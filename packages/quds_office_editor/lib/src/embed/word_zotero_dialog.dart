@@ -97,10 +97,15 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
   ZoteroKeyInfo? _identity;
   final _groups = <ZoteroGroup>[];
   final _collections = <ZoteroCollection>[];
+  final _savedSearches = <ZoteroSavedSearch>[];
   ZoteroPage<ZoteroItem>? _page;
   String? _collectionKey;
+  String? _savedSearchKey;
+  var _savedSearchMode = false;
+  var _catalogGeneration = 0;
   int? _moreGroups;
   int? _moreCollections;
+  int? _moreSavedSearches;
   var _publicGroup = true;
   var _busy = false;
   var _reviewing = false;
@@ -182,7 +187,7 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
               e.message ?? 'This field cannot be changed safely.',
             StateError e => e.message,
             ArgumentError _ =>
-              'Check the library ID, selected sources, style, and locale.',
+              'Check the library ID, search text, selected sources, style, and locale.',
             _ =>
               'The operation could not finish. Existing document content was kept.',
           };
@@ -209,13 +214,18 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
   }
 
   void _clearLibrary() {
+    _catalogGeneration++;
     _identity = null;
     _session.library = null;
     _groups.clear();
     _collections.clear();
+    _savedSearches.clear();
     _collectionKey = null;
+    _savedSearchKey = null;
+    _savedSearchMode = false;
     _moreGroups = null;
     _moreCollections = null;
+    _moreSavedSearches = null;
     _page = null;
     _selected.clear();
   }
@@ -307,12 +317,19 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
 
   Future<void> _loadLibrary() async {
     final library = _session.library;
-    if (library == null || _client == null) return;
+    final client = _client;
+    if (library == null || client == null) return;
+    final generation = ++_catalogGeneration;
     _collectionKey = null;
+    _savedSearchKey = null;
+    _savedSearchMode = false;
     _collections.clear();
+    _savedSearches.clear();
+    _moreCollections = null;
+    _moreSavedSearches = null;
     _page = null;
-    final collections = await _client!.collections(library, limit: 100);
-    if (!mounted) return;
+    final collections = await client.collections(library, limit: 100);
+    if (!_catalogIsCurrent(client, library, generation)) return;
     _collections.addAll(collections.items);
     _moreCollections = collections.nextStart;
     await _loadItems();
@@ -320,14 +337,79 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
 
   Future<void> _loadItems({int start = 0}) async {
     final library = _session.library;
-    if (library == null || _client == null) return;
-    final page = await _client!.items(
-      library,
-      collectionKey: _collectionKey,
-      query: _search.text,
-      start: start,
-    );
-    if (mounted) setState(() => _page = page);
+    final client = _client;
+    if (library == null || client == null) return;
+    final generation = ++_catalogGeneration;
+    _page = null;
+    final searchKey = _savedSearchKey;
+    if (_savedSearchMode && searchKey == null) return;
+    final page = _savedSearchMode
+        ? await client.savedSearchItems(
+            library,
+            searchKey!,
+            query: _search.text,
+            start: start,
+          )
+        : await client.items(
+            library,
+            collectionKey: _collectionKey,
+            query: _search.text,
+            start: start,
+          );
+    if (_catalogIsCurrent(client, library, generation)) {
+      setState(() => _page = page);
+    }
+  }
+
+  bool _catalogIsCurrent(
+    ZoteroClient client,
+    ZoteroLibrary library,
+    int generation,
+  ) =>
+      mounted &&
+      identical(client, _client) &&
+      library == _session.library &&
+      generation == _catalogGeneration;
+
+  Future<void> _showSavedSearches(bool show) => _run(() async {
+    _savedSearchMode = show;
+    if (show) {
+      await _loadSavedSearches();
+    } else {
+      await _loadItems();
+    }
+  });
+
+  Future<void> _loadSavedSearches({int start = 0}) async {
+    final library = _session.library;
+    final client = _client;
+    if (library == null || client == null || !client.isLocal) return;
+    final generation = ++_catalogGeneration;
+    if (start == 0) {
+      _savedSearchKey = null;
+      _savedSearches.clear();
+      _moreSavedSearches = null;
+      _page = null;
+    }
+    final page = await client.savedSearches(library, start: start, limit: 100);
+    if (!_catalogIsCurrent(client, library, generation) || !_savedSearchMode) {
+      return;
+    }
+    setState(() {
+      // A search can move between pages while its library is being edited.
+      // Keep one menu entry per key without losing the current selection.
+      for (final search in page.items) {
+        final index = _savedSearches.indexWhere(
+          (item) => item.key == search.key,
+        );
+        if (index < 0) {
+          _savedSearches.add(search);
+        } else {
+          _savedSearches[index] = search;
+        }
+      }
+      _moreSavedSearches = page.nextStart;
+    });
   }
 
   Future<void> _openPublic() => _run(() async {
@@ -353,11 +435,7 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
       ..apiKey = null
       ..library = null
       ..rememberKey = false;
-    _identity = null;
-    _groups.clear();
-    _collections.clear();
-    _page = null;
-    _selected.clear();
+    _clearLibrary();
     _client = widget.transport == null
         ? null
         : ZoteroClient(transport: widget.transport!);
@@ -1114,8 +1192,8 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
                       _scrollableTab(
                         _libraryTab(),
                         minHeight: size.width < 600
-                            ? (widget.localTransport == null ? 820 : 920)
-                            : (widget.localTransport == null ? 660 : 760),
+                            ? (widget.localTransport == null ? 820 : 960)
+                            : (widget.localTransport == null ? 660 : 800),
                       ),
                       _documentTab(),
                       _scrollableTab(_importTab(), minHeight: 600),
@@ -1147,6 +1225,57 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
         ? Theme.of(context).colorScheme.errorContainer
         : Theme.of(context).colorScheme.surfaceContainerHigh,
     child: Text(text, maxLines: 4, overflow: TextOverflow.ellipsis),
+  );
+
+  Widget _savedSearchNavigation() => Row(
+    children: [
+      Expanded(
+        child: DropdownButtonFormField<String>(
+          key: ValueKey(
+            'saved-searches-${_session.library}-$_savedSearchKey-${_savedSearches.length}',
+          ),
+          initialValue: _savedSearchKey,
+          isExpanded: true,
+          decoration: const InputDecoration(
+            labelText: 'Saved search',
+            isDense: true,
+          ),
+          hint: Text(
+            _savedSearches.isEmpty
+                ? 'No saved searches in this library'
+                : 'Choose a saved search',
+            overflow: TextOverflow.ellipsis,
+          ),
+          items: _savedSearches
+              .map(
+                (search) => DropdownMenuItem(
+                  value: search.key,
+                  child: Text(search.name, overflow: TextOverflow.ellipsis),
+                ),
+              )
+              .toList(),
+          onChanged: _busy
+              ? null
+              : (key) => _run(() async {
+                  _savedSearchKey = key;
+                  await _loadItems();
+                }),
+        ),
+      ),
+      if (_moreSavedSearches != null)
+        TextButton(
+          onPressed: _busy
+              ? null
+              : () =>
+                    _run(() => _loadSavedSearches(start: _moreSavedSearches!)),
+          child: const Text('More searches'),
+        ),
+      IconButton(
+        tooltip: 'Refresh saved searches',
+        onPressed: _busy ? null : () => _run(_loadSavedSearches),
+        icon: const Icon(Icons.refresh),
+      ),
+    ],
   );
 
   Widget _libraryTab() => Padding(
@@ -1377,70 +1506,102 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
             ],
           ),
         if (_session.library != null) ...[
-          Row(
-            children: [
-              Expanded(
-                child: DropdownButtonFormField<String>(
-                  key: ValueKey(
-                    'collections-${_session.library}-$_collectionKey-${_collections.length}',
+          if (_useLocal) ...[
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Wrap(
+                spacing: 8,
+                children: [
+                  ChoiceChip(
+                    label: const Text('Collections'),
+                    selected: !_savedSearchMode,
+                    onSelected: _busy ? null : (_) => _showSavedSearches(false),
                   ),
-                  initialValue: _collectionKey ?? '',
-                  isExpanded: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Collection',
-                    isDense: true,
+                  ChoiceChip(
+                    label: const Text('Saved searches'),
+                    selected: _savedSearchMode,
+                    onSelected: _busy ? null : (_) => _showSavedSearches(true),
                   ),
-                  items: [
-                    const DropdownMenuItem(value: '', child: Text('All items')),
-                    ..._collections.map(
-                      (collection) => DropdownMenuItem(
-                        value: collection.key,
-                        child: Text(
-                          collection.name,
-                          overflow: TextOverflow.ellipsis,
+                ],
+              ),
+            ),
+            const SizedBox(height: 4),
+          ],
+          if (_savedSearchMode)
+            _savedSearchNavigation()
+          else
+            Row(
+              children: [
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    key: ValueKey(
+                      'collections-${_session.library}-$_collectionKey-${_collections.length}',
+                    ),
+                    initialValue: _collectionKey ?? '',
+                    isExpanded: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Collection',
+                      isDense: true,
+                    ),
+                    items: [
+                      const DropdownMenuItem(
+                        value: '',
+                        child: Text('All items'),
+                      ),
+                      ..._collections.map(
+                        (collection) => DropdownMenuItem(
+                          value: collection.key,
+                          child: Text(
+                            collection.name,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                  onChanged: _busy
-                      ? null
-                      : (key) => _run(() async {
-                          _collectionKey = key == '' ? null : key;
-                          await _loadItems();
-                        }),
+                    ],
+                    onChanged: _busy
+                        ? null
+                        : (key) => _run(() async {
+                            _collectionKey = key == '' ? null : key;
+                            await _loadItems();
+                          }),
+                  ),
                 ),
-              ),
-              if (_moreCollections != null)
-                TextButton(
-                  onPressed: _busy
-                      ? null
-                      : () => _run(() async {
-                          final page = await _client!.collections(
-                            _session.library!,
-                            start: _moreCollections!,
-                            limit: 100,
-                          );
-                          if (mounted) {
-                            setState(() {
-                              _collections.addAll(page.items);
-                              _moreCollections = page.nextStart;
-                            });
-                          }
-                        }),
-                  child: const Text('More collections'),
-                ),
-            ],
-          ),
+                if (_moreCollections != null)
+                  TextButton(
+                    onPressed: _busy
+                        ? null
+                        : () => _run(() async {
+                            final page = await _client!.collections(
+                              _session.library!,
+                              start: _moreCollections!,
+                              limit: 100,
+                            );
+                            if (mounted) {
+                              setState(() {
+                                _collections.addAll(page.items);
+                                _moreCollections = page.nextStart;
+                              });
+                            }
+                          }),
+                    child: const Text('More collections'),
+                  ),
+              ],
+            ),
           const SizedBox(height: 8),
           TextField(
             controller: _search,
-            enabled: !_busy,
+            enabled: !_busy && (!_savedSearchMode || _savedSearchKey != null),
             decoration: InputDecoration(
-              labelText: 'Search title, creator, or year',
+              labelText: _savedSearchMode
+                  ? 'Search within saved search'
+                  : 'Search title, creator, or year',
               isDense: true,
               prefixIcon: const Icon(Icons.search),
               suffixIcon: IconButton(
-                onPressed: _busy ? null : () => _run(_loadItems),
+                onPressed:
+                    _busy || (_savedSearchMode && _savedSearchKey == null)
+                    ? null
+                    : () => _run(_loadItems),
                 tooltip: 'Search',
                 icon: const Icon(Icons.arrow_forward),
               ),
@@ -1452,8 +1613,16 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
         ],
         Expanded(
           child: _page == null
-              ? const Center(
-                  child: Text('Connect a Zotero library to browse references.'),
+              ? Center(
+                  child: Text(
+                    _session.library == null
+                        ? 'Connect a Zotero library to browse references.'
+                        : _savedSearchMode && _savedSearchKey == null
+                        ? 'Choose a saved search to browse its references.'
+                        : _busy
+                        ? 'Loading references…'
+                        : 'No references loaded. Choose a view or search again.',
+                  ),
                 )
               : _page!.items.where((item) => item.isCitable).isEmpty
               ? const Center(child: Text('No citable references on this page.'))
@@ -1492,7 +1661,9 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '${_page!.start + 1}–${_page!.start + _page!.items.length}${_page!.totalResults == null ? '' : ' of ${_page!.totalResults}'}',
+                _page!.items.isEmpty
+                    ? '0 references'
+                    : '${_page!.start + 1}–${_page!.start + _page!.items.length}${_page!.totalResults == null ? '' : ' of ${_page!.totalResults}'}',
               ),
               Row(
                 children: [
@@ -2000,8 +2171,23 @@ class _ZoteroFormattedPreview extends StatelessWidget {
         if (span.strike) TextDecoration.lineThrough,
       ]),
     );
+    TextSpan content(double scale) => span.smallCaps
+        ? TextSpan(
+            style: style,
+            children: [
+              for (final segment in WordSmallCaps.segments(span.text))
+                TextSpan(
+                  text: segment.text,
+                  style: style.copyWith(fontSize: size * scale * segment.scale),
+                ),
+            ],
+          )
+        : TextSpan(
+            text: span.text,
+            style: style.copyWith(fontSize: size * scale),
+          );
     if (span.verticalAlign == WmlVertAlign.baseline) {
-      return TextSpan(text: span.text, style: style);
+      return content(1);
     }
     return WidgetSpan(
       alignment: PlaceholderAlignment.baseline,
@@ -2013,7 +2199,7 @@ class _ZoteroFormattedPreview extends StatelessWidget {
               ? -size * 0.35
               : size * 0.14,
         ),
-        child: Text(span.text, style: style.copyWith(fontSize: size * 0.65)),
+        child: Text.rich(content(0.65)),
       ),
     );
   }

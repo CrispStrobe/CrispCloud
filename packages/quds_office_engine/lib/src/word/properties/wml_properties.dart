@@ -639,6 +639,7 @@ class WmlRunProps {
     this.italic = false,
     this.underline = WmlUnderline.none,
     this.strike = false,
+    this.smallCaps = false,
     this.color = '000000',
     this.highlight,
     this.fontSizeHalfPoints = 22,
@@ -661,6 +662,10 @@ class WmlRunProps {
 
   /// strike API.
   bool strike;
+
+  /// Native `w:smallCaps`: authored text stays unchanged. Lowercase letters
+  /// are displayed as smaller capitals by the layout and painting layers.
+  bool smallCaps;
 
   /// color API.
   String color;
@@ -691,6 +696,7 @@ class WmlRunProps {
           italic: italic,
           underline: underline,
           strike: strike,
+          smallCaps: smallCaps,
           color: color,
           highlight: highlight,
           fontSizeHalfPoints: fontSizeHalfPoints,

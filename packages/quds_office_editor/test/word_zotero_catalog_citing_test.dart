@@ -25,9 +25,10 @@ String _preferences(int note) => jsonEncode({
 });
 
 class _CatalogDesktop {
-  _CatalogDesktop({this.noteType = 1});
+  _CatalogDesktop({this.noteType = 1, this.savedSearch = false});
 
   final int noteType;
+  final bool savedSearch;
   bool cancelStyle = false;
   bool cancelCitation = false;
   bool failCitation = false;
@@ -39,6 +40,20 @@ class _CatalogDesktop {
   String documentId = '';
   int step = 0;
   List<Map<String, Object?> Function()> script = [];
+
+  List<Map<String, Object?>> get catalogRecords => [
+    {
+      'key': 'ABCD1234',
+      'version': 1,
+      'library': {'type': 'user', 'id': 0},
+      'data': {
+        'key': 'ABCD1234',
+        'itemType': 'book',
+        'title': 'Local catalog source',
+      },
+      'csljson': [_item],
+    },
+  ];
 
   Map<String, Object?> _message(String name, [List<Object?> args = const []]) =>
       {'command': name, 'arguments': args};
@@ -70,19 +85,14 @@ class _CatalogDesktop {
       }
       final Object body = switch (request.uri.path) {
         '/api/users/0/groups' || '/api/users/0/collections' => <Object>[],
-        '/api/users/0/items/top' => [
+        '/api/users/0/items/top' => savedSearch ? <Object>[] : catalogRecords,
+        '/api/users/0/searches' => [
           {
-            'key': 'ABCD1234',
-            'version': 1,
-            'library': {'type': 'user', 'id': 0},
-            'data': {
-              'key': 'ABCD1234',
-              'itemType': 'book',
-              'title': 'Local catalog source',
-            },
-            'csljson': [_item],
+            'key': 'SEARCH01',
+            'data': {'key': 'SEARCH01', 'name': 'Sources for this paper'},
           },
         ],
+        '/api/users/0/searches/SEARCH01/items' => catalogRecords,
         _ => throw StateError('Unexpected catalog path: ${request.uri.path}'),
       };
       return ZoteroHttpResponse(
@@ -185,6 +195,19 @@ Future<WordEditorController> _open(
   );
   await _tap(tester, find.text('Open catalog'));
   await _tap(tester, find.byKey(const ValueKey('zotero-connect-desktop')));
+  if (desktop.savedSearch) {
+    expect(find.text('Local catalog source'), findsNothing);
+    await _tap(tester, find.widgetWithText(ChoiceChip, 'Saved searches'));
+    await _tap(
+      tester,
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is DropdownButtonFormField<String> &&
+            widget.decoration.labelText == 'Saved search',
+      ),
+    );
+    await _tap(tester, find.text('Sources for this paper').last);
+  }
   await _tap(
     tester,
     find.widgetWithText(CheckboxListTile, 'Local catalog source'),
@@ -211,6 +234,34 @@ void _expectUntouched(WordEditorController controller) {
 }
 
 void main() {
+  testWidgets(
+    'a saved-search source seeds native first insertion and survives DOCX and undo',
+    (tester) async {
+      final desktop = _CatalogDesktop(savedSearch: true);
+      final controller = await _open(tester, desktop);
+      expect(
+        desktop.requests.last.uri.path,
+        '/api/users/0/searches/SEARCH01/items',
+      );
+      await _tap(tester, find.text('Insert with Zotero…'));
+      expect(desktop.commands, ['setDocPrefs', 'addEditCitation']);
+      expect(desktop.ids.toSet(), hasLength(1));
+      expect(desktop.seed!['code'], contains(_uri));
+      expect(controller.document.footnotes, hasLength(1));
+      expect(controller.zoteroFields.single.cachedText, 'Ebd., 34.');
+      expect(find.text('0 selected'), findsOneWidget);
+      final reopened = WordDeserializer().readBytes(controller.saveBytes());
+      final citation = WordZotero.fields(reopened).single.citation!;
+      expect(citation.items.single.uris, [_uri]);
+      expect(citation.items.single.locator, '34');
+      expect(citation.items.single.label, 'page');
+      controller.undo();
+      _expectUntouched(controller);
+      expect(controller.caret.logicalIndex, 7);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   for (final noteType in [0, 1, 2]) {
     testWidgets(
       'first catalog insertion chooses placement $noteType in one undo',

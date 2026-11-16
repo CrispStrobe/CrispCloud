@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import '../../zotero/zotero_formatted_text.dart';
+import '../properties/wml_properties.dart';
 import 'wml_document.dart';
 import 'wml_run_edit.dart';
 import 'word_content_controls.dart';
@@ -38,9 +39,9 @@ final class WordZoteroCitingSession {
       );
     }
     final all = WordZotero.fields(document);
-    if (all.length > 10000 || all.any((f) => !f.canEdit)) {
+    if (all.length > 10000 || all.any((f) => !_canProcessField(f))) {
       throw UnsupportedError(
-        'Zotero needs editable citation fields. Locked, nested, malformed or multi-paragraph fields must be resolved first.',
+        'Zotero needs editable citation fields or complete bibliography entry paragraphs. Locked, nested, malformed or ambiguous field structures must be resolved first.',
       );
     }
     final byParagraph = <WmlParagraph, List<WmlZoteroField>>{};
@@ -135,9 +136,11 @@ final class WordZoteroCitingSession {
           .where(
             (f) =>
                 f.note == null &&
-                identical(f.original?.paragraph, insertionParagraph) &&
-                insertionOffset >= f.original!.start &&
-                insertionOffset < f.original!.end,
+                (f.original!.paragraphs.length > 1
+                    ? f.original!.paragraphs.contains(insertionParagraph)
+                    : identical(f.original?.paragraph, insertionParagraph) &&
+                          insertionOffset >= f.original!.start &&
+                          insertionOffset < f.original!.end),
           )
           .firstOrNull;
     }
@@ -173,7 +176,7 @@ final class WordZoteroCitingSession {
   _CitingField? _selected;
   bool _complete = false;
   bool _applied = false;
-  bool _bibliographyStyleRequested = false;
+  _BibliographyStyle? _bibliographyStyle;
   WmlParagraph? _insertedParagraph;
   WmlNote? _insertedNote;
   ({WmlParagraph paragraph, int offset})? _caretAfter;
@@ -191,7 +194,9 @@ final class WordZoteroCitingSession {
         (field.codeWasSet || field.textWasSet),
   );
   bool get hasChanges =>
-      _nativeData != _originalData || _fields.any((f) => f.changed);
+      _nativeData != _originalData ||
+      _bibliographyStyle != null ||
+      _fields.any((f) => f.changed);
   int get changedFieldCount => _fields.where((f) => f.changed).length;
   List<String> get previewTexts => List.unmodifiable(
     _ordered().where((f) => !f.deleted && f.changed).map((f) => f.text),
@@ -259,7 +264,21 @@ final class WordZoteroCitingSession {
         return _canInsert || _selected != null;
       case 'Document.getDocumentData':
         _arity(args, 1);
-        return WordZoteroDocumentData.toHttp(_nativeData);
+        // Earlier Quds versions accepted the callback but simplified its
+        // values. Ask Zotero to send the style again when no applied native
+        // paragraph layout is present, including a newly added bibliography.
+        final hasLayout = _fields.any((field) {
+          final original = field.original;
+          return original?.kind == ZoteroFieldKind.bibliography &&
+              original!.paragraph.properties.explicitIndent &&
+              original.paragraph.properties.explicitLineSpacing &&
+              original.paragraph.properties.explicitSpacingAfter;
+        });
+        return WordZoteroDocumentData.toHttp(
+          hasLayout || _bibliographyStyle != null
+              ? _nativeData
+              : WordZoteroDocumentData.requestBibliographyStyle(_nativeData),
+        );
       case 'Document.setDocumentData':
         _arity(args, 2);
         _nativeData = WordZoteroDocumentData.toNative(_string(args[1]));
@@ -311,20 +330,7 @@ final class WordZoteroCitingSession {
         return null;
       case 'Document.setBibliographyStyle':
         _arity(args, 7);
-        if (args.sublist(1, 5).any((v) => v is! num || !v.isFinite) ||
-            args[5] is! List ||
-            args[6] is! int ||
-            (args[5] as List).length != args[6] ||
-            (args[5] as List).length > 100 ||
-            (args[5] as List).any((v) => v is! num || !v.isFinite)) {
-          throw const FormatException(
-            'Zotero returned an invalid bibliography layout.',
-          );
-        }
-        _bibliographyStyleRequested = true;
-        formattingWarnings.add(
-          'Bibliography hanging indents, paragraph spacing and tab stops are simplified.',
-        );
+        _bibliographyStyle = _BibliographyStyle.fromArguments(args);
         return null;
       case 'Document.complete':
         _arity(args, 1);
@@ -402,6 +408,18 @@ final class WordZoteroCitingSession {
       throw StateError('Zotero has not completed this operation.');
     }
     for (final field in _fields.where((f) => !f.deleted && !f.unlinked)) {
+      if (_bibliographyStyle != null &&
+          _kind(field) == ZoteroFieldKind.bibliography &&
+          field.original != null &&
+          (!WordZotero.canReplaceNativeBibliography(
+                document,
+                field.original!,
+              ) ||
+              !_hasKnownBibliographyEntries(field))) {
+        formattingWarnings.add(
+          'Bibliography paragraph layout cannot be applied to a field mixed with surrounding text, structural markers or ambiguous legacy line breaks. Refresh the bibliography with Zotero to obtain its entry boundaries.',
+        );
+      }
       final formatted = field.formatted;
       if (formatted == null) continue;
       formattingWarnings.addAll(
@@ -411,7 +429,7 @@ final class WordZoteroCitingSession {
       );
       if (_kind(field) == ZoteroFieldKind.bibliography &&
           field.original != null &&
-          !WordZotero.canReplaceFormattedBibliography(field.original!)) {
+          !WordZotero.canReplaceNativeBibliography(document, field.original!)) {
         formattingWarnings.add(
           'An inline bibliography is kept as protected plain text.',
         );
@@ -447,7 +465,7 @@ final class WordZoteroCitingSession {
             (c) =>
                 _sameField(c, f.original!) &&
                 c.cachedText == f.original!.cachedText &&
-                c.canEdit,
+                _canProcessField(c),
           ),
         )) {
       throw StateError('A Zotero field changed while formatting.');
@@ -473,7 +491,10 @@ final class WordZoteroCitingSession {
         continue;
       }
       if (field.deleted) {
-        if (field.note != null && _isSoleNoteField(field)) {
+        if (original.kind == ZoteroFieldKind.bibliography &&
+            WordZotero.canReplaceNativeBibliography(document, original)) {
+          WordZotero.deleteNativeBibliography(document, original);
+        } else if (field.note != null && _isSoleNoteField(field)) {
           WordNotes.delete(
             document,
             field.note!.id,
@@ -510,7 +531,42 @@ final class WordZoteroCitingSession {
         _replace(field);
       }
     }
-    if (_nativeData != _originalData || _bibliographyStyleRequested) {
+    if (_bibliographyStyle != null) {
+      var applied = false;
+      var incomplete = false;
+      for (final field in WordZotero.fields(document)) {
+        if (field.kind != ZoteroFieldKind.bibliography) continue;
+        final staged = _fields
+            .where(
+              (entry) =>
+                  identical(entry.original?.paragraph, field.paragraph) ||
+                  (entry.original == null &&
+                      identical(_insertedParagraph, field.paragraph)),
+            )
+            .firstOrNull;
+        if (!WordZotero.canReplaceNativeBibliography(document, field) ||
+            staged == null ||
+            !_hasKnownBibliographyEntries(staged)) {
+          incomplete = true;
+          continue;
+        }
+        for (final paragraph in field.paragraphs) {
+          WordContentControls.assertCanEdit(
+            paragraph,
+            0,
+            paragraph.text.length,
+          );
+          _bibliographyStyle!.applyTo(paragraph.properties);
+        }
+        applied = true;
+      }
+      if (!applied || incomplete) {
+        _nativeData = WordZoteroDocumentData.requestBibliographyStyle(
+          _nativeData,
+        );
+      }
+    }
+    if (_nativeData != _originalData || _bibliographyStyle != null) {
       document.zoteroDocumentData = _nativeData;
     }
     final inserted = _fields
@@ -540,7 +596,10 @@ final class WordZoteroCitingSession {
             )
             .firstOrNull;
         if (current != null) {
-          _caretAfter = (paragraph: current.paragraph, offset: current.end);
+          _caretAfter = (
+            paragraph: current.paragraphs.last,
+            offset: current.end,
+          );
         }
       }
     }
@@ -549,6 +608,17 @@ final class WordZoteroCitingSession {
 
   void _replace(_CitingField field) {
     final original = field.original!;
+    if (_kind(field) == ZoteroFieldKind.bibliography &&
+        WordZotero.canReplaceNativeBibliography(document, original)) {
+      WordZotero.replaceNativeBibliography(
+        document,
+        original,
+        instruction: _resultInstruction(field),
+        text: field.text,
+        formattedText: field.formatted,
+      );
+      return;
+    }
     final rich =
         _kind(field) != ZoteroFieldKind.bibliography ||
         WordZotero.canReplaceFormattedBibliography(original);
@@ -571,21 +641,17 @@ final class WordZoteroCitingSession {
       if (slot == null) {
         throw StateError('The bibliography insertion point changed.');
       }
-      final paragraph = WordZotero.bibliography(
+      final paragraphs = WordZotero.nativeBibliographyParagraphs(
+        instruction: instruction,
         text: field.text,
-        metadata: WordZotero.metadataOf(instruction),
         formattedText: field.formatted,
       );
       if (field.unlinked) {
-        final temp = WmlDocument(
-          sections: [
-            WmlSection(blocks: [paragraph]),
-          ],
-        );
+        final temp = WmlDocument(sections: [WmlSection(blocks: paragraphs)]);
         WordZotero.unlink(WordZotero.fields(temp).single);
       }
-      slot.parent.insert(slot.index + 1, paragraph);
-      if (field.original == null) _insertedParagraph = paragraph;
+      slot.parent.insertAll(slot.index + 1, paragraphs);
+      if (field.original == null) _insertedParagraph = paragraphs.first;
       return;
     }
     var paragraph = anchor;
@@ -629,6 +695,16 @@ final class WordZoteroCitingSession {
       );
     }
     final paragraph = insertionParagraph!;
+    if (_fields.any(
+      (field) =>
+          field.original != null &&
+          field.original!.paragraphs.length > 1 &&
+          field.original!.paragraphs.contains(paragraph),
+    )) {
+      throw UnsupportedError(
+        'Move the caret outside the bibliography before inserting a citation.',
+      );
+    }
     final range = WmlRunEdit.normalizeRange(
       paragraph,
       insertionOffset,
@@ -871,6 +947,23 @@ final class WordZoteroCitingSession {
       a.start == b.start &&
       a.end == b.end &&
       a.instruction == b.instruction;
+
+  bool _canProcessField(WmlZoteroField field) =>
+      field.canEdit ||
+      (_body.contains(field.paragraph) &&
+          WordZotero.canReplaceNativeBibliography(document, field));
+
+  static bool _hasKnownBibliographyEntries(_CitingField field) {
+    final original = field.original;
+    return original == null ||
+        field.textWasSet ||
+        original.paragraphs.length > 1 ||
+        !original.cachedText.contains('\n') ||
+        (original.paragraph.properties.explicitIndent &&
+            original.paragraph.properties.explicitLineSpacing &&
+            original.paragraph.properties.explicitSpacingAfter);
+  }
+
   static void _arity(List<dynamic> args, int length) {
     if (args.length != length) {
       throw const FormatException('Zotero returned invalid command arguments.');
@@ -992,4 +1085,64 @@ final class _NoteAnchor {
   final WmlParagraph paragraph;
   final int bodyIndex;
   final int offset;
+}
+
+/// Zotero's native layout callback uses twips; line spacing is expressed in
+/// 240ths of a line, and the first-line indent is relative to the body indent.
+final class _BibliographyStyle {
+  _BibliographyStyle.fromArguments(List<dynamic> args) {
+    bool bounded(Object? value, {bool negative = false}) =>
+        value is num &&
+        value.isFinite &&
+        value.abs() <= 1440000 &&
+        (negative || value >= 0);
+    if (!bounded(args[1], negative: true) ||
+        !bounded(args[2], negative: true) ||
+        !bounded(args[3]) ||
+        (args[3] as num) <= 0 ||
+        (args[3] as num) > 24000 ||
+        !bounded(args[4]) ||
+        args[5] is! List ||
+        args[6] is! int ||
+        (args[5] as List).length != args[6] ||
+        (args[5] as List).length > 100 ||
+        (args[5] as List).any((value) => !bounded(value))) {
+      throw const FormatException(
+        'Zotero returned an invalid bibliography layout.',
+      );
+    }
+    firstLine = (args[1] as num).toDouble() / 20;
+    indent = (args[2] as num).toDouble() / 20;
+    lineSpacing = (args[3] as num).toDouble() / 240;
+    entrySpacing = (args[4] as num).toDouble() / 20;
+    tabs = (args[5] as List)
+        .cast<num>()
+        .map((value) => WmlTabStop(position: value.toDouble() / 20))
+        .toList();
+  }
+
+  late final double firstLine;
+  late final double indent;
+  late final double lineSpacing;
+  late final double entrySpacing;
+  late final List<WmlTabStop> tabs;
+
+  void applyTo(WmlParagraphProps properties) {
+    properties
+      ..indent = WmlIndent(
+        left: indent,
+        right: properties.indent.right,
+        firstLine: firstLine > 0 ? firstLine : 0,
+        hanging: firstLine < 0 ? -firstLine : 0,
+      )
+      ..explicitIndent = true
+      ..lineSpacing = lineSpacing
+      ..lineSpacingRule = WmlLineSpacingRule.auto
+      ..explicitLineSpacing = true
+      ..spacingBefore = 0
+      ..explicitSpacingBefore = true
+      ..spacingAfter = entrySpacing
+      ..explicitSpacingAfter = true
+      ..tabs = List.of(tabs);
+  }
 }

@@ -1,0 +1,1749 @@
+{
+  "repository": "CrispStrobe/CrispCloud",
+  "snapshot_at": "2026-11-16T07:01:37.250Z",
+  "verified_at": "2026-11-16T07:03:01.349172+00:00",
+  "integrated_head": "ce386fd6c16268b782088b2e47e32bbab8b4ce43",
+  "branches": 38,
+  "pulls": 151,
+  "entries": [
+    {
+      "kind": "branches",
+      "name": "codex/ssh-terminal-tmux",
+      "sha": "378c036b392ee3ff9112d86aa21e7fdd8e722808",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "branches",
+      "name": "codex/terminal-screen-workspace",
+      "sha": "ce386fd6c16268b782088b2e47e32bbab8b4ce43",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "branches",
+      "name": "codex/zotero-support-20261115",
+      "sha": "e678e17859f8d29e274d1abbf064b93d04a6fa42",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "branches",
+      "name": "codex/zotero-support-20261116",
+      "sha": "cf442dd2aab29211ab8b9c80f0767373b91a3c94",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "branches",
+      "name": "docs/conditional-affix",
+      "sha": "4919c87f0225599b9b2b963285d364d2c2bd1a1e",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "branches",
+      "name": "docs/conditional-between",
+      "sha": "073713474ea62525d9f5832da918407de333cd03",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "branches",
+      "name": "docs/conditional-complete",
+      "sha": "a49c3f14f96fed4c5551e45060ebbce3fa6883a1",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "branches",
+      "name": "docs/conditional-formats",
+      "sha": "2281ad58aed9f97bc1d387d3c98728245a5e4bcf",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "branches",
+      "name": "docs/metadata-closed",
+      "sha": "343a930ebdbc1b0ee45f16328be868d0f78ba624",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "branches",
+      "name": "docs/ods-hidden-state",
+      "sha": "1cb0b4a6a01b4aabe58f95d9a9132171bbb11aa0",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "branches",
+      "name": "docs/ods-pictures",
+      "sha": "128f55295107e3ada605b52d160165e03f726cb4",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "branches",
+      "name": "docs/ods-validations",
+      "sha": "b420b45b6666ca0658ae74f2a682a3cb6b88134d",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "branches",
+      "name": "docs/office-pin-20261115",
+      "sha": "5ed4f45cb758394dc2346041d826c10257c24dc1",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "branches",
+      "name": "docs/remaining-gaps",
+      "sha": "a0df68710bbacdcbddf57f7fb7b77238566b65c3",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "branches",
+      "name": "docs/remaining-gaps-link",
+      "sha": "854d2ff6a20206434c64173ddca1152b079c8277",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "branches",
+      "name": "feat/hidden-sheets-ui",
+      "sha": "dacf219a094e8f309e3f2ea1e27afbdccaa69f3d",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "branches",
+      "name": "feat/odt-headers",
+      "sha": "38a69f9a60bce92b6c2db60a71427ac47d98819d",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "branches",
+      "name": "feat/odt-images",
+      "sha": "969c104a09dc2ad0732edb4a11a0300b52f20e2f",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "branches",
+      "name": "feat/odt-styles",
+      "sha": "048ad97b6d4b1be94821dd29f1ffb1494a329ecb",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "branches",
+      "name": "feat/odt-textboxes",
+      "sha": "b81105fe579d00b66c0a07b07d8ed36cee23ecfb",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "branches",
+      "name": "fix/conditional-affix-vendor",
+      "sha": "1dbfa2125cd83d6ec4e0028d1584e612fccfb77c",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "branches",
+      "name": "fix/conditional-between-vendor",
+      "sha": "a52efabd7d05a50b428eb337944d2b6aeee2400b",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "branches",
+      "name": "fix/conditional-dxf-vendor",
+      "sha": "b9b7932eca6213973803b5bb227464cccd3051d6",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "branches",
+      "name": "fix/conditional-operators-vendor",
+      "sha": "24ac26de023313dba726f8cdaabd16179c49da01",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "branches",
+      "name": "fix/conditional-text-vendor",
+      "sha": "20e5c5b7f63f0b8335665ca131418023f6bc2ca7",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "branches",
+      "name": "fix/hidden-state-vendor",
+      "sha": "fd69bc3ee8db4ecec4683a7b8161a643b758db6b",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "branches",
+      "name": "fix/ods-conditional-vendor",
+      "sha": "4e3e45e619fa2983f1fa8394a9f28cf6c454a9f6",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "branches",
+      "name": "fix/ods-default-geometry-vendor",
+      "sha": "29a2bb5158a316dcde5da776172e09027e04f78d",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "branches",
+      "name": "fix/ods-default-style-vendor",
+      "sha": "0ba620fdc34ea7afd278468f3978997c3cc7ba8f",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "branches",
+      "name": "fix/ods-images-vendor",
+      "sha": "d18dc14194bfa4d11e96552b77dc34cbe5a8b417",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "branches",
+      "name": "fix/ods-metadata-vendor",
+      "sha": "8a62e0864ad4bae96063ec6f8a542db039a306cf",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "branches",
+      "name": "fix/ods-validations-vendor",
+      "sha": "ee74601e71441fcac2b6defebff33ca04f538d12",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "branches",
+      "name": "integrate/final-corpus-20261115",
+      "sha": "59b11b5647a8a07d36c0d2e0d579855f474ef4d2",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "branches",
+      "name": "integrate/sdt-section-break-20261115",
+      "sha": "012314d440c49bc73b6726796fd9930eee6f1830",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "branches",
+      "name": "integrate/utf16-custom-xml-20261115",
+      "sha": "abfcf08bd2bfbe87349fdacc3484b824b77fefa3",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "branches",
+      "name": "integration/storage-carving-20261115",
+      "sha": "5018aebb709b35f1c4d730c06e0f91187727751c",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "branches",
+      "name": "integration/storage-carving-local-20261115124645",
+      "sha": "10891b06a6da9f2502960cdbfe34b30eed271665",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "branches",
+      "name": "main",
+      "sha": "45ed126a6d7da0ecd80f3a765155f54008b278f3",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 160,
+      "title": "Extend terminal with SSH agents, saved forwarding, and output triggers",
+      "state": "open",
+      "mergedAt": null,
+      "head": "ce386fd6c16268b782088b2e47e32bbab8b4ce43",
+      "branch": "codex/terminal-screen-workspace",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 161,
+      "title": "Improve Office Zotero workflow and reconcile recent terminal work [skip ci]",
+      "state": "open",
+      "mergedAt": null,
+      "head": "cf442dd2aab29211ab8b9c80f0767373b91a3c94",
+      "branch": "codex/zotero-support-20261116",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 149,
+      "title": "Add Zotero catalogs, native citation tools and document-wide style refresh",
+      "state": "closed",
+      "mergedAt": "2026-11-15T23:45:32Z",
+      "head": "e678e17859f8d29e274d1abbf064b93d04a6fa42",
+      "branch": "codex/zotero-support-20261115",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 140,
+      "title": "Extend terminal with nested panes, SSH import, key bindings and routed sessions",
+      "state": "closed",
+      "mergedAt": "2026-11-15T23:45:32Z",
+      "head": "01b3f6090f682c9c8cd909d229aaad50b54ea3fd",
+      "branch": "codex/terminal-screen-workspace",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 159,
+      "title": "Record ODS metadata and validation progress",
+      "state": "closed",
+      "mergedAt": "2026-11-15T23:07:40Z",
+      "head": "343a930ebdbc1b0ee45f16328be868d0f78ba624",
+      "branch": "docs/metadata-closed",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 158,
+      "title": "Vendor ODS workbook metadata",
+      "state": "closed",
+      "mergedAt": "2026-11-15T23:06:44Z",
+      "head": "8a62e0864ad4bae96063ec6f8a542db039a306cf",
+      "branch": "fix/ods-metadata-vendor",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 157,
+      "title": "Vendor multi-section content control support and the Zotero engine",
+      "state": "closed",
+      "mergedAt": "2026-11-15T22:50:42Z",
+      "head": "59b11b5647a8a07d36c0d2e0d579855f474ef4d2",
+      "branch": "integrate/final-corpus-20261115",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 156,
+      "title": "Refresh verified snapshot in remaining-gaps doc",
+      "state": "closed",
+      "mergedAt": "2026-11-15T22:23:46Z",
+      "head": "854d2ff6a20206434c64173ddca1152b079c8277",
+      "branch": "docs/remaining-gaps-link",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 155,
+      "title": "Document the remaining Office format backlog",
+      "state": "closed",
+      "mergedAt": "2026-11-15T22:21:17Z",
+      "head": "a0df68710bbacdcbddf57f7fb7b77238566b65c3",
+      "branch": "docs/remaining-gaps",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 154,
+      "title": "Record conditional affix rules and current pin",
+      "state": "closed",
+      "mergedAt": "2026-11-15T22:08:34Z",
+      "head": "4919c87f0225599b9b2b963285d364d2c2bd1a1e",
+      "branch": "docs/conditional-affix",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 153,
+      "title": "Vendor begins-with and ends-with conditions",
+      "state": "closed",
+      "mergedAt": "2026-11-15T22:07:45Z",
+      "head": "1dbfa2125cd83d6ec4e0028d1584e612fccfb77c",
+      "branch": "fix/conditional-affix-vendor",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 152,
+      "title": "Vendor the trailing content-control section break fix",
+      "state": "closed",
+      "mergedAt": "2026-11-15T20:35:24Z",
+      "head": "012314d440c49bc73b6726796fd9930eee6f1830",
+      "branch": "integrate/sdt-section-break-20261115",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 151,
+      "title": "Record between conditions and current Quds pin",
+      "state": "closed",
+      "mergedAt": "2026-11-15T20:25:04Z",
+      "head": "073713474ea62525d9f5832da918407de333cd03",
+      "branch": "docs/conditional-between",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 150,
+      "title": "Vendor between conditional rules",
+      "state": "closed",
+      "mergedAt": "2026-11-15T20:24:41Z",
+      "head": "a52efabd7d05a50b428eb337944d2b6aeee2400b",
+      "branch": "fix/conditional-between-vendor",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 148,
+      "title": "Document ODS list validations and current pin",
+      "state": "closed",
+      "mergedAt": "2026-11-15T19:20:05Z",
+      "head": "b420b45b6666ca0658ae74f2a682a3cb6b88134d",
+      "branch": "docs/ods-validations",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 147,
+      "title": "Vendor ODS list validations",
+      "state": "closed",
+      "mergedAt": "2026-11-15T19:19:44Z",
+      "head": "ee74601e71441fcac2b6defebff33ca04f538d12",
+      "branch": "fix/ods-validations-vendor",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 146,
+      "title": "Document complete conditional format subset",
+      "state": "closed",
+      "mergedAt": "2026-11-15T19:16:04Z",
+      "head": "a49c3f14f96fed4c5551e45060ebbce3fa6883a1",
+      "branch": "docs/conditional-complete",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 145,
+      "title": "Vendor contains-text and duplicate conditional rules",
+      "state": "closed",
+      "mergedAt": "2026-11-15T19:14:58Z",
+      "head": "20e5c5b7f63f0b8335665ca131418023f6bc2ca7",
+      "branch": "fix/conditional-text-vendor",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 144,
+      "title": "Vendor conditional dxf styles",
+      "state": "closed",
+      "mergedAt": "2026-11-15T19:11:36Z",
+      "head": "b9b7932eca6213973803b5bb227464cccd3051d6",
+      "branch": "fix/conditional-dxf-vendor",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 143,
+      "title": "Vendor the UTF-16 custom XML bibliography fix",
+      "state": "closed",
+      "mergedAt": null,
+      "head": "abfcf08bd2bfbe87349fdacc3484b824b77fefa3",
+      "branch": "integrate/utf16-custom-xml-20261115",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 142,
+      "title": "Document numeric ODS conditional formats",
+      "state": "closed",
+      "mergedAt": "2026-11-15T19:05:37Z",
+      "head": "2281ad58aed9f97bc1d387d3c98728245a5e4bcf",
+      "branch": "docs/conditional-formats",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 141,
+      "title": "Vendor numeric conditional comparators",
+      "state": "closed",
+      "mergedAt": "2026-11-15T19:03:36Z",
+      "head": "24ac26de023313dba726f8cdaabd16179c49da01",
+      "branch": "fix/conditional-operators-vendor",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 139,
+      "title": "Vendor ODS conditional formats",
+      "state": "closed",
+      "mergedAt": "2026-11-15T18:59:38Z",
+      "head": "4e3e45e619fa2983f1fa8394a9f28cf6c454a9f6",
+      "branch": "fix/ods-conditional-vendor",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 138,
+      "title": "Record ODS hidden-state and current Quds pin",
+      "state": "closed",
+      "mergedAt": "2026-11-15T18:44:41Z",
+      "head": "1cb0b4a6a01b4aabe58f95d9a9132171bbb11aa0",
+      "branch": "docs/ods-hidden-state",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 137,
+      "title": "Hide hidden worksheets in the worksheet selector",
+      "state": "closed",
+      "mergedAt": "2026-11-15T18:43:15Z",
+      "head": "dacf219a094e8f309e3f2ea1e27afbdccaa69f3d",
+      "branch": "feat/hidden-sheets-ui",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 136,
+      "title": "Extend SSH terminals with key authentication, tmux sessions and reconnect",
+      "state": "closed",
+      "mergedAt": "2026-11-15T18:39:10Z",
+      "head": "378c036b392ee3ff9112d86aa21e7fdd8e722808",
+      "branch": "codex/ssh-terminal-tmux",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 135,
+      "title": "Show ODT header and footer text",
+      "state": "closed",
+      "mergedAt": "2026-11-15T16:55:32Z",
+      "head": "38a69f9a60bce92b6c2db60a71427ac47d98819d",
+      "branch": "feat/odt-headers",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 134,
+      "title": "Vendor ODS hidden row and column state",
+      "state": "closed",
+      "mergedAt": "2026-11-15T16:52:29Z",
+      "head": "fd69bc3ee8db4ecec4683a7b8161a643b758db6b",
+      "branch": "fix/hidden-state-vendor",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 133,
+      "title": "Vendor ODS default style and geometry fixes",
+      "state": "closed",
+      "mergedAt": "2026-11-15T16:46:55Z",
+      "head": "29a2bb5158a316dcde5da776172e09027e04f78d",
+      "branch": "fix/ods-default-geometry-vendor",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 132,
+      "title": "Vendor ODS default cell styles",
+      "state": "closed",
+      "mergedAt": "2026-11-15T16:26:28Z",
+      "head": "0ba620fdc34ea7afd278468f3978997c3cc7ba8f",
+      "branch": "fix/ods-default-style-vendor",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 131,
+      "title": "Read ODT named styles from styles.xml",
+      "state": "closed",
+      "mergedAt": "2026-11-15T15:40:31Z",
+      "head": "048ad97b6d4b1be94821dd29f1ffb1494a329ecb",
+      "branch": "feat/odt-styles",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 130,
+      "title": "Record the verified current Office source pin",
+      "state": "closed",
+      "mergedAt": "2026-11-15T15:32:24Z",
+      "head": "5ed4f45cb758394dc2346041d826c10257c24dc1",
+      "branch": "docs/office-pin-20261115",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 123,
+      "title": "Sync Quds 6d7c696 and cover the new underline styles",
+      "state": "closed",
+      "mergedAt": "2026-11-15T13:37:42Z",
+      "head": "e19731eb9a2b69b0047b9f9ee6165a1e53ae187e",
+      "branch": "integrate/quds-6d7c696-20261115",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 119,
+      "title": "Vendor ODS style/date fixes and live ODF corpus coverage",
+      "state": "closed",
+      "mergedAt": "2026-11-15T10:16:48Z",
+      "head": "f74f1fceb9959b1197fc21218e047240f215ba75",
+      "branch": "integrate/ods-style-20261115",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 115,
+      "title": "Vendor host-specific selection golden references",
+      "state": "closed",
+      "mergedAt": "2026-11-15T08:43:07Z",
+      "head": "74f97cba657d43f18f6e95553a465d23e21ceb20",
+      "branch": "integrate/office-goldens-20261115",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 112,
+      "title": "Vendor the current Quds Word fixes, including inline pictures",
+      "state": "closed",
+      "mergedAt": "2026-11-15T07:18:17Z",
+      "head": "bb981ec37c40369ba15bacdd9c21c520807a200c",
+      "branch": "integrate/word-inline-pictures-20261115",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 125,
+      "title": "Open ODS files in the Quds grid with a typed fallback",
+      "state": "closed",
+      "mergedAt": "2026-11-15T13:52:03Z",
+      "head": "5c1714d5abb3f728b924a6a2a515eec02497ae9c",
+      "branch": "integrate/ods-grid-20261115",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 122,
+      "title": "Show ODS in the Quds grid with a typed table fallback",
+      "state": "closed",
+      "mergedAt": "2026-11-15T14:12:29Z",
+      "head": "3ffe089765eecd5a867369392a8e3610d896c0cf",
+      "branch": "fix/ods-grid-main",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 118,
+      "title": "Preserve ODS cell positions and cover ODS copy saves",
+      "state": "closed",
+      "mergedAt": "2026-11-15T09:50:45Z",
+      "head": "5530aff56e575a2ecad42c774233e2c0946e24c7",
+      "branch": "integrate/ods-fixes-20261115",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 117,
+      "title": "Add ODF preview, ODS editing and rich ODT/ODP rendering",
+      "state": "closed",
+      "mergedAt": "2026-11-15T09:24:04Z",
+      "head": "a8e350d94e120c7422ade4e4caa4e92a2c4e461a",
+      "branch": "integrate/odf-integration-20261115",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 114,
+      "title": "Preview legacy .xls through Quds and enrich ODF extraction",
+      "state": "closed",
+      "mergedAt": "2026-11-15T08:38:34Z",
+      "head": "eba6c9dcb24108d7277dea2f0042acbb19f8fb72",
+      "branch": "integrate/legacy-xls-preview-20261115",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 113,
+      "title": "Integrate the new document workspace and spreadsheet wrap-text",
+      "state": "closed",
+      "mergedAt": null,
+      "head": "eab538e7af002ddffa2746b5932fdbbbd3a97334",
+      "branch": "integrate/consistency-20261115",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 124,
+      "title": "Edit macro-enabled and template spreadsheets",
+      "state": "closed",
+      "mergedAt": "2026-11-15T14:12:33Z",
+      "head": "d7895df6d55ca588a70575dabf2216ed42055d75",
+      "branch": "feat/xlsm-edit",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 121,
+      "title": "Extend bundled VeraCrypt and TrueCrypt browsing with PIM, keyfiles and native Argon2id",
+      "state": "closed",
+      "mergedAt": "2026-11-15T14:58:33Z",
+      "head": "2dbc312ff2aaff1495adb95c67afe8aa7d987e7e",
+      "branch": "feature/veracrypt-compatibility-20261115",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 120,
+      "title": "Vendor ODS date styles and comments",
+      "state": "closed",
+      "mergedAt": "2026-11-15T11:49:21Z",
+      "head": "443db52220f25b6fa982dfa6afd18c17ed09179e",
+      "branch": "fix/ods-date-styles",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 116,
+      "title": "Preview legacy .xls through Quds, edit ODS, enrich ODT/ODP",
+      "state": "closed",
+      "mergedAt": null,
+      "head": "7dec00fb1ed4fd8552fcf5bf682de02849d3d93a",
+      "branch": "fix/odf-final",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 110,
+      "title": "Add draft-safe worksheet navigation and complete host validation",
+      "state": "closed",
+      "mergedAt": "2026-11-15T14:58:33Z",
+      "head": "d97705dabbdae5969a67bf4bf74b6c604d934419",
+      "branch": "codex/office-recovery-20261115",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 111,
+      "title": "feat(storage): recover validated PNG images to reviewed new ZIPs",
+      "state": "closed",
+      "mergedAt": "2026-11-15T14:58:33Z",
+      "head": "5018aebb709b35f1c4d730c06e0f91187727751c",
+      "branch": "integration/storage-carving-20261115",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 129,
+      "title": "Keep text-box labels in ODT previews",
+      "state": "closed",
+      "mergedAt": "2026-11-15T14:33:02Z",
+      "head": "b81105fe579d00b66c0a07b07d8ed36cee23ecfb",
+      "branch": "feat/odt-textboxes",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 128,
+      "title": "Render bounded ODT pictures inline",
+      "state": "closed",
+      "mergedAt": "2026-11-15T14:29:56Z",
+      "head": "969c104a09dc2ad0732edb4a11a0300b52f20e2f",
+      "branch": "feat/odt-images",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 127,
+      "title": "Document ODS pictures and exact host goldens",
+      "state": "closed",
+      "mergedAt": "2026-11-15T14:19:25Z",
+      "head": "128f55295107e3ada605b52d160165e03f726cb4",
+      "branch": "docs/ods-pictures",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 126,
+      "title": "Vendor ODS picture import",
+      "state": "closed",
+      "mergedAt": "2026-11-15T14:12:15Z",
+      "head": "d18dc14194bfa4d11e96552b77dc34cbe5a8b417",
+      "branch": "fix/ods-images-vendor",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 108,
+      "title": "Open legacy .xls workbooks as XLSX",
+      "state": "closed",
+      "mergedAt": "2026-11-15T06:27:18Z",
+      "head": "a77364501d274e0fde2e9fffeefb121258ae9614",
+      "branch": "fix/excel-legacy-xls",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 109,
+      "title": "Open damaged .doc files with parser recovery; read RTF files named .doc",
+      "state": "closed",
+      "mergedAt": "2026-11-15T06:27:18Z",
+      "head": "1b7680583ac69649b17287ab68738288fec10f51",
+      "branch": "fix/legacy-doc-recover",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 107,
+      "title": "feat(storage): add reviewed S3 block reuse to queued copies",
+      "state": "closed",
+      "mergedAt": "2026-11-14T22:32:06Z",
+      "head": "7187d6d0ad636f844f7e9622ed915a880d20d992",
+      "branch": "integration/storage-delta-20261114",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 106,
+      "title": "Add shared queued HTTP payload limits for G29",
+      "state": "closed",
+      "mergedAt": "2026-11-14T20:12:42Z",
+      "head": "2e683c9de9e8bc801dd9e2f3dea4380b4b854ca6",
+      "branch": "integration/storage-bandwidth-20261114",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 103,
+      "title": "Add bounded read-only NTFS filesystem image browsing",
+      "state": "closed",
+      "mergedAt": null,
+      "head": "d504409acc779b670de482247f3231a7247dcd92",
+      "branch": "integration/storage-ntfs-20261114",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 105,
+      "title": "Preserve comparison backpressure and prompt read errors",
+      "state": "closed",
+      "mergedAt": "2026-11-14T17:55:45Z",
+      "head": "22bd67b887c81a11ea22664defc3474a07eef50a",
+      "branch": "integration/storage-binary-20261114",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 104,
+      "title": "Bind binary comparison navigation to verified bounded snapshots",
+      "state": "closed",
+      "mergedAt": "2026-11-14T17:33:23Z",
+      "head": "542c1c8b97643e5ad2e7c44f35b5417ef95c7d6a",
+      "branch": "integration/storage-binary-20261114",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 102,
+      "title": "Add bounded read-only ext filesystem image browsing",
+      "state": "closed",
+      "mergedAt": "2026-11-14T13:44:27Z",
+      "head": "ffdd6a86820b0d58cf8b93b4e626d0439beefab9",
+      "branch": "integration/storage-ext-20261114",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 101,
+      "title": "Add FAT/UDF image browsing, LZFSE, ZIP recovery and partition tools",
+      "state": "closed",
+      "mergedAt": "2026-11-14T11:37:29Z",
+      "head": "03f37893819ee999a9a660f029306f53ed7f2d0f",
+      "branch": "integration/storage-capabilities-20261114",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 100,
+      "title": "Integrate all saved branch work and extend archive/container support",
+      "state": "closed",
+      "mergedAt": "2026-11-13T22:13:16Z",
+      "head": "c582f2d7a413c54dcf954f6f25f8201e36ba81d2",
+      "branch": "integration/archive-containers-20261113",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 97,
+      "title": "Expand Commander archive workflows on the shared operation queue",
+      "state": "closed",
+      "mergedAt": "2026-11-13T21:42:42Z",
+      "head": "cfae329b3dee73ececc6b689c9936339dd3e6a49",
+      "branch": "feature/archive-commander-parity-20261113",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 95,
+      "title": "Improve document fonts, preview alternatives, and legacy DOC recovery",
+      "state": "closed",
+      "mergedAt": "2026-11-13T21:42:43Z",
+      "head": "02160e56ffb3ec2e11c47447fa2c3203e4268cc3",
+      "branch": "feature/apache-file-viewer-20261113",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 84,
+      "title": "Consolidate Linux ebook host readiness and platform parity recovery",
+      "state": "closed",
+      "mergedAt": null,
+      "head": "464e4dd3f548302ee5b9f78994fa09caf95437bc",
+      "branch": "feature/ebook-parity-canary-20261112",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 94,
+      "title": "Retain final DOC fidelity receipts and verified source pins",
+      "state": "closed",
+      "mergedAt": "2026-11-12T21:21:51Z",
+      "head": "ef88da683a8ad68e57bde5d6d794698add46d2b1",
+      "branch": "feature/legacy-doc-fidelity-20261112",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 92,
+      "title": "Add reviewed archive copy, integrity reports and portable codecs",
+      "state": "closed",
+      "mergedAt": null,
+      "head": "7cb65d768f2b096230f8bd32afc6c954baae7416",
+      "branch": "feature/archive-workflows-codecs-20261112",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 93,
+      "title": "Archive member rearrangement and preserved legacy CPIO writing",
+      "state": "closed",
+      "mergedAt": null,
+      "head": "19bbb8606a87492f991261eb3fb79ed1d9f2c299",
+      "branch": "feature/archive-rearrange-cpio-20261112",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 90,
+      "title": "Browse RPM, CAB and Apple PBZX/portable CPIO payloads",
+      "state": "closed",
+      "mergedAt": null,
+      "head": "e103d8c6fd6dc8c8c3d73467a8a1eb15fb8471d4",
+      "branch": "feature/archive-package-readers-20261112",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 91,
+      "title": "Integrate tested DOC fidelity fixes and complete source receipts",
+      "state": "closed",
+      "mergedAt": "2026-11-12T20:12:46Z",
+      "head": "b3be1616199a049a6a239a0199a3b5ac890aea21",
+      "branch": "feature/legacy-doc-fidelity-20261112",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 89,
+      "title": "Expand writable archives and verified data-image creation",
+      "state": "closed",
+      "mergedAt": null,
+      "head": "84c3a1172759abdbab0c320142ae190e532f7753",
+      "branch": "feature/archive-writers-20261112",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 87,
+      "title": "Integrate measured legacy DOC fidelity and preserve native review semantics",
+      "state": "closed",
+      "mergedAt": "2026-11-12T18:32:19Z",
+      "head": "8b0c01597c231814815bf5456ab0a616102e7307",
+      "branch": "feature/legacy-doc-fidelity-20261112",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 88,
+      "title": "Integrate DOC fidelity parser and vector previews with verified source pins",
+      "state": "closed",
+      "mergedAt": "2026-11-12T18:21:06Z",
+      "head": "b100cd751688f13609a8829180b487b381588d14",
+      "branch": "feature/office-fidelity-oracles-20261112",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 79,
+      "title": "Consume shared Office font, table and custom-tab improvements",
+      "state": "closed",
+      "mergedAt": "2026-11-12T15:38:50Z",
+      "head": "788e1f005e72371d0cf2182ae0cec81dd4e84adb",
+      "branch": "feature/office-fidelity-followup-20261112",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 85,
+      "title": "Consume expanded Office fidelity and recover font and picture workflows",
+      "state": "closed",
+      "mergedAt": null,
+      "head": "d8643faed99c03a3d6fdba91bf047c690a50ea5b",
+      "branch": "feature/office-fidelity-expansion-20261112",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 86,
+      "title": "Add ISO/DMG and package archive readers with source-backed F3 browsing",
+      "state": "closed",
+      "mergedAt": "2026-11-12T18:21:06Z",
+      "head": "120f839ab9091bdbedf326621347ee737140e043",
+      "branch": "feature/archive-containers-20261112",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 83,
+      "title": "Bound remote viewer preparation and temporary-copy cleanup",
+      "state": "closed",
+      "mergedAt": null,
+      "head": "d46b35a23a3d0631bc509e115fa003b1e64ebd67",
+      "branch": "feature/viewer-spool-lifecycle-20261112",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 81,
+      "title": "Add reviewed archive imports and verified native publication",
+      "state": "closed",
+      "mergedAt": null,
+      "head": "3bb4874de0785edf0b0fa24d2d0ea05a74c58b71",
+      "branch": "feature/writable-archive-endpoints-20261112",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 75,
+      "title": "Add retained private staging for external tools",
+      "state": "closed",
+      "mergedAt": null,
+      "head": "47b7c57012cfc23f8100bad8c5a7fb4c53171a12",
+      "branch": "feature/private-tool-staging-20261112",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 68,
+      "title": "Consolidate Quds Office fidelity and captured legacy Word conversion",
+      "state": "closed",
+      "mergedAt": "2026-11-12T13:53:00Z",
+      "head": "9cd18e7c704937897d037b1051d38341d4928bf5",
+      "branch": "feature/office-fidelity-gap-closure-20261112",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 82,
+      "title": "Use standalone MPL DOC parser and extend reviewed DOCX/DOCM preservation",
+      "state": "closed",
+      "mergedAt": "2026-11-12T15:38:51Z",
+      "head": "085495527e0ab02f52eeded928d54cb766b79910",
+      "branch": "feature/format-viewers-path-favorites-20261112",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 80,
+      "title": "Add retained external editing with revision-guarded remote saves",
+      "state": "closed",
+      "mergedAt": null,
+      "head": "fdf8c35014367834570bb89a3902f50fd132e865",
+      "branch": "feature/external-remote-editing-20261112",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 77,
+      "title": "Add reviewed external text and image comparison tools",
+      "state": "closed",
+      "mergedAt": null,
+      "head": "77af99427e2d7d1b3719a22376a4ebf56508edbd",
+      "branch": "feature/external-comparison-tools-20261112",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 76,
+      "title": "Add conditional publication for retained remote edits",
+      "state": "closed",
+      "mergedAt": null,
+      "head": "2297f8e3f7a261c8cbf80b48ffa70bf25df2998d",
+      "branch": "feature/conditional-remote-publication-20261112",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 78,
+      "title": "Add verified archive publication and recovery foundation",
+      "state": "closed",
+      "mergedAt": null,
+      "head": "005771bd53f2cd437cb70b23ebe83c224792bd00",
+      "branch": "feature/archive-publication-recovery-20261112",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 53,
+      "title": "Harden ebook reader lifecycle and Linux startup recovery",
+      "state": "closed",
+      "mergedAt": "2026-11-12T15:38:51Z",
+      "head": "bffdfbb49433859823081f2198f16e33be8369a6",
+      "branch": "feature/ebook-reader-editor",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 55,
+      "title": "Extend file viewers, KeePass editing, Office conversion and path favorites",
+      "state": "closed",
+      "mergedAt": "2026-11-12T13:53:00Z",
+      "head": "9a3e07808ed883938d2e6139593a406065a8a75c",
+      "branch": "feature/format-viewers-path-favorites-20261112",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 62,
+      "title": "CI: dart format for #56's adapters; resolve vendored office editor against vendored engine",
+      "state": "closed",
+      "mergedAt": "2026-11-12T13:53:00Z",
+      "head": "cdeedaf48f9892fe82191f090afccf15529db1a6",
+      "branch": "fix/ci-format-analyze",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 66,
+      "title": "Add SOCKS4 and SOCKS4a routing for native HTTP clients",
+      "state": "closed",
+      "mergedAt": null,
+      "head": "42ae79ce5dbaec184726b538c7100823a4b1edfe",
+      "branch": "feature/socks4-http-routing-20261112",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 57,
+      "title": "Rust Filen/Internxt engines, CLI support, reliable Internxt on both engines; fixes #44 #46 #48",
+      "state": "closed",
+      "mergedAt": "2026-11-12T09:52:17Z",
+      "head": "62e438e6836949207b4541b818c1c261bb7104fe",
+      "branch": "feature/rust-cloud-engines",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 63,
+      "title": "Open saved items directly with captured-source guards",
+      "state": "closed",
+      "mergedAt": null,
+      "head": "baccf470e946fc86fde41c96443423006eac2be7",
+      "branch": "feature/quick-open-actions-20261112",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 73,
+      "title": "Add maintained offline guides and localized help reader",
+      "state": "closed",
+      "mergedAt": null,
+      "head": "d76fe9bbb743e4194bfd54edc930abe9ad4f4854",
+      "branch": "feature/localized-help-20261112",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 61,
+      "title": "Route incoming drops through captured copy review",
+      "state": "closed",
+      "mergedAt": null,
+      "head": "a452b7ade6ccdd9cd39804155309a21797f2612a",
+      "branch": "feature/incoming-drop-routing-20261112",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 72,
+      "title": "Add persistent gathering stack with reviewed grouped transfers",
+      "state": "closed",
+      "mergedAt": null,
+      "head": "8f117e7f85aba2adffb63bdd6511ca2d112c31a8",
+      "branch": "feature/gathering-stack-20261112",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 69,
+      "title": "Scope the next gathering, command, resume and help increments",
+      "state": "closed",
+      "mergedAt": null,
+      "head": "cd1447740f2834ec68af97beb3a3dad47cffd68b",
+      "branch": "feature/gap-extension-scope-20261112",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 64,
+      "title": "Close FTP transports during stalled TCP and TLS setup",
+      "state": "closed",
+      "mergedAt": null,
+      "head": "c8f4561343ff0abca6aa3ffffeb45892c2fc7bd1",
+      "branch": "feature/ftp-transport-lifetime-20261112",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 70,
+      "title": "Add verified FTP download resume and durable partial stages",
+      "state": "closed",
+      "mergedAt": null,
+      "head": "5b2f1fabf9ac642a906d2275e753e098c324ddeb",
+      "branch": "feature/ftp-download-resume-20261112",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 40,
+      "title": "Improve file workspace workflows and directory scan performance",
+      "state": "closed",
+      "mergedAt": "2026-11-11T21:35:22Z",
+      "head": "08c9f8453589c2d1c43f7b2f3a6f79199ad953b3",
+      "branch": "feature/file-manager-ux-20261110",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 58,
+      "title": "Scope remaining file manager gaps and acceptance lanes",
+      "state": "closed",
+      "mergedAt": null,
+      "head": "9887b53272d5f747cae9f73b363748985937ad05",
+      "branch": "feature/file-manager-gap-closure-20261112",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 54,
+      "title": "Add file manager workflow capabilities and document remaining gaps",
+      "state": "closed",
+      "mergedAt": "2026-11-12T13:53:00Z",
+      "head": "28b7b9ce388e08345aa995037256ab50ab0e17b9",
+      "branch": "feature/file-manager-capabilities-20261112",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 67,
+      "title": "Add verified UUE, XXE and single-part MIME file conversion",
+      "state": "closed",
+      "mergedAt": null,
+      "head": "403e942dc99779883210125a01841ef209e19d2e",
+      "branch": "feature/file-conversion-20261112",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 74,
+      "title": "Scope external tools and writable archive endpoints",
+      "state": "closed",
+      "mergedAt": null,
+      "head": "e473083f7439b5d8592f43c6ca2f013cdb50c5a1",
+      "branch": "feature/external-tools-archive-scope-20261112",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 60,
+      "title": "Configure reviewed external terminal launches",
+      "state": "closed",
+      "mergedAt": null,
+      "head": "f798f27d823ee846b5e6238e167970e0345612ed",
+      "branch": "feature/external-terminal-20261112",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 59,
+      "title": "Add bounded conflict previews and safe file details",
+      "state": "closed",
+      "mergedAt": null,
+      "head": "132f70e746aa9815a51a046ab02e83393d084622",
+      "branch": "feature/conflict-review-20261112",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 65,
+      "title": "Add configurable browser menus and protected recovery controls",
+      "state": "closed",
+      "mergedAt": null,
+      "head": "55dd210a2eb6db7cc5c100507d63be411f30b679",
+      "branch": "feature/configurable-menus-20261112",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 71,
+      "title": "Add reviewed command entry and scoped filename/path insertion",
+      "state": "closed",
+      "mergedAt": null,
+      "head": "50a9547a3a6aca251a46b5140f93fb87c789e848",
+      "branch": "feature/command-entry-20261112",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 56,
+      "title": "Remote adapters: POSIX path rules on every platform (Windows backslash keys)",
+      "state": "closed",
+      "mergedAt": "2026-11-12T10:12:48Z",
+      "head": "d3d69c1cfa8ab35a3aa54d562a2c63d298ca9476",
+      "branch": "fix/remote-posix-paths",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 52,
+      "title": "crisp_storage: bundle the Rust SMB bridge via an opt-in build hook",
+      "state": "closed",
+      "mergedAt": "2026-11-12T06:10:46Z",
+      "head": "c9c0f58ae1c4c73f64417e807901549e33fd77a8",
+      "branch": "feature/rust-smb-bundled",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 51,
+      "title": "tool: sign_macos_local.sh finds identities outside the search list",
+      "state": "closed",
+      "mergedAt": "2026-11-11T19:33:16Z",
+      "head": "20aaf76d213ec0cde07c505287f8a2e48d683db2",
+      "branch": "fix/sign-script-keychain",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 50,
+      "title": "ci: richer store screenshot content",
+      "state": "closed",
+      "mergedAt": "2026-11-11T19:29:10Z",
+      "head": "83049a2edf71b9d8b5dcf9aebd4ee187f4c6199f",
+      "branch": "fix/store-screenshots-content",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 49,
+      "title": "ci: fix store screenshot navigation and capture scale",
+      "state": "closed",
+      "mergedAt": "2026-11-11T18:33:27Z",
+      "head": "b76bbfafda1cb69d7a343b9777af42db8c1b717a",
+      "branch": "fix/store-screenshots-capture",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 47,
+      "title": "ci: capture Mac App Store screenshots from the real app",
+      "state": "closed",
+      "mergedAt": "2026-11-11T08:38:35Z",
+      "head": "be318f380fc47f94975a35c0924c89190d46f990",
+      "branch": "chore/store-screenshots",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 45,
+      "title": "release: advance to build 1.1.0+12 for TestFlight",
+      "state": "closed",
+      "mergedAt": "2026-11-11T08:13:27Z",
+      "head": "f39bcd927f32729e63194f35db019c36802d1c67",
+      "branch": "release/build-12",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 21,
+      "title": "Unify open PRs across queue, editors, terminal, mounts and localization",
+      "state": "closed",
+      "mergedAt": "2026-11-06T21:28:27Z",
+      "head": "4769da0812cb4c7eb19cfd88019f9c059d2b75b2",
+      "branch": "integrate/open-prs-20261106",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 42,
+      "title": "fix: grant sandbox access when a listed keychain is chosen",
+      "state": "closed",
+      "mergedAt": "2026-11-11T07:38:22Z",
+      "head": "ea4446482d7ca513160669fbb48e641397c6514f",
+      "branch": "fix/keychain-picker-access",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 41,
+      "title": "fix: offer a confirmed choice of another credential store at startup",
+      "state": "closed",
+      "mergedAt": "2026-11-11T06:07:02Z",
+      "head": "44aadba3b515fbbca0a7b2520be84204ee603007",
+      "branch": "fix/startup-storage-choices",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 18,
+      "title": "Runtime polish: hex fonts, inline rename, editor choice, sandbox terminal, App Store guards",
+      "state": "closed",
+      "mergedAt": "2026-11-06T21:28:29Z",
+      "head": "d07804b9e0d3869bd4d20f020d7620ce7e352c43",
+      "branch": "fix/hex-runtime-polish",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 8,
+      "title": "Integrate open-issue fixes, macOS mounts, and localization",
+      "state": "closed",
+      "mergedAt": "2026-11-06T21:28:29Z",
+      "head": "29580c7ddf6fca7ba74440ff146535fe5da51800",
+      "branch": "fix/issues-integration",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 20,
+      "title": "Fix hex editor history limits, storage identity and host regression coverage",
+      "state": "closed",
+      "mergedAt": "2026-11-06T21:28:29Z",
+      "head": "02c92b6cdd2936dd9bd10d35b1d9ad22479997e7",
+      "branch": "feature/madedit2-hex-editor",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 10,
+      "title": "Add native audio and video editing with export-copy workflow",
+      "state": "closed",
+      "mergedAt": "2026-11-05T21:04:53Z",
+      "head": "3ebb72f0e6f49fb2c462ac3d7c968200f7a5d438",
+      "branch": "feature/media-editing",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 9,
+      "title": "Extend CrispCloud image editing",
+      "state": "closed",
+      "mergedAt": "2026-11-05T22:31:18Z",
+      "head": "07df87d7ae616b702de887f3327916aeb3f67ad5",
+      "branch": "feature/image-editor-completion",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 7,
+      "title": "Add F4 image editing with CrispCloud UI and maintained pro_image_editor fork",
+      "state": "closed",
+      "mergedAt": "2026-11-05T10:44:53Z",
+      "head": "1311b04a3e7a9d810b46173dbaa73ea6265fe886",
+      "branch": "feature/f4-pro-image-editor",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 6,
+      "title": "Add shared PDF operations to the GUI and CLI",
+      "state": "closed",
+      "mergedAt": "2026-11-05T05:49:29Z",
+      "head": "a0ada3b3cd344bbdacf01313ac2d72749b72d4d0",
+      "branch": "feature/pdf-editor-integration",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 17,
+      "title": "Add a real interactive PTY and SSH terminal",
+      "state": "closed",
+      "mergedAt": "2026-11-06T14:03:54Z",
+      "head": "6bda9f2306d36fb4a7ce3f501346b597c2000beb",
+      "branch": "feat/real-terminal",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 15,
+      "title": "Complete missing Commander workflows and transfer safeguards",
+      "state": "closed",
+      "mergedAt": "2026-11-06T10:34:26Z",
+      "head": "8755f0dff6ff87528a77aa6613242ce1ef5851f5",
+      "branch": "feature/commander-file-operations",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 14,
+      "title": "Add Commander multi-rename, selection, collections, and transfer options",
+      "state": "closed",
+      "mergedAt": null,
+      "head": "eff79b3c8ed03020aeaeac4dcd86058fb1e2e181",
+      "branch": "feature/commander-review-20261105",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 13,
+      "title": "Add Commander file workflows and safe batch undo",
+      "state": "closed",
+      "mergedAt": "2026-11-06T00:45:30Z",
+      "head": "cb2db48e5e0f623139f260b63f88405b577791ec",
+      "branch": "feature/commander-workflow-polish",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 11,
+      "title": "Add image gallery, tiles, viewer and batch photo tools",
+      "state": "closed",
+      "mergedAt": "2026-11-05T21:44:47Z",
+      "head": "7e32fef5ed563c73d617fc4933d07b88d8525a60",
+      "branch": "feat/image-gallery-tiles",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 43,
+      "title": "tool: sign local macOS builds with the team development identity",
+      "state": "closed",
+      "mergedAt": "2026-11-11T08:00:53Z",
+      "head": "1dbb98105d96fc3c9a42ce105d2f3d87f30f2eef",
+      "branch": "chore/macos-local-signing",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 19,
+      "title": "Add copy/move job scheduling and batch queue management",
+      "state": "closed",
+      "mergedAt": "2026-11-06T19:17:21Z",
+      "head": "261ae0a091cf87639da8feb2bcdf38efec61f106",
+      "branch": "feat/copy-move-job-manager",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 39,
+      "title": "Authenticate native asset cache downloads",
+      "state": "closed",
+      "mergedAt": "2026-11-09T08:13:23Z",
+      "head": "cec4b8d11f59c0c9ddbe53706ef35fcea909aa8d",
+      "branch": "fix/prime-gh-token",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 38,
+      "title": "Prime sqlite3 Apple assets from the verified mirror",
+      "state": "closed",
+      "mergedAt": "2026-11-09T08:02:13Z",
+      "head": "d95f46c4f12beb037cd64fb2c8910173500a7ca7",
+      "branch": "fix/sqlite-ci-cache",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 37,
+      "title": "Prime dart_smb2 Apple assets from a reliable mirror",
+      "state": "closed",
+      "mergedAt": "2026-11-09T07:24:58Z",
+      "head": "429d9edf052dece0db48a6f41fc04b0d95b6c70b",
+      "branch": "fix/smb2-ci-cache",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 36,
+      "title": "Record build 11 upload and TestFlight review submission",
+      "state": "closed",
+      "mergedAt": "2026-11-08T15:56:36Z",
+      "head": "3d40ffc1a04be27077531b9c0e90520f36b4dc2d",
+      "branch": "docs/build11-status",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 34,
+      "title": "Audit crypto correctness and gate Apple/French encryption compliance",
+      "state": "closed",
+      "mergedAt": "2026-11-08T13:55:48Z",
+      "head": "eebffef31b7bd96d03dcc939b6b6cdb46aee2c0c",
+      "branch": "security/crypto-export-compliance-2026-11-08",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 35,
+      "title": "Record the France condition attached to TestFlight build 10",
+      "state": "closed",
+      "mergedAt": "2026-11-08T06:52:26Z",
+      "head": "dfe7a175148a95cc80738142c85a88e2bd8b9810",
+      "branch": "docs/export-build10-condition",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 33,
+      "title": "Validate the reviewed no-documentation Apple export answer",
+      "state": "closed",
+      "mergedAt": "2026-11-07T23:52:11Z",
+      "head": "f2eb2911cbf53833f5f385675edc4326b4787496",
+      "branch": "fix/crypto-gate-france-exempt",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 32,
+      "title": "Match Apple's no-documentation export route for France-excluded builds",
+      "state": "closed",
+      "mergedAt": "2026-11-07T22:53:36Z",
+      "head": "b31b114ed7aa368861056f183b1a61edb436a97c",
+      "branch": "fix/apple-export-france-excluded",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 31,
+      "title": "Record the no-French-declaration release route",
+      "state": "closed",
+      "mergedAt": "2026-11-07T22:11:31Z",
+      "head": "ab45ac55990233492208549c18f42dfe51e518e4",
+      "branch": "docs/export-route-decision",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 28,
+      "title": "Add storage analyzer with treemap, sunburst and saved scans",
+      "state": "closed",
+      "mergedAt": "2026-11-07T21:48:06Z",
+      "head": "e5858440cfc383aae7c000372f6f223a7041c85c",
+      "branch": "feature/storage-analyzer-2026-11-07",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 30,
+      "title": "Record the macOS TestFlight export-compliance blocker",
+      "state": "closed",
+      "mergedAt": "2026-11-07T21:40:57Z",
+      "head": "b5d204c6d532caff008a42b4dcf000f3a06f4b66",
+      "branch": "docs/testflight-export-blocker",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 29,
+      "title": "Fix macOS release smoke test for the first-run credential chooser",
+      "state": "closed",
+      "mergedAt": "2026-11-07T19:56:53Z",
+      "head": "b42e103344f5f4acb18fc4c1f60149481d9906d6",
+      "branch": "fix/macos-startup-smoke-first-run",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 27,
+      "title": "fix(macos): repair custom-keychain enumeration and complete deletion",
+      "state": "closed",
+      "mergedAt": "2026-11-07T17:28:27Z",
+      "head": "da3ba2dd95ba25e37ea831dc19765d3bd15c6455",
+      "branch": "fix/credential-main-review-20261107",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 26,
+      "title": "Add configurable credential storage for keychain-less machines",
+      "state": "closed",
+      "mergedAt": "2026-11-07T16:32:51Z",
+      "head": "46976afeaaa7e5cb03203884798c7663d27ebb2b",
+      "branch": "feat/credential-storage-backends",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 25,
+      "title": "Audit encryption, preserve providers, and document no-report store releases",
+      "state": "closed",
+      "mergedAt": "2026-11-07T11:24:35Z",
+      "head": "ef149b2edd4659205cbfb6efff4cfd6789659bde",
+      "branch": "feat/crypto-export-audit",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 23,
+      "title": "Embed an iOS shell with scoped folders and staged cloud workspaces",
+      "state": "closed",
+      "mergedAt": "2026-11-07T07:02:39Z",
+      "head": "8537a7e20d8fa6f36612ee29e725710a643d39f1",
+      "branch": "feat/ios-embedded-shell",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 24,
+      "title": "Replace process helpers with native APIs; document export compliance",
+      "state": "closed",
+      "mergedAt": "2026-11-07T02:29:14Z",
+      "head": "da7c3e940d022dd585708beac2de2cd5c3d10be2",
+      "branch": "fix/native-process-and-export",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 22,
+      "title": "Fix terminal focus, add top-toolbar toggle, simplify multi-rename",
+      "state": "closed",
+      "mergedAt": "2026-11-07T00:03:23Z",
+      "head": "b71da724fc4686e45ac8235c8cf604a184b02ec8",
+      "branch": "fix/runtime-followups",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 16,
+      "title": "Add native MadEdit2-based hex editor",
+      "state": "closed",
+      "mergedAt": "2026-11-06T14:12:07Z",
+      "head": "da52efc43c2043df9a4aa8cde69c25fbc616928d",
+      "branch": "feature/madedit2-hex-editor",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 12,
+      "title": "Complete Commander workflows: rename, collections, transfers, recovery and workspaces",
+      "state": "closed",
+      "mergedAt": null,
+      "head": "3564a5c8b30684f284063bdbbd10c7942e423fdc",
+      "branch": "feature/commander-file-operations",
+      "integration": "ancestor"
+    },
+    {
+      "kind": "pulls",
+      "number": 5,
+      "title": "Integrate permissive Flutter PDF editing with save and recovery flows",
+      "state": "closed",
+      "mergedAt": "2026-11-04T23:10:50Z",
+      "head": "af7ef4beb93f97c89697e3780d9fd0a882f3dbaf",
+      "branch": "feature/pdf-editor-integration",
+      "integration": "ancestor"
+    }
+  ],
+  "github_actions_accessed": false
+}

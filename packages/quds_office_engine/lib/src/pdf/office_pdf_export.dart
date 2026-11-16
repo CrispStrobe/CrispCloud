@@ -117,7 +117,9 @@ abstract final class OfficePdfExport {
           title: title,
         );
       case OpcPackageKind.unknown:
-        throw const FormatException('Unsupported Office package for PDF export');
+        throw const FormatException(
+          'Unsupported Office package for PDF export',
+        );
     }
   }
 
@@ -937,9 +939,25 @@ abstract final class OfficePdfExport {
         );
       }
     }
-    for (final LaidOutGlyph g in line.glyphs) {
-      sink.drawGlyph(g);
-      _paintGlyphChrome(sink, g);
+    for (var i = 0; i < line.glyphs.length;) {
+      final glyph = line.glyphs[i];
+      final actualText = glyph.actualText;
+      var end = i + 1;
+      if (actualText != null) {
+        while (end < line.glyphs.length &&
+            line.glyphs[end].actualText == actualText &&
+            line.glyphs[end].glyph.logicalIndex == glyph.glyph.logicalIndex &&
+            line.glyphs[end].sourceEnd == glyph.sourceEnd) {
+          end++;
+        }
+        sink.canvas.beginActualText(actualText);
+      }
+      for (var index = i; index < end; index++) {
+        sink.drawGlyph(line.glyphs[index]);
+        _paintGlyphChrome(sink, line.glyphs[index]);
+      }
+      if (actualText != null) sink.canvas.endActualText();
+      i = end;
     }
     if (line.overlayText != null &&
         line.overlayText!.isNotEmpty &&

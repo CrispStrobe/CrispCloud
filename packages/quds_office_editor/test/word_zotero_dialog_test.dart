@@ -831,7 +831,7 @@ void main() {
   ) async {
     final desktop = _DesktopLibrary()
       ..bibliographyHtml =
-          '<div><span style="font-variant: small-caps">Author</span>. '
+          '<div><span style="font-variant: small-caps; color:red">Author</span>. '
           '<i>A title</i>.</div>';
     final controller = await _openDialog(
       tester,
@@ -844,13 +844,27 @@ void main() {
     );
     await _connectDesktop(tester);
     await _documentAction(tester, 'Zotero bibliography', opensReview: true);
-    expect(find.textContaining('small caps'), findsOneWidget);
+    expect(find.textContaining('unsupported inline style'), findsOneWidget);
+    expect(find.textContaining('small caps'), findsNothing);
+    final preview = tester.widget<Text>(
+      find.byKey(const ValueKey('zotero-formatted-preview')),
+    );
+    expect(preview.textSpan!.toPlainText(), 'AUTHOR. A title.');
+    expect(preview.semanticsLabel, 'Author. A title.');
     expect(tester.takeException(), isNull);
     final use = find.widgetWithText(FilledButton, 'Use bibliography');
     await tester.ensureVisible(use);
     await tester.tap(use);
     await tester.pumpAndSettle();
     expect(controller.zoteroFields.last.cachedText, 'Author. A title.');
+    expect(
+      controller.zoteroFields.last.paragraph.inlines
+          .whereType<WmlRun>()
+          .singleWhere((run) => run.text == 'Author')
+          .properties
+          .smallCaps,
+      isTrue,
+    );
     expect(tester.takeException(), isNull);
   });
 

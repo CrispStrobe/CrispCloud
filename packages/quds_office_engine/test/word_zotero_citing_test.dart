@@ -1041,19 +1041,16 @@ void main() {
         true,
       ]);
       _call(session, 'Document.setBibliographyStyle', [
-        0,
-        36,
-        1,
-        1,
-        <int>[36],
+        -720,
+        720,
+        240,
+        240,
+        <int>[720],
         1,
       ]);
       _call(session, 'Document.complete');
       session.prepareReview();
-      expect(
-        session.formattingWarnings.any((v) => v.contains('hanging indents')),
-        isTrue,
-      );
+      expect(session.formattingWarnings, isEmpty);
       session.apply();
       final saved = WordDeserializer().readBytes(
         WordSerializer().writeBytes(document),
@@ -1062,6 +1059,10 @@ void main() {
       expect(result.metadata!['future'], 'retain');
       expect(result.instruction, startsWith(' ADDIN ZOTERO_BIBL '));
       expect(result.cachedText, 'Müller. Forschung.');
+      expect(result.paragraph.properties.indent.hanging, 36);
+      expect(result.paragraph.properties.indent.left, 36);
+      expect(result.paragraph.properties.lineSpacing, 1);
+      expect(result.paragraph.properties.spacingAfter, 12);
       expect(
         result.paragraph.inlines
             .whereType<WmlRun>()
@@ -1092,10 +1093,11 @@ void main() {
       _apply(session);
       expect(document.paragraphs.map((p) => p.text), [
         'Keep the body',
-        'First\nSecond',
+        'First',
+        'Second',
       ]);
       expect(session.caretAfter!.paragraph, same(document.paragraphs.last));
-      expect(session.caretAfter!.offset, 'First\nSecond'.length);
+      expect(session.caretAfter!.offset, 'Second'.length);
       expect(
         WordZotero.fields(document).single.kind,
         ZoteroFieldKind.bibliography,
