@@ -1,0 +1,23 @@
+{
+  "recorded_at": "2026-11-16T07:20:31.981766+00:00",
+  "github_actions_queried_or_awaited": false,
+  "actual_feature_tests_completed": 0,
+  "binary": "/workspace/scratch/6c8a74f9de7f/toolchain/bin/tmux",
+  "version": "tmux 3.5a",
+  "probe_command": [
+    "/workspace/scratch/6c8a74f9de7f/toolchain/bin/tmux",
+    "-S",
+    "/workspace/scratch/6c8a74f9de7f/toolchain/tmp/tmux-probe-48u5ga7t/server",
+    "-f",
+    "/dev/null",
+    "new-session",
+    "-d",
+    "-s",
+    "crispcloud-probe"
+  ],
+  "probe_exit_code": 1,
+  "probe_stdout": "",
+  "probe_stderr": "error connecting to /workspace/scratch/6c8a74f9de7f/toolchain/tmp/tmux-probe-48u5ga7t/server (Operation not permitted)\n",
+  "status": "skipped",
+  "reason": "Host policy prevents an unmodified tmux Unix-socket server."
+}

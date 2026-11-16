@@ -328,8 +328,7 @@ class PdfCanvas {
     List<int> glyphIds = const <int>[],
     String? visual,
   }) {
-    endText();
-    _buf.writeln('/Span << /ActualText ${_utf16Hex(logical)} >> BDC');
+    beginActualText(logical);
     beginText();
     setFillColor(color);
     _setFont(fontName, fontSize);
@@ -342,6 +341,17 @@ class PdfCanvas {
           .join();
       _buf.writeln('[<$hex>] TJ');
     }
+    endActualText();
+  }
+
+  /// Retains authored text while one or more following glyphs use a display
+  /// substitution, for example synthetic small capitals or a ligature.
+  void beginActualText(String text) {
+    endText();
+    _buf.writeln('/Span << /ActualText ${_utf16Hex(text)} >> BDC');
+  }
+
+  void endActualText() {
     endText();
     _buf.writeln('EMC');
   }

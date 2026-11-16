@@ -1,0 +1,76 @@
+{
+  "recorded_at": "2026-11-16T05:01:10.423565+00:00",
+  "scope": "Toolchain setup only; no runtime acceptance claim",
+  "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "root": "/workspace/scratch/43b2a351bc52/toolchain",
+  "flutter_commit": "737ba8f885dc774b53b442759999a312c9461e4e",
+  "native_hooks_disabled": false,
+  "tracked_manifests_changed": false,
+  "compile_link_execute_probes": {
+    "C": [
+      "normal",
+      "filtered"
+    ],
+    "Rust": [
+      "normal",
+      "filtered"
+    ]
+  },
+  "versions": {
+    "clang --version": {
+      "returncode": 0,
+      "stdout": "Debian clang version 19.1.7 (3+b1)\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /workspace/scratch/43b2a351bc52/toolchain/native/usr/lib/llvm-19/bin\n",
+      "stderr": ""
+    },
+    "clang++ --version": {
+      "returncode": 0,
+      "stdout": "Debian clang version 19.1.7 (3+b1)\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /workspace/scratch/43b2a351bc52/toolchain/native/usr/lib/llvm-19/bin\n",
+      "stderr": ""
+    },
+    "cmake --version": {
+      "returncode": 0,
+      "stdout": "cmake version 3.31.6\n\nCMake suite maintained and supported by Kitware (kitware.com/cmake).\n",
+      "stderr": ""
+    },
+    "ninja --version": {
+      "returncode": 0,
+      "stdout": "1.12.1\n",
+      "stderr": ""
+    },
+    "rustc -Vv": {
+      "returncode": 0,
+      "stdout": "rustc 1.100.0 (0ef1bc386 2026-11-09)\nbinary: rustc\ncommit-hash: 0ef1bc386059596dada8fb65b50425aab2ea637a\ncommit-date: 2026-11-09\nhost: x86_64-unknown-linux-gnu\nrelease: 1.100.0\nLLVM version: 23.1.5\n",
+      "stderr": ""
+    },
+    "cargo -Vv": {
+      "returncode": 0,
+      "stdout": "cargo 1.100.0 (3acc79c0c 2026-11-05)\nrelease: 1.100.0\ncommit-hash: 3acc79c0c841844675bc53a605922dbfc441e750\ncommit-date: 2026-11-05\nhost: x86_64-unknown-linux-gnu\nlibgit2: 1.9.6 (sys:0.21.0 vendored)\nlibcurl: 8.21.0-DEV (sys:0.4.90+curl-8.21.0 vendored ssl:OpenSSL/3.6.3)\nssl: OpenSSL 3.6.3 9 Jun 2026\nos: Debian 13.0.0 (trixie) [64-bit]\n",
+      "stderr": ""
+    },
+    "/workspace/scratch/43b2a351bc52/toolchain/flutter/bin/cache/dart-sdk/bin/dart --version": {
+      "returncode": 0,
+      "stdout": "Dart SDK version: 3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\"\n",
+      "stderr": ""
+    }
+  },
+  "free_disk": 39844356096,
+  "resolved_at": "2026-11-16T05:08:01.758559+00:00",
+  "linux_precache_success": true,
+  "web_precache_success": true,
+  "app_resolution_command": "flutter --no-version-check --suppress-analytics pub get --enforce-lockfile",
+  "app_resolution_exit_code": 0,
+  "app_manifests_sha256": {
+    "pubspec.yaml": "3ebf1028450dea3718c593ae959071dd55bef1ca6007e71f15c776a81958ac44",
+    "pubspec.lock": "a2eb22310a1faae09576624b86566111ea3306d404c4609e081c74680814c89e"
+  },
+  "manifest_git_diff_empty": true,
+  "native_pty_bootstrap": {
+    "command": "flutter test --no-pub --concurrency=1 --reporter=expanded test/terminal_process_test.dart",
+    "passed": 6,
+    "skipped": 1,
+    "failed": 0,
+    "skip": "Windows ConPTY fixture on Linux",
+    "log": "native-pty-bootstrap.log"
+  },
+  "sdk_launcher_note": "Direct launchers call the unchanged normally bootstrapped SDK snapshot and Dart binary to avoid duplicate-PID engine.stamp.tmp collisions across isolated exec namespaces; application graph and native hooks are unchanged."
+}

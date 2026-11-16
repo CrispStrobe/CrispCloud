@@ -1,0 +1,55 @@
+{
+  "recorded_utc": "2026-11-16T06:12:28.913162+00:00",
+  "command": [
+    "/workspace/scratch/5ee066981535/toolchain/run",
+    "flutter",
+    "test",
+    "--no-pub",
+    "--concurrency=1",
+    "--reporter=expanded",
+    "--dart-define=SSH_AGENT_VISUALS=true",
+    "--dart-define=SSH_AGENT_VISUAL_DIR=/workspace/scratch/5ee066981535/parity-design/visuals",
+    "test/ssh_agent_visual_test.dart",
+    "test/ssh_agent_test.dart"
+  ],
+  "passed": 24,
+  "failed": 0,
+  "visual_tests": 3,
+  "protocol_tests": 21,
+  "log": "agent-visuals.log",
+  "scope": "Production widgets with simulated local agent availability, real bundled Roboto and icons; layout inspection only. Unix agent sockets and physical devices are not exercised.",
+  "source_sha256": {
+    "lib/widgets/ssh_terminal_connect_dialog.dart": "fd185b98a68a2cb77531e1ceac492edf37ac66c64b41e642391ef0f16a91f027",
+    "lib/l10n/ssh_agent_strings.dart": "8a47a825bd2dd35b3f7d932cf6232b8a625629357560ab8fc606cfc6c1ddeba4",
+    "lib/models/ssh_terminal_config.dart": "c4091fdbc6808cda2af041ddffec36ebfc0a6b2607d7335511dbde53cd8cb6b9",
+    "lib/models/ssh_jump_host.dart": "163e54f9e1dc6a3eca855107c96235f5d604fb222b2685690bcfd775bf5db574",
+    "test/ssh_agent_visual_test.dart": "3ba4a1a9e132654eeed9f61a034e82f80810c5218e59f54ce5baae92e692b5cd"
+  },
+  "images": [
+    {
+      "file": "/workspace/scratch/5ee066981535/parity-design/visuals/agent-desktop.png",
+      "dimensions": [
+        800,
+        900
+      ],
+      "sha256": "9b2c9d526d8be4f2c241044fc1db28c6ef4314cfb6a88057fdfb41a8055e1cb9"
+    },
+    {
+      "file": "/workspace/scratch/5ee066981535/parity-design/visuals/agent-narrow.png",
+      "dimensions": [
+        320,
+        320
+      ],
+      "sha256": "2bab4ef712c86e877e7fd03b46bda11bb953130524ecc709adaac3b0c7e77e52"
+    },
+    {
+      "file": "/workspace/scratch/5ee066981535/parity-design/visuals/agent-unavailable-narrow.png",
+      "dimensions": [
+        320,
+        320
+      ],
+      "sha256": "8559b4f4add6f126cd195a9b09a96a367c97bf374fc4a92d3490d3faabc00d14"
+    }
+  ],
+  "visual_inspection": "All three PNGs inspected. Desktop includes independently agent-authenticated jump host, final-host-only forwarding disclosure and opt-in checkbox. 320x320 controls remain available; scrollable content shows full setting label and top-aligned checkbox. Missing-agent guidance is legible. No overflow or overlapping controls observed."
+}

@@ -1,6 +1,75 @@
-# Zotero validation — 15 November 2026
+# Zotero validation — 16 November 2026
 
-## Native citing continuation: current executed results
+## Current continuation: catalog insertion, rich fields and note numbering
+
+CrispCloud incorporates the Quds implementation qualified at
+`72691877bd9bafab761e655c13d0c9a0936b55bb`. Later documentation-only Quds pins
+retain those measured production/test bytes. The final manifest pins
+`b24718cc1468c34f494805eb7fb433a87f565503`; the delivery proof verifies that
+no managed implementation file changed. The host source qualified from
+tree `e56518372313b5d9c9698a26d25488bf331c1915`, saved remotely at
+`e5dc3dc5b0919fd79f913e1ad7aee427bafef09e` (the receipt records the identical
+local commit `a81f686f0e96958da42b055f4264b6f87b9c7b95`).
+
+| Executed local check | Result |
+| --- | ---: |
+| Canonical Zotero/Word engine, field, revision and note selection | 579 passed |
+| Canonical shared editor/controller/dialog/note/paste selection | 195 passed |
+| Actual Quds Studio native transport | 16 passed |
+| Actual CrispCloud host service/transport/credential/target/ribbon selection | 37 passed |
+| **Office/Word selection** | **827 passed** |
+| Incoming ODS metadata/conditional-affix integration | 85 passed |
+| Incoming terminal/session/forwarding/output-trigger selection | 226 passed |
+| **Total selected unit/widget tests** | **1,138 passed** |
+| Terminal shell smoke, counted separately | 3 passed; none skipped |
+| Real loopback SSH, counted separately | 6 passed; 1 separate optional PTY skip |
+| Canonical 32-target and host eight-target strict analysis | Clean |
+| Formatting and whitespace | Clean |
+| Normal and tracked-source vendor guards | **2,399 entries verified** |
+
+The canonical run measured 1,568 unchanged source/dependency-input files; the
+host run measured 1,595 unchanged files and an unchanged vendor manifest. The
+managed inventory contains **542 Quds files and 1,857 standalone parser files**.
+Parser bytes, hashes, modes and source pin remain unchanged. Runtime: official
+Flutter 3.47.8 / Dart 3.13.7, genuine locked dependencies, unchanged production
+constraints. Intermediate overlapping test runs are not added to these totals.
+
+The shared source now offers first-use native catalog insertion with document
+preferences and citation insertion in one staged undo step, protected mixed
+character formatting through editing/native conversion/DOCX roundtrip, and
+body-order note labels with supported numbering preferences and custom marks.
+
+Real native acceptance against official **Zotero 10.0.8** also passed for the
+actual Quds catalog/Studio transport and document driver/Word adapter. Native
+style selection and refresh produced a full first citation, `Ebd.`, and
+`Ebd., 34.` after DOCX save/reopen; mixed italics and bibliography survive. Live
+scenarios are reported separately from unit/widget totals. A third native
+scenario also passed the new first-use sequence: fresh document → native
+preferences → same-session seeded picker acceptance with page 12 → one staged
+apply → DOCX roundtrip with the linked footnote/style/locator retained. It
+captures 455 production input hashes and the exact executed kernel hash.
+The three scenarios use synthetic sources and do not establish a full compiled
+application or Word/LibreOffice interoperability qualification. Native locator
+popup editing remains unverified; its bounded automation attempt is retained
+separately from successful seeded-locator acceptance.
+
+See [current host evidence](validation/zotero-continuation-20261116/README.md),
+[host receipt](validation/zotero-continuation-20261116/final/host-validation-receipt.json),
+[terminal integration evidence](validation/zotero-continuation-20261116/terminal-integration/README.md),
+and [canonical/live evidence](https://github.com/CrispStrobe/quds_office_suite/tree/codex/zotero-support-20261116/docs/validation/zotero-continuation-20261116).
+
+Small caps and bibliography paragraph layout still require reviewed
+simplification; page-based note restarts/unsupported formats use explicit
+source-ID fallback. Active ODT citation transfer, full native builds, private
+accounts/keychain acceptance and opening the exported DOCX in Word/LibreOffice
+remain outside the executed qualification. Unsupported stories, protected or
+ambiguous fields and unsafe note conversions refuse processing.
+
+All sections below are historical evidence for their recorded source commits.
+No GitHub Actions were queried, polled, awaited or rerun; every new checkpoint
+uses `[skip ci]`.
+
+## Earlier native citing continuation: historical executed results
 
 Native desktop tools now use Zotero's source picker, document style preferences
 and complete CSL processor, with staged citation/bibliography updates, safe

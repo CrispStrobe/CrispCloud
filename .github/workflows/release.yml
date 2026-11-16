@@ -92,6 +92,9 @@ jobs:
       - name: Verify CrisperBooks consumer source
         run: python3 tool/verify_ebook_sources.py
 
+      - name: Verify reviewed SSH runtime
+        run: python3 tool/verify_dartssh2_vendor.py --require-tracked
+
       - name: Resolve vendored analyzer dependencies
         run: |
           (cd packages/quds_office_engine && dart pub get)

@@ -513,6 +513,7 @@ abstract final class WmlRunEdit {
         a.italic == b.italic &&
         a.underline == b.underline &&
         a.strike == b.strike &&
+        a.smallCaps == b.smallCaps &&
         a.color == b.color &&
         a.highlight == b.highlight &&
         a.fontSizeHalfPoints == b.fontSizeHalfPoints &&

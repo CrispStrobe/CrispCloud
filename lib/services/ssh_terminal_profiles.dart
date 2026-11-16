@@ -12,17 +12,26 @@ class SshTerminalProfiles {
     Future<String?> Function()? read,
     Future<void> Function(String value)? write,
   }) : _read = read ?? _readPreferences,
-       _write = write ?? _writePreferences;
+       _write = write ?? _writePreferences,
+       _lock = read == null ? _preferencesLock : AsyncLock() {
+    if ((read == null) != (write == null)) {
+      throw ArgumentError('Supply both SSH profile storage callbacks');
+    }
+  }
 
   static const preferencesKey = 'terminal_ssh_profiles_v1';
   static const maxProfiles = 50;
   static const maxStorageLength = 256 * 1024;
   final Future<String?> Function() _read;
   final Future<void> Function(String value) _write;
-  final _lock = AsyncLock();
+  static final _preferencesLock = AsyncLock();
+  final AsyncLock _lock;
 
-  static Future<String?> _readPreferences() async =>
-      (await SharedPreferences.getInstance()).getString(preferencesKey);
+  static Future<String?> _readPreferences() async {
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.reload();
+    return preferences.getString(preferencesKey);
+  }
 
   static Future<void> _writePreferences(String value) async {
     if (!await (await SharedPreferences.getInstance()).setString(
@@ -47,7 +56,7 @@ class SshTerminalProfiles {
     final data = jsonDecode(raw);
     if (data is! Map<String, dynamic> ||
         data['version'] is! int ||
-        (data['version'] != 1 && data['version'] != 2) ||
+        !const [1, 2, 3, 4].contains(data['version']) ||
         data['profiles'] is! List) {
       throw const FormatException('Unsupported SSH profile store');
     }
@@ -130,9 +139,18 @@ class SshTerminalProfiles {
     // Old v1 readers ignore unknown fields within a profile. A v2 envelope
     // makes them preserve/refuse a jump route instead of silently connecting
     // directly. Once upgraded, keep v2 even after removing the last route.
+    // v3 readers understand agent authentication and forwarding permission.
+    // Older readers must refuse the envelope instead of dropping that choice.
+    // v4 retains native tmux panes instead of silently falling back to a PTY.
     final version =
-        minimumVersion >= 2 ||
-            profiles.any((profile) => profile.config.jumpHosts.isNotEmpty)
+        minimumVersion >= 4 ||
+            profiles.any((profile) => profile.config.tmux?.controlMode == true)
+        ? 4
+        : minimumVersion >= 3 ||
+              profiles.any((profile) => profile.config.usesAgent)
+        ? 3
+        : minimumVersion >= 2 ||
+              profiles.any((profile) => profile.config.jumpHosts.isNotEmpty)
         ? 2
         : 1;
     final encoded = jsonEncode({

@@ -1,0 +1,202 @@
+{
+  "recorded_at": "2026-11-16T06:06:03.238394+00:00",
+  "scope": "Toolchain setup and baseline PTY smoke only; final feature acceptance is separate.",
+  "root": "/workspace/scratch/5ee066981535/toolchain",
+  "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "versions": {
+    "flutter": {
+      "command": [
+        "flutter",
+        "--version",
+        "--machine"
+      ],
+      "returncode": 0,
+      "stdout": "{\n  \"frameworkVersion\": \"3.47.8\",\n  \"channel\": \"stable\",\n  \"repositoryUrl\": \"https://github.com/flutter/flutter.git\",\n  \"frameworkRevision\": \"737ba8f885dc774b53b442759999a312c9461e4e\",\n  \"frameworkCommitDate\": \"2026-10-22 21:37:31 -0700\",\n  \"engineRevision\": \"cf636b1dfb818dd6a3ff16e390e93b1a036969c8\",\n  \"engineCommitDate\": \"2026-10-23 02:13:38.000Z\",\n  \"engineContentHash\": \"dfd2e6cb7d319db05e3bf1503f3e2ac60f6288a2\",\n  \"engineBuildDate\": \"2026-10-22 20:34:48.330\",\n  \"dartSdkVersion\": \"3.13.7\",\n  \"devToolsVersion\": \"2.60.0\",\n  \"flutterVersion\": \"3.47.8\",\n  \"flutterRoot\": \"/workspace/scratch/5ee066981535/toolchain/flutter\"\n}\n",
+      "stderr": ""
+    },
+    "dart": {
+      "command": [
+        "dart",
+        "--version"
+      ],
+      "returncode": 0,
+      "stdout": "Dart SDK version: 3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\"\n",
+      "stderr": ""
+    },
+    "clang": {
+      "command": [
+        "clang",
+        "--version"
+      ],
+      "returncode": 0,
+      "stdout": "Debian clang version 19.1.7 (3+b1)\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /workspace/scratch/5ee066981535/toolchain/native/usr/lib/llvm-19/bin\n",
+      "stderr": ""
+    },
+    "cmake": {
+      "command": [
+        "cmake",
+        "--version"
+      ],
+      "returncode": 0,
+      "stdout": "cmake version 3.31.6\n\nCMake suite maintained and supported by Kitware (kitware.com/cmake).\n",
+      "stderr": ""
+    },
+    "ninja": {
+      "command": [
+        "ninja",
+        "--version"
+      ],
+      "returncode": 0,
+      "stdout": "1.12.1\n",
+      "stderr": ""
+    },
+    "rustc": {
+      "command": [
+        "rustc",
+        "-Vv"
+      ],
+      "returncode": 0,
+      "stdout": "rustc 1.100.0 (0ef1bc386 2026-11-09)\nbinary: rustc\ncommit-hash: 0ef1bc386059596dada8fb65b50425aab2ea637a\ncommit-date: 2026-11-09\nhost: x86_64-unknown-linux-gnu\nrelease: 1.100.0\nLLVM version: 23.1.5\n",
+      "stderr": ""
+    },
+    "cargo": {
+      "command": [
+        "cargo",
+        "-Vv"
+      ],
+      "returncode": 0,
+      "stdout": "cargo 1.100.0 (3acc79c0c 2026-11-05)\nrelease: 1.100.0\ncommit-hash: 3acc79c0c841844675bc53a605922dbfc441e750\ncommit-date: 2026-11-05\nhost: x86_64-unknown-linux-gnu\nlibgit2: 1.9.6 (sys:0.21.0 vendored)\nlibcurl: 8.21.0-DEV (sys:0.4.90+curl-8.21.0 vendored ssl:OpenSSL/3.6.3)\nssl: OpenSSL 3.6.3 9 Jun 2026\nos: Debian 13.0.0 (trixie) [64-bit]\n",
+      "stderr": ""
+    }
+  },
+  "flutter_commit": "737ba8f885dc774b53b442759999a312c9461e4e",
+  "sdk_source_status": {
+    "command": [
+      "git",
+      "status",
+      "--short"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "native_hooks_disabled": false,
+  "compile_link_execute_probes": [
+    {
+      "environment": "normal",
+      "language": "C",
+      "command": [
+        "clang",
+        "/workspace/scratch/5ee066981535/toolchain/tmp/probe.c",
+        "-o",
+        "/workspace/scratch/5ee066981535/toolchain/tmp/probe-c"
+      ],
+      "returncode": 0,
+      "execution_returncode": 0
+    },
+    {
+      "environment": "normal",
+      "language": "Rust",
+      "command": [
+        "rustc",
+        "/workspace/scratch/5ee066981535/toolchain/tmp/probe.rs",
+        "-o",
+        "/workspace/scratch/5ee066981535/toolchain/tmp/probe-rs"
+      ],
+      "returncode": 0,
+      "execution_returncode": 0
+    },
+    {
+      "environment": "filtered",
+      "language": "C",
+      "command": [
+        "clang",
+        "/workspace/scratch/5ee066981535/toolchain/tmp/probe.c",
+        "-o",
+        "/workspace/scratch/5ee066981535/toolchain/tmp/probe-c"
+      ],
+      "returncode": 0,
+      "execution_returncode": 0
+    },
+    {
+      "environment": "filtered",
+      "language": "Rust",
+      "command": [
+        "rustc",
+        "/workspace/scratch/5ee066981535/toolchain/tmp/probe.rs",
+        "-o",
+        "/workspace/scratch/5ee066981535/toolchain/tmp/probe-rs"
+      ],
+      "returncode": 0,
+      "execution_returncode": 0
+    }
+  ],
+  "unix_and_tcp_socket_probes": {
+    "unix": {
+      "ok": false,
+      "error": "PermissionError(1, 'Operation not permitted')"
+    },
+    "tcp": {
+      "ok": true,
+      "address": "('127.0.0.1', 47831)"
+    }
+  },
+  "flutter_precache": {
+    "command": [
+      "flutter",
+      "precache",
+      "--linux",
+      "--web"
+    ],
+    "exit_code": 0,
+    "log": "flutter-precache-final.log"
+  },
+  "baseline_resolution": {
+    "command": [
+      "flutter",
+      "pub",
+      "get",
+      "--enforce-lockfile",
+      "--offline"
+    ],
+    "exit_code": 0,
+    "log": "app-pub-get-baseline-offline.log",
+    "cache_warming": "287 official hosted package archives verified against exact SDK/application lockfile SHA-256 values. Git dependencies fetched normally. Slow online metadata refresh was interrupted and resolution completed offline with same lockfile and production graph."
+  },
+  "app_manifests_sha256": {
+    "pubspec.yaml": "3ebf1028450dea3718c593ae959071dd55bef1ca6007e71f15c776a81958ac44",
+    "pubspec.lock": "a2eb22310a1faae09576624b86566111ea3306d404c4609e081c74680814c89e"
+  },
+  "app_manifest_diff": {
+    "command": [
+      "git",
+      "diff",
+      "--",
+      "pubspec.yaml",
+      "pubspec.lock"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "free_disk": 22694633472,
+  "runner": "/workspace/scratch/5ee066981535/toolchain/run",
+  "sdk_launcher_note": "Scratch direct launcher calls unchanged normally bootstrapped pinned Flutter tool snapshot/Dart binary to avoid duplicate PID engine.stamp.tmp collisions across isolated exec namespaces.",
+  "sdk_binary_sha256": {
+    "bin/cache/dart-sdk/bin/dart": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb",
+    "bin/cache/dart-sdk/bin/dartaotruntime": "3599c987228070f342c80d29353f496c8efc72c620c75fc4d59e5671666b2f72",
+    "bin/cache/flutter_tools.snapshot": "803f5eabe0f147bbd7cbfb5810d012f88d909d092d15de36a62be43c42af0da9"
+  },
+  "native_pty_bootstrap": {
+    "command": [
+      "flutter",
+      "test",
+      "--no-pub",
+      "--concurrency=1",
+      "--reporter=expanded",
+      "test/terminal_process_test.dart"
+    ],
+    "final_test_line": "00:00 +6 ~1: All tests passed!",
+    "log": "native-pty-bootstrap.log"
+  }
+}

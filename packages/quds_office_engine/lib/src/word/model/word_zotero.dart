@@ -731,6 +731,224 @@ abstract final class WordZotero {
         _standaloneComplexField(field);
   }
 
+  /// Native bibliography processing may replace a complete, contiguous range
+  /// of entry paragraphs. Ordinary inline edits keep their narrower contract.
+  /// Every inline and every paragraph must belong exclusively to this field,
+  /// in one real block list; a flattened view across cells/sections is unsafe.
+  static bool canReplaceNativeBibliography(
+    WmlDocument document,
+    WmlZoteroField field,
+  ) {
+    if (field.kind != ZoteroFieldKind.bibliography ||
+        !field.isValid ||
+        field.locked ||
+        field.nested ||
+        field.opaqueMetadata ||
+        field.paragraphs.isEmpty ||
+        field.paragraphs.length > 10000 ||
+        field._contents.any(
+          (inline) =>
+              inline is! WmlRun ||
+              inline.inlineVisual != null ||
+              inline.noteRefId != null ||
+              inline.hyperlink != null ||
+              inline.commentIds.isNotEmpty ||
+              (!identical(inline, field.run) &&
+                  inline.fieldInstruction != null),
+        )) {
+      return false;
+    }
+    final slot = WordTree.locate(document, field.paragraph);
+    if (slot == null ||
+        slot.index + field.paragraphs.length > slot.parent.length) {
+      return false;
+    }
+    for (var i = 0; i < field.paragraphs.length; i++) {
+      final paragraph = field.paragraphs[i];
+      if (!identical(slot.parent[slot.index + i], paragraph) ||
+          paragraph.contentControlWrappers.isNotEmpty ||
+          paragraph.properties.bookmarkName != null ||
+          paragraph.properties.noteId != null ||
+          paragraph.properties.pageNumberField) {
+        return false;
+      }
+    }
+    if (field.paragraphs.length == 1) {
+      return canReplaceFormattedBibliography(field);
+    }
+    if (field.start != 0 ||
+        field.end != field.paragraphs.last.text.length ||
+        field.paragraphs.any(
+          (paragraph) => paragraph.properties.fieldInstruction != null,
+        )) {
+      return false;
+    }
+    final boundaries = field._boundaries.values.expand((value) => value);
+    final first = field._boundaries[field.paragraph];
+    final last = field._boundaries[field.paragraphs.last];
+    if (first == null ||
+        first.length < 3 ||
+        first.first.kind != WmlFieldBoundaryKind.begin ||
+        first.last.kind != WmlFieldBoundaryKind.separate ||
+        first
+            .skip(1)
+            .take(first.length - 2)
+            .any(
+              (boundary) => boundary.kind != WmlFieldBoundaryKind.instruction,
+            ) ||
+        last == null ||
+        last.length != 1 ||
+        last.single.kind != WmlFieldBoundaryKind.end ||
+        !identical(field.paragraph.inlines.first, first.first) ||
+        !identical(field.paragraphs.last.inlines.last, last.single) ||
+        boundaries.length != first.length + 1) {
+      return false;
+    }
+    final owned = Set<WmlInline>.identity()
+      ..addAll(field._contents)
+      ..addAll(boundaries);
+    final inlines = field.paragraphs.expand((paragraph) => paragraph.inlines);
+    return owned.length == inlines.length && inlines.every(owned.contains);
+  }
+
+  /// Builds one native bibliography field spanning its entry paragraphs.
+  /// Structural XHTML breaks become paragraphs; soft breaks remain in runs.
+  static List<WmlParagraph> nativeBibliographyParagraphs({
+    required String instruction,
+    required String text,
+    ZoteroFormattedText? formattedText,
+    WmlParagraphProps? paragraphProperties,
+    WmlRunProps? runProperties,
+  }) {
+    _validateNativeInstruction(instruction, ZoteroFieldKind.bibliography);
+    _assertFormattedText(text, formattedText);
+    final entries =
+        formattedText?.toParagraphRuns(baseProperties: runProperties) ??
+        [
+          for (final entry in text.split('\n'))
+            <WmlRun>[WmlRun(text: entry, properties: runProperties?.copy())],
+        ];
+    if (entries.isEmpty || entries.length > 10000) {
+      throw const FormatException(
+        'The Zotero bibliography has too many entries.',
+      );
+    }
+    final result = <WmlParagraph>[];
+    for (final entry in entries) {
+      final properties =
+          paragraphProperties?.copy() ??
+          WmlParagraphProps(styleId: 'Bibliography');
+      // New entries inherit modeled formatting, never duplicate native opaque
+      // paragraph XML or structural aliases from the first source paragraph.
+      properties
+        ..sourcePropertiesXml = null
+        ..importedValues = null
+        ..fieldInstruction = null
+        ..fieldBegin = false
+        ..fieldSeparate = false
+        ..fieldEnd = false
+        ..pageNumberField = false
+        ..bookmarkName = null
+        ..sourceBookmarkName = null;
+      if (result.isNotEmpty) {
+        properties
+          ..pageBreakBefore = false
+          ..columnBreakBefore = false
+          ..numId = null
+          ..listLabel = null
+          ..listRestart = null
+          ..headingLevel = null
+          ..dropCapLines = 0;
+      }
+      result.add(
+        WmlParagraph(properties: properties, inlines: <WmlInline>[...entry]),
+      );
+    }
+    result.first.inlines.insertAll(0, [
+      WmlFieldBoundary(kind: WmlFieldBoundaryKind.begin),
+      WmlFieldBoundary(
+        kind: WmlFieldBoundaryKind.instruction,
+        text: instruction,
+      ),
+      WmlFieldBoundary(kind: WmlFieldBoundaryKind.separate),
+    ]);
+    result.last.inlines.add(WmlFieldBoundary(kind: WmlFieldBoundaryKind.end));
+    return result;
+  }
+
+  /// Replaces a native bibliography without replacing its first paragraph
+  /// identity. Existing entry paragraph properties are retained on refresh;
+  /// Zotero's staged layout can then override their layout as one undo step.
+  static void replaceNativeBibliography(
+    WmlDocument document,
+    WmlZoteroField field, {
+    required String instruction,
+    required String text,
+    ZoteroFormattedText? formattedText,
+  }) {
+    if (!canReplaceNativeBibliography(document, field)) {
+      throw UnsupportedError(
+        'This bibliography does not own complete contiguous entry paragraphs.',
+      );
+    }
+    _assertCurrent(field);
+    _validateNativeInstruction(instruction, ZoteroFieldKind.bibliography);
+    for (final paragraph in field.paragraphs) {
+      WordContentControls.assertCanEdit(paragraph, 0, paragraph.text.length);
+    }
+    if (formattedText == null && text == field.cachedText) {
+      _replaceInstruction(field, instruction);
+      return;
+    }
+    final replacements = nativeBibliographyParagraphs(
+      instruction: instruction,
+      text: text,
+      formattedText: formattedText,
+      paragraphProperties: field.paragraph.properties,
+      runProperties: WmlRunEdit.propsAt(field.paragraph, 0),
+    );
+    final slot = WordTree.locate(document, field.paragraph)!;
+    for (
+      var i = 0;
+      i < replacements.length && i < field.paragraphs.length;
+      i++
+    ) {
+      final original = field.paragraphs[i];
+      original.inlines
+        ..clear()
+        ..addAll(replacements[i].inlines);
+      _clearParagraphField(original);
+      replacements[i] = original;
+    }
+    slot.parent.replaceRange(
+      slot.index,
+      slot.index + field.paragraphs.length,
+      replacements,
+    );
+  }
+
+  /// Removes a standalone native bibliography while retaining its first empty
+  /// paragraph, matching ordinary field deletion and preserving a caret host.
+  static void deleteNativeBibliography(
+    WmlDocument document,
+    WmlZoteroField field,
+  ) {
+    if (!canReplaceNativeBibliography(document, field)) {
+      throw UnsupportedError('This bibliography cannot be removed safely.');
+    }
+    _assertCurrent(field);
+    for (final paragraph in field.paragraphs) {
+      WordContentControls.assertCanEdit(paragraph, 0, paragraph.text.length);
+    }
+    final slot = WordTree.locate(document, field.paragraph)!;
+    field.paragraph.inlines.clear();
+    _clearParagraphField(field.paragraph);
+    slot.parent.removeRange(
+      slot.index + 1,
+      slot.index + field.paragraphs.length,
+    );
+  }
+
   static void _assertFormattedText(
     String text,
     ZoteroFormattedText? formattedText,

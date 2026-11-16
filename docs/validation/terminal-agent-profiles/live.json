@@ -1,0 +1,32 @@
+{
+  "phase": "live",
+  "command": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+    "tool/run_terminal_live_smoke.py",
+    "--flutter",
+    "flutter",
+    "--with-unix-agent"
+  ],
+  "head_at_start": "9753a980f6bfe94abe7940f59bd19287e4f65c57",
+  "started_utc": "2026-11-16T06:31:25.167514+00:00",
+  "watched_source_count": 5511,
+  "github_actions_queried_or_awaited": false,
+  "suite_count": 3,
+  "suite_files": [
+    "test/ssh_terminal_live_test.dart",
+    "test/ssh_port_forwarding_live_test.dart",
+    "test/ssh_agent_live_test.dart"
+  ],
+  "finished_utc": "2026-11-16T06:32:40.100882+00:00",
+  "seconds": 74.929,
+  "exit_code": 0,
+  "changed_sources": [],
+  "counts": {
+    "passed": 17,
+    "skipped": 2,
+    "failed": 0
+  },
+  "final_test_line": "00:50 +17 ~2: All tests passed!",
+  "source_inventory": "live-source-sha256.json.gz",
+  "log": "live.log"
+}

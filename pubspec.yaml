@@ -216,6 +216,10 @@ dev_dependencies:
 dependency_overrides:
   legacy_doc_parser:
     path: packages/legacy_doc_parser
+  # Reviewed 4.1.0 runtime with bounded agent/authentication lifecycle behavior.
+  # Exact source hashes and the local patch: packages/dartssh2/UPSTREAM.json.
+  dartssh2:
+    path: packages/dartssh2
   crisp_ebook:
     git:
       url: https://github.com/CrispStrobe/crisperbooks.git

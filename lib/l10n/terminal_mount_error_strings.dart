@@ -1,6 +1,11 @@
+import 'package:dartssh2/dartssh2.dart'
+    show SSHAuthAbortError, SSHInternalError;
 import 'package:flutter/widgets.dart';
+
 import '../services/terminal_mount_failure.dart';
+import '../services/ssh_agent.dart';
 import 'provider_operation_strings.dart';
+import 'ssh_agent_strings.dart';
 
 String localizedTerminalMountError(BuildContext context, Object error) =>
     localizedTerminalMountErrorForLanguage(
@@ -9,16 +14,35 @@ String localizedTerminalMountError(BuildContext context, Object error) =>
     );
 
 String localizedTerminalMountErrorForLanguage(String language, Object error) {
-  if (error is! TerminalMountFailure)
+  final agentError = _knownAgentError(error);
+  if (agentError != null) return sshAgentText(language, agentError.message);
+  if (error is! TerminalMountFailure) {
     return localizedProviderErrorForLanguage(language, error);
+  }
   final template = (_messages[language] ?? _messages['en']!)[error.code.name]!;
   return template.replaceAllMapped(RegExp(r'\{([A-Za-z]+)\}'), (match) {
     final value = error.arguments[match.group(1)];
     if (value == null) return match.group(0)!;
-    return value is TerminalMountFailure
-        ? localizedTerminalMountErrorForLanguage(language, value)
-        : localizedProviderErrorForLanguage(language, value);
+    return localizedTerminalMountErrorForLanguage(language, value);
   });
+}
+
+SshAgentException? _knownAgentError(Object error) {
+  var cause = error;
+  // dartssh2 wraps asynchronous signer failures, then may wrap that transport
+  // failure again while aborting authentication. Only recognized agent causes
+  // are unwrapped; unrelated SSH errors retain their existing presentation.
+  for (var depth = 0; depth < 8; depth++) {
+    if (cause is SshAgentException) return cause;
+    if (cause is SSHInternalError) {
+      cause = cause.error;
+    } else if (cause is SSHAuthAbortError && cause.reason != null) {
+      cause = cause.reason!;
+    } else {
+      return null;
+    }
+  }
+  return null;
 }
 
 const Map<String, Map<String, String>> _messages = {
@@ -38,8 +62,7 @@ const Map<String, Map<String, String>> _messages = {
         "FUSE mounts are only available on macOS, Linux, and Windows desktop.",
   },
   "de": {
-    "sshPoolFull":
-        "Der SSH-Sitzungspool ist voll (maximal {max} gleichzeitige Sitzungen).",
+    "sshPoolFull": "Der SSH-Sitzungspool ist voll (maximal {max} gleichzeitige Sitzungen).",
     "sshDisconnected": "Sitzung {session} ist nicht verbunden",
     "sshNoShell": "Keine aktive Shell für Sitzung {session}",
     "sshUnknownSession": "Unbekannte Sitzungs-ID: {session}",
@@ -50,8 +73,7 @@ const Map<String, Map<String, String>> _messages = {
     "sshInvalidKey": "Ungültiger privater SSH-Schlüssel",
     "sshCommand": "Befehlsausführung fehlgeschlagen: {error}",
     "mountDuplicate": "Einhängepunkt „{path}“ ist bereits eingehängt",
-    "mountUnsupported":
-        "FUSE-Laufwerke sind nur auf macOS-, Linux- und Windows-Desktops verfügbar.",
+    "mountUnsupported": "FUSE-Laufwerke sind nur auf macOS-, Linux- und Windows-Desktops verfügbar.",
   },
   "fr": {
     "sshPoolFull":
@@ -66,8 +88,7 @@ const Map<String, Map<String, String>> _messages = {
     "sshInvalidKey": "Clé privée SSH invalide",
     "sshCommand": "Échec de la commande : {error}",
     "mountDuplicate": "Le point de montage « {path} » est déjà monté",
-    "mountUnsupported":
-        "Les montages FUSE sont disponibles uniquement sur macOS, Linux et Windows.",
+    "mountUnsupported": "Les montages FUSE sont disponibles uniquement sur macOS, Linux et Windows.",
   },
   "es": {
     "sshPoolFull": "Se alcanzó el máximo de sesiones SSH ({max} simultáneas).",
@@ -81,8 +102,7 @@ const Map<String, Map<String, String>> _messages = {
     "sshInvalidKey": "Clave privada SSH no válida",
     "sshCommand": "Error al ejecutar el comando: {error}",
     "mountDuplicate": "El punto de montaje «{path}» ya está montado",
-    "mountUnsupported":
-        "Los montajes FUSE solo están disponibles en macOS, Linux y Windows de escritorio.",
+    "mountUnsupported": "Los montajes FUSE solo están disponibles en macOS, Linux y Windows de escritorio.",
   },
   "pt": {
     "sshPoolFull":
@@ -97,8 +117,7 @@ const Map<String, Map<String, String>> _messages = {
     "sshInvalidKey": "Chave privada SSH inválida",
     "sshCommand": "Falha na execução do comando: {error}",
     "mountDuplicate": "O ponto de montagem «{path}» já está montado",
-    "mountUnsupported":
-        "As montagens FUSE só estão disponíveis em macOS, Linux e Windows de ambiente de trabalho.",
+    "mountUnsupported": "As montagens FUSE só estão disponíveis em macOS, Linux e Windows de ambiente de trabalho.",
   },
   "zh": {
     "sshPoolFull": "SSH 会话已满（最多同时 {max} 个会话）。",

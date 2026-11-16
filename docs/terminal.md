@@ -370,7 +370,9 @@ attempts. Traffic refreshes the SSH activity clock.
 Closing the dialog leaves listeners running. **Stop** ends a listener and all
 its clients. Disconnect, natural SSH closure, session replacement and service
 disposal also close owned listeners. Nothing is persisted or restarted on
-reconnect. Late socket/channel results are closed after cancellation; a pending
+reconnect unless you explicitly save a forwarding profile and enable its
+**Auto-start** setting. Live listener IDs and allocated ports are never saved.
+Late socket/channel results are closed after cancellation; a pending
 or active remote forwarding operation whose cancellation cannot be confirmed
 closes the SSH transport so a remote listener cannot outlive its ownership.
 The manager reports the closure rather than silently claiming a successful stop.
@@ -379,9 +381,47 @@ The forwarding bridge preserves backpressure and both half-close directions,
 allowing a server to send its final response after the requesting client closes
 its write side. Dial operations have a 15-second deadline and SOCKS negotiation
 has a 10-second deadline. Browser builds cannot listen on native TCP sockets;
-the forwarding action remains unavailable there. SSH-agent integration,
-forwarding-profile persistence, shared connections across terminal tabs and
-native tmux control mode remain separate work.
+the forwarding action remains unavailable there. Sharing SSH connections across
+terminal tabs remains separate work. Native tmux panes share one verified SSH
+route within their own control workspace, as described below.
+
+### Saved forwarding profiles
+
+In **Port forwarding**, choose **New saved profile**, or **Save as profile** on
+an existing listener. Give the profile a name and review its local, remote or
+SOCKS5 settings. Saving does not start another listener. Choose **Start** to
+start it now; the manager recognizes an already active listener with the same
+settings instead of creating a duplicate.
+
+Profiles belong to the exact server, port, username, gateway and ordered jump
+route shown in the dialog. A different route has a separate list. Authentication
+method and shell/tmux/Screen launch mode do not change that route identity.
+Profiles contain endpoint and forwarding settings only; no passwords, private
+keys, agent material, active-client state or allocated ephemeral port is saved.
+There are at most 50 profiles overall and 16 for one route.
+
+**Auto-start** is off by default. Enabling it starts the recipe on the next
+successful, host-key-verified connection to that exact route, including a manual
+reconnect. Startup waits until the shell is opened; a canceled tmux/Screen picker,
+failed authentication or failed shell does not start listeners. A requested
+port of zero gets a fresh allocation. This setting does not reconnect or
+authenticate in the background.
+
+**Stop** ends the current listener and keeps it stopped for that connection.
+It does not turn off the saved Auto-start setting for a later connection.
+Changing a profile's forwarding settings stops its current listeners before
+saving the replacement; editing its name or Auto-start setting alone leaves
+current listeners running. **Delete and stop** stops matching listeners across
+open sessions and removes the recipe. If cleanup cannot be confirmed, the
+recipe remains available and the error is shown. These actions also cancel
+queued starts, so a late result cannot recreate a deleted or replaced recipe.
+
+Startup errors stay beside the saved profile and failed listener, and automatic
+startup failures also appear as an in-app message. A failed listener does not
+prevent the other saved profiles from starting unless the SSH transport itself
+has ended. Preferences are reloaded under a shared mutation lock; stale editors,
+duplicates, corrupt stores and unknown schema versions fail without replacing
+existing saved data.
 
 ## Broadcast input
 
@@ -404,14 +444,66 @@ connections the user selected and is never saved in arrangements or profiles.
 
 ## SSH authentication, reconnect, tmux and screen
 
-Open **Connect via SSH** and select **Password** or **Private key** under
+Open **Connect via SSH** and select **Password**, **Private key** or **SSH agent** under
 Authentication. Key mode accepts a PEM/OpenSSH private key and an optional
 passphrase for an encrypted key. Use **Paste private key** to preserve the key's
 line breaks while keeping it masked, or reveal the field to edit it across
 multiple lines. The passphrase decrypts the key locally; it is not used as the
 server login password. Invalid keys or an incorrect passphrase fail before a
-connection is opened. Both authentication modes use the same host-key checks
+connection is opened. All authentication modes use the same host-key checks
 and direct TCP or explicit WebSocket gateway transport.
+
+### Local SSH agent and agent forwarding
+
+On native Linux/macOS, **SSH agent** uses the agent named by the application's
+`SSH_AUTH_SOCK` environment variable. Start and populate the agent outside
+CrispCloud, then launch CrispCloud with that environment. The app does not start
+an agent, search key files, execute `ssh-add`, or copy private keys. An unavailable
+agent, empty supported key list, refused signature or timeout produces an
+actionable error. Agent mode does not fall back to password authentication.
+
+Agent authentication is selected independently for each jump host and the
+final destination. Each server's host key is accepted before a signature is
+requested for it. Supported identities are Ed25519, RSA with SHA-2-512 or
+SHA-2-256, and ECDSA `nistp256`, `nistp384` or `nistp521`. RSA/SHA-1 fallback,
+SSH certificates, `sk-*` security-key algorithms and agent extensions are not
+implemented. A device or external agent may still provide a supported ordinary
+key type; actual device/agent acceptance needs validation on that platform.
+Destination-restricted OpenSSH agent keys that require session-bind extensions
+are not supported by this implementation.
+
+**Forward SSH agent** is a separate, default-off checkbox. It can accompany
+password, private-key or agent authentication. The form explains that programs
+on the final SSH server can request signatures from the connection's agent keys
+while connected. Jump hosts never receive that forwarded capability. Select it
+only for a destination where you intend to allow those signature requests.
+Server refusal is reported instead of silently opening a session without the
+selected forwarding behavior.
+
+Forwarding exposes a frozen public-key list and signing for those keys only.
+Keys added to the local agent later do not become visible to the existing
+connection. Removing a key or locking the agent can make later requests fail.
+Adding/removing keys, locking/unlocking the agent, arbitrary extensions and
+requests for a different key are rejected. Disconnect, remote closure and
+session replacement revoke this connection's agent access before asynchronous
+transport cleanup begins.
+
+The saved authentication choice and forwarding permission are visible again in
+the reconnect form. No agent socket path, public-key comment or private-key
+material enters saved profiles or arrangements. Browser, Windows and mobile
+agent backends are not implemented. A native app must also have operating-system
+permission to open its agent socket; setting the environment variable does not
+grant that permission.
+
+Agent work is bounded: 64 public identities, four concurrent local transactions,
+256 KiB request/response frames, a 10-second transaction deadline and 32 forwarded
+requests per second. Incoming SSH agent channels have an additional 16-channel
+limit, 64 KiB receive windows, bounded framing, input/output backpressure and
+deadlines for incomplete, stalled or closed operations. Source provenance and
+the local dependency hardening are in
+[the pinned runtime record](../packages/dartssh2/UPSTREAM.md).
+
+### Session modes and reconnect
 
 The Session selector offers five modes:
 
@@ -423,11 +515,12 @@ The Session selector offers five modes:
 | **Create new screen** | Creates a new GNU screen session with the requested name. |
 | **Attach existing screen** | Resolves an exact existing screen name or full `PID.name` ID, then joins that session. Missing or ambiguous targets fail. |
 
-The remote server must have `tmux` available on the SSH command path and allow
-PTY execution. Names contain 1–64 ASCII letters, digits, underscores or hyphens
+The remote server must have `tmux` available on the SSH command path. Ordinary
+attachment requires PTY execution; **Native tmux panes** uses a control channel
+without a PTY. Names contain 1–64 ASCII letters, digits, underscores or hyphens
 and cannot start with a hyphen. This deliberately excludes tmux target patterns,
 window/pane separators and shell syntax. The service validates names before
-replacing a running shell. It launches tmux through an SSH PTY exec request,
+replacing a running shell. Ordinary attachment launches tmux through an SSH PTY exec request,
 never by typing a startup command into the terminal. It does not detach other
 attached clients. Missing tmux, a missing attach-only target, and server errors
 remain visible in terminal output; no fresh-shell fallback hides the failure.
@@ -480,11 +573,75 @@ See the upstream [tmux getting started guide](https://github.com/tmux/tmux/wiki/
 for the default bindings and remote session model.
 See also the [GNU screen invocation manual](https://www.gnu.org/software/screen/manual/html_node/Invoking-Screen.html).
 
+### Native tmux windows and panes
+
+In **Connect via SSH**, choose **Create or attach tmux** or **Attach existing
+tmux**, enter the session name, and enable **Native tmux panes**. This option is
+off by default and requires tmux **3.2 or later** on the remote command path.
+It uses the same independently verified destination/jump route, authentication
+choices and explicit agent permission as ordinary SSH. Saved SSH profiles,
+arrangements and reconnect forms retain the selected mode without credentials.
+Saving native mode upgrades their store envelope to v4 so older applications
+preserve the record instead of silently treating it as an ordinary PTY.
+
+Remote windows appear as a scrollable tab strip inside this terminal tab.
+Each remote pane has its own emulator, selection, scrollback and keyboard state.
+The remote cell layout determines pane geometry. Choose a window or click a pane
+to select it remotely; the pane picker remains available when the display is too
+small to show the complete layout. Window/pane creation and layout changes from
+another tmux client are reflected after the next bounded metadata refresh.
+
+The tmux toolbar provides **New window**, horizontal and vertical splits, local
+pane zoom, copy, paste and search. Window creation and splits start remote
+processes using that server's normal tmux settings. Local zoom only changes the
+view. Resizing updates this client's overall size; the remote tmux window-size
+policy still determines shared geometry. Custom terminal key bindings and
+saved output triggers apply to the individual pane emulators. Clipboard access
+is explicit; output escape sequences cannot read or write the local clipboard.
+
+**Detach** closes this control client and its SSH route without sending a
+kill-session, kill-window or kill-pane command. It leaves remote processes
+subject to the server's normal tmux settings, including `destroy-unattached`.
+Hiding the terminal retains the connection. Remote pane identities are not
+added to the cross-tab broadcast group: changing a selected tmux pane must not
+silently change an approved broadcast destination.
+
+This first native workspace has explicit limits:
+
+- At most **16 windows and 64 panes** on one control connection, with bounded
+  metadata, response sizes, pane buffers and queued input. Oversized or malformed
+  protocol data closes the connection and leaves the remote session alone.
+- Initial attachment captures up to **200 history lines** plus the visible
+  screen for each pane, within its local buffer budget. It restores the active
+  screen, saved primary screen when an alternate screen is active, pending
+  parser bytes, cursor and common input modes. It does not recreate original
+  soft-wrap metadata, custom tab stops or every terminal/SGR state. Some
+  full-screen applications may need to redraw after attachment.
+- Keyboard, IME, paste and custom mappings target the selected remote pane.
+  Input goes directly to that pane; tmux's interactive prefix bindings and
+  copy-mode interface are not rendered. Use ordinary PTY tmux mode for those
+  interfaces, or the native toolbar and pane search/copy controls here.
+  Mouse/focus protocol forwarding and every advanced keyboard protocol are
+  not yet qualified. tmux itself answers application terminal queries; the
+  second emulator's automatic replies are suppressed.
+- Pane search, copy/paste and output triggers are available in the native
+  workspace. The ordinary panel's command-history/status actions and mobile
+  prefix row are separate controls and are not mapped onto native panes yet.
+- The workspace is contained within the existing terminal tab. Independent
+  operating-system windows and automatic reconnection/restoration remain work.
+
+The implementation follows the upstream
+[control-mode protocol](https://github.com/tmux/tmux/wiki/Control-Mode).
+[Local validation and its limits](validation/terminal-tmux-control/README.md)
+distinguish deterministic protocol/widget coverage and actual SSH transport
+checks from running a real tmux daemon. The current validation host rejects Unix
+sockets, so actual tmux-server behavior requires a separate platform run.
+
 ### Jump hosts
 
 The connection form's **Jump hosts** section supports up to three ordered SSH
 hops before the destination. Add or edit each hop and enter its own username
-and password or private key/passphrase. The app verifies the host key of every
+and password, private key/passphrase or local SSH-agent authentication. The app verifies the host key of every
 hop and the final destination independently, using that endpoint's host and
 port. A rejected key or failed hop ends that attempt and releases its route.
 
@@ -497,12 +654,14 @@ Without a jump host, the existing direct/gateway behavior is unchanged.
 Reconnect, saved profiles and arrangements retain hop addresses, usernames and
 authentication methods, but recursively remove every hop's password, private
 key and passphrase. Reopening a saved route requests credentials for every
-endpoint. Repeated endpoints and routes longer than three hops are rejected.
+endpoint that uses password/key authentication; agent hops use the current local
+agent. Repeated endpoints and routes longer than three hops are rejected.
 One complete route occupies one slot in the existing five-session application
 pool, although it owns multiple SSH clients internally.
 
-Jump hosts do not add SSH-agent authentication, agent forwarding or persistent
-connection multiplexing. Native forwarding controls now use the final verified
+Jump hosts support independent agent authentication, but never receive forwarded
+agent access. Persistent connection multiplexing remains unimplemented.
+Native forwarding controls use the final verified
 connection, as described in [SSH port forwarding](#ssh-port-forwarding).
 OpenSSH destination import is available separately from saved profiles below.
 
@@ -530,8 +689,8 @@ disconnect, replacement or hidden panel cannot start a shell.
 
 The listing is a snapshot and does not eliminate remote session rename/exit
 races. Missing tools and failed or oversized listings are reported. This
-workflow attaches the normal terminal stream; native tmux control-mode window
-and pane mapping is not implemented.
+workflow attaches the normal terminal stream. To use native window/pane mapping,
+reopen the SSH form with that exact session name and enable **Native tmux panes**.
 
 ## Saved SSH profiles
 
@@ -542,6 +701,7 @@ canceling that form leaves the existing connection intact.
 
 Profiles store only their name, host, port, username, authentication method,
 optional gateway, ordered jump hosts and exact shell/tmux/screen settings.
+They also retain the explicit final-host agent-forwarding permission.
 Passwords, private keys and passphrases are removed recursively before a
 profile is constructed and are absent from the versioned persisted schema. Profiles use the app's local preferences and
 survive ordinary app restarts; they are not exported or synchronized by this
@@ -552,6 +712,12 @@ or newer-format saved data is left untouched and reported as an error.
 Direct-only profile stores retain schema version 1. A store with jump routes
 uses version 2 and does not downgrade again; older app versions reject that
 newer data instead of silently turning a saved jump route into a direct login.
+Agent authentication or forwarding upgrades the store to version 3, which also
+never downgrades. Saved arrangements likewise use version 3 when agent settings
+require it, so older readers preserve/refuse those records instead of discarding
+an authentication or forwarding choice.
+Native tmux panes upgrades either store to version 4, also without downgrading
+after the last native profile or arrangement is deleted.
 
 An attach-only profile remains attach-only, including after restarting the
 app. Profile loading does not bypass host-key verification or connect

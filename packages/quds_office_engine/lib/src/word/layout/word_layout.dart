@@ -16,6 +16,7 @@ import '../model/word_comment.dart';
 import '../model/word_fields.dart';
 import '../model/word_link.dart';
 import '../model/word_notes.dart';
+import '../model/word_small_caps.dart';
 import '../model/word_table.dart';
 import '../model/word_toc.dart';
 import '../model/word_tree.dart';
@@ -47,6 +48,7 @@ class LaidOutGlyph {
     this.displayText,
     this.displayOffset = 0,
     this.sourceEnd,
+    this.actualText,
     double? advance,
     double? paintDx,
     double? paintDy,
@@ -103,6 +105,11 @@ class LaidOutGlyph {
   final String? displayText;
   final int displayOffset;
   final int? sourceEnd;
+
+  /// Authored source for a synthetic character presentation. PDF exporters
+  /// mark the complete display group with this text for copy and search.
+  /// Automatic note labels intentionally leave this null.
+  final String? actualText;
 
   int get logicalEnd =>
       sourceEnd ?? glyph.logicalIndex + (glyph.codePoint > 0xffff ? 2 : 1);
@@ -1294,13 +1301,55 @@ class WordLayoutEngine {
     // painter draws a character there; the picture itself becomes a box on
     // the baseline once the line is placed.
     final inlinePictures = <int, OfficeVisual>{};
+    final displayLabels =
+        <int, ({String text, int end, double scale, bool note})>{};
     {
       var offset = 0;
       for (final WmlInline inline in paragraph.inlines) {
+        if (inline is WmlBreak) {
+          offset++;
+          continue;
+        }
         if (inline is! WmlRun) continue;
         final WmlVisual? picture = inline.inlineVisual;
         if (picture != null) inlinePictures[offset] = picture.visual;
+        final label = _noteNumbering?.referenceLabel(inline);
+        if (label != null) {
+          displayLabels[offset] = (
+            text: label,
+            end: offset + inline.text.length,
+            scale: 1,
+            note: true,
+          );
+        }
         offset += inline.text.length;
+      }
+    }
+    if (paragraph.inlines.whereType<WmlRun>().any(
+      (run) => run.properties.smallCaps,
+    )) {
+      for (final segment in WordSmallCaps.segments(text)) {
+        if (segment.text == text.substring(segment.start, segment.end) ||
+            !propsAt(segment.start).smallCaps ||
+            inlinePictures.containsKey(segment.start) ||
+            displayLabels.containsKey(segment.start)) {
+          continue;
+        }
+        // A grapheme that crosses a run with different formatting must stay
+        // intact. Do not claim that differently styled marks share one run.
+        final props = propsAt(segment.start);
+        if (!List.generate(
+          segment.end - segment.start,
+          (i) => segment.start + i,
+        ).every((offset) => identical(propsAt(offset), props))) {
+          continue;
+        }
+        displayLabels[segment.start] = (
+          text: segment.text,
+          end: segment.end,
+          scale: segment.scale,
+          note: false,
+        );
       }
     }
     double widthAt(int cp, int offset) {
@@ -1309,7 +1358,9 @@ class WordLayoutEngine {
       final props = propsAt(offset);
       return _advanceOf(
         cp,
-        props.fontSizePoints * props.vertAlign.fontScale,
+        props.fontSizePoints *
+            props.vertAlign.fontScale *
+            (displayLabels[offset]?.scale ?? 1),
         em,
         props,
       );
@@ -1319,35 +1370,17 @@ class WordLayoutEngine {
         ? _faceFor(0x20, propsAt(offset))?.glyphIdFor(0x20) ?? 0
         : _faceFor(cp, propsAt(offset))?.glyphIdFor(cp) ?? 0;
 
-    final noteLabels = <int, ({String text, int end})>{};
-    var sourceOffset = 0;
-    for (final inline in paragraph.inlines) {
-      if (inline is WmlRun) {
-        final label = _noteNumbering?.referenceLabel(inline);
-        if (label != null) {
-          noteLabels[sourceOffset] = (
-            text: label,
-            end: sourceOffset + inline.text.length,
-          );
-        }
-        sourceOffset += inline.text.length;
-      } else if (inline is WmlBreak) {
-        sourceOffset++;
-      }
-    }
-    final displayOffsets = <ShapedGlyph, int>{};
-    List<ShapedGlyph> displayNoteLabels(List<ShapedGlyph> source) {
+    List<ShapedGlyph> displayReplacements(List<ShapedGlyph> source) {
       final result = <ShapedGlyph>[];
       var skipUntil = -1;
       for (final glyph in source) {
         if (glyph.logicalIndex < skipUntil) continue;
-        final label = noteLabels[glyph.logicalIndex];
+        final label = displayLabels[glyph.logicalIndex];
         if (label == null) {
           result.add(glyph);
           continue;
         }
         skipUntil = label.end;
-        var displayOffset = 0;
         for (final cp in label.text.isEmpty ? const [0] : label.text.runes) {
           final replacement = ShapedGlyph(
             codePoint: cp,
@@ -1355,11 +1388,11 @@ class WordLayoutEngine {
             advance: cp == 0 ? 0 : widthAt(cp, glyph.logicalIndex),
             logicalIndex: glyph.logicalIndex,
             // Numeric and Roman note labels form one left-to-right unit.
-            level: glyph.level.isOdd ? glyph.level + 1 : glyph.level,
+            level: label.note && glyph.level.isOdd
+                ? glyph.level + 1
+                : glyph.level,
           );
-          displayOffsets[replacement] = displayOffset;
           result.add(replacement);
-          displayOffset += cp > 0xffff ? 2 : 1;
         }
       }
       return result;
@@ -1373,8 +1406,14 @@ class WordLayoutEngine {
       final markProps = propsAt(mark.logicalIndex);
       final baseFace = _faceFor(base.codePoint, baseProps);
       final markFace = _faceFor(mark.codePoint, markProps);
-      final baseSize = baseProps.fontSizePoints * baseProps.vertAlign.fontScale;
-      final markSize = markProps.fontSizePoints * markProps.vertAlign.fontScale;
+      final baseSize =
+          baseProps.fontSizePoints *
+          baseProps.vertAlign.fontScale *
+          (displayLabels[base.logicalIndex]?.scale ?? 1);
+      final markSize =
+          markProps.fontSizePoints *
+          markProps.vertAlign.fontScale *
+          (displayLabels[mark.logicalIndex]?.scale ?? 1);
       if (baseFace == null ||
           !identical(baseFace, markFace) ||
           baseSize != markSize) {
@@ -1397,7 +1436,7 @@ class WordLayoutEngine {
             glyphIdAt: glyphIdAt,
             markAttachOf: markAttach,
             baseLevel: paragraph.properties.bidiBaseLevel,
-            ligate: noteLabels.isEmpty ? null : displayNoteLabels,
+            ligate: displayLabels.isEmpty ? null : displayReplacements,
           )
         : null;
     final List<BrokenLine> broken = wrapsFrames
@@ -1411,7 +1450,7 @@ class WordLayoutEngine {
             markAttachOf: markAttach,
             baseLevel: paragraph.properties.bidiBaseLevel,
             breakLongWords: !allowBreak,
-            ligate: noteLabels.isEmpty ? null : displayNoteLabels,
+            ligate: displayLabels.isEmpty ? null : displayReplacements,
           );
     var cursorY = y + paragraph.properties.spacingBefore;
     var idx = pageIndex;
@@ -1635,16 +1674,24 @@ class WordLayoutEngine {
       final bool lineHasPicture = pictureAscent > 0;
       final double baselineAscent = math.max(textAscentOn(line), pictureAscent);
       final List<LaidOutGlyph> glyphs = <LaidOutGlyph>[];
+      // Mark attachment can replace a shaped glyph object. Track display
+      // offsets by source ownership rather than that transient identity.
+      final displayOffsets = <int, int>{};
       for (final ShapedGlyph g in line.glyphs) {
         final WmlRunProps props = propsAt(g.logicalIndex);
         final double baseSize = props.fontSizePoints;
-        final double size = baseSize * props.vertAlign.fontScale;
+        final display = displayLabels[g.logicalIndex];
+        final double size =
+            baseSize * props.vertAlign.fontScale * (display?.scale ?? 1);
         glyphs.add(
           LaidOutGlyph(
             glyph: g,
-            displayText: noteLabels[g.logicalIndex]?.text,
-            displayOffset: displayOffsets[g] ?? 0,
-            sourceEnd: noteLabels[g.logicalIndex]?.end,
+            displayText: display?.text,
+            displayOffset: displayOffsets[g.logicalIndex] ?? 0,
+            sourceEnd: display?.end,
+            actualText: display != null && !display.note
+                ? text.substring(g.logicalIndex, display.end)
+                : null,
             x: gx + g.paintDx,
             y:
                 cursorY +
@@ -1671,6 +1718,11 @@ class WordLayoutEngine {
             paintDy: g.paintDy,
           ),
         );
+        if (display != null) {
+          displayOffsets[g.logicalIndex] =
+              (displayOffsets[g.logicalIndex] ?? 0) +
+              (g.codePoint > 0xffff ? 2 : 1);
+        }
         gx += g.advance;
       }
       final bool paraRtl =

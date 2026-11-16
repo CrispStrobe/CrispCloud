@@ -1,0 +1,16 @@
+{
+  "utc": "2026-11-16T06:33:56.194704+00:00",
+  "source_head": "9753a980f6bfe94abe7940f59bd19287e4f65c57",
+  "receipts": [
+    {
+      "path": "agent-focus/agent-visuals-receipt.json",
+      "source_count": 5,
+      "changed_sources": []
+    },
+    {
+      "path": "forwarding-profile-focus/receipt.json",
+      "source_count": 13,
+      "changed_sources": []
+    }
+  ]
+}

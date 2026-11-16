@@ -1,0 +1,139 @@
+{
+  "copied_utc": "2026-11-16T06:28:32.854947+00:00",
+  "purpose": "Byte-preserving relocation of intermediate local acceptance evidence. Original receipts, timestamps, commands and source hashes are unchanged.",
+  "source_identity_note": "Recorded source hashes describe each original focused run only. No claim is made that all captured sources match the final combined application; final acceptance records must make that comparison.",
+  "files": [
+    {
+      "original_path": "build/ssh-forwarding-profile-validation/receipt.json",
+      "retained_path": "forwarding-profile-focus/receipt.json",
+      "bytes": 3193,
+      "sha256": "61dc8f2d05d5f034a41dbbc682c64c4df691f6692d07f169d1c0095081de4169"
+    },
+    {
+      "original_path": "build/ssh-forwarding-profile-validation/focused.log",
+      "retained_path": "forwarding-profile-focus/focused.log",
+      "bytes": 11646,
+      "sha256": "b349c222bfea957e2d6a1b3775ab8c261f5af9c396bba7d72e8def1000766087"
+    },
+    {
+      "original_path": "build/ssh-forwarding-profile-validation/analyzer.log",
+      "retained_path": "forwarding-profile-focus/analyzer.log",
+      "bytes": 440,
+      "sha256": "470c7975cfb0f23dde9a4daba4f6ba329143104582f13b452cbd284f46fd9bf2"
+    },
+    {
+      "original_path": "../parity-design/agent-tests.log",
+      "retained_path": "agent-focus/agent-tests.log",
+      "bytes": 27192,
+      "sha256": "16e1b6c4763f95afda003c3265308fac31d04aac67e0005dde7116c737900a67"
+    },
+    {
+      "original_path": "../parity-design/agent-analysis.log",
+      "retained_path": "agent-focus/agent-analysis.log",
+      "bytes": 672,
+      "sha256": "f919177072ac25d360cb3d1b3f96bee4bf88927973dec5a5873d92c6ab34cffa"
+    },
+    {
+      "original_path": "../parity-design/agent-visuals.log",
+      "retained_path": "agent-focus/agent-visuals.log",
+      "bytes": 3964,
+      "sha256": "2b6382f0d2c67a11db8dee39ee5a5d536d6a9411913cbc9ac717e2c0a6aac045"
+    },
+    {
+      "original_path": "../parity-design/agent-visuals-receipt.json",
+      "retained_path": "agent-focus/agent-visuals-receipt.json",
+      "bytes": 2412,
+      "sha256": "27de2672029dc8b41c015e28304907867df436f265f610bece3298827420283f"
+    },
+    {
+      "original_path": "../parity-design/auth-review-receipt.json",
+      "retained_path": "agent-focus/auth-review-receipt.json",
+      "bytes": 1949,
+      "sha256": "cd60dab4a9dc1b64eb31ca3b789c72e4acd78f333231f288d16a79843336d8a5"
+    },
+    {
+      "original_path": "../ssh-agent-channel.log",
+      "retained_path": "channel-focus/ssh-agent-channel.log",
+      "bytes": 1644,
+      "sha256": "932c97baab85eb4ddf3e95c932c0c96dc141b062c7b3b55911f0f536439d0bfe"
+    },
+    {
+      "original_path": "../toolchain/receipts/app-pub-get-vendored.log",
+      "retained_path": "environment/app-pub-get-vendored.log",
+      "bytes": 1616,
+      "sha256": "c37ce8ff6a2e0ccd1b9b9c3f6cc21ce4ea7855ae37f445106afc7803a040a9e8"
+    },
+    {
+      "original_path": "../toolchain/receipts/app-pub-get-vendored-enforced.log",
+      "retained_path": "environment/app-pub-get-vendored-enforced.log",
+      "bytes": 1616,
+      "sha256": "c37ce8ff6a2e0ccd1b9b9c3f6cc21ce4ea7855ae37f445106afc7803a040a9e8"
+    },
+    {
+      "original_path": "../toolchain/receipts/agent-live-attempt-2.json",
+      "retained_path": "historical-live/agent-live-attempt-2.json",
+      "bytes": 13322,
+      "sha256": "2f7cef86e69a7066662f2cc8940b804f18d7b733d3cf662647a8432cf09c572f"
+    },
+    {
+      "original_path": "../toolchain/receipts/agent-live-attempt-2.log",
+      "retained_path": "historical-live/agent-live-attempt-2.log",
+      "bytes": 30154,
+      "sha256": "1ed2668566054f072c693f2a133f94743d971b38ecc642e40cc5143336886387"
+    },
+    {
+      "original_path": "../toolchain/receipts/remote-heads-final.json",
+      "retained_path": "remote-refresh/remote-heads-062410.json",
+      "bytes": 31040,
+      "sha256": "43fb6172f6407781dc6cc9d398e7b9bc557e168433b3c18dcab16c3f6040dd7d"
+    },
+    {
+      "original_path": "../toolchain/receipts/remote-heads-final.tsv",
+      "retained_path": "remote-refresh/remote-heads-062410.tsv",
+      "bytes": 11928,
+      "sha256": "44ddd11e40d00decfc586e0b699550d5bf9b7e7cefff4a182129e17768278728"
+    },
+    {
+      "original_path": "/workspace/scratch/5ee066981535/parity-design/visuals/agent-desktop.png",
+      "retained_path": "visuals/agent-desktop.png",
+      "bytes": 68781,
+      "sha256": "9b2c9d526d8be4f2c241044fc1db28c6ef4314cfb6a88057fdfb41a8055e1cb9"
+    },
+    {
+      "original_path": "/workspace/scratch/5ee066981535/parity-design/visuals/agent-narrow.png",
+      "retained_path": "visuals/agent-narrow.png",
+      "bytes": 22651,
+      "sha256": "2bab4ef712c86e877e7fd03b46bda11bb953130524ecc709adaac3b0c7e77e52"
+    },
+    {
+      "original_path": "/workspace/scratch/5ee066981535/parity-design/visuals/agent-unavailable-narrow.png",
+      "retained_path": "visuals/agent-unavailable-narrow.png",
+      "bytes": 23993,
+      "sha256": "8559b4f4add6f126cd195a9b09a96a367c97bf374fc4a92d3490d3faabc00d14"
+    },
+    {
+      "original_path": "build/ssh-forwarding-profile-visuals/forwarding-profiles-editor-desktop.png",
+      "retained_path": "visuals/forwarding-profiles-editor-desktop.png",
+      "bytes": 75332,
+      "sha256": "a33b303afebd7c08d6f6924387bb51cbf4c68a01277cc50b2905bf557ee97cf6"
+    },
+    {
+      "original_path": "build/ssh-forwarding-profile-visuals/forwarding-profiles-editor-narrow.png",
+      "retained_path": "visuals/forwarding-profiles-editor-narrow.png",
+      "bytes": 26842,
+      "sha256": "c682b8f74b13f83e2ddc059578e3a5bc2b65e295a07cf944303e06dd78f250d6"
+    },
+    {
+      "original_path": "build/ssh-forwarding-profile-visuals/forwarding-profiles-manager-desktop.png",
+      "retained_path": "visuals/forwarding-profiles-manager-desktop.png",
+      "bytes": 54514,
+      "sha256": "8d772be84410c6498920435daa74beec26bd4f9abcb0e4dbb85e4c632a278b80"
+    },
+    {
+      "original_path": "build/ssh-forwarding-profile-visuals/forwarding-profiles-manager-narrow.png",
+      "retained_path": "visuals/forwarding-profiles-manager-narrow.png",
+      "bytes": 22092,
+      "sha256": "b8549e229bb7f99baeac882ab7c675ea68df9f1d5c205697ee318e077434bb2f"
+    }
+  ]
+}

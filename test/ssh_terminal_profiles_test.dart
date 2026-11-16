@@ -82,7 +82,7 @@ void main() {
     () {
       final data = SshTerminalProfile(name: 'Build', config: config()).toJson();
       for (final patch in <Map<String, dynamic>>[
-        {'authentication': 'agent'},
+        {'authentication': 'unknown'},
         {
           'session': {'kind': 'unknown'},
         },
@@ -267,7 +267,7 @@ void main() {
       final profile = SshTerminalProfile(name: 'Build', config: config());
       for (final raw in [
         '{invalid',
-        jsonEncode({'version': 3, 'profiles': []}),
+        jsonEncode({'version': 99, 'profiles': []}),
         jsonEncode({'version': 1.0, 'profiles': []}),
         jsonEncode({
           'version': 1,

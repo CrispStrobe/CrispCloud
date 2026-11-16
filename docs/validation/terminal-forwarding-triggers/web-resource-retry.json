@@ -1,0 +1,32 @@
+{
+  "started_utc": "2026-11-16T05:34:23.156396+00:00",
+  "command": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+    "tool/run_terminal_validation.py",
+    "web"
+  ],
+  "heap_mb": 3072,
+  "sdk_before": {
+    "bin/dart": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb",
+    "bin/dartaotruntime": "3599c987228070f342c80d29353f496c8efc72c620c75fc4d59e5671666b2f72",
+    "bin/snapshots/dart2js_aot.dart.snapshot": "29314b1f8e994436c5639a59df0243692cd83625fc587619a9c99e9a3804b1d6"
+  },
+  "launcher_sha256": "d0fbf25f517ecd35f45eba6b1811527b56ea272f4b108cc1b0b0074075b69f90",
+  "application_or_dependency_changes": false,
+  "compiler_args": "Unchanged Flutter compile-js arguments; SDK implicit arguments preserved.",
+  "github_actions_queried_or_awaited": false,
+  "exit_code": 0,
+  "sdk_after": {
+    "bin/dart": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb",
+    "bin/dartaotruntime": "3599c987228070f342c80d29353f496c8efc72c620c75fc4d59e5671666b2f72",
+    "bin/snapshots/dart2js_aot.dart.snapshot": "29314b1f8e994436c5639a59df0243692cd83625fc587619a9c99e9a3804b1d6"
+  },
+  "sdk_restored_exactly": true,
+  "finished_utc": "2026-11-16T05:39:11.503153+00:00",
+  "seconds": 288.347,
+  "peak_visible_rss_kb": 3355196,
+  "sample_count": 96,
+  "complete_record": "web-resource-observations.json.gz",
+  "complete_record_uncompressed_sha256": "ee690658e995c7db59a98b3f89dcf3dd1051c45c53b7593b3e53556850b0a20a",
+  "minimum_available_memory_kb": 5267020
+}

@@ -1,0 +1,63 @@
+{
+  "recorded_at": "2026-11-16T05:32:22.273334+00:00",
+  "memory_sample": {
+    "MemTotal": "10206472 kB",
+    "MemFree": "5928408 kB",
+    "MemAvailable": "8679620 kB",
+    "Cached": "2124868 kB",
+    "SwapTotal": "0 kB",
+    "SwapFree": "0 kB",
+    "AnonPages": "709672 kB"
+  },
+  "cgroup_and_pressure_files": {
+    "/sys/fs/cgroup/memory.max": false,
+    "/sys/fs/cgroup/memory.events": false,
+    "/proc/pressure/memory": false
+  },
+  "process_scope": "Each exec has a separate PID namespace; only current command descendants are visible. No cross-namespace inspection or termination attempted.",
+  "visible_process_inventory": "    PID    PPID COMMAND             ELAPSED   RSS    VSZ\n      1       0 codex                 00:00 15688 321060\n      5       2 python3               00:00 10464  36376\n      6       5 ps                    00:00  2492   6812\n      2       1 bash                  00:00  2000   4636\n",
+  "processes_stopped": [],
+  "known_owned_toolchain_sessions": "All previously launched setup/native/widget/browser tasks completed.",
+  "address_space_limits": [
+    -1,
+    -1
+  ],
+  "data_limits": [
+    -1,
+    -1
+  ],
+  "first_build_interpretation": "Compiler exited -9 during CFE, without Dart compile error. Resource pressure is plausible from available memory but not confirmed by OOM counters, which are unavailable.",
+  "sdk_revision": "416e33b0ffaef062a60ec966bb8c82ed2b83f128",
+  "dart_version": "3.13.7",
+  "flutter_version": "3.47.8",
+  "default_old_gen_heap_mb": 30720,
+  "recommended_old_gen_heap_mb": 3072,
+  "flag_proof_log": "compiler-probe-aot-flags.log",
+  "flag_proof": "Explicit dartaotruntime --old_gen_heap_size=3072 --print_flags reports old_gen_heap_size:3072 before running pinned dart2js AOT snapshot.",
+  "tiny_release_probe": {
+    "command": "toolchain/dart-compiler-resource-launcher compile js -O4 --minify --no-source-maps toolchain/tmp/compiler_probe.dart -o toolchain/tmp/compiler_probe_bounded_o4.js",
+    "exit_code": 0,
+    "node_execution_output": "compiler resource probe",
+    "log": "compiler-probe-bounded-o4.log"
+  },
+  "rejected_options": {
+    "DART_VM_OPTIONS": "SDK main_impl.cc applies it only to appended native executables; direct AOT snapshot probe does not apply it.",
+    "dart_global_vm_option": "A 1 MB flag before dart compile js did not constrain its compiler; compiler delegation loses the flag.",
+    "extra_front_end_option": "--old_gen_heap_size passed after compile js fails with unknown compiler option."
+  },
+  "launcher": "/workspace/scratch/43b2a351bc52/toolchain/dart-compiler-resource-launcher",
+  "launcher_sha256": "d0fbf25f517ecd35f45eba6b1811527b56ea272f4b108cc1b0b0074075b69f90",
+  "original_sdk_hashes": {
+    "bin/dart": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb",
+    "bin/dartaotruntime": "3599c987228070f342c80d29353f496c8efc72c620c75fc4d59e5671666b2f72",
+    "bin/snapshots/dart2js_aot.dart.snapshot": "29314b1f8e994436c5639a59df0243692cd83625fc587619a9c99e9a3804b1d6"
+  },
+  "source_references": {
+    "dart_compile_js_delegation": "https://github.com/dart-lang/sdk/blob/416e33b0ffaef062a60ec966bb8c82ed2b83f128/pkg/dartdev/lib/src/commands/compile.dart",
+    "native_env_option_scope": "https://github.com/dart-lang/sdk/blob/416e33b0ffaef062a60ec966bb8c82ed2b83f128/runtime/bin/main_impl.cc",
+    "local_flutter_command_builder": "/workspace/scratch/43b2a351bc52/toolchain/flutter/packages/flutter_tools/lib/src/build_system/targets/web.dart"
+  },
+  "plan": "Root records SDK backup hashes, temporarily installs the compiler launcher at SDK bin/dart while keeping original binary at bin/dart.resource-original, runs unchanged full release/O4 command isolated with compiler old-gen cap3072, monitors memory/RSS, then restores and verifies the original binary in finally.",
+  "full_build_started_by_this_agent": false,
+  "application_sources_modified_by_task": false
+}

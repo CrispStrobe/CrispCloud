@@ -239,18 +239,18 @@ void main() {
   });
 
   testWidgets(
-    'unsupported small caps are reviewed before mutation and can be discarded',
+    'unsupported capital variants are reviewed before mutation and can be discarded',
     (tester) async {
       final desktop = _Desktop(
         _insertScript(
-          html: '<span style="font-variant: small-caps">Title</span>, 34.',
+          html: '<span style="font-variant: all-small-caps">Title</span>, 34.',
           noteType: 0,
         ),
       );
       final controller = await _open(tester, desktop: desktop);
       await _tap(tester, 'Citation in Zotero…');
       expect(find.text('Review Zotero formatting'), findsOneWidget);
-      expect(find.textContaining('small caps'), findsOneWidget);
+      expect(find.textContaining('unsupported inline style'), findsOneWidget);
       expect(controller.zoteroFields, isEmpty);
       expect(WordZoteroDocumentData.read(controller.document), isEmpty);
       await _tap(tester, 'Cancel');
@@ -259,6 +259,34 @@ void main() {
       expect(find.textContaining('result discarded'), findsOneWidget);
     },
   );
+
+  testWidgets('native small caps apply without a simplification review', (
+    tester,
+  ) async {
+    final desktop = _Desktop(
+      _insertScript(
+        html: '<span style="font-variant: small-caps">Title</span>, 34.',
+        noteType: 0,
+      ),
+    );
+    final controller = await _open(tester, desktop: desktop);
+    await _tap(tester, 'Citation in Zotero…');
+    expect(find.text('Review Zotero formatting'), findsNothing);
+    final field = controller.zoteroFields.single;
+    expect(field.cachedText, 'Title, 34.');
+    expect(field.canEdit, isTrue);
+    expect(
+      field.paragraph.inlines
+          .whereType<WmlRun>()
+          .singleWhere((run) => run.text == 'Title')
+          .properties
+          .smallCaps,
+      isTrue,
+    );
+    expect(controller.canUndo, isTrue);
+    controller.undo();
+    expect(controller.zoteroFields, isEmpty);
+  });
 
   testWidgets(
     'mixed formatting applies styled runs while retaining one protected field',
@@ -298,7 +326,7 @@ void main() {
   ) async {
     final desktop = _Desktop(
       _insertScript(
-        html: '<span style="font-variant: small-caps">Title</span>, 34.',
+        html: '<span style="font-variant: all-small-caps">Title</span>, 34.',
         noteType: 0,
       ),
     );

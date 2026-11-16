@@ -23,6 +23,47 @@ const _tmuxName = ValueKey('terminal-ssh-tmux-name');
 const _screenName = ValueKey('terminal-ssh-screen-name');
 
 void main() {
+  testWidgets(
+    'native tmux is explicit and survives credential-free reconnect',
+    (tester) async {
+      final submitted = await _open(tester);
+      await _enterTarget(tester);
+      await _select(tester, _sessionMode, 'Attach existing tmux');
+      final native = find.byKey(const ValueKey('terminal-ssh-tmux-control'));
+      expect(tester.widget<CheckboxListTile>(native).value, isFalse);
+      await tester.ensureVisible(native);
+      await tester.tap(native);
+      await _enter(tester, _tmuxName, 'work');
+      await _enter(tester, _password, 'temporary-secret');
+      await _submit(tester);
+      final config = submitted.single!;
+      expect(config.tmux!.controlMode, isTrue);
+      expect(config.tmux!.mode, TmuxSessionMode.attach);
+      final reconnect = await _open(tester, initial: config);
+      expect(tester.widget<CheckboxListTile>(native).value, isTrue);
+      expect(_editable(tester, _password).controller!.text, isEmpty);
+      await _submit(tester);
+      expect(reconnect.single!.tmux!.controlMode, isTrue);
+      expect(reconnect.single!.password, isEmpty);
+    },
+  );
+
+  testWidgets(
+    'leaving tmux mode cannot silently enable native mode on a shell',
+    (tester) async {
+      final submitted = await _open(tester);
+      await _enterTarget(tester);
+      await _select(tester, _sessionMode, 'Create or attach tmux');
+      final native = find.byKey(const ValueKey('terminal-ssh-tmux-control'));
+      await tester.ensureVisible(native);
+      await tester.tap(native);
+      await _select(tester, _sessionMode, 'Remote shell');
+      expect(native, findsNothing);
+      await _submit(tester);
+      expect(submitted.single!.tmux, isNull);
+    },
+  );
+
   test('reconnect details retain the target and mode but no credentials', () {
     final config = SshTerminalConfig(
       host: 'ssh.example',

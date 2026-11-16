@@ -1,0 +1,34 @@
+{
+  "recorded_at_utc": "2026-11-16T06:27:32.208561+00:00",
+  "scope": "Intermediate focused validation, observed tool output; final cohort and live-SSH validation remain owned by root.",
+  "runner": "/workspace/scratch/5ee066981535/toolchain/run",
+  "working_directory": "/workspace/scratch/5ee066981535/CrispCloud",
+  "analysis": {
+    "command": "dart analyze packages/dartssh2/lib/src/ssh_client.dart lib/l10n/terminal_mount_error_strings.dart test/ssh_public_key_auth_test.dart test/ssh_agent_widget_test.dart",
+    "exec_session_id": 91601,
+    "exit_code": 0,
+    "observed_stdout_tail": "No issues found!"
+  },
+  "tests": {
+    "command": "flutter test --no-pub --concurrency=1 --reporter=expanded test/ssh_public_key_auth_test.dart test/ssh_agent_widget_test.dart test/terminal_mount_localization_test.dart",
+    "exec_session_id": 29246,
+    "exit_code": 0,
+    "passed": 32,
+    "failed": 0,
+    "skipped": 0,
+    "observed_stdout_tail": "00:13 +32: All tests passed!",
+    "files": {
+      "test/ssh_public_key_auth_test.dart": 19,
+      "test/ssh_agent_widget_test.dart": 11,
+      "test/terminal_mount_localization_test.dart": 2
+    }
+  },
+  "source_hash_note": "SHA-256 snapshots captured after the focused run. ssh_client.dart is also edited by root in separate agent-channel areas; final cohort must bind the final combined source.",
+  "sha256_after_run": {
+    "packages/dartssh2/lib/src/ssh_client.dart": "db86b25cf02d10437afd6d3e5742d78baac88517560fd1e233974802f30230e9",
+    "lib/l10n/terminal_mount_error_strings.dart": "c4b2e87fccc120c0fa1f84bbab0ecd9b8b7aeab6d1f4578424f4226174e8c4e4",
+    "test/ssh_public_key_auth_test.dart": "61217a4cd4a342f8f53f242699596def484f1ce8af23da6b6cf33f8e7e35fb39",
+    "test/ssh_agent_widget_test.dart": "ced619277436a5446af9f005a65982d715b274f40eb86a9276213a56ee7384ff",
+    "test/terminal_mount_localization_test.dart": "ae3609de00c8621191dae14b4437967244ed023b908fa8681c13369cace05664"
+  }
+}

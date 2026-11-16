@@ -1,0 +1,32 @@
+{
+  "recorded_utc": "2026-11-16T07:12:04.941267+00:00",
+  "scope": "Unmodified native tmux availability and server prerequisite attempt",
+  "attempts": [
+    {
+      "command": [
+        "/workspace/scratch/6c8a74f9de7f/toolchain/bin/tmux",
+        "-V"
+      ],
+      "returncode": 0,
+      "stdout": "tmux 3.5a\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/6c8a74f9de7f/toolchain/bin/tmux",
+        "-S",
+        "/workspace/scratch/6c8a74f9de7f/toolchain/tmp/crisp-tmux-smoke.sock",
+        "new-session",
+        "-d",
+        "-s",
+        "crisp-validation",
+        "sleep 5"
+      ],
+      "returncode": 1,
+      "stdout": "",
+      "stderr": "error connecting to /workspace/scratch/6c8a74f9de7f/toolchain/tmp/crisp-tmux-smoke.sock (Operation not permitted)\n"
+    }
+  ],
+  "github_actions_queried_or_awaited": false,
+  "status": "blocked_by_unix_socket_policy"
+}

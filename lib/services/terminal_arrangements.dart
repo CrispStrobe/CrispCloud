@@ -30,6 +30,7 @@ class TerminalArrangements {
   final Future<String?> Function() _read;
   final Future<void> Function(String value) _write;
   final AsyncLock _lock;
+  int _loadedVersion = 1;
 
   static Future<String?> _readPreferences() async {
     final preferences = await SharedPreferences.getInstance();
@@ -48,14 +49,17 @@ class TerminalArrangements {
 
   Future<List<TerminalArrangement>> _load() async {
     final raw = await _read();
-    if (raw == null) return const [];
+    if (raw == null) {
+      _loadedVersion = 1;
+      return const [];
+    }
     if (raw.length > maxStorageLength) {
       throw const FormatException('Terminal arrangement store exceeds limit');
     }
     final data = jsonDecode(raw);
     if (data is! Map<String, dynamic> ||
         data['version'] is! int ||
-        (data['version'] != 1 && data['version'] != 2) ||
+        !const [1, 2, 3, 4].contains(data['version']) ||
         data['arrangements'] is! List) {
       throw const FormatException('Unsupported terminal arrangement store');
     }
@@ -71,7 +75,7 @@ class TerminalArrangements {
       }
       final arrangement = TerminalArrangement.fromJson(
         entry,
-        requireLayout: data['version'] == 2,
+        requireLayout: (data['version'] as int) >= 2,
       );
       if (!names.add(arrangement.name)) {
         throw const FormatException('Duplicate terminal arrangement name');
@@ -82,6 +86,7 @@ class TerminalArrangements {
       final lower = a.name.toLowerCase().compareTo(b.name.toLowerCase());
       return lower != 0 ? lower : a.name.compareTo(b.name);
     });
+    _loadedVersion = data['version'] as int;
     return List.unmodifiable(arrangements);
   }
 
@@ -113,7 +118,22 @@ class TerminalArrangements {
     final encoded = jsonEncode({
       // Keep the same storage key so an older app rejects this version before
       // it can silently discard nested panes during a read-modify-write.
-      'version': 2,
+      'version':
+          _loadedVersion >= 4 ||
+              arrangements.any(
+                (arrangement) => arrangement.tabs.any(
+                  (tab) => tab.paneState.sshConfig?.tmux?.controlMode == true,
+                ),
+              )
+          ? 4
+          : _loadedVersion >= 3 ||
+                arrangements.any(
+                  (arrangement) => arrangement.tabs.any(
+                    (tab) => tab.paneState.sshConfig?.usesAgent ?? false,
+                  ),
+                )
+          ? 3
+          : 2,
       'arrangements': arrangements.map((item) => item.toJson()).toList(),
     });
     if (encoded.length > maxStorageLength) {

@@ -1,0 +1,196 @@
+@Tags(['live-tmux'])
+library;
+
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:crisp_cloud/services/tmux_control_client.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+const _enabled = bool.fromEnvironment('TMUX_CONTROL_LIVE');
+const _binary = String.fromEnvironment(
+  'TMUX_CONTROL_BINARY',
+  defaultValue: 'tmux',
+);
+
+void main() {
+  test(
+    'actual tmux maps panes, preserves Unicode, detaches and recaptures',
+    () async {
+      final directory = await Directory.systemTemp.createTemp('tmux-native-');
+      final socket = '${directory.path}/server';
+      final clients = <TmuxControlClient>[];
+      Future<ProcessResult> command(List<String> args) => Process.run(
+        _binary,
+        ['-S', socket, ...args],
+        environment: {'TERM': 'xterm-256color'},
+      );
+      Future<TmuxControlClient> attach() async {
+        final process = await Process.start(
+          _binary,
+          ['-S', socket, '-C', 'attach-session', '-t', '=crispcloud-check'],
+          environment: {'TERM': 'xterm-256color'},
+        );
+        final stderr = StringBuffer();
+        final errors = process.stderr.transform(utf8.decoder).listen((text) {
+          if (stderr.length < 16384) stderr.write(text);
+        });
+        Future<void>? closing;
+        Future<void> stop() => closing ??= () async {
+          try {
+            await process.stdin.close();
+          } catch (_) {}
+          try {
+            await process.exitCode.timeout(const Duration(seconds: 2));
+          } on TimeoutException {
+            process.kill(ProcessSignal.sigterm);
+            await process.exitCode.timeout(const Duration(seconds: 2));
+          }
+          await errors.cancel();
+        }();
+        final client = TmuxControlClient(
+          output: process.stdout,
+          write: (value) async {
+            process.stdin.add(utf8.encode(value));
+            await process.stdin.flush();
+          },
+          close: stop,
+          exitCode: process.exitCode,
+        );
+        clients.add(client);
+        try {
+          await client.start(columns: 100, rows: 32);
+        } catch (error) {
+          fail('Real tmux startup failed: $error; stderr=$stderr');
+        }
+        return client;
+      }
+
+      try {
+        final created = await command([
+          '-f',
+          '/dev/null',
+          'new-session',
+          '-d',
+          '-x',
+          '100',
+          '-y',
+          '32',
+          '-s',
+          'crispcloud-check',
+        ]);
+        expect(created.exitCode, 0, reason: '${created.stderr}');
+        var client = await attach();
+        expect(client.windows, hasLength(1));
+        final firstPane = client.activePaneId!;
+        final firstWindow = client.activeWindowId!;
+        client.panes[firstPane]!.session.terminal.textInput(
+          "printf 'native_%s café 中\\n' 'marker'\r",
+        );
+        await _until(
+          () => client.panes[firstPane]!.session.terminal.buffer
+              .getText()
+              .contains('native_marker café 中'),
+        );
+        await client.newWindow();
+        expect(client.windows, hasLength(2));
+        final secondWindow = client.activeWindowId!;
+        await client.splitPane(client.activePaneId!, horizontal: true);
+        expect(client.panes, hasLength(3));
+        expect(
+          client.windows
+              .singleWhere((window) => window.id == secondWindow)
+              .paneIds,
+          hasLength(2),
+        );
+        final remotelySplit = await command([
+          'split-window',
+          '-v',
+          '-t',
+          firstPane,
+        ]);
+        expect(remotelySplit.exitCode, 0, reason: '${remotelySplit.stderr}');
+        await _until(() => client.panes.length == 4);
+        await client.selectWindow(firstWindow);
+        await client.selectPane(firstPane);
+        expect(client.activePaneId, firstPane);
+        await client.resize(120, 40);
+        final geometry = await command([
+          'list-windows',
+          '-F',
+          '#{window_id} #{window_width} #{window_height}',
+        ]);
+        expect(geometry.exitCode, 0);
+        for (final window in client.windows) {
+          expect(
+            geometry.stdout.toString(),
+            contains('${window.id} ${window.width} ${window.height}'),
+          );
+        }
+        // Leave the remote process in its alternate screen across a real detach.
+        client.panes[firstPane]!.session.terminal.textInput(
+          "printf '\\033[?1049h\\033[Halternate_%s\\n' 'marker'\r",
+        );
+        await _until(
+          () =>
+              client.panes[firstPane]!.session.terminal.isUsingAltBuffer &&
+              client.panes[firstPane]!.session.terminal.buffer
+                  .getText()
+                  .contains('alternate_marker'),
+        );
+        await client.detach();
+        expect(
+          (await command(['has-session', '-t', '=crispcloud-check'])).exitCode,
+          0,
+        );
+        client = await attach();
+        expect(client.panes, hasLength(4));
+        expect(
+          client.panes[firstPane]!.session.terminal.isUsingAltBuffer,
+          isTrue,
+        );
+        expect(
+          client.panes[firstPane]!.session.terminal.buffer.getText(),
+          contains('alternate_marker'),
+        );
+        client.panes[firstPane]!.session.terminal.textInput(
+          "printf '\\033[?1049l'\r",
+        );
+        await _until(
+          () => !client.panes[firstPane]!.session.terminal.isUsingAltBuffer,
+        );
+        expect(
+          client.panes[firstPane]!.session.terminal.buffer.getText(),
+          contains('native_marker café 中'),
+        );
+        await client.close();
+        expect(
+          (await command(['has-session', '-t', '=crispcloud-check'])).exitCode,
+          0,
+        );
+      } finally {
+        for (final client in clients) {
+          await client.close();
+          client.dispose();
+        }
+        await command(['kill-server']); // This fixture's dedicated socket only.
+        await directory.delete(recursive: true);
+      }
+    },
+    skip: !_enabled
+        ? 'Run tool/run_tmux_control_live_smoke.py on a host permitting Unix sockets.'
+        : false,
+    timeout: const Timeout(Duration(minutes: 2)),
+  );
+}
+
+Future<void> _until(bool Function() condition) async {
+  final deadline = DateTime.now().add(const Duration(seconds: 10));
+  while (!condition()) {
+    if (DateTime.now().isAfter(deadline)) {
+      fail('Real tmux did not reach the expected state.');
+    }
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+  }
+}

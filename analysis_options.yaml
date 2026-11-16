@@ -3,6 +3,9 @@ include: package:flutter_lints/flutter.yaml
 analyzer:
   exclude:
     - cli/**
+    # Reviewed SSH runtime retains upstream style. Agent/channel behavior is
+    # checked by the application protocol and real OpenSSH regression suites.
+    - packages/dartssh2/**
     # Third-party source vendored for a macOS sandbox patch. It keeps its own
     # upstream style; app analysis should not report that package's lint debt.
     - packages/filen_client/**

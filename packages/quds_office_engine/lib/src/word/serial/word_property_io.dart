@@ -11,6 +11,7 @@ abstract final class WordPropertyIo {
     'b': '${r.bold}',
     'i': '${r.italic}',
     'strike': '${r.strike}',
+    'smallCaps': '${r.smallCaps}',
     'color': r.color,
     'sz': '${r.fontSizeHalfPoints}',
     'highlight': '${r.highlight}',

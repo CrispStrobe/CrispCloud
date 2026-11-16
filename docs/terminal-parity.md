@@ -6,11 +6,52 @@ toward desktop terminal workflows. It does not claim complete iTerm2 compatibili
 
 ## Current status
 
-The current continuation adds **local, remote and SOCKS5 SSH forwarding** and
-**persistent output triggers with marks and in-app alerts**, in draft PR #160.
-The implementation and exact behavior are described in the
-[terminal guide](terminal.md#output-triggers). Current local validation and
-integration evidence are recorded in
+This continuation adds **native tmux control-mode windows and panes** to draft
+PR #160. The SSH form has an explicit default-off **Native tmux panes** option;
+tmux 3.2+ windows and pane geometry become separate native terminal views inside
+the existing tab. Window/pane selection, remote window creation and splits,
+client resizing, local zoom, search, copy/paste, custom key bindings, and output
+triggers are supported. Closing the client detaches without issuing remote kill
+commands. Saved destinations and arrangements retain the mode in a v4 envelope.
+
+This is a bounded first native workspace, not complete iTerm2 tmux equivalence.
+It captures up to 200 history lines within local buffer limits and restores
+active/saved primary screens, pending parser bytes and common cursor/input modes.
+Original soft-wrap metadata, every parser/SGR state, tmux's interactive prefix
+and copy-mode interface, mouse/focus forwarding, full command-history controls and independent native
+operating-system windows remain incomplete. See the
+[native tmux guide](terminal.md#native-tmux-windows-and-panes) and
+[current acceptance record](validation/terminal-tmux-control/README.md).
+Actual tmux daemon startup is blocked by this host's Unix-socket policy; recorded
+protocol/widget coverage must not be read as live tmux-server acceptance.
+
+Before implementation, a fresh fetch again contained all **38 branch heads and
+151 PR heads** at `ce386fd6`, including main and PR #161. No additional merge was
+needed. The [fresh snapshot](validation/terminal-tmux-control/integration.json)
+records exact ancestry. Remote checkpoints retain every intermediate change;
+GitHub Actions results are neither queried nor awaited.
+
+### Previous agent/profile continuation
+
+The preceding continuation added **native Linux/macOS SSH-agent authentication**,
+**explicit agent forwarding to the final host**, and **saved forwarding profiles
+with opt-in startup after a verified connection or reconnect**, in draft PR #160.
+These build on local/remote/SOCKS5 forwarding and persistent output triggers.
+The [terminal guide](terminal.md#local-ssh-agent-and-agent-forwarding) describes
+the workflow and limits. Its local validation and integration evidence are
+recorded in [the agent/profile acceptance directory](validation/terminal-agent-profiles/README.md).
+
+Agent access is scoped to one verified route, uses a frozen public-key list, and
+ends on disconnect. Saved listeners match the exact server, user, gateway and
+ordered jump route. Auto-start is off by default. The production graph now pins
+the same dartssh2 4.1.0 source locally with reviewed protocol/lifecycle patches;
+[the runtime provenance record](../packages/dartssh2/UPSTREAM.md) identifies the
+upstream archive and every changed source file.
+
+The preceding forwarding/trigger checkpoint passed **676 native tests with two
+platform skips across 60 files**, clean analysis/formatting of **99 Dart files**,
+**six real OpenSSH tests with one optional PTY skip**, and the standard optimized
+web release build. Those historical results retain their own source identity in
 [the forwarding/trigger evidence directory](validation/terminal-forwarding-triggers/README.md).
 
 The preceding continuation started at `4cd8065a` in PR #140, now merged. It added **up to
@@ -24,9 +65,19 @@ historical evidence; it no longer describes the current validation environment.
 Source changes are saved incrementally to `codex/terminal-screen-workspace`.
 GitHub Actions results are neither queried nor awaited; checkpoints carry
 `[skip ci]`. Local validation and its explicit platform limits are recorded below
-and in [the evidence directory](validation/terminal-parity-continuation/README.md).
+and in [the current evidence directory](validation/terminal-agent-profiles/README.md).
 
-## Integration baseline and refresh
+## Previous integration baselines and refreshes
+
+The agent/profile continuation began from `e6cb6eee` and first integrated the newer Zotero and
+Office head `cf442dd2` from PR #161. Merge checkpoint `7203aa28` contains all
+**38 advertised branch heads and 151 available PR heads** as actual ancestors.
+The ordinary merge preserved the terminal work and brought in the incoming
+canonical Quds pin `b24718cc1468c34f494805eb7fb433a87f565503`. All **2,399** managed
+Office source hashes and tracked modes pass the vendor guard. The
+[integration snapshot](validation/terminal-agent-profiles/integration.json)
+records the complete 189-reference inventory and exact merge tree. Earlier
+snapshots below describe previous checkpoints.
 
 The 16 November continuation first advanced the branch from `01b3f609` to main
 `45ed126a`, bringing in the newer terminal fixes, canonical Office/Zotero work
@@ -36,8 +87,19 @@ from main's ancestry; both had exact tree identity with their already-merged
 squash commits. Checkpoint `5c2dbea9` retains those heads as additional parents
 and contains every audited head. No newer source was reverted to an old branch
 snapshot. The [integration record](validation/terminal-forwarding-triggers/integration.json)
-contains the exact refs and tree comparisons. The previous snapshots below are
-retained as historical evidence.
+contains the exact refs and tree comparisons.
+
+The final remote advertisement at **16 November 2026, 05:21:54 UTC** contains
+**38 branch heads and 150 PR heads**. It found the new Zotero continuation head
+`d916a841`, which contributed two audit documents. Merge `4a6a03b9` contains
+**all 188 snapshot references as actual ancestors**, including the original
+squash-equivalent heads. Its tree matches the reviewed `git merge-tree` result;
+the merge preserves every tested application input. Main remained at `45ed126a`
+through this cutoff. All **2,391** managed vendor blob IDs and modes, the vendor
+manifest and source pins are identical across the current, incoming and merged
+trees. Exact cutoff refs, merge inspection and post-integration ancestry checks
+are in [the final remote audit](validation/terminal-forwarding-triggers/final-remote-audit.json).
+The previous snapshots below are retained as historical evidence.
 
 At **15 November 2026, 22:12:24 UTC**, all **32 live branch heads** and the
 **100 recent PR heads** were audited before new implementation. The branch
@@ -52,8 +114,9 @@ freshly SHA-256 checked. All **527** Quds entries matched the complete canonical
 Git tree by blob, mode and size; the **1,857** standalone parser files retained
 their existing source pin and matching digests.
 
-The final refresh found **34 branch heads**, PRs #155 and #156, and later Zotero
-work. The integrated Zotero head `6a53294ad086e2a1c6475d888fbed7dcc2591449`
+The previous continuation's final refresh found **34 branch heads**, PRs #155
+and #156, and later Zotero work. The integrated Zotero head
+`6a53294ad086e2a1c6475d888fbed7dcc2591449`
 already includes main `d1add32cf5f4a14379ae35ca30b123e781558549` and terminal
 checkpoint `a965bfd4`. It merges cleanly with the newer terminal fixes. The
 incoming vendor manifest advances canonical Quds to
@@ -70,8 +133,8 @@ Earlier feature evidence retains its original source cutoff. Records:
 - [PR ancestry checks](validation/terminal-parity-continuation/pr-head-ancestry.json)
 - [Initial canonical reconciliation](validation/terminal-parity-continuation/canonical-integration.json)
 - [Initial complete managed-source verification](validation/terminal-parity-continuation/canonical-source-verification.json)
-- [Latest remote snapshot and comparisons](validation/terminal-parity-continuation/remote-cutoff-refresh.json)
-- [Latest complete managed-source verification](validation/terminal-parity-continuation/canonical-source-cutoff-verification.json)
+- [Previous continuation's final remote snapshot and comparisons](validation/terminal-parity-continuation/remote-cutoff-refresh.json)
+- [Previous continuation's final managed-source verification](validation/terminal-parity-continuation/canonical-source-cutoff-verification.json)
 - [All 134 snapshot references contained](validation/terminal-parity-continuation/refresh-ancestry-verification.json)
 
 ## Implemented coverage
@@ -79,12 +142,15 @@ Earlier feature evidence retains its original source cutoff. Records:
 | Area | Current behavior |
 | --- | --- |
 | Terminal workspace | Up to eight independent tabs and eight nested visible panes; per-divider sizing and balancing; directional/cyclic pane selection; temporary zoom; compact active-pane fallback; retained hidden sessions |
-| Saved arrangements | Up to 20 named arrangements with full split topology, ratios, tab order/names, active pane, font sizes and sanitized SSH routes; reads legacy schema v1 and writes v2 |
-| SSH authentication | Password and encrypted/unencrypted key login, verified host keys, explicit gateway, up to three independently authenticated and verified jump hosts |
+| Saved arrangements | Up to 20 named arrangements with full split topology, ratios, tab order/names, active pane, font sizes and sanitized SSH routes; reads legacy records, uses v3 for agent choices and v4 for native tmux |
+| SSH authentication | Password, encrypted/unencrypted key and native Linux/macOS SSH-agent login; verified host keys, explicit gateway, up to three independently authenticated and verified jump hosts |
+| SSH-agent forwarding | Separate default-off permission for the final host only; frozen supported keys, list/sign-only protocol, bounded requests/channels and immediate revocation on disconnect |
 | SSH forwarding | Native local, remote and SOCKS5 TCP CONNECT listeners on existing verified routes; actual assigned ports; per-listener clients and errors; bounded ownership and cleanup |
-| Saved destinations | Up to 50 secret-free profiles; shell/tmux/Screen modes and jump-route persistence; atomic import from a bounded OpenSSH configuration subset |
+| Saved forwarding | Up to 50 credential-free recipes, 16 per exact route; explicit Auto-start after verified shell connection/reconnect, duplicate suppression, offline editing and delete-and-stop |
+| Saved destinations | Up to 50 secret-free profiles; shell/tmux/Screen modes, jump routes, agent authentication choices and explicit forwarding permission; atomic import from a bounded OpenSSH configuration subset |
 | Key bindings | Capture, add, edit, enable/disable and delete exact shortcuts; explicit text or complete terminal-key taps; recipient-specific keyboard protocols and broadcast integration |
 | tmux and GNU screen | Create/attach, exact targets, non-evicting detach, manual reconnect and authenticated bounded session discovery |
+| Native tmux workspace | Optional tmux 3.2+ control client; up to 16 remote windows/64 panes, independent emulators and remote geometry, selection, create/split, resize, zoom, search, explicit clipboard, keys/triggers and detach |
 | Navigation | Unicode/wrap-aware literal scrollback search, per-tab font size, OSC 133/633 command history, previous/next marks, manual/iTerm2 marks and completed-command output selection |
 | Shell status and setup | Shell-reported directory/status/duration, one-shot in-app completion notification, review-and-copy Bash 4.4+/Zsh helpers preserving prompt hooks |
 | Output triggers | Up to 50 persistent literal/limited-pattern rules; line-specific marks and in-app alerts; preview, cooldowns, per-connection one-shot state and bounded matching work |
@@ -160,8 +226,9 @@ selection.
 A complete route uses one of the five SSH session slots and retains the existing
 30-minute activity timeout. Up to three jump hosts precede the final destination;
 a configured gateway reaches the first hop. The final verified client now also
-supports native local/remote/SOCKS5 forwarding controls. Intermediate direct-TCP
-channels and forwarding do not provide SSH-agent authentication or agent forwarding.
+supports native local/remote/SOCKS5 forwarding controls. Agent authentication is
+chosen separately for each server; every host key is verified before signing.
+Only the final client can receive the separately enabled forwarded agent.
 Empty key passphrases normalize to absent passphrases so unencrypted jump keys
 behave like direct connections; nonempty passphrases remain exact.
 
@@ -172,6 +239,28 @@ picker releases its connection; stale results cannot launch a target. Screen
 uses full PID.name and the exact resolver rechecks it before attach. Unsupported
 names remain visible but disabled. Listing and attachment are subject to remote
 rename/exit races.
+
+### Agent and saved-forwarding boundaries
+
+The Unix agent adapter uses the exact absolute `SSH_AUTH_SOCK` supplied to the
+native Linux/macOS app. It never reads private keys. Ordinary Ed25519, RSA SHA-2
+and NIST ECDSA keys are supported; certificates, FIDO/security-key algorithms,
+agent extensions and Windows named pipes remain unimplemented. In particular,
+OpenSSH destination-restricted keys requiring session-bind extensions are not
+qualified. Forwarding lets programs on the final server request signatures from
+the frozen supported key list for the life of that connection. It is explicitly
+off by default and is never granted to jump hosts.
+
+Saved port-forwarding recipes contain the exact route and listener settings,
+without credentials or agent permission. Auto-start occurs only after a verified
+shell is published; failed authentication, canceled discovery and stale
+connection attempts cannot start listeners. Stop leaves a listener stopped for
+the current connection. Editing forwarding settings or deleting a recipe stops
+its matching live listeners before persistence, including related mounted
+panes. Editing remains available when an already-open manager loses its SSH
+connection. Reconnect uses a new coordinator and can apply opted-in recipes
+again; it does not resume the old socket, active clients or dynamically allocated
+port number.
 
 ### Shell integration
 
@@ -199,6 +288,92 @@ The group disarms on hide, close, restore approval, connection changes,
 forwarding failure or an oversized input operation. The per-event bound is
 262,144 UTF-16 code units, not a byte count. Stop also revokes pending deliveries
 that have not reached their transports. Groups are never persisted.
+
+## Current agent/profile verification
+
+At source checkpoint `9753a980`, the full terminal cohort passed **813 tests,
+two platform skips and zero failures across 69 files**. Analysis and formatting
+are clean across **123 Dart files**. The combined real OpenSSH run passed
+**17 tests, two explicit skips and zero failures across three files**. All
+**5,511 watched source, dependency and test files** remained unchanged during
+these runs. Seven production-widget captures were inspected; their recorded
+source inputs match this checkpoint exactly.
+
+The live runs cover the prior 3 MiB local/remote/SOCKS5 transfers, verified direct
+and jump-host agent authentication, refusal/cancellation/revocation, and a real
+rekey preserving 512 KiB of binary data plus Unicode. Agent signatures in those
+cases come from a framed in-memory fixture signing disposable keys; the actual
+Unix-agent case is explicitly skipped because this host denies Unix sockets.
+The second live skip is the optional interactive SSH PTY fixture. Actual local
+Linux PTYs are exercised in the native cohort.
+
+The same-version checked-in SSH runtime is used by the production dependency
+graph. Its 96 upstream files and four local runtime changes pass the tracked
+vendor guard; the patch reproduces the exact changed source. The Office guard
+also verifies all 2,399 managed entries and their existing pins. The current
+full web release build passed in **290.588 seconds** with standard O4/minification
+and a 3,072 MB compiler VM heap cap. Its source was also `9753a980`, with the same
+5,511 inputs unchanged; original SDK binaries and modes were restored exactly.
+The final remote snapshot contains all **189** advertised refs. Future native
+and portable browser workflow lists include the new deterministic suites, and
+CI/nightly/release invoke the SSH vendor guard; those workflow changes were
+checked locally without querying or waiting for Actions. Complete commands, logs, source
+inventories and platform limits are in
+[the acceptance record](validation/terminal-agent-profiles/README.md).
+
+## Previous forwarding/trigger verification
+
+The preceding normal-application cohort passed **676 native tests, two platform
+skips and zero failures across 60 files**, using pinned Flutter **3.47.8** / Dart
+**3.13.7**, the unchanged production lockfile and normal native build hooks.
+Static analysis and formatting are clean across the same **99 terminal-related
+Dart files**. The [current acceptance record](validation/terminal-forwarding-triggers/README.md)
+links the complete logs, commands and exact source inventories.
+
+| Check | Actual result |
+| --- | --- |
+| Native terminal cohort | 676 passed, 2 platform skips, 0 failures across 60 files; real Linux PTY coverage included |
+| Static analysis | 99 Dart files; no issues |
+| Formatting | The same 99 Dart files; no changes required |
+| Actual loopback OpenSSH | 6 passed; 1 optional interactive SSH PTY skip |
+| Managed Office source identity | All 2,391 managed-file hashes and tracked modes match |
+| Browser runtime | Zero tests completed; Chromium failed before startup because Unix socket creation was denied |
+| Full web release compilation | Passed with standard O4/minification and a 3,072 MB compiler VM heap cap |
+| GitHub Actions | No result queried, awaited or required |
+
+The native/analyzer source checkpoint is `ea9a5463`. All **5,388 watched
+source/dependency/test files** stayed unchanged during the final runs. Subsequent
+merge `4a6a03b9` added only two Zotero audit documents and preserved those tested
+inputs. Intermediate focused counts overlap the final cohort and are not added
+to its total. The first full attempt exposed an optional forwarding-capability
+lookup bug in reconnect tests; the final cohort includes its repair. That failed
+attempt remains in the evidence directory.
+
+The web release build passed from `f089d000` with the same 5,388-file inventory
+unchanged. Version `1.3.4+28` and Git hash `f089d000` were verified in the bundle.
+The first attempt was externally killed with exit `-9`; the successful isolated
+retry changed only the compiler VM heap limit, preserving release optimization,
+application sources and dependencies. The original SDK binaries were restored
+and their hashes verified. The [web record](validation/terminal-forwarding-triggers/web.json)
+links the command, output hash and resource configuration. The optional
+WebAssembly compatibility probe was disabled; WebAssembly is not qualified.
+
+Four of the six actual OpenSSH cases exercise the new forwarding controls
+through independently verified jump and final hosts. Local, remote and SOCKS5
+paths each transfer an exact **3 MiB binary payload plus Unicode**, exceeding
+the initial SSH channel window. Request half-close preserves the full final
+response; stopping a listener leaves ordinary SSH command execution working.
+Disconnect closes active client sockets and both local and remote listeners.
+The two retained cases cover verified jump execution, reconnect and changed-key
+rejection. Fixtures use disposable keys and loopback-only servers.
+
+The two native skips are the macOS-only shell fixture and Windows ConPTY. The
+OpenSSH runner's optional interactive PTY case was not enabled; separate real
+Linux PTYs passed in the native cohort. Browser runtime, packaged or signed
+macOS, Windows, physical Android/iOS, external gateways and actual tmux/Screen
+deployments still require their own acceptance. The historical web build
+recorded below belongs to the previous continuation; the current successful
+release compilation is recorded above.
 
 ## Previous continuation verification
 
@@ -241,9 +416,10 @@ Reproduction commands and manual checks are in
 
 ## Remaining larger parity areas
 
-- Native tmux control-mode mapping of remote windows and panes.
-- SSH-agent authentication/forwarding, reusable forwarding profiles and
-  persistent connection multiplexing.
+- Complete native tmux state fidelity, mouse/focus forwarding, broader pane
+  actions and real tmux-server/platform qualification beyond the first workspace.
+- Persistent connection multiplexing and broader agent support, including
+  Windows named pipes, certificates/security-key algorithms and session binding.
 - Independent terminal windows and layouts beyond the current eight-tab limit.
 - Automatic process/session restoration and secure reusable credential/identity
   integration beyond secret-free destination stores.
@@ -253,9 +429,9 @@ Reproduction commands and manual checks are in
 - Browser runtime, packaged Windows/macOS, physical mobile and external
   SSH/jump/tmux/Screen acceptance.
 
-Ordinary tmux PTY attachment and browsing do not provide iTerm2's native tmux
-control-mode integration. The next parity work should address these distinct
-capabilities without describing the current terminal as fully equivalent.
+Ordinary tmux PTY attachment and browsing remain distinct from the opt-in native
+control workspace. The initial window/pane mapping does not establish full
+iTerm2 compatibility or qualify every terminal mode and external deployment.
 
 ## Historical validation boundaries
 
@@ -276,8 +452,8 @@ belong to that earlier source and are not added to the new cohort.
 The earlier integration snapshots of 27, then 30 branch heads are retained in
 [the initial audit](validation/terminal-20261115/integration.json),
 [refresh record](validation/terminal-20261115/integration-refresh.json) and
-[cutoff record](validation/terminal-20261115/integration-cutoff.json). The latest
-34-head refresh above supersedes those repository cutoffs.
+[cutoff record](validation/terminal-20261115/integration-cutoff.json). The
+16 November 38-head refresh above supersedes these earlier repository cutoffs.
 
 ## Primary references
 

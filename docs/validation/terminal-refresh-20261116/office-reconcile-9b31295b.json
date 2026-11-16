@@ -1,0 +1,52 @@
+{
+  "parents": [
+    "2c6ff73eb8a5fac21c8ddfe60151de6a7d3ff06d",
+    "9b31295bbf705b7aff8a732c16f9d010edbb4e3a"
+  ],
+  "target": "9295eca6dc374b0303e18b4d96a908abfb4dd8ea",
+  "managed_files": 2410,
+  "writes": [
+    {
+      "path": "packages/quds_office_editor/test/word_small_caps_test.dart",
+      "before_sha256": "0830487170358566b4916da849e2aef84c412e4d86971f9acbd2a2a58016bceb",
+      "after_sha256": "b3c0c63278163ae391f5712eba74b187592a36aeab4487c97765e1b75a41cc39"
+    },
+    {
+      "path": "packages/quds_office_editor/test/word_zotero_bibliography_controller_test.dart",
+      "before_sha256": null,
+      "after_sha256": "40f8356d305050033c0dff978768cc6e0b64dd3e73b2092023019c1ee3634749"
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/word/layout/word_layout.dart",
+      "before_sha256": "f0b1eef4b71b3e309b56623054ed851b589e491b9100200a8219773b079d7fae",
+      "after_sha256": "1f9b55b38461c708c725880a09e7cf339248da28d6510cad8550e9dee2775794"
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/word/model/word_small_caps.dart",
+      "before_sha256": "52cd7c93e6aee1b4fd0bddbee9b25701c0980f9db3d33d263ddc0ff64c4e156d",
+      "after_sha256": "4420d1d7cc2aa18f7e897fdb34debc581cf169d3fad04f910a613999609c437a"
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/word/model/word_small_caps_case_data.dart",
+      "before_sha256": null,
+      "after_sha256": "dd05f3ae8bf4366f6609953d54d92952fbf1310c2b2e3a1251f88c198e70e2dc"
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/word/model/word_zotero_citing.dart",
+      "before_sha256": "d6470182f5d064d951acb22697f4a0a7d79da4f420f4aa8a9b827f332e8e0e88",
+      "after_sha256": "a18893904d03f1e8a5b02f65653e6a981a87cb18451a6195da00ee82ad73d416"
+    },
+    {
+      "path": "packages/quds_office_engine/test/word_small_caps_test.dart",
+      "before_sha256": "07a29f37d32aa908910df3867505f81fd7e686dfadce69858415df8e85cf79c7",
+      "after_sha256": "4c24154b60998f358e399565284d72fa0c2270183daa773947ab1938022c629e"
+    },
+    {
+      "path": "packages/quds_office_engine/test/word_zotero_bibliography_layout_test.dart",
+      "before_sha256": "faa43f14792cd2a3335eb0b258bd264860bbd8d087ead789581d0fe27df2e8aa",
+      "after_sha256": "8cbcf6221fcf125324c9f78f2e97063b7467762cd7063ca6138d873f7f9decc3"
+    }
+  ],
+  "deleted": [],
+  "validation": "Every current file matched a merge-parent manifest or the exact combined canonical source before replacement; standalone parser remained unchanged."
+}

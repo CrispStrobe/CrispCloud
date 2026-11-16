@@ -53,6 +53,7 @@ class SshTerminalProfile {
     'port': config.port,
     'username': config.username,
     'authentication': config.authentication.name,
+    if (config.forwardAgent) 'forwardAgent': true,
     if (config.gateway != null) 'gateway': config.gateway.toString(),
     if (config.jumpHosts.isNotEmpty)
       'jumpHosts': config.jumpHosts.map((jump) => jump.toJson()).toList(),
@@ -61,6 +62,7 @@ class SshTerminalProfile {
             'kind': 'tmux',
             'mode': config.tmux!.mode.name,
             'name': config.tmux!.sessionName,
+            if (config.tmux!.controlMode) 'controlMode': true,
           }
         : config.screen != null
         ? {
@@ -83,8 +85,13 @@ class SshTerminalProfile {
     final authentication = switch (text('authentication')) {
       'password' => SshTerminalAuthentication.password,
       'privateKey' => SshTerminalAuthentication.privateKey,
+      'agent' => SshTerminalAuthentication.agent,
       _ => throw const FormatException('Unknown SSH authentication method'),
     };
+    final forwardAgent = value['forwardAgent'];
+    if (forwardAgent != null && forwardAgent is! bool) {
+      throw const FormatException('Invalid SSH agent forwarding choice');
+    }
     final gatewayValue = value['gateway'];
     if (gatewayValue != null && gatewayValue is! String) {
       throw const FormatException('Invalid SSH profile gateway');
@@ -131,8 +138,13 @@ class SshTerminalProfile {
       case 'tmux':
         final name = session['name'];
         if (name is! String) throw const FormatException('Invalid tmux target');
+        final controlMode = session['controlMode'];
+        if (controlMode != null && controlMode is! bool) {
+          throw const FormatException('Invalid tmux control mode');
+        }
         tmux = TmuxSessionOptions(
           sessionName: name,
+          controlMode: controlMode == true,
           mode: switch (session['mode']) {
             'createOrAttach' => TmuxSessionMode.createOrAttach,
             'attach' => TmuxSessionMode.attach,
@@ -162,6 +174,7 @@ class SshTerminalProfile {
         port: port,
         username: text('username'),
         authentication: authentication,
+        forwardAgent: forwardAgent == true,
         gateway: gateway,
         jumpHosts: jumpHosts,
         tmux: tmux,

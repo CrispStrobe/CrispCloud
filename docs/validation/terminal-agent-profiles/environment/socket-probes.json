@@ -1,0 +1,10 @@
+{
+  "unix": {
+    "ok": false,
+    "error": "PermissionError(1, 'Operation not permitted')"
+  },
+  "tcp": {
+    "ok": true,
+    "address": "('127.0.0.1', 47831)"
+  }
+}

@@ -233,12 +233,18 @@ revision, protected documents, uneditable Zotero fields and citations in
 unsupported stories such as headers, footers, comments and text boxes. This
 keeps Zotero from processing a silently incomplete citation sequence.
 
-ODT active-citation transfer, faithful small caps/bibliography layout, page-based
-note restarts, full native builds and live native Word/Zotero refresh
-acceptance remain outside the executed qualification. Protocol, controller and
-UI tests use deterministic transports; real CSL fixtures exercise Zotero's
-pinned processor, but do not constitute a live desktop session. The native app
-talks directly to localhost and never through a server-side proxy.
+ODT active-citation transfer, faithful small caps/bibliography layout and
+page-based note restarts remain implementation boundaries. The actual Quds
+catalog/Studio transport and citing driver/Word adapter passed live desktop
+Zotero style-selection, refresh, first-use seeded picker acceptance and DOCX
+save/reopen checks with synthetic sources, including German `Ebd.` and page
+locators. Native locator-popup editing remains outside the successful live
+acceptance scope; the seeded locator was accepted and preserved. Protocol, controller and UI
+regressions also use deterministic transports and pinned real CSL fixtures.
+Full compiled application builds, private-account/keychain acceptance and
+opening the exported DOCX in Microsoft Word or LibreOffice remain separate
+acceptance steps. The native app talks directly to localhost without a
+server-side proxy.
 
 ## Shared source and local checks
 
@@ -247,17 +253,18 @@ The implementation is maintained in
 `tool/office_fidelity_manifest.json` records the exact immutable Quds source and
 hashes of managed files. Its standalone legacy DOC parser pin is unchanged.
 
-The native-citing continuation audited all 45 live branches and all 42 Quds /
-50 recent CrispCloud PR heads first. Main through Quds #42 and CrispCloud #152,
-plus terminal #140, was already integrated. Five retained Quds heads were exact
-tree equivalents of integrated squash changes. Work is saved incrementally
-to remote branches using `[skip ci]`. No GitHub Actions queue was awaited.
+This continuation starts after the prior Quds #47, CrispCloud #149 and terminal
+#140 work was merged. Before feature edits, all **60 branch heads and 198 PR
+heads** were accounted for. The final incoming-work snapshot at **16 November
+2026, 05:17:13 UTC** accounts for **62 branches and 199 PR heads**. It includes
+the new terminal #160 at `49d63f78d0b854ba76289dba69fdb6584f8a1260`, with both
+merge parents retained. All 259 external refs are actual ancestors; the two
+continuation branches are listed separately. Later concurrent commits are
+outside that explicit cutoff.
 
-The final reconciliation also integrates work that arrived during the task:
-Quds main through **#46**, CrispCloud main through **#156**, and terminal #140
-through `a965bfd4a61ca01e6f50bf4d8c433c3fdc9e1423`. Both parents are retained in
-the main and terminal merges. Quds #40 was merged during implementation; its
-remaining continuation is reviewed in [draft PR #47](https://github.com/CrispStrobe/quds_office_suite/pull/47).
+Work is saved incrementally to `codex/zotero-support-20261116` in both
+repositories. Every new checkpoint uses `[skip ci]`. No GitHub Actions are
+queried, polled, awaited or rerun.
 
 Local execution uses official Flutter/Dart and genuine locked dependency
 graphs. This increment adds protocol, native preference, document adapter,

@@ -1,0 +1,185 @@
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_transport_test.dart
+00:00 +0: requests the actual terminal geometry and resizes the active PTY
+ℹ️ [SshTerminalService] Session ho7ibavk4p0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7ibavk4p0)
+ℹ️ [SshTerminalService] resizeTerminal(ho7ibavk4p0): 95x31
+ℹ️ [SshTerminalService] Disconnecting session ho7ibavk4p0
+00:00 +1: starts tmux through an exec PTY and preserves input and resize
+ℹ️ [SshTerminalService] Session ho7ibaw6350 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7ibaw6350)
+ℹ️ [SshTerminalService] resizeTerminal(ho7ibaw6350): 95x31
+ℹ️ [SshTerminalService] Disconnecting session ho7ibaw6350
+00:00 +2: attach uses an exact tmux target and never creates a fallback shell
+ℹ️ [SshTerminalService] Session ho7ibawcji0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7ibawcji0)
+ℹ️ [SshTerminalService] Disconnecting session ho7ibawcji0
+00:00 +3: native control cleanup remains retryable after transport failure
+ℹ️ [SshTerminalService] Session ho7ibawf0k0 established to test.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7ibawf0k0
+00:00 +4: native cancellation releases its route even if a stream fails
+ℹ️ [SshTerminalService] Session ho7ibawlwh0 established to test.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7ibawlwh0
+00:00 +5: native tmux preserves raw stdout and separates stderr without a PTY
+ℹ️ [SshTerminalService] Session ho7ibawoox0 established to test.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7ibawoox0
+00:00 +6: raw tmux validates mode and name before replacing a running shell
+ℹ️ [SshTerminalService] Session ho7ibawwi10 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7ibawwi10)
+ℹ️ [SshTerminalService] Disconnecting session ho7ibawwi10
+00:00 +7: disconnect during native tmux startup closes a late channel
+ℹ️ [SshTerminalService] Session ho7ibax0oi0 established to test.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7ibax0oi0
+00:00 +8: replaced native controller cannot write to or close its replacement
+ℹ️ [SshTerminalService] Session ho7ibax45d0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7ibax45d0)
+ℹ️ [SshTerminalService] Disconnecting session ho7ibax45d0
+00:00 +9: native control cancellation releases channel, route and pool slot
+ℹ️ [SshTerminalService] Session ho7ibax8d30 established to test.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7ibax8d30
+00:00 +10: native startup output is bounded before the client listens
+ℹ️ [SshTerminalService] Session ho7ibaxbj00 established to test.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7ibaxbj00
+00:00 +11: invalid tmux names leave an existing shell untouched
+ℹ️ [SshTerminalService] Session ho7ibaxnjm0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7ibaxnjm0)
+ℹ️ [SshTerminalService] Disconnecting session ho7ibaxnjm0
+00:00 +12: screen uses an exec PTY and preserves input and geometry
+ℹ️ [SshTerminalService] Session ho7ibaxr3j0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7ibaxr3j0)
+ℹ️ [SshTerminalService] resizeTerminal(ho7ibaxr3j0): 95x31
+ℹ️ [SshTerminalService] Disconnecting session ho7ibaxr3j0
+00:00 +13: invalid or conflicting screen options preserve the running shell
+ℹ️ [SshTerminalService] Session ho7ibaxv3g0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7ibaxv3g0)
+ℹ️ [SshTerminalService] Disconnecting session ho7ibaxv3g0
+00:00 +14: disconnect during screen startup closes the late channel
+ℹ️ [SshTerminalService] Session ho7ibaxxzv0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7ibaxxzv0)
+ℹ️ [SshTerminalService] Disconnecting session ho7ibaxxzv0
+00:00 +15: failed screen exec closes its pool slot without shell fallback
+ℹ️ [SshTerminalService] Session ho7ibay0vb0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7ibay0vb0)
+ℹ️ [SshTerminalService] Disconnecting session ho7ibay0vb0
+00:00 +16: closing screen disconnects only this SSH client without remote commands
+ℹ️ [SshTerminalService] Session ho7ibay3eu0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7ibay3eu0)
+ℹ️ [SshTerminalService] Disconnecting session ho7ibay3eu0
+00:00 +17: disconnect during tmux startup closes its late exec channel
+ℹ️ [SshTerminalService] Session ho7ibay65d0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7ibay65d0)
+ℹ️ [SshTerminalService] Disconnecting session ho7ibay65d0
+00:00 +18: failed tmux exec releases its pool slot without shell fallback
+ℹ️ [SshTerminalService] Session ho7ibay8tt0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7ibay8tt0)
+ℹ️ [SshTerminalService] Disconnecting session ho7ibay8tt0
+00:00 +19: disconnect closes only the tmux client without sending kill or exit
+ℹ️ [SshTerminalService] Session ho7ibaybui0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7ibaybui0)
+ℹ️ [SshTerminalService] Disconnecting session ho7ibaybui0
+00:00 +20: preserves remote exit status without losing final tmux output
+ℹ️ [SshTerminalService] Session ho7ibayf630 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7ibayf630)
+ℹ️ [SshTerminalService] Disconnecting session ho7ibayf630
+00:00 +21: output EOF waits for the later SSH exit status before cleanup
+ℹ️ [SshTerminalService] Session ho7ibayl580 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7ibayl580)
+ℹ️ [SshTerminalService] Disconnecting session ho7ibayl580
+00:00 +22: explicit disconnect still closes SSH while waiting after output EOF
+ℹ️ [SshTerminalService] Session ho7ibayo220 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7ibayo220)
+ℹ️ [SshTerminalService] Disconnecting session ho7ibayo220
+00:00 +23: observes early channel errors and preserves them for the exit reader
+ℹ️ [SshTerminalService] Session ho7ibayqpn0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7ibayqpn0)
+ℹ️ [SshTerminalService] Disconnecting session ho7ibayqpn0
+00:00 +24: plain output streams remain compatible without exit metadata
+ℹ️ [SshTerminalService] Session ho7ibaytub0 established to test.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7ibaytub0
+00:00 +25: decrypts an encrypted key without sending its passphrase as a password
+ℹ️ [SshTerminalService] Session ho7ibayvj60 established to test.example:22
+ℹ️ [SshTerminalService] Session ho7ibb5xa10 established to key.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7ibb5xa10
+ℹ️ [SshTerminalService] Disconnecting session ho7ibayvj60
+00:00 +26: rejects missing or incorrect key passphrases before connecting
+ℹ️ [SshTerminalService] Session ho7ibb73hc0 established to test.example:22
+❌ [SshTerminalService] Failed to parse or decrypt SSH private key
+❌ [SshTerminalService] Failed to parse or decrypt SSH private key
+❌ [SshTerminalService] Failed to parse or decrypt SSH private key
+ℹ️ [SshTerminalService] Disconnecting session ho7ibb73hc0
+00:00 +27: accepts unencrypted keys with omitted or empty passphrases
+ℹ️ [SshTerminalService] Session ho7ibb8ig90 established to test.example:22
+ℹ️ [SshTerminalService] Session ho7ibb9vwb1 established to key.example:22
+ℹ️ [SshTerminalService] Session ho7ibb9wfk2 established to key.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7ibb8ig90
+ℹ️ [SshTerminalService] Disconnecting session ho7ibb9vwb1
+ℹ️ [SshTerminalService] Disconnecting session ho7ibb9wfk2
+00:00 +28: writes UTF-8, arrow keys, tab and control characters without line buffering
+ℹ️ [SshTerminalService] Session ho7ibb9zd70 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7ibb9zd70)
+ℹ️ [SshTerminalService] Disconnecting session ho7ibb9zd70
+00:00 +29: buffers initial prompt and decodes UTF-8 split across packets
+ℹ️ [SshTerminalService] Session ho7ibba4670 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7ibba4670)
+ℹ️ [SshTerminalService] Disconnecting session ho7ibba4670
+00:00 +30: waits for stderr after stdout EOF and keeps its UTF-8 decoder separate
+ℹ️ [SshTerminalService] Session ho7ibba9yr0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7ibba9yr0)
+ℹ️ [SshTerminalService] Disconnecting session ho7ibba9yr0
+00:00 +31: reports channel errors instead of silently swallowing stderr errors
+ℹ️ [SshTerminalService] Session ho7ibbaehm0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7ibbaehm0)
+ℹ️ [SshTerminalService] Disconnecting session ho7ibbaehm0
+00:00 +32: disconnect completes before any output consumer attaches
+ℹ️ [SshTerminalService] Session ho7ibbai4s0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7ibbai4s0)
+ℹ️ [SshTerminalService] Disconnecting session ho7ibbai4s0
+00:00 +33: cancelling the terminal subscription closes the SSH connection
+ℹ️ [SshTerminalService] Session ho7ibbal0d0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7ibbal0d0)
+ℹ️ [SshTerminalService] Disconnecting session ho7ibbal0d0
+00:00 +34: restart closes the old shell without disconnecting the replacement
+ℹ️ [SshTerminalService] Session ho7ibbasut0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7ibbasut0)
+ℹ️ [SshTerminalService] startShell(ho7ibbasut0)
+ℹ️ [SshTerminalService] Disconnecting session ho7ibbasut0
+00:00 +35: disconnect during shell setup closes the late shell
+ℹ️ [SshTerminalService] Session ho7ibbaxf70 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7ibbaxf70)
+ℹ️ [SshTerminalService] Disconnecting session ho7ibbaxf70
+00:00 +36: failed shell setup releases the connection and its pool slot
+ℹ️ [SshTerminalService] Session ho7ibbb1i20 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7ibbb1i20)
+ℹ️ [SshTerminalService] Disconnecting session ho7ibbb1i20
+00:00 +37: transport completion does not discard output still queued in channels
+ℹ️ [SshTerminalService] Session ho7ibbb4uw0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7ibbb4uw0)
+ℹ️ [SshTerminalService] Disconnecting session ho7ibbb4uw0
+00:00 +38: noninteractive execute also decodes UTF-8
+ℹ️ [SshTerminalService] Session ho7ibbb7t60 established to test.example:22
+ℹ️ [SshTerminalService] execute(ho7ibbb7t60)
+ℹ️ [SshTerminalService] Disconnecting session ho7ibbb7t60
+00:00 +39: validates actual start and resize entry points before requesting a PTY
+ℹ️ [SshTerminalService] Session ho7ibbba6q0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7ibbba6q0)
+ℹ️ [SshTerminalService] Disconnecting session ho7ibbba6q0
+00:00 +40: dispose rejects and closes a connection that completes later
+ℹ️ [SshTerminalService] Session ho7ibbbdwl0 established to test.example:22
+❌ [SshTerminalService] SSH connect failed
+  Error: Bad state: SSH connection was cancelled
+ℹ️ [SshTerminalService] Disconnecting session ho7ibbbdwl0
+00:00 +41: pool limit includes connections still authenticating
+ℹ️ [SshTerminalService] Session ho7ibbbhfx0 established to test.example:22
+ℹ️ [SshTerminalService] Session ho7ibbbkbw0 established to host0:22
+ℹ️ [SshTerminalService] Session ho7ibbbkkz1 established to host1:22
+ℹ️ [SshTerminalService] Session ho7ibbbkqq2 established to host2:22
+ℹ️ [SshTerminalService] Session ho7ibbbkw53 established to host3:22
+ℹ️ [SshTerminalService] Session ho7ibbbl1p4 established to host4:22
+ℹ️ [SshTerminalService] Disconnecting session ho7ibbbkbw0
+ℹ️ [SshTerminalService] Disconnecting session ho7ibbbkkz1
+ℹ️ [SshTerminalService] Disconnecting session ho7ibbbkqq2
+ℹ️ [SshTerminalService] Disconnecting session ho7ibbbkw53
+ℹ️ [SshTerminalService] Disconnecting session ho7ibbbl1p4
+ℹ️ [SshTerminalService] Disconnecting session ho7ibbbhfx0
+00:00 +42: All tests passed!

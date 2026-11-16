@@ -1,10 +1,16 @@
 import 'package:flutter/widgets.dart';
 
+import 'ssh_forwarding_profile_strings.dart';
+
 extension SshPortForwardingStrings on BuildContext {
   String sshForwardTr(String english) {
     final language = Localizations.maybeLocaleOf(this)?.languageCode ?? 'en';
     final index = _languages.indexOf(language);
-    return index < 0 ? english : _values[english]?[index] ?? english;
+    return index < 0
+        ? english
+        : _values[english]?[index] ??
+              sshForwardingProfileTranslations[english]?[index] ??
+              english;
   }
 }
 

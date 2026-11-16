@@ -1,0 +1,16 @@
+{
+  "recorded_utc": "2026-11-16T07:28:37.725542+00:00",
+  "command": [
+    "git",
+    "merge-tree",
+    "--write-tree",
+    "6e11d2d6fda1486dc6968e01137ba7466356398f",
+    "e980293cc7446899f1404372ee6296bb65710358"
+  ],
+  "head": "6e11d2d6fda1486dc6968e01137ba7466356398f",
+  "late_remote_head": "e980293cc7446899f1404372ee6296bb65710358",
+  "exit_code": 0,
+  "stdout": "3f854d143c07788ce0b07ad8b0d65bd86c7ea59d\n",
+  "stderr": "",
+  "modifies_worktree_or_index": false
+}

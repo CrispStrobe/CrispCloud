@@ -1,0 +1,216 @@
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_test.dart
+00:00 +0: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_test.dart: agent identities probe before signing and return actual Ed25519 signatures
+00:00 +1: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_test.dart: identity and signature frames survive every split and bytewise fragmentation
+00:00 +2: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_test.dart: parallel identity reads share one frozen snapshot
+00:00 +3: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_test.dart: unknown key families skip and duplicate public keys are exposed once
+00:00 +4: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_test.dart: empty agents and unsupported-only agents fail without password fallback
+00:00 +5: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_test.dart: malformed identity responses reject before exposing any key
+00:00 +6: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_test.dart: oversized, zero, truncated and trailing frame bytes are rejected
+00:00 +7: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_test.dart: RSA uses SHA2 authentication algorithms and exact agent signing flags
+00:00 +8: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_test.dart: ECDSA curves validate their point geometry and signature components
+00:00 +9: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_test.dart: sign refusal is distinct; wrong types, lengths and trailing bytes reject
+00:00 +10: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_test.dart: forwarding allows only frozen keys, list and sign with exact flags
+00:00 +11: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_test.dart: forwarding rate limit resets and identity listing never queries new keys
+00:00 +12: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_test.dart: oversized or empty signing data is rejected before touching the agent
+00:00 +13: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_test.dart: local request concurrency cap includes pending connections
+00:00 +14: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_test.dart: timeout destroys active sockets and reports a stable error
+00:00 +15: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_route_test.dart: each agent-authenticated hop verifies its host before signing
+00:00 +16: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_route_test.dart: each agent-authenticated hop verifies its host before signing
+00:00 +17: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_route_test.dart: each agent-authenticated hop verifies its host before signing
+00:00 +18: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_route_test.dart: each agent-authenticated hop verifies its host before signing
+00:00 +19: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_route_test.dart: each agent-authenticated hop verifies its host before signing
+00:00 +20: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_route_test.dart: each agent-authenticated hop verifies its host before signing
+ℹ️ [SshTerminalService] Session ho7g02hhxz0 established to final.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7g02hhxz0
+00:00 +21: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_route_test.dart: agent authentication alone never forwards the agent
+ℹ️ [SshTerminalService] Session ho7g02iqlx0 established to final.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7g02iqlx0
+00:00 +22: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_route_test.dart: password authentication forwards only after explicit permission at final host
+ℹ️ [SshTerminalService] Session ho7g02iupe0 established to final.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7g02iupe0
+00:00 +23: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_route_test.dart: published route retains agent access after the opener lease ends
+ℹ️ [SshTerminalService] Session ho7g02j1ee0 established to final.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7g02j1ee0
+00:00 +24: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_route_test.dart: outer host-key rejection never requests an agent signature
+❌ [SshTerminalService] SSH connect failed
+  Error: Verify this server’s SSH host key before connecting: SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+00:00 +25: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_route_test.dart: final host-key rejection allows only the already verified jump signature
+❌ [SshTerminalService] SSH connect failed
+  Error: Verify this server’s SSH host key before connecting: SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+00:00 +26: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_route_test.dart: ordinary password routes never create an agent capability
+ℹ️ [SshTerminalService] Session ho7g02jksr0 established to final.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7g02jksr0
+00:00 +27: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_route_test.dart: mixed agent jump and password final target do not change authentication intent
+ℹ️ [SshTerminalService] Session ho7g02jqwc0 established to final.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7g02jqwc0
+00:00 +28: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_route_test.dart: dispose cancels pending agent open and closes the late transport
+❌ [SshTerminalService] SSH connect failed
+  Error: SSH agent access has ended.
+00:00 +29: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_route_test.dart: dispose during signature revokes local requests and publishes no session
+❌ [SshTerminalService] SSH connect failed
+  Error: SSH agent access has ended.
+00:00 +30: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_route_test.dart: remote closure immediately revokes forwarding authority
+ℹ️ [SshTerminalService] Session ho7g02k73m0 established to final.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7g02k73m0
+00:00 +31: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_route_test.dart: already canceled attempt never opens the local agent
+00:01 +32: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_profiles_test.dart: agent authentication and forwarding intent survive secret-free round trips
+00:01 +33: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_profiles_test.dart: agent profile settings upgrade to v3 and never downgrade after deleting them
+00:01 +34: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_profiles_test.dart: arrangements preserve forwarding permission under a v3 envelope
+00:01 +35: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_profiles_test.dart: unrecognized agent permission values reject instead of enabling forwarding
+00:01 +36: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_profiles_test.dart: unknown future agent profile and arrangement stores remain untouched
+00:01 +37: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_profiles_test.dart: separate default stores serialize mutations without losing agent settings
+00:06 +38: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_jump_transport_test.dart: opens one outer socket, authenticates each hop, executes at final host
+ℹ️ [SshTerminalService] Session ho7g064kat0 established to target.example:2200
+ℹ️ [SshTerminalService] execute(ho7g064kat0)
+ℹ️ [SshTerminalService] Disconnecting session ho7g064kat0
+00:06 +39: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_widget_test.dart: agent authentication has no password or private-key fields and forwarding defaults off
+00:06 +39: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_jump_transport_test.dart: direct connections still use verified socket path when no seam is set
+ℹ️ [SshTerminalService] Session ho7g064z7w0 established to target.example:2200
+ℹ️ [SshTerminalService] Disconnecting session ho7g064z7w0
+00:06 +40: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_widget_test.dart: agent authentication has no password or private-key fields and forwarding defaults off
+00:07 +40: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_jump_transport_test.dart: mixed hop key authentication never sends a passphrase as a password
+ℹ️ [SshTerminalService] Session ho7g066oxd0 established to target.example:2200
+ℹ️ [SshTerminalService] Disconnecting session ho7g066oxd0
+00:07 +41: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_widget_test.dart: agent authentication has no password or private-key fields and forwarding defaults off
+00:07 +41: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_jump_transport_test.dart: invalid key at any later hop fails before opening the outer socket
+❌ [SshTerminalService] Failed to parse or decrypt SSH private key
+00:07 +42: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_widget_test.dart: agent authentication has no password or private-key fields and forwarding defaults off
+00:07 +42: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_jump_transport_test.dart: unencrypted jump key accepts the default empty passphrase
+ℹ️ [SshTerminalService] Session ho7g0697s60 established to target.example:2200
+ℹ️ [SshTerminalService] Disconnecting session ho7g0697s60
+00:07 +43: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_widget_test.dart: agent authentication has no password or private-key fields and forwarding defaults off
+00:07 +43: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_jump_transport_test.dart: private-key targets retain the password-authenticated jump route
+ℹ️ [SshTerminalService] Session ho7g06ahfw0 established to target.example:2200
+ℹ️ [SshTerminalService] Disconnecting session ho7g06ahfw0
+00:07 +44: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_widget_test.dart: agent authentication has no password or private-key fields and forwarding defaults off
+00:07 +44: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_jump_transport_test.dart: disconnect releases channels without waiting for a remote close reply
+ℹ️ [SshTerminalService] Session ho7g06akz90 established to target.example:2200
+ℹ️ [SshTerminalService] Disconnecting session ho7g06akz90
+00:07 +45: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_widget_test.dart: agent authentication has no password or private-key fields and forwarding defaults off
+00:07 +45: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_jump_transport_test.dart: rejecting a middle host key prevents downstream auth and closes route
+❌ [SshTerminalService] SSH connect failed
+  Error: Verify this server’s SSH host key before connecting: SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+00:07 +46: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_widget_test.dart: agent authentication has no password or private-key fields and forwarding defaults off
+00:07 +46: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_jump_transport_test.dart: changed middle host key fails closed without offering a trust override
+❌ [SshTerminalService] SSH connect failed
+  Error: SSH host key changed for inner.example:22. Expected SHA256:ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ; received SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA.
+00:07 +47: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_widget_test.dart: agent authentication has no password or private-key fields and forwarding defaults off
+00:07 +47: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_jump_transport_test.dart: forwarding failure releases already authenticated hops
+❌ [SshTerminalService] SSH connect failed
+  Error: Bad state: Forwarding rejected
+00:07 +48: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_widget_test.dart: agent authentication has no password or private-key fields and forwarding defaults off
+00:07 +48: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_jump_transport_test.dart: final authentication failure closes the final client and its ancestors
+❌ [SshTerminalService] SSH connect failed
+  Error: Bad state: Authentication failed
+00:07 +49: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_widget_test.dart: agent authentication has no password or private-key fields and forwarding defaults off
+00:07 +49: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_jump_transport_test.dart: disconnectAll closes a client while its host-key prompt is pending
+❌ [SshTerminalService] SSH connect failed
+  Error: Verify this server’s SSH host key before connecting: SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+00:07 +50: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_widget_test.dart: agent authentication has no password or private-key fields and forwarding defaults off
+00:07 +50: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_jump_transport_test.dart: cancellation closes a forwarded socket that arrives later
+❌ [SshTerminalService] SSH connect failed
+  Error: Bad state: SSH connection was cancelled
+00:07 +51: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_widget_test.dart: agent authentication has no password or private-key fields and forwarding defaults off
+00:07 +51: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_jump_transport_test.dart: dispose closes an outer socket that arrives after cancellation
+❌ [SshTerminalService] SSH connect failed
+  Error: Bad state: SSH connection was cancelled
+00:07 +52: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_widget_test.dart: agent authentication has no password or private-key fields and forwarding defaults off
+00:07 +52: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_jump_transport_test.dart: route snapshot cannot change while the first connection awaits I/O
+ℹ️ [SshTerminalService] Session ho7g06ba170 established to target.example:2200
+ℹ️ [SshTerminalService] Disconnecting session ho7g06ba170
+00:07 +53: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_widget_test.dart: agent authentication has no password or private-key fields and forwarding defaults off
+00:07 +53: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_jump_transport_test.dart: each attempt retains its captured host-key prompt for every hop
+ℹ️ [SshTerminalService] Session ho7g06bcef0 established to target.example:2200
+ℹ️ [SshTerminalService] Disconnecting session ho7g06bcef0
+00:07 +54: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_widget_test.dart: agent authentication has no password or private-key fields and forwarding defaults off
+00:07 +55: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_widget_test.dart: agent authentication has no password or private-key fields and forwarding defaults off
+00:07 +55: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_jump_transport_test.dart: tab cancellation prevents later hops without disconnecting other tabs
+ℹ️ [SshTerminalService] Session ho7g06bgs60 established to other.example:22
+❌ [SshTerminalService] SSH connect failed
+  Error: Bad state: SSH connection was cancelled
+ℹ️ [SshTerminalService] execute(ho7g06bgs60)
+ℹ️ [SshTerminalService] Disconnecting session ho7g06bgs60
+00:07 +56: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_widget_test.dart: agent authentication has no password or private-key fields and forwarding defaults off
+00:07 +57: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_widget_test.dart: agent authentication has no password or private-key fields and forwarding defaults off
+00:07 +57: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_jump_transport_test.dart: a route consumes one terminal pool slot and cleanup makes it reusable
+ℹ️ [SshTerminalService] Session ho7g06blrh0 established to target.example:2200
+ℹ️ [SshTerminalService] Session ho7g06bm7q1 established to other1.example:22
+ℹ️ [SshTerminalService] Session ho7g06bmhd2 established to other2.example:22
+ℹ️ [SshTerminalService] Session ho7g06bmqa3 established to other3.example:22
+ℹ️ [SshTerminalService] Session ho7g06bn394 established to other4.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7g06blrh0
+ℹ️ [SshTerminalService] Session ho7g06bo6q5 established to target.example:2200
+ℹ️ [SshTerminalService] Disconnecting session ho7g06bm7q1
+ℹ️ [SshTerminalService] Disconnecting session ho7g06bmhd2
+ℹ️ [SshTerminalService] Disconnecting session ho7g06bmqa3
+ℹ️ [SshTerminalService] Disconnecting session ho7g06bn394
+ℹ️ [SshTerminalService] Disconnecting session ho7g06bo6q5
+00:07 +58: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_widget_test.dart: agent authentication has no password or private-key fields and forwarding defaults off
+00:07 +58: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_jump_transport_test.dart: a failed client constructor closes its socket and previous hops
+❌ [SshTerminalService] SSH connect failed
+  Error: Bad state: Client constructor failed
+00:07 +59: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_widget_test.dart: agent authentication has no password or private-key fields and forwarding defaults off
+00:08 +60: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_widget_test.dart: explicit agent forwarding choice and server authority explanation are visible
+00:08 +61: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_widget_test.dart: explicit agent forwarding choice and server authority explanation are visible
+00:08 +62: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: password connections preserve the existing form behavior
+00:09 +63: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: password connections preserve the existing form behavior
+00:09 +64: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: password connections preserve the existing form behavior
+00:09 +65: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: password connections preserve the existing form behavior
+00:09 +66: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: password connections preserve the existing form behavior
+00:09 +67: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: password connections preserve the existing form behavior
+00:09 +68: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: password connections preserve the existing form behavior
+00:10 +69: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: private-key mode validates the key and submits its passphrase
+00:10 +70: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: private-key mode validates the key and submits its passphrase
+00:10 +71: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: private-key mode validates the key and submits its passphrase
+00:10 +72: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: private-key mode validates the key and submits its passphrase
+00:10 +73: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: private-key mode validates the key and submits its passphrase
+00:10 +74: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: private-key mode validates the key and submits its passphrase
+00:10 +75: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: private-key mode validates the key and submits its passphrase
+00:10 +76: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: private-key mode validates the key and submits its passphrase
+00:10 +77: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: private-key mode validates the key and submits its passphrase
+00:10 +78: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: private-key mode validates the key and submits its passphrase
+00:10 +79: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: private-key mode validates the key and submits its passphrase
+00:10 +80: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: private-key mode validates the key and submits its passphrase
+00:11 +81: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: private-key mode validates the key and submits its passphrase
+00:11 +82: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: private-key mode validates the key and submits its passphrase
+00:11 +83: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: private-key mode validates the key and submits its passphrase
+00:11 +84: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: private-key mode validates the key and submits its passphrase
+00:11 +85: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: private-key mode validates the key and submits its passphrase
+00:11 +86: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: private-key mode validates the key and submits its passphrase
+00:11 +87: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: private-key mode validates the key and submits its passphrase
+00:11 +88: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: private-key mode validates the key and submits its passphrase
+00:11 +89: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: private-key mode validates the key and submits its passphrase
+00:11 +90: /workspace/scratch/5ee066981535/CrispCloud/test/terminal_arrangements_test.dart: arrangement store rejects corrupt or newer data before save or delete writes
+00:11 +91: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: switching authentication discards credentials from the old mode
+00:11 +92: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: switching authentication discards credentials from the old mode
+00:11 +93: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: switching authentication discards credentials from the old mode
+00:12 +94: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: explicit private-key paste preserves the exact multiline PEM
+00:12 +95: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: late clipboard results cannot restore cleared key credentials
+00:13 +96: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: a manual key edit supersedes a pending clipboard paste
+00:13 +97: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: reconnect prefills endpoint and tmux settings, never secrets
+00:14 +98: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: password reconnect also leaves the password empty
+00:14 +99: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: tmux validates names before returning a create-or-attach request
+00:14 +100: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: plain shell mode does not accidentally reuse a tmux target
+00:15 +101: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: screen create validates names and discards a previous tmux choice
+00:15 +102: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: screen attach accepts full IDs and reconnect preserves mode without secrets
+00:15 +103: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: switching from screen to plain shell discards its target
+00:16 +104: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: screen controls fit narrow screens
+00:16 +105: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: Screen controls are translated in every supported locale
+00:16 +106: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: key and tmux mode still require a safe browser gateway
+00:16 +107: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: expanded key and tmux form fits a narrow viewport
+00:17 +108: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: SSH extension labels are translated in every supported locale
+00:19 +109: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:22 +110: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_reconnect_test.dart: private-key authentication forwards the passphrase and never retains it for reconnect
+00:23 +111: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_reconnect_test.dart: screen detach and reconnect preserve the exact target without secrets
+00:24 +112: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_reconnect_test.dart: conflicting multiplexer options do not replace a live connection
+00:24 +113: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_reconnect_test.dart: failed startup can reconnect with the previous destination
+00:25 +114: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_reconnect_test.dart: overlapping reconnect attempts keep host-key prompts isolated
+00:25 +115: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_reconnect_test.dart: browsing tmux starts no shell before an exact selection and keeps a secret-free reconnect route
+00:26 +116: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_reconnect_test.dart: screen browsing attaches the selected full ID among duplicate names
+00:26 +117: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_reconnect_test.dart: cancelling a session picker closes its authenticated connection
+00:27 +118: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_reconnect_test.dart: a stale listing never displays a picker or opens a shell
+00:27 +119: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_reconnect_test.dart: hiding a panel dismisses only its owned picker and closes the route
+00:27 +120: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_reconnect_test.dart: browse credentials hide old session settings but retain the jump editor
+00:28 +121: All tests passed!

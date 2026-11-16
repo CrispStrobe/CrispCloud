@@ -101,6 +101,11 @@ class InputAwareTerminal extends Terminal {
   TerminalUserInput? _currentInput;
   bool _inputTaken = false;
 
+  /// True throughout every chunk of one explicit input operation, including
+  /// after its one-shot broadcast origin has been consumed. A tmux client
+  /// uses this to avoid duplicating tmux's own terminal-protocol replies.
+  bool get hasActiveUserInput => _currentInput != null;
+
   /// Submits a compound explicit action as one source operation for broadcast.
   /// Replay still uses TerminalSession.sendUserInput to suppress notification.
   void submitUserInput(TerminalUserInput input) =>

@@ -132,7 +132,7 @@ void main() {
   );
 
   test(
-    'unsupported small caps and layout are reported without changing letters',
+    'small caps preserve letters while unsupported layout remains reported',
     () {
       final result = ZoteroFormattedText.fromHtml(
         '<div style="line-height:2; text-indent:-1em">'
@@ -141,13 +141,10 @@ void main() {
       expect(result.plainText, 'Smith');
       expect(
         result.unsupportedFormatting,
-        containsAll([
-          'small caps',
-          'paragraph layout',
-          'unsupported inline style',
-        ]),
+        containsAll(['paragraph layout', 'unsupported inline style']),
       );
       expect(result.toRuns().single.properties.color, '000000');
+      expect(result.toRuns().single.properties.smallCaps, isTrue);
       expect(
         ZoteroFormattedText.fromHtml(
           '<small>Small</small>',

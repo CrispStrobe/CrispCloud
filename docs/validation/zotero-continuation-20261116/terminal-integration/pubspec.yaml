@@ -1,0 +1,35 @@
+name: crisp_cloud
+publish_to: none
+environment:
+  sdk: '>=3.13.0 <4.0.0'
+  flutter: '>=3.47.0'
+dependencies:
+  xterm2: 5.4.0
+  crisp_storage:
+    path: /workspace/scratch/7b8555dd0115/CrispCloud/packages/crisp_storage
+  dartssh2: ^4.1.0
+  web_socket_channel: ^3.0.0
+  file_picker: 10.3.10
+  flutter_riverpod: 2.6.1
+  flutter_secure_storage: 9.2.4
+  http: 1.6.0
+  image: 4.12.0
+  intl: 0.20.3
+  shared_preferences: 2.5.6
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  quds_office_engine:
+    path: /workspace/scratch/7b8555dd0115/zotero-toolchain/crisp-host-harness/packages/quds_office_engine
+  quds_office_editor:
+    path: /workspace/scratch/7b8555dd0115/zotero-toolchain/crisp-host-harness/packages/quds_office_editor
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: 3.0.2
+flutter:
+  uses-material-design: true
+
+dependency_overrides:
+  pointycastle: ^4.0.0

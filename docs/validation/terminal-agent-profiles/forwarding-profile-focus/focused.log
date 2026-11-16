@@ -1,0 +1,71 @@
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_profiles_test.dart
+00:00 +0: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_profiles_test.dart: forwarding route and recipe roundtrips all kinds and keeps requested port zero
+00:00 +1: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_profiles_test.dart: forwarding route and recipe captures a route without retaining top-level or jump credentials
+00:00 +2: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_profiles_test.dart: forwarding route and recipe exact endpoints, usernames, gateway and ordered hops identify a route
+00:00 +3: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_profiles_test.dart: forwarding route and recipe authentication changes do not select a different route
+00:00 +4: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_profiles_test.dart: forwarding route and recipe rejects unsafe routes and persisted gateway port zero
+00:00 +5: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_profiles_test.dart: forwarding route and recipe rejects unknown future fields and malformed profile records
+00:00 +6: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_profiles_test.dart: forwarding profile store concurrent saves reload under lock and preserve both routes
+00:00 +7: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_profiles_test.dart: forwarding profile store default store instances coordinate reload and writes
+00:00 +8: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_profiles_test.dart: forwarding profile store duplicates require both a unique name and recipe within a route
+00:00 +9: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_profiles_test.dart: forwarding profile store optimistic replacement rejects stale edits and deleted snapshots
+00:00 +10: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_profiles_test.dart: forwarding profile store cannot migrate an edited profile to a different route
+00:00 +11: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_profiles_test.dart: forwarding profile store global and per-route limits fail before a write
+00:00 +12: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_profiles_test.dart: forwarding profile store corrupt, future, oversized and duplicate stores survive every mutation
+00:00 +13: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_profiles_test.dart: forwarding profile store write errors do not leak storage details or replace old data
+00:00 +14: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_profiles_test.dart: verified connection coordination starts only explicit auto-start recipes for the exact route once
+00:00 +15: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_profiles_test.dart: verified connection coordination manual starts coalesce and adopt an equal ad-hoc port-zero listener
+00:00 +16: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_profiles_test.dart: verified connection coordination a competing refresh cannot consume the automatic start snapshot
+00:00 +17: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_profiles_test.dart: verified connection coordination saving enabled profiles does not start current listeners; reconnect does
+00:00 +18: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_profiles_test.dart: verified connection coordination Stop does not trigger another automatic start on the same connection
+00:00 +19: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_profiles_test.dart: verified connection coordination cancelled connection during storage read never opens a listener
+00:00 +20: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_profiles_test.dart: verified connection coordination disposal closes a late start and cancels remaining auto-start work
+00:00 +21: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_profiles_test.dart: verified connection coordination automatic failure is visible, bounded and permits another recipe
+00:00 +22: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_profiles_test.dart: verified connection coordination invalid storage surfaces a retained error without autostart
+00:00 +23: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_profiles_test.dart: verified connection coordination delete stops matching listeners across sessions and preserves others
+00:00 +24: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_profiles_test.dart: verified connection coordination delete cancels a pending start before removing its saved recipe
+00:00 +25: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_profiles_test.dart: verified connection coordination stop failure preserves the profile and exposes the manager error
+00:00 +26: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_profiles_test.dart: verified connection coordination recipe edit stops old listeners; metadata edit keeps them running
+00:00 +27: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_profiles_test.dart: verified connection coordination default stores stop listeners even when held by different providers
+00:01 +28: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_profiles_widget_test.dart: new saved recipe defaults to manual and does not open a listener
+00:03 +29: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_panel_test.dart: saved listeners start only after authentication and shell acceptance
+00:03 +30: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_panel_test.dart: saved listeners start only after authentication and shell acceptance
+00:04 +31: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_panel_test.dart: saved listeners start only after authentication and shell acceptance
+00:04 +32: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_panel_test.dart: saved listeners start only after authentication and shell acceptance
+00:04 +33: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_panel_test.dart: saved listeners start only after authentication and shell acceptance
+00:04 +34: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_panel_test.dart: saved listeners start only after authentication and shell acceptance
+00:04 +35: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_panel_test.dart: saved listeners start only after authentication and shell acceptance
+00:04 +36: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_panel_test.dart: saved listeners start only after authentication and shell acceptance
+00:04 +37: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_panel_test.dart: saved listeners start only after authentication and shell acceptance
+00:05 +38: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_port_forwarding_widget_test.dart: Remote submits its route and displays the assigned port
+00:05 +39: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_port_forwarding_widget_test.dart: Remote submits its route and displays the assigned port
+00:05 +40: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_profiles_visual_test.dart: saved forwarding editor on desktop viewport
+00:05 +41: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_panel_test.dart: Stop is respected until reconnect creates one new owned listener
+00:05 +42: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_panel_test.dart: Stop is respected until reconnect creates one new owned listener
+00:05 +43: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_panel_test.dart: Stop is respected until reconnect creates one new owned listener
+00:05 +44: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_panel_test.dart: Stop is respected until reconnect creates one new owned listener
+00:05 +45: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_panel_test.dart: Stop is respected until reconnect creates one new owned listener
+00:05 +46: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_panel_test.dart: Stop is respected until reconnect creates one new owned listener
+00:06 +47: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_panel_test.dart: Stop is respected until reconnect creates one new owned listener
+00:06 +48: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_port_forwarding_widget_test.dart: invalid ports and empty destinations never reach the transport
+00:06 +49: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_panel_test.dart: authentication failure never starts saved forwarding
+00:06 +50: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_port_forwarding_widget_test.dart: pending creation cannot submit twice or dismiss its owner
+00:06 +51: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_panel_test.dart: shell failure never starts saved forwarding
+00:06 +52: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_port_forwarding_widget_test.dart: disconnect disables an already open editor without reconnecting
+00:07 +53: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_panel_test.dart: a changed SSH username does not inherit another route’s profiles
+00:07 +54: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_port_forwarding_widget_test.dart: late startup failure after disconnect stays on the ended route
+00:07 +55: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_panel_test.dart: load failure shows a snackbar and leaves SSH usable
+00:07 +56: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_port_forwarding_widget_test.dart: an unexpected start failure permits a corrected retry
+00:07 +57: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_panel_test.dart: disconnect during profile loading cancels automatic listener creation
+00:07 +58: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_panel_test.dart: disconnect during profile loading cancels automatic listener creation
+00:07 +59: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_port_forwarding_widget_test.dart: pending Stop is disabled and a stop failure remains visible
+00:07 +60: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_panel_test.dart: switching panel sessions cancels late starts without touching the new terminal
+00:07 +61: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_panel_test.dart: switching panel sessions cancels late starts without touching the new terminal
+00:08 +62: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_port_forwarding_widget_test.dart: remote startup cleanup explains why SSH was closed
+00:08 +63: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_panel_test.dart: disconnect with profile editor open permits saved edits and deletion without new listeners
+00:08 +64: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_panel_test.dart: disconnect with profile editor open permits saved edits and deletion without new listeners
+00:08 +65: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_panel_test.dart: disconnect with profile editor open permits saved edits and deletion without new listeners
+00:08 +66: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_forwarding_panel_test.dart: profile deletion can finish while the disconnected manager is closing
+00:09 +67: All tests passed!

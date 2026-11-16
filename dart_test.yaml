@@ -1,4 +1,7 @@
 tags:
+  live-tmux:
+    # A dedicated scratch server only; enabled by the local smoke runner.
+    timeout: 2m
   live-ssh:
     # The suite itself skips unless the disposable loopback runner supplies it.
     timeout: 2m

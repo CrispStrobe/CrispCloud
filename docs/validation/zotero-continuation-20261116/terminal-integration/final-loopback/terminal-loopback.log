@@ -1,0 +1,51 @@
+{"protocolVersion":"0.1.1","runnerVersion":null,"pid":38,"type":"start","time":0}
+{"suite":{"id":0,"platform":"vm","path":"/workspace/scratch/7b8555dd0115/zotero-toolchain/crisp-terminal-harness/test/ssh_terminal_live_test.dart"},"type":"suite","time":0}
+{"test":{"id":1,"name":"loading /workspace/scratch/7b8555dd0115/zotero-toolchain/crisp-terminal-harness/test/ssh_terminal_live_test.dart","suiteID":0,"groupIDs":[],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":1}
+{"count":2,"time":4,"type":"allSuites"}
+{"testID":1,"messageType":"print","message":"Warning: A tag was used that wasn't specified in dart_test.yaml.\n  live-ssh was used in the suite itself\n","type":"print","time":3220}
+{"testID":1,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":3226}
+{"group":{"id":2,"suiteID":0,"parentID":null,"name":"","metadata":{"skip":false,"skipReason":null},"testCount":3,"line":null,"column":null,"url":null},"type":"group","time":3228}
+{"group":{"id":3,"suiteID":0,"parentID":2,"name":"real OpenSSH loopback route","metadata":{"skip":false,"skipReason":null},"testCount":3,"line":30,"column":3,"url":"file:///workspace/scratch/7b8555dd0115/zotero-toolchain/crisp-terminal-harness/test/ssh_terminal_live_test.dart"},"type":"group","time":3229}
+{"test":{"id":4,"name":"real OpenSSH loopback route verifies both servers and preserves Unicode execution through a jump","suiteID":0,"groupIDs":[2,3],"metadata":{"skip":false,"skipReason":null},"line":71,"column":7,"url":"file:///workspace/scratch/7b8555dd0115/zotero-toolchain/crisp-terminal-harness/test/ssh_terminal_live_test.dart"},"type":"testStart","time":3229}
+{"testID":4,"messageType":"print","message":"ℹ️ [SshTerminalService] Session ho7ewcd7860 established to 127.0.0.1:45045","type":"print","time":3688}
+{"testID":4,"messageType":"print","message":"ℹ️ [SshTerminalService] execute(ho7ewcd7860)","type":"print","time":3690}
+{"testID":4,"messageType":"print","message":"ℹ️ [SshTerminalService] Disconnecting session ho7ewcd7860","type":"print","time":3725}
+{"testID":4,"messageType":"print","message":"ℹ️ [SshTerminalService] Session ho7ewci75t1 established to 127.0.0.1:45045","type":"print","time":3917}
+{"testID":4,"messageType":"print","message":"ℹ️ [SshTerminalService] execute(ho7ewci75t1)","type":"print","time":3917}
+{"testID":4,"messageType":"print","message":"ℹ️ [SshTerminalService] Disconnecting session ho7ewci75t1","type":"print","time":3932}
+{"testID":4,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3934}
+{"test":{"id":5,"name":"real OpenSSH loopback route rejects a changed target host key without trusting or registering the route","suiteID":0,"groupIDs":[2,3],"metadata":{"skip":false,"skipReason":null},"line":104,"column":7,"url":"file:///workspace/scratch/7b8555dd0115/zotero-toolchain/crisp-terminal-harness/test/ssh_terminal_live_test.dart"},"type":"testStart","time":3935}
+{"testID":5,"messageType":"print","message":"ℹ️ [SshTerminalService] Session ho7ewcmalr0 established to 127.0.0.1:45045","type":"print","time":4109}
+{"testID":5,"messageType":"print","message":"ℹ️ [SshTerminalService] Disconnecting session ho7ewcmalr0","type":"print","time":4110}
+{"testID":5,"messageType":"print","message":"❌ [SshTerminalService] SSH connect failed","type":"print","time":4229}
+{"testID":5,"messageType":"print","message":"  Error: SSH host key changed for 127.0.0.1:45045. Expected SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA; received SHA256:Ni8HKZZHK1x5viUPtIKjmuFhTteYPIr3jI3tEurJSOI.","type":"print","time":4230}
+{"testID":5,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":4231}
+{"test":{"id":6,"name":"real OpenSSH loopback route real PTY receives size changes and preserves final output and exit status","suiteID":0,"groupIDs":[2,3],"metadata":{"skip":true,"skipReason":"Use --with-pty with an sshd allowed to write login records."},"line":124,"column":7,"url":"file:///workspace/scratch/7b8555dd0115/zotero-toolchain/crisp-terminal-harness/test/ssh_terminal_live_test.dart"},"type":"testStart","time":4231}
+{"testID":6,"messageType":"skip","message":"Skip: Use --with-pty with an sshd allowed to write login records.","type":"print","time":4232}
+{"testID":6,"result":"success","skipped":true,"hidden":false,"type":"testDone","time":4232}
+{"suite":{"id":7,"platform":"vm","path":"/workspace/scratch/7b8555dd0115/zotero-toolchain/crisp-terminal-harness/test/ssh_port_forwarding_live_test.dart"},"type":"suite","time":4245}
+{"test":{"id":8,"name":"loading /workspace/scratch/7b8555dd0115/zotero-toolchain/crisp-terminal-harness/test/ssh_port_forwarding_live_test.dart","suiteID":7,"groupIDs":[],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":4245}
+{"testID":8,"messageType":"print","message":"Warning: A tag was used that wasn't specified in dart_test.yaml.\n  live-ssh was used in the suite itself\n","type":"print","time":4905}
+{"testID":8,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":4905}
+{"group":{"id":9,"suiteID":7,"parentID":null,"name":"","metadata":{"skip":false,"skipReason":null},"testCount":4,"line":null,"column":null,"url":null},"type":"group","time":4906}
+{"group":{"id":10,"suiteID":7,"parentID":9,"name":"real OpenSSH forwarding through a verified jump route","metadata":{"skip":false,"skipReason":null},"testCount":4,"line":30,"column":3,"url":"file:///workspace/scratch/7b8555dd0115/zotero-toolchain/crisp-terminal-harness/test/ssh_port_forwarding_live_test.dart"},"type":"group","time":4906}
+{"test":{"id":11,"name":"real OpenSSH forwarding through a verified jump route local allocates a listener, drains binary response after half-close, and cancels","suiteID":7,"groupIDs":[9,10],"metadata":{"skip":false,"skipReason":null},"line":106,"column":9,"url":"file:///workspace/scratch/7b8555dd0115/zotero-toolchain/crisp-terminal-harness/test/ssh_port_forwarding_live_test.dart"},"type":"testStart","time":4906}
+{"testID":11,"messageType":"print","message":"ℹ️ [SshTerminalService] Session ho7ewdbzvn0 established to 127.0.0.1:45045","type":"print","time":5312}
+{"testID":11,"messageType":"print","message":"ℹ️ [SshTerminalService] execute(ho7ewdbzvn0)","type":"print","time":20042}
+{"testID":11,"messageType":"print","message":"ℹ️ [SshTerminalService] Disconnecting session ho7ewdbzvn0","type":"print","time":20059}
+{"testID":11,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":20066}
+{"test":{"id":12,"name":"real OpenSSH forwarding through a verified jump route remote allocates a listener, drains binary response after half-close, and cancels","suiteID":7,"groupIDs":[9,10],"metadata":{"skip":false,"skipReason":null},"line":106,"column":9,"url":"file:///workspace/scratch/7b8555dd0115/zotero-toolchain/crisp-terminal-harness/test/ssh_port_forwarding_live_test.dart"},"type":"testStart","time":20067}
+{"testID":12,"messageType":"print","message":"ℹ️ [SshTerminalService] Session ho7ewm80gh0 established to 127.0.0.1:45045","type":"print","time":20238}
+{"testID":12,"messageType":"print","message":"ℹ️ [SshTerminalService] execute(ho7ewm80gh0)","type":"print","time":35049}
+{"testID":12,"messageType":"print","message":"ℹ️ [SshTerminalService] Disconnecting session ho7ewm80gh0","type":"print","time":35054}
+{"testID":12,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":35059}
+{"test":{"id":13,"name":"real OpenSSH forwarding through a verified jump route SOCKS domain request and pipelined binary payload survive request half-close","suiteID":7,"groupIDs":[9,10],"metadata":{"skip":false,"skipReason":null},"line":147,"column":7,"url":"file:///workspace/scratch/7b8555dd0115/zotero-toolchain/crisp-terminal-harness/test/ssh_port_forwarding_live_test.dart"},"type":"testStart","time":35061}
+{"testID":13,"messageType":"print","message":"ℹ️ [SshTerminalService] Session ho7ewv5h6v0 established to 127.0.0.1:45045","type":"print","time":35236}
+{"testID":13,"messageType":"print","message":"ℹ️ [SshTerminalService] execute(ho7ewv5h6v0)","type":"print","time":49918}
+{"testID":13,"messageType":"print","message":"ℹ️ [SshTerminalService] Disconnecting session ho7ewv5h6v0","type":"print","time":49923}
+{"testID":13,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":49926}
+{"test":{"id":14,"name":"real OpenSSH forwarding through a verified jump route disconnect closes active client sockets and both local and remote listeners","suiteID":7,"groupIDs":[9,10],"metadata":{"skip":false,"skipReason":null},"line":185,"column":7,"url":"file:///workspace/scratch/7b8555dd0115/zotero-toolchain/crisp-terminal-harness/test/ssh_port_forwarding_live_test.dart"},"type":"testStart","time":49926}
+{"testID":14,"messageType":"print","message":"ℹ️ [SshTerminalService] Session ho7ex3zy400 established to 127.0.0.1:45045","type":"print","time":50095}
+{"testID":14,"messageType":"print","message":"ℹ️ [SshTerminalService] Disconnecting session ho7ex3zy400","type":"print","time":50110}
+{"testID":14,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":50127}
+{"success":true,"type":"done","time":50144}

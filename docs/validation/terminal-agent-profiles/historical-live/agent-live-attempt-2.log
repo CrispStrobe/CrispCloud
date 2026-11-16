@@ -1,0 +1,353 @@
+Optional real Unix-agent acceptance skipped: Host rejected Unix-socket creation: [Errno 1] Operation not permitted
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_live_test.dart
+00:00 +0: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_live_test.dart: real OpenSSH loopback route verifies both servers and preserves Unicode execution through a jump
+ℹ️ [SshTerminalService] Session ho7g8cp3sk0 established to 127.0.0.1:46285
+ℹ️ [SshTerminalService] execute(ho7g8cp3sk0)
+ℹ️ [SshTerminalService] Disconnecting session ho7g8cp3sk0
+ℹ️ [SshTerminalService] Session ho7g8cug4o1 established to 127.0.0.1:46285
+ℹ️ [SshTerminalService] execute(ho7g8cug4o1)
+ℹ️ [SshTerminalService] Disconnecting session ho7g8cug4o1
+00:00 +1: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_live_test.dart: real OpenSSH loopback route rejects a changed target host key without trusting or registering the route
+ℹ️ [SshTerminalService] Session ho7g8cz4xn0 established to 127.0.0.1:46285
+ℹ️ [SshTerminalService] Disconnecting session ho7g8cz4xn0
+❌ [SshTerminalService] SSH connect failed
+  Error: SSH host key changed for 127.0.0.1:46285. Expected SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA; received SHA256:tSiL8HkZ0o7oQFkCpkZzjrlXQ+LxsiS0fJcF6/dNpbE.
+00:01 +2: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_terminal_live_test.dart: real OpenSSH loopback route real PTY receives size changes and preserves final output and exit status
+  Skip: Use --with-pty with an sshd allowed to write login records.
+00:01 +2 ~1: loading /workspace/scratch/5ee066981535/CrispCloud/test/ssh_port_forwarding_live_test.dart
+00:02 +2 ~1: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_port_forwarding_live_test.dart: real OpenSSH forwarding through a verified jump route local allocates a listener, drains binary response after half-close, and cancels
+ℹ️ [SshTerminalService] Session ho7g8e4w3t0 established to 127.0.0.1:46285
+ℹ️ [SshTerminalService] execute(ho7g8e4w3t0)
+ℹ️ [SshTerminalService] Disconnecting session ho7g8e4w3t0
+00:18 +3 ~1: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_port_forwarding_live_test.dart: real OpenSSH forwarding through a verified jump route remote allocates a listener, drains binary response after half-close, and cancels
+ℹ️ [SshTerminalService] Session ho7g8ngrh60 established to 127.0.0.1:46285
+ℹ️ [SshTerminalService] execute(ho7g8ngrh60)
+ℹ️ [SshTerminalService] Disconnecting session ho7g8ngrh60
+00:33 +4 ~1: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_port_forwarding_live_test.dart: real OpenSSH forwarding through a verified jump route SOCKS domain request and pipelined binary payload survive request half-close
+ℹ️ [SshTerminalService] Session ho7g8w7y730 established to 127.0.0.1:46285
+ℹ️ [SshTerminalService] execute(ho7g8w7y730)
+ℹ️ [SshTerminalService] Disconnecting session ho7g8w7y730
+00:47 +5 ~1: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_port_forwarding_live_test.dart: real OpenSSH forwarding through a verified jump route disconnect closes active client sockets and both local and remote listeners
+ℹ️ [SshTerminalService] Session ho7g94wa110 established to 127.0.0.1:46285
+ℹ️ [SshTerminalService] Disconnecting session ho7g94wa110
+00:47 +6 ~1: loading /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_live_test.dart
+00:48 +6 ~1: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture Ed25519 waits for host approval before direct signing
+ℹ️ [SshTerminalService] Session ho7g95h1g40 established to 127.0.0.1:46285
+ℹ️ [SshTerminalService] execute(ho7g95h1g40)
+ℹ️ [SshTerminalService] Disconnecting session ho7g95h1g40
+00:48 +7 ~1: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture Ed25519 signs independently after each verified jump hop
+ℹ️ [SshTerminalService] Session ho7g95mq5r0 established to 127.0.0.1:46285
+ℹ️ [SshTerminalService] execute(ho7g95mq5r0)
+ℹ️ [SshTerminalService] Disconnecting session ho7g95mq5r0
+00:49 +8 ~1: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture RSA SHA-2 waits for host approval before direct signing
+ℹ️ [SshTerminalService] Session ho7g95q4460 established to 127.0.0.1:46285
+ℹ️ [SshTerminalService] execute(ho7g95q4460)
+ℹ️ [SshTerminalService] Disconnecting session ho7g95q4460
+00:49 +9 ~1: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture RSA SHA-2 signs independently after each verified jump hop
+ℹ️ [SshTerminalService] Session ho7g95u72b0 established to 127.0.0.1:46285
+ℹ️ [SshTerminalService] execute(ho7g95u72b0)
+ℹ️ [SshTerminalService] Disconnecting session ho7g95u72b0
+00:49 +10 ~1: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture bounded channel writes drain across a live OpenSSH rekey
+ℹ️ [SshTerminalService] Session ho7g95yd2q0 established to 127.0.0.1:46285
+00:49 +10 ~1 -1: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture bounded channel writes drain across a live OpenSSH rekey [E]
+  Bad state: Cannot add event while adding a stream
+  dart:async                                    _StreamController.add
+  package:dartssh2/src/ssh_channel.dart 561:20  SSHChannelController.sendDataAndWait
+  package:dartssh2/src/ssh_channel.dart 602:19  SSHChannel.sendDataAndWait
+  test/ssh_agent_live_test.dart 189:39          main.<fn>.<fn>
+  
+ℹ️ [SshTerminalService] Disconnecting session ho7g95yd2q0
+  SSHStateError(SSH client closed)
+  dart:async                                                      _Completer.completeError
+  package:dartssh2/src/ssh_channel.dart 321:41                    SSHChannelController._finish
+  package:dartssh2/src/ssh_channel.dart 301:5                     SSHChannelController.destroy
+  package:dartssh2/src/ssh_client.dart 938:15                     SSHClient._closeChannels
+  package:dartssh2/src/ssh_client.dart 905:5                      SSHClient.close
+  package:crisp_cloud/services/ssh_terminal_service.dart 235:24   _SshClientRoute._closeClient
+  package:crisp_cloud/services/ssh_terminal_service.dart 210:13   _SshClientRoute._close
+  package:crisp_cloud/services/ssh_terminal_service.dart 201:40   _SshClientRoute.close
+  package:crisp_cloud/services/ssh_terminal_service.dart 1177:23  SshTerminalService._closeState
+  ===== asynchronous gap ===========================
+  dart:async                                                      _CustomZone.registerUnaryCallback
+  package:crisp_cloud/services/ssh_terminal_service.dart 1170:5   SshTerminalService._closeState
+  package:crisp_cloud/services/ssh_terminal_service.dart 711:11   SshTerminalService.disconnect
+  package:crisp_cloud/services/ssh_terminal_service.dart 722:13   SshTerminalService.disconnectAll
+  package:crisp_cloud/services/ssh_terminal_service.dart 1111:11  SshTerminalService.dispose
+  
+00:49 +10 ~1 -1: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture rejecting a real host key never asks the agent to sign
+❌ [SshTerminalService] SSH connect failed
+  Error: Verify this server’s SSH host key before connecting: SHA256:tSiL8HkZ0o7oQFkCpkZzjrlXQ+LxsiS0fJcF6/dNpbE
+00:49 +11 ~1 -1: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture a changed direct host key fails before any signature
+❌ [SshTerminalService] SSH connect failed
+  Error: SSH host key changed for 127.0.0.1:46285. Expected SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA; received SHA256:tSiL8HkZ0o7oQFkCpkZzjrlXQ+LxsiS0fJcF6/dNpbE.
+00:49 +12 ~1 -1: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture a changed final key signs only for the independently trusted jump
+❌ [SshTerminalService] SSH connect failed
+  Error: SSH host key changed for 127.0.0.1:46285. Expected SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA; received SHA256:tSiL8HkZ0o7oQFkCpkZzjrlXQ+LxsiS0fJcF6/dNpbE.
+00:49 +13 ~1 -1: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture a refused agent signature has no password or interactive fallback
+❌ [SshTerminalService] SSH connect failed
+  Error: SSHAuthAbortError(Connection closed before authentication)
+00:49 +14 ~1 -1: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture disconnect revokes a pending local-agent signature on a live route
+ℹ️ [SshTerminalService] Session ho7g9695xu0 established to 127.0.0.1:46285
+ℹ️ [SshTerminalService] execute(ho7g9695xu0)
+ℹ️ [SshTerminalService] Disconnecting session ho7g9695xu0
+00:50 +15 ~1 -1: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture cancelling host approval closes authority before a late approval
+❌ [SshTerminalService] SSH connect failed
+  Error: SSHAuthAbortError(Connection closed before authentication)
+00:50 +16 ~1 -1: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_live_test.dart: actual disposable Unix ssh-agent authenticates and forwards to ssh-add
+  Skip: Host rejected Unix-socket creation: [Errno 1] Operation not permitted
+00:50 +16 ~2 -1: Some tests failed.
+
+Failing tests:
+  /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture bounded channel writes drain across a live OpenSSH rekey
+OpenSSH jump fixture log:
+Server listening on 127.0.0.1 port 36133.
+Connection from 127.0.0.1 port 51424 on 127.0.0.1 port 36133 rdomain ""
+kex_exchange_identification: Connection closed by remote host
+Connection closed by 127.0.0.1 port 51424
+srclimit_penalise: ipv4: new 127.0.0.1/32 deferred penalty of 1 seconds for penalty: connections without attempting authentication
+Connection from 127.0.0.1 port 57800 on 127.0.0.1 port 36133 rdomain ""
+Accepted key ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU found at /workspace/scratch/5ee066981535/CrispCloud/.dart_tool/terminal-live-smoke/route-ihvx9oco/authorized_keys:1
+Accepted publickey for agent from 127.0.0.1 port 57800 ssh2: ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU
+User child is on pid 136
+Connection closed by 127.0.0.1 port 57800
+Transferred: sent 4156, received 2852 bytes
+Closing connection to 127.0.0.1 port 57800
+Connection from 127.0.0.1 port 57814 on 127.0.0.1 port 36133 rdomain ""
+Accepted key ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU found at /workspace/scratch/5ee066981535/CrispCloud/.dart_tool/terminal-live-smoke/route-ihvx9oco/authorized_keys:1
+Accepted publickey for agent from 127.0.0.1 port 57814 ssh2: ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU
+User child is on pid 143
+Connection closed by 127.0.0.1 port 57814
+Transferred: sent 4176, received 2836 bytes
+Closing connection to 127.0.0.1 port 57814
+Connection from 127.0.0.1 port 57828 on 127.0.0.1 port 36133 rdomain ""
+Accepted key ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU found at /workspace/scratch/5ee066981535/CrispCloud/.dart_tool/terminal-live-smoke/route-ihvx9oco/authorized_keys:1
+Accepted publickey for agent from 127.0.0.1 port 57828 ssh2: ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU
+User child is on pid 150
+Read error from remote host 127.0.0.1 port 57828: Connection reset by peer
+Connection from 127.0.0.1 port 57830 on 127.0.0.1 port 36133 rdomain ""
+Accepted key ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU found at /workspace/scratch/5ee066981535/CrispCloud/.dart_tool/terminal-live-smoke/route-ihvx9oco/authorized_keys:1
+Accepted publickey for agent from 127.0.0.1 port 57830 ssh2: ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU
+User child is on pid 156
+Read error from remote host 127.0.0.1 port 57830: Connection reset by peer
+Connection from 127.0.0.1 port 57846 on 127.0.0.1 port 36133 rdomain ""
+Accepted key ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU found at /workspace/scratch/5ee066981535/CrispCloud/.dart_tool/terminal-live-smoke/route-ihvx9oco/authorized_keys:1
+Accepted publickey for agent from 127.0.0.1 port 57846 ssh2: ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU
+User child is on pid 173
+Connection closed by 127.0.0.1 port 57846
+Transferred: sent 3158252, received 3157712 bytes
+Closing connection to 127.0.0.1 port 57846
+Connection from 127.0.0.1 port 60650 on 127.0.0.1 port 36133 rdomain ""
+Accepted key ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU found at /workspace/scratch/5ee066981535/CrispCloud/.dart_tool/terminal-live-smoke/route-ihvx9oco/authorized_keys:1
+Accepted publickey for agent from 127.0.0.1 port 60650 ssh2: ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU
+User child is on pid 184
+Connection closed by 127.0.0.1 port 60650
+Transferred: sent 3158356, received 3157912 bytes
+Closing connection to 127.0.0.1 port 60650
+Connection from 127.0.0.1 port 49994 on 127.0.0.1 port 36133 rdomain ""
+Accepted key ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU found at /workspace/scratch/5ee066981535/CrispCloud/.dart_tool/terminal-live-smoke/route-ihvx9oco/authorized_keys:1
+Accepted publickey for agent from 127.0.0.1 port 49994 ssh2: ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU
+User child is on pid 195
+Connection closed by 127.0.0.1 port 49994
+Transferred: sent 3159292, received 3157676 bytes
+Closing connection to 127.0.0.1 port 49994
+Connection from 127.0.0.1 port 60930 on 127.0.0.1 port 36133 rdomain ""
+Accepted key ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU found at /workspace/scratch/5ee066981535/CrispCloud/.dart_tool/terminal-live-smoke/route-ihvx9oco/authorized_keys:1
+Accepted publickey for agent from 127.0.0.1 port 60930 ssh2: ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU
+User child is on pid 208
+Connection closed by 127.0.0.1 port 60930
+Transferred: sent 4368, received 3204 bytes
+Closing connection to 127.0.0.1 port 60930
+Connection from 127.0.0.1 port 60932 on 127.0.0.1 port 36133 rdomain ""
+Accepted key ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU found at /workspace/scratch/5ee066981535/CrispCloud/.dart_tool/terminal-live-smoke/route-ihvx9oco/authorized_keys:1
+Postponed publickey for agent from 127.0.0.1 port 60932 ssh2 [preauth]
+Accepted key ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU found at /workspace/scratch/5ee066981535/CrispCloud/.dart_tool/terminal-live-smoke/route-ihvx9oco/authorized_keys:1
+Accepted publickey for agent from 127.0.0.1 port 60932 ssh2: ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU
+User child is on pid 234
+Connection closed by 127.0.0.1 port 60932
+Transferred: sent 4864, received 3148 bytes
+Closing connection to 127.0.0.1 port 60932
+Connection from 127.0.0.1 port 60946 on 127.0.0.1 port 36133 rdomain ""
+Accepted key RSA SHA256:w5fLpQJ14mTXsjppRfPUlfY0RC8jAmh8rlwVU3YWgo4 found at /workspace/scratch/5ee066981535/CrispCloud/.dart_tool/terminal-live-smoke/route-ihvx9oco/authorized_keys:2
+Postponed publickey for agent from 127.0.0.1 port 60946 ssh2 [preauth]
+Accepted key RSA SHA256:w5fLpQJ14mTXsjppRfPUlfY0RC8jAmh8rlwVU3YWgo4 found at /workspace/scratch/5ee066981535/CrispCloud/.dart_tool/terminal-live-smoke/route-ihvx9oco/authorized_keys:2
+Accepted publickey for agent from 127.0.0.1 port 60946 ssh2: RSA SHA256:w5fLpQJ14mTXsjppRfPUlfY0RC8jAmh8rlwVU3YWgo4
+User child is on pid 245
+Connection closed by 127.0.0.1 port 60946
+Transferred: sent 5272, received 4460 bytes
+Closing connection to 127.0.0.1 port 60946
+Connection from 127.0.0.1 port 60948 on 127.0.0.1 port 36133 rdomain ""
+Accepted key ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU found at /workspace/scratch/5ee066981535/CrispCloud/.dart_tool/terminal-live-smoke/route-ihvx9oco/authorized_keys:1
+Postponed publickey for agent from 127.0.0.1 port 60948 ssh2 [preauth]
+Accepted key ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU found at /workspace/scratch/5ee066981535/CrispCloud/.dart_tool/terminal-live-smoke/route-ihvx9oco/authorized_keys:1
+Accepted publickey for agent from 127.0.0.1 port 60948 ssh2: ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU
+User child is on pid 252
+Connection closed by 127.0.0.1 port 60948
+Transferred: sent 5884, received 4020 bytes
+Closing connection to 127.0.0.1 port 60948
+Connection from 127.0.0.1 port 60952 on 127.0.0.1 port 36133 rdomain ""
+Accepted key ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU found at /workspace/scratch/5ee066981535/CrispCloud/.dart_tool/terminal-live-smoke/route-ihvx9oco/authorized_keys:1
+Postponed publickey for agent from 127.0.0.1 port 60952 ssh2 [preauth]
+Accepted key ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU found at /workspace/scratch/5ee066981535/CrispCloud/.dart_tool/terminal-live-smoke/route-ihvx9oco/authorized_keys:1
+Accepted publickey for agent from 127.0.0.1 port 60952 ssh2: ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU
+User child is on pid 264
+Read error from remote host 127.0.0.1 port 60952: Connection reset by peer
+Connection from 127.0.0.1 port 60960 on 127.0.0.1 port 36133 rdomain ""
+Accepted key ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU found at /workspace/scratch/5ee066981535/CrispCloud/.dart_tool/terminal-live-smoke/route-ihvx9oco/authorized_keys:1
+Postponed publickey for agent from 127.0.0.1 port 60960 ssh2 [preauth]
+Accepted key ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU found at /workspace/scratch/5ee066981535/CrispCloud/.dart_tool/terminal-live-smoke/route-ihvx9oco/authorized_keys:1
+Accepted publickey for agent from 127.0.0.1 port 60960 ssh2: ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU
+User child is on pid 271
+Connection closed by 127.0.0.1 port 60960
+Transferred: sent 4828, received 3148 bytes
+Closing connection to 127.0.0.1 port 60960
+
+OpenSSH target fixture log:
+Server listening on 127.0.0.1 port 46285.
+Connection from 127.0.0.1 port 48950 on 127.0.0.1 port 46285 rdomain ""
+kex_exchange_identification: Connection closed by remote host
+Connection closed by 127.0.0.1 port 48950
+srclimit_penalise: ipv4: new 127.0.0.1/32 deferred penalty of 1 seconds for penalty: connections without attempting authentication
+Connection from 127.0.0.1 port 38038 on 127.0.0.1 port 46285 rdomain ""
+Accepted key ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU found at /workspace/scratch/5ee066981535/CrispCloud/.dart_tool/terminal-live-smoke/route-ihvx9oco/authorized_keys:1
+Accepted publickey for agent from 127.0.0.1 port 38038 ssh2: ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU
+User child is on pid 139
+Starting session: command for agent from 127.0.0.1 port 38038 id 0
+Close session: user agent from 127.0.0.1 port 38038 id 0
+Connection closed by 127.0.0.1 port 38038
+Transferred: sent 1920, received 1232 bytes
+Closing connection to 127.0.0.1 port 38038
+Connection from 127.0.0.1 port 38040 on 127.0.0.1 port 46285 rdomain ""
+Accepted key ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU found at /workspace/scratch/5ee066981535/CrispCloud/.dart_tool/terminal-live-smoke/route-ihvx9oco/authorized_keys:1
+Accepted publickey for agent from 127.0.0.1 port 38040 ssh2: ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU
+User child is on pid 146
+Starting session: command for agent from 127.0.0.1 port 38040 id 0
+Close session: user agent from 127.0.0.1 port 38040 id 0
+Connection closed by 127.0.0.1 port 38040
+Transferred: sent 1904, received 1216 bytes
+Closing connection to 127.0.0.1 port 38040
+Connection from 127.0.0.1 port 38046 on 127.0.0.1 port 46285 rdomain ""
+Accepted key ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU found at /workspace/scratch/5ee066981535/CrispCloud/.dart_tool/terminal-live-smoke/route-ihvx9oco/authorized_keys:1
+Accepted publickey for agent from 127.0.0.1 port 38046 ssh2: ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU
+User child is on pid 153
+Connection closed by 127.0.0.1 port 38046
+Transferred: sent 1716, received 1088 bytes
+Closing connection to 127.0.0.1 port 38046
+Connection from 127.0.0.1 port 38060 on 127.0.0.1 port 46285 rdomain ""
+Connection closed by 127.0.0.1 port 38060 [preauth]
+srclimit_penalise: ipv4: new 127.0.0.1/32 deferred penalty of 1 seconds for penalty: connections without attempting authentication
+Connection from 127.0.0.1 port 38062 on 127.0.0.1 port 46285 rdomain ""
+Accepted key ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU found at /workspace/scratch/5ee066981535/CrispCloud/.dart_tool/terminal-live-smoke/route-ihvx9oco/authorized_keys:1
+Accepted publickey for agent from 127.0.0.1 port 38062 ssh2: ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU
+User child is on pid 176
+Starting session: command for agent from 127.0.0.1 port 38062 id 0
+Close session: user agent from 127.0.0.1 port 38062 id 0
+Connection closed by 127.0.0.1 port 38062
+Transferred: sent 3150272, received 3149132 bytes
+Closing connection to 127.0.0.1 port 38062
+Connection from 127.0.0.1 port 46054 on 127.0.0.1 port 46285 rdomain ""
+Accepted key ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU found at /workspace/scratch/5ee066981535/CrispCloud/.dart_tool/terminal-live-smoke/route-ihvx9oco/authorized_keys:1
+Accepted publickey for agent from 127.0.0.1 port 46054 ssh2: ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU
+User child is on pid 187
+Starting session: command for agent from 127.0.0.1 port 46054 id 0
+Close session: user agent from 127.0.0.1 port 46054 id 0
+Connection closed by 127.0.0.1 port 46054
+Transferred: sent 3150320, received 3149208 bytes
+Closing connection to 127.0.0.1 port 46054
+Connection from 127.0.0.1 port 48158 on 127.0.0.1 port 46285 rdomain ""
+Accepted key ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU found at /workspace/scratch/5ee066981535/CrispCloud/.dart_tool/terminal-live-smoke/route-ihvx9oco/authorized_keys:1
+Accepted publickey for agent from 127.0.0.1 port 48158 ssh2: ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU
+User child is on pid 198
+Starting session: command for agent from 127.0.0.1 port 48158 id 0
+Close session: user agent from 127.0.0.1 port 48158 id 0
+Connection closed by 127.0.0.1 port 48158
+Transferred: sent 3150240, received 3149116 bytes
+Closing connection to 127.0.0.1 port 48158
+Connection from 127.0.0.1 port 50152 on 127.0.0.1 port 46285 rdomain ""
+Accepted key ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU found at /workspace/scratch/5ee066981535/CrispCloud/.dart_tool/terminal-live-smoke/route-ihvx9oco/authorized_keys:1
+Accepted publickey for agent from 127.0.0.1 port 50152 ssh2: ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU
+User child is on pid 212
+Connection closed by 127.0.0.1 port 50152
+Transferred: sent 1956, received 1392 bytes
+Closing connection to 127.0.0.1 port 50152
+Connection from 127.0.0.1 port 50166 on 127.0.0.1 port 46285 rdomain ""
+Accepted key ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU found at /workspace/scratch/5ee066981535/CrispCloud/.dart_tool/terminal-live-smoke/route-ihvx9oco/authorized_keys:1
+Postponed publickey for agent from 127.0.0.1 port 50166 ssh2 [preauth]
+Accepted key ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU found at /workspace/scratch/5ee066981535/CrispCloud/.dart_tool/terminal-live-smoke/route-ihvx9oco/authorized_keys:1
+Accepted publickey for agent from 127.0.0.1 port 50166 ssh2: ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU
+User child is on pid 230
+Starting session: command for agent from 127.0.0.1 port 50166 id 0
+Close session: user agent from 127.0.0.1 port 50166 id 0
+Connection closed by 127.0.0.1 port 50166
+Transferred: sent 2216, received 1364 bytes
+Closing connection to 127.0.0.1 port 50166
+Connection from 127.0.0.1 port 50174 on 127.0.0.1 port 46285 rdomain ""
+Accepted key ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU found at /workspace/scratch/5ee066981535/CrispCloud/.dart_tool/terminal-live-smoke/route-ihvx9oco/authorized_keys:1
+Postponed publickey for agent from 127.0.0.1 port 50174 ssh2 [preauth]
+Accepted key ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU found at /workspace/scratch/5ee066981535/CrispCloud/.dart_tool/terminal-live-smoke/route-ihvx9oco/authorized_keys:1
+Accepted publickey for agent from 127.0.0.1 port 50174 ssh2: ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU
+User child is on pid 237
+Starting session: command for agent from 127.0.0.1 port 50174 id 0
+Close session: user agent from 127.0.0.1 port 50174 id 0
+Connection closed by 127.0.0.1 port 50174
+Transferred: sent 2200, received 1348 bytes
+Closing connection to 127.0.0.1 port 50174
+Connection from 127.0.0.1 port 50182 on 127.0.0.1 port 46285 rdomain ""
+Accepted key RSA SHA256:w5fLpQJ14mTXsjppRfPUlfY0RC8jAmh8rlwVU3YWgo4 found at /workspace/scratch/5ee066981535/CrispCloud/.dart_tool/terminal-live-smoke/route-ihvx9oco/authorized_keys:2
+Postponed publickey for agent from 127.0.0.1 port 50182 ssh2 [preauth]
+Accepted key RSA SHA256:w5fLpQJ14mTXsjppRfPUlfY0RC8jAmh8rlwVU3YWgo4 found at /workspace/scratch/5ee066981535/CrispCloud/.dart_tool/terminal-live-smoke/route-ihvx9oco/authorized_keys:2
+Accepted publickey for agent from 127.0.0.1 port 50182 ssh2: RSA SHA256:w5fLpQJ14mTXsjppRfPUlfY0RC8jAmh8rlwVU3YWgo4
+User child is on pid 241
+Starting session: command for agent from 127.0.0.1 port 50182 id 0
+Close session: user agent from 127.0.0.1 port 50182 id 0
+Connection closed by 127.0.0.1 port 50182
+Transferred: sent 2456, received 2020 bytes
+Closing connection to 127.0.0.1 port 50182
+Connection from 127.0.0.1 port 50194 on 127.0.0.1 port 46285 rdomain ""
+Accepted key RSA SHA256:w5fLpQJ14mTXsjppRfPUlfY0RC8jAmh8rlwVU3YWgo4 found at /workspace/scratch/5ee066981535/CrispCloud/.dart_tool/terminal-live-smoke/route-ihvx9oco/authorized_keys:2
+Postponed publickey for agent from 127.0.0.1 port 50194 ssh2 [preauth]
+Accepted key RSA SHA256:w5fLpQJ14mTXsjppRfPUlfY0RC8jAmh8rlwVU3YWgo4 found at /workspace/scratch/5ee066981535/CrispCloud/.dart_tool/terminal-live-smoke/route-ihvx9oco/authorized_keys:2
+Accepted publickey for agent from 127.0.0.1 port 50194 ssh2: RSA SHA256:w5fLpQJ14mTXsjppRfPUlfY0RC8jAmh8rlwVU3YWgo4
+User child is on pid 248
+Starting session: command for agent from 127.0.0.1 port 50194 id 0
+Close session: user agent from 127.0.0.1 port 50194 id 0
+Connection closed by 127.0.0.1 port 50194
+Transferred: sent 2440, received 2004 bytes
+Closing connection to 127.0.0.1 port 50194
+Connection from 127.0.0.1 port 50210 on 127.0.0.1 port 46285 rdomain ""
+Accepted key ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU found at /workspace/scratch/5ee066981535/CrispCloud/.dart_tool/terminal-live-smoke/route-ihvx9oco/authorized_keys:1
+Postponed publickey for agent from 127.0.0.1 port 50210 ssh2 [preauth]
+Accepted key ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU found at /workspace/scratch/5ee066981535/CrispCloud/.dart_tool/terminal-live-smoke/route-ihvx9oco/authorized_keys:1
+Accepted publickey for agent from 127.0.0.1 port 50210 ssh2: ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU
+User child is on pid 255
+Starting session: command for agent from 127.0.0.1 port 50210 id 0
+Connection closed by 127.0.0.1 port 50210
+Close session: user agent from 127.0.0.1 port 50210 id 0
+Transferred: sent 3268, received 2124 bytes
+Closing connection to 127.0.0.1 port 50210
+Connection from 127.0.0.1 port 50226 on 127.0.0.1 port 46285 rdomain ""
+Connection closed by 127.0.0.1 port 50226 [preauth]
+srclimit_penalise: ipv4: new 127.0.0.1/32 deferred penalty of 1 seconds for penalty: connections without attempting authentication
+Connection from 127.0.0.1 port 50242 on 127.0.0.1 port 46285 rdomain ""
+Connection closed by 127.0.0.1 port 50242 [preauth]
+Connection from 127.0.0.1 port 50252 on 127.0.0.1 port 46285 rdomain ""
+Connection closed by 127.0.0.1 port 50252 [preauth]
+Connection from 127.0.0.1 port 50256 on 127.0.0.1 port 46285 rdomain ""
+Accepted key ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU found at /workspace/scratch/5ee066981535/CrispCloud/.dart_tool/terminal-live-smoke/route-ihvx9oco/authorized_keys:1
+Postponed publickey for agent from 127.0.0.1 port 50256 ssh2 [preauth]
+Connection closed by authenticating user agent 127.0.0.1 port 50256 [preauth]
+Connection from 127.0.0.1 port 50272 on 127.0.0.1 port 46285 rdomain ""
+Accepted key ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU found at /workspace/scratch/5ee066981535/CrispCloud/.dart_tool/terminal-live-smoke/route-ihvx9oco/authorized_keys:1
+Postponed publickey for agent from 127.0.0.1 port 50272 ssh2 [preauth]
+Accepted key ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU found at /workspace/scratch/5ee066981535/CrispCloud/.dart_tool/terminal-live-smoke/route-ihvx9oco/authorized_keys:1
+Accepted publickey for agent from 127.0.0.1 port 50272 ssh2: ED25519 SHA256:gsYLjRjWTv83bnvuN9wn14YLT3PgHbkhwURFzFU9FgU
+User child is on pid 274
+Starting session: command for agent from 127.0.0.1 port 50272 id 0
+Close session: user agent from 127.0.0.1 port 50272 id 0
+Connection closed by 127.0.0.1 port 50272
+Transferred: sent 2200, received 1348 bytes
+Closing connection to 127.0.0.1 port 50272
+Connection from 127.0.0.1 port 50284 on 127.0.0.1 port 46285 rdomain ""
+Connection closed by 127.0.0.1 port 50284 [preauth]
+

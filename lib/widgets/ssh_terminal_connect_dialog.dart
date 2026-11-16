@@ -4,11 +4,14 @@ import 'package:flutter/services.dart';
 
 import '../l10n/screen_terminal_strings.dart';
 import '../l10n/ssh_jump_strings.dart';
+import '../l10n/ssh_agent_strings.dart';
 import '../l10n/terminal_strings.dart';
+import '../l10n/tmux_control_strings.dart';
 import '../models/screen_session_options.dart';
 import '../models/ssh_terminal_config.dart';
 import '../models/tmux_session_options.dart';
 import '../services/ssh_gateway.dart';
+import '../services/ssh_agent.dart';
 
 export '../models/ssh_terminal_config.dart';
 
@@ -23,6 +26,8 @@ class SshTerminalConnectDialog extends StatefulWidget {
     this.initialConfig,
     this.jumpHostOnly = false,
     this.showSessionOptions = true,
+    this.agentSupported,
+    this.agentAvailable,
   });
 
   final bool requiresGateway;
@@ -33,6 +38,8 @@ class SshTerminalConnectDialog extends StatefulWidget {
 
   /// Discovery selects an existing session after authentication instead.
   final bool showSessionOptions;
+  final bool? agentSupported;
+  final bool? agentAvailable;
 
   @override
   State<SshTerminalConnectDialog> createState() => _SshConnectDialogState();
@@ -59,6 +66,22 @@ class _SshConnectDialogState extends State<SshTerminalConnectDialog> {
   final _jumpHosts = <SshJumpHost>[];
   final _credentialledJumps = <SshJumpHost>{};
   String? _routeError;
+  bool _forwardAgent = false;
+  bool _tmuxControlMode = false;
+  String? _agentError;
+
+  bool get _agentSupported =>
+      widget.agentSupported ?? SshAgentConnection.supported;
+  bool get _agentAvailable =>
+      _agentSupported &&
+      (widget.agentAvailable ?? SshAgentConnection.available);
+  String get _agentUnavailableMessage => _agentSupported
+      ? SshAgentException.unavailable
+      : SshAgentException.unsupported;
+  bool _hasJumpCredentials(SshJumpHost jump) =>
+      jump.authentication == SshTerminalAuthentication.agent
+      ? _agentAvailable
+      : _credentialledJumps.contains(jump);
 
   @override
   void initState() {
@@ -73,10 +96,12 @@ class _SshConnectDialogState extends State<SshTerminalConnectDialog> {
     _username.text = initial.username;
     _gateway.text = initial.gateway?.toString() ?? '';
     _authentication = initial.authentication;
+    _forwardAgent = !widget.jumpHostOnly && initial.forwardAgent;
     if (!widget.jumpHostOnly) _jumpHosts.addAll(initial.jumpHosts);
     final tmux = widget.showSessionOptions ? initial.tmux : null;
     if (tmux != null) {
       _tmuxName.text = tmux.sessionName;
+      _tmuxControlMode = tmux.controlMode;
       _sessionMode = tmux.mode == TmuxSessionMode.attach
           ? _SessionMode.attach
           : _SessionMode.createOrAttach;
@@ -92,7 +117,16 @@ class _SshConnectDialogState extends State<SshTerminalConnectDialog> {
 
   void _submit() {
     if (_form.currentState?.validate() != true) return;
-    if (_jumpHosts.any((jump) => !_credentialledJumps.contains(jump))) {
+    if ((_authentication == SshTerminalAuthentication.agent ||
+            _forwardAgent ||
+            _jumpHosts.any(
+              (jump) => jump.authentication == SshTerminalAuthentication.agent,
+            )) &&
+        !_agentAvailable) {
+      setState(() => _agentError = _agentUnavailableMessage);
+      return;
+    }
+    if (_jumpHosts.any((jump) => !_hasJumpCredentials(jump))) {
       setState(() => _routeError = 'Enter credentials for each jump host.');
       return;
     }
@@ -103,7 +137,10 @@ class _SshConnectDialogState extends State<SshTerminalConnectDialog> {
       port: int.parse(_port.text.trim()),
       username: _username.text.trim(),
       authentication: _authentication,
-      password: usesKey ? '' : _password.text,
+      forwardAgent: !widget.jumpHostOnly && _forwardAgent,
+      password: _authentication == SshTerminalAuthentication.password
+          ? _password.text
+          : '',
       privateKey: usesKey ? _privateKey.text : '',
       passphrase: usesKey ? _passphrase.text : '',
       gateway: _showGateway && gateway.isNotEmpty ? Uri.parse(gateway) : null,
@@ -113,6 +150,7 @@ class _SshConnectDialogState extends State<SshTerminalConnectDialog> {
               _sessionMode == _SessionMode.createOrAttach
           ? TmuxSessionOptions(
               sessionName: _tmuxName.text.trim(),
+              controlMode: _tmuxControlMode,
               mode: _sessionMode == _SessionMode.attach
                   ? TmuxSessionMode.attach
                   : TmuxSessionMode.createOrAttach,
@@ -148,6 +186,8 @@ class _SshConnectDialogState extends State<SshTerminalConnectDialog> {
       builder: (_) => SshTerminalConnectDialog(
         requiresGateway: false,
         jumpHostOnly: true,
+        agentSupported: widget.agentSupported,
+        agentAvailable: widget.agentAvailable,
         initialConfig: previous == null
             ? null
             : SshTerminalConfig(
@@ -207,11 +247,13 @@ class _SshConnectDialogState extends State<SshTerminalConnectDialog> {
             overflow: TextOverflow.ellipsis,
           ),
           subtitle: Text(
-            context.sshJumpTr(
-              _credentialledJumps.contains(_jumpHosts[i])
-                  ? 'Credentials entered'
-                  : 'Credentials needed',
-            ),
+            _jumpHosts[i].authentication == SshTerminalAuthentication.agent
+                ? context.sshAgentTr('Uses the local SSH agent')
+                : context.sshJumpTr(
+                    _hasJumpCredentials(_jumpHosts[i])
+                        ? 'Credentials entered'
+                        : 'Credentials needed',
+                  ),
           ),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
@@ -268,6 +310,7 @@ class _SshConnectDialogState extends State<SshTerminalConnectDialog> {
       _showPrivateKey = false;
       _keyPasteFailed = false;
       _keyPasteRequest++;
+      _agentError = null;
     });
   }
 
@@ -313,6 +356,7 @@ class _SshConnectDialogState extends State<SshTerminalConnectDialog> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
+    insetPadding: const EdgeInsets.all(16),
     title: Text(
       widget.jumpHostOnly
           ? context.sshJumpTr('SSH jump host')
@@ -435,6 +479,13 @@ class _SshConnectDialogState extends State<SshTerminalConnectDialog> {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
+                  DropdownMenuItem(
+                    value: SshTerminalAuthentication.agent,
+                    child: Text(
+                      context.sshAgentTr('SSH agent'),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
                 ],
                 onChanged: _selectAuthentication,
               ),
@@ -454,7 +505,8 @@ class _SshConnectDialogState extends State<SshTerminalConnectDialog> {
                   textInputAction: TextInputAction.done,
                   onFieldSubmitted: (_) => _submit(),
                 )
-              else ...[
+              else if (_authentication ==
+                  SshTerminalAuthentication.privateKey) ...[
                 TextFormField(
                   key: const ValueKey('terminal-ssh-private-key'),
                   controller: _privateKey,
@@ -535,6 +587,39 @@ class _SshConnectDialogState extends State<SshTerminalConnectDialog> {
                   onFieldSubmitted: (_) => _submit(),
                 ),
               ],
+              if (_authentication == SshTerminalAuthentication.agent)
+                Text(
+                  context.sshAgentTr(
+                    _agentAvailable
+                        ? 'Use keys from the local SSH agent. Private keys stay in the agent.'
+                        : _agentUnavailableMessage,
+                  ),
+                ),
+              if (!widget.jumpHostOnly &&
+                  (_agentSupported || _forwardAgent)) ...[
+                CheckboxListTile(
+                  key: const ValueKey('terminal-ssh-forward-agent'),
+                  contentPadding: EdgeInsets.zero,
+                  controlAffinity: ListTileControlAffinity.leading,
+                  titleAlignment: ListTileTitleAlignment.top,
+                  value: _forwardAgent,
+                  onChanged: (value) => setState(() {
+                    _forwardAgent = value ?? false;
+                    _agentError = null;
+                  }),
+                  title: Text(context.sshAgentTr('Forward SSH agent')),
+                  subtitle: Text(
+                    context.sshAgentTr(
+                      'Programs on the final SSH server can request signatures from these agent keys while connected. Jump hosts do not receive agent access.',
+                    ),
+                  ),
+                ),
+              ],
+              if (_agentError != null)
+                Text(
+                  context.sshAgentTr(_agentError!),
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
               if (!widget.jumpHostOnly) ...[
                 const SizedBox(height: 16),
                 _jumpRoute(),
@@ -611,6 +696,20 @@ class _SshConnectDialogState extends State<SshTerminalConnectDialog> {
                           ),
                     textInputAction: TextInputAction.done,
                     onFieldSubmitted: (_) => _submit(),
+                  ),
+                  const SizedBox(height: 8),
+                  CheckboxListTile(
+                    key: const ValueKey('terminal-ssh-tmux-control'),
+                    contentPadding: EdgeInsets.zero,
+                    value: _tmuxControlMode,
+                    onChanged: (value) =>
+                        setState(() => _tmuxControlMode = value == true),
+                    title: Text(context.tmuxControlTr('Native tmux panes')),
+                    subtitle: Text(
+                      context.tmuxControlTr(
+                        'Render tmux windows and panes as native terminals. Requires tmux 3.2 or later.',
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(

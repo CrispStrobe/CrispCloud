@@ -1,0 +1,24 @@
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_channel_test.dart
+00:00 +0: agent channel decodes every split of a frame exactly once
+00:00 +1: agent channel handles pipelined frames in order
+00:00 +2: a stalled response applies output pressure before another request
+00:00 +3: signer wait pauses receive-window replenishment
+00:00 +4: invalid frame length 0 closes before invoking agent
+00:00 +5: invalid frame length 262145 closes before invoking agent
+00:00 +6: invalid frame length 4294967295 closes before invoking agent
+00:00 +7: oversized handler response closes instead of queuing output
+00:00 +8: channel close discards a late signature and consumes late errors
+00:00 +9: input EOF preserves the final response before closing
+00:00 +10: handler errors return generic failure without logging local details
+00:00 +11: handler and output-flush deadlines both close stalled channels
+00:00 +12: idle and incomplete agent channels expire without agent calls
+00:00 +13: extended data is rejected at the agent protocol boundary
+00:00 +14: unsolicited agent channels cannot access a configured handler
+00:00 +15: transport flush waits for queued rekey packets and close revokes it
+00:00 +16: send barrier waits through every packet and remote-window split
+00:00 +17: local close fails queued sends without waiting for the peer
+00:00 +18: rejected enqueue leaves no pending send error behind
+00:00 +19: client bounds agent channels and releases a slot only on peer close
+00:00 +20: All tests passed!

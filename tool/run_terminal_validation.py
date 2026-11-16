@@ -17,6 +17,21 @@ import time
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 BASELINE = ROOT / 'docs/validation/terminal-parity-continuation'
 NEW_TESTS = [
+    'test/tmux_control_protocol_test.dart',
+    'test/tmux_control_client_test.dart',
+    'test/tmux_control_workspace_test.dart',
+    'test/ssh_native_tmux_persistence_test.dart',
+    'test/terminal_input_budget_test.dart',
+    'test/ssh_tmux_panel_lifecycle_test.dart',
+    'test/ssh_agent_channel_test.dart',
+    'test/ssh_agent_profiles_test.dart',
+    'test/ssh_agent_route_test.dart',
+    'test/ssh_agent_test.dart',
+    'test/ssh_agent_widget_test.dart',
+    'test/ssh_public_key_auth_test.dart',
+    'test/ssh_forwarding_panel_test.dart',
+    'test/ssh_forwarding_profiles_test.dart',
+    'test/ssh_forwarding_profiles_widget_test.dart',
     'test/ssh_port_forwarding_model_test.dart',
     'test/ssh_port_forwarding_test.dart',
     'test/ssh_port_forwarding_widget_test.dart',
@@ -63,15 +78,18 @@ def main():
     changed += git('ls-files', '--others', '--exclude-standard').splitlines()
     analysis_files.update(path for path in changed
                           if path.startswith(('lib/', 'test/')) and path.endswith('.dart'))
+    analysis_files.add('packages/crisp_storage/lib/src/host_keys.dart')
     analysis_files = sorted(analysis_files)
     head = git('rev-parse', 'HEAD')
     if args.phase == 'live':
-        suites = ['test/ssh_terminal_live_test.dart', 'test/ssh_port_forwarding_live_test.dart']
+        suites = ['test/ssh_terminal_live_test.dart', 'test/ssh_port_forwarding_live_test.dart',
+                  'test/ssh_agent_live_test.dart']
     if args.phase == 'native':
         command = [args.flutter, 'test', '--no-pub', '--concurrency=2',
                    '--reporter=expanded', *suites]
     elif args.phase == 'live':
-        command = [sys.executable, 'tool/run_terminal_live_smoke.py', '--flutter', args.flutter]
+        command = [sys.executable, 'tool/run_terminal_live_smoke.py', '--flutter', args.flutter,
+                   '--with-unix-agent']
     elif args.phase == 'analysis':
         command = [args.dart, 'analyze', *analysis_files]
     elif args.phase == 'format':

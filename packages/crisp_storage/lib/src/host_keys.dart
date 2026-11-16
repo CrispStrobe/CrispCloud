@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
+
 import 'package:dartssh2/dartssh2.dart';
+
 import 'remote_client.dart';
 
 typedef HostKeyPrompt =
@@ -91,6 +93,7 @@ Future<SSHClient> openVerifiedSsh(
   required String username,
   String? password,
   List<SSHIdentity>? identities,
+  SSHAgentHandler? agentHandler,
   required FutureOr<bool> Function(String, Uint8List) verify,
   void Function(SSHClient)? onCreated,
 }) async {
@@ -99,6 +102,7 @@ Future<SSHClient> openVerifiedSsh(
     socket,
     username: username,
     identities: identities,
+    agentHandler: agentHandler,
     handshakeTimeout: const Duration(seconds: 15),
     authTimeout: const Duration(seconds: 15),
     onPasswordRequest: password == null ? null : () => password,

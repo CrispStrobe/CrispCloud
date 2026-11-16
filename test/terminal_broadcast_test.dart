@@ -56,6 +56,24 @@ void main() {
   });
 
   test(
+    'workspace containers cannot redirect broadcast to a changing remote pane',
+    () async {
+      final workspace = _WorkspaceConnection();
+      connections.add(workspace);
+      await sessions[1].connect(
+        (_, __) async => workspace,
+        kind: TerminalSessionKind.ssh,
+      );
+      expect(sessions[1].isConnected, isTrue);
+      expect(sessions[1].acceptsDirectInput, isFalse);
+      expect(broadcast.start([target(0), target(1)]), isFalse);
+      sessions[1].sendUserInput(TerminalUserInput.text('must not send'));
+      await _events();
+      expect(workspace.writes, isEmpty);
+    },
+  );
+
+  test(
     'mapped key taps deliver Kitty releases from a legacy-mode source',
     () async {
       sessions[1].terminal.write('\x1b[>11u');
@@ -350,4 +368,14 @@ class _Connection implements TerminalConnection {
     if (!_exit.isCompleted) _exit.complete(0);
     if (!_output.isClosed) unawaited(_output.close());
   }
+}
+
+class _WorkspaceConnection extends _Connection
+    implements TerminalWorkspaceConnection {
+  @override
+  bool get acceptsDirectInput => false;
+  @override
+  Object get workspace => this;
+  @override
+  void disposeWorkspace() {}
 }

@@ -2142,6 +2142,10 @@ class WordDeserializer {
           props.strike = _onOff(
             reader.getAttribute('val', namespaceUri: OfficeNamespaces.w),
           );
+        case 'smallCaps':
+          props.smallCaps = _onOff(
+            reader.getAttribute('val', namespaceUri: OfficeNamespaces.w),
+          );
         case 'color':
           props.color =
               reader.getAttribute('val', namespaceUri: OfficeNamespaces.w) ??
