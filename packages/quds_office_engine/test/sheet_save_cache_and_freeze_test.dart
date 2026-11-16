@@ -123,4 +123,49 @@ void main() {
     expect(reopened.blackAndWhite, isTrue);
     expect(reopened.draft, isTrue);
   });
+
+  test('top, bottom and average conditional rules round-trip', () async {
+    final book = SmlWorkbook(
+      sheets: [SmlWorksheet(name: 'Sheet1', sheetId: 1)],
+    );
+    final sheet = book.firstSheet;
+    for (var row = 0; row < 5; row++) {
+      sheet.cellA1('A${row + 1}').value = row + 1;
+    }
+    sheet.conditionalFormats.addAll([
+      SmlConditionalRule(
+        range: SmlRange.parse('A1:A5'),
+        kind: SmlConditionalKind.top,
+        rank: 3,
+      ),
+      SmlConditionalRule(
+        range: SmlRange.parse('A1:A5'),
+        kind: SmlConditionalKind.bottomPercent,
+        rank: 20,
+      ),
+      SmlConditionalRule(
+        range: SmlRange.parse('A1:A5'),
+        kind: SmlConditionalKind.belowAverage,
+      ),
+    ]);
+    final saved = await OfficeIsolateSave.workbook(book);
+    final xml = OpcPackage.openBytes(
+      saved,
+    ).getPart('/xl/worksheets/sheet1.xml')!.readText();
+    expect(xml, contains('type="top10"'));
+    expect(xml, contains('bottom="1"'));
+    expect(xml, contains('aboveAverage="0"'));
+    final reopened = SheetDeserializer().readBytes(saved).firstSheet;
+    expect(reopened.conditionalFormats[0].kind, SmlConditionalKind.top);
+    expect(reopened.conditionalFormats[0].rank, 3);
+    expect(
+      reopened.conditionalFormats[1].kind,
+      SmlConditionalKind.bottomPercent,
+    );
+    expect(reopened.conditionalFormats[1].rank, 20);
+    expect(
+      reopened.conditionalFormats[2].kind,
+      SmlConditionalKind.belowAverage,
+    );
+  });
 }

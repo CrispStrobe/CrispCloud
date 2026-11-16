@@ -242,6 +242,41 @@ void main() {
     expect(rule.errorStyle, 'warning');
   });
 
+  test('writes top and bottom conditional rules', () {
+    final sheet = SmlWorksheet(name: 'Data', sheetId: 1);
+    for (var row = 1; row <= 5; row++) {
+      sheet.cellA1('A$row').value = row;
+    }
+    sheet.conditionalFormats.addAll([
+      SmlConditionalRule(
+        range: SmlRange.parse('A1:A5'),
+        kind: SmlConditionalKind.top,
+        rank: 2,
+        fillRgb: '00FF00',
+      ),
+      SmlConditionalRule(
+        range: SmlRange.parse('A1:A5'),
+        kind: SmlConditionalKind.bottomPercent,
+        rank: 20,
+        fillRgb: 'FF0000',
+      ),
+      SmlConditionalRule(
+        range: SmlRange.parse('A1:A5'),
+        kind: SmlConditionalKind.aboveAverage,
+        fillRgb: '0000FF',
+      ),
+    ]);
+    final reopened = OdsSheetReader.readBytes(
+      OdsSheetWriter.writeBytes(SmlWorkbook(sheets: [sheet])),
+    );
+    final rules = reopened.sheets.first.conditionalFormats;
+    expect(rules[0].kind, SmlConditionalKind.top);
+    expect(rules[0].rank, 2);
+    expect(rules[1].kind, SmlConditionalKind.bottomPercent);
+    expect(rules[1].rank, 20);
+    expect(rules[2].kind, SmlConditionalKind.aboveAverage);
+  });
+
   test('writes conditional formats and validates them on read', () {
     final sheet = SmlWorksheet(name: 'Data', sheetId: 1);
     sheet.conditionalFormats.add(
