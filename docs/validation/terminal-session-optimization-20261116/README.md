@@ -23,6 +23,28 @@ records exact refs, parents, and canonical source comparisons. The Office
 inventory now verifies 2,411 files at Quds `91c725fe`, with all seven changed/new
 files matching the canonical Git blobs and modes.
 
+The final fixed inventory, recorded at **10:47:11 UTC**, contains **46 branch
+heads and 159 PR heads (205 references)**. Integration `df18aed3` preserves every
+one as an actual ancestor, including latest main `b9772e1a`, the original
+squash-equivalent ODS PR #168, Zotero PR #167 and the newer terminal recovery
+evidence. Its tree and four ordered parents match the reviewed ordinary merge.
+[Cutoff review](main-refresh-review.json) and
+[actual ancestry proof](final-cutoff-merge-audit.json) retain the complete refs.
+Later validation uses this fixed inventory rather than continually moving its
+source inputs.
+
+Review of that incoming ODS change found that a sheet with both a tab colour
+and a picture tried to write its drawing namespace after the worksheet start
+tag had closed. The new combined regression fails on canonical `18c76e88` and
+passes after moving the existing namespace declaration before child elements.
+Canonical commit `4fadcc68` is saved on
+`CrispStrobe/quds_office_suite:codex/terminal-integration-ods-20261116`; its
+complete ODS suite passes **91 tests**, with clean analysis and formatting of
+both changed files. CrispCloud contains those exact two Git blobs, and all
+**2,411 managed Office files** verify against the updated pin. The standalone
+parser pin and application dependency declarations remain unchanged.
+[Canonical reproduction, fix and vendor receipts](canonical-ods-repair/README.md).
+
 ## Changes and checkpoint status
 
 - Ordinary terminal sessions keep one in-flight resize and the latest pending
@@ -44,13 +66,62 @@ files matching the canonical Git blobs and modes.
   snapshot, while partial replies cannot extend the active pane's deadline.
   The 256-command admission limit remains in place.
 
-The first implementation checkpoint is intentionally saved before the complete
-Flutter qualification. Local commands and outcomes will be added as they finish;
-historical acceptance from earlier commits is not counted as new validation.
+Implementation and evidence are saved in separate incremental remote
+checkpoints. The final focused tmux suite passes **64 tests with no skips or
+failures**, including hard per-pane deadlines, queued input behind a progressing
+capture and resize reversals. The complete final terminal cohort also passes,
+as recorded below. Historical acceptance from earlier commits is not counted
+as new validation.
 
 The [Screen resolver before/after proof](screen-resolver-regression.json) runs the
 extracted production shell through actual `/bin/sh` and `awk` with controlled
 Screen listings. It qualifies command resolution, not a live GNU Screen daemon.
+
+Independent review also reproduced a remaining trailing-tab ambiguity. GNU
+Screen emits one separator tab and preserves tabs inside session names. The
+final parser removes exactly one separator at each boundary, retaining trailing
+tabs, repeated tabs and tab/space combinations in unsupported names. All **32
+actual shell cases** in [the additional before/after proof](screen-tab-regression.json)
+pass; 12 reproduce the defect in checkpoint `bb300164`. The
+[runnable harness](screen-tab-regression.py) records the producer source used
+to confirm the format. Formatting both changed Dart files requires no changes.
+
+## Final local qualification
+
+Frozen application source is commit `047adfb944ad9f46acc65e0c8c38376b3949f3da`.
+The independent [source audit](final-source-audit.json) verifies that all **5,556
+watched files** match that commit's blobs and modes, all 205 fixed-cutoff refs
+are ancestors, and root `pubspec.yaml`, `pubspec.lock` and `.fvmrc` are identical
+to the initial baseline. It also verifies all 554 canonical Quds files and all
+1,857 unchanged standalone parser files. The [vendor guards](vendor-verification.json)
+pass against the final pin and SSH dependency.
+
+| Completed check | Result | Evidence |
+| --- | --- | --- |
+| Full terminal/SSH/tmux native cohort | **1,075 passed, 2 skipped, 0 failed**, 85 files; 294.615 seconds | [Native receipt](native.json), [log](native.log.gz) |
+| Actual loopback OpenSSH | **22 passed, 3 skipped, 0 failed**, 4 files; 156.502 seconds | [Live receipt](live.json), [log](live.log.gz) |
+| Final vendored Office/Zotero engine cohort | **209 passed, 0 skipped, 0 failed**, 5 files; 6.472 seconds | [Engine receipt](engine-final.json), [log](engine-final.log.gz) |
+| Static analysis | **164 Dart files**, no errors or warnings; three existing informational lints | [Analysis receipt](analysis.json), [log](analysis.log.gz) |
+| Formatting | **164 Dart files**, zero changes | [Format receipt](format.json), [log](format.log.gz) |
+| Production-widget capture tests | **2 passed**, nine desktop/320×320 PNGs, no test failures | [Visual receipt](visual.json), [captures](visuals/) |
+| Exact Screen resolver | 15 initial shell cases and 32 additional tab-boundary cases pass | [Initial proof](screen-resolver-regression.json), [tab proof](screen-tab-regression.json) |
+
+The native skips are the macOS-only shell case and Windows ConPTY on this Linux
+host. Actual Linux PTY allocation, resizing, Unicode input/output, Ctrl+C and
+disposal run in the complete cohort. Native and engine source fingerprints match
+exactly, and neither run changed a watched file. Live SSH uses disposable local
+servers and keys. It passes jump-route authentication, forwarding, rekeying and
+shared-route cleanup; two optional SSH PTY tests and one real Unix-agent test
+are skipped with their reasons retained in the log. All six completed phases
+have identical source fingerprints and no changed watched files. Only the full
+optimized web release remains in progress.
+
+The captured recovery dialog keeps its actions visible while its compact body
+scrolls; native tmux retains a pane picker when only one pane fits. Captures use
+in-memory connections and disconnected recovery sessions, so they establish
+widget layout rather than a live multiplexer or browser runtime. The desktop
+tmux fixture lacks a Chinese font fallback and displays two missing-glyph boxes;
+these images do not qualify complete Unicode glyph coverage.
 
 ## Development findings retained
 
@@ -64,7 +135,24 @@ run and its unchanged source inventory remain under
 
 The first incoming Office command ran pure-Dart engine tests through the root
 Flutter graph, which does not declare `package:test`: four files failed to
-load while all 39 editor-dialog tests passed. The engine is being qualified
-through its own declared development graph without changing the application's
-production manifests or lockfile. That runner mismatch is preserved separately
-from feature-test outcomes.
+load while all 39 editor-dialog tests passed. The engine's own declared
+development graph then passes **118 tests with no skips or failures**. Its ten
+runtime dependencies match the application graph exactly; no application
+production manifest or lockfile changed. [Engine commands and dependency
+identity](incoming-engine-README.md) preserve that qualification separately from
+the initial runner mismatch.
+
+A second two-worker native run stopped progressing after 185 passing tests
+without reporting an assertion failure. It was interrupted with exit 130;
+[`development/stalled-native`](development/stalled-native/) preserves its exact
+command, last-progress timestamp and source inventory. The last printed test is
+not evidence of the cause. The validation runner now accepts `--concurrency 1`
+so the final full cohort can run serially on this constrained host.
+
+The first final live-SSH launch stopped before executing a feature test because
+a normal native Cargo hook tried to refresh the registry and the host rejected
+the network tunnel. Its complete source inventory and diagnostic are retained
+under [`development/live-cargo-registry`](development/live-cargo-registry/).
+The retry sets `CARGO_NET_OFFLINE=true` and uses the already populated verified
+cache, retaining the normal build hooks and unchanged sources, manifests and
+lockfiles. This prerequisite failure is separate from SSH test outcomes.

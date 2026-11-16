@@ -9,9 +9,18 @@ toward desktop terminal workflows. It does not claim complete iTerm2 compatibili
 The current continuation bounds terminal and native tmux resize queues,
 preserves the final geometry during rapid resize reversals, batches native tmux
 pane captures in groups of up to eight, and hardens GNU Screen exact attachment
-against truncated names and incomplete listings. All 43 pre-existing branch
-heads and 156 PR heads are included in baseline `0c43c476`; work is saved to
-`codex/terminal-session-optimization-20261116` with `[skip ci]`.
+against truncated names and incomplete listings. Captures retain a hard deadline
+per pane at the reply queue head, so queued work does not expire behind a
+progressing snapshot. Screen listing separators remove exactly one tab,
+preserving literal trailing tabs in unsupported names.
+
+The final fixed inventory contains **46 branch heads and 159 PR heads**, all
+actual ancestors of integration `df18aed3`. It includes latest main, original
+squash-equivalent PR histories and the newer Zotero/recovery work. An incoming
+ODS tab-colour/picture save regression is repaired in canonical Quds commit
+`4fadcc68` and vendored with all 2,411 managed files verified. Frozen source
+`047adfb9` is saved to `codex/terminal-session-optimization-20261116` with
+`[skip ci]`; no GitHub Actions are queried or awaited.
 [Current local qualification and source record](validation/terminal-session-optimization-20261116/README.md).
 
 ### Previous workspace recovery continuation

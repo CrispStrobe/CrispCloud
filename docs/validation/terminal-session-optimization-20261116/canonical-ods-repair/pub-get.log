@@ -1,0 +1,5 @@
+Resolving dependencies...
+Because quds_report_studio depends on window_manager any which doesn't exist (could not find package window_manager in cache), version solving failed.
+
+Try again without --offline!
+Failed to update packages.

@@ -1,0 +1,30 @@
+{
+  "phase": "live",
+  "command": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+    "tool/run_terminal_live_smoke.py",
+    "--flutter",
+    "flutter",
+    "--with-unix-agent"
+  ],
+  "head_at_start": "047adfb944ad9f46acc65e0c8c38376b3949f3da",
+  "started_utc": "2026-11-16T11:08:39.996158+00:00",
+  "watched_source_count": 5556,
+  "github_actions_queried_or_awaited": false,
+  "suite_count": 4,
+  "suite_files": [
+    "test/ssh_terminal_live_test.dart",
+    "test/ssh_port_forwarding_live_test.dart",
+    "test/ssh_agent_live_test.dart",
+    "test/ssh_connection_sharing_live_test.dart"
+  ],
+  "finished_utc": "2026-11-16T11:09:20.540804+00:00",
+  "seconds": 40.54,
+  "exit_code": 1,
+  "changed_sources": [],
+  "final_test_line": "",
+  "classification": "Native build prerequisite failed before any live SSH test executed.",
+  "cause": "Cargo attempted a crates.io index refresh; the host network rejected the proxy tunnel with HTTP 403.",
+  "next_step": "Rerun normal hooks with CARGO_NET_OFFLINE=true and the already populated, verified Cargo cache; no source, manifest, lockfile or hook substitution.",
+  "actual_feature_tests_completed": 0
+}

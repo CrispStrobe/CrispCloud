@@ -1,0 +1,206 @@
+{
+  "started_utc": "2026-11-16T11:05:27.227523+00:00",
+  "completed_utc": "2026-11-16T11:05:30.534942+00:00",
+  "source_commit": "047adfb944ad9f46acc65e0c8c38376b3949f3da",
+  "source_tree": "589dcac4af8b78af3175985bf8d6a92d3373738a",
+  "initial_baseline": "0c43c476ff33638306425c1427cf1d04a170a912",
+  "head_before": "047adfb944ad9f46acc65e0c8c38376b3949f3da",
+  "head_after": "047adfb944ad9f46acc65e0c8c38376b3949f3da",
+  "watched_source": {
+    "scope": "The exact file predicate in tool/run_terminal_validation.py: source_hashes; compares the union of committed and current watched paths to detect missing and extra files, then Git blob IDs and modes. Also rehashes at completion.",
+    "scope_definition_sha256": "b330aec503ed835a4b25490d751b2915ed01ee569265f5ccf014cd5fcccc1d4d",
+    "current_file_count": 5556,
+    "committed_file_count": 5556,
+    "identity_inventory_sha256": "bc85e4df4b5c023446bdf35432a8a653555a346258e0bc9ebcd1db9396356a3a",
+    "sha256_inventory_sha256": "274aad2b980bdc2de30e9f280eaba895b0980a07bfd02c23c94d87bf5743ecff",
+    "mismatches": [],
+    "all_watched_sources_fully_committed": true,
+    "unchanged_during_audit": true
+  },
+  "root_dependency_inputs": {
+    "pubspec.yaml": {
+      "initial_blob": "5e0b052beca36973152101a542115df255d30595",
+      "frozen_blob": "5e0b052beca36973152101a542115df255d30595",
+      "mode": "100644",
+      "worktree_sha256": "d82a1bb2d1a015e37d5a7283cf8041039c3eb01f6dbf1d3feb139b1b837ea998",
+      "unchanged_from_initial_baseline": true
+    },
+    "pubspec.lock": {
+      "initial_blob": "3a87fba873d399d74311e85f3fe42de370a81a74",
+      "frozen_blob": "3a87fba873d399d74311e85f3fe42de370a81a74",
+      "mode": "100644",
+      "worktree_sha256": "58560e3fdba68d18b767f4c934b913283df5297468141defbeb816dbb55a0326",
+      "unchanged_from_initial_baseline": true
+    },
+    ".fvmrc": {
+      "initial_blob": "4e46fba09bb9c1d654a226b7285b55b6949b3767",
+      "frozen_blob": "4e46fba09bb9c1d654a226b7285b55b6949b3767",
+      "mode": "100644",
+      "worktree_sha256": "90bf8f8884c05a407f51d6ef651ba033fef99a656010f8bfcb65951e921f4294",
+      "unchanged_from_initial_baseline": true
+    }
+  },
+  "fixed_cutoff_ancestry": {
+    "inventory_path": "docs/validation/terminal-session-optimization-20261116/main-refresh-review.json",
+    "inventory_commit": "047adfb944ad9f46acc65e0c8c38376b3949f3da",
+    "inventory_sha256": "a3a0d928913d4f5a347c9878561d89896bbd797b8f3b4e8222380d914ec62f03",
+    "refs_sha256": "2fc5ffd6e6b15804803b20802c9f6761ebcd5c2623db45556c692ffaef3808a1",
+    "branch_head_count": 46,
+    "pr_head_count": 159,
+    "total_ref_count": 205,
+    "unique_commits_checked": 161,
+    "not_ancestors": [],
+    "all_205_refs_are_actual_ancestors": true,
+    "remote_inventory_refreshed": false
+  },
+  "vendor_identity": {
+    "manifest": "tool/office_fidelity_manifest.json",
+    "manifest_sha256": "b1d0f5dbaea1a44f3405a5d2ca19c0a55daaf862945643c1778b01f8a4f481cd",
+    "source_repository": "CrispStrobe/quds_office_suite",
+    "canonical_commit": "4fadcc68d52d51e72e8d782765a0dd5086b982c6",
+    "canonical_tree": "7574aa05506e693812d6c6e282846b344a470ca6",
+    "canonical_quds_files": 554,
+    "canonical_blob_mode_mismatches": [],
+    "standalone_parser_files": 1857,
+    "standalone_parser_sources": {
+      "packages/legacy_doc_parser": {
+        "repository": "CrispStrobe/legacy-doc-parser",
+        "commit": "4895712158127b2fc930d796e17035c3ca0dac62"
+      }
+    },
+    "standalone_blob_mode_changes_from_initial_baseline": [],
+    "total_managed_files": 2411,
+    "managed_worktree_vs_frozen_commit_mismatches": [],
+    "managed_sha256_pin_mismatches": [],
+    "all_managed_files_committed_and_pinned": true
+  },
+  "screen_finding": {
+    "status": "Closed for the verified producer format by exact-one-tab separator removal.",
+    "path": "lib/models/screen_session_options.dart",
+    "baseline_commit": "bb300164e60560caa09bbfb27497998c5c5f518f",
+    "baseline_sha256": "67f6062e331a776d2fe1d475a72a56260ef15b67c1ea29c27ce01d92e857f551",
+    "fixed_sha256": "a00d530cd8ac285955cd117be55399693a5401d40d351acfa085d7e3bca2db6a",
+    "reason": "The former tab-run trimming could remove tabs belonging to an existing session name and authorize a prefix. The frozen fix removes exactly one separator tab before state and exactly one before the final producer timestamp, preserving additional name bytes.",
+    "source_format_evidence": {
+      "reviewed_by": "/root/ssh_screen_optimization",
+      "source_review": [
+        {
+          "url": "https://sources.debian.org/src/screen/4.9.1-3/screen.c/",
+          "finding": "The -S handler checks length and emptiness. Socket-name construction copies the supplied name without tab normalization; slash handling is separate."
+        },
+        {
+          "url": "https://sources.debian.org/src/screen/4.9.1-3/socket.c/",
+          "finding": "FindSocket emits one literal tab before the name, timestamp and state. A name ending with tabs therefore retains those bytes before the timestamp separator."
+        }
+      ]
+    },
+    "shell_proof": {
+      "path": "docs/validation/terminal-session-optimization-20261116/screen-tab-regression.json",
+      "commit": "047adfb944ad9f46acc65e0c8c38376b3949f3da",
+      "sha256": "d1ef4b730e0d11533a39e7e38473f7a866bb771c551269d73a445b94e95dc49d",
+      "case_count": 32,
+      "baseline_failed": 12,
+      "fixed_passed": 32,
+      "fixed_failed": 0,
+      "fixed_file_matches_receipt": true,
+      "asserted_results_independently_checked": true
+    },
+    "independent_awk_reproduction": {
+      "command": [
+        "awk",
+        "-v",
+        "target=work",
+        "<exact extracted production AWK body>"
+      ],
+      "before_program_sha256": "da7bbcd8956c1a39ea4fd54c8c058a505793a06c55f744c5849524201bb7599b",
+      "after_program_sha256": "5622f1999d2e6bea976729480845a77ea57defb8ce8608a8ef9fe31e46f4b387",
+      "cases": [
+        {
+          "case": "exact undated",
+          "target": "work",
+          "producer_row": "123.work\t(Detached)",
+          "expected_fixed_exit": 0,
+          "before": {
+            "exit_code": 0,
+            "stdout": "123.work\n",
+            "stderr": ""
+          },
+          "after": {
+            "exit_code": 0,
+            "stdout": "123.work\n",
+            "stderr": ""
+          }
+        },
+        {
+          "case": "trailing tab undated",
+          "target": "work",
+          "producer_row": "123.work\t\t(Detached)",
+          "expected_fixed_exit": 44,
+          "before": {
+            "exit_code": 0,
+            "stdout": "123.work\n",
+            "stderr": ""
+          },
+          "after": {
+            "exit_code": 44,
+            "stdout": "",
+            "stderr": ""
+          }
+        },
+        {
+          "case": "trailing tab dated",
+          "target": "work",
+          "producer_row": "123.work\t\t(11/15/26 20:15:00)\t(Detached)",
+          "expected_fixed_exit": 44,
+          "before": {
+            "exit_code": 0,
+            "stdout": "123.work\n",
+            "stderr": ""
+          },
+          "after": {
+            "exit_code": 44,
+            "stdout": "",
+            "stderr": ""
+          }
+        },
+        {
+          "case": "tab and space undated",
+          "target": "work",
+          "producer_row": "123.work\t \t(Detached)",
+          "expected_fixed_exit": 44,
+          "before": {
+            "exit_code": 0,
+            "stdout": "123.work\n",
+            "stderr": ""
+          },
+          "after": {
+            "exit_code": 44,
+            "stdout": "",
+            "stderr": ""
+          }
+        },
+        {
+          "case": "exact dated",
+          "target": "work",
+          "producer_row": "123.work\t(11/15/26 20:15:00)\t(Detached)",
+          "expected_fixed_exit": 0,
+          "before": {
+            "exit_code": 0,
+            "stdout": "123.work\n",
+            "stderr": ""
+          },
+          "after": {
+            "exit_code": 0,
+            "stdout": "123.work\n",
+            "stderr": ""
+          }
+        }
+      ],
+      "scope": "The exact production AWK body ran with controlled listing text in memory. No real Screen daemon or SDK process was started."
+    }
+  },
+  "mutations": "Only this new final-source-audit.json was written. Runtime sources, index, branches, SDK, and prior audit documents were not modified.",
+  "github_actions_queried_or_awaited": false,
+  "sdk_processes_started": false,
+  "additional_remote_discovery_performed": false
+}

@@ -1,0 +1,30 @@
+{
+  "phase": "engine-final",
+  "command": [
+    "dart",
+    "test",
+    "--concurrency=1",
+    "--reporter=expanded",
+    "test/ods_sheet_reader_test.dart",
+    "test/zotero_metadata_batch_test.dart",
+    "test/zotero_client_test.dart",
+    "test/word_zotero_scaling_test.dart",
+    "test/word_zotero_citing_test.dart"
+  ],
+  "cwd": "/workspace/scratch/cb0df5963965/crispcloud/packages/quds_office_engine",
+  "head_at_start": "047adfb944ad9f46acc65e0c8c38376b3949f3da",
+  "started_utc": "2026-11-16T11:02:54.503926+00:00",
+  "source_scope": "all",
+  "watched_source_count": 5556,
+  "github_actions_queried_or_awaited": false,
+  "finished_utc": "2026-11-16T11:03:01.015737+00:00",
+  "seconds": 6.472,
+  "exit_code": 0,
+  "changed_sources": [],
+  "counts": {
+    "passed": 209,
+    "skipped": 0,
+    "failed": 0
+  },
+  "final_test_line": "00:02 +209: All tests passed!"
+}

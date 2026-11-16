@@ -1,0 +1,696 @@
+{
+  "baseline_commit": "bb300164e60560caa09bbfb27497998c5c5f518f",
+  "source_path": "lib/models/screen_session_options.dart",
+  "baseline_sha256": "67f6062e331a776d2fe1d475a72a56260ef15b67c1ea29c27ce01d92e857f551",
+  "fixed_sha256": "a00d530cd8ac285955cd117be55399693a5401d40d351acfa085d7e3bca2db6a",
+  "command": [
+    "python3",
+    "docs/validation/terminal-session-optimization-20261116/screen-tab-regression.py"
+  ],
+  "shell": "/bin/sh",
+  "case_count": 32,
+  "baseline_failed": 12,
+  "fixed_passed": 32,
+  "fixed_failed": 0,
+  "source_review": [
+    {
+      "url": "https://sources.debian.org/src/screen/4.9.1-3/screen.c/",
+      "finding": "The -S handler checks length and emptiness. Socket-name construction copies the supplied name without tab normalization; slash handling is separate."
+    },
+    {
+      "url": "https://sources.debian.org/src/screen/4.9.1-3/socket.c/",
+      "finding": "FindSocket emits one literal tab before the name, timestamp and state. A name ending with tabs therefore retains those bytes before the timestamp separator."
+    }
+  ],
+  "scope": "Real command body with controlled producer output; this is not a live GNU Screen daemon test. No Flutter/Dart or GitHub CI process was run.",
+  "cases": [
+    {
+      "case": "exact undated",
+      "target": "work",
+      "listing": "There are screens on:\n\t123.work\t(Detached)\n1 Sockets in /run/screen/S-alice.\n",
+      "expected_exit": 0,
+      "expected_arguments": [
+        "-x",
+        "123.work"
+      ],
+      "before": {
+        "exit_code": 0,
+        "arguments": [
+          "-x",
+          "123.work"
+        ],
+        "stderr": "",
+        "passed": true
+      },
+      "after": {
+        "exit_code": 0,
+        "arguments": [
+          "-x",
+          "123.work"
+        ],
+        "stderr": "",
+        "passed": true
+      }
+    },
+    {
+      "case": "trailing tab undated work",
+      "target": "work",
+      "listing": "There are screens on:\n\t123.work\t\t(Detached)\n1 Sockets in /run/screen/S-alice.\n",
+      "expected_exit": 44,
+      "expected_arguments": null,
+      "before": {
+        "exit_code": 0,
+        "arguments": [
+          "-x",
+          "123.work"
+        ],
+        "stderr": "",
+        "passed": false
+      },
+      "after": {
+        "exit_code": 44,
+        "arguments": null,
+        "stderr": "No screen session has this exact name or ID. Run screen -ls on the server.\n",
+        "passed": true
+      }
+    },
+    {
+      "case": "trailing tab undated 123.work",
+      "target": "123.work",
+      "listing": "There are screens on:\n\t123.work\t\t(Detached)\n1 Sockets in /run/screen/S-alice.\n",
+      "expected_exit": 44,
+      "expected_arguments": null,
+      "before": {
+        "exit_code": 0,
+        "arguments": [
+          "-x",
+          "123.work"
+        ],
+        "stderr": "",
+        "passed": false
+      },
+      "after": {
+        "exit_code": 44,
+        "arguments": null,
+        "stderr": "No screen session has this exact name or ID. Run screen -ls on the server.\n",
+        "passed": true
+      }
+    },
+    {
+      "case": "prefix collision trailing tab undated",
+      "target": "123.work",
+      "listing": "There are screens on:\n\t123.work\t(Detached)\n\t456.123.work\t\t(Detached)\n2 Sockets in /run/screen/S-alice.\n",
+      "expected_exit": 47,
+      "expected_arguments": null,
+      "before": {
+        "exit_code": 47,
+        "arguments": null,
+        "stderr": "Screen has another matching prefix. Rename that session before attaching here.\n",
+        "passed": true
+      },
+      "after": {
+        "exit_code": 47,
+        "arguments": null,
+        "stderr": "Screen has another matching prefix. Rename that session before attaching here.\n",
+        "passed": true
+      }
+    },
+    {
+      "case": "repeated tabs undated work",
+      "target": "work",
+      "listing": "There are screens on:\n\t123.work\t\t\t(Detached)\n1 Sockets in /run/screen/S-alice.\n",
+      "expected_exit": 44,
+      "expected_arguments": null,
+      "before": {
+        "exit_code": 0,
+        "arguments": [
+          "-x",
+          "123.work"
+        ],
+        "stderr": "",
+        "passed": false
+      },
+      "after": {
+        "exit_code": 44,
+        "arguments": null,
+        "stderr": "No screen session has this exact name or ID. Run screen -ls on the server.\n",
+        "passed": true
+      }
+    },
+    {
+      "case": "repeated tabs undated 123.work",
+      "target": "123.work",
+      "listing": "There are screens on:\n\t123.work\t\t\t(Detached)\n1 Sockets in /run/screen/S-alice.\n",
+      "expected_exit": 44,
+      "expected_arguments": null,
+      "before": {
+        "exit_code": 0,
+        "arguments": [
+          "-x",
+          "123.work"
+        ],
+        "stderr": "",
+        "passed": false
+      },
+      "after": {
+        "exit_code": 44,
+        "arguments": null,
+        "stderr": "No screen session has this exact name or ID. Run screen -ls on the server.\n",
+        "passed": true
+      }
+    },
+    {
+      "case": "prefix collision repeated tabs undated",
+      "target": "123.work",
+      "listing": "There are screens on:\n\t123.work\t(Detached)\n\t456.123.work\t\t\t(Detached)\n2 Sockets in /run/screen/S-alice.\n",
+      "expected_exit": 47,
+      "expected_arguments": null,
+      "before": {
+        "exit_code": 47,
+        "arguments": null,
+        "stderr": "Screen has another matching prefix. Rename that session before attaching here.\n",
+        "passed": true
+      },
+      "after": {
+        "exit_code": 47,
+        "arguments": null,
+        "stderr": "Screen has another matching prefix. Rename that session before attaching here.\n",
+        "passed": true
+      }
+    },
+    {
+      "case": "tab and space undated work",
+      "target": "work",
+      "listing": "There are screens on:\n\t123.work\t \t(Detached)\n1 Sockets in /run/screen/S-alice.\n",
+      "expected_exit": 44,
+      "expected_arguments": null,
+      "before": {
+        "exit_code": 0,
+        "arguments": [
+          "-x",
+          "123.work"
+        ],
+        "stderr": "",
+        "passed": false
+      },
+      "after": {
+        "exit_code": 44,
+        "arguments": null,
+        "stderr": "No screen session has this exact name or ID. Run screen -ls on the server.\n",
+        "passed": true
+      }
+    },
+    {
+      "case": "tab and space undated 123.work",
+      "target": "123.work",
+      "listing": "There are screens on:\n\t123.work\t \t(Detached)\n1 Sockets in /run/screen/S-alice.\n",
+      "expected_exit": 44,
+      "expected_arguments": null,
+      "before": {
+        "exit_code": 0,
+        "arguments": [
+          "-x",
+          "123.work"
+        ],
+        "stderr": "",
+        "passed": false
+      },
+      "after": {
+        "exit_code": 44,
+        "arguments": null,
+        "stderr": "No screen session has this exact name or ID. Run screen -ls on the server.\n",
+        "passed": true
+      }
+    },
+    {
+      "case": "prefix collision tab and space undated",
+      "target": "123.work",
+      "listing": "There are screens on:\n\t123.work\t(Detached)\n\t456.123.work\t \t(Detached)\n2 Sockets in /run/screen/S-alice.\n",
+      "expected_exit": 47,
+      "expected_arguments": null,
+      "before": {
+        "exit_code": 47,
+        "arguments": null,
+        "stderr": "Screen has another matching prefix. Rename that session before attaching here.\n",
+        "passed": true
+      },
+      "after": {
+        "exit_code": 47,
+        "arguments": null,
+        "stderr": "Screen has another matching prefix. Rename that session before attaching here.\n",
+        "passed": true
+      }
+    },
+    {
+      "case": "space and tab undated work",
+      "target": "work",
+      "listing": "There are screens on:\n\t123.work \t\t(Detached)\n1 Sockets in /run/screen/S-alice.\n",
+      "expected_exit": 44,
+      "expected_arguments": null,
+      "before": {
+        "exit_code": 44,
+        "arguments": null,
+        "stderr": "No screen session has this exact name or ID. Run screen -ls on the server.\n",
+        "passed": true
+      },
+      "after": {
+        "exit_code": 44,
+        "arguments": null,
+        "stderr": "No screen session has this exact name or ID. Run screen -ls on the server.\n",
+        "passed": true
+      }
+    },
+    {
+      "case": "space and tab undated 123.work",
+      "target": "123.work",
+      "listing": "There are screens on:\n\t123.work \t\t(Detached)\n1 Sockets in /run/screen/S-alice.\n",
+      "expected_exit": 44,
+      "expected_arguments": null,
+      "before": {
+        "exit_code": 44,
+        "arguments": null,
+        "stderr": "No screen session has this exact name or ID. Run screen -ls on the server.\n",
+        "passed": true
+      },
+      "after": {
+        "exit_code": 44,
+        "arguments": null,
+        "stderr": "No screen session has this exact name or ID. Run screen -ls on the server.\n",
+        "passed": true
+      }
+    },
+    {
+      "case": "prefix collision space and tab undated",
+      "target": "123.work",
+      "listing": "There are screens on:\n\t123.work\t(Detached)\n\t456.123.work \t\t(Detached)\n2 Sockets in /run/screen/S-alice.\n",
+      "expected_exit": 47,
+      "expected_arguments": null,
+      "before": {
+        "exit_code": 47,
+        "arguments": null,
+        "stderr": "Screen has another matching prefix. Rename that session before attaching here.\n",
+        "passed": true
+      },
+      "after": {
+        "exit_code": 47,
+        "arguments": null,
+        "stderr": "Screen has another matching prefix. Rename that session before attaching here.\n",
+        "passed": true
+      }
+    },
+    {
+      "case": "exact and trailing tab coexist undated",
+      "target": "work",
+      "listing": "There are screens on:\n\t123.work\t(Detached)\n\t456.work\t\t(Detached)\n2 Sockets in /run/screen/S-alice.\n",
+      "expected_exit": 0,
+      "expected_arguments": [
+        "-x",
+        "123.work"
+      ],
+      "before": {
+        "exit_code": 45,
+        "arguments": null,
+        "stderr": "More than one screen session has this name. Use the full PID.name from screen -ls.\n",
+        "passed": false
+      },
+      "after": {
+        "exit_code": 0,
+        "arguments": [
+          "-x",
+          "123.work"
+        ],
+        "stderr": "",
+        "passed": true
+      }
+    },
+    {
+      "case": "exact dated",
+      "target": "work",
+      "listing": "There are screens on:\n\t123.work\t(11/15/26 20:15:00)\t(Detached)\n1 Sockets in /run/screen/S-alice.\n",
+      "expected_exit": 0,
+      "expected_arguments": [
+        "-x",
+        "123.work"
+      ],
+      "before": {
+        "exit_code": 0,
+        "arguments": [
+          "-x",
+          "123.work"
+        ],
+        "stderr": "",
+        "passed": true
+      },
+      "after": {
+        "exit_code": 0,
+        "arguments": [
+          "-x",
+          "123.work"
+        ],
+        "stderr": "",
+        "passed": true
+      }
+    },
+    {
+      "case": "trailing tab dated work",
+      "target": "work",
+      "listing": "There are screens on:\n\t123.work\t\t(11/15/26 20:15:00)\t(Detached)\n1 Sockets in /run/screen/S-alice.\n",
+      "expected_exit": 44,
+      "expected_arguments": null,
+      "before": {
+        "exit_code": 0,
+        "arguments": [
+          "-x",
+          "123.work"
+        ],
+        "stderr": "",
+        "passed": false
+      },
+      "after": {
+        "exit_code": 44,
+        "arguments": null,
+        "stderr": "No screen session has this exact name or ID. Run screen -ls on the server.\n",
+        "passed": true
+      }
+    },
+    {
+      "case": "trailing tab dated 123.work",
+      "target": "123.work",
+      "listing": "There are screens on:\n\t123.work\t\t(11/15/26 20:15:00)\t(Detached)\n1 Sockets in /run/screen/S-alice.\n",
+      "expected_exit": 44,
+      "expected_arguments": null,
+      "before": {
+        "exit_code": 0,
+        "arguments": [
+          "-x",
+          "123.work"
+        ],
+        "stderr": "",
+        "passed": false
+      },
+      "after": {
+        "exit_code": 44,
+        "arguments": null,
+        "stderr": "No screen session has this exact name or ID. Run screen -ls on the server.\n",
+        "passed": true
+      }
+    },
+    {
+      "case": "prefix collision trailing tab dated",
+      "target": "123.work",
+      "listing": "There are screens on:\n\t123.work\t(11/15/26 20:15:00)\t(Detached)\n\t456.123.work\t\t(11/15/26 20:15:00)\t(Detached)\n2 Sockets in /run/screen/S-alice.\n",
+      "expected_exit": 47,
+      "expected_arguments": null,
+      "before": {
+        "exit_code": 47,
+        "arguments": null,
+        "stderr": "Screen has another matching prefix. Rename that session before attaching here.\n",
+        "passed": true
+      },
+      "after": {
+        "exit_code": 47,
+        "arguments": null,
+        "stderr": "Screen has another matching prefix. Rename that session before attaching here.\n",
+        "passed": true
+      }
+    },
+    {
+      "case": "repeated tabs dated work",
+      "target": "work",
+      "listing": "There are screens on:\n\t123.work\t\t\t(11/15/26 20:15:00)\t(Detached)\n1 Sockets in /run/screen/S-alice.\n",
+      "expected_exit": 44,
+      "expected_arguments": null,
+      "before": {
+        "exit_code": 0,
+        "arguments": [
+          "-x",
+          "123.work"
+        ],
+        "stderr": "",
+        "passed": false
+      },
+      "after": {
+        "exit_code": 44,
+        "arguments": null,
+        "stderr": "No screen session has this exact name or ID. Run screen -ls on the server.\n",
+        "passed": true
+      }
+    },
+    {
+      "case": "repeated tabs dated 123.work",
+      "target": "123.work",
+      "listing": "There are screens on:\n\t123.work\t\t\t(11/15/26 20:15:00)\t(Detached)\n1 Sockets in /run/screen/S-alice.\n",
+      "expected_exit": 44,
+      "expected_arguments": null,
+      "before": {
+        "exit_code": 0,
+        "arguments": [
+          "-x",
+          "123.work"
+        ],
+        "stderr": "",
+        "passed": false
+      },
+      "after": {
+        "exit_code": 44,
+        "arguments": null,
+        "stderr": "No screen session has this exact name or ID. Run screen -ls on the server.\n",
+        "passed": true
+      }
+    },
+    {
+      "case": "prefix collision repeated tabs dated",
+      "target": "123.work",
+      "listing": "There are screens on:\n\t123.work\t(11/15/26 20:15:00)\t(Detached)\n\t456.123.work\t\t\t(11/15/26 20:15:00)\t(Detached)\n2 Sockets in /run/screen/S-alice.\n",
+      "expected_exit": 47,
+      "expected_arguments": null,
+      "before": {
+        "exit_code": 47,
+        "arguments": null,
+        "stderr": "Screen has another matching prefix. Rename that session before attaching here.\n",
+        "passed": true
+      },
+      "after": {
+        "exit_code": 47,
+        "arguments": null,
+        "stderr": "Screen has another matching prefix. Rename that session before attaching here.\n",
+        "passed": true
+      }
+    },
+    {
+      "case": "tab and space dated work",
+      "target": "work",
+      "listing": "There are screens on:\n\t123.work\t \t(11/15/26 20:15:00)\t(Detached)\n1 Sockets in /run/screen/S-alice.\n",
+      "expected_exit": 44,
+      "expected_arguments": null,
+      "before": {
+        "exit_code": 44,
+        "arguments": null,
+        "stderr": "No screen session has this exact name or ID. Run screen -ls on the server.\n",
+        "passed": true
+      },
+      "after": {
+        "exit_code": 44,
+        "arguments": null,
+        "stderr": "No screen session has this exact name or ID. Run screen -ls on the server.\n",
+        "passed": true
+      }
+    },
+    {
+      "case": "tab and space dated 123.work",
+      "target": "123.work",
+      "listing": "There are screens on:\n\t123.work\t \t(11/15/26 20:15:00)\t(Detached)\n1 Sockets in /run/screen/S-alice.\n",
+      "expected_exit": 44,
+      "expected_arguments": null,
+      "before": {
+        "exit_code": 44,
+        "arguments": null,
+        "stderr": "No screen session has this exact name or ID. Run screen -ls on the server.\n",
+        "passed": true
+      },
+      "after": {
+        "exit_code": 44,
+        "arguments": null,
+        "stderr": "No screen session has this exact name or ID. Run screen -ls on the server.\n",
+        "passed": true
+      }
+    },
+    {
+      "case": "prefix collision tab and space dated",
+      "target": "123.work",
+      "listing": "There are screens on:\n\t123.work\t(11/15/26 20:15:00)\t(Detached)\n\t456.123.work\t \t(11/15/26 20:15:00)\t(Detached)\n2 Sockets in /run/screen/S-alice.\n",
+      "expected_exit": 47,
+      "expected_arguments": null,
+      "before": {
+        "exit_code": 47,
+        "arguments": null,
+        "stderr": "Screen has another matching prefix. Rename that session before attaching here.\n",
+        "passed": true
+      },
+      "after": {
+        "exit_code": 47,
+        "arguments": null,
+        "stderr": "Screen has another matching prefix. Rename that session before attaching here.\n",
+        "passed": true
+      }
+    },
+    {
+      "case": "space and tab dated work",
+      "target": "work",
+      "listing": "There are screens on:\n\t123.work \t\t(11/15/26 20:15:00)\t(Detached)\n1 Sockets in /run/screen/S-alice.\n",
+      "expected_exit": 44,
+      "expected_arguments": null,
+      "before": {
+        "exit_code": 44,
+        "arguments": null,
+        "stderr": "No screen session has this exact name or ID. Run screen -ls on the server.\n",
+        "passed": true
+      },
+      "after": {
+        "exit_code": 44,
+        "arguments": null,
+        "stderr": "No screen session has this exact name or ID. Run screen -ls on the server.\n",
+        "passed": true
+      }
+    },
+    {
+      "case": "space and tab dated 123.work",
+      "target": "123.work",
+      "listing": "There are screens on:\n\t123.work \t\t(11/15/26 20:15:00)\t(Detached)\n1 Sockets in /run/screen/S-alice.\n",
+      "expected_exit": 44,
+      "expected_arguments": null,
+      "before": {
+        "exit_code": 44,
+        "arguments": null,
+        "stderr": "No screen session has this exact name or ID. Run screen -ls on the server.\n",
+        "passed": true
+      },
+      "after": {
+        "exit_code": 44,
+        "arguments": null,
+        "stderr": "No screen session has this exact name or ID. Run screen -ls on the server.\n",
+        "passed": true
+      }
+    },
+    {
+      "case": "prefix collision space and tab dated",
+      "target": "123.work",
+      "listing": "There are screens on:\n\t123.work\t(11/15/26 20:15:00)\t(Detached)\n\t456.123.work \t\t(11/15/26 20:15:00)\t(Detached)\n2 Sockets in /run/screen/S-alice.\n",
+      "expected_exit": 47,
+      "expected_arguments": null,
+      "before": {
+        "exit_code": 47,
+        "arguments": null,
+        "stderr": "Screen has another matching prefix. Rename that session before attaching here.\n",
+        "passed": true
+      },
+      "after": {
+        "exit_code": 47,
+        "arguments": null,
+        "stderr": "Screen has another matching prefix. Rename that session before attaching here.\n",
+        "passed": true
+      }
+    },
+    {
+      "case": "exact and trailing tab coexist dated",
+      "target": "work",
+      "listing": "There are screens on:\n\t123.work\t(11/15/26 20:15:00)\t(Detached)\n\t456.work\t\t(11/15/26 20:15:00)\t(Detached)\n2 Sockets in /run/screen/S-alice.\n",
+      "expected_exit": 0,
+      "expected_arguments": [
+        "-x",
+        "123.work"
+      ],
+      "before": {
+        "exit_code": 45,
+        "arguments": null,
+        "stderr": "More than one screen session has this name. Use the full PID.name from screen -ls.\n",
+        "passed": false
+      },
+      "after": {
+        "exit_code": 0,
+        "arguments": [
+          "-x",
+          "123.work"
+        ],
+        "stderr": "",
+        "passed": true
+      }
+    },
+    {
+      "case": "timestamp text in dated name '\\t(11/15/26 20:15:00)' work",
+      "target": "work",
+      "listing": "There are screens on:\n\t123.work\t(11/15/26 20:15:00)\t(11/15/26 20:16:00)\t(Detached)\n1 Sockets in /run/screen/S-alice.\n",
+      "expected_exit": 44,
+      "expected_arguments": null,
+      "before": {
+        "exit_code": 44,
+        "arguments": null,
+        "stderr": "No screen session has this exact name or ID. Run screen -ls on the server.\n",
+        "passed": true
+      },
+      "after": {
+        "exit_code": 44,
+        "arguments": null,
+        "stderr": "No screen session has this exact name or ID. Run screen -ls on the server.\n",
+        "passed": true
+      }
+    },
+    {
+      "case": "timestamp text in dated name '\\t(11/15/26 20:15:00)' 123.work",
+      "target": "123.work",
+      "listing": "There are screens on:\n\t123.work\t(11/15/26 20:15:00)\t(11/15/26 20:16:00)\t(Detached)\n1 Sockets in /run/screen/S-alice.\n",
+      "expected_exit": 44,
+      "expected_arguments": null,
+      "before": {
+        "exit_code": 44,
+        "arguments": null,
+        "stderr": "No screen session has this exact name or ID. Run screen -ls on the server.\n",
+        "passed": true
+      },
+      "after": {
+        "exit_code": 44,
+        "arguments": null,
+        "stderr": "No screen session has this exact name or ID. Run screen -ls on the server.\n",
+        "passed": true
+      }
+    },
+    {
+      "case": "timestamp text in dated name '\\t\\t(11/15/26 20:15:00)' work",
+      "target": "work",
+      "listing": "There are screens on:\n\t123.work\t\t(11/15/26 20:15:00)\t(11/15/26 20:16:00)\t(Detached)\n1 Sockets in /run/screen/S-alice.\n",
+      "expected_exit": 44,
+      "expected_arguments": null,
+      "before": {
+        "exit_code": 44,
+        "arguments": null,
+        "stderr": "No screen session has this exact name or ID. Run screen -ls on the server.\n",
+        "passed": true
+      },
+      "after": {
+        "exit_code": 44,
+        "arguments": null,
+        "stderr": "No screen session has this exact name or ID. Run screen -ls on the server.\n",
+        "passed": true
+      }
+    },
+    {
+      "case": "timestamp text in dated name '\\t\\t(11/15/26 20:15:00)' 123.work",
+      "target": "123.work",
+      "listing": "There are screens on:\n\t123.work\t\t(11/15/26 20:15:00)\t(11/15/26 20:16:00)\t(Detached)\n1 Sockets in /run/screen/S-alice.\n",
+      "expected_exit": 44,
+      "expected_arguments": null,
+      "before": {
+        "exit_code": 44,
+        "arguments": null,
+        "stderr": "No screen session has this exact name or ID. Run screen -ls on the server.\n",
+        "passed": true
+      },
+      "after": {
+        "exit_code": 44,
+        "arguments": null,
+        "stderr": "No screen session has this exact name or ID. Run screen -ls on the server.\n",
+        "passed": true
+      }
+    }
+  ]
+}

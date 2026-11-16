@@ -94,8 +94,8 @@ resolved=$(
     /^[ \t]+[1-9][0-9]*[.]/ {
       # A Screen name may contain spaces. Splitting on shell whitespace would
       # turn "123.work extra" into "123.work" and authorize a prefix attach.
-      # Preserve the entire target, removing only the listing separators and
-      # Screen timestamp that the discovery parser also recognizes.
+      # Preserve the entire target. Screen emits exactly one separator tab;
+      # any preceding tabs belong to the name. Remove only the final timestamp.
       id = $0
       sub(/^[ \t]+/, "", id)
       if (!match(id, /[(][^()]*[)][ \t]*$/)) {
@@ -104,8 +104,8 @@ resolved=$(
       }
       state = substr(id, RSTART)
       id = substr(id, 1, RSTART - 1)
-      sub(/\t+[ \t]*$/, "", id)
-      sub(/\t+[(][0-9][0-9]\/[0-9][0-9]\/[0-9][0-9]([0-9][0-9])? [0-9][0-9]:[0-9][0-9]:[0-9][0-9][)]$/, "", id)
+      sub(/\t$/, "", id)
+      sub(/\t[(][0-9][0-9]\/[0-9][0-9]\/[0-9][0-9]([0-9][0-9])? [0-9][0-9]:[0-9][0-9]:[0-9][0-9][)]$/, "", id)
       if (id !~ /^[1-9][0-9]*[.].+/ || id in seen) {
         malformed = 1
         next

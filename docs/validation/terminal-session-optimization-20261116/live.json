@@ -1,0 +1,45 @@
+{
+  "phase": "live",
+  "command": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+    "tool/run_terminal_live_smoke.py",
+    "--flutter",
+    "flutter",
+    "--with-unix-agent"
+  ],
+  "head_at_start": "047adfb944ad9f46acc65e0c8c38376b3949f3da",
+  "started_utc": "2026-11-16T11:10:29.245237+00:00",
+  "watched_source_count": 5556,
+  "github_actions_queried_or_awaited": false,
+  "suite_count": 4,
+  "suite_files": [
+    "test/ssh_terminal_live_test.dart",
+    "test/ssh_port_forwarding_live_test.dart",
+    "test/ssh_agent_live_test.dart",
+    "test/ssh_connection_sharing_live_test.dart"
+  ],
+  "finished_utc": "2026-11-16T11:13:05.750984+00:00",
+  "seconds": 156.502,
+  "exit_code": 0,
+  "changed_sources": [],
+  "counts": {
+    "passed": 22,
+    "skipped": 3,
+    "failed": 0
+  },
+  "final_test_line": "01:36 +22 ~3: All tests passed!",
+  "invocation": [
+    "../toolchain/run",
+    "env",
+    "CARGO_NET_OFFLINE=true",
+    "python3",
+    "tool/run_terminal_validation.py",
+    "live",
+    "--evidence",
+    "docs/validation/terminal-session-optimization-20261116"
+  ],
+  "environment": {
+    "CARGO_NET_OFFLINE": "true"
+  },
+  "prerequisite_note": "Uses normal native hooks and the already populated Cargo cache; the initial registry refresh failure is retained under development/live-cargo-registry."
+}

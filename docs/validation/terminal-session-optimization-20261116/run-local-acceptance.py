@@ -14,6 +14,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--phase', required=True)
 parser.add_argument('--evidence', type=pathlib.Path, required=True)
 parser.add_argument('--scope', choices=['all', 'packages'], default='all')
+parser.add_argument('--cwd', type=pathlib.Path, default=pathlib.Path.cwd())
 parser.add_argument('command', nargs=argparse.REMAINDER)
 args = parser.parse_args()
 command = args.command[1:] if args.command[:1] == ['--'] else args.command
@@ -40,6 +41,7 @@ def stamp():
 args.evidence.mkdir(parents=True, exist_ok=True)
 before = sources()
 record = {'phase': args.phase, 'command': command,
+          'cwd': str(args.cwd.resolve()),
           'head_at_start': acceptance.git('rev-parse', 'HEAD'),
           'started_utc': stamp(), 'source_scope': args.scope,
           'watched_source_count': len(before),
@@ -49,7 +51,8 @@ inventory.write_bytes(gzip.compress((json.dumps(before, indent=2) + '\n').encode
 started = time.monotonic()
 log_path = args.evidence / f'{args.phase}.log'
 with log_path.open('w') as log:
-    result = subprocess.run(command, stdout=log, stderr=subprocess.STDOUT)
+    result = subprocess.run(command, cwd=args.cwd, stdout=log,
+                            stderr=subprocess.STDOUT)
 after = sources()
 record.update(finished_utc=stamp(), seconds=round(time.monotonic() - started, 3),
               exit_code=result.returncode,

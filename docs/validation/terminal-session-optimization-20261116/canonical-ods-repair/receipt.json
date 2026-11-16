@@ -1,0 +1,163 @@
+{
+  "recorded_utc": "2026-11-16T10:53:22.330266+00:00",
+  "repository": "CrispStrobe/quds_office_suite",
+  "parent": "18c76e886623ae3be9a41addd80e7f6837c2d3b0",
+  "branch": "codex/terminal-integration-ods-20261116",
+  "github_actions_queried_or_awaited": false,
+  "normal_workspace_graph": true,
+  "package_manifests_modified": false,
+  "dependency_resolution": {
+    "command": [
+      "/workspace/scratch/cb0df5963965/toolchain/run",
+      "flutter",
+      "pub",
+      "get"
+    ],
+    "cwd": "/workspace/scratch/cb0df5963965/quds-ods-integration",
+    "exit_code": 0,
+    "log": "pub-get-online.log",
+    "generated_lock": "resolved-workspace-pubspec.lock",
+    "generated_lock_sha256": "344190a0224b9e6dcc2161cbfb1be3b7a9569a3a03a809f42801d99f9052e130",
+    "manifests": [
+      {
+        "path": "pubspec.yaml",
+        "sha256": "a28be038727f1340879544309b9d8f78f66ed90e5c0c8f3285a394c4c20441a2",
+        "matches_parent": true
+      },
+      {
+        "path": "packages/legacy_doc_parser/pubspec.yaml",
+        "sha256": "150af8d89562635bf5a876c0a539c20ae48b58ea3666db071b5e4ebd3addf153",
+        "matches_parent": true
+      },
+      {
+        "path": "packages/quds_office_engine/pubspec.yaml",
+        "sha256": "049a5c838d0d1b8c482f984c27b66c5235411d93b5d06ff1c254dca4c6274408",
+        "matches_parent": true
+      },
+      {
+        "path": "packages/quds_office_engine/example/pubspec.yaml",
+        "sha256": "9f1b07bb8665c2125d92074aef74f2892963e34171ab0ea381df7a1cf798fb6c",
+        "matches_parent": true
+      },
+      {
+        "path": "packages/quds_reports/pubspec.yaml",
+        "sha256": "5e4bc0d98b2ed07463fede914e41d6536a985ede6746741df85a0bc743dbb98a",
+        "matches_parent": true
+      },
+      {
+        "path": "packages/quds_office_editor/pubspec.yaml",
+        "sha256": "f3cbfae1226252ba650d206e9f58eb0792d0cec6e8518355f47a8a9fc970b03d",
+        "matches_parent": true
+      },
+      {
+        "path": "packages/quds_office_editor/example/pubspec.yaml",
+        "sha256": "229bea40049a905fc76868677b9a5772672114071423db4529b31d0f90b63d1b",
+        "matches_parent": true
+      },
+      {
+        "path": "apps/quds_report_studio/pubspec.yaml",
+        "sha256": "4a6624ee8d31222409dca9cea01daa28231ae477ac81369a2226540837a8179a",
+        "matches_parent": true
+      }
+    ]
+  },
+  "test_cwd": "/workspace/scratch/cb0df5963965/quds-ods-integration/packages/quds_office_engine",
+  "baseline": {
+    "command": [
+      "/workspace/scratch/cb0df5963965/toolchain/run",
+      "dart",
+      "test",
+      "--concurrency=1",
+      "--reporter=expanded",
+      "--plain-name",
+      "ODS tab colour and picture survive save together",
+      "test/ods_sheet_reader_test.dart"
+    ],
+    "production_source": "18c76e886623ae3be9a41addd80e7f6837c2d3b0",
+    "test_source": "New combined regression and registration of the previously uncalled imageTests group.",
+    "exit_code": 1,
+    "passed": 0,
+    "failed": 1,
+    "error": "Bad state: Attributes can only be written on an open start tag",
+    "log": "baseline-regression.log"
+  },
+  "fixed": {
+    "command": [
+      "/workspace/scratch/cb0df5963965/toolchain/run",
+      "dart",
+      "test",
+      "--concurrency=1",
+      "--reporter=expanded",
+      "test/ods_sheet_reader_test.dart"
+    ],
+    "exit_code": 0,
+    "passed": 91,
+    "skipped": 0,
+    "failed": 0,
+    "log": "fixed-ods-suite.log"
+  },
+  "analysis": {
+    "command": [
+      "/workspace/scratch/cb0df5963965/toolchain/run",
+      "dart",
+      "analyze",
+      "lib/src/sheet/serial/sheet_serial.dart",
+      "test/ods_sheet_reader_test.dart"
+    ],
+    "exit_code": 0,
+    "log": "analysis.log"
+  },
+  "format": {
+    "command": [
+      "/workspace/scratch/cb0df5963965/toolchain/run",
+      "dart",
+      "format",
+      "--output=none",
+      "--set-exit-if-changed",
+      "lib/src/sheet/serial/sheet_serial.dart",
+      "test/ods_sheet_reader_test.dart"
+    ],
+    "exit_code": 0,
+    "changed_files": 0,
+    "log": "format.log"
+  },
+  "sources": [
+    {
+      "path": "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+      "parent_sha256": "a419fda8c408b98f10822475c05a5866bfd96c7d2540e847e72f72ef55000e45",
+      "fixed_sha256": "079b9786e91baacf2a6a83f5721588a52c79ea1382a99cefccc1f4830c73d8ff",
+      "fixed_git_blob": "480d868cadb44f76eeb7f5800d5096b147d92ed2",
+      "mode": "100644"
+    },
+    {
+      "path": "packages/quds_office_engine/test/ods_sheet_reader_test.dart",
+      "parent_sha256": "ac1cfe69397f65112701df2748a46fe0f9a35145745e926e235dd9610e714f99",
+      "fixed_sha256": "c8ad01e7f5720307bb96d38badd0b2afcd43eb4023738892e868b32170869091",
+      "fixed_git_blob": "d75d2a5b8a1d65073fe5e6838927af5a2d927f9e",
+      "mode": "100644"
+    }
+  ],
+  "setup_diagnostics": [
+    {
+      "result": "Automatic approval review rejected an initial Flutter invocation without the prepared runner because its bot detector attempted Azure metadata discovery.",
+      "resolution": "Inspected official bot_detector.dart; the existing runner sets local CI=true, causing the documented short-circuit before the Azure probe, and suppresses analytics. No SDK patch or escalation was used."
+    },
+    {
+      "log": "pub-get.log",
+      "result": "Offline workspace resolution lacked window_manager; normal workspace resolution then succeeded."
+    },
+    {
+      "log": "baseline-wrong-cwd.log",
+      "result": "The first test launch from workspace root could not find package-relative fixtures; the package cwd is used for all baseline/fixed acceptance."
+    },
+    {
+      "log": "baseline-unregistered-images.log",
+      "result": "Exposed the existing unregistered imageTests group; registration was added before executing the successful baseline reproduction."
+    }
+  ],
+  "runtime": {
+    "flutter": "3.47.8",
+    "dart": "3.13.7",
+    "test_graph": "Unmodified canonical workspace dependency declarations and the generated lock stored alongside this receipt."
+  }
+}

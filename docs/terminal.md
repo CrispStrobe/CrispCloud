@@ -664,7 +664,8 @@ session or shell. Screen's CLI can still race with another process renaming or
 creating sessions between listing and attachment; this is a conservative
 listing check, not an atomic server-side exact-only attachment primitive.
 Full listed identifiers remain intact even when an unsupported name contains
-spaces or parentheses; those entries still participate in prefix checks.
+spaces, parentheses or trailing tabs; those entries still participate in prefix
+checks.
 Malformed rows, duplicate IDs or summaries, inconsistent socket counts and
 listings over 512 sessions stop attachment instead of selecting a partial name.
 
