@@ -1,0 +1,22 @@
+00:00 +0: loading /private/tmp/crispcloud-terminal-ods-isolated/test/terminal_session_test.dart
+00:00 +0: interprets cursor controls, color and alternate screen from the transport
+00:00 +1: keys and bracketed paste reach the PTY without line submission or local echo
+00:00 +2: terminal answers device-attribute and cursor queries over its transport
+00:00 +3: uses initial size and catches layout changes during connection
+00:00 +4: resize bursts retain only the latest geometry behind an in-flight request
+00:00 +5: a resize reversal restores the last completed geometry
+00:00 +6: same-turn resizing sends one final size without duplicate transport calls
+00:00 +7: late resize failure cannot clear a replacement session resize
+00:00 +8: disconnect revokes a pending resize without waiting for its reply
+00:00 +9: resize errors fail the owned session and close its transport
+00:00 +10: restart rejects a late connection and never mixes its output
+00:00 +11: disconnect during connection disposes the eventual process
+00:00 +12: disposal during connection cannot revive a session
+00:00 +13: finished shell preserves trailing output and exit code
+00:00 +14: disconnect can close a process after output EOF but before its exit
+00:00 +15: transport errors close the session and retain output for inspection
+00:00 +16: asynchronous input failure is handled rather than escaping the event loop
+00:00 +17: queued input from a closed shell never reaches a new one
+00:00 +18: client platform is set and Windows reflow applies only to local PTYs
+00:00 +19: scrollback remains bounded for long-running jobs
+00:00 +20: All tests passed!

@@ -1,0 +1,20 @@
+Running native: 85 files; source 25b77a49
+{
+  "phase": "native",
+  "head_at_start": "25b77a492b0b01d1716a40b2a66924113c2577b5",
+  "started_utc": "2026-11-16T10:33:43.557425+00:00",
+  "watched_source_count": 5556,
+  "github_actions_queried_or_awaited": false,
+  "suite_count": 85,
+  "isolated_zsh_startup": true,
+  "finished_utc": "2026-11-16T10:38:59.732924+00:00",
+  "seconds": 316.159,
+  "exit_code": 1,
+  "changed_sources": [],
+  "counts": {
+    "passed": 1066,
+    "skipped": 2,
+    "failed": 7
+  },
+  "final_test_line": "04:14 +1066 ~2 -7: Some tests failed."
+}

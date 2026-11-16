@@ -1,0 +1,36 @@
+{
+  "recorded_at": "2026-11-16T12:38:52.720730+00:00",
+  "github_actions_queried_or_awaited": false,
+  "actual_feature_tests_completed": 1,
+  "binary": "/opt/homebrew/bin/tmux",
+  "version": "tmux 3.8",
+  "probe_command": [
+    "/opt/homebrew/bin/tmux",
+    "-S",
+    "/var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/tmux-probe-kl328mpz/server",
+    "-f",
+    "/dev/null",
+    "new-session",
+    "-d",
+    "-s",
+    "crispcloud-probe"
+  ],
+  "probe_exit_code": 0,
+  "probe_stdout": "",
+  "probe_stderr": "",
+  "command": [
+    "/tmp/crispcloud-flutter-20261116",
+    "test",
+    "--no-pub",
+    "--concurrency=1",
+    "--reporter=expanded",
+    "--dart-define=TMUX_CONTROL_LIVE=true",
+    "--dart-define=TMUX_CONTROL_BINARY=/opt/homebrew/bin/tmux",
+    "test/tmux_control_live_test.dart"
+  ],
+  "status": "passed",
+  "exit_code": 0,
+  "cleanup_exit_code": 0,
+  "cleanup_stdout": "",
+  "cleanup_stderr": ""
+}

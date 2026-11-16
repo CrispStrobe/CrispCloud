@@ -1,0 +1,118 @@
+00:00 +0: loading /private/tmp/crispcloud-terminal-ods-isolated/test/ssh_terminal_live_test.dart
+00:00 +0: /private/tmp/crispcloud-terminal-ods-isolated/test/ssh_terminal_live_test.dart: real OpenSSH loopback route verifies both servers and preserves Unicode execution through a jump
+ℹ️ [SshTerminalService] Session ho7qnji3yv0 established to 127.0.0.1:57184
+ℹ️ [SshTerminalService] execute(ho7qnji3yv0)
+ℹ️ [SshTerminalService] Disconnecting session ho7qnji3yv0
+ℹ️ [SshTerminalService] Session ho7qnjz0j11 established to 127.0.0.1:57184
+ℹ️ [SshTerminalService] execute(ho7qnjz0j11)
+ℹ️ [SshTerminalService] Disconnecting session ho7qnjz0j11
+00:01 +1: /private/tmp/crispcloud-terminal-ods-isolated/test/ssh_terminal_live_test.dart: real OpenSSH loopback route rejects a changed target host key without trusting or registering the route
+ℹ️ [SshTerminalService] Session ho7qnk46xo0 established to 127.0.0.1:57184
+ℹ️ [SshTerminalService] Disconnecting session ho7qnk46xo0
+❌ [SshTerminalService] SSH connect failed
+  Error: SSH host key changed for 127.0.0.1:57184. Expected SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA; received SHA256:XzhV3/oLtmwhFCFlDNic5FTQOAhHKMy71SBICMpBenE.
+00:02 +2: /private/tmp/crispcloud-terminal-ods-isolated/test/ssh_terminal_live_test.dart: real OpenSSH loopback route real PTY receives size changes and preserves final output and exit status
+ℹ️ [SshTerminalService] Session ho7qnke0770 established to 127.0.0.1:57184
+ℹ️ [SshTerminalService] startShell(ho7qnke0770)
+ℹ️ [SshTerminalService] resizeTerminal(ho7qnke0770): 103x37
+ℹ️ [SshTerminalService] Disconnecting session ho7qnke0770
+00:02 +3: loading /private/tmp/crispcloud-terminal-ods-isolated/test/ssh_port_forwarding_live_test.dart
+00:05 +3: /private/tmp/crispcloud-terminal-ods-isolated/test/ssh_port_forwarding_live_test.dart: real OpenSSH forwarding through a verified jump route local allocates a listener, drains binary response after half-close, and cancels
+ℹ️ [SshTerminalService] Session ho7qnn62we0 established to 127.0.0.1:57184
+ℹ️ [SshTerminalService] execute(ho7qnn62we0)
+ℹ️ [SshTerminalService] Disconnecting session ho7qnn62we0
+01:09 +4: /private/tmp/crispcloud-terminal-ods-isolated/test/ssh_port_forwarding_live_test.dart: real OpenSSH forwarding through a verified jump route remote allocates a listener, drains binary response after half-close, and cancels
+ℹ️ [SshTerminalService] Session ho7qooj3mi0 established to 127.0.0.1:57184
+ℹ️ [SshTerminalService] execute(ho7qooj3mi0)
+ℹ️ [SshTerminalService] Disconnecting session ho7qooj3mi0
+02:17 +5: /private/tmp/crispcloud-terminal-ods-isolated/test/ssh_port_forwarding_live_test.dart: real OpenSSH forwarding through a verified jump route SOCKS domain request and pipelined binary payload survive request half-close
+ℹ️ [SshTerminalService] Session ho7qpsywyq0 established to 127.0.0.1:57184
+ℹ️ [SshTerminalService] execute(ho7qpsywyq0)
+ℹ️ [SshTerminalService] Disconnecting session ho7qpsywyq0
+02:52 +6: /private/tmp/crispcloud-terminal-ods-isolated/test/ssh_port_forwarding_live_test.dart: real OpenSSH forwarding through a verified jump route disconnect closes active client sockets and both local and remote listeners
+ℹ️ [SshTerminalService] Session ho7qqdhygq0 established to 127.0.0.1:57184
+ℹ️ [SshTerminalService] Disconnecting session ho7qqdhygq0
+02:52 +7: loading /private/tmp/crispcloud-terminal-ods-isolated/test/ssh_agent_live_test.dart
+02:53 +7: /private/tmp/crispcloud-terminal-ods-isolated/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture Ed25519 waits for host approval before direct signing
+ℹ️ [SshTerminalService] Session ho7qqefyzi0 established to 127.0.0.1:57184
+ℹ️ [SshTerminalService] execute(ho7qqefyzi0)
+ℹ️ [SshTerminalService] Disconnecting session ho7qqefyzi0
+02:54 +8: /private/tmp/crispcloud-terminal-ods-isolated/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture Ed25519 signs independently after each verified jump hop
+ℹ️ [SshTerminalService] Session ho7qqek40x0 established to 127.0.0.1:57184
+ℹ️ [SshTerminalService] execute(ho7qqek40x0)
+ℹ️ [SshTerminalService] Disconnecting session ho7qqek40x0
+02:54 +9: /private/tmp/crispcloud-terminal-ods-isolated/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture RSA SHA-2 waits for host approval before direct signing
+ℹ️ [SshTerminalService] Session ho7qqencqs0 established to 127.0.0.1:57184
+ℹ️ [SshTerminalService] execute(ho7qqencqs0)
+ℹ️ [SshTerminalService] Disconnecting session ho7qqencqs0
+02:54 +10: /private/tmp/crispcloud-terminal-ods-isolated/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture RSA SHA-2 signs independently after each verified jump hop
+ℹ️ [SshTerminalService] Session ho7qqeqn3s0 established to 127.0.0.1:57184
+ℹ️ [SshTerminalService] execute(ho7qqeqn3s0)
+ℹ️ [SshTerminalService] Disconnecting session ho7qqeqn3s0
+02:54 +11: /private/tmp/crispcloud-terminal-ods-isolated/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture session output drains across a live OpenSSH rekey
+ℹ️ [SshTerminalService] Session ho7qqetf6l0 established to 127.0.0.1:57184
+ℹ️ [SshTerminalService] execute(ho7qqetf6l0)
+ℹ️ [SshTerminalService] Disconnecting session ho7qqetf6l0
+02:57 +12: /private/tmp/crispcloud-terminal-ods-isolated/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture rejecting a real host key never asks the agent to sign
+❌ [SshTerminalService] SSH connect failed
+  Error: Verify this server’s SSH host key before connecting: SHA256:XzhV3/oLtmwhFCFlDNic5FTQOAhHKMy71SBICMpBenE
+02:57 +13: /private/tmp/crispcloud-terminal-ods-isolated/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture a changed direct host key fails before any signature
+❌ [SshTerminalService] SSH connect failed
+  Error: SSH host key changed for 127.0.0.1:57184. Expected SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA; received SHA256:XzhV3/oLtmwhFCFlDNic5FTQOAhHKMy71SBICMpBenE.
+02:57 +14: /private/tmp/crispcloud-terminal-ods-isolated/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture a changed final key signs only for the independently trusted jump
+❌ [SshTerminalService] SSH connect failed
+  Error: SSH host key changed for 127.0.0.1:57184. Expected SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA; received SHA256:XzhV3/oLtmwhFCFlDNic5FTQOAhHKMy71SBICMpBenE.
+02:57 +15: /private/tmp/crispcloud-terminal-ods-isolated/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture a refused agent signature has no password or interactive fallback
+❌ [SshTerminalService] SSH connect failed
+  Error: SSHAuthAbortError(Connection closed before authentication)
+02:57 +16: /private/tmp/crispcloud-terminal-ods-isolated/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture disconnect revokes a pending local-agent signature on a live route
+ℹ️ [SshTerminalService] Session ho7qqgx38w0 established to 127.0.0.1:57184
+ℹ️ [SshTerminalService] execute(ho7qqgx38w0)
+ℹ️ [SshTerminalService] Disconnecting session ho7qqgx38w0
+02:58 +17: /private/tmp/crispcloud-terminal-ods-isolated/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture cancelling host approval closes authority before a late approval
+❌ [SshTerminalService] SSH connect failed
+  Error: SSHAuthAbortError(Connection closed before authentication)
+02:58 +18: /private/tmp/crispcloud-terminal-ods-isolated/test/ssh_agent_live_test.dart: actual disposable Unix ssh-agent authenticates and forwards to ssh-add
+ℹ️ [SshTerminalService] Session ho7qqgzy0r0 established to 127.0.0.1:57184
+ℹ️ [SshTerminalService] execute(ho7qqgzy0r0)
+ℹ️ [SshTerminalService] Disconnecting session ho7qqgzy0r0
+02:58 +19: loading /private/tmp/crispcloud-terminal-ods-isolated/test/ssh_connection_sharing_live_test.dart
+02:59 +19: /private/tmp/crispcloud-terminal-ods-isolated/test/ssh_connection_sharing_live_test.dart: real OpenSSH shared connection parallel commands share one verified transport and survive source closure
+ℹ️ [SshTerminalService] Session ho7qqhq6q50 established to 127.0.0.1:57184
+ℹ️ [SshTerminalService] execute(ho7qqhq6q50)
+ℹ️ [SshTerminalService] execute(ho7qqhqdi21)
+ℹ️ [SshTerminalService] execute(ho7qqhqdi21)
+ℹ️ [SshTerminalService] Disconnecting session ho7qqhq6q50
+ℹ️ [SshTerminalService] Disconnecting session ho7qqhqdi21
+02:59 +20: /private/tmp/crispcloud-terminal-ods-isolated/test/ssh_connection_sharing_live_test.dart: real OpenSSH shared connection canceling a command session preserves a concurrently running sibling
+ℹ️ [SshTerminalService] Session ho7qqhwzy60 established to 127.0.0.1:57184
+ℹ️ [SshTerminalService] execute(ho7qqhwzy60)
+ℹ️ [SshTerminalService] execute(ho7qqhx0s51)
+ℹ️ [SshTerminalService] Disconnecting session ho7qqhwzy60
+❌ [SshTerminalService] execute error
+  Error: Bad state: SSH command was cancelled
+ℹ️ [SshTerminalService] execute(ho7qqhx0s51)
+ℹ️ [SshTerminalService] Disconnecting session ho7qqhx0s51
+02:59 +21: /private/tmp/crispcloud-terminal-ods-isolated/test/ssh_connection_sharing_live_test.dart: real OpenSSH shared connection local forwards remain live through source closure and stop at last lease
+ℹ️ [SshTerminalService] Session ho7qqi2r7f0 established to 127.0.0.1:57184
+ℹ️ [SshTerminalService] Disconnecting session ho7qqi2r7f0
+ℹ️ [SshTerminalService] execute(ho7qqi2te41)
+ℹ️ [SshTerminalService] Disconnecting session ho7qqi2te41
+03:24 +22: /private/tmp/crispcloud-terminal-ods-isolated/test/ssh_connection_sharing_live_test.dart: real OpenSSH shared connection remote forwards remain live through source closure and stop at last lease
+ℹ️ [SshTerminalService] Session ho7qqwxs0k0 established to 127.0.0.1:57184
+ℹ️ [SshTerminalService] Disconnecting session ho7qqwxs0k0
+ℹ️ [SshTerminalService] execute(ho7qqwxsiq1)
+ℹ️ [SshTerminalService] Disconnecting session ho7qqwxsiq1
+03:55 +23: /private/tmp/crispcloud-terminal-ods-isolated/test/ssh_connection_sharing_live_test.dart: real OpenSSH shared connection dynamic forwards remain live through source closure and stop at last lease
+ℹ️ [SshTerminalService] Session ho7qrf7h330 established to 127.0.0.1:57184
+ℹ️ [SshTerminalService] Disconnecting session ho7qrf7h330
+ℹ️ [SshTerminalService] execute(ho7qrf7hof1)
+ℹ️ [SshTerminalService] Disconnecting session ho7qrf7hof1
+04:21 +24: /private/tmp/crispcloud-terminal-ods-isolated/test/ssh_connection_sharing_live_test.dart: real OpenSSH shared connection independent PTYs preserve sizes, output and peer input after exit
+ℹ️ [SshTerminalService] Session ho7qruq7tj0 established to 127.0.0.1:57184
+ℹ️ [SshTerminalService] startShell(ho7qruq7tj0)
+ℹ️ [SshTerminalService] startShell(ho7qruq8kg1)
+ℹ️ [SshTerminalService] resizeTerminal(ho7qruq8kg1): 113x41
+ℹ️ [SshTerminalService] Disconnecting session ho7qruq7tj0
+ℹ️ [SshTerminalService] Disconnecting session ho7qruq8kg1
+04:21 +25: All tests passed!

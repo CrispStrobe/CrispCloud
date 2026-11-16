@@ -1,0 +1,138 @@
+[
+  {
+    "phase": "unit",
+    "head": "17351a31b46948c69076ec43022e4d49b42ad09a",
+    "command": [
+      "python3",
+      "tool/run_terminal_validation.py",
+      "native",
+      "--flutter",
+      "/tmp/crispcloud-flutter-20261116",
+      "--dart",
+      "/Users/christianstrobele/flutter-3.47.8/bin/cache/dart-sdk/bin/dart",
+      "--evidence",
+      "/private/tmp/crispcloud-terminal-ods-isolated/docs/validation/canonical-refresh-20261116/unit"
+    ],
+    "cwd": "/private/tmp/crispcloud-terminal-ods-isolated",
+    "started_utc": "2026-11-16T12:28:52.282943+00:00",
+    "seconds": 310.342,
+    "exit_code": 0,
+    "changed_sources": [],
+    "log": "unit-runner.log",
+    "source_sha256": "fea5e3a28e1a989d2ab19582a9f4a1aa4085af3674e7e37babb77db619560647",
+    "final_line": "05:00 +1077 ~2: All tests passed!",
+    "counts": {
+      "passed": 1077,
+      "skipped": 2,
+      "failed": 0
+    }
+  },
+  {
+    "phase": "ssh-live",
+    "head": "17351a31b46948c69076ec43022e4d49b42ad09a",
+    "command": [
+      "python3",
+      "tool/run_terminal_live_smoke.py",
+      "--flutter",
+      "/tmp/crispcloud-flutter-20261116",
+      "--with-pty",
+      "--with-unix-agent"
+    ],
+    "cwd": "/private/tmp/crispcloud-terminal-ods-isolated",
+    "started_utc": "2026-11-16T12:34:04.165577+00:00",
+    "seconds": 288.066,
+    "exit_code": 0,
+    "changed_sources": [],
+    "log": "ssh-live.log",
+    "source_sha256": "fea5e3a28e1a989d2ab19582a9f4a1aa4085af3674e7e37babb77db619560647",
+    "final_line": "04:21 +25: All tests passed!",
+    "counts": {
+      "passed": 25,
+      "skipped": 0,
+      "failed": 0
+    }
+  },
+  {
+    "phase": "tmux-live",
+    "head": "17351a31b46948c69076ec43022e4d49b42ad09a",
+    "command": [
+      "python3",
+      "tool/run_tmux_control_live_smoke.py",
+      "--flutter",
+      "/tmp/crispcloud-flutter-20261116",
+      "--tmux",
+      "/opt/homebrew/bin/tmux",
+      "--evidence",
+      "/private/tmp/crispcloud-terminal-ods-isolated/docs/validation/canonical-refresh-20261116/live-tmux"
+    ],
+    "cwd": "/private/tmp/crispcloud-terminal-ods-isolated",
+    "started_utc": "2026-11-16T12:38:52.650014+00:00",
+    "seconds": 13.889,
+    "exit_code": 0,
+    "changed_sources": [],
+    "log": "tmux-live.log",
+    "source_sha256": "fea5e3a28e1a989d2ab19582a9f4a1aa4085af3674e7e37babb77db619560647",
+    "final_line": "00:00 +1: All tests passed!",
+    "counts": {
+      "passed": 1,
+      "skipped": 0,
+      "failed": 0
+    }
+  },
+  {
+    "phase": "ods-host",
+    "head": "17351a31b46948c69076ec43022e4d49b42ad09a",
+    "command": [
+      "/tmp/crispcloud-flutter-20261116",
+      "test",
+      "--no-pub",
+      "--concurrency=2",
+      "--reporter=expanded",
+      "test/office_document_service_test.dart",
+      "test/widget/ods_viewer_grid_test.dart",
+      "test/widget/ods_viewer_workflow_test.dart",
+      "test/widget/ods_editor_workflow_test.dart",
+      "test/widget/office_editor_dialog_test.dart",
+      "test/local_odf_corpus_test.dart",
+      "test/office_zotero_citing_transport_test.dart",
+      "test/office_zotero_test.dart",
+      "test/office_zotero_ribbon_test.dart",
+      "packages/madedit2_hex/test",
+      "packages/quds_office_editor/test/word_zotero_dialog_test.dart",
+      "packages/quds_office_editor/test/word_zotero_collection_pagination_test.dart"
+    ],
+    "cwd": "/private/tmp/crispcloud-terminal-ods-isolated",
+    "started_utc": "2026-11-16T12:39:06.957540+00:00",
+    "seconds": 95.385,
+    "exit_code": 0,
+    "changed_sources": [],
+    "log": "ods-host.log",
+    "source_sha256": "fea5e3a28e1a989d2ab19582a9f4a1aa4085af3674e7e37babb77db619560647",
+    "final_line": "01:25 +169: All tests passed!",
+    "counts": {
+      "passed": 169,
+      "skipped": 0,
+      "failed": 0
+    }
+  },
+  {
+    "phase": "ods-local",
+    "head": "17351a31b46948c69076ec43022e4d49b42ad09a",
+    "command": [
+      "/Users/christianstrobele/flutter-3.47.8/bin/cache/dart-sdk/bin/dart",
+      "test",
+      "test/local_spreadsheet_corpus_test.dart",
+      "--name",
+      "local ODS corpus",
+      "--reporter=expanded"
+    ],
+    "cwd": "/private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_engine",
+    "started_utc": "2026-11-16T12:40:42.760310+00:00",
+    "seconds": 0.833,
+    "exit_code": 1,
+    "changed_sources": [],
+    "log": "ods-local.log",
+    "source_sha256": "fea5e3a28e1a989d2ab19582a9f4a1aa4085af3674e7e37babb77db619560647",
+    "final_line": ""
+  }
+]

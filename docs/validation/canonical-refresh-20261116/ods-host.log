@@ -1,0 +1,182 @@
+00:00 +0: loading /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart
+00:00 +0: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODS keeps typed values, repeats and the real sheet name
+00:00 +1: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODS merged and covered cells each retain one grid position
+00:00 +2: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODS keeps leading and interior repeated gaps through row groups
+00:00 +3: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODF row positions do not depend on namespace prefixes
+00:00 +4: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODT tables retain covered cells and interior blank rows
+00:00 +5: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODF preview refuses data after an oversized row gap without a partial table
+00:00 +6: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODF preview refuses data after an oversized column gap without a partial table
+00:00 +7: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODF preview refuses repeated data beyond the row limit without a partial table
+00:00 +8: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODF preview refuses repeated data beyond the column limit without a partial table
+00:00 +9: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODF preview refuses a small XML Cartesian expansion without a partial table
+00:00 +10: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODF preview refuses padding earlier rows to a later wide row without a partial table
+00:00 +11: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODF preview shares expansion limits across tables
+00:00 +12: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODF preview bounds repeated text before rendering
+00:00 +13: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODF preview rejects invalid repeat counts
+00:00 +14: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODS with a merged cell keeps following columns aligned
+00:00 +15: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODS preserves internal blank runs and trims trailing padding
+00:00 +16: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODS CSV preserves leading blank rows and cell whitespace
+00:00 +17: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODS counts explicit and repeated covered cells only once
+00:00 +18: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODS refuses later data when empty padding exceeds the row limit
+00:00 +19: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODT renders lists and ODF table cells
+00:00 +20: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODT renders inline styles, links, notes and ordered lists
+00:00 +21: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODP exposes slide size, positioned text, fills and notes
+00:00 +22: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODP loads framed images from the package
+00:00 +23: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODT named styles and list styles come from styles.xml
+00:00 +24: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODT headers and footers keep text and skip page fields
+00:00 +25: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODT text boxes keep their visible labels
+00:00 +26: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODT embeds a bounded picture as a data image
+00:00 +27: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: DOCX produces Markdown with headings, bold runs and tables
+00:00 +28: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: XLSX produces CSV from shared strings and cell references
+00:00 +29: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: PPTX produces one section per slide
+00:00 +30: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: PPTX exposes slide geometry, text and fills
+00:00 +31: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: truncated legacy PPT has a structured extraction failure
+00:00 +32: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODT content.xml produces headings and paragraphs
+00:00 +33: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: EPUB chapters become Markdown
+00:00 +34: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: EPUB extraction follows relocated OPF spine and excludes navigation
+00:00 +35: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: malformed documents fail gracefully
+00:00 +36: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: an RTF file named .doc is read as RTF
+00:23 +37: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/ods_viewer_grid_test.dart: ODS opens in the Quds grid and falls back to the typed table
+00:27 +38: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/ods_viewer_workflow_test.dart: ODS F3 grid and table fallback preserve typed cells and source bytes
+00:27 +39: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/ods_viewer_workflow_test.dart: ODS archive member uses its display name for grid and table fallback
+00:30 +40: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/ods_editor_workflow_test.dart: ODS editing saves an XLSX copy and preserves its source
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:31 +41: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/ods_editor_workflow_test.dart: ODS editing saves an XLSX copy and preserves its source
+00:32 +41: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_dialog_test.dart: office load translates an oversized verified file without reading it
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+⚠️ [OfficeEditor] office editor load failed
+  Error: This file exceeds the 64 MiB editing limit.
+00:33 +42: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_dialog_test.dart: office load translates an oversized verified file without reading it
+00:33 +42: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/ods_editor_workflow_test.dart: ODS copy outcome null retains unsaved edits
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:33 +43: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/ods_editor_workflow_test.dart: ODS copy outcome null retains unsaved edits
+00:33 +44: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/ods_editor_workflow_test.dart: ODS copy outcome null retains unsaved edits
+00:34 +45: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_dialog_test.dart: PPTX opens in the slide editor
+00:34 +45: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/ods_editor_workflow_test.dart: ODS copy outcome OfficeCopyOutcome.downloadedCopy retains unsaved edits
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:35 +46: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_dialog_test.dart: PPTX opens in the slide editor
+00:35 +46: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/ods_editor_workflow_test.dart: ODS copy completion cannot clean a newer edit
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:35 +47: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/ods_editor_workflow_test.dart: ODS copy completion cannot clean a newer edit
+00:35 +48: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_dialog_test.dart: DOCX opens in the Word editor with the ribbon
+00:36 +49: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_dialog_test.dart: closing the editor clears the native-menu bridge safely
+00:37 +50: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_dialog_test.dart: ODF/legacy files show a safe editing message
+00:38 +51: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_dialog_test.dart: macro-enabled workbooks open in the sheet editor
+00:39 +52: /private/tmp/crispcloud-terminal-ods-isolated/test/local_odf_corpus_test.dart: local ODF corpus parses into typed previews
+00:42 +53: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_citing_transport_test.dart: saved-search reads stay on direct loopback with the pinned database
+00:42 +54: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_citing_transport_test.dart: saved-search writes and encoded route injection are refused before sending
+00:42 +55: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_citing_transport_test.dart: citing execCommand sends only local UTF-8 JSON without redirects
+00:42 +56: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_citing_transport_test.dart: citing respond sends only local UTF-8 JSON without redirects
+00:42 +57: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_citing_transport_test.dart: citing rejects other origins and protocol routes before sending
+00:42 +58: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_citing_transport_test.dart: citing requires POST and rejects cloud or catalog request bodies
+00:42 +59: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_citing_transport_test.dart: citing accepts case-insensitive names but no secrets or extra headers
+00:42 +60: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_citing_transport_test.dart: citing request bodies are valid JSON with a UTF-8 byte bound
+00:42 +61: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_citing_transport_test.dart: citing redirects return once without forwarding document data
+00:42 +62: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_citing_transport_test.dart: citing responses reject declared and streamed excess bytes
+00:42 +63: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_citing_transport_test.dart: native dialog uses its own longer timeout
+00:42 +64: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_citing_transport_test.dart: request timeout can shorten but cannot extend host limit
+00:42 +65: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_citing_transport_test.dart: dispose settles pending citing immediately and ignores late response
+00:42 +66: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_citing_transport_test.dart: dispose cancels a response body already being read
+00:42 +67: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_citing_transport_test.dart: citing network failures never expose document or credential data
+00:42 +68: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_citing_transport_test.dart: citing and catalog limits must be positive before client creation
+00:42 +69: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_test.dart: credential loading target rejects changed documents and selections
+00:42 +70: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_test.dart: Zotero transport boundary desktop reads use only the explicitly supplied direct client
+00:42 +71: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_test.dart: Zotero transport boundary cloud requests retain the selected proxy factory with local enabled
+00:42 +72: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_test.dart: Zotero transport boundary desktop access requires host opt-in before creating any client
+00:43 +73: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_test.dart: Zotero transport boundary desktop rejects secrets and unexpected headers before client creation
+00:43 +74: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_test.dart: Zotero transport boundary desktop rejects other hosts, ports, paths and URL credentials
+00:43 +75: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_test.dart: Zotero transport boundary desktop redirects are returned without another request
+00:43 +76: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_test.dart: Zotero transport boundary desktop responses retain size and total timeout limits
+00:43 +77: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_test.dart: Zotero transport boundary disposal closes desktop requests and rejects later desktop reads
+00:43 +78: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_test.dart: Zotero transport boundary sends API-key header only to Zotero and never follows redirects
+00:43 +79: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_test.dart: Zotero transport boundary rejects non-Zotero destinations before creating a client
+00:43 +80: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_test.dart: Zotero transport boundary passes redirect status for the API client to reject
+00:43 +81: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_test.dart: Zotero transport boundary bounds declared and streamed response sizes
+00:43 +82: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_test.dart: Zotero transport boundary total request timeout closes the owned client
+00:43 +83: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_test.dart: Zotero transport boundary HTTP exceptions cannot expose the API key
+00:43 +84: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_test.dart: Zotero transport boundary timeout cancels a stalled response body subscription
+00:43 +85: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_test.dart: Zotero transport boundary disposal closes active requests and rejects new requests
+00:43 +86: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_test.dart: Zotero credential persistence writes, reads back and forgets only the Zotero entry
+00:43 +87: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_test.dart: Zotero credential persistence session-only backend never offers persistent credentials
+00:43 +88: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_test.dart: Zotero credential persistence failed read-back never reports a successful remember operation
+00:43 +89: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_test.dart: Zotero credential persistence backend failures are sanitized and invalid keys are rejected
+00:44 +90: /private/tmp/crispcloud-terminal-ods-isolated/packages/madedit2_hex/test/hex_regression_test.dart: persistent rope matches a reference model over random edits and history
+00:45 +91: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_ribbon_test.dart: Zotero is reachable from Word Insert menu and ribbon
+00:45 +92: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_ribbon_test.dart: Zotero is reachable from Word Insert menu and ribbon
+00:45 +93: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_ribbon_test.dart: Zotero is reachable from Word Insert menu and ribbon
+00:45 +94: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_ribbon_test.dart: Zotero is reachable from Word Insert menu and ribbon
+00:45 +95: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_ribbon_test.dart: Zotero is reachable from Word Insert menu and ribbon
+00:45 +96: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_ribbon_test.dart: Zotero is reachable from Word Insert menu and ribbon
+00:45 +97: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_ribbon_test.dart: Zotero is reachable from Word Insert menu and ribbon
+00:45 +98: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_ribbon_test.dart: Zotero is reachable from Word Insert menu and ribbon
+00:45 +99: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_ribbon_test.dart: Zotero is reachable from Word Insert menu and ribbon
+00:47 +100: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_ribbon_test.dart: Zotero is reachable from Word Insert menu and ribbon
+00:47 +101: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_ribbon_test.dart: hosts without Zotero integration keep the entry point hidden
+00:48 +102: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_ribbon_test.dart: hosts without Zotero integration keep the entry point hidden
+00:48 +103: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_ribbon_test.dart: hosts without Zotero integration keep the entry point hidden
+00:48 +104: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_ribbon_test.dart: hosts without Zotero integration keep the entry point hidden
+00:48 +105: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_ribbon_test.dart: hosts without Zotero integration keep the entry point hidden
+00:48 +106: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_ribbon_test.dart: hosts without Zotero integration keep the entry point hidden
+00:48 +107: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_ribbon_test.dart: hosts without Zotero integration keep the entry point hidden
+00:49 +108: /private/tmp/crispcloud-terminal-ods-isolated/packages/madedit2_hex/test/hex_ui_regression_test.dart: navigation keeps its selection when an older search finishes
+00:49 +109: /private/tmp/crispcloud-terminal-ods-isolated/packages/madedit2_hex/test/hex_ui_regression_test.dart: queued navigation takes priority over an older search result
+00:49 +110: /private/tmp/crispcloud-terminal-ods-isolated/packages/madedit2_hex/test/hex_ui_regression_test.dart: queued navigation takes priority over an older search result
+00:49 +111: /private/tmp/crispcloud-terminal-ods-isolated/packages/madedit2_hex/test/hex_ui_regression_test.dart: queued navigation takes priority over an older search result
+00:49 +112: /private/tmp/crispcloud-terminal-ods-isolated/packages/madedit2_hex/test/hex_ui_regression_test.dart: queued navigation takes priority over an older search result
+00:49 +113: /private/tmp/crispcloud-terminal-ods-isolated/packages/madedit2_hex/test/hex_ui_regression_test.dart: queued navigation takes priority over an older search result
+00:49 +114: /private/tmp/crispcloud-terminal-ods-isolated/packages/madedit2_hex/test/hex_ui_regression_test.dart: keyboard navigation reveals hex bytes on narrow screens
+00:50 +115: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: refresh batches 50 sources and duplicate citations into one undo
+00:50 +116: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: refresh batches 50 sources and duplicate citations into one undo
+00:50 +117: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: refresh batches 50 sources and duplicate citations into one undo
+00:53 +118: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_collection_pagination_test.dart: initial collection duplicates keep one selectable latest entry
+00:54 +119: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: refresh batches 51 sources and duplicate citations into one undo
+00:55 +120: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_collection_pagination_test.dart: later collection pages replace duplicate metadata and retain selected keys
+00:55 +121: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: refresh batches 101 sources and duplicate citations into one undo
+00:56 +122: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: refresh batches 101 sources and duplicate citations into one undo
+00:56 +123: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: refresh batches 101 sources and duplicate citations into one undo
+00:57 +124: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: refresh batches 1000 sources and duplicate citations into one undo
+01:01 +125: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: refresh isolates identical keys across libraries; incomplete=false
+01:01 +126: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: refresh isolates identical keys across libraries; incomplete=true
+01:01 +127: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: refresh chunks each library without combining matching keys
+01:03 +128: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: later same-library batch missing CSL keeps all citations
+01:05 +129: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: later same-library batch server error keeps all citations
+01:06 +130: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: successful batch backoff stops refresh without partial changes
+01:08 +131: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: closing during the second batch stops further refresh requests
+01:10 +132: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: stale target after the second batch stops the third request
+01:12 +133: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: refresh refuses 1001 distinct sources before any request
+01:14 +134: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: missing CSL in a later library refuses all staged updates
+01:14 +135: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: changed edit target stops refresh before the next library
+01:14 +136: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: unsynced refresh keeps URI aliases and unknown citation data
+01:15 +137: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: wrong desktop profile with the same item key cannot refresh
+01:15 +138: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: online operations reject local-only references before a request
+01:15 +139: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: online refresh can use a numeric alias while retaining old local URI
+01:15 +140: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: different local profiles are not combined through the same route
+01:16 +141: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: unsynced single-source preview verifies identity: mismatch false
+01:17 +142: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: unsynced single-source preview verifies identity: mismatch true
+01:17 +143: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: unsynced selected export verifies sources before copying reference data
+01:18 +144: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: changed profile cannot copy another source under a selected item key
+01:18 +145: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: unsynced bibliography verifies selection and requires review before insertion
+01:18 +146: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: reviewed bibliography keeps rich runs through save and undo
+01:19 +147: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: bibliography review offers an explicit editable plain result
+01:19 +148: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: cancelling rich bibliography review keeps history unchanged
+01:19 +149: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: a changed caret rejects a reviewed rich bibliography
+01:20 +150: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: a changed revision rejects a reviewed rich bibliography
+01:20 +151: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: rich review and format limitation fit a narrow viewport
+01:20 +152: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: unchanged imported citation keeps its rich cache and native formatting metadata
+01:20 +153: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: older desktop cannot render an unverified aggregate bibliography
+01:21 +154: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: local source without CSL or identity is not refetched by a bare key
+01:21 +155: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: desktop account source inserts without using the saved cloud key
+01:21 +156: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: desktop unsynced source inserts without using the saved cloud key
+01:21 +157: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: desktop citation-key source inserts without using the saved cloud key
+01:22 +158: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: switching sources makes no requests and preserves the cloud credential
+01:22 +159: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: a host without desktop transport offers only the supported source
+01:22 +160: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: desktop connection and errors fit a 320 by 640 viewport
+01:22 +161: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: offline CSL import inserts source metadata and can be undone
+01:22 +162: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: cancelling the citation composer leaves document and history unchanged
+01:23 +163: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: a changed caret while the composer is open blocks stale insertion
+01:23 +164: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: a changed revision while the composer is open blocks stale insertion
+01:24 +165: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: mock Web API connection, pagination and search keep the key outside the document
+01:24 +166: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: unchecking Remember removes the saved key immediately without connecting
+01:24 +167: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: imported bibliography customizations cannot be overwritten by basic update
+01:25 +168: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_test.dart: dialog, offline import and composer fit a 320 by 640 viewport
+01:25 +169: All tests passed!

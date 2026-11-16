@@ -1,0 +1,13 @@
+Running analysis: 165 files; source de6a5216
+{
+  "phase": "analysis",
+  "head_at_start": "de6a5216b603304a32a079dabf47d9c51c8b2f05",
+  "started_utc": "2026-11-16T11:49:38.049091+00:00",
+  "watched_source_count": 5557,
+  "github_actions_queried_or_awaited": false,
+  "file_count": 165,
+  "finished_utc": "2026-11-16T12:27:43.782170+00:00",
+  "seconds": 137.649,
+  "exit_code": 0,
+  "changed_sources": []
+}

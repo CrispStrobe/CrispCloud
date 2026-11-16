@@ -1,0 +1,23 @@
+{
+  "pubspec.yaml": {
+    "sha256": "d55acc358dc33a41fce5a815793c90e114499f9893e6469db806776010e51c64"
+  },
+  "pubspec.lock": {
+    "sha256": "e72cedd4bc93593d05c8c7a711c90295b17fbce40cb6f8c726b9446a2f0e665b"
+  },
+  "tool/office_fidelity_manifest.json": {
+    "sha256": "e7fb7517d25bda5671e747f462f18e3039de54a2ab6eab9d1fab245f204502b5"
+  },
+  "tool/run_terminal_validation.py": {
+    "sha256": "ad353ccc8db49542db29425775a4971b1874453ab3b221a31d9fe6b249e0313e"
+  },
+  "tool/run_terminal_live_smoke.py": {
+    "sha256": "f1f1acbeb0390ee3e07dbdf1ff32ac389175f6d1df77951951fe4e3bd2705010"
+  },
+  "tool/run_tmux_control_live_smoke.py": {
+    "sha256": "2d23527d31c62b3b7b864d1442e42aa41bff9e18e72e7828c0f20cc7f3b409c3"
+  },
+  "/tmp/crispcloud-flutter-tools-packages-20261116.json": {
+    "sha256": "a9893072a708471d05e43b315752d95819c11cd2b8b49c33d564a4731d20f346"
+  }
+}

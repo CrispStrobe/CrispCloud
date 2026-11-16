@@ -1,0 +1,16 @@
+{
+  "qualified_source": "17351a31",
+  "delivery_source": "12f2b601d465df65e5f07f3d84cea26f5b01081f",
+  "changed_watched_sources": [],
+  "watched_sources": 5557,
+  "terminal_unit_passed": 1077,
+  "terminal_platform_skips": 2,
+  "openssh_live_passed": 25,
+  "tmux_live_passed": 1,
+  "combined_host_passed": 169,
+  "ods_zotero_engine_passed": 538,
+  "local_ods_corpus_passed": 1,
+  "office_managed_files": 2413,
+  "quds_source": "e5e1e9af6beb0972a010d8208c1690a642809113",
+  "github_actions_queried_or_awaited": false
+}

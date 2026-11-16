@@ -1,0 +1,30 @@
+[
+  {
+    "phase": "unit",
+    "head": "25b77a492b0b01d1716a40b2a66924113c2577b5",
+    "command": [
+      "python3",
+      "tool/run_terminal_validation.py",
+      "native",
+      "--flutter",
+      "/Users/christianstrobele/flutter-3.47.8/bin/flutter",
+      "--dart",
+      "/Users/christianstrobele/flutter-3.47.8/bin/cache/dart-sdk/bin/dart",
+      "--evidence",
+      "/private/tmp/crispcloud-terminal-ods-isolated/docs/validation/canonical-refresh-20261116/unit"
+    ],
+    "cwd": "/private/tmp/crispcloud-terminal-ods-isolated",
+    "started_utc": "2026-11-16T10:33:41.884593+00:00",
+    "seconds": 318.673,
+    "exit_code": 1,
+    "changed_sources": [],
+    "log": "unit-runner.log",
+    "source_sha256": "47f84ff7543b8f10e02ae4b8e82647de295cf343c1a1f4756eab3b1351d461e4",
+    "final_line": "04:14 +1066 ~2 -7: Some tests failed.",
+    "counts": {
+      "passed": 1066,
+      "skipped": 2,
+      "failed": 7
+    }
+  }
+]

@@ -1,0 +1,41 @@
+PathNotFoundException: Creation failed, path = '/Users/christianstrobele/.pub-cache' (OS Error: No such file or directory, errno = 2)
+#0      _Directory.createSync (dart:io/directory_impl.dart:136)
+#1      _Directory.createSync (dart:io/directory_impl.dart:131)
+#2      ensureDir (package:pub/src/io.dart:342)
+#3      SystemCache.createTempDir (package:pub/src/system_cache.dart:142)
+#4      HostedSource._downloadAtomically (package:pub/src/source/hosted.dart:1491)
+#5      HostedSource.downloadToSystemCache (package:pub/src/source/hosted.dart:1237)
+<asynchronous suspension>
+#6      SystemCache.downloadPackage (package:pub/src/system_cache.dart:234)
+<asynchronous suspension>
+#7      SolveResult.downloadCachedPackages.<anonymous closure>.<anonymous closure> (package:pub/src/solver/result.dart:68)
+<asynchronous suspension>
+#8      Future.wait.<anonymous closure> (dart:async/future.dart:567)
+<asynchronous suspension>
+#9      SolveResult.downloadCachedPackages.<anonymous closure> (package:pub/src/solver/result.dart:65)
+<asynchronous suspension>
+#10     Progress.stop (package:pub/src/progress.dart:61)
+<asynchronous suspension>
+#11     SolveResult.downloadCachedPackages (package:pub/src/solver/result.dart:64)
+<asynchronous suspension>
+#12     Entrypoint.acquireDependencies (package:pub/src/entrypoint.dart:628)
+<asynchronous suspension>
+#13     Entrypoint.ensureUpToDate.<anonymous closure> (package:pub/src/entrypoint.dart:1334)
+<asynchronous suspension>
+#14     errorsOnlyUnlessTerminal (package:pub/src/log.dart:438)
+<asynchronous suspension>
+#15     Entrypoint.ensureUpToDate (package:pub/src/entrypoint.dart:1333)
+<asynchronous suspension>
+#16     getExecutableForCommand (package:pub/src/executable.dart:319)
+<asynchronous suspension>
+#17     TestCommand.run (package:dartdev/src/commands/test.dart:118)
+<asynchronous suspension>
+#18     CommandRunner.runCommand (package:args/command_runner.dart:236)
+<asynchronous suspension>
+#19     DartdevRunner.runCommand (package:dartdev/dartdev.dart:326)
+<asynchronous suspension>
+#20     runDartdev (package:dartdev/dartdev.dart:54)
+<asynchronous suspension>
+#21     main (file:///Volumes/Work/s/w/ir/x/w/sdk/pkg/dartdev/bin/dartdev.dart:13)
+<asynchronous suspension>
+

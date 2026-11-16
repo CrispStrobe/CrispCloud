@@ -93,13 +93,13 @@ cfRule + dxf, and reopen in Excel.
 **Status:** Partial\
 **Covered:** literal list rules and bounded range-source snapshots, shared
 spreadsheet-level definitions, blank input cells, and literal whole-number,
-decimal, date and text-length bounds with comparison/between operators. Basic
-title/message attributes are carried by the modeled rules.\
-**Remaining:** custom/formula-driven conditions, dynamic source-range links,
-full native input/error-message elements, error styles and unmodeled
-cross-sheet filter cases.\
-**Next step:** preserve native prompt/error metadata and extend the supported
-condition grammar without approximating arbitrary expressions.\
+decimal, date and text-length bounds with comparison/between operators.
+Supported custom formula conditions translate into XLSX rules; native prompt/error
+text, titles and modeled error styles are retained.\
+**Remaining:** arbitrary condition grammar, dynamic source-range links, complete
+native validation semantics and unmodeled cross-sheet filter cases.\
+**Next step:** extend condition coverage without approximating unsupported
+expressions and qualify dynamic range behavior.\
 **Acceptance:** list, numeric and date rules survive ODS → XLSX, with the same
 source ranges, bounds, blank policy and messages.
 
@@ -108,8 +108,10 @@ source ranges, bounds, blank policy and messages.
 **Status:** Partial\
 **Covered:** print areas, print-title rows/columns, global and sheet-local
 named ranges, and a basic database-range autofilter.
-**Remaining:** unmodeled named expressions, database filter conditions, sheet
-tab colors, row/column outline grouping, cell hyperlinks, and several page-style
+**Covered additionally:** modeled named expressions and sheet tab colors, including
+namespace-correct XLSX copies when drawings coexist.\
+**Remaining:** unmodeled named-expression semantics, database filter conditions,
+row/column outline grouping, cell hyperlinks, and several page-style
 properties.\
 **Next step:** add the corresponding model fields or preserve/rebase native
 ODS metadata.\
