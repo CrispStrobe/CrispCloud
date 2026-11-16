@@ -1,0 +1,82 @@
+{
+  "utc": "2026-11-16T06:42:37.804585+00:00",
+  "scope": "Local YAML, referenced-file and gate-membership verification only. No GitHub Actions result was queried or awaited. Platform runs remain separate acceptance.",
+  "workflows": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "sha256": "7d7d925fec9993474b480b5ced26ce8a4bd7e6caa4a97d30715b0957d10b1365",
+      "yaml_parsed": true,
+      "referenced_dart_tests_exist": true,
+      "vendor_guard_jobs": [
+        "analyze"
+      ],
+      "updated_terminal_lists": [
+        {
+          "step": "Terminal input and explicit SSH gateway",
+          "new_suite_count": 6,
+          "files": [
+            "test/ssh_agent_channel_test.dart",
+            "test/ssh_agent_profiles_test.dart",
+            "test/ssh_agent_test.dart",
+            "test/ssh_agent_widget_test.dart",
+            "test/ssh_forwarding_profiles_test.dart",
+            "test/ssh_public_key_auth_test.dart"
+          ],
+          "executed_on_this_platform": false
+        },
+        {
+          "step": "Terminal workspace and remote session regressions",
+          "new_suite_count": 9,
+          "files": [
+            "test/ssh_agent_channel_test.dart",
+            "test/ssh_agent_profiles_test.dart",
+            "test/ssh_agent_route_test.dart",
+            "test/ssh_agent_test.dart",
+            "test/ssh_agent_widget_test.dart",
+            "test/ssh_forwarding_panel_test.dart",
+            "test/ssh_forwarding_profiles_test.dart",
+            "test/ssh_forwarding_profiles_widget_test.dart",
+            "test/ssh_public_key_auth_test.dart"
+          ],
+          "executed_on_this_platform": false
+        },
+        {
+          "step": "macOS regression tests",
+          "new_suite_count": 9,
+          "files": [
+            "test/ssh_agent_channel_test.dart",
+            "test/ssh_agent_profiles_test.dart",
+            "test/ssh_agent_route_test.dart",
+            "test/ssh_agent_test.dart",
+            "test/ssh_agent_widget_test.dart",
+            "test/ssh_forwarding_panel_test.dart",
+            "test/ssh_forwarding_profiles_test.dart",
+            "test/ssh_forwarding_profiles_widget_test.dart",
+            "test/ssh_public_key_auth_test.dart"
+          ],
+          "executed_on_this_platform": false
+        }
+      ]
+    },
+    {
+      "path": ".github/workflows/nightly.yml",
+      "sha256": "32a82605667ac257c373b2916de65bd687b9a3db54939b4aeb26ca00165be3d4",
+      "yaml_parsed": true,
+      "referenced_dart_tests_exist": true,
+      "vendor_guard_jobs": [
+        "test"
+      ],
+      "updated_terminal_lists": []
+    },
+    {
+      "path": ".github/workflows/release.yml",
+      "sha256": "98d8caa5f6310a5e560658e033642eb1e21c97ac318d825b6620151e26f61a69",
+      "yaml_parsed": true,
+      "referenced_dart_tests_exist": true,
+      "vendor_guard_jobs": [
+        "test"
+      ],
+      "updated_terminal_lists": []
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "verified_utc": "2026-11-16T06:45:07.199004+00:00",
+  "accepted_application_source": "9753a980f6bfe94abe7940f59bd19287e4f65c57",
+  "head_checked_before_final_evidence_commit": "793bf62821cd8234b3fcb7e8c5d17c880651a963",
+  "local_and_tracking_head_match": true,
+  "watched_source_count": 5511,
+  "current_sources_equal_every_accepted_git_blob": true,
+  "phases": [
+    {
+      "phase": "native",
+      "source_head": "9753a980f6bfe94abe7940f59bd19287e4f65c57",
+      "watched_files": 5511,
+      "matches_final_source": true,
+      "inventory": "native-source-sha256.json.gz",
+      "inventory_sha256": "2857154f0507406374c791d397eb298e67a1814588e6557f7ebc468c2505b1ac"
+    },
+    {
+      "phase": "analysis",
+      "source_head": "9753a980f6bfe94abe7940f59bd19287e4f65c57",
+      "watched_files": 5511,
+      "matches_final_source": true,
+      "inventory": "analysis-source-sha256.json.gz",
+      "inventory_sha256": "2857154f0507406374c791d397eb298e67a1814588e6557f7ebc468c2505b1ac"
+    },
+    {
+      "phase": "format",
+      "source_head": "9753a980f6bfe94abe7940f59bd19287e4f65c57",
+      "watched_files": 5511,
+      "matches_final_source": true,
+      "inventory": "format-source-sha256.json.gz",
+      "inventory_sha256": "2857154f0507406374c791d397eb298e67a1814588e6557f7ebc468c2505b1ac"
+    },
+    {
+      "phase": "live",
+      "source_head": "9753a980f6bfe94abe7940f59bd19287e4f65c57",
+      "watched_files": 5511,
+      "matches_final_source": true,
+      "inventory": "live-source-sha256.json.gz",
+      "inventory_sha256": "2857154f0507406374c791d397eb298e67a1814588e6557f7ebc468c2505b1ac"
+    },
+    {
+      "phase": "web",
+      "source_head": "9753a980f6bfe94abe7940f59bd19287e4f65c57",
+      "watched_files": 5511,
+      "matches_final_source": true,
+      "inventory": "web-source-sha256.json.gz",
+      "inventory_sha256": "2857154f0507406374c791d397eb298e67a1814588e6557f7ebc468c2505b1ac"
+    }
+  ],
+  "all_advertised_remote_refs_are_ancestors": true,
+  "remote_ref_count": 189,
+  "sdk_hashes_and_modes_restored_and_rechecked": true,
+  "copied_intermediate_evidence_hashes_preserved": true,
+  "post_acceptance_changes": "Documentation, acceptance evidence and workflow registrations only. No watched application/dependency/test input changed.",
+  "github_actions_queried_or_awaited": false
+}

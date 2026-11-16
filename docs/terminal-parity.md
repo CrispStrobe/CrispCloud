@@ -283,7 +283,13 @@ The same-version checked-in SSH runtime is used by the production dependency
 graph. Its 96 upstream files and four local runtime changes pass the tracked
 vendor guard; the patch reproduces the exact changed source. The Office guard
 also verifies all 2,399 managed entries and their existing pins. The current
-full web release build is in progress. Complete commands, logs, source
+full web release build passed in **290.588 seconds** with standard O4/minification
+and a 3,072 MB compiler VM heap cap. Its source was also `9753a980`, with the same
+5,511 inputs unchanged; original SDK binaries and modes were restored exactly.
+The final remote snapshot contains all **189** advertised refs. Future native
+and portable browser workflow lists include the new deterministic suites, and
+CI/nightly/release invoke the SSH vendor guard; those workflow changes were
+checked locally without querying or waiting for Actions. Complete commands, logs, source
 inventories and platform limits are in
 [the acceptance record](validation/terminal-agent-profiles/README.md).
 

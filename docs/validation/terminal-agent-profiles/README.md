@@ -7,10 +7,10 @@ PR [#160](https://github.com/CrispStrobe/CrispCloud/pull/160).
 
 **Acceptance status: the complete terminal regression cohort passed 813 tests,
 with two platform skips and no failures. The combined live OpenSSH rerun passed
-17 tests with two explicit skips. Selected static analysis/formatting and
-dependency provenance verification also passed. The full optimized web build
-and final remote comparison are pending.**
-The remaining pending sections must be completed from their actual receipts.
+17 tests with two explicit skips. Static analysis/formatting, dependency
+provenance verification and the full optimized web release build also passed.
+All five acceptance phases used the same 5,511 unchanged watched inputs.**
+The final remote snapshot contains all 189 advertised branch/PR heads.
 Focused counts below overlap the complete terminal cohort.
 
 The user requested incremental remote checkpoints and instructed that GitHub
@@ -47,7 +47,11 @@ A later [remote advertisement and ancestry check](remote-refresh/remote-heads-06
 captured at **06:24:10 UTC**, again found 38 branch heads and 151 PR heads, all
 contained by `13756a8f9231f17173e6b0deb8ebca0c729d4510`. Its
 [raw advertisement](remote-refresh/remote-heads-062410.tsv) is retained. This
-is a dated snapshot; a final remote comparison remains pending.
+is a dated snapshot. The [final remote audit](final-remote-audit.json), captured
+at **06:37:52 UTC**, again contains 38 branch heads and 151 PR heads, all actual
+ancestors of evidence checkpoint `793bf628`. No additional objects or merges
+were needed. The [raw final advertisement](final-remote-advertisement.tsv) is
+preserved with the exact cutoff references.
 
 ### Incremental remote checkpoints
 
@@ -62,10 +66,14 @@ source identities. Later acceptance receipts must name their actual source.
 | `13756a8f9231f17173e6b0deb8ebca0c729d4510` | Bound agent channels and preserve initial agent/profile regression coverage. |
 | `d5876720d714e4b78d86dac1f68a06fe8c37349f` | Preserve usable profile management across disconnects and agent-route checks. |
 | `9753a980f6bfe94abe7940f59bd19287e4f65c57` | Freeze combined authentication/channel hardening and provenance for full local acceptance. |
+| `793bf62821cd8234b3fcb7e8c5d17c880651a963` | Save the passing native/live/static checks, exact input inventories, and seven inspected visual outputs. |
 
-**Pending finalization:** append subsequent saved checkpoints and the final
-local/remote head comparison. The final working tree and reference audit have
-not been certified by this intermediate document.
+Subsequent commits retain acceptance source `9753a980` and add evidence,
+documentation and workflow registration. The [source comparison](final-source-verification.json)
+checks every accepted input against the Git source checkpoint and final working
+source, and the final remote snapshot records all advertised references. Remote
+updates use the expected prior branch SHA and are fetched back for exact tree
+verification; application work was never replaced by a stale branch snapshot.
 
 ## Production dependency identity
 
@@ -289,20 +297,29 @@ updated suite and combined source.
 | Full selected static analysis | **Passed: 123 files, exit 0.** [Analysis receipt](analysis.json) records source `9753a980`, 5,511 watched inputs, and no changed sources. Focused analysis above is a separate overlapping result. |
 | Formatting | **Passed: 123 files, exit 0.** [Format receipt](format.json) records the same source and 5,511 watched inputs, with no changed sources. |
 | Live OpenSSH | **Passed: 17 tests, 2 explicit skips, 0 failures across three files.** [Live receipt](live.json) and [log](live.log), source `9753a980`, 5,511 unchanged watched inputs. The system-agent and interactive SSH PTY cases are the two skips. |
-| `dartssh2` and managed Office provenance | **Passed at `9753a980`.** [Verification receipt](vendor-verification.json): 96 upstream runtime files, four reproduced patches, and all 2,399 tracked Office entries. The dependency/runtime-manifest hashes are retained. |
-| Full optimized application web build | **PENDING.** Populate from `web.json`, `web.log`, `web-source-sha256.json`, output size/hash, and the web resource/restoration receipts. No full web pass is claimed here. |
-| Final source and remote identity | **PENDING.** Compare source inventories with the final checkpoint and record the final remote advertisement, ancestry, branch head, and clean working-tree state. |
+| `dartssh2` and managed Office provenance | **Passed at `9753a980`.** [Verification receipt](vendor-verification.json): 96 upstream files, four reproduced runtime patches, and all 2,399 tracked Office entries. The dependency/runtime-manifest hashes are retained. |
+| Full optimized application web build | **Passed: standard release O4 and minification, 290.588 seconds.** [Web receipt](web.json), [log](web.log), and [bundle verification](web-bundle-verification.json). Source `9753a980`; all 5,511 watched inputs unchanged. |
+| Final source and remote identity | **Passed.** [Source comparison](final-source-verification.json) and [remote audit](final-remote-audit.json): exact accepted inputs, all five phase inventories equal, and all 189 advertised refs contained. |
+| Future workflow registration | **Verified locally.** [Entrypoint record](workflow-entrypoints.json): YAML parses, referenced tests exist, native/portable browser lists include the new deterministic suites, and the SSH vendor guard is registered in CI/nightly/release. No Actions run was queried or awaited. |
 
-The web preparation is kept separate from the application build. Its owned
-files are `web-resource-runner.py`, `web-resource-launcher.sh`,
-`web-resource-preflight.json`, `web-resource-preflight.log`, and
-`web-resource-restoration-check.json`. A small O4/minified compiler probe passed
-with a 3,072 MB compiler VM heap. Cleanup tests on a disposable SDK copy restored
-binary hashes/modes after child exit 23 and runner SIGTERM. Those checks establish
-the bounded-runner setup and cleanup behavior only. The final application build
-must supply `web-resource-run.json`, `web-resource-observations.json`,
-`web-resource-runner.log`, and the ordinary web validation receipt. Compiler
-optimization and minification must remain the normal release settings.
+The [full web resource record](web-resource-run.json) records a 3,072 MB compiler
+VM heap cap with unchanged Flutter release arguments, O4 optimization and
+minification. The runner took 291.034 seconds including cleanup. All three
+pinned SDK executable/snapshot hashes and file modes were restored exactly.
+[Complete sampled observations](web-resource-observations.json.gz) preserve the
+actual compiler arguments and process memory; [runner output](web-resource-runner.log)
+preserves the ordinary validation result. The optional Wasm compatibility probe
+was disabled. This is JavaScript release compilation, not browser runtime or
+WebAssembly acceptance.
+
+The resulting `main.dart.js` is **29,354,418 bytes**, SHA-256
+`b1cdd2dd9cc020382e1bffa6bc7f4714b17b4c5edb7f36e1cb2e0d85ddad1bc0`.
+The bundle contains app version `1.3.4+28` and source label `9753a980`.
+Preparation remains separately documented by
+[the no-mutation preflight](web-resource-preflight.json) and
+[restoration checks](web-resource-restoration-check.json), which exercised a
+disposable SDK copy after child exit 23 and runner SIGTERM. Those setup checks
+are not counted as application tests.
 
 ## Evidence relocation and reproducibility
 
@@ -339,8 +356,26 @@ The complete acceptance driver is
 with separate `native`, `analysis`, `format`, `live`, and `web` phases and an
 explicit evidence directory. The live fixture is
 [`tool/run_terminal_live_smoke.py`](../../../tool/run_terminal_live_smoke.py).
-The final receipts must preserve the actual commands used, including any
-toolchain launcher required by this environment.
+The receipts preserve the actual commands. This workspace supplied the pinned
+toolchain through `../toolchain/run`; its versions, native compiler probes,
+normal build-hook behavior and lockfile checks are retained under `environment/`.
+The complete local reproduction sequence is:
+
+```sh
+flutter pub get --enforce-lockfile --offline
+python3 tool/verify_dartssh2_vendor.py --require-tracked
+python3 tool/verify_office_fidelity.py --require-tracked
+python3 tool/run_terminal_validation.py native --evidence docs/validation/terminal-agent-profiles
+python3 tool/run_terminal_validation.py analysis --evidence docs/validation/terminal-agent-profiles
+python3 tool/run_terminal_validation.py format --evidence docs/validation/terminal-agent-profiles
+python3 tool/run_terminal_validation.py live --evidence docs/validation/terminal-agent-profiles
+python3 docs/validation/terminal-agent-profiles/web-resource-runner.py --run
+```
+
+Offline resolution assumes the pinned packages are already cached. The final
+web command uses the prepared toolchain layout; its runner also accepts explicit
+repository/toolchain locations. The workflow additions register future platform
+checks; they do not establish Windows, macOS or Chrome acceptance in this run.
 
 ## Remaining parity work and acceptance limits
 

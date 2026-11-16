@@ -221,6 +221,11 @@ jobs:
             dependency-status.txt
           retention-days: 30
 
+      - name: Verify reviewed SSH runtime
+        run: |
+          python3 tool/verify_dartssh2_vendor.py --require-tracked
+          dart analyze packages/dartssh2/lib
+
       - name: flutter analyze (errors fail the build)
         # CLI analysis runs above; analysis_options.yaml excludes it here.
         # Preserve the errors-only policy while also failing on tool crashes.
@@ -402,6 +407,9 @@ jobs:
           test/terminal_workspace_web_test.dart
           test/tmux_session_options_test.dart test/ssh_terminal_connect_dialog_test.dart
           test/ssh_terminal_reconnect_test.dart
+          test/ssh_agent_channel_test.dart test/ssh_agent_profiles_test.dart
+          test/ssh_agent_test.dart test/ssh_agent_widget_test.dart
+          test/ssh_public_key_auth_test.dart test/ssh_forwarding_profiles_test.dart
           test/screen_session_options_test.dart
           test/terminal_search_test.dart test/terminal_search_bar_test.dart
           test/terminal_tabs_test.dart
@@ -652,6 +660,11 @@ jobs:
           test/screen_session_options_test.dart test/tmux_session_options_test.dart
           test/ssh_terminal_transport_test.dart test/ssh_terminal_connect_dialog_test.dart
           test/ssh_terminal_reconnect_test.dart
+          test/ssh_agent_channel_test.dart test/ssh_agent_profiles_test.dart
+          test/ssh_agent_route_test.dart test/ssh_agent_test.dart
+          test/ssh_agent_widget_test.dart test/ssh_public_key_auth_test.dart
+          test/ssh_forwarding_panel_test.dart test/ssh_forwarding_profiles_test.dart
+          test/ssh_forwarding_profiles_widget_test.dart
           test/terminal_search_test.dart test/terminal_search_bar_test.dart
           test/terminal_tabs_test.dart
           test/ssh_terminal_profiles_test.dart test/ssh_terminal_profiles_dialog_test.dart
@@ -771,6 +784,11 @@ jobs:
           test/screen_session_options_test.dart test/screen_session_command_test.dart
           test/tmux_session_options_test.dart test/ssh_terminal_transport_test.dart
           test/ssh_terminal_connect_dialog_test.dart test/ssh_terminal_reconnect_test.dart
+          test/ssh_agent_channel_test.dart test/ssh_agent_profiles_test.dart
+          test/ssh_agent_route_test.dart test/ssh_agent_test.dart
+          test/ssh_agent_widget_test.dart test/ssh_public_key_auth_test.dart
+          test/ssh_forwarding_panel_test.dart test/ssh_forwarding_profiles_test.dart
+          test/ssh_forwarding_profiles_widget_test.dart
           test/terminal_search_test.dart test/terminal_search_bar_test.dart
           test/terminal_tabs_test.dart
           test/ssh_terminal_profiles_test.dart test/ssh_terminal_profiles_dialog_test.dart
