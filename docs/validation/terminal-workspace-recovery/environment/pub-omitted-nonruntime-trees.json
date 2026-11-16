@@ -1,0 +1,530 @@
+[
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/cryptography-2.9.0/example",
+    "bytes": 627
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/cryptography-2.9.0/test",
+    "bytes": 273172
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/build_config-1.3.0/test",
+    "bytes": 18731
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/collection-1.19.1/test",
+    "bytes": 200914
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/file_selector-1.1.0/example",
+    "bytes": 1432
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/file_selector-1.1.0/test",
+    "bytes": 16416
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/csslib-1.0.2/example",
+    "bytes": 2780
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/csslib-1.0.2/test",
+    "bytes": 163467
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/clock-1.1.2/test",
+    "bytes": 15523
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/checked_yaml-2.0.4/example",
+    "bytes": 2214
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/checked_yaml-2.0.4/test",
+    "bytes": 6656
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/desktop_drop-0.7.1/example",
+    "bytes": 279753
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/desktop_drop-0.7.1/test",
+    "bytes": 1816
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/dds-5.4.0/example",
+    "bytes": 809
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/dds-5.4.0/test",
+    "bytes": 1136199
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/drift_dev-2.34.0/test",
+    "bytes": 458532
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/_fe_analyzer_shared-93.0.0/test",
+    "bytes": 1934152
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/_fe_analyzer_shared-93.0.0/benchmark",
+    "bytes": 12668
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/characters-1.4.1/example",
+    "bytes": 1026
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/characters-1.4.1/test",
+    "bytes": 586532
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/characters-1.4.1/benchmark",
+    "bytes": 4000
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/drift-2.34.0/example",
+    "bytes": 47166
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/drift-2.34.0/test",
+    "bytes": 954946
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/charcode-1.4.0/example",
+    "bytes": 1787
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/charcode-1.4.0/test",
+    "bytes": 7614
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/dart_style-3.1.7/example",
+    "bytes": 3845
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/dart_style-3.1.7/test",
+    "bytes": 2107417
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/dart_style-3.1.7/benchmark",
+    "bytes": 374397
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/completion-1.0.2/example",
+    "bytes": 4762
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/completion-1.0.2/test",
+    "bytes": 8664
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/built_collection-5.1.1/example",
+    "bytes": 2908
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/built_collection-5.1.1/test",
+    "bytes": 146407
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/built_collection-5.1.1/benchmark",
+    "bytes": 4990
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/file_selector_ios-0.5.3+5/example",
+    "bytes": 5632
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/file_selector_ios-0.5.3+5/test",
+    "bytes": 5070
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/file_selector_android-0.5.2+6/example",
+    "bytes": 2441
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/archive-3.6.1/example",
+    "bytes": 9923
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/archive-3.6.1/test",
+    "bytes": 10161262
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/dtd-4.0.0/example",
+    "bytes": 9082
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/dtd-4.0.0/test",
+    "bytes": 66946
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/dwds-27.1.2/test",
+    "bytes": 755399
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/cryptography_flutter-2.3.4/example",
+    "bytes": 398314
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/_fe_analyzer_shared-95.0.0/test",
+    "bytes": 1937899
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/_fe_analyzer_shared-95.0.0/benchmark",
+    "bytes": 12668
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/args-2.7.0/example",
+    "bytes": 10142
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/args-2.7.0/test",
+    "bytes": 109727
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/data_assets-0.20.0/example",
+    "bytes": 261
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/extension_discovery-2.1.0/example",
+    "bytes": 4119
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/extension_discovery-2.1.0/test",
+    "bytes": 25370
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/cli_util-0.4.2/example",
+    "bytes": 832
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/cli_util-0.4.2/test",
+    "bytes": 1242
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/equatable-2.1.0/example",
+    "bytes": 1838
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/equatable-2.1.0/test",
+    "bytes": 90454
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/equatable-2.1.0/benchmarks",
+    "bytes": 8588
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/equatable-2.1.0/doc",
+    "bytes": 274741
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/dart_pg-2.1.0/example",
+    "bytes": 50694
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/dart_pg-2.1.0/test",
+    "bytes": 279728
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/code_assets-1.2.1/example",
+    "bytes": 1611
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/analyzer-10.1.0/example",
+    "bytes": 19107024
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/analyzer-10.1.0/test",
+    "bytes": 18538581
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/analyzer-10.1.0/doc",
+    "bytes": 83054
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/cli_config-0.2.0/example",
+    "bytes": 659
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/cli_config-0.2.0/test",
+    "bytes": 21103
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/code_builder-4.11.1/example",
+    "bytes": 2563
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/code_builder-4.11.1/test",
+    "bytes": 124374
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/code_builder-4.11.1/doc",
+    "bytes": 908
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/async-2.13.1/test",
+    "bytes": 274222
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/code_assets-2.2.0/example",
+    "bytes": 1611
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/file_selector_platform_interface-2.7.0/test",
+    "bytes": 17716
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/coverage-1.15.1/test",
+    "bytes": 2434950
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/coverage-1.15.1/benchmark",
+    "bytes": 5109
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/fake_async-1.3.3/test",
+    "bytes": 28269
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/file_selector_linux-0.9.4/test",
+    "bytes": 16455
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/dart_pdf_editor_assets-14.0.0/test",
+    "bytes": 7941
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/cupertino_icons-2.0.0/example",
+    "bytes": 559
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/cupertino_icons-2.0.0/test",
+    "bytes": 2353879
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/build-4.0.6/example",
+    "bytes": 250
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/build-4.0.6/test",
+    "bytes": 16119
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/dio_web_adapter-2.2.0/example",
+    "bytes": 286
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/dio_web_adapter-2.2.0/test",
+    "bytes": 9337
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/extension-0.6.0/example",
+    "bytes": 1358
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/extension-0.6.0/test",
+    "bytes": 4192
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/built_value-8.12.6/example",
+    "bytes": 358
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/built_value-8.12.6/test",
+    "bytes": 87530
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/cross_file-0.3.5+2/example",
+    "bytes": 2267
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/cross_file-0.3.5+2/test",
+    "bytes": 9244
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/build_runner-2.15.0/example",
+    "bytes": 251
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/build_runner-2.15.0/test",
+    "bytes": 664155
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/browser_launcher-1.1.3/example",
+    "bytes": 1257
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/browser_launcher-1.1.3/test",
+    "bytes": 7058
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/ffi-2.2.0/example",
+    "bytes": 750
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/ffi-2.2.0/test",
+    "bytes": 14940
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/crypto-3.0.7/example",
+    "bytes": 1126
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/crypto-3.0.7/test",
+    "bytes": 1110686
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/crypto-3.0.7/benchmark",
+    "bytes": 4739
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/dynamic_color-1.8.1/example",
+    "bytes": 467188
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/dynamic_color-1.8.1/test",
+    "bytes": 6558
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/dynamic_color-1.8.1/screenshots",
+    "bytes": 729844
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/bidi-2.0.13/example",
+    "bytes": 111150
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/bidi-2.0.13/test",
+    "bytes": 1350
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/boolean_selector-2.1.2/example",
+    "bytes": 215
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/boolean_selector-2.1.2/test",
+    "bytes": 27525
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/bip39-1.0.6/example",
+    "bytes": 587
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/bip39-1.0.6/test",
+    "bytes": 20796
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/dbus-0.7.14/example",
+    "bytes": 11702
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/dbus-0.7.14/test",
+    "bytes": 307586
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/build_daemon-4.1.1/example",
+    "bytes": 2698
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/build_daemon-4.1.1/test",
+    "bytes": 22836
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/asn1lib-1.6.5/example",
+    "bytes": 3107
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/asn1lib-1.6.5/test",
+    "bytes": 93408
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/devtools_shared-13.1.0/test",
+    "bytes": 109411
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/analyzer-10.0.1/example",
+    "bytes": 122243
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/analyzer-10.0.1/test",
+    "bytes": 17941559
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/analyzer-10.0.1/doc",
+    "bytes": 79884
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/dart_pdf_printing-0.11.0/example",
+    "bytes": 4908
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/dart_pdf_printing-0.11.0/test",
+    "bytes": 101401
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/archive-4.6.0/doc",
+    "bytes": 70251
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/file_selector_macos-0.9.5/example",
+    "bytes": 727
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/file_selector_macos-0.9.5/test",
+    "bytes": 21933
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/cupertino_ui-1.1.6/example",
+    "bytes": 616939
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/cupertino_ui-1.1.6/test",
+    "bytes": 2328158
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/dio-5.10.0/example",
+    "bytes": 225
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/dio-5.10.0/test",
+    "bytes": 211292
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/dio-5.10.0/doc",
+    "bytes": 9454
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/covfuzz-0.1.1/example",
+    "bytes": 1627
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/covfuzz-0.1.1/test",
+    "bytes": 2465
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/file-7.0.1/example",
+    "bytes": 578
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/file-7.0.1/test",
+    "bytes": 159925
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/dds_service_extensions-2.1.0/test",
+    "bytes": 60
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/convert-3.1.2/example",
+    "bytes": 682
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/convert-3.1.2/test",
+    "bytes": 31124
+  },
+  {
+    "path": "toolchain/pub-cache/hosted/pub.dev/convert-3.1.2/benchmark",
+    "bytes": 740
+  }
+]

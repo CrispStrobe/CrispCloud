@@ -1,0 +1,9 @@
+{
+  "classification": "environment failure before any tests executed",
+  "reason": "ENOSPC during test_cache directory creation while host storage exhausted; unused web compiler cache and locally installed C tools then removed",
+  "native_flags": {
+    "FLUTTER_NATIVE_ASSETS": "false",
+    "FLUTTER_DART_DATA_ASSETS": "true"
+  },
+  "tests_executed": 0
+}

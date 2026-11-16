@@ -1,0 +1,770 @@
+[
+  {
+    "artifact": {
+      "name": "rustc",
+      "kind": "rust",
+      "version": "1.100.0 (0ef1bc386 2026-11-09)",
+      "url": "https://static.rust-lang.org/dist/2026-11-12/rustc-1.100.0-x86_64-unknown-linux-gnu.tar.xz",
+      "sha256": "f1d0b1dec81dab6f523cd098507763487b0d4bd7fd2c87582f154128719be03b",
+      "bytes": 84955936
+    },
+    "files": [
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/rustc/share/man/man1/rustdoc.1",
+        "bytes": 3610
+      },
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/rustc/share/man/man1/rustc.1",
+        "bytes": 9178
+      },
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/LICENSE-APACHE",
+        "bytes": 9723
+      },
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/COPYRIGHT",
+        "bytes": 1571
+      },
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/LICENSE-MIT",
+        "bytes": 1068
+      },
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/rustc/bin/rust-gdb",
+        "bytes": 1413
+      },
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/rustc/bin/rust-lldb",
+        "bytes": 1371
+      },
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/rustc/bin/rustdoc",
+        "bytes": 12867704
+      },
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/rustc/bin/rustc",
+        "bytes": 647568
+      },
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/rustc/lib/rustlib/x86_64-unknown-linux-gnu/bin/gcc-ld/wasm-ld",
+        "bytes": 371872
+      },
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/rustc/lib/rustlib/x86_64-unknown-linux-gnu/bin/wasm-component-ld",
+        "bytes": 5290048
+      },
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/rustc/lib/rustlib/x86_64-unknown-linux-gnu/bin/rust-lld",
+        "bytes": 11880816
+      },
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/rustc/lib/rustlib/x86_64-unknown-linux-gnu/bin/gcc-ld/ld64.lld",
+        "bytes": 371872
+      },
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/rustc/lib/rustlib/x86_64-unknown-linux-gnu/bin/gcc-ld/ld.lld",
+        "bytes": 371872
+      },
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/rustc/share/doc/rust/README.md",
+        "bytes": 3304
+      },
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/README.md",
+        "bytes": 3304
+      },
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/rustc/lib/libLLVM.so.23.1-rust-1.100.0-stable",
+        "bytes": 208242288
+      },
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/builder-config",
+        "bytes": 9401
+      },
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/install.sh",
+        "bytes": 29339
+      },
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/git-commit-hash",
+        "bytes": 40
+      },
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/rustc/bin/rust-gdbgui",
+        "bytes": 2160
+      },
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/rustc/lib/rustlib/x86_64-unknown-linux-gnu/bin/gcc-ld/lld-link",
+        "bytes": 371872
+      },
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/rustc/share/doc/rust/COPYRIGHT.html",
+        "bytes": 14304607
+      },
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/rustc/share/doc/rust/COPYRIGHT-library.html",
+        "bytes": 1512515
+      },
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/rustc/manifest.in",
+        "bytes": 1658
+      },
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/rust-installer-version",
+        "bytes": 2
+      },
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/version",
+        "bytes": 30
+      },
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/rustc/etc/target-spec-json-schema.json",
+        "bytes": 26853
+      },
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/git-commit-info",
+        "bytes": 62
+      },
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/rustc/lib/librustc_driver-62d0ff9ea62999cc.so",
+        "bytes": 164092624
+      },
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/rustc/lib/libLLVM-23-rust-1.100.0-stable.so",
+        "bytes": 43
+      },
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/components",
+        "bytes": 6
+      },
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/rustc/share/doc/rust/licenses/Apache-2.0.txt",
+        "bytes": 10280
+      },
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/rustc/share/doc/rust/licenses/Unicode-3.0.txt",
+        "bytes": 1995
+      },
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/rustc/share/doc/rust/licenses/CC-BY-SA-4.0.txt",
+        "bytes": 20137
+      },
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/rustc/share/doc/rust/licenses/OFL-1.1.txt",
+        "bytes": 4016
+      },
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/rustc/share/doc/rust/licenses/GCC-exception-3.1.txt",
+        "bytes": 3320
+      },
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/rustc/share/doc/rust/licenses/NCSA.txt",
+        "bytes": 1676
+      },
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/rustc/share/doc/rust/licenses/ISC.txt",
+        "bytes": 730
+      },
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/rustc/share/doc/rust/licenses/MIT.txt",
+        "bytes": 1078
+      },
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/rustc/share/doc/rust/licenses/BSD-2-Clause.txt",
+        "bytes": 1267
+      },
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/rustc/share/doc/rust/licenses/LLVM-exception.txt",
+        "bytes": 919
+      },
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/rustc/share/doc/rust/licenses/GPL-3.0-or-later.txt",
+        "bytes": 34795
+      },
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/rustc/share/doc/rust/licenses/GPL-2.0-only.txt",
+        "bytes": 17642
+      },
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/rustc/libexec/rust-analyzer-proc-macro-srv",
+        "bytes": 1577592
+      },
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/rustc/lib/rustlib/etc/gdb_lookup.py",
+        "bytes": 3833
+      },
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/rustc/lib/rustlib/etc/lldb_lookup.py",
+        "bytes": 20303
+      },
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/rustc/lib/rustlib/etc/rust_types.py",
+        "bytes": 4232
+      },
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/rustc/lib/rustlib/etc/gdb_providers.py",
+        "bytes": 16948
+      },
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/rustc/lib/rustlib/etc/lldb_providers.py",
+        "bytes": 59884
+      },
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/rustc/lib/rustlib/etc/gdb_load_rust_pretty_printers.py",
+        "bytes": 504
+      },
+      {
+        "name": "rustc-1.100.0-x86_64-unknown-linux-gnu/rustc/lib/rustlib/x86_64-unknown-linux-gnu/bin/rust-objcopy",
+        "bytes": 296392
+      }
+    ]
+  },
+  {
+    "artifact": {
+      "name": "rust-std",
+      "kind": "rust",
+      "version": "1.100.0 (0ef1bc386 2026-11-09)",
+      "url": "https://static.rust-lang.org/dist/2026-11-12/rust-std-1.100.0-x86_64-unknown-linux-gnu.tar.xz",
+      "sha256": "4591b6486594ded52ecd6135db95bf9355bbd3ca7a380888b141528bbcf9a5d4",
+      "bytes": 31283108
+    },
+    "files": [
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/LICENSE-APACHE",
+        "bytes": 9723
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/COPYRIGHT",
+        "bytes": 1571
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/LICENSE-MIT",
+        "bytes": 1068
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc-stable_rt.safestack.a",
+        "bytes": 28554
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc-stable_rt.asan.a",
+        "bytes": 3675706
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc-stable_rt.ubsan.a",
+        "bytes": 1079836
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc-stable_rt.dfsan.a",
+        "bytes": 1190740
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc-stable_rt.lsan.a",
+        "bytes": 1249460
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc-stable_rt.msan.a",
+        "bytes": 3023090
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc-stable_rt.tsan.a",
+        "bytes": 3266760
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc-stable_rt.rtsan.a",
+        "bytes": 1174488
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libcompiler_builtins-ea8da5fbd1b77660.rmeta",
+        "bytes": 1940575
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libadler2-e2ce665ff67b57c0.rmeta",
+        "bytes": 20773
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libminiz_oxide-a7264d6b6be47ce0.rmeta",
+        "bytes": 129273
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libpanic_abort-7f72f5a27aac29e1.rmeta",
+        "bytes": 2996
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libaddr2line-7b0f6e97825481e2.rmeta",
+        "bytes": 474700
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libsysroot-e1dd1d70a4ba0233.rmeta",
+        "bytes": 2264
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libunwind-340d0bf6f5821f74.rmeta",
+        "bytes": 21788
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libgetopts-d231349914b4aee4.rmeta",
+        "bytes": 214119
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libobject-a7ba6115ade4b705.rmeta",
+        "bytes": 8972244
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libproc_macro-fd3d6edc4970f055.rmeta",
+        "bytes": 1134825
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc_demangle-472a59a7b73a19f5.rmeta",
+        "bytes": 90454
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/liballoc-85247acc020adff6.rmeta",
+        "bytes": 8804590
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libcore-5cc9b44b3cc93987.rmeta",
+        "bytes": 68644344
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/liblibc-7d5a06a231119d28.rmeta",
+        "bytes": 4471105
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc_std_workspace_core-dfb2205f94d45e38.rmeta",
+        "bytes": 6372
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libpanic_unwind-ff93ac03b0a682c8.rmeta",
+        "bytes": 8062
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc_std_workspace_alloc-d8ea523cfa8887c8.rmeta",
+        "bytes": 2263
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libmemchr-1ba61398ed2c734a.rmeta",
+        "bytes": 1545011
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libstd-7d3c8b3343c9c95a.rmeta",
+        "bytes": 7849090
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libtest-99883dc9c2b2e79a.rmeta",
+        "bytes": 1020920
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libstd_detect-401278cbbb34fdda.rmeta",
+        "bytes": 649592
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc_std_workspace_std-ad4dc629300baa8b.rmeta",
+        "bytes": 8125
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc_literal_escaper-e227872d3722edcb.rmeta",
+        "bytes": 123633
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libprofiler_builtins-0bc3b1a2f2d663cc.rmeta",
+        "bytes": 1374
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libgimli-1a6fc8b0208bb8fc.rmeta",
+        "bytes": 5942747
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libcfg_if-9c6f2168fa87763d.rmeta",
+        "bytes": 5607
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libhashbrown-4ff56eecd226607f.rmeta",
+        "bytes": 1740734
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libcompiler_builtins-ea8da5fbd1b77660.rlib",
+        "bytes": 5070778
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libadler2-e2ce665ff67b57c0.rlib",
+        "bytes": 10612
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libminiz_oxide-a7264d6b6be47ce0.rlib",
+        "bytes": 111270
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libpanic_abort-7f72f5a27aac29e1.rlib",
+        "bytes": 11468
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libaddr2line-7b0f6e97825481e2.rlib",
+        "bytes": 28866
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libsysroot-e1dd1d70a4ba0233.rlib",
+        "bytes": 5372
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libunwind-340d0bf6f5821f74.rlib",
+        "bytes": 5354
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libgetopts-d231349914b4aee4.rlib",
+        "bytes": 748664
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libobject-a7ba6115ade4b705.rlib",
+        "bytes": 274692
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libproc_macro-fd3d6edc4970f055.rlib",
+        "bytes": 4510616
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc_demangle-472a59a7b73a19f5.rlib",
+        "bytes": 241958
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/liballoc-85247acc020adff6.rlib",
+        "bytes": 958262
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libcore-5cc9b44b3cc93987.rlib",
+        "bytes": 3033092
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/liblibc-7d5a06a231119d28.rlib",
+        "bytes": 32690
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc_std_workspace_core-dfb2205f94d45e38.rlib",
+        "bytes": 5550
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libpanic_unwind-ff93ac03b0a682c8.rlib",
+        "bytes": 33542
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc_std_workspace_alloc-d8ea523cfa8887c8.rlib",
+        "bytes": 5552
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libmemchr-1ba61398ed2c734a.rlib",
+        "bytes": 425114
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libstd-7d3c8b3343c9c95a.rlib",
+        "bytes": 12267136
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libtest-99883dc9c2b2e79a.rlib",
+        "bytes": 7318628
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libstd_detect-401278cbbb34fdda.rlib",
+        "bytes": 69282
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc_std_workspace_std-ad4dc629300baa8b.rlib",
+        "bytes": 5532
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc_literal_escaper-e227872d3722edcb.rlib",
+        "bytes": 5504
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libprofiler_builtins-0bc3b1a2f2d663cc.rlib",
+        "bytes": 499960
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libgimli-1a6fc8b0208bb8fc.rlib",
+        "bytes": 1060078
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libcfg_if-9c6f2168fa87763d.rlib",
+        "bytes": 5346
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libhashbrown-4ff56eecd226607f.rlib",
+        "bytes": 42632
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/README.md",
+        "bytes": 3304
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/builder-config",
+        "bytes": 9401
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/install.sh",
+        "bytes": 29342
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/git-commit-hash",
+        "bytes": 40
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/manifest.in",
+        "bytes": 5136
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-installer-version",
+        "bytes": 2
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/version",
+        "bytes": 30
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/git-commit-info",
+        "bytes": 62
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib/libstd-7d3c8b3343c9c95a.so",
+        "bytes": 2841496
+      },
+      {
+        "name": "rust-std-1.100.0-x86_64-unknown-linux-gnu/components",
+        "bytes": 34
+      }
+    ]
+  },
+  {
+    "artifact": {
+      "name": "cargo",
+      "kind": "rust",
+      "version": "0.101.0 (3acc79c0c 2026-11-05)",
+      "url": "https://static.rust-lang.org/dist/2026-11-12/cargo-1.100.0-x86_64-unknown-linux-gnu.tar.xz",
+      "sha256": "7e29ce07d7c6e92d1826870575ba27d57fff6cb3e754aa57d99099cb88fab35d",
+      "bytes": 10946408
+    },
+    "files": [
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/cargo/share/man/man1/cargo-metadata.1",
+        "bytes": 21985
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/cargo/share/man/man1/cargo-doc.1",
+        "bytes": 15317
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/cargo/share/man/man1/cargo-rustdoc.1",
+        "bytes": 16138
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/cargo/share/man/man1/cargo-rustc.1",
+        "bytes": 17556
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/cargo/share/man/man1/cargo-add.1",
+        "bytes": 10793
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/cargo/share/man/man1/cargo-pkgid.1",
+        "bytes": 7457
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/cargo/share/man/man1/cargo-build.1",
+        "bytes": 16634
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/cargo/share/man/man1/cargo-tree.1",
+        "bytes": 17050
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/cargo/share/man/man1/cargo-package.1",
+        "bytes": 15806
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/cargo/share/man/man1/cargo-generate-lockfile.1",
+        "bytes": 5940
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/cargo/share/man/man1/cargo-update.1",
+        "bytes": 7332
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/cargo/share/man/man1/cargo-remove.1",
+        "bytes": 6289
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/cargo/share/man/man1/cargo-bench.1",
+        "bytes": 20460
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/cargo/share/man/man1/cargo-search.1",
+        "bytes": 4200
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/cargo/share/man/man1/cargo-fetch.1",
+        "bytes": 6705
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/cargo/share/man/man1/cargo-publish.1",
+        "bytes": 12667
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/cargo/share/man/man1/cargo-check.1",
+        "bytes": 16314
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/cargo/share/man/man1/cargo-yank.1",
+        "bytes": 8274
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/cargo/share/man/man1/cargo-install.1",
+        "bytes": 17903
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/cargo/share/man/man1/cargo-uninstall.1",
+        "bytes": 4467
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/cargo/share/man/man1/cargo-clean.1",
+        "bytes": 7810
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/cargo/share/man/man1/cargo-login.1",
+        "bytes": 4791
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/cargo/share/man/man1/cargo-version.1",
+        "bytes": 664
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/cargo/share/man/man1/cargo-run.1",
+        "bytes": 12396
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/cargo/share/man/man1/cargo-info.1",
+        "bytes": 6117
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/cargo/share/man/man1/cargo.1",
+        "bytes": 11180
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/cargo/share/man/man1/cargo-help.1",
+        "bytes": 5769
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/cargo/share/man/man1/cargo-owner.1",
+        "bytes": 5750
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/cargo/share/man/man1/cargo-vendor.1",
+        "bytes": 7415
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/cargo/share/man/man1/cargo-report-future-incompatibilities.1",
+        "bytes": 5917
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/cargo/share/man/man1/cargo-locate-project.1",
+        "bytes": 4665
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/cargo/share/man/man1/cargo-init.1",
+        "bytes": 5324
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/cargo/share/man/man1/cargo-report.1",
+        "bytes": 4918
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/cargo/share/man/man1/cargo-test.1",
+        "bytes": 22405
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/cargo/share/man/man1/cargo-logout.1",
+        "bytes": 4843
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/cargo/share/man/man1/cargo-new.1",
+        "bytes": 5136
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/cargo/share/man/man1/cargo-fix.1",
+        "bytes": 19435
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/cargo/share/doc/cargo/LICENSE-APACHE",
+        "bytes": 10860
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/LICENSE-APACHE",
+        "bytes": 10860
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/cargo/share/doc/cargo/LICENSE-MIT",
+        "bytes": 1023
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/LICENSE-MIT",
+        "bytes": 1023
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/cargo/share/doc/cargo/LICENSE-THIRD-PARTY",
+        "bytes": 68430
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/LICENSE-THIRD-PARTY",
+        "bytes": 68430
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/cargo/share/doc/cargo/README.md",
+        "bytes": 4677
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/README.md",
+        "bytes": 4677
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/builder-config",
+        "bytes": 9401
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/install.sh",
+        "bytes": 29339
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/git-commit-hash",
+        "bytes": 40
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/cargo/manifest.in",
+        "bytes": 1532
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/rust-installer-version",
+        "bytes": 2
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/version",
+        "bytes": 30
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/git-commit-info",
+        "bytes": 62
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/cargo/etc/bash_completion.d/cargo",
+        "bytes": 11443
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/cargo/bin/cargo",
+        "bytes": 36100400
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/cargo/share/zsh/site-functions/_cargo",
+        "bytes": 24568
+      },
+      {
+        "name": "cargo-1.100.0-x86_64-unknown-linux-gnu/components",
+        "bytes": 6
+      }
+    ]
+  }
+]

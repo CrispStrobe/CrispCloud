@@ -1,0 +1,25 @@
+{
+  "qualification": "Isolated Dart/widget validation; not normal-native/full-app acceptance",
+  "started_at_utc": "2026-11-16T09:35:59.624450+00:00",
+  "duration_seconds": 23.51312432299892,
+  "command": [
+    "/workspace/scratch/732a154614f9/toolchain/run",
+    "flutter",
+    "test",
+    "--no-pub",
+    "--concurrency=1",
+    "--reporter=expanded",
+    "test/terminal_workspace_recovery_test.dart",
+    "test/terminal_workspace_recovery_dialog_test.dart",
+    "test/terminal_workspace_recovery_widget_test.dart"
+  ],
+  "environment_overrides": {
+    "FLUTTER_NATIVE_ASSETS": "false",
+    "FLUTTER_DART_DATA_ASSETS": "true"
+  },
+  "mechanism": "Supported per-command Flutter feature flags keep data hooks enabled while omitting CodeAssetConfig; unrelated native bridge hooks return without compiling Cargo. No app/test/pubspec/lock/hook source is modified.",
+  "exit_code": 1,
+  "watched_files": 5394,
+  "source_changes_during_run": [],
+  "log_sha256": "8d8465c7ff208fe3aece5ae0b69ab1cfd45aac1683707773b47d771b099c6351"
+}

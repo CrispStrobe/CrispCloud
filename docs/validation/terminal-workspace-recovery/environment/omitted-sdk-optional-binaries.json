@@ -1,0 +1,30 @@
+{
+  "reason": "Host disk capacity; retain production Dart VM, AOT analysis/server/compilers, kernel compilation, Flutter tool sources and normal native hooks. These alternate JIT/sanitizer binaries are not required by planned commands.",
+  "files": [
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/dartaotruntime_asan",
+      "bytes": 15131824,
+      "sha256": "ec10ae7f20683abdf3f2e8073352238aa9acbba0982760d10960a6b3baedba95"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/dartaotruntime_msan",
+      "bytes": 11827896,
+      "sha256": "9b5d1d0131973da81163479c60a0c4d9ff113bdaf2c91e9a7b428c4704539c73"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/dartaotruntime_tsan",
+      "bytes": 10764288,
+      "sha256": "80a8e5bb581bc4a10d8e2dddbc1382e488e03584a61db381901eb1e6ab575b3a"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/snapshots/analysis_server.dart.snapshot",
+      "bytes": 76803056,
+      "sha256": "1e4ed42c1bba2a2ef718b2a6d43c28cf544fdecc445cb8db7e4d112536bcfb93"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/snapshots/dartdevc.dart.snapshot",
+      "bytes": 62441968,
+      "sha256": "b1c8557a950fe84f50d8328e85aed88f9409862cb06a8e16669d6ddd475dd4b4"
+    }
+  ]
+}

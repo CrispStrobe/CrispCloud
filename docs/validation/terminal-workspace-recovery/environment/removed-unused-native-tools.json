@@ -1,0 +1,4 @@
+{
+  "reason": "Disk pressure during isolated Dart/widget tests; C tool archives remain identified by verified native-downloads-current.json and can be restored. No active isolated/web command uses these binaries.",
+  "removed_bytes": 209852227
+}
