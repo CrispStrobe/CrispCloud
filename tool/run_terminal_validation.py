@@ -8,11 +8,13 @@ import argparse
 import datetime
 import hashlib
 import json
+import os
 import pathlib
 import re
 import subprocess
 import sys
 import time
+import tempfile
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 BASELINE = ROOT / 'docs/validation/terminal-parity-continuation'
@@ -115,8 +117,15 @@ def main():
     (evidence / f'{args.phase}-source-sha256.json').write_text(json.dumps(before, indent=2) + '\n')
     print(f'Running {args.phase}: {len(suites) if args.phase == "native" else len(analysis_files)} files; source {head[:8]}', flush=True)
     start = time.monotonic()
-    with (evidence / f'{args.phase}.log').open('w') as log:
-        result = subprocess.run(command, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT)
+    with tempfile.TemporaryDirectory(prefix='crisp-terminal-zsh-') as shell_config:
+        environment = dict(os.environ)
+        if args.phase == 'native':
+            # Real PTY tests must not execute the developer's startup scripts.
+            environment['ZDOTDIR'] = shell_config
+            record['isolated_zsh_startup'] = True
+        with (evidence / f'{args.phase}.log').open('w') as log:
+            result = subprocess.run(command, cwd=ROOT, stdout=log,
+                                    stderr=subprocess.STDOUT, env=environment)
     after = source_hashes()
     record.update(finished_utc=stamp(), seconds=round(time.monotonic() - start, 3),
                   exit_code=result.returncode,
