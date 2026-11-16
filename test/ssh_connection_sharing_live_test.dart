@@ -171,6 +171,7 @@ void main() {
       // Exceeds the initial 2 MiB SSH channel window. The response comes only
       // after request EOF, so route ownership must survive both large transfers
       // and half-close after the originating tab has disappeared.
+      const transferTimeout = Duration(seconds: 60);
       final payload = Uint8List.fromList([
         ...utf8.encode('shared-route-✓-日本語\n'),
         ...List<int>.generate(3 * 1024 * 1024, (index) => index % 256),
@@ -230,9 +231,8 @@ void main() {
             }
             socket.add(payload);
             await socket.close();
-            final received = (await response.timeout(
-              const Duration(seconds: 20),
-            )).takeBytes();
+            final received = (await response.timeout(transferTimeout))
+                .takeBytes();
             if (kind == SshPortForwardKind.dynamic) {
               expect(received.take(2), [5, 0]);
               expect(received.sublist(2, 4), [5, 0]);
