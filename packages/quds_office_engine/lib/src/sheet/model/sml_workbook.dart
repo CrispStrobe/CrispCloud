@@ -205,6 +205,7 @@ class SmlCell {
     this.borderRgb = '',
     this.borderWidth = 0,
     this.locked = true,
+    this.hyperlink,
   });
 
   /// ref API.
@@ -218,6 +219,9 @@ class SmlCell {
 
   /// formula API.
   String? formula;
+
+  /// External URL or internal `Sheet!A1` location.
+  String? hyperlink;
 
   /// styleIndex API.
   int styleIndex;
