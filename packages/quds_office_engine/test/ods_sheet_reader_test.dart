@@ -1899,6 +1899,37 @@ void validationTests() {
 }
 
 void metadataTests() {
+  test('ODS named expressions translate to XLSX formulas', () async {
+    final book = OdsSheetReader.readBytes(
+      _ods(
+        '<t:table t:name="Data"><t:table-row><t:table-cell '
+        'o:value-type="float" o:value="1"><x:p>1</x:p></t:table-cell>'
+        '</t:table-row><t:table-row><t:table-cell o:value-type="float" '
+        'o:value="2"><x:p>2</x:p></t:table-cell></t:table-row></t:table>',
+        extra:
+            '<t:named-expressions>'
+            '<t:named-expression t:name="Double" '
+            't:expression="[\$Data.\$A\$1]*2"/>'
+            '<t:named-expression t:name="Total" '
+            't:expression="SUM([\$Data.\$A\$1:.\$A\$2])"/>'
+            '</t:named-expressions>',
+      ),
+    );
+    expect(book.namedRanges, isEmpty);
+    expect(book.formulaNames.length, 2);
+    expect(
+      book.formulaNames.firstWhere((name) => name.name == 'Total').formula,
+      contains('SUM('),
+    );
+    final saved = await OfficeIsolateSave.workbook(book, recalculate: false);
+    final archive = ZipDecoder().decodeBytes(saved);
+    final workbookXml = utf8.decode(
+      archive.findFile('xl/workbook.xml')!.content as List<int>,
+    );
+    expect(workbookXml, contains('name="Total"'));
+    expect(workbookXml, contains('name="Double"'));
+  });
+
   test('ODS tab colour survives save and reopen', () async {
     final book = OdsSheetReader.readBytes(
       _ods(

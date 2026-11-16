@@ -946,11 +946,28 @@ abstract final class OdsSheetReader {
       'named-expression',
       _table,
     )) {
-      if (_attribute(element, 'name', _table) != 'Excel_BuiltIn_Print_Titles') {
+      final name = _attribute(element, 'name', _table);
+      final expression = _attribute(element, 'expression', _table);
+      if (name == null || expression == null) continue;
+      if (name == 'Excel_BuiltIn_Print_Titles') {
+        _applyOdsPrintTitles(book, expression);
         continue;
       }
-      final expression = _attribute(element, 'expression', _table);
-      if (expression != null) _applyOdsPrintTitles(book, expression);
+      if (name.startsWith('Excel_BuiltIn_')) continue;
+      try {
+        final translated = _translateFormula('of:=$expression');
+        if (translated == null || translated.isEmpty) continue;
+        book.formulaNames.add(
+          SmlFormulaName(
+            name: name,
+            formula: translated,
+            localSheetId: localScope(element),
+          ),
+        );
+      } on OdsSheetFormatException {
+        // Unsupported expressions stay native rather than becoming invalid
+        // XLSX defined names.
+      }
     }
 
     for (final element in _descendants(spreadsheet, 'database-range', _table)) {
