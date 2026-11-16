@@ -1364,6 +1364,13 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         ),
       ),
       _editorItem(context, 'Save a copy', OfficeEditorAction.saveCopy, editor),
+      if (editor.kind == OfficeEditorKind.sheet)
+        _editorItem(
+          context,
+          'Export as ODS',
+          OfficeEditorAction.exportOds,
+          editor,
+        ),
       _editorItem(
         context,
         'Close Editor',

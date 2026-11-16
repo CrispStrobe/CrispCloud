@@ -21,6 +21,7 @@ import 'package:crisp_cloud/services/captured_file_target.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
+import 'package:crisp_cloud/services/office_device_export.dart';
 import 'package:crisp_cloud/services/office_editor_menu.dart';
 import 'package:crisp_cloud/widgets/office_editor_dialog.dart';
 
@@ -315,5 +316,64 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pumpAndSettle();
     }
+  });
+
+  testWidgets('sheet Export as ODS writes a readable package', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    Uint8List? exported;
+    String? exportedName;
+    final source = File(
+      'test/fixtures/office_native_workflows/native-sheet-source.xlsx',
+    ).readAsBytesSync();
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: OfficeEditorDialog(
+            file: FileItem(
+              name: 'sheet.xlsx',
+              isFolder: false,
+              size: source.length,
+            ),
+            side: PanelSide.local,
+            bytesOverride: source,
+            copyExporter: (bytes, name, title, {initialDirectory}) async {
+              exported = bytes;
+              exportedName = name;
+              return OfficeCopyOutcome.savedCopy;
+            },
+          ),
+        ),
+      ),
+    );
+    for (
+      var i = 0;
+      i < 100 && find.byType(QudsSheetEditor).evaluate().isEmpty;
+      i++
+    ) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 20)),
+      );
+      await tester.pump(const Duration(milliseconds: 1));
+    }
+    expect(find.byType(QudsSheetEditor), findsOneWidget);
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(OfficeEditorDialog)),
+    );
+    container
+        .read(officeEditorMenuProvider)!
+        .perform(OfficeEditorAction.exportOds);
+    for (var i = 0; i < 100 && exported == null; i++) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 20)),
+      );
+      await tester.pump(const Duration(milliseconds: 1));
+    }
+    expect(exported, isNotNull);
+    expect(exportedName, endsWith('.ods'));
+    final book = OdsSheetReader.readBytes(exported!);
+    expect(book.sheets, isNotEmpty);
   });
 }
