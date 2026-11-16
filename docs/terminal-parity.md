@@ -47,9 +47,10 @@ The frozen `60bc3a41` source passes **896 terminal tests with two platform skips
 across 75 files**, clean analysis/formatting of **142 Dart files**, and **17 actual
 OpenSSH tests with two explicit environment skips**. Four production-widget
 captures were regenerated and inspected. All **5,535 watched source/dependency/
-test files** match across the completed phases. The optimized web release build
-is retrying with a 4,096 MB compiler heap after the previous 3,072 MB cap was
-exhausted during optimization; its final result belongs in the acceptance record.
+test files** match across all five acceptance phases. The standard O4/minified
+web release build passed in **234.072 seconds** with a 4,096 MB compiler heap;
+the original SDK binary/snapshot hashes and modes were restored exactly. The
+previous 3,072 MB attempt exhausted its compiler heap and remains archived.
 
 ### Previous agent/profile continuation
 
