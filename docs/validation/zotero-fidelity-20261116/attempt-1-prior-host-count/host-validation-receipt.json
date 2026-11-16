@@ -1,0 +1,167 @@
+{
+  "analysis_targets": [
+    "lib/services/office_zotero.dart",
+    "lib/services/office_zotero_transport.dart",
+    "lib/l10n/office_zotero_strings.dart",
+    "lib/l10n/office_editor_strings.dart",
+    "lib/widgets/office_editor_ribbon.dart",
+    "test/office_zotero_citing_transport_test.dart",
+    "test/office_zotero_test.dart",
+    "test/office_zotero_ribbon_test.dart"
+  ],
+  "completed_at_utc": "2026-11-16T07:28:04.918608+00:00",
+  "dependency_inputs": "host-dependency-inputs.json",
+  "dependency_inputs_sha256": "8807f2190ebef72a498251626c80177737aad7a5524019b736a4baad74a27497",
+  "dependency_package_count": 96,
+  "environment": {
+    "CI": "true",
+    "DART_SUPPRESS_ANALYTICS": "true",
+    "FLUTTER_ROOT": "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk",
+    "FLUTTER_SUPPRESS_ANALYTICS": "true",
+    "PUB_CACHE": "/workspace/scratch/4156e4a05f09/zotero-toolchain/pub-cache",
+    "TMPDIR": "/workspace/scratch/4156e4a05f09/zotero-toolchain/tmp",
+    "XDG_CONFIG_HOME": "/workspace/scratch/4156e4a05f09/zotero-toolchain/config"
+  },
+  "error": "The executed host test count did not match the expected cohort",
+  "expected_test_count": 37,
+  "head_at_completion": "769b087c8b8fa78fbdfb9da1faaeb6d28b69ecca",
+  "head_at_start": "769b087c8b8fa78fbdfb9da1faaeb6d28b69ecca",
+  "head_is_informational": true,
+  "limitations": [
+    "Focused genuine host dependency graph, not a full native application build or full production dependency resolution.",
+    "Test clients and credential stores are test doubles; no live Zotero desktop, private account, real OS keychain or native Word refresh acceptance.",
+    "Canonical engine/editor tests are qualified separately and are not counted as host test executions.",
+    "No GitHub Actions queries, waits or reruns."
+  ],
+  "passed_test_count": 39,
+  "repository": "https://github.com/CrispStrobe/CrispCloud",
+  "runtime": {
+    "channel": "[user-branch]",
+    "dartSdkVersion": "3.13.7",
+    "devToolsVersion": "2.60.0",
+    "engineBuildDate": "2026-10-23 05:34:48.330",
+    "engineCommitDate": "2026-10-23 02:13:38.000Z",
+    "engineContentHash": "dfd2e6cb7d319db05e3bf1503f3e2ac60f6288a2",
+    "engineRevision": "cf636b1dfb818dd6a3ff16e390e93b1a036969c8",
+    "flutterVersion": "3.47.8",
+    "frameworkCommitDate": "2026-10-22 21:37:31 -0700",
+    "frameworkRevision": "737ba8f885dc774b53b442759999a312c9461e4e",
+    "frameworkVersion": "3.47.8",
+    "repositoryUrl": "https://github.com/flutter/flutter.git"
+  },
+  "schema_version": 1,
+  "script_sha256": "bf1a306d98eedb041aed799c43b361d58d26819d2c5db2d5e5b6d669edaebbfc",
+  "source_aggregate_sha256_after": "56e6bed897e17d69da81b8f934c5e8feba88de3a3fc9bab01e6c91cd219e84a2",
+  "source_aggregate_sha256_before": "56e6bed897e17d69da81b8f934c5e8feba88de3a3fc9bab01e6c91cd219e84a2",
+  "source_changed_paths": [],
+  "source_file_count": 1605,
+  "source_inventory_after": "host-source-after.json",
+  "source_inventory_before": "host-source-before.json",
+  "source_unchanged": true,
+  "standalone_parser_proof": "standalone-parser-proof.json",
+  "started_at_utc": "2026-11-16T07:27:30.636826+00:00",
+  "status": "failed",
+  "steps": [
+    {
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "get",
+        "--enforce-lockfile"
+      ],
+      "completed_at_utc": "2026-11-16T07:27:46.573325+00:00",
+      "cwd": "/workspace/scratch/4156e4a05f09/zotero-toolchain/crisp-host-harness",
+      "exit_code": 0,
+      "log": "host-pub-get.log",
+      "log_sha256": "a559e3351ea9d6edbb33011eff411809f6f391a0bb29d52c20e2c24e49097f0f",
+      "name": "pub-get",
+      "started_at_utc": "2026-11-16T07:27:30.640388+00:00"
+    },
+    {
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "tool/verify_office_fidelity.py",
+        "--source",
+        "/workspace/scratch/4156e4a05f09/quds_office_suite"
+      ],
+      "completed_at_utc": "2026-11-16T07:27:47.082754+00:00",
+      "cwd": "/workspace/scratch/4156e4a05f09/CrispCloud",
+      "exit_code": 0,
+      "log": "host-vendor-verify.log",
+      "log_sha256": "027d4768557432eb3dfcb223cb8145067e05267b1a76af5e29849e22a93a9691",
+      "name": "vendor-verify",
+      "started_at_utc": "2026-11-16T07:27:46.576474+00:00"
+    },
+    {
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "tool/verify_office_fidelity.py",
+        "--source",
+        "/workspace/scratch/4156e4a05f09/quds_office_suite",
+        "--require-tracked"
+      ],
+      "completed_at_utc": "2026-11-16T07:27:48.201195+00:00",
+      "cwd": "/workspace/scratch/4156e4a05f09/CrispCloud",
+      "exit_code": 0,
+      "log": "host-vendor-verify-tracked.log",
+      "log_sha256": "027d4768557432eb3dfcb223cb8145067e05267b1a76af5e29849e22a93a9691",
+      "name": "vendor-verify-tracked",
+      "started_at_utc": "2026-11-16T07:27:47.082864+00:00"
+    },
+    {
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/flutter_tools.snapshot",
+        "test",
+        "--no-pub",
+        "--concurrency=1",
+        "--reporter",
+        "expanded",
+        "/workspace/scratch/4156e4a05f09/CrispCloud/test/office_zotero_citing_transport_test.dart",
+        "/workspace/scratch/4156e4a05f09/CrispCloud/test/office_zotero_test.dart",
+        "/workspace/scratch/4156e4a05f09/CrispCloud/test/office_zotero_ribbon_test.dart"
+      ],
+      "completed_at_utc": "2026-11-16T07:28:04.811337+00:00",
+      "cwd": "/workspace/scratch/4156e4a05f09/zotero-toolchain/crisp-host-harness",
+      "exit_code": 0,
+      "log": "host-tests.log",
+      "log_sha256": "101d8cdabf0737391ba6d895f4eca5ad07bfbeff7d108f544c17dc718ef743ac",
+      "name": "tests",
+      "started_at_utc": "2026-11-16T07:27:48.201697+00:00"
+    }
+  ],
+  "tests": [
+    "test/office_zotero_citing_transport_test.dart",
+    "test/office_zotero_test.dart",
+    "test/office_zotero_ribbon_test.dart"
+  ],
+  "vendor_manifest_after": {
+    "managed_file_count": 2409,
+    "managed_inventory_sha256": "1d914c8740b37a56d6de6eb73118a163bb82429debea19492697a66053e2d16c",
+    "sha256": "489825716eb7cf0b6c68d3e9f3ab3401f56a426032299f5a2d4a68fac5d684cd",
+    "source_branch": "codex/zotero-support-20261116",
+    "source_commit": "ca4011de0e17783f12bcff07336e318adc1db99c",
+    "source_repository": "CrispStrobe/quds_office_suite",
+    "standalone_sources": {
+      "packages/legacy_doc_parser": {
+        "commit": "4895712158127b2fc930d796e17035c3ca0dac62",
+        "repository": "CrispStrobe/legacy-doc-parser"
+      }
+    }
+  },
+  "vendor_manifest_before": {
+    "managed_file_count": 2409,
+    "managed_inventory_sha256": "1d914c8740b37a56d6de6eb73118a163bb82429debea19492697a66053e2d16c",
+    "sha256": "489825716eb7cf0b6c68d3e9f3ab3401f56a426032299f5a2d4a68fac5d684cd",
+    "source_branch": "codex/zotero-support-20261116",
+    "source_commit": "ca4011de0e17783f12bcff07336e318adc1db99c",
+    "source_repository": "CrispStrobe/quds_office_suite",
+    "standalone_sources": {
+      "packages/legacy_doc_parser": {
+        "commit": "4895712158127b2fc930d796e17035c3ca0dac62",
+        "repository": "CrispStrobe/legacy-doc-parser"
+      }
+    }
+  },
+  "vendor_manifest_unchanged": true
+}
