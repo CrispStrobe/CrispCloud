@@ -164,6 +164,8 @@ final class CustomKeychainStore {
       SecKeychainUnlock(created, UInt32(bytes.count), buffer.baseAddress, true)
     }
     guard unlocked == errSecSuccess else { throw securityError(unlocked, operation: "unlock") }
+    _ = try updateLockSettings(created, lockOnSleep: false,
+                               lockAfterInactivity: false, idleSeconds: 900)
     try probe(created)
     return try keychainURL(created).path
   }
@@ -360,6 +362,48 @@ final class CustomKeychainStore {
 
   func initialize(path: String) throws {
     try withKeychain(path: path) { try probe($0) }
+  }
+
+  /// macOS persists these settings on the selected keychain, for every app
+  /// using that file. Reading them never unlocks a keychain or changes policy.
+  func readLockSettings(path: String) throws -> [String: Any] {
+    try withKeychain(path: path) { try lockSettings($0) }
+  }
+
+  func writeLockSettings(path: String, lockOnSleep: Bool,
+                         lockAfterInactivity: Bool, idleSeconds: Int) throws -> [String: Any] {
+    guard (1...86400).contains(idleSeconds) else {
+      throw CustomKeychainStoreError(
+        code: "custom_keychain_invalid_settings",
+        message: "Choose an inactivity timeout between one second and one day.", status: nil)
+    }
+    return try withKeychain(path: path) {
+      try updateLockSettings($0, lockOnSleep: lockOnSleep,
+                             lockAfterInactivity: lockAfterInactivity, idleSeconds: idleSeconds)
+    }
+  }
+
+  private func updateLockSettings(_ keychain: SecKeychain, lockOnSleep: Bool,
+                                  lockAfterInactivity: Bool, idleSeconds: Int) throws -> [String: Any] {
+    var settings = SecKeychainSettings(version: UInt32(SEC_KEYCHAIN_SETTINGS_VERS1),
+                                       lockOnSleep: DarwinBoolean(lockOnSleep),
+                                       useLockInterval: DarwinBoolean(lockAfterInactivity),
+                                       lockInterval: lockAfterInactivity ? UInt32(idleSeconds) : UInt32(Int32.max))
+    let status = SecKeychainSetSettings(keychain, &settings)
+    guard status == errSecSuccess else { throw securityError(status, operation: "update lock settings of") }
+    return try lockSettings(keychain)
+  }
+
+  private func lockSettings(_ keychain: SecKeychain) throws -> [String: Any] {
+    var settings = SecKeychainSettings(version: UInt32(SEC_KEYCHAIN_SETTINGS_VERS1),
+                                       lockOnSleep: false, useLockInterval: false, lockInterval: 900)
+    let status = SecKeychainCopySettings(keychain, &settings)
+    guard status == errSecSuccess else { throw securityError(status, operation: "read lock settings of") }
+    return ["lockOnSleep": settings.lockOnSleep.boolValue,
+            // SecKeychainCopySettings does not populate useLockInterval. macOS
+            // stores INT_MAX for no timeout (Apple Security/SecKeychain.cpp).
+            "lockAfterInactivity": settings.lockInterval != UInt32(Int32.max),
+            "idleSeconds": Int(settings.lockInterval)]
   }
 
   private func probe(_ keychain: SecKeychain) throws {

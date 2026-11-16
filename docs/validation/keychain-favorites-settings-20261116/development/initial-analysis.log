@@ -1,0 +1,9 @@
+Analyzing macos_keychain_lock_settings.dart, secure_storage_macos_keychain.dart, keychain_lock_settings.dart, settings_dialog.dart, path_favorites.dart, panel_header.dart, settings_strings.dart, keychain_lock_settings_test.dart, path_favorites_test.dart, path_favorites_exchange_test.dart, panel_header_navigation_test.dart...
+
+   info - lib/services/secure_storage_macos_keychain.dart:110:7 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+   info - lib/services/secure_storage_macos_keychain.dart:127:7 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+   info - lib/widgets/keychain_lock_settings.dart:136:29 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+   info - lib/widgets/path_favorites.dart:114:9 - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check. Guard a 'State.context' use with a 'mounted' check on the State, and other BuildContext use with a 'mounted' check on the BuildContext. - use_build_context_synchronously
+   info - test/widget/keychain_lock_settings_test.dart:47:11 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+
+5 issues found.

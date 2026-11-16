@@ -85,6 +85,8 @@ void main() {
       await add('Photos', '/home', group: 'Personal');
       await mount(tester);
       await menu(tester);
+      await tester.tap(find.text('Filter favorites'));
+      await tester.pumpAndSettle();
       await group(tester, 'Work');
       expect(find.text('Photos'), findsNothing);
       expect(find.text('Reports'), findsOneWidget);

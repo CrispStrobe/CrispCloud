@@ -28,6 +28,7 @@ import '../services/credential_storage_config.dart';
 import '../services/app_lock_service.dart';
 import '../services/secure_storage_macos_keychain.dart';
 import 'credential_storage_setup.dart';
+import 'keychain_lock_settings.dart';
 import '../providers/quick_search_provider.dart';
 import 'cache_settings_dialog.dart';
 import 'provider_settings_dialog.dart';
@@ -695,6 +696,12 @@ class _CredentialStorageSettingsSectionState
                 : const Icon(Icons.chevron_right),
             onTap: _busy ? null : _change,
           ),
+          if (activePath != null)
+            KeychainLockSettings(
+              storage: ref.watch(
+                secureStorageProvider,
+              ) as MacOsCustomKeychainStorage,
+            ),
         ],
       ),
     );

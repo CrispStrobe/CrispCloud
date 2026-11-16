@@ -93,6 +93,8 @@ void main() {
       await mount(tester);
       expect(find.text('*'), findsNWidgets(2));
       await menu(tester, PanelSide.remote);
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(find.byKey(const ValueKey('path-favorites-search')), findsNothing);
       expect(find.text('/one'), findsOneWidget);
       expect(find.textContaining('workspace@example.test'), findsOneWidget);
       await tester.tap(find.text('Cloud reports'));
@@ -306,13 +308,13 @@ void main() {
       expect(panel.isInArchive, isTrue);
       await mount(tester);
       await menu(tester, PanelSide.remote);
-      final item = tester.widget<TextButton>(
+      final item = tester.widget<PopupMenuItem<Object>>(
         find.ancestor(
           of: find.text('Add current path…'),
-          matching: find.byType(TextButton),
+          matching: find.byType(PopupMenuItem<Object>),
         ),
       );
-      expect(item.onPressed, isNull);
+      expect(item.enabled, isFalse);
       expect(find.text('Edit path favorites…'), findsOneWidget);
       expect(bookmarks.bookmarks, isEmpty);
       await tester.runAsync(panel.navigateUpArchive);

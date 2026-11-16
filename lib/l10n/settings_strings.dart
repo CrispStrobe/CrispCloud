@@ -19,6 +19,14 @@ class SettingsStrings {
 
 const _translations = <String, Map<String, String>>{
   "de": {
+    "Lock keychain when the Mac sleeps":
+        "Schlüsselbund beim Ruhezustand des Macs sperren",
+    "Lock keychain after inactivity": "Schlüsselbund bei Inaktivität sperren",
+    "Inactivity timeout": "Inaktivitätsdauer",
+    "{minutes} minutes": "{minutes} Minuten",
+    "Both automatic locks are off for new keychains. These settings apply to every app using this keychain. Restarting or locking it manually can still require an unlock.": "Bei neuen Schlüsselbünden sind beide automatischen Sperren ausgeschaltet. Diese Einstellungen gelten für alle Apps, die diesen Schlüsselbund verwenden. Nach Neustarts oder manuellem Sperren kann erneutes Entsperren nötig sein.",
+    "Could not read or update keychain lock settings.": "Die Sperreinstellungen des Schlüsselbunds konnten nicht gelesen oder geändert werden.",
+    "Retry": "Erneut versuchen",
     "Credentials": "Zugangsdaten",
     "Credential storage": "Speicherung von Zugangsdaten",
     "Choose credential storage": "Speicher für Zugangsdaten wählen",
@@ -147,6 +155,15 @@ const _translations = <String, Map<String, String>>{
     "Reset to Defaults": "Auf Standard zurücksetzen",
   },
   "fr": {
+    "Lock keychain when the Mac sleeps":
+        "Verrouiller le trousseau lorsque le Mac se met en veille",
+    "Lock keychain after inactivity":
+        "Verrouiller le trousseau après une période d’inactivité",
+    "Inactivity timeout": "Délai d’inactivité",
+    "{minutes} minutes": "{minutes} minutes",
+    "Both automatic locks are off for new keychains. These settings apply to every app using this keychain. Restarting or locking it manually can still require an unlock.": "Les deux verrouillages automatiques sont désactivés pour les nouveaux trousseaux. Ces réglages concernent toutes les apps utilisant ce trousseau. Un redémarrage ou un verrouillage manuel peut nécessiter un déverrouillage.",
+    "Could not read or update keychain lock settings.": "Impossible de lire ou de modifier les réglages de verrouillage du trousseau.",
+    "Retry": "Réessayer",
     "Credentials": "Identifiants",
     "Credential storage": "Stockage des identifiants",
     "Choose credential storage": "Choisir le stockage des identifiants",
@@ -276,6 +293,16 @@ const _translations = <String, Map<String, String>>{
     "Reset to Defaults": "Rétablir les valeurs par défaut",
   },
   "es": {
+    "Lock keychain when the Mac sleeps":
+        "Bloquear el llavero cuando el Mac entre en reposo",
+    "Lock keychain after inactivity":
+        "Bloquear el llavero tras un periodo de inactividad",
+    "Inactivity timeout": "Tiempo de inactividad",
+    "{minutes} minutes": "{minutes} minutos",
+    "Both automatic locks are off for new keychains. These settings apply to every app using this keychain. Restarting or locking it manually can still require an unlock.": "Ambos bloqueos automáticos están desactivados en los llaveros nuevos. Estos ajustes se aplican a todas las apps que usen este llavero. Reiniciar o bloquearlo manualmente puede requerir desbloquearlo de nuevo.",
+    "Could not read or update keychain lock settings.":
+        "No se pudieron leer o modificar los ajustes de bloqueo del llavero.",
+    "Retry": "Reintentar",
     "Credentials": "Credenciales",
     "Credential storage": "Almacenamiento de credenciales",
     "Choose credential storage": "Elegir almacenamiento de credenciales",
@@ -403,6 +430,15 @@ const _translations = <String, Map<String, String>>{
     "Reset to Defaults": "Restablecer valores predeterminados",
   },
   "pt": {
+    "Lock keychain when the Mac sleeps":
+        "Bloquear o porta-chaves quando o Mac entrar em repouso",
+    "Lock keychain after inactivity":
+        "Bloquear o porta-chaves após inatividade",
+    "Inactivity timeout": "Tempo de inatividade",
+    "{minutes} minutes": "{minutes} minutos",
+    "Both automatic locks are off for new keychains. These settings apply to every app using this keychain. Restarting or locking it manually can still require an unlock.": "Os dois bloqueios automáticos estão desativados nos novos porta-chaves. Estas definições aplicam-se a todas as apps que utilizam este porta-chaves. Reiniciar ou bloquear manualmente pode exigir novo desbloqueio.",
+    "Could not read or update keychain lock settings.": "Não foi possível ler ou alterar as definições de bloqueio do porta-chaves.",
+    "Retry": "Tentar novamente",
     "Credentials": "Credenciais",
     "Credential storage": "Armazenamento de credenciais",
     "Choose credential storage": "Escolher armazenamento de credenciais",
@@ -532,6 +568,14 @@ const _translations = <String, Map<String, String>>{
     "Reset to Defaults": "Repor predefinições",
   },
   "zh": {
+    "Lock keychain when the Mac sleeps": "Mac 进入睡眠时锁定钥匙串",
+    "Lock keychain after inactivity": "闲置后锁定钥匙串",
+    "Inactivity timeout": "闲置时长",
+    "{minutes} minutes": "{minutes} 分钟",
+    "Both automatic locks are off for new keychains. These settings apply to every app using this keychain. Restarting or locking it manually can still require an unlock.":
+        "新钥匙串默认关闭这两项自动锁定。这些设置适用于使用该钥匙串的所有应用。重新启动或手动锁定后，仍可能需要解锁。",
+    "Could not read or update keychain lock settings.": "无法读取或更新钥匙串锁定设置。",
+    "Retry": "重试",
     "Credentials": "凭据",
     "Credential storage": "凭据存储",
     "Choose credential storage": "选择凭据存储方式",
@@ -663,6 +707,14 @@ const _translations = <String, Map<String, String>>{
     "Reset to Defaults": "恢复默认设置",
   },
   "ja": {
+    "Lock keychain when the Mac sleeps": "Mac のスリープ時にキーチェーンをロック",
+    "Lock keychain after inactivity": "操作がない場合にキーチェーンをロック",
+    "Inactivity timeout": "操作がない状態の時間",
+    "{minutes} minutes": "{minutes} 分",
+    "Both automatic locks are off for new keychains. These settings apply to every app using this keychain. Restarting or locking it manually can still require an unlock.": "新しいキーチェーンでは両方の自動ロックがオフです。この設定は、このキーチェーンを使用するすべてのアプリに適用されます。再起動や手動ロックの後には、再度ロック解除が必要な場合があります。",
+    "Could not read or update keychain lock settings.":
+        "キーチェーンのロック設定を読み取るか更新できませんでした。",
+    "Retry": "再試行",
     "Credentials": "認証情報",
     "Credential storage": "認証情報の保存先",
     "Choose credential storage": "認証情報の保存先を選択",
@@ -798,6 +850,14 @@ const _translations = <String, Map<String, String>>{
     "Reset to Defaults": "既定値に戻す",
   },
   "ko": {
+    "Lock keychain when the Mac sleeps": "Mac 잠자기 시 키체인 잠그기",
+    "Lock keychain after inactivity": "비활성 상태 후 키체인 잠그기",
+    "Inactivity timeout": "비활성 시간",
+    "{minutes} minutes": "{minutes}분",
+    "Both automatic locks are off for new keychains. These settings apply to every app using this keychain. Restarting or locking it manually can still require an unlock.": "새 키체인에서는 두 자동 잠금이 기본적으로 꺼져 있습니다. 이 설정은 이 키체인을 사용하는 모든 앱에 적용됩니다. 재시작하거나 수동으로 잠그면 다시 잠금 해제가 필요할 수 있습니다.",
+    "Could not read or update keychain lock settings.":
+        "키체인 잠금 설정을 읽거나 업데이트할 수 없습니다.",
+    "Retry": "다시 시도",
     "Credentials": "자격 증명",
     "Credential storage": "자격 증명 저장소",
     "Choose credential storage": "자격 증명 저장소 선택",
@@ -933,6 +993,15 @@ const _translations = <String, Map<String, String>>{
     "Reset to Defaults": "기본값으로 재설정",
   },
   "ar": {
+    "Lock keychain when the Mac sleeps":
+        "قفل سلسلة المفاتيح عند دخول Mac في وضع السكون",
+    "Lock keychain after inactivity": "قفل سلسلة المفاتيح بعد عدم النشاط",
+    "Inactivity timeout": "مهلة عدم النشاط",
+    "{minutes} minutes": "{minutes} دقيقة",
+    "Both automatic locks are off for new keychains. These settings apply to every app using this keychain. Restarting or locking it manually can still require an unlock.": "يكون القفلان التلقائيان متوقفين في سلاسل المفاتيح الجديدة. تنطبق هذه الإعدادات على كل التطبيقات التي تستخدم سلسلة المفاتيح هذه. قد يلزم إلغاء القفل مجددًا بعد إعادة التشغيل أو القفل اليدوي.",
+    "Could not read or update keychain lock settings.":
+        "تعذرت قراءة إعدادات قفل سلسلة المفاتيح أو تحديثها.",
+    "Retry": "إعادة المحاولة",
     "Credentials": "بيانات الاعتماد",
     "Credential storage": "تخزين بيانات الاعتماد",
     "Choose credential storage": "اختيار تخزين بيانات الاعتماد",

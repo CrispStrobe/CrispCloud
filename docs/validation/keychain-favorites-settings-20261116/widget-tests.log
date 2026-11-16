@@ -1,0 +1,356 @@
+00:00 +0: loading /private/tmp/crispcloud-terminal-ods-isolated/test/widget/keychain_lock_settings_test.dart
+00:00 +0: /private/tmp/crispcloud-terminal-ods-isolated/test/secure_storage_macos_keychain_test.dart: every credential operation addresses the initialized custom path
+00:00 +1: /private/tmp/crispcloud-terminal-ods-isolated/test/secure_storage_macos_keychain_test.dart: uninitialized storage cannot read or write
+00:00 +2: /private/tmp/crispcloud-terminal-ods-isolated/test/secure_storage_macos_keychain_test.dart: invalid and locked custom paths propagate without a fallback
+00:00 +3: /private/tmp/crispcloud-terminal-ods-isolated/test/secure_storage_macos_keychain_test.dart: errors after initialization do not retry a different store
+00:00 +4: /private/tmp/crispcloud-terminal-ods-isolated/test/secure_storage_macos_keychain_test.dart: a locked selected keychain unlocks through macOS without another file grant
+00:00 +5: /private/tmp/crispcloud-terminal-ods-isolated/test/secure_storage_macos_keychain_test.dart: sleep-time locking coalesces concurrent credential reads into one unlock
+00:00 +6: /private/tmp/crispcloud-terminal-ods-isolated/test/secure_storage_macos_keychain_test.dart: cancellation preserves the store and suppresses more prompts until deliberate Retry
+00:00 +7: /private/tmp/crispcloud-terminal-ods-isolated/test/secure_storage_macos_keychain_test.dart: Browse returns a path or cancellation without selecting a backend
+00:00 +8: /private/tmp/crispcloud-terminal-ods-isolated/test/secure_storage_macos_keychain_test.dart: other platforms never invoke the native custom-keychain channel
+00:00 +9: /private/tmp/crispcloud-terminal-ods-isolated/test/secure_storage_macos_keychain_test.dart: empty account keys cannot become service-wide queries
+00:00 +10: /private/tmp/crispcloud-terminal-ods-isolated/test/secure_storage_macos_keychain_test.dart: malformed boolean and collection responses fail explicitly
+00:00 +11: /private/tmp/crispcloud-terminal-ods-isolated/test/secure_storage_macos_keychain_test.dart: compatibility selector probes the scoped adapter without global selection
+00:00 +12: /private/tmp/crispcloud-terminal-ods-isolated/test/secure_storage_macos_keychain_test.dart: discovery is read only and selection errors do not fall back
+00:00 +13: /private/tmp/crispcloud-terminal-ods-isolated/test/secure_storage_macos_keychain_test.dart: creation returns actual path and preserves password bytes or cancellation
+00:00 +14: /private/tmp/crispcloud-terminal-ods-isolated/test/secure_storage_macos_keychain_test.dart: creation failures propagate and no automatic selection follows
+00:00 +15: /private/tmp/crispcloud-terminal-ods-isolated/test/secure_storage_macos_keychain_test.dart: compatibility Browse uses the saved-bookmark picker
+00:00 +16: /private/tmp/crispcloud-terminal-ods-isolated/test/secure_storage_macos_keychain_test.dart: same-store recovery sends only the configured path and returns cancellation
+00:00 +17: /private/tmp/crispcloud-terminal-ods-isolated/test/secure_storage_macos_keychain_test.dart: different-file recovery errors propagate without selecting or probing a store
+00:00 +18: /private/tmp/crispcloud-terminal-ods-isolated/test/secure_storage_macos_keychain_test.dart: recovery rejects empty configured paths and missing native acknowledgements
+00:00 +19: /private/tmp/crispcloud-terminal-ods-isolated/test/secure_storage_macos_keychain_test.dart: discovery and creation reject malformed native results
+00:00 +20: /private/tmp/crispcloud-terminal-ods-isolated/test/secure_storage_macos_keychain_test.dart: compatibility methods never invoke macOS methods on other platforms
+00:06 +21: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/keychain_lock_settings_test.dart: both default locks are off without any unlock or credential query (variant: TargetPlatform.macOS)
+00:14 +22: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/keychain_lock_settings_test.dart: independent switches and timeout survive reopening settings (variant: TargetPlatform.macOS)
+00:24 +23: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/keychain_lock_settings_test.dart: a locked keychain waits for explicit Retry before requesting unlock (variant: TargetPlatform.macOS)
+00:25 +24: /private/tmp/crispcloud-terminal-ods-isolated/test/credential_storage_settings_test.dart: saving session-only keeps active storage until restart
+00:26 +25: /private/tmp/crispcloud-terminal-ods-isolated/test/credential_storage_settings_test.dart: saving session-only keeps active storage until restart
+00:27 +26: /private/tmp/crispcloud-terminal-ods-isolated/test/credential_storage_settings_test.dart: saving session-only keeps active storage until restart
+00:28 +27: /private/tmp/crispcloud-terminal-ods-isolated/test/credential_storage_settings_test.dart: saving session-only keeps active storage until restart
+00:37 +28: /private/tmp/crispcloud-terminal-ods-isolated/test/credential_storage_settings_test.dart: an enabled App Lock prevents opening the chooser
+00:37 +29: /private/tmp/crispcloud-terminal-ods-isolated/test/credential_storage_settings_test.dart: an authenticated switch authorizes one deferred file vault creation
+00:39 +30: /private/tmp/crispcloud-terminal-ods-isolated/test/credential_storage_settings_test.dart: reconfirming an existing file vault does not authorize replacement
+00:39 +31: /private/tmp/crispcloud-terminal-ods-isolated/test/credential_storage_settings_test.dart: cancelling a pending switch back to the active vault does not grant recreation
+00:40 +32: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/path_favorites_test.dart: both star menus open a favorite in the pane that owns the menu
+00:41 +33: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/path_favorites_test.dart: both star menus open a favorite in the pane that owns the menu
+🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] listDirectory("/") returned 0 entities
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:42 +34: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/path_favorites_test.dart: both star menus open a favorite in the pane that owns the menu
+00:42 +35: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/path_favorites_test.dart: both star menus open a favorite in the pane that owns the menu
+00:42 +36: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/path_favorites_test.dart: both star menus open a favorite in the pane that owns the menu
+ℹ️ [PanelNotifier] navigateToPath: /one (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Memory path=/one side=PanelSide.remote
+ℹ️ [PanelNotifier] navigateToPath: /one (side=PanelSide.local, web=false)
+🐛 [PanelSource] setSource: Memory path=/one side=PanelSide.local
+00:47 +37: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/path_favorites_test.dart: an open menu cannot navigate a pane that has since changed
+🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] listDirectory("/") returned 0 entities
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateToPath: /other (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Memory path=/other side=PanelSide.remote
+00:48 +38: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/path_favorites_test.dart: adding a favorite captures the source and supports a custom path
+🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] listDirectory("/") returned 0 entities
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateToPath: /one (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Memory path=/one side=PanelSide.remote
+00:53 +38: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/path_favorites_exchange_test.dart: picker combines group and word search; Enter opens its pane only
+🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] listDirectory("/") returned 0 entities
+00:53 +38: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/path_favorites_test.dart: adding a favorite captures the source and supports a custom path
+ℹ️ [PanelNotifier] navigateToPath: /other (side=PanelSide.remote, web=false)
+00:53 +38: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/path_favorites_exchange_test.dart: picker combines group and word search; Enter opens its pane only
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:55 +39: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/path_favorites_exchange_test.dart: picker combines group and word search; Enter opens its pane only
+00:55 +39: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/path_favorites_test.dart: editor validates paths and never overwrites a duplicate on retry
+🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] listDirectory("/") returned 0 entities
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:05 +40: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/path_favorites_exchange_test.dart: picker combines group and word search; Enter opens its pane only
+01:05 +40: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/path_favorites_test.dart: editor reorders, filters and removes saved favorites
+🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] listDirectory("/") returned 0 entities
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:16 +41: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/path_favorites_exchange_test.dart: picker combines group and word search; Enter opens its pane only
+01:16 +41: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/path_favorites_test.dart: legacy bookmarks require explicit binding and remain editable
+🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] listDirectory("/") returned 0 entities
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:17 +41: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/path_favorites_exchange_test.dart: picker combines group and word search; Enter opens its pane only
+ℹ️ [PanelNotifier] navigateToPath: /one (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Memory path=/one side=PanelSide.remote
+01:18 +42: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/path_favorites_test.dart: legacy bookmarks require explicit binding and remain editable
+01:18 +42: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/path_favorites_exchange_test.dart: renaming and removing a group keeps its favorites and sources
+🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] listDirectory("/") returned 0 entities
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:19 +43: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/path_favorites_exchange_test.dart: renaming and removing a group keeps its favorites and sources
+01:19 +43: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/path_favorites_test.dart: archives retain the menu without saving virtual paths as favorites
+🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] listDirectory("/") returned 0 entities
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] enterArchive: /bundle.zip (Memory)
+ℹ️ [PanelNotifier] navigateToPath: / (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Memory path=/ side=PanelSide.remote
+01:22 +44: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/path_favorites_exchange_test.dart: renaming and removing a group keeps its favorites and sources
+01:29 +45: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/path_favorites_exchange_test.dart: import preview can be cancelled; merge preserves unknown accounts and skips duplicates
+🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] listDirectory("/") returned 0 entities
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:33 +46: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/path_favorites_exchange_test.dart: invalid import never opens merge and export waits for explicit copy
+🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] listDirectory("/") returned 0 entities
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:47 +47: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/panel_header_navigation_test.dart: path editing uses a full-width row below navigation
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateToPath: /account/projects/deep (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Memory path=/account/projects/deep side=PanelSide.remote
+01:50 +48: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/panel_header_navigation_test.dart: path editing uses a full-width row below navigation
+01:51 +49: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/panel_header_navigation_test.dart: path editing uses a full-width row below navigation
+01:53 +50: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/panel_header_navigation_test.dart: path context menus copy the full current path from either pane
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateToPath: /account/projects/deep (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Memory path=/account/projects/deep side=PanelSide.remote
+🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] listDirectory("/") returned 0 entities
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:55 +51: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/panel_header_navigation_test.dart: path context favorites retain their cloud account and can be removed
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateToPath: /account/projects/deep (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Memory path=/account/projects/deep side=PanelSide.remote
+01:57 +52: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/panel_header_navigation_test.dart: open in other pane switches to the exact cloud account and keeps this pane
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateToPath: /account/projects/deep (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Memory path=/account/projects/deep side=PanelSide.remote
+🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] listDirectory("/") returned 0 entities
+ℹ️ [PanelNotifier] navigateToPath: /account/projects/deep (side=PanelSide.local, web=false)
+🐛 [PanelSource] setSource: Memory path=/account/projects/deep side=PanelSide.local
+01:57 +53: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/panel_header_navigation_test.dart: a local directory in the right pane can also open in the left pane
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateToPath: /account/projects/deep (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Memory path=/account/projects/deep side=PanelSide.remote
+🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] listDirectory("/") returned 0 entities
+ℹ️ [PanelNotifier] navigateToPath: /Photos/Projects/Deep (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Local path=/Photos/Projects/Deep side=PanelSide.remote
+🐛 [PanelNotifier] _loadLocalFiles: /Photos/Projects/Deep (web=false)
+🐛 [PanelNotifier] listDirectory("/Photos/Projects/Deep") returned 0 entities
+ℹ️ [PanelNotifier] navigateToPath: /Photos/Projects/Deep (side=PanelSide.local, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /Photos/Projects/Deep (web=false)
+🐛 [PanelNotifier] listDirectory("/Photos/Projects/Deep") returned 0 entities
+01:59 +54: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/panel_header_navigation_test.dart: the current path menu swaps both actual pane locations
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateToPath: /account/projects/deep (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Memory path=/account/projects/deep side=PanelSide.remote
+🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] listDirectory("/") returned 0 entities
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] listDirectory("/") returned 0 entities
+01:59 +55: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/panel_header_navigation_test.dart: a path menu does not bookmark a replacement directory
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateToPath: /account/projects/deep (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Memory path=/account/projects/deep side=PanelSide.remote
+ℹ️ [PanelNotifier] navigateToPath: /account (side=PanelSide.remote, web=false)
+02:00 +56: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/panel_header_navigation_test.dart: open in other pane does not replace a newer other-pane choice
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateToPath: /account/projects/deep (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Memory path=/account/projects/deep side=PanelSide.remote
+🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] listDirectory("/") returned 0 entities
+ℹ️ [PanelNotifier] navigateToPath: /Photos/Elsewhere (side=PanelSide.local, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /Photos/Elsewhere (web=false)
+🐛 [PanelNotifier] listDirectory("/Photos/Elsewhere") returned 0 entities
+02:00 +57: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/panel_header_navigation_test.dart: touch long press on the current breadcrumb opens its menu
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateToPath: /account/projects/deep (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Memory path=/account/projects/deep side=PanelSide.remote
+02:01 +58: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/panel_header_navigation_test.dart: cloud breadcrumbs start at the configured root and keep their account
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateToPath: /account/projects/deep (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Memory path=/account/projects/deep side=PanelSide.remote
+ℹ️ [PanelNotifier] navigateToPath: /account (side=PanelSide.remote, web=false)
+02:01 +59: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/panel_header_navigation_test.dart: a right-pane local grant has no synthetic root or cloud navigation
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateToPath: /account/projects/deep (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Memory path=/account/projects/deep side=PanelSide.remote
+ℹ️ [PanelNotifier] navigateToPath: /Photos/Projects/Deep (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Local path=/Photos/Projects/Deep side=PanelSide.remote
+🐛 [PanelNotifier] _loadLocalFiles: /Photos/Projects/Deep (web=false)
+🐛 [PanelNotifier] listDirectory("/Photos/Projects/Deep") returned 0 entities
+ℹ️ [PanelNotifier] navigateToPath: /Photos (side=PanelSide.remote, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /Photos (web=false)
+🐛 [PanelNotifier] listDirectory("/Photos") returned 0 entities
+02:02 +60: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/panel_header_navigation_test.dart: a retained breadcrumb callback cannot navigate a replacement account
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateToPath: /account/projects/deep (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Memory path=/account/projects/deep side=PanelSide.remote
+ℹ️ [PanelNotifier] navigateToPath: /account/other (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Memory path=/account/other side=PanelSide.remote
+02:02 +61: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/panel_header_navigation_test.dart: a path editor cancels when its owning tab changes
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateToPath: /account/projects/deep (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Memory path=/account/projects/deep side=PanelSide.remote
+🐛 [PanelNotifier] selectTab: tab_1
+ℹ️ [PanelNotifier] navigateToPath: /account/other (side=PanelSide.remote, web=false)
+02:03 +62: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/panel_header_navigation_test.dart: Escape cancels path editing without navigating
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateToPath: /account/projects/deep (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Memory path=/account/projects/deep side=PanelSide.remote
+02:03 +63: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/panel_header_navigation_test.dart: typed cloud paths stay in the captured root and accept relative locations
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateToPath: /account/projects/deep (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Memory path=/account/projects/deep side=PanelSide.remote
+ℹ️ [PanelNotifier] navigateToPath: /account/projects/sibling (side=PanelSide.remote, web=false)
+02:05 +64: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/panel_header_navigation_test.dart: same-name grant replacement invalidates mounted breadcrumb and editor callbacks
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateToPath: /account/projects/deep (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Memory path=/account/projects/deep side=PanelSide.remote
+ℹ️ [PanelNotifier] navigateToPath: /Photos/Projects/Deep (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Local path=/Photos/Projects/Deep side=PanelSide.remote
+🐛 [PanelNotifier] _loadLocalFiles: /Photos/Projects/Deep (web=false)
+🐛 [PanelNotifier] listDirectory("/Photos/Projects/Deep") returned 0 entities
+02:06 +65: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/panel_header_navigation_test.dart: path editing can recover an older location outside its configured cloud root
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateToPath: /account/projects/deep (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Memory path=/account/projects/deep side=PanelSide.remote
+ℹ️ [PanelNotifier] navigateToPath: /older/location (side=PanelSide.remote, web=false)
+ℹ️ [PanelNotifier] navigateToPath: /account (side=PanelSide.remote, web=false)
+02:07 +66: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/panel_header_navigation_test.dart: grant replacement during access checking cannot publish a new local listing
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateToPath: /account/projects/deep (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Memory path=/account/projects/deep side=PanelSide.remote
+ℹ️ [PanelNotifier] navigateToPath: /Photos/Projects/Deep (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Local path=/Photos/Projects/Deep side=PanelSide.remote
+🐛 [PanelNotifier] _loadLocalFiles: /Photos/Projects/Deep (web=false)
+🐛 [PanelNotifier] listDirectory("/Photos/Projects/Deep") returned 0 entities
+ℹ️ [PanelNotifier] navigateToPath: /Photos (side=PanelSide.remote, web=false)
+02:07 +67: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/panel_header_navigation_test.dart: namespace path entry cannot adopt a replaced target grant during access checking
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateToPath: /account/projects/deep (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Memory path=/account/projects/deep side=PanelSide.remote
+ℹ️ [PanelNotifier] navigateToPath: / (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Local path=/ side=PanelSide.remote
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] listDirectory("/") returned 0 entities
+ℹ️ [PanelNotifier] navigateToPath: /Photos/Projects (side=PanelSide.remote, web=false)
+02:08 +68: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/panel_header_navigation_test.dart: relative local path entry resolves inside its original grant
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateToPath: /account/projects/deep (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Memory path=/account/projects/deep side=PanelSide.remote
+ℹ️ [PanelNotifier] navigateToPath: /Photos/Projects/Deep (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Local path=/Photos/Projects/Deep side=PanelSide.remote
+🐛 [PanelNotifier] _loadLocalFiles: /Photos/Projects/Deep (web=false)
+🐛 [PanelNotifier] listDirectory("/Photos/Projects/Deep") returned 0 entities
+ℹ️ [PanelNotifier] navigateToPath: /Photos/Projects/Sibling (side=PanelSide.remote, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /Photos/Projects/Sibling (web=false)
+🐛 [PanelNotifier] listDirectory("/Photos/Projects/Sibling") returned 0 entities
+02:10 +69: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/panel_header_navigation_test.dart: an explicit local path can acquire its requested new grant
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateToPath: /account/projects/deep (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Memory path=/account/projects/deep side=PanelSide.remote
+ℹ️ [PanelNotifier] navigateToPath: /Photos/Projects/Deep (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Local path=/Photos/Projects/Deep side=PanelSide.remote
+🐛 [PanelNotifier] _loadLocalFiles: /Photos/Projects/Deep (web=false)
+🐛 [PanelNotifier] listDirectory("/Photos/Projects/Deep") returned 0 entities
+ℹ️ [PanelNotifier] navigateToPath: /External/Reports (side=PanelSide.remote, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /External/Reports (web=false)
+🐛 [PanelNotifier] listDirectory("/External/Reports") returned 0 entities
+02:11 +70: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/panel_header_navigation_test.dart: an explicit existing grant remains independent of the previous root
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateToPath: /account/projects/deep (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Memory path=/account/projects/deep side=PanelSide.remote
+ℹ️ [PanelNotifier] navigateToPath: /Photos/Projects/Deep (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Local path=/Photos/Projects/Deep side=PanelSide.remote
+🐛 [PanelNotifier] _loadLocalFiles: /Photos/Projects/Deep (web=false)
+🐛 [PanelNotifier] listDirectory("/Photos/Projects/Deep") returned 0 entities
+ℹ️ [PanelNotifier] navigateToPath: /External/Reports (side=PanelSide.remote, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /External/Reports (web=false)
+🐛 [PanelNotifier] listDirectory("/External/Reports") returned 0 entities
+ℹ️ [PanelNotifier] navigateToPath: /External (side=PanelSide.remote, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /External (web=false)
+🐛 [PanelNotifier] listDirectory("/External") returned 0 entities
+02:12 +71: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/panel_header_navigation_test.dart: Up navigates to the parent on either pane
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateToPath: /account/projects/deep (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Memory path=/account/projects/deep side=PanelSide.remote
+🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] listDirectory("/") returned 0 entities
+ℹ️ [PanelNotifier] navigateToPath: /Photos/Projects/Deep (side=PanelSide.local, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /Photos/Projects/Deep (web=false)
+🐛 [PanelNotifier] listDirectory("/Photos/Projects/Deep") returned 0 entities
+ℹ️ [PanelNotifier] navigateUp: currentPath=/Photos/Projects/Deep archive=false flat=false
+ℹ️ [PanelNotifier] navigateToPath: /Photos/Projects (side=PanelSide.local, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /Photos/Projects (web=false)
+🐛 [PanelNotifier] listDirectory("/Photos/Projects") returned 0 entities
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateToPath: /Photos/Projects/Deep (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Local path=/Photos/Projects/Deep side=PanelSide.remote
+🐛 [PanelNotifier] _loadLocalFiles: /Photos/Projects/Deep (web=false)
+🐛 [PanelNotifier] listDirectory("/Photos/Projects/Deep") returned 0 entities
+ℹ️ [PanelNotifier] navigateUp: currentPath=/Photos/Projects/Deep archive=false flat=false
+ℹ️ [PanelNotifier] navigateToPath: /Photos/Projects (side=PanelSide.remote, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /Photos/Projects (web=false)
+🐛 [PanelNotifier] listDirectory("/Photos/Projects") returned 0 entities
+02:13 +72: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/panel_header_navigation_test.dart: source selector includes and opens local volumes
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateToPath: /account/projects/deep (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Memory path=/account/projects/deep side=PanelSide.remote
+ℹ️ [PanelNotifier] navigateToPath: /Photos/Projects/Deep (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Local path=/Photos/Projects/Deep side=PanelSide.remote
+🐛 [PanelNotifier] _loadLocalFiles: /Photos/Projects/Deep (web=false)
+🐛 [PanelNotifier] listDirectory("/Photos/Projects/Deep") returned 0 entities
+ℹ️ [PanelNotifier] navigateToPath: /External (side=PanelSide.remote, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /External (web=false)
+🐛 [PanelNotifier] listDirectory("/External") returned 0 entities
+02:15 +73: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/panel_header_navigation_test.dart: removed volumes cannot be chosen from an already open selector
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateToPath: /account/projects/deep (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Memory path=/account/projects/deep side=PanelSide.remote
+ℹ️ [PanelNotifier] navigateToPath: /Photos/Projects/Deep (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Local path=/Photos/Projects/Deep side=PanelSide.remote
+🐛 [PanelNotifier] _loadLocalFiles: /Photos/Projects/Deep (web=false)
+🐛 [PanelNotifier] listDirectory("/Photos/Projects/Deep") returned 0 entities
+02:15 +74: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/panel_header_navigation_test.dart: narrow headers retain volumes in More commands
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateToPath: /account/projects/deep (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Memory path=/account/projects/deep side=PanelSide.remote
+ℹ️ [PanelNotifier] navigateToPath: /Photos/Projects/Deep (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Local path=/Photos/Projects/Deep side=PanelSide.remote
+🐛 [PanelNotifier] _loadLocalFiles: /Photos/Projects/Deep (web=false)
+🐛 [PanelNotifier] listDirectory("/Photos/Projects/Deep") returned 0 entities
+ℹ️ [PanelNotifier] navigateToPath: /External (side=PanelSide.remote, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /External (web=false)
+🐛 [PanelNotifier] listDirectory("/External") returned 0 entities
+02:17 +75: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/panel_header_navigation_test.dart: an open volume menu cannot redirect a different local tab
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateToPath: /account/projects/deep (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Memory path=/account/projects/deep side=PanelSide.remote
+ℹ️ [PanelNotifier] navigateToPath: /Photos/Projects/Deep (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Local path=/Photos/Projects/Deep side=PanelSide.remote
+🐛 [PanelNotifier] _loadLocalFiles: /Photos/Projects/Deep (web=false)
+🐛 [PanelNotifier] listDirectory("/Photos/Projects/Deep") returned 0 entities
+🐛 [PanelNotifier] selectTab: tab_1
+ℹ️ [PanelNotifier] navigateToPath: /Photos/Other (side=PanelSide.remote, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /Photos/Other (web=false)
+🐛 [PanelNotifier] listDirectory("/Photos/Other") returned 0 entities
+02:18 +76: All tests passed!

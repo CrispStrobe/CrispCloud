@@ -221,10 +221,8 @@ void main() {
     await pathMenu(tester);
     await choosePathAction(tester, 'edit');
     final field = tester.getRect(editor());
-    final marker = tester.getRect(
-      find.byKey(const ValueKey('panel-activity-marker-remote')),
-    );
-    expect(field.top, greaterThan(marker.bottom));
+    final up = tester.getRect(find.byTooltip('Up'));
+    expect(field.top, greaterThan(up.bottom));
     expect(
       field.width,
       greaterThan(tester.getSize(find.byType(PanelHeader)).width - 65),

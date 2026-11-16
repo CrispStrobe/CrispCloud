@@ -90,6 +90,18 @@ class AppDelegate: FlutterAppDelegate {
         case "unlock":
           try self.customKeychainStore.unlock(path: path)
           result(nil)
+        case "readLockSettings":
+          result(try self.customKeychainStore.readLockSettings(path: path))
+        case "writeLockSettings":
+          guard let sleep = arguments["lockOnSleep"] as? Bool,
+                let inactivity = arguments["lockAfterInactivity"] as? Bool,
+                let seconds = arguments["idleSeconds"] as? Int else {
+            throw CustomKeychainStoreError(
+              code: "custom_keychain_invalid_settings",
+              message: "Keychain lock settings are required.", status: nil)
+          }
+          result(try self.customKeychainStore.writeLockSettings(
+            path: path, lockOnSleep: sleep, lockAfterInactivity: inactivity, idleSeconds: seconds))
         case "read", "write", "delete", "containsKey":
           guard let key = arguments["key"] as? String else {
             throw CustomKeychainStoreError(

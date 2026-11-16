@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import 'secure_storage_service.dart';
 import 'credential_storage_diagnostics.dart';
+import 'macos_keychain_lock_settings.dart';
 
 /// An explicitly selected macOS file-based keychain. Every native operation is
 /// scoped to [path]; failure never retries in the user's default keychain.
@@ -96,6 +97,37 @@ class MacOsCustomKeychainStorage extends SecureStorage
       throw ArgumentError.value(key, 'key', 'A credential key is required.');
     }
     return {'path': path, if (key != null) 'key': key};
+  }
+
+  /// Merely viewing settings does not request an unlock. An explicit retry may.
+  Future<MacOsKeychainLockSettings> readLockSettings({
+    bool unlockIfNeeded = false,
+  }) async {
+    Future<Map<Object?, Object?>?> read() =>
+        _channel.invokeMapMethod('readLockSettings', _arguments());
+    final result = unlockIfNeeded ? await _withUnlock(read) : await read();
+    if (result == null) {
+      throw const FormatException('Missing keychain lock settings.');
+    }
+    return MacOsKeychainLockSettings.fromMap(result);
+  }
+
+  /// The native keychain persists this policy; no duplicate preference or
+  /// password is stored by CrispCloud. Errors never redirect to another file.
+  Future<MacOsKeychainLockSettings> writeLockSettings(
+    MacOsKeychainLockSettings settings,
+  ) async {
+    final arguments = {..._arguments(), ...settings.toMap()};
+    final result = await _withUnlock(
+      () => _channel.invokeMapMethod<Object?, Object?>(
+        'writeLockSettings',
+        arguments,
+      ),
+    );
+    if (result == null) {
+      throw const FormatException('Missing keychain lock settings.');
+    }
+    return MacOsKeychainLockSettings.fromMap(result);
   }
 
   /// Grants access through the native file picker, retaining a security-scoped

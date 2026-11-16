@@ -1,4 +1,3 @@
-import 'active_pane_frame.dart';
 // widgets/panel_header.dart
 //
 // One compact command row per panel. It unifies the former source selector,
@@ -371,28 +370,6 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
             height: 36,
             child: Row(
               children: <Widget>[
-                Tooltip(
-                  message: paneActivityLabel(
-                    context,
-                    widget.side,
-                    active: widget.isActive,
-                  ),
-                  child: SizedBox(
-                    width: 20,
-                    child: Icon(
-                      widget.isActive
-                          ? Icons.radio_button_checked
-                          : Icons.radio_button_unchecked,
-                      key: ValueKey(
-                        'panel-activity-marker-${widget.side.name}',
-                      ),
-                      size: 14,
-                      color: widget.isActive
-                          ? theme.colorScheme.onPrimaryContainer
-                          : theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
                 if (widget.showSource) ...<Widget>[
                   const SizedBox(width: 4),
                   ConstrainedBox(

@@ -143,6 +143,32 @@ private struct CustomKeychainStoreTests {
     fixtures.append(first)
     let second = try TemporaryKeychain(directory: directory, name: "second", store: store)
     fixtures.append(second)
+    let initialLocks = try store.readLockSettings(path: first.path)
+    try expect(initialLocks["lockOnSleep"] as? Bool == false,
+               "New keychains must not lock on sleep by default")
+    try expect(initialLocks["lockAfterInactivity"] as? Bool == false,
+               "New keychains must not lock after inactivity by default")
+    for (sleep, inactivity) in [(true, false), (false, true), (true, true), (false, false)] {
+      _ = try store.writeLockSettings(path: first.path, lockOnSleep: sleep,
+                                      lockAfterInactivity: inactivity, idleSeconds: 3600)
+      let reopened = CustomKeychainStore(defaults: defaults)
+      let saved = try reopened.readLockSettings(path: first.path)
+      try expect(saved["lockOnSleep"] as? Bool == sleep, "Sleep policy did not persist")
+      try expect(saved["lockAfterInactivity"] as? Bool == inactivity, "Idle policy did not persist: \(saved) expected \(inactivity)")
+      if inactivity {
+        try expect(saved["idleSeconds"] as? Int == 3600, "Timeout did not persist")
+      }
+      let untouched = try store.readLockSettings(path: second.path)
+      try expect(untouched["lockOnSleep"] as? Bool == false &&
+                 untouched["lockAfterInactivity"] as? Bool == false,
+                 "Lock policy escaped the selected keychain")
+    }
+    for seconds in [0, -1, 86401] {
+      try expectStoreError("custom_keychain_invalid_settings") {
+        _ = try store.writeLockSettings(path: first.path, lockOnSleep: true,
+                                        lockAfterInactivity: true, idleSeconds: seconds)
+      }
+    }
     // Private-keychain creation itself must not change user preferences.
     let beforeOperations = try PreferencesSnapshot.capture()
     try expect(beforeOperations == originalPreferences,
