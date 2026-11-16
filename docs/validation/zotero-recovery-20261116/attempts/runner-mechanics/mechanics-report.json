@@ -1,0 +1,42 @@
+{
+  "runner_sha256": "74596ef08a2c1ae14c93474c8347985e055f4da284c34540a664b29979be1ff5",
+  "only_synthetic_process_control_cases": true,
+  "canonical_or_host_tests_launched": false,
+  "production_runner_constants": {
+    "timeout_seconds": 600,
+    "heartbeat_seconds": 15
+  },
+  "synthetic_control_constants": {
+    "timeout_seconds": 0.2,
+    "heartbeat_seconds": 0.04
+  },
+  "results": [
+    {
+      "case": "synthetic-command-success",
+      "observed_status": "passed",
+      "exit_code": 0,
+      "gate_correct": true
+    },
+    {
+      "case": "synthetic-test-marker",
+      "observed_status": "passed",
+      "exit_code": 0,
+      "gate_correct": true
+    },
+    {
+      "case": "synthetic-missing-marker",
+      "observed_status": "failed",
+      "exit_code": 0,
+      "gate_correct": true
+    },
+    {
+      "case": "synthetic-timeout",
+      "observed_status": "timed_out",
+      "exit_code": 124,
+      "gate_correct": true
+    }
+  ],
+  "heartbeat_observed": true,
+  "before_and_after_journals_observed": true,
+  "counts_excluded_from_qualification": true
+}

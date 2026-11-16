@@ -1,0 +1,48 @@
+{
+  "all_integrity_gates_passed": true,
+  "analysis_format_targets": 37,
+  "canonical_passed": true,
+  "canonical_receipt_sha256": "ccb716a6edeef5aab1b50369c5d4139e62136ff7cd70e49951a89319e81559da",
+  "canonical_source_inputs": 1568,
+  "canonical_tests": 1104,
+  "cohorts": {
+    "editor-hyphenation-integration": 30,
+    "editor-proofing-integration": 107,
+    "editor-recovery-integration": 4,
+    "editor-zotero": 186,
+    "engine-ods-integration": 102,
+    "engine-proofing-integration": 74,
+    "engine-recovery-integration": 180,
+    "engine-word-layout-integration": 31,
+    "engine-zotero": 390
+  },
+  "external_dependency_runtime_inputs": 3857,
+  "fixture_present_count": 4,
+  "integration_tests": 528,
+  "no_further_tests_required_or_executed": true,
+  "pdf_binding_passed": true,
+  "pdf_binding_sha256": "9e24e43f8481605b59e671d813ed4f4c1274c2227c954a6ee9897db5a3365d1f",
+  "pdf_checks_not_added_to_test_totals": true,
+  "pdf_expected_code_points": [
+    "U+0041",
+    "U+1F600",
+    "U+20000",
+    "U+0041",
+    "U+005A"
+  ],
+  "pdf_passed": true,
+  "pdf_raster_differing_pixels": 0,
+  "pdf_raster_dimensions": [
+    320,
+    112
+  ],
+  "pdf_raster_nonwhite_pixels": 2109,
+  "pdf_receipt_sha256": "cd410bf4ad3ad595e6977a68f936e335c3586689d64d168718056fe05efb8360",
+  "readme_sha256": "36a67107f3e33a0ee7a598776c2f30f30cec05a0c3092fe09b739aa5ca443e13",
+  "separate_optional_fixture_paths": 4,
+  "skipped_tests": 0,
+  "source_commit": "b87f9d6c3a2532c9695024adf48ca9fbd3c0927a",
+  "source_tree": "acb1d1060879dc4a8168df8abf3105dc828af360",
+  "test_files": 70,
+  "zotero_tests": 576
+}

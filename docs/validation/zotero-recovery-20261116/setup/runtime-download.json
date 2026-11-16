@@ -1,0 +1,15 @@
+{
+  "recorded_utc": "2026-11-16T19:54:29.353821+00:00",
+  "framework_commit": "737ba8f885dc774b53b442759999a312c9461e4e",
+  "engine_commit": "cf636b1dfb818dd6a3ff16e390e93b1a036969c8",
+  "archive_url": "https://storage.googleapis.com/flutter_infra_release/flutter/cf636b1dfb818dd6a3ff16e390e93b1a036969c8/dart-sdk-linux-x64.zip",
+  "url_source": "bin/internal/update_dart_sdk.sh at the exact framework commit",
+  "archive_sha256": "b52a1d890575d6c286079bd51650dc77f90c2dddfdcb073a052ae06a5fdb276d",
+  "archive_bytes": 238851283,
+  "dart_binary_sha256": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb",
+  "dart_version": "Dart SDK version: 3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\"",
+  "matches_preserved_sdk_artifact_sha256": true,
+  "sdk_tracked_status": "",
+  "transport": "Resumable HTTP/1.1 curl; framework clone HTTP/1.1 after an HTTP/2 EOF. No tracked SDK source modifications.",
+  "prestage_correction": "Archive has the genuine top-level LICENSE.dart_sdk_archive.md in addition to dart-sdk/. Initial conservative path check rejected it; corrected before extraction. A premature Flutter bootstrap was stopped and its duplicate partial download removed."
+}

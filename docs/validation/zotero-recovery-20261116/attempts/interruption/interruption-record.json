@@ -1,0 +1,90 @@
+{
+  "cause": "Unknown; no exit code or traceback recorded, do not characterize as a failing test or completed editor cohort",
+  "completed_cohorts": [
+    {
+      "exit_code": 0,
+      "log_sha256": "7acb1d58f28f6ecd95ce5a1f2ec391880fa267f7ac29e4da9272cd44b1ee439c",
+      "name": "engine-zotero",
+      "passed_tests": 390
+    }
+  ],
+  "dependency_runtime_inputs_match_original_before": true,
+  "editor_tests_claimed_passed": 0,
+  "files": {
+    "dependencies-before.json": {
+      "bytes": 572647,
+      "sha256": "30e07a28cfc616b2bfe3095355ea149d09956965a51c46ea0e133bb99bcfb601",
+      "source_mtime_utc": "2026-11-16T20:10:24.831275+00:00"
+    },
+    "editor-analysis-package-config.json": {
+      "bytes": 17758,
+      "sha256": "7a248bfce5a41a48c97ba5403097106a280387f2b40c5ada4df520488d643396",
+      "source_mtime_utc": "2026-11-16T20:10:19.006260+00:00"
+    },
+    "editor-zotero.log": {
+      "bytes": 23360,
+      "sha256": "889bc88165781b8da99a855cdb7609101d7763779aa7169c2f83eda1197155ef",
+      "source_mtime_utc": "2026-11-16T20:16:36.510839+00:00"
+    },
+    "engine-analysis-package-config.json": {
+      "bytes": 12188,
+      "sha256": "0d63dc937758050ed548634e466de46e0641b056be9d6cbbb528ed7e3efe81fb",
+      "source_mtime_utc": "2026-11-16T20:10:18.988951+00:00"
+    },
+    "engine-zotero.log": {
+      "bytes": 45328,
+      "sha256": "7acb1d58f28f6ecd95ce5a1f2ec391880fa267f7ac29e4da9272cd44b1ee439c",
+      "source_mtime_utc": "2026-11-16T20:13:05.656815+00:00"
+    },
+    "execution.log": {
+      "bytes": 1293,
+      "sha256": "caa9e18394f2bacb697620ef3a69cb17a39a52c935bbd376b5524d0fce7f16d8",
+      "source_mtime_utc": "2026-11-16T20:13:06.226327+00:00"
+    },
+    "invocation.json": {
+      "bytes": 8614,
+      "sha256": "1512d623b671741f552f0b86ba7cf49ddfbc6d6e492ed9ceb976dee8c2395466",
+      "source_mtime_utc": "2026-11-16T20:10:18.859308+00:00"
+    },
+    "receipt.json": {
+      "bytes": 12238,
+      "sha256": "9853ef3022e028c3319618d12ce95cec33570745ebd64dc1a150963c03a8c544",
+      "source_mtime_utc": "2026-11-16T20:13:06.226327+00:00"
+    },
+    "run-qualification.py": {
+      "bytes": 17896,
+      "sha256": "23100f4e48e996b08081b5587edfe54f11642fdeb6eb87a4b6801565a61f354e",
+      "source_mtime_utc": "2026-11-16T19:58:04.009974+00:00"
+    },
+    "source-before.json": {
+      "bytes": 232384,
+      "sha256": "1807731ab57a3875f1eca49da251e85a5598c1db938b31fda7f0a26274967064",
+      "source_mtime_utc": "2026-11-16T20:10:24.823635+00:00"
+    }
+  },
+  "harness_inputs_after": {
+    "harness/legacy_doc_parser/pubspec.yaml": "9c7e076de0d9c36c12a7fe6e1ba546355a20087e0e6483a0bc0fb9804d422cf3",
+    "harness/quds_office_editor/.dart_tool/package_config.json": "59be3f5fda4b7a65bf3582d335eaa5c2c9289e3db6f23c1c33907a1dea40fa9c",
+    "harness/quds_office_editor/.dart_tool/package_graph.json": "4b397977d13ce34fd156813735cfcfbcf2f76ab865b3df2dd73af8e506c4bace",
+    "harness/quds_office_editor/pubspec.lock": "110e7e8e57a36c6292502866e0656cdb89dfbf16576c3503f9571576d480796d",
+    "harness/quds_office_editor/pubspec.yaml": "70f33c82ce2616264e63bb203db1c7cff18286c489ad55e38979c683cf5db2c8",
+    "harness/quds_office_engine/.dart_tool/package_config.json": "221034149a2fe82f998ba27c75e611b6268ee0455814325609e55f867445c8ec",
+    "harness/quds_office_engine/.dart_tool/package_graph.json": "608ca20056036a3c76a95a222192fbc4ee7d0b74c17bad96d7ebd24368095b45",
+    "harness/quds_office_engine/pubspec.lock": "3b55c7eb8535653c0733db7abc99934bf3f23fdf3835eb5fb673c1044a848379",
+    "harness/quds_office_engine/pubspec.yaml": "09ab3b5abb15bacd2d398bb543640b531f92ffdd9796763cfbca14df496462c2",
+    "harness/quds_reports/pubspec.yaml": "8d60275e20f0fdc7c61b5e1d0a80637efb34d6d5993909e9a50878e338766e0b"
+  },
+  "harness_inputs_match_original_before": false,
+  "head_now": "b87f9d6c3a2532c9695024adf48ca9fbd3c0927a",
+  "last_observed_editor_counter": 121,
+  "later_cohorts_executed": false,
+  "process_observation": "Current ps inventory showed no Dart, flutter_tester or qualification runner",
+  "qualified_source_commit": "b87f9d6c3a2532c9695024adf48ca9fbd3c0927a",
+  "recorded_utc": "2026-11-16T20:29:50.685262+00:00",
+  "root_analysis_config_present": false,
+  "session_id": 13468,
+  "session_observation": "write_stdin returned Unknown process id",
+  "source_inputs_match_original_before": true,
+  "status": "Interrupted, no terminal result available",
+  "unfinalized_cohort": "editor-zotero"
+}

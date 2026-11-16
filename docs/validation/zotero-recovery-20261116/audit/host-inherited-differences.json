@@ -1,0 +1,748 @@
+{
+  "generated_at_utc": "2026-11-16T20:43:16.431090+00:00",
+  "purpose": "Supplemental read-only disposition; does not replace or relax the original strict delivery verifier result.",
+  "sources": {
+    "host_baseline": "553f3be64da9ad3c35730f1b6a67d79f1ac54b72",
+    "host_implementation": "07083d1983db87a9868c3e8ba0cda1efd283b445",
+    "canonical_quds": "b87f9d6c3a2532c9695024adf48ca9fbd3c0927a"
+  },
+  "evidence_sha256": {
+    "delivery-verification.json": "e410bd23b862ff88c407d1cc8db9c1b3cfee1879c2a9b5281139e15fd5865210",
+    "delivery-verification.details.json.gz": "d2dab368e12279c23341a112a4fd8d8473789247ce48662e102115a57947a53e",
+    "unmanaged-baseline-proof.json": "77320d4af46dc7d9e06a0bfc7eaec0f615e483f8f50dd8a2916b2c49d056c501"
+  },
+  "original_strict_check": {
+    "name": "managed_non_parser_git_blobs_and_modes_identical",
+    "result": false,
+    "reason": "Eight managed host executable bits differ from canonical modes; all 652 managed non-parser Git blob IDs match canonical.",
+    "original_result_preserved": true
+  },
+  "checks": {
+    "all_14_unmanaged_content_differences_unchanged_in_blob_and_mode": true,
+    "all_6_host_only_files_unchanged_in_blob_and_mode": true,
+    "all_8_managed_modes_unchanged_from_host_baseline": true,
+    "all_652_managed_non_parser_blob_ids_match_canonical": true,
+    "all_8_mode_differences_have_equal_current_canonical_blob_ids": true,
+    "source_or_runtime_mutated": false,
+    "additional_tests_executed": false
+  },
+  "unmanaged_file_dispositions": [
+    {
+      "path": "packages/quds_office_editor/lib/src/editor_reports/quds_report_designer.dart",
+      "scope": "unmanaged_content",
+      "baseline": {
+        "mode": "100755",
+        "type": "blob",
+        "oid": "6bd5d3474f6443f388e35b583bc2144c3bbf0fee"
+      },
+      "host": {
+        "mode": "100755",
+        "type": "blob",
+        "oid": "6bd5d3474f6443f388e35b583bc2144c3bbf0fee"
+      },
+      "blob_unchanged_from_baseline": true,
+      "mode_unchanged_from_baseline": true,
+      "classification": "Report interface localization",
+      "disposition": "Localizes template menus, status and diagnostics; forwards the selected strings to preview and avoids translating custom template names. Optional translateActions defaults to existing behavior.",
+      "canonical": {
+        "mode": "100644",
+        "oid": "3d059d20e32858406b00892a007f7b42ed405068",
+        "type": "blob"
+      },
+      "diff_file": "unmanaged-diffs/01-quds_report_designer.dart.diff",
+      "incoming_pdf_zotero_compatibility_risk_identified": false
+    },
+    {
+      "path": "packages/quds_office_editor/lib/src/editor_reports/render_report_data_explorer.dart",
+      "scope": "unmanaged_content",
+      "baseline": {
+        "mode": "100755",
+        "type": "blob",
+        "oid": "b44bcc6f9593c4581fdfa0dd1655291531436699"
+      },
+      "host": {
+        "mode": "100755",
+        "type": "blob",
+        "oid": "b44bcc6f9593c4581fdfa0dd1655291531436699"
+      },
+      "blob_unchanged_from_baseline": true,
+      "mode_unchanged_from_baseline": true,
+      "classification": "Report interface localization",
+      "disposition": "Localizes accessibility labels and row/column counts; takes text direction from the selected report language.",
+      "canonical": {
+        "mode": "100644",
+        "oid": "de2cc97454a843b72696c7110fb97fa7a80d9b3b",
+        "type": "blob"
+      },
+      "diff_file": "unmanaged-diffs/02-render_report_data_explorer.dart.diff",
+      "incoming_pdf_zotero_compatibility_risk_identified": false
+    },
+    {
+      "path": "packages/quds_office_editor/lib/src/editor_reports/render_report_designer.dart",
+      "scope": "unmanaged_content",
+      "baseline": {
+        "mode": "100755",
+        "type": "blob",
+        "oid": "744904e0fb748b28845ab1e5b84b806393f806bc"
+      },
+      "host": {
+        "mode": "100755",
+        "type": "blob",
+        "oid": "744904e0fb748b28845ab1e5b84b806393f806bc"
+      },
+      "blob_unchanged_from_baseline": true,
+      "mode_unchanged_from_baseline": true,
+      "classification": "Report interface localization",
+      "disposition": "Localizes band captions, element placeholders and accessibility labels; includes direction in the label cache key. Small const/formatting differences are nonfunctional.",
+      "canonical": {
+        "mode": "100644",
+        "oid": "9fa5045a99d96c468228339ed684a54b69bdc4ed",
+        "type": "blob"
+      },
+      "diff_file": "unmanaged-diffs/03-render_report_designer.dart.diff",
+      "incoming_pdf_zotero_compatibility_risk_identified": false
+    },
+    {
+      "path": "packages/quds_office_editor/lib/src/editor_reports/render_report_inspector.dart",
+      "scope": "unmanaged_content",
+      "baseline": {
+        "mode": "100755",
+        "type": "blob",
+        "oid": "829723f4c3ad898139dfc24b0c9e3d7dc1cbec17"
+      },
+      "host": {
+        "mode": "100755",
+        "type": "blob",
+        "oid": "829723f4c3ad898139dfc24b0c9e3d7dc1cbec17"
+      },
+      "blob_unchanged_from_baseline": true,
+      "mode_unchanged_from_baseline": true,
+      "classification": "Report interface localization",
+      "disposition": "Uses shared localized element/inspector headings and font-face names while retaining document-defined names.",
+      "canonical": {
+        "mode": "100644",
+        "oid": "12e9b218812f9f371cd2fa68ff045e70a0ae532c",
+        "type": "blob"
+      },
+      "diff_file": "unmanaged-diffs/04-render_report_inspector.dart.diff",
+      "incoming_pdf_zotero_compatibility_risk_identified": false
+    },
+    {
+      "path": "packages/quds_office_editor/lib/src/editor_reports/render_report_preview.dart",
+      "scope": "unmanaged_content",
+      "baseline": {
+        "mode": "100755",
+        "type": "blob",
+        "oid": "c01c4ac99410a562c72d901a04fd021160f32dd3"
+      },
+      "host": {
+        "mode": "100755",
+        "type": "blob",
+        "oid": "c01c4ac99410a562c72d901a04fd021160f32dd3"
+      },
+      "blob_unchanged_from_baseline": true,
+      "mode_unchanged_from_baseline": true,
+      "classification": "Report interface localization",
+      "disposition": "Adds an optional strings parameter with an English default; localizes empty/error/page/warning/accessibility messages and invalidates label/semantics caches on language changes. Report page painting is unchanged.",
+      "canonical": {
+        "mode": "100644",
+        "oid": "42154bc19ed0469db882d59fa9bf2ede4c739e89",
+        "type": "blob"
+      },
+      "diff_file": "unmanaged-diffs/05-render_report_preview.dart.diff",
+      "incoming_pdf_zotero_compatibility_risk_identified": false
+    },
+    {
+      "path": "packages/quds_office_editor/lib/src/editor_reports/report_designer_controller.dart",
+      "scope": "unmanaged_content",
+      "baseline": {
+        "mode": "100755",
+        "type": "blob",
+        "oid": "cd903063d54ebaebddf1dfd4cd98d479d1136982"
+      },
+      "host": {
+        "mode": "100755",
+        "type": "blob",
+        "oid": "cd903063d54ebaebddf1dfd4cd98d479d1136982"
+      },
+      "blob_unchanged_from_baseline": true,
+      "mode_unchanged_from_baseline": true,
+      "classification": "Report interface localization",
+      "disposition": "Keeps original notices plus structured family, error and imported-row values to localize displayed notices without parsing user names; localizes a property hint. Existing font import and report export work remains in place.",
+      "canonical": {
+        "mode": "100644",
+        "oid": "2c35579c5732732e75d6cdad6e83c195871d9b94",
+        "type": "blob"
+      },
+      "diff_file": "unmanaged-diffs/06-report_designer_controller.dart.diff",
+      "incoming_pdf_zotero_compatibility_risk_identified": false
+    },
+    {
+      "path": "packages/quds_office_editor/lib/src/editor_reports/report_designer_strings.dart",
+      "scope": "unmanaged_content",
+      "baseline": {
+        "mode": "100755",
+        "type": "blob",
+        "oid": "581c13a988a00687d22f189bbcddc4272b096afb"
+      },
+      "host": {
+        "mode": "100755",
+        "type": "blob",
+        "oid": "581c13a988a00687d22f189bbcddc4272b096afb"
+      },
+      "blob_unchanged_from_baseline": true,
+      "mode_unchanged_from_baseline": true,
+      "classification": "Report interface localization",
+      "disposition": "Extends English/Arabic with German, French, Spanish, Portuguese, Chinese, Japanese and Korean; adds count, diagnostic, template-value, element-title, font-face and notice helpers. Unknown messages and supplied user/provider values are preserved.",
+      "canonical": {
+        "mode": "100644",
+        "oid": "7290c2be6b0b7a22737e7d6fc665b01056c42ee4",
+        "type": "blob"
+      },
+      "diff_file": "unmanaged-diffs/07-report_designer_strings.dart.diff",
+      "incoming_pdf_zotero_compatibility_risk_identified": false
+    },
+    {
+      "path": "packages/quds_office_editor/lib/src/editor_reports/report_element_painter.dart",
+      "scope": "unmanaged_content",
+      "baseline": {
+        "mode": "100755",
+        "type": "blob",
+        "oid": "ccdc6529122a7c0e8821de3d38f8a1ad29f9ae7c"
+      },
+      "host": {
+        "mode": "100755",
+        "type": "blob",
+        "oid": "ccdc6529122a7c0e8821de3d38f8a1ad29f9ae7c"
+      },
+      "blob_unchanged_from_baseline": true,
+      "mode_unchanged_from_baseline": true,
+      "classification": "Report interface localization",
+      "disposition": "Adds an optional strings argument for crosstab/subreport placeholder frame labels; other element painting is unchanged.",
+      "canonical": {
+        "mode": "100644",
+        "oid": "153109cb76fea581f0551580aeb2f510a77a855f",
+        "type": "blob"
+      },
+      "diff_file": "unmanaged-diffs/08-report_element_painter.dart.diff",
+      "incoming_pdf_zotero_compatibility_risk_identified": false
+    },
+    {
+      "path": "packages/quds_office_editor/lib/src/embed/office_uri_io.dart",
+      "scope": "unmanaged_content",
+      "baseline": {
+        "mode": "100755",
+        "type": "blob",
+        "oid": "5633b0613a598666b20f9bf029f21937de85d82d"
+      },
+      "host": {
+        "mode": "100755",
+        "type": "blob",
+        "oid": "5633b0613a598666b20f9bf029f21937de85d82d"
+      },
+      "blob_unchanged_from_baseline": true,
+      "mode_unchanged_from_baseline": true,
+      "classification": "Host platform integration",
+      "disposition": "Uses url_launcher LaunchMode.externalApplication with Uri.tryParse instead of desktop Process.start commands. The public office_uri.dart wrapper and viewer scheme/navigation/host-callback checks are unchanged.",
+      "canonical": {
+        "mode": "100644",
+        "oid": "ce2cb778ec0b95b260fa88f8cc93c5de1c03175c",
+        "type": "blob"
+      },
+      "diff_file": "unmanaged-diffs/09-office_uri_io.dart.diff",
+      "incoming_pdf_zotero_compatibility_risk_identified": false
+    },
+    {
+      "path": "packages/quds_office_engine/lib/quds_reports.dart",
+      "scope": "unmanaged_content",
+      "baseline": {
+        "mode": "100755",
+        "type": "blob",
+        "oid": "335f56b67e15ce988e9f3d368aa2af510ae18180"
+      },
+      "host": {
+        "mode": "100755",
+        "type": "blob",
+        "oid": "335f56b67e15ce988e9f3d368aa2af510ae18180"
+      },
+      "blob_unchanged_from_baseline": true,
+      "mode_unchanged_from_baseline": true,
+      "classification": "Nonfunctional export ordering",
+      "disposition": "Moves the report_shape.dart export one position relative to report_pdf_writer.dart; the exported library set is identical.",
+      "canonical": {
+        "mode": "100644",
+        "oid": "e712486f81830a9e3899794e0289c4138e3b3de1",
+        "type": "blob"
+      },
+      "diff_file": "unmanaged-diffs/10-quds_reports.dart.diff",
+      "incoming_pdf_zotero_compatibility_risk_identified": false
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/opc/crypto/office_crypto.dart",
+      "scope": "unmanaged_content",
+      "baseline": {
+        "mode": "100755",
+        "type": "blob",
+        "oid": "16e87675eee9cc101d37521720b52fd9037ef47d"
+      },
+      "host": {
+        "mode": "100755",
+        "type": "blob",
+        "oid": "16e87675eee9cc101d37521720b52fd9037ef47d"
+      },
+      "blob_unchanged_from_baseline": true,
+      "mode_unchanged_from_baseline": true,
+      "classification": "Host Office package integrity hardening",
+      "disposition": "Authenticates the complete encrypted Office package before returning plaintext; validates integrity metadata and distinguishes KeyData salt size from password salt size. Existing writer files are accepted only when their legacy HMAC-key length produces a valid HMAC.",
+      "canonical": {
+        "mode": "100644",
+        "oid": "b5c29641ba1109ae6610e8e6f3b30ada020475b3",
+        "type": "blob"
+      },
+      "diff_file": "unmanaged-diffs/11-office_crypto.dart.diff",
+      "incoming_pdf_zotero_compatibility_risk_identified": false
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/pdf/widgets/pw_paint.dart",
+      "scope": "unmanaged_content",
+      "baseline": {
+        "mode": "100755",
+        "type": "blob",
+        "oid": "16fae6742f2001291b56beae4c572c173ea1bf0e"
+      },
+      "host": {
+        "mode": "100755",
+        "type": "blob",
+        "oid": "16fae6742f2001291b56beae4c572c173ea1bf0e"
+      },
+      "blob_unchanged_from_baseline": true,
+      "mode_unchanged_from_baseline": true,
+      "classification": "Redundant PDF nullability compatibility form",
+      "disposition": "Retains a nullable local face and duplicate null checks in the watermark path. An identical earlier guard returns whenever stampFace is null, so the extra null branch cannot change reachable rendering behavior.",
+      "canonical": {
+        "mode": "100644",
+        "oid": "e59afaa8c847f88a510a4cdc0eb8026f3aafcd09",
+        "type": "blob"
+      },
+      "diff_file": "unmanaged-diffs/12-pw_paint.dart.diff",
+      "incoming_pdf_zotero_compatibility_risk_identified": false
+    },
+    {
+      "path": "packages/quds_office_engine/test/arabic_pdf_export_test.dart",
+      "scope": "unmanaged_content",
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "e33a670ad327302ab8dac341047726fdeaa13df9"
+      },
+      "host": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "e33a670ad327302ab8dac341047726fdeaa13df9"
+      },
+      "blob_unchanged_from_baseline": true,
+      "mode_unchanged_from_baseline": true,
+      "classification": "Equivalent test syntax adaptation",
+      "disposition": "Uses if (latin != null) latin instead of the nullable collection element ?latin. Both add the same non-null Latin fallback font; the assertions and PDF inputs are unchanged.",
+      "canonical": {
+        "mode": "100644",
+        "oid": "499ec5de46580f44a125b0eea641fe4aae187e4f",
+        "type": "blob"
+      },
+      "diff_file": "unmanaged-diffs/13-arabic_pdf_export_test.dart.diff",
+      "incoming_pdf_zotero_compatibility_risk_identified": false
+    },
+    {
+      "path": "packages/quds_office_engine/test/office_crypto_test.dart",
+      "scope": "unmanaged_content",
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "9be94363faae1b56c06c6d39f28bbf3f2f3e3535"
+      },
+      "host": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "9be94363faae1b56c06c6d39f28bbf3f2f3e3535"
+      },
+      "blob_unchanged_from_baseline": true,
+      "mode_unchanged_from_baseline": true,
+      "classification": "Host integrity regression coverage",
+      "disposition": "Adds six existing host tests for ciphertext/size tampering, missing metadata and an independently constructed HMAC fixture, including distinct salt sizes and metadata rejection. The fixture explicitly does not claim complete Microsoft Office interoperability.",
+      "canonical": {
+        "mode": "100644",
+        "oid": "025b98b9802813b6603f155d71e2898fba8c9866",
+        "type": "blob"
+      },
+      "diff_file": "unmanaged-diffs/14-office_crypto_test.dart.diff",
+      "incoming_pdf_zotero_compatibility_risk_identified": false
+    },
+    {
+      "path": "packages/quds_office_editor/lib/src/editor_reports/report_asset_strings.dart",
+      "scope": "host_only",
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "f3e491abcac6b20c347c35ef6ef3698b273eda36"
+      },
+      "host": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "f3e491abcac6b20c347c35ef6ef3698b273eda36"
+      },
+      "blob_unchanged_from_baseline": true,
+      "mode_unchanged_from_baseline": true,
+      "classification": "Host report localization helper",
+      "disposition": "Recognizes report package/font/shape/data asset messages and translates fixed templates while preserving file names and supplied details.",
+      "canonical": null,
+      "diff_file": null,
+      "incoming_pdf_zotero_compatibility_risk_identified": false
+    },
+    {
+      "path": "packages/quds_office_editor/lib/src/editor_reports/report_data_error_strings.dart",
+      "scope": "host_only",
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "9242b05b52480d8f3d2d713734cd65d037b5f059"
+      },
+      "host": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "9242b05b52480d8f3d2d713734cd65d037b5f059"
+      },
+      "blob_unchanged_from_baseline": true,
+      "mode_unchanged_from_baseline": true,
+      "classification": "Host report localization helper",
+      "disposition": "Translation tables for JSON/data-path/CSV diagnostics.",
+      "canonical": null,
+      "diff_file": null,
+      "incoming_pdf_zotero_compatibility_risk_identified": false
+    },
+    {
+      "path": "packages/quds_office_editor/lib/src/editor_reports/report_font_extra_strings.dart",
+      "scope": "host_only",
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "634865e2a5e97bc8cf2d253a94bf5c514bf0207c"
+      },
+      "host": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "634865e2a5e97bc8cf2d253a94bf5c514bf0207c"
+      },
+      "blob_unchanged_from_baseline": true,
+      "mode_unchanged_from_baseline": true,
+      "classification": "Host report localization helper",
+      "disposition": "Translation tables for font-wrapper, missing-glyf and family-name diagnostics.",
+      "canonical": null,
+      "diff_file": null,
+      "incoming_pdf_zotero_compatibility_risk_identified": false
+    },
+    {
+      "path": "packages/quds_office_editor/lib/src/editor_reports/report_notice_strings.dart",
+      "scope": "host_only",
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "e4efe068ff46dbba741bedb2603e758c0a707bf7"
+      },
+      "host": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "e4efe068ff46dbba741bedb2603e758c0a707bf7"
+      },
+      "blob_unchanged_from_baseline": true,
+      "mode_unchanged_from_baseline": true,
+      "classification": "Host report localization helper",
+      "disposition": "Translates known validation notices and enum terms, retaining supplied names and values.",
+      "canonical": null,
+      "diff_file": null,
+      "incoming_pdf_zotero_compatibility_risk_identified": false
+    },
+    {
+      "path": "packages/quds_office_editor/lib/src/editor_reports/report_special_asset_strings.dart",
+      "scope": "host_only",
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "fba08c56187f17c66538cd8e8a4d673a1cabb7a4"
+      },
+      "host": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "fba08c56187f17c66538cd8e8a4d673a1cabb7a4"
+      },
+      "blob_unchanged_from_baseline": true,
+      "mode_unchanged_from_baseline": true,
+      "classification": "Host report localization helper",
+      "disposition": "Translation tables for existing font, shape and bundled-template diagnostics.",
+      "canonical": null,
+      "diff_file": null,
+      "incoming_pdf_zotero_compatibility_risk_identified": false
+    },
+    {
+      "path": "packages/quds_office_editor/lib/src/editor_reports/report_template_strings.dart",
+      "scope": "host_only",
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "dfde7d0526cf4eec301bc86c7a071c10a7148454"
+      },
+      "host": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "dfde7d0526cf4eec301bc86c7a071c10a7148454"
+      },
+      "blob_unchanged_from_baseline": true,
+      "mode_unchanged_from_baseline": true,
+      "classification": "Host report localization helper",
+      "disposition": "Localizes bundled template categories, families and language labels; custom template titles/family names pass through unchanged.",
+      "canonical": null,
+      "diff_file": null,
+      "incoming_pdf_zotero_compatibility_risk_identified": false
+    }
+  ],
+  "managed_mode_dispositions": [
+    {
+      "path": "packages/quds_office_editor/lib/src/core/input_bridge.dart",
+      "scope": "managed_mode",
+      "baseline": {
+        "mode": "100755",
+        "type": "blob",
+        "oid": "ca0a9e4d20ddf6412e4df3778e8a301299d88286"
+      },
+      "host": {
+        "mode": "100755",
+        "type": "blob",
+        "oid": "ca0a9e4d20ddf6412e4df3778e8a301299d88286"
+      },
+      "blob_unchanged_from_baseline": true,
+      "mode_unchanged_from_baseline": true,
+      "canonical": {
+        "mode": "100644",
+        "oid": "ca0a9e4d20ddf6412e4df3778e8a301299d88286",
+        "type": "blob"
+      },
+      "current_blob_matches_canonical": true
+    },
+    {
+      "path": "packages/quds_office_editor/lib/src/editor_pdf/pdf_font_faces.dart",
+      "scope": "managed_mode",
+      "baseline": {
+        "mode": "100755",
+        "type": "blob",
+        "oid": "af274059768b2ad5c0d39d3280e05d808b265e94"
+      },
+      "host": {
+        "mode": "100755",
+        "type": "blob",
+        "oid": "af274059768b2ad5c0d39d3280e05d808b265e94"
+      },
+      "blob_unchanged_from_baseline": true,
+      "mode_unchanged_from_baseline": true,
+      "canonical": {
+        "mode": "100644",
+        "oid": "af274059768b2ad5c0d39d3280e05d808b265e94",
+        "type": "blob"
+      },
+      "current_blob_matches_canonical": true
+    },
+    {
+      "path": "packages/quds_office_editor/lib/src/editor_pdf/pdf_page_thumb.dart",
+      "scope": "managed_mode",
+      "baseline": {
+        "mode": "100755",
+        "type": "blob",
+        "oid": "d0957104accff68497e955d42559a51cfb770fa9"
+      },
+      "host": {
+        "mode": "100755",
+        "type": "blob",
+        "oid": "d0957104accff68497e955d42559a51cfb770fa9"
+      },
+      "blob_unchanged_from_baseline": true,
+      "mode_unchanged_from_baseline": true,
+      "canonical": {
+        "mode": "100644",
+        "oid": "d0957104accff68497e955d42559a51cfb770fa9",
+        "type": "blob"
+      },
+      "current_blob_matches_canonical": true
+    },
+    {
+      "path": "packages/quds_office_editor/lib/src/editor_pdf/render_pdf_canvas.dart",
+      "scope": "managed_mode",
+      "baseline": {
+        "mode": "100755",
+        "type": "blob",
+        "oid": "47f3cbb0e34900aafb1138ed975eaeefa87b19fb"
+      },
+      "host": {
+        "mode": "100755",
+        "type": "blob",
+        "oid": "47f3cbb0e34900aafb1138ed975eaeefa87b19fb"
+      },
+      "blob_unchanged_from_baseline": true,
+      "mode_unchanged_from_baseline": true,
+      "canonical": {
+        "mode": "100644",
+        "oid": "47f3cbb0e34900aafb1138ed975eaeefa87b19fb",
+        "type": "blob"
+      },
+      "current_blob_matches_canonical": true
+    },
+    {
+      "path": "packages/quds_office_editor/lib/src/embed/office_direction_keys.dart",
+      "scope": "managed_mode",
+      "baseline": {
+        "mode": "100755",
+        "type": "blob",
+        "oid": "b1a1efd3db9c59dbebf6b742ba3c2acf6f92b812"
+      },
+      "host": {
+        "mode": "100755",
+        "type": "blob",
+        "oid": "b1a1efd3db9c59dbebf6b742ba3c2acf6f92b812"
+      },
+      "blob_unchanged_from_baseline": true,
+      "mode_unchanged_from_baseline": true,
+      "canonical": {
+        "mode": "100644",
+        "oid": "b1a1efd3db9c59dbebf6b742ba3c2acf6f92b812",
+        "type": "blob"
+      },
+      "current_blob_matches_canonical": true
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/fonts/font_subsetter.dart",
+      "scope": "managed_mode",
+      "baseline": {
+        "mode": "100755",
+        "type": "blob",
+        "oid": "85981ff378feea22e88ddff475956b75204cf0c3"
+      },
+      "host": {
+        "mode": "100755",
+        "type": "blob",
+        "oid": "7332885a95f34ea6d0d26c7b3160ff002bdd3c6d"
+      },
+      "blob_unchanged_from_baseline": false,
+      "mode_unchanged_from_baseline": true,
+      "canonical": {
+        "mode": "100644",
+        "oid": "7332885a95f34ea6d0d26c7b3160ff002bdd3c6d",
+        "type": "blob"
+      },
+      "current_blob_matches_canonical": true
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/pdf/pdf_document.dart",
+      "scope": "managed_mode",
+      "baseline": {
+        "mode": "100755",
+        "type": "blob",
+        "oid": "586fecc33ee03f3fe154e98efc11565d910554e7"
+      },
+      "host": {
+        "mode": "100755",
+        "type": "blob",
+        "oid": "b2404c1894c485511a276ca1628bee2cec40e010"
+      },
+      "blob_unchanged_from_baseline": false,
+      "mode_unchanged_from_baseline": true,
+      "canonical": {
+        "mode": "100644",
+        "oid": "b2404c1894c485511a276ca1628bee2cec40e010",
+        "type": "blob"
+      },
+      "current_blob_matches_canonical": true
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/pdf/pdf_font.dart",
+      "scope": "managed_mode",
+      "baseline": {
+        "mode": "100755",
+        "type": "blob",
+        "oid": "fee6cfc931e6351b273b1945e8b27fcf6e6ebb0d"
+      },
+      "host": {
+        "mode": "100755",
+        "type": "blob",
+        "oid": "d879fc69f81d1e331a1be9b93062fd227f96e5dc"
+      },
+      "blob_unchanged_from_baseline": false,
+      "mode_unchanged_from_baseline": true,
+      "canonical": {
+        "mode": "100644",
+        "oid": "d879fc69f81d1e331a1be9b93062fd227f96e5dc",
+        "type": "blob"
+      },
+      "current_blob_matches_canonical": true
+    }
+  ],
+  "mode_policy": {
+    "canonical_mode": "100644",
+    "host_mode": "100755",
+    "updater": "tool/sync_office_fidelity.py apply()",
+    "behavior": "The official planner omits a modes map. apply() preserves an existing target file permission mode when no explicit source mode is supplied; new files default to 0644.",
+    "existing_regression": "tool/test_sync_office_fidelity.py::test_apply_without_source_modes_keeps_existing_permission_behavior",
+    "content_update_note": "font_subsetter.dart, pdf_document.dart and pdf_font.dart have deliberately updated blobs matching canonical; only their executable modes are unchanged from baseline."
+  },
+  "compatibility_review": [
+    {
+      "area": "PDF watermark and CID encoding",
+      "finding": "No concrete new incompatibility identified. pwEmitStampLine has the same early return for null stampFace in both trees, making the host-only later null checks redundant. Incoming PdfEmbeddedFace.encoding is optional, with null explicitly retaining CID-equals-glyph identity encoding. pw_core.dart and report_pdf_writer.dart still construct faces without encoding; office_pdf_export.dart opts into the new encoding and emits its CIDs. The watermark continues to emit subset glyph IDs under the retained identity contract.",
+      "paths": [
+        "packages/quds_office_engine/lib/src/pdf/widgets/pw_paint.dart",
+        "packages/quds_office_engine/lib/src/pdf/widgets/pw_core.dart",
+        "packages/quds_office_engine/lib/src/reports/report_pdf_writer.dart",
+        "packages/quds_office_engine/lib/src/pdf/pdf_document.dart",
+        "packages/quds_office_engine/lib/src/pdf/pdf_font.dart",
+        "packages/quds_office_engine/lib/src/pdf/office_pdf_export.dart"
+      ]
+    },
+    {
+      "area": "Report localization",
+      "finding": "No concrete new incompatibility identified. The eight differing report files and six helper files change generated interface text and localization state. No report document schema, font embedding API or Zotero request/field format changes are introduced by these inherited differences. New PDF encoding remains optional for the unchanged report writer.",
+      "paths": [
+        "packages/quds_office_editor/lib/src/editor_reports/quds_report_designer.dart",
+        "packages/quds_office_editor/lib/src/editor_reports/render_report_data_explorer.dart",
+        "packages/quds_office_editor/lib/src/editor_reports/render_report_designer.dart",
+        "packages/quds_office_editor/lib/src/editor_reports/render_report_inspector.dart",
+        "packages/quds_office_editor/lib/src/editor_reports/render_report_preview.dart",
+        "packages/quds_office_editor/lib/src/editor_reports/report_designer_controller.dart",
+        "packages/quds_office_editor/lib/src/editor_reports/report_designer_strings.dart",
+        "packages/quds_office_editor/lib/src/editor_reports/report_element_painter.dart",
+        "packages/quds_office_editor/lib/src/editor_reports/report_asset_strings.dart",
+        "packages/quds_office_editor/lib/src/editor_reports/report_data_error_strings.dart",
+        "packages/quds_office_editor/lib/src/editor_reports/report_font_extra_strings.dart",
+        "packages/quds_office_editor/lib/src/editor_reports/report_notice_strings.dart",
+        "packages/quds_office_editor/lib/src/editor_reports/report_special_asset_strings.dart",
+        "packages/quds_office_editor/lib/src/editor_reports/report_template_strings.dart"
+      ]
+    },
+    {
+      "area": "URL launching and Zotero",
+      "finding": "No concrete new incompatibility identified. The inherited url_launcher adapter is behind the unchanged PDF viewer wrapper. The viewer still permits only http, https and mailto, honors preventLinkNavigation and prefers onOpenUri. Incoming font/CID work does not change those call sites; the Zotero engine/client paths are outside this adapter. No live platform launch or Zotero account acceptance is asserted.",
+      "paths": [
+        "packages/quds_office_editor/lib/src/embed/office_uri.dart",
+        "packages/quds_office_editor/lib/src/embed/office_uri_io.dart",
+        "packages/quds_office_editor/lib/src/embed/pdf_controller.dart"
+      ]
+    },
+    {
+      "area": "Office crypto and test adaptations",
+      "finding": "No concrete new incompatibility with the incoming PDF/Zotero code identified. The integrity change and six host regressions predate this recovery and are retained byte-for-byte. The Arabic fallback syntax is equivalent, and the reports barrel exports the same libraries. These inherited tests were inspected only; they are not additional test executions in the recovery totals.",
+      "paths": [
+        "packages/quds_office_engine/lib/quds_reports.dart",
+        "packages/quds_office_engine/lib/src/opc/crypto/office_crypto.dart",
+        "packages/quds_office_engine/test/arabic_pdf_export_test.dart",
+        "packages/quds_office_engine/test/office_crypto_test.dart"
+      ]
+    }
+  ],
+  "concrete_new_pdf_or_zotero_risks_identified": [],
+  "limits": "Read-only source/interface review and Git object proof, not runtime or platform acceptance. The original strict blob-plus-mode diagnostic remains false. No new tests or source/runtime changes were made for this supplement."
+}

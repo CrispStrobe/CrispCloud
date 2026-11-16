@@ -1,0 +1,89 @@
+{
+  "direct_importer": "packages/quds_office_engine/test/pdf_widgets_test.dart",
+  "harness_manifests_locks_and_graphs_after": {
+    ".dart_tool/package_config.json": "221034149a2fe82f998ba27c75e611b6268ee0455814325609e55f867445c8ec",
+    ".dart_tool/package_graph.json": "608ca20056036a3c76a95a222192fbc4ee7d0b74c17bad96d7ebd24368095b45",
+    "pubspec.lock": "3b55c7eb8535653c0733db7abc99934bf3f23fdf3835eb5fb673c1044a848379",
+    "pubspec.yaml": "09ab3b5abb15bacd2d398bb543640b531f92ffdd9796763cfbca14df496462c2"
+  },
+  "harness_manifests_locks_and_graphs_before": {
+    ".dart_tool/package_config.json": "221034149a2fe82f998ba27c75e611b6268ee0455814325609e55f867445c8ec",
+    ".dart_tool/package_graph.json": "608ca20056036a3c76a95a222192fbc4ee7d0b74c17bad96d7ebd24368095b45",
+    "pubspec.lock": "3b55c7eb8535653c0733db7abc99934bf3f23fdf3835eb5fb673c1044a848379",
+    "pubspec.yaml": "09ab3b5abb15bacd2d398bb543640b531f92ffdd9796763cfbca14df496462c2"
+  },
+  "harness_manifests_locks_and_graphs_unchanged": true,
+  "helper_sha256": "c4f8ec4d681c3fa984f027b238e92cb98bf4e1b064f603a9b272036a71a03ad9",
+  "nested_pubspec_absent": true,
+  "only_required_examples_exposed": true,
+  "optional_system_font_presence_and_sha256": {
+    "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf": {
+      "exists": true,
+      "sha256": "a4c5bc453ca281d90ea079e596da7ae0dfeb5777497c29ec254e76d97ff6f890"
+    },
+    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf": {
+      "exists": true,
+      "sha256": "57f73e11f51999432bf7ab22ce55b6f945d5eca1bf824404cfa9ec2e3718c84e"
+    },
+    "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf": {
+      "exists": true,
+      "sha256": "1b5f2da6f4cadce4c05b9ecebe3a6fcd374eb95ae443605e799f4c3287978939"
+    },
+    "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf": {
+      "exists": true,
+      "sha256": "bade59d822652f76e6941aa87b40a87c13d1cc70db98ededb5011127efafd1d3"
+    }
+  },
+  "production_or_sdk_changes": false,
+  "pub_get_or_tests_run": false,
+  "recorded_utc": "2026-11-16T20:52:08.055665+00:00",
+  "relative_source_closure_is_exactly_the_three_examples": true,
+  "required_source_files": [
+    {
+      "bytes": 9316,
+      "canonical_path": "packages/quds_office_engine/example/pdf_widgets_invoice.dart",
+      "harness_path": "zotero-toolchain/retry-harness/quds_office_engine/example/pdf_widgets_invoice.dart",
+      "import_export_part_uris": [
+        "dart:io",
+        "dart:typed_data",
+        "package:quds_office_engine/pdf_widgets.dart",
+        "package:quds_office_engine/quds_office_engine.dart"
+      ],
+      "relative_import_export_part_closure": [],
+      "sha256": "a285b8a52f27b71e4fdf07dcc7898acdafdd1fac01e03a32f057529b6e3faba9",
+      "source_git_blob": "f095ce73a123bb3c0ded75ad9be96604245e9740",
+      "source_git_mode": "100644"
+    },
+    {
+      "bytes": 7001,
+      "canonical_path": "packages/quds_office_engine/example/pdf_widgets_proposal.dart",
+      "harness_path": "zotero-toolchain/retry-harness/quds_office_engine/example/pdf_widgets_proposal.dart",
+      "import_export_part_uris": [
+        "dart:io",
+        "dart:typed_data",
+        "package:quds_office_engine/pdf_widgets.dart",
+        "package:quds_office_engine/quds_office_engine.dart"
+      ],
+      "relative_import_export_part_closure": [],
+      "sha256": "c994237003b2d6f8f93d6e5f2bb10e9172bdc218bdb287d204f0c15079cf5479",
+      "source_git_blob": "4910df2d25fc40da25475295c2a3b243fd52ff86",
+      "source_git_mode": "100644"
+    },
+    {
+      "bytes": 10704,
+      "canonical_path": "packages/quds_office_engine/example/pdf_widgets_report.dart",
+      "harness_path": "zotero-toolchain/retry-harness/quds_office_engine/example/pdf_widgets_report.dart",
+      "import_export_part_uris": [
+        "dart:io",
+        "dart:typed_data",
+        "package:quds_office_engine/pdf_widgets.dart",
+        "package:quds_office_engine/quds_office_engine.dart"
+      ],
+      "relative_import_export_part_closure": [],
+      "sha256": "4e82baab98c29737ee06de806281fa2737648a284fe094ede70e6a6bba0c578d",
+      "source_git_blob": "8e3910c7ceb1a6a79c67e09970c6414dc033da2b",
+      "source_git_mode": "100644"
+    }
+  ],
+  "source_commit": "b87f9d6c3a2532c9695024adf48ca9fbd3c0927a"
+}

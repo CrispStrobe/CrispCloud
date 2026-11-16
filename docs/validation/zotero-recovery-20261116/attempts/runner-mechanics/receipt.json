@@ -1,0 +1,96 @@
+{
+  "commands": [
+    {
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-c",
+        "print(\"control success\")"
+      ],
+      "cwd": "/workspace/scratch/79aea0ff70bc/recovery-audit/quds/retry-runner-mechanics",
+      "elapsed_seconds": 0.13,
+      "exit_code": 0,
+      "finished_utc": "2026-11-16T20:38:36.049861+00:00",
+      "last_heartbeat_utc": "2026-11-16T20:38:36.004418+00:00",
+      "log": "synthetic-command-success-execution.log",
+      "log_sha256": "31784d61325f6801781b8d45c50b47e4ab370c6798eac1984eb05ca1491d560e",
+      "name": "synthetic-command-success",
+      "observed_log_bytes": 0,
+      "pid": 6,
+      "process_returncode": 0,
+      "started_utc": "2026-11-16T20:38:35.919713+00:00",
+      "status": "passed",
+      "timeout_seconds": 0.2
+    },
+    {
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-c",
+        "print(\"00:00 +2: All tests passed!\")"
+      ],
+      "cwd": "/workspace/scratch/79aea0ff70bc/recovery-audit/quds/retry-runner-mechanics",
+      "elapsed_seconds": 0.128,
+      "exit_code": 0,
+      "finished_utc": "2026-11-16T20:38:36.182547+00:00",
+      "last_heartbeat_utc": "2026-11-16T20:38:36.135784+00:00",
+      "log": "synthetic-test-marker-execution.log",
+      "log_sha256": "a6c560e25dbe5588412558834297f86f1fea1e2a9805155dcb53fcd0081c6184",
+      "name": "synthetic-test-marker",
+      "observed_log_bytes": 0,
+      "observed_success_marker_count": 2,
+      "passed_tests": 2,
+      "pid": 7,
+      "process_returncode": 0,
+      "skipped_tests": 0,
+      "started_utc": "2026-11-16T20:38:36.054071+00:00",
+      "status": "passed",
+      "timeout_seconds": 0.2
+    },
+    {
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-c",
+        "print(\"no marker\")"
+      ],
+      "cwd": "/workspace/scratch/79aea0ff70bc/recovery-audit/quds/retry-runner-mechanics",
+      "elapsed_seconds": 0.084,
+      "exit_code": 0,
+      "finished_utc": "2026-11-16T20:38:36.267623+00:00",
+      "last_heartbeat_utc": "2026-11-16T20:38:36.223376+00:00",
+      "log": "synthetic-missing-marker-execution.log",
+      "log_sha256": "cdbcc73a3b9853af001eccd43dc60c986d8ba5a66b6a4042619ad4ba7091ae14",
+      "name": "synthetic-missing-marker",
+      "observed_log_bytes": 0,
+      "passed_tests": null,
+      "pid": 8,
+      "process_returncode": 0,
+      "skipped_tests": null,
+      "started_utc": "2026-11-16T20:38:36.183215+00:00",
+      "status": "failed",
+      "timeout_seconds": 0.2
+    },
+    {
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-c",
+        "import time; time.sleep(5)"
+      ],
+      "cwd": "/workspace/scratch/79aea0ff70bc/recovery-audit/quds/retry-runner-mechanics",
+      "elapsed_seconds": 0.218,
+      "exit_code": 124,
+      "finished_utc": "2026-11-16T20:38:36.488746+00:00",
+      "last_heartbeat_utc": "2026-11-16T20:38:36.448749+00:00",
+      "log": "synthetic-timeout-execution.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "name": "synthetic-timeout",
+      "observed_log_bytes": 0,
+      "pid": 9,
+      "process_returncode": -15,
+      "started_utc": "2026-11-16T20:38:36.270788+00:00",
+      "status": "timed_out",
+      "timed_out": true,
+      "timeout_seconds": 0.2
+    }
+  ],
+  "included_in_canonical_counts": false,
+  "synthetic_runner_control_tests_only": true
+}

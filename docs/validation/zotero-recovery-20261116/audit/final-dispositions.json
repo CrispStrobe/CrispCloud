@@ -1,0 +1,94 @@
+{
+  "schema": "quds-zotero-recovery-incoming-v1",
+  "observed_utc": "2026-11-16T19:39:07Z",
+  "base_main": "be9eeec9ea3455018de26fff5874c558dbc66798",
+  "ref_count": 166,
+  "unique_heads": 113,
+  "fork": {
+    "repository": "CrispStrobe/quds_office_suite",
+    "branch_heads": 79,
+    "pr_heads": 79
+  },
+  "upstream": {
+    "repository": "MohammedAsaadAsaad/quds_office_suite",
+    "branch_heads": 4,
+    "pr_heads": 4,
+    "main": "15c5d29b63fb17a93c7fb3426a8fd4d95a32f1ba"
+  },
+  "exclusions": [
+    "PR /merge refs",
+    "outgoing codex/zotero-recovery-20261116 branch (created after inventory)"
+  ],
+  "main_ancestor_refs": 149,
+  "incoming_distinct_change": {
+    "ref": "codex/text-rendering-20261116 / PR #72",
+    "head": "6bf486ee0bbcd2025c3a42cae7d7003b8c9324a4",
+    "refs": 2,
+    "ahead_of_main": 4,
+    "common_base": "0d19b16e10c6bc8492f47880321df2d9f2561223",
+    "clean_merge_tree": "754fd323403c79e822f33421d132cdc9c022b0e4",
+    "merge_tree_exit_code": 0,
+    "recommendation": "Integrate frozen head, then qualify combined source; do not move cutoff.",
+    "inherited_qualification": {
+      "source": "docs/validation/text-rendering-continuation-20261116/engine-attempt1/receipt.json",
+      "head_before": "097f6153906e246d33a72382bfc5454fd8e40b9d",
+      "head_after": "59b69ac034f2217c92dce47480e9a7fd383d51c2",
+      "tests": 169,
+      "passed": true,
+      "inputs_unchanged": true,
+      "scope": "Published engine tests/analyzer/format and independent Poppler fixture; not a new combined-source run."
+    },
+    "added_notice": "packages/quds_office_engine/third_party/fonttools/LICENSE",
+    "source_review": "Five engine production files; no Zotero production/dependency-manifest edits. Preserve optional identity encoding API and new CID mapping path.",
+    "editorial_gap": "The frozen docs/text-rendering-strategy.md references docs/validation/text-rendering-continuation-20261116/README.md, absent from this frozen commit. CHECKPOINT and raw receipts remain available.",
+    "integration_status": "Actual ancestor through initial rendering merge c6b9856"
+  },
+  "equivalent_refs": {
+    "whole_tree_equal": 12,
+    "source_test_blobs_equal_vendor": 2,
+    "superseded_vendor_same_production": 1
+  },
+  "vendor_928_disposition": {
+    "incoming": "928f85483ec1cb85e468ca9381585875137ba8d5",
+    "successor": "817982d580e990a5ca21d74c35135db4817e54b5",
+    "integrated_counterpart": "e81650bd7f17dc8e38f892e05dfc9025ad5705b1",
+    "production_parent_blob": "10c21fe",
+    "production_result_blob": "e3a1d1e78ad7809fe795cbb0bb00a76d3726c47e",
+    "old_test_blob": "f8384a68d354ca50369ae93c455a193ee9d26dba",
+    "successor_test_blob": "c77e81725fa0d17bb3f5dd756d46e9f8894749d5",
+    "only_test_difference": {
+      "line": 11,
+      "old": "    final a1 = sheet.cellA1('A1')",
+      "current": "    sheet.cellA1('A1')"
+    },
+    "disposition": "Identical production patch; corrected successor removes one unused test local. Remaining test data/assertions identical. Retain current version."
+  },
+  "after_recommended_merge_expected_counts": {
+    "ancestor": 151,
+    "whole_tree_equal_squash_alias": 12,
+    "changed_source_and_test_equal_vendor_alias": 2,
+    "superseded_vendor_same_production_and_test_assertions": 1
+  },
+  "no_actions_queried_awaited_rerun": true,
+  "scope": "Remote branch/PR advertised heads at the recorded cutoff, not a claim that concurrent work stopped. Counts remain expected after merge until checked against an actual resulting commit.",
+  "status": "Verified actual final implementation after bounded late-main integration",
+  "integrated_commit": "b87f9d6c3a2532c9695024adf48ca9fbd3c0927a",
+  "integrated_tree": "acb1d1060879dc4a8168df8abf3105dc828af360",
+  "integrated_counts": {
+    "ancestor": 151,
+    "whole_tree_equal_squash_alias": 12,
+    "changed_source_and_test_equal_vendor_alias": 2,
+    "superseded_vendor_same_production_and_test_assertions": 1
+  },
+  "historical_projected_receipt": "projected-ancestry.json",
+  "actual_ancestry_receipt": "final-ancestry.json",
+  "actual_vs_projected_only_documentation": [
+    "docs/validation/zotero-recovery-20261116/README.md",
+    "docs/validation/zotero-recovery-20261116/incoming-refs.json"
+  ],
+  "bounded_late_main_receipt": "late-main-review.json",
+  "bounded_late_main": "63194d8e482892f284eaccb95ce48a8a8132376d",
+  "bounded_late_main_is_ancestor": true,
+  "previous_integration": "c6b9856ccd5264602d709b747decbd9631263574",
+  "actual_vs_projected_only_documentation_applies_to": "Initial c6b9856 integration; finalb87 adds separately recorded late-main sheet changes"
+}

@@ -1,0 +1,42 @@
+{
+  "bootstrap_contains_custom_zip_path_guard": false,
+  "broad_support_linking_limited_to": [
+    "quds_reports",
+    "legacy_doc_parser"
+  ],
+  "engine_source_links_in_pinned_receipt": {
+    "lib": "/workspace/scratch/d13d764c3646/quds_office_suite/packages/quds_office_engine/lib",
+    "test": "/workspace/scratch/d13d764c3646/quds_office_suite/packages/quds_office_engine/test",
+    "tool": "/workspace/scratch/d13d764c3646/quds_office_suite/packages/quds_office_engine/tool"
+  },
+  "new_preflight_execution_during_review": false,
+  "official_sdk_unzip_script_sha256": "730d3f3145d0c652147043fa914ac54679ab2b4ac94f8f983e4d44f1e17cb6f7",
+  "official_sdk_unzip_source": "https://github.com/flutter/flutter/blob/737ba8f885dc774b53b442759999a312c9461e4e/bin/internal/update_dart_sdk.sh",
+  "original_committed_scripts": {
+    "bootstrap-local-tests.sh": {
+      "git_blob": "d38076a6ff797ab888383f0a2e0933763e39561c",
+      "matches_pinned_original": true,
+      "sha256": "4ee96966d4998694983225a3e86fe12bb11d78c674327593e8cbdc1ab983b3d7"
+    },
+    "reconstruct-harnesses.py": {
+      "git_blob": "37f9c91a5395b08b7262186a05b55fdd6ae667e0",
+      "matches_pinned_original": true,
+      "sha256": "252fff2497658f0acb1cfde3a0c897a26a8fdae87320c44a6fd5bb0ec2bdee47"
+    },
+    "record-setup.py": {
+      "git_blob": "8e1ea0fd759276e71f37d4a988dc8b1943400b80",
+      "matches_pinned_original": true,
+      "sha256": "e8a86adb40539820c59e4c3cb867ec433cd19432bd77ca077336cfb839206ad5"
+    }
+  },
+  "pinned_reconstructor_exposes_full_engine_example_project": false,
+  "post_isolation_three_example_link_step_present": true,
+  "preflight_is_read_only_and_does_not_seed_or_patch_metadata": true,
+  "preflight_requires_no_full_original_engine_example_and_four_real_host_assets": true,
+  "preflight_requires_verified_runtime_Flutter_metadata_and_unchanged_recorded_locks": true,
+  "python_syntax_checked": true,
+  "recipe_now_explicitly_uses_Flutter_managed_engine_pub_with_enforced_lockfile": true,
+  "recorded_utc": "2026-11-16T21:03:39.997588+00:00",
+  "review_kind": "Static source/recipe review only; no pub, downloads, tests, or active-input changes.",
+  "shell_syntax_checked": true
+}

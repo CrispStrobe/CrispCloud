@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "repository": "CrispStrobe/CrispCloud",
+  "observed_utc": "2026-11-16 20:04:10 UTC",
+  "scope": "One bounded reread of main after the initial inventory; no branch/PR ref refresh and no CI queries.",
+  "initial_inventory": "crisp-incoming-audit.json",
+  "previous_main": "bf0255a168576b0d9993d8b668f2a7d0d943fd4f",
+  "new_main": "553f3be64da9ad3c35730f1b6a67d79f1ac54b72",
+  "ahead_by": 5,
+  "behind_by": 0,
+  "manifest_source_commit": "c6a7eff46bcfcb806ee7c43252636b06c088963c",
+  "manifest_source_branch": "vendor/ods-header-footer",
+  "commits": [
+    {
+      "sha": "553f3be64da9ad3c35730f1b6a67d79f1ac54b72",
+      "message": "docs: record ODS header and footer round-trips (#200)\n\nCo-authored-by: CrispStrobe <crispstrobe@users.noreply.github.com>",
+      "parents": [
+        "9d9c8e073d28653b181e0db9a332fffd64b64e41"
+      ]
+    },
+    {
+      "sha": "9d9c8e073d28653b181e0db9a332fffd64b64e41",
+      "message": "Vendor ODS header and footer round-trips (#199)\n\nCo-authored-by: CrispStrobe <crispstrobe@users.noreply.github.com>",
+      "parents": [
+        "56aeb053d20a515299d1dba49d841e8429eb7576"
+      ]
+    },
+    {
+      "sha": "56aeb053d20a515299d1dba49d841e8429eb7576",
+      "message": "docs: restore ODT registry and ODS page-setup status (#198)\n\nCo-authored-by: CrispStrobe <crispstrobe@users.noreply.github.com>",
+      "parents": [
+        "57d027c124fe7416accd225f9b6d1d7814a25614"
+      ]
+    },
+    {
+      "sha": "57d027c124fe7416accd225f9b6d1d7814a25614",
+      "message": "docs: record worksheet page setup (#197)\n\nCo-authored-by: CrispStrobe <crispstrobe@users.noreply.github.com>",
+      "parents": [
+        "d76959f3ae76399fdc1fc8f5dc6dbc39bf2b3ecb"
+      ]
+    },
+    {
+      "sha": "d76959f3ae76399fdc1fc8f5dc6dbc39bf2b3ecb",
+      "message": "Vendor worksheet page setup round-trips (#196)\n\nCo-authored-by: CrispStrobe <crispstrobe@users.noreply.github.com>",
+      "parents": [
+        "bf0255a168576b0d9993d8b668f2a7d0d943fd4f"
+      ]
+    }
+  ],
+  "files": [
+    {
+      "path": "README.md",
+      "status": "modified",
+      "changes": 2
+    },
+    {
+      "path": "docs/file-format-viewers.md",
+      "status": "modified",
+      "changes": 2
+    },
+    {
+      "path": "docs/office-remaining-gaps-20261115.md",
+      "status": "modified",
+      "changes": 35
+    },
+    {
+      "path": "packages/QUDS_FORKS.md",
+      "status": "modified",
+      "changes": 6
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+      "status": "modified",
+      "changes": 194
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_writer.dart",
+      "status": "modified",
+      "changes": 195
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/sheet/model/sml_workbook.dart",
+      "status": "modified",
+      "changes": 98
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+      "status": "modified",
+      "changes": 151
+    },
+    {
+      "path": "packages/quds_office_engine/test/ods_sheet_writer_test.dart",
+      "status": "modified",
+      "changes": 59
+    },
+    {
+      "path": "packages/quds_office_engine/test/sheet_save_cache_and_freeze_test.dart",
+      "status": "modified",
+      "changes": 74
+    },
+    {
+      "path": "tool/office_fidelity_manifest.json",
+      "status": "modified",
+      "changes": 16
+    }
+  ],
+  "reconciliation": "Preserve the incoming worksheet page setup and ODS header/footer changes. Keep managed content and manifest consistent during the merge, then guardedly sync from the final reconciled canonical source."
+}

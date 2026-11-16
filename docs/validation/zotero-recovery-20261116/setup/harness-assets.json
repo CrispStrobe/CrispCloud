@@ -1,0 +1,35 @@
+{
+  "recorded_utc": "2026-11-16T19:57:25.393074+00:00",
+  "harness": "/workspace/scratch/79aea0ff70bc/zotero-toolchain/crisp-host-harness",
+  "assets": [
+    "packages/quds_office_engine/third_party/hyphenation/LICENSE",
+    "packages/quds_office_engine/third_party/proofing/WORTLISTE_LICENSE",
+    "packages/quds_office_engine/third_party/proofing/QUDS_WORDS_LICENSE",
+    "packages/quds_office_engine/third_party/fonttools/LICENSE"
+  ],
+  "new_symlinks": [
+    {
+      "path": "harness/quds_office_engine/third_party",
+      "target": "/workspace/scratch/79aea0ff70bc/quds/packages/quds_office_engine/third_party"
+    },
+    {
+      "path": "crisp-host-harness/packages/quds_office_engine/third_party",
+      "target": "/workspace/scratch/79aea0ff70bc/crispcloud/packages/quds_office_engine/third_party"
+    }
+  ],
+  "pubspec_sha256_before": "bb20d4c7f63d8d6fcb2c079f79529c7afb35f5ab1a4506b0b5ef97684fe51ce0",
+  "pubspec_sha256_after": "bc7929f600d75fb1b6dd3e7c5de0b6d47e14532859cb2f722256a251a173c168",
+  "dependency_lock_sha256_before": "5daf3f63e43107482405adcb566a3fd2f8bca18a3d49cbb4ad528a5a6925cf23",
+  "pub_get_enforce_lockfile_will_follow": true,
+  "scope": "Add real bundled notice assets including FontTools to the preserved host harness; source data symlinks only, no dependency version changes.",
+  "setup_correction": "Removed a temporary canonical engine example symlink because Dart pub automatically tries to resolve the workspace-only example. Only fixture/data links needed by the qualified tests are retained.",
+  "dependency_lock_sha256_after_setup": "5daf3f63e43107482405adcb566a3fd2f8bca18a3d49cbb4ad528a5a6925cf23",
+  "pub_get_enforce_lockfile_exit_code": 0,
+  "assets_sha256": {
+    "packages/quds_office_engine/third_party/hyphenation/LICENSE": "0d4a2c679490537f8c07955b76c055919e603125d99a00850d6765c00ec73ebd",
+    "packages/quds_office_engine/third_party/proofing/WORTLISTE_LICENSE": "3dc8ca573654facf18b8046dad2fae36b8d0acb254ccea888c283c60c7b62c99",
+    "packages/quds_office_engine/third_party/proofing/QUDS_WORDS_LICENSE": "0ca439fa407bd063bb2f16a5ce43a9200ebaafcccb3fe6f8f8ed11d6498ea0b9",
+    "packages/quds_office_engine/third_party/fonttools/LICENSE": "0b9d2e1458441c63e9f139b2a1d43e6ec22a06ea119911d47447d8ce9bcffc90"
+  },
+  "all_assets_resolve_to_actual_host_sources": true
+}

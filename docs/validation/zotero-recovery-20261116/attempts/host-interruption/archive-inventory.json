@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-11-16T20:38:09.882285+00:00",
+  "status": "interrupted_not_accepted",
+  "source_directory": "recovery-validation/host-attempt-1",
+  "original_directory_untouched": true,
+  "finished_receipt_present": false,
+  "partial_host_tests_excluded_from_final_totals": 41,
+  "watched_source_files": 3732,
+  "watched_dependency_files": 5837,
+  "source_unchanged_at_interruption_observation": true,
+  "dependencies_unchanged_at_interruption_observation": true,
+  "files": [
+    {
+      "original_name": "analysis-package-config.json",
+      "original_bytes": 21983,
+      "original_sha256": "ec9b047b311c381af47fb697d21b39756616c081027f57c409054c5dc04d4399",
+      "archive_name": "analysis-package-config.json",
+      "archive_bytes": 21983,
+      "archive_sha256": "ec9b047b311c381af47fb697d21b39756616c081027f57c409054c5dc04d4399",
+      "lossless_gzip": false
+    },
+    {
+      "original_name": "dependencies-before.json",
+      "original_bytes": 767860,
+      "original_sha256": "0562655dddd11df7ac43d5dda96b9719e100105dc84c5dcc713b2428f2ad16af",
+      "archive_name": "dependencies-before.json.gz",
+      "archive_bytes": 281492,
+      "archive_sha256": "1bb2584b055946c120779b4c75b61d34b2db7ae3e479624f35df8dd48e0c0b47",
+      "lossless_gzip": true
+    },
+    {
+      "original_name": "host-analysis.log",
+      "original_bytes": 256,
+      "original_sha256": "abd1d95793690155a6844e6bc123fd1d630f4a1a15808eb098670efb800cfcfe",
+      "archive_name": "host-analysis.log",
+      "archive_bytes": 256,
+      "archive_sha256": "abd1d95793690155a6844e6bc123fd1d630f4a1a15808eb098670efb800cfcfe",
+      "lossless_gzip": false
+    },
+    {
+      "original_name": "host-tests.log",
+      "original_bytes": 8290,
+      "original_sha256": "085f38524b51d40582eb063681c5fa5fbb83238a327a85e8869d2aa86253805f",
+      "archive_name": "host-tests.log",
+      "archive_bytes": 8290,
+      "archive_sha256": "085f38524b51d40582eb063681c5fa5fbb83238a327a85e8869d2aa86253805f",
+      "lossless_gzip": false
+    },
+    {
+      "original_name": "interruption-observation.json",
+      "original_bytes": 1507,
+      "original_sha256": "6f56c5d5e1abb3487253c271de6a20636eb66732cc20512d783691a19702b3d4",
+      "archive_name": "interruption-observation.json",
+      "archive_bytes": 1507,
+      "archive_sha256": "6f56c5d5e1abb3487253c271de6a20636eb66732cc20512d783691a19702b3d4",
+      "lossless_gzip": false
+    },
+    {
+      "original_name": "source-before.json",
+      "original_bytes": 524786,
+      "original_sha256": "40e0fa66e074c1a26a27c1e05292be75618a191532694622f749dad66220c757",
+      "archive_name": "source-before.json.gz",
+      "archive_bytes": 172267,
+      "archive_sha256": "90d12eaa76de5b8f8d1b3bcfa5069d1d6e80d07102dd0045cdcb8ee135625d99",
+      "lossless_gzip": true
+    },
+    {
+      "original_name": "vendor-source.log",
+      "original_bytes": 203,
+      "original_sha256": "ade78a7118de2e7bbabd51f3d9a28df25bdf148df5d402c36eadbb860e474be5",
+      "archive_name": "vendor-source.log",
+      "archive_bytes": 203,
+      "archive_sha256": "ade78a7118de2e7bbabd51f3d9a28df25bdf148df5d402c36eadbb860e474be5",
+      "lossless_gzip": false
+    },
+    {
+      "original_name": "vendor-tracked.log",
+      "original_bytes": 203,
+      "original_sha256": "ade78a7118de2e7bbabd51f3d9a28df25bdf148df5d402c36eadbb860e474be5",
+      "archive_name": "vendor-tracked.log",
+      "archive_bytes": 203,
+      "archive_sha256": "ade78a7118de2e7bbabd51f3d9a28df25bdf148df5d402c36eadbb860e474be5",
+      "lossless_gzip": false
+    },
+    {
+      "original_path": "zotero-toolchain/expanded-host-qualification/run-expanded-host.py",
+      "archive_name": "run-expanded-host-original.py",
+      "original_bytes": 15862,
+      "original_sha256": "8f718f76d030291a11b236b9618e0694662d4d1c78a7740c3749942375e14ff4",
+      "archive_bytes": 15862,
+      "archive_sha256": "8f718f76d030291a11b236b9618e0694662d4d1c78a7740c3749942375e14ff4",
+      "lossless_gzip": false
+    },
+    {
+      "original_path": "zotero-toolchain/expanded-host-qualification/preparation.json",
+      "archive_name": "runner-preparation.json",
+      "original_bytes": 1722,
+      "original_sha256": "ff52dba9e33640ad10073b90aef37982d6a459f64ab48857858f232eee162802",
+      "archive_bytes": 1722,
+      "archive_sha256": "ff52dba9e33640ad10073b90aef37982d6a459f64ab48857858f232eee162802",
+      "lossless_gzip": false
+    }
+  ]
+}

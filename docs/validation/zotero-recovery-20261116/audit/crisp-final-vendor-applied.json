@@ -1,0 +1,21 @@
+{
+  "from": "c6a7eff46bcfcb806ee7c43252636b06c088963c",
+  "to": "b87f9d6c3a2532c9695024adf48ca9fbd3c0927a",
+  "write": [
+    "packages/quds_office_editor/test/font_subset_render_test.dart",
+    "packages/quds_office_engine/CHANGELOG.md",
+    "packages/quds_office_engine/lib/src/fonts/font_subsetter.dart",
+    "packages/quds_office_engine/lib/src/pdf/office_pdf_export.dart",
+    "packages/quds_office_engine/lib/src/pdf/pdf_canvas.dart",
+    "packages/quds_office_engine/lib/src/pdf/pdf_document.dart",
+    "packages/quds_office_engine/lib/src/pdf/pdf_font.dart",
+    "packages/quds_office_engine/test/font_subset_structure_test.dart",
+    "packages/quds_office_engine/test/pdf_cid_encoding_test.dart",
+    "packages/quds_office_engine/test/pdf_unicode_alias_export_test.dart",
+    "packages/quds_office_engine/test/support/pdf_alias_fixture.dart",
+    "packages/quds_office_engine/third_party/fonttools/LICENSE"
+  ],
+  "delete": [],
+  "pinned_files": 2509,
+  "applied": true
+}

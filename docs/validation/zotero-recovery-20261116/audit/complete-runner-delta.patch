@@ -1,0 +1,117 @@
+--- failed-retry/run-qualification.py
++++ complete-retry/run-qualification.py
+@@ -23,6 +23,8 @@
+ EXPECTED_TREE = None
+ COMMAND_TIMEOUT_SECONDS = 600
+ HEARTBEAT_SECONDS = 15
++EXAMPLE_INPUTS = ('packages/quds_office_engine/example/pdf_widgets_invoice.dart', 'packages/quds_office_engine/example/pdf_widgets_proposal.dart', 'packages/quds_office_engine/example/pdf_widgets_report.dart')
++FIXTURE_INPUT_PATHS = ('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf', '/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf')
+ PACKAGE_PATHS = {
+     'legacy_doc_parser': 'packages/legacy_doc_parser',
+     'quds_office_engine': 'packages/quds_office_engine',
+@@ -74,7 +76,8 @@
+     if not parts or parts[0] == 'docs':
+         return False
+     return (
+-        Path(path).name in {'pubspec.yaml', 'pubspec.lock', 'analysis_options.yaml'}
++        path in EXAMPLE_INPUTS
++        or Path(path).name in {'pubspec.yaml', 'pubspec.lock', 'analysis_options.yaml'}
+         or (len(parts) >= 4 and parts[0] == 'packages' and parts[2] in {'lib', 'test', 'fonts', 'assets', 'third_party'})
+         or path.startswith('packages/quds_office_editor/example/lib/')
+         or path.startswith('packages/quds_office_editor/example/test/')
+@@ -158,6 +161,19 @@
+     }
+ 
+ 
++def fixture_inputs():
++    inputs = {}
++    for name in FIXTURE_INPUT_PATHS:
++        path = Path(name)
++        present = path.is_file()
++        inputs[name] = {
++            'present': present,
++            'bytes': path.stat().st_size if present else None,
++            'sha256': sha(path) if present else None,
++        }
++    return inputs
++
++
+ def harness_inputs():
+     inputs = {}
+     for name in ['quds_office_engine', 'quds_office_editor', 'quds_reports', 'legacy_doc_parser']:
+@@ -212,6 +228,8 @@
+     assert not mismatches, mismatches
+     dependencies_before = dependencies_fingerprint(graphs)
+     inputs_before = harness_inputs()
++    fixtures_before = fixture_inputs()
++    save('fixtures-before.json', fixtures_before)
+     save('source-before.json', before)
+     save('dependencies-before.json', dependencies_before)
+ 
+@@ -256,7 +274,7 @@
+     receipt = {
+         'recorded_utc': datetime.now(timezone.utc).isoformat(),
+         'reproduction_script_sha256': sha(Path(__file__)),
+-        'runner_changes': ['Resolve canonical checkout symlink for portable path identity', 'Allow explicit disjoint additional integration tests without changing existing cohorts', 'Bind runner bytes and require selected tests to exist', 'Fingerprint bundled fonts, assets, and third-party inputs used by incoming rendering tests', 'Analyze support fixtures without enrolling them as standalone test suites', 'Allow isolated source and harness roots with the original shared runtime', 'Journal command start, heartbeat, and completion atomically', 'Stop command process groups after 600 seconds and fail closed', 'Require successful command status in addition to zero exit codes'],
++        'runner_changes': ['Resolve canonical checkout symlink for portable path identity', 'Allow explicit disjoint additional integration tests without changing existing cohorts', 'Bind runner bytes and require selected tests to exist', 'Fingerprint bundled fonts, assets, and third-party inputs used by incoming rendering tests', 'Analyze support fixtures without enrolling them as standalone test suites', 'Allow isolated source and harness roots with the original shared runtime', 'Journal command start, heartbeat, and completion atomically', 'Stop command process groups after 600 seconds and fail closed', 'Require successful command status in addition to zero exit codes', 'Fingerprint the exact three imported PDF example files and verified relative closure', 'Record four actual optional system-font fixture paths and require unchanged presence and bytes'],
+         'repository': 'CrispStrobe/quds_office_suite',
+         'status': 'running',
+         'source_checkout': str(SOURCE),
+@@ -267,6 +285,14 @@
+         'qualified_published_source_commit': PUBLISHED_SOURCE,
+         'qualified_source_tree': EXPECTED_TREE,
+         'working_head_at_start': git_text('rev-parse', 'HEAD'),
++        'fixture_input_count': len(fixtures_before),
++        'fixture_scope': 'Presence and bytes of four optional system-font paths actually probed by the PDF widget tests and imported example builders; observed separately from canonical and resolved dependency inputs.',
++        'previous_failed_retry_excluded': {
++            'directory': '../attempt-3-missing-example-fixtures',
++            'completed_prior_cohort_tests': 920,
++            'failed_cohort_partial_progress_is_not_a_completed_result': True,
++            'all_counts_excluded_from_this_full_run': True,
++        },
+         'fresh_full_retry': {
+             'original_interrupted_attempt': '../expanded-canonical-qualification/attempt-2-executor-interruption',
+             'previous_completed_engine_tests_excluded': 390,
+@@ -284,7 +310,7 @@
+         'cohorts_are_disjoint': True,
+         'analysis_and_format_targets': TARGETS,
+         'harness_input_sha256_before': inputs_before,
+-        'source_scope': 'Tracked canonical package lib/test/fonts/assets/third_party trees, Studio lib/test and dependency/analysis manifests outside docs. Untracked compiled inputs are rejected.',
++        'source_scope': 'Tracked canonical package lib/test/fonts/assets/third_party trees, the exact three compiled PDF widget examples and their verified relative closure, Studio lib/test and dependency/analysis manifests outside docs. Untracked compiled inputs are rejected.',
+         'dependency_scope': 'Source lib/bin trees and manifests of all resolved external engine/editor graph packages, plus the genuine runtime artifacts. Exact package resolution is preserved by the unchanged locked harness inputs.',
+         'counts_exclude_setup_smokes_overlapping_runs_and_expected_failure_controls': True,
+         'production_dependency_manifests_changed': False,
+@@ -409,6 +435,8 @@
+         after = source_fingerprint()
+         dependencies_after = dependencies_fingerprint(graphs)
+         inputs_after = harness_inputs()
++        fixtures_after = fixture_inputs()
++        save('fixtures-after.json', fixtures_after)
+         save('source-after.json', after)
+         save('dependencies-after.json', dependencies_after)
+         receipt['analysis_config_restored'] = (config.read_bytes() if config.exists() else None) == original
+@@ -416,6 +444,9 @@
+         receipt['external_dependency_and_runtime_inputs_unchanged'] = dependencies_before == dependencies_after
+         receipt['harness_input_sha256_after'] = inputs_after
+         receipt['harness_inputs_unchanged'] = inputs_before == inputs_after
++        receipt['fixture_inputs_unchanged'] = fixtures_before == fixtures_after
++        receipt['fixture_input_count'] = len(fixtures_after)
++        receipt['fixture_present_count'] = sum(item['present'] for item in fixtures_after.values())
+         receipt['working_head_at_end'] = git_text('rev-parse', 'HEAD')
+         receipt['published_source_still_matches'] = not published_matches(after['sha256_by_path'])
+         receipt['passed_tests_by_cohort'] = {row['name']: row['passed_tests'] for row in receipt['commands'] if 'passed_tests' in row}
+@@ -425,12 +456,12 @@
+         receipt['all_passed'] = (
+             len(receipt['commands']) == len(cohorts) + 3
+             and all(row['exit_code'] == 0 and row['status'] == 'passed' for row in receipt['commands'])
+-            and all(receipt[key] for key in ['analysis_config_restored', 'source_inputs_unchanged', 'external_dependency_and_runtime_inputs_unchanged', 'harness_inputs_unchanged', 'published_source_still_matches'])
++            and all(receipt[key] for key in ['analysis_config_restored', 'source_inputs_unchanged', 'external_dependency_and_runtime_inputs_unchanged', 'harness_inputs_unchanged', 'fixture_inputs_unchanged', 'published_source_still_matches'])
+         )
+         receipt['status'] = 'passed' if receipt['all_passed'] else 'failed'
+         receipt['finished_utc'] = datetime.now(timezone.utc).isoformat()
+         save('receipt.json', receipt)
+-        print(json.dumps({key: receipt[key] for key in ['all_passed', 'passed_tests_by_cohort', 'zotero_passed_tests', 'integration_passed_tests', 'total_disjoint_tests_passed', 'source_inputs_unchanged', 'external_dependency_and_runtime_inputs_unchanged', 'analysis_config_restored']}), flush=True)
++        print(json.dumps({key: receipt[key] for key in ['all_passed', 'passed_tests_by_cohort', 'zotero_passed_tests', 'integration_passed_tests', 'total_disjoint_tests_passed', 'source_inputs_unchanged', 'external_dependency_and_runtime_inputs_unchanged', 'fixture_inputs_unchanged', 'analysis_config_restored']}), flush=True)
+     if not receipt['all_passed']:
+         raise SystemExit(1)
+ 

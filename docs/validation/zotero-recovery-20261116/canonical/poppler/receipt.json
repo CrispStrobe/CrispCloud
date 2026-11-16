@@ -1,0 +1,474 @@
+{
+  "schema": "quds-independent-pdf-rendering-v1",
+  "started_utc": "2026-11-16T20:59:27.123093+00:00",
+  "input_directory": "/workspace/scratch/79aea0ff70bc/zotero-toolchain/retry-canonical-complete/render",
+  "scope": "Poppler verifies CID-mapped PDF painting and Unicode extraction for synthetic Latin-outline aliases",
+  "limits": "One raster fixture at 72 dpi; no emoji/CJK coverage, shaping-parity, platform-conformance, or performance claim",
+  "source_provenance": "Contemporaneous checkout hashes, not proof of artifact-generation provenance; see producer receipt when supplied",
+  "source_before_sha256": {
+    "packages/quds_office_engine/lib/src/pdf/pdf_font.dart": "d0c309b3091e9b6f245cafcc144d88d93e4b9f8b7e4887bd10f0c3c550351f67",
+    "packages/quds_office_engine/lib/src/pdf/pdf_document.dart": "a9114581caf59635c538a7eb0b337bf1907a6bdd4ff2b6419cd1551ff150ae81",
+    "packages/quds_office_engine/lib/src/pdf/pdf_canvas.dart": "d65559b9e31e1c7b4e940741451092430a1764a6cf28dd1b2c5f0cb786d64cc1",
+    "packages/quds_office_engine/lib/src/pdf/pdf_stream.dart": "fa24007793f6dab3454d9c80db8d8b33d081a0338767de4a27db5e742d502b28",
+    "packages/quds_office_engine/lib/src/pdf/office_pdf_export.dart": "38e5042ec2f552027fc8c8f3a35555280c35e2b4a9c6abc0a18aad0287fd6432",
+    "packages/quds_office_engine/lib/src/fonts/font_subsetter.dart": "57537f5ad63b488a7ffb8e3234e5387bc25543742a0404554f8ff586c2d08077",
+    "packages/quds_office_engine/lib/src/fonts/sfnt_parser.dart": "5e6d0ec9bba6e5c0be8d6763c6773a4b2e2afa136e3787b915ad2b7742b062d6",
+    "packages/quds_office_engine/test/pdf_cid_encoding_test.dart": "640c532144d9bc8caaf18315dd09fa6624cbd8f689e384089a867118dbfa1800",
+    "packages/quds_office_engine/test/pdf_unicode_alias_export_test.dart": "6a50e1a94b20e7682be66b2ae233adaef8a732a18902c1fd4363cc57b56fb621",
+    "packages/quds_office_engine/test/support/pdf_alias_fixture.dart": "e34d9dc829231299e4ff3185b1725899d0164d2c13407478f596918a83a99ce6",
+    "packages/quds_office_editor/fonts/LiberationSans-Regular.ttf": "075e71be4c58beda172ecb574a799308f04c3d054c6a5b7434954d3b0f1b28d8"
+  },
+  "harness_sha256": "dc089ba747fdbd8acd04d07fbe18986763020f2b3df419a0fef65ee9ce381b3f",
+  "runtime": {
+    "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+    "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+    "pillow": "13.0.0",
+    "pdftoppm": {
+      "invoked_path": "/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override/pdftoppm",
+      "resolved_executable": {
+        "path": "/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override/pdftoppm",
+        "bytes": 157,
+        "sha256": "de772e88ab9977ccde25def9b403bf42675d75f5dd82b19fbd7d8123ad183159"
+      },
+      "version_stdout": "",
+      "version_stderr": "pdftoppm version 26.05.0\nCopyright 2005-2026 The Poppler Developers - http://poppler.freedesktop.org\nCopyright 1996-2011, 2022 Glyph & Cog, LLC\n"
+    },
+    "pdftotext": {
+      "invoked_path": "/usr/bin/pdftotext",
+      "resolved_executable": {
+        "path": "/usr/bin/pdftotext",
+        "bytes": 51664,
+        "sha256": "7fe3559cac3ba61dd93650a1ba90499b9fc488184ef8d0f2f1305ddf52c0378b"
+      },
+      "version_stdout": "",
+      "version_stderr": "pdftotext version 25.03.0\nCopyright 2005-2025 The Poppler Developers - http://poppler.freedesktop.org\nCopyright 1996-2011, 2022 Glyph & Cog, LLC\n"
+    }
+  },
+  "commands": [
+    {
+      "name": "pdftoppm-version",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override/pdftoppm",
+        "-v"
+      ],
+      "cwd": "/workspace/scratch/79aea0ff70bc/zotero-toolchain/retry-canonical-complete/poppler",
+      "started_utc": "2026-11-16T20:59:27.133237+00:00",
+      "duration_seconds": 0.053464252003323054,
+      "exit_code": 0,
+      "stdout": "pdftoppm-version.stdout.txt",
+      "stderr": "pdftoppm-version.stderr.txt",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "9b3b47703da9f8e397c209c07869aa7d92c2c25a63b48f42425934902df3c286",
+      "passed": true
+    },
+    {
+      "name": "pdftotext-version",
+      "command": [
+        "/usr/bin/pdftotext",
+        "-v"
+      ],
+      "cwd": "/workspace/scratch/79aea0ff70bc/zotero-toolchain/retry-canonical-complete/poppler",
+      "started_utc": "2026-11-16T20:59:27.188016+00:00",
+      "duration_seconds": 0.05292506100158789,
+      "exit_code": 0,
+      "stdout": "pdftotext-version.stdout.txt",
+      "stderr": "pdftotext-version.stderr.txt",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "0f2ff359cb556fedcd7be481e9a06c6f25d46789094b702bd84ab4cf09ce49b0",
+      "passed": true
+    },
+    {
+      "name": "source-head",
+      "command": [
+        "git",
+        "-C",
+        "/workspace/scratch/79aea0ff70bc/quds-validation",
+        "rev-parse",
+        "HEAD"
+      ],
+      "cwd": "/workspace/scratch/79aea0ff70bc/zotero-toolchain/retry-canonical-complete/poppler",
+      "started_utc": "2026-11-16T20:59:27.241594+00:00",
+      "duration_seconds": 0.006018079999194015,
+      "exit_code": 0,
+      "stdout": "source-head.stdout.txt",
+      "stderr": "source-head.stderr.txt",
+      "stdout_sha256": "66e0c8bbe85b94c2380bcb6f510f72892848fd2b20ba5b186f5eb3e34e79a0cf",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "passed": true
+    },
+    {
+      "name": "raster-encoded-aliases",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override/pdftoppm",
+        "-f",
+        "1",
+        "-l",
+        "1",
+        "-r",
+        "72",
+        "-singlefile",
+        "-png",
+        "/workspace/scratch/79aea0ff70bc/zotero-toolchain/retry-canonical-complete/poppler/encoded-aliases.pdf",
+        "/workspace/scratch/79aea0ff70bc/zotero-toolchain/retry-canonical-complete/poppler/encoded-aliases"
+      ],
+      "cwd": "/workspace/scratch/79aea0ff70bc/zotero-toolchain/retry-canonical-complete/poppler",
+      "started_utc": "2026-11-16T20:59:27.248749+00:00",
+      "duration_seconds": 0.06306640800175956,
+      "exit_code": 0,
+      "stdout": "raster-encoded-aliases.stdout.txt",
+      "stderr": "raster-encoded-aliases.stderr.txt",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "passed": true
+    },
+    {
+      "name": "raster-identity-glyph-reference",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override/pdftoppm",
+        "-f",
+        "1",
+        "-l",
+        "1",
+        "-r",
+        "72",
+        "-singlefile",
+        "-png",
+        "/workspace/scratch/79aea0ff70bc/zotero-toolchain/retry-canonical-complete/poppler/identity-glyph-reference.pdf",
+        "/workspace/scratch/79aea0ff70bc/zotero-toolchain/retry-canonical-complete/poppler/identity-glyph-reference"
+      ],
+      "cwd": "/workspace/scratch/79aea0ff70bc/zotero-toolchain/retry-canonical-complete/poppler",
+      "started_utc": "2026-11-16T20:59:27.312678+00:00",
+      "duration_seconds": 0.05911635299707996,
+      "exit_code": 0,
+      "stdout": "raster-identity-glyph-reference.stdout.txt",
+      "stderr": "raster-identity-glyph-reference.stderr.txt",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "passed": true
+    },
+    {
+      "name": "text-encoded-aliases",
+      "command": [
+        "/usr/bin/pdftotext",
+        "-enc",
+        "UTF-8",
+        "-eol",
+        "unix",
+        "/workspace/scratch/79aea0ff70bc/zotero-toolchain/retry-canonical-complete/poppler/encoded-aliases.pdf",
+        "/workspace/scratch/79aea0ff70bc/zotero-toolchain/retry-canonical-complete/poppler/encoded-aliases.txt"
+      ],
+      "cwd": "/workspace/scratch/79aea0ff70bc/zotero-toolchain/retry-canonical-complete/poppler",
+      "started_utc": "2026-11-16T20:59:27.373018+00:00",
+      "duration_seconds": 0.07840657199994894,
+      "exit_code": 0,
+      "stdout": "text-encoded-aliases.stdout.txt",
+      "stderr": "text-encoded-aliases.stderr.txt",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "passed": true
+    },
+    {
+      "name": "text-word-unicode-aliases",
+      "command": [
+        "/usr/bin/pdftotext",
+        "-enc",
+        "UTF-8",
+        "-eol",
+        "unix",
+        "/workspace/scratch/79aea0ff70bc/zotero-toolchain/retry-canonical-complete/poppler/word-unicode-aliases.pdf",
+        "/workspace/scratch/79aea0ff70bc/zotero-toolchain/retry-canonical-complete/poppler/word-unicode-aliases.txt"
+      ],
+      "cwd": "/workspace/scratch/79aea0ff70bc/zotero-toolchain/retry-canonical-complete/poppler",
+      "started_utc": "2026-11-16T20:59:27.455478+00:00",
+      "duration_seconds": 0.07516608200239716,
+      "exit_code": 0,
+      "stdout": "text-word-unicode-aliases.stdout.txt",
+      "stderr": "text-word-unicode-aliases.stderr.txt",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "passed": true
+    }
+  ],
+  "checks": {
+    "raster": {
+      "dpi": 72,
+      "page": 1,
+      "comparison": "Exact RGB pixels; no tolerance, rescaling, or alignment",
+      "expected_fixture_dimensions": [
+        320,
+        112
+      ],
+      "samples": {
+        "encoded-aliases": {
+          "png": "encoded-aliases.png",
+          "png_sha256": "78f19170fa51c630fc72792402f34837dcd5a901dc906e1d123ecd8a37ccbbef",
+          "original_mode": "RGB",
+          "width": 320,
+          "height": 112,
+          "pixel_count": 35840,
+          "nonwhite_ink_pixels": 2109,
+          "rgb_sha256": "23a35dc4f1e1ebc78dd2af458e9524143c3555d49f5167ebc57b374d018f825b"
+        },
+        "identity-glyph-reference": {
+          "png": "identity-glyph-reference.png",
+          "png_sha256": "78f19170fa51c630fc72792402f34837dcd5a901dc906e1d123ecd8a37ccbbef",
+          "original_mode": "RGB",
+          "width": 320,
+          "height": 112,
+          "pixel_count": 35840,
+          "nonwhite_ink_pixels": 2109,
+          "rgb_sha256": "23a35dc4f1e1ebc78dd2af458e9524143c3555d49f5167ebc57b374d018f825b"
+        }
+      },
+      "same_dimensions": true,
+      "expected_dimensions": true,
+      "rgb_mode": true,
+      "both_have_ink": true,
+      "differing_pixels": 0,
+      "difference_bbox": null,
+      "passed": true
+    },
+    "text": {
+      "expected_code_points": [
+        "U+0041",
+        "U+1F600",
+        "U+20000",
+        "U+0041",
+        "U+005A"
+      ],
+      "normalization": "Extracted text: remove trailing U+000A/U+000C only; authored text unchanged",
+      "identity_control": "Raster only; deliberately not an extraction oracle",
+      "results": {
+        "encoded-aliases": {
+          "text_file": "encoded-aliases.txt",
+          "raw_sha256": "d991886630ee8133aa0b97d30abb809fdbd3bcc5ca3625f8f81a01c237f9b82a",
+          "raw_code_points": [
+            "U+0041",
+            "U+1F600",
+            "U+20000",
+            "U+0041",
+            "U+005A",
+            "U+000A",
+            "U+000A",
+            "U+000C"
+          ],
+          "compared_code_points": [
+            "U+0041",
+            "U+1F600",
+            "U+20000",
+            "U+0041",
+            "U+005A"
+          ],
+          "trimmed_trailing_code_points": [
+            "U+000A",
+            "U+000A",
+            "U+000C"
+          ],
+          "passed": true
+        },
+        "word-unicode-aliases": {
+          "text_file": "word-unicode-aliases.txt",
+          "raw_sha256": "d991886630ee8133aa0b97d30abb809fdbd3bcc5ca3625f8f81a01c237f9b82a",
+          "raw_code_points": [
+            "U+0041",
+            "U+1F600",
+            "U+20000",
+            "U+0041",
+            "U+005A",
+            "U+000A",
+            "U+000A",
+            "U+000C"
+          ],
+          "compared_code_points": [
+            "U+0041",
+            "U+1F600",
+            "U+20000",
+            "U+0041",
+            "U+005A"
+          ],
+          "trimmed_trailing_code_points": [
+            "U+000A",
+            "U+000A",
+            "U+000C"
+          ],
+          "passed": true
+        }
+      },
+      "passed": true
+    }
+  },
+  "passed": true,
+  "github_actions": "No Actions access or waits",
+  "inputs_before": {
+    "encoded-aliases.pdf": {
+      "path": "/workspace/scratch/79aea0ff70bc/zotero-toolchain/retry-canonical-complete/render/encoded-aliases.pdf",
+      "bytes": 6873,
+      "sha256": "96feb2bab8f025dc9755d2e697bd0b5588bed2e3000d784f51ff2a3060bd2f23"
+    },
+    "identity-glyph-reference.pdf": {
+      "path": "/workspace/scratch/79aea0ff70bc/zotero-toolchain/retry-canonical-complete/render/identity-glyph-reference.pdf",
+      "bytes": 6736,
+      "sha256": "9d4d1486ece4577369c9a8c156a2041349ae2919afc1a1ee57fcacfc491d8f31"
+    },
+    "word-unicode-aliases.pdf": {
+      "path": "/workspace/scratch/79aea0ff70bc/zotero-toolchain/retry-canonical-complete/render/word-unicode-aliases.pdf",
+      "bytes": 6899,
+      "sha256": "4290a1930abed91021c42a659294f7729a29ac4c1eaac20a0c767aa9fb6463d1"
+    },
+    "authored-text.txt": {
+      "path": "/workspace/scratch/79aea0ff70bc/zotero-toolchain/retry-canonical-complete/render/authored-text.txt",
+      "bytes": 11,
+      "sha256": "e74a676e1bda53634984fdb18c5e78dbedde1a9740844ab5b9f554f062298326"
+    },
+    "producer-receipt.json": {
+      "path": "/workspace/scratch/79aea0ff70bc/zotero-toolchain/retry-canonical-complete/receipt.json",
+      "bytes": 34768,
+      "sha256": "ccb716a6edeef5aab1b50369c5d4139e62136ff7cd70e49951a89319e81559da"
+    }
+  },
+  "source_after_sha256": {
+    "packages/quds_office_engine/lib/src/pdf/pdf_font.dart": "d0c309b3091e9b6f245cafcc144d88d93e4b9f8b7e4887bd10f0c3c550351f67",
+    "packages/quds_office_engine/lib/src/pdf/pdf_document.dart": "a9114581caf59635c538a7eb0b337bf1907a6bdd4ff2b6419cd1551ff150ae81",
+    "packages/quds_office_engine/lib/src/pdf/pdf_canvas.dart": "d65559b9e31e1c7b4e940741451092430a1764a6cf28dd1b2c5f0cb786d64cc1",
+    "packages/quds_office_engine/lib/src/pdf/pdf_stream.dart": "fa24007793f6dab3454d9c80db8d8b33d081a0338767de4a27db5e742d502b28",
+    "packages/quds_office_engine/lib/src/pdf/office_pdf_export.dart": "38e5042ec2f552027fc8c8f3a35555280c35e2b4a9c6abc0a18aad0287fd6432",
+    "packages/quds_office_engine/lib/src/fonts/font_subsetter.dart": "57537f5ad63b488a7ffb8e3234e5387bc25543742a0404554f8ff586c2d08077",
+    "packages/quds_office_engine/lib/src/fonts/sfnt_parser.dart": "5e6d0ec9bba6e5c0be8d6763c6773a4b2e2afa136e3787b915ad2b7742b062d6",
+    "packages/quds_office_engine/test/pdf_cid_encoding_test.dart": "640c532144d9bc8caaf18315dd09fa6624cbd8f689e384089a867118dbfa1800",
+    "packages/quds_office_engine/test/pdf_unicode_alias_export_test.dart": "6a50e1a94b20e7682be66b2ae233adaef8a732a18902c1fd4363cc57b56fb621",
+    "packages/quds_office_engine/test/support/pdf_alias_fixture.dart": "e34d9dc829231299e4ff3185b1725899d0164d2c13407478f596918a83a99ce6",
+    "packages/quds_office_editor/fonts/LiberationSans-Regular.ttf": "075e71be4c58beda172ecb574a799308f04c3d054c6a5b7434954d3b0f1b28d8"
+  },
+  "source_unchanged": true,
+  "inputs_after": {
+    "encoded-aliases.pdf": {
+      "path": "/workspace/scratch/79aea0ff70bc/zotero-toolchain/retry-canonical-complete/render/encoded-aliases.pdf",
+      "bytes": 6873,
+      "sha256": "96feb2bab8f025dc9755d2e697bd0b5588bed2e3000d784f51ff2a3060bd2f23"
+    },
+    "identity-glyph-reference.pdf": {
+      "path": "/workspace/scratch/79aea0ff70bc/zotero-toolchain/retry-canonical-complete/render/identity-glyph-reference.pdf",
+      "bytes": 6736,
+      "sha256": "9d4d1486ece4577369c9a8c156a2041349ae2919afc1a1ee57fcacfc491d8f31"
+    },
+    "word-unicode-aliases.pdf": {
+      "path": "/workspace/scratch/79aea0ff70bc/zotero-toolchain/retry-canonical-complete/render/word-unicode-aliases.pdf",
+      "bytes": 6899,
+      "sha256": "4290a1930abed91021c42a659294f7729a29ac4c1eaac20a0c767aa9fb6463d1"
+    },
+    "authored-text.txt": {
+      "path": "/workspace/scratch/79aea0ff70bc/zotero-toolchain/retry-canonical-complete/render/authored-text.txt",
+      "bytes": 11,
+      "sha256": "e74a676e1bda53634984fdb18c5e78dbedde1a9740844ab5b9f554f062298326"
+    },
+    "producer-receipt.json": {
+      "path": "/workspace/scratch/79aea0ff70bc/zotero-toolchain/retry-canonical-complete/receipt.json",
+      "bytes": 34768,
+      "sha256": "ccb716a6edeef5aab1b50369c5d4139e62136ff7cd70e49951a89319e81559da"
+    }
+  },
+  "inputs_unchanged": true,
+  "artifacts": {
+    "authored-text.txt": {
+      "bytes": 11,
+      "sha256": "e74a676e1bda53634984fdb18c5e78dbedde1a9740844ab5b9f554f062298326"
+    },
+    "encoded-aliases.pdf": {
+      "bytes": 6873,
+      "sha256": "96feb2bab8f025dc9755d2e697bd0b5588bed2e3000d784f51ff2a3060bd2f23"
+    },
+    "encoded-aliases.png": {
+      "bytes": 2068,
+      "sha256": "78f19170fa51c630fc72792402f34837dcd5a901dc906e1d123ecd8a37ccbbef"
+    },
+    "encoded-aliases.txt": {
+      "bytes": 14,
+      "sha256": "d991886630ee8133aa0b97d30abb809fdbd3bcc5ca3625f8f81a01c237f9b82a"
+    },
+    "identity-glyph-reference.pdf": {
+      "bytes": 6736,
+      "sha256": "9d4d1486ece4577369c9a8c156a2041349ae2919afc1a1ee57fcacfc491d8f31"
+    },
+    "identity-glyph-reference.png": {
+      "bytes": 2068,
+      "sha256": "78f19170fa51c630fc72792402f34837dcd5a901dc906e1d123ecd8a37ccbbef"
+    },
+    "pdftoppm-version.stderr.txt": {
+      "bytes": 144,
+      "sha256": "9b3b47703da9f8e397c209c07869aa7d92c2c25a63b48f42425934902df3c286"
+    },
+    "pdftoppm-version.stdout.txt": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "pdftotext-version.stderr.txt": {
+      "bytes": 145,
+      "sha256": "0f2ff359cb556fedcd7be481e9a06c6f25d46789094b702bd84ab4cf09ce49b0"
+    },
+    "pdftotext-version.stdout.txt": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "producer-receipt.json": {
+      "bytes": 34768,
+      "sha256": "ccb716a6edeef5aab1b50369c5d4139e62136ff7cd70e49951a89319e81559da"
+    },
+    "raster-difference.png": {
+      "bytes": 184,
+      "sha256": "d3361e7c176a75303813111d216fd6015807a30744f49b27a15c648922c20ff9"
+    },
+    "raster-encoded-aliases.stderr.txt": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "raster-encoded-aliases.stdout.txt": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "raster-identity-glyph-reference.stderr.txt": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "raster-identity-glyph-reference.stdout.txt": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "source-head.stderr.txt": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "source-head.stdout.txt": {
+      "bytes": 41,
+      "sha256": "66e0c8bbe85b94c2380bcb6f510f72892848fd2b20ba5b186f5eb3e34e79a0cf"
+    },
+    "text-encoded-aliases.stderr.txt": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "text-encoded-aliases.stdout.txt": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "text-word-unicode-aliases.stderr.txt": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "text-word-unicode-aliases.stdout.txt": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "verify-pdf-rendering-used.py": {
+      "bytes": 13195,
+      "sha256": "dc089ba747fdbd8acd04d07fbe18986763020f2b3df419a0fef65ee9ce381b3f"
+    },
+    "word-unicode-aliases.pdf": {
+      "bytes": 6899,
+      "sha256": "4290a1930abed91021c42a659294f7729a29ac4c1eaac20a0c767aa9fb6463d1"
+    },
+    "word-unicode-aliases.txt": {
+      "bytes": 14,
+      "sha256": "d991886630ee8133aa0b97d30abb809fdbd3bcc5ca3625f8f81a01c237f9b82a"
+    }
+  },
+  "finished_utc": "2026-11-16T20:59:27.658432+00:00"
+}

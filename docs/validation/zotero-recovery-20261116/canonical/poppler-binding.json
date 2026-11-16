@@ -1,0 +1,124 @@
+{
+  "absent_declared_source_paths_not_tracked_or_in_producer_map": [
+    "pubspec.lock"
+  ],
+  "checked_source_still_matches": true,
+  "completed_emitting_command": {
+    "command": [
+      "/workspace/scratch/79aea0ff70bc/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+      "test",
+      "--concurrency=2",
+      "--reporter",
+      "expanded",
+      "test/font_subset_structure_test.dart",
+      "test/font_subset_unicode_test.dart",
+      "test/pdf_cid_encoding_test.dart",
+      "test/pdf_unicode_alias_export_test.dart",
+      "test/fonts_test.dart",
+      "test/office_named_fonts_test.dart",
+      "test/arabic_pdf_export_test.dart",
+      "test/office_pdf_export_test.dart",
+      "test/pdf_file_test.dart",
+      "test/pdf_toolbox_test.dart",
+      "test/word_pdf_test.dart",
+      "test/pdf_widgets_test.dart",
+      "test/pdf_widgets_catalog_test.dart",
+      "test/pdf_templates_test.dart",
+      "test/pdf_to_office_test.dart",
+      "test/bidi_test.dart",
+      "test/ods_sheet_writer_test.dart",
+      "test/word_comment_proofing_styles_test.dart",
+      "test/sheet_save_cache_and_freeze_test.dart"
+    ],
+    "cwd": "/workspace/scratch/79aea0ff70bc/zotero-toolchain/retry-harness/quds_office_engine",
+    "elapsed_seconds": 25.019,
+    "exit_code": 0,
+    "finished_utc": "2026-11-16T20:57:35.655454+00:00",
+    "last_heartbeat_utc": "2026-11-16T20:57:25.636726+00:00",
+    "log": "engine-recovery-integration-execution.log",
+    "log_sha256": "fc0ffd65ec6b6a7930fbe209f575246e2918f7cdfc9e9b1e6436c2a60de16d05",
+    "name": "engine-recovery-integration",
+    "observed_log_bytes": 11101,
+    "observed_success_marker_count": 180,
+    "passed_tests": 180,
+    "pid": 535,
+    "process_returncode": 0,
+    "skipped_tests": 0,
+    "started_utc": "2026-11-16T20:57:10.636825+00:00",
+    "status": "passed",
+    "timeout_seconds": 600
+  },
+  "counts_added_to_dart_flutter_qualification": 0,
+  "dependency_lock_scope": "The original verifier snapshots its declared paths only when present. This source has no tracked root pubspec.lock; the completed producer receipt independently fingerprints the unchanged locked harness inputs.",
+  "emitted_inputs_before": {
+    "authored-text.txt": {
+      "bytes": 11,
+      "modified_utc": "2026-11-16T20:57:17.859468+00:00",
+      "path": "/workspace/scratch/79aea0ff70bc/zotero-toolchain/retry-canonical-complete/render/authored-text.txt",
+      "sha256": "e74a676e1bda53634984fdb18c5e78dbedde1a9740844ab5b9f554f062298326"
+    },
+    "encoded-aliases.pdf": {
+      "bytes": 6873,
+      "modified_utc": "2026-11-16T20:57:17.859468+00:00",
+      "path": "/workspace/scratch/79aea0ff70bc/zotero-toolchain/retry-canonical-complete/render/encoded-aliases.pdf",
+      "sha256": "96feb2bab8f025dc9755d2e697bd0b5588bed2e3000d784f51ff2a3060bd2f23"
+    },
+    "identity-glyph-reference.pdf": {
+      "bytes": 6736,
+      "modified_utc": "2026-11-16T20:57:17.859468+00:00",
+      "path": "/workspace/scratch/79aea0ff70bc/zotero-toolchain/retry-canonical-complete/render/identity-glyph-reference.pdf",
+      "sha256": "9d4d1486ece4577369c9a8c156a2041349ae2919afc1a1ee57fcacfc491d8f31"
+    },
+    "word-unicode-aliases.pdf": {
+      "bytes": 6899,
+      "modified_utc": "2026-11-16T20:57:18.067470+00:00",
+      "path": "/workspace/scratch/79aea0ff70bc/zotero-toolchain/retry-canonical-complete/render/word-unicode-aliases.pdf",
+      "sha256": "4290a1930abed91021c42a659294f7729a29ac4c1eaac20a0c767aa9fb6463d1"
+    }
+  },
+  "finished_utc": "2026-11-16T20:59:27.660520+00:00",
+  "invocation": {
+    "path": "/workspace/scratch/79aea0ff70bc/recovery-audit/quds/complete-invocation.json",
+    "sha256": "8bcf21e44ee1d433de1433874502f7349588b0599f0ffc21ff71443e90f866d1"
+  },
+  "only_verifier_override": {
+    "name": "REPO",
+    "original": "/workspace/scratch/79aea0ff70bc/quds",
+    "selected": "/workspace/scratch/79aea0ff70bc/quds-validation"
+  },
+  "original_verifier": {
+    "path": "/workspace/scratch/79aea0ff70bc/quds/docs/validation/text-rendering-continuation-20261116/verify_pdf_rendering.py",
+    "sha256": "dc089ba747fdbd8acd04d07fbe18986763020f2b3df419a0fef65ee9ce381b3f"
+  },
+  "passed": true,
+  "producer_receipt": {
+    "path": "/workspace/scratch/79aea0ff70bc/zotero-toolchain/retry-canonical-complete/receipt.json",
+    "sha256": "ccb716a6edeef5aab1b50369c5d4139e62136ff7cd70e49951a89319e81559da"
+  },
+  "provenance_scope": "Inputs are taken from the directory named by the recorded emitting invocation after its complete successful source-bound producer run. The unmodified verifier separately copies and hashes the producer receipt and fixture inputs.",
+  "schema": "quds-retry-pdf-verifier-binding-v1",
+  "source_checkout": "/workspace/scratch/79aea0ff70bc/quds-validation",
+  "source_commit": "b87f9d6c3a2532c9695024adf48ca9fbd3c0927a",
+  "source_sha256_matched_to_final_producer_map": {
+    "packages/quds_office_editor/fonts/LiberationSans-Regular.ttf": "075e71be4c58beda172ecb574a799308f04c3d054c6a5b7434954d3b0f1b28d8",
+    "packages/quds_office_engine/lib/src/fonts/font_subsetter.dart": "57537f5ad63b488a7ffb8e3234e5387bc25543742a0404554f8ff586c2d08077",
+    "packages/quds_office_engine/lib/src/fonts/sfnt_parser.dart": "5e6d0ec9bba6e5c0be8d6763c6773a4b2e2afa136e3787b915ad2b7742b062d6",
+    "packages/quds_office_engine/lib/src/pdf/office_pdf_export.dart": "38e5042ec2f552027fc8c8f3a35555280c35e2b4a9c6abc0a18aad0287fd6432",
+    "packages/quds_office_engine/lib/src/pdf/pdf_canvas.dart": "d65559b9e31e1c7b4e940741451092430a1764a6cf28dd1b2c5f0cb786d64cc1",
+    "packages/quds_office_engine/lib/src/pdf/pdf_document.dart": "a9114581caf59635c538a7eb0b337bf1907a6bdd4ff2b6419cd1551ff150ae81",
+    "packages/quds_office_engine/lib/src/pdf/pdf_font.dart": "d0c309b3091e9b6f245cafcc144d88d93e4b9f8b7e4887bd10f0c3c550351f67",
+    "packages/quds_office_engine/lib/src/pdf/pdf_stream.dart": "fa24007793f6dab3454d9c80db8d8b33d081a0338767de4a27db5e742d502b28",
+    "packages/quds_office_engine/test/pdf_cid_encoding_test.dart": "640c532144d9bc8caaf18315dd09fa6624cbd8f689e384089a867118dbfa1800",
+    "packages/quds_office_engine/test/pdf_unicode_alias_export_test.dart": "6a50e1a94b20e7682be66b2ae233adaef8a732a18902c1fd4363cc57b56fb621",
+    "packages/quds_office_engine/test/support/pdf_alias_fixture.dart": "e34d9dc829231299e4ff3185b1725899d0164d2c13407478f596918a83a99ce6"
+  },
+  "source_tree": "acb1d1060879dc4a8168df8abf3105dc828af360",
+  "started_utc": "2026-11-16T20:59:27.122098+00:00",
+  "verifier_checks_changed": false,
+  "verifier_exit_code": 0,
+  "verifier_receipt_sha256": "cd410bf4ad3ad595e6977a68f936e335c3586689d64d168718056fe05efb8360",
+  "wrapper": {
+    "path": "/workspace/scratch/79aea0ff70bc/recovery-audit/quds/run-current-pdf-verification.py",
+    "sha256": "dafe7c286bd4fa5c7bfb28904cd780f5d2245f17698405aa3f95f6e65c03d428"
+  }
+}

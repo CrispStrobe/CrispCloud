@@ -1,0 +1,28 @@
+{
+  "baseline_repository": "CrispStrobe/CrispCloud",
+  "baseline_commit": "f80c67f1e817bf14266d9f8b33a5129d54463b78",
+  "baseline_path": "docs/validation/zotero-capabilities-20261116/final-host/run-expanded-host.py",
+  "baseline_runner_sha256": "bfa0636f636c119686cd10f6a5fe8b9e87c0b02d7146a846a1a8d4d0c88de0b9",
+  "prepared_runner_sha256": "8f718f76d030291a11b236b9618e0694662d4d1c78a7740c3749942375e14ff4",
+  "change": "Add five font/PDF and four bounded late-main sheet production files to existing strict analysis/format gates; retain all tests and integrity guards.",
+  "added_vendored_analysis_format_targets": [
+    "packages/quds_office_engine/lib/src/fonts/font_subsetter.dart",
+    "packages/quds_office_engine/lib/src/pdf/office_pdf_export.dart",
+    "packages/quds_office_engine/lib/src/pdf/pdf_canvas.dart",
+    "packages/quds_office_engine/lib/src/pdf/pdf_document.dart",
+    "packages/quds_office_engine/lib/src/pdf/pdf_font.dart",
+    "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+    "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_writer.dart",
+    "packages/quds_office_engine/lib/src/sheet/model/sml_workbook.dart",
+    "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart"
+  ],
+  "expected_host_cases": 41,
+  "expected_python_cases": 28,
+  "host_analysis_format_targets": 8,
+  "vendored_analysis_format_targets": 16,
+  "execution_status": "prepared_not_run",
+  "pre_late_main_runner_sha256": "79fbcba73f2f681c2f34598db81ba4d8480dd9b1cc27a0c7ca316ff7801f99ba",
+  "late_main_host_commit": "553f3be64da9ad3c35730f1b6a67d79f1ac54b72",
+  "expected_canonical_commit": "b87f9d6c3a2532c9695024adf48ca9fbd3c0927a",
+  "total_analysis_format_targets": 24
+}

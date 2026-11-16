@@ -1,0 +1,13 @@
+{
+  "path": "harness/quds_office_engine/.dart_tool/package_config.json",
+  "expected_original_sha256": "acadc2dc0d437f6ccb7e553fa1050f8884e5916bd9a218ce43477dba42d92914",
+  "current_sha256": "221034149a2fe82f998ba27c75e611b6268ee0455814325609e55f867445c8ec",
+  "reconstructed_without_two_metadata_lines_sha256": "acadc2dc0d437f6ccb7e553fa1050f8884e5916bd9a218ce43477dba42d92914",
+  "byte_exact_original_recovered_by_removing_only_metadata_lines": true,
+  "metadata_added": {
+    "flutterRoot": "file:///workspace/scratch/79aea0ff70bc/zotero-toolchain/flutter-sdk",
+    "flutterVersion": "3.47.8"
+  },
+  "production_dependency_graph_or_lock_change": false,
+  "effect": "The interrupted run did not preserve the original byte-identical harness fingerprint. A fresh run must baseline the warmed metadata and retain this adjustment as setup evidence."
+}

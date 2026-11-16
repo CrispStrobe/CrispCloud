@@ -1,0 +1,11 @@
+--- quds/packages/quds_office_engine/test/arabic_pdf_export_test.dart
++++ crispcloud/packages/quds_office_engine/test/arabic_pdf_export_test.dart
+@@ -123,7 +123,7 @@
+       _doc('$_phrase 2026'),
+       fonts: OfficeFontSet(
+         primary: naskh,
+-        fallbacks: <SfntFont>[?latin],
++        fallbacks: <SfntFont>[if (latin != null) latin],
+       ),
+       title: 'Arabic',
+     );
