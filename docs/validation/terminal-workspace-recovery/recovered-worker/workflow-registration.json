@@ -1,0 +1,118 @@
+{
+  "verified_utc": "2026-11-16T09:56:44.193986+00:00",
+  "source_commit": "3cd501798794dcb74de5dca912b498a4c0a7e39b",
+  "command": [
+    "python3",
+    "docs/validation/terminal-workspace-recovery/static/verify_registration.py"
+  ],
+  "workflow": ".github/workflows/ci.yml",
+  "workflow_sha256": "f0ecf7d75f54da795292b61d7c3b58c42f997143926f200a7cf1e8f23f7fb860",
+  "parser": "PyYAML.safe_load",
+  "yaml_parsed": true,
+  "required_new_tests": {
+    "test/terminal_workspace_recovery_test.dart": [
+      {
+        "job": "collection-browser",
+        "step": "Terminal input and explicit SSH gateway",
+        "occurrences": 1,
+        "working_directory": ".",
+        "runs_on": "ubuntu-latest"
+      },
+      {
+        "job": "build-windows",
+        "step": "Terminal workspace and remote session regressions",
+        "occurrences": 1,
+        "working_directory": ".",
+        "runs_on": "windows-latest"
+      },
+      {
+        "job": "build-macos",
+        "step": "macOS regression tests",
+        "occurrences": 1,
+        "working_directory": ".",
+        "runs_on": "macos-15-intel"
+      }
+    ],
+    "test/terminal_workspace_recovery_dialog_test.dart": [
+      {
+        "job": "collection-browser",
+        "step": "Terminal input and explicit SSH gateway",
+        "occurrences": 1,
+        "working_directory": ".",
+        "runs_on": "ubuntu-latest"
+      },
+      {
+        "job": "build-windows",
+        "step": "Terminal workspace and remote session regressions",
+        "occurrences": 1,
+        "working_directory": ".",
+        "runs_on": "windows-latest"
+      },
+      {
+        "job": "build-macos",
+        "step": "macOS regression tests",
+        "occurrences": 1,
+        "working_directory": ".",
+        "runs_on": "macos-15-intel"
+      }
+    ],
+    "test/terminal_workspace_recovery_widget_test.dart": [
+      {
+        "job": "collection-browser",
+        "step": "Terminal input and explicit SSH gateway",
+        "occurrences": 1,
+        "working_directory": ".",
+        "runs_on": "ubuntu-latest"
+      },
+      {
+        "job": "build-windows",
+        "step": "Terminal workspace and remote session regressions",
+        "occurrences": 1,
+        "working_directory": ".",
+        "runs_on": "windows-latest"
+      },
+      {
+        "job": "build-macos",
+        "step": "macOS regression tests",
+        "occurrences": 1,
+        "working_directory": ".",
+        "runs_on": "macos-15-intel"
+      }
+    ],
+    "test/terminal_panel_recovery_idle_test.dart": [
+      {
+        "job": "collection-browser",
+        "step": "Terminal input and explicit SSH gateway",
+        "occurrences": 1,
+        "working_directory": ".",
+        "runs_on": "ubuntu-latest"
+      },
+      {
+        "job": "build-windows",
+        "step": "Terminal workspace and remote session regressions",
+        "occurrences": 1,
+        "working_directory": ".",
+        "runs_on": "windows-latest"
+      },
+      {
+        "job": "build-macos",
+        "step": "macOS regression tests",
+        "occurrences": 1,
+        "working_directory": ".",
+        "runs_on": "macos-15-intel"
+      }
+    ]
+  },
+  "registration_counts": {
+    "test/terminal_workspace_recovery_test.dart": 3,
+    "test/terminal_workspace_recovery_dialog_test.dart": 3,
+    "test/terminal_workspace_recovery_widget_test.dart": 3,
+    "test/terminal_panel_recovery_idle_test.dart": 3
+  },
+  "all_four_tests_registered_three_times": true,
+  "resolved_explicit_test_path_count": 128,
+  "all_explicit_test_paths_exist": true,
+  "missing_paths": [],
+  "scope": "Static repository file check using each step/job working directory. No Actions API, workflow runs, statuses or queues were queried. This check does not execute tests listed in YAML.",
+  "recovery_note": "Reconstructed verbatim fields from the successful local checker result in the task transcript after the original executor became unavailable; the uncommitted local receipt file was lost."
+}
