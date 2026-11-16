@@ -6,7 +6,17 @@ toward desktop terminal workflows. It does not claim complete iTerm2 compatibili
 
 ## Current status
 
-This continuation adds **opt-in automatic terminal workspace recovery**, with a
+The current continuation bounds terminal and native tmux resize queues,
+preserves the final geometry during rapid resize reversals, batches native tmux
+pane captures in groups of up to eight, and hardens GNU Screen exact attachment
+against truncated names and incomplete listings. All 43 pre-existing branch
+heads and 156 PR heads are included in baseline `0c43c476`; work is saved to
+`codex/terminal-session-optimization-20261116` with `[skip ci]`.
+[Current local qualification and source record](validation/terminal-session-optimization-20261116/README.md).
+
+### Previous workspace recovery continuation
+
+The preceding continuation adds **opt-in automatic terminal workspace recovery**, with a
 separate choice to relaunch local shells. **Terminal layout → Session recovery**
 remembers the latest tab order/names, full split topology and proportions, active
 pane, font sizes and sanitized SSH/tmux/Screen destinations. Initial recovery

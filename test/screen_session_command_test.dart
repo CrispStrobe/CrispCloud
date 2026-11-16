@@ -96,24 +96,27 @@ exit "${CRISP_SCREEN_ATTACH_STATUS:-0}"
       expect(await arguments.exists(), isFalse);
     });
 
-    test('unsupported names cannot become exact targets by truncation', () async {
-      for (final name in [
-        'work extra',
-        'work (custom)',
-        'work (11/15/26 20:15:00)',
-        'work ',
-        'work\textra',
-      ]) {
-        for (final target in ['work', '123.work']) {
-          final result = await run(
-            target,
-            sessions(['123.$name\t(Detached)']),
-          );
-          expect(result.exitCode, 44, reason: '$target: $name');
-          expect(await arguments.exists(), isFalse);
+    test(
+      'unsupported names cannot become exact targets by truncation',
+      () async {
+        for (final name in [
+          'work extra',
+          'work (custom)',
+          'work (11/15/26 20:15:00)',
+          'work ',
+          'work\textra',
+        ]) {
+          for (final target in ['work', '123.work']) {
+            final result = await run(
+              target,
+              sessions(['123.$name\t(Detached)']),
+            );
+            expect(result.exitCode, 44, reason: '$target: $name');
+            expect(await arguments.exists(), isFalse);
+          }
         }
-      }
-    });
+      },
+    );
 
     test('duplicate exact names require a full ID', () async {
       final result = await run(
@@ -200,35 +203,41 @@ exit "${CRISP_SCREEN_ATTACH_STATUS:-0}"
       expect(await arguments.exists(), isFalse);
     });
 
-    test('malformed or contradictory listings cannot authorize attach', () async {
-      final valid = sessions(['123.work\t(Detached)']);
-      for (final output in [
-        valid.replaceFirst('1 Sockets', '2 Sockets'),
-        '$valid' '1 Socket in /run/screen/S-alice.\n',
-        '$valid' 'unexpected trailing output\n',
-        sessions(['123.work\t(Detached)', '456.\t(Detached)']),
-        sessions(['123.work\t(Detached)', '0.other\t(Detached)']),
-        sessions(['123.work\t(Detached)', '456.other']),
-        sessions([
-          '123.work\t(Detached)',
-          '456.other\t(Attached)',
-          '456.other\t(Detached)',
-        ]),
-      ]) {
-        final result = await run('work', output);
-        expect(result.exitCode, 48, reason: output);
-        expect(await arguments.exists(), isFalse);
-      }
-    });
+    test(
+      'malformed or contradictory listings cannot authorize attach',
+      () async {
+        final valid = sessions(['123.work\t(Detached)']);
+        for (final output in [
+          valid.replaceFirst('1 Sockets', '2 Sockets'),
+          '${valid}1 Socket in /run/screen/S-alice.\n',
+          '${valid}unexpected trailing output\n',
+          sessions(['123.work\t(Detached)', '456.\t(Detached)']),
+          sessions(['123.work\t(Detached)', '0.other\t(Detached)']),
+          sessions(['123.work\t(Detached)', '456.other']),
+          sessions([
+            '123.work\t(Detached)',
+            '456.other\t(Attached)',
+            '456.other\t(Detached)',
+          ]),
+        ]) {
+          final result = await run('work', output);
+          expect(result.exitCode, 48, reason: output);
+          expect(await arguments.exists(), isFalse);
+        }
+      },
+    );
 
-    test('unsupported names still participate in prefix collision checks', () async {
-      final result = await run(
-        '123.work',
-        sessions(['123.work\t(Detached)', '456.123.work extra\t(Detached)']),
-      );
-      expect(result.exitCode, 47);
-      expect(await arguments.exists(), isFalse);
-    });
+    test(
+      'unsupported names still participate in prefix collision checks',
+      () async {
+        final result = await run(
+          '123.work',
+          sessions(['123.work\t(Detached)', '456.123.work extra\t(Detached)']),
+        );
+        expect(result.exitCode, 47);
+        expect(await arguments.exists(), isFalse);
+      },
+    );
 
     test('oversized listings fail closed', () async {
       for (final output in [

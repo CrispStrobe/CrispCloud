@@ -496,6 +496,155 @@ void main() {
     expect(client.panes['%0']!.session.terminal.viewWidth, 140);
   });
 
+  test(
+    'resize retains the original size requested during an in-flight change',
+    () async {
+      await server.start(client);
+      server.deferReplies = true;
+      final changing = client.resize(120, 40);
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      expect(server.panes.single.width, 120);
+      final intermediate = client.resize(160, 50);
+      var restored = false;
+      final restoring = client.resize(80, 24).then((_) => restored = true);
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      expect(restored, isFalse);
+      // An unresolved resize owns the wire; further requests retain only the
+      // latest geometry, including one equal to the old completed dimensions.
+      expect(
+        server.commands.where(
+          (command) => command.startsWith('refresh-client -C'),
+        ),
+        ['refresh-client -C 80x24', 'refresh-client -C 120x40'],
+      );
+      server.deferReplies = false;
+      server.flushReplies();
+      await Future.wait([changing, intermediate, restoring]);
+      expect(
+        server.commands.where(
+          (command) => command.startsWith('refresh-client -C'),
+        ),
+        [
+          'refresh-client -C 80x24',
+          'refresh-client -C 120x40',
+          'refresh-client -C 80x24',
+        ],
+      );
+      expect(client.windows.single.width, 80);
+      expect(client.panes['%0']!.session.terminal.viewWidth, 80);
+      expect(client.panes['%0']!.session.terminal.viewHeight, 24);
+    },
+  );
+
+  test(
+    'repeated in-flight size waits without issuing another resize',
+    () async {
+      await server.start(client);
+      server.deferReplies = true;
+      final first = client.resize(120, 40);
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      final repeated = client.resize(120, 40);
+      server.deferReplies = false;
+      server.flushReplies();
+      await Future.wait([first, repeated]);
+      expect(
+        server.commands.where(
+          (command) => command.startsWith('refresh-client -C'),
+        ),
+        ['refresh-client -C 80x24', 'refresh-client -C 120x40'],
+      );
+      expect(client.windows.single.width, 120);
+    },
+  );
+
+  test(
+    'closing an in-flight resize settles queued geometry without sending it',
+    () async {
+      await server.start(client);
+      server.deferReplies = true;
+      final first = client.resize(120, 40);
+      final failed = expectLater(first, throwsA(isA<TmuxControlException>()));
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      final queued = client.resize(80, 24);
+      await client.close();
+      await Future.wait([failed, queued]);
+      server.flushReplies();
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      expect(
+        server.commands.where(
+          (command) => command.startsWith('refresh-client -C'),
+        ),
+        ['refresh-client -C 80x24', 'refresh-client -C 120x40'],
+      );
+      expect(client.isClosed, isTrue);
+    },
+  );
+
+  test('pane captures amortize round trips with bounded synchronous groups', () async {
+    server.setPaneRows(20);
+    server.afterCommand = (command) {
+      if (command.startsWith('list-panes')) {
+        server.afterCommand = null;
+        server.deferReplies = true;
+      }
+    };
+    final starting = server.start(client);
+    await _events();
+    expect(client.ready, isFalse);
+    expect(client.panes, isEmpty);
+    // One pending group captures several panes, but cannot consume the full
+    // 256-command budget before a single server reply has returned.
+    expect(server.captureWrites, hasLength(1));
+    final firstGroup = server.captureWrites.single.split(' ; ');
+    expect(
+      firstGroup.where((command) => command.contains(':continue')),
+      hasLength(8),
+    );
+    expect(firstGroup, hasLength(56));
+    server.flushReplies();
+    await _events();
+    expect(server.captureWrites, hasLength(2));
+    expect(client.panes, isEmpty);
+    server.deferReplies = false;
+    server.flushReplies();
+    await starting;
+    // Twenty panes require three capture round trips, not twenty. Each pane
+    // remains independent and all are published only when the full view exists.
+    expect(server.captureWrites, hasLength(3));
+    expect(client.panes, hasLength(20));
+    expect(client.ready, isTrue);
+    for (final pane in client.panes.values) {
+      expect(pane.session.terminal.viewWidth, 80);
+      expect(pane.session.terminal.viewHeight, 1);
+    }
+  });
+
+  test(
+    'closing a grouped capture revokes unissued groups and publication',
+    () async {
+      server.setPaneRows(20);
+      server.afterCommand = (command) {
+        if (command.startsWith('list-panes')) {
+          server.afterCommand = null;
+          server.deferReplies = true;
+        }
+      };
+      final starting = server.start(client);
+      final failed = expectLater(
+        starting,
+        throwsA(isA<TmuxControlException>()),
+      );
+      await _events();
+      expect(server.captureWrites, hasLength(1));
+      await client.close();
+      server.flushReplies();
+      await failed;
+      expect(client.panes, isEmpty);
+      expect(client.isClosed, isTrue);
+      expect(server.captureWrites, hasLength(1));
+    },
+  );
+
   test('close revokes queued input and keeps read-only pane buffers', () async {
     await server.start(client);
     final session = client.panes['%0']!.session;
@@ -659,6 +808,9 @@ class _Server {
   late final StreamController<List<int>> output;
   final exit = Completer<int?>();
   final commands = <String>[];
+  final captureWrites = <String>[];
+  final deferredReplies = <List<int>>[];
+  bool deferReplies = false;
   final inputBytes = <int>[];
   final panes = [_Pane('%0', '@0')];
   String activeWindow = '@0';
@@ -703,6 +855,28 @@ class _Server {
     panes.add(_Pane('%1', '@0', width: 39, x: 41, active: false));
   }
 
+  void setPaneRows(int count) {
+    cursorX = 0;
+    captureText = '';
+    panes
+      ..clear()
+      ..addAll(
+        List.generate(count, (index) {
+          return _Pane('%$index', '@0', active: index == 0)
+            ..height = 1
+            ..y = index;
+        }),
+      );
+  }
+
+  void flushReplies() {
+    final replies = deferredReplies.toList();
+    deferredReplies.clear();
+    for (final reply in replies) {
+      if (!output.isClosed) output.add(reply);
+    }
+  }
+
   void notification(String record) {
     if (!output.isClosed) output.add(utf8.encode('$record\n'));
   }
@@ -736,6 +910,7 @@ class _Server {
   }
 
   Future<void> write(String value) async {
+    if (value.startsWith('refresh-client -A')) captureWrites.add(value);
     if (captureGate != null && value.startsWith('refresh-client -A')) {
       final gate = captureGate!;
       captureGate = null;
@@ -871,7 +1046,12 @@ class _Server {
         injectHook = false;
         output.add(ascii.encode('%begin 1 999 0\nhook output\n%end 1 999 0\n'));
       }
-      output.add(utf8.encode(response.toString()));
+      final encoded = utf8.encode(response.toString());
+      if (deferReplies) {
+        deferredReplies.add(encoded);
+      } else {
+        output.add(encoded);
+      }
       afterCommand?.call(command);
       if (failure) return;
     }

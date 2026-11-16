@@ -109,6 +109,32 @@ void main() {
     await tester.pump();
   }
 
+  testWidgets('returning to the last viewport size cancels a pending resize', (
+    tester,
+  ) async {
+    await mount(tester);
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(client.sizes, hasLength(1));
+    final original = client.sizes.single;
+
+    tester.view.physicalSize = const Size(800, 500);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    tester.view.physicalSize = const Size(1000, 600);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 250));
+    expect(client.sizes, [original]);
+
+    // A later settled size must still be sent after canceling the old timer.
+    tester.view.physicalSize = const Size(800, 500);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(client.sizes, hasLength(2));
+    expect(client.sizes.last, isNot(original));
+    expect(tester.takeException(), isNull);
+    await finish(tester);
+  });
+
   testWidgets(
     'native windows keep independent pane grids and route keyboard to selected pane',
     (tester) async {

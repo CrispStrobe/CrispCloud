@@ -451,7 +451,9 @@ class TerminalSession extends ChangeNotifier {
     _resizingGeneration = generation;
     // Layout can notify synchronously; keep transport effects out of layout
     // and also collapse all geometry updates from the same event turn.
-    unawaited(Future<void>.microtask(() => _flushResize(connection, generation)));
+    unawaited(
+      Future<void>.microtask(() => _flushResize(connection, generation)),
+    );
   }
 
   Future<void> _flushResize(

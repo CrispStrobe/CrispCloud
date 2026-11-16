@@ -119,7 +119,9 @@ and fixes the case exposed by Flutter's headless test runner.
 
 - `TerminalView` renders the `Terminal` model and reports its measured columns
   and rows. Initial PTY dimensions and later resizes reach both local and SSH
-  backends. The PTY uses an xterm-compatible terminal type.
+  backends. Resize bursts retain one in-flight request and only the newest
+  pending dimensions, so a slow SSH connection does not accumulate redundant
+  layout work. The PTY uses an xterm-compatible terminal type.
 - Local PTY output is one ordered byte stream. SSH standard output and standard
   error are each decoded incrementally, then delivered to the terminal without
   stripping escape sequences. UTF-8 characters may span transport chunks.
@@ -661,6 +663,10 @@ not force-detach other displays, log out other clients, or fall back to a new
 session or shell. Screen's CLI can still race with another process renaming or
 creating sessions between listing and attachment; this is a conservative
 listing check, not an atomic server-side exact-only attachment primitive.
+Full listed identifiers remain intact even when an unsupported name contains
+spaces or parentheses; those entries still participate in prefix checks.
+Malformed rows, duplicate IDs or summaries, inconsistent socket counts and
+listings over 512 sessions stop attachment instead of selecting a partial name.
 
 The terminal header includes the trusted SSH endpoint and selected session.
 **Detach from tmux** closes CrispCloud's SSH connection without sending `exit`
@@ -719,6 +725,10 @@ view. Resizing updates this client's overall size; the remote tmux window-size
 policy still determines shared geometry. Custom terminal key bindings and
 saved output triggers apply to the individual pane emulators. Clipboard access
 is explicit; output escape sequences cannot read or write the local clipboard.
+Rapid size changes coalesce through both the viewport and control client.
+Returning to the original size cancels an unsent intermediate resize or queues
+the correct final size after an already-sent change. Pending callers share one
+completion instead of accumulating one waiter for every layout notification.
 
 **Detach** closes this control client and its SSH route without sending a
 kill-session, kill-window or kill-pane command. It leaves remote processes
@@ -746,6 +756,10 @@ This first native workspace has explicit limits:
   full-screen applications may need to redraw after attachment.
   A real size change can trim previously retained history to this capture
   budget; focus changes and pane moves without a size change preserve it.
+  Captures use synchronous command groups of up to eight panes: 64 panes need
+  at most eight capture groups instead of one round trip per pane. A complete
+  window/pane snapshot is published only after its captures succeed. This is a
+  protocol round-trip reduction, not a measured latency guarantee.
   On tmux versions without the `bracket_paste_flag` format, already-enabled
   bracketed paste cannot be inferred on initial attachment. A subsequent live
   mode change establishes the local paste mode, which survives later captures.

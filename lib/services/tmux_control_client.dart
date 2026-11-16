@@ -107,6 +107,9 @@ class TmuxControlClient extends ChangeNotifier {
   static const historyLines = 200;
   static const maximumInputBytes = 64 * 1024;
   static const _maximumPendingCommands = 256;
+  // Seven synchronous commands capture one pane. A group of eight keeps the
+  // command budget bounded while amortizing high-latency SSH round trips.
+  static const _maximumCaptureGroup = 8;
 
   final Duration commandTimeout;
   final Stream<List<int>> _source;
@@ -136,11 +139,12 @@ class TmuxControlClient extends ChangeNotifier {
   Future<void> _writing = Future<void>.value();
   Timer? _refreshTimer;
   Timer? _resizeTimer;
+  bool _resizing = false;
   int _columns = 80;
   int _rows = 24;
   int _layoutRevision = 0;
   (int, int)? _requestedSize;
-  final _resizeWaiters = <Completer<void>>[];
+  Completer<void>? _resizeCompletion;
 
   List<TmuxControlWindow> get windows => _windows;
   Map<String, TmuxControlPane> get panes => _panes;
@@ -604,12 +608,31 @@ class TmuxControlClient extends ChangeNotifier {
           pane.session.terminal.viewHeight != record.height) {
         pane._capturing = true;
       }
-      if (pane._capturing && !await _capture(pane, record, revision)) {
-        return false;
-      }
       _checkOpen();
       if (revision != _layoutRevision) return false;
       nextPanes[record.id] = pane;
+    }
+    final captures = <_PaneCapture>[];
+    for (var index = 0; index < paneRecords.length; index++) {
+      final record = paneRecords[index];
+      final pane = nextPanes[record.id]!;
+      if (pane._capturing) {
+        captures.add(_prepareCapture(pane, record, revision));
+      }
+      if (captures.isNotEmpty &&
+          (captures.length == _maximumCaptureGroup ||
+              index == paneRecords.length - 1)) {
+        // tmux executes this complete command list synchronously. Snapshot
+        // groups therefore share a server event-loop boundary, without
+        // holding 64 independent reply batches or one RTT for every pane.
+        await _batch([for (final capture in captures) ...capture.commands]);
+        _checkOpen();
+        if (revision != _layoutRevision ||
+            captures.any((capture) => !capture.wasInstalled())) {
+          return false;
+        }
+        captures.clear();
+      }
     }
     for (final record in paneRecords) {
       final pane = nextPanes[record.id]!;
@@ -641,11 +664,11 @@ class TmuxControlClient extends ChangeNotifier {
     return true;
   }
 
-  Future<bool> _capture(
+  _PaneCapture _prepareCapture(
     TmuxControlPane pane,
     _PaneRecord record,
     int revision,
-  ) async {
+  ) {
     TmuxControlBlock? screen;
     TmuxControlBlock? savedScreen;
     TmuxControlBlock? parserPending;
@@ -655,7 +678,7 @@ class TmuxControlClient extends ChangeNotifier {
     // client's output first, discard its pre-capture backlog, then re-enable
     // it at the same server event-loop boundary as the snapshot. Capture is
     // applied in the reply callback, before subsequent records in that packet.
-    await _batch([
+    final commands = <_Command>[
       _Command('refresh-client -A ${pane.id}:off'),
       _Command(
         'capture-pane -p -e -C -t ${pane.id} -S -$historyLines',
@@ -713,8 +736,8 @@ class TmuxControlClient extends ChangeNotifier {
         pane._capturing = false;
         installed = true;
       }),
-    ]);
-    return installed;
+    ];
+    return _PaneCapture(commands, () => installed);
   }
 
   void _installCapture(
@@ -889,35 +912,47 @@ class TmuxControlClient extends ChangeNotifier {
     _checkDimensions(columns, rows);
     if (_closed ||
         !_ready ||
-        (columns == _columns && rows == _rows && _requestedSize == null)) {
+        (!_resizing &&
+            columns == _columns &&
+            rows == _rows &&
+            _requestedSize == null)) {
       return Future<void>.value();
     }
     _requestedSize = (columns, rows);
-    final completion = Completer<void>();
-    _resizeWaiters.add(completion);
+    final completion = _resizeCompletion ??= Completer<void>();
+    _scheduleResize();
+    return completion.future;
+  }
+
+  void _scheduleResize() {
+    // Keep at most one resize on the wire and one latest requested size. In
+    // particular, returning to the last completed size while another resize
+    // is in flight must not lose that final viewport geometry.
+    if (_closed || _resizing || _requestedSize == null) return;
     _resizeTimer ??= Timer(const Duration(milliseconds: 80), () async {
       _resizeTimer = null;
+      _resizing = true;
       final size = _requestedSize;
       _requestedSize = null;
-      final waiters = _resizeWaiters.toList();
-      _resizeWaiters.clear();
+      final completion = _resizeCompletion;
+      _resizeCompletion = null;
       try {
-        if (!_closed && size != null) {
+        if (!_closed &&
+            size != null &&
+            (size.$1 != _columns || size.$2 != _rows)) {
           await _command('refresh-client -C ${size.$1}x${size.$2}');
           _columns = size.$1;
           _rows = size.$2;
           await _refresh();
         }
-        for (final waiter in waiters) {
-          if (!waiter.isCompleted) waiter.complete();
-        }
+        completion?.complete();
       } catch (failure, stack) {
-        for (final waiter in waiters) {
-          if (!waiter.isCompleted) waiter.completeError(failure, stack);
-        }
+        completion?.completeError(failure, stack);
+      } finally {
+        _resizing = false;
+        _scheduleResize();
       }
     });
-    return completion.future;
   }
 
   Future<void> detach() async {
@@ -979,10 +1014,8 @@ class TmuxControlClient extends ChangeNotifier {
         pending.completer.completeError(failure);
       }
     }
-    for (final waiter in _resizeWaiters) {
-      if (!waiter.isCompleted) waiter.complete();
-    }
-    _resizeWaiters.clear();
+    _resizeCompletion?.complete();
+    _resizeCompletion = null;
     for (final pane in _ownedPanes.values) {
       pane._connection.finish();
     }
@@ -1062,6 +1095,12 @@ class _Command {
   const _Command(this.text, [this.onSuccess]);
   final String text;
   final void Function(TmuxControlBlock)? onSuccess;
+}
+
+class _PaneCapture {
+  const _PaneCapture(this.commands, this.wasInstalled);
+  final List<_Command> commands;
+  final bool Function() wasInstalled;
 }
 
 class _PendingCommand {
