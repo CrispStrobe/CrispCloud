@@ -12,6 +12,10 @@ The implementation and exact behavior are described in the
 [terminal guide](terminal.md#output-triggers). Current local validation and
 integration evidence are recorded in
 [the forwarding/trigger evidence directory](validation/terminal-forwarding-triggers/README.md).
+The completed native cohort passed **676 tests with two platform skips and zero
+failures across 60 files**. Analysis and formatting are clean across **99 Dart
+files**; the separate real OpenSSH run passed **six tests with one optional PTY
+skip**. The current web release compilation retry is pending.
 
 The preceding continuation started at `4cd8065a` in PR #140, now merged. It added **up to
 eight nested panes, OpenSSH destination import and custom terminal key bindings**,
@@ -24,7 +28,7 @@ historical evidence; it no longer describes the current validation environment.
 Source changes are saved incrementally to `codex/terminal-screen-workspace`.
 GitHub Actions results are neither queried nor awaited; checkpoints carry
 `[skip ci]`. Local validation and its explicit platform limits are recorded below
-and in [the evidence directory](validation/terminal-parity-continuation/README.md).
+and in [the current evidence directory](validation/terminal-forwarding-triggers/README.md).
 
 ## Integration baseline and refresh
 
@@ -36,8 +40,19 @@ from main's ancestry; both had exact tree identity with their already-merged
 squash commits. Checkpoint `5c2dbea9` retains those heads as additional parents
 and contains every audited head. No newer source was reverted to an old branch
 snapshot. The [integration record](validation/terminal-forwarding-triggers/integration.json)
-contains the exact refs and tree comparisons. The previous snapshots below are
-retained as historical evidence.
+contains the exact refs and tree comparisons.
+
+The final remote advertisement at **16 November 2026, 05:21:54 UTC** contains
+**38 branch heads and 150 PR heads**. It found the new Zotero continuation head
+`d916a841`, which contributed two audit documents. Merge `4a6a03b9` contains
+**all 188 snapshot references as actual ancestors**, including the original
+squash-equivalent heads. Its tree matches the reviewed `git merge-tree` result;
+the merge preserves every tested application input. Main remained at `45ed126a`
+through this cutoff. All **2,391** managed vendor blob IDs and modes, the vendor
+manifest and source pins are identical across the current, incoming and merged
+trees. Exact cutoff refs, merge inspection and post-integration ancestry checks
+are in [the final remote audit](validation/terminal-forwarding-triggers/final-remote-audit.json).
+The previous snapshots below are retained as historical evidence.
 
 At **15 November 2026, 22:12:24 UTC**, all **32 live branch heads** and the
 **100 recent PR heads** were audited before new implementation. The branch
@@ -52,8 +67,9 @@ freshly SHA-256 checked. All **527** Quds entries matched the complete canonical
 Git tree by blob, mode and size; the **1,857** standalone parser files retained
 their existing source pin and matching digests.
 
-The final refresh found **34 branch heads**, PRs #155 and #156, and later Zotero
-work. The integrated Zotero head `6a53294ad086e2a1c6475d888fbed7dcc2591449`
+The previous continuation's final refresh found **34 branch heads**, PRs #155
+and #156, and later Zotero work. The integrated Zotero head
+`6a53294ad086e2a1c6475d888fbed7dcc2591449`
 already includes main `d1add32cf5f4a14379ae35ca30b123e781558549` and terminal
 checkpoint `a965bfd4`. It merges cleanly with the newer terminal fixes. The
 incoming vendor manifest advances canonical Quds to
@@ -70,8 +86,8 @@ Earlier feature evidence retains its original source cutoff. Records:
 - [PR ancestry checks](validation/terminal-parity-continuation/pr-head-ancestry.json)
 - [Initial canonical reconciliation](validation/terminal-parity-continuation/canonical-integration.json)
 - [Initial complete managed-source verification](validation/terminal-parity-continuation/canonical-source-verification.json)
-- [Latest remote snapshot and comparisons](validation/terminal-parity-continuation/remote-cutoff-refresh.json)
-- [Latest complete managed-source verification](validation/terminal-parity-continuation/canonical-source-cutoff-verification.json)
+- [Previous continuation's final remote snapshot and comparisons](validation/terminal-parity-continuation/remote-cutoff-refresh.json)
+- [Previous continuation's final managed-source verification](validation/terminal-parity-continuation/canonical-source-cutoff-verification.json)
 - [All 134 snapshot references contained](validation/terminal-parity-continuation/refresh-ancestry-verification.json)
 
 ## Implemented coverage
@@ -200,6 +216,51 @@ forwarding failure or an oversized input operation. The per-event bound is
 262,144 UTF-16 code units, not a byte count. Stop also revokes pending deliveries
 that have not reached their transports. Groups are never persisted.
 
+## Current continuation verification
+
+The final normal-application cohort passed **676 native tests, two platform
+skips and zero failures across 60 files**, using pinned Flutter **3.47.8** / Dart
+**3.13.7**, the unchanged production lockfile and normal native build hooks.
+Static analysis and formatting are clean across the same **99 terminal-related
+Dart files**. The [current acceptance record](validation/terminal-forwarding-triggers/README.md)
+links the complete logs, commands and exact source inventories.
+
+| Check | Actual result |
+| --- | --- |
+| Native terminal cohort | 676 passed, 2 platform skips, 0 failures across 60 files; real Linux PTY coverage included |
+| Static analysis | 99 Dart files; no issues |
+| Formatting | The same 99 Dart files; no changes required |
+| Actual loopback OpenSSH | 6 passed; 1 optional interactive SSH PTY skip |
+| Managed Office source identity | All 2,391 managed-file hashes and tracked modes match |
+| Browser runtime | Zero tests completed; Chromium failed before startup because Unix socket creation was denied |
+| Full web release compilation | Initial compiler process killed with exit -9; isolated retry pending |
+| GitHub Actions | No result queried, awaited or required |
+
+The native/analyzer source checkpoint is `ea9a5463`. All **5,388 watched
+source/dependency/test files** stayed unchanged during the final runs. Subsequent
+merge `4a6a03b9` added only two Zotero audit documents and preserved those tested
+inputs. Intermediate focused counts overlap the final cohort and are not added
+to its total. The first full attempt exposed an optional forwarding-capability
+lookup bug in reconnect tests; the final cohort includes its repair. That failed
+attempt remains in the evidence directory.
+
+Four of the six actual OpenSSH cases exercise the new forwarding controls
+through independently verified jump and final hosts. Local, remote and SOCKS5
+paths each transfer an exact **3 MiB binary payload plus Unicode**, exceeding
+the initial SSH channel window. Request half-close preserves the full final
+response; stopping a listener leaves ordinary SSH command execution working.
+Disconnect closes active client sockets and both local and remote listeners.
+The two retained cases cover verified jump execution, reconnect and changed-key
+rejection. Fixtures use disposable keys and loopback-only servers.
+
+The two native skips are the macOS-only shell fixture and Windows ConPTY. The
+OpenSSH runner's optional interactive PTY case was not enabled; separate real
+Linux PTYs passed in the native cohort. Browser runtime, packaged or signed
+macOS, Windows, physical Android/iOS, external gateways and actual tmux/Screen
+deployments still require their own acceptance. The current web retry has no
+completed result yet; the successful web build recorded below belongs to the
+previous continuation.
+
 ## Previous continuation verification
 
 The final normal-application run passed **585 tests with two platform skips and
@@ -276,8 +337,8 @@ belong to that earlier source and are not added to the new cohort.
 The earlier integration snapshots of 27, then 30 branch heads are retained in
 [the initial audit](validation/terminal-20261115/integration.json),
 [refresh record](validation/terminal-20261115/integration-refresh.json) and
-[cutoff record](validation/terminal-20261115/integration-cutoff.json). The latest
-34-head refresh above supersedes those repository cutoffs.
+[cutoff record](validation/terminal-20261115/integration-cutoff.json). The
+16 November 38-head refresh above supersedes these earlier repository cutoffs.
 
 ## Primary references
 
