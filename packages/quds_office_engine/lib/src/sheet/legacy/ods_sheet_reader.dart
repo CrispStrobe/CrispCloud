@@ -1040,12 +1040,39 @@ abstract final class OdsSheetReader {
             final text = sheet.cell(SmlCellRef(column, row)).asString;
             if (text.isNotEmpty) all.add(text);
           }
-          final visible = switch (operator) {
-            '=' => <String>{value},
-            '<>' || '!=' => all.difference(<String>{value}),
-            _ => null,
-          };
-          if (visible == null) continue;
+          bool passes(String candidate) {
+            final left = double.tryParse(candidate);
+            final right = double.tryParse(value);
+            final compare = left != null && right != null
+                ? left.compareTo(right)
+                : candidate.compareTo(value);
+            return switch (operator) {
+              '=' => candidate == value,
+              '<>' || '!=' => candidate != value,
+              '<' => compare < 0,
+              '<=' => compare <= 0,
+              '>' => compare > 0,
+              '>=' => compare >= 0,
+              'empty' => candidate.isEmpty,
+              'not-empty' => candidate.isNotEmpty,
+              _ => true,
+            };
+          }
+
+          if (!const {
+            '=',
+            '<>',
+            '!=',
+            '<',
+            '<=',
+            '>',
+            '>=',
+            'empty',
+            'not-empty',
+          }.contains(operator)) {
+            continue;
+          }
+          final visible = all.where(passes).toSet();
           visibleByField[field] = visibleByField.containsKey(field)
               ? visibleByField[field]!.intersection(visible)
               : visible;

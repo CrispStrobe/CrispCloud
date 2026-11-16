@@ -2166,6 +2166,40 @@ void metadataTests() {
     expect(workbookXml, contains('name="Double"'));
   });
 
+  test('ODS range filter predicates select visible values', () async {
+    final book = OdsSheetReader.readBytes(
+      _ods(
+        '<t:table t:name="Data">'
+        '<t:table-row><t:table-cell><x:p>Qty</x:p></t:table-cell>'
+        '</t:table-row>'
+        '<t:table-row><t:table-cell o:value-type="float" o:value="1">'
+        '<x:p>1</x:p></t:table-cell></t:table-row>'
+        '<t:table-row><t:table-cell o:value-type="float" o:value="3">'
+        '<x:p>3</x:p></t:table-cell></t:table-row>'
+        '<t:table-row><t:table-cell o:value-type="float" o:value="5">'
+        '<x:p>5</x:p></t:table-cell></t:table-row></t:table>',
+        extra:
+            '<t:database-ranges><t:database-range '
+            't:target-range-address="Data.A1:Data.A4"><t:filter>'
+            '<t:filter-and><t:filter-condition t:field-number="0" '
+            't:value="2" t:operator="&gt;"/></t:filter-and></t:filter>'
+            '</t:database-range></t:database-ranges>',
+      ),
+    );
+    final filter = book.sheets.first.autoFilter!;
+    expect(filter.hiddenValues[0], {'1.0'});
+    expect(filter.isRowHidden(book.sheets.first, 1), isTrue);
+    expect(filter.isRowHidden(book.sheets.first, 2), isFalse);
+
+    final saved = await OfficeIsolateSave.workbook(book, recalculate: false);
+    final archive = ZipDecoder().decodeBytes(saved);
+    final sheetXml = utf8.decode(
+      archive.findFile('xl/worksheets/sheet1.xml')!.content as List<int>,
+    );
+    expect(sheetXml, contains('<filter val="3.0"/>'));
+    expect(sheetXml, contains('<filter val="5.0"/>'));
+  });
+
   test('ODS filter predicates become XLSX filter columns', () async {
     final book = OdsSheetReader.readBytes(
       _ods(
