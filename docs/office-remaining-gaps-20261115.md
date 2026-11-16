@@ -33,7 +33,7 @@ exact source identities, commands and the separately qualified terminal results.
 ## Earlier verified state
 
 - CrispCloud `main` snapshot: `4eea7d16`
-- Vendored Quds source checkpoint: `ea9d16edd489b3a4ccff7a25cc5277b686c4e263`
+- Vendored Quds source checkpoint: `76c7087c22da8ace85b9a71ca266a90f84faa3ae`
   (`packages/QUDS_FORKS.md`, 2,503 managed files)
 - Quds sheet/ODS cohort: **514 tests**; the last clean full engine run was
   **2,205 tests** (two unrelated CLI bookmark/content-control tests currently
@@ -144,8 +144,8 @@ arbitrary part names.
 **Status:** Partial\
 **Current:** supported raster pictures are held in a bounded image registry (8 MiB per
 image, 24 MiB total) and referenced by synthetic `odt-image:` keys. The viewer
-renders them with `Image.memory`; payloads stay out of plain text, search and
-the rich-render budget. Larger/unsupported media remains a marker.\
+renders them with `Image.memory` and applies the ODF frame's width/height;
+payloads stay out of plain text, search and the rich-render budget. Larger/unsupported media remains a marker.\
 **Remaining:** image positioning/cropping, captions, linked images and vector
 formats.\
 **Next step:** model the remaining frame geometry and media relationships.\

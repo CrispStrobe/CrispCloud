@@ -1,7 +1,7 @@
 {
   "source_repository": "CrispStrobe/quds_office_suite",
   "source_branch": "codex/zotero-recovery-20261116",
-  "source_commit": "5b05664357eead5ddc86922bab248224dbd4da6d",
+  "source_commit": "732fc3d0bc7a1118f3eb86e6c762fe70182c4fd2",
   "files": {
     "packages/legacy_doc_parser/.gitattributes": "e03c93473e616ad6fcd8697f797b4774076aa6fc468bf0f72860d2c6512eebbf",
     "packages/legacy_doc_parser/.github/workflows/ci.yml": "111910a34c0e41774a325c0bc5c6c3d7517298254a08c79df6dce7d7f70e3605",
@@ -2078,8 +2078,8 @@
     "packages/quds_office_engine/lib/src/sheet/model/sml_workbook.dart": "099358ae26351f2899bf37832b4f31b0f52e796d921be88fb28e4b17ce2f2249",
     "packages/quds_office_engine/lib/src/sheet/serial/sheet_drawing_io.dart": "12bdcd3963ce4acb83bc6465f7d4343d9c4a0303d17d124ea76dbe5e83ac9f77",
     "packages/quds_office_engine/lib/src/sheet/serial/sheet_package_fidelity.dart": "f8984392e9f886bdbc121880643f05d22a28d451cc79a7a85f74962f9ad81864",
-    "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart": "73439393a0a2d7dc94a07c8126fad730898d15c4aeda6f7df1204204c3d56baf",
-    "packages/quds_office_engine/lib/src/sheet/styles/sml_styles.dart": "84be6e42c47c58872c451639722dd33af50005a9aab6e13ac766888f66311f5b",
+    "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart": "2ef13ce2877a3a250ea478c6e56938605cb2544eb937885365b68dd17bdc97fc",
+    "packages/quds_office_engine/lib/src/sheet/styles/sml_styles.dart": "0e67f3a761f6a97981d81bbc16b55b6954dbafd597c30a74022f062603394e6b",
     "packages/quds_office_engine/lib/src/slide/anim/pml_motion_io.dart": "c651ee0235ed5c96b47398ac86fa5ba8f414aad1bc2ae8066752de01af42e88c",
     "packages/quds_office_engine/lib/src/slide/model/pml_arrange.dart": "55b511cf38d76de917fcbde0d80990a2e5eb99f7caf80d5c9c51da48a05948b7",
     "packages/quds_office_engine/lib/src/slide/model/pml_presentation.dart": "c18bfea9cc8db55de0e9c823d82539a1e9738a7b6c16e8a2eb26d361a05a5de0",
@@ -2302,7 +2302,7 @@
     "packages/quds_office_engine/test/sheet_qualified_names_test.dart": "ad817ca73805ba21c4729a9fc997ee3f90edbd48ca96babcf8f18c49a7f2cdb2",
     "packages/quds_office_engine/test/sheet_rename_adversarial_test.dart": "62aa60cf7ccefd124f71c17fcc40478478111a2a8e962eec057668b6c0b2b10b",
     "packages/quds_office_engine/test/sheet_rename_fidelity_test.dart": "a46c2efbf4a813a0ae8efa9d04edb2f9085beb2c584c8e09800cc304820f9828",
-    "packages/quds_office_engine/test/sheet_save_cache_and_freeze_test.dart": "955c75feb22118a918e006e2f7279be5d0c9d10335046048ca63582f03b0dddc",
+    "packages/quds_office_engine/test/sheet_save_cache_and_freeze_test.dart": "dc41678dc891f8c676536810d108944df3e14ba7080a4f0acd8ff94a625c12bb",
     "packages/quds_office_engine/test/sheet_schema_fidelity_test.dart": "36115b3cca8384e798f96b8da6204da0ab9e1c3719585135743a3a704a67cf54",
     "packages/quds_office_engine/test/sheet_style_namespace_fidelity_test.dart": "56c25d5e174c2bfc6089e0db2236c9ce97475e1f75ced91ba1d9793250de4c16",
     "packages/quds_office_engine/test/sheet_time_number_format_test.dart": "344a4fa9e16c2e7756af18b00b5a6adbaeddd5d1221afd406dd7d537d28d4f51",
