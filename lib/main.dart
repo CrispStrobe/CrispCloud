@@ -70,6 +70,7 @@ import 'services/file_viewer_lrc_license.dart';
 import 'services/file_viewer_documents_license.dart';
 import 'services/ebook_licenses.dart';
 import 'services/legacy_doc_licenses.dart';
+import 'services/office_proofing_licenses.dart';
 import 'services/secure_storage_service.dart';
 import 'services/secure_storage_web.dart';
 import 'services/secure_storage_file.dart';
@@ -349,6 +350,7 @@ Future<void> _startCrispCloud() async {
     registerFileViewerDocumentsLicenses();
     registerEbookLicenses();
     registerLegacyDocLicenses();
+    registerOfficeProofingLicenses();
     registerMediaVideoLicenses();
     LicenseRegistry.addLicense(
       () => Stream.value(

@@ -1,0 +1,12 @@
+{
+  "source_head": "3cbc1cb105a066072f9a4d8d0a1c4b7be37ba240",
+  "files_sha256": {
+    "lib/screens/file_browser_screen.dart": "c701e6db0f4f7c15530c384d07a907516edd51368e636d5995d277e377acecb9",
+    "lib/services/office_editor_menu.dart": "1c37e3aa99688a4263b9ae5b07b5fa9ceb13dfcc05313f8bee4f651af289c5b3",
+    "lib/widgets/office_editor_dialog.dart": "f39d3b8833e41464008c8161f7e07c3215f7ec78d25beb639b1d1ce6a949c173",
+    "lib/widgets/office_editor_ribbon.dart": "44cc7b11de164668208de506c3bf70e251de1226e83126654760305902d1cf2b",
+    "test/widget/office_editor_dialog_test.dart": "c891eef05a31a97b6dd4096cf80d67f0c49ab6db241d5020d16a49cb3660915f"
+  },
+  "patch_sha256": "5db96b99a94633ab8694f687b7928284ecda0dbfce0e3cb1831b9289d02e47f4",
+  "original_working_copy": "preserved"
+}

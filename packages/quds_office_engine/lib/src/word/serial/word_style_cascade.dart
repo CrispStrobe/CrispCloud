@@ -97,6 +97,9 @@ class _StyleCascade {
     for (final note in [...document.footnotes, ...document.endnotes]) {
       walk(note.blocks);
     }
+    for (final comment in document.comments) {
+      walk(comment.paragraphs);
+    }
     return true;
   }
 
@@ -123,6 +126,18 @@ class _StyleCascade {
       for (final child in layer.childElements) {
         if (child.localName == 'sectPr') continue;
         final old = result.firstChild(child.localName);
+        if (name == 'rPr' && child.localName == 'noProof') {
+          // An omitted on/off value enables noProof. Do not retain a lower
+          // layer's explicit false when the next layer uses <w:noProof/>.
+          final effective = old ?? child.copy();
+          effective.setAttribute(
+            'val',
+            child.getAttribute('val') ?? '1',
+            prefix: 'w',
+          );
+          if (old == null) result.addChild(effective);
+          continue;
+        }
         if (name == 'rPr' &&
             const {
               'b',
@@ -338,6 +353,13 @@ class _StyleCascade {
         XmlDocument(root: rp).toXmlString(declaration: false),
       )..next();
       reader._parseRPr(inner, resolved);
+      // The document default remains live: changing it must affect runs that
+      // do not override it without stamping direct formatting onto every run.
+      resolved.proofingLanguage = merged('rPr', [
+        for (final t in tableLayers) t.firstChild('rPr'),
+        ...styleRuns,
+        direct,
+      ]).firstChild('lang')?.getAttribute('val');
       if (run.hyperlink != null) {
         if (rp.firstChild('color') == null) resolved.color = WordLink.color;
         if (rp.firstChild('u') == null) {

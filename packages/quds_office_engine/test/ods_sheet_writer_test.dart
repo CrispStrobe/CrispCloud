@@ -8,7 +8,7 @@ void main() {
   test('writes a readable ODS package with values, formulas and metadata', () {
     final sheet = SmlWorksheet(name: 'Data', sheetId: 1)
       ..setColumnWidth(0, 160);
-    final a1 = sheet.cellA1('A1')
+    sheet.cellA1('A1')
       ..value = 'Item'
       ..type = SmlCellType.string
       ..fontBold = true

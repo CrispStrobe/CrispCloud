@@ -1,0 +1,27 @@
+{
+  "setup_started_utc": "2026-11-16T13:17:52.808969+00:00",
+  "harness": "zotero-toolchain/crisp-host-harness",
+  "amendments": {
+    "assets": [
+      "packages/quds_office_engine/third_party/hyphenation/LICENSE",
+      "packages/quds_office_engine/third_party/proofing/WORTLISTE_LICENSE",
+      "packages/quds_office_engine/third_party/proofing/QUDS_WORDS_LICENSE"
+    ],
+    "new_symlinks": [
+      {
+        "path": "packages/quds_office_engine/third_party",
+        "target": "CrispCloud/packages/quds_office_engine/third_party"
+      },
+      {
+        "path": "test/office_proofing_licenses_test.dart",
+        "target": "CrispCloud/test/office_proofing_licenses_test.dart"
+      }
+    ],
+    "pubspec_sha256_before": "8ae150f25ca6eebc1e262f923cede1a949a33834e7dd637e884db83ede4d7874",
+    "pubspec_sha256_after": "3d4953e436d280cbc4a4fe0d635a4b6166ed625e188c9a9fa096398250aeea68"
+  },
+  "dependency_lock_sha256_before": "0707090b1c56ae828b06829cf5640403e146f790d5f824b7d4bff6456e71a0ab",
+  "dependency_lock_sha256_after_setup": "0707090b1c56ae828b06829cf5640403e146f790d5f824b7d4bff6456e71a0ab",
+  "pub_get_rerun": false,
+  "scope": "Asset declarations and symlinks only; no dependency changes or test-result claims in this setup record."
+}

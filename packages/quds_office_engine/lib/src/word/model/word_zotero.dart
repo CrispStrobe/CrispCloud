@@ -654,30 +654,87 @@ abstract final class WordZotero {
   ];
 
   /// Distinct embedded CSL items, with their full original JSON preserved.
-  static List<Map<String, dynamic>> embeddedItems(WmlDocument document) {
-    final seen = <String>{};
-    final items = <Map<String, dynamic>>[];
-    for (final field in fields(document)) {
-      for (final item
-          in field.citation?.items ?? const <ZoteroCitationItem>[]) {
-        if (item.itemData == null) continue;
-        final identities = item.uris.isEmpty
-            ? <String>['id:${item.id}']
-            : <String>[for (final uri in item.uris) _itemIdentity(uri)];
-        final duplicate = identities.any(seen.contains);
-        seen.addAll(identities);
-        if (!duplicate) items.add(item.itemData!);
+  static List<Map<String, dynamic>> embeddedItems(WmlDocument document) =>
+      distinctEmbeddedItems(
+        fields(document).expand(
+          (field) => field.citation?.items ?? const <ZoteroCitationItem>[],
+        ),
+      );
+
+  /// One original CSL snapshot per source, in first-available-snapshot order.
+  ///
+  /// All URIs on a citation item describe the same source. Resolve their full
+  /// alias groups before choosing snapshots, so a later item can connect two
+  /// earlier identities even when that connecting item has no embedded data.
+  /// Only complete URI identities are compared; equal item keys or CSL IDs do
+  /// not join linked sources from unrelated libraries. Unlinked sources retain
+  /// the existing item-ID fallback, separate from every URI namespace.
+  /// Neither citation metadata nor the chosen snapshot is rewritten.
+  static List<Map<String, dynamic>> distinctEmbeddedItems(
+    Iterable<ZoteroCitationItem> sources,
+  ) {
+    final items = sources.toList(growable: false);
+    final parents = List<int>.generate(items.length, (index) => index);
+    final ranks = List<int>.filled(items.length, 0);
+
+    int root(int index) {
+      while (parents[index] != index) {
+        parents[index] = parents[parents[index]];
+        index = parents[index];
+      }
+      return index;
+    }
+
+    final owners = <(String, String), int>{};
+    for (var index = 0; index < items.length; index++) {
+      final item = items[index];
+      final uris = item.uris;
+      final identities = uris.isEmpty
+          ? <(String, String)>[('id', '${item.id}')]
+          : uris.map(_itemIdentity);
+      for (final identity in identities) {
+        final previous = owners.putIfAbsent(identity, () => index);
+        final currentRoot = root(index);
+        final previousRoot = root(previous);
+        if (currentRoot == previousRoot) continue;
+        if (ranks[currentRoot] < ranks[previousRoot]) {
+          parents[currentRoot] = previousRoot;
+        } else {
+          parents[previousRoot] = currentRoot;
+          if (ranks[currentRoot] == ranks[previousRoot]) {
+            ranks[currentRoot]++;
+          }
+        }
       }
     }
-    return items;
+    final snapshots = <int, Map<String, dynamic>>{};
+    for (var index = 0; index < items.length; index++) {
+      final data = items[index].itemData;
+      if (data != null) snapshots.putIfAbsent(root(index), () => data);
+    }
+    return snapshots.values.toList();
   }
 
-  static String _itemIdentity(String value) {
-    final uri = Uri.tryParse(value);
-    if (uri != null && ZoteroCitationItem._isItemUri(value)) {
-      return 'zotero:${uri.path}';
+  static final _itemUriOrigin = RegExp(
+    r'^https?://(?:www\.)?zotero\.org/',
+    caseSensitive: false,
+  );
+  static final _itemUriPath = RegExp(
+    r'^/(?:users/(?:[1-9][0-9]*|local/[A-Za-z0-9]{8})|groups/[1-9][0-9]*)/items/[A-Z0-9]{8}$',
+  );
+
+  static (String, String) _itemIdentity(String value) {
+    final origin = _itemUriOrigin.matchAsPrefix(value);
+    if (origin != null) {
+      // Check the original path: Uri normalization must not turn escapes,
+      // dot segments, explicit ports or trailing characters into aliases.
+      final path = value.substring(origin.end - 1);
+      final match = _itemUriPath.matchAsPrefix(path);
+      if (match != null && match.end == path.length) {
+        return ('zotero', path);
+      }
     }
-    return value;
+    return ('uri', value);
   }
 
   /// Explicitly replaces a citation and its cache; unknown metadata can be

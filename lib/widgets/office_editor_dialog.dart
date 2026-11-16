@@ -596,6 +596,59 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
     }
   }
 
+  String _odsOutputName() {
+    final name = widget.saveAsName ?? _file.name;
+    final dot = name.lastIndexOf('.');
+    final base = dot > 0 ? name.substring(0, dot) : name;
+    return officeCopyName('$base.ods');
+  }
+
+  Future<void> _exportOds() async {
+    if (_saving || _exporting) return;
+    final controller = _controller;
+    if (controller is! SheetEditorController) return;
+    setState(() => _exporting = true);
+    try {
+      controller.commitPendingEdits();
+      final bytes = OdsSheetWriter.writeBytes(controller.workbook);
+      if (bytes.length > kOfficeCopyOutputLimitBytes) {
+        throw FileTargetTooLarge(kOfficeCopyOutputLimitBytes);
+      }
+      if (!mounted) return;
+      final outcome = await widget.copyExporter(
+        Uint8List.fromList(bytes).asUnmodifiableView(),
+        _odsOutputName(),
+        context.tr('Export as ODS'),
+        initialDirectory: _copyInitialDirectory,
+      );
+      if (!mounted || outcome == null) return;
+      _showNotice(
+        TransientSnackBar(
+          content: Text(
+            context.tr(
+              outcome == OfficeCopyOutcome.savedCopy
+                  ? 'Copy saved. The original is unchanged.'
+                  : 'Copy download started. The original is unchanged.',
+            ),
+          ),
+        ),
+      );
+    } catch (e, st) {
+      _log.warn('ODS export failed', e, st);
+      if (!mounted) return;
+      _showNotice(
+        SnackBar(
+          content: Text(
+            '${context.tr('Could not save a copy')}: ${_localizedError(e)}',
+          ),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _exporting = false);
+    }
+  }
+
   Future<void> _saveCopy({
     bool original = false,
     bool asLegacySave = false,
@@ -728,10 +781,11 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
     if (next.lengthUnit != _config.lengthUnit) {
       _unitRevision++;
       unawaited(
-        OfficeMeasurementPreferences.write(next.lengthUnit)
-            .catchError((Object error) {
-              _log.warn('Could not save measurement units', error);
-            }),
+        OfficeMeasurementPreferences.write(next.lengthUnit).catchError((
+          Object error,
+        ) {
+          _log.warn('Could not save measurement units', error);
+        }),
       );
     }
     setState(() => _config = next);
@@ -977,6 +1031,9 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
           config: _config,
           onSave: () => unawaited(_save()),
           onSaveCopy: () => unawaited(_saveCopy()),
+          onExportOds: _kind == OfficeEditorKind.sheet
+              ? () => unawaited(_exportOds())
+              : null,
           onSaveAs: kIsWeb ? null : () => unawaited(_saveAs()),
           onPrint: () => ref.read(documentPrintProvider)?.run(),
           onZotero: _kind == OfficeEditorKind.word
@@ -1021,8 +1078,9 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
           // Keep a key entered during this document session even if the
           // initial credential-store read was unavailable.
           _zoteroCredentialsLoaded = true;
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text(context.tr(error.message))));
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(context.tr(error.message))));
         }
       }
       if (!mounted ||

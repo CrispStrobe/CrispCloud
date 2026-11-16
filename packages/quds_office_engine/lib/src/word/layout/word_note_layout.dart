@@ -14,9 +14,28 @@ class _NoteStory {
     WordLayoutEngine owner,
   ) {
     final List<WmlBlock> blocks = note.blocks.map(WmlClone.block).toList();
+    final originals = WordTree.paragraphs(note.blocks).toList();
+    final copies = WordTree.paragraphs(blocks).toList();
+    final originalOf = <WmlParagraph, WmlParagraph>{
+      for (var i = 0; i < copies.length; i++) copies[i]: originals[i],
+    };
+    final offsetsOf = <WmlParagraph, List<int?>>{};
     final label = owner._noteNumbering?.labelFor(note) ?? '${note.id}';
     var hasMarker = false;
     for (final paragraph in blocks.expand(WmlClone.paragraphsOf)) {
+      final offsets = <int?>[];
+      var sourceOffset = 0;
+      for (final inline in paragraph.inlines) {
+        if (inline is WmlNoteMarker) {
+          offsets.addAll(List<int?>.filled(label.length, null));
+        } else if (inline is WmlRun) {
+          for (var j = 0; j < inline.text.length; j++) {
+            offsets.add(sourceOffset++);
+          }
+        }
+      }
+      offsets.add(sourceOffset);
+      offsetsOf[paragraph] = offsets;
       for (var i = 0; i < paragraph.inlines.length; i++) {
         final inline = paragraph.inlines[i];
         if (inline is WmlNoteMarker) {
@@ -37,6 +56,11 @@ class _NoteStory {
           label.isNotEmpty &&
           note.addReferenceSpace &&
           (first.text.isEmpty || !RegExp(r'^\s').hasMatch(first.text));
+      final map = offsetsOf.putIfAbsent(first, () => <int?>[0]);
+      map.insertAll(
+        0,
+        List<int?>.filled(label.length + (separator ? 1 : 0), null),
+      );
       first.inlines.insertAll(0, [
         WmlRun(
           text: label,
@@ -50,6 +74,8 @@ class _NoteStory {
     }
     // Make oversized drawings fit a continuation page without clipping.
     final WmlDocument story = WmlDocument(
+      proofingLanguage: owner._layoutDoc?.proofingLanguage,
+      autoHyphenation: owner._layoutDoc?.autoHyphenation ?? false,
       sections: <WmlSection>[
         WmlSection(
           blocks: blocks,
@@ -80,6 +106,7 @@ class _NoteStory {
       font: owner.font,
       fonts: owner.fonts,
       measure: owner.measure,
+      measureRun: owner.measureRun,
       fallbackWidthFactor: owner.fallbackWidthFactor,
     ).._containedPhysicalSection = section;
     final LaidOutDocument laid = storyEngine.layout(story, updateFields: false);
@@ -93,7 +120,18 @@ class _NoteStory {
       for (final LaidOutLine line in page.lines) {
         final String source =
             line.sourceText ?? paragraphs[line.paragraphIndex].text;
-        lines.add(_noteLine(line, 0, height, 0, source));
+        final cloned = line.sourceParagraph ?? paragraphs[line.paragraphIndex];
+        lines.add(
+          _noteLine(
+            line,
+            0,
+            height,
+            0,
+            source,
+            sourceParagraph: originalOf[cloned],
+            proofingOffsets: offsetsOf[cloned],
+          ),
+        );
         bottom = math.max(bottom, line.y + line.height);
       }
       for (final LaidOutBox box in page.frames) {
@@ -173,6 +211,8 @@ LaidOutLine _noteLine(
   int page,
   String source, {
   int paragraphIndex = -1,
+  WmlParagraph? sourceParagraph,
+  List<int?>? proofingOffsets,
 }) => LaidOutLine(
   glyphs: <LaidOutGlyph>[
     for (final LaidOutGlyph g in line.glyphs)
@@ -219,6 +259,8 @@ LaidOutLine _noteLine(
   tocLeader: line.tocLeader,
   hyperlink: line.hyperlink,
   sourceText: source,
+  sourceParagraph: sourceParagraph ?? line.sourceParagraph,
+  proofingOffsets: proofingOffsets ?? line.proofingOffsets,
   boxX: line.boxX + dx,
   boxWidth: line.boxWidth,
   justificationRatio: line.justificationRatio,

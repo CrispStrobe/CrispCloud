@@ -26,6 +26,8 @@ part of 'word_layout.dart';
     properties: table.properties,
   );
   final storyDocument = WmlDocument(
+    proofingLanguage: owner._layoutDoc?.proofingLanguage,
+    autoHyphenation: owner._layoutDoc?.autoHyphenation ?? false,
     sections: [
       WmlSection(
         blocks: [rowTable],
@@ -48,6 +50,7 @@ part of 'word_layout.dart';
           font: owner.font,
           fonts: owner.fonts,
           measure: owner.measure,
+          measureRun: owner.measureRun,
           fallbackWidthFactor: owner.fallbackWidthFactor,
         )
         .._deferredContainedFrames = deferredFrames

@@ -1,0 +1,281 @@
+{
+  "analysis_config_restored": true,
+  "analysis_config_sha256": "39e74d36fd4613dbb6521855d1bd011741e822a86d900ca042e2c73540e969e0",
+  "canonical_tree": "17eecf8b8c8558c78dbbefe9ffc9b1249e2455cf",
+  "changed_source_paths": [],
+  "commands": [
+    {
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "tool/verify_office_fidelity.py",
+        "--source",
+        "/workspace/scratch/c17add9bb04f/quds_office_suite"
+      ],
+      "cwd": "/workspace/scratch/c17add9bb04f/CrispCloud",
+      "duration_seconds": 0.453,
+      "exit_code": 0,
+      "finished_utc": "2026-11-16T13:44:42.008180+00:00",
+      "log": "vendor-source.log",
+      "log_sha256": "172d82625561b1111bbb2cd3d8ad52b2ca65c5dce80f6de0148b3bb1db6704c6",
+      "name": "vendor-source",
+      "started_utc": "2026-11-16T13:44:41.555545+00:00"
+    },
+    {
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "tool/verify_office_fidelity.py",
+        "--source",
+        "/workspace/scratch/c17add9bb04f/quds_office_suite",
+        "--require-tracked"
+      ],
+      "cwd": "/workspace/scratch/c17add9bb04f/CrispCloud",
+      "duration_seconds": 0.868,
+      "exit_code": 0,
+      "finished_utc": "2026-11-16T13:44:42.876587+00:00",
+      "log": "vendor-tracked.log",
+      "log_sha256": "172d82625561b1111bbb2cd3d8ad52b2ca65c5dce80f6de0148b3bb1db6704c6",
+      "name": "vendor-tracked",
+      "started_utc": "2026-11-16T13:44:42.008383+00:00"
+    },
+    {
+      "command": [
+        "/workspace/scratch/c17add9bb04f/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "/workspace/scratch/c17add9bb04f/zotero-toolchain/flutter-sdk/bin/cache/flutter_tools.snapshot",
+        "test",
+        "--no-pub",
+        "--concurrency=1",
+        "--reporter",
+        "expanded",
+        "test/office_zotero_test.dart",
+        "test/office_zotero_citing_transport_test.dart",
+        "test/office_zotero_ribbon_test.dart",
+        "test/office_proofing_licenses_test.dart"
+      ],
+      "cwd": "/workspace/scratch/c17add9bb04f/zotero-toolchain/crisp-host-harness",
+      "duration_seconds": 27.242,
+      "exit_code": 0,
+      "finished_utc": "2026-11-16T13:45:10.118725+00:00",
+      "log": "host-tests.log",
+      "log_sha256": "5dbca9bddc41decf16e613c42f3562b0691e96ea1fec510500c1f01631213c4c",
+      "name": "host-tests",
+      "started_utc": "2026-11-16T13:44:42.876841+00:00"
+    },
+    {
+      "command": [
+        "/workspace/scratch/c17add9bb04f/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "analyze",
+        "--fatal-infos",
+        "lib/services/office_zotero.dart",
+        "lib/services/office_zotero_transport.dart",
+        "lib/services/office_proofing_licenses.dart",
+        "lib/l10n/office_zotero_strings.dart",
+        "test/office_zotero_test.dart",
+        "test/office_zotero_citing_transport_test.dart",
+        "test/office_zotero_ribbon_test.dart",
+        "test/office_proofing_licenses_test.dart"
+      ],
+      "cwd": "/workspace/scratch/c17add9bb04f/CrispCloud",
+      "duration_seconds": 17.787,
+      "exit_code": 0,
+      "finished_utc": "2026-11-16T13:45:27.907352+00:00",
+      "log": "host-analysis.log",
+      "log_sha256": "455a7c6aaf0b32ad7bf110903173144dbd1e4f55ddb786914ffc1b9f21eaea38",
+      "name": "host-analysis",
+      "started_utc": "2026-11-16T13:45:10.119976+00:00"
+    },
+    {
+      "command": [
+        "/workspace/scratch/c17add9bb04f/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "analyze",
+        "--fatal-infos",
+        "packages/quds_office_engine/lib/src/word/model/word_zotero.dart",
+        "packages/quds_office_engine/lib/src/zotero/zotero_client.dart",
+        "packages/quds_office_editor/lib/src/embed/word_zotero_dialog.dart",
+        "packages/quds_office_editor/lib/src/embed/word_zotero_format.dart",
+        "packages/quds_office_editor/lib/src/editor_word/caret_engine.dart",
+        "packages/quds_office_editor/lib/src/editor_word/paint_run_text.dart",
+        "packages/quds_office_editor/test/word_hyphenation_caret_test.dart"
+      ],
+      "cwd": "/workspace/scratch/c17add9bb04f/CrispCloud",
+      "duration_seconds": 13.318,
+      "exit_code": 0,
+      "finished_utc": "2026-11-16T13:45:41.226389+00:00",
+      "log": "vendor-analysis.log",
+      "log_sha256": "4b77a8790c2ef00297086992695b9e4a38c11d3213bd2f2a50597c4eb43e73e9",
+      "name": "vendor-analysis",
+      "started_utc": "2026-11-16T13:45:27.908700+00:00"
+    },
+    {
+      "command": [
+        "/workspace/scratch/c17add9bb04f/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "format",
+        "--output=none",
+        "--set-exit-if-changed",
+        "lib/services/office_zotero.dart",
+        "lib/services/office_zotero_transport.dart",
+        "lib/services/office_proofing_licenses.dart",
+        "lib/l10n/office_zotero_strings.dart",
+        "test/office_zotero_test.dart",
+        "test/office_zotero_citing_transport_test.dart",
+        "test/office_zotero_ribbon_test.dart",
+        "test/office_proofing_licenses_test.dart"
+      ],
+      "cwd": "/workspace/scratch/c17add9bb04f/CrispCloud",
+      "duration_seconds": 0.061,
+      "exit_code": 0,
+      "finished_utc": "2026-11-16T13:45:41.287565+00:00",
+      "log": "host-format.log",
+      "log_sha256": "12b6ed25704189c510964fcb7aace6fa3848150e2d532b7e5c5a08e54ceb1cbc",
+      "name": "host-format",
+      "started_utc": "2026-11-16T13:45:41.226587+00:00"
+    },
+    {
+      "command": [
+        "/workspace/scratch/c17add9bb04f/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "format",
+        "--output=none",
+        "--set-exit-if-changed",
+        "packages/quds_office_engine/lib/src/word/model/word_zotero.dart",
+        "packages/quds_office_engine/lib/src/zotero/zotero_client.dart",
+        "packages/quds_office_editor/lib/src/embed/word_zotero_dialog.dart",
+        "packages/quds_office_editor/lib/src/embed/word_zotero_format.dart",
+        "packages/quds_office_editor/lib/src/editor_word/caret_engine.dart",
+        "packages/quds_office_editor/lib/src/editor_word/paint_run_text.dart",
+        "packages/quds_office_editor/test/word_hyphenation_caret_test.dart"
+      ],
+      "cwd": "/workspace/scratch/c17add9bb04f/CrispCloud",
+      "duration_seconds": 0.168,
+      "exit_code": 0,
+      "finished_utc": "2026-11-16T13:45:41.455929+00:00",
+      "log": "vendor-format.log",
+      "log_sha256": "6c1831ee8e6d39346ed5d848ced164c58ae3cc0574c9ff345f4580b771c0b05e",
+      "name": "vendor-format",
+      "started_utc": "2026-11-16T13:45:41.287775+00:00"
+    },
+    {
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-m",
+        "unittest",
+        "test_sync_office_fidelity",
+        "test_sync_legacy_doc_parser",
+        "-v"
+      ],
+      "cwd": "/workspace/scratch/c17add9bb04f/CrispCloud/tool",
+      "duration_seconds": 2.232,
+      "exit_code": 0,
+      "finished_utc": "2026-11-16T13:45:43.687522+00:00",
+      "log": "python-sync-verifier-tests.log",
+      "log_sha256": "bcf9df5c8ade0ae4840f2a709b0b59e5a4e7e8f05454e9535203c8c1e1ff3e43",
+      "name": "python-sync-verifier-tests",
+      "started_utc": "2026-11-16T13:45:41.456106+00:00"
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "cwd": "/workspace/scratch/c17add9bb04f/CrispCloud",
+      "duration_seconds": 0.015,
+      "exit_code": 0,
+      "finished_utc": "2026-11-16T13:45:43.705991+00:00",
+      "log": "whitespace.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "name": "whitespace",
+      "started_utc": "2026-11-16T13:45:43.690556+00:00"
+    },
+    {
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "tool/verify_office_fidelity.py",
+        "--source",
+        "/workspace/scratch/c17add9bb04f/quds_office_suite",
+        "--require-tracked"
+      ],
+      "cwd": "/workspace/scratch/c17add9bb04f/CrispCloud",
+      "duration_seconds": 1.134,
+      "exit_code": 0,
+      "finished_utc": "2026-11-16T13:45:44.839523+00:00",
+      "log": "vendor-tracked-final.log",
+      "log_sha256": "172d82625561b1111bbb2cd3d8ad52b2ca65c5dce80f6de0148b3bb1db6704c6",
+      "name": "vendor-tracked-final",
+      "started_utc": "2026-11-16T13:45:43.706128+00:00"
+    }
+  ],
+  "dependencies_after_aggregate_sha256": "bd69cdd0d26c14afdd1c16b2ddfb14bc33ac92cacd3115229438559f15b21ccd",
+  "dependencies_before_aggregate_sha256": "bd69cdd0d26c14afdd1c16b2ddfb14bc33ac92cacd3115229438559f15b21ccd",
+  "dependencies_unchanged": true,
+  "dependency_file_count": 5827,
+  "dependency_package_count": 96,
+  "error": null,
+  "expected_canonical_source": "8e017e8c148517fea61f8d55eaafc7f070b82bba",
+  "expected_python_test_count": 28,
+  "expected_test_count": 41,
+  "finished_utc": "2026-11-16T13:45:45.574762+00:00",
+  "head_at_completion": "84955ca66662f7fdf638487dd4691e5c2fa018d0",
+  "head_at_start": "84955ca66662f7fdf638487dd4691e5c2fa018d0",
+  "host_analysis_targets": [
+    "lib/services/office_zotero.dart",
+    "lib/services/office_zotero_transport.dart",
+    "lib/services/office_proofing_licenses.dart",
+    "lib/l10n/office_zotero_strings.dart",
+    "test/office_zotero_test.dart",
+    "test/office_zotero_citing_transport_test.dart",
+    "test/office_zotero_ribbon_test.dart",
+    "test/office_proofing_licenses_test.dart"
+  ],
+  "implementation_tree": "ab5fe16a2289ea67ae4d4c72a542f233d178305f",
+  "limitations": [
+    "Focused genuine locked dependency graph; no full application compile or full production dependency resolution.",
+    "Network, credentials and protocol interactions use test doubles; no live Zotero account, desktop picker, Word/LibreOffice or keychain acceptance.",
+    "Canonical tests are qualified separately; these counts are distinct host tests.",
+    "No GitHub Actions, status, workflow or job queries, waits or reruns."
+  ],
+  "managed_office_files": 2468,
+  "passed_host_tests": 41,
+  "passed_python_tests": 28,
+  "pub_get_rerun": false,
+  "published_source": "27f001d60777d27f412d9984b62dbdb05019b9eb",
+  "quds_commit": "8e017e8c148517fea61f8d55eaafc7f070b82bba",
+  "repository": "CrispStrobe/CrispCloud",
+  "reproduction_script_sha256": "bfa0636f636c119686cd10f6a5fe8b9e87c0b02d7146a846a1a8d4d0c88de0b9",
+  "runtime": {
+    "channel": "[user-branch]",
+    "dartSdkVersion": "3.13.7",
+    "devToolsVersion": "2.60.0",
+    "engineBuildDate": "2026-10-23 05:34:48.330",
+    "engineCommitDate": "2026-10-23 02:13:38.000Z",
+    "engineContentHash": "dfd2e6cb7d319db05e3bf1503f3e2ac60f6288a2",
+    "engineRevision": "cf636b1dfb818dd6a3ff16e390e93b1a036969c8",
+    "flutterVersion": "3.47.8",
+    "frameworkCommitDate": "2026-10-22 21:37:31 -0700",
+    "frameworkRevision": "737ba8f885dc774b53b442759999a312c9461e4e",
+    "frameworkVersion": "3.47.8",
+    "repositoryUrl": "https://github.com/flutter/flutter.git"
+  },
+  "schema_version": 2,
+  "source_after_aggregate_sha256": "eb31b19bb7ce6b746dd38a6bc87003a31d8514b84b04e1ecfe8c5f2ad48723d8",
+  "source_before_aggregate_sha256": "eb31b19bb7ce6b746dd38a6bc87003a31d8514b84b04e1ecfe8c5f2ad48723d8",
+  "source_commit": "27f001d60777d27f412d9984b62dbdb05019b9eb",
+  "source_file_count": 3685,
+  "source_unchanged": true,
+  "started_utc": "2026-11-16T13:44:41.540168+00:00",
+  "status": "passed",
+  "tests": [
+    "test/office_zotero_test.dart",
+    "test/office_zotero_citing_transport_test.dart",
+    "test/office_zotero_ribbon_test.dart",
+    "test/office_proofing_licenses_test.dart"
+  ],
+  "tracked_inputs_match_published_source": true,
+  "vendored_analysis_targets": [
+    "packages/quds_office_engine/lib/src/word/model/word_zotero.dart",
+    "packages/quds_office_engine/lib/src/zotero/zotero_client.dart",
+    "packages/quds_office_editor/lib/src/embed/word_zotero_dialog.dart",
+    "packages/quds_office_editor/lib/src/embed/word_zotero_format.dart",
+    "packages/quds_office_editor/lib/src/editor_word/caret_engine.dart",
+    "packages/quds_office_editor/lib/src/editor_word/paint_run_text.dart",
+    "packages/quds_office_editor/test/word_hyphenation_caret_test.dart"
+  ]
+}

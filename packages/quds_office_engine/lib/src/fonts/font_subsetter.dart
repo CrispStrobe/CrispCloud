@@ -35,8 +35,14 @@ class FontSubsetter {
   /// font API.
   final SfntFont font;
 
-  /// subset API.
-  FontSubset subset(Iterable<int> codePoints, {Iterable<int> extraGlyphIds = const <int>[]}) {
+  /// Retains the requested Unicode scalars and their composite components.
+  ///
+  /// Invalid scalar values and absent glyphs are ignored. Supplementary
+  /// characters retain their mappings in a full-repertoire format 12 cmap.
+  FontSubset subset(
+    Iterable<int> codePoints, {
+    Iterable<int> extraGlyphIds = const <int>[],
+  }) {
     final Set<int> wanted = <int>{0};
     final Map<int, int> unicodeToOld = <int, int>{};
     for (final int gid in extraGlyphIds) {
@@ -45,6 +51,9 @@ class FontSubsetter {
       }
     }
     for (final int cp in codePoints) {
+      if (!_isUnicodeScalar(cp)) {
+        continue;
+      }
       final int gid = font.glyphIdFor(cp);
       if (gid == 0) {
         continue;
@@ -203,42 +212,66 @@ class FontSubsetter {
   }
 
   static Uint8List _buildCmap(Map<int, int> unicodeToNew) {
-    final List<MapEntry<int, int>> bmp =
-        unicodeToNew.entries
-            .where((MapEntry<int, int> e) => e.key <= 0xFFFF)
-            .toList()
-          ..sort((MapEntry<int, int> a, MapEntry<int, int> b) => a.key - b.key);
-    final List<_Seg> segs = <_Seg>[];
-    if (bmp.isNotEmpty) {
-      int start = bmp.first.key;
-      int prev = bmp.first.key;
-      int startGid = bmp.first.value;
-      for (int i = 1; i < bmp.length; i++) {
-        final int cp = bmp[i].key;
-        final int gid = bmp[i].value;
-        if (cp == prev + 1 && gid == startGid + (cp - start)) {
-          prev = cp;
-          continue;
-        }
-        segs.add(_Seg(start, prev, startGid));
-        start = prev = cp;
-        startGid = gid;
-      }
-      segs.add(_Seg(start, prev, startGid));
+    final entries = unicodeToNew.entries.toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
+    // U+FFFF is the mandatory format 4 sentinel. A real mapping for it must
+    // live in format 12, just like a supplementary character.
+    final bmp = _cmapSegments(entries.where((e) => e.key < 0xFFFF))
+      ..add(const _Seg(0xFFFF, 0xFFFF, 0));
+    final format4Length = 16 + bmp.length * 8;
+    final include4 = format4Length <= 0xFFFF;
+    final include12 = !include4 || entries.any((e) => e.key >= 0xFFFF);
+    final format4 = include4 ? _cmapFormat4(bmp) : null;
+    final format12 = include12 ? _cmapFormat12(_cmapSegments(entries)) : null;
+    final count = (include4 ? 1 : 0) + (include12 ? 1 : 0);
+    final headerLength = 4 + count * 8;
+    final sink = ByteSink();
+    sink.u16be(0);
+    sink.u16be(count);
+    if (format4 != null) {
+      sink.u16be(3); // Windows, Unicode BMP.
+      sink.u16be(1);
+      sink.u32be(headerLength);
     }
-    segs.add(const _Seg(0xFFFF, 0xFFFF, 0));
+    if (format12 != null) {
+      sink.u16be(3); // Windows, full Unicode repertoire.
+      sink.u16be(10);
+      sink.u32be(headerLength + (format4?.length ?? 0));
+    }
+    if (format4 != null) sink.add(format4);
+    if (format12 != null) sink.add(format12);
+    return sink.takeBytes();
+  }
 
+  static List<_Seg> _cmapSegments(Iterable<MapEntry<int, int>> entries) {
+    final segments = <_Seg>[];
+    int? start;
+    var end = 0;
+    var firstGid = 0;
+    for (final entry in entries) {
+      if (start != null &&
+          entry.key == end + 1 &&
+          entry.value == firstGid + entry.key - start) {
+        end = entry.key;
+        continue;
+      }
+      if (start != null) segments.add(_Seg(start, end, firstGid));
+      start = end = entry.key;
+      firstGid = entry.value;
+    }
+    if (start != null) segments.add(_Seg(start, end, firstGid));
+    return segments;
+  }
+
+  static Uint8List _cmapFormat4(List<_Seg> segs) {
     final int segCount = segs.length;
     final int searchRange = _pow2le(segCount) * 2;
     final int entrySelector = _log2(_pow2le(segCount));
     final int rangeShift = segCount * 2 - searchRange;
-    final int length = 16 + segCount * 8 + 2;
-    final ByteSink sink = ByteSink(capacity: 32 + length);
-    sink.u16be(0);
-    sink.u16be(1);
-    sink.u16be(3);
-    sink.u16be(1);
-    sink.u32be(12);
+    // The 16-byte fixed header already includes reservedPad. Never wrap the
+    // uint16 length: large sparse mappings use format 12 instead.
+    final int length = 16 + segCount * 8;
+    final ByteSink sink = ByteSink(capacity: length);
     sink.u16be(4);
     sink.u16be(length);
     sink.u16be(0);
@@ -265,6 +298,25 @@ class FontSubsetter {
     }
     return sink.takeBytes();
   }
+
+  static Uint8List _cmapFormat12(List<_Seg> groups) {
+    final length = 16 + groups.length * 12;
+    final sink = ByteSink(capacity: length);
+    sink.u16be(12);
+    sink.u16be(0); // Reserved.
+    sink.u32be(length);
+    sink.u32be(0); // Language-neutral Unicode mapping.
+    sink.u32be(groups.length);
+    for (final group in groups) {
+      sink.u32be(group.start);
+      sink.u32be(group.end);
+      sink.u32be(group.startGid);
+    }
+    return sink.takeBytes();
+  }
+
+  static bool _isUnicodeScalar(int value) =>
+      value >= 0 && value <= 0x10FFFF && (value < 0xD800 || value > 0xDFFF);
 
   static Uint8List _minimalName(String family) {
     final String name = family.isEmpty ? 'Subset' : family;

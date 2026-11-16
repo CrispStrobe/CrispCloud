@@ -11,6 +11,7 @@ import 'word_zotero_format.dart';
 
 /// Connection preferences belong to the host session, never to a document.
 class ZoteroSession {
+  final _onlineBackoff = ZoteroBackoffState();
   String? apiKey;
   bool rememberKey = false;
   bool useLocal = false;
@@ -144,6 +145,7 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
       _client = ZoteroClient(
         transport: widget.transport!,
         apiKey: _session.apiKey,
+        backoffState: _session._onlineBackoff,
       );
     }
   }
@@ -236,7 +238,11 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
       _session.useLocal = local;
       _clearLibrary();
       _client = !local && widget.transport != null
-          ? ZoteroClient(transport: widget.transport!, apiKey: _session.apiKey)
+          ? ZoteroClient(
+              transport: widget.transport!,
+              apiKey: _session.apiKey,
+              backoffState: _session._onlineBackoff,
+            )
           : null;
       _error = null;
       _notice = null;
@@ -282,7 +288,11 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
         'This host has no Zotero network transport. Use CSL JSON import.',
       );
     }
-    final client = ZoteroClient(transport: transport, apiKey: _key.text);
+    final client = ZoteroClient(
+      transport: transport,
+      apiKey: _key.text,
+      backoffState: _session._onlineBackoff,
+    );
     final identity = await client.verifyKey();
     if (!mounted) return;
     if (widget.persistApiKey != null) {
@@ -451,6 +461,7 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
     _client = ZoteroClient(
       transport: widget.transport!,
       apiKey: _session.apiKey,
+      backoffState: _session._onlineBackoff,
     );
     await _loadLibrary();
   });
@@ -466,7 +477,10 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
     _clearLibrary();
     _client = widget.transport == null
         ? null
-        : ZoteroClient(transport: widget.transport!);
+        : ZoteroClient(
+            transport: widget.transport!,
+            backoffState: _session._onlineBackoff,
+          );
     setState(
       () => _notice =
           'Disconnected. The saved key was removed; citations remain in the document.',
@@ -1802,6 +1816,12 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
 
   Widget _documentTab() {
     final fields = _controller.zoteroFields;
+    // The field list already parsed every citation for this build. Reuse it
+    // for action availability instead of rescanning the entire document for
+    // each button, including while the Library tab is visible.
+    final hasDocumentItems = fields.any(
+      (field) => field.citation?.items.isNotEmpty ?? false,
+    );
     return Padding(
       padding: const EdgeInsets.all(16),
       child: CustomScrollView(
@@ -1852,14 +1872,14 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
                       onPressed:
                           _busy ||
                               !_canEdit ||
-                              _documentItems.isEmpty ||
+                              !hasDocumentItems ||
                               _client == null
                           ? null
                           : () => _bibliography(online: true),
                       child: const Text('Zotero bibliography'),
                     ),
                     OutlinedButton(
-                      onPressed: _busy || !_canEdit || _documentItems.isEmpty
+                      onPressed: _busy || !_canEdit || !hasDocumentItems
                           ? null
                           : () => _bibliography(online: false),
                       child: const Text('Basic bibliography'),
@@ -1871,7 +1891,7 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
                       child: const Text('Refresh basic citations'),
                     ),
                     TextButton(
-                      onPressed: _busy || _documentItems.isEmpty
+                      onPressed: _busy || !hasDocumentItems
                           ? null
                           : () => _copySources(),
                       child: const Text('Copy embedded CSL JSON'),

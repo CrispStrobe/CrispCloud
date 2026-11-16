@@ -86,14 +86,17 @@ void main() {
     expect(lines[1].logicalStart, 7);
     expect(lines[1].glyphs.take(2).every((g) => g.codePoint == 32), isTrue);
   });
-  test('nonbreaking space after hyphen is never treated as ordinary boundary space', () {
-    final prepared = LineBreaker.prepare(
-      text: 'Stadt-\u00a0und Kreis',
-      widthOf: _width,
-    );
-    final first = prepared.breakNext(start: 0, maxWidth: 36);
-    expect(first.nextOffset, 6);
-  });
+  test(
+    'nonbreaking space after hyphen is never treated as ordinary boundary space',
+    () {
+      final prepared = LineBreaker.prepare(
+        text: 'Stadt-\u00a0und Kreis',
+        widthOf: _width,
+      );
+      final first = prepared.breakNext(start: 0, maxWidth: 36);
+      expect(first.nextOffset, 6);
+    },
+  );
   test('variable widths consume Unicode and hard breaks exactly once', () {
     const text = 'One 😀 two\r\n\r\nthree 🧭 four five six\nseven eight nine';
     final lines = _prepared(text, (i) => i < 3 ? 38 : 100);

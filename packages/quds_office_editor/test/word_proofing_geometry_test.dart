@@ -1,0 +1,511 @@
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+
+import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:quds_office_editor/quds_office_editor.dart';
+import 'package:quds_office_editor/src/editor_word/proofing_geometry.dart';
+
+const _boundaryKey = ValueKey<String>('proofing-geometry-image');
+
+WmlDocument _document(List<WmlBlock> blocks, {double width = 300}) =>
+    WmlDocument(
+      proofingLanguage: 'de-DE',
+      sections: [
+        WmlSection(
+          pageSize: WmlPageSize(width: width, height: 320),
+          margins: const WmlPageMargins(
+            top: 60,
+            bottom: 70,
+            left: 30,
+            right: 30,
+            header: 15,
+            footer: 15,
+          ),
+          blocks: blocks,
+        ),
+      ],
+    );
+
+WmlParagraph _paragraph(String text) =>
+    WmlParagraph(inlines: [WmlRun(text: text)]);
+
+LaidOutDocument _layout(WmlDocument document) => WordLayoutEngine(
+  font: null,
+  measure: (cp, size, props) => PaintRunText.advanceOf(cp, size, props),
+).layout(document, updateFields: false);
+
+OfficeProofingFinding _finding(WmlParagraph paragraph, int start, int end) =>
+    OfficeProofingFinding.forRequest(
+      OfficeProofingRequest(
+        documentId: 'geometry',
+        blockId: 'paragraph',
+        revision: 0,
+        text: paragraph.text,
+      ),
+      providerId: 'geometry-provider',
+      start: start,
+      end: end,
+      ruleId: 'geometry.spelling',
+      message: 'Check this source range.',
+      category: OfficeProofingCategory.spelling,
+    );
+
+Future<RenderWordCanvas> _mount(
+  WidgetTester tester,
+  WmlDocument document,
+  LaidOutDocument layout, {
+  Map<WmlParagraph, List<OfficeProofingFinding>> findings = const {},
+  ValueChanged<OfficeContextHit>? onContextMenu,
+}) async {
+  await tester.pumpWidget(
+    Directionality(
+      textDirection: TextDirection.ltr,
+      child: RepaintBoundary(
+        key: _boundaryKey,
+        child: WordCanvas(
+          document: document,
+          laidOut: layout,
+          caret: CaretEngine(),
+          config: const OfficeSurfaceConfig(showRulers: false),
+          proofingFindings: findings,
+          onContextMenu: onContextMenu,
+        ),
+      ),
+    ),
+  );
+  await tester.pump();
+  expect(tester.takeException(), isNull);
+  return tester.renderObject<RenderWordCanvas>(find.byType(WordCanvas));
+}
+
+Future<({Uint8List bytes, int width, int height})> _pixels(
+  WidgetTester tester,
+) async {
+  final boundary = tester.renderObject<RenderRepaintBoundary>(
+    find.byKey(_boundaryKey),
+  );
+  final image = (await tester.runAsync(() => boundary.toImage(pixelRatio: 1)))!;
+  final data = (await tester.runAsync(
+    () => image.toByteData(format: ui.ImageByteFormat.rawRgba),
+  ))!;
+  final result = (
+    bytes: data.buffer.asUint8List(),
+    width: image.width,
+    height: image.height,
+  );
+  image.dispose();
+  return result;
+}
+
+int _redPixels(
+  ({Uint8List bytes, int width, int height}) image, [
+  Rect? region,
+]) {
+  final area =
+      region ??
+      Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble());
+  var count = 0;
+  for (
+    var y = area.top.floor().clamp(0, image.height);
+    y < area.bottom.ceil().clamp(0, image.height);
+    y++
+  ) {
+    for (
+      var x = area.left.floor().clamp(0, image.width);
+      x < area.right.ceil().clamp(0, image.width);
+      x++
+    ) {
+      final index = (y * image.width + x) * 4;
+      if (image.bytes[index] > 150 &&
+          image.bytes[index + 1] < 145 &&
+          image.bytes[index + 2] < 145) {
+        count++;
+      }
+    }
+  }
+  return count;
+}
+
+Rect _lineRegion(RenderWordCanvas canvas, LaidOutLine line) => Rect.fromPoints(
+  canvas.windowForPagePoint(line.pageIndex, Offset(line.x - 2, line.y)),
+  canvas.windowForPagePoint(
+    line.pageIndex,
+    Offset(line.x + line.width + 6, line.y + line.height + 4),
+  ),
+);
+
+Future<void> _rightClick(
+  WidgetTester tester,
+  RenderWordCanvas canvas,
+  int page,
+  Offset point,
+) async {
+  final position =
+      tester.getTopLeft(find.byType(WordCanvas)) +
+      canvas.windowForPagePoint(page, point);
+  final gesture = await tester.startGesture(
+    position,
+    kind: PointerDeviceKind.mouse,
+    buttons: kSecondaryMouseButton,
+  );
+  await gesture.up();
+  await tester.pump();
+}
+
+class _WordProvider extends OfficeProofingProvider {
+  @override
+  String get id => 'test-word-provider';
+  @override
+  bool supportsLanguage(String language) => true;
+  @override
+  Future<OfficeProofingResult> check(OfficeProofingRequest request) async =>
+      OfficeProofingResult(
+        request: request,
+        providerId: id,
+        status: OfficeProofingStatus.success,
+        findings: [
+          for (final match in RegExp('Fehler').allMatches(request.text))
+            OfficeProofingFinding.forRequest(
+              request,
+              providerId: id,
+              start: match.start,
+              end: match.end,
+              ruleId: 'test.word',
+              message: 'Test finding.',
+              category: OfficeProofingCategory.spelling,
+            ),
+        ],
+      );
+}
+
+void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  setUpAll(OfficeHostFonts.ensureRegistered);
+
+  test(
+    'mixed bidi source ranges have disjoint boxes and span wrapped lines',
+    () {
+      final paragraph = _paragraph('ABC אבג DEF ABC אבג DEF ABC אבג DEF');
+      final lines = _layout(
+        _document([paragraph], width: 160),
+      ).pages.expand((page) => page.lines).toList();
+      expect(lines.length, greaterThan(1));
+      for (final line in lines) {
+        PaintRunText.fitLine(line, paragraph.text);
+      }
+      final range = WordProofingGeometry.displayRanges(
+        lines.first,
+        2,
+        5,
+      ).single;
+      final boxes = CaretEngine.rangeRectsOnLine(
+        lines.first,
+        lines.first.y,
+        lines.first.height,
+        range.start,
+        range.end,
+      );
+      expect(boxes, hasLength(2));
+      expect(boxes[0].right, lessThan(boxes[1].left));
+      for (final line in lines) {
+        final mapped = WordProofingGeometry.displayRanges(
+          line,
+          2,
+          paragraph.text.length - 2,
+        ).single;
+        final lineBoxes = CaretEngine.rangeRectsOnLine(
+          line,
+          line.y,
+          line.height,
+          mapped.start,
+          mapped.end,
+        );
+        expect(lineBoxes, isNotEmpty);
+        expect(
+          lineBoxes.every(
+            (box) =>
+                box.left >= line.x - .01 &&
+                box.right <= line.x + line.width + .01,
+          ),
+          isTrue,
+        );
+      }
+    },
+  );
+
+  test('repeated header text maps only to its matching source occurrence', () {
+    final header = _paragraph('  Fehler\t  Fehler\t1');
+    final doc = _document([_paragraph('Body')]);
+    doc.sections.single.header.add(header);
+    final lines = _layout(doc).pages.single.header;
+    final start = header.text.lastIndexOf('Fehler');
+    expect(
+      WordProofingGeometry.displayRanges(lines.first, start, start + 6),
+      isEmpty,
+    );
+    expect(WordProofingGeometry.displayRanges(lines[1], start, start + 6), [
+      const TextRange(start: 0, end: 6),
+    ]);
+    expect(
+      WordProofingGeometry.displayRanges(lines.last, 0, header.text.length),
+      isEmpty,
+    );
+    expect(
+      WordProofingGeometry.displayRanges(
+        lines.last,
+        header.text.length,
+        header.text.length,
+      ),
+      isEmpty,
+    );
+  });
+
+  test('note presentation labels cannot acquire authored source ranges', () {
+    final paragraph = WmlParagraph(
+      inlines: [
+        WmlRun(text: 'A'),
+        WmlNoteMarker(endnote: false, properties: WmlRunProps()),
+        WmlRun(text: 'Fehler'),
+      ],
+    );
+    final doc = _document([_paragraph('Body')]);
+    doc.footnotes.add(WmlNote(id: 1, endnote: false, blocks: [paragraph]));
+    doc.paragraphs.first.inlines.add(WmlRun(text: '1', noteRefId: 1));
+    final line = _layout(doc).pages.single.notes.singleWhere(
+      (line) => identical(line.sourceParagraph, paragraph),
+    );
+    expect(paragraph.text, 'AFehler');
+    expect(line.sourceText, 'A1Fehler');
+    expect(line.proofingOffsetAt(1), isNull);
+    expect(WordProofingGeometry.displayRanges(line, 0, 7), [
+      const TextRange(start: 0, end: 1),
+      const TextRange(start: 2, end: 8),
+    ]);
+    expect(WordProofingGeometry.displayRanges(line, 1, 1), [
+      const TextRange(start: 2, end: 2),
+    ]);
+  });
+
+  testWidgets(
+    'squiggles follow paragraph identity through body and table text and clear on refresh',
+    (tester) async {
+      final first = _paragraph('Fehler');
+      final second = _paragraph('Fehler');
+      final cell = _paragraph('Fehler');
+      final doc = _document([
+        first,
+        second,
+        WmlTable(
+          grid: [200],
+          rows: [
+            WmlTableRow(
+              cells: [
+                WmlTableCell(blocks: [cell]),
+              ],
+            ),
+          ],
+        ),
+      ]);
+      final layout = _layout(doc);
+      final canvas = await _mount(
+        tester,
+        doc,
+        layout,
+        findings: {
+          first: [_finding(first, 0, 6)],
+          cell: [_finding(cell, 0, 6)],
+        },
+      );
+      final image = await _pixels(tester);
+      final lines = layout.pages.single.lines;
+      for (final paragraph in [first, cell]) {
+        final line = lines.singleWhere(
+          (line) => identical(line.sourceParagraph, paragraph),
+        );
+        expect(_redPixels(image, _lineRegion(canvas, line)), greaterThan(4));
+      }
+      final clean = lines.singleWhere(
+        (line) => identical(line.sourceParagraph, second),
+      );
+      expect(_redPixels(image, _lineRegion(canvas, clean)), 0);
+      final updated = await _mount(tester, doc, layout);
+      expect(identical(updated, canvas), isTrue);
+      expect(_redPixels(await _pixels(tester)), 0);
+    },
+  );
+
+  testWidgets('generated field text receives no findings or squiggles', (
+    tester,
+  ) async {
+    final paragraph = WmlParagraph(
+      inlines: [
+        WmlRun(text: 'Fehler '),
+        WmlRun(text: 'Fehler', fieldInstruction: 'REF bookmark'),
+        WmlRun(text: ' Fehler'),
+      ],
+    );
+    final doc = _document([paragraph]);
+    final session = WordProofingSession(
+      document: () => doc,
+      revision: () => 0,
+      service: OfficeProofingService(providers: [_WordProvider()]),
+    );
+    addTearDown(session.dispose);
+    await tester.runAsync(session.checkNow);
+    expect(
+      session.summary.issues.map(
+        (issue) => (issue.finding.start, issue.finding.end),
+      ),
+      [(0, 6), (14, 20)],
+    );
+    final layout = _layout(doc);
+    final canvas = await _mount(
+      tester,
+      doc,
+      layout,
+      findings: session.findingsByParagraph,
+    );
+    final line = layout.pages.single.lines.single;
+    final field = CaretEngine.rangeRectsOnLine(
+      line,
+      line.y,
+      line.height,
+      7,
+      13,
+    ).single;
+    final region = Rect.fromPoints(
+      canvas.windowForPagePoint(0, Offset(field.left + 1, field.top)),
+      canvas.windowForPagePoint(0, Offset(field.right - 1, field.bottom + 2)),
+    );
+    final image = await _pixels(tester);
+    expect(_redPixels(image), greaterThan(5));
+    expect(_redPixels(image, region), 0);
+  });
+
+  testWidgets('generated header labels cannot paint source squiggles', (
+    tester,
+  ) async {
+    final header = _paragraph('1');
+    final doc = _document([_paragraph('Body')]);
+    doc.sections.single.header.add(header);
+    await _mount(
+      tester,
+      doc,
+      _layout(doc),
+      findings: {
+        header: [_finding(header, 0, 1)],
+      },
+    );
+    expect(_redPixels(await _pixels(tester)), 0);
+  });
+
+  testWidgets(
+    'right-click source hits distinguish repeated body, table, and footnote text',
+    (tester) async {
+      final first = _paragraph('Fehler');
+      final second = _paragraph('Fehler');
+      final cell = _paragraph('Fehler');
+      final note = _paragraph('Fehler');
+      final doc = _document([
+        first,
+        second,
+        WmlTable(
+          grid: [200],
+          rows: [
+            WmlTableRow(
+              cells: [
+                WmlTableCell(blocks: [cell]),
+              ],
+            ),
+          ],
+        ),
+      ]);
+      doc.footnotes.add(WmlNote(id: 1, endnote: false, blocks: [note]));
+      first.inlines.add(WmlRun(text: '1', noteRefId: 1));
+      final layout = _layout(doc);
+      final hits = <OfficeContextHit>[];
+      final canvas = await _mount(tester, doc, layout, onContextMenu: hits.add);
+      final page = layout.pages.single;
+      for (final paragraph in [second, cell, note]) {
+        final line = [
+          ...page.lines,
+          ...page.notes,
+        ].singleWhere((line) => identical(line.sourceParagraph, paragraph));
+        final glyph = line.glyphs.firstWhere(
+          (g) => line.proofingOffsetAt(g.glyph.logicalIndex) == 2,
+        );
+        await _rightClick(
+          tester,
+          canvas,
+          0,
+          Offset(glyph.x + glyph.advance * .2, line.y + line.height / 2),
+        );
+        expect(hits.last.paragraph, same(paragraph));
+        expect(hits.last.proofingOffset, 2);
+      }
+    },
+  );
+
+  testWidgets('right-click header hits use measured glyphs and alignment', (
+    tester,
+  ) async {
+    final header = _paragraph('  WWWWiiiiiiii  ');
+    header.properties.justification = WmlJustification.right;
+    final doc = _document([_paragraph('Body')]);
+    doc.sections.single.header.add(header);
+    final layout = _layout(doc);
+    final hits = <OfficeContextHit>[];
+    final canvas = await _mount(tester, doc, layout, onContextMenu: hits.add);
+    final line = layout.pages.single.header.single;
+    final painter = PaintRunText.plain(
+      text: line.overlayText!,
+      fontSize: line.overlaySize,
+      color: Colors.black,
+      themeFamily: OfficeTheme.light.fontFamily,
+    )..layout();
+    addTearDown(painter.dispose);
+    final origin = line.x + line.width - painter.width;
+    for (final index in [2, 4, 8]) {
+      final boxes = painter.getBoxesForSelection(
+        TextSelection(baseOffset: index, extentOffset: index + 1),
+      );
+      final box = boxes.single;
+      await _rightClick(
+        tester,
+        canvas,
+        0,
+        Offset(
+          origin + box.left + (box.right - box.left) * .2,
+          line.y + line.height / 2,
+        ),
+      );
+      expect(hits.last.paragraph, same(header));
+      expect(hits.last.proofingOffset, index + 2);
+    }
+  });
+
+  for (final inHeader in [false, true]) {
+    testWidgets(
+      'zero-length finding at ${inHeader ? 'header' : 'body'} end remains visible',
+      (tester) async {
+        final paragraph = _paragraph('Fehler');
+        final doc = _document([inHeader ? _paragraph('Body') : paragraph]);
+        if (inHeader) doc.sections.single.header.add(paragraph);
+        await _mount(
+          tester,
+          doc,
+          _layout(doc),
+          findings: {
+            paragraph: [
+              _finding(paragraph, paragraph.text.length, paragraph.text.length),
+            ],
+          },
+        );
+        expect(_redPixels(await _pixels(tester)), greaterThan(1));
+      },
+    );
+  }
+}

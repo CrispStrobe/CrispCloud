@@ -1,0 +1,180 @@
+00:00 +0: loading /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_dialog_test.dart
+00:00 +0: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_dialog_test.dart: Office extensions are routed to the Office editor
+00:00 +1: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_dialog_test.dart: office load translates an oversized verified file without reading it
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:02 +1: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: standard Word shortcuts align, redo and insert a page break
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:03 +1: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_dialog_test.dart: office load translates an oversized verified file without reading it
+⚠️ [OfficeEditor] office editor load failed
+  Error: This file exceeds the 64 MiB editing limit.
+00:03 +2: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: standard Word shortcuts align, redo and insert a page break
+00:04 +3: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: standard Word shortcuts align, redo and insert a page break
+00:06 +4: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: standard Word shortcuts align, redo and insert a page break
+00:08 +5: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: standard Word shortcuts align, redo and insert a page break
+00:09 +6: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: standard Word shortcuts align, redo and insert a page break
+00:10 +7: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: standard Word shortcuts align, redo and insert a page break
+00:12 +8: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_dialog_test.dart: macro-enabled workbooks open in the sheet editor
+00:12 +8: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: Save As adopts its captured revision while newer edits remain dirty
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:13 +9: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: Save As adopts its captured revision while newer edits remain dirty
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:15 +10: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: Save As adopts its captured revision while newer edits remain dirty
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:17 +11: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: Save As F12 adopts filename and subsequent Save writes the new file
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:21 +12: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: Save As Control Left adopts filename and subsequent Save writes the new file
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:21 +12: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/ods_editor_workflow_test.dart: Save As adopts converted ODS workbook as a writable XLSX
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:22 +12: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: Save As Control Left adopts filename and subsequent Save writes the new file
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:22 +13: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/ods_editor_workflow_test.dart: Save As adopts converted ODS workbook as a writable XLSX
+00:22 +13: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: Save As Meta Left adopts filename and subsequent Save writes the new file
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:24 +14: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/ods_editor_workflow_test.dart: Save As adopts converted ODS workbook as a writable XLSX
+00:24 +14: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: Save As cancellation retains old target and dirty state
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:25 +14: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/ods_editor_workflow_test.dart: Save As adopts converted ODS workbook as a writable XLSX
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:25 +15: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/ods_editor_workflow_test.dart: Save As adopts converted ODS workbook as a writable XLSX
+00:25 +15: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: Save As failure retains old target and dirty state
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+⚠️ [OfficeEditor] office Save As failed
+  Error: FileSystemException: test write failure, path = ''
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:25 +16: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/ods_editor_workflow_test.dart: Save As adopts converted ODS workbook as a writable XLSX
+00:26 +16: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: hyperlink shortcuts focus the URL and modal typing never edits Word
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:26 +16: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/ods_editor_workflow_test.dart: Save As adopts converted ODS workbook as a writable XLSX
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:26 +17: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: hyperlink shortcuts focus the URL and modal typing never edits Word
+00:26 +17: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/ods_editor_workflow_test.dart: ODS editing saves an XLSX copy and preserves its source
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:27 +18: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: hyperlink shortcuts focus the URL and modal typing never edits Word
+00:27 +18: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/ods_editor_workflow_test.dart: ODS copy outcome null retains unsaved edits
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:28 +19: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: hyperlink shortcuts focus the URL and modal typing never edits Word
+00:28 +19: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/ods_editor_workflow_test.dart: ODS copy outcome OfficeCopyOutcome.downloadedCopy retains unsaved edits
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:28 +20: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: hyperlink shortcuts focus the URL and modal typing never edits Word
+00:28 +20: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/ods_editor_workflow_test.dart: ODS copy completion cannot clean a newer edit
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:29 +21: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/ods_editor_workflow_test.dart: ODS copy completion cannot clean a newer edit
+00:29 +21: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: Save a copy uses captured source folder and preserves edits
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:29 +22: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: Save a copy uses captured source folder and preserves edits
+00:30 +23: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: sorting alone prompts on Back and saves undoable reordered rows
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:32 +24: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: speaker-notes-only edits prompt on Back and save before closing
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:34 +24: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/legacy_sheet_import_test.dart: Save As adopts converted XLS workbook as a writable XLSX
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:34 +24: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: speaker-notes-only edits prompt on Back and save before closing
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:35 +25: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/legacy_sheet_import_test.dart: Save As adopts converted XLS workbook as a writable XLSX
+00:35 +25: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: speaker notes edited during Save and Close stay open and dirty
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:37 +26: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/legacy_sheet_import_test.dart: Save As adopts converted XLS workbook as a writable XLSX
+00:37 +26: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: Save and Close preserves an open notes dialog and its draft
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:39 +26: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/legacy_sheet_import_test.dart: Save As adopts converted XLS workbook as a writable XLSX
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:39 +26: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: Save and Close preserves an open notes dialog and its draft
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:39 +27: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/legacy_sheet_import_test.dart: Save As adopts converted XLS workbook as a writable XLSX
+00:39 +27: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: speaker notes undo and redo survive actual host saves
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:41 +27: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/legacy_sheet_import_test.dart: Save As adopts converted XLS workbook as a writable XLSX
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:42 +27: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: speaker notes undo and redo survive actual host saves
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:42 +28: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: speaker notes undo and redo survive actual host saves
+00:42 +28: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/legacy_sheet_import_test.dart: legacy Save emits XLSX, keeps BIFF original, and cleans only saved edits
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:42 +28: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: speaker notes undo and redo survive actual host saves
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:43 +29: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/legacy_sheet_import_test.dart: legacy Save emits XLSX, keeps BIFF original, and cleans only saved edits
+00:43 +29: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: notes-only recovery copy preserves dirty state after disconnect
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:45 +30: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/legacy_sheet_import_test.dart: legacy Save emits XLSX, keeps BIFF original, and cleans only saved edits
+00:45 +30: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: system Back prompts once and Cancel retains unsaved edits
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:45 +31: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: system Back prompts once and Cancel retains unsaved edits
+00:45 +31: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/legacy_sheet_import_test.dart: legacy save cannot clean edits made while its copy picker is open
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:46 +32: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/legacy_sheet_import_test.dart: legacy save cannot clean edits made while its copy picker is open
+00:46 +32: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: system Back discards only after explicit confirmation
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:47 +33: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: system Back discards only after explicit confirmation
+00:47 +33: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/legacy_sheet_import_test.dart: a refused XLS export retains the true original bytes and extension
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+⚠️ [OfficeEditor] office editor load failed
+  Error: LegacySheetFormatException: Not an OLE compound file or an Excel HTML workbook
+00:48 +34: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: system Back discards only after explicit confirmation
+00:48 +35: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: system Back closes a clean document without a prompt
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:48 +36: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: system Back Save writes the captured original before closing
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:51 +37: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: Back and Close cannot discard an in-flight save
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:53 +38: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: Back Save keeps later edits open until their own save
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:55 +39: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: disconnected original can export edited copy without cleaning
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+⚠️ [OfficeEditor] office editor save failed
+  Error: The original storage is disconnected or changed. Reopen the file before saving.
+00:57 +40: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: copy cancel retains edits and permits a successful retry
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:58 +41: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: copy error retains edits and permits a successful retry
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+⚠️ [OfficeEditor] office copy export failed
+  Error: Bad state: Destination full
+00:59 +42: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: copy picker owns one revision while newer edits remain unsaved
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:00 +43: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: copying an unchanged document leaves it clean
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:01 +44: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: recovery copy commits pending cell text after disconnect
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:02 +45: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: recovery copy commits pending slide text after disconnect
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:02 +46: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: refused input exports its captured original without reserializing
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+⚠️ [OfficeEditor] office editor load failed
+  Error: FormatException: Invalid Word package ZIP: Buffer is too small to be a ZIP archive
+01:03 +47: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: signed-marker xlsx refusal retains an exact original copy
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+⚠️ [OfficeEditor] office editor load failed
+  Error: FormatException: This Office package is digitally signed. Save an unsigned copy in Office before editing it here. The original has not been changed.
+01:03 +48: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: signed-marker pptx refusal retains an exact original copy
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+⚠️ [OfficeEditor] office editor load failed
+  Error: FormatException: This Office package is digitally signed. Save an unsigned copy in Office before editing it here. The original has not been changed.
+01:03 +49: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: copy completion after host disposal has no late UI callbacks
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:03 +50: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: protection changed during upload remains dirty until saved
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:05 +51: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: Track Changes follows save, undo and redo in actual host bytes
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:06 +52: All tests passed!

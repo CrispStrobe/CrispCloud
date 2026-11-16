@@ -16,6 +16,8 @@ import 'office_controller.dart';
 import 'office_direction_keys.dart';
 import 'office_theme.dart';
 import 'word_notes_pane.dart';
+import 'word_proofing_dialog.dart';
+import '../proofing/word_proofing.dart';
 
 /// Class OfficeUndoIntent.
 class OfficeUndoIntent extends Intent {
@@ -216,9 +218,13 @@ class _QudsWordEditorState extends State<QudsWordEditor>
   late final bool _ownsFocus;
   late final Ticker _ticker;
   OverlayEntry? _contextMenu;
+  bool _proofingOpen = false;
   ModalRoute<dynamic>? _inputRoute;
+  bool? _inputRouteWasCurrent;
   final _directionKeys = OfficeDirectionKeyChord();
-  late final bool Function() _inputGuard = () =>
+  late final bool Function() _inputGuard = _allowsWordInput;
+
+  bool _allowsWordInput() =>
       mounted &&
       _focus.hasPrimaryFocus &&
       (_inputRoute?.isCurrent ?? true) &&
@@ -246,6 +252,7 @@ class _QudsWordEditorState extends State<QudsWordEditor>
       }
     })..start();
     _c.addListener(_onCtrl);
+    _c.onSpellCheckRequested ??= _openProofing;
     PaintingBinding.instance.systemFonts.addListener(_onSystemFonts);
     _c.onRequestFocus = () {
       if (mounted && (_inputRoute?.isCurrent ?? true)) {
@@ -265,7 +272,19 @@ class _QudsWordEditorState extends State<QudsWordEditor>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _inputRoute = ModalRoute.of(context);
+    final route = ModalRoute.of(context);
+    final isCurrent = route?.isCurrent ?? true;
+    final routeChanged =
+        !identical(_inputRoute, route) || _inputRouteWasCurrent != isCurrent;
+    _inputRoute = route;
+    _inputRouteWasCurrent = isCurrent;
+    if (!routeChanged) return;
+    // A route can cover or reveal Word without changing its primary focus
+    // (for example a requestFocus:false dialog). Reconcile the IME after the
+    // route update even when no FocusNode notification will arrive.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _onFocus();
+    });
   }
 
   @override
@@ -273,26 +292,47 @@ class _QudsWordEditorState extends State<QudsWordEditor>
   void didUpdateWidget(QudsWordEditor oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (!identical(oldWidget.controller, _c)) {
+      if (identical(oldWidget.controller.input.inputAllowed, _inputGuard)) {
+        oldWidget.controller.detachInput();
+        oldWidget.controller.input.inputAllowed = () => false;
+      }
       oldWidget.controller.removeListener(_onCtrl);
-      oldWidget.controller.input.inputAllowed = () => false;
-      oldWidget.controller.detachInput();
+      if (oldWidget.controller.onSpellCheckRequested == _openProofing) {
+        oldWidget.controller.onSpellCheckRequested = null;
+      }
       oldWidget.controller.onRequestFocus = null;
       _c.input.inputAllowed = _inputGuard;
       _c.detachInput();
       _c.addListener(_onCtrl);
+      _c.onSpellCheckRequested ??= _openProofing;
       _c.onRequestFocus = () {
-        if (mounted && (_inputRoute?.isCurrent ?? true)) _focus.requestFocus();
+        if (mounted && (_inputRoute?.isCurrent ?? true)) {
+          _focus.requestFocus();
+        }
       };
     }
     if (widget.config != null && !identical(widget.config, _c.config)) {
       _c.syncConfig(widget.config!);
     }
+    // Replacing a controller need not change the FocusNode, so no focus event
+    // is guaranteed to attach the new controller or apply its mode.
+    _onFocus();
   }
 
   void _onSystemFonts() {
     PaintRunText.clearAdvanceCache();
     if (mounted) {
       _c.refreshMetrics();
+    }
+  }
+
+  Future<void> _openProofing() async {
+    if (!mounted || _proofingOpen) return;
+    _proofingOpen = true;
+    try {
+      await showWordProofingDialog(context, controller: _c);
+    } finally {
+      _proofingOpen = false;
     }
   }
 
@@ -313,6 +353,9 @@ class _QudsWordEditorState extends State<QudsWordEditor>
     }
     _ticker.dispose();
     _c.removeListener(_onCtrl);
+    if (_c.onSpellCheckRequested == _openProofing) {
+      _c.onSpellCheckRequested = null;
+    }
     PaintingBinding.instance.systemFonts.removeListener(_onSystemFonts);
     _c.onRequestFocus = null;
     if (_ownsFocus) {
@@ -328,12 +371,65 @@ class _QudsWordEditorState extends State<QudsWordEditor>
 
   void _showWordContext(OfficeContextHit hit) {
     _dismissContextMenu();
+    final issues = hit.paragraph != null && hit.proofingOffset != null
+        ? _c.proofing.issuesAt(hit.paragraph!, hit.proofingOffset!)
+        : const <WordProofingIssue>[];
+    final issue = issues.firstOrNull;
+    final actions = <OfficeContextAction>[
+      if (issue != null) ...[
+        OfficeContextAction.caption(issue.finding.message),
+        for (var i = 0; i < issue.finding.replacements.length && i < 8; i++)
+          OfficeContextAction(
+            id: 'proofing:replace:$i',
+            label: issue.finding.replacements[i].isEmpty
+                ? 'Delete'
+                : issue.finding.replacements[i],
+            enabled: _c.canApplyProofingIssue(issue),
+          ),
+        const OfficeContextAction(id: 'proofing:ignore', label: 'Ignore once'),
+        if (issue.finding.category == OfficeProofingCategory.spelling)
+          const OfficeContextAction(
+            id: 'proofing:add',
+            label: 'Add to personal words',
+          ),
+      ],
+      const OfficeContextAction(
+        id: 'proofing:review',
+        label: 'Spelling and writing…',
+        shortcut: 'F7',
+        separatorBefore: true,
+      ),
+      ...OfficeContextMenu.word(hit: hit, controller: _c),
+    ];
     _contextMenu = OfficeContextMenu.show(
       context: context,
       globalPosition: hit.globalPosition,
-      actions: OfficeContextMenu.word(hit: hit, controller: _c),
+      actions: actions,
       onSelect: (String id) {
         _contextMenu = null;
+        if (id == 'proofing:review') {
+          unawaited(_openProofing());
+          return;
+        }
+        if (issue != null && id.startsWith('proofing:')) {
+          if (id == 'proofing:ignore') {
+            _c.proofing.ignoreOnce(issue);
+          } else if (id == 'proofing:add') {
+            _c.proofing.addWord(issue);
+          } else if (id.startsWith('proofing:replace:')) {
+            final index = int.tryParse(id.split(':').last);
+            if (index != null &&
+                index >= 0 &&
+                index < issue.finding.replacements.length) {
+              _c.applyProofingSuggestion(
+                issue,
+                issue.finding.replacements[index],
+              );
+            }
+          }
+          unawaited(_c.checkDocumentProofing());
+          return;
+        }
         _runWordContext(hit, id);
       },
     );
@@ -416,6 +512,9 @@ class _QudsWordEditorState extends State<QudsWordEditor>
   }
 
   KeyEventResult _onWordKey(FocusNode node, KeyEvent event) {
+    if (!_focus.hasPrimaryFocus || !(_inputRoute?.isCurrent ?? true)) {
+      return KeyEventResult.ignored;
+    }
     final directionRtl = _directionKeys.handle(event);
     if (directionRtl != null && _c.config.allowsMutation) {
       _c.setParagraphDirection(rtl: directionRtl);
@@ -592,8 +691,9 @@ class _QudsWordEditorState extends State<QudsWordEditor>
     if (event.logicalKey == LogicalKeyboardKey.enter ||
         event.logicalKey == LogicalKeyboardKey.numpadEnter) {
       // Modified Enter belongs to host actions such as page/column breaks.
-      if (ctrl || HardwareKeyboard.instance.isAltPressed)
+      if (ctrl || HardwareKeyboard.instance.isAltPressed) {
         return KeyEventResult.ignored;
+      }
       _c.insertParagraphBreak();
       return KeyEventResult.handled;
     }
@@ -813,6 +913,7 @@ class _QudsWordEditorState extends State<QudsWordEditor>
                           textField: config.allowsMutation,
                           child: WordCanvas(
                             document: _c.document,
+                            proofingFindings: _c.proofing.findingsByParagraph,
                             laidOut: _c.documentLaidOut,
                             caret: _c.caret,
                             findHits: _c.findSession.hits,
@@ -979,7 +1080,9 @@ class _QudsSheetEditorState extends State<QudsSheetEditor> {
   late final bool _ownsFocus;
   ModalRoute<dynamic>? _inputRoute;
   final _directionKeys = OfficeDirectionKeyChord();
-  late final bool Function() _inputGuard = () =>
+  late final bool Function() _inputGuard = _allowsSheetInput;
+
+  bool _allowsSheetInput() =>
       mounted &&
       _focus.hasPrimaryFocus &&
       (_inputRoute?.isCurrent ?? true) &&
@@ -1712,7 +1815,9 @@ class _QudsSlideEditorState extends State<QudsSlideEditor>
   late final bool _ownsFocus;
   ModalRoute<dynamic>? _inputRoute;
   final _directionKeys = OfficeDirectionKeyChord();
-  late final bool Function() _inputGuard = () =>
+  late final bool Function() _inputGuard = _allowsSlideInput;
+
+  bool _allowsSlideInput() =>
       mounted &&
       _focus.hasPrimaryFocus &&
       (_inputRoute?.isCurrent ?? true) &&

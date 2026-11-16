@@ -79,7 +79,9 @@ class OfficeInputBridge with TextInputClient {
     _value = value;
     composing = value.composing;
     final TextInputConnection? connection = _connection;
-    if (connection != null && connection.attached) {
+    if (connection != null &&
+        connection.attached &&
+        inputAllowed?.call() != false) {
       connection.setEditingState(_value);
     }
   }

@@ -502,7 +502,7 @@ abstract final class WmlRunEdit {
 
   static bool _sameProps(WmlRunProps a, WmlRunProps b) {
     // Equal visible formatting is insufficient: source XML retains properties
-    // such as language, direction, and proofing that the model cannot edit.
+    // such as script-specific language and direction extensions.
     // Import baselines and explicit defaults also affect subsequent export.
     return a.styleId == b.styleId &&
         a.sourcePropertiesXml == b.sourcePropertiesXml &&
@@ -519,6 +519,8 @@ abstract final class WmlRunEdit {
         a.fontSizeHalfPoints == b.fontSizeHalfPoints &&
         a.asciiFont == b.asciiFont &&
         a.csFont == b.csFont &&
-        a.vertAlign == b.vertAlign;
+        a.vertAlign == b.vertAlign &&
+        a.proofingLanguage == b.proofingLanguage &&
+        a.noProof == b.noProof;
   }
 }

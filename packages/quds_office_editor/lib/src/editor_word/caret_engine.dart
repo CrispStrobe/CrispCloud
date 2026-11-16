@@ -394,7 +394,11 @@ class CaretEngine {
     var x = 0.0;
     double? runStart;
     for (final ShapedGlyph g in line.glyphs) {
-      final bool inside = g.logicalIndex >= from && g.logicalIndex < to;
+      final end =
+          g.logicalIndex + (g.sourceLength ?? (g.codePoint > 0xffff ? 2 : 1));
+      final bool inside = g.isDiscretionaryHyphen && g.sourceLength == 0
+          ? from < g.logicalIndex && g.logicalIndex <= to
+          : g.logicalIndex < to && end > from;
       if (inside) {
         runStart ??= x;
       } else if (runStart != null) {
@@ -427,7 +431,10 @@ class CaretEngine {
     double? runStart;
     var runEnd = 0.0;
     for (final LaidOutGlyph g in line.glyphs) {
-      final bool inside = g.glyph.logicalIndex < to && g.logicalEnd > from;
+      final bool inside =
+          g.glyph.isDiscretionaryHyphen && g.glyph.sourceLength == 0
+          ? from < g.glyph.logicalIndex && g.glyph.logicalIndex <= to
+          : g.glyph.logicalIndex < to && g.logicalEnd > from;
       // Measure on the pen position: [LaidOutGlyph.x] includes the glyph's
       // paint offset (kerning, mark attachment), which would open gaps and
       // overlaps between neighbouring boxes.
@@ -471,8 +478,21 @@ class CaretEngine {
       }
       return line.x;
     }
+    // A break owns both of its source boundaries, even when an adjacent
+    // presentation label ends at the same offset. Check breaks before labels.
     for (final glyph in line.glyphs) {
-      if (glyph.displayText == null ||
+      if (glyph.glyph.isDiscretionaryHyphen &&
+          logicalIndex >= glyph.glyph.logicalIndex &&
+          logicalIndex <= glyph.logicalEnd) {
+        final after = logicalIndex >= glyph.logicalEnd;
+        return after == glyph.glyph.level.isEven
+            ? glyph.x + glyph.advance
+            : glyph.x;
+      }
+    }
+    for (final glyph in line.glyphs) {
+      if (glyph.glyph.isDiscretionaryHyphen ||
+          glyph.displayText == null ||
           logicalIndex < glyph.glyph.logicalIndex ||
           logicalIndex > glyph.logicalEnd) {
         continue;
@@ -484,7 +504,11 @@ class CaretEngine {
       );
       final left = group.map((g) => g.x).reduce(math.min);
       final right = group.map((g) => g.x + g.advance).reduce(math.max);
-      return logicalIndex <= glyph.glyph.logicalIndex ? left : right;
+      // Zero-source labels have one insertion point after their visible ink.
+      final after =
+          logicalIndex > glyph.glyph.logicalIndex ||
+          glyph.logicalEnd == glyph.glyph.logicalIndex;
+      return after == glyph.glyph.level.isEven ? right : left;
     }
     for (final LaidOutGlyph glyph in line.glyphs) {
       if (glyph.glyph.logicalIndex != logicalIndex) {
@@ -594,7 +618,9 @@ class CaretEngine {
       return 0;
     }
     for (final glyph in line.glyphs) {
-      if (glyph.displayText == null) continue;
+      if (glyph.glyph.isDiscretionaryHyphen || glyph.displayText == null) {
+        continue;
+      }
       final group = line.glyphs.where(
         (g) =>
             g.displayText != null &&
@@ -603,7 +629,8 @@ class CaretEngine {
       final left = group.map((g) => g.x).reduce(math.min);
       final right = group.map((g) => g.x + g.advance).reduce(math.max);
       if (x >= left && x <= right) {
-        return x <= (left + right) / 2
+        final leftHalf = x <= (left + right) / 2;
+        return leftHalf == glyph.glyph.level.isEven
             ? glyph.glyph.logicalIndex
             : glyph.logicalEnd;
       }
@@ -634,7 +661,7 @@ class CaretEngine {
       return (min: 0, max: 0);
     }
     var min = line.glyphs.first.glyph.logicalIndex;
-    var max = min + 1;
+    var max = line.glyphs.first.logicalEnd;
     for (final LaidOutGlyph glyph in line.glyphs) {
       if (glyph.glyph.logicalIndex < min) {
         min = glyph.glyph.logicalIndex;

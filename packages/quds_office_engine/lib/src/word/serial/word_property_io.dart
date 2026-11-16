@@ -17,6 +17,8 @@ abstract final class WordPropertyIo {
     'highlight': '${r.highlight}',
     'u': '${r.underline}',
     'vertAlign': '${r.vertAlign}',
+    'lang': '${r.proofingLanguage}',
+    'noProof': '${r.noProof}',
   };
   static Map<String, String> paragraphValues(WmlParagraphProps p) => {
     'pStyle': '${p.styleId}',
@@ -30,6 +32,8 @@ abstract final class WordPropertyIo {
     'numPr': '${p.numId ?? (p.numberingSuppressed ? 0 : null)}|${p.ilvl}',
     'outlineLvl': '${p.headingLevel}',
     'bidi': '${p.rightToLeft}',
+    'rPr': '${p.proofingLanguage}',
+    'suppressAutoHyphens': '${p.suppressAutoHyphens}',
     'framePr': '${p.dropCapLines}',
     'shd': '${p.shadingFill}',
     'pBdr': '${p.borderColor}',
@@ -55,6 +59,35 @@ abstract final class WordPropertyIo {
     final XmlElement result = parse(source, generated.localName);
     for (final String key in current.keys) {
       if (current[key] == imported[key]) continue;
+      if (key == 'lang' || key == 'rPr') {
+        // Language owns only @w:val. Preserve East Asian/bidi languages and
+        // unrelated paragraph-mark formatting from the native source.
+        if (key == 'lang') {
+          mergeLanguage(
+            result,
+            generated.firstChild('lang')?.getAttribute('val'),
+          );
+        } else {
+          var marker = result.firstChild(
+            'rPr',
+            namespaceUri: OfficeNamespaces.w,
+          );
+          final value = generated
+              .firstChild('rPr')
+              ?.firstChild('lang')
+              ?.getAttribute('val');
+          if (marker == null && value != null) {
+            marker = XmlElement(
+              localName: 'rPr',
+              prefix: 'w',
+              namespaceUri: OfficeNamespaces.w,
+            );
+            result.addChild(marker);
+          }
+          if (marker != null) mergeLanguage(marker, value);
+        }
+        continue;
+      }
       result.children.removeWhere(
         (n) =>
             n is XmlElement &&
@@ -93,6 +126,40 @@ abstract final class WordPropertyIo {
     }
     orderChildren(result);
     return result;
+  }
+
+  /// Change the owned language attribute while preserving native metadata.
+  static void mergeLanguage(XmlElement runProperties, String? language) {
+    var lang = runProperties.firstChild(
+      'lang',
+      namespaceUri: OfficeNamespaces.w,
+    );
+    if (lang == null && language != null && language.isNotEmpty) {
+      lang = XmlElement(
+        localName: 'lang',
+        prefix: 'w',
+        namespaceUri: OfficeNamespaces.w,
+      )..setAttribute('w', OfficeNamespaces.w, prefix: 'xmlns');
+      runProperties.addChild(lang);
+    }
+    if (lang == null) return;
+    if (language == null || language.isEmpty) {
+      lang.attributes.removeWhere(
+        (a) => a.localName == 'val' && a.namespaceUri == OfficeNamespaces.w,
+      );
+      if (lang.attributes.every((a) => a.prefix == 'xmlns')) {
+        runProperties.children.remove(lang);
+      }
+    } else {
+      lang.setAttribute('w', OfficeNamespaces.w, prefix: 'xmlns');
+      lang.setAttribute(
+        'val',
+        language,
+        prefix: 'w',
+        namespaceUri: OfficeNamespaces.w,
+      );
+    }
+    orderChildren(runProperties);
   }
 
   /// Canonical OOXML property order for sparse style and direct property edits.

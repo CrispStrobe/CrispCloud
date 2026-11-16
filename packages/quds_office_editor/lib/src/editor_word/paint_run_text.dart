@@ -87,7 +87,11 @@ abstract final class PaintRunText {
     return TextDirection.ltr;
   }
 
-  /// logicalSlice API.
+  /// Smallest logical substring containing the selected grapheme clusters.
+  ///
+  /// Offsets use UTF-16, but a slice never cuts a surrogate pair, combining
+  /// sequence, flag or emoji ZWJ sequence. Paint runs use [runText] instead:
+  /// their style ownership must not expand into a differently styled mark.
   static String logicalSlice(String paragraph, Iterable<int> logicalIndices) {
     if (paragraph.isEmpty) {
       return '';
@@ -101,20 +105,18 @@ abstract final class PaintRunText {
       if (i < start) {
         start = i;
       }
-      var e = i + 1;
-      final int cu = paragraph.codeUnitAt(i);
-      if (cu >= 0xD800 && cu <= 0xDBFF && i + 1 < paragraph.length) {
-        e = i + 2;
-      }
-      while (e < paragraph.length && _isMark(paragraph.codeUnitAt(e))) {
-        e++;
-      }
-      if (e > end) {
-        end = e;
-      }
+      end = math.max(end, i + 1);
     }
     if (start >= end) {
       return '';
+    }
+    for (final cluster in GraphemeClusters.segment(paragraph)) {
+      if (cluster.start <= start && start < cluster.end) {
+        start = cluster.start;
+      }
+      if (cluster.start < end && end <= cluster.end) {
+        return paragraph.substring(start, cluster.end);
+      }
     }
     return paragraph.substring(start, end);
   }
@@ -130,7 +132,10 @@ abstract final class PaintRunText {
 
   /// samePaintRun API.
   static bool samePaintRun(LaidOutGlyph a, LaidOutGlyph b) {
-    if (_isTab(a) || _isTab(b)) {
+    if (_isTab(a) ||
+        _isTab(b) ||
+        a.glyph.isDiscretionaryHyphen ||
+        b.glyph.isDiscretionaryHyphen) {
       return false;
     }
     if (a.displayText != b.displayText ||
@@ -149,7 +154,9 @@ abstract final class PaintRunText {
         a.fontFamily == b.fontFamily &&
         a.vertAlign == b.vertAlign &&
         a.commentIds.join(',') == b.commentIds.join(',') &&
-        a.glyph.level.isOdd == b.glyph.level.isOdd;
+        // Equal parity does not imply one logical run: nested embeddings can
+        // share a direction while referring to disjoint source intervals.
+        a.glyph.level == b.glyph.level;
   }
 
   /// Runs painted as a single [TextPainter] (word-split when justified).
@@ -224,9 +231,14 @@ abstract final class PaintRunText {
         text: text,
         first: first,
         themeFamily: themeFamily,
-      )..layout();
-      _placeRun(run, painter, text, paragraph, x);
-      x += painter.width;
+      );
+      try {
+        painter.layout();
+        _placeRun(run, painter, text, paragraph, x);
+        x += painter.width;
+      } finally {
+        painter.dispose();
+      }
       start = end;
     }
     line.width = (x - line.x).clamp(0, double.infinity);
@@ -256,7 +268,9 @@ abstract final class PaintRunText {
     }
   }
 
-  /// painterFor API.
+  /// Creates an unlaid-out painter owned by the caller.
+  ///
+  /// Call [TextPainter.dispose] after measuring, painting or hit testing.
   static TextPainter painterFor({
     required String text,
     required LaidOutGlyph first,
@@ -309,53 +323,74 @@ abstract final class PaintRunText {
       first: first,
       themeFamily: themeFamily,
       color: color,
-    )..layout();
-    final baseline = plain.computeDistanceToActualBaseline(
-      TextBaseline.alphabetic,
     );
-    final band = Rect.fromLTRB(
-      offset.dx - first.fontSize,
-      offset.dy + baseline,
-      offset.dx + decorated.width + first.fontSize,
-      offset.dy + decorated.height + first.fontSize,
-    );
-    canvas.save();
-    canvas.clipRect(band);
-    canvas.saveLayer(band, Paint());
-    decorated.paint(canvas, offset);
-    for (final style in [PaintingStyle.fill, PaintingStyle.stroke]) {
-      final mask = painterFor(
-        text: text,
-        first: first,
-        themeFamily: themeFamily,
-        foreground: Paint()
-          ..blendMode = BlendMode.clear
-          ..style = style
-          ..strokeWidth = first.fontSize * 0.04,
-      )..layout();
-      mask.paint(canvas, offset);
-      mask.dispose();
+    try {
+      plain.layout();
+      final baseline = plain.computeDistanceToActualBaseline(
+        TextBaseline.alphabetic,
+      );
+      final band = Rect.fromLTRB(
+        offset.dx - first.fontSize,
+        offset.dy + baseline,
+        offset.dx + decorated.width + first.fontSize,
+        offset.dy + decorated.height + first.fontSize,
+      );
+      canvas.save();
+      try {
+        canvas.clipRect(band);
+        canvas.saveLayer(band, Paint());
+        try {
+          decorated.paint(canvas, offset);
+          for (final style in [PaintingStyle.fill, PaintingStyle.stroke]) {
+            final mask = painterFor(
+              text: text,
+              first: first,
+              themeFamily: themeFamily,
+              foreground: Paint()
+                ..blendMode = BlendMode.clear
+                ..style = style
+                ..strokeWidth = first.fontSize * 0.04,
+            );
+            try {
+              mask.layout();
+              mask.paint(canvas, offset);
+            } finally {
+              mask.dispose();
+            }
+          }
+        } finally {
+          canvas.restore();
+        }
+      } finally {
+        canvas.restore();
+      }
+      plain.paint(canvas, offset);
+    } finally {
+      plain.dispose();
     }
-    canvas.restore();
-    canvas.restore();
-    plain.paint(canvas, offset);
-    plain.dispose();
   }
 
   static final Map<String, double> _advanceCache = <String, double>{};
+  static int _advanceFontRevision = -1;
 
   /// Forgets measured widths, e.g. after new fonts finish loading.
   static void clearAdvanceCache() => _advanceCache.clear();
 
-  /// Width of [codePoint] painted in [props] at [sizePoints], as
-  /// [painterFor] would paint it. Feeds [WordLayoutEngine.measure] so line
-  /// breaks agree with [fitLine].
+  /// Width of one [codePoint] painted in [props] at [sizePoints], using the
+  /// same font selection as [painterFor]. This scalar fallback cannot include
+  /// kerning or contextual shaping; pre-wrap measurement should shape runs.
   static double advanceOf(
     int codePoint,
     double sizePoints,
     WmlRunProps props, {
     String? themeFamily,
   }) {
+    // A family requested before its bytes finish loading was measured with a
+    // fallback. Never reuse those widths once registration changes resolution.
+    if (_advanceFontRevision != OfficeHostFonts.registrationRevision) {
+      _advanceCache.clear();
+      _advanceFontRevision = OfficeHostFonts.registrationRevision;
+    }
     final String text = String.fromCharCode(codePoint);
     final String runFamily = OfficeTypeface.familyForRun(props, codePoint);
     final String key =
@@ -383,9 +418,14 @@ abstract final class PaintRunText {
       ),
       textDirection: looksRtl(text) ? TextDirection.rtl : TextDirection.ltr,
       maxLines: 1,
-    )..layout();
-    final double width = painter.width;
-    painter.dispose();
+    );
+    final double width;
+    try {
+      painter.layout();
+      width = painter.width;
+    } finally {
+      painter.dispose();
+    }
     if (_advanceCache.length >= 20000) {
       _advanceCache.clear();
     }
@@ -395,6 +435,12 @@ abstract final class PaintRunText {
 
   /// runText API.
   static String runText(String paragraph, List<LaidOutGlyph> run) {
+    // A selected break paints a hyphen while retaining its source ownership:
+    // automatic breaks own no text; manual breaks own U+00AD, not '-'.
+    // These glyphs form individual paint runs (see samePaintRun).
+    if (run.isNotEmpty && run.first.glyph.isDiscretionaryHyphen) {
+      return String.fromCharCode(run.first.glyph.codePoint);
+    }
     if (run.isNotEmpty && run.first.displayText != null) {
       return run.first.displayText!;
     }
@@ -405,19 +451,35 @@ abstract final class PaintRunText {
       for (final LaidOutGlyph glyph in run)
         if (glyph.glyph.logicalIndex >= 0 &&
             glyph.glyph.logicalIndex < paragraph.length)
-          glyph.glyph.logicalIndex,
+          _scalarStart(paragraph, glyph.glyph.logicalIndex),
     ]..sort();
     if (indices.isEmpty) {
       return '';
     }
-    var start = indices.first;
-    var end = indices.last + 1;
-    if (end < paragraph.length && _isMark(paragraph.codeUnitAt(end))) {
-      while (end < paragraph.length && _isMark(paragraph.codeUnitAt(end))) {
-        end++;
+    final start = indices.first;
+    final end = indices.last + _utf16Len(paragraph, indices.last);
+    // The breaker omits invisible format controls and unselected soft
+    // hyphens. Preserve those gaps regardless of length: they affect shaping
+    // and their UTF-16 offsets still belong to this logical source span.
+    // Any omitted visible scalar instead belongs to another run; do not
+    // borrow it merely because the gap is short.
+    var next = start;
+    var hasOnlyInvisibleGaps = true;
+    for (final index in indices) {
+      while (next < index) {
+        final codePoint = paragraph.codeUnitAt(next);
+        if (codePoint != 0x00ad && !Uax9Bidi.isInvisibleFormat(codePoint)) {
+          hasOnlyInvisibleGaps = false;
+          break;
+        }
+        next++;
       }
+      if (!hasOnlyInvisibleGaps) break;
+      next = math.max(next, index + _utf16Len(paragraph, index));
     }
-    if (end - start <= indices.length + 8) {
+    // Every authored mark has its own source glyph. Extending past the final
+    // scalar would draw a following, differently styled mark a second time.
+    if (hasOnlyInvisibleGaps) {
       return paragraph.substring(start, end.clamp(0, paragraph.length));
     }
     final StringBuffer buffer = StringBuffer();
@@ -426,7 +488,7 @@ abstract final class PaintRunText {
       if (i == last) {
         continue;
       }
-      buffer.writeCharCode(paragraph.codeUnitAt(i));
+      buffer.write(paragraph.substring(i, i + _utf16Len(paragraph, i)));
       last = i;
     }
     return buffer.toString();
@@ -543,6 +605,9 @@ abstract final class PaintRunText {
     if (paragraph.isEmpty || run.isEmpty || text.isEmpty) {
       return 0;
     }
+    if (run.first.glyph.isDiscretionaryHyphen) {
+      return run.first.glyph.logicalIndex;
+    }
     var min = run.first.glyph.logicalIndex;
     for (final LaidOutGlyph glyph in run) {
       if (glyph.glyph.logicalIndex < min) {
@@ -561,11 +626,24 @@ abstract final class PaintRunText {
       return 0;
     }
     final int cu = text.codeUnitAt(offset);
-    if (cu >= 0xD800 && cu <= 0xDBFF && offset + 1 < text.length) {
+    if (cu >= 0xD800 &&
+        cu <= 0xDBFF &&
+        offset + 1 < text.length &&
+        _isLowSurrogate(text.codeUnitAt(offset + 1))) {
       return 2;
     }
     return 1;
   }
+
+  static int _scalarStart(String text, int offset) {
+    if (offset > 0 && _isLowSurrogate(text.codeUnitAt(offset))) {
+      final previous = text.codeUnitAt(offset - 1);
+      if (previous >= 0xD800 && previous <= 0xDBFF) return offset - 1;
+    }
+    return offset;
+  }
+
+  static bool _isLowSurrogate(int unit) => unit >= 0xDC00 && unit <= 0xDFFF;
 
   /// Page X of the insertion point using the same [TextPainter] as ink.
   static double caretXOnLine(
@@ -607,20 +685,35 @@ abstract final class PaintRunText {
     required String paragraph,
     String? themeFamily,
   }) {
-    final List<List<LaidOutGlyph>> segments = paintSegments(line)
-        .toList(growable: false);
+    // A discretionary break owns its boundary before any adjacent label,
+    // including callers that construct glyphs without displayText metadata.
+    for (final glyph in line.glyphs) {
+      if (glyph.glyph.isDiscretionaryHyphen &&
+          logicalIndex >= glyph.glyph.logicalIndex &&
+          logicalIndex <= glyph.logicalEnd) {
+        final after = logicalIndex >= glyph.logicalEnd;
+        return after == glyph.glyph.level.isEven
+            ? glyph.x + glyph.advance
+            : glyph.x;
+      }
+    }
+    final List<List<LaidOutGlyph>> segments = paintSegments(
+      line,
+    ).toList(growable: false);
     for (int s = 0; s < segments.length; s++) {
       final List<LaidOutGlyph> run = segments[s];
       final LaidOutGlyph first = run.first;
       final (:int min, :int max) = _runSpan(run);
       final bool lastRun = s == segments.length - 1;
+      final bool emptyDisplay = first.displayText != null && min == max;
       final bool inRun =
           logicalIndex >= min &&
-          (logicalIndex < max || (logicalIndex == max && lastRun));
+          (logicalIndex < max ||
+              (logicalIndex == max && (lastRun || emptyDisplay)));
       if (!inRun) {
         continue;
       }
-      if (logicalIndex == max && !lastRun) {
+      if (logicalIndex == max && !lastRun && !emptyDisplay) {
         continue;
       }
       if (run.length == 1 && first.glyph.isSpace) {
@@ -636,13 +729,18 @@ abstract final class PaintRunText {
         text: text,
         first: first,
         themeFamily: themeFamily,
-      )..layout();
-      final int base = _runTextBase(paragraph, run, text);
-      final int offset = first.displayText != null
-          ? (logicalIndex <= min ? 0 : text.length)
-          : (logicalIndex - base).clamp(0, text.length);
-      final double origin = runPaintOrigin(run, painter, text, paragraph);
-      return origin + caretDx(painter, offset);
+      );
+      try {
+        painter.layout();
+        final int base = _runTextBase(paragraph, run, text);
+        final int offset = first.displayText != null
+            ? (logicalIndex <= min && !emptyDisplay ? 0 : text.length)
+            : (logicalIndex - base).clamp(0, text.length);
+        final double origin = runPaintOrigin(run, painter, text, paragraph);
+        return origin + caretDx(painter, offset);
+      } finally {
+        painter.dispose();
+      }
     }
     return null;
   }
@@ -657,11 +755,7 @@ abstract final class PaintRunText {
     if (line.glyphs.isEmpty) {
       return 0;
     }
-    TextPainter? bestPainter;
-    List<LaidOutGlyph>? bestRun;
-    String bestText = '';
-    var bestBase = 0;
-    var bestOrigin = line.x;
+    int? bestIndex;
     var bestDist = double.infinity;
     for (final List<LaidOutGlyph> run in paintSegments(line)) {
       final LaidOutGlyph first = run.first;
@@ -676,10 +770,7 @@ abstract final class PaintRunText {
         final double dist = x < left ? left - x : x - right;
         if (dist < bestDist) {
           bestDist = dist;
-          bestPainter = null;
-          bestText = '';
-          bestBase = first.glyph.logicalIndex;
-          bestOrigin = left;
+          bestIndex = null;
         }
         continue;
       }
@@ -691,48 +782,36 @@ abstract final class PaintRunText {
         text: text,
         first: first,
         themeFamily: themeFamily,
-      )..layout();
-      final double origin = runPaintOrigin(run, painter, text, paragraph);
-      final double left = origin;
-      final double right = origin + painter.width;
-      if (x >= left && x <= right) {
-        if (first.displayText != null) {
-          return x <= left + painter.width / 2
-              ? first.glyph.logicalIndex
-              : first.logicalEnd;
+      );
+      try {
+        painter.layout();
+        final double left = runPaintOrigin(run, painter, text, paragraph);
+        final double right = left + painter.width;
+        final bool contains = x >= left && x <= right;
+        final double dist = contains ? 0 : (x < left ? left - x : x - right);
+        if (!contains && dist >= bestDist) continue;
+        final int index;
+        if (first.glyph.isDiscretionaryHyphen || first.displayText != null) {
+          index = _displayHit(first, x <= left + painter.width / 2);
+        } else {
+          final double localX = (x - left).clamp(0.0, painter.width);
+          final int local = hitIndex(painter, Offset(localX, 0), text.length);
+          final int base = _runTextBase(paragraph, run, text);
+          index = (base + local).clamp(0, paragraph.length);
         }
-        final int local = hitIndex(painter, Offset(x - left, 0), text.length);
-        final int base = _runTextBase(paragraph, run, text);
-        final int max = paragraph.isEmpty ? 0 : paragraph.length;
-        return (base + local).clamp(0, max);
-      }
-      final double dist = x < left ? left - x : x - right;
-      if (dist < bestDist) {
+        if (contains) return index;
         bestDist = dist;
-        bestPainter = painter;
-        bestRun = run;
-        bestText = text;
-        bestBase = _runTextBase(paragraph, run, text);
-        bestOrigin = left;
+        bestIndex = index;
+      } finally {
+        painter.dispose();
       }
     }
-    if (bestPainter == null) {
-      return CaretEngine.hitLogicalIndex(line, x);
-    }
-    if (bestRun?.first.displayText != null) {
-      return x <= bestOrigin + bestPainter.width / 2
-          ? bestRun!.first.glyph.logicalIndex
-          : bestRun!.first.logicalEnd;
-    }
-    final double localX = (x - bestOrigin).clamp(0.0, bestPainter.width);
-    final int local = hitIndex(bestPainter, Offset(localX, 0), bestText.length);
-    final int max = paragraph.isEmpty ? 0 : paragraph.length;
-    return (bestBase + local).clamp(0, max);
+    return bestIndex ?? CaretEngine.hitLogicalIndex(line, x);
   }
 
   static ({int min, int max}) _runSpan(List<LaidOutGlyph> run) {
     var min = run.first.glyph.logicalIndex;
-    var max = min + 1;
+    var max = run.first.logicalEnd;
     for (final LaidOutGlyph glyph in run) {
       if (glyph.glyph.logicalIndex < min) {
         min = glyph.glyph.logicalIndex;
@@ -745,7 +824,12 @@ abstract final class PaintRunText {
     return (min: min, max: max);
   }
 
-  /// plain API.
+  static int _displayHit(LaidOutGlyph glyph, bool leftHalf) =>
+      leftHalf == glyph.glyph.level.isEven
+      ? glyph.glyph.logicalIndex
+      : glyph.logicalEnd;
+
+  /// Creates a plain painter owned by the caller; dispose it after use.
   static TextPainter plain({
     required String text,
     required double fontSize,
@@ -786,13 +870,6 @@ abstract final class PaintRunText {
   /// caretDx API.
   static double caretDx(TextPainter painter, int index) {
     return painter.getOffsetForCaret(TextPosition(offset: index), Rect.zero).dx;
-  }
-
-  static bool _isMark(int cu) {
-    return (cu >= 0x064B && cu <= 0x065F) ||
-        cu == 0x0670 ||
-        (cu >= 0x06D6 && cu <= 0x06ED) ||
-        (cu >= 0x08D3 && cu <= 0x08FF);
   }
 }
 

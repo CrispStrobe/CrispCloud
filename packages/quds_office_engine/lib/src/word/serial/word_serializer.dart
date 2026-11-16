@@ -1061,20 +1061,29 @@ class WordSerializer {
   }
 
   void _writeRunContent(XmlWriter w, String text, {required bool deleted}) {
-    if (!text.contains(RegExp(r'[\t\r\n]'))) {
+    if (!text.contains(RegExp(r'[\t\r\n\u00ad\u2011]'))) {
       _writeTextNode(w, text, deleted: deleted);
       return;
     }
     var start = 0;
     for (int i = 0; i < text.length; i++) {
       final int code = text.codeUnitAt(i);
-      if (code != 0x09 && code != 0x0a && code != 0x0d) {
+      if (code != 0x09 &&
+          code != 0x0a &&
+          code != 0x0d &&
+          code != 0x00ad &&
+          code != 0x2011) {
         continue;
       }
       if (i > start) {
         _writeTextNode(w, text.substring(start, i), deleted: deleted);
       }
-      w.writeEmptyElement(code == 0x09 ? 'tab' : 'br', prefix: 'w');
+      w.writeEmptyElement(switch (code) {
+        0x09 => 'tab',
+        0x00ad => 'softHyphen',
+        0x2011 => 'noBreakHyphen',
+        _ => 'br',
+      }, prefix: 'w');
       if (code == 0x0d &&
           i + 1 < text.length &&
           text.codeUnitAt(i + 1) == 0x0a) {
@@ -1215,6 +1224,13 @@ class WordSerializer {
       }
       w.writeEndElement();
     }
+    if (p.suppressAutoHyphens != null) {
+      w.writeEmptyElement(
+        'suppressAutoHyphens',
+        prefix: 'w',
+        attributes: {'w:val': p.suppressAutoHyphens! ? '1' : '0'},
+      );
+    }
     if (p.rightToLeft == true) {
       w.writeEmptyElement('bidi', prefix: 'w');
     } else if (p.rightToLeft == false) {
@@ -1267,6 +1283,15 @@ class WordSerializer {
         prefix: 'w',
         attributes: <String, String>{'w:val': '${p.headingLevel! - 1}'},
       );
+    }
+    if (p.proofingLanguage != null) {
+      w.writeStartElement('rPr', prefix: 'w');
+      w.writeEmptyElement(
+        'lang',
+        prefix: 'w',
+        attributes: {'w:val': p.proofingLanguage!},
+      );
+      w.writeEndElement();
     }
     if (sectionBreak != null) {
       _writeSectPr(w, sectionBreak);
@@ -1331,6 +1356,13 @@ class WordSerializer {
     if (r.strike) {
       w.writeEmptyElement('strike', prefix: 'w');
     }
+    if (r.noProof != null) {
+      w.writeEmptyElement(
+        'noProof',
+        prefix: 'w',
+        attributes: {'w:val': r.noProof! ? '1' : '0'},
+      );
+    }
     w.writeEmptyElement(
       'color',
       prefix: 'w',
@@ -1365,6 +1397,13 @@ class WordSerializer {
               ? 'superscript'
               : 'subscript',
         },
+      );
+    }
+    if (r.proofingLanguage != null) {
+      w.writeEmptyElement(
+        'lang',
+        prefix: 'w',
+        attributes: {'w:val': r.proofingLanguage!},
       );
     }
     w.writeEndElement();
@@ -1829,6 +1868,7 @@ class WordSerializer {
       protection: document.restrictEditing,
       restrictMode: document.restrictMode,
       oddEven: document.sections.any((s) => s.differentOddEven),
+      autoHyphenation: document.autoHyphenation,
     );
     if (xml == null) return;
     _putPart(
@@ -2070,7 +2110,11 @@ class WordSerializer {
       document,
       includeDefaultStyles: document.package == null,
     );
-    if (importedWithoutStyles && current.isEmpty) return;
+    if (importedWithoutStyles &&
+        current.isEmpty &&
+        document.proofingLanguage == null) {
+      return;
+    }
     final XmlWriter w = XmlWriter();
     w.writeStartDocument();
     w.writeStartElement('styles', prefix: 'w');
@@ -2240,6 +2284,45 @@ class WordSerializer {
         }
         xml = preserved.toXmlString();
       }
+    }
+    final languageDocument = XmlDocument.parse(xml);
+    final styleRoot = languageDocument.root!;
+    var defaults = styleRoot.firstChild(
+      'docDefaults',
+      namespaceUri: OfficeNamespaces.w,
+    );
+    var runDefaults = defaults?.firstChild(
+      'rPrDefault',
+      namespaceUri: OfficeNamespaces.w,
+    );
+    var runProperties = runDefaults?.firstChild(
+      'rPr',
+      namespaceUri: OfficeNamespaces.w,
+    );
+    final previousLanguage = runProperties
+        ?.firstChild('lang', namespaceUri: OfficeNamespaces.w)
+        ?.getAttribute('val', namespaceUri: OfficeNamespaces.w);
+    if (previousLanguage != document.proofingLanguage) {
+      XmlElement element(String name) => XmlElement(
+        localName: name,
+        prefix: 'w',
+        namespaceUri: OfficeNamespaces.w,
+      )..setAttribute('w', OfficeNamespaces.w, prefix: 'xmlns');
+      if (defaults == null) {
+        defaults = element('docDefaults');
+        styleRoot.children.insert(0, defaults);
+        defaults.parent = styleRoot;
+      }
+      if (runDefaults == null) {
+        runDefaults = element('rPrDefault');
+        defaults.addChild(runDefaults);
+      }
+      if (runProperties == null) {
+        runProperties = element('rPr');
+        runDefaults.addChild(runProperties);
+      }
+      WordPropertyIo.mergeLanguage(runProperties, document.proofingLanguage);
+      xml = languageDocument.toXmlString();
     }
     _putPart(
       package,

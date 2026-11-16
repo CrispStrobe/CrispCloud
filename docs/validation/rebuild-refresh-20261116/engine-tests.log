@@ -1,0 +1,273 @@
+00:00 +0: loading test/font_subset_unicode_test.dart
+00:00 +0: test/font_subset_unicode_test.dart: BMP subset cmap has an exact format 4 length and sentinel
+00:00 +1: test/font_subset_unicode_test.dart: subset preserves supplementary scalars and U+FFFF in format 12
+00:00 +2: test/font_subset_unicode_test.dart: large sparse BMP mapping never overflows format 4 length
+00:00 +3: test/font_subset_unicode_test.dart: large sparse BMP mapping never overflows format 4 length
+00:00 +4: test/font_subset_unicode_test.dart: large sparse BMP mapping never overflows format 4 length
+00:00 +5: test/font_subset_unicode_test.dart: large sparse BMP mapping never overflows format 4 length
+00:00 +6: test/line_breaker_measure_line_test.dart: overflow repair bounds host calls even when no word can fit
+00:00 +7: test/line_breaker_measure_line_test.dart: overflow repair bounds host calls even when no word can fit
+00:00 +8: test/line_breaker_measure_line_test.dart: overflow repair bounds host calls even when no word can fit
+00:00 +9: test/line_breaker_measure_line_test.dart: overflow repair bounds host calls even when no word can fit
+00:00 +10: test/line_breaker_measure_line_test.dart: overflow repair bounds host calls even when no word can fit
+00:00 +11: test/line_breaker_measure_line_test.dart: overflow repair bounds host calls even when no word can fit
+00:00 +12: test/line_breaker_measure_line_test.dart: overflow repair bounds host calls even when no word can fit
+00:00 +13: test/line_breaker_measure_line_test.dart: overflow repair bounds host calls even when no word can fit
+00:00 +14: test/line_breaker_measure_line_test.dart: overflow repair bounds host calls even when no word can fit
+00:00 +15: test/line_breaker_measure_line_test.dart: overflow repair bounds host calls even when no word can fit
+00:00 +16: test/font_subset_unicode_test.dart: Word PDF export reopens searchable supplementary text and font cmap
+00:00 +17: test/font_subset_unicode_test.dart: Word PDF export reopens searchable supplementary text and font cmap
+00:00 +18: test/font_subset_unicode_test.dart: Word PDF export reopens searchable supplementary text and font cmap
+00:00 +19: test/font_subset_unicode_test.dart: Word PDF export reopens searchable supplementary text and font cmap
+00:00 +20: test/font_subset_unicode_test.dart: Word PDF export reopens searchable supplementary text and font cmap
+00:00 +21: test/font_subset_unicode_test.dart: Word PDF export reopens searchable supplementary text and font cmap
+00:00 +22: test/font_subset_unicode_test.dart: Word PDF export reopens searchable supplementary text and font cmap
+00:00 +23: test/font_subset_unicode_test.dart: Word PDF export reopens searchable supplementary text and font cmap
+00:00 +24: test/font_subset_unicode_test.dart: Word PDF export reopens searchable supplementary text and font cmap
+00:00 +25: test/font_subset_unicode_test.dart: Word PDF export reopens searchable supplementary text and font cmap
+00:00 +26: test/font_subset_unicode_test.dart: Word PDF export reopens searchable supplementary text and font cmap
+00:00 +27: test/font_subset_unicode_test.dart: Word PDF export reopens searchable supplementary text and font cmap
+00:00 +28: test/font_subset_unicode_test.dart: Word PDF export reopens searchable supplementary text and font cmap
+00:00 +29: test/font_subset_unicode_test.dart: Word PDF export reopens searchable supplementary text and font cmap
+00:00 +30: test/font_subset_unicode_test.dart: Word PDF export reopens searchable supplementary text and font cmap
+00:00 +31: test/font_subset_unicode_test.dart: Word PDF export reopens searchable supplementary text and font cmap
+00:00 +32: test/font_subset_unicode_test.dart: Word PDF export reopens searchable supplementary text and font cmap
+00:00 +33: test/font_subset_unicode_test.dart: Word PDF export reopens searchable supplementary text and font cmap
+00:00 +34: test/font_subset_unicode_test.dart: Word PDF export reopens searchable supplementary text and font cmap
+00:00 +35: test/font_subset_unicode_test.dart: Word PDF export reopens searchable supplementary text and font cmap
+00:00 +36: test/font_subset_unicode_test.dart: Word PDF export reopens searchable supplementary text and font cmap
+00:00 +37: test/font_subset_unicode_test.dart: Word PDF export reopens searchable supplementary text and font cmap
+00:00 +38: test/font_subset_unicode_test.dart: Word PDF export reopens searchable supplementary text and font cmap
+00:00 +39: test/font_subset_unicode_test.dart: Word PDF export reopens searchable supplementary text and font cmap
+00:00 +40: test/font_subset_unicode_test.dart: Word PDF export reopens searchable supplementary text and font cmap
+00:00 +41: test/font_subset_unicode_test.dart: Word PDF export reopens searchable supplementary text and font cmap
+00:00 +42: test/word_layout_test.dart: RTL table paints the first logical column on the right
+00:00 +43: test/word_layout_test.dart: superscript and subscript shrink and shift the baseline
+00:00 +44: test/word_layout_test.dart: full-page pictures paginate flush to the page
+00:00 +45: test/word_layout_test.dart: section columns fill left then right on the same page
+00:00 +46: test/word_layout_test.dart: column break moves the next paragraph to the second column
+00:00 +47: test/word_layout_test.dart: absolute frames do not advance the story and keep inner text
+00:00 +48: test/word_layout_test.dart: layout keeps global paragraph indices across sections
+00:00 +49: test/word_layout_test.dart: explicit paragraph bidi sets the layout base level
+00:00 +50: test/word_layout_test.dart: justified wrapped lines stretch spaces to the column edge
+00:00 +51: test/word_layout_test.dart: tab occupies the default half-inch stop
+00:00 +52: test/word_layout_test.dart: tab-only paragraph still lays out a tab glyph
+00:00 +53: test/word_layout_test.dart: long table cell text wraps inside the column
+00:00 +54: test/word_layout_test.dart: incremental layout reuses earlier sections
+00:00 +55: test/word_layout_test.dart: paragraph content box matches table cell, column, and frame origins
+00:00 +56: test/word_layout_test.dart: continuous two-column section starts below a full-width heading
+00:00 +57: test/proofing_hyphenation_test.dart: licensed German patterns orthographic examples and regional language selection
+00:01 +58: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +59: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +60: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +61: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +62: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +63: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +64: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +65: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +66: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +67: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +68: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +69: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +70: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +71: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +72: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +73: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +74: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +75: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +76: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +77: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +78: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +79: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +80: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +81: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +82: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +83: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +84: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +85: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +86: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +87: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +88: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +89: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +90: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +91: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +92: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +93: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +94: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +95: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +96: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +97: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +98: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +99: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +100: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +101: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +102: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +103: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +104: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +105: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +106: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +107: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +108: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +109: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +110: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +111: test/proofing/german_spelling_test.dart: real shipped dictionary accepts ordinary modern German
+00:01 +112: test/word_comment_proofing_styles_test.dart: inherited and explicit comment proofing values survive three DOCX saves
+00:01 +113: test/word_comment_proofing_styles_test.dart: inherited and explicit comment proofing values survive three DOCX saves
+00:01 +114: test/word_comment_proofing_styles_test.dart: inherited and explicit comment proofing values survive three DOCX saves
+00:01 +115: test/word_comment_proofing_styles_test.dart: inherited and explicit comment proofing values survive three DOCX saves
+00:01 +116: test/word_comment_proofing_styles_test.dart: inherited and explicit comment proofing values survive three DOCX saves
+00:02 +117: test/word_comment_proofing_styles_test.dart: inherited and explicit comment proofing values survive three DOCX saves
+00:02 +118: test/ods_sheet_reader_test.dart: repeated annotations stay separate from cell values through save
+00:02 +119: test/ods_sheet_reader_test.dart: repeated annotations stay separate from cell values through save
+00:02 +120: test/ods_sheet_reader_test.dart: repeated annotations stay separate from cell values through save
+00:02 +121: test/ods_sheet_reader_test.dart: repeated annotations stay separate from cell values through save
+00:02 +122: test/ods_sheet_reader_test.dart: repeated annotations stay separate from cell values through save
+00:02 +123: test/ods_sheet_reader_test.dart: repeated annotations stay separate from cell values through save
+00:02 +124: test/ods_sheet_reader_test.dart: repeated annotations stay separate from cell values through save
+00:02 +125: test/ods_sheet_reader_test.dart: repeated annotations stay separate from cell values through save
+00:02 +126: test/ods_sheet_reader_test.dart: repeated annotations stay separate from cell values through save
+00:02 +127: test/ods_sheet_reader_test.dart: repeated annotations stay separate from cell values through save
+00:02 +128: test/ods_sheet_reader_test.dart: repeated annotations stay separate from cell values through save
+00:02 +129: test/ods_sheet_reader_test.dart: repeated annotations stay separate from cell values through save
+00:02 +130: test/ods_sheet_reader_test.dart: repeated annotations stay separate from cell values through save
+00:02 +131: test/ods_sheet_reader_test.dart: repeated annotations stay separate from cell values through save
+00:02 +132: test/ods_sheet_reader_test.dart: repeated annotations stay separate from cell values through save
+00:02 +133: test/ods_sheet_reader_test.dart: repeated annotations stay separate from cell values through save
+00:02 +134: test/ods_sheet_reader_test.dart: repeated annotations stay separate from cell values through save
+00:02 +135: test/ods_sheet_reader_test.dart: repeated annotations stay separate from cell values through save
+00:02 +136: test/ods_sheet_reader_test.dart: ambiguous and foreign annotations are refused without inventing a value
+00:02 +137: test/ods_sheet_reader_test.dart: repeated annotation text and author consume the expanded text budget
+00:02 +138: test/ods_sheet_reader_test.dart: annotation-only cells obey materialized-cell and grid bounds
+00:02 +139: test/ods_sheet_reader_test.dart: covered cells cannot silently discard annotations
+00:02 +140: test/ods_sheet_reader_test.dart: authored date literals retain spaces quotes and format-like text
+00:02 +141: test/ods_sheet_writer_test.dart: writes a readable ODS package with values, formulas and metadata
+00:02 +142: test/ods_sheet_writer_test.dart: writes a readable ODS package with values, formulas and metadata
+00:02 +143: test/ods_sheet_writer_test.dart: writes a readable ODS package with values, formulas and metadata
+00:02 +144: test/ods_sheet_writer_test.dart: writes a readable ODS package with values, formulas and metadata
+00:02 +145: test/ods_sheet_writer_test.dart: writes a readable ODS package with values, formulas and metadata
+00:02 +146: test/ods_sheet_writer_test.dart: writes a readable ODS package with values, formulas and metadata
+00:02 +147: test/word_zotero_source_identity_test.dart: late URI bridge joins previously distinct embedded snapshots
+00:02 +148: test/word_zotero_source_identity_test.dart: late URI bridge joins previously distinct embedded snapshots
+00:02 +149: test/word_zotero_source_identity_test.dart: late URI bridge joins previously distinct embedded snapshots
+00:02 +150: test/word_zotero_source_identity_test.dart: late URI bridge joins previously distinct embedded snapshots
+00:02 +151: test/ods_sheet_writer_test.dart: writes workbook metadata and reads it back
+00:02 +152: test/ods_sheet_writer_test.dart: writes workbook metadata and reads it back
+00:02 +153: test/ods_sheet_writer_test.dart: writes workbook metadata and reads it back
+00:02 +154: test/ods_sheet_writer_test.dart: writes workbook metadata and reads it back
+00:02 +155: test/ods_sheet_writer_test.dart: writes workbook metadata and reads it back
+00:02 +156: test/ods_sheet_writer_test.dart: writes workbook metadata and reads it back
+00:02 +157: test/ods_sheet_writer_test.dart: writes workbook metadata and reads it back
+00:02 +158: test/ods_sheet_writer_test.dart: writes workbook metadata and reads it back
+00:02 +159: test/ods_sheet_writer_test.dart: writes workbook metadata and reads it back
+00:02 +160: test/ods_sheet_writer_test.dart: writes workbook metadata and reads it back
+00:02 +161: test/ods_sheet_writer_test.dart: writes workbook metadata and reads it back
+00:02 +162: test/ods_sheet_writer_test.dart: writes workbook metadata and reads it back
+00:02 +163: test/ods_sheet_writer_test.dart: writes workbook metadata and reads it back
+00:02 +164: test/ods_sheet_writer_test.dart: writes workbook metadata and reads it back
+00:02 +165: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:02 +166: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:02 +167: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:02 +168: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:02 +169: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:02 +170: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:02 +171: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:02 +172: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:02 +173: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:02 +174: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:02 +175: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:02 +176: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:02 +177: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:02 +178: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:02 +179: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:02 +180: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:02 +181: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:02 +182: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:02 +183: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:02 +184: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:02 +185: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:02 +186: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:02 +187: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:02 +188: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:02 +189: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:02 +190: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:02 +191: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:02 +192: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:02 +193: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:02 +194: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:02 +195: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:02 +196: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:02 +197: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:02 +198: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:02 +199: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:02 +200: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:02 +201: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:02 +202: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:03 +203: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:03 +204: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:03 +205: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:03 +206: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:03 +207: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:03 +208: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:03 +209: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:03 +210: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:03 +211: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:03 +212: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:03 +213: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:03 +214: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:03 +215: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:03 +216: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:03 +217: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:03 +218: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:03 +219: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:03 +220: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:03 +221: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:03 +222: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:03 +223: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:03 +224: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:03 +225: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:03 +226: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:03 +227: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:03 +228: test/word_zotero_scaling_test.dart: large mixed-story field snapshots preserve reading order and guards
+00:03 +229: test/ods_sheet_reader_test.dart: annotations retain coordinates and do not leak into cell values
+00:03 +230: test/word_zotero_scaling_test.dart: note snapshots follow deletes, conversions and new field identities
+00:03 +231: test/ods_sheet_reader_test.dart: reads ODS values, formulas, styles and merges
+00:03 +232: test/word_zotero_scaling_test.dart: equal codes in different notes cannot replace original field identity
+00:03 +233: test/ods_sheet_reader_test.dart: an imported ODS saves as a readable .xlsx
+00:03 +234: test/word_zotero_scaling_test.dart: same-length metadata changes cannot hide among duplicate citations
+00:03 +235: test/word_zotero_scaling_test.dart: same-length metadata changes cannot hide among duplicate citations
+00:03 +236: test/word_zotero_scaling_test.dart: same-length metadata changes cannot hide among duplicate citations
+00:03 +237: test/word_zotero_scaling_test.dart: same-length metadata changes cannot hide among duplicate citations
+00:03 +238: test/word_zotero_scaling_test.dart: same-length metadata changes cannot hide among duplicate citations
+00:03 +239: test/word_zotero_scaling_test.dart: same-length metadata changes cannot hide among duplicate citations
+00:03 +240: test/word_zotero_scaling_test.dart: same-length metadata changes cannot hide among duplicate citations
+00:03 +241: test/ods_sheet_reader_test.dart: named inherited cell wrap styles survive an XLSX roundtrip
+00:03 +242: test/word_zotero_scaling_test.dart: duplicate anchored note IDs remain invalid within their own bucket
+00:03 +243: test/ods_sheet_reader_test.dart: column groups retain dimensions and repeated values
+00:03 +244: test/ods_sheet_reader_test.dart: blank trailing padding is skipped without truncating data silently
+00:03 +245: test/ods_sheet_reader_test.dart: rejects cross-product expansion before materializing repeated cells
+00:03 +246: test/ods_sheet_reader_test.dart: workbook budget is shared by multiple individually small sheets
+00:03 +247: test/ods_sheet_reader_test.dart: repeated text is bounded before it can expand during XLSX save
+00:03 +248: test/ods_sheet_reader_test.dart: rejects invalid or out-of-range meaningful repeats instead of clipping
+00:03 +249: test/ods_sheet_reader_test.dart: formula conversion preserves delimiters and brackets inside literals
+00:03 +250: test/ods_sheet_reader_test.dart: repeated formulas decline rather than cloning incorrect references
+00:03 +251: test/ods_sheet_reader_test.dart: preserves ODF explicit spaces, tabs and paragraph boundaries
+00:03 +252: test/ods_sheet_reader_test.dart: rejects XML with spreadsheet local names in the wrong namespace
+00:03 +253: test/ods_sheet_reader_test.dart: rejects cyclic named styles and excessive XML nesting
+00:03 +254: test/ods_sheet_reader_test.dart: keeps internal repeated blank rows without expanding trailing padding
+00:03 +255: test/ods_sheet_reader_test.dart: blank runs retain in-range cells and refuse later out-of-range data
+00:03 +256: test/ods_sheet_reader_test.dart: horizontal merge consumes explicit placeholder once
+00:03 +257: test/ods_sheet_reader_test.dart: horizontal merge consumes repeated placeholders once
+00:03 +258: test/ods_sheet_reader_test.dart: horizontal merge consumes additional covered column once
+00:03 +259: test/ods_sheet_reader_test.dart: consecutive merged origins retain explicit covered positions
+00:03 +260: test/ods_sheet_reader_test.dart: merge spans retain in-range cells and refuse column overflow
+00:03 +261: test/ods_sheet_reader_test.dart: styled trailing row padding stays sparse within the admitted grid
+00:03 +262: test/ods_sheet_reader_test.dart: formula translation preserves literals in of:=MYCOM.MICROSOFT.FUNC(1)
+00:03 +263: test/ods_sheet_reader_test.dart: formula translation preserves literals in of:="a;b"
+00:03 +264: test/ods_sheet_reader_test.dart: formula translation preserves literals in of:="literal [.A1];COM.MICROSOFT.SUM"
+00:03 +265: test/ods_sheet_reader_test.dart: formula translation preserves literals in of:=IF([.A1]="a;b";"say ""[.B2];""";COM.MICROSOFT.SUM([.A1:.A2];1))
+00:03 +266: test/ods_sheet_reader_test.dart: formula translation preserves literals in of:=CONCATENATE("";"a;b";"[.A1]")
+00:03 +267: test/ods_sheet_reader_test.dart: formula translation preserves literals in of:=SUM(['Semi;Colon'.A1];1)
+00:03 +268: test/ods_sheet_reader_test.dart: formula translation preserves literals in of:=SUM(['COM.MICROSOFT.Data'.A1];1)
+00:03 +269: test/ods_sheet_reader_test.dart: formula translation preserves literals in of:=[$Sheet2.A1]+[.$A$1]
+00:03 +270: test/ods_sheet_reader_test.dart: formula translation preserves literals in of:=[$'Semi;Colon'.$A$1]
+00:03 +271: All tests passed!

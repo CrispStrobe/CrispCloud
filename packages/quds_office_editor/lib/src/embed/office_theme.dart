@@ -459,7 +459,8 @@ class OfficeStrings {
     this.pasteTextOnly = 'Keep text only',
     this.pictureLabel = 'Picture',
     this.cropMode = 'Crop mode',
-    this.pictureHint = 'Drag handles to resize. Drag the picture to move. Press C to crop. Shift plus arrows resize.',
+    this.pictureHint =
+        'Drag handles to resize. Drag the picture to move. Press C to crop. Shift plus arrows resize.',
     this.followLinkHint = 'Press Ctrl and click to follow the link',
     this.selectAll = 'Select all',
     this.insertComment = 'New comment',
@@ -791,7 +792,8 @@ class OfficeStrings {
     pasteTextOnly: 'Keep text only',
     pictureLabel: 'Picture',
     cropMode: 'Crop mode',
-    pictureHint: 'Drag handles to resize. Drag the picture to move. Press C to crop. Shift plus arrows resize.',
+    pictureHint:
+        'Drag handles to resize. Drag the picture to move. Press C to crop. Shift plus arrows resize.',
     followLinkHint: 'Press Ctrl and click to follow the link',
     selectAll: 'Select all',
     insertComment: 'New comment',
@@ -877,7 +879,8 @@ class OfficeStrings {
     pasteTextOnly: 'الاحتفاظ بالنص فقط',
     pictureLabel: 'صورة',
     cropMode: 'وضع القص',
-    pictureHint: 'اسحب المقابض لتغيير الحجم. اسحب الصورة لنقلها. اضغط C للقص. Shift مع الأسهم لتغيير الحجم.',
+    pictureHint:
+        'اسحب المقابض لتغيير الحجم. اسحب الصورة لنقلها. اضغط C للقص. Shift مع الأسهم لتغيير الحجم.',
     followLinkHint: 'اضغط Ctrl ثم انقر للانتقال',
     selectAll: 'تحديد الكل',
     insertComment: 'تعليق جديد',

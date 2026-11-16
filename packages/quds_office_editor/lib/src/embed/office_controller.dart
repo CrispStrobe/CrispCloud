@@ -13,6 +13,8 @@ import '../editor_word/caret_engine.dart';
 import '../editor_word/office_ruler.dart';
 import '../editor_word/paint_run_text.dart';
 import '../editor_word/table_history.dart';
+import '../editor_word/word_run_metrics.dart';
+import '../proofing/word_proofing.dart';
 import 'office_clipboard.dart';
 import 'office_theme.dart';
 
@@ -443,9 +445,53 @@ abstract class OfficeController extends ChangeNotifier {
 
 /// Word document controller: IME, caret, layout, load/save.
 class WordEditorController extends OfficeController {
+  WordProofingSession? _proofing;
+  final OfficeProofingVocabulary? _initialProofingVocabulary;
+  final OfficeProofingService? _initialProofingService;
+
+  /// Offline German checkers are available immediately. Checking is opt-in;
+  /// hosts can configure additional local providers through the session.
+  WordProofingSession get proofing {
+    _proofing ??= WordProofingSession(
+      document: () => document,
+      revision: () => contentRevision,
+      vocabulary: _initialProofingVocabulary,
+      service: _initialProofingService,
+    )..addListener(_onProofingChanged);
+    return _proofing!;
+  }
+
+  void _onProofingChanged() => super.notifyListeners();
+
+  @override
+  void notifyListeners() {
+    _proofing?.observeDocument();
+    super.notifyListeners();
+  }
+
+  @override
+  void refresh() {
+    _proofing?.refresh();
+    super.refresh();
+  }
+
+  @override
+  void dispose() {
+    _proofing?.removeListener(_onProofingChanged);
+    _proofing?.dispose();
+    super.dispose();
+  }
+
   /// WordEditorController API.
-  WordEditorController({WmlDocument? document, super.config, this.layoutEngine})
-    : document = document ?? WmlDocument.empty() {
+  WordEditorController({
+    WmlDocument? document,
+    super.config,
+    this.layoutEngine,
+    OfficeProofingVocabulary? proofingVocabulary,
+    OfficeProofingService? proofingService,
+  }) : document = document ?? WmlDocument.empty(),
+       _initialProofingVocabulary = proofingVocabulary,
+       _initialProofingService = proofingService {
     _requestedMode = _config.mode;
     _config = _effectiveConfig(_config);
     relayout();
@@ -462,10 +508,14 @@ class WordEditorController extends OfficeController {
     String? password,
     OfficeSurfaceConfig? config,
     WordLayoutEngine? layoutEngine,
+    OfficeProofingVocabulary? proofingVocabulary,
+    OfficeProofingService? proofingService,
   }) {
     final WordEditorController controller = WordEditorController(
       config: config,
       layoutEngine: layoutEngine,
+      proofingVocabulary: proofingVocabulary,
+      proofingService: proofingService,
     );
     controller.loadBytes(bytes, password: password);
     return controller;
@@ -536,8 +586,8 @@ class WordEditorController extends OfficeController {
   /// commentLaidOut API.
   LaidOutDocument? commentLaidOut;
 
-  /// Custom layout engine. When null, lines break with the same Flutter
-  /// metrics the canvas paints with ([PaintRunText.advanceOf]).
+  /// Custom layout engine. When null, complete logical runs are measured by
+  /// Flutter before wrapping, with scalar metrics as an explicit fallback.
   final WordLayoutEngine? layoutEngine;
 
   WordLayoutEngine? _paintMetricsEngine;
@@ -546,6 +596,14 @@ class WordEditorController extends OfficeController {
       layoutEngine ??
       (_paintMetricsEngine ??= WordLayoutEngine(
         font: null,
+        measureRun: (text, sizePoints, props, bidiLevel) =>
+            WordRunMetrics.measure(
+              text,
+              sizePoints,
+              props,
+              bidiLevel,
+              themeFamily: config.theme.fontFamily,
+            ),
         measure: (int codePoint, double sizePoints, WmlRunProps props) =>
             PaintRunText.advanceOf(
               codePoint,
@@ -7690,7 +7748,321 @@ class WordEditorController extends OfficeController {
     );
   }
 
-  /// checkSpelling API.
+  /// Checks all modeled document stories, preserving provider availability and
+  /// coverage. Findings never become document edits without an explicit choice.
+  Future<WordProofingSummary> checkDocumentProofing() => proofing.checkNow();
+
+  /// Changes the default language; explicit span languages remain authoritative.
+  void setProofingLanguage(String value) {
+    if (!config.allowsMutation) return;
+    final language = normalizeProofingLanguage(value);
+    if (language.isEmpty || document.proofingLanguage == language) return;
+    final before = document.proofingLanguage;
+    commands.commit(
+      _CallbackCommand(
+        executeFn: () => document.proofingLanguage = language,
+        undoFn: () => document.proofingLanguage = before,
+      ),
+    );
+    relayout();
+    notifyListeners();
+  }
+
+  /// Saves the displayed language together with the hyphenation toggle so an
+  /// untagged document actually receives linguistic line breaking. One undo
+  /// restores both source settings.
+  void setAutomaticHyphenation(bool enabled) {
+    if (!config.allowsMutation ||
+        (document.autoHyphenation == enabled &&
+            (!enabled || document.proofingLanguage != null))) {
+      return;
+    }
+    final before = document.autoHyphenation;
+    final previousLanguage = document.proofingLanguage;
+    final language = proofing.language;
+    commands.commit(
+      _CallbackCommand(
+        executeFn: () {
+          document.autoHyphenation = enabled;
+          if (enabled && document.proofingLanguage == null) {
+            document.proofingLanguage = language;
+          }
+        },
+        undoFn: () {
+          document.autoHyphenation = before;
+          document.proofingLanguage = previousLanguage;
+        },
+      ),
+    );
+    relayout();
+    notifyListeners();
+  }
+
+  bool get canApplyProofingSuggestions =>
+      !isDisposed &&
+      config.allowsMutation &&
+      !(document.restrictEditing &&
+          (document.restrictMode != WmlRestrictMode.none ||
+              document.protectionFormattingRestricted)) &&
+      !(input.composing.isValid && !input.composing.isCollapsed);
+
+  bool canApplyProofingIssue(WordProofingIssue issue) =>
+      canApplyProofingSuggestions && proofing.canCorrect(issue);
+
+  /// Replaces one current, editable source span through normal undo history.
+  /// Tracked corrections retain deleted text and a separate inserted revision.
+  bool applyProofingSuggestion(WordProofingIssue issue, String replacement) {
+    if (!canApplyProofingIssue(issue) ||
+        !issue.finding.replacements.contains(replacement) ||
+        replacement == issue.finding.originalText ||
+        RegExp(r'[\r\n\u2028\u2029]').hasMatch(replacement)) {
+      return false;
+    }
+    commitNoteEdits();
+    // Committing a changed note draft changes the revision, so reacquire a
+    // finding rather than letting the correction overwrite that draft.
+    if (!canApplyProofingIssue(issue)) return false;
+    final paragraph = issue.paragraph;
+    final finding = issue.finding;
+    final start = finding.start;
+    final end = finding.end;
+    final before = _cloneInlines(paragraph);
+    final revisions = WordRevisions.capture(document);
+    List<WmlInline>? after;
+    WmlRevisionSnapshot? afterRevisions;
+    final tracked = document.trackRevisions;
+    final previousText = paragraph.text;
+    final activeCaret = caret;
+    final activeParagraphs = _paragraphs;
+    final activeComment = isEditingComment ? selectedComment : null;
+    final activeHeaderFooter = isEditingHeaderFooter ? activeParagraphs : null;
+    bool sameCaretStory() =>
+        identical(caret, activeCaret) &&
+        (activeComment != null
+            ? isEditingComment && identical(selectedComment, activeComment)
+            : activeHeaderFooter != null
+            ? isEditingHeaderFooter &&
+                  identical(_paragraphs, activeHeaderFooter)
+            : !isEditingComment && !isEditingHeaderFooter);
+    final activeAffected =
+        activeCaret.paragraphIndex >= 0 &&
+        activeCaret.paragraphIndex < activeParagraphs.length &&
+        identical(activeParagraphs[activeCaret.paragraphIndex], paragraph);
+    final beforeCaret = (
+      paragraph: activeCaret.paragraphIndex,
+      offset: activeCaret.logicalIndex,
+      anchorParagraph: activeCaret.selectionAnchorParagraph,
+      anchor: activeCaret.selectionAnchor,
+    );
+    void correctedCaret() {
+      // Comments and headers/footers share a caret across distinct stories.
+      // Undo/redo must not apply one story's offsets to another story.
+      if (!activeAffected || !sameCaretStory()) {
+        _historyRestoredSelection = true;
+        return;
+      }
+      activeCaret
+        ..paragraphIndex = beforeCaret.paragraph
+        ..logicalIndex = (tracked ? end : start) + replacement.length
+        ..collapseSelection();
+    }
+
+    void originalCaret() {
+      if (!activeAffected || !sameCaretStory()) {
+        _historyRestoredSelection = true;
+        return;
+      }
+      activeCaret
+        ..paragraphIndex = beforeCaret.paragraph
+        ..logicalIndex = beforeCaret.offset
+        ..selectionAnchorParagraph = beforeCaret.anchorParagraph
+        ..selectionAnchor = beforeCaret.anchor;
+      if (identical(caret, activeCaret)) {
+        _historyRestoredSelection = true;
+      }
+    }
+
+    void restoreBefore() {
+      paragraph.inlines
+        ..clear()
+        ..addAll(_cloneInlinesFrom(before));
+      revisions.restore(document);
+    }
+
+    // Validate the exact operation on a clone before opening a transaction.
+    final preview = WmlClone.paragraph(paragraph);
+    WmlRunEdit.replaceRange(preview, tracked ? end : start, end, replacement);
+    commands.commit(
+      _CallbackCommand(
+        executeFn: () {
+          if (after != null) {
+            paragraph.inlines
+              ..clear()
+              ..addAll(_cloneInlinesFrom(after!));
+            afterRevisions!.restore(document);
+            correctedCaret();
+            return;
+          }
+          restoreBefore();
+          try {
+            if (tracked) {
+              // Recording deletion first keeps replacement insertion at the
+              // original end outside the deleted span during range rebasing.
+              if (start != end) {
+                WordRevisions.record(
+                  document,
+                  kind: WmlRevisionKind.delete,
+                  paragraph: paragraph,
+                  paragraphIndex: document.paragraphs.toList().indexOf(
+                    paragraph,
+                  ),
+                  start: start,
+                  end: end,
+                  text: finding.originalText,
+                );
+              }
+              WordRevisions.rebaseEdit(
+                document,
+                paragraph,
+                start: end,
+                end: end,
+                insertedLength: replacement.length,
+              );
+              WmlRunEdit.replaceRange(paragraph, end, end, replacement);
+              if (replacement.isNotEmpty) {
+                WordRevisions.record(
+                  document,
+                  kind: WmlRevisionKind.insert,
+                  paragraph: paragraph,
+                  paragraphIndex: document.paragraphs.toList().indexOf(
+                    paragraph,
+                  ),
+                  start: end,
+                  end: end + replacement.length,
+                  text: replacement,
+                );
+              }
+            } else {
+              WordRevisions.rebaseEdit(
+                document,
+                paragraph,
+                start: start,
+                end: end,
+                insertedLength: replacement.length,
+              );
+              WmlRunEdit.replaceRange(paragraph, start, end, replacement);
+            }
+            after = _cloneInlines(paragraph);
+            afterRevisions = WordRevisions.capture(document);
+            correctedCaret();
+          } on Object {
+            restoreBefore();
+            originalCaret();
+            rethrow;
+          }
+        },
+        undoFn: () {
+          restoreBefore();
+          originalCaret();
+        },
+      ),
+    );
+    if (activeAffected) {
+      _markLocalEdit(previousText: previousText);
+    }
+    relayout();
+    _syncImeSelection();
+    notifyListeners();
+    return true;
+  }
+
+  /// Selects findings in supported canvas stories. Notes and alternate page
+  /// headers remain fully reviewable and correctable in the proofing dialog.
+  bool revealProofingIssue(WordProofingIssue issue) {
+    if (!config.allowsSelection || !proofing.isCurrent(issue)) return false;
+    commitPendingEdits();
+    if (!proofing.isCurrent(issue)) return false;
+    final paragraph = issue.paragraph;
+    for (final comment in document.comments) {
+      if (comment.paragraphs.contains(paragraph)) {
+        beginCommentEdit(comment.id);
+        commentCaret
+          ..paragraphIndex = comment.paragraphs.indexOf(paragraph)
+          ..logicalIndex = issue.finding.end
+          ..selectionAnchorParagraph = comment.paragraphs.indexOf(paragraph)
+          ..selectionAnchor = issue.finding.start;
+        _syncImeSelection();
+        notifyListeners();
+        return true;
+      }
+    }
+    for (
+      var sectionIndex = 0;
+      sectionIndex < document.sections.length;
+      sectionIndex++
+    ) {
+      final section = document.sections[sectionIndex];
+      for (final footer in [false, true]) {
+        final paragraphs = footer ? section.footer : section.header;
+        final index = paragraphs.indexOf(paragraph);
+        if (index < 0) continue;
+        // A default header/footer may be absent on the first or even page.
+        // Navigate only to a page that actually renders this source paragraph.
+        final page = documentLaidOut.pages.indexWhere((page) {
+          final lines = footer ? page.footer : page.header;
+          return page.sectionIndex == sectionIndex &&
+              lines.any((line) => identical(line.sourceParagraph, paragraph));
+        });
+        if (page < 0) return false;
+        beginHeaderFooterEdit(page, footer: footer);
+        headerFooterCaret
+          ..paragraphIndex = index
+          ..logicalIndex = issue.finding.end
+          ..selectionAnchorParagraph = index
+          ..selectionAnchor = issue.finding.start;
+        _syncImeSelection();
+        notifyListeners();
+        return true;
+      }
+    }
+    final index = document.paragraphs.toList().indexOf(paragraph);
+    if (index < 0) return false;
+    endCommentEdit();
+    endHeaderFooterEdit();
+    // Showing a text finding leaves object editing. Otherwise the equation
+    // IME or visual/frame key handlers can retain ownership of later input.
+    selectEquation(null);
+    selectVisual(null);
+    selectFrame(null);
+    selectTable(null);
+    documentCaret
+      ..paragraphIndex = index
+      ..logicalIndex = issue.finding.end
+      ..selectionAnchorParagraph = index
+      ..selectionAnchor = issue.finding.start;
+    final page = documentLaidOut.pages.indexWhere(
+      (page) =>
+          page.lines.any((line) => identical(line.sourceParagraph, paragraph)),
+    );
+    if (page >= 0) _revealPage(page);
+    _syncImeSelection();
+    notifyListeners();
+    return true;
+  }
+
+  /// Reading findings must not create a paragraph in an empty document.
+  /// Use the session's half-open hit ranges, including exact insertion points.
+  List<WordProofingIssue> get proofingIssuesAtCaret {
+    final paragraphs = _paragraphs;
+    final index = caret.paragraphIndex;
+    if (index < 0 || index >= paragraphs.length) {
+      return const <WordProofingIssue>[];
+    }
+    return proofing.issuesAt(paragraphs[index], caret.logicalIndex);
+  }
+
+  /// Legacy caller-supplied spelling callback. New hosts should use
+  /// [checkDocumentProofing] to distinguish unavailable and clean results.
   List<OfficeSpellIssue> checkSpelling({OfficeSpellChecker? checker}) {
     return OfficeSpell.check(_activeParagraph.text, checker: checker);
   }

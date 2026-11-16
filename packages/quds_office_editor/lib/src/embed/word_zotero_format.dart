@@ -93,25 +93,7 @@ String zoteroBasicCitation(List<ZoteroCitationItem> items) {
 /// A portable fallback bibliography from embedded data. This is not APA,
 /// Chicago, numeric numbering, or any other complete CSL implementation.
 String zoteroBasicBibliography(List<ZoteroCitationItem> items) {
-  final unique = <String, Map<String, dynamic>>{};
-  for (final item in items) {
-    final data = item.itemData;
-    final address = item.uris
-        .map(ZoteroSourceAddress.parse)
-        .whereType<ZoteroSourceAddress>()
-        .firstOrNull;
-    if (data != null) {
-      unique.putIfAbsent(
-        address != null
-            ? address.canonicalUri.toString()
-            : item.uris.isEmpty
-            ? 'csl:${item.id}'
-            : item.uris.first,
-        () => data,
-      );
-    }
-  }
-  final records = unique.values.toList()
+  final records = WordZotero.distinctEmbeddedItems(items)
     ..sort(
       (a, b) => '${_authors(a)} ${a['title'] ?? ''}'.toLowerCase().compareTo(
         '${_authors(b)} ${b['title'] ?? ''}'.toLowerCase(),
@@ -233,11 +215,7 @@ List<ZoteroCitationItem> zoteroImportCslJson(String input) {
 class ZoteroSourceAddress {
   const ZoteroSourceAddress(this.library, this.key) : _localUserKey = null;
 
-  const ZoteroSourceAddress._local(
-    this.library,
-    this.key,
-    this._localUserKey,
-  );
+  const ZoteroSourceAddress._local(this.library, this.key, this._localUserKey);
 
   final ZoteroLibrary library;
   final String key;

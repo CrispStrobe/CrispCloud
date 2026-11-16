@@ -1,5 +1,7 @@
 import 'dart:math' as math;
 
+import '../../bidi/german_hyphenator.dart';
+import '../../bidi/grapheme_clusters.dart';
 import '../../bidi/line_breaker.dart';
 import '../../fonts/font_metrics.dart';
 import '../../fonts/gpos_mark_to_base.dart';
@@ -24,6 +26,7 @@ import '../properties/wml_properties.dart';
 
 part 'word_contained_layout.dart';
 part 'word_note_layout.dart';
+part 'word_run_measure.dart';
 part 'word_table_row_layout.dart';
 part 'word_wrap_layout.dart';
 
@@ -99,7 +102,8 @@ class LaidOutGlyph {
   /// commentIds API.
   final List<int> commentIds;
 
-  /// Automatic field text painted in place of a cached source range.
+  /// Presentation text painted in place of a source range, including an
+  /// automatic field label or a selected discretionary hyphen.
   /// All glyphs in one label share the source start/end; [displayOffset]
   /// identifies this glyph within [displayText] for shaping and hit testing.
   final String? displayText;
@@ -112,7 +116,9 @@ class LaidOutGlyph {
   final String? actualText;
 
   int get logicalEnd =>
-      sourceEnd ?? glyph.logicalIndex + (glyph.codePoint > 0xffff ? 2 : 1);
+      sourceEnd ??
+      glyph.logicalIndex +
+          (glyph.sourceLength ?? (glyph.codePoint > 0xffff ? 2 : 1));
 
   /// advance API.
   double advance;
@@ -145,6 +151,8 @@ class LaidOutLine {
     this.overlaySize = 11,
     this.overlayBold = false,
     this.sourceText,
+    this.sourceParagraph,
+    this.proofingOffsets,
     this.tocTargetParagraph,
     this.tocLeader = false,
     this.hyperlink,
@@ -152,6 +160,20 @@ class LaidOutLine {
     this.boxX = 0,
     this.boxWidth = 0,
   });
+
+  /// Exact model paragraph for this layout story, independent of body indexes.
+  final WmlParagraph? sourceParagraph;
+
+  /// Note labels can add display-only UTF-16 units before/between source runs.
+  /// A null entry denotes such a label; otherwise each entry is the original
+  /// source offset. Null list means the identity mapping.
+  final List<int?>? proofingOffsets;
+
+  int? proofingOffsetAt(int layoutOffset) => proofingOffsets == null
+      ? layoutOffset
+      : layoutOffset < 0 || layoutOffset >= proofingOffsets!.length
+      ? null
+      : proofingOffsets![layoutOffset];
 
   /// Inner left/right pad for table-cell text (`tblCellMar` 108 twips).
   static const double tableCellPad = 5.4;
@@ -191,7 +213,7 @@ class LaidOutLine {
         (LaidOutGlyph a, LaidOutGlyph b) =>
             a.glyph.logicalIndex.compareTo(b.glyph.logicalIndex),
       );
-    final String? source = sourceText;
+    final String? source = sourceText ?? sourceParagraph?.text;
     if (logical.any((glyph) => glyph.displayText != null)) {
       logical.sort((a, b) {
         final bySource = a.glyph.logicalIndex.compareTo(b.glyph.logicalIndex);
@@ -201,7 +223,19 @@ class LaidOutLine {
       });
       final out = StringBuffer();
       var lastDisplayStart = -1;
+      var sourceOffset = logical.first.glyph.logicalIndex;
       for (final glyph in logical) {
+        final at = glyph.glyph.logicalIndex;
+        if (source != null && sourceOffset < at) {
+          // Invisible authored controls can lie between painted glyphs.
+          out.write(source.substring(sourceOffset, at.clamp(0, source.length)));
+          sourceOffset = at;
+        }
+        if (glyph.glyph.isDiscretionaryHyphen) {
+          out.write(glyph.actualText ?? '');
+          sourceOffset = math.max(sourceOffset, glyph.logicalEnd);
+          continue;
+        }
         if (glyph.displayText case final String display) {
           if (glyph.glyph.logicalIndex != lastDisplayStart) out.write(display);
           lastDisplayStart = glyph.glyph.logicalIndex;
@@ -215,6 +249,7 @@ class LaidOutLine {
         } else if (glyph.glyph.codePoint != 0) {
           out.writeCharCode(glyph.glyph.codePoint);
         }
+        sourceOffset = math.max(sourceOffset, glyph.logicalEnd);
       }
       return out.toString();
     }
@@ -224,9 +259,7 @@ class LaidOutLine {
         source.length,
       );
       final LaidOutGlyph last = logical.last;
-      final int end =
-          (last.glyph.logicalIndex + (last.glyph.codePoint > 0xffff ? 2 : 1))
-              .clamp(start, source.length);
+      final int end = last.logicalEnd.clamp(start, source.length);
       return source.substring(start, end);
     }
     return String.fromCharCodes(
@@ -721,8 +754,8 @@ const double kDefaultTabWidth = 36;
 /// Advance width in points of [codePoint] set in [props] at [sizePoints].
 ///
 /// Hosts that paint with their own text stack (for example Flutter's
-/// `TextPainter`) pass this to [WordLayoutEngine.measure] so line breaks use
-/// the same widths the painter will use.
+/// `TextPainter`) can supply scalar fallback metrics. Contextual shaping needs
+/// [WordLayoutEngine.measureRun], which measures complete logical runs.
 typedef WordGlyphMeasure =
     double Function(int codePoint, double sizePoints, WmlRunProps props);
 
@@ -734,6 +767,7 @@ class WordLayoutEngine {
     this.fonts,
     this.fallbackWidthFactor = 0.5,
     this.measure,
+    this.measureRun,
   });
 
   /// Primary face used when [fonts] does not cover a code point.
@@ -749,6 +783,11 @@ class WordLayoutEngine {
 
   /// Host measurement used when [fonts] and [font] do not cover a code point.
   final WordGlyphMeasure? measure;
+
+  /// Optional host shaping metrics, applied before wrapping. Valid run metrics
+  /// take precedence over scalar/font metrics; null or invalid measurements
+  /// retain the pure-Dart fallback. This does not change glyph IDs for PDF.
+  final WordRunMeasure? measureRun;
 
   final Map<(SfntFont, double), FontMetrics> _metricsCache = {};
 
@@ -1398,6 +1437,53 @@ class WordLayoutEngine {
       return result;
     }
 
+    // An actual line can be unsupported even when the full paragraph was
+    // measurable. Preserve the original font/scalar advances before applying
+    // host metrics so a declined fragment does not reuse a different context.
+    // Repeated display-label scalars share this source/style and scalar width.
+    final fallbackAdvances = <(int, int, int), double>{};
+    List<ShapedGlyph> measuredLine(List<ShapedGlyph> presented) {
+      final host = measureRun;
+      if (host == null) return presented;
+      final fallback = <ShapedGlyph>[
+        for (final glyph in presented)
+          if (fallbackAdvances[(
+                glyph.logicalIndex,
+                glyph.codePoint,
+                glyph.glyphId,
+              )]
+              case final advance?)
+            advance == glyph.advance
+                ? glyph
+                : _withMeasuredAdvance(glyph, advance)
+          else
+            // Selected hyphens are created after paragraph measurement and
+            // retain their independent scalar metrics and source ownership.
+            glyph,
+      ];
+      return _measureWordRuns(
+        glyphs: fallback,
+        text: text,
+        paragraph: paragraph,
+        propsAt: propsAt,
+        labels: displayLabels,
+        pictures: inlinePictures.keys.toSet(),
+        measure: host,
+      );
+    }
+
+    List<ShapedGlyph> measuredRuns(List<ShapedGlyph> source) {
+      final presented = displayLabels.isEmpty
+          ? source
+          : displayReplacements(source);
+      if (measureRun == null) return presented;
+      for (final glyph in presented) {
+        fallbackAdvances[(glyph.logicalIndex, glyph.codePoint, glyph.glyphId)] =
+            glyph.advance;
+      }
+      return measuredLine(presented);
+    }
+
     // Widths and glyph IDs are resolved before wrapping, using each run's
     // actual family, style and size. Scaling only after wrapping lets bold or
     // large runs overflow the line and produces incorrect PDF positioning.
@@ -1422,35 +1508,67 @@ class WordLayoutEngine {
       return GposMarkToBase.fnFor(baseFace, baseSize)(base, mark);
     }
 
+    final hyphenationOffsets =
+        _layoutDoc?.autoHyphenation == true &&
+            paragraph.properties.suppressAutoHyphens != true
+        ? GermanHyphenator.breakOffsets(
+            text,
+            language:
+                paragraph.properties.proofingLanguage ??
+                _layoutDoc?.proofingLanguage,
+            languageAt: (offset) =>
+                propsAt(offset).proofingLanguage ??
+                paragraph.properties.proofingLanguage ??
+                _layoutDoc?.proofingLanguage,
+          )
+        : const <int>[];
+    int sourceStyleOffset(ShapedGlyph glyph) =>
+        glyph.isDiscretionaryHyphen && glyph.sourceLength == 0
+        ? (glyph.logicalIndex - 1).clamp(0, text.length)
+        : glyph.logicalIndex;
+
     final bool wrapsFrames =
         allowBreak &&
         flow != null &&
         currentFrames.any(
           (box) => box.frame != null && box.frame!.wrap != WmlFrameWrap.none,
         );
+    final justify =
+        paragraph.properties.justification == WmlJustification.justify ||
+        paragraph.properties.justification == WmlJustification.distributed;
     final PreparedLineBreaker? wrapBreaker = wrapsFrames
         ? LineBreaker.prepare(
             text: text,
+            hyphenationOffsets: hyphenationOffsets,
             widthOf: (cp) => widthAt(cp, 0),
             widthAt: widthAt,
             glyphIdAt: glyphIdAt,
             markAttachOf: markAttach,
             baseLevel: paragraph.properties.bidiBaseLevel,
-            ligate: displayLabels.isEmpty ? null : displayReplacements,
+            justify: justify,
+            measureLine: measureRun == null ? null : measuredLine,
+            ligate: displayLabels.isEmpty && measureRun == null
+                ? null
+                : measuredRuns,
           )
         : null;
     final List<BrokenLine> broken = wrapsFrames
         ? const []
         : LineBreaker.breakLines(
             text: text,
+            hyphenationOffsets: hyphenationOffsets,
             maxWidth: maxWidth,
             widthOf: (cp) => widthAt(cp, 0),
             widthAt: widthAt,
             glyphIdAt: glyphIdAt,
             markAttachOf: markAttach,
             baseLevel: paragraph.properties.bidiBaseLevel,
+            justify: justify,
+            measureLine: measureRun == null ? null : measuredLine,
             breakLongWords: !allowBreak,
-            ligate: displayLabels.isEmpty ? null : displayReplacements,
+            ligate: displayLabels.isEmpty && measureRun == null
+                ? null
+                : measuredRuns,
           );
     var cursorY = y + paragraph.properties.spacingBefore;
     var idx = pageIndex;
@@ -1465,7 +1583,7 @@ class WordLayoutEngine {
     double largestSizeOn(BrokenLine line) {
       var largest = fontSize;
       for (final ShapedGlyph g in line.glyphs) {
-        final double size = propsAt(g.logicalIndex).fontSizePoints;
+        final double size = propsAt(sourceStyleOffset(g)).fontSizePoints;
         if (size > largest) largest = size;
       }
       return largest;
@@ -1678,18 +1796,25 @@ class WordLayoutEngine {
       // offsets by source ownership rather than that transient identity.
       final displayOffsets = <int, int>{};
       for (final ShapedGlyph g in line.glyphs) {
-        final WmlRunProps props = propsAt(g.logicalIndex);
+        final WmlRunProps props = propsAt(sourceStyleOffset(g));
         final double baseSize = props.fontSizePoints;
-        final display = displayLabels[g.logicalIndex];
+        final display = g.isDiscretionaryHyphen
+            ? null
+            : displayLabels[g.logicalIndex];
         final double size =
             baseSize * props.vertAlign.fontScale * (display?.scale ?? 1);
         glyphs.add(
           LaidOutGlyph(
             glyph: g,
-            displayText: display?.text,
+            // The visible break has separate source ownership.
+            displayText: g.isDiscretionaryHyphen ? '-' : display?.text,
             displayOffset: displayOffsets[g.logicalIndex] ?? 0,
-            sourceEnd: display?.end,
-            actualText: display != null && !display.note
+            sourceEnd: g.isDiscretionaryHyphen
+                ? g.logicalIndex + (g.sourceLength ?? 0)
+                : display?.end,
+            actualText: g.isDiscretionaryHyphen
+                ? (g.sourceLength == 0 ? '' : '\u00ad')
+                : display != null && !display.note
                 ? text.substring(g.logicalIndex, display.end)
                 : null,
             x: gx + g.paintDx,
@@ -1709,7 +1834,12 @@ class WordLayoutEngine {
             italic: props.italic,
             strike: props.strike,
             highlight: WmlHighlight.toRgb(props.highlight) ?? props.highlight,
-            fontFamily: OfficeTypeface.familyForRun(props, g.codePoint),
+            fontFamily: OfficeTypeface.familyForRun(
+              props,
+              g.codePoint == 0 && display == null
+                  ? _sourceCodePoint(text, g.logicalIndex)
+                  : g.codePoint,
+            ),
             vertAlign: props.vertAlign,
             hyperlink: WordLink.at(paragraph, g.logicalIndex),
             commentIds: WordComment.idsAt(paragraph, g.logicalIndex),
@@ -1743,7 +1873,8 @@ class WordLayoutEngine {
         listLabel: listLabel,
         listMarkerX: markerX,
         isParagraphStart: lineNumber == 0,
-        sourceText: sourceText,
+        sourceText: sourceText ?? text,
+        sourceParagraph: paragraph,
         tocTargetParagraph: tocTargetParagraph,
         overlayText:
             (wrapBreaker == null
@@ -3026,8 +3157,11 @@ class WordLayoutEngine {
       final WmlParagraph paragraph = story[i];
       final WmlRunProps run = WmlRunEdit.propsAt(paragraph, 0);
       final WmlDocument? doc = _layoutDoc;
-      final String raw = paragraph.text.trim();
+      final String source = paragraph.text;
+      final String raw = source.trim();
+      final int rawStart = source.length - source.trimLeft().length;
       final String text;
+      var generated = false;
       if (doc != null &&
           (paragraph.properties.pageNumberField ||
               paragraph.properties.fieldInstruction != null)) {
@@ -3038,31 +3172,78 @@ class WordLayoutEngine {
           pageCount: math.max(pageNumber, 1),
         );
         text = resolved.isEmpty ? raw : resolved;
+        generated = true;
       } else if (_looksLikePageCache(raw)) {
         text = '$pageNumber';
+        generated = true;
       } else {
         text = raw;
       }
+      // These overlay lines have no glyphs. Their character positions must
+      // map to the untrimmed source, not to a body paragraph or a repeated
+      // label elsewhere in the same header/footer. Generated labels expose
+      // no authored offsets, even when their cache happens to match the text.
+      final offsets = List<int?>.generate(
+        text.length + 1,
+        (index) => generated ? null : rawStart + index,
+      );
       final double size = run.fontSizePoints.clamp(8, 16);
       final String overlayColor = run.color.isEmpty
           ? (isFooter ? '222222' : '6B7280')
           : run.color;
       final List<String> tabParts = text.split('\t');
       if (tabParts.length >= 2) {
-        final List<String> parts = <String>[
-          for (final String part in tabParts)
-            _looksLikePageCache(part.trim()) ? '$pageNumber' : part.trim(),
-        ];
-        final String left = parts.first;
-        final String mid = parts.length >= 3 ? parts[1] : '';
-        final String right = parts.length >= 3
-            ? parts.sublist(2).join(' ')
-            : parts.last;
-        void addPart(String part, WmlJustification align) {
-          if (part.isEmpty) {
+        final parts = <({String text, List<int?> offsets})>[];
+        var partStart = 0;
+        for (final part in tabParts) {
+          final trimmed = part.trim();
+          final leading = part.length - part.trimLeft().length;
+          if (_looksLikePageCache(trimmed)) {
+            parts.add((
+              text: '$pageNumber',
+              offsets: List<int?>.filled('$pageNumber'.length + 1, null),
+            ));
+          } else {
+            parts.add((
+              text: trimmed,
+              offsets: offsets.sublist(
+                partStart + leading,
+                partStart + leading + trimmed.length + 1,
+              ),
+            ));
+          }
+          partStart += part.length + 1;
+        }
+        final left = parts.first;
+        final mid = parts.length >= 3
+            ? parts[1]
+            : (text: '', offsets: <int?>[null]);
+        final ({String text, List<int?> offsets}) right;
+        if (parts.length >= 3) {
+          final rightParts = parts.sublist(2);
+          final rightOffsets = <int?>[];
+          for (var j = 0; j < rightParts.length; j++) {
+            if (j > 0) rightOffsets.add(null); // Presentation-only join space.
+            rightOffsets.addAll(
+              rightParts[j].offsets.take(rightParts[j].text.length),
+            );
+          }
+          rightOffsets.add(rightParts.last.offsets.last);
+          right = (
+            text: rightParts.map((part) => part.text).join(' '),
+            offsets: rightOffsets,
+          );
+        } else {
+          right = parts.last;
+        }
+        void addPart(
+          ({String text, List<int?> offsets}) part,
+          WmlJustification align,
+        ) {
+          if (part.text.isEmpty) {
             return;
           }
-          final double width = part.length * size * 0.52;
+          final double width = part.text.length * size * 0.52;
           var x = section.margins.left;
           if (align == WmlJustification.center) {
             x = (section.pageSize.width - width) / 2;
@@ -3078,9 +3259,12 @@ class WordLayoutEngine {
               height: size + 3,
               pageIndex: pageNumber - 1,
               paragraphIndex: i,
+              sourceParagraph: paragraph,
+              sourceText: source,
+              proofingOffsets: part.offsets,
               justification: align,
               isFooter: isFooter,
-              overlayText: part,
+              overlayText: part.text,
               overlayColor: overlayColor,
               overlaySize: size,
               overlayBold: run.bold,
@@ -3115,6 +3299,9 @@ class WordLayoutEngine {
           height: size + 3,
           pageIndex: pageNumber - 1,
           paragraphIndex: i,
+          sourceParagraph: paragraph,
+          sourceText: source,
+          proofingOffsets: offsets,
           justification: paragraph.properties.justification,
           isFooter: isFooter,
           overlayText: text,

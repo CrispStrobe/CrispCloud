@@ -143,6 +143,13 @@ class PdfCidFont {
   static String _toUnicode(Map<int, int> unicodeToGid) {
     final Map<int, int> gidToUnicode = <int, int>{};
     for (final MapEntry<int, int> entry in unicodeToGid.entries) {
+      // The subsetter filters scalar requests, but FontSubset is also a public
+      // value type. Invalid aliases must not replace an extractable character.
+      if (entry.key < 0 ||
+          entry.key > 0x10FFFF ||
+          (entry.key >= 0xD800 && entry.key <= 0xDFFF)) {
+        continue;
+      }
       final int? existing = gidToUnicode[entry.value];
       if (existing == null || _preferUnicode(entry.key, existing)) {
         gidToUnicode[entry.value] = entry.key;
@@ -158,7 +165,12 @@ class PdfCidFont {
       for (int j = i; j < end; j++) {
         final MapEntry<int, int> e = entries[j];
         bf.write('<${e.key.toRadixString(16).padLeft(4, '0')}>');
-        bf.writeln('<${e.value.toRadixString(16).padLeft(4, '0')}>');
+        // ToUnicode destinations are UTF-16BE strings, not hexadecimal
+        // Unicode scalar numbers. Supplementary values require two code units.
+        final utf16 = String.fromCharCode(e.value).codeUnits;
+        bf.writeln(
+          '<${utf16.map((unit) => unit.toRadixString(16).padLeft(4, '0')).join()}>',
+        );
       }
       bf.writeln('endbfchar');
     }

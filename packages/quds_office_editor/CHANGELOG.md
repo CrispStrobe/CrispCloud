@@ -4,6 +4,32 @@ All notable changes to `quds_office_editor` are documented here.
 
 ## Unreleased
 
+- Identify embedded PDF fonts by their full bytes instead of sampled positions,
+  keeping owned immutable snapshots and bounded content-deduplication storage.
+  Reuse font associations during painting without repeatedly hashing a face.
+- Notify every waiting PDF canvas/thumbnail when a shared font finishes loading,
+  keep failures terminal for the buffer, and clean up listeners on disposal.
+  Repaint on reattachment so moved retained layers cannot freeze fallback text.
+
+- Label invisible proofing replacements, including space insertions. Restore
+  ignored words in their original language, rules and ignored occurrences
+  from the review dialog without changing source text or undo history.
+
+- Measure complete Word text runs with Flutter's shaping before wrapping,
+  including contextual kerning, Arabic and grapheme advances. Cache immutable
+  metrics with bounded storage and invalidate them after font registration.
+- Recheck the shaped width of each painted line fragment so trimmed spaces
+  and changed joining/kerning context cannot silently overflow narrow table
+  cells or variable-width text bands around floating frames.
+- Preserve Unicode grapheme slices and styled combining-mark ownership, keep
+  nested bidi embeddings in separate paint runs, and dispose temporary native
+  text painters after fitting, caret/hit testing and document painting.
+- Retain invisible source controls across long paint-run gaps so caret and hit
+  testing keep their authored UTF-16 offsets; exclude visible text owned by
+  another sparse run regardless of gap length.
+- Include full OFL notices and recorded provenance for the existing Liberation
+  2.1.5 and Noto Naskh Arabic 2.004 font assets; font binaries are unchanged.
+
 - Keep Zotero collection pages unique by key, replacing renamed metadata while
   preserving order, the selected collection and selected references. Discard
   collection continuation responses after the library or dialog has changed.

@@ -1,0 +1,524 @@
+Waiting for another flutter command to release the startup lock...
+00:00 +0: loading /private/tmp/crispcloud-terminal-ods-isolated/test/office_proofing_licenses_test.dart
+00:00 +0: /private/tmp/crispcloud-terminal-ods-isolated/test/office_proofing_licenses_test.dart: German data notices are bundled unchanged and exposed in licenses
+00:00 +1: /private/tmp/crispcloud-terminal-ods-isolated/test/office_proofing_licenses_test.dart: hyphenation notice retains the complete upstream header text
+00:00 +2: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_test.dart: credential loading target rejects changed documents and selections
+00:01 +3: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_test.dart: Zotero transport boundary desktop reads use only the explicitly supplied direct client
+00:01 +4: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_test.dart: Zotero transport boundary cloud requests retain the selected proxy factory with local enabled
+00:01 +5: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_test.dart: Zotero transport boundary desktop access requires host opt-in before creating any client
+00:01 +6: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_test.dart: Zotero transport boundary desktop rejects secrets and unexpected headers before client creation
+00:01 +7: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_test.dart: Zotero transport boundary desktop rejects other hosts, ports, paths and URL credentials
+00:01 +8: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_test.dart: Zotero transport boundary desktop redirects are returned without another request
+00:01 +9: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_test.dart: Zotero transport boundary desktop responses retain size and total timeout limits
+00:01 +10: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_test.dart: Zotero transport boundary disposal closes desktop requests and rejects later desktop reads
+00:01 +11: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_test.dart: Zotero transport boundary sends API-key header only to Zotero and never follows redirects
+00:01 +12: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_test.dart: Zotero transport boundary rejects non-Zotero destinations before creating a client
+00:01 +13: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_test.dart: Zotero transport boundary passes redirect status for the API client to reject
+00:01 +14: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_test.dart: Zotero transport boundary bounds declared and streamed response sizes
+00:01 +15: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_test.dart: Zotero transport boundary total request timeout closes the owned client
+00:01 +16: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_test.dart: Zotero transport boundary HTTP exceptions cannot expose the API key
+00:01 +17: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_test.dart: Zotero transport boundary timeout cancels a stalled response body subscription
+00:01 +18: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_test.dart: Zotero transport boundary disposal closes active requests and rejects new requests
+00:01 +19: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_test.dart: Zotero credential persistence writes, reads back and forgets only the Zotero entry
+00:01 +20: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_test.dart: Zotero credential persistence session-only backend never offers persistent credentials
+00:01 +21: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_test.dart: Zotero credential persistence failed read-back never reports a successful remember operation
+00:01 +22: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_test.dart: Zotero credential persistence backend failures are sanitized and invalid keys are rejected
+00:02 +23: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_citing_transport_test.dart: saved-search reads stay on direct loopback with the pinned database
+00:02 +24: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_citing_transport_test.dart: saved-search writes and encoded route injection are refused before sending
+00:02 +25: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_citing_transport_test.dart: citing execCommand sends only local UTF-8 JSON without redirects
+00:02 +26: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_citing_transport_test.dart: citing respond sends only local UTF-8 JSON without redirects
+00:02 +27: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_citing_transport_test.dart: citing rejects other origins and protocol routes before sending
+00:02 +28: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_citing_transport_test.dart: citing requires POST and rejects cloud or catalog request bodies
+00:02 +29: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_citing_transport_test.dart: citing accepts case-insensitive names but no secrets or extra headers
+00:02 +30: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_citing_transport_test.dart: citing request bodies are valid JSON with a UTF-8 byte bound
+00:02 +31: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_citing_transport_test.dart: citing redirects return once without forwarding document data
+00:02 +32: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_citing_transport_test.dart: citing responses reject declared and streamed excess bytes
+00:02 +33: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_citing_transport_test.dart: native dialog uses its own longer timeout
+00:02 +34: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_citing_transport_test.dart: request timeout can shorten but cannot extend host limit
+00:02 +35: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_citing_transport_test.dart: dispose settles pending citing immediately and ignores late response
+00:02 +36: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_citing_transport_test.dart: dispose cancels a response body already being read
+00:02 +37: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_citing_transport_test.dart: citing network failures never expose document or credential data
+00:02 +38: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_citing_transport_test.dart: citing and catalog limits must be positive before client creation
+00:04 +39: /private/tmp/crispcloud-terminal-ods-isolated/test/office_zotero_ribbon_test.dart: Zotero is reachable from Word Insert menu and ribbon
+00:09 +39: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: standard Word shortcuts align, redo and insert a page break
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:10 +40: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: standard Word shortcuts align, redo and insert a page break
+00:11 +41: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: standard Word shortcuts align, redo and insert a page break
+00:19 +41: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: ribbon headings, paragraphs, notes and pictures survive three host saves
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:22 +42: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: ribbon headings, paragraphs, notes and pictures survive three host saves
+00:22 +42: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: Save As adopts its captured revision while newer edits remain dirty
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:28 +43: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: ribbon headings, paragraphs, notes and pictures survive three host saves
+00:28 +43: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: Save As F12 adopts filename and subsequent Save writes the new file
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:33 +44: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: ribbon headings, paragraphs, notes and pictures survive three host saves
+00:33 +44: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: Save As Control Left adopts filename and subsequent Save writes the new file
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:36 +45: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: ribbon headings, paragraphs, notes and pictures survive three host saves
+00:36 +45: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: Save As Meta Left adopts filename and subsequent Save writes the new file
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:39 +46: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: ribbon headings, paragraphs, notes and pictures survive three host saves
+00:39 +46: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: Save As cancellation retains old target and dirty state
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:39 +46: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: ribbon headings, paragraphs, notes and pictures survive three host saves
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:40 +46: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: Save As cancellation retains old target and dirty state
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:40 +47: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: ribbon headings, paragraphs, notes and pictures survive three host saves
+00:40 +47: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: Save As failure retains old target and dirty state
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:41 +47: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: ribbon headings, paragraphs, notes and pictures survive three host saves
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:41 +47: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: Save As failure retains old target and dirty state
+⚠️ [OfficeEditor] office Save As failed
+  Error: FileSystemException: test write failure, path = ''
+00:41 +47: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: ribbon headings, paragraphs, notes and pictures survive three host saves
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:42 +47: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: Save As failure retains old target and dirty state
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:42 +48: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: ribbon headings, paragraphs, notes and pictures survive three host saves
+00:42 +48: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: hyperlink shortcuts focus the URL and modal typing never edits Word
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:42 +48: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: ribbon headings, paragraphs, notes and pictures survive three host saves
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:43 +49: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: hyperlink shortcuts focus the URL and modal typing never edits Word
+00:43 +49: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: new text, style, note and image edits stay dirty during upload
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:45 +50: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: hyperlink shortcuts focus the URL and modal typing never edits Word
+00:45 +50: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: Save and Close keeps newer edits open until they are saved
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:46 +51: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: Save and Close keeps newer edits open until they are saved
+00:46 +51: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: Save a copy uses captured source folder and preserves edits
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:46 +51: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: Save and Close keeps newer edits open until they are saved
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:46 +52: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: Save and Close keeps newer edits open until they are saved
+00:46 +52: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: sorting alone prompts on Back and saves undoable reordered rows
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:47 +52: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: Save and Close keeps newer edits open until they are saved
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:47 +53: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: sorting alone prompts on Back and saves undoable reordered rows
+00:47 +53: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: pending note typing stays dirty until its next upload
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:48 +53: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: sorting alone prompts on Back and saves undoable reordered rows
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:48 +53: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: pending note typing stays dirty until its next upload
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:49 +54: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: sorting alone prompts on Back and saves undoable reordered rows
+00:49 +54: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: Save and Close retains pending note typing until its next upload
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:49 +55: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: Save and Close retains pending note typing until its next upload
+00:49 +55: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: speaker-notes-only edits prompt on Back and save before closing
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:49 +55: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: Save and Close retains pending note typing until its next upload
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:50 +55: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: speaker-notes-only edits prompt on Back and save before closing
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:50 +56: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: speaker-notes-only edits prompt on Back and save before closing
+00:50 +56: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: pending cell typing survives Save uploads and retries
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:51 +57: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: pending cell typing survives Save uploads and retries
+00:51 +57: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: speaker notes edited during Save and Close stay open and dirty
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:52 +57: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: pending cell typing survives Save uploads and retries
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:53 +58: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: pending cell typing survives Save uploads and retries
+00:53 +58: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: Save and Close preserves an open notes dialog and its draft
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:53 +58: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: pending cell typing survives Save uploads and retries
+⚠️ [OfficeEditor] office editor save failed
+  Error: Bad state: Upload failed
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:54 +58: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: Save and Close preserves an open notes dialog and its draft
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:54 +59: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: Save and Close preserves an open notes dialog and its draft
+00:54 +59: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: pending cell typing survives Save and Close uploads and retries
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:54 +59: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: Save and Close preserves an open notes dialog and its draft
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:54 +60: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: pending cell typing survives Save and Close uploads and retries
+00:54 +60: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: speaker notes undo and redo survive actual host saves
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:55 +60: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: pending cell typing survives Save and Close uploads and retries
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:55 +60: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: speaker notes undo and redo survive actual host saves
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:55 +60: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: pending cell typing survives Save and Close uploads and retries
+⚠️ [OfficeEditor] office editor save failed
+  Error: Bad state: Upload failed
+00:55 +61: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: pending cell typing survives Save and Close uploads and retries
+00:55 +61: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: notes-only recovery copy preserves dirty state after disconnect
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:56 +61: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: pending cell typing survives Save and Close uploads and retries
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:56 +62: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: pending cell typing survives Save and Close uploads and retries
+00:56 +62: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: system Back prompts once and Cancel retains unsaved edits
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:57 +63: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: system Back prompts once and Cancel retains unsaved edits
+00:57 +63: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: pending slide typing survives Save uploads and retries
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:57 +64: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: pending slide typing survives Save uploads and retries
+00:57 +64: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: system Back discards only after explicit confirmation
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:57 +65: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: pending slide typing survives Save uploads and retries
+00:57 +65: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: system Back closes a clean document without a prompt
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:58 +66: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: pending slide typing survives Save uploads and retries
+00:58 +66: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: system Back Save writes the captured original before closing
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:58 +66: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: pending slide typing survives Save uploads and retries
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+⚠️ [OfficeEditor] office editor save failed
+  Error: Bad state: Upload failed
+00:58 +66: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: system Back Save writes the captured original before closing
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:59 +66: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: pending slide typing survives Save uploads and retries
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:59 +67: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: system Back Save writes the captured original before closing
+00:59 +67: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: pending slide typing survives Save and Close uploads and retries
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:59 +68: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: pending slide typing survives Save and Close uploads and retries
+00:59 +68: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: Back and Close cannot discard an in-flight save
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:59 +69: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: pending slide typing survives Save and Close uploads and retries
+00:59 +69: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: Back Save keeps later edits open until their own save
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:00 +69: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: pending slide typing survives Save and Close uploads and retries
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+⚠️ [OfficeEditor] office editor save failed
+  Error: Bad state: Upload failed
+01:00 +69: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: Back Save keeps later edits open until their own save
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:00 +69: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: pending slide typing survives Save and Close uploads and retries
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:00 +69: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: Back Save keeps later edits open until their own save
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:01 +70: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: Back Save keeps later edits open until their own save
+01:01 +70: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: selection changes during upload do not create unsaved edits
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:01 +71: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: selection changes during upload do not create unsaved edits
+01:01 +71: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: disconnected original can export edited copy without cleaning
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:01 +71: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: selection changes during upload do not create unsaved edits
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:01 +71: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: disconnected original can export edited copy without cleaning
+⚠️ [OfficeEditor] office editor save failed
+  Error: The original storage is disconnected or changed. Reopen the file before saving.
+01:01 +72: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: disconnected original can export edited copy without cleaning
+01:01 +72: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: failed upload preserves the original and retains dirty edits
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:02 +73: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: failed upload preserves the original and retains dirty edits
+01:02 +73: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: copy cancel retains edits and permits a successful retry
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:02 +73: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: failed upload preserves the original and retains dirty edits
+⚠️ [OfficeEditor] office editor save failed
+  Error: Bad state: Upload failed
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:02 +74: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: copy cancel retains edits and permits a successful retry
+01:02 +74: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: system Back guards unsaved edits and Cancel permits a later close
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:03 +75: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: system Back guards unsaved edits and Cancel permits a later close
+01:03 +75: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: copy error retains edits and permits a successful retry
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+⚠️ [OfficeEditor] office copy export failed
+  Error: Bad state: Destination full
+01:03 +76: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: copy error retains edits and permits a successful retry
+01:03 +76: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: copy export survives failure and cancellation without cleaning the original
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:03 +77: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: copy export survives failure and cancellation without cleaning the original
+01:03 +77: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: copy picker owns one revision while newer edits remain unsaved
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:04 +77: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: copy export survives failure and cancellation without cleaning the original
+⚠️ [OfficeEditor] office copy export failed
+  Error: Bad state: Simulated unavailable destination
+01:04 +77: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: copy picker owns one revision while newer edits remain unsaved
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:04 +78: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: copy export survives failure and cancellation without cleaning the original
+01:04 +78: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: copying an unchanged document leaves it clean
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:04 +79: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: copying an unchanged document leaves it clean
+01:04 +79: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: pending copy export blocks Back and retains edits made during export
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:05 +80: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_save_fidelity_test.dart: pending copy export blocks Back and retains edits made during export
+01:05 +80: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: recovery copy commits pending cell text after disconnect
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:05 +81: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: recovery copy commits pending cell text after disconnect
+01:06 +82: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: recovery copy commits pending slide text after disconnect
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:07 +83: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: refused input exports its captured original without reserializing
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+⚠️ [OfficeEditor] office editor load failed
+  Error: FormatException: Invalid Word package ZIP: Buffer is too small to be a ZIP archive
+01:07 +84: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: signed-marker xlsx refusal retains an exact original copy
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+⚠️ [OfficeEditor] office editor load failed
+  Error: FormatException: This Office package is digitally signed. Save an unsigned copy in Office before editing it here. The original has not been changed.
+01:08 +85: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: signed-marker pptx refusal retains an exact original copy
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+⚠️ [OfficeEditor] office editor load failed
+  Error: FormatException: This Office package is digitally signed. Save an unsigned copy in Office before editing it here. The original has not been changed.
+01:08 +86: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: copy completion after host disposal has no late UI callbacks
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:08 +87: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: protection changed during upload remains dirty until saved
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:10 +88: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_paragraph_fidelity_test.dart: unchanged paragraph dialog preserves fractions, tabs and clean state
+01:10 +88: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_lifecycle_test.dart: Track Changes follows save, undo and redo in actual host bytes
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:11 +89: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_paragraph_fidelity_test.dart: unchanged paragraph dialog preserves fractions, tabs and clean state
+01:14 +90: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_paragraph_fidelity_test.dart: selected paragraph spacing edits preserve every other imported property
+01:14 +91: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_paragraph_fidelity_test.dart: selected paragraph spacing edits preserve every other imported property
+01:15 +92: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_layout_units_test.dart: metric layout dialog preserves exact imported geometry on untouched Apply
+01:16 +93: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_layout_units_test.dart: metric layout dialog preserves exact imported geometry on untouched Apply
+01:17 +94: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_paragraph_fidelity_test.dart: invalid numeric input cannot erase tabs or poison paragraph geometry
+01:17 +95: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_layout_units_test.dart: layout accepts decimal comma and blocks impossible geometry
+01:17 +96: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_paragraph_fidelity_test.dart: adding a tab preserves the leaders and alignment of existing stops
+01:18 +97: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_paragraph_fidelity_test.dart: adding a tab preserves the leaders and alignment of existing stops
+01:18 +98: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_paragraph_fidelity_test.dart: shared custom tab controls reach the native host save and history
+01:20 +99: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_paragraph_fidelity_test.dart: cancelling tab drafts preserves body and unrelated pending note history
+01:21 +99: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/ods_editor_workflow_test.dart: Save As adopts converted ODS workbook as a writable XLSX
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:21 +100: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/ods_editor_workflow_test.dart: Save As adopts converted ODS workbook as a writable XLSX
+01:22 +101: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/ods_editor_workflow_test.dart: Save As adopts converted ODS workbook as a writable XLSX
+01:22 +102: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/ods_editor_workflow_test.dart: Save As adopts converted ODS workbook as a writable XLSX
+01:23 +103: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/ods_editor_workflow_test.dart: Save As adopts converted ODS workbook as a writable XLSX
+01:23 +104: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/ods_editor_workflow_test.dart: Save As adopts converted ODS workbook as a writable XLSX
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:24 +105: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/ods_editor_workflow_test.dart: Save As adopts converted ODS workbook as a writable XLSX
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:25 +106: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/ods_editor_workflow_test.dart: Save As adopts converted ODS workbook as a writable XLSX
+01:25 +107: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_paragraph_fidelity_test.dart: host comment dialog exports stable ranges and authors across history
+01:25 +107: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/ods_editor_workflow_test.dart: ODS editing saves an XLSX copy and preserves its source
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:25 +108: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/ods_editor_workflow_test.dart: ODS editing saves an XLSX copy and preserves its source
+01:25 +109: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_paragraph_fidelity_test.dart: host contents action exports a TOC linked to its heading
+01:25 +109: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/ods_editor_workflow_test.dart: ODS copy outcome null retains unsaved edits
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:26 +110: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/ods_editor_workflow_test.dart: ODS copy outcome null retains unsaved edits
+01:26 +111: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_paragraph_fidelity_test.dart: host table dialog exports the requested grid with undo and redo
+01:26 +111: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/ods_editor_workflow_test.dart: ODS copy outcome OfficeCopyOutcome.downloadedCopy retains unsaved edits
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:26 +112: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/ods_editor_workflow_test.dart: ODS copy outcome OfficeCopyOutcome.downloadedCopy retains unsaved edits
+01:27 +113: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/ods_editor_workflow_test.dart: ODS copy completion cannot clean a newer edit
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:30 +114: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/legacy_sheet_import_test.dart: Save As adopts converted XLS workbook as a writable XLSX
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:33 +114: /private/tmp/crispcloud-terminal-ods-isolated/test/macos_application_navigation_test.dart: default opening launches a verified local app and keeps the folder view
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+ℹ️ [PanelNotifier] navigateToPath: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-y8hbwR (side=PanelSide.local, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-y8hbwR (web=false)
+🐛 [PanelNotifier] listDirectory("/var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-y8hbwR") returned 2 entities
+ℹ️ [PanelNotifier] navigateInto: Viewer.app isFolder=true path=/var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-y8hbwR/Viewer.app
+ℹ️ [PanelNotifier] navigateInto: Viewer.app isFolder=true path=/var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-y8hbwR/Viewer.app
+ℹ️ [PanelNotifier] navigateToPath: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-y8hbwR/Viewer.app (side=PanelSide.local, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-y8hbwR/Viewer.app (web=false)
+🐛 [PanelNotifier] listDirectory("/var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-y8hbwR/Viewer.app") returned 1 entities
+01:33 +115: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/legacy_sheet_import_test.dart: Save As adopts converted XLS workbook as a writable XLSX
+01:33 +115: /private/tmp/crispcloud-terminal-ods-isolated/test/macos_application_navigation_test.dart: navigation during access keeps the captured original application target
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+ℹ️ [PanelNotifier] navigateToPath: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-5hVQhz (side=PanelSide.local, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-5hVQhz (web=false)
+🐛 [PanelNotifier] listDirectory("/var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-5hVQhz") returned 2 entities
+ℹ️ [PanelNotifier] navigateToPath: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-5hVQhz/ordinary (side=PanelSide.local, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-5hVQhz/ordinary (web=false)
+🐛 [PanelNotifier] listDirectory("/var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-5hVQhz/ordinary") returned 0 entities
+01:33 +116: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/legacy_sheet_import_test.dart: Save As adopts converted XLS workbook as a writable XLSX
+01:33 +116: /private/tmp/crispcloud-terminal-ods-isolated/test/macos_application_navigation_test.dart: remote application folders stay browsable without launching or downloading
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+ℹ️ [PanelNotifier] navigateToPath: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-2jP0iO (side=PanelSide.local, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-2jP0iO (web=false)
+🐛 [PanelNotifier] listDirectory("/var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-2jP0iO") returned 2 entities
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateInto: Remote.app isFolder=true path=/Remote.app
+ℹ️ [PanelNotifier] navigateToPath: /Remote.app (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Memory path=/Remote.app side=PanelSide.remote
+01:33 +117: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/legacy_sheet_import_test.dart: Save As adopts converted XLS workbook as a writable XLSX
+01:33 +117: /private/tmp/crispcloud-terminal-ods-isolated/test/macos_application_navigation_test.dart: an unverified replacement row cannot launch an application
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+ℹ️ [PanelNotifier] navigateToPath: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-ZBDbo5 (side=PanelSide.local, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-ZBDbo5 (web=false)
+🐛 [PanelNotifier] listDirectory("/var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-ZBDbo5") returned 2 entities
+01:33 +118: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/legacy_sheet_import_test.dart: Save As adopts converted XLS workbook as a writable XLSX
+01:33 +118: /private/tmp/crispcloud-terminal-ods-isolated/test/macos_application_navigation_test.dart: denied filesystem access does not launch or enter the bundle
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+ℹ️ [PanelNotifier] navigateToPath: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-l5Q7BA (side=PanelSide.local, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-l5Q7BA (web=false)
+🐛 [PanelNotifier] listDirectory("/var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-l5Q7BA") returned 2 entities
+01:33 +119: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/legacy_sheet_import_test.dart: Save As adopts converted XLS workbook as a writable XLSX
+01:33 +119: /private/tmp/crispcloud-terminal-ods-isolated/test/macos_application_navigation_test.dart: column selection and Right never launch; Enter and double click do
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+ℹ️ [PanelNotifier] navigateToPath: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-VbkYOK (side=PanelSide.local, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-VbkYOK (web=false)
+🐛 [PanelNotifier] listDirectory("/var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-VbkYOK") returned 2 entities
+01:33 +119: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/legacy_sheet_import_test.dart: Save As adopts converted XLS workbook as a writable XLSX
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:34 +120: /private/tmp/crispcloud-terminal-ods-isolated/test/macos_application_navigation_test.dart: column selection and Right never launch; Enter and double click do
+01:34 +120: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/legacy_sheet_import_test.dart: legacy Save emits XLSX, keeps BIFF original, and cleans only saved edits
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:35 +121: /private/tmp/crispcloud-terminal-ods-isolated/test/macos_application_navigation_test.dart: column selection and Right never launch; Enter and double click do
+01:35 +121: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/legacy_sheet_import_test.dart: legacy save cannot clean edits made while its copy picker is open
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:35 +121: /private/tmp/crispcloud-terminal-ods-isolated/test/macos_application_navigation_test.dart: column selection and Right never launch; Enter and double click do
+ℹ️ [PanelNotifier] navigateInto: Viewer.app isFolder=true path=/var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-VbkYOK/Viewer.app
+ℹ️ [PanelNotifier] navigateInto: Viewer.app isFolder=true path=/var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-VbkYOK/Viewer.app
+01:36 +122: /private/tmp/crispcloud-terminal-ods-isolated/test/macos_application_navigation_test.dart: column selection and Right never launch; Enter and double click do
+01:36 +122: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/legacy_sheet_import_test.dart: a refused XLS export retains the true original bytes and extension
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+⚠️ [OfficeEditor] office editor load failed
+  Error: LegacySheetFormatException: Not an OLE compound file or an Excel HTML workbook
+01:36 +123: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/legacy_sheet_import_test.dart: a refused XLS export retains the true original bytes and extension
+01:36 +123: /private/tmp/crispcloud-terminal-ods-isolated/test/macos_application_navigation_test.dart: context menu offers Launch and Browse package contents separately
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+ℹ️ [PanelNotifier] navigateToPath: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-FjOP10 (side=PanelSide.local, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-FjOP10 (web=false)
+🐛 [PanelNotifier] listDirectory("/var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-FjOP10") returned 2 entities
+01:36 +124: /private/tmp/crispcloud-terminal-ods-isolated/test/macos_application_navigation_test.dart: context menu offers Launch and Browse package contents separately
+🐛 [FileContextMenu] file=Viewer.app side=local web=false
+🐛 [PanelNotifier] clearSelection (was 0)
+🐛 [PanelNotifier] toggleSelection: Viewer.app shift=false ctrl=false lastSelected=null side=PanelSide.local
+01:38 +125: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/pdf_font_faces_test.dart: all pending consumers finish once and identical copies share a face
+01:38 +126: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/pdf_font_faces_test.dart: failed loading notifies all waiters and remains terminal
+01:38 +127: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/pdf_font_faces_test.dart: registration owns a read-only snapshot while caller bytes change
+01:38 +128: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/pdf_font_faces_test.dart: removing a consumer leaves the other pending consumers intact
+01:38 +129: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/pdf_font_faces_test.dart: one consumer error does not corrupt a loaded face or stop fanout
+01:38 +130: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/pdf_font_faces_test.dart: evicting content snapshots preserves active font buffer bindings
+01:38 +131: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/pdf_font_faces_test.dart: valid fonts colliding under the old sampled key render separately
+01:38 +132: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/pdf_font_faces_test.dart: independent canvases repaint after one shared load completes
+01:38 +133: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/font_subset_render_test.dart: BMP PDF subset remains loadable with exact glyph advances
+01:38 +134: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/font_subset_render_test.dart: BMP PDF subset remains loadable with exact glyph advances
+01:38 +135: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/font_subset_render_test.dart: BMP PDF subset remains loadable with exact glyph advances
+01:39 +136: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/font_subset_render_test.dart: BMP PDF subset remains loadable with exact glyph advances
+01:39 +137: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/pdf_font_faces_test.dart: reparented retained thumbnail observes pending font completion
+01:39 +138: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/font_subset_render_test.dart: supplementary PDF mappings survive real Flutter font loading and painting
+01:39 +139: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/font_subset_render_test.dart: supplementary PDF mappings survive real Flutter font loading and painting
+01:39 +140: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/font_subset_render_test.dart: (tearDownAll)
+01:40 +140: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_run_metrics_test.dart: (setUpAll)
+01:40 +140: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_run_metrics_test.dart: run advances retain kerning instead of adding isolated characters
+01:40 +141: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_session_test.dart: closed empty complex fields never reach providers
+01:40 +142: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_session_test.dart: closed empty complex fields never reach providers
+01:40 +143: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_session_test.dart: closed empty complex fields never reach providers
+01:40 +144: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_session_test.dart: closed empty complex fields never reach providers
+01:40 +145: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_session_test.dart: closed empty complex fields never reach providers
+01:40 +146: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_run_metrics_test.dart: Indic graphemes preserve source and match complete paint width
+01:40 +147: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_session_test.dart: empty paragraphs inside and ending a spanning field are excluded while later authored paragraphs are checked
+01:40 +148: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_session_test.dart: empty paragraphs inside and ending a spanning field are excluded while later authored paragraphs are checked
+01:40 +149: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_session_test.dart: empty paragraphs inside and ending a spanning field are excluded while later authored paragraphs are checked
+01:40 +150: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_session_test.dart: empty paragraphs inside and ending a spanning field are excluded while later authored paragraphs are checked
+01:40 +151: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_session_test.dart: empty paragraphs inside and ending a spanning field are excluded while later authored paragraphs are checked
+01:40 +152: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_run_metrics_test.dart: cache retains immutable values and evicts old runs
+01:40 +153: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_run_metrics_test.dart: cache retains immutable values and evicts old runs
+01:40 +154: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_run_metrics_test.dart: cache retains immutable values and evicts old runs
+01:40 +155: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_run_metrics_test.dart: cache retains immutable values and evicts old runs
+01:40 +156: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_run_metrics_test.dart: cache retains immutable values and evicts old runs
+01:40 +157: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_run_metrics_test.dart: cache retains immutable values and evicts old runs
+01:40 +158: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_run_metrics_test.dart: cache retains immutable values and evicts old runs
+01:40 +159: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_run_metrics_test.dart: cache retains immutable values and evicts old runs
+01:40 +160: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_run_metrics_test.dart: cache retains immutable values and evicts old runs
+01:40 +161: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_session_test.dart: review traverses body, nested tables, frames, all headers/footers, notes and comments
+01:40 +162: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_session_test.dart: review traverses body, nested tables, frames, all headers/footers, notes and comments
+01:40 +163: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_session_test.dart: review traverses body, nested tables, frames, all headers/footers, notes and comments
+01:40 +164: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_session_test.dart: formatting fragments join while language and noProof boundaries preserve UTF-16 offsets
+01:40 +165: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_session_test.dart: run language overrides paragraph language, which overrides the document default
+01:40 +166: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_session_test.dart: late results after a revision change never become current findings
+01:40 +167: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_session_test.dart: direct model edits during a pending check invalidate its snapshot even without revision notification
+01:40 +168: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_session_test.dart: replacing a document with identical text and revision rejects the old document result
+01:40 +169: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_session_test.dart: provider reconfiguration cancels pending publication and disposes the previous provider
+01:40 +170: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_session_test.dart: unchanged paragraphs reuse results while rebinding findings to the current revision
+01:40 +171: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_session_test.dart: provider configuration revisions invalidate otherwise identical cached text
+01:40 +172: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_session_test.dart: moving a paragraph between stories invalidates its old finding and cache
+01:40 +173: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_session_test.dart: a document with no checkable paragraphs never claims a clean completed check
+01:40 +174: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_session_test.dart: no configured provider is visibly unavailable
+01:40 +175: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_session_test.dart: unavailable checks are incomplete and can be retried instead of cached as clean
+01:40 +176: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_session_test.dart: unsupported checks are incomplete and can be retried instead of cached as clean
+01:40 +177: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_session_test.dart: failed checks are incomplete and can be retried instead of cached as clean
+01:40 +178: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_session_test.dart: an unsupported document language reports its locale without calling the checker
+01:40 +179: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_session_test.dart: opaque body blocks and preserved header stories are explicit coverage gaps
+01:40 +180: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_session_test.dart: personal words are language-scoped and host snapshots preserve owner identity
+01:40 +181: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_session_test.dart: ignore once suppresses one occurrence and resets when its paragraph text changes
+01:40 +182: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_session_test.dart: ignored rules can be restored without changing source text or personal words
+01:40 +183: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_session_test.dart: restoring ignored occurrences preserves word and rule preferences
+01:43 +184: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_correction_test.dart: correction history preserves the selection after switching comments
+01:43 +185: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_dialog_test.dart: spacing correction Insert space is visible and undoable
+01:43 +186: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_dialog_test.dart: spacing correction Insert space is visible and undoable
+01:43 +187: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_dialog_test.dart: spacing correction Insert space is visible and undoable
+01:43 +188: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_dialog_test.dart: spacing correction Insert space is visible and undoable
+01:43 +189: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_dialog_test.dart: spacing correction Insert space is visible and undoable
+01:43 +190: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_dialog_test.dart: spacing correction Insert space is visible and undoable
+01:44 +191: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_dialog_test.dart: spacing correction Insert space is visible and undoable
+01:44 +192: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_dialog_test.dart: spacing correction Insert space is visible and undoable
+01:44 +193: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_dialog_test.dart: spacing correction Insert space is visible and undoable
+01:44 +194: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_dialog_test.dart: spacing correction Insert space is visible and undoable
+01:44 +195: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_dialog_test.dart: spacing correction Insert space is visible and undoable
+01:44 +196: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_dialog_test.dart: spacing correction Insert space is visible and undoable
+01:44 +197: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_dialog_test.dart: spacing correction Insert space is visible and undoable
+01:44 +198: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_dialog_test.dart: spacing correction Insert space is visible and undoable
+01:44 +199: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_dialog_test.dart: spacing correction Insert space is visible and undoable
+01:44 +200: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_dialog_test.dart: spacing correction Insert space is visible and undoable
+01:44 +201: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_dialog_test.dart: spacing correction Insert space is visible and undoable
+01:44 +202: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_dialog_test.dart: spacing correction Insert space is visible and undoable
+01:44 +203: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_dialog_test.dart: spacing correction Insert space is visible and undoable
+01:44 +204: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_dialog_test.dart: spacing correction Insert space is visible and undoable
+01:44 +205: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_dialog_test.dart: spacing correction Insert space is visible and undoable
+01:44 +206: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_dialog_test.dart: spacing correction Insert space is visible and undoable
+01:44 +207: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_dialog_test.dart: spacing correction Insert space is visible and undoable
+01:44 +208: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_dialog_test.dart: spacing correction Insert space is visible and undoable
+01:44 +209: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_dialog_test.dart: spacing correction Insert space is visible and undoable
+01:44 +210: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_dialog_test.dart: spacing correction Insert space is visible and undoable
+01:44 +211: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_dialog_test.dart: spacing correction Insert space is visible and undoable
+01:44 +212: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_dialog_test.dart: spacing correction Insert space is visible and undoable
+01:44 +213: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_dialog_test.dart: spacing correction Insert space is visible and undoable
+01:44 +214: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_dialog_test.dart: spacing correction Insert space is visible and undoable
+01:44 +215: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_dialog_test.dart: spacing correction Insert space is visible and undoable
+01:44 +216: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_dialog_test.dart: spacing correction Insert space is visible and undoable
+01:44 +217: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_dialog_test.dart: spacing correction Insert space is visible and undoable
+01:46 +218: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_backoff_session_test.dart: reconnecting and reopening keep an online session pause
+01:46 +219: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_backoff_session_test.dart: reconnecting and reopening keep an online session pause
+01:47 +220: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_backoff_session_test.dart: reconnecting and reopening keep an online session pause
+01:48 +221: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_backoff_session_test.dart: reconnecting and reopening keep an online session pause
+01:48 +222: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_backoff_session_test.dart: reconnecting and reopening keep an online session pause
+01:49 +223: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_backoff_session_test.dart: reconnecting and reopening keep an online session pause
+01:49 +224: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_backoff_session_test.dart: reconnecting and reopening keep an online session pause
+01:49 +225: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_backoff_session_test.dart: reconnecting and reopening keep an online session pause
+01:49 +226: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_backoff_session_test.dart: reconnecting and reopening keep an online session pause
+01:50 +227: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_backoff_session_test.dart: reconnecting and reopening keep an online session pause
+01:50 +228: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_dialog_test.dart: unsupported provider never produces a clean-document message
+01:50 +229: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_backoff_session_test.dart: disconnect and public library switching do not discard backoff
+01:50 +230: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_backoff_session_test.dart: disconnect and public library switching do not discard backoff
+01:50 +231: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_backoff_session_test.dart: disconnect and public library switching do not discard backoff
+01:50 +232: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_dialog_test.dart: adding a personal word dismisses its finding without changing document text
+01:50 +233: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_backoff_session_test.dart: desktop works during online backoff and does not clear it
+01:50 +234: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_backoff_session_test.dart: desktop works during online backoff and does not clear it
+01:51 +235: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_backoff_session_test.dart: desktop works during online backoff and does not clear it
+01:51 +236: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_proofing_dialog_test.dart: unsupported existing language and a narrow viewport remain reviewable
+01:51 +237: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_backoff_session_test.dart: a response after closing the dialog still pauses the same session
+01:51 +238: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_backoff_session_test.dart: a response after closing the dialog still pauses the same session
+01:51 +239: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_backoff_session_test.dart: successful Backoff survives public library recreation
+01:53 +240: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_scaling_test.dart: opening references scans a 1000-citation document once
+01:58 +241: /private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_editor/test/word_zotero_dialog_scaling_test.dart: bibliography-only documents keep source actions disabled
+01:58 +242: All tests passed!

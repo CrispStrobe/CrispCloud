@@ -1,0 +1,11 @@
+{
+  "excluded_setup_attempts": [
+    {
+      "stage": "dependency snapshot construction",
+      "result": "Stopped before tests or analyzer setup",
+      "reason": "Snapshot helper originally required lib/ for every package. flutter_plugin_android_lifecycle 2.0.35 is a native-only Android plugin and legitimately has no Dart library directory.",
+      "resolution": "Record has_dart_library and hash existing library inputs plus package declarations; still require every resolved package root to exist. Actual dependency/source bytes and constraints were not changed.",
+      "executed_tests": 0
+    }
+  ]
+}

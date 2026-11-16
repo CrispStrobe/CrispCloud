@@ -226,8 +226,9 @@ void main() {
       ],
     );
     final LaidOutDocument laid = WordLayoutEngine(font: null).layout(doc);
+    final bodyParagraphs = doc.paragraphs;
     final List<LaidOutLine> lines = laid.pages.first.lines
-        .where((LaidOutLine line) => line.sourceText == null)
+        .where((line) => bodyParagraphs.contains(line.sourceParagraph))
         .toList();
     expect(lines.length, greaterThanOrEqualTo(2));
     expect(lines[1].x, greaterThan(lines[0].x + 40));

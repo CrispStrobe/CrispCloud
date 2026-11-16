@@ -85,12 +85,14 @@ void main() {
         final output = Directory('build/underline-preview')
           ..createSync(recursive: true);
         File('${output.path}/before-$scale.png').writeAsBytesSync(
-          (await before.toByteData(format: ui.ImageByteFormat.png))!.buffer
-              .asUint8List(),
+          (await before.toByteData(
+            format: ui.ImageByteFormat.png,
+          ))!.buffer.asUint8List(),
         );
         File('${output.path}/after-$scale.png').writeAsBytesSync(
-          (await after.toByteData(format: ui.ImageByteFormat.png))!.buffer
-              .asUint8List(),
+          (await after.toByteData(
+            format: ui.ImageByteFormat.png,
+          ))!.buffer.asUint8List(),
         );
         before.dispose();
         after.dispose();

@@ -621,7 +621,7 @@ void main() {
             transport: (_) async => ZoteroHttpResponse(
               statusCode: 200,
               body: 'Nothing to see here.',
-              headers: {if (version != null) 'Zotero-API-Version': version},
+              headers: {'Zotero-API-Version': ?version},
             ),
           );
           await expectLater(
@@ -658,9 +658,7 @@ void main() {
               return ZoteroHttpResponse(
                 statusCode: status,
                 body: '[]',
-                headers: {
-                  if (returnedId != null) 'Zotero-Server-ID': returnedId,
-                },
+                headers: {'Zotero-Server-ID': ?returnedId},
               );
             },
           );
@@ -884,11 +882,11 @@ void main() {
         for (final csl in [
           'not JSON',
           3,
-          [],
+          <Object?>[],
           [null],
-          [{}, {}],
-          {'items': []},
-          jsonEncode([{}, {}]),
+          [<String, Object?>{}, <String, Object?>{}],
+          {'items': <Object?>[]},
+          jsonEncode([<String, Object?>{}, <String, Object?>{}]),
           jsonEncode({
             'items': [null],
           }),

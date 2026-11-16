@@ -234,6 +234,8 @@ class RenderPdfCanvas extends RenderBox implements MouseTrackerAnnotation {
   VirtualViewport _viewport;
   double _scale;
   OfficeSurfaceConfig _config;
+  bool _disposed = false;
+  late final VoidCallback _fontReadyListener = _onFontReady;
 
   PdfTextSelection? _selection;
 
@@ -480,10 +482,15 @@ class RenderPdfCanvas extends RenderBox implements MouseTrackerAnnotation {
   void attach(PipelineOwner owner) {
     super.attach(owner);
     _ensureRecognizers();
+    // Detach unsubscribes from pending fonts. A retained layer may otherwise
+    // survive reparenting without another paint, so warm those listeners
+    // again and refresh fonts that completed while this canvas was detached.
+    markNeedsPaint();
   }
 
   @override
   void detach() {
+    PdfFontFaces.removeListener(_fontReadyListener);
     _zoomSettle?.cancel();
     _zoomSettle = null;
     _flinging = false;
@@ -1725,14 +1732,20 @@ class RenderPdfCanvas extends RenderBox implements MouseTrackerAnnotation {
   }
 
   void _warmFonts(PdfDisplayList list) {
+    final seen = Set<Uint8List>.identity();
     for (final PdfPaintOp op in list.ops) {
-      if (op is PdfDrawText && op.fontBytes != null) {
-        PdfFontFaces.ensure(op.fontBytes!, () {
-          _clearTiles();
-          markNeedsPaint();
-        });
+      if (op is PdfDrawText &&
+          op.fontBytes != null &&
+          seen.add(op.fontBytes!)) {
+        PdfFontFaces.ensure(op.fontBytes!, _fontReadyListener);
       }
     }
+  }
+
+  void _onFontReady() {
+    if (_disposed) return;
+    _clearTiles();
+    if (attached) markNeedsPaint();
   }
 
   void _warmImages(PdfDisplayList list) {
@@ -1754,6 +1767,8 @@ class RenderPdfCanvas extends RenderBox implements MouseTrackerAnnotation {
 
   @override
   void dispose() {
+    _disposed = true;
+    PdfFontFaces.removeListener(_fontReadyListener);
     _zoomSettle?.cancel();
     _zoomSettle = null;
     for (final _PageTile tile in _tiles.values) {

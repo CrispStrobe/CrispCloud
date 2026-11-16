@@ -1,0 +1,20 @@
+{
+  "published_source": "27f001d60777d27f412d9984b62dbdb05019b9eb",
+  "local_head_at_start": "84955ca66662f7fdf638487dd4691e5c2fa018d0",
+  "local_head_at_completion": "84955ca66662f7fdf638487dd4691e5c2fa018d0",
+  "identical_published_and_local_tree": "ab5fe16a2289ea67ae4d4c72a542f233d178305f",
+  "quds_commit": "8e017e8c148517fea61f8d55eaafc7f070b82bba",
+  "canonical_tree": "17eecf8b8c8558c78dbbefe9ffc9b1249e2455cf",
+  "fetch_scope": "Only the requested continuation branch; no incoming-ref refresh and no reset.",
+  "fetch_command": [
+    "git",
+    "fetch",
+    "--no-tags",
+    "origin",
+    "refs/heads/codex/zotero-capabilities-20261116:refs/remotes/origin/codex/zotero-capabilities-20261116"
+  ],
+  "previous_evidence_receipt_sha256": "9c44b1a6580b961dba808df80e29c4d2cdb30fcaa6fac3e2dade4fb1bd84cbdc",
+  "prior_evidence_preserved": true,
+  "legacy_doc_parser_commit": "4895712158127b2fc930d796e17035c3ca0dac62",
+  "production_or_harness_dependency_edits": false
+}

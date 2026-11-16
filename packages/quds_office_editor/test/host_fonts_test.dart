@@ -113,4 +113,37 @@ void main() {
       throwsArgumentError,
     );
   });
+
+  test(
+    'late font registration invalidates widths measured with a fallback',
+    () async {
+      await OfficeHostFonts.ensureRegistered();
+      const family = 'Late Width Serif';
+      final props = WmlRunProps(asciiFont: family);
+      final fallbackWidth = PaintRunText.advanceOf(0x6d, 24, props);
+      final before = OfficeHostFonts.registrationRevision;
+      final regular = await rootBundle.load(
+        'packages/quds_office_editor/fonts/LiberationSerif-Regular.ttf',
+      );
+      await OfficeHostFonts.registerFamily(family: family, faces: [regular]);
+      expect(OfficeHostFonts.registrationRevision, greaterThan(before));
+      final registeredWidth = PaintRunText.advanceOf(0x6d, 24, props);
+      final referenceWidth = PaintRunText.advanceOf(
+        0x6d,
+        24,
+        WmlRunProps(asciiFont: 'Liberation Serif'),
+      );
+      expect(registeredWidth, closeTo(referenceWidth, 0.001));
+      expect((registeredWidth - fallbackWidth).abs(), greaterThan(0.1));
+
+      final registeredRevision = OfficeHostFonts.registrationRevision;
+      await OfficeHostFonts.registerFamily(family: family, faces: [regular]);
+      expect(OfficeHostFonts.registrationRevision, registeredRevision);
+      await expectLater(
+        OfficeHostFonts.registerFamily(family: '', faces: [regular]),
+        throwsArgumentError,
+      );
+      expect(OfficeHostFonts.registrationRevision, registeredRevision);
+    },
+  );
 }

@@ -4,6 +4,32 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Preserve supplementary Unicode in embedded TrueType subsets with a complete
+  format 12 cmap; correct format 4 lengths and avoid overflowing their 16-bit
+  length field for large sparse mappings. Ignore invalid scalar requests.
+- Encode PDF ToUnicode destinations as UTF-16BE, preserving supplementary
+  characters through export, reopening, search and text extraction.
+
+- Keep protected URL/email text out of German agreement context, retain
+  surrounding URL punctuation for balance checks, recognize uppercase URL
+  prefixes, and suggest Swiss `SS` for uppercase sharp-s spellings.
+- Preserve ZERO WIDTH SPACE opportunities and WORD JOINER/no-break controls
+  through normal, prepared, emergency and contextually measured wrapping,
+  without changing source text or UTF-16 offsets.
+
+- Add optional pure-Dart `WordRunMeasure`/`WordMeasuredCluster` contracts for
+  contextual host advances before Word wrapping, preserving source ranges and
+  validating complete grapheme coverage. Retain scalar/font fallback for hosts
+  without a shaping callback, and carry callbacks through notes and tall tables.
+- Keep lam–alef continuation glyphs in their source complex-script family.
+  Compute natural line widths for left, center and right alignment; reserve
+  justification expansion for justified/distributed paragraphs.
+- Remeasure actual trimmed line fragments before emission and repair overflow
+  at legal source boundaries with bounded host measurements. Use the same
+  checks for adaptive frame widths, preserve discretionary hyphen ownership,
+  and prevent ordinary breaks inside decorated-space graphemes.
+- Restore original scalar/font advances when a shortened line fragment is
+  declined by the host shaper, including zero-width ligature continuations.
 - ODS writer now emits conditional formats (numeric, text, duplicate and
   between rules) with cell styles, and writes/reads list and numeric validations
   with prompts and error messages.

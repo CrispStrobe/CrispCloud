@@ -73,17 +73,9 @@ void main() {
     final PdfDocument pdf = PdfDocument(title: 'Tagged', author: 'Wave4');
     final PdfCanvas canvas = PdfCanvas(200, 200);
     canvas.fillRect(0, 0, 200, 200, 'FFFFFF');
-    canvas.showLatin(
-      x: 20,
-      y: 40,
-      fontSize: 12,
-      text: 'Hi',
-      color: '000000',
-    );
+    canvas.showLatin(x: 20, y: 40, fontSize: 12, text: 'Hi', color: '000000');
     canvas.endText();
-    pdf.addPage(
-      PdfPage(width: 200, height: 200, content: canvas.toStream()),
-    );
+    pdf.addPage(PdfPage(width: 200, height: 200, content: canvas.toStream()));
     pdf.addOutline(const PdfOutlineItem(title: 'Intro', pageIndex: 0));
     final Uint8List bytes = pdf.save(
       options: const PdfSaveOptions(pdfA: true, tagged: true),
@@ -135,6 +127,9 @@ void main() {
 SfntFont? _tryLatin() {
   SfntFont? any;
   for (final String path in <String>[
+    // Prefer the audited repository font from package or workspace root.
+    '../quds_office_editor/fonts/LiberationSans-Regular.ttf',
+    'packages/quds_office_editor/fonts/LiberationSans-Regular.ttf',
     r'C:\Windows\Fonts\consola.ttf',
     r'C:\Windows\Fonts\cour.ttf',
     '/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf',
@@ -157,6 +152,9 @@ SfntFont? _tryLatin() {
 
 SfntFont? _tryArabic() {
   for (final String path in <String>[
+    // Use a distinct bundled face so fallback embedding is deterministic.
+    '../quds_office_editor/fonts/NotoNaskhArabic-Regular.ttf',
+    'packages/quds_office_editor/fonts/NotoNaskhArabic-Regular.ttf',
     '/usr/share/fonts/truetype/noto/NotoNaskhArabic-Regular.ttf',
     r'C:\Windows\Fonts\NotoNaskhArabic-Regular.ttf',
     r'C:\Windows\Fonts\arial.ttf',

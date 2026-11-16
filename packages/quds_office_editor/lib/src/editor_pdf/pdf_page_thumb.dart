@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:flutter/rendering.dart' show PipelineOwner;
 import 'package:flutter/widgets.dart';
 import 'package:quds_office_engine/pdf_file.dart';
 
@@ -59,6 +60,8 @@ class RenderPdfPageThumb extends RenderBox {
   List<PdfAnnot> _annots;
   final Map<int, ui.Image> _images = <int, ui.Image>{};
   final Set<int> _decoding = <int>{};
+  bool _disposed = false;
+  late final VoidCallback _fontReadyListener = _onFontReady;
 
   /// list API.
   set list(PdfDisplayList value) {
@@ -89,6 +92,14 @@ class RenderPdfPageThumb extends RenderBox {
   bool hitTestSelf(Offset position) => true;
 
   @override
+  void attach(PipelineOwner owner) {
+    super.attach(owner);
+    // Rebuild a retained fallback picture and restore any pending listeners
+    // removed by detach, even when reparenting leaves layout unchanged.
+    markNeedsPaint();
+  }
+
+  @override
   void performLayout() {
     final double maxW = constraints.maxWidth;
     final double pageW = _list.page.width <= 0 ? 595 : _list.page.width;
@@ -100,9 +111,12 @@ class RenderPdfPageThumb extends RenderBox {
 
   @override
   void paint(PaintingContext context, Offset offset) {
+    final fonts = Set<Uint8List>.identity();
     for (final PdfPaintOp op in _list.ops) {
-      if (op is PdfDrawText && op.fontBytes != null) {
-        PdfFontFaces.ensure(op.fontBytes!, markNeedsPaint);
+      if (op is PdfDrawText &&
+          op.fontBytes != null &&
+          fonts.add(op.fontBytes!)) {
+        PdfFontFaces.ensure(op.fontBytes!, _fontReadyListener);
       }
       if (op is PdfDrawImage && !op.placeholder && op.bytes.isNotEmpty) {
         final int key = identityHashCode(op.bytes);
@@ -156,8 +170,20 @@ class RenderPdfPageThumb extends RenderBox {
     );
   }
 
+  void _onFontReady() {
+    if (!_disposed && attached) markNeedsPaint();
+  }
+
+  @override
+  void detach() {
+    PdfFontFaces.removeListener(_fontReadyListener);
+    super.detach();
+  }
+
   @override
   void dispose() {
+    _disposed = true;
+    PdfFontFaces.removeListener(_fontReadyListener);
     for (final ui.Image image in _images.values) {
       image.dispose();
     }

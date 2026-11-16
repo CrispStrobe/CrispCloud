@@ -14,6 +14,12 @@ abstract final class OfficeHostFonts {
   static final Map<String, (String, bool)> _registeredFaces = {};
   static final Map<String, Future<void>> _extensionLoads = {};
   static final Map<String, String> _extensionOwners = {};
+  static int _revision = 0;
+
+  /// Changes after a name or alias successfully gains real font bytes.
+  /// Measurement caches can use this to discard widths obtained from a
+  /// fallback before an asynchronous registration completed.
+  static int get registrationRevision => _revision;
 
   /// The actual bundled family behind a successfully loaded name or alias.
   /// Unknown/unloaded names and unavailable italic faces stay unresolved;
@@ -187,5 +193,6 @@ abstract final class OfficeHostFonts {
     }
     await loader.load();
     _registeredFaces[family.trim().toLowerCase()] = (resolvedFamily, hasItalic);
+    _revision++;
   }
 }

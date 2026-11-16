@@ -377,6 +377,8 @@ class WmlParagraphProps {
     this.bookmarkName,
     this.sourceBookmarkName,
     this.rightToLeft,
+    this.proofingLanguage,
+    this.suppressAutoHyphens,
     this.dropCapLines = 0,
     this.shadingFill,
     this.borderColor,
@@ -476,6 +478,13 @@ class WmlParagraphProps {
   /// Word `w:bidi`. `null` lets UAX #9 pick the paragraph level.
   bool? rightToLeft;
 
+  /// Paragraph-mark proofing language (`w:pPr/w:rPr/w:lang`).
+  /// Null inherits the document or applicable style language.
+  String? proofingLanguage;
+
+  /// `w:suppressAutoHyphens`; null inherits, false explicitly allows it.
+  bool? suppressAutoHyphens;
+
   /// Drop-cap line count; 0 is none.
   int dropCapLines;
 
@@ -535,6 +544,8 @@ class WmlParagraphProps {
           bookmarkName: bookmarkName,
           sourceBookmarkName: sourceBookmarkName,
           rightToLeft: rightToLeft,
+          proofingLanguage: proofingLanguage,
+          suppressAutoHyphens: suppressAutoHyphens,
           dropCapLines: dropCapLines,
           shadingFill: shadingFill,
           borderColor: borderColor,
@@ -646,6 +657,8 @@ class WmlRunProps {
     this.asciiFont = 'Arial',
     this.csFont = 'Arial',
     this.vertAlign = WmlVertAlign.baseline,
+    this.proofingLanguage,
+    this.noProof,
   });
 
   /// Character style reference (`w:rStyle`).
@@ -685,6 +698,12 @@ class WmlRunProps {
   /// vertAlign API.
   WmlVertAlign vertAlign;
 
+  /// Latin-script proofing language (`w:lang/@w:val`).
+  String? proofingLanguage;
+
+  /// `w:noProof`; null inherits the surrounding style/default.
+  bool? noProof;
+
   /// fontSizePoints API.
   double get fontSizePoints => fontSizeHalfPoints / 2.0;
 
@@ -703,6 +722,8 @@ class WmlRunProps {
           asciiFont: asciiFont,
           csFont: csFont,
           vertAlign: vertAlign,
+          proofingLanguage: proofingLanguage,
+          noProof: noProof,
         )
         ..explicitProperties.addAll(explicitProperties)
         ..sourcePropertiesXml = sourcePropertiesXml

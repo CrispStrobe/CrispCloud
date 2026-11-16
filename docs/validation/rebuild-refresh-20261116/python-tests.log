@@ -1,0 +1,11 @@
+............../var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/tmpsf2lu0hk/appstore.app: replacing existing signature
+/var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/tmpsf2lu0hk/appstore.app: replacing existing signature
+/var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/tmpsf2lu0hk/github.app: replacing existing signature
+/var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/tmpsf2lu0hk/github.app: replacing existing signature
+......................
+----------------------------------------------------------------------
+Ran 36 tests in 17.457s
+
+OK
+Verified signed appstore macOS app (FUSE: False)
+Verified signed github macOS app (FUSE: False)

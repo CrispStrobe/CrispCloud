@@ -1,0 +1,30 @@
+{
+  "date": "2026-11-16",
+  "quds_source": "9de9b4fb1287e935328dc6e653f7457eef7defa1",
+  "incoming": [
+    "CrispCloud PR #176",
+    "Quds PR #63 (included by ancestry)",
+    "Quds PR #72",
+    "Quds main page-layout fix #73",
+    "stable uncommitted local ODS export snapshot"
+  ],
+  "tests": {
+    "editor_host": 242,
+    "initial_engine": 271,
+    "final_ods_engine": 110,
+    "local_export_host": 52,
+    "python": 36,
+    "note": "Scoped cohorts overlap; do not add as unique-test total."
+  },
+  "dependency_defaults_unchanged": {
+    "madedit2": "74416dc",
+    "crisp-docx": "9a39f17",
+    "legacy-doc-parser": "4895712158127b2fc930d796e17035c3ca0dac62",
+    "crisperbooks": "505d3d7bfb922e5f0d77b7230cd38b0e266d0606",
+    "libdbm": "1d2b0a9e25e0890fc113dd6f533309275dc66830",
+    "filen-dart": "5cf040bd7e67ecccf7c959b17bac9004ef497bf9",
+    "crisp-cloud-rs": "b7a619c7c5a45b443018b85ab3a9c93562f1fa21"
+  },
+  "dependency_lock": "Enforced offline; unchanged",
+  "ci": "No CI jobs queried or awaited."
+}

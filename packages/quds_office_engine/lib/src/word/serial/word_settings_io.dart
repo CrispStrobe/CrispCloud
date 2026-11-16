@@ -8,6 +8,7 @@ abstract final class WordSettingsIo {
     bool tracking,
     bool protection,
     bool oddEven,
+    bool autoHyphenation,
     WmlRestrictMode restrictMode,
     bool protectionHasPassword,
     bool protectionFormattingRestricted,
@@ -18,6 +19,7 @@ abstract final class WordSettingsIo {
       tracking: _enabled(root, 'trackRevisions'),
       protection: _enabled(root, 'documentProtection'),
       oddEven: _enabled(root, 'evenAndOddHeaders'),
+      autoHyphenation: _enabled(root, 'autoHyphenation'),
       restrictMode: _restrictMode(root),
       protectionHasPassword: _hasPassword(root),
       protectionFormattingRestricted: const {'1', 'true', 'on'}.contains(
@@ -35,9 +37,16 @@ abstract final class WordSettingsIo {
     required bool tracking,
     required bool protection,
     required bool oddEven,
+    bool? autoHyphenation,
     WmlRestrictMode? restrictMode,
   }) {
-    if (source == null && !tracking && !protection && !oddEven) return null;
+    if (source == null &&
+        !tracking &&
+        !protection &&
+        !oddEven &&
+        autoHyphenation != true) {
+      return null;
+    }
     final document = source == null
         ? XmlDocument.parse('<w:settings xmlns:w="${OfficeNamespaces.w}"/>')
         : XmlDocument.parse(source);
@@ -48,6 +57,7 @@ abstract final class WordSettingsIo {
       'trackRevisions': tracking,
       'documentProtection': protection,
       'evenAndOddHeaders': oddEven,
+      'autoHyphenation': ?autoHyphenation,
     };
     for (final entry in values.entries) {
       var element = root.firstChild(
