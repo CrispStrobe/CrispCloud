@@ -917,7 +917,7 @@ void imageTests() {
         '''
 <office:document-content $namespaces>
   <office:body><office:text>
-    <text:p>Before <draw:frame draw:name="Picture 1">
+    <text:p>Before <draw:frame draw:name="Picture 1" svg:width="2in" svg:height="1in">
       <draw:image xlink:href="Pictures/p.png" xlink:type="simple"/>
     </draw:frame> after</text:p>
   </office:text></office:body>
@@ -934,6 +934,8 @@ void imageTests() {
     expect(doc.markdown, isNot(contains('*[Image:')));
     expect(doc.imageRegistry.keys, ['odt-image:1']);
     expect(doc.imageRegistry['odt-image:1'], _png);
+    expect(doc.imageInfo['odt-image:1']!.width, closeTo(192, 0.01));
+    expect(doc.imageInfo['odt-image:1']!.height, closeTo(96, 0.01));
     expect(doc.plainText, contains('[Image]'));
     expect(doc.plainText, isNot(contains('odt-image:')));
   });
