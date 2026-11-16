@@ -1,0 +1,543 @@
+{
+  "snapshot_precedes_new_integration_branch": true,
+  "branch_count": 34,
+  "pr_count": 55,
+  "total_refs": 89,
+  "existing_ref_contains_both_pins": false,
+  "refs": [
+    {
+      "sha": "4235e690602195cc504438a6b937972c71f1ad39",
+      "ref": "refs/heads/codex/terminal-sharing-office-20261116",
+      "contains_retained_pin": true,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "fc37658c907edf6687eccb9564d3046283b49a3a",
+      "ref": "refs/heads/codex/zotero-support-20261115",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "428679a33381f943a8ae63117d4207f01dd15462",
+      "ref": "refs/heads/codex/zotero-support-20261116",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "a5febc3362d2fccdb979f012a5296af72e465797",
+      "ref": "refs/heads/docs/metadata-closed",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "e6fdd16849aaf7ccbaf50f2593d7a92b6a82e630",
+      "ref": "refs/heads/docs/readme-remaining-gaps",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "0a26be7f136ad3e57dbe894b0bc4cdb0602addd0",
+      "ref": "refs/heads/docs/remaining-gaps",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "f5b67cc296b7d27e4f3a480dc46160f472d78694",
+      "ref": "refs/heads/docs/validation-complete",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "01f62eb1812ca54827cc14e074e03abd82f963d7",
+      "ref": "refs/heads/docs/validation-operators",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "20681b8658392212c128f51b4c91f0b638942448",
+      "ref": "refs/heads/feat/conditional-affix",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "b69bad50fb235118a5334b325683cd1524b3e3d1",
+      "ref": "refs/heads/feat/conditional-between",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "b0efe6c661009ffa463f2bf6d7945216ce1dae4c",
+      "ref": "refs/heads/feat/conditional-dxf",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "21de3c3963b0334068b87fb1c25c787660cb17cf",
+      "ref": "refs/heads/feat/conditional-operators",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "752a94dfddf69522429f3025f9d25702499cb6da",
+      "ref": "refs/heads/feat/conditional-text",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "e59751246a200e7477657d0e4835bf77b153422c",
+      "ref": "refs/heads/feat/ods-conditional",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "2e3074c8e1860f9503b059a87870911afc3eee7d",
+      "ref": "refs/heads/feat/ods-custom-validation",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "912f26f21446ef9bdbf4f542535438dae0ded9a9",
+      "ref": "refs/heads/feat/ods-default-geometry",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "49b447324159595c59e64d8425b54a09f79ec736",
+      "ref": "refs/heads/feat/ods-default-style",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "7fe296e29e2e1b173580f6854507fc060cb4f080",
+      "ref": "refs/heads/feat/ods-images",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "d6d6866c0f4ddbbaa196e1a5eb7ff9e31007fdea",
+      "ref": "refs/heads/feat/ods-metadata",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "49ba086251ba61032f15b3e7b726fc921874fd12",
+      "ref": "refs/heads/feat/ods-validation-messages",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "8769019fb8be5483939edd4655dd88005e2515c4",
+      "ref": "refs/heads/feat/ods-validation-operators",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "b85501b2810e537e21040d82528d8dbaa6fdcf15",
+      "ref": "refs/heads/feat/ods-validations",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "4c8036bbf16ac224c3fc102b5c44d8913a512b18",
+      "ref": "refs/heads/feat/sheet-hidden-sheets",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "46850ae47e0241733750decb22417a0150e4b0e4",
+      "ref": "refs/heads/feat/sheet-hidden-state",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "866c14f0b3a876e11732bc544dc25a05d8f10524",
+      "ref": "refs/heads/fix/sdt-multi-section-control",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "8fc3d06be36da5c2176feb107c14245f61650d75",
+      "ref": "refs/heads/fix/sdt-trailing-section-break",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "09a05d7d60d2a2e1d2547487ad4545c50472834b",
+      "ref": "refs/heads/fix/utf16-custom-xml",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "6c2e3d173b8ed3a84b26792105a061bd9dd57c35",
+      "ref": "refs/heads/main",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "90acedb9835cb5bdef30606301e74482f5977448",
+      "ref": "refs/heads/vendor/ods-custom-validation",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "18dc693fbf4e39fc6c38e3d655d1e5b35eeef273",
+      "ref": "refs/heads/vendor/ods-metadata",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "4fbd1687d3c0ada22d460cf5cadb9586c4f62905",
+      "ref": "refs/heads/vendor/ods-metadata-zotero",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "c7bb6d6f51885e4082882252f502bbf2de81d552",
+      "ref": "refs/heads/vendor/ods-validation",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "4ffdf113803806ba5f8ade4a0846eee85dcfbe68",
+      "ref": "refs/heads/vendor/ods-validation-current",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "14fde4b1bd2539f0c6168be4569ac1adcc5105cd",
+      "ref": "refs/heads/vendor/ods-validation-messages",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": true
+    },
+    {
+      "sha": "54f0f8de01416640560519aa9d732f668f603709",
+      "ref": "refs/pull/1/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "1b1bac125f426b05f868d482e9fbd657d4ffb73a",
+      "ref": "refs/pull/10/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "5c1ab430c6911bb11f71d29efa35027ead5ac1d5",
+      "ref": "refs/pull/11/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "579f2105cf7fca61536f7e3f9b59004929bdb6c5",
+      "ref": "refs/pull/12/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "73b354efdf0f2e7fbe0e87bc67f332a9dfb4903e",
+      "ref": "refs/pull/13/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "d4e2a0fcf1fe18e0e5158ac7d86b1f71bf3b70da",
+      "ref": "refs/pull/14/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "448eff5aac55054a34eccd4f8a1e79e754909a05",
+      "ref": "refs/pull/15/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "78a7b6f4e613c7d18d4bcc6434cda12b50ed184e",
+      "ref": "refs/pull/16/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "89c7f06c592edde0c67774e9c7e087d96f52184b",
+      "ref": "refs/pull/17/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "f31cf308013ceb4527e3f4de677785894bb1bfc0",
+      "ref": "refs/pull/18/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "e8227569a3b90fb21db598483690bd13fe74ddef",
+      "ref": "refs/pull/19/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "08b09485588d2b6270f594a07c983689c087587d",
+      "ref": "refs/pull/2/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "5278aafd512640608fe06b8f7d357c4cffe8520a",
+      "ref": "refs/pull/20/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "1f30a823b30678e3684c98fee6a2cd5c4945c4f2",
+      "ref": "refs/pull/21/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "4637ddce4154f4b50105c7322fedc1c75fd02193",
+      "ref": "refs/pull/22/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "e002b9584bead9761fac8c7cf818431966d1b1c3",
+      "ref": "refs/pull/23/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "9cc8c6e91ff9acf0f52a68aea7c0da69934a2661",
+      "ref": "refs/pull/24/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "b6d27c84a72d622f670a7e646e36ba4bd920cfc8",
+      "ref": "refs/pull/25/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "5b9ac71db1934252c4b8ae48ac03d4cd976e15ae",
+      "ref": "refs/pull/26/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "cde05b85bcd00c26d519d43283fcc6b55a1884e7",
+      "ref": "refs/pull/27/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "a8cd28d8af8ca966e8c4259862587ecc9aade2f4",
+      "ref": "refs/pull/28/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "7fe296e29e2e1b173580f6854507fc060cb4f080",
+      "ref": "refs/pull/29/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "e550723b0f2a7cd849970f58820d260c36857502",
+      "ref": "refs/pull/3/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "49b447324159595c59e64d8425b54a09f79ec736",
+      "ref": "refs/pull/30/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "912f26f21446ef9bdbf4f542535438dae0ded9a9",
+      "ref": "refs/pull/31/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "46850ae47e0241733750decb22417a0150e4b0e4",
+      "ref": "refs/pull/32/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "4c8036bbf16ac224c3fc102b5c44d8913a512b18",
+      "ref": "refs/pull/33/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "09a05d7d60d2a2e1d2547487ad4545c50472834b",
+      "ref": "refs/pull/34/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "e59751246a200e7477657d0e4835bf77b153422c",
+      "ref": "refs/pull/35/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "21de3c3963b0334068b87fb1c25c787660cb17cf",
+      "ref": "refs/pull/36/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "b0efe6c661009ffa463f2bf6d7945216ce1dae4c",
+      "ref": "refs/pull/37/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "752a94dfddf69522429f3025f9d25702499cb6da",
+      "ref": "refs/pull/38/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "b85501b2810e537e21040d82528d8dbaa6fdcf15",
+      "ref": "refs/pull/39/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "09f5ec4b8eba290ff4d65678179854fb6ff6a468",
+      "ref": "refs/pull/4/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "8855b88a96b5c94349e3b5278c339228a1688c3e",
+      "ref": "refs/pull/40/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "b69bad50fb235118a5334b325683cd1524b3e3d1",
+      "ref": "refs/pull/41/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "8fc3d06be36da5c2176feb107c14245f61650d75",
+      "ref": "refs/pull/42/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "20681b8658392212c128f51b4c91f0b638942448",
+      "ref": "refs/pull/43/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "866c14f0b3a876e11732bc544dc25a05d8f10524",
+      "ref": "refs/pull/44/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "0a26be7f136ad3e57dbe894b0bc4cdb0602addd0",
+      "ref": "refs/pull/45/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "e6fdd16849aaf7ccbaf50f2593d7a92b6a82e630",
+      "ref": "refs/pull/46/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "fc37658c907edf6687eccb9564d3046283b49a3a",
+      "ref": "refs/pull/47/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "d6d6866c0f4ddbbaa196e1a5eb7ff9e31007fdea",
+      "ref": "refs/pull/48/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "a5febc3362d2fccdb979f012a5296af72e465797",
+      "ref": "refs/pull/49/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "da0979a5c6c4273ea68f360ce9a079bfa747384f",
+      "ref": "refs/pull/5/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "428679a33381f943a8ae63117d4207f01dd15462",
+      "ref": "refs/pull/50/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "8769019fb8be5483939edd4655dd88005e2515c4",
+      "ref": "refs/pull/51/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "01f62eb1812ca54827cc14e074e03abd82f963d7",
+      "ref": "refs/pull/52/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "2e3074c8e1860f9503b059a87870911afc3eee7d",
+      "ref": "refs/pull/53/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "49ba086251ba61032f15b3e7b726fc921874fd12",
+      "ref": "refs/pull/54/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "f5b67cc296b7d27e4f3a480dc46160f472d78694",
+      "ref": "refs/pull/55/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "78ed85f5fd19d44f672dee11420fed261c974f4a",
+      "ref": "refs/pull/6/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "e82c997b6df8746fe86fb83b9f416a89bb3e3b80",
+      "ref": "refs/pull/7/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "a86a360bf9bd45c729e00b31dd9a97492e23f2e7",
+      "ref": "refs/pull/8/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    },
+    {
+      "sha": "58de54567d45e38c05dd77064b7607c577374b9d",
+      "ref": "refs/pull/9/head",
+      "contains_retained_pin": false,
+      "contains_incoming_pin": false
+    }
+  ]
+}

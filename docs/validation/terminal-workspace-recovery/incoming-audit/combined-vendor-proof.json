@@ -1,0 +1,39 @@
+{
+  "verified_utc": "2026-11-16T09:47:02.660820+00:00",
+  "host_initial": "28dd2e9897a0c41e92ed7faaf4c587c68d8bb594",
+  "host_head_at_verification": "28dd2e9897a0c41e92ed7faaf4c587c68d8bb594",
+  "host_merge_in_progress": true,
+  "canonical_repository": "CrispStrobe/quds_office_suite",
+  "canonical_branch": "codex/terminal-recovery-office-20261116",
+  "canonical_commit": "be2c3a91b0dd5b4abb1b9a7baa8f5e10769bc87a",
+  "canonical_tree": "f0e47bfd8f0be406ba6aa69886e76371faa86b03",
+  "canonical_parents": [
+    "4235e690602195cc504438a6b937972c71f1ad39",
+    "14fde4b1bd2539f0c6168be4569ac1adcc5105cd"
+  ],
+  "fetched_remote_branch_matches": true,
+  "managed_entries": 2409,
+  "quds_entries": 552,
+  "separately_pinned_legacy_entries": 1857,
+  "standalone_sources": {
+    "packages/legacy_doc_parser": {
+      "repository": "CrispStrobe/legacy-doc-parser",
+      "commit": "4895712158127b2fc930d796e17035c3ca0dac62"
+    }
+  },
+  "changed_content_paths": [
+    "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+    "packages/quds_office_engine/lib/src/sheet/model/sml_analysis.dart",
+    "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+    "packages/quds_office_engine/test/ods_sheet_reader_test.dart"
+  ],
+  "mode_corrections": [],
+  "inventory_sha256": "488217b349a3ec1dc24e7cea992afe01d19ee9beda007dc1bfe1e404e6a83d53",
+  "all_managed_hashes_verified": true,
+  "all_index_blobs_and_modes_verified": true,
+  "all_canonical_quds_blobs_and_modes_verified": true,
+  "standalone_legacy_bytes_unchanged": true,
+  "standalone_legacy_modes_unchanged": true,
+  "errors": [],
+  "scope": "All host bytes are freshly SHA-256 hashed and tied to stage-0 index blobs and filesystem modes. All 552 Quds entries match the fetched canonical Git commit by exact blob and mode. All 1,857 standalone legacy parser blobs and modes retain the original manifest pin and unchanged UPSTREAM.json source boundary. No source checkout or CI is used."
+}

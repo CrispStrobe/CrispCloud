@@ -1,0 +1,264 @@
+diff --git a/packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart b/packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart
+index 3731596..9778682 100644
+--- a/packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart
++++ b/packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart
+@@ -33,8 +33,11 @@ typedef _OdsValidation = ({
+   String formula2,
+   List<String> items,
+   bool allowBlank,
++  String promptTitle,
++  String prompt,
+   String errorTitle,
+   String error,
++  String errorStyle,
+   SmlRange? sourceRange,
+   String? sourceSheet,
+ });
+@@ -532,8 +535,11 @@ abstract final class OdsSheetReader {
+         formula2: '',
+         items: items,
+         allowBlank: definition.allowBlank,
++        promptTitle: definition.promptTitle,
++        prompt: definition.prompt,
+         errorTitle: definition.errorTitle,
+         error: definition.error,
++        errorStyle: definition.errorStyle,
+         sourceRange: null,
+         sourceSheet: null,
+       ), budget);
+@@ -700,8 +706,11 @@ abstract final class OdsSheetReader {
+           formula1: definition.formula1,
+           formula2: definition.formula2,
+           allowBlank: definition.allowBlank,
++          promptTitle: definition.promptTitle,
++          prompt: definition.prompt,
+           errorTitle: definition.errorTitle,
+           error: definition.error,
++          errorStyle: definition.errorStyle,
+         ),
+       );
+       index = end + 1;
+@@ -731,8 +740,23 @@ abstract final class OdsSheetReader {
+       final lowerCondition = condition.toLowerCase();
+       final allowBlank =
+           _attribute(validation, 'allow-empty-cell', _table) != 'false';
+-      final errorTitle = _attribute(validation, 'title', _table) ?? '';
+-      final error = _attribute(validation, 'message', _table) ?? '';
++      var promptTitle = '';
++      var prompt = '';
++      var errorTitle = _attribute(validation, 'title', _table) ?? '';
++      var error = _attribute(validation, 'message', _table) ?? '';
++      var errorStyle = 'stop';
++      for (final child in validation.childElements) {
++        final title = _attribute(child, 'title', _table) ?? '';
++        final text = _text(child).trim();
++        if (_is(child, 'help-message', _table)) {
++          promptTitle = title;
++          prompt = text;
++        } else if (_is(child, 'error-message', _table)) {
++          errorTitle = title;
++          error = text;
++          errorStyle = _attribute(child, 'message-type', _table) ?? 'stop';
++        }
++      }
+       final listMatch = listCondition.firstMatch(condition);
+       if (listMatch != null) {
+         final argument = listMatch.group(1)!.trim();
+@@ -764,8 +788,11 @@ abstract final class OdsSheetReader {
+           formula2: '',
+           items: items,
+           allowBlank: allowBlank,
++          promptTitle: promptTitle,
++          prompt: prompt,
+           errorTitle: errorTitle,
+           error: error,
++          errorStyle: errorStyle,
+           sourceRange: sourceRange,
+           sourceSheet: sourceSheet,
+         );
+@@ -781,6 +808,30 @@ abstract final class OdsSheetReader {
+         kind = SmlValidationKind.date;
+       } else if (lowerCondition.contains('cell-content-text-length')) {
+         kind = SmlValidationKind.textLength;
++      } else if (lowerCondition.contains('is-true-formula(')) {
++        final start = condition.indexOf('is-true-formula(');
++        final open = condition.indexOf('(', start);
++        final close = condition.lastIndexOf(')');
++        if (open < 0 || close <= open) continue;
++        final expression = condition.substring(open + 1, close).trim();
++        final translated = _translateFormula('of:=$expression');
++        if (translated == null || translated.isEmpty) continue;
++        definitions[name] = (
++          kind: SmlValidationKind.custom,
++          operator: SmlValidationOperator.between,
++          formula1: translated,
++          formula2: '',
++          items: const <String>[],
++          allowBlank: allowBlank,
++          promptTitle: promptTitle,
++          prompt: prompt,
++          errorTitle: errorTitle,
++          error: error,
++          errorStyle: errorStyle,
++          sourceRange: null,
++          sourceSheet: null,
++        );
++        continue;
+       } else {
+         continue;
+       }
+@@ -816,8 +867,11 @@ abstract final class OdsSheetReader {
+         formula2: formula2,
+         items: const <String>[],
+         allowBlank: allowBlank,
++        promptTitle: promptTitle,
++        prompt: prompt,
+         errorTitle: errorTitle,
+         error: error,
++        errorStyle: errorStyle,
+         sourceRange: null,
+         sourceSheet: null,
+       );
+diff --git a/packages/quds_office_engine/lib/src/sheet/model/sml_analysis.dart b/packages/quds_office_engine/lib/src/sheet/model/sml_analysis.dart
+index fe5cb7c..e3a65bc 100644
+--- a/packages/quds_office_engine/lib/src/sheet/model/sml_analysis.dart
++++ b/packages/quds_office_engine/lib/src/sheet/model/sml_analysis.dart
+@@ -88,8 +88,11 @@ class SmlDataValidation {
+     this.formula2 = '',
+     this.operator = SmlValidationOperator.between,
+     this.allowBlank = true,
++    this.promptTitle = '',
++    this.prompt = '',
+     this.errorTitle = '',
+     this.error = '',
++    this.errorStyle = 'stop',
+   });
+ 
+   /// range API.
+@@ -110,12 +113,21 @@ class SmlDataValidation {
+   /// allowBlank API.
+   bool allowBlank;
+ 
++  /// Input-message title.
++  String promptTitle;
++
++  /// Input-message text.
++  String prompt;
++
+   /// errorTitle API.
+   String errorTitle;
+ 
+   /// error API.
+   String error;
+ 
++  /// Excel error style: stop, warning or information.
++  String errorStyle;
++
+   /// listItems API.
+   List<String> get listItems {
+     if (kind != SmlValidationKind.list) {
+diff --git a/packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart b/packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart
+index 2c6971a..736f38b 100644
+--- a/packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart
++++ b/packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart
+@@ -478,6 +478,9 @@ class SheetDeserializer {
+                 _ => SmlValidationOperator.between,
+               },
+               allowBlank: reader.getAttribute('allowBlank') != '0',
++              promptTitle: reader.getAttribute('promptTitle') ?? '',
++              prompt: reader.getAttribute('prompt') ?? '',
++              errorStyle: reader.getAttribute('errorStyle') ?? 'stop',
+             ),
+           );
+         }
+@@ -1423,6 +1426,21 @@ class SheetSerializer {
+           '${rule.range.start.a1}:${rule.range.end.a1}',
+         );
+         w.writeAttribute('allowBlank', rule.allowBlank ? '1' : '0');
++        if (rule.promptTitle.isNotEmpty) {
++          w.writeAttribute('promptTitle', rule.promptTitle);
++        }
++        if (rule.prompt.isNotEmpty) {
++          w.writeAttribute('prompt', rule.prompt);
++        }
++        if (rule.errorTitle.isNotEmpty) {
++          w.writeAttribute('errorTitle', rule.errorTitle);
++        }
++        if (rule.error.isNotEmpty) {
++          w.writeAttribute('error', rule.error);
++        }
++        if (rule.errorStyle != 'stop') {
++          w.writeAttribute('errorStyle', rule.errorStyle);
++        }
+         if (rule.kind != SmlValidationKind.list) {
+           w.writeAttribute('operator', switch (rule.operator) {
+             SmlValidationOperator.between => 'between',
+diff --git a/packages/quds_office_engine/test/ods_sheet_reader_test.dart b/packages/quds_office_engine/test/ods_sheet_reader_test.dart
+index 3d3f677..df52be3 100644
+--- a/packages/quds_office_engine/test/ods_sheet_reader_test.dart
++++ b/packages/quds_office_engine/test/ods_sheet_reader_test.dart
+@@ -1649,6 +1649,64 @@ void conditionalFormatTests() {
+ }
+ 
+ void validationTests() {
++  test('ODS validation prompts and error styles round-trip', () async {
++    final book = OdsSheetReader.readBytes(
++      _ods(
++        '<t:table t:name="Data"><t:table-row><t:table-cell '
++        't:content-validation-name="v"><x:p>1</x:p></t:table-cell>'
++        '</t:table-row><t:content-validations>'
++        '<t:content-validation t:name="v" '
++        't:condition="of:cell-content-is-whole-number() '
++        'and cell-content-is-between(1,5)">'
++        '<t:help-message t:title="Enter"><x:p>One to five</x:p>'
++        '</t:help-message>'
++        '<t:error-message t:message-type="warning" t:title="Bad">'
++        '<x:p>Out of range</x:p></t:error-message>'
++        '</t:content-validation></t:content-validations></t:table>',
++      ),
++    );
++    final validation = book.sheets.first.validations.single;
++    expect(validation.promptTitle, 'Enter');
++    expect(validation.prompt, 'One to five');
++    expect(validation.errorTitle, 'Bad');
++    expect(validation.error, 'Out of range');
++    expect(validation.errorStyle, 'warning');
++
++    final saved = await OfficeIsolateSave.workbook(book, recalculate: false);
++    final archive = ZipDecoder().decodeBytes(saved);
++    final sheetXml = utf8.decode(
++      archive.findFile('xl/worksheets/sheet1.xml')!.content as List<int>,
++    );
++    expect(sheetXml, contains('promptTitle="Enter"'));
++    expect(sheetXml, contains('prompt="One to five"'));
++    expect(sheetXml, contains('errorStyle="warning"'));
++  });
++
++  test('ODS custom formula validations translate relative refs', () async {
++    final book = OdsSheetReader.readBytes(
++      _ods(
++        '<t:table t:name="Data"><t:table-row><t:table-cell '
++        't:content-validation-name="v"><x:p>1</x:p></t:table-cell>'
++        '</t:table-row><t:content-validations>'
++        '<t:content-validation t:name="v" '
++        't:condition="of:is-true-formula([.A1]&gt;0)"/>'
++        '</t:content-validations></t:table>',
++      ),
++    );
++    final validation = book.sheets.first.validations.single;
++    expect(validation.kind, SmlValidationKind.custom);
++    expect(validation.formula1, 'A1>0');
++    expect(validation.accepts('1'), isTrue);
++
++    final saved = await OfficeIsolateSave.workbook(book, recalculate: false);
++    final archive = ZipDecoder().decodeBytes(saved);
++    final sheetXml = utf8.decode(
++      archive.findFile('xl/worksheets/sheet1.xml')!.content as List<int>,
++    );
++    expect(sheetXml, contains('type="custom"'));
++    expect(sheetXml, contains('A1&gt;0'));
++  });
++
+   test('ODS whole, decimal, date and text-length validations import', () async {
+     final book = OdsSheetReader.readBytes(
+       _ods(
