@@ -129,6 +129,18 @@ abstract final class OdsSheetWriter {
     layout.writeColumnStyles(w);
     layout.writeRowStyles(w);
     layout.writeCellStyles(w);
+    w.writeStartElement('page-layout', prefix: 'style');
+    w.writeAttribute('style:name', 'pm1');
+    w.writeStartElement('page-layout-properties', prefix: 'style');
+    w.writeAttribute('fo:page-width', '8.2677in');
+    w.writeAttribute('fo:page-height', '11.6929in');
+    w.writeAttribute('style:print-orientation', 'portrait');
+    w.writeAttribute('fo:margin-top', '0.7874in');
+    w.writeAttribute('fo:margin-bottom', '0.7874in');
+    w.writeAttribute('fo:margin-left', '0.7874in');
+    w.writeAttribute('fo:margin-right', '0.7874in');
+    w.writeEndElement();
+    w.writeEndElement();
     w.writeEndElement();
 
     w.writeStartElement('master-styles', prefix: 'office');
