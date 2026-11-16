@@ -24,21 +24,27 @@ session-only. Nextcloud web connections provide endpoint and browser diagnostics
 server CORS still needs configuration. See the [live verification and limits](docs/cloud-issues-96-98-verification.md).
 
 
-The current Office integration preserves authored spreadsheet number formats and
-wrap settings, and retains inline Word pictures through text edits. It also
-includes Word media deduplication, supported symbol characters and independent
-sibling text boxes. Legacy VML pictures, shapes and rules retain their source
-content for export; their native rendering and editing remain unsupported.
-Legacy DOC preview and conversion recover supported damaged auxiliary features
-with explicit diagnostics, retain Word-written hyperlinks, and recognize RTF
-content named `.doc`/`.dot`. Supported Word 6/95 and damaged-compound inputs can
-produce a separately reviewed text-only DOCX copy; this does not reconstruct
-rich formatting or page layout. Supported legacy Excel `.xls`/`.xlt` workbooks open
-in the spreadsheet editor and save as separate XLSX copies. It also includes undoable worksheet direction, frozen panes,
-grid edits and selection formatting, plus more tolerant DOCX bookmark and measurement
-imports. Cell identity is retained across sorting and grid undo. Imported control-ID
-duplicates are retained; edits cannot add more. See the tested scope and remaining
-limits in [the Office integration record](docs/integration-viewers-20261114.md).
+## Office and ODF today
+
+The Office stack is broader than the upstream Quds “OOXML only” summary:
+
+| Family | Read and inspect | Edit and save |
+| --- | --- | --- |
+| Word OOXML | `.docx`, `.docm`, `.dotx`, `.dotm` | Rich Quds Word editor; macro projects and template content types are preserved as package data and never executed; signed packages are refused |
+| Word legacy | `.doc`, `.dot` (Word 97–2007 binary) | Structured DOCX/DOCM copy through the reviewed converter, an installed Word/LibreOffice path, or an explicitly selected text-only DOCX; the original is never rewritten |
+| Excel OOXML | `.xlsx`, `.xlsm`, `.xltx` | Rich Quds sheet editor; macros/templates are preserved as opaque package data and never executed |
+| Excel legacy | `.xls`, `.xlt` (BIFF8) | Import into the sheet editor, then save a new `.xlsx` copy; the original is never rewritten |
+| Excel binary | `.xlsb` | Preview grid with supported formatting and stored formula results; Source/Hex only, no BIFF12 writer |
+| OpenDocument sheet | `.ods` | Typed Quds grid with formulas, formats, pictures, hidden state, conditional formats, validations and metadata; ordinary Save writes a new `.xlsx`, while **Export as ODS** writes a new modeled `.ods` package |
+| Slides OOXML | `.pptx` | Rich Quds slide editor |
+| Slides legacy/ODF | `.ppt`, `.pps`, `.pot`, `.odp` | Positioned read-only previews (legacy PowerPoint also has a text fallback); no binary PowerPoint or ODP writer |
+| OpenDocument text | `.odt` | Formatted read-only view: headings, lists, tables, footnotes, inline pictures, text boxes and headers/footers; no ODT writer |
+
+Macros and ActiveX are never executed. Signed OOXML packages are refused by the
+existing guard; legacy inputs are read-only. ODS import and the writer export
+the modeled subset; unknown ODF XML is not silently rewritten. See
+[the format matrix](docs/file-format-viewers.md) and
+[the remaining Office/ODF gaps](docs/office-remaining-gaps-20261115.md).
 
 F3 now previews binary/ASCII STL and core and production-part 3MF geometry with rotate, zoom, fit and
 wireframe controls. The portable Flutter preview handles 3MF units, build items

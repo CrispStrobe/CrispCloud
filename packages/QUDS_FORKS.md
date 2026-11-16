@@ -26,6 +26,10 @@ content.
 The app mirrors the canonical Quds source and the standalone legacy parser.
 Exact revisions, source boundaries and the complete managed-file inventory are
 recorded in [the fidelity manifest](../tool/office_fidelity_manifest.json).
+The current checkpoint is `2aee95e6aa7021869a198cf19ebbb43a44d7910f`; the
+managed inventory contains 2,422 files. The host now exposes a sheet-only
+**Export as ODS** action backed by `OdsSheetWriter`; ordinary Save and the
+legacy-Excel path still produce new XLSX copies.
 Managed files must match those sources; the guarded sync and verifier enforce
 that requirement. New work includes supported BIFF8/HTML/ODS spreadsheet imports, shared
 formulas, explicit and inherited wrap-text styles, and cell font families, guarded worksheet navigation and HTML table captions/headers; Word-like selection, inline picture placement inside its line, inline field preservation, revision
@@ -91,7 +95,11 @@ hyperlinks, named expressions, outline groups and comparison/empty filter predic
 survive an ODS→XLSX save. Absolute sheet references, clock components and
 elapsed time formats survive XLSX saves. The sheet/ODS development cohort is
 507 tests; the ODS reader+writer suite is 110 tests; the last clean full engine run was 2,205 tests, with two unrelated CLI
-bookmark/content-control tests currently failing on main. The combined host qualification remains separately source-bound
+bookmark/content-control tests currently failing on main. The ODS writer emits
+the modeled workbook subset, including pictures, conditional formats,
+validations and a default page layout; authored page styles and ODT/ODP writers
+remain open. A host widget test opens an XLSX fixture and reads the exported ODS
+back. The combined host qualification remains separately source-bound
 in the storage evidence.
 
 The resumed storage qualification also integrates Word inline-picture retention
