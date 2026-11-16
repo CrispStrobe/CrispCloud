@@ -567,6 +567,12 @@ abstract final class OdsSheetWriter {
         'ends-with(${quote(rule.formula)})',
       ),
       SmlConditionalKind.duplicate => 'duplicate',
+      SmlConditionalKind.top => 'top-elements(${rule.rank})',
+      SmlConditionalKind.bottom => 'bottom-elements(${rule.rank})',
+      SmlConditionalKind.topPercent => 'top-percent(${rule.rank})',
+      SmlConditionalKind.bottomPercent => 'bottom-percent(${rule.rank})',
+      SmlConditionalKind.aboveAverage => 'above-average',
+      SmlConditionalKind.belowAverage => 'below-average',
     };
   }
 

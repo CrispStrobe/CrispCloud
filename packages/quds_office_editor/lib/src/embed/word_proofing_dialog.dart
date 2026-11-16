@@ -38,6 +38,9 @@ class _WordProofingDialogState extends State<WordProofingDialog> {
     'de-CH': 'Deutsch (Schweiz)',
     'en-US': 'English (United States)',
     'en-GB': 'English (United Kingdom)',
+    'en-CA': 'English (Canada)',
+    'en-AU': 'English (Australia)',
+    'en-IN': 'English (India)',
   };
 
   static const Map<String, String> _ruleLabels = <String, String>{
@@ -384,8 +387,9 @@ class _WordProofingDialogState extends State<WordProofingDialog> {
           contentPadding: EdgeInsets.zero,
           title: const Text('Automatic hyphenation'),
           subtitle: const Text(
-            'Uses the document and text languages. Hyphens at line breaks '
-            'do not change the original text.',
+            'Automatic breaks use German or US/UK English patterns. '
+            'Soft hyphens stay available in every language; '
+            'the original text is unchanged.',
           ),
           value: _controller.document.autoHyphenation,
           onChanged: editable ? _controller.setAutomaticHyphenation : null,

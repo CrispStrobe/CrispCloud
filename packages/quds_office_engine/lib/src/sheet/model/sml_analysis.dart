@@ -238,6 +238,12 @@ enum SmlConditionalKind {
   contains,
   beginsWith,
   endsWith,
+  top,
+  bottom,
+  topPercent,
+  bottomPercent,
+  aboveAverage,
+  belowAverage,
 }
 
 /// One conditional-format rule.
@@ -250,6 +256,7 @@ class SmlConditionalRule {
     this.formula2 = '',
     this.fillRgb = 'FFF2CC',
     this.fontRgb = '',
+    this.rank = 10,
     this.dxfId,
   });
 
@@ -270,6 +277,9 @@ class SmlConditionalRule {
 
   /// fontRgb API.
   String fontRgb;
+
+  /// Rank for top/bottom rules, or the percentage for percent variants.
+  int rank;
 
   /// Generated differential-style id, assigned during serialization.
   int? dxfId;
@@ -333,6 +343,37 @@ class SmlConditionalRule {
           }
         }
         return seen > 1;
+      case SmlConditionalKind.top:
+      case SmlConditionalKind.bottom:
+      case SmlConditionalKind.topPercent:
+      case SmlConditionalKind.bottomPercent:
+      case SmlConditionalKind.aboveAverage:
+      case SmlConditionalKind.belowAverage:
+        final number = cell.asNumber;
+        if (number == null) return false;
+        final values = <double>[
+          for (final ref in range.cells) ?sheet.cellOrNull(ref)?.asNumber,
+        ];
+        if (values.isEmpty) return false;
+        if (kind == SmlConditionalKind.aboveAverage ||
+            kind == SmlConditionalKind.belowAverage) {
+          final average =
+              values.reduce((left, right) => left + right) / values.length;
+          return kind == SmlConditionalKind.aboveAverage
+              ? number > average
+              : number < average;
+        }
+        final percent =
+            kind == SmlConditionalKind.topPercent ||
+            kind == SmlConditionalKind.bottomPercent;
+        final limit = percent
+            ? ((values.length * rank) / 100).ceil().clamp(1, values.length)
+            : rank.clamp(1, values.length);
+        if (kind == SmlConditionalKind.top ||
+            kind == SmlConditionalKind.topPercent) {
+          return values.where((value) => value > number).length < limit;
+        }
+        return values.where((value) => value < number).length < limit;
     }
   }
 }

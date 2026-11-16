@@ -131,6 +131,153 @@ void main() {
     );
   });
   test(
+    'finite auxiliary and modal agreement preserves exact source offsets',
+    () async {
+      final GermanWritingRulesProvider provider = GermanWritingRulesProvider();
+      const List<(String, String)> cases = <(String, String)>[
+        ('ich hast', 'habe'),
+        ('du hat', 'hast'),
+        ('wir habe', 'haben'),
+        ('ich wirst', 'werde'),
+        ('du wird', 'wirst'),
+        ('wir werdet', 'werden'),
+        ('ich kannst', 'kann'),
+        ('du kann', 'kannst'),
+        ('wir könnt', 'können'),
+        ('ich musst', 'muss'),
+        ('du muss', 'musst'),
+        ('wir müsst', 'müssen'),
+        ('ich darfst', 'darf'),
+        ('du darf', 'darfst'),
+        ('wir dürft', 'dürfen'),
+        ('ich sollst', 'soll'),
+        ('du soll', 'sollst'),
+        ('wir sollt', 'sollen'),
+        ('ich willst', 'will'),
+        ('du will', 'willst'),
+        ('wir wollt', 'wollen'),
+        ('ich magst', 'mag'),
+        ('du mag', 'magst'),
+        ('wir mögt', 'mögen'),
+      ];
+      for (final (String, String) entry in cases) {
+        final String text = '🙂 ${entry.$1} hier.';
+        final String original = entry.$1.split(' ').last;
+        final OfficeProofingReport report =
+            await OfficeProofingService(
+              providers: <OfficeProofingProvider>[provider],
+            ).check(
+              OfficeProofingRequest(
+                documentId: 'doc',
+                blockId: 'p',
+                revision: 1,
+                text: text,
+                startOffset: 20,
+              ),
+            );
+        expect(report.complete, isTrue, reason: text);
+        expect(report.findings, hasLength(1), reason: text);
+        final OfficeProofingFinding finding = report.findings.single;
+        expect(finding.ruleId, 'de.grammar.pronoun-verb');
+        expect(finding.category, OfficeProofingCategory.grammar);
+        expect(finding.start, 20 + text.indexOf(original));
+        expect(finding.end, finding.start + original.length);
+        expect(finding.originalText, original);
+        expect(finding.replacements, <String>[entry.$2]);
+      }
+      await provider.dispose();
+    },
+  );
+  test(
+    'valid German constructions remain outside finite agreement findings',
+    () async {
+      final GermanWritingRulesProvider provider = GermanWritingRulesProvider();
+      for (final String text in <String>[
+        'Ich habe Zeit. Du hast Zeit. Wir haben Zeit.',
+        'Ich werde warten. Du wirst warten. Wir werden warten.',
+        'Ich kann warten. Du kannst warten. Wir können warten.',
+        'Ich muss warten. Du musst warten. Wir müssen warten.',
+        'Ich darf warten. Du darfst warten. Wir dürfen warten.',
+        'Ich soll warten. Du sollst warten. Wir sollen warten.',
+        'Ich will warten. Du willst warten. Wir wollen warten.',
+        'Ich mag Bücher. Du magst Bücher. Wir mögen Bücher.',
+        'Ich sei bereit. Du seiest bereit. Wir seien bereit.',
+        'Ich hätte Zeit. Du hättest Zeit. Wir hätten Zeit.',
+        'Ich könnte kommen. Du könntest kommen. Wir könnten kommen.',
+        'Ich möchte bleiben. Du möchtest bleiben. Wir möchten bleiben.',
+        'Sei ruhig! Seid ruhig! Hab Geduld! Werde gesund!',
+        'Du, hab Geduld! Ihr, seid ruhig!',
+        'Du und ich sind hier. Peter und ich haben Zeit.',
+        'Mein Bruder, den du kennst, und ich haben Zeit.',
+        'Meine Schwester, die du kennst, sowie ich können helfen.',
+        'Weder du noch ich haben Zeit. Du sowie ich können kommen.',
+        'Nicht nur du, sondern auch ich haben Zeit.',
+        'Wie du haben wir Zeit. Anders als ich hast du Zeit.',
+        'Das Ich hat Grenzen. Mein wahres Ich hat Zeit.',
+        'Das Wir ist stark. Unser gemeinsames Wir hat Bestand.',
+        'Ich ist ein Personalpronomen. Du ist ein Personalpronomen.',
+        '„ich“ und „du“ sind Personalpronomen.',
+        'Ihr ist kalt. Ihr ist es gelungen.',
+        'Ihr bin ich dankbar. Ihr bist du wichtig.',
+        'Ihr sind die Bücher wichtig. Ihr sind Menschen wichtig.',
+        'Ihr sind heute alle dankbar. Mit ihr sind wir zufrieden.',
+        'Von ihr haben wir gehört. Bei nur ihr bin ich ruhig.',
+        'Sie haben wir gesehen. Es haben wir erwähnt.',
+        'foo_ich haben value_du hat object-wir ist',
+        'ich haben2 du hat_teil wir ist-was',
+        'ich\nhaben. du\nhat.',
+        'ich haſt hier.',
+      ]) {
+        final OfficeProofingResult result = await provider.check(input(text));
+        expect(result.findings, isEmpty, reason: text);
+      }
+      await provider.dispose();
+    },
+  );
+  test(
+    'finite agreement handles horizontal spaces, regions and capitals',
+    () async {
+      final GermanWritingRulesProvider provider = GermanWritingRulesProvider();
+      for (final String language in <String>['de-DE', 'de-AT', 'de-CH']) {
+        for (final String space in <String>[' ', '\t', '\u00a0', '\u202f']) {
+          final OfficeProofingResult result = await provider.check(
+            input(
+              'ICH${space}HAST Zeit. WIR${space}KANN warten.',
+              language: language,
+            ),
+          );
+          expect(
+            result.findings.map(
+              (OfficeProofingFinding finding) => finding.replacements.single,
+            ),
+            <String>['HABE', 'KÖNNEN'],
+            reason: '$language / $space',
+          );
+        }
+      }
+      await provider.dispose();
+    },
+  );
+  test('finite agreement preserves exclusions and narrow ihr checks', () async {
+    final GermanWritingRulesProvider provider = GermanWritingRulesProvider();
+    const String text =
+        '🙂 `ich hast` ``du hat`` HTTPS://example.invalid/wir kann. '
+        'ich hast\u200d. ich hast. ihr bist hier.';
+    final OfficeProofingResult result = await provider.check(input(text));
+    expect(
+      result.findings.map(
+        (OfficeProofingFinding finding) => finding.replacements.single,
+      ),
+      <String>['habe', 'seid'],
+    );
+    expect(result.findings.first.start, text.lastIndexOf('hast'));
+    final OfficeProofingResult ignored = await provider.check(
+      input(text, ignored: <String>{'de.grammar.pronoun-verb'}),
+    );
+    expect(ignored.findings, isEmpty);
+    await provider.dispose();
+  });
+  test(
     'word-internal apostrophes do not close enclosing single quotes',
     () async {
       final OfficeProofingService service = OfficeProofingService(
@@ -278,6 +425,25 @@ void main() {
         );
     expect(result.findings, isEmpty);
   });
+  test(
+    'matching multi-backtick spans protect grammar and punctuation',
+    () async {
+      final GermanWritingRulesProvider provider = GermanWritingRulesProvider();
+      for (final String code in <String>[
+        '`ich bist [`',
+        '``ich bist ` [`x``',
+        '```dart\nich bist [\n```',
+      ]) {
+        final String text = '🙂 $code Ich bist hier.';
+        final OfficeProofingResult result = await provider.check(input(text));
+        expect(result.findings, hasLength(1), reason: code);
+        expect(result.findings.single.originalText, 'bist');
+        expect(result.findings.single.start, text.lastIndexOf('bist'));
+        expect(result.findings.single.replacements, <String>['bin']);
+      }
+      await provider.dispose();
+    },
+  );
   test(
     'protected tokens cannot supply a subject for following prose',
     () async {

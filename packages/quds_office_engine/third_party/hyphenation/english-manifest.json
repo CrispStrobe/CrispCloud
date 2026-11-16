@@ -1,0 +1,35 @@
+{
+  "upstream_repository": "https://github.com/hyphenation/tex-hyphen",
+  "upstream_commit": "5684c0f51c0b81133db2efbe60a408b4155a3ff5",
+  "generator": "tool/proofing/generate_english_hyphenation.py",
+  "inputs": [
+    {
+      "language": "en-US",
+      "source": "hyph-en-us.tex",
+      "upstream": "https://github.com/hyphenation/tex-hyphen/blob/5684c0f51c0b81133db2efbe60a408b4155a3ff5/hyph-utf8/tex/generic/hyph-utf8/patterns/tex/hyph-en-us.tex",
+      "source_sha256": "f4ffcd96c5cbc886bdad23f95dcae8edc3cd3620eae62f7946eceda97c4e68f8",
+      "source_git_blob": "bd9b757d89074e3e11b590311ce13ba6667544aa",
+      "license": "LicenseRef-Kuiken-permissive",
+      "patterns": 4938,
+      "exceptions": 14,
+      "left_min": 2,
+      "right_min": 3,
+      "generated": "lib/src/bidi/english_us_hyphenation_data.dart",
+      "generated_sha256": "809673b992606bbe3a249f99126ae14419e1969905954311e04125c34e231fea"
+    },
+    {
+      "language": "en-GB",
+      "source": "hyph-en-gb.tex",
+      "upstream": "https://github.com/hyphenation/tex-hyphen/blob/5684c0f51c0b81133db2efbe60a408b4155a3ff5/hyph-utf8/tex/generic/hyph-utf8/patterns/tex/hyph-en-gb.tex",
+      "source_sha256": "e95bb4ab350f620c41c231c4785d7bdb4f91949d3e631b30e08b3ead3c340a52",
+      "source_git_blob": "a668f67d756532694a5d160740487cda435ee1f7",
+      "license": "MIT",
+      "patterns": 8527,
+      "exceptions": 8,
+      "left_min": 2,
+      "right_min": 3,
+      "generated": "lib/src/bidi/english_gb_hyphenation_data.dart",
+      "generated_sha256": "12ec89a0bec6172d782821f75dd9f78a6ac62ec980cc6cab6a4928fb69041d9d"
+    }
+  ]
+}

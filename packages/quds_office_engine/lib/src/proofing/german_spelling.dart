@@ -216,8 +216,9 @@ class GermanSpellingProvider extends OfficeProofingProvider {
     r"\p{L}[\p{L}\p{M}\u00ad]*(?:[-\u2010\u2011'’]\p{L}[\p{L}\p{M}\u00ad]*)*",
     unicode: true,
   );
-  static final RegExp _webTokens = RegExp(
-    r'(?:https?://|www\.)\S+|[\w.+-]+@[\w.-]+\.[a-zA-Z]{2,}',
+  static final RegExp _protectedTokens = RegExp(
+    r'(?:https?://|www\.)\S+|[\w.+-]+@[\w.-]+\.[a-zA-Z]{2,}|'
+    r'(?<!`)(`+)(?!`)[\s\S]*?(?<!`)\1(?!`)',
     caseSensitive: false,
   );
   static const String _alphabet = 'abcdefghijklmnopqrstuvwxyzäöüß';
@@ -273,7 +274,7 @@ class GermanSpellingProvider extends OfficeProofingProvider {
     final bool swiss = request.language == 'de-CH';
     final List<OfficeProofingFinding> findings = <OfficeProofingFinding>[];
     final Set<int> boundaries = _sourceGraphemeBoundaries(request.text);
-    final List<RegExpMatch> webRanges = _webTokens
+    final List<RegExpMatch> protectedRanges = _protectedTokens
         .allMatches(request.text)
         .toList();
     final Map<String, List<String>> suggestions = <String, List<String>>{};
@@ -295,7 +296,7 @@ class GermanSpellingProvider extends OfficeProofingProvider {
           !boundaries.contains(token.end)) {
         continue;
       }
-      if (webRanges.any(
+      if (protectedRanges.any(
         (RegExpMatch range) =>
             token.start >= range.start && token.end <= range.end,
       )) {
@@ -326,7 +327,7 @@ class GermanSpellingProvider extends OfficeProofingProvider {
               ? 'Die Schweizer Schreibweise verwendet ss statt ß.'
               : 'Dieses Wort ist nicht im deutschen Wörterverzeichnis enthalten.',
           category: OfficeProofingCategory.spelling,
-          replacements: replacements,
+          replacements: _withSourceHyphens(original, replacements),
         ),
       );
     }
@@ -357,6 +358,50 @@ class GermanSpellingProvider extends OfficeProofingProvider {
   List<String> _suggest(String word, _GermanLexicon lexicon, bool swiss) {
     if (maximumSuggestions == 0 || word.isEmpty || word.length > 64) {
       return const <String>[];
+    }
+    // Repair one unknown component of an explicitly joined compound. Other
+    // components keep their source case, and every component must be known.
+    // Only one ordinary suggestion search is performed, so the existing
+    // per-token candidate budget also bounds this path.
+    if (word.contains('-')) {
+      final List<String> parts = word.split('-');
+      int unknown = -1;
+      if (parts.length <= 8 && parts.every((String part) => part.isNotEmpty)) {
+        for (int i = 0; i < parts.length; i++) {
+          if (lexicon.contains(
+            parts[i],
+            swiss: swiss,
+            sentenceInitial: false,
+          )) {
+            continue;
+          }
+          if (unknown >= 0) {
+            unknown = -2;
+            break;
+          }
+          unknown = i;
+        }
+        if (unknown >= 0) {
+          final List<String> compounds = <String>[];
+          for (final String replacement in _suggest(
+            parts[unknown],
+            lexicon,
+            swiss,
+          )) {
+            final List<String> corrected = List<String>.of(parts);
+            corrected[unknown] = replacement;
+            final String candidate = corrected.join('-');
+            if (lexicon.contains(
+              candidate,
+              swiss: swiss,
+              sentenceInitial: false,
+            )) {
+              compounds.add(candidate);
+            }
+          }
+          return List<String>.unmodifiable(compounds);
+        }
+      }
     }
     final Set<String> found = <String>{};
     int examined = 0;
@@ -430,6 +475,30 @@ class GermanSpellingProvider extends OfficeProofingProvider {
     }
     return List<String>.unmodifiable(
       found.map((String value) => upper ? _upper(value) : value).toSet(),
+    );
+  }
+
+  static List<String> _withSourceHyphens(
+    String source,
+    List<String> replacements,
+  ) {
+    final List<String> separators = RegExp(
+      r'[-\u2010\u2011]',
+    ).allMatches(source).map((RegExpMatch match) => match.group(0)!).toList();
+    if (separators.every((String separator) => separator == '-')) {
+      return replacements;
+    }
+    return List<String>.unmodifiable(
+      replacements.map((String replacement) {
+        if ('-'.allMatches(replacement).length != separators.length) {
+          return replacement;
+        }
+        int index = 0;
+        return replacement.replaceAllMapped(
+          RegExp('-'),
+          (Match _) => separators[index++],
+        );
+      }),
     );
   }
 

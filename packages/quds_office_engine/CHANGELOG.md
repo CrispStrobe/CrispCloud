@@ -4,6 +4,21 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Add separately licensed American and British English automatic hyphenation
+  with pinned original notices, exceptions, two/three-letter fragment minima,
+  per-run language dispatch and unchanged source ownership in Word/PDF layout.
+  Preserve the existing German implementation and reject unsupported dialect
+  mappings, protected URL/email/code spans and unsafe word fragments.
+- Extend conservative German pronoun/verb agreement to nine finite present
+  families, while guarding coordinated subjects, nominal pronouns, comparisons
+  and ambiguous dative uses of ihr. Accept horizontal nonbreaking whitespace.
+- Protect closed matching-backtick code spans consistently in German spelling
+  and writing checks. Repair one unknown explicit-compound constituent while
+  retaining the other noun casing and authored hyphen/nonbreaking-hyphen style.
+- Preserve all existing German dictionary and pattern data. New Dart regressions
+  and local verifier coverage accompany the changes; see the 2026-11-16 English/
+  German continuation report for the execution-environment qualification limit.
+
 - Keep TrueType glyph offsets aligned, retain/remap composite dependencies and
   preserve font metrics, style and embedding metadata while recomputing subset
   coverage. Reject malformed/cyclic glyph structures without recursive outline
