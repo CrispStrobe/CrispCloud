@@ -23,6 +23,7 @@ void main() {
   late int writes;
   late bool failWrites;
   late Future<String?> Function()? deferredRead;
+  late Future<void> Function(String)? deferredWrite;
   late TerminalWorkspaceRecovery store;
   late ProviderContainer container;
   late List<_Session> sessions;
@@ -32,11 +33,13 @@ void main() {
     writes = 0;
     failWrites = false;
     deferredRead = null;
+    deferredWrite = null;
     sessions = [];
     store = TerminalWorkspaceRecovery(
       read: () => deferredRead?.call() ?? Future.value(raw),
       write: (value) async {
         if (failWrites) throw StateError('disk unavailable');
+        await deferredWrite?.call(value);
         writes++;
         raw = value;
       },
@@ -542,6 +545,86 @@ void main() {
     expect(raw, original);
     expect(writes, 0);
     expect(caller.disposed, isFalse);
+  });
+
+  testWidgets('retry after startup failure preserves the unseen saved layout', (
+    tester,
+  ) async {
+    seed(savedWorkspace());
+    final original = raw;
+    deferredRead = () async => throw StateError('temporary settings failure');
+    await mount(tester);
+    await tester.pumpAndSettle();
+    await tapKey(tester, 'terminal-new-tab');
+    expect(panels(tester), hasLength(2));
+    deferredRead = null;
+    await action(tester, 'Session recovery');
+    await tapKey(tester, 'terminal-recovery-retry');
+    expect(raw, original);
+    expect(writes, 0);
+    expect(panels(tester), hasLength(2));
+    await tester.tap(find.widgetWithText(TextButton, 'Cancel').last);
+    await tester.pumpAndSettle();
+    await tapKey(tester, 'terminal-new-tab');
+    await checkpoint(tester);
+    expect(raw, original);
+    expect(writes, 0);
+    await action(tester, 'Session recovery');
+    await tapKey(tester, 'terminal-recovery-save');
+    expect(writes, 1);
+    expect(
+      record().snapshot!.tabs.every((tab) => tab.paneState.sshConfig == null),
+      isTrue,
+    );
+    await unmount(tester);
+  });
+
+  testWidgets('enabling during replacement commits the current layout once', (
+    tester,
+  ) async {
+    raw = jsonEncode(
+      TerminalWorkspaceRecoveryRecord(
+        snapshot: savedWorkspace(),
+        savedAt: DateTime.utc(2026, 11, 16),
+      ).toJson(),
+    );
+    await mount(tester);
+    await tester.pumpAndSettle();
+    await tapKey(tester, 'terminal-new-tab');
+    expect(panels(tester), hasLength(2));
+    await action(tester, 'Session recovery');
+    final dialog = tester.widget<TerminalWorkspaceRecoveryDialog>(
+      find.byType(TerminalWorkspaceRecoveryDialog),
+    );
+    final accepted = Completer<void>();
+    final release = Completer<void>();
+    deferredWrite = (_) {
+      accepted.complete();
+      return release.future;
+    };
+    final saving = dialog.onSave(true, false);
+    final revoked = expectLater(
+      saving,
+      throwsA(isA<TerminalWorkspaceRecoveryLeaseExpired>()),
+    );
+    await tester.pump();
+    expect(accepted.isCompleted, isTrue);
+    await mount(tester, key: const ValueKey('replacement-during-enable'));
+    deferredWrite = null;
+    release.complete();
+    await revoked;
+    await tester.pumpAndSettle();
+    expect(writes, 1);
+    expect(record().enabled, isTrue);
+    expect(record().snapshot!.tabs, hasLength(2));
+    expect(panels(tester), hasLength(2));
+    expect(
+      panels(tester)
+          .every((panel) => panel.initialPaneState!.sshConfig == null),
+      isTrue,
+    );
+    expect(tester.takeException(), isNull);
+    await unmount(tester);
   });
 }
 

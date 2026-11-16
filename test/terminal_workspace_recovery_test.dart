@@ -265,6 +265,76 @@ void main() {
       },
     );
 
+    test(
+      'enabling can commit settings and current snapshot atomically',
+      () async {
+        raw = jsonEncode(
+          TerminalWorkspaceRecoveryRecord(
+            snapshot: _snapshot('Old disabled layout'),
+            savedAt: savedAt.subtract(const Duration(days: 1)),
+          ).toJson(),
+        );
+        final configured = await store.configure(
+          lease: lease,
+          enabled: true,
+          relaunchLocalShells: true,
+          snapshot: _snapshot('Current layout'),
+        );
+        expect(writes, hasLength(1));
+        expect(configured.enabled, isTrue);
+        expect(configured.relaunchLocalShells, isTrue);
+        expect(configured.snapshot!.tabs.single.name, 'Current layout');
+        expect(configured.savedAt, savedAt);
+        expect((await store.load()).toJson(), configured.toJson());
+      },
+    );
+
+    test(
+      'configure preserves timestamp when exact snapshot is unchanged',
+      () async {
+        final previousTime = savedAt.subtract(const Duration(days: 1));
+        raw = jsonEncode(
+          TerminalWorkspaceRecoveryRecord(
+            enabled: true,
+            snapshot: _fullSnapshot(),
+            savedAt: previousTime,
+          ).toJson(),
+        );
+        final configured = await store.configure(
+          lease: lease,
+          enabled: true,
+          relaunchLocalShells: true,
+          snapshot: _fullSnapshot(),
+        );
+        expect(configured.savedAt, previousTime);
+        expect(writes, hasLength(1));
+        await store.configure(
+          lease: lease,
+          enabled: true,
+          relaunchLocalShells: true,
+          snapshot: _fullSnapshot(),
+        );
+        expect(writes, hasLength(1));
+      },
+    );
+
+    test('disabling ignores a supplied new snapshot', () async {
+      await store.configure(
+        lease: lease,
+        enabled: true,
+        relaunchLocalShells: false,
+        snapshot: _snapshot('Retained'),
+      );
+      final disabled = await store.configure(
+        lease: lease,
+        enabled: false,
+        relaunchLocalShells: false,
+        snapshot: _snapshot('Ignored'),
+      );
+      expect(disabled.snapshot!.tabs.single.name, 'Retained');
+      expect(raw, isNot(contains('Ignored')));
+    });
+
     test('identical layout saves do not rewrite the checkpoint', () async {
       await store.configure(
         lease: lease,
@@ -550,6 +620,58 @@ void main() {
     });
 
     test(
+      'interrupted enabling never publishes old snapshot with new settings',
+      () async {
+        var raw = jsonEncode(
+          TerminalWorkspaceRecoveryRecord(
+            snapshot: _snapshot('Old disabled layout'),
+            savedAt: savedAt.subtract(const Duration(days: 1)),
+          ).toJson(),
+        );
+        final entered = Completer<void>();
+        final release = Completer<void>();
+        final writes = <String>[];
+        final store = TerminalWorkspaceRecovery(
+          clock: () => savedAt,
+          read: () async => raw,
+          write: (value) async {
+            entered.complete();
+            await release.future;
+            writes.add(value);
+            raw = value;
+          },
+        );
+        final old = store.acquireLease();
+        final configuring = store.configure(
+          lease: old,
+          enabled: true,
+          relaunchLocalShells: false,
+          snapshot: _snapshot('Current layout'),
+        );
+        await entered.future;
+        old.close();
+        final current = store.acquireLease();
+        addTearDown(current.close);
+        final loading = store.load();
+        release.complete();
+        await configuring;
+        final loaded = await loading;
+        expect(writes, hasLength(1));
+        expect(loaded.enabled, isTrue);
+        expect(loaded.snapshot!.tabs.single.name, 'Current layout');
+        expect(loaded.savedAt, savedAt);
+        await expectLater(
+          store.save(_snapshot('Late stale snapshot'), lease: old),
+          throwsA(isA<TerminalWorkspaceRecoveryLeaseExpired>()),
+        );
+        expect(
+          (await store.load()).snapshot!.tabs.single.name,
+          'Current layout',
+        );
+      },
+    );
+
+    test(
       'new owner reads only after an already-started write settles',
       () async {
         var raw = jsonEncode(
@@ -697,6 +819,137 @@ void main() {
   });
 
   group('final checkpoint handoff', () {
+    test('new acquire captures previous owner before its disposal', () async {
+      String? raw;
+      var captures = 0;
+      var currentLayout = _snapshot('Initial');
+      final store = TerminalWorkspaceRecovery(
+        read: () async => raw,
+        write: (value) async => raw = value,
+      );
+      final old = store.acquireLease(
+        onSuperseded: () {
+          captures++;
+          return currentLayout;
+        },
+      );
+      await store.configure(
+        lease: old,
+        enabled: true,
+        relaunchLocalShells: false,
+        snapshot: currentLayout,
+      );
+      // The old widget is still alive and has not run its disposal callback.
+      currentLayout = _snapshot('Before debounce');
+      final current = store.acquireLease();
+      expect(captures, 1);
+      expect(old.isCurrent, isFalse);
+      expect(current.isCurrent, isTrue);
+      expect(
+        (await store.load()).snapshot!.tabs.single.name,
+        'Before debounce',
+      );
+      old.close();
+      current.close();
+      final third = store.acquireLease();
+      addTearDown(third.close);
+      expect(captures, 1);
+      expect(
+        (await store.load()).snapshot!.tabs.single.name,
+        'Before debounce',
+      );
+    });
+
+    test(
+      'throwing snapshot callback cannot block successor ownership',
+      () async {
+        var raw = jsonEncode(
+          TerminalWorkspaceRecoveryRecord(
+            enabled: true,
+            snapshot: _snapshot('Preserved'),
+            savedAt: savedAt,
+          ).toJson(),
+        );
+        var captures = 0;
+        var writes = 0;
+        final store = TerminalWorkspaceRecovery(
+          read: () async => raw,
+          write: (value) async {
+            raw = value;
+            writes++;
+          },
+        );
+        final old = store.acquireLease(
+          onSuperseded: () {
+            captures++;
+            throw StateError('snapshot unavailable');
+          },
+        );
+        final current = store.acquireLease();
+        addTearDown(current.close);
+        expect(old.isCurrent, isFalse);
+        expect(current.isCurrent, isTrue);
+        expect(captures, 1);
+        expect((await store.load()).snapshot!.tabs.single.name, 'Preserved');
+        expect(writes, 0);
+        old.close();
+        expect(captures, 1);
+      },
+    );
+
+    test(
+      'failed acquire-time checkpoint leaves successor and queue usable',
+      () async {
+        var raw = jsonEncode(
+          TerminalWorkspaceRecoveryRecord(
+            enabled: true,
+            snapshot: _snapshot('Preserved'),
+            savedAt: savedAt,
+          ).toJson(),
+        );
+        var fail = true;
+        final store = TerminalWorkspaceRecovery(
+          read: () async => raw,
+          write: (value) async {
+            if (fail) throw StateError('write unavailable');
+            raw = value;
+          },
+        );
+        store.acquireLease(onSuperseded: () => _snapshot('Failed final write'));
+        final current = store.acquireLease();
+        addTearDown(current.close);
+        expect((await store.load()).snapshot!.tabs.single.name, 'Preserved');
+        expect(current.isCurrent, isTrue);
+        fail = false;
+        await store.save(_snapshot('Successor'), lease: current);
+        expect((await store.load()).snapshot!.tabs.single.name, 'Successor');
+      },
+    );
+
+    test(
+      'reentrant snapshot callback cannot acquire nested ownership',
+      () async {
+        final store = TerminalWorkspaceRecovery(
+          read: () async => null,
+          write: (_) async {},
+        );
+        var captures = 0;
+        final old = store.acquireLease(
+          onSuperseded: () {
+            captures++;
+            store.acquireLease();
+            return _snapshot('Unreachable');
+          },
+        );
+        final current = store.acquireLease();
+        addTearDown(current.close);
+        expect(captures, 1);
+        expect(old.isCurrent, isFalse);
+        expect(current.isCurrent, isTrue);
+        expect((await store.load()).snapshot, isNull);
+      },
+    );
+
     test(
       'rapid remount loads final snapshot before its own mutation',
       () async {

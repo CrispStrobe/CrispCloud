@@ -6,7 +6,39 @@ toward desktop terminal workflows. It does not claim complete iTerm2 compatibili
 
 ## Current status
 
-This continuation adds **explicit SSH connection sharing across tabs and panes**.
+This continuation adds **opt-in automatic terminal workspace recovery**, with a
+separate choice to relaunch local shells. **Terminal layout → Session recovery**
+remembers the latest tab order/names, full split topology and proportions, active
+pane, font sizes and sanitized SSH/tmux/Screen destinations. Initial recovery
+finishes before any default shell is started. SSH destinations remain
+disconnected until the existing authentication flow is explicitly used.
+
+Recovery and relaunch both default off. Enabling atomically saves settings and
+the current workspace. Structural changes are debounced; lifecycle flushes and
+an ordered owner handoff preserve the last checkpoint during immediate remounts.
+Read failures time out without blocking terminals, storage errors pause saves,
+and stale panels/dialogs cannot overwrite a replacement workspace. Retry after a
+startup-read failure preserves the previously unseen checkpoint until explicit
+Save. Disable retains the last layout; confirmed Forget clears it and stops
+recovery while current terminals stay open. All controls cover the existing
+eight non-English locales.
+
+This restores workspace metadata and can launch fresh local shells. It does not
+restore commands, output, working directories, filesystem grants, credentials,
+live SSH ownership or operating-system process state. Local-shell relaunch uses
+the existing verified current-folder/fallback and platform backend. Abrupt
+termination can lose a pending preference write. [Usage and limits](terminal.md#automatic-session-recovery).
+
+The initial full fetch found **40 branch heads and 153 PR heads**, all already
+ancestors of `74fbdd5a`. It preserves the newer shared-shell and ODS work beyond
+the pasted native-tmux handoff. [This continuation's integration and local
+validation record](validation/terminal-workspace-recovery/README.md) separates
+new acceptance from the historical counts below. Remote checkpoints carry
+`[skip ci]`; no GitHub Actions are queried or awaited.
+
+### Previous shared SSH connection continuation
+
+The previous continuation added **explicit SSH connection sharing across tabs and panes**.
 On a connected SSH terminal, **Terminal layout** offers **New SSH shell**,
 **Split SSH side by side**, and **Split SSH top and bottom**. Each opens a plain
 shell with its own channel, emulator, input, geometry, exit status and connection
@@ -218,6 +250,7 @@ Earlier feature evidence retains its original source cutoff. Records:
 | --- | --- |
 | Terminal workspace | Up to eight independent tabs and eight nested visible panes; per-divider sizing and balancing; directional/cyclic pane selection; temporary zoom; compact active-pane fallback; retained hidden sessions |
 | Saved arrangements | Up to 20 named arrangements with full split topology, ratios, tab order/names, active pane, font sizes and sanitized SSH routes; reads legacy records, uses v3 for agent choices and v4 for native tmux |
+| Automatic workspace recovery | Default-off autosave/restore of the most recent layout and sanitized destinations; separate fresh-local-shell relaunch, explicit SSH reconnect, owner handoff, retry and confirmed Forget |
 | SSH authentication | Password, encrypted/unencrypted key and native Linux/macOS SSH-agent login; verified host keys, explicit gateway, up to three independently authenticated and verified jump hosts |
 | SSH connection sharing | Explicit new shell or split on the exact verified route; up to eight logical owners, isolated channels, shared forwarding/agent lifetime, route-wide idle expiry and prompt pending-open cancellation |
 | SSH-agent forwarding | Separate default-off permission for the final host only; frozen supported keys, list/sign-only protocol, bounded requests/channels and immediate revocation on disconnect |
@@ -500,8 +533,9 @@ Reproduction commands and manual checks are in
   cross-process SSH sharing and broader agent support, including Windows named
   pipes, certificates/security-key algorithms and session binding.
 - Independent terminal windows and layouts beyond the current eight-tab limit.
-- Automatic process/session restoration and secure reusable credential/identity
-  integration beyond secret-free destination stores.
+- Process resurrection, scrollback/working-directory recovery, automatic SSH
+  reconnection and secure reusable credential/identity integration beyond the
+  opt-in layout recovery and fresh-local-shell relaunch.
 - Script/coprocess trigger actions, command automation, richer key-binding
   actions and broader shell integration beyond the current Bash/Zsh helpers.
 - Qualification of graphics/file-transfer protocols and their app-level controls.

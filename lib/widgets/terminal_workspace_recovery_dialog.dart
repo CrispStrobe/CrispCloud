@@ -198,6 +198,14 @@ class _TerminalWorkspaceRecoveryDialogState
                 'Restore tabs, panes, names, font sizes and SSH destinations when you next open the terminal.',
               ),
             ),
+            if (_enabled) ...[
+              const SizedBox(height: 8),
+              Text(
+                context.terminalRecoveryTr(
+                  'Saving these settings remembers the current workspace.',
+                ),
+              ),
+            ],
             const SizedBox(height: 12),
             SwitchListTile(
               key: const ValueKey('terminal-recovery-enabled'),

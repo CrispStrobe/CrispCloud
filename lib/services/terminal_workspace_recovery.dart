@@ -11,9 +11,10 @@ export '../models/terminal_workspace_recovery.dart';
 /// A mount's exclusive authority to update the remembered terminal workspace.
 /// Acquiring another lease supersedes this one, including queued writes.
 class TerminalWorkspaceRecoveryLease {
-  TerminalWorkspaceRecoveryLease._(this._authority);
+  TerminalWorkspaceRecoveryLease._(this._authority, this._onSuperseded);
 
   final _RecoveryAuthority _authority;
+  TerminalArrangement? Function()? _onSuperseded;
   bool _closed = false;
 
   bool get isCurrent => !_closed && identical(_authority.activeLease, this);
@@ -23,6 +24,7 @@ class TerminalWorkspaceRecoveryLease {
   void close() {
     if (_closed) return;
     _closed = true;
+    _onSuperseded = null;
     if (identical(_authority.activeLease, this)) {
       _authority.activeLease = null;
     }
@@ -88,10 +90,50 @@ class TerminalWorkspaceRecovery {
     }
   }
 
-  TerminalWorkspaceRecoveryLease acquireLease() {
-    final lease = TerminalWorkspaceRecoveryLease._(_authority);
-    _authority.activeLease = lease;
-    return lease;
+  /// Acquire ownership, optionally sealing the previous owner's latest layout.
+  ///
+  /// Flutter can mount a replacement before disposing the old widget. Calling
+  /// its pure snapshot callback here places the final write ahead of the new
+  /// owner's first load without treating temporary deactivation as a restart.
+  TerminalWorkspaceRecoveryLease acquireLease({
+    TerminalArrangement? Function()? onSuperseded,
+  }) {
+    if (_authority.acquiring) {
+      throw StateError('Terminal recovery ownership acquisition is reentrant');
+    }
+    _authority.acquiring = true;
+    try {
+      final previous = _authority.activeLease;
+      if (previous != null && _owns(previous)) {
+        final capture = previous._onSuperseded;
+        // Consume before invoking user code. A throw or explicit closure in
+        // the callback cannot leave it eligible for a second invocation.
+        previous._onSuperseded = null;
+        TerminalArrangement? snapshot;
+        try {
+          snapshot = capture?.call();
+        } catch (_) {
+          // A failed snapshot must not prevent the successor from starting.
+        }
+        if (_owns(previous)) {
+          if (snapshot == null) {
+            previous.close();
+          } else {
+            unawaited(
+              finish(
+                snapshot,
+                lease: previous,
+              ).then<void>((_) {}, onError: (Object _, StackTrace __) {}),
+            );
+          }
+        }
+      }
+      final lease = TerminalWorkspaceRecoveryLease._(_authority, onSuperseded);
+      _authority.activeLease = lease;
+      return lease;
+    } finally {
+      _authority.acquiring = false;
+    }
   }
 
   Future<TerminalWorkspaceRecoveryRecord> load() => _authority.enqueue(_load);
@@ -113,10 +155,13 @@ class TerminalWorkspaceRecovery {
 
   /// Disabling stops automatic saves and preserves the last saved layout.
   /// [forget] also removes that layout and resets both preferences.
+  /// Enabling with [snapshot] commits the current workspace and settings in
+  /// one backend write, so interruption cannot enable a stale saved layout.
   Future<TerminalWorkspaceRecoveryRecord> configure({
     required TerminalWorkspaceRecoveryLease lease,
     required bool enabled,
     required bool relaunchLocalShells,
+    TerminalArrangement? snapshot,
   }) {
     if (!_owns(lease)) return _expired();
     // A save issued before this setting change must not publish after it,
@@ -126,16 +171,18 @@ class TerminalWorkspaceRecovery {
       _requireOwner(lease);
       final previous = await _load();
       _requireOwner(lease);
-      if (previous.enabled == enabled &&
-          previous.relaunchLocalShells == relaunchLocalShells) {
-        return previous;
-      }
-      final next = TerminalWorkspaceRecoveryRecord(
+      var next = TerminalWorkspaceRecoveryRecord(
         enabled: enabled,
         relaunchLocalShells: relaunchLocalShells,
         snapshot: previous.snapshot,
         savedAt: previous.savedAt,
       );
+      if (enabled && snapshot != null) next = _withSnapshot(next, snapshot);
+      if (previous.enabled == next.enabled &&
+          previous.relaunchLocalShells == next.relaunchLocalShells &&
+          identical(previous.snapshot, next.snapshot)) {
+        return previous;
+      }
       await _persist(next, lease);
       return next;
     });
@@ -258,14 +305,32 @@ class TerminalWorkspaceRecovery {
 }
 
 class _RecoveryAuthority {
-  Future<void> _tail = Future<void>.value();
+  Future<void>? _tail;
   TerminalWorkspaceRecoveryLease? activeLease;
   int configurationRevision = 0;
+  bool acquiring = false;
 
   Future<T> enqueue<T>(Future<T> Function() action) {
-    final next = _tail.then((_) => action());
-    // A failed operation must not poison subsequent reads or explicit resets.
-    _tail = next.then<void>((_) {}, onError: (Object _, StackTrace __) {});
+    final previous = _tail;
+    // Start an idle queue in the caller's zone. Creating a seed Future while
+    // constructing the service would tie the first operation to that earlier
+    // zone's scheduler, even when the service is used from a different one.
+    // A microtask also assigns the barrier before any reentrant backend call.
+    final next = previous == null
+        ? Future<T>.microtask(action)
+        : previous.then((_) => action());
+    late final Future<void> settled;
+    void release() {
+      if (identical(_tail, settled)) _tail = null;
+    }
+
+    // Failure must not poison the queue. Drop the settled idle barrier so a
+    // later operation does not inherit an earlier caller's scheduler either.
+    settled = next.then<void>(
+      (_) => release(),
+      onError: (Object _, StackTrace __) => release(),
+    );
+    _tail = settled;
     return next;
   }
 }

@@ -33,7 +33,15 @@ void main() {
     expect(_toggle(tester, _enabledKey).value, isFalse);
     expect(_toggle(tester, _relaunchKey).value, isFalse);
     expect(_toggle(tester, _relaunchKey).onChanged, isNull);
+    expect(
+      find.text('Saving these settings remembers the current workspace.'),
+      findsNothing,
+    );
     await _tap(tester, _enabledKey);
+    expect(
+      find.text('Saving these settings remembers the current workspace.'),
+      findsOneWidget,
+    );
     expect(_toggle(tester, _relaunchKey).onChanged, isNotNull);
     expect(_toggle(tester, _relaunchKey).value, isFalse);
     await _tap(tester, _relaunchKey);
@@ -293,6 +301,8 @@ void main() {
         'Could not save session recovery.',
         'Could not forget saved workspace.',
         'Session recovery is paused. Retry in Session recovery.',
+        'Session recovery is paused. Save settings to remember the current workspace.',
+        'Saving these settings remembers the current workspace.',
       ];
       for (final language in ['de', 'fr', 'es', 'pt', 'zh', 'ja', 'ko', 'ar']) {
         final values = <String>[];

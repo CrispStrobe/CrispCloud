@@ -10,6 +10,27 @@ extension TerminalRecoveryStrings on BuildContext {
 
 const _languages = ['de', 'fr', 'es', 'pt', 'zh', 'ja', 'ko', 'ar'];
 const _values = <String, List<String>>{
+  'Session recovery is paused. Save settings to remember the current workspace.':
+      [
+        'Die Sitzungswiederherstellung ist pausiert. Speichern Sie die Einstellungen, um den aktuellen Arbeitsbereich zu merken.',
+        'La restauration de session est en pause. Enregistrez les réglages pour mémoriser l’espace de travail actuel.',
+        'La recuperación de sesión está pausada. Guarda los ajustes para recordar el espacio de trabajo actual.',
+        'A recuperação da sessão está em pausa. Guarde as definições para memorizar o espaço de trabalho atual.',
+        '会话恢复已暂停。保存设置以记住当前工作区。',
+        'セッションの復元は一時停止中です。現在のワークスペースを記憶するには設定を保存してください。',
+        '세션 복원이 일시 중지되었습니다. 현재 작업 공간을 기억하려면 설정을 저장하세요.',
+        'استعادة الجلسة متوقفة مؤقتًا. احفظ الإعدادات لتذكّر مساحة العمل الحالية.',
+      ],
+  'Saving these settings remembers the current workspace.': [
+    'Beim Speichern dieser Einstellungen wird der aktuelle Arbeitsbereich gemerkt.',
+    'L’enregistrement de ces réglages mémorise l’espace de travail actuel.',
+    'Guardar estos ajustes recuerda el espacio de trabajo actual.',
+    'Guardar estas definições memoriza o espaço de trabalho atual.',
+    '保存这些设置会记住当前工作区。',
+    'これらの設定を保存すると、現在のワークスペースが記憶されます。',
+    '이 설정을 저장하면 현재 작업 공간을 기억합니다.',
+    'يؤدي حفظ هذه الإعدادات إلى تذكّر مساحة العمل الحالية.',
+  ],
   'Session recovery': [
     'Sitzungswiederherstellung',
     'Restauration de session',

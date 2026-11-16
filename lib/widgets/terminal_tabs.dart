@@ -99,6 +99,7 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs>
   String? _pendingRecoveryJson;
   bool _recoveryLoading = false;
   bool _recoveryBusy = false;
+  bool _recoveryStartupFailed = false;
   int _recoveryEpoch = 0;
   int _recoverySaveSerial = 0;
 
@@ -125,10 +126,11 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs>
   void _beginRecovery() {
     if (!_ownsWorkspace) return;
     final recovery = ref.read(terminalWorkspaceRecoveryProvider);
-    final lease = recovery.acquireLease();
+    final lease = recovery.acquireLease(onSuperseded: _checkpointForHandoff);
     _recovery = recovery;
     _recoveryLease = lease;
     _recoveryLoading = true;
+    _recoveryStartupFailed = false;
     final epoch = ++_recoveryEpoch;
     unawaited(_loadRecovery(recovery, lease, epoch));
   }
@@ -215,6 +217,7 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs>
         return;
       }
       _recoveryRecord = null;
+      _recoveryStartupFailed = true;
       _recoveryError = 'Could not load session recovery. Saved data was kept.';
     }
     if (!_currentRecovery(lease, epoch)) {
@@ -320,27 +323,26 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs>
     final epoch = ++_recoveryEpoch;
     _recoveryBusy = true;
     try {
-      var record = await recovery.configure(
+      // Settings and the current checkpoint are one write. If this owner is
+      // disposed during persistence, enabling can never resurrect an older
+      // snapshot that happened to remain from a previous disabled session.
+      final snapshot = enabled ? _recoverySnapshot() : null;
+      final record = await recovery.configure(
         lease: lease,
         enabled: enabled,
         relaunchLocalShells: enabled && relaunchLocalShells,
+        snapshot: snapshot,
       );
       if (!_currentRecovery(lease, epoch)) {
         throw const TerminalWorkspaceRecoveryLeaseExpired();
       }
-      // Enabling takes a checkpoint immediately; it never applies an older
-      // saved layout over a workspace the user has already begun using.
-      if (enabled) {
-        final snapshot = _recoverySnapshot();
-        record = await recovery.save(snapshot, lease: lease);
-        if (!_currentRecovery(lease, epoch)) {
-          throw const TerminalWorkspaceRecoveryLeaseExpired();
-        }
+      if (snapshot != null) {
         _savedRecoveryJson = jsonEncode(snapshot.toJson());
       }
       setState(() {
         _recoveryRecord = record;
         _recoveryError = null;
+        _recoveryStartupFailed = false;
       });
       return record;
     } catch (_) {
@@ -371,6 +373,7 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs>
       setState(() {
         _recoveryRecord = record;
         _recoveryError = null;
+        _recoveryStartupFailed = false;
         _savedRecoveryJson = null;
       });
       return record;
@@ -393,6 +396,16 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs>
     final record = await _recovery!.load().timeout(const Duration(seconds: 3));
     if (!_currentRecovery(lease, epoch)) {
       throw const TerminalWorkspaceRecoveryLeaseExpired();
+    }
+    if (_recoveryStartupFailed) {
+      // The unseen saved layout may contain work absent from the fallback
+      // workspace. Retry only reveals its settings; explicit Save opts into
+      // replacing that checkpoint with the current workspace.
+      setState(() {
+        _recoveryRecord = record;
+        _recoveryError = 'Session recovery is paused. Save settings to remember the current workspace.';
+      });
+      return record;
     }
     setState(() {
       _recoveryRecord = record;
@@ -449,14 +462,7 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs>
     _recoveryTimer = null;
     final recovery = _recovery;
     final lease = _recoveryLease;
-    final snapshot =
-        !_recoveryLoading &&
-            !_recoveryBusy &&
-            _recoveryError == null &&
-            _recoveryRecord?.enabled == true &&
-            _tabs.isNotEmpty
-        ? _recoverySnapshot()
-        : null;
+    final snapshot = _checkpointForHandoff();
     _recoveryEpoch++;
     _recoveryLease = null;
     _recovery = null;
@@ -466,6 +472,7 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs>
     _pendingRecoveryJson = null;
     _recoveryLoading = false;
     _recoveryBusy = false;
+    _recoveryStartupFailed = false;
     if (recovery == null || lease == null) return;
     if (snapshot == null || !lease.isCurrent) {
       lease.close();
@@ -479,6 +486,15 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs>
           .then<void>((_) {}, onError: (Object _) {}),
     );
   }
+
+  TerminalArrangement? _checkpointForHandoff() =>
+      !_recoveryLoading &&
+          !_recoveryBusy &&
+          _recoveryError == null &&
+          _recoveryRecord?.enabled == true &&
+          _tabs.isNotEmpty
+      ? _recoverySnapshot()
+      : null;
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {

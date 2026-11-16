@@ -207,8 +207,9 @@ Double-click a tab or choose
 **Rename terminal** to give it a local label; that label does not replace the
 trusted SSH endpoint in the pane header. Closing a running tab asks before
 disconnecting it. The last tab remains available; use Disconnect or Hide for it.
-The current workspace stays in memory. Explicitly saved arrangements survive
-app restarts, as described below; they reopen disconnected.
+The current workspace stays in memory while the app is open. Explicitly saved
+arrangements survive app restarts and reopen disconnected. Opt-in **Session
+recovery** can also remember the most recent workspace automatically.
 
 Choose **Terminal actions → Find in terminal** for literal search over the
 active screen and its scrollback. Case-sensitive and whole-word options, next
@@ -320,6 +321,62 @@ or newer-format records are preserved instead of silently overwritten. The
 arrangement store reads the earlier two-pane schema v1 and writes schema v2.
 Migration happens only on a save/delete operation. Older app versions reject
 v2 instead of silently discarding nested panes.
+
+## Automatic session recovery
+
+Open **Terminal layout → Session recovery** and enable **Remember terminal
+workspace**, then choose **Save**. Recovery is off by default. Enabling saves
+the current workspace immediately; subsequent changes save automatically after
+a short delay. The next time the terminal first opens in a new app session, it
+restores the saved tabs before starting any local shell.
+
+The checkpoint includes all eight supported tabs, their order and custom names,
+full nested split topology and proportions, active pane, font sizes, and
+credential-free SSH destinations. SSH destinations retain jump routes, agent
+authentication choices, forwarding permission preferences, and ordinary or
+native tmux/Screen modes. Live connections, shared-route ownership and broadcast
+membership are created afresh only through the existing explicit controls.
+Named **Saved arrangements** remain independent of automatic recovery.
+
+By default, every recovered tab is disconnected. Enable the separate **Relaunch
+local shells** option to start new local shells for recovered tabs that have no
+SSH destination. These shells use the current verified local folder or the
+existing safe fallback and follow the platform's normal local-shell backend.
+The previous working directory, command line and process are not resumed.
+Recovered SSH tabs always require **Reconnect SSH** and the existing
+authentication and host-key flow; recovery does not automatically contact a
+remote server. An existing remote tmux or Screen session can then be attached
+using its remembered destination and mode.
+
+Turning off **Remember terminal workspace** stops automatic saves and leaves
+the last checkpoint intact. **Forget saved workspace** asks for confirmation,
+turns recovery off, resets local-shell relaunch, and clears the checkpoint.
+Both controls leave current terminals open. Enabling again explicitly saves
+the current workspace rather than applying an old layout over live sessions.
+
+A save error shows a recovery status icon and pauses further automatic writes.
+**Retry** resumes a failed autosave. If startup could not read the checkpoint,
+Retry loads its settings without replacing current terminals or overwriting the
+previously unseen checkpoint; **Save** explicitly chooses the current workspace.
+Corrupt or newer-format records remain intact until explicit **Forget**. A
+settings dialog can be closed while storage is pending; closing does not cancel
+an already accepted write.
+
+Recovery uses one bounded local preference record (128 KiB, version 1) with
+serialized writes and an exclusive workspace owner. Settings and an enabling
+checkpoint are written together. A replacement owner reads the previous owner's
+final checkpoint before restoring, including same-frame widget replacement.
+Background lifecycle transitions and orderly disposal flush pending structural
+changes. An abrupt process kill or storage failure can still lose changes that
+have not finished saving; this is not a crash-proof transaction log.
+
+Passwords, private keys, passphrases, terminal output, command history, selection,
+filesystem grants, staged-workspace authority and operating-system process
+memory are never part of the recovery model. Saved destination addresses and
+user-entered tab names remain in the app's local preferences. Browser recovery
+is scoped to the same browser profile and site origin. Clearing app/site data
+removes it. Full process resurrection and automatic SSH reconnection remain
+separate parity work.
 
 ## Custom terminal key bindings
 
