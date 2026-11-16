@@ -249,6 +249,18 @@ abstract final class OdsSheetReader {
             sheet.hiddenRows.add(rowIndex + r);
           }
         }
+        var rowOutlineLevel = 0;
+        XmlElement? rowAncestor = row.parent;
+        while (rowAncestor != null && !_is(rowAncestor, 'table', _table)) {
+          if (_is(rowAncestor, 'table-row-group', _table)) rowOutlineLevel++;
+          rowAncestor = rowAncestor.parent;
+        }
+        if (rowOutlineLevel > 0) {
+          budget.dimensions(rowRepeat);
+          for (var r = 0; r < rowRepeat && rowIndex + r < _maxRows; r++) {
+            sheet.rowOutlineLevels[rowIndex + r] = rowOutlineLevel;
+          }
+        }
         final rowDefault = _attribute(row, 'default-cell-style-name', _table);
         final rowStyle = _styleChain(
           styles,
@@ -669,6 +681,12 @@ abstract final class OdsSheetReader {
           visibility == 'collapse' ||
           visibility == 'hidden' ||
           visibility == 'false';
+      var outlineLevel = 0;
+      XmlElement? ancestor = element.parent;
+      while (ancestor != null && !_is(ancestor, 'table', _table)) {
+        if (_is(ancestor, 'table-column-group', _table)) outlineLevel++;
+        ancestor = ancestor.parent;
+      }
       // Column definitions commonly include a full-sheet metadata tail. It
       // has no cells to preserve outside the admitted grid.
       final end = (column + repeat).clamp(0, _maxColumns);
@@ -686,12 +704,13 @@ abstract final class OdsSheetReader {
           }
         }
       }
-      if (hidden && count > 0) {
+      if ((hidden || outlineLevel > 0) && count > 0) {
         budget.dimensions(count);
         for (var i = 0; i < count; i++) {
-          (sheet.columnProperties[column + i] ??=
-                  <String, String>{})['hidden'] =
-              '1';
+          final properties = sheet.columnProperties[column + i] ??=
+              <String, String>{};
+          if (hidden) properties['hidden'] = '1';
+          if (outlineLevel > 0) properties['outlineLevel'] = '$outlineLevel';
         }
       }
       if (cellStyle != null) {

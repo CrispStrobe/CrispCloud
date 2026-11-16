@@ -603,6 +603,13 @@ class SheetDeserializer {
             r < SmlWorksheet.excelRowCount) {
           sheet.hiddenRows.add(r);
         }
+        final outline = int.tryParse(reader.getAttribute('outlineLevel') ?? '');
+        if (outline != null &&
+            outline > 0 &&
+            r >= 0 &&
+            r < SmlWorksheet.excelRowCount) {
+          sheet.rowOutlineLevels[r] = outline;
+        }
       }
       if (reader.eventType == XmlEventType.startElement &&
           reader.localName == 'c') {
@@ -1348,6 +1355,7 @@ class SheetSerializer {
       ...sheet.rows.keys,
       ...sheet.rowHeights.keys,
       ...sheet.hiddenRows,
+      ...sheet.rowOutlineLevels.keys,
     };
     final List<int> rowIdx = rowKeys.toList()..sort();
     for (final int r in rowIdx) {
@@ -1355,6 +1363,10 @@ class SheetSerializer {
       w.writeStartElement('row');
       w.writeAttribute('r', '${r + 1}');
       if (sheet.hiddenRows.contains(r)) w.writeAttribute('hidden', '1');
+      final outline = sheet.rowOutlineLevels[r];
+      if (outline != null && outline > 0) {
+        w.writeAttribute('outlineLevel', '$outline');
+      }
       final double? ht = sheet.rowHeights[r];
       if (ht != null) {
         w.writeAttribute('ht', '${SmlWorksheet.rowHeightToExcel(ht)}');
