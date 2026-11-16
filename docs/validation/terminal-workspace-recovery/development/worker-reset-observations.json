@@ -1,0 +1,323 @@
+{
+  "schema_version": 1,
+  "record_kind": "Reconstructed observations from retained tool output; not a recovered original receipt or raw log",
+  "artifact_status": {
+    "old_execution_workspace": "Became unavailable after the combined run; previous files were absent when tools resumed.",
+    "durable_source_commit": "3cd501798794dcb74de5dca912b498a4c0a7e39b",
+    "durable_evidence_commit_at_run_end": "0c43c476ff33638306425c1427cf1d04a170a912",
+    "end_commit_scope": "Documentation/evidence only; watched runtime and test inputs unchanged during the run.",
+    "old_combined_raw_log": "Not recovered in this record",
+    "old_combined_source_inventory_files": "Not recovered in this record",
+    "initial_and_interim_png_files": "Not recovered in this record",
+    "final_accepted_source_png_files": "Not recovered or visually inspected; no final PNG hashes are available in this reconstruction",
+    "reconstructed_files_are_original_artifact_bytes": false
+  },
+  "qualification": {
+    "toolchain": "Flutter 3.47.8 / Dart 3.13.7",
+    "test_mode": "Isolated Dart/widget validation with the production dependency graph",
+    "environment_overrides": {
+      "FLUTTER_NATIVE_ASSETS": "false",
+      "FLUTTER_DART_DATA_ASSETS": "true"
+    },
+    "code_assets": "Native code-asset building disabled only for the test command",
+    "data_assets": "Enabled",
+    "not_qualified": [
+      "Normal-native bridge construction",
+      "Actual local shell processes",
+      "Live SSH or tmux-daemon acceptance",
+      "Packaged Linux/macOS/Windows/mobile applications",
+      "Browser runtime",
+      "Optimized full-application web release"
+    ],
+    "github_actions_queried_or_awaited": false
+  },
+  "combined_run_observed": {
+    "started_at_utc": "2026-11-16T09:55:50.792776+00:00",
+    "duration_seconds": 155.154742803,
+    "source_head_at_start": "3cd501798794dcb74de5dca912b498a4c0a7e39b",
+    "source_head_at_end": "0c43c476ff33638306425c1427cf1d04a170a912",
+    "exit_code": 0,
+    "counts": {
+      "passed": 462,
+      "skipped": 1,
+      "failed": 0
+    },
+    "cohorts": {
+      "recovery": {
+        "files": 4,
+        "passed": 76,
+        "skipped": 0,
+        "failed": 0
+      },
+      "related_terminal": {
+        "files": 28,
+        "passed": 267,
+        "skipped": 1,
+        "failed": 0
+      },
+      "office": {
+        "files": 3,
+        "passed": 118,
+        "skipped": 0,
+        "failed": 0
+      },
+      "visual": {
+        "files": 1,
+        "passed": 1,
+        "skipped": 0,
+        "failed": 0
+      }
+    },
+    "test_file_count": 36,
+    "reporter_final_line": "02:20 +462 ~1: All tests passed!",
+    "watched_files": 5664,
+    "source_inventory_scope": "Byte length, SHA-256, and tracked mode, with additions/removals checked",
+    "source_changes_during_run": [],
+    "observed_raw_log_sha256": "ccdfd8f60a59065a4624b6aab680749b7d6a4a69afe2487127f6006a0d5317e7",
+    "observed_validation_runner_sha256": "4e507423ff1e76663af4d86fb5f08e75226f228dc177ddd568df2042cb0357d1",
+    "command": [
+      "/workspace/scratch/732a154614f9/toolchain/run",
+      "flutter",
+      "test",
+      "--no-pub",
+      "--concurrency=1",
+      "--reporter=expanded",
+      "--dart-define=TERMINAL_RECOVERY_VISUALS=true",
+      "test/terminal_workspace_recovery_test.dart",
+      "test/terminal_workspace_recovery_dialog_test.dart",
+      "test/terminal_workspace_recovery_widget_test.dart",
+      "test/terminal_panel_recovery_idle_test.dart",
+      "test/terminal_arrangements_test.dart",
+      "test/terminal_arrangements_dialog_test.dart",
+      "test/terminal_arrangements_widget_test.dart",
+      "test/terminal_tabs_test.dart",
+      "test/terminal_pane_layout_test.dart",
+      "test/terminal_session_test.dart",
+      "test/terminal_panel_test.dart",
+      "test/terminal_widget_test.dart",
+      "test/terminal_user_input_test.dart",
+      "test/terminal_broadcast_test.dart",
+      "test/terminal_broadcast_dialog_test.dart",
+      "test/terminal_key_bindings_test.dart",
+      "test/terminal_key_bindings_widget_test.dart",
+      "test/terminal_triggers_test.dart",
+      "test/terminal_triggers_widget_test.dart",
+      "test/terminal_trigger_session_test.dart",
+      "test/terminal_shell_integration_test.dart",
+      "test/terminal_shell_directory_labels_test.dart",
+      "test/terminal_search_test.dart",
+      "test/terminal_search_bar_test.dart",
+      "test/terminal_input_budget_test.dart",
+      "test/terminal_connection_sharing_test.dart",
+      "test/ssh_connection_sharing_widget_test.dart",
+      "test/ssh_tmux_panel_lifecycle_test.dart",
+      "test/tmux_control_workspace_test.dart",
+      "test/ssh_native_tmux_persistence_test.dart",
+      "test/ssh_terminal_reconnect_test.dart",
+      "test/terminal_mount_localization_test.dart",
+      "build/office-incoming-tests/ods_sheet_reader_test.dart",
+      "build/office-incoming-tests/sheet_formula_test.dart",
+      "test/widget/ods_editor_workflow_test.dart",
+      "test/terminal_workspace_recovery_visual_test.dart"
+    ],
+    "environment_overrides": {
+      "FLUTTER_NATIVE_ASSETS": "false",
+      "FLUTTER_DART_DATA_ASSETS": "true"
+    },
+    "command_origin": "Retained execution transcript, supplied by the agent that performed the run; not read from a recovered receipt file."
+  },
+  "selected_source_hashes_observed_before_combined_run": {
+    "test/terminal_workspace_recovery_visual_test.dart": {
+      "bytes": 9335,
+      "mode": "0o644",
+      "sha256": "8b9de6bdfeb50459a54aaa69e5f79d0f0aa8895a26ecd7d03ed307987710523b"
+    },
+    "lib/widgets/terminal_panel.dart": {
+      "bytes": 84172,
+      "mode": "0o644",
+      "sha256": "7bf5457f4c48799bda613a55d18b906a91f08e9fa020b77f8ca3de08b4fa9af6"
+    },
+    "lib/widgets/terminal_tabs.dart": {
+      "bytes": 64402,
+      "mode": "0o644",
+      "sha256": "c66ae629121191d93808349f0b4abe4c7e51d02c791c66c84c2badadc4f7bc57"
+    },
+    "lib/widgets/terminal_workspace_recovery_dialog.dart": {
+      "bytes": 8962,
+      "mode": "0o644",
+      "sha256": "2ebf8c4649797c8bebf1ec12cc49db209b31e7ce77f133161a3294d10a05add0"
+    }
+  },
+  "development_focused_runs": [
+    {
+      "name": "recovery-idle-focused",
+      "started_at_utc": "2026-11-16T09:49:13.767989+00:00",
+      "duration_seconds": 17.09461049100355,
+      "head_at_start": "28dd2e9897a0c41e92ed7faaf4c587c68d8bb594",
+      "head_at_end": "28dd2e9897a0c41e92ed7faaf4c587c68d8bb594",
+      "counts": {
+        "passed": 14,
+        "skipped": 0,
+        "failed": 6
+      },
+      "exit_code": 1,
+      "watched_files": 5659,
+      "source_changes_during_run": [],
+      "test_files": [
+        "test/terminal_panel_recovery_idle_test.dart",
+        "test/terminal_workspace_recovery_dialog_test.dart"
+      ],
+      "failure": "All six new panel tests reached their behavioral assertions but failed Flutter's final foundation debug-variable invariant because the platform override was restored in outer teardown.",
+      "observed_raw_log_sha256": "0cc3f7eb660dc585933b6757293427578813618e876cccd9d8c33cb5a3843927",
+      "observed_validation_runner_sha256": "89b8bd7e4100854e420dd148ae3cbd95a3cfc1db3f08c75c55f484f3d1b26536",
+      "environment_overrides": {
+        "FLUTTER_NATIVE_ASSETS": "false",
+        "FLUTTER_DART_DATA_ASSETS": "true"
+      },
+      "original_artifacts_status": "Locally archived with receipts and source inventories before interruption; not recovered here."
+    },
+    {
+      "name": "recovery-idle-focused-retry",
+      "started_at_utc": "2026-11-16T09:50:12.655435+00:00",
+      "duration_seconds": 11.442227542000182,
+      "head_at_start": "3ab3323da81d265d338337d2dee4214e5b9daafb",
+      "head_at_end": "3ab3323da81d265d338337d2dee4214e5b9daafb",
+      "counts": {
+        "passed": 6,
+        "skipped": 0,
+        "failed": 0
+      },
+      "exit_code": 0,
+      "watched_files": 5659,
+      "source_changes_during_run": [],
+      "test_files": [
+        "test/terminal_panel_recovery_idle_test.dart"
+      ],
+      "change": "Restore the platform override inside each test body before return. No behavioral assertion was removed.",
+      "observed_raw_log_sha256": "89f451a0c50881841ea0c23713926f9f3eaf95b40b21727f64b9428d21487a5a",
+      "observed_validation_runner_sha256": "89b8bd7e4100854e420dd148ae3cbd95a3cfc1db3f08c75c55f484f3d1b26536",
+      "environment_overrides": {
+        "FLUTTER_NATIVE_ASSETS": "false",
+        "FLUTTER_DART_DATA_ASSETS": "true"
+      },
+      "original_artifacts_status": "Locally archived with receipts and source inventories before interruption; not recovered here."
+    }
+  ],
+  "visual_observations": {
+    "fixture_path": "test/terminal_workspace_recovery_visual_test.dart",
+    "fixture_semantics": "Production TerminalTabs and recovery dialog, in-memory recovery store, three recovered idle sessions, one SSH/native-tmux destination, bundled Roboto/RobotoMono and MaterialIcons. No real backend is started.",
+    "initial_review": {
+      "source_fixture_sha256": "2eb0a9f997ac4d19ae546bc7afe8032fc975ef797d7ccfb3f876c26a6647fc84",
+      "source_fixture_checkpoint": "28dd2e98",
+      "all_five_pixels_inspected": true,
+      "platform": "Default Android widget-test target at both 1180x700 and 320x320.",
+      "findings": [
+        "Recovered idle panels incorrectly said Starting the built-in shell… although autostart was disabled.",
+        "The nominal desktop capture included mobile extra keys because the platform override was absent.",
+        "The compact dialog could scroll through settings and Forget while keeping action buttons reachable."
+      ],
+      "images": [
+        {
+          "file": "recovered-workspace-desktop.png",
+          "width": 1180,
+          "height": 700,
+          "bytes": 42287,
+          "sha256": "85e2463d6a38fbcbd3c9d781d638d4bc1f3574c4ada87cd5817098188f2a942b"
+        },
+        {
+          "file": "recovery-settings-desktop.png",
+          "width": 1180,
+          "height": 700,
+          "bytes": 88500,
+          "sha256": "36860ba93ecdcfe18f1819092fdf82e3da7d75a87e2f9f1d71784b1a1310aed2"
+        },
+        {
+          "file": "recovery-settings-compact-top.png",
+          "width": 320,
+          "height": 320,
+          "bytes": 25340,
+          "sha256": "84c3691fc5e3a1a43a794d4bbb34710bbccc2f3655bf7e07a1959fd4b02d84ef"
+        },
+        {
+          "file": "recovery-settings-compact-choices.png",
+          "width": 320,
+          "height": 320,
+          "bytes": 27222,
+          "sha256": "9c82ffc81f2e820982932fd0a61f152ad46b4ad4900a24b9e79c74981662f866"
+        },
+        {
+          "file": "recovery-settings-compact-bottom.png",
+          "width": 320,
+          "height": 320,
+          "bytes": 25547,
+          "sha256": "db6f17a4086d55fe322add0528ff388d15a0089f3f2f4b0ad55f576b56b9afd4"
+        }
+      ]
+    },
+    "pre_header_fix_review": {
+      "source_fixture_sha256": "8b9de6bdfeb50459a54aaa69e5f79d0f0aa8895a26ecd7d03ed307987710523b",
+      "panel_source_sha256": "3c885f5f400d89b80ac7c80dfd36b91c30704b587d18796072a07506259baddd",
+      "all_five_pixels_inspected": true,
+      "platform": "Linux widget target at 1180x700; Android widget target at 320x320.",
+      "findings": [
+        "Idle panels showed readiness and explicit local-start or SSH-authentication actions.",
+        "The Linux capture had no mobile extra-key row.",
+        "The compact dialog displayed all settings and privacy/Forget controls through scrolling, without overflow.",
+        "The idle SSH pane header still said Local shell. This was subsequently corrected to its remembered user@host[:port] before commit 3cd50179."
+      ],
+      "images": [
+        {
+          "file": "recovered-workspace-desktop.png",
+          "width": 1180,
+          "height": 700,
+          "bytes": 42927,
+          "sha256": "b1883834c1f94ac749418319486a6abe313a7e451065d2da75833d9c58fa6fba"
+        },
+        {
+          "file": "recovery-settings-desktop.png",
+          "width": 1180,
+          "height": 700,
+          "bytes": 90750,
+          "sha256": "a742f2ffae6999640122034b797a652e664c08ad173bf9aff0444c83bad3b4c4"
+        },
+        {
+          "file": "recovery-settings-compact-top.png",
+          "width": 320,
+          "height": 320,
+          "bytes": 25848,
+          "sha256": "18f5f4012ef401eb9cdf3fd561ef081f88cc9e9464984671b68510750226e886"
+        },
+        {
+          "file": "recovery-settings-compact-choices.png",
+          "width": 320,
+          "height": 320,
+          "bytes": 31124,
+          "sha256": "80242003740c6a235d4f11662c44a924513df7ff1ae0b2b44674eb99cf85d05f"
+        },
+        {
+          "file": "recovery-settings-compact-bottom.png",
+          "width": 320,
+          "height": 320,
+          "bytes": 28144,
+          "sha256": "64ec41b3c02399b1aeab88bd5fab1dd8a19e53a6ddf85cd48d426d7b89779d6b"
+        }
+      ]
+    },
+    "accepted_source_capture": {
+      "source_commit": "3cd501798794dcb74de5dca912b498a4c0a7e39b",
+      "fixture_test_passed": true,
+      "actual_png_files_retrieved_before_reset": false,
+      "actual_pixels_inspected": false,
+      "actual_png_hashes_available": false,
+      "expected_filenames": [
+        "recovered-workspace-desktop.png",
+        "recovery-settings-desktop.png",
+        "recovery-settings-compact-top.png",
+        "recovery-settings-compact-choices.png",
+        "recovery-settings-compact-bottom.png"
+      ],
+      "expected_platform_dimensions": "Two Linux-target 1180x700 captures and three Android-target 320x320 captures, per the unchanged fixture.",
+      "limitation": "The final captured pixels were not inspected or archived before the execution workspace disappeared. Earlier inspected images are not presented as the final accepted-source set."
+    }
+  }
+}
