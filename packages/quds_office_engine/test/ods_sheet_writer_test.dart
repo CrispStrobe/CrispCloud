@@ -77,6 +77,55 @@ void main() {
     expect(reopened.formulaNames.single.name, 'Total');
   });
 
+  test('writes list validation prompts and errors', () {
+    final sheet = SmlWorksheet(name: 'Data', sheetId: 1);
+    sheet.cellA1('A1').value = 'Red';
+    sheet.cellA1('A2').value = 'Green';
+    sheet.validations.add(
+      SmlDataValidation(
+        range: SmlRange.parse('A1:A2'),
+        kind: SmlValidationKind.list,
+        formula1: 'Red,Green',
+        allowBlank: false,
+        promptTitle: 'Pick',
+        prompt: 'Choose a colour',
+        errorTitle: 'Bad',
+        error: 'Not in list',
+        errorStyle: 'warning',
+      ),
+    );
+    final reopened = OdsSheetReader.readBytes(
+      OdsSheetWriter.writeBytes(SmlWorkbook(sheets: [sheet])),
+    );
+    final rule = reopened.sheets.first.validations.first;
+    expect(rule.listItems, ['Red', 'Green']);
+    expect(rule.allowBlank, isFalse);
+    expect(rule.promptTitle, 'Pick');
+    expect(rule.prompt, 'Choose a colour');
+    expect(rule.errorTitle, 'Bad');
+    expect(rule.error, 'Not in list');
+    expect(rule.errorStyle, 'warning');
+  });
+
+  test('writes conditional formats and validates them on read', () {
+    final sheet = SmlWorksheet(name: 'Data', sheetId: 1);
+    sheet.conditionalFormats.add(
+      SmlConditionalRule(
+        range: SmlRange.parse('A1:A10'),
+        kind: SmlConditionalKind.greaterThan,
+        formula: '3',
+        fillRgb: '00FF00',
+      ),
+    );
+    final reopened = OdsSheetReader.readBytes(
+      OdsSheetWriter.writeBytes(SmlWorkbook(sheets: [sheet])),
+    );
+    final rule = reopened.sheets.first.conditionalFormats.single;
+    expect(rule.kind, SmlConditionalKind.greaterThan);
+    expect(rule.formula, '3');
+    expect(rule.fillRgb, '00FF00');
+  });
+
   test('writes authored number formats', () {
     final styles = SmlStyleSheet();
     final sheet = SmlWorksheet(name: 'Data', sheetId: 1);

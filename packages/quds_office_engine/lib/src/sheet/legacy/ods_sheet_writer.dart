@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import '../../opc/zip/zip_writer.dart';
 import '../../xml/xml_writer.dart';
+import '../model/sml_analysis.dart';
 import '../model/sml_workbook.dart';
 import '../styles/sml_styles.dart';
 
@@ -110,12 +111,13 @@ abstract final class OdsSheetWriter {
     w.writeAttribute('fo:font-size', '11pt');
     w.writeEndElement();
     w.writeEndElement();
-    w.writeEndElement();
     w.writeEmptyElement(
       'style',
       prefix: 'style',
       attributes: {'style:name': 'Default', 'style:family': 'table-cell'},
     );
+    layout.writeConditionalStyles(w);
+    w.writeEndElement();
     w.writeStartElement('automatic-styles', prefix: 'office');
     layout.writeNumberStyles(w);
     layout.writeColumnStyles(w);
@@ -165,6 +167,16 @@ abstract final class OdsSheetWriter {
     w.writeEndElement();
     w.writeStartElement('body', prefix: 'office');
     w.writeStartElement('spreadsheet', prefix: 'office');
+    final allValidations = [
+      for (final definitions in layout.validationXml) ...definitions,
+    ];
+    if (allValidations.isNotEmpty) {
+      w.writeStartElement('content-validations', prefix: 'table');
+      for (final definition in allValidations) {
+        w.writeRaw(definition);
+      }
+      w.writeEndElement();
+    }
     for (var index = 0; index < book.sheets.length; index++) {
       _writeSheet(w, book, book.sheets[index], index, layout);
     }
@@ -267,6 +279,26 @@ abstract final class OdsSheetWriter {
       }
       w.writeEndElement();
     }
+    final conditional = StringBuffer();
+    for (final rule in sheet.conditionalFormats) {
+      final style = layout.conditionalStyle(rule);
+      if (style == null) continue;
+      conditional.write(
+        '<calcext:conditional-format calcext:target-range-address="'
+        '${_plainSheet(sheet.name)}.${rule.range.start.a1}:'
+        '${_plainSheet(sheet.name)}.${rule.range.end.a1}">'
+        '<calcext:condition calcext:apply-style-name="$style" '
+        'calcext:base-cell-address="${_plainSheet(sheet.name)}.'
+        '${rule.range.start.a1}" calcext:value="${_condition(rule)}"/>'
+        '</calcext:conditional-format>',
+      );
+    }
+    if (conditional.isNotEmpty) {
+      w.writeRaw(
+        '<calcext:conditional-formats>${conditional.toString()}'
+        '</calcext:conditional-formats>',
+      );
+    }
     final localNames = <String>[];
     if (sheet.printTitleRows != null || sheet.printTitleCols != null) {
       localNames.add(
@@ -314,6 +346,10 @@ abstract final class OdsSheetWriter {
     final style = cell == null ? null : layout.cellStyle(sheet, cell);
     if (style != null) {
       w.writeAttribute('table:style-name', style);
+    }
+    final validation = layout.validationName(sheet, col, row);
+    if (validation != null) {
+      w.writeAttribute('table:content-validation-name', validation);
     }
     if (merge != null) {
       final columns = merge.c1 - merge.c0 + 1;
@@ -372,6 +408,34 @@ abstract final class OdsSheetWriter {
       w.writeEndElement();
     }
     w.writeEndElement();
+  }
+
+  static String _condition(SmlConditionalRule rule) {
+    String quote(String value) => '"${value.replaceAll('"', '""')}"';
+    return switch (rule.kind) {
+      SmlConditionalKind.greaterThan => _escapeAttr('>${rule.formula}'),
+      SmlConditionalKind.greaterOrEqual => _escapeAttr('>=${rule.formula}'),
+      SmlConditionalKind.lessThan => _escapeAttr('<${rule.formula}'),
+      SmlConditionalKind.lessOrEqual => _escapeAttr('<=${rule.formula}'),
+      SmlConditionalKind.equal => _escapeAttr('=${rule.formula}'),
+      SmlConditionalKind.notEqual => _escapeAttr('<>${rule.formula}'),
+      SmlConditionalKind.between => _escapeAttr(
+        'between(${rule.formula},${rule.formula2})',
+      ),
+      SmlConditionalKind.notBetween => _escapeAttr(
+        'not-between(${rule.formula},${rule.formula2})',
+      ),
+      SmlConditionalKind.contains => _escapeAttr(
+        'contains-text(${quote(rule.formula)})',
+      ),
+      SmlConditionalKind.beginsWith => _escapeAttr(
+        'begins-with(${quote(rule.formula)})',
+      ),
+      SmlConditionalKind.endsWith => _escapeAttr(
+        'ends-with(${quote(rule.formula)})',
+      ),
+      SmlConditionalKind.duplicate => 'duplicate',
+    };
   }
 
   static String _plainSheet(String name) =>
@@ -529,6 +593,22 @@ class _OdsLayout {
       }
       this.columnStyles.add(columnStyles);
       this.rowStyles.add(rowStyles);
+      final validationXml = <String>[];
+      for (final rule in sheet.validations) {
+        final name = 'val${++_validationCount}';
+        validationDefinitions.add(name);
+        validationXml.add(
+          _validationXml(
+            rule,
+            name,
+            '${OdsSheetWriter._plainSheet(sheet.name)}.${rule.range.start.a1}',
+          ),
+        );
+        for (final ref in rule.range.cells) {
+          validationNames['${sheet.name}:${ref.a1}'] = name;
+        }
+      }
+      this.validationXml.add(validationXml);
       tableStyle.add('ta$sheetIndex');
       tableBuffers.add(
         '<style:style style:name="ta$sheetIndex" style:family="table">'
@@ -621,7 +701,13 @@ class _OdsLayout {
   final List<String> columnStyleBuffers = [];
   final List<String> rowStyleBuffers = [];
   final List<String> cellStyleBuffers = [];
+  final List<String> conditionalStyleBuffers = [];
   final List<String> numberStyleBuffers = [];
+  final Map<String, String> conditionalStyles = {};
+  final List<String> validationDefinitions = [];
+  final List<List<String>> validationXml = [];
+  final Map<String, String> validationNames = {};
+  var _validationCount = 0;
 
   final Map<String, String> cellStyles = {};
 
@@ -629,6 +715,119 @@ class _OdsLayout {
 
   String? cellStyle(SmlWorksheet sheet, SmlCell cell) =>
       cellStyles[cellKey(book.sheets.indexOf(sheet), cell)];
+
+  String? validationName(SmlWorksheet sheet, int col, int row) =>
+      validationNames['${sheet.name}:${SmlCellRef(col, row).a1}'];
+
+  static String _escapeAttr(String value) => OdsSheetWriter._escapeAttr(value);
+
+  static String _validationXml(
+    SmlDataValidation rule,
+    String name,
+    String baseCellAddress,
+  ) {
+    final condition = _validationCondition(rule);
+    final buffer = StringBuffer(
+      '<table:content-validation table:name="$name" '
+      'table:condition="${_escapeAttr(condition)}" '
+      'table:allow-empty-cell="${rule.allowBlank}" '
+      'table:base-cell-address="$baseCellAddress">',
+    );
+    if (rule.promptTitle.isNotEmpty || rule.prompt.isNotEmpty) {
+      buffer.write(
+        '<table:help-message table:title="${_escapeAttr(rule.promptTitle)}" '
+        'table:display="true"><text:p>${_escapeAttr(rule.prompt)}</text:p>'
+        '</table:help-message>',
+      );
+    }
+    if (rule.errorTitle.isNotEmpty || rule.error.isNotEmpty) {
+      buffer.write(
+        '<table:error-message table:message-type="${rule.errorStyle}" '
+        'table:title="${_escapeAttr(rule.errorTitle)}" '
+        'table:display="true"><text:p>${_escapeAttr(rule.error)}</text:p>'
+        '</table:error-message>',
+      );
+    }
+    buffer.write('</table:content-validation>');
+    return buffer.toString();
+  }
+
+  static String _validationCondition(SmlDataValidation rule) {
+    String op(SmlValidationOperator operator) => switch (operator) {
+      SmlValidationOperator.between => 'between',
+      SmlValidationOperator.notBetween => 'not-between',
+      SmlValidationOperator.equal => '=',
+      SmlValidationOperator.notEqual => '<>',
+      SmlValidationOperator.greaterThan => '>',
+      SmlValidationOperator.lessThan => '<',
+      SmlValidationOperator.greaterThanOrEqual => '>=',
+      SmlValidationOperator.lessThanOrEqual => '<=',
+    };
+    String value(String raw) {
+      if (rule.kind == SmlValidationKind.date) {
+        final serial = double.tryParse(raw);
+        if (serial != null) {
+          final date = excelSerialToDate(serial);
+          return '${date.year}-${date.month}-${date.day}';
+        }
+      }
+      return raw;
+    }
+
+    if (rule.kind == SmlValidationKind.list) {
+      final items = rule.listItems
+          .map((item) => '"${item.replaceAll('"', '""')}"')
+          .join(';');
+      return 'of:cell-content-is-in-list($items)';
+    }
+    if (rule.kind == SmlValidationKind.custom) {
+      return 'of:is-true-formula([.A1]>0)';
+    }
+    final prefix = switch (rule.kind) {
+      SmlValidationKind.whole => 'of:cell-content-is-whole-number()',
+      SmlValidationKind.decimal => 'of:cell-content-is-decimal-number()',
+      SmlValidationKind.date => 'of:cell-content-is-date()',
+      SmlValidationKind.textLength => 'of:cell-content-text-length()',
+      _ => 'of:cell-content-is-whole-number()',
+    };
+    if (rule.operator == SmlValidationOperator.between ||
+        rule.operator == SmlValidationOperator.notBetween) {
+      final between = rule.operator == SmlValidationOperator.between
+          ? 'between'
+          : 'not-between';
+      return '$prefix and cell-content-is-$between('
+          '${value(rule.formula1)},${value(rule.formula2)})';
+    }
+    return '$prefix and cell-content()${op(rule.operator)}'
+        '${value(rule.formula1)}';
+  }
+
+  String? conditionalStyle(SmlConditionalRule rule) {
+    final fill = rule.fillRgb;
+    final font = rule.fontRgb;
+    if (fill.isEmpty && font.isEmpty) return null;
+    final key = '$fill|$font';
+    return conditionalStyles.putIfAbsent(key, () {
+      final name = 'cf${conditionalStyles.length + 1}';
+      final buffer = StringBuffer(
+        '<style:style style:name="$name" style:display-name="$name" style:family="table-cell" '
+        'style:parent-style-name="Default">',
+      );
+      if (fill.isNotEmpty) {
+        buffer.write(
+          '<style:table-cell-properties fo:background-color="#${fill.toLowerCase()}"/>',
+        );
+      }
+      if (font.isNotEmpty) {
+        buffer.write(
+          '<style:text-properties fo:color="#${font.toLowerCase()}"/>',
+        );
+      }
+      buffer.write('</style:style>');
+      conditionalStyleBuffers.add(buffer.toString());
+      return name;
+    });
+  }
 
   void writeNumberStyles(XmlWriter w) {
     for (final buffer in numberStyleBuffers) {
@@ -699,6 +898,12 @@ class _OdsLayout {
       w.writeRaw(buffer);
     }
     for (final buffer in cellStyleBuffers) {
+      w.writeRaw(buffer);
+    }
+  }
+
+  void writeConditionalStyles(XmlWriter w) {
+    for (final buffer in conditionalStyleBuffers) {
       w.writeRaw(buffer);
     }
   }
