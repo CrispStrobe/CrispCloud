@@ -62,6 +62,7 @@ class SshTerminalProfile {
             'kind': 'tmux',
             'mode': config.tmux!.mode.name,
             'name': config.tmux!.sessionName,
+            if (config.tmux!.controlMode) 'controlMode': true,
           }
         : config.screen != null
         ? {
@@ -137,8 +138,13 @@ class SshTerminalProfile {
       case 'tmux':
         final name = session['name'];
         if (name is! String) throw const FormatException('Invalid tmux target');
+        final controlMode = session['controlMode'];
+        if (controlMode != null && controlMode is! bool) {
+          throw const FormatException('Invalid tmux control mode');
+        }
         tmux = TmuxSessionOptions(
           sessionName: name,
+          controlMode: controlMode == true,
           mode: switch (session['mode']) {
             'createOrAttach' => TmuxSessionMode.createOrAttach,
             'attach' => TmuxSessionMode.attach,

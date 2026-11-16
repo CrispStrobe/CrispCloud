@@ -33,6 +33,8 @@ import '../services/terminal_backends.dart';
 import '../services/terminal_menu.dart';
 import '../services/keyboard_shortcut_service.dart';
 import '../services/terminal_session.dart';
+import '../services/tmux_control_client.dart';
+import '../services/tmux_terminal_connection.dart';
 import '../services/terminal_user_input.dart';
 import '../services/terminal_shell_integration.dart';
 import '../services/terminal_mount_failure.dart';
@@ -48,6 +50,7 @@ import 'terminal_tabs.dart';
 import 'terminal_search_bar.dart';
 import 'terminal_command_history_dialog.dart';
 import 'terminal_shell_setup_dialog.dart';
+import 'tmux_control_workspace.dart';
 import 'terminal_key_bindings_dialog.dart';
 import 'terminal_triggers_dialog.dart';
 import 'ssh_port_forwarding_dialog.dart';
@@ -177,6 +180,10 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
   SshForwardingProfileSession? _forwardingProfiles;
   final _forwardingDialogLeases = <SshForwardingProfileSession, int>{};
   Terminal? _tmuxTerminal;
+  TmuxTerminalConnection? _tmuxWorkspaceConnection;
+  final _pendingTmuxControls = <TmuxControlClient>{};
+  final _pendingTmuxRoutes = <String>{};
+  bool _tmuxPaneFocused = false;
   Terminal? _screenTerminal;
   bool _showSearch = false;
   bool _searchFits = true;
@@ -214,11 +221,44 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
 
   bool get _usingTmux =>
       _session.kind == TerminalSessionKind.ssh &&
-      identical(_tmuxTerminal, _session.terminal);
+      (_nativeTmux != null || identical(_tmuxTerminal, _session.terminal));
 
   bool get _usingScreen =>
       _session.kind == TerminalSessionKind.ssh &&
       identical(_screenTerminal, _session.terminal);
+
+  TmuxControlClient? get _nativeTmux => _tmuxWorkspaceConnection?.client;
+
+  void _syncTmuxWorkspace() {
+    final workspace = _session.workspaceConnection;
+    final next = workspace is TmuxTerminalConnection ? workspace : null;
+    if (identical(next, _tmuxWorkspaceConnection)) return;
+    _retireTmuxControl();
+    _tmuxWorkspaceConnection = next;
+    next?.retainView();
+  }
+
+  void _retireTmuxControl() {
+    final connection = _tmuxWorkspaceConnection;
+    _tmuxWorkspaceConnection = null;
+    _tmuxPaneFocused = false;
+    if (connection == null) return;
+    // View removal releases only the viewport's lease. The owning session
+    // decides when to close the route and release retained pane buffers.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      connection.releaseView();
+    });
+    WidgetsBinding.instance.ensureVisualUpdate();
+  }
+
+  void _cancelPendingTmuxStarts() {
+    for (final client in _pendingTmuxControls.toList()) {
+      unawaited(client.close().catchError((Object _) {}));
+    }
+    for (final id in _pendingTmuxRoutes.toList()) {
+      unawaited(_ssh.disconnect(id).catchError((Object _) {}));
+    }
+  }
 
   bool get _canCopy =>
       _controller.selectionFor(_session.terminal.buffer) != null;
@@ -238,7 +278,9 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     _attachSession(widget.session);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      if (widget.visible && widget.active) _focus.requestFocus();
+      if (widget.visible && widget.active && _nativeTmux == null) {
+        _focus.requestFocus();
+      }
       if (_ownsSession || widget.autoStart) {
         unawaited(_startLocal());
       } else {
@@ -262,6 +304,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     _session = session ?? TerminalSession();
     _session.addListener(_onSessionChanged);
     _attachTerminal();
+    _syncTmuxWorkspace();
   }
 
   void _detachTitleHandler() {
@@ -302,6 +345,8 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
   void didUpdateWidget(TerminalPanel oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (!identical(oldWidget.session, widget.session)) {
+      _cancelPendingTmuxStarts();
+      _retireTmuxControl();
       _connectionRequest++;
       _clearForwardingProfiles();
       _workspace = null;
@@ -328,6 +373,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
 
   void _onSessionChanged() {
     if (!mounted) return;
+    _syncTmuxWorkspace();
     final forwardingProfiles = _forwardingProfiles;
     if (forwardingProfiles != null && !forwardingProfiles.isCurrent) {
       _clearForwardingProfiles();
@@ -383,6 +429,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
 
   void _focusIfVisible() {
     if (mounted &&
+        _nativeTmux == null &&
         widget.visible &&
         _activePane &&
         !(_showSearch && _searchFits && _preferSearchFocus) &&
@@ -395,7 +442,23 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     if (_preferSearchFocus) setState(() => _preferSearchFocus = false);
     widget.onActivate?.call();
     _focusAreaState.state = FocusArea.terminal;
-    if (widget.active) _focus.requestFocus();
+    if (widget.active && _nativeTmux == null) _focus.requestFocus();
+  }
+
+  void _onTmuxPaneFocusChanged(bool focused) {
+    if (!mounted) return;
+    _tmuxPaneFocused = focused;
+    if (focused && widget.visible && _activePane) {
+      _focus.unfocus();
+      _focusOwnerState.state = _menuOwner;
+      _inputFocusedState.state = true;
+      _focusAreaState.state = FocusArea.terminal;
+    } else if (identical(_focusOwnerState.state, _menuOwner) &&
+        !_focus.hasFocus) {
+      _focusOwnerState.state = null;
+      _inputFocusedState.state = false;
+    }
+    _scheduleMenuUpdate();
   }
 
   void _activateSearch() {
@@ -428,12 +491,14 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
       _menuUpdateScheduled = false;
       if (!mounted) return;
       final current = _menuState.state;
-      if (!widget.visible || !widget.active || !_focus.hasFocus) {
+      if (!widget.visible ||
+          !widget.active ||
+          (!_focus.hasFocus && !_tmuxPaneFocused)) {
         if (identical(current?.owner, _menuOwner)) _menuState.state = null;
         return;
       }
-      final canCopy = _canCopy;
-      final canPaste = _session.isConnected;
+      final canCopy = _nativeTmux == null && _canCopy;
+      final canPaste = _session.acceptsDirectInput;
       final canDisconnect = _canDisconnect;
       if (identical(current?.owner, _menuOwner) &&
           current!.canCopy == canCopy &&
@@ -453,14 +518,17 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
   }
 
   void _performMenuAction(TerminalMenuAction action) {
-    if (!mounted || !widget.visible || !widget.active || !_focus.hasFocus) {
+    if (!mounted ||
+        !widget.visible ||
+        !widget.active ||
+        (!_focus.hasFocus && !_tmuxPaneFocused)) {
       return;
     }
     switch (action) {
       case TerminalMenuAction.copy:
-        unawaited(_copySelection());
+        if (_nativeTmux == null) unawaited(_copySelection());
       case TerminalMenuAction.paste:
-        unawaited(_paste());
+        if (_nativeTmux == null) unawaited(_paste());
       case TerminalMenuAction.disconnect:
         if (_canDisconnect) unawaited(_session.disconnect());
       case TerminalMenuAction.hide:
@@ -759,6 +827,69 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
             _screenTerminal = launchConfig.screen == null
                 ? null
                 : connectingTerminal;
+          }
+          final tmux = launchConfig.tmux;
+          if (tmux?.controlMode == true) {
+            final owner = _session;
+            TmuxControlClient? pendingClient;
+            String Function()? diagnostics;
+            _pendingTmuxRoutes.add(session.id);
+            void cancelStaleStart() {
+              if (!currentAttempt()) {
+                final client = pendingClient;
+                if (client != null) {
+                  unawaited(client.close().catchError((Object _) {}));
+                }
+                unawaited(
+                  _ssh.disconnect(session.id).catchError((Object _) {}),
+                );
+              }
+            }
+
+            owner.addListener(cancelStaleStart);
+            try {
+              if (!currentAttempt()) {
+                throw StateError('tmux control start was cancelled');
+              }
+              final raw = await _ssh.startTmuxControl(
+                session.id,
+                tmux: tmux!,
+                width: columns,
+                height: rows,
+              );
+              diagnostics = () => raw.diagnostics;
+              final client = TmuxControlClient(
+                output: raw.output,
+                write: raw.write,
+                close: raw.close,
+                exitCode: raw.exitCode,
+              );
+              pendingClient = client;
+              _pendingTmuxControls.add(client);
+              if (!currentAttempt()) {
+                throw StateError('tmux control start was cancelled');
+              }
+              await client.start(columns: columns, rows: rows);
+              if (!currentAttempt()) {
+                throw StateError('tmux control start was cancelled');
+              }
+              return TmuxTerminalConnection(_ssh, session.id, client);
+            } catch (error) {
+              try {
+                await pendingClient?.close();
+              } finally {
+                pendingClient?.dispose();
+              }
+              final detail = diagnostics?.call() ?? '';
+              if (detail.isNotEmpty) {
+                throw StateError('$error\n$detail');
+              }
+              rethrow;
+            } finally {
+              owner.removeListener(cancelStaleStart);
+              _pendingTmuxControls.remove(pendingClient);
+              _pendingTmuxRoutes.remove(session.id);
+            }
           }
           final stream = await _ssh.startShell(
             session.id,
@@ -1518,22 +1649,25 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
                             ExternalTerminalStrings(context).text('open'),
                           ),
                         ),
-                      PopupMenuItem(
-                        value: _PanelAction.copy,
-                        enabled: _canCopy,
-                        child: Text(context.terminalTr('Copy selection')),
-                      ),
-                      PopupMenuItem(
-                        value: _PanelAction.paste,
-                        enabled: _session.isConnected,
-                        child: Text(context.terminalTr('Paste')),
-                      ),
-                      PopupMenuItem(
-                        value: _PanelAction.find,
-                        child: Text(
-                          context.terminalControlsTr('Find in terminal'),
+                      if (_nativeTmux == null)
+                        PopupMenuItem(
+                          value: _PanelAction.copy,
+                          enabled: _canCopy,
+                          child: Text(context.terminalTr('Copy selection')),
                         ),
-                      ),
+                      if (_nativeTmux == null)
+                        PopupMenuItem(
+                          value: _PanelAction.paste,
+                          enabled: _session.isConnected,
+                          child: Text(context.terminalTr('Paste')),
+                        ),
+                      if (_nativeTmux == null)
+                        PopupMenuItem(
+                          value: _PanelAction.find,
+                          child: Text(
+                            context.terminalControlsTr('Find in terminal'),
+                          ),
+                        ),
                       PopupMenuItem(
                         value: _PanelAction.zoomIn,
                         enabled: _fontSize < 32,
@@ -1579,54 +1713,64 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
                           context.terminalShellTr('Shell integration setup'),
                         ),
                       ),
-                      PopupMenuItem(
-                        value: _PanelAction.history,
-                        child: Text(context.terminalShellTr('Command history')),
-                      ),
-                      PopupMenuItem(
-                        value: _PanelAction.previousCommand,
-                        enabled:
-                            !_session.terminal.isUsingAltBuffer &&
-                            _session.shellIntegration.marks.isNotEmpty,
-                        child: Text(
-                          context.terminalShellTr('Previous command'),
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: _PanelAction.nextCommand,
-                        enabled:
-                            !_session.terminal.isUsingAltBuffer &&
-                            _session.shellIntegration.marks.isNotEmpty,
-                        child: Text(context.terminalShellTr('Next command')),
-                      ),
-                      PopupMenuItem(
-                        value: _PanelAction.addMark,
-                        enabled: !_session.terminal.isUsingAltBuffer,
-                        child: Text(context.terminalShellTr('Add mark')),
-                      ),
-                      PopupMenuItem(
-                        value: _PanelAction.selectOutput,
-                        enabled:
-                            _session.shellIntegration.latestCommand != null &&
-                            _session.shellIntegration.outputRange(
-                                  _session.shellIntegration.latestCommand!,
-                                ) !=
-                                null,
-                        child: Text(
-                          context.terminalShellTr('Select last command output'),
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: _PanelAction.notifyCommand,
-                        enabled: _session.isConnected,
-                        child: Text(
-                          context.terminalShellTr(
-                            _session.shellIntegration.notifyOnCompletion
-                                ? 'Cancel command notification'
-                                : 'Notify when command finishes',
+                      if (_nativeTmux == null)
+                        PopupMenuItem(
+                          value: _PanelAction.history,
+                          child: Text(
+                            context.terminalShellTr('Command history'),
                           ),
                         ),
-                      ),
+                      if (_nativeTmux == null)
+                        PopupMenuItem(
+                          value: _PanelAction.previousCommand,
+                          enabled:
+                              !_session.terminal.isUsingAltBuffer &&
+                              _session.shellIntegration.marks.isNotEmpty,
+                          child: Text(
+                            context.terminalShellTr('Previous command'),
+                          ),
+                        ),
+                      if (_nativeTmux == null)
+                        PopupMenuItem(
+                          value: _PanelAction.nextCommand,
+                          enabled:
+                              !_session.terminal.isUsingAltBuffer &&
+                              _session.shellIntegration.marks.isNotEmpty,
+                          child: Text(context.terminalShellTr('Next command')),
+                        ),
+                      if (_nativeTmux == null)
+                        PopupMenuItem(
+                          value: _PanelAction.addMark,
+                          enabled: !_session.terminal.isUsingAltBuffer,
+                          child: Text(context.terminalShellTr('Add mark')),
+                        ),
+                      if (_nativeTmux == null)
+                        PopupMenuItem(
+                          value: _PanelAction.selectOutput,
+                          enabled:
+                              _session.shellIntegration.latestCommand != null &&
+                              _session.shellIntegration.outputRange(
+                                    _session.shellIntegration.latestCommand!,
+                                  ) !=
+                                  null,
+                          child: Text(
+                            context.terminalShellTr(
+                              'Select last command output',
+                            ),
+                          ),
+                        ),
+                      if (_nativeTmux == null)
+                        PopupMenuItem(
+                          value: _PanelAction.notifyCommand,
+                          enabled: _session.isConnected,
+                          child: Text(
+                            context.terminalShellTr(
+                              _session.shellIntegration.notifyOnCompletion
+                                  ? 'Cancel command notification'
+                                  : 'Notify when command finishes',
+                            ),
+                          ),
+                        ),
                       PopupMenuItem(
                         value: _PanelAction.hide,
                         child: Text(context.terminalTr('Hide terminal')),
@@ -1765,6 +1909,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
       view.viewInsets.bottom / view.devicePixelRatio,
     );
     final message = _message();
+    final nativeTmux = _nativeTmux;
     return LayoutBuilder(
       builder: (context, constraints) {
         // Leave room for browser chrome and adapt when the phone keyboard opens.
@@ -1822,7 +1967,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
                   ),
                 ),
               _buildHeader(),
-              if (_showSearch)
+              if (_showSearch && nativeTmux == null)
                 Visibility(
                   visible: showSearch,
                   maintainState: true,
@@ -1852,43 +1997,59 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
                 child: Stack(
                   children: [
                     Positioned.fill(
-                      child: Listener(
-                        behavior: HitTestBehavior.translucent,
-                        onPointerDown: (_) => _activateInput(),
-                        child: Focus(
-                          canRequestFocus: false,
-                          skipTraversal: true,
-                          // Unhandled terminal keys must reach the IME, never the file
-                          // browser's Enter/F-key/delete handlers higher in the focus tree.
-                          onKeyEvent: (_, __) =>
-                              KeyEventResult.skipRemainingHandlers,
-                          child: TerminalView(
-                            _session.terminal,
-                            key: _terminalViewKey,
-                            controller: _controller,
-                            focusNode: _focus,
-                            scrollController: _scroll,
-                            readOnly: !_session.isConnected,
-                            autofocus: false,
-                            deleteDetection: _mobile,
-                            keyboardType: TextInputType.multiline,
-                            keyboardAppearance: Brightness.dark,
-                            textStyle: TerminalStyle(
-                              fontFamily: 'AppMono',
+                      child: nativeTmux != null
+                          ? TmuxControlWorkspace(
+                              client: nativeTmux,
+                              visible: widget.visible,
+                              active:
+                                  widget.active &&
+                                  ref.watch(focusAreaProvider) ==
+                                      FocusArea.terminal,
                               fontSize: _fontSize,
+                              onFontSizeChanged: _setFontSize,
+                              focusRequest: widget.focusRequest,
+                              onActivate: _activateInput,
+                              onPaneFocusChanged: _onTmuxPaneFocusChanged,
+                              onWorkspaceKey: widget.onWorkspaceKey,
+                              onDetach: () => unawaited(_session.disconnect()),
+                            )
+                          : Listener(
+                              behavior: HitTestBehavior.translucent,
+                              onPointerDown: (_) => _activateInput(),
+                              child: Focus(
+                                canRequestFocus: false,
+                                skipTraversal: true,
+                                // Unhandled terminal keys must reach the IME, never the file
+                                // browser's Enter/F-key/delete handlers higher in the focus tree.
+                                onKeyEvent: (_, __) =>
+                                    KeyEventResult.skipRemainingHandlers,
+                                child: TerminalView(
+                                  _session.terminal,
+                                  key: _terminalViewKey,
+                                  controller: _controller,
+                                  focusNode: _focus,
+                                  scrollController: _scroll,
+                                  readOnly: !_session.isConnected,
+                                  autofocus: false,
+                                  deleteDetection: _mobile,
+                                  keyboardType: TextInputType.multiline,
+                                  keyboardAppearance: Brightness.dark,
+                                  textStyle: TerminalStyle(
+                                    fontFamily: 'AppMono',
+                                    fontSize: _fontSize,
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  shiftOverridesMouseReporting: true,
+                                  dragOverridesMouseReporting: _mobile,
+                                  onCopy: _copyText,
+                                  onPaste: _paste,
+                                  onKeyEvent: _onTerminalKey,
+                                ),
+                              ),
                             ),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            shiftOverridesMouseReporting: true,
-                            dragOverridesMouseReporting: _mobile,
-                            onCopy: _copyText,
-                            onPaste: _paste,
-                            onKeyEvent: _onTerminalKey,
-                          ),
-                        ),
-                      ),
                     ),
                     if (message != null)
                       Positioned.fill(
@@ -1934,8 +2095,9 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
                   ],
                 ),
               ),
-              if (showExtraKeys) _buildExtraKeys(),
-              if (height >= 220 &&
+              if (showExtraKeys && nativeTmux == null) _buildExtraKeys(),
+              if (nativeTmux == null &&
+                  height >= 220 &&
                   !_session.terminal.isUsingAltBuffer &&
                   (_session.shellIntegration.detected ||
                       _session.shellIntegration.currentDirectory != null))
@@ -1949,6 +2111,8 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
 
   @override
   void dispose() {
+    _cancelPendingTmuxStarts();
+    _retireTmuxControl();
     _scroll.removeListener(_onScrollChanged);
     _clearCommandNavigation();
     _connectionRequest++;

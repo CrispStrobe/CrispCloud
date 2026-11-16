@@ -1,0 +1,19 @@
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_workspace_test.dart
+00:00 +0: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_workspace_test.dart: native windows keep independent pane grids and route keyboard to selected pane (variant: TargetPlatform.linux)
+00:01 +1: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_workspace_test.dart: remote creation and split controls use active target; local zoom preserves remote layout
+00:02 +2: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_workspace_test.dart: 320 by 320 shows active pane and native pane selector without overflow
+00:03 +3: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_workspace_test.dart: hidden workspace revokes keyboard and does not reclaim focus after server events
+00:03 +4: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_workspace_test.dart: narrow outer split keeps pane selection and overflow actions available
+00:03 +5: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_workspace_test.dart: remote zoom retains hidden panes in the native selector
+00:03 +6: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_workspace_test.dart: clipboard read is revoked on pane switch, while explicit current paste keeps bracketed mode
+00:03 +7: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_workspace_test.dart: server pane selection does not take focus from the file browser
+00:03 +8: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_workspace_test.dart: mapped press executes once and repeat or release cannot leak after remote pane selection (variant: TargetPlatform.linux)
+00:03 +9: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_workspace_test.dart: saved output triggers run for hidden remote windows and identify their pane
+00:04 +10: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_workspace_test.dart: detach delegates to owner without closing or killing individual panes
+00:04 +11: loading /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_visual_test.dart
+00:05 +11: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_visual_test.dart: (setUpAll)
+00:05 +11: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_visual_test.dart: capture native tmux workspace at desktop and compact sizes
+00:07 +12: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_visual_test.dart: (tearDownAll)
+00:07 +12: All tests passed!

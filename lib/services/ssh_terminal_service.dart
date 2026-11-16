@@ -28,6 +28,7 @@ import 'secure_storage_service.dart';
 import 'ssh_agent.dart';
 import 'ssh_gateway.dart';
 import 'ssh_port_forwarding.dart';
+import 'ssh_tmux_control_output.dart';
 import 'terminal_output.dart';
 import 'terminal_mount_failure.dart';
 
@@ -162,6 +163,7 @@ class _SessionState {
   SSHClient get client => route.clients.last;
   SSHSession? shellSession;
   TerminalOutput? shellOutput;
+  SshTmuxControlOutput? tmuxControlOutput;
   int shellGeneration = 0;
   bool discoveryRunning = false;
   SshPortForwarding? forwarding;
@@ -938,6 +940,9 @@ class SshTerminalService {
     ScreenSessionOptions? screen,
   }) async {
     _validateDimensions(width, height);
+    if (tmux?.controlMode == true) {
+      throw ArgumentError('Native tmux panes require a raw control channel');
+    }
     // Validate before replacing a running shell or sending any remote request.
     if (tmux != null && screen != null) {
       throw ArgumentError('Choose either tmux or screen, not both');
@@ -959,11 +964,14 @@ class SshTerminalService {
     // Invalidates callbacks from the previous shell before closing its stream.
     final generation = ++state.shellGeneration;
     final previousOutput = state.shellOutput;
+    final previousControl = state.tmuxControlOutput;
     final previousShell = state.shellSession;
     state.shellOutput = null;
+    state.tmuxControlOutput = null;
     state.shellSession = null;
     previousShell?.close();
     await previousOutput?.dispose();
+    await previousControl?.dispose();
     if (!_isCurrentShell(sessionId, state, generation)) {
       throw StateError('SSH shell start was cancelled');
     }
@@ -1022,6 +1030,77 @@ class SshTerminalService {
     );
     state.shellOutput = output;
     return SshShellOutput(output.stream, exitCode);
+  }
+
+  /// Open tmux's machine protocol on the verified route without requesting a
+  /// PTY. No terminal byte, diagnostic or remote name becomes a local command.
+  Future<SshTmuxControlOutput> startTmuxControl(
+    String sessionId, {
+    required TmuxSessionOptions tmux,
+    int width = 80,
+    int height = 24,
+  }) async {
+    _validateDimensions(width, height);
+    if (!tmux.controlMode) {
+      throw ArgumentError('Native tmux panes must be explicitly selected');
+    }
+    final command = tmux.command;
+    final state = _requireSession(sessionId);
+    if (state.client.isClosed) throw StateError('SSH connection is closed');
+    final generation = ++state.shellGeneration;
+    final previousShell = state.shellSession;
+    final previousOutput = state.shellOutput;
+    final previousControl = state.tmuxControlOutput;
+    state.shellSession = null;
+    state.shellOutput = null;
+    state.tmuxControlOutput = null;
+    previousShell?.close();
+    await previousOutput?.dispose();
+    await previousControl?.dispose();
+    bool current() => _isCurrentShell(sessionId, state, generation);
+    if (!current()) throw StateError('tmux control start was cancelled');
+    _touch(sessionId);
+    SSHSession shell;
+    try {
+      shell = await state.client.execute(command, pty: null);
+    } catch (_) {
+      if (current()) await disconnect(sessionId);
+      rethrow;
+    }
+    if (!current()) {
+      shell.close();
+      throw StateError('tmux control start was cancelled');
+    }
+    state.shellSession = shell;
+    final exitCode = shell.done.then<int?>((_) => shell.exitCode);
+    final output = SshTmuxControlOutput(
+      stdout: shell.stdout,
+      stderr: shell.stderr,
+      exitCode: exitCode,
+      write: (command) async {
+        if (!current()) throw StateError('tmux control channel was replaced');
+        _touch(sessionId);
+        shell.stdin.add(Uint8List.fromList(utf8.encode(command)));
+      },
+      close: () async {
+        if (current()) await disconnect(sessionId);
+      },
+      onActivity: () {
+        if (current()) _touch(sessionId);
+      },
+      onDone: () {
+        unawaited(() async {
+          try {
+            await exitCode;
+          } catch (_) {
+            // The control client observes exit errors independently.
+          }
+          if (current()) await disconnect(sessionId);
+        }());
+      },
+    );
+    state.tmuxControlOutput = output;
+    return output;
   }
 
   /// Sends [input] to the active interactive shell of [sessionId].
@@ -1153,7 +1232,9 @@ class SshTerminalService {
     unawaited(state.forwarding?.close());
     // An attached shell drains its stdout/stderr before removing the session.
     // Connections used only for execute have no terminal streams to drain.
-    if (state.shellOutput == null) unawaited(disconnect(id));
+    if (state.shellOutput == null && state.tmuxControlOutput == null) {
+      unawaited(disconnect(id));
+    }
   }
 
   static void _validateDimensions(int width, int height) {
@@ -1173,6 +1254,9 @@ class SshTerminalService {
     } catch (_) {}
     try {
       await state.shellOutput?.dispose();
+    } catch (_) {}
+    try {
+      await state.tmuxControlOutput?.dispose();
     } catch (_) {}
     await state.route.close();
   }

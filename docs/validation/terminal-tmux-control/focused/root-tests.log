@@ -1,0 +1,222 @@
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_session_options_test.dart
+00:00 +0: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_session_options_test.dart: native mode selects control protocol without taking other clients
+00:00 +1: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_session_options_test.dart: accepts short names and the 64-character boundary
+00:00 +2: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_session_options_test.dart: attach targets the exact session without detaching other clients
+00:00 +3: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_session_options_test.dart: rejects shell syntax, tmux targets, whitespace and oversized names
+00:05 +4: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_transport_test.dart: requests the actual terminal geometry and resizes the active PTY
+ℹ️ [SshTerminalService] Session ho7hva08sf0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7hva08sf0)
+ℹ️ [SshTerminalService] resizeTerminal(ho7hva08sf0): 95x31
+ℹ️ [SshTerminalService] Disconnecting session ho7hva08sf0
+00:05 +5: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_transport_test.dart: starts tmux through an exec PTY and preserves input and resize
+ℹ️ [SshTerminalService] Session ho7hva0qci0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7hva0qci0)
+ℹ️ [SshTerminalService] resizeTerminal(ho7hva0qci0): 95x31
+ℹ️ [SshTerminalService] Disconnecting session ho7hva0qci0
+00:05 +6: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_transport_test.dart: attach uses an exact tmux target and never creates a fallback shell
+ℹ️ [SshTerminalService] Session ho7hva0u7e0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7hva0u7e0)
+ℹ️ [SshTerminalService] Disconnecting session ho7hva0u7e0
+00:05 +7: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_transport_test.dart: native tmux preserves raw stdout and separates stderr without a PTY
+ℹ️ [SshTerminalService] Session ho7hva0xl80 established to test.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7hva0xl80
+00:05 +8: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_transport_test.dart: raw tmux validates mode and name before replacing a running shell
+ℹ️ [SshTerminalService] Session ho7hva17lk0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7hva17lk0)
+ℹ️ [SshTerminalService] Disconnecting session ho7hva17lk0
+00:05 +9: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_transport_test.dart: disconnect during native tmux startup closes a late channel
+ℹ️ [SshTerminalService] Session ho7hva1e4v0 established to test.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7hva1e4v0
+00:05 +10: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_transport_test.dart: replaced native controller cannot write to or close its replacement
+ℹ️ [SshTerminalService] Session ho7hva1guh0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7hva1guh0)
+ℹ️ [SshTerminalService] Disconnecting session ho7hva1guh0
+00:05 +11: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_transport_test.dart: native control cancellation releases channel, route and pool slot
+ℹ️ [SshTerminalService] Session ho7hva1kg40 established to test.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7hva1kg40
+00:05 +12: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_transport_test.dart: native startup output is bounded before the client listens
+ℹ️ [SshTerminalService] Session ho7hva1mkv0 established to test.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7hva1mkv0
+00:05 +13: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_transport_test.dart: invalid tmux names leave an existing shell untouched
+ℹ️ [SshTerminalService] Session ho7hva1yfg0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7hva1yfg0)
+ℹ️ [SshTerminalService] Disconnecting session ho7hva1yfg0
+00:05 +14: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_transport_test.dart: screen uses an exec PTY and preserves input and geometry
+ℹ️ [SshTerminalService] Session ho7hva23oi0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7hva23oi0)
+ℹ️ [SshTerminalService] resizeTerminal(ho7hva23oi0): 95x31
+ℹ️ [SshTerminalService] Disconnecting session ho7hva23oi0
+00:05 +15: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_transport_test.dart: invalid or conflicting screen options preserve the running shell
+ℹ️ [SshTerminalService] Session ho7hva26rl0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7hva26rl0)
+ℹ️ [SshTerminalService] Disconnecting session ho7hva26rl0
+00:05 +16: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_transport_test.dart: disconnect during screen startup closes the late channel
+ℹ️ [SshTerminalService] Session ho7hva29cx0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7hva29cx0)
+ℹ️ [SshTerminalService] Disconnecting session ho7hva29cx0
+00:05 +17: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_transport_test.dart: failed screen exec closes its pool slot without shell fallback
+ℹ️ [SshTerminalService] Session ho7hva2c2t0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7hva2c2t0)
+ℹ️ [SshTerminalService] Disconnecting session ho7hva2c2t0
+00:05 +18: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_transport_test.dart: closing screen disconnects only this SSH client without remote commands
+ℹ️ [SshTerminalService] Session ho7hva2eb90 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7hva2eb90)
+ℹ️ [SshTerminalService] Disconnecting session ho7hva2eb90
+00:05 +19: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_transport_test.dart: disconnect during tmux startup closes its late exec channel
+ℹ️ [SshTerminalService] Session ho7hva2gvm0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7hva2gvm0)
+ℹ️ [SshTerminalService] Disconnecting session ho7hva2gvm0
+00:05 +20: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_transport_test.dart: failed tmux exec releases its pool slot without shell fallback
+ℹ️ [SshTerminalService] Session ho7hva2j5h0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7hva2j5h0)
+ℹ️ [SshTerminalService] Disconnecting session ho7hva2j5h0
+00:05 +21: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_transport_test.dart: disconnect closes only the tmux client without sending kill or exit
+ℹ️ [SshTerminalService] Session ho7hva2l7m0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7hva2l7m0)
+ℹ️ [SshTerminalService] Disconnecting session ho7hva2l7m0
+00:05 +22: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_transport_test.dart: preserves remote exit status without losing final tmux output
+ℹ️ [SshTerminalService] Session ho7hva2nac0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7hva2nac0)
+ℹ️ [SshTerminalService] Disconnecting session ho7hva2nac0
+00:05 +23: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_transport_test.dart: output EOF waits for the later SSH exit status before cleanup
+ℹ️ [SshTerminalService] Session ho7hva2s4g0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7hva2s4g0)
+ℹ️ [SshTerminalService] Disconnecting session ho7hva2s4g0
+00:05 +24: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_transport_test.dart: explicit disconnect still closes SSH while waiting after output EOF
+ℹ️ [SshTerminalService] Session ho7hva2v9v0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7hva2v9v0)
+ℹ️ [SshTerminalService] Disconnecting session ho7hva2v9v0
+00:05 +25: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_transport_test.dart: observes early channel errors and preserves them for the exit reader
+ℹ️ [SshTerminalService] Session ho7hva2y9x0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7hva2y9x0)
+ℹ️ [SshTerminalService] Disconnecting session ho7hva2y9x0
+00:05 +26: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_transport_test.dart: plain output streams remain compatible without exit metadata
+ℹ️ [SshTerminalService] Session ho7hva31000 established to test.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7hva31000
+00:05 +27: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_transport_test.dart: decrypts an encrypted key without sending its passphrase as a password
+ℹ️ [SshTerminalService] Session ho7hva32kp0 established to test.example:22
+ℹ️ [SshTerminalService] Session ho7hva4mom0 established to key.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7hva4mom0
+ℹ️ [SshTerminalService] Disconnecting session ho7hva32kp0
+00:05 +28: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_transport_test.dart: rejects missing or incorrect key passphrases before connecting
+ℹ️ [SshTerminalService] Session ho7hva4pxe0 established to test.example:22
+❌ [SshTerminalService] Failed to parse or decrypt SSH private key
+❌ [SshTerminalService] Failed to parse or decrypt SSH private key
+❌ [SshTerminalService] Failed to parse or decrypt SSH private key
+ℹ️ [SshTerminalService] Disconnecting session ho7hva4pxe0
+00:06 +29: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_transport_test.dart: accepts unencrypted keys with omitted or empty passphrases
+ℹ️ [SshTerminalService] Session ho7hva64rz0 established to test.example:22
+00:06 +30: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_transport_test.dart: accepts unencrypted keys with omitted or empty passphrases
+00:06 +31: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_transport_test.dart: accepts unencrypted keys with omitted or empty passphrases
+00:06 +32: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_transport_test.dart: accepts unencrypted keys with omitted or empty passphrases
+00:06 +33: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_transport_test.dart: accepts unencrypted keys with omitted or empty passphrases
+ℹ️ [SshTerminalService] Session ho7hva7fvy1 established to key.example:22
+ℹ️ [SshTerminalService] Session ho7hva7gkt2 established to key.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7hva64rz0
+ℹ️ [SshTerminalService] Disconnecting session ho7hva7fvy1
+ℹ️ [SshTerminalService] Disconnecting session ho7hva7gkt2
+00:06 +34: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_transport_test.dart: writes UTF-8, arrow keys, tab and control characters without line buffering
+ℹ️ [SshTerminalService] Session ho7hva7kdh0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7hva7kdh0)
+ℹ️ [SshTerminalService] Disconnecting session ho7hva7kdh0
+00:06 +35: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_transport_test.dart: buffers initial prompt and decodes UTF-8 split across packets
+ℹ️ [SshTerminalService] Session ho7hva7p9s0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7hva7p9s0)
+ℹ️ [SshTerminalService] Disconnecting session ho7hva7p9s0
+00:06 +36: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_transport_test.dart: waits for stderr after stdout EOF and keeps its UTF-8 decoder separate
+ℹ️ [SshTerminalService] Session ho7hva7v6s0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7hva7v6s0)
+ℹ️ [SshTerminalService] Disconnecting session ho7hva7v6s0
+00:06 +37: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_transport_test.dart: reports channel errors instead of silently swallowing stderr errors
+ℹ️ [SshTerminalService] Session ho7hva7zb30 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7hva7zb30)
+ℹ️ [SshTerminalService] Disconnecting session ho7hva7zb30
+00:06 +38: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_transport_test.dart: disconnect completes before any output consumer attaches
+ℹ️ [SshTerminalService] Session ho7hva83t30 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7hva83t30)
+ℹ️ [SshTerminalService] Disconnecting session ho7hva83t30
+00:06 +39: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_transport_test.dart: cancelling the terminal subscription closes the SSH connection
+ℹ️ [SshTerminalService] Session ho7hva877g0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7hva877g0)
+ℹ️ [SshTerminalService] Disconnecting session ho7hva877g0
+00:06 +40: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_transport_test.dart: restart closes the old shell without disconnecting the replacement
+ℹ️ [SshTerminalService] Session ho7hva8ad50 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7hva8ad50)
+ℹ️ [SshTerminalService] startShell(ho7hva8ad50)
+ℹ️ [SshTerminalService] Disconnecting session ho7hva8ad50
+00:06 +41: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_transport_test.dart: disconnect during shell setup closes the late shell
+ℹ️ [SshTerminalService] Session ho7hva8dtl0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7hva8dtl0)
+ℹ️ [SshTerminalService] Disconnecting session ho7hva8dtl0
+00:06 +42: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_transport_test.dart: failed shell setup releases the connection and its pool slot
+ℹ️ [SshTerminalService] Session ho7hva8g9i0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7hva8g9i0)
+ℹ️ [SshTerminalService] Disconnecting session ho7hva8g9i0
+00:06 +43: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_transport_test.dart: transport completion does not discard output still queued in channels
+ℹ️ [SshTerminalService] Session ho7hva8ilq0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7hva8ilq0)
+ℹ️ [SshTerminalService] Disconnecting session ho7hva8ilq0
+00:06 +44: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_transport_test.dart: noninteractive execute also decodes UTF-8
+ℹ️ [SshTerminalService] Session ho7hva8q0x0 established to test.example:22
+ℹ️ [SshTerminalService] execute(ho7hva8q0x0)
+ℹ️ [SshTerminalService] Disconnecting session ho7hva8q0x0
+00:06 +45: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_transport_test.dart: validates actual start and resize entry points before requesting a PTY
+ℹ️ [SshTerminalService] Session ho7hva8uxn0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7hva8uxn0)
+ℹ️ [SshTerminalService] Disconnecting session ho7hva8uxn0
+00:06 +46: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_transport_test.dart: dispose rejects and closes a connection that completes later
+ℹ️ [SshTerminalService] Session ho7hva8ymz0 established to test.example:22
+❌ [SshTerminalService] SSH connect failed
+  Error: Bad state: SSH connection was cancelled
+ℹ️ [SshTerminalService] Disconnecting session ho7hva8ymz0
+00:06 +47: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_transport_test.dart: pool limit includes connections still authenticating
+ℹ️ [SshTerminalService] Session ho7hva91bn0 established to test.example:22
+ℹ️ [SshTerminalService] Session ho7hva92mw0 established to host0:22
+ℹ️ [SshTerminalService] Session ho7hva92tx1 established to host1:22
+ℹ️ [SshTerminalService] Session ho7hva92zu2 established to host2:22
+ℹ️ [SshTerminalService] Session ho7hva933v3 established to host3:22
+ℹ️ [SshTerminalService] Session ho7hva937j4 established to host4:22
+ℹ️ [SshTerminalService] Disconnecting session ho7hva92mw0
+ℹ️ [SshTerminalService] Disconnecting session ho7hva92tx1
+ℹ️ [SshTerminalService] Disconnecting session ho7hva92zu2
+ℹ️ [SshTerminalService] Disconnecting session ho7hva933v3
+ℹ️ [SshTerminalService] Disconnecting session ho7hva937j4
+ℹ️ [SshTerminalService] Disconnecting session ho7hva91bn0
+00:09 +48: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: native tmux is explicit and survives credential-free reconnect
+00:11 +49: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: native tmux is explicit and survives credential-free reconnect
+00:11 +50: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: native tmux is explicit and survives credential-free reconnect
+00:11 +51: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: native tmux is explicit and survives credential-free reconnect
+00:11 +52: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: native tmux is explicit and survives credential-free reconnect
+00:11 +53: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: native tmux is explicit and survives credential-free reconnect
+00:11 +54: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: native tmux is explicit and survives credential-free reconnect
+00:11 +55: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: native tmux is explicit and survives credential-free reconnect
+00:11 +56: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: native tmux is explicit and survives credential-free reconnect
+00:11 +57: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: native tmux is explicit and survives credential-free reconnect
+00:11 +58: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: native tmux is explicit and survives credential-free reconnect
+00:11 +59: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: native tmux is explicit and survives credential-free reconnect
+00:11 +60: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: native tmux is explicit and survives credential-free reconnect
+00:11 +61: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: native tmux is explicit and survives credential-free reconnect
+00:11 +62: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: native tmux is explicit and survives credential-free reconnect
+00:12 +63: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: leaving tmux mode cannot silently enable native mode on a shell
+00:13 +64: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: reconnect details retain the target and mode but no credentials
+00:13 +65: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: password connections preserve the existing form behavior
+00:13 +66: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: private-key mode validates the key and submits its passphrase
+00:14 +67: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: switching authentication discards credentials from the old mode
+00:15 +68: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: explicit private-key paste preserves the exact multiline PEM
+00:15 +69: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: late clipboard results cannot restore cleared key credentials
+00:15 +70: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: a manual key edit supersedes a pending clipboard paste
+00:16 +71: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: reconnect prefills endpoint and tmux settings, never secrets
+00:16 +72: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: password reconnect also leaves the password empty
+00:16 +73: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: tmux validates names before returning a create-or-attach request
+00:17 +74: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: plain shell mode does not accidentally reuse a tmux target
+00:17 +75: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: screen create validates names and discards a previous tmux choice
+00:18 +76: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: screen attach accepts full IDs and reconnect preserves mode without secrets
+00:18 +77: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: switching from screen to plain shell discards its target
+00:18 +78: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: screen controls fit narrow screens
+00:19 +79: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: Screen controls are translated in every supported locale
+00:19 +80: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: key and tmux mode still require a safe browser gateway
+00:20 +81: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: expanded key and tmux form fits a narrow viewport
+00:20 +82: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: SSH extension labels are translated in every supported locale
+00:20 +83: All tests passed!

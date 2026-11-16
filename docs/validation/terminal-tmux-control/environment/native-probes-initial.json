@@ -1,0 +1,53 @@
+[
+  {
+    "filtered": false,
+    "command": [
+      "/workspace/scratch/6c8a74f9de7f/toolchain/bin/clang",
+      "/workspace/scratch/6c8a74f9de7f/toolchain/tmp/probe.c",
+      "-o",
+      "/workspace/scratch/6c8a74f9de7f/toolchain/tmp/probe-c"
+    ],
+    "returncode": 1,
+    "stdout": "",
+    "stderr": "clang: error: unable to make temporary file: No such file or directory\n"
+  },
+  {
+    "filtered": false,
+    "command": [
+      "/workspace/scratch/6c8a74f9de7f/toolchain/bin/rustc",
+      "/workspace/scratch/6c8a74f9de7f/toolchain/tmp/probe.rs",
+      "-o",
+      "/workspace/scratch/6c8a74f9de7f/toolchain/tmp/probe-rs"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": "",
+    "execution_returncode": 0
+  },
+  {
+    "filtered": true,
+    "command": [
+      "/workspace/scratch/6c8a74f9de7f/toolchain/bin/clang",
+      "/workspace/scratch/6c8a74f9de7f/toolchain/tmp/probe.c",
+      "-o",
+      "/workspace/scratch/6c8a74f9de7f/toolchain/tmp/probe-c"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": "",
+    "execution_returncode": 0
+  },
+  {
+    "filtered": true,
+    "command": [
+      "/workspace/scratch/6c8a74f9de7f/toolchain/bin/rustc",
+      "/workspace/scratch/6c8a74f9de7f/toolchain/tmp/probe.rs",
+      "-o",
+      "/workspace/scratch/6c8a74f9de7f/toolchain/tmp/probe-rs"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": "",
+    "execution_returncode": 0
+  }
+]

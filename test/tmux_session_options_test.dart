@@ -2,6 +2,20 @@ import 'package:crisp_cloud/models/tmux_session_options.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('native mode selects control protocol without taking other clients', () {
+    expect(
+      const TmuxSessionOptions(sessionName: 'build', controlMode: true).command,
+      "exec tmux -C new-session -A -s 'build'",
+    );
+    expect(
+      const TmuxSessionOptions(
+        sessionName: 'build',
+        mode: TmuxSessionMode.attach,
+        controlMode: true,
+      ).command,
+      "exec tmux -C attach-session -t '=build'",
+    );
+  });
   test('accepts short names and the 64-character boundary', () {
     for (final name in ['a', '0', '_', 'build_2-linux', 'a' * 64]) {
       expect(TmuxSessionOptions.isValidSessionName(name), isTrue, reason: name);
@@ -61,6 +75,15 @@ void main() {
           reason: name,
         );
         for (final mode in TmuxSessionMode.values) {
+          expect(
+            () => TmuxSessionOptions(
+              sessionName: name,
+              mode: mode,
+              controlMode: true,
+            ).command,
+            throwsArgumentError,
+            reason: 'control $mode: $name',
+          );
           expect(
             () => TmuxSessionOptions(sessionName: name, mode: mode).command,
             throwsArgumentError,

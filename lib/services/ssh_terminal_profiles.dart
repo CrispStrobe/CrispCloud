@@ -56,7 +56,7 @@ class SshTerminalProfiles {
     final data = jsonDecode(raw);
     if (data is! Map<String, dynamic> ||
         data['version'] is! int ||
-        !const [1, 2, 3].contains(data['version']) ||
+        !const [1, 2, 3, 4].contains(data['version']) ||
         data['profiles'] is! List) {
       throw const FormatException('Unsupported SSH profile store');
     }
@@ -141,9 +141,13 @@ class SshTerminalProfiles {
     // directly. Once upgraded, keep v2 even after removing the last route.
     // v3 readers understand agent authentication and forwarding permission.
     // Older readers must refuse the envelope instead of dropping that choice.
+    // v4 retains native tmux panes instead of silently falling back to a PTY.
     final version =
-        minimumVersion >= 3 ||
-            profiles.any((profile) => profile.config.usesAgent)
+        minimumVersion >= 4 ||
+            profiles.any((profile) => profile.config.tmux?.controlMode == true)
+        ? 4
+        : minimumVersion >= 3 ||
+              profiles.any((profile) => profile.config.usesAgent)
         ? 3
         : minimumVersion >= 2 ||
               profiles.any((profile) => profile.config.jumpHosts.isNotEmpty)

@@ -59,7 +59,7 @@ class TerminalArrangements {
     final data = jsonDecode(raw);
     if (data is! Map<String, dynamic> ||
         data['version'] is! int ||
-        !const [1, 2, 3].contains(data['version']) ||
+        !const [1, 2, 3, 4].contains(data['version']) ||
         data['arrangements'] is! List) {
       throw const FormatException('Unsupported terminal arrangement store');
     }
@@ -119,12 +119,19 @@ class TerminalArrangements {
       // Keep the same storage key so an older app rejects this version before
       // it can silently discard nested panes during a read-modify-write.
       'version':
-          _loadedVersion >= 3 ||
+          _loadedVersion >= 4 ||
               arrangements.any(
                 (arrangement) => arrangement.tabs.any(
-                  (tab) => tab.paneState.sshConfig?.usesAgent ?? false,
+                  (tab) => tab.paneState.sshConfig?.tmux?.controlMode == true,
                 ),
               )
+          ? 4
+          : _loadedVersion >= 3 ||
+                arrangements.any(
+                  (arrangement) => arrangement.tabs.any(
+                    (tab) => tab.paneState.sshConfig?.usesAgent ?? false,
+                  ),
+                )
           ? 3
           : 2,
       'arrangements': arrangements.map((item) => item.toJson()).toList(),

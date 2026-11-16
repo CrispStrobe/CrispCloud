@@ -6,12 +6,39 @@ toward desktop terminal workflows. It does not claim complete iTerm2 compatibili
 
 ## Current status
 
-The current continuation adds **native Linux/macOS SSH-agent authentication**,
+This continuation adds **native tmux control-mode windows and panes** to draft
+PR #160. The SSH form has an explicit default-off **Native tmux panes** option;
+tmux 3.2+ windows and pane geometry become separate native terminal views inside
+the existing tab. Window/pane selection, remote window creation and splits,
+client resizing, local zoom, search, copy/paste, custom key bindings, and output
+triggers are supported. Closing the client detaches without issuing remote kill
+commands. Saved destinations and arrangements retain the mode in a v4 envelope.
+
+This is a bounded first native workspace, not complete iTerm2 tmux equivalence.
+It captures up to 200 history lines within local buffer limits and restores
+active/saved primary screens, pending parser bytes and common cursor/input modes.
+Original soft-wrap metadata, every parser/SGR state, tmux's interactive prefix
+and copy-mode interface, mouse/focus forwarding, full command-history controls and independent native
+operating-system windows remain incomplete. See the
+[native tmux guide](terminal.md#native-tmux-windows-and-panes) and
+[current acceptance record](validation/terminal-tmux-control/README.md).
+Actual tmux daemon startup is blocked by this host's Unix-socket policy; recorded
+protocol/widget coverage must not be read as live tmux-server acceptance.
+
+Before implementation, a fresh fetch again contained all **38 branch heads and
+151 PR heads** at `ce386fd6`, including main and PR #161. No additional merge was
+needed. The [fresh snapshot](validation/terminal-tmux-control/integration.json)
+records exact ancestry. Remote checkpoints retain every intermediate change;
+GitHub Actions results are neither queried nor awaited.
+
+### Previous agent/profile continuation
+
+The preceding continuation added **native Linux/macOS SSH-agent authentication**,
 **explicit agent forwarding to the final host**, and **saved forwarding profiles
 with opt-in startup after a verified connection or reconnect**, in draft PR #160.
 These build on local/remote/SOCKS5 forwarding and persistent output triggers.
 The [terminal guide](terminal.md#local-ssh-agent-and-agent-forwarding) describes
-the workflow and limits. Current local validation and integration evidence are
+the workflow and limits. Its local validation and integration evidence are
 recorded in [the agent/profile acceptance directory](validation/terminal-agent-profiles/README.md).
 
 Agent access is scoped to one verified route, uses a frozen public-key list, and
@@ -40,9 +67,9 @@ GitHub Actions results are neither queried nor awaited; checkpoints carry
 `[skip ci]`. Local validation and its explicit platform limits are recorded below
 and in [the current evidence directory](validation/terminal-agent-profiles/README.md).
 
-## Integration baseline and refresh
+## Previous integration baselines and refreshes
 
-This continuation began from `e6cb6eee` and first integrated the newer Zotero and
+The agent/profile continuation began from `e6cb6eee` and first integrated the newer Zotero and
 Office head `cf442dd2` from PR #161. Merge checkpoint `7203aa28` contains all
 **38 advertised branch heads and 151 available PR heads** as actual ancestors.
 The ordinary merge preserved the terminal work and brought in the incoming
@@ -115,7 +142,7 @@ Earlier feature evidence retains its original source cutoff. Records:
 | Area | Current behavior |
 | --- | --- |
 | Terminal workspace | Up to eight independent tabs and eight nested visible panes; per-divider sizing and balancing; directional/cyclic pane selection; temporary zoom; compact active-pane fallback; retained hidden sessions |
-| Saved arrangements | Up to 20 named arrangements with full split topology, ratios, tab order/names, active pane, font sizes and sanitized SSH routes; reads v1/v2 and uses v3 when saving agent choices |
+| Saved arrangements | Up to 20 named arrangements with full split topology, ratios, tab order/names, active pane, font sizes and sanitized SSH routes; reads legacy records, uses v3 for agent choices and v4 for native tmux |
 | SSH authentication | Password, encrypted/unencrypted key and native Linux/macOS SSH-agent login; verified host keys, explicit gateway, up to three independently authenticated and verified jump hosts |
 | SSH-agent forwarding | Separate default-off permission for the final host only; frozen supported keys, list/sign-only protocol, bounded requests/channels and immediate revocation on disconnect |
 | SSH forwarding | Native local, remote and SOCKS5 TCP CONNECT listeners on existing verified routes; actual assigned ports; per-listener clients and errors; bounded ownership and cleanup |
@@ -123,6 +150,7 @@ Earlier feature evidence retains its original source cutoff. Records:
 | Saved destinations | Up to 50 secret-free profiles; shell/tmux/Screen modes, jump routes, agent authentication choices and explicit forwarding permission; atomic import from a bounded OpenSSH configuration subset |
 | Key bindings | Capture, add, edit, enable/disable and delete exact shortcuts; explicit text or complete terminal-key taps; recipient-specific keyboard protocols and broadcast integration |
 | tmux and GNU screen | Create/attach, exact targets, non-evicting detach, manual reconnect and authenticated bounded session discovery |
+| Native tmux workspace | Optional tmux 3.2+ control client; up to 16 remote windows/64 panes, independent emulators and remote geometry, selection, create/split, resize, zoom, search, explicit clipboard, keys/triggers and detach |
 | Navigation | Unicode/wrap-aware literal scrollback search, per-tab font size, OSC 133/633 command history, previous/next marks, manual/iTerm2 marks and completed-command output selection |
 | Shell status and setup | Shell-reported directory/status/duration, one-shot in-app completion notification, review-and-copy Bash 4.4+/Zsh helpers preserving prompt hooks |
 | Output triggers | Up to 50 persistent literal/limited-pattern rules; line-specific marks and in-app alerts; preview, cooldowns, per-connection one-shot state and bounded matching work |
@@ -388,7 +416,8 @@ Reproduction commands and manual checks are in
 
 ## Remaining larger parity areas
 
-- Native tmux control-mode mapping of remote windows and panes.
+- Complete native tmux state fidelity, mouse/focus forwarding, broader pane
+  actions and real tmux-server/platform qualification beyond the first workspace.
 - Persistent connection multiplexing and broader agent support, including
   Windows named pipes, certificates/security-key algorithms and session binding.
 - Independent terminal windows and layouts beyond the current eight-tab limit.
@@ -400,9 +429,9 @@ Reproduction commands and manual checks are in
 - Browser runtime, packaged Windows/macOS, physical mobile and external
   SSH/jump/tmux/Screen acceptance.
 
-Ordinary tmux PTY attachment and browsing do not provide iTerm2's native tmux
-control-mode integration. The next parity work should address these distinct
-capabilities without describing the current terminal as fully equivalent.
+Ordinary tmux PTY attachment and browsing remain distinct from the opt-in native
+control workspace. The initial window/pane mapping does not establish full
+iTerm2 compatibility or qualify every terminal mode and external deployment.
 
 ## Historical validation boundaries
 

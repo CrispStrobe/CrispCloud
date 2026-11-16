@@ -1,0 +1,164 @@
+{
+  "recorded_utc": "2026-11-16T07:15:12.336884+00:00",
+  "scope": "Toolchain setup; feature acceptance is separate.",
+  "toolchain_root": "/workspace/scratch/6c8a74f9de7f/toolchain",
+  "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "native_hooks_disabled": false,
+  "production_manifests_modified": false,
+  "github_actions_queried_or_awaited": false,
+  "flutter_revision": "737ba8f885dc774b53b442759999a312c9461e4e",
+  "sdk_source_status": "",
+  "hosted_package_archives_verified": 322,
+  "app_resolution_command": [
+    "flutter",
+    "pub",
+    "get",
+    "--enforce-lockfile",
+    "--offline"
+  ],
+  "app_resolution_exit_code": 0,
+  "runner": "/workspace/scratch/6c8a74f9de7f/toolchain/run",
+  "free_disk_bytes": 11674927104,
+  "pub_cache": "/workspace/scratch/6c8a74f9de7f/toolchain/pub-cache",
+  "cargo_cache": "/workspace/scratch/6c8a74f9de7f/toolchain/cargo",
+  "bootstrap": "Pinned Flutter tools resolve offline from verified official package archives, compiled with the standard shared.sh Dart snapshot arguments. Direct launcher uses that unmodified snapshot to avoid parallel PID engine stamp collisions. Initial online bootstrap without TMPDIR was interrupted; exact cache preparation and workspace TMPDIR resolved it. App online resolver warmed git mirrors, then offline lockfile enforcement completed.",
+  "app_manifests_sha256": {
+    "pubspec.yaml": "d82a1bb2d1a015e37d5a7283cf8041039c3eb01f6dbf1d3feb139b1b837ea998",
+    "pubspec.lock": "58560e3fdba68d18b767f4c934b913283df5297468141defbeb816dbb55a0326"
+  },
+  "sdk_binaries_sha256": {
+    "bin/cache/dart-sdk/bin/dart": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb",
+    "bin/cache/dart-sdk/bin/dartaotruntime": "3599c987228070f342c80d29353f496c8efc72c620c75fc4d59e5671666b2f72",
+    "bin/cache/dart-sdk/bin/snapshots/dart2js_aot.dart.snapshot": "29314b1f8e994436c5639a59df0243692cd83625fc587619a9c99e9a3804b1d6",
+    "bin/cache/flutter_tools.snapshot": "a7fd386cb8422ce56fa28003e68a86f1c3584b26698e29d2ad3834573016a2c9"
+  },
+  "versions": {
+    "dart": {
+      "returncode": 0,
+      "stdout": "Dart SDK version: 3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\"\n",
+      "stderr": ""
+    },
+    "clang": {
+      "returncode": 0,
+      "stdout": "Debian clang version 19.1.7 (3+b1)\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /workspace/scratch/6c8a74f9de7f/toolchain/native/usr/lib/llvm-19/bin\n",
+      "stderr": ""
+    },
+    "cmake": {
+      "returncode": 0,
+      "stdout": "cmake version 3.31.6\n\nCMake suite maintained and supported by Kitware (kitware.com/cmake).\n",
+      "stderr": ""
+    },
+    "ninja": {
+      "returncode": 0,
+      "stdout": "1.12.1\n",
+      "stderr": ""
+    },
+    "rustc": {
+      "returncode": 0,
+      "stdout": "rustc 1.100.0 (0ef1bc386 2026-11-09)\nbinary: rustc\ncommit-hash: 0ef1bc386059596dada8fb65b50425aab2ea637a\ncommit-date: 2026-11-09\nhost: x86_64-unknown-linux-gnu\nrelease: 1.100.0\nLLVM version: 23.1.5\n",
+      "stderr": ""
+    },
+    "cargo": {
+      "returncode": 0,
+      "stdout": "cargo 1.100.0 (3acc79c0c 2026-11-05)\nrelease: 1.100.0\ncommit-hash: 3acc79c0c841844675bc53a605922dbfc441e750\ncommit-date: 2026-11-05\nhost: x86_64-unknown-linux-gnu\nlibgit2: 1.9.6 (sys:0.21.0 vendored)\nlibcurl: 8.21.0-DEV (sys:0.4.90+curl-8.21.0 vendored ssl:OpenSSL/3.6.3)\nssl: OpenSSL 3.6.3 9 Jun 2026\nos: Debian 13.0.0 (trixie) [64-bit]\n",
+      "stderr": ""
+    },
+    "flutter": {
+      "frameworkVersion": "3.47.8",
+      "channel": "stable",
+      "repositoryUrl": "https://github.com/flutter/flutter.git",
+      "frameworkRevision": "737ba8f885dc774b53b442759999a312c9461e4e",
+      "frameworkCommitDate": "2026-10-22 21:37:31 -0700",
+      "engineRevision": "cf636b1dfb818dd6a3ff16e390e93b1a036969c8",
+      "engineCommitDate": "2026-10-23 02:13:38.000Z",
+      "engineContentHash": "dfd2e6cb7d319db05e3bf1503f3e2ac60f6288a2",
+      "engineBuildDate": "2026-10-23 05:34:48.330",
+      "dartSdkVersion": "3.13.7",
+      "devToolsVersion": "2.60.0",
+      "flutterVersion": "3.47.8",
+      "flutterRoot": "/workspace/scratch/6c8a74f9de7f/toolchain/flutter"
+    }
+  },
+  "native_probes": [
+    {
+      "filtered": false,
+      "command": [
+        "/workspace/scratch/6c8a74f9de7f/toolchain/bin/clang",
+        "/workspace/scratch/6c8a74f9de7f/toolchain/tmp/probe.c",
+        "-o",
+        "/workspace/scratch/6c8a74f9de7f/toolchain/tmp/probe-c"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "execution_returncode": 0
+    },
+    {
+      "filtered": false,
+      "command": [
+        "/workspace/scratch/6c8a74f9de7f/toolchain/bin/rustc",
+        "/workspace/scratch/6c8a74f9de7f/toolchain/tmp/probe.rs",
+        "-o",
+        "/workspace/scratch/6c8a74f9de7f/toolchain/tmp/probe-rs"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "execution_returncode": 0
+    },
+    {
+      "filtered": true,
+      "command": [
+        "/workspace/scratch/6c8a74f9de7f/toolchain/bin/clang",
+        "/workspace/scratch/6c8a74f9de7f/toolchain/tmp/probe.c",
+        "-o",
+        "/workspace/scratch/6c8a74f9de7f/toolchain/tmp/probe-c"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "execution_returncode": 0
+    },
+    {
+      "filtered": true,
+      "command": [
+        "/workspace/scratch/6c8a74f9de7f/toolchain/bin/rustc",
+        "/workspace/scratch/6c8a74f9de7f/toolchain/tmp/probe.rs",
+        "-o",
+        "/workspace/scratch/6c8a74f9de7f/toolchain/tmp/probe-rs"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "execution_returncode": 0
+    }
+  ],
+  "socket_probes": {
+    "unix": {
+      "ok": false,
+      "error": "PermissionError(1, 'Operation not permitted')"
+    },
+    "tcp": {
+      "ok": true,
+      "address": "('127.0.0.1', 52033)"
+    }
+  },
+  "native_pty_bootstrap": {
+    "command": [
+      "flutter",
+      "test",
+      "--no-pub",
+      "--concurrency=1",
+      "--reporter=expanded",
+      "test/terminal_process_test.dart"
+    ],
+    "exit_code": 0,
+    "counts": {
+      "passed": 6,
+      "skipped": 1,
+      "failed": 0
+    },
+    "log": "native-pty-bootstrap.log",
+    "scope": "Environment bootstrap only; application feature acceptance is separate."
+  }
+}

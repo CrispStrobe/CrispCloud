@@ -504,7 +504,7 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
     if (_arranging || _closing) return;
     final candidates = <TerminalBroadcastTarget>[];
     for (final tab in _tabs) {
-      if (!tab.session.isConnected) continue;
+      if (!tab.session.acceptsDirectInput) continue;
       final label = _label(tab);
       final destination = tab.session.label;
       candidates.add(
@@ -1052,7 +1052,10 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
               PopupMenuItem(
                 value: 'broadcast',
                 enabled:
-                    _tabs.where((tab) => tab.session.isConnected).length >= 2,
+                    _tabs
+                        .where((tab) => tab.session.acceptsDirectInput)
+                        .length >=
+                    2,
                 child: Text(context.terminalBroadcastTr('Broadcast input')),
               ),
             ],
