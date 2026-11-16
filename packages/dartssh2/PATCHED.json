@@ -1,0 +1,8 @@
+{
+  "files": {
+    "lib/src/ssh_agent.dart": "631817f31647692897868b5d608c822772ddf5777606e500c9b80537cbce6d37",
+    "lib/src/ssh_client.dart": "5b466cfc897b3d88ea28f0acbae022a814ec3c625976458894d83c670ab91224",
+    "lib/src/ssh_channel.dart": "962f65fd4d5ef18e7605578d452c3229454b10e14ae35ab7dd3b6dbb4eabdfbc"
+  },
+  "patch_sha256": "6c565f3b882f699ae283400673739eec228352452a07febadc7399451efffa21"
+}

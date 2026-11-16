@@ -144,7 +144,7 @@ class SshAgentConnection implements SSHAgentHandler {
     Uint8List data,
   ) async {
     _ensureCurrent();
-    if (data.isEmpty || data.length > maximumSigningDataLength) _invalid();
+    if (data.length > maximumSigningDataLength) _invalid();
     final flags = switch (algorithm) {
       'rsa-sha2-512' => 4,
       'rsa-sha2-256' => 2,

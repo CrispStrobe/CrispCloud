@@ -83,8 +83,9 @@ class _SshPortForwardingDialogState extends State<SshPortForwardingDialog> {
         await widget.profiles!.start(profile.id);
       }
     } catch (error) {
-      if (mounted)
+      if (mounted) {
         setState(() => _error = sshForwardingProfileErrorMessage(error));
+      }
     } finally {
       _updatingProfiles.remove(profile.id);
       if (mounted) setState(() {});
@@ -299,6 +300,20 @@ class _SshPortForwardingDialogState extends State<SshPortForwardingDialog> {
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                         const SizedBox(height: 8),
+                        SelectableText(
+                          '${profiles.route.endpoint.username}@${profiles.route.endpoint.host}:${profiles.route.endpoint.port}',
+                        ),
+                        if (profiles.route.jumpHosts.isNotEmpty)
+                          SelectableText(
+                            profiles.route.jumpHosts
+                                .map(
+                                  (hop) =>
+                                      '${hop.username}@${hop.host}:${hop.port}',
+                                )
+                                .join(' → '),
+                          ),
+                        if (profiles.route.gateway != null)
+                          SelectableText(profiles.route.gateway.toString()),
                         Text(
                           context.sshForwardTr(
                             'Profiles match the exact server, user, gateway and jump route. Credentials are not saved.',

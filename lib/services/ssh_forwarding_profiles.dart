@@ -243,8 +243,8 @@ class SshForwardingProfileSession extends ChangeNotifier {
     required this.store,
     required this.route,
     required this.forwarding,
-    bool Function()? isCurrent,
-  }) : _isCurrent = isCurrent {
+    this._isCurrent,
+  }) {
     store._sessions.add(this);
     store.addListener(_storeChanged);
     forwarding.addListener(_forwardChanged);
@@ -384,8 +384,9 @@ class SshForwardingProfileSession extends ChangeNotifier {
       }
       final profile = matches.single;
       if (automatic &&
-          (!profile.autoStart || _suppressedAutomatic.contains(id)))
+          (!profile.autoStart || _suppressedAutomatic.contains(id))) {
         return null;
+      }
       _errors.remove(id);
       final existing = listenerFor(profile);
       if (existing != null) {
