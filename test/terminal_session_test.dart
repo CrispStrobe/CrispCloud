@@ -94,6 +94,116 @@ void main() {
   );
 
   test(
+    'resize bursts retain only the latest geometry behind an in-flight request',
+    () async {
+      final connection = await connect();
+      await _events();
+      connection.sizes.clear();
+      final gate = connection.resizeGate = Completer<void>();
+      session.terminal.resize(90, 25);
+      await _events();
+      for (var width = 91; width <= 290; width++) {
+        session.terminal.resize(width, 26);
+      }
+      await _events();
+      expect(connection.sizes, [(90, 25)]);
+
+      connection.resizeGate = null;
+      gate.complete();
+      await _events();
+      expect(connection.sizes, [(90, 25), (290, 26)]);
+      expect(session.status, TerminalSessionStatus.connected);
+    },
+  );
+
+  test('a resize reversal restores the last completed geometry', () async {
+    final connection = await connect();
+    session.terminal.resize(80, 24);
+    await _events();
+    connection.sizes.clear();
+    final gate = connection.resizeGate = Completer<void>();
+    session.terminal.resize(120, 40);
+    await _events();
+    session.terminal.resize(80, 24);
+    connection.resizeGate = null;
+    gate.complete();
+    await _events();
+    expect(connection.sizes, [(120, 40), (80, 24)]);
+  });
+
+  test('same-turn resizing sends one final size without duplicate transport calls', () async {
+    final connection = await connect();
+    await _events();
+    connection.sizes.clear();
+    session.terminal.resize(90, 25);
+    session.terminal.resize(100, 30);
+    session.terminal.resize(110, 35);
+    await _events();
+    expect(connection.sizes, [(110, 35)]);
+    // xterm may suppress identical dimensions, so invoke its transport callback
+    // directly to exercise repeated layout notifications as well.
+    session.terminal.onResize?.call(110, 35, 0, 0);
+    await _events();
+    expect(connection.sizes, [(110, 35)]);
+  });
+
+  test('late resize failure cannot clear a replacement session resize', () async {
+    final old = await connect();
+    await _events();
+    final oldGate = old.resizeGate = Completer<void>();
+    session.terminal.resize(90, 25);
+    await _events();
+    session.terminal.resize(100, 30);
+    await session.disconnect();
+
+    final current = await connect();
+    await _events();
+    current.sizes.clear();
+    final currentGate = current.resizeGate = Completer<void>();
+    session.terminal.resize(120, 40);
+    await _events();
+    session.terminal.resize(132, 43);
+    oldGate.completeError(StateError('old connection closed'));
+    await _events();
+    expect(session.status, TerminalSessionStatus.connected);
+    expect(current.sizes, [(120, 40)]);
+    current.resizeGate = null;
+    currentGate.complete();
+    await _events();
+    expect(current.sizes, [(120, 40), (132, 43)]);
+    expect(old.sizes, isNot(contains((100, 30))));
+  });
+
+  test('disconnect revokes a pending resize without waiting for its reply', () async {
+    final connection = await connect();
+    await _events();
+    connection.sizes.clear();
+    final gate = connection.resizeGate = Completer<void>();
+    session.terminal.resize(90, 25);
+    await _events();
+    session.terminal.resize(100, 30);
+    await session.disconnect();
+    gate.complete();
+    await _events();
+    expect(connection.sizes, [(90, 25)]);
+    expect(session.status, TerminalSessionStatus.disconnected);
+    expect(connection.closeCount, 1);
+  });
+
+  test('resize errors fail the owned session and close its transport', () async {
+    final connection = await connect();
+    await _events();
+    final gate = connection.resizeGate = Completer<void>();
+    session.terminal.resize(90, 25);
+    await _events();
+    gate.completeError(StateError('window-change failed'));
+    await _events();
+    expect(session.status, TerminalSessionStatus.failed);
+    expect(session.error.toString(), contains('window-change failed'));
+    expect(connection.closeCount, 1);
+  });
+
+  test(
     'restart rejects a late connection and never mixes its output',
     () async {
       final pending = Completer<TerminalConnection>();
@@ -274,6 +384,7 @@ class _Connection implements TerminalConnection {
   int? code = 0;
   Object? writeError;
   Completer<void>? writeGate;
+  Completer<void>? resizeGate;
   Completer<int?>? exitGate;
 
   @override
@@ -291,8 +402,10 @@ class _Connection implements TerminalConnection {
   }
 
   @override
-  Future<void> resize(int columns, int rows) async =>
-      sizes.add((columns, rows));
+  Future<void> resize(int columns, int rows) async {
+    sizes.add((columns, rows));
+    await resizeGate?.future;
+  }
   @override
   Future<void> close() async {
     closeCount++;

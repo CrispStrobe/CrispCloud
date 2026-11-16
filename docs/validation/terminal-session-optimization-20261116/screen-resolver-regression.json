@@ -1,0 +1,92 @@
+[
+  {
+    "case": "exact",
+    "expected": 0,
+    "before": 0,
+    "after": 0
+  },
+  {
+    "case": "timestamp",
+    "expected": 0,
+    "before": 0,
+    "after": 0
+  },
+  {
+    "case": "unsupported space",
+    "expected": 44,
+    "before": 0,
+    "after": 44
+  },
+  {
+    "case": "unsupported parentheses",
+    "expected": 44,
+    "before": 0,
+    "after": 44
+  },
+  {
+    "case": "unsupported trailing space",
+    "expected": 44,
+    "before": 0,
+    "after": 44
+  },
+  {
+    "case": "unsupported tab",
+    "expected": 44,
+    "before": 0,
+    "after": 44
+  },
+  {
+    "case": "prefix",
+    "expected": 47,
+    "before": 47,
+    "after": 47
+  },
+  {
+    "case": "bad summary",
+    "expected": 48,
+    "before": 0,
+    "after": 48
+  },
+  {
+    "case": "duplicate summary",
+    "expected": 48,
+    "before": 0,
+    "after": 48
+  },
+  {
+    "case": "trailing garbage",
+    "expected": 48,
+    "before": 0,
+    "after": 48
+  },
+  {
+    "case": "empty name",
+    "expected": 48,
+    "before": 0,
+    "after": 48
+  },
+  {
+    "case": "bad pid",
+    "expected": 48,
+    "before": 0,
+    "after": 48
+  },
+  {
+    "case": "bad row",
+    "expected": 48,
+    "before": 0,
+    "after": 48
+  },
+  {
+    "case": "duplicate unrelated target",
+    "expected": 48,
+    "before": 0,
+    "after": 48
+  },
+  {
+    "case": "session limit",
+    "expected": 75,
+    "before": 44,
+    "after": 75
+  }
+]
