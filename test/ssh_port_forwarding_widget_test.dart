@@ -244,7 +244,13 @@ void main() {
       await enter(tester, _targetPort, '80');
       await forwarding.close();
       await tester.pumpAndSettle();
-      expect(find.text('This SSH connection has ended.'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(AddSshPortForwardDialog),
+          matching: find.text('This SSH connection has ended.'),
+        ),
+        findsOneWidget,
+      );
       expect(tester.widget<FilledButton>(find.byKey(_start)).onPressed, isNull);
       await tester.tap(find.text('Cancel'));
       await tester.pumpAndSettle();
@@ -268,7 +274,13 @@ void main() {
       pending.complete();
       await tester.pumpAndSettle();
       expect(find.byType(AddSshPortForwardDialog), findsOneWidget);
-      expect(find.text('This SSH connection has ended.'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(AddSshPortForwardDialog),
+          matching: find.text('This SSH connection has ended.'),
+        ),
+        findsOneWidget,
+      );
       expect(tester.widget<FilledButton>(find.byKey(_start)).onPressed, isNull);
       expect(forwarding.forwards, isEmpty);
       expect(forwarding.requests, hasLength(1));

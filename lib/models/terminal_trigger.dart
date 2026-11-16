@@ -220,7 +220,8 @@ class TerminalTriggerPattern {
   bool _start = false;
   bool _end = false;
 
-  int get workPerRune => _atoms.length * 3 +
+  int get workPerRune =>
+      _atoms.length * 3 +
       _atoms.fold(0, (sum, atom) => sum + atom.ranges.length);
 
   static int _singleRune(String value, int fallback) {
@@ -307,8 +308,11 @@ class _PatternAtom {
   bool get repeating => quantifier == 42 || quantifier == 43;
   bool matches(int rune, int lower, int upper) =>
       any ||
-      ranges.any((range) =>
-        (rune >= range.$1 && rune <= range.$2) ||
-        (lower >= range.$1 && lower <= range.$2) ||
-        (upper >= range.$1 && upper <= range.$2)) != inverse;
+      ranges.any(
+            (range) =>
+                (rune >= range.$1 && rune <= range.$2) ||
+                (lower >= range.$1 && lower <= range.$2) ||
+                (upper >= range.$1 && upper <= range.$2),
+          ) !=
+          inverse;
 }

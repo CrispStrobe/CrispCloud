@@ -89,6 +89,12 @@ class _TerminalTriggersDialogState
                   'Match completed output lines. Full-screen applications are ignored.',
                 ),
               ),
+              const SizedBox(height: 8),
+              Text(
+                context.terminalTriggerTr(
+                  'Heavy output may skip triggers to keep the terminal responsive.',
+                ),
+              ),
               if (error != null) ...[
                 const SizedBox(height: 8),
                 Text(
@@ -401,7 +407,7 @@ class _EditTerminalTriggerDialogState
                   ),
                   DropdownMenuItem(
                     value: TerminalTriggerMatchKind.safePattern,
-                    child: Text(context.terminalTriggerTr('Safe pattern')),
+                    child: Text(context.terminalTriggerTr('Limited pattern')),
                   ),
                 ],
                 onChanged: _saving

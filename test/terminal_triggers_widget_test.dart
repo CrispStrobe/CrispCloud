@@ -95,6 +95,7 @@ void main() {
         find.byKey(const ValueKey('terminal-trigger-sample')),
         'done',
       );
+      await tester.pump();
       expect(
         find.byKey(const ValueKey('terminal-trigger-preview')),
         findsNothing,
@@ -154,7 +155,7 @@ void main() {
       tester,
       find.byKey(const ValueKey('terminal-trigger-kind')),
     );
-    await tester.tap(find.text('Safe pattern').last);
+    await tester.tap(find.text('Limited pattern').last);
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const ValueKey('terminal-trigger-pattern')),

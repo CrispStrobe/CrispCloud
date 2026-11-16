@@ -86,6 +86,9 @@ void main() {
 
       Future<Socket> connect(int port) async {
         final value = await Socket.connect('127.0.0.1', port);
+        unawaited(
+          value.done.then<void>((_) {}, onError: (Object _, StackTrace __) {}),
+        );
         sockets.add(value);
         return value;
       }
@@ -197,7 +200,16 @@ void main() {
         );
         final first = await connect(local.port);
         final second = await connect(remote.port);
-        final drained = [first.drain<void>(), second.drain<void>()];
+        Future<void> closed(Socket socket) async {
+          try {
+            await socket.drain<void>();
+          } on SocketException {
+            // Disconnect may deliver TCP reset instead of orderly EOF when
+            // pending application data is intentionally abandoned.
+          }
+        }
+
+        final drained = Future.wait([closed(first), closed(second)]);
         first.add([1]);
         second.add([2]);
         final deadline = DateTime.now().add(const Duration(seconds: 5));
@@ -208,7 +220,7 @@ void main() {
           await Future<void>.delayed(const Duration(milliseconds: 10));
         }
         await service.disconnect(session.id);
-        await Future.wait(drained).timeout(const Duration(seconds: 5));
+        await drained.timeout(const Duration(seconds: 5));
         expect(manager.isClosed, isTrue);
         expect(manager.forwards, isEmpty);
         for (final port in [local.port, remote.port]) {

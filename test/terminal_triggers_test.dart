@@ -115,6 +115,7 @@ void main() {
         r'build\[ok\]',
         r'a*b+c?d',
         r'^[A-Z]+$',
+        r'^[A-z]+$',
         r'[a-zA-Z_]+',
         r'^a?b*cd+$',
       ];
@@ -541,5 +542,70 @@ void main() {
         throwsFormatException,
       );
     });
+
+    test(
+      'no-match work budget reserves a whole line independently of chunks',
+      () {
+        final rule = _rule(
+          pattern: '${'a*' * 100}b',
+          kind: TerminalTriggerMatchKind.safePattern,
+        );
+        final line = 'a' * TerminalTriggerEngine.maximumLineLength;
+        final work = line.length * rule.matchWorkPerRune;
+        final admitted =
+            TerminalTriggerEngine.maximumMatchWorkPerSecond ~/ work;
+        expect(admitted, greaterThan(0));
+        engine.updateTriggers([rule]);
+        engine.addOutput('$line\n' * (admitted + 3));
+        expect(matches, isEmpty);
+        expect(engine.skippedLines, 3);
+        engine.reset();
+        for (var i = 0; i < admitted + 3; i++) {
+          for (var offset = 0; offset < line.length; offset += 128) {
+            engine.addOutput(line.substring(offset, offset + 128));
+          }
+          engine.addOutput('\n');
+        }
+        expect(engine.skippedLines, 3);
+        now = now.add(const Duration(seconds: 1));
+        engine.addOutput('$line\n');
+        expect(engine.skippedLines, 3);
+        engine.reset();
+        expect(engine.skippedLines, 0);
+        engine.addOutput('$line\n');
+        expect(engine.skippedLines, 0);
+      },
+    );
+
+    test(
+      'a huge combined rule cost skips matching without partial rule actions',
+      () {
+        engine.updateTriggers([
+          _rule(pattern: 'a'),
+          for (var i = 1; i < 50; i++)
+            _rule(
+              id: 'expensive_$i',
+              pattern: '${'a*' * 100}b',
+              kind: TerminalTriggerMatchKind.safePattern,
+            ),
+        ]);
+        engine.addOutput('${'a' * 4096}\n' * 100);
+        expect(matches, isEmpty);
+        expect(engine.skippedLines, 100);
+        engine.updateTriggers([_rule(pattern: 'a')]);
+        engine.addOutput('a\n');
+        expect(matches.single.line, 'a');
+      },
+    );
+
+    test(
+      'restore-cursor and origin modes invalidate lines but Kitty does not',
+      () {
+        engine.addOutput('ERROR\x1b[u\nERROR\x1b[?6h\nERROR\x1b[4h\n');
+        expect(matches, isEmpty);
+        engine.addOutput('ERROR\x1b[>3u\nERROR\x1b[?25l\n');
+        expect(matches.map((match) => match.line), ['ERROR', 'ERROR']);
+      },
+    );
   });
 }

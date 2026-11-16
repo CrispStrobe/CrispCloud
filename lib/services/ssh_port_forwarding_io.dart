@@ -79,6 +79,7 @@ class _NativeForwarding extends SshPortForwarding {
         throw const SshPortForwardException('Forwarding was cancelled.');
       }
       if (spec.kind == SshPortForwardKind.remote) {
+        entry.remoteOpening = true;
         final pending = client.forwardRemote(
           host: spec.bindHost,
           port: spec.bindPort,
@@ -98,6 +99,7 @@ class _NativeForwarding extends SshPortForwarding {
           }, onError: (Object _, StackTrace __) {}),
         );
         final remote = await pending.timeout(connectTimeout);
+        entry.remoteOpening = false;
         if (remote == null) {
           throw const SshPortForwardException(
             'The SSH server refused remote forwarding.',
@@ -154,18 +156,22 @@ class _NativeForwarding extends SshPortForwarding {
       return entry.snapshot;
     } catch (error) {
       entry.live = false;
-      await release(entry);
+      var message = error is SshPortForwardException
+          ? error.message
+          : error is TimeoutException
+          ? 'Starting the forward timed out.'
+          : 'The forwarding listener could not be started.';
+      try {
+        await release(entry);
+      } on SshPortForwardException catch (cleanup) {
+        message = cleanup.message;
+      }
       if (identical(_entries[entry.id], entry) && !_closed) {
         entry.status = SshPortForwardStatus.failed;
-        entry.error = error is SshPortForwardException
-            ? error.message
-            : error is TimeoutException
-            ? 'Starting the forward timed out.'
-            : 'The forwarding listener could not be started.';
+        entry.error = message;
         changed();
       }
-      if (error is SshPortForwardException) rethrow;
-      throw SshPortForwardException(entry.error ?? 'Forwarding was cancelled.');
+      throw SshPortForwardException(message);
     }
   }
 
@@ -224,10 +230,7 @@ class _NativeForwarding extends SshPortForwarding {
         throw StateError('Cancellation rejected');
       }
     } catch (_) {
-      unawaited(client.close().catchError((Object _) {}));
-      try {
-        client.socket.destroy();
-      } catch (_) {}
+      await closeClientTransport();
       throw const SshPortForwardException(
         'The server did not confirm stopping the forward; the SSH connection was closed.',
       );
@@ -239,11 +242,34 @@ class _NativeForwarding extends SshPortForwarding {
     }
   }();
 
+  Future<void>? _clientClosing;
+  Future<void> closeClientTransport() => _clientClosing ??= () async {
+    Future<void>? closing;
+    try {
+      closing = client.close();
+    } catch (_) {}
+    try {
+      client.socket.destroy();
+    } catch (_) {}
+    try {
+      await closing?.timeout(const Duration(seconds: 2));
+    } catch (_) {}
+  }();
+
   Future<void> release(_Forward entry) => entry.releasing ??= () async {
     for (final peer in entry.peers.toList()) {
       peer.close();
     }
     Object? failure;
+    if (entry.remoteOpening && entry.remote == null && !client.isClosed) {
+      // The server may have created a listener even if its global-request
+      // reply never arrives. There is no assigned port to cancel in that case.
+      // Stop/timeout must not leave an unowned server listener behind.
+      await closeClientTransport();
+      failure = const SshPortForwardException(
+        'The remote forwarding request could not be confirmed; the SSH connection was closed.',
+      );
+    }
     try {
       await entry.server?.close();
       final remote = entry.remote;
@@ -307,6 +333,7 @@ class _Forward {
   String? error;
   ServerSocket? server;
   SSHRemoteForward? remote;
+  bool remoteOpening = false;
   StreamSubscription<Socket>? localSubscription;
   StreamSubscription<SSHForwardChannel>? remoteSubscription;
   Future<void>? releasing;
@@ -325,7 +352,10 @@ class _Forward {
 /// Owns even partially established connections, including a SOCKS negotiation
 /// or a socket/channel which arrives after its owner was stopped.
 class _Peer {
-  _Peer(this.owner, this.forward, {this.socket, this.channel});
+  _Peer(this.owner, this.forward, {this.socket, this.channel}) {
+    if (socket != null) _observeDone(socket!.done);
+    if (channel != null) _observeDone(channel!.done);
+  }
   final _NativeForwarding owner;
   final _Forward forward;
   Socket? socket;
@@ -364,6 +394,7 @@ class _Peer {
         return;
       }
       channel = remote;
+      _observeDone(remote.done);
       if (socksReady) {
         local.add(_socksReply(0));
         await local.flush();
@@ -399,7 +430,10 @@ class _Peer {
       );
       unawaited(
         pending.then<void>((late) {
-          if (!current) late.destroy();
+          if (!current) {
+            _observeDone(late.done);
+            late.destroy();
+          }
         }, onError: (Object _, StackTrace __) {}),
       );
       final local = await pending.timeout(owner.connectTimeout);
@@ -408,6 +442,7 @@ class _Peer {
         return;
       }
       socket = local;
+      _observeDone(local.done);
       await pump(local, local, channel!);
     } catch (error) {
       if (current) {
@@ -477,6 +512,10 @@ void _destroyChannel(SSHForwardChannel channel) {
     );
     channel.destroy();
   } catch (_) {}
+}
+
+void _observeDone(Future<dynamic> done) {
+  unawaited(done.then<void>((_) {}, onError: (Object _, StackTrace __) {}));
 }
 
 class _ForwardCancelled implements Exception {

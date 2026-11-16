@@ -246,40 +246,98 @@ void main() {
     expect(manager.forwards.single.error, contains('timed out'));
   });
 
-  test('remote listener arriving after stop is cancelled once', () async {
-    final pending = client.pendingRemote = Completer<SSHRemoteForward?>();
-    final starting = manager.start(remote(80));
-    final failure = expectLater(
-      starting,
-      throwsA(isA<SshPortForwardException>()),
-    );
-    await until(() => manager.forwards.isNotEmpty);
-    await manager.stop(manager.forwards.single.id);
-    final late = await client.makeRemote('127.0.0.1', 0);
-    pending.complete(late);
-    await failure;
-    await until(() => client.cancellations == 1);
-    expect(client.isClosed, isFalse);
-    expect(manager.forwards, isEmpty);
-  });
+  test(
+    'stopping an unacknowledged remote listener closes the SSH route',
+    () async {
+      final pending = client.pendingRemote = Completer<SSHRemoteForward?>();
+      final starting = manager.start(remote(80));
+      final failure = expectLater(
+        starting,
+        throwsA(isA<SshPortForwardException>()),
+      );
+      final late = await client.makeRemote('127.0.0.1', 0);
+      final accepted = await connect(late.port);
+      final acceptedDone = accepted.drain<void>();
+      await until(() => late.clients.isNotEmpty);
+      await expectLater(
+        manager.stop(manager.forwards.single.id),
+        throwsA(isA<SshPortForwardException>()),
+      );
+      pending.complete(late);
+      await failure;
+      await manager.close();
+      await acceptedDone.timeout(const Duration(seconds: 3));
+      expect(late.clients.single.destroyed, isTrue);
+      expect(client.isClosed, isTrue);
+      expect(manager.forwards, isEmpty);
+    },
+  );
 
-  test('remote listener arriving after timeout is cancelled without resurrecting it', () async {
+  test(
+    'unacknowledged remote timeout closes the transport before a late reply',
+    () async {
+      await manager.close();
+      manager = SshPortForwarding(
+        client,
+        connectTimeout: const Duration(milliseconds: 30),
+      );
+      final pending = client.pendingRemote = Completer<SSHRemoteForward?>();
+      final late = await client.makeRemote('127.0.0.1', 0);
+      await expectLater(
+        manager.start(remote(80)),
+        throwsA(isA<SshPortForwardException>()),
+      );
+      expect(client.isClosed, isTrue);
+      pending.complete(late);
+      await manager.close();
+      expect(manager.forwards, isEmpty);
+      await expectLater(
+        Socket.connect('127.0.0.1', late.port),
+        throwsA(isA<SocketException>()),
+      );
+    },
+  );
+
+  test('a remote create that never replies cannot keep the connection alive after timeout', () async {
     await manager.close();
     manager = SshPortForwarding(
       client,
       connectTimeout: const Duration(milliseconds: 30),
     );
-    final pending = client.pendingRemote = Completer<SSHRemoteForward?>();
+    client.pendingRemote = Completer<SSHRemoteForward?>();
     await expectLater(
       manager.start(remote(80)),
       throwsA(isA<SshPortForwardException>()),
     );
-    final late = await client.makeRemote('127.0.0.1', 0);
-    pending.complete(late);
-    await until(() => client.cancellations == 1);
-    expect(manager.forwards.single.status, SshPortForwardStatus.failed);
-    expect(client.isClosed, isFalse);
+    expect(client.isClosed, isTrue);
+    await manager.close();
+    expect(manager.forwards, isEmpty);
   });
+
+  test(
+    'Stop closes SSH even when a pending remote create never replies',
+    () async {
+      await manager.close();
+      manager = SshPortForwarding(
+        client,
+        connectTimeout: const Duration(milliseconds: 30),
+      );
+      client.pendingRemote = Completer<SSHRemoteForward?>();
+      final starting = manager.start(remote(80));
+      final failure = expectLater(
+        starting,
+        throwsA(isA<SshPortForwardException>()),
+      );
+      await expectLater(
+        manager.stop(manager.forwards.single.id),
+        throwsA(isA<SshPortForwardException>()),
+      );
+      expect(client.isClosed, isTrue);
+      await failure;
+      await manager.close();
+      expect(manager.forwards, isEmpty);
+    },
+  );
 
   test('32-client limit applies before a SOCKS handshake completes', () async {
     final forward = await manager.start(
@@ -548,7 +606,7 @@ class _Client implements SSHClient {
   Future<bool> cancelForwardRemote(SSHRemoteForward forward) async {
     cancellations++;
     if (refuseCancellation) return false;
-    await (forward as _Remote).shutdown();
+    await (forward as _Remote).stopListening();
     return true;
   }
 
@@ -570,7 +628,7 @@ class _Client implements SSHClient {
 }
 
 class _Remote implements SSHRemoteForward {
-  _Remote(this.server) {
+  _Remote(this.server) : host = server.address.address, port = server.port {
     subscription = server.listen((socket) {
       final channel = _Channel(socket);
       clients.add(channel);
@@ -583,19 +641,23 @@ class _Remote implements SSHRemoteForward {
   late final StreamSubscription<Socket> subscription;
   Future<void>? closing;
   @override
-  String get host => server.address.address;
+  final String host;
   @override
-  int get port => server.port;
+  final int port;
   @override
   Stream<SSHForwardChannel> get connections => controller.stream;
-  Future<void> shutdown() => closing ??= () async {
+  Future<void> stopListening() => closing ??= () async {
     await server.close();
     await subscription.cancel();
+    unawaited(controller.close());
+  }();
+  Future<void> shutdown() async {
     for (final channel in clients) {
       channel.destroy();
     }
-    unawaited(controller.close());
-  }();
+    await stopListening();
+  }
+
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
@@ -603,6 +665,7 @@ class _Remote implements SSHRemoteForward {
 class _Channel implements SSHForwardChannel {
   _Channel(this.socket);
   final Socket socket;
+  bool destroyed = false;
   @override
   Stream<Uint8List> get stream => socket;
   @override
@@ -612,7 +675,11 @@ class _Channel implements SSHForwardChannel {
   @override
   Future<void> close() async => socket.close();
   @override
-  void destroy() => socket.destroy();
+  void destroy() {
+    destroyed = true;
+    socket.destroy();
+  }
+
   @override
   Future<void> flush() => socket.flush();
 }

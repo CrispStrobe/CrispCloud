@@ -152,7 +152,7 @@ class _SshPortForwardingDialogState extends State<SshPortForwardingDialog> {
                                 ),
                                 if (forward.error != null)
                                   Text(
-                                    forward.error!,
+                                    context.sshForwardTr(forward.error!),
                                     style: TextStyle(
                                       color: Theme.of(context)
                                           .colorScheme

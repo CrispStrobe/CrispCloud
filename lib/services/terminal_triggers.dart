@@ -132,7 +132,15 @@ enum _OutputState { text, escape, csi, string, stringEscape, charset }
 /// input, protocol responses, or in-app notifications back into this observer.
 class TerminalTriggerEngine {
   TerminalTriggerEngine({required this.onMatch, DateTime Function()? now})
-    : _now = now ?? DateTime.now;
+    : _now = now ?? _monotonicClock();
+
+  static DateTime Function() _monotonicClock() {
+    final watch = Stopwatch()..start();
+    return () => DateTime.fromMicrosecondsSinceEpoch(
+      watch.elapsedMicroseconds,
+      isUtc: true,
+    );
+  }
 
   static const maximumLineLength = 4096;
   static const maximumActionsPerSecond = 10;
@@ -333,10 +341,24 @@ class TerminalTriggerEngine {
       }
       // Origin, insert, wrapping and scrolling modes affect how a line is
       // displayed. Ignore only known non-text modes; invalidate everything else.
-      if (modes.any((mode) => !const {
-        '1', '12', '25', '47', '1047', '1049', '1000', '1002', '1003',
-        '1004', '1005', '1006', '1015', '2004',
-      }.contains(mode))) {
+      if (modes.any(
+        (mode) => !const {
+          '1',
+          '12',
+          '25',
+          '47',
+          '1047',
+          '1049',
+          '1000',
+          '1002',
+          '1003',
+          '1004',
+          '1005',
+          '1006',
+          '1015',
+          '2004',
+        }.contains(mode),
+      )) {
         _invalidLine = true;
       }
       return;
@@ -361,8 +383,12 @@ class TerminalTriggerEngine {
     // Terminal replies, keyboard protocol, cursor visibility and mode changes
     // do not constitute printable text. Cursor/screen edits invalidate the line.
     if (finalByte == 'u' &&
-        (_csi.startsWith('>') || _csi.startsWith('<') ||
-          _csi.startsWith('=') || _csi.startsWith('?'))) return;
+        (_csi.startsWith('>') ||
+            _csi.startsWith('<') ||
+            _csi.startsWith('=') ||
+            _csi.startsWith('?'))) {
+      return;
+    }
     if (const {'n', 'c'}.contains(finalByte)) return;
     _invalidLine = true;
   }
@@ -388,10 +414,18 @@ class TerminalTriggerEngine {
           (trigger.oncePerSession && _fired.contains(trigger.id))) {
         continue;
       }
+      final previous = _lastFired[trigger.id];
+      if (previous != null &&
+          now.difference(previous).inMilliseconds <
+              trigger.cooldownSeconds * 1000) {
+        continue;
+      }
       eligible.add(trigger);
     }
     if (eligible.isEmpty) return;
-    final work = _line.length * eligible.fold(0, (sum, rule) => sum + rule.matchWorkPerRune);
+    final work =
+        _line.length *
+        eligible.fold<int>(0, (sum, rule) => sum + rule.matchWorkPerRune);
     // Reserve the whole line before matching. Transport chunking therefore
     // cannot change which rules receive an expensive line, and no-match floods
     // are bounded just like matching floods. Skipped lines are not replayed.
@@ -403,12 +437,6 @@ class TerminalTriggerEngine {
     // Snapshot allows callback-driven edits without mutating this iteration.
     for (final trigger in eligible) {
       if (_burstCount >= maximumActionsPerSecond) break;
-      final previous = _lastFired[trigger.id];
-      if (previous != null &&
-          now.difference(previous).inMilliseconds <
-              trigger.cooldownSeconds * 1000) {
-        continue;
-      }
       if (!trigger.matches(line)) continue;
       _fired.add(trigger.id);
       _lastFired[trigger.id] = now;
