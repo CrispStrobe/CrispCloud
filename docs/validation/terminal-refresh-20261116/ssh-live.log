@@ -1,0 +1,81 @@
+Identity added: /tmp/ccssh-itb9pytx/client (christianstrobele@AirCS.local)
+Lifetime set to 120 seconds
+00:00 +0: loading /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_live_test.dart
+00:00 +0: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_live_test.dart: real OpenSSH loopback route verifies both servers and preserves Unicode execution through a jump
+ℹ️ [SshTerminalService] Session ho7j4mnso20 established to 127.0.0.1:56853
+ℹ️ [SshTerminalService] execute(ho7j4mnso20)
+ℹ️ [SshTerminalService] Disconnecting session ho7j4mnso20
+ℹ️ [SshTerminalService] Session ho7j4mvy4x1 established to 127.0.0.1:56853
+ℹ️ [SshTerminalService] execute(ho7j4mvy4x1)
+ℹ️ [SshTerminalService] Disconnecting session ho7j4mvy4x1
+00:01 +1: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_live_test.dart: real OpenSSH loopback route rejects a changed target host key without trusting or registering the route
+ℹ️ [SshTerminalService] Session ho7j4n0p8k0 established to 127.0.0.1:56853
+ℹ️ [SshTerminalService] Disconnecting session ho7j4n0p8k0
+❌ [SshTerminalService] SSH connect failed
+  Error: SSH host key changed for 127.0.0.1:56853. Expected SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA; received SHA256:yZohHlMLefXFIimlmaESXm10VIpFhqrFFi9cuI5Tjvw.
+00:01 +2: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_live_test.dart: real OpenSSH loopback route real PTY receives size changes and preserves final output and exit status
+ℹ️ [SshTerminalService] Session ho7j4n7l0p0 established to 127.0.0.1:56853
+ℹ️ [SshTerminalService] startShell(ho7j4n7l0p0)
+ℹ️ [SshTerminalService] resizeTerminal(ho7j4n7l0p0): 103x37
+ℹ️ [SshTerminalService] Disconnecting session ho7j4n7l0p0
+00:06 +3: loading /Users/christianstrobele/code/local/CrispCloud/test/ssh_port_forwarding_live_test.dart
+00:08 +3: /Users/christianstrobele/code/local/CrispCloud/test/ssh_port_forwarding_live_test.dart: real OpenSSH forwarding through a verified jump route local allocates a listener, drains binary response after half-close, and cancels
+ℹ️ [SshTerminalService] Session ho7j4rukmk0 established to 127.0.0.1:56853
+ℹ️ [SshTerminalService] execute(ho7j4rukmk0)
+ℹ️ [SshTerminalService] Disconnecting session ho7j4rukmk0
+00:34 +4: /Users/christianstrobele/code/local/CrispCloud/test/ssh_port_forwarding_live_test.dart: real OpenSSH forwarding through a verified jump route remote allocates a listener, drains binary response after half-close, and cancels
+ℹ️ [SshTerminalService] Session ho7j56uzz80 established to 127.0.0.1:56853
+ℹ️ [SshTerminalService] execute(ho7j56uzz80)
+ℹ️ [SshTerminalService] Disconnecting session ho7j56uzz80
+00:47 +5: /Users/christianstrobele/code/local/CrispCloud/test/ssh_port_forwarding_live_test.dart: real OpenSSH forwarding through a verified jump route SOCKS domain request and pipelined binary payload survive request half-close
+ℹ️ [SshTerminalService] Session ho7j5egdvl0 established to 127.0.0.1:56853
+ℹ️ [SshTerminalService] execute(ho7j5egdvl0)
+ℹ️ [SshTerminalService] Disconnecting session ho7j5egdvl0
+00:58 +6: /Users/christianstrobele/code/local/CrispCloud/test/ssh_port_forwarding_live_test.dart: real OpenSSH forwarding through a verified jump route disconnect closes active client sockets and both local and remote listeners
+ℹ️ [SshTerminalService] Session ho7j5lfpjy0 established to 127.0.0.1:56853
+ℹ️ [SshTerminalService] Disconnecting session ho7j5lfpjy0
+00:59 +7: loading /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_live_test.dart
+00:59 +7: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture Ed25519 waits for host approval before direct signing
+ℹ️ [SshTerminalService] Session ho7j5lwudu0 established to 127.0.0.1:56853
+ℹ️ [SshTerminalService] execute(ho7j5lwudu0)
+ℹ️ [SshTerminalService] Disconnecting session ho7j5lwudu0
+00:59 +8: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture Ed25519 signs independently after each verified jump hop
+ℹ️ [SshTerminalService] Session ho7j5lztkd0 established to 127.0.0.1:56853
+ℹ️ [SshTerminalService] execute(ho7j5lztkd0)
+ℹ️ [SshTerminalService] Disconnecting session ho7j5lztkd0
+00:59 +9: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture RSA SHA-2 waits for host approval before direct signing
+ℹ️ [SshTerminalService] Session ho7j5m1m5u0 established to 127.0.0.1:56853
+ℹ️ [SshTerminalService] execute(ho7j5m1m5u0)
+ℹ️ [SshTerminalService] Disconnecting session ho7j5m1m5u0
+01:00 +10: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture RSA SHA-2 signs independently after each verified jump hop
+ℹ️ [SshTerminalService] Session ho7j5m3sqj0 established to 127.0.0.1:56853
+ℹ️ [SshTerminalService] execute(ho7j5m3sqj0)
+ℹ️ [SshTerminalService] Disconnecting session ho7j5m3sqj0
+01:00 +11: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture session output drains across a live OpenSSH rekey
+ℹ️ [SshTerminalService] Session ho7j5m62030 established to 127.0.0.1:56853
+ℹ️ [SshTerminalService] execute(ho7j5m62030)
+ℹ️ [SshTerminalService] Disconnecting session ho7j5m62030
+01:02 +12: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture rejecting a real host key never asks the agent to sign
+❌ [SshTerminalService] SSH connect failed
+  Error: Verify this server’s SSH host key before connecting: SHA256:yZohHlMLefXFIimlmaESXm10VIpFhqrFFi9cuI5Tjvw
+01:02 +13: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture a changed direct host key fails before any signature
+❌ [SshTerminalService] SSH connect failed
+  Error: SSH host key changed for 127.0.0.1:56853. Expected SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA; received SHA256:yZohHlMLefXFIimlmaESXm10VIpFhqrFFi9cuI5Tjvw.
+01:02 +14: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture a changed final key signs only for the independently trusted jump
+❌ [SshTerminalService] SSH connect failed
+  Error: SSH host key changed for 127.0.0.1:56853. Expected SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA; received SHA256:yZohHlMLefXFIimlmaESXm10VIpFhqrFFi9cuI5Tjvw.
+01:02 +15: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture a refused agent signature has no password or interactive fallback
+❌ [SshTerminalService] SSH connect failed
+  Error: SSHAuthAbortError(Connection closed before authentication)
+01:02 +16: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture disconnect revokes a pending local-agent signature on a live route
+ℹ️ [SshTerminalService] Session ho7j5nex6a0 established to 127.0.0.1:56853
+ℹ️ [SshTerminalService] execute(ho7j5nex6a0)
+ℹ️ [SshTerminalService] Disconnecting session ho7j5nex6a0
+01:02 +17: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture cancelling host approval closes authority before a late approval
+❌ [SshTerminalService] SSH connect failed
+  Error: SSHAuthAbortError(Connection closed before authentication)
+01:02 +18: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_live_test.dart: actual disposable Unix ssh-agent authenticates and forwards to ssh-add
+ℹ️ [SshTerminalService] Session ho7j5ngk350 established to 127.0.0.1:56853
+ℹ️ [SshTerminalService] execute(ho7j5ngk350)
+ℹ️ [SshTerminalService] Disconnecting session ho7j5ngk350
+01:02 +19: All tests passed!

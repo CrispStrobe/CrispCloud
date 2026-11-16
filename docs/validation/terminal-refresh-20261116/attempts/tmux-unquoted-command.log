@@ -1,0 +1,22 @@
+%begin 1794815327 315 0
+%end 1794815327 315 0
+%session-changed $0 crispcloud-check
+SEND: "display-message -p '#{version}'"
+%begin 1794815327 317 1
+3.8
+%end 1794815327 317 1
+SEND: 'refresh-client -C 100x32'
+%begin 1794815328 318 1
+%end 1794815328 318 1
+%layout-change @0 b07d,100x32,0,0,0 b07d,100x32,0,0,0 *
+SEND: "list-windows -F '#{window_id} #{window_index} #{window_width} #{window_height} #{window_active} #{pane_id} #{window_zoomed_flag} #{s/[[:cntrl:]]/ /:window_name}' ; list-panes -s -F '#{window_id} #{pane_id} #{pane_width} #{pane_height} #{pane_left} #{pane_top} #{pane_active}'"
+%begin 1794815328 319 1
+@0 0 100 32 1 %0 0 
+%end 1794815328 319 1
+%begin 1794815328 320 1
+@0 %0 100 32 0 0 1
+%end 1794815328 320 1
+SEND: 'refresh-client -A %0:off ; capture-pane -p -e -C -t %0 -S -200'
+%begin 1794815328 321 1
+parse error: syntax error
+%error 1794815328 321 1

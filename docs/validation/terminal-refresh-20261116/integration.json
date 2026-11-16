@@ -1,0 +1,41 @@
+{
+  "cutoff_utc": "2026-11-16T07:45:39.268921+00:00",
+  "application_tested_commit": "6c3db0fa5e7586959a44c1dded0832a6b2c96871",
+  "branch": "integrate/current-repos-20261116",
+  "quds_commit": "9bf7b7aa9559d4d2a318152b9fe4eaa16c97ffd9",
+  "managed_office_files": 2410,
+  "integrated_prs": {
+    "CrispStrobe/CrispCloud": [
+      {
+        "number": 161,
+        "head": "fc09d3f5e0ecb74ca91f3c416b401b0897dc04da"
+      },
+      {
+        "number": 160,
+        "head": "359e399757e4f0b74ab8b190a3119cef841d3c7d"
+      }
+    ],
+    "CrispStrobe/quds_office_suite": [
+      {
+        "number": 50,
+        "head": "428679a33381f943a8ae63117d4207f01dd15462"
+      }
+    ]
+  },
+  "other_repositories": "Parser, CrisperBooks, libdbm, Filen, MadEdit, crisp-docx and storage-Rust audit heads are unchanged from the previous integration. Published-source/local-patch boundaries were retained.",
+  "fixes": [
+    "Quote tmux refresh-client pane/action arguments so actual control-mode command parsing succeeds.",
+    "Accept paired tmux UINT_MAX saved-cursor sentinels only on the primary screen; continue rejecting missing alternate-screen saved coordinates. Two regression tests cover both cases.",
+    "Use a short private temporary directory for OpenSSH and real-agent fixture sockets to avoid macOS AF_UNIX path-length skips.",
+    "Preserve real tmux window names by protecting the POSIX control-character class inside a literal format; live coverage asserts a Unicode window label."
+  ],
+  "test_execution": "Flutter invocations are serialized after an initial shared-native-output collision. Original failed attempts and direct tmux traces are retained separately; they are not pass evidence.",
+  "environment": {
+    "flutter": "3.47.8",
+    "dart": "3.13.7",
+    "tmux": "3.8",
+    "ssh_server": "macOS system OpenSSH, disposable high loopback ports",
+    "ssh_agent": "disposable ssh-agent loaded with an ephemeral test key"
+  },
+  "scope": "Local integration and testing. No remote PR merge, push, deployment or change to system SSH server configuration."
+}

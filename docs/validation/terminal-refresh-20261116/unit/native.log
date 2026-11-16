@@ -1,0 +1,1229 @@
+00:00 +0: loading /Users/christianstrobele/code/local/CrispCloud/test/external_terminal_service_test.dart
+00:00 +0: /Users/christianstrobele/code/local/CrispCloud/test/external_terminal_service_test.dart: argv preserves quotes, Unicode and shell syntax as directory data
+00:00 +1: /Users/christianstrobele/code/local/CrispCloud/test/external_terminal_service_test.dart: Windows paths remain complete arguments and settings use their path style
+00:00 +2: /Users/christianstrobele/code/local/CrispCloud/test/external_terminal_service_test.dart: rejects an implicit path or shell executable: relative-terminal
+00:00 +3: /Users/christianstrobele/code/local/CrispCloud/test/external_terminal_service_test.dart: rejects an implicit path or shell executable: /bin/sh
+00:00 +4: /Users/christianstrobele/code/local/CrispCloud/test/external_terminal_service_test.dart: rejects an implicit path or shell executable: /bin/bash
+00:00 +5: /Users/christianstrobele/code/local/CrispCloud/test/external_terminal_service_test.dart: rejects an implicit path or shell executable: /bin/zsh
+00:00 +6: /Users/christianstrobele/code/local/CrispCloud/test/external_terminal_service_test.dart: rejects Windows command execution fallback: C:\Tools\run.cmd
+00:00 +7: /Users/christianstrobele/code/local/CrispCloud/test/external_terminal_service_test.dart: rejects Windows command execution fallback: C:\Tools\run.BAT
+00:00 +8: /Users/christianstrobele/code/local/CrispCloud/test/external_terminal_service_test.dart: rejects Windows command execution fallback: C:\Windows\cmd.exe
+00:00 +9: /Users/christianstrobele/code/local/CrispCloud/test/external_terminal_service_test.dart: rejects Windows command execution fallback: C:\Tools\powershell.exe
+00:00 +10: /Users/christianstrobele/code/local/CrispCloud/test/external_terminal_service_test.dart: rejects unsupported placeholders and excessive configuration before saving
+00:00 +11: /Users/christianstrobele/code/local/CrispCloud/test/external_terminal_service_test.dart: view changes during access check prevent a process launch
+00:00 +12: /Users/christianstrobele/code/local/CrispCloud/test/external_terminal_service_test.dart: view changes during directory check prevent a process launch
+00:00 +13: /Users/christianstrobele/code/local/CrispCloud/test/external_terminal_service_test.dart: view changes during executable check prevent a process launch
+00:00 +14: /Users/christianstrobele/code/local/CrispCloud/test/external_terminal_service_test.dart: unavailable access is never replaced by a fallback directory
+00:00 +15: /Users/christianstrobele/code/local/CrispCloud/test/external_terminal_service_test.dart: missing executable and missing directory are actionable without fallback
+00:00 +16: /Users/christianstrobele/code/local/CrispCloud/test/external_terminal_service_test.dart: unsupported runtime and another platform configuration cannot launch
+00:00 +17: /Users/christianstrobele/code/local/CrispCloud/test/external_terminal_service_test.dart: runtime errors do not expose arbitrary exception contents
+00:00 +18: /Users/christianstrobele/code/local/CrispCloud/test/external_terminal_service_test.dart: preferences roundtrip per OS, reject mismatched saves and reset independently
+00:00 +19: /Users/christianstrobele/code/local/CrispCloud/test/external_terminal_service_test.dart: malformed or unsupported saved data is reported without erasing it
+00:00 +20: /Users/christianstrobele/code/local/CrispCloud/test/external_terminal_service_test.dart: native host distinguishes real directories and absent executables
+00:00 +21: /Users/christianstrobele/code/local/CrispCloud/test/external_terminal_service_test.dart: expanded arguments and the working directory retain the launch bounds
+00:00 +22: /Users/christianstrobele/code/local/CrispCloud/test/external_terminal_service_test.dart: escaped settings cannot save a value that exceeds the load limit
+00:00 +23: /Users/christianstrobele/code/local/CrispCloud/test/external_terminal_service_test.dart: all supported languages have complete terminal labels and errors
+00:00 +24: /Users/christianstrobele/code/local/CrispCloud/test/ios_terminal_connection_test.dart: starts Dash in the captured directory with bounded dimensions
+00:00 +25: /Users/christianstrobele/code/local/CrispCloud/test/ios_terminal_connection_test.dart: preserves terminal output, input, exit status and resize
+00:00 +26: /Users/christianstrobele/code/local/CrispCloud/test/ios_terminal_connection_test.dart: close is idempotent and stops late layout/input
+00:00 +27: /Users/christianstrobele/code/local/CrispCloud/test/ios_terminal_connection_test.dart: iOS routing uses the embedded engine and never starts a host process
+00:00 +28: /Users/christianstrobele/code/local/CrispCloud/test/ios_terminal_connection_test.dart: iOS startup failures remain visible without switching interpreters
+00:01 +29: /Users/christianstrobele/code/local/CrispCloud/test/screen_session_command_test.dart: POSIX Screen command resolution creates a new named session even inside an inherited Screen
+00:01 +30: /Users/christianstrobele/code/local/CrispCloud/test/screen_session_command_test.dart: POSIX Screen command resolution exact names cannot select longer names or a different prefix
+00:01 +31: /Users/christianstrobele/code/local/CrispCloud/test/screen_session_command_test.dart: POSIX Screen command resolution exact names cannot select longer names or a different prefix
+00:01 +32: /Users/christianstrobele/code/local/CrispCloud/test/screen_session_command_test.dart: POSIX Screen command resolution exact names cannot select longer names or a different prefix
+00:01 +33: /Users/christianstrobele/code/local/CrispCloud/test/screen_session_command_test.dart: POSIX Screen command resolution exact names cannot select longer names or a different prefix
+00:01 +34: /Users/christianstrobele/code/local/CrispCloud/test/screen_session_command_test.dart: POSIX Screen command resolution exact names cannot select longer names or a different prefix
+00:01 +35: /Users/christianstrobele/code/local/CrispCloud/test/screen_session_command_test.dart: POSIX Screen command resolution exact names cannot select longer names or a different prefix
+00:01 +36: /Users/christianstrobele/code/local/CrispCloud/test/screen_session_command_test.dart: POSIX Screen command resolution missing exact names do not attach prefixes or create sessions
+00:01 +37: /Users/christianstrobele/code/local/CrispCloud/test/screen_session_command_test.dart: POSIX Screen command resolution numeric names use string equality
+00:01 +38: /Users/christianstrobele/code/local/CrispCloud/test/screen_session_command_test.dart: POSIX Screen command resolution duplicate exact names require a full ID
+00:01 +39: /Users/christianstrobele/code/local/CrispCloud/test/screen_session_command_test.dart: POSIX Screen command resolution full IDs distinguish duplicate names and preserve other displays
+00:01 +40: /Users/christianstrobele/code/local/CrispCloud/test/screen_session_command_test.dart: POSIX Screen command resolution missing full IDs do not fall back to a session with that name
+00:01 +41: /Users/christianstrobele/code/local/CrispCloud/test/screen_session_command_test.dart: POSIX Screen command resolution supports dated and multi-display listings owned by this account
+00:01 +42: /Users/christianstrobele/code/local/CrispCloud/test/screen_session_command_test.dart: POSIX Screen command resolution rejects alternate candidates for Screen prefix fallback
+00:01 +43: /Users/christianstrobele/code/local/CrispCloud/test/screen_session_command_test.dart: POSIX Screen command resolution unavailable exact matches are not replaced by live prefix matches
+00:01 +44: /Users/christianstrobele/code/local/CrispCloud/test/screen_session_command_test.dart: POSIX Screen command resolution a failed or incomplete listing cannot trigger an attach
+00:01 +45: /Users/christianstrobele/code/local/CrispCloud/test/screen_session_command_test.dart: POSIX Screen command resolution oversized listings fail closed
+00:01 +46: /Users/christianstrobele/code/local/CrispCloud/test/screen_session_command_test.dart: POSIX Screen command resolution attach failure is returned without shell or creation fallback
+00:01 +47: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_channel_test.dart: agent channel decodes every split of a frame exactly once
+00:02 +48: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_channel_test.dart: agent channel handles pipelined frames in order
+00:02 +49: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_channel_test.dart: a stalled response applies output pressure before another request
+00:02 +50: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_channel_test.dart: signer wait pauses receive-window replenishment
+00:02 +51: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_channel_test.dart: invalid frame length 0 closes before invoking agent
+00:02 +52: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_channel_test.dart: invalid frame length 262145 closes before invoking agent
+00:02 +53: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_channel_test.dart: invalid frame length 4294967295 closes before invoking agent
+00:02 +54: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_channel_test.dart: oversized handler response closes instead of queuing output
+00:02 +55: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_channel_test.dart: channel close discards a late signature and consumes late errors
+00:02 +56: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_channel_test.dart: input EOF preserves the final response before closing
+00:02 +57: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_channel_test.dart: handler errors return generic failure without logging local details
+00:02 +58: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_channel_test.dart: handler and output-flush deadlines both close stalled channels
+00:02 +59: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_channel_test.dart: idle and incomplete agent channels expire without agent calls
+00:02 +60: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_channel_test.dart: extended data is rejected at the agent protocol boundary
+00:02 +61: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_channel_test.dart: unsolicited agent channels cannot access a configured handler
+00:02 +62: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_channel_test.dart: transport flush waits for queued rekey packets and close revokes it
+00:02 +63: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_channel_test.dart: send barrier waits through every packet and remote-window split
+00:02 +64: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_channel_test.dart: local close fails queued sends without waiting for the peer
+00:02 +65: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_channel_test.dart: rejected enqueue leaves no pending send error behind
+00:02 +66: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_channel_test.dart: client bounds agent channels and releases a slot only on peer close
+00:02 +67: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_profiles_test.dart: agent authentication and forwarding intent survive secret-free round trips
+00:02 +68: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_profiles_test.dart: agent profile settings upgrade to v3 and never downgrade after deleting them
+00:02 +69: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_profiles_test.dart: arrangements preserve forwarding permission under a v3 envelope
+00:02 +70: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_profiles_test.dart: unrecognized agent permission values reject instead of enabling forwarding
+00:02 +71: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_profiles_test.dart: unknown future agent profile and arrangement stores remain untouched
+00:02 +72: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_profiles_test.dart: separate default stores serialize mutations without losing agent settings
+00:02 +73: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_route_test.dart: each agent-authenticated hop verifies its host before signing
+ℹ️ [SshTerminalService] Session ho7j2da3vv0 established to final.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7j2da3vv0
+00:03 +74: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_route_test.dart: agent authentication alone never forwards the agent
+ℹ️ [SshTerminalService] Session ho7j2davwk0 established to final.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7j2davwk0
+00:03 +75: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_route_test.dart: password authentication forwards only after explicit permission at final host
+ℹ️ [SshTerminalService] Session ho7j2dayxu0 established to final.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7j2dayxu0
+00:03 +76: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_route_test.dart: published route retains agent access after the opener lease ends
+ℹ️ [SshTerminalService] Session ho7j2db64z0 established to final.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7j2db64z0
+00:03 +77: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_route_test.dart: outer host-key rejection never requests an agent signature
+❌ [SshTerminalService] SSH connect failed
+  Error: Verify this server’s SSH host key before connecting: SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+00:03 +78: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_route_test.dart: final host-key rejection allows only the already verified jump signature
+❌ [SshTerminalService] SSH connect failed
+  Error: Verify this server’s SSH host key before connecting: SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+00:03 +79: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_route_test.dart: ordinary password routes never create an agent capability
+ℹ️ [SshTerminalService] Session ho7j2dbpuy0 established to final.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7j2dbpuy0
+00:03 +80: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_route_test.dart: mixed agent jump and password final target do not change authentication intent
+ℹ️ [SshTerminalService] Session ho7j2dbyqe0 established to final.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7j2dbyqe0
+00:03 +81: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_route_test.dart: dispose cancels pending agent open and closes the late transport
+❌ [SshTerminalService] SSH connect failed
+  Error: SSH agent access has ended.
+00:03 +82: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_route_test.dart: dispose during signature revokes local requests and publishes no session
+❌ [SshTerminalService] SSH connect failed
+  Error: SSH agent access has ended.
+00:03 +83: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_route_test.dart: remote closure immediately revokes forwarding authority
+ℹ️ [SshTerminalService] Session ho7j2dc8wa0 established to final.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7j2dc8wa0
+00:03 +84: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_route_test.dart: already canceled attempt never opens the local agent
+00:03 +85: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_test.dart: agent identities probe before signing and return actual Ed25519 signatures
+00:03 +86: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_test.dart: identity and signature frames survive every split and bytewise fragmentation
+00:03 +87: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_test.dart: empty signing payloads retain normal agent protocol semantics
+00:03 +88: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_test.dart: parallel identity reads share one frozen snapshot
+00:03 +89: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_test.dart: unknown key families skip and duplicate public keys are exposed once
+00:03 +90: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_test.dart: empty agents and unsupported-only agents fail without password fallback
+00:03 +91: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_test.dart: malformed identity responses reject before exposing any key
+00:03 +92: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_test.dart: oversized, zero, truncated and trailing frame bytes are rejected
+00:03 +93: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_test.dart: RSA uses SHA2 authentication algorithms and exact agent signing flags
+00:03 +94: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_test.dart: ECDSA curves validate their point geometry and signature components
+00:03 +95: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_test.dart: sign refusal is distinct; wrong types, lengths and trailing bytes reject
+00:03 +96: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_test.dart: forwarding allows only frozen keys, list and sign with exact flags
+00:03 +97: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_test.dart: forwarding rate limit resets and identity listing never queries new keys
+00:03 +98: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_test.dart: oversized signing data is rejected before touching the agent
+00:03 +99: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_test.dart: local request concurrency cap includes pending connections
+00:03 +100: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_test.dart: timeout destroys active sockets and reports a stable error
+00:03 +101: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_test.dart: cancel during pending open closes its late socket without writing
+00:03 +102: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_test.dart: timeout during open closes a late socket without using its response
+00:03 +103: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_test.dart: cancel during signature immediately revokes future authority
+00:03 +104: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_test.dart: expired caller lease refuses signing without a socket
+00:03 +105: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_test.dart: connection failures hide transport details and socket paths
+00:04 +106: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_widget_test.dart: agent authentication has no password or private-key fields and forwarding defaults off
+00:04 +107: /Users/christianstrobele/code/local/CrispCloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:05 +108: /Users/christianstrobele/code/local/CrispCloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:05 +109: /Users/christianstrobele/code/local/CrispCloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:05 +110: /Users/christianstrobele/code/local/CrispCloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:05 +111: /Users/christianstrobele/code/local/CrispCloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:05 +112: /Users/christianstrobele/code/local/CrispCloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:05 +113: /Users/christianstrobele/code/local/CrispCloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:05 +114: /Users/christianstrobele/code/local/CrispCloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:05 +115: /Users/christianstrobele/code/local/CrispCloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:05 +116: /Users/christianstrobele/code/local/CrispCloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:05 +117: /Users/christianstrobele/code/local/CrispCloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:06 +118: /Users/christianstrobele/code/local/CrispCloud/test/ssh_config_import_dialog_test.dart: existing names get an editable unique suggestion and never overwrite
+00:06 +119: /Users/christianstrobele/code/local/CrispCloud/test/ssh_config_import_dialog_test.dart: a racing profile save rejects the batch without replacements
+00:06 +120: /Users/christianstrobele/code/local/CrispCloud/test/ssh_config_import_dialog_test.dart: unsupported routing is visible and cannot be selected
+00:06 +121: /Users/christianstrobele/code/local/CrispCloud/test/ssh_config_import_dialog_test.dart: default username fixes a missing user after a fresh preview
+00:06 +122: /Users/christianstrobele/code/local/CrispCloud/test/ssh_config_import_dialog_test.dart: default username fixes a missing user after a fresh preview
+00:06 +123: /Users/christianstrobele/code/local/CrispCloud/test/ssh_config_import_dialog_test.dart: default username fixes a missing user after a fresh preview
+00:06 +124: /Users/christianstrobele/code/local/CrispCloud/test/ssh_config_import_dialog_test.dart: default username fixes a missing user after a fresh preview
+00:06 +125: /Users/christianstrobele/code/local/CrispCloud/test/ssh_config_import_dialog_test.dart: default username fixes a missing user after a fresh preview
+00:06 +126: /Users/christianstrobele/code/local/CrispCloud/test/ssh_config_import_dialog_test.dart: default username fixes a missing user after a fresh preview
+00:06 +127: /Users/christianstrobele/code/local/CrispCloud/test/ssh_config_import_dialog_test.dart: default username fixes a missing user after a fresh preview
+00:06 +128: /Users/christianstrobele/code/local/CrispCloud/test/ssh_config_import_dialog_test.dart: default username fixes a missing user after a fresh preview
+00:06 +129: /Users/christianstrobele/code/local/CrispCloud/test/ssh_config_import_dialog_test.dart: default username fixes a missing user after a fresh preview
+00:06 +130: /Users/christianstrobele/code/local/CrispCloud/test/ssh_config_import_dialog_test.dart: default username fixes a missing user after a fresh preview
+00:06 +131: /Users/christianstrobele/code/local/CrispCloud/test/ssh_config_import_dialog_test.dart: default username fixes a missing user after a fresh preview
+00:06 +132: /Users/christianstrobele/code/local/CrispCloud/test/ssh_config_import_dialog_test.dart: default username fixes a missing user after a fresh preview
+00:06 +133: /Users/christianstrobele/code/local/CrispCloud/test/ssh_config_import_dialog_test.dart: default username fixes a missing user after a fresh preview
+00:06 +134: /Users/christianstrobele/code/local/CrispCloud/test/ssh_config_import_dialog_test.dart: default username fixes a missing user after a fresh preview
+00:06 +135: /Users/christianstrobele/code/local/CrispCloud/test/ssh_config_import_dialog_test.dart: default username fixes a missing user after a fresh preview
+00:06 +136: /Users/christianstrobele/code/local/CrispCloud/test/ssh_config_import_dialog_test.dart: default username fixes a missing user after a fresh preview
+00:06 +137: /Users/christianstrobele/code/local/CrispCloud/test/ssh_config_import_dialog_test.dart: default username fixes a missing user after a fresh preview
+00:06 +138: /Users/christianstrobele/code/local/CrispCloud/test/ssh_config_import_dialog_test.dart: default username fixes a missing user after a fresh preview
+00:06 +139: /Users/christianstrobele/code/local/CrispCloud/test/ssh_config_import_dialog_test.dart: default username fixes a missing user after a fresh preview
+00:06 +140: /Users/christianstrobele/code/local/CrispCloud/test/ssh_config_import_dialog_test.dart: default username fixes a missing user after a fresh preview
+00:06 +141: /Users/christianstrobele/code/local/CrispCloud/test/ssh_config_import_dialog_test.dart: default username fixes a missing user after a fresh preview
+00:06 +142: /Users/christianstrobele/code/local/CrispCloud/test/ssh_config_import_dialog_test.dart: default username fixes a missing user after a fresh preview
+00:06 +143: /Users/christianstrobele/code/local/CrispCloud/test/ssh_config_import_dialog_test.dart: default username fixes a missing user after a fresh preview
+00:06 +144: /Users/christianstrobele/code/local/CrispCloud/test/ssh_config_import_dialog_test.dart: default username fixes a missing user after a fresh preview
+00:06 +145: /Users/christianstrobele/code/local/CrispCloud/test/ssh_config_import_dialog_test.dart: default username fixes a missing user after a fresh preview
+00:06 +146: /Users/christianstrobele/code/local/CrispCloud/test/ssh_config_import_dialog_test.dart: default username fixes a missing user after a fresh preview
+00:06 +147: /Users/christianstrobele/code/local/CrispCloud/test/ssh_config_import_dialog_test.dart: default username fixes a missing user after a fresh preview
+00:06 +148: /Users/christianstrobele/code/local/CrispCloud/test/ssh_config_import_dialog_test.dart: default username fixes a missing user after a fresh preview
+00:06 +149: /Users/christianstrobele/code/local/CrispCloud/test/ssh_config_import_test.dart: atomic profile import capacity failures preserve the entire old store
+00:06 +150: /Users/christianstrobele/code/local/CrispCloud/test/ssh_config_import_dialog_test.dart: editing a previewed source revokes its old selection
+00:06 +151: /Users/christianstrobele/code/local/CrispCloud/test/ssh_config_import_dialog_test.dart: editing a previewed source revokes its old selection
+00:06 +152: /Users/christianstrobele/code/local/CrispCloud/test/ssh_config_import_dialog_test.dart: oversized paste rejects all text and revokes the prior preview
+00:07 +153: /Users/christianstrobele/code/local/CrispCloud/test/ssh_config_import_dialog_test.dart: storage errors stay bounded and do not leak internal details
+00:07 +154: /Users/christianstrobele/code/local/CrispCloud/test/ssh_config_import_dialog_test.dart: pending batch writes disable cancel and all import controls
+00:07 +155: /Users/christianstrobele/code/local/CrispCloud/test/ssh_config_import_dialog_test.dart: profile manager exposes import and stays open after saving
+00:07 +156: /Users/christianstrobele/code/local/CrispCloud/test/ssh_config_import_dialog_test.dart: short narrow layouts scroll source preview and selection without overflow
+00:07 +157: /Users/christianstrobele/code/local/CrispCloud/test/ssh_config_import_dialog_test.dart: all eight established locales translate the import entry point
+00:08 +158: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_panel_test.dart: saved listeners start only after authentication and shell acceptance
+00:08 +159: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_panel_test.dart: saved listeners start only after authentication and shell acceptance
+00:08 +160: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_panel_test.dart: saved listeners start only after authentication and shell acceptance
+00:08 +161: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_panel_test.dart: saved listeners start only after authentication and shell acceptance
+00:08 +162: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_panel_test.dart: saved listeners start only after authentication and shell acceptance
+00:08 +163: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_panel_test.dart: saved listeners start only after authentication and shell acceptance
+00:08 +164: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_panel_test.dart: saved listeners start only after authentication and shell acceptance
+00:08 +165: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_panel_test.dart: saved listeners start only after authentication and shell acceptance
+00:08 +166: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_panel_test.dart: saved listeners start only after authentication and shell acceptance
+00:08 +167: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_panel_test.dart: saved listeners start only after authentication and shell acceptance
+00:08 +168: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_panel_test.dart: saved listeners start only after authentication and shell acceptance
+00:08 +169: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_panel_test.dart: saved listeners start only after authentication and shell acceptance
+00:08 +170: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_panel_test.dart: saved listeners start only after authentication and shell acceptance
+00:08 +171: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_panel_test.dart: saved listeners start only after authentication and shell acceptance
+00:08 +172: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_panel_test.dart: saved listeners start only after authentication and shell acceptance
+00:08 +173: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_panel_test.dart: saved listeners start only after authentication and shell acceptance
+00:08 +174: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_panel_test.dart: saved listeners start only after authentication and shell acceptance
+00:08 +175: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_panel_test.dart: saved listeners start only after authentication and shell acceptance
+00:08 +176: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_panel_test.dart: saved listeners start only after authentication and shell acceptance
+00:08 +177: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_panel_test.dart: saved listeners start only after authentication and shell acceptance
+00:08 +178: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_panel_test.dart: saved listeners start only after authentication and shell acceptance
+00:08 +179: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_panel_test.dart: saved listeners start only after authentication and shell acceptance
+00:08 +180: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_panel_test.dart: saved listeners start only after authentication and shell acceptance
+00:08 +181: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_panel_test.dart: saved listeners start only after authentication and shell acceptance
+00:08 +182: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_panel_test.dart: saved listeners start only after authentication and shell acceptance
+00:08 +183: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_panel_test.dart: saved listeners start only after authentication and shell acceptance
+00:08 +184: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_panel_test.dart: saved listeners start only after authentication and shell acceptance
+00:08 +185: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_panel_test.dart: saved listeners start only after authentication and shell acceptance
+00:08 +186: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_panel_test.dart: saved listeners start only after authentication and shell acceptance
+00:09 +187: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_panel_test.dart: Stop is respected until reconnect creates one new owned listener
+00:09 +188: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_panel_test.dart: authentication failure never starts saved forwarding
+00:10 +189: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_profiles_widget_test.dart: new saved recipe defaults to manual and does not open a listener
+00:10 +190: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_profiles_widget_test.dart: new saved recipe defaults to manual and does not open a listener
+00:10 +191: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_profiles_widget_test.dart: new saved recipe defaults to manual and does not open a listener
+00:10 +192: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_profiles_widget_test.dart: new saved recipe defaults to manual and does not open a listener
+00:10 +193: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_profiles_widget_test.dart: new saved recipe defaults to manual and does not open a listener
+00:11 +194: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_profiles_widget_test.dart: new saved recipe defaults to manual and does not open a listener
+00:11 +195: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_panel_test.dart: disconnect with profile editor open permits saved edits and deletion without new listeners
+00:11 +196: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_profiles_widget_test.dart: saving an active listener preserves requested automatic port and avoids a duplicate
+00:11 +197: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_panel_test.dart: profile deletion can finish while the disconnected manager is closing
+00:11 +198: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_panel_test.dart: profile deletion can finish while the disconnected manager is closing
+00:12 +199: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_profiles_widget_test.dart: editing an active recipe stops it and retains its identity
+00:12 +200: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_profiles_widget_test.dart: Delete and stop removes the stored recipe and current listener
+00:12 +201: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_profiles_widget_test.dart: corrupt storage offers retry while retaining existing data
+00:12 +202: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_profiles_widget_test.dart: saved startup failure remains visible when reopening the manager
+00:12 +203: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_profiles_widget_test.dart: profile editor and validation fit a 320 by 320 viewport
+00:12 +204: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_profiles_widget_test.dart: profile editor and validation fit a 320 by 320 viewport
+00:12 +205: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_profiles_widget_test.dart: profile editor and validation fit a 320 by 320 viewport
+00:12 +206: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_profiles_widget_test.dart: profile editor and validation fit a 320 by 320 viewport
+00:12 +207: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_profiles_widget_test.dart: profile editor and validation fit a 320 by 320 viewport
+00:12 +208: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_profiles_widget_test.dart: profile editor and validation fit a 320 by 320 viewport
+00:12 +209: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_profiles_widget_test.dart: profile editor and validation fit a 320 by 320 viewport
+00:12 +210: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_profiles_widget_test.dart: profile editor and validation fit a 320 by 320 viewport
+00:12 +211: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_profiles_widget_test.dart: profile editor and validation fit a 320 by 320 viewport
+00:12 +212: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_profiles_widget_test.dart: profile editor and validation fit a 320 by 320 viewport
+00:12 +213: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_profiles_widget_test.dart: profile editor and validation fit a 320 by 320 viewport
+00:12 +214: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_profiles_widget_test.dart: profile editor and validation fit a 320 by 320 viewport
+00:12 +215: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_profiles_widget_test.dart: profile editor and validation fit a 320 by 320 viewport
+00:12 +216: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_profiles_widget_test.dart: German profile controls and validation use translated strings
+00:12 +217: /Users/christianstrobele/code/local/CrispCloud/test/ssh_forwarding_profiles_widget_test.dart: every forwarding profile message provides all eight translations
+00:13 +218: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_dialog_test.dart: adding a hop keeps target credentials separate
+00:13 +219: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_dialog_test.dart: adding a hop keeps target credentials separate
+00:13 +220: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_dialog_test.dart: adding a hop keeps target credentials separate
+00:13 +221: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_dialog_test.dart: adding a hop keeps target credentials separate
+00:13 +222: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_dialog_test.dart: adding a hop keeps target credentials separate
+00:13 +223: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_dialog_test.dart: adding a hop keeps target credentials separate
+00:13 +224: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_dialog_test.dart: adding a hop keeps target credentials separate
+00:13 +225: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_dialog_test.dart: adding a hop keeps target credentials separate
+00:13 +226: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_dialog_test.dart: adding a hop keeps target credentials separate
+00:14 +226: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_transport_test.dart: opens one outer socket, authenticates each hop, executes at final host
+ℹ️ [SshTerminalService] Session ho7j2jsk8d0 established to target.example:2200
+ℹ️ [SshTerminalService] execute(ho7j2jsk8d0)
+ℹ️ [SshTerminalService] Disconnecting session ho7j2jsk8d0
+00:14 +227: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_dialog_test.dart: adding a hop keeps target credentials separate
+00:14 +227: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_transport_test.dart: direct connections still use verified socket path when no seam is set
+ℹ️ [SshTerminalService] Session ho7j2jswmo0 established to target.example:2200
+ℹ️ [SshTerminalService] Disconnecting session ho7j2jswmo0
+00:14 +228: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_dialog_test.dart: adding a hop keeps target credentials separate
+00:14 +228: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_transport_test.dart: mixed hop key authentication never sends a passphrase as a password
+ℹ️ [SshTerminalService] Session ho7j2julml0 established to target.example:2200
+ℹ️ [SshTerminalService] Disconnecting session ho7j2julml0
+00:14 +229: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_dialog_test.dart: adding a hop keeps target credentials separate
+00:14 +229: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_transport_test.dart: invalid key at any later hop fails before opening the outer socket
+❌ [SshTerminalService] Failed to parse or decrypt SSH private key
+00:14 +230: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_dialog_test.dart: adding a hop keeps target credentials separate
+00:14 +230: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_transport_test.dart: unencrypted jump key accepts the default empty passphrase
+ℹ️ [SshTerminalService] Session ho7j2jx8ta0 established to target.example:2200
+ℹ️ [SshTerminalService] Disconnecting session ho7j2jx8ta0
+00:14 +231: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_dialog_test.dart: adding a hop keeps target credentials separate
+00:14 +231: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_transport_test.dart: private-key targets retain the password-authenticated jump route
+ℹ️ [SshTerminalService] Session ho7j2jykmg0 established to target.example:2200
+ℹ️ [SshTerminalService] Disconnecting session ho7j2jykmg0
+00:14 +232: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_dialog_test.dart: adding a hop keeps target credentials separate
+00:14 +232: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_transport_test.dart: disconnect releases channels without waiting for a remote close reply
+ℹ️ [SshTerminalService] Session ho7j2jyn5y0 established to target.example:2200
+ℹ️ [SshTerminalService] Disconnecting session ho7j2jyn5y0
+00:14 +233: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_dialog_test.dart: adding a hop keeps target credentials separate
+00:14 +233: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_transport_test.dart: rejecting a middle host key prevents downstream auth and closes route
+❌ [SshTerminalService] SSH connect failed
+  Error: Verify this server’s SSH host key before connecting: SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+00:14 +234: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_dialog_test.dart: adding a hop keeps target credentials separate
+00:14 +234: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_transport_test.dart: changed middle host key fails closed without offering a trust override
+❌ [SshTerminalService] SSH connect failed
+  Error: SSH host key changed for inner.example:22. Expected SHA256:ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ; received SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA.
+00:14 +235: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_dialog_test.dart: adding a hop keeps target credentials separate
+00:14 +235: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_transport_test.dart: forwarding failure releases already authenticated hops
+❌ [SshTerminalService] SSH connect failed
+  Error: Bad state: Forwarding rejected
+00:14 +236: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_dialog_test.dart: adding a hop keeps target credentials separate
+00:14 +236: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_transport_test.dart: final authentication failure closes the final client and its ancestors
+❌ [SshTerminalService] SSH connect failed
+  Error: Bad state: Authentication failed
+00:14 +237: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_dialog_test.dart: adding a hop keeps target credentials separate
+00:14 +237: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_transport_test.dart: disconnectAll closes a client while its host-key prompt is pending
+❌ [SshTerminalService] SSH connect failed
+  Error: Verify this server’s SSH host key before connecting: SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+00:14 +238: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_dialog_test.dart: adding a hop keeps target credentials separate
+00:14 +238: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_transport_test.dart: cancellation closes a forwarded socket that arrives later
+❌ [SshTerminalService] SSH connect failed
+  Error: Bad state: SSH connection was cancelled
+00:14 +239: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_dialog_test.dart: adding a hop keeps target credentials separate
+00:14 +239: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_transport_test.dart: dispose closes an outer socket that arrives after cancellation
+❌ [SshTerminalService] SSH connect failed
+  Error: Bad state: SSH connection was cancelled
+00:14 +240: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_dialog_test.dart: adding a hop keeps target credentials separate
+00:14 +240: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_transport_test.dart: route snapshot cannot change while the first connection awaits I/O
+ℹ️ [SshTerminalService] Session ho7j2jzazo0 established to target.example:2200
+ℹ️ [SshTerminalService] Disconnecting session ho7j2jzazo0
+00:14 +241: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_dialog_test.dart: adding a hop keeps target credentials separate
+00:14 +241: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_transport_test.dart: each attempt retains its captured host-key prompt for every hop
+ℹ️ [SshTerminalService] Session ho7j2jzcsg0 established to target.example:2200
+ℹ️ [SshTerminalService] Disconnecting session ho7j2jzcsg0
+00:14 +242: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_dialog_test.dart: adding a hop keeps target credentials separate
+00:14 +243: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_dialog_test.dart: adding a hop keeps target credentials separate
+00:14 +243: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_transport_test.dart: tab cancellation prevents later hops without disconnecting other tabs
+ℹ️ [SshTerminalService] Session ho7j2jzge60 established to other.example:22
+❌ [SshTerminalService] SSH connect failed
+  Error: Bad state: SSH connection was cancelled
+ℹ️ [SshTerminalService] execute(ho7j2jzge60)
+ℹ️ [SshTerminalService] Disconnecting session ho7j2jzge60
+00:14 +244: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_dialog_test.dart: adding a hop keeps target credentials separate
+00:14 +245: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_dialog_test.dart: adding a hop keeps target credentials separate
+00:14 +245: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_transport_test.dart: a route consumes one terminal pool slot and cleanup makes it reusable
+ℹ️ [SshTerminalService] Session ho7j2jzjw70 established to target.example:2200
+ℹ️ [SshTerminalService] Session ho7j2jzk991 established to other1.example:22
+ℹ️ [SshTerminalService] Session ho7j2jzkgk2 established to other2.example:22
+ℹ️ [SshTerminalService] Session ho7j2jzkrc3 established to other3.example:22
+ℹ️ [SshTerminalService] Session ho7j2jzl034 established to other4.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7j2jzjw70
+ℹ️ [SshTerminalService] Session ho7j2jzlup5 established to target.example:2200
+ℹ️ [SshTerminalService] Disconnecting session ho7j2jzk991
+ℹ️ [SshTerminalService] Disconnecting session ho7j2jzkgk2
+ℹ️ [SshTerminalService] Disconnecting session ho7j2jzkrc3
+ℹ️ [SshTerminalService] Disconnecting session ho7j2jzl034
+ℹ️ [SshTerminalService] Disconnecting session ho7j2jzlup5
+00:14 +246: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_dialog_test.dart: adding a hop keeps target credentials separate
+00:14 +246: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_transport_test.dart: a failed client constructor closes its socket and previous hops
+❌ [SshTerminalService] SSH connect failed
+  Error: Bad state: Client constructor failed
+00:14 +247: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_dialog_test.dart: adding a hop keeps target credentials separate
+00:14 +248: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_dialog_test.dart: restored routes require explicit credentials for every hop
+00:14 +248: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: uses only the fixed no-PTY command and closes a successful channel
+ℹ️ [SshTerminalService] Session ho7j2kc48l0 established to host.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7j2kc48l0
+00:14 +249: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_dialog_test.dart: restored routes require explicit credentials for every hop
+00:14 +249: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: waits for a late exit status after both streams reach EOF
+ℹ️ [SshTerminalService] Session ho7j2kcof70 established to host.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7j2kcof70
+00:14 +250: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_dialog_test.dart: restored routes require explicit credentials for every hop
+00:14 +250: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: exit status never discards output queued afterwards
+ℹ️ [SshTerminalService] Session ho7j2kct6p0 established to host.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7j2kct6p0
+00:14 +251: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_dialog_test.dart: restored routes require explicit credentials for every hop
+00:14 +251: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: stdout and stderr share one byte budget
+ℹ️ [SshTerminalService] Session ho7j2kcwdj0 established to host.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7j2kcwdj0
+00:14 +252: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_dialog_test.dart: restored routes require explicit credentials for every hop
+00:14 +252: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: missing tool errors remain errors and still close the channel
+ℹ️ [SshTerminalService] Session ho7j2kd2k60 established to host.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7j2kd2k60
+00:14 +253: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_dialog_test.dart: restored routes require explicit credentials for every hop
+00:14 +253: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: screen discovery uses full IDs without opening an interactive shell
+ℹ️ [SshTerminalService] Session ho7j2kd4rd0 established to host.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7j2kd4rd0
+00:14 +254: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_dialog_test.dart: restored routes require explicit credentials for every hop
+00:14 +254: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: invalid UTF-8 is rejected instead of changing an attach target
+ℹ️ [SshTerminalService] Session ho7j2kd7x70 established to host.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7j2kd7x70
+00:14 +255: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_dialog_test.dart: restored routes require explicit credentials for every hop
+00:14 +255: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: a quiet stale tab cancels without killing the verified connection
+ℹ️ [SshTerminalService] Session ho7j2kdafd0 established to host.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7j2kdafd0
+00:15 +256: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_dialog_test.dart: restored routes require explicit credentials for every hop
+00:15 +256: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: a request returning after cancellation closes its late channel
+ℹ️ [SshTerminalService] Session ho7j2kfjy10 established to host.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7j2kfjy10
+00:15 +257: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_dialog_test.dart: restored routes require explicit credentials for every hop
+00:15 +257: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: disconnecting the connection cancels an in-flight listing
+ℹ️ [SshTerminalService] Session ho7j2kht2l0 established to host.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7j2kht2l0
+00:15 +258: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_dialog_test.dart: restored routes require explicit credentials for every hop
+00:15 +258: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: one session cannot accumulate concurrent discovery channels
+ℹ️ [SshTerminalService] Session ho7j2khvj90 established to host.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7j2khvj90
+00:15 +259: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_dialog_test.dart: restored routes require explicit credentials for every hop
+00:15 +259: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: transport stream errors fail and release the listing channel
+ℹ️ [SshTerminalService] Session ho7j2khyur0 established to host.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7j2khyur0
+00:15 +260: /Users/christianstrobele/code/local/CrispCloud/test/ssh_jump_dialog_test.dart: restored routes require explicit credentials for every hop
+00:15 +260: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+ℹ️ [SshTerminalService] Session ho7j2ki20y0 established to host.example:22
+00:15 +261: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:15 +262: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:15 +263: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:15 +264: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:16 +265: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:16 +266: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:16 +267: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:16 +268: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:16 +269: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:16 +270: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:16 +271: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:16 +272: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:16 +273: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:16 +274: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:16 +275: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:16 +276: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:16 +277: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:16 +278: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:16 +279: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:16 +280: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:18 +281: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:18 +282: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:18 +283: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:18 +284: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:18 +285: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:18 +286: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:18 +287: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:19 +288: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:19 +289: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:19 +290: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:19 +291: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:19 +292: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:19 +293: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:19 +294: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:19 +295: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:20 +296: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:20 +297: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:20 +298: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:20 +299: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:20 +300: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:20 +301: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:20 +302: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:20 +303: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:20 +304: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:20 +305: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:20 +306: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:20 +307: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:20 +308: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:20 +309: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:20 +310: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:20 +311: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:20 +312: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:20 +313: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:20 +314: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:20 +315: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:20 +316: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:20 +317: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:20 +318: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:20 +319: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:20 +320: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:20 +321: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:20 +322: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:20 +323: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:20 +323: /Users/christianstrobele/code/local/CrispCloud/test/ssh_port_forwarding_test.dart: service owns a manager per connection and closes it on disconnect
+ℹ️ [SshTerminalService] Session ho7j2nordh0 established to test.invalid:22
+ℹ️ [SshTerminalService] Disconnecting session ho7j2nordh0
+00:20 +324: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:22 +325: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:22 +326: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:22 +327: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:23 +328: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:23 +329: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:23 +330: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:23 +331: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:23 +332: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:23 +333: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:23 +334: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:23 +335: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:24 +336: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:24 +337: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:24 +338: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:24 +339: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:24 +340: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:24 +341: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:24 +342: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:24 +343: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:24 +344: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:24 +345: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:24 +346: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:24 +347: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:24 +348: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:24 +349: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:24 +350: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:24 +351: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:24 +352: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:24 +353: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:24 +354: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:24 +355: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:24 +356: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:24 +357: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:24 +358: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+ℹ️ [SshTerminalService] Disconnecting session ho7j2ki20y0
+00:25 +359: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: synchronous exec failures use the same bounded cleanup path
+ℹ️ [SshTerminalService] Session ho7j2qghdk0 established to host.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7j2qghdk0
+00:25 +360: /Users/christianstrobele/code/local/CrispCloud/test/ssh_multiplexer_discovery_test.dart: already stale requests never send a server command
+ℹ️ [SshTerminalService] Session ho7j2qgjhr0 established to host.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7j2qgjhr0
+00:25 +361: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_gateway_test.dart: browser requires an explicit gateway; native defaults to direct TCP
+ℹ️ [SshTerminalService] Session ho7j2qrtx90 established to target.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7j2qrtx90
+00:25 +362: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: native tmux is explicit and survives credential-free reconnect
+00:25 +362: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_gateway_test.dart: gateway URL stays separate from the real SSH server and username
+ℹ️ [SshTerminalService] Session ho7j2qs3i60 established to target.example:2222
+ℹ️ [SshTerminalService] Disconnecting session ho7j2qs3i60
+00:25 +363: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: native tmux is explicit and survives credential-free reconnect
+00:25 +364: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: native tmux is explicit and survives credential-free reconnect
+00:27 +365: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_profiles_dialog_test.dart: saving a destination strips credentials and closes after successful storage
+00:27 +366: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_profiles_dialog_test.dart: saving a destination strips credentials and closes after successful storage
+00:27 +367: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_profiles_dialog_test.dart: saving a destination strips credentials and closes after successful storage
+00:27 +368: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: password connections preserve the existing form behavior
+00:27 +369: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_profiles_dialog_test.dart: save errors stay visible without exposing storage exception contents
+00:27 +370: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: private-key mode validates the key and submits its passphrase
+00:27 +371: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: private-key mode validates the key and submits its passphrase
+00:27 +372: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: private-key mode validates the key and submits its passphrase
+00:27 +373: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: private-key mode validates the key and submits its passphrase
+00:28 +374: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: private-key mode validates the key and submits its passphrase
+00:28 +375: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_profiles_dialog_test.dart: selecting a saved profile asks for credentials and cancel preserves live connection
+00:28 +376: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_profiles_dialog_test.dart: selecting a saved profile asks for credentials and cancel preserves live connection
+00:28 +377: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: explicit private-key paste preserves the exact multiline PEM
+00:28 +378: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: late clipboard results cannot restore cleared key credentials
+00:29 +379: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: a manual key edit supersedes a pending clipboard paste
+00:29 +380: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: a manual key edit supersedes a pending clipboard paste
+00:29 +381: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: a manual key edit supersedes a pending clipboard paste
+00:29 +382: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: a manual key edit supersedes a pending clipboard paste
+00:29 +383: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: a manual key edit supersedes a pending clipboard paste
+00:29 +384: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: a manual key edit supersedes a pending clipboard paste
+00:29 +385: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: a manual key edit supersedes a pending clipboard paste
+00:29 +386: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: a manual key edit supersedes a pending clipboard paste
+00:29 +387: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: a manual key edit supersedes a pending clipboard paste
+00:29 +388: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: a manual key edit supersedes a pending clipboard paste
+00:29 +389: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: a manual key edit supersedes a pending clipboard paste
+00:29 +390: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: a manual key edit supersedes a pending clipboard paste
+00:29 +391: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: reconnect prefills endpoint and tmux settings, never secrets
+00:29 +392: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: password reconnect also leaves the password empty
+00:29 +393: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: tmux validates names before returning a create-or-attach request
+00:29 +394: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: plain shell mode does not accidentally reuse a tmux target
+00:30 +395: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_connect_dialog_test.dart: screen create validates names and discards a previous tmux choice
+00:30 +396: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:30 +397: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:30 +398: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:30 +399: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:30 +400: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:31 +401: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:31 +402: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:31 +403: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:32 +404: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_test.dart: SshSession model constructor stores all fields
+00:32 +405: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: private-key authentication forwards the passphrase and never retains it for reconnect
+00:32 +406: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: private-key authentication forwards the passphrase and never retains it for reconnect
+00:32 +407: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: private-key authentication forwards the passphrase and never retains it for reconnect
+00:32 +408: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: private-key authentication forwards the passphrase and never retains it for reconnect
+00:32 +409: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: private-key authentication forwards the passphrase and never retains it for reconnect
+00:32 +410: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: private-key authentication forwards the passphrase and never retains it for reconnect
+00:32 +411: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: private-key authentication forwards the passphrase and never retains it for reconnect
+00:32 +412: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: private-key authentication forwards the passphrase and never retains it for reconnect
+00:32 +413: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: private-key authentication forwards the passphrase and never retains it for reconnect
+00:32 +414: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: private-key authentication forwards the passphrase and never retains it for reconnect
+00:32 +415: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: private-key authentication forwards the passphrase and never retains it for reconnect
+00:32 +416: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: private-key authentication forwards the passphrase and never retains it for reconnect
+00:32 +417: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: private-key authentication forwards the passphrase and never retains it for reconnect
+00:32 +418: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: private-key authentication forwards the passphrase and never retains it for reconnect
+00:32 +419: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: private-key authentication forwards the passphrase and never retains it for reconnect
+00:32 +420: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: private-key authentication forwards the passphrase and never retains it for reconnect
+00:32 +421: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: private-key authentication forwards the passphrase and never retains it for reconnect
+00:32 +422: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: private-key authentication forwards the passphrase and never retains it for reconnect
+00:32 +423: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: private-key authentication forwards the passphrase and never retains it for reconnect
+00:32 +424: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: private-key authentication forwards the passphrase and never retains it for reconnect
+00:32 +425: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: private-key authentication forwards the passphrase and never retains it for reconnect
+00:32 +426: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: private-key authentication forwards the passphrase and never retains it for reconnect
+00:32 +427: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: private-key authentication forwards the passphrase and never retains it for reconnect
+00:32 +428: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: private-key authentication forwards the passphrase and never retains it for reconnect
+00:32 +429: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: private-key authentication forwards the passphrase and never retains it for reconnect
+00:32 +430: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: private-key authentication forwards the passphrase and never retains it for reconnect
+00:32 +431: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: private-key authentication forwards the passphrase and never retains it for reconnect
+00:32 +432: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: private-key authentication forwards the passphrase and never retains it for reconnect
+00:32 +433: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: private-key authentication forwards the passphrase and never retains it for reconnect
+00:32 +434: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: private-key authentication forwards the passphrase and never retains it for reconnect
+00:32 +435: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: private-key authentication forwards the passphrase and never retains it for reconnect
+00:32 +436: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: private-key authentication forwards the passphrase and never retains it for reconnect
+00:32 +437: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: private-key authentication forwards the passphrase and never retains it for reconnect
+00:32 +438: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: private-key authentication forwards the passphrase and never retains it for reconnect
+00:32 +439: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: private-key authentication forwards the passphrase and never retains it for reconnect
+00:32 +440: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: private-key authentication forwards the passphrase and never retains it for reconnect
+00:32 +441: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: private-key authentication forwards the passphrase and never retains it for reconnect
+00:32 +442: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: private-key authentication forwards the passphrase and never retains it for reconnect
+00:32 +443: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: private-key authentication forwards the passphrase and never retains it for reconnect
+00:32 +444: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: private-key authentication forwards the passphrase and never retains it for reconnect
+00:32 +445: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: private-key authentication forwards the passphrase and never retains it for reconnect
+00:32 +446: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: screen detach and reconnect preserve the exact target without secrets
+00:32 +446: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_transport_test.dart: requests the actual terminal geometry and resizes the active PTY
+ℹ️ [SshTerminalService] Session ho7j2v3lzs0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7j2v3lzs0)
+ℹ️ [SshTerminalService] resizeTerminal(ho7j2v3lzs0): 95x31
+ℹ️ [SshTerminalService] Disconnecting session ho7j2v3lzs0
+00:33 +447: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: screen detach and reconnect preserve the exact target without secrets
+00:33 +447: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_transport_test.dart: starts tmux through an exec PTY and preserves input and resize
+ℹ️ [SshTerminalService] Session ho7j2v46eo0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7j2v46eo0)
+ℹ️ [SshTerminalService] resizeTerminal(ho7j2v46eo0): 95x31
+ℹ️ [SshTerminalService] Disconnecting session ho7j2v46eo0
+00:33 +448: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: screen detach and reconnect preserve the exact target without secrets
+00:33 +448: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_transport_test.dart: attach uses an exact tmux target and never creates a fallback shell
+ℹ️ [SshTerminalService] Session ho7j2v49k50 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7j2v49k50)
+ℹ️ [SshTerminalService] Disconnecting session ho7j2v49k50
+00:33 +449: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: screen detach and reconnect preserve the exact target without secrets
+00:33 +449: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_transport_test.dart: native control cleanup remains retryable after transport failure
+ℹ️ [SshTerminalService] Session ho7j2v4b5s0 established to test.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7j2v4b5s0
+00:33 +450: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: screen detach and reconnect preserve the exact target without secrets
+00:33 +450: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_transport_test.dart: native cancellation releases its route even if a stream fails
+ℹ️ [SshTerminalService] Session ho7j2v4g990 established to test.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7j2v4g990
+00:33 +451: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: screen detach and reconnect preserve the exact target without secrets
+00:33 +451: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_transport_test.dart: native tmux preserves raw stdout and separates stderr without a PTY
+ℹ️ [SshTerminalService] Session ho7j2v4i7j0 established to test.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7j2v4i7j0
+00:33 +452: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: screen detach and reconnect preserve the exact target without secrets
+00:33 +452: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_transport_test.dart: raw tmux validates mode and name before replacing a running shell
+ℹ️ [SshTerminalService] Session ho7j2v4orp0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7j2v4orp0)
+ℹ️ [SshTerminalService] Disconnecting session ho7j2v4orp0
+00:33 +453: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: screen detach and reconnect preserve the exact target without secrets
+00:33 +453: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_transport_test.dart: disconnect during native tmux startup closes a late channel
+ℹ️ [SshTerminalService] Session ho7j2v4ra70 established to test.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7j2v4ra70
+00:33 +454: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: screen detach and reconnect preserve the exact target without secrets
+00:33 +454: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_transport_test.dart: replaced native controller cannot write to or close its replacement
+ℹ️ [SshTerminalService] Session ho7j2v4tng0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7j2v4tng0)
+ℹ️ [SshTerminalService] Disconnecting session ho7j2v4tng0
+00:33 +455: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: screen detach and reconnect preserve the exact target without secrets
+00:33 +455: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_transport_test.dart: native control cancellation releases channel, route and pool slot
+ℹ️ [SshTerminalService] Session ho7j2v4wr10 established to test.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7j2v4wr10
+00:33 +456: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: screen detach and reconnect preserve the exact target without secrets
+00:33 +456: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_transport_test.dart: native startup output is bounded before the client listens
+ℹ️ [SshTerminalService] Session ho7j2v4ybb0 established to test.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7j2v4ybb0
+00:33 +457: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: screen detach and reconnect preserve the exact target without secrets
+00:33 +457: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_transport_test.dart: invalid tmux names leave an existing shell untouched
+ℹ️ [SshTerminalService] Session ho7j2v55mo0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7j2v55mo0)
+ℹ️ [SshTerminalService] Disconnecting session ho7j2v55mo0
+00:33 +458: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: screen detach and reconnect preserve the exact target without secrets
+00:33 +458: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_transport_test.dart: screen uses an exec PTY and preserves input and geometry
+ℹ️ [SshTerminalService] Session ho7j2v58340 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7j2v58340)
+ℹ️ [SshTerminalService] resizeTerminal(ho7j2v58340): 95x31
+ℹ️ [SshTerminalService] Disconnecting session ho7j2v58340
+00:33 +459: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: screen detach and reconnect preserve the exact target without secrets
+00:33 +459: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_transport_test.dart: invalid or conflicting screen options preserve the running shell
+ℹ️ [SshTerminalService] Session ho7j2v5aux0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7j2v5aux0)
+ℹ️ [SshTerminalService] Disconnecting session ho7j2v5aux0
+00:33 +460: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: screen detach and reconnect preserve the exact target without secrets
+00:33 +460: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_transport_test.dart: disconnect during screen startup closes the late channel
+ℹ️ [SshTerminalService] Session ho7j2v5e5u0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7j2v5e5u0)
+ℹ️ [SshTerminalService] Disconnecting session ho7j2v5e5u0
+00:33 +461: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: screen detach and reconnect preserve the exact target without secrets
+00:33 +461: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_transport_test.dart: failed screen exec closes its pool slot without shell fallback
+ℹ️ [SshTerminalService] Session ho7j2v5gmi0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7j2v5gmi0)
+ℹ️ [SshTerminalService] Disconnecting session ho7j2v5gmi0
+00:33 +462: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: screen detach and reconnect preserve the exact target without secrets
+00:33 +462: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_transport_test.dart: closing screen disconnects only this SSH client without remote commands
+ℹ️ [SshTerminalService] Session ho7j2v5ipc0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7j2v5ipc0)
+ℹ️ [SshTerminalService] Disconnecting session ho7j2v5ipc0
+00:33 +463: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: screen detach and reconnect preserve the exact target without secrets
+00:33 +463: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_transport_test.dart: disconnect during tmux startup closes its late exec channel
+ℹ️ [SshTerminalService] Session ho7j2v5lbr0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7j2v5lbr0)
+ℹ️ [SshTerminalService] Disconnecting session ho7j2v5lbr0
+00:33 +464: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: screen detach and reconnect preserve the exact target without secrets
+00:33 +464: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_transport_test.dart: failed tmux exec releases its pool slot without shell fallback
+ℹ️ [SshTerminalService] Session ho7j2v5naj0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7j2v5naj0)
+ℹ️ [SshTerminalService] Disconnecting session ho7j2v5naj0
+00:33 +465: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: screen detach and reconnect preserve the exact target without secrets
+00:33 +465: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_transport_test.dart: disconnect closes only the tmux client without sending kill or exit
+ℹ️ [SshTerminalService] Session ho7j2v5q0l0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7j2v5q0l0)
+ℹ️ [SshTerminalService] Disconnecting session ho7j2v5q0l0
+00:33 +466: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: screen detach and reconnect preserve the exact target without secrets
+00:33 +466: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_transport_test.dart: preserves remote exit status without losing final tmux output
+ℹ️ [SshTerminalService] Session ho7j2v5smx0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7j2v5smx0)
+ℹ️ [SshTerminalService] Disconnecting session ho7j2v5smx0
+00:33 +467: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: screen detach and reconnect preserve the exact target without secrets
+00:33 +467: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_transport_test.dart: output EOF waits for the later SSH exit status before cleanup
+ℹ️ [SshTerminalService] Session ho7j2v5x0r0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7j2v5x0r0)
+ℹ️ [SshTerminalService] Disconnecting session ho7j2v5x0r0
+00:33 +468: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: screen detach and reconnect preserve the exact target without secrets
+00:33 +468: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_transport_test.dart: explicit disconnect still closes SSH while waiting after output EOF
+ℹ️ [SshTerminalService] Session ho7j2v608e0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7j2v608e0)
+ℹ️ [SshTerminalService] Disconnecting session ho7j2v608e0
+00:33 +469: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: screen detach and reconnect preserve the exact target without secrets
+00:33 +469: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_transport_test.dart: observes early channel errors and preserves them for the exit reader
+ℹ️ [SshTerminalService] Session ho7j2v631z0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7j2v631z0)
+ℹ️ [SshTerminalService] Disconnecting session ho7j2v631z0
+00:33 +470: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: screen detach and reconnect preserve the exact target without secrets
+00:33 +470: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_transport_test.dart: plain output streams remain compatible without exit metadata
+ℹ️ [SshTerminalService] Session ho7j2v65mu0 established to test.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7j2v65mu0
+00:33 +471: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: screen detach and reconnect preserve the exact target without secrets
+00:33 +471: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_transport_test.dart: decrypts an encrypted key without sending its passphrase as a password
+ℹ️ [SshTerminalService] Session ho7j2v66xm0 established to test.example:22
+00:33 +472: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_transport_test.dart: decrypts an encrypted key without sending its passphrase as a password
+ℹ️ [SshTerminalService] Session ho7j2v7ut30 established to key.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7j2v7ut30
+ℹ️ [SshTerminalService] Disconnecting session ho7j2v66xm0
+00:33 +473: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: conflicting multiplexer options do not replace a live connection
+00:33 +473: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_transport_test.dart: rejects missing or incorrect key passphrases before connecting
+ℹ️ [SshTerminalService] Session ho7j2v7xcy0 established to test.example:22
+❌ [SshTerminalService] Failed to parse or decrypt SSH private key
+❌ [SshTerminalService] Failed to parse or decrypt SSH private key
+❌ [SshTerminalService] Failed to parse or decrypt SSH private key
+ℹ️ [SshTerminalService] Disconnecting session ho7j2v7xcy0
+00:33 +474: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: conflicting multiplexer options do not replace a live connection
+00:33 +474: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_transport_test.dart: accepts unencrypted keys with omitted or empty passphrases
+ℹ️ [SshTerminalService] Session ho7j2v989u0 established to test.example:22
+ℹ️ [SshTerminalService] Session ho7j2valq41 established to key.example:22
+ℹ️ [SshTerminalService] Session ho7j2vam3s2 established to key.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7j2v989u0
+ℹ️ [SshTerminalService] Disconnecting session ho7j2valq41
+ℹ️ [SshTerminalService] Disconnecting session ho7j2vam3s2
+00:33 +475: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: conflicting multiplexer options do not replace a live connection
+00:33 +475: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_transport_test.dart: writes UTF-8, arrow keys, tab and control characters without line buffering
+ℹ️ [SshTerminalService] Session ho7j2vans60 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7j2vans60)
+ℹ️ [SshTerminalService] Disconnecting session ho7j2vans60
+00:33 +476: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: conflicting multiplexer options do not replace a live connection
+00:33 +476: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_transport_test.dart: buffers initial prompt and decodes UTF-8 split across packets
+ℹ️ [SshTerminalService] Session ho7j2varmz0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7j2varmz0)
+ℹ️ [SshTerminalService] Disconnecting session ho7j2varmz0
+00:33 +477: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: conflicting multiplexer options do not replace a live connection
+00:33 +477: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_transport_test.dart: waits for stderr after stdout EOF and keeps its UTF-8 decoder separate
+ℹ️ [SshTerminalService] Session ho7j2vav450 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7j2vav450)
+ℹ️ [SshTerminalService] Disconnecting session ho7j2vav450
+00:33 +478: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: conflicting multiplexer options do not replace a live connection
+00:33 +478: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_transport_test.dart: reports channel errors instead of silently swallowing stderr errors
+ℹ️ [SshTerminalService] Session ho7j2vaya70 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7j2vaya70)
+ℹ️ [SshTerminalService] Disconnecting session ho7j2vaya70
+00:33 +479: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: conflicting multiplexer options do not replace a live connection
+00:33 +479: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_transport_test.dart: disconnect completes before any output consumer attaches
+ℹ️ [SshTerminalService] Session ho7j2vb1vr0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7j2vb1vr0)
+ℹ️ [SshTerminalService] Disconnecting session ho7j2vb1vr0
+00:33 +480: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: conflicting multiplexer options do not replace a live connection
+00:33 +480: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_transport_test.dart: cancelling the terminal subscription closes the SSH connection
+ℹ️ [SshTerminalService] Session ho7j2vb6jy0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7j2vb6jy0)
+ℹ️ [SshTerminalService] Disconnecting session ho7j2vb6jy0
+00:33 +481: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: conflicting multiplexer options do not replace a live connection
+00:33 +481: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_transport_test.dart: restart closes the old shell without disconnecting the replacement
+ℹ️ [SshTerminalService] Session ho7j2vb99p0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7j2vb99p0)
+ℹ️ [SshTerminalService] startShell(ho7j2vb99p0)
+ℹ️ [SshTerminalService] Disconnecting session ho7j2vb99p0
+00:33 +482: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: conflicting multiplexer options do not replace a live connection
+00:33 +482: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_transport_test.dart: disconnect during shell setup closes the late shell
+ℹ️ [SshTerminalService] Session ho7j2vbf5v0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7j2vbf5v0)
+ℹ️ [SshTerminalService] Disconnecting session ho7j2vbf5v0
+00:33 +483: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: conflicting multiplexer options do not replace a live connection
+00:33 +483: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_transport_test.dart: failed shell setup releases the connection and its pool slot
+ℹ️ [SshTerminalService] Session ho7j2vbjdp0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7j2vbjdp0)
+ℹ️ [SshTerminalService] Disconnecting session ho7j2vbjdp0
+00:33 +484: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: conflicting multiplexer options do not replace a live connection
+00:33 +484: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_transport_test.dart: transport completion does not discard output still queued in channels
+ℹ️ [SshTerminalService] Session ho7j2vbmf50 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7j2vbmf50)
+ℹ️ [SshTerminalService] Disconnecting session ho7j2vbmf50
+00:33 +485: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: conflicting multiplexer options do not replace a live connection
+00:33 +485: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_transport_test.dart: noninteractive execute also decodes UTF-8
+ℹ️ [SshTerminalService] Session ho7j2vbsmo0 established to test.example:22
+ℹ️ [SshTerminalService] execute(ho7j2vbsmo0)
+ℹ️ [SshTerminalService] Disconnecting session ho7j2vbsmo0
+00:33 +486: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: conflicting multiplexer options do not replace a live connection
+00:33 +486: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_transport_test.dart: validates actual start and resize entry points before requesting a PTY
+ℹ️ [SshTerminalService] Session ho7j2vbw1r0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7j2vbw1r0)
+ℹ️ [SshTerminalService] Disconnecting session ho7j2vbw1r0
+00:33 +487: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: conflicting multiplexer options do not replace a live connection
+00:33 +487: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_transport_test.dart: dispose rejects and closes a connection that completes later
+ℹ️ [SshTerminalService] Session ho7j2vbzsj0 established to test.example:22
+❌ [SshTerminalService] SSH connect failed
+  Error: Bad state: SSH connection was cancelled
+ℹ️ [SshTerminalService] Disconnecting session ho7j2vbzsj0
+00:33 +488: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: conflicting multiplexer options do not replace a live connection
+00:33 +488: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_transport_test.dart: pool limit includes connections still authenticating
+ℹ️ [SshTerminalService] Session ho7j2vc2xs0 established to test.example:22
+ℹ️ [SshTerminalService] Session ho7j2vc4vy0 established to host0:22
+ℹ️ [SshTerminalService] Session ho7j2vc5be1 established to host1:22
+ℹ️ [SshTerminalService] Session ho7j2vc5em2 established to host2:22
+ℹ️ [SshTerminalService] Session ho7j2vc5w03 established to host3:22
+ℹ️ [SshTerminalService] Session ho7j2vc65n4 established to host4:22
+ℹ️ [SshTerminalService] Disconnecting session ho7j2vc4vy0
+ℹ️ [SshTerminalService] Disconnecting session ho7j2vc5be1
+ℹ️ [SshTerminalService] Disconnecting session ho7j2vc5em2
+ℹ️ [SshTerminalService] Disconnecting session ho7j2vc5w03
+ℹ️ [SshTerminalService] Disconnecting session ho7j2vc65n4
+ℹ️ [SshTerminalService] Disconnecting session ho7j2vc2xs0
+00:33 +489: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: conflicting multiplexer options do not replace a live connection
+00:33 +490: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: failed startup can reconnect with the previous destination
+00:33 +491: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: overlapping reconnect attempts keep host-key prompts isolated
+00:34 +492: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: browsing tmux starts no shell before an exact selection and keeps a secret-free reconnect route
+00:34 +493: /Users/christianstrobele/code/local/CrispCloud/test/ssh_tmux_panel_lifecycle_test.dart: caller-owned tmux survives viewport removal and remount
+00:34 +494: /Users/christianstrobele/code/local/CrispCloud/test/ssh_tmux_panel_lifecycle_test.dart: caller-owned tmux survives viewport removal and remount
+00:35 +495: /Users/christianstrobele/code/local/CrispCloud/test/ssh_tmux_panel_lifecycle_test.dart: caller-owned tmux survives viewport removal and remount
+00:35 +496: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: a stale listing never displays a picker or opens a shell
+00:35 +497: /Users/christianstrobele/code/local/CrispCloud/test/ssh_tmux_panel_lifecycle_test.dart: disconnect retains the readonly workspace across remount
+00:35 +498: /Users/christianstrobele/code/local/CrispCloud/test/ssh_tmux_panel_lifecycle_test.dart: disconnect retains the readonly workspace across remount
+00:35 +499: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: browse credentials hide old session settings but retain the jump editor
+00:35 +500: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: browse credentials hide old session settings but retain the jump editor
+00:35 +501: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_reconnect_test.dart: browse credentials hide old session settings but retain the jump editor
+00:36 +502: /Users/christianstrobele/code/local/CrispCloud/test/ssh_tmux_panel_lifecycle_test.dart: client protocol failure is visible on the outer session
+00:36 +503: /Users/christianstrobele/code/local/CrispCloud/test/ssh_tmux_panel_lifecycle_test.dart: removing a caller-owned panel cancels a pending handshake
+00:36 +504: /Users/christianstrobele/code/local/CrispCloud/test/ssh_tmux_panel_lifecycle_test.dart: removing a panel cancels the route before control exec returns
+00:36 +505: /Users/christianstrobele/code/local/CrispCloud/test/ssh_tmux_panel_lifecycle_test.dart: adapter retries a failed transport close
+00:37 +506: /Users/christianstrobele/code/local/CrispCloud/test/terminal_arrangements_dialog_test.dart: save validates, names replacements and restores the selected value
+00:37 +507: /Users/christianstrobele/code/local/CrispCloud/test/terminal_arrangements_dialog_test.dart: save validates, names replacements and restores the selected value
+00:37 +508: /Users/christianstrobele/code/local/CrispCloud/test/terminal_arrangements_dialog_test.dart: save validates, names replacements and restores the selected value
+00:37 +509: /Users/christianstrobele/code/local/CrispCloud/test/terminal_arrangements_dialog_test.dart: save validates, names replacements and restores the selected value
+00:37 +510: /Users/christianstrobele/code/local/CrispCloud/test/terminal_arrangements_dialog_test.dart: save validates, names replacements and restores the selected value
+00:37 +511: /Users/christianstrobele/code/local/CrispCloud/test/terminal_arrangements_dialog_test.dart: save validates, names replacements and restores the selected value
+00:37 +512: /Users/christianstrobele/code/local/CrispCloud/test/terminal_arrangements_dialog_test.dart: save validates, names replacements and restores the selected value
+00:37 +513: /Users/christianstrobele/code/local/CrispCloud/test/terminal_arrangements_dialog_test.dart: save validates, names replacements and restores the selected value
+00:37 +514: /Users/christianstrobele/code/local/CrispCloud/test/terminal_arrangements_dialog_test.dart: save validates, names replacements and restores the selected value
+00:37 +515: /Users/christianstrobele/code/local/CrispCloud/test/terminal_arrangements_dialog_test.dart: save validates, names replacements and restores the selected value
+00:37 +516: /Users/christianstrobele/code/local/CrispCloud/test/terminal_arrangements_dialog_test.dart: save validates, names replacements and restores the selected value
+00:37 +517: /Users/christianstrobele/code/local/CrispCloud/test/terminal_arrangements_dialog_test.dart: save validates, names replacements and restores the selected value
+00:37 +518: /Users/christianstrobele/code/local/CrispCloud/test/terminal_arrangements_dialog_test.dart: save validates, names replacements and restores the selected value
+00:38 +519: /Users/christianstrobele/code/local/CrispCloud/test/terminal_arrangements_dialog_test.dart: future data disables saving and remains intact on both dialogs
+00:38 +520: /Users/christianstrobele/code/local/CrispCloud/test/terminal_arrangements_dialog_test.dart: failed deletion retains the saved value and retry succeeds
+00:38 +521: /Users/christianstrobele/code/local/CrispCloud/test/terminal_arrangements_dialog_test.dart: capacity preserves existing arrangements and allows replacement
+00:38 +522: /Users/christianstrobele/code/local/CrispCloud/test/terminal_arrangements_widget_test.dart: save and restore preserve order, names, zoom and resized split
+00:38 +523: /Users/christianstrobele/code/local/CrispCloud/test/terminal_arrangements_widget_test.dart: save and restore preserve order, names, zoom and resized split
+00:39 +524: /Users/christianstrobele/code/local/CrispCloud/test/terminal_arrangements_widget_test.dart: save and restore preserve order, names, zoom and resized split
+00:39 +525: /Users/christianstrobele/code/local/CrispCloud/test/terminal_arrangements_widget_test.dart: save and restore preserve order, names, zoom and resized split
+00:39 +526: /Users/christianstrobele/code/local/CrispCloud/test/terminal_arrangements_widget_test.dart: save and restore preserve order, names, zoom and resized split
+00:41 +527: /Users/christianstrobele/code/local/CrispCloud/test/terminal_broadcast_dialog_test.dart: requires explicit selection of two exact connected destinations
+00:41 +528: /Users/christianstrobele/code/local/CrispCloud/test/terminal_arrangements_widget_test.dart: SSH arrangements stay disconnected and reconnect asks again
+00:41 +529: /Users/christianstrobele/code/local/CrispCloud/test/terminal_broadcast_dialog_test.dart: a changed connection is deselected and cannot be silently replaced
+00:41 +530: /Users/christianstrobele/code/local/CrispCloud/test/terminal_arrangements_widget_test.dart: blocked divider motion preserves saved ratios when the window widens
+00:41 +531: /Users/christianstrobele/code/local/CrispCloud/test/terminal_arrangements_widget_test.dart: blocked divider motion preserves saved ratios when the window widens
+00:42 +532: /Users/christianstrobele/code/local/CrispCloud/test/terminal_arrangements_widget_test.dart: nested arrangements preserve hidden tabs and independent dividers
+00:42 +533: /Users/christianstrobele/code/local/CrispCloud/test/terminal_arrangements_widget_test.dart: nested arrangements preserve hidden tabs and independent dividers
+00:42 +534: /Users/christianstrobele/code/local/CrispCloud/test/terminal_arrangements_widget_test.dart: nested arrangements preserve hidden tabs and independent dividers
+00:42 +535: /Users/christianstrobele/code/local/CrispCloud/test/terminal_arrangements_widget_test.dart: nested arrangements preserve hidden tabs and independent dividers
+00:42 +536: /Users/christianstrobele/code/local/CrispCloud/test/terminal_arrangements_widget_test.dart: nested arrangements preserve hidden tabs and independent dividers
+00:42 +537: /Users/christianstrobele/code/local/CrispCloud/test/terminal_arrangements_widget_test.dart: nested arrangements preserve hidden tabs and independent dividers
+00:42 +538: /Users/christianstrobele/code/local/CrispCloud/test/terminal_arrangements_widget_test.dart: nested arrangements preserve hidden tabs and independent dividers
+00:42 +539: /Users/christianstrobele/code/local/CrispCloud/test/terminal_arrangements_widget_test.dart: nested arrangements preserve hidden tabs and independent dividers
+00:42 +540: /Users/christianstrobele/code/local/CrispCloud/test/terminal_arrangements_widget_test.dart: nested arrangements preserve hidden tabs and independent dividers
+00:42 +541: /Users/christianstrobele/code/local/CrispCloud/test/terminal_arrangements_widget_test.dart: nested arrangements preserve hidden tabs and independent dividers
+00:42 +542: /Users/christianstrobele/code/local/CrispCloud/test/terminal_arrangements_widget_test.dart: nested arrangements preserve hidden tabs and independent dividers
+00:42 +543: /Users/christianstrobele/code/local/CrispCloud/test/terminal_arrangements_widget_test.dart: nested arrangements preserve hidden tabs and independent dividers
+00:42 +544: /Users/christianstrobele/code/local/CrispCloud/test/terminal_arrangements_widget_test.dart: nested arrangements preserve hidden tabs and independent dividers
+00:42 +545: /Users/christianstrobele/code/local/CrispCloud/test/terminal_arrangements_widget_test.dart: nested arrangements preserve hidden tabs and independent dividers
+00:42 +546: /Users/christianstrobele/code/local/CrispCloud/test/terminal_arrangements_widget_test.dart: nested arrangements preserve hidden tabs and independent dividers
+00:43 +547: /Users/christianstrobele/code/local/CrispCloud/test/terminal_arrangements_widget_test.dart: cancel keeps live sessions and every existing screen
+00:43 +548: /Users/christianstrobele/code/local/CrispCloud/test/terminal_arrangements_widget_test.dart: cleanup failure retains every tab and permits a later retry
+00:43 +549: /Users/christianstrobele/code/local/CrispCloud/test/terminal_arrangements_widget_test.dart: cleanup failure retains every tab and permits a later retry
+00:43 +550: /Users/christianstrobele/code/local/CrispCloud/test/terminal_arrangements_widget_test.dart: cleanup failure retains every tab and permits a later retry
+00:43 +551: /Users/christianstrobele/code/local/CrispCloud/test/terminal_arrangements_widget_test.dart: cleanup failure retains every tab and permits a later retry
+00:43 +552: /Users/christianstrobele/code/local/CrispCloud/test/terminal_arrangements_widget_test.dart: pending connection is kept until its opener settles
+00:44 +553: /Users/christianstrobele/code/local/CrispCloud/test/terminal_arrangements_widget_test.dart: failed load cannot save over an unreadable store
+00:44 +554: /Users/christianstrobele/code/local/CrispCloud/test/terminal_arrangements_widget_test.dart: delete confirms without affecting the current workspace
+00:44 +555: /Users/christianstrobele/code/local/CrispCloud/test/terminal_fallback_test.dart: a denied PTY falls back to the built-in sandbox shell
+00:45 +556: /Users/christianstrobele/code/local/CrispCloud/test/terminal_input_budget_test.dart: bounded input fails before scheduling an overflowing queued operation
+00:45 +557: /Users/christianstrobele/code/local/CrispCloud/test/terminal_input_budget_test.dart: successful writes release capacity for later user operations
+00:45 +558: /Users/christianstrobele/code/local/CrispCloud/test/terminal_input_budget_test.dart: a new connection gets its own budget after pending old writes close
+00:45 +559: /Users/christianstrobele/code/local/CrispCloud/test/terminal_key_bindings_test.dart: logical chords match exact modifier state and preserve unicode IDs
+00:45 +560: /Users/christianstrobele/code/local/CrispCloud/test/terminal_key_bindings_test.dart: plain typing, modifiers and unstable logical IDs cannot become shortcuts
+00:45 +561: /Users/christianstrobele/code/local/CrispCloud/test/terminal_key_bindings_test.dart: workspace, copy, search and interrupt shortcuts retain priority
+00:45 +562: /Users/christianstrobele/code/local/CrispCloud/test/terminal_key_bindings_test.dart: text mappings preserve literal text and never append an Enter
+00:45 +563: /Users/christianstrobele/code/local/CrispCloud/test/terminal_key_bindings_test.dart: key actions use each recipients cursor and keyboard modes
+00:45 +564: /Users/christianstrobele/code/local/CrispCloud/test/terminal_key_bindings_test.dart: printable key taps include explicit text only for legacy fallback
+00:45 +565: /Users/christianstrobele/code/local/CrispCloud/test/terminal_key_bindings_test.dart: payloads and action schemas are bounded and fail closed
+00:45 +566: /Users/christianstrobele/code/local/CrispCloud/test/terminal_key_bindings_test.dart: local store serializes concurrent additions, edits, disabling and deletion
+00:45 +567: /Users/christianstrobele/code/local/CrispCloud/test/terminal_key_bindings_test.dart: local store never silently overwrites another chord while editing
+00:45 +568: /Users/christianstrobele/code/local/CrispCloud/test/terminal_key_bindings_test.dart: local store bounds mappings and permits an update at capacity
+00:45 +569: /Users/christianstrobele/code/local/CrispCloud/test/terminal_key_bindings_test.dart: local store corrupt, duplicate and future stores remain untouched
+00:45 +570: /Users/christianstrobele/code/local/CrispCloud/test/terminal_key_bindings_test.dart: local store default stores coordinate and backend failures release the lock
+00:46 +571: /Users/christianstrobele/code/local/CrispCloud/test/terminal_key_bindings_widget_test.dart: text mapping runs once and consumes repeat and modifier-changed release (variant: TargetPlatform.linux)
+00:47 +572: /Users/christianstrobele/code/local/CrispCloud/test/terminal_key_bindings_widget_test.dart: text mapping runs once and consumes repeat and modifier-changed release (variant: TargetPlatform.linux)
+00:47 +573: /Users/christianstrobele/code/local/CrispCloud/test/terminal_key_bindings_widget_test.dart: text mapping runs once and consumes repeat and modifier-changed release (variant: TargetPlatform.linux)
+00:47 +574: /Users/christianstrobele/code/local/CrispCloud/test/terminal_key_bindings_widget_test.dart: mode-aware mapped tap completes once and disabling takes effect (variant: TargetPlatform.linux)
+00:47 +575: /Users/christianstrobele/code/local/CrispCloud/test/terminal_key_bindings_widget_test.dart: workspace callbacks and built-in search win over stored mappings (variant: TargetPlatform.linux)
+00:47 +576: /Users/christianstrobele/code/local/CrispCloud/test/terminal_key_bindings_widget_test.dart: held mapped keys cannot leak repeat or release into another pane (variant: TargetPlatform.linux)
+00:47 +577: /Users/christianstrobele/code/local/CrispCloud/test/terminal_key_bindings_widget_test.dart: ordinary native IME text bypasses hardware mappings (variant: TargetPlatform.android)
+00:47 +578: /Users/christianstrobele/code/local/CrispCloud/test/terminal_key_bindings_widget_test.dart: terminal menu supports capture, save, edit, disable and delete (variant: TargetPlatform.linux)
+00:48 +579: /Users/christianstrobele/code/local/CrispCloud/test/terminal_key_bindings_widget_test.dart: capture rejects reserved and duplicate keys without modifying storage (variant: TargetPlatform.linux)
+00:48 +580: /Users/christianstrobele/code/local/CrispCloud/test/terminal_native_assets_test.dart: iOS device builds emit no local PTY native asset
+00:48 +581: /Users/christianstrobele/code/local/CrispCloud/test/terminal_key_bindings_widget_test.dart: narrow editor validates text and preserves corrupt stores (variant: TargetPlatform.linux)
+00:48 +582: /Users/christianstrobele/code/local/CrispCloud/test/terminal_key_bindings_widget_test.dart: narrow editor validates text and preserves corrupt stores (variant: TargetPlatform.linux)
+00:49 +583: /Users/christianstrobele/code/local/CrispCloud/test/terminal_pane_layout_test.dart: nested layout round-trips order, axes and independent dividers
+00:49 +584: /Users/christianstrobele/code/local/CrispCloud/test/terminal_pane_layout_test.dart: repeated splits retain prior sessions and stop at eight panes
+00:49 +585: /Users/christianstrobele/code/local/CrispCloud/test/terminal_pane_layout_test.dart: switching a hidden terminal replaces only the selected leaf
+00:49 +586: /Users/christianstrobele/code/local/CrispCloud/test/terminal_pane_layout_test.dart: closing a pane collapses parents without losing sibling topology
+00:49 +587: /Users/christianstrobele/code/local/CrispCloud/test/terminal_pane_layout_test.dart: divider movement targets its branch and balance preserves topology
+00:49 +588: /Users/christianstrobele/code/local/CrispCloud/test/terminal_pane_layout_test.dart: runtime IDs map to saved indexes and back without changing layout
+00:49 +589: /Users/christianstrobele/code/local/CrispCloud/test/terminal_pane_layout_test.dart: constructors reject duplicate IDs, negative IDs and bad proportions
+00:49 +590: /Users/christianstrobele/code/local/CrispCloud/test/terminal_pane_layout_test.dart: decoder rejects malformed and over-deep trees before traversing them
+00:49 +591: /Users/christianstrobele/code/local/CrispCloud/test/terminal_panel_test.dart: built-in shell executes file commands inside its working directory
+00:49 +592: /Users/christianstrobele/code/local/CrispCloud/test/terminal_panel_test.dart: real PTY shell accepts a command on desktop
+00:50 +593: /Users/christianstrobele/code/local/CrispCloud/test/terminal_panel_test.dart: terminal sends raw typed input and cooperates with sticky pane focus
+00:50 +594: /Users/christianstrobele/code/local/CrispCloud/test/terminal_panel_test.dart: terminal sends raw typed input and cooperates with sticky pane focus
+00:50 +595: /Users/christianstrobele/code/local/CrispCloud/test/terminal_panel_test.dart: terminal sends raw typed input and cooperates with sticky pane focus
+00:50 +595 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_panel_test.dart: terminal sends raw typed input and cooperates with sticky pane focus
+00:51 +596 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_process_test.dart: Local desktop PTY POSIX PTY allocates a TTY and retains ANSI output through process exit
+00:51 +597 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_process_test.dart: Local desktop PTY POSIX PTY allocates a TTY and retains ANSI output through process exit
+00:51 +598 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_process_test.dart: Local desktop PTY POSIX PTY allocates a TTY and retains ANSI output through process exit
+00:51 +599 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_process_test.dart: Local desktop PTY POSIX PTY allocates a TTY and retains ANSI output through process exit
+00:51 +600 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_process_test.dart: Local desktop PTY POSIX PTY allocates a TTY and retains ANSI output through process exit
+00:53 +601 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_process_test.dart: Local desktop PTY POSIX PTY allocates a TTY and retains ANSI output through process exit
+00:54 +602 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_process_test.dart: Local desktop PTY POSIX PTY allocates a TTY and retains ANSI output through process exit
+00:54 +603 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_search_bar_test.dart: replacement terminal cancels stale search and reuses query
+00:54 +604 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_process_test.dart: Local desktop PTY POSIX PTY resizing changes the size seen by the running process
+00:54 +605 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_process_test.dart: Local desktop PTY POSIX PTY resizing changes the size seen by the running process
+00:54 +606 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_process_test.dart: Local desktop PTY POSIX PTY resizing changes the size seen by the running process
+00:54 +607 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_process_test.dart: Local desktop PTY POSIX PTY resizing changes the size seen by the running process
+00:54 +608 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_process_test.dart: Local desktop PTY POSIX PTY resizing changes the size seen by the running process
+00:55 +609 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_process_test.dart: Local desktop PTY POSIX PTY resizing changes the size seen by the running process
+00:56 +610 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_process_test.dart: Local desktop PTY POSIX PTY streams split UTF-8 output and sends non-ASCII input unchanged
+00:56 +611 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_process_test.dart: Local desktop PTY POSIX PTY streams split UTF-8 output and sends non-ASCII input unchanged
+00:56 +612 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_process_test.dart: Local desktop PTY POSIX PTY streams split UTF-8 output and sends non-ASCII input unchanged
+00:56 +613 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_process_test.dart: Local desktop PTY POSIX PTY streams split UTF-8 output and sends non-ASCII input unchanged
+00:56 +614 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_process_test.dart: Local desktop PTY POSIX PTY streams split UTF-8 output and sends non-ASCII input unchanged
+00:56 +615 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_process_test.dart: Local desktop PTY POSIX PTY streams split UTF-8 output and sends non-ASCII input unchanged
+00:56 +616 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_process_test.dart: Local desktop PTY POSIX PTY streams split UTF-8 output and sends non-ASCII input unchanged
+00:56 +617 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_process_test.dart: Local desktop PTY POSIX PTY streams split UTF-8 output and sends non-ASCII input unchanged
+00:56 +618 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_process_test.dart: Local desktop PTY POSIX PTY streams split UTF-8 output and sends non-ASCII input unchanged
+00:56 +619 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_process_test.dart: Local desktop PTY POSIX PTY streams split UTF-8 output and sends non-ASCII input unchanged
+00:56 +620 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_process_test.dart: Local desktop PTY POSIX PTY streams split UTF-8 output and sends non-ASCII input unchanged
+00:56 +621 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_process_test.dart: Local desktop PTY POSIX PTY streams split UTF-8 output and sends non-ASCII input unchanged
+00:56 +622 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_process_test.dart: Local desktop PTY POSIX PTY streams split UTF-8 output and sends non-ASCII input unchanged
+00:56 +623 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_process_test.dart: Local desktop PTY POSIX PTY streams split UTF-8 output and sends non-ASCII input unchanged
+00:57 +624 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_process_test.dart: Local desktop PTY POSIX PTY Ctrl+C reaches the terminal foreground process
+00:59 +625 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_session_test.dart: interprets cursor controls, color and alternate screen from the transport
+00:59 +626 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_session_test.dart: keys and bracketed paste reach the PTY without line submission or local echo
+00:59 +627 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_session_test.dart: terminal answers device-attribute and cursor queries over its transport
+00:59 +628 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_session_test.dart: uses initial size and catches layout changes during connection
+00:59 +629 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_session_test.dart: restart rejects a late connection and never mixes its output
+00:59 +630 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_session_test.dart: disconnect during connection disposes the eventual process
+00:59 +631 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_session_test.dart: disposal during connection cannot revive a session
+00:59 +632 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_session_test.dart: finished shell preserves trailing output and exit code
+00:59 +633 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_session_test.dart: disconnect can close a process after output EOF but before its exit
+00:59 +634 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_session_test.dart: transport errors close the session and retain output for inspection
+00:59 +635 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_session_test.dart: asynchronous input failure is handled rather than escaping the event loop
+00:59 +636 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_session_test.dart: queued input from a closed shell never reaches a new one
+00:59 +637 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_session_test.dart: client platform is set and Windows reflow applies only to local PTYs
+00:59 +638 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_session_test.dart: scrollback remains bounded for long-running jobs
+01:00 +639 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_shell_directory_labels_test.dart: literal absolute directory labels preserve URI punctuation
+01:00 +640 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_shell_directory_labels_test.dart: non-file URI labels and credential-bearing URIs remain ignored
+01:00 +641 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_shell_integration_test.dart: fragmented OSC maps Unicode command, output and status
+01:00 +642 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_shell_integration_test.dart: OSC633 equal previous status does not complete a new command
+01:00 +643 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_shell_integration_test.dart: orphan and duplicate completion cannot invent commands or alerts
+01:00 +644 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_shell_integration_test.dart: new prompt closes an unterminated command with unknown status
+01:00 +645 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_shell_integration_test.dart: continuation and right prompts do not split history
+01:00 +646 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_shell_integration_test.dart: alternate screen cannot create marks, completion or a directory
+01:00 +647 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_shell_integration_test.dart: manual and iTerm marks need no setup and send no input
+01:00 +648 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_shell_integration_test.dart: anchors follow wide wrapped reflow and expire with scrollback
+01:00 +649 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_shell_integration_test.dart: mark count and directory metadata stay bounded
+01:00 +650 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_shell_integration_test.dart: completion survives long output evicting the current prompt
+01:00 +651 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_shell_integration_test.dart: disposal restores callback ownership
+01:01 +652 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: tabs retain independent buffers, views and input ownership
+01:01 +653 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: tabs retain independent buffers, views and input ownership
+01:02 +654 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: tabs retain independent buffers, views and input ownership
+01:02 +655 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: tabs retain independent buffers, views and input ownership
+01:02 +656 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: tabs retain independent buffers, views and input ownership
+01:02 +657 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: tabs retain independent buffers, views and input ownership
+01:02 +658 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: tabs retain independent buffers, views and input ownership
+01:02 +659 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: tabs retain independent buffers, views and input ownership
+01:02 +660 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: split resize accessibility describes and applies each step
+01:03 +661 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: split panes are visible and only the clicked pane owns focus
+01:03 +662 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: split panes are visible and only the clicked pane owns focus
+01:03 +663 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: split panes are visible and only the clicked pane owns focus
+01:03 +664 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: split panes are visible and only the clicked pane owns focus
+01:03 +665 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: split panes are visible and only the clicked pane owns focus
+01:03 +666 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: split panes are visible and only the clicked pane owns focus
+01:03 +667 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: split panes are visible and only the clicked pane owns focus
+01:03 +668 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: split panes are visible and only the clicked pane owns focus
+01:03 +669 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: split panes are visible and only the clicked pane owns focus
+01:03 +670 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: split panes are visible and only the clicked pane owns focus
+01:03 +671 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: split panes are visible and only the clicked pane owns focus
+01:03 +672 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: split panes are visible and only the clicked pane owns focus
+01:03 +673 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: split panes are visible and only the clicked pane owns focus
+01:03 +674 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: split panes are visible and only the clicked pane owns focus
+01:03 +675 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: split panes are visible and only the clicked pane owns focus
+01:03 +676 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: split panes are visible and only the clicked pane owns focus
+01:03 +677 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: split panes are visible and only the clicked pane owns focus
+01:03 +678 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: split panes are visible and only the clicked pane owns focus
+01:03 +679 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: split panes are visible and only the clicked pane owns focus
+01:03 +680 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: split panes are visible and only the clicked pane owns focus
+01:03 +681 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: split panes are visible and only the clicked pane owns focus
+01:03 +682 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: split panes are visible and only the clicked pane owns focus
+01:03 +683 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: split panes are visible and only the clicked pane owns focus
+01:03 +684 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: split panes are visible and only the clicked pane owns focus
+01:03 +685 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: split panes are visible and only the clicked pane owns focus
+01:03 +686 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: split panes are visible and only the clicked pane owns focus
+01:03 +687 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: split panes are visible and only the clicked pane owns focus
+01:03 +688 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: split panes are visible and only the clicked pane owns focus
+01:03 +689 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: split panes are visible and only the clicked pane owns focus
+01:03 +690 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: split panes are visible and only the clicked pane owns focus
+01:03 +691 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: split panes are visible and only the clicked pane owns focus
+01:03 +692 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: search stays visible while clicks route typing to either split viewport (variant: TargetPlatform.linux)
+01:04 +693 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: eight nested panes retain views through zoom and compact layouts
+01:06 +694 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_triggers_widget_test.dart: add, preview, disable, edit and delete a trigger from the dialog
+01:06 +695 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_triggers_widget_test.dart: add, preview, disable, edit and delete a trigger from the dialog
+01:06 +696 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_triggers_widget_test.dart: add, preview, disable, edit and delete a trigger from the dialog
+01:06 +697 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: clicking current or another tab reclaims typing from a file pane
+01:06 +698 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_triggers_widget_test.dart: unsupported regular expression cannot be saved or previewed
+01:07 +699 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_triggers_widget_test.dart: unsupported regular expression cannot be saved or previewed
+01:07 +700 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: narrow and short layouts collapse and restore splits without losing sessions
+01:07 +701 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_triggers_widget_test.dart: management and editor remain scrollable in a 320 by 320 window
+01:07 +702 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: a delayed clipboard read cannot paste into a pane that lost focus
+01:07 +703 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: a delayed clipboard read cannot paste into a pane that lost focus
+01:07 +704 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_triggers_widget_test.dart: new controls translate in all eight existing non-English languages
+01:07 +705 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: hide and reopen preserve all sessions and release keyboard and menu ownership
+01:07 +706 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: cancel keeps a live tab, confirm closes only that owned session
+01:07 +707 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: failed close keeps the tab available for a cleanup retry
+01:08 +708 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: the final tab stays available and the tab limit blocks additional sessions
+01:08 +709 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: workspace shortcuts add, cycle and close without sending control input
+01:08 +710 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: macOS command shortcuts also stay inside the workspace
+01:08 +711 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: renaming a tab preserves its connection and other tab labels
+01:08 +712 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_tabs_test.dart: unmount disposes owned sessions but leaves the injected session caller-owned
+01:09 +713 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_user_input_test.dart: a compound key tap has one input origin and complete protocol edges
+01:09 +714 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_user_input_test.dart: compound taps preserve explicit text fallback and ignored-input isolation
+01:09 +715 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_user_input_test.dart: only explicit input produces user events; terminal replies stay local
+01:09 +716 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_user_input_test.dart: replayed paste uses recipient bracketed-paste mode without recursion
+01:09 +717 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_user_input_test.dart: replayed key uses recipient application cursor mode
+01:09 +718 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_user_input_test.dart: revoked broadcast lease drops input already waiting in the write queue
+01:09 +719 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_user_input_test.dart: locked or disconnected input is not broadcast
+01:09 +720 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_user_input_test.dart: reconnect replaces the input identity and command history
+01:09 +721 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_user_input_test.dart: failed transport stays owned until asynchronous cleanup settles
+01:09 +722 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_user_input_test.dart: replacement waits for pending failed-transport cleanup
+01:09 +723 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_user_input_test.dart: cancelled late opener stays owned while its close is pending
+01:09 +724 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_user_input_test.dart: input origin can be consumed only once per explicit operation
+01:10 +725 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_widget_test.dart: raw keys reach the terminal without triggering ancestor file commands
+01:10 +726 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_widget_test.dart: raw keys reach the terminal without triggering ancestor file commands
+01:11 +727 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_widget_test.dart: raw keys reach the terminal without triggering ancestor file commands
+01:11 +728 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_dialog_test.dart: cancel waits for the safe checkpoint and suppresses a late result
+01:11 +729 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_widget_test.dart: hide preserves output and connection but removes keyboard focus
+01:11 +730 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_widget_test.dart: hide preserves output and connection but removes keyboard focus
+01:11 +731 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_dialog_test.dart: review permits only selected uploadable files and never selects deletions
+01:11 +732 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_dialog_test.dart: review permits only selected uploadable files and never selects deletions
+01:11 +733 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_widget_test.dart: remote clipboard sequences are denied; explicit bracketed paste and copy work
+01:11 +734 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_widget_test.dart: remote clipboard sequences are denied; explicit bracketed paste and copy work
+01:11 +735 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_dialog_test.dart: saved workspaces reload their manifest before opening a shell
+01:11 +736 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_widget_test.dart: SSH form rejects invalid port instead of silently connecting to port 22
+01:11 +737 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_widget_test.dart: SSH form rejects invalid port instead of silently connecting to port 22
+01:12 +738 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_widget_test.dart: SSH form rejects invalid port instead of silently connecting to port 22
+01:12 +739 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_widget_test.dart: SSH form rejects invalid port instead of silently connecting to port 22
+01:12 +740 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_widget_test.dart: SSH form rejects invalid port instead of silently connecting to port 22
+01:12 +741 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_widget_test.dart: browser SSH form requires a secure gateway and preserves SSH target identity
+01:13 +742 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_widget_test.dart: font shortcuts resize only the viewport and reset without sending shell input (variant: TargetPlatform.linux)
+01:13 +743 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_widget_test.dart: find shortcut isolates query input and preserves query while the viewport is cramped (variant: TargetPlatform.linux)
+01:13 +744 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_widget_test.dart: find shortcut isolates query input and preserves query while the viewport is cramped (variant: TargetPlatform.linux)
+01:13 +745 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_integration_review_test.dart: unconfirmed native cleanup retains its scope and permits a later close retry
+01:13 +746 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_widget_test.dart: native phone keyboard keeps a usable viewport and control keys
+01:13 +747 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_widget_test.dart: native phone keyboard keeps a usable viewport and control keys
+01:13 +748 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_widget_test.dart: native phone keyboard keeps a usable viewport and control keys
+01:13 +749 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_widget_test.dart: native phone keyboard keeps a usable viewport and control keys
+01:13 +750 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_widget_test.dart: native phone keyboard keeps a usable viewport and control keys
+01:13 +751 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_widget_test.dart: native phone keyboard keeps a usable viewport and control keys
+01:13 +752 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_integration_review_test.dart: new nested upload rejects every remote symlink ancestor before writing
+01:14 +753 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_model_test.dart: remote fingerprints uses the transfer backend revision precedence and preserves alternate tags
+01:14 +754 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_model_test.dart: remote fingerprints extracts stable identity and revision fields but never credentials
+01:14 +755 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_model_test.dart: remote fingerprints compares file identity, revision, size, type and metadata exactly
+01:14 +756 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_model_test.dart: remote fingerprints directory anchors compare identity while allowing children to change
+01:14 +757 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_model_test.dart: remote fingerprints invalid lengths, identities and malformed metadata are rejected
+01:14 +758 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_model_test.dart: persistent workspace models round-trips the complete manifest while deriving local path externally
+01:14 +759 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_model_test.dart: persistent workspace models copyWith preserves anchors and supports clearing errors and pending receipts
+01:14 +760 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_model_test.dart: persistent workspace models rejects mismatched paths, duplicate case aliases and incomplete baselines
+01:14 +761 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_model_test.dart: persistent workspace models pending staging and new upload receipts legitimately have no original digest
+01:14 +762 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_model_test.dart: persistent workspace models results and review tokens expose only safe regular-file upload choices
+01:14 +763 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_model_test.dart: untrusted path validation identifiers must be opaque UUID workspace identifiers
+01:14 +764 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_model_test.dart: untrusted path validation rejects traversal, aliases, Windows paths, controls and empty segments
+01:14 +765 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_model_test.dart: untrusted path validation requires normalized absolute cloud roots
+01:14 +766 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_panel_test.dart: stage opens the native shell and reviewed uploads keep the original account (variant: TargetPlatform.iOS)
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] toggleSelection: input.txt shift=false ctrl=false lastSelected=null side=PanelSide.remote
+01:16 +767 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_panel_test.dart: stage opens the native shell and reviewed uploads keep the original account (variant: TargetPlatform.iOS)
+01:16 +768 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_panel_test.dart: stage opens the native shell and reviewed uploads keep the original account (variant: TargetPlatform.iOS)
+01:16 +769 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_panel_test.dart: stage opens the native shell and reviewed uploads keep the original account (variant: TargetPlatform.iOS)
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] listDirectory("/") returned 0 entities
+01:16 +770 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_panel_test.dart: stage opens the native shell and reviewed uploads keep the original account (variant: TargetPlatform.iOS)
+01:16 +771 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_panel_test.dart: stage opens the native shell and reviewed uploads keep the original account (variant: TargetPlatform.iOS)
+01:16 +772 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_panel_test.dart: stage opens the native shell and reviewed uploads keep the original account (variant: TargetPlatform.iOS)
+01:16 +773 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_panel_test.dart: stage opens the native shell and reviewed uploads keep the original account (variant: TargetPlatform.iOS)
+01:16 +774 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_panel_test.dart: stage opens the native shell and reviewed uploads keep the original account (variant: TargetPlatform.iOS)
+01:16 +775 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_panel_test.dart: stage opens the native shell and reviewed uploads keep the original account (variant: TargetPlatform.iOS)
+01:16 +776 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_service_test.dart: native staging and persistence entry, depth, byte and stream length limits are enforced
+01:16 +776 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_panel_test.dart: cleanup failure stays visible with a working disconnect retry (variant: TargetPlatform.iOS)
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] toggleSelection: input.txt shift=false ctrl=false lastSelected=null side=PanelSide.remote
+01:16 +777 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_panel_test.dart: cleanup failure stays visible with a working disconnect retry (variant: TargetPlatform.iOS)
+01:16 +778 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_panel_test.dart: cleanup failure stays visible with a working disconnect retry (variant: TargetPlatform.iOS)
+01:16 +779 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_panel_test.dart: cleanup failure stays visible with a working disconnect retry (variant: TargetPlatform.iOS)
+01:17 +780 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_panel_test.dart: cleanup failure stays visible with a working disconnect retry (variant: TargetPlatform.iOS)
+01:17 +781 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_panel_test.dart: cleanup failure stays visible with a working disconnect retry (variant: TargetPlatform.iOS)
+01:17 +782 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_panel_test.dart: cleanup failure stays visible with a working disconnect retry (variant: TargetPlatform.iOS)
+01:17 +783 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_panel_test.dart: cleanup failure stays visible with a working disconnect retry (variant: TargetPlatform.iOS)
+01:17 +784 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_panel_test.dart: cleanup failure stays visible with a working disconnect retry (variant: TargetPlatform.iOS)
+01:17 +785 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_service_test.dart: local inspection and containment uses decrypted lengths while retaining provider stored-size metadata
+01:17 +785 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_panel_test.dart: account disconnection invalidates a staging request without opening a shell (variant: TargetPlatform.iOS)
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] toggleSelection: input.txt shift=false ctrl=false lastSelected=null side=PanelSide.remote
+01:17 +786 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_panel_test.dart: account disconnection invalidates a staging request without opening a shell (variant: TargetPlatform.iOS)
+01:17 +787 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_panel_test.dart: account disconnection invalidates a staging request without opening a shell (variant: TargetPlatform.iOS)
+01:17 +787 ~1: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_service_test.dart: local inspection and containment blocks both names in a local case collision and bounds inspection reads
+  Case-insensitive file system
+01:17 +787 ~2: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_panel_test.dart: account disconnection invalidates a staging request without opening a shell (variant: TargetPlatform.iOS)
+01:17 +788 ~2: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_panel_test.dart: account disconnection invalidates a staging request without opening a shell (variant: TargetPlatform.iOS)
+01:17 +789 ~2: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_panel_test.dart: account disconnection invalidates a staging request without opening a shell (variant: TargetPlatform.iOS)
+01:17 +790 ~2: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_panel_test.dart: account disconnection invalidates a staging request without opening a shell (variant: TargetPlatform.iOS)
+01:17 +791 ~2: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_panel_test.dart: account disconnection invalidates a staging request without opening a shell (variant: TargetPlatform.iOS)
+01:17 +792 ~2: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_service_test.dart: local inspection and containment never propagates a local deletion and unchanged uploads are a no-op
+01:17 +793 ~2: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_service_test.dart: local inspection and containment does not follow file or directory links outside the workspace
+01:17 +794 ~2: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_service_test.dart: local inspection and containment rejects a replaced workspace root or journal symlink
+01:17 +795 ~2: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_service_test.dart: local inspection and containment rejects symlink storage root and tampered manifest path mappings
+01:17 +796 ~2: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_service_test.dart: local inspection and containment rejects regular-file and directory type substitutions
+01:17 +797 ~2: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_service_test.dart: reviewed uploads and recovery conditional native-move backup receipt survives interruption after backedUp
+01:18 +798 ~2: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_service_test.dart: reviewed uploads and recovery native-move restoration records a changed revision for a safe retry
+01:18 +799 ~2: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_service_test.dart: reviewed uploads and recovery conditional native moves protect replacements and unsafe preferred move routes are rejected
+01:18 +800 ~2: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_service_test.dart: reviewed uploads and recovery a failed commit restores the original and accepts a retry against the recorded restored revision
+01:18 +801 ~2: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_service_test.dart: reviewed uploads and recovery backup cleanup failures are recorded as persistent nonfatal warnings
+01:18 +802 ~2: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_service_test.dart: reviewed uploads and recovery lost acknowledgements for new files recover without treating them as unrelated conflicts
+01:18 +803 ~2: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_service_test.dart: reviewed uploads and recovery uploads only reviewed changes using staged streams and updates baseline
+01:18 +804 ~2: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_service_test.dart: reviewed uploads and recovery uploads new files with exact no-replace moves while retaining unsupported replacements
+01:18 +805 ~2: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_service_test.dart: reviewed uploads and recovery an incapable provider retains all local work without a direct upload fallback
+01:18 +806 ~2: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_service_test.dart: reviewed uploads and recovery missing revision tokens prevent unsafe replacement before any upload
+01:18 +807 ~2: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_service_test.dart: reviewed uploads and recovery stale, forged, duplicated and changed review tokens are rejected
+01:18 +808 ~2: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_service_test.dart: reviewed uploads and recovery uses immutable reviewed snapshot even if a shell edits the file during upload
+01:19 +809 ~2: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_service_test.dart: reviewed uploads and recovery detects remote version, identity and same-metadata content changes
+01:19 +810 ~2: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_service_test.dart: reviewed uploads and recovery detects remote mutation after streaming and conditional-copy races
+01:19 +811 ~2: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_service_test.dart: reviewed uploads and recovery new-name conflicts and new directory requirements never overwrite remotely
+01:19 +812 ~2: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_service_test.dart: reviewed uploads and recovery another writer at final commit is preserved together with original backup
+01:19 +813 ~2: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_service_test.dart: reviewed uploads and recovery failed uploads keep originals and retry from the persisted reviewed baseline
+01:19 +814 ~2: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_service_test.dart: reviewed uploads and recovery corrupted remote stage is never promoted
+01:19 +815 ~2: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_service_test.dart: reviewed uploads and recovery lost commit acknowledgements reconcile without re-uploading and retain recovery warnings
+01:19 +816 ~2: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_service_test.dart: reviewed uploads and recovery lost acknowledgement followed by further local edits preserves both reviews
+01:19 +817 ~2: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_service_test.dart: reviewed uploads and recovery recovers a terminated transaction with a verified original backup
+01:19 +818 ~2: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_service_test.dart: reviewed uploads and recovery unverified missing originals and altered backup versions remain conflicts
+01:19 +819 ~2: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_service_test.dart: reviewed uploads and recovery account switching before and during upload prohibits replacement-account writes
+01:19 +820 ~2: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_service_test.dart: reviewed uploads and recovery cancellation and independent errors retain all unuploaded local files
+01:19 +821 ~2: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_service_test.dart: reviewed uploads and recovery serialized service instances reject a review superseded by another uploader
+01:19 +822 ~2: /Users/christianstrobele/code/local/CrispCloud/test/terminal_workspace_service_test.dart: web stub reports unsupported and has no native workspace operations
+01:22 +823 ~2: /Users/christianstrobele/code/local/CrispCloud/test/tmux_control_client_test.dart: starts after the unsolicited guard and maps native panes and geometry
+01:22 +824 ~2: /Users/christianstrobele/code/local/CrispCloud/test/tmux_control_client_test.dart: snapshot publishes before output in the same transport chunk
+01:22 +825 ~2: /Users/christianstrobele/code/local/CrispCloud/test/tmux_control_client_test.dart: fresh primary screen accepts tmux unset saved cursor coordinates
+01:22 +826 ~2: /Users/christianstrobele/code/local/CrispCloud/test/tmux_control_client_test.dart: alternate screen refuses unset saved cursor coordinates
+01:22 +827 ~2: /Users/christianstrobele/code/local/CrispCloud/test/tmux_control_client_test.dart: UTF-8 split between records is independent for every pane
+01:22 +828 ~2: /Users/christianstrobele/code/local/CrispCloud/test/tmux_control_client_test.dart: control-looking captured lines stay screen content
+01:22 +829 ~2: /Users/christianstrobele/code/local/CrispCloud/test/tmux_control_client_test.dart: explicit input is hex encoded while emulator replies are suppressed
+01:22 +830 ~2: /Users/christianstrobele/code/local/CrispCloud/test/tmux_control_client_test.dart: captured cursor and keyboard modes govern the first input
+01:22 +831 ~2: /Users/christianstrobele/code/local/CrispCloud/test/tmux_control_client_test.dart: attaching in the alternate screen preserves the saved primary screen
+01:22 +832 ~2: /Users/christianstrobele/code/local/CrispCloud/test/tmux_control_client_test.dart: a parser sequence pending at capture is completed by live output
+01:22 +833 ~2: /Users/christianstrobele/code/local/CrispCloud/test/tmux_control_client_test.dart: select, split and create use validated IDs and update server topology
+01:22 +834 ~2: /Users/christianstrobele/code/local/CrispCloud/test/tmux_control_client_test.dart: external topology change reconciles without recreating retained panes
+01:22 +835 ~2: /Users/christianstrobele/code/local/CrispCloud/test/tmux_control_client_test.dart: capture retains literal backslashes and restored cell colors
+01:22 +836 ~2: /Users/christianstrobele/code/local/CrispCloud/test/tmux_control_client_test.dart: input queue admission revokes remaining chunks after a stalled reply
+01:22 +837 ~2: /Users/christianstrobele/code/local/CrispCloud/test/tmux_control_client_test.dart: early cleanup errors are observed while source cancellation is pending
+01:22 +838 ~2: /Users/christianstrobele/code/local/CrispCloud/test/tmux_control_client_test.dart: hook guards cannot consume the pending user command response
+01:22 +839 ~2: /Users/christianstrobele/code/local/CrispCloud/test/tmux_control_client_test.dart: resize coalesces rapid changes and uses client size policy
+01:22 +840 ~2: /Users/christianstrobele/code/local/CrispCloud/test/tmux_control_client_test.dart: close revokes queued input and keeps read-only pane buffers
+01:22 +841 ~2: /Users/christianstrobele/code/local/CrispCloud/test/tmux_control_client_test.dart: detach sends only the client detach command and preserves remote panes
+01:22 +842 ~2: /Users/christianstrobele/code/local/CrispCloud/test/tmux_control_client_test.dart: unsupported tmux version and malformed metadata fail before publication
+01:22 +843 ~2: /Users/christianstrobele/code/local/CrispCloud/test/tmux_control_client_test.dart: duplicate IDs, overlapping geometry and excessive sizes fail closed
+01:22 +844 ~2: /Users/christianstrobele/code/local/CrispCloud/test/tmux_control_client_test.dart: startup cancellation owns late protocol events and does not resurrect panes
+01:22 +845 ~2: /Users/christianstrobele/code/local/CrispCloud/test/tmux_control_client_test.dart: a timed out command closes the stream instead of reusing late replies
+01:23 +846 ~2: /Users/christianstrobele/code/local/CrispCloud/test/tmux_control_client_test.dart: unknown unbounded output is not retained before pane discovery
+01:23 +847 ~2: /Users/christianstrobele/code/local/CrispCloud/test/tmux_control_client_test.dart: a failed multi-command capture aborts before any later response is reused
+01:23 +848 ~2: /Users/christianstrobele/code/local/CrispCloud/test/tmux_control_client_test.dart: natural EOF with a partial guard is a visible protocol failure
+01:23 +849 ~2: /Users/christianstrobele/code/local/CrispCloud/test/tmux_control_protocol_test.dart: capture escape grammar differs from output for literal backslashes
+01:23 +850 ~2: /Users/christianstrobele/code/local/CrispCloud/test/tmux_control_protocol_test.dart: fragments every byte without interpreting notification-like command data
+01:23 +851 ~2: /Users/christianstrobele/code/local/CrispCloud/test/tmux_control_protocol_test.dart: each possible transport split yields identical guards and output
+01:23 +852 ~2: /Users/christianstrobele/code/local/CrispCloud/test/tmux_control_protocol_test.dart: raw high bytes survive separate output records
+01:23 +853 ~2: /Users/christianstrobele/code/local/CrispCloud/test/tmux_control_protocol_test.dart: empty response and matching error response are distinct
+01:23 +854 ~2: /Users/christianstrobele/code/local/CrispCloud/test/tmux_control_protocol_test.dart: unmatched standalone guards and nonprotocol text fail closed
+01:23 +855 ~2: /Users/christianstrobele/code/local/CrispCloud/test/tmux_control_protocol_test.dart: EOF during a line or command never produces a successful response
+01:23 +856 ~2: /Users/christianstrobele/code/local/CrispCloud/test/tmux_control_protocol_test.dart: line limit applies across chunks and before allocating a whole line
+01:23 +857 ~2: /Users/christianstrobele/code/local/CrispCloud/test/tmux_control_protocol_test.dart: response bytes and response line count are independently bounded
+01:23 +858 ~2: /Users/christianstrobele/code/local/CrispCloud/test/tmux_control_protocol_test.dart: stop discards partial data and revokes future callbacks
+01:23 +859 ~2: /Users/christianstrobele/code/local/CrispCloud/test/tmux_control_protocol_test.dart: octal decoding preserves every byte and rejects ambiguous escapes
+01:24 +860 ~2: /Users/christianstrobele/code/local/CrispCloud/test/tmux_session_options_test.dart: native mode selects control protocol without taking other clients
+01:24 +861 ~2: /Users/christianstrobele/code/local/CrispCloud/test/tmux_session_options_test.dart: accepts short names and the 64-character boundary
+01:24 +862 ~2: /Users/christianstrobele/code/local/CrispCloud/test/tmux_session_options_test.dart: attach targets the exact session without detaching other clients
+01:24 +863 ~2: /Users/christianstrobele/code/local/CrispCloud/test/tmux_session_options_test.dart: rejects shell syntax, tmux targets, whitespace and oversized names
+01:24 +864 ~2: /Users/christianstrobele/code/local/CrispCloud/test/tmux_control_workspace_test.dart: native windows keep independent pane grids and route keyboard to selected pane (variant: TargetPlatform.linux)
+01:25 +865 ~2: /Users/christianstrobele/code/local/CrispCloud/test/tmux_control_workspace_test.dart: remote creation and split controls use active target; local zoom preserves remote layout
+01:25 +866 ~2: /Users/christianstrobele/code/local/CrispCloud/test/tmux_control_workspace_test.dart: 320 by 320 shows active pane and native pane selector without overflow
+01:26 +867 ~2: /Users/christianstrobele/code/local/CrispCloud/test/widget/external_terminal_dialog_test.dart: preferences and opening the review never start a process
+01:26 +868 ~2: /Users/christianstrobele/code/local/CrispCloud/test/widget/external_terminal_dialog_test.dart: preferences and opening the review never start a process
+01:26 +869 ~2: /Users/christianstrobele/code/local/CrispCloud/test/widget/external_terminal_dialog_test.dart: preferences and opening the review never start a process
+01:26 +870 ~2: /Users/christianstrobele/code/local/CrispCloud/test/widget/external_terminal_dialog_test.dart: preferences and opening the review never start a process
+01:27 +871 ~2: /Users/christianstrobele/code/local/CrispCloud/test/widget/external_terminal_dialog_test.dart: preferences and opening the review never start a process
+01:27 +872 ~2: /Users/christianstrobele/code/local/CrispCloud/test/widget/external_terminal_dialog_test.dart: preferences and opening the review never start a process
+01:27 +873 ~2: /Users/christianstrobele/code/local/CrispCloud/test/tmux_control_workspace_test.dart: mapped press executes once and repeat or release cannot leak after remote pane selection (variant: TargetPlatform.linux)
+01:27 +874 ~2: /Users/christianstrobele/code/local/CrispCloud/test/widget/external_terminal_dialog_test.dart: explicit save and open passes the captured folder as one argument
+01:27 +875 ~2: /Users/christianstrobele/code/local/CrispCloud/test/widget/external_terminal_dialog_test.dart: explicit save and open passes the captured folder as one argument
+01:27 +876 ~2: /Users/christianstrobele/code/local/CrispCloud/test/tmux_control_workspace_test.dart: closed buffers allow local scrolling selection copying and window navigation without input (variant: TargetPlatform.linux)
+01:27 +877 ~2: /Users/christianstrobele/code/local/CrispCloud/test/tmux_control_workspace_test.dart: closed buffers allow local scrolling selection copying and window navigation without input (variant: TargetPlatform.linux)
+01:27 +878 ~2: /Users/christianstrobele/code/local/CrispCloud/test/tmux_control_workspace_test.dart: closed buffers allow local scrolling selection copying and window navigation without input (variant: TargetPlatform.linux)
+01:28 +879 ~2: /Users/christianstrobele/code/local/CrispCloud/test/widget/external_terminal_dialog_test.dart: view change during preflight blocks the reviewed launch
+01:28 +880 ~2: /Users/christianstrobele/code/local/CrispCloud/test/widget/external_terminal_dialog_test.dart: view change during preflight blocks the reviewed launch
+01:28 +881 ~2: /Users/christianstrobele/code/local/CrispCloud/test/widget/external_terminal_dialog_test.dart: forced disposal cancels pending launch preparation
+01:28 +882 ~2: /Users/christianstrobele/code/local/CrispCloud/test/widget/external_terminal_dialog_test.dart: review fits a narrow enlarged de layout
+01:28 +883 ~2: /Users/christianstrobele/code/local/CrispCloud/test/widget/external_terminal_dialog_test.dart: review fits a narrow enlarged ar layout
+01:30 +884 ~2: /Users/christianstrobele/code/local/CrispCloud/test/widget/terminal_localization_test.dart: SSH host trust message retains host and fingerprint
+01:31 +885 ~2: /Users/christianstrobele/code/local/CrispCloud/test/widget/screen_dialog_localization_test.dart: keyboard shortcut descriptions follow the selected locale
+01:31 +886 ~2: /Users/christianstrobele/code/local/CrispCloud/test/widget/screen_dialog_localization_test.dart: keyboard shortcut descriptions follow the selected locale
+01:32 +887 ~2: /Users/christianstrobele/code/local/CrispCloud/test/widget/screen_dialog_localization_test.dart: received-files confirmation follows the selected locale
+01:32 +888 ~2: /Users/christianstrobele/code/local/CrispCloud/test/widget/screen_dialog_localization_test.dart: shortcut help omits aliases disabled by customization
+01:32 +889 ~2: All tests passed!

@@ -1,0 +1,47 @@
+[
+  {
+    "phase": "unit",
+    "head": "6c3db0fa5e7586959a44c1dded0832a6b2c96871",
+    "command": [
+      "python3",
+      "tool/run_terminal_validation.py",
+      "native",
+      "--flutter",
+      "/Users/christianstrobele/flutter-3.47.8/bin/flutter",
+      "--dart",
+      "/Users/christianstrobele/flutter-3.47.8/bin/cache/dart-sdk/bin/dart",
+      "--evidence",
+      "/Users/christianstrobele/code/local/CrispCloud/docs/validation/terminal-refresh-20261116/unit"
+    ],
+    "started_utc": "2026-11-16T07:58:31.476233+00:00",
+    "seconds": 132.056,
+    "exit_code": 0,
+    "changed_sources": [],
+    "log": "unit-runner.log",
+    "source_sha256": "8105d5d48ed0f5056851407b4df89d2ab21c536dbd8b2344e90d09dd3b3656d9"
+  },
+  {
+    "phase": "ssh-live",
+    "head": "6c3db0fa5e7586959a44c1dded0832a6b2c96871",
+    "command": [
+      "python3",
+      "tool/run_terminal_live_smoke.py",
+      "--flutter",
+      "/Users/christianstrobele/flutter-3.47.8/bin/flutter",
+      "--with-pty",
+      "--with-unix-agent"
+    ],
+    "started_utc": "2026-11-16T08:00:43.862377+00:00",
+    "seconds": 108.121,
+    "exit_code": 0,
+    "changed_sources": [],
+    "log": "ssh-live.log",
+    "source_sha256": "8105d5d48ed0f5056851407b4df89d2ab21c536dbd8b2344e90d09dd3b3656d9",
+    "final_line": "01:02 +19: All tests passed!",
+    "counts": {
+      "passed": 19,
+      "skipped": 0,
+      "failed": 0
+    }
+  }
+]

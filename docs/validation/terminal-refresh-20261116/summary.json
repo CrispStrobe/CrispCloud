@@ -1,0 +1,56 @@
+{
+  "completed_utc": "2026-11-16T08:03:55.483954+00:00",
+  "qualified_application_source": "6c3db0fa5e7586959a44c1dded0832a6b2c96871",
+  "unit_and_widget": {
+    "files": 75,
+    "passed": 889,
+    "skipped": 2,
+    "failed": 0,
+    "receipt": "unit/native.json"
+  },
+  "live_openssh": {
+    "files": 3,
+    "passed": 19,
+    "skipped": 0,
+    "failed": 0,
+    "pty_enabled": true,
+    "real_unix_agent_enabled": true,
+    "receipt": "final-execution.json",
+    "log": "ssh-live.log"
+  },
+  "live_tmux": {
+    "passed": 1,
+    "skipped": 0,
+    "failed": 0,
+    "version": "tmux 3.8",
+    "cases": [
+      "window names with spaces, accents and CJK",
+      "pane discovery and splits",
+      "window sizing",
+      "Unicode terminal I/O",
+      "detach without killing the remote session",
+      "alternate-screen recapture and primary-screen restoration"
+    ],
+    "receipt": "live-tmux/live-tmux.json"
+  },
+  "static_analysis": {
+    "files": 143,
+    "exit_code": 0,
+    "receipt": "analysis/analysis.json"
+  },
+  "formatting": {
+    "files": 143,
+    "exit_code": 0,
+    "receipt": "format/format.json"
+  },
+  "source_stability": "All final watched production/dependency/test files were unchanged during unit, analysis, formatting and live SSH runs. Live tmux passed at the same application source commit.",
+  "vendor_checks": {
+    "office_entries": 2410,
+    "dartssh2_upstream_files": 96,
+    "reviewed_ssh_patched_files": 4,
+    "office_log": "office-guard.log",
+    "ssh_log": "ssh-vendor-guard.log"
+  },
+  "initial_attempts": "attempts/ contains native-output collisions and direct tmux diagnostic traces. These failed attempts are retained and excluded from the final pass counts.",
+  "scope": "Actual live servers are disposable local OpenSSH and tmux processes. No external server, existing SSH agent, system sshd configuration, production deployment or remote PR merge is involved."
+}

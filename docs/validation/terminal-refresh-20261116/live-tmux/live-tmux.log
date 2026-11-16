@@ -1,0 +1,3 @@
+00:00 +0: loading /Users/christianstrobele/code/local/CrispCloud/test/tmux_control_live_test.dart
+00:00 +0: actual tmux maps panes, preserves Unicode, detaches and recaptures
+00:02 +1: All tests passed!

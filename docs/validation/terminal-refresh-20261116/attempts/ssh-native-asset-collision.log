@@ -1,0 +1,18 @@
+Optional real Unix-agent acceptance skipped: Host rejected Unix-socket creation: AF_UNIX path too long
+Failed to get the install name of LocalFile: '/Users/christianstrobele/code/local/CrispCloud/build/native_assets/macos/libcrisp_catalog_bridge.dylib':
+error: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/otool-classic: can't open file: /Users/christianstrobele/code/local/CrispCloud/build/native_assets/macos/libcrisp_catalog_bridge.dylib (No such file or directory)
+
+OpenSSH jump fixture log:
+Server listening on 127.0.0.1 port 53802.
+Connection from 127.0.0.1 port 53803 on 127.0.0.1 port 53802
+kex_exchange_identification: Connection closed by remote host
+Connection closed by 127.0.0.1 port 53803
+srclimit_penalise: ipv4: new 127.0.0.1/32 deferred penalty of 1 seconds for penalty: connections without attempting authentication
+
+OpenSSH target fixture log:
+Server listening on 127.0.0.1 port 53804.
+Connection from 127.0.0.1 port 53806 on 127.0.0.1 port 53804
+kex_exchange_identification: Connection closed by remote host
+Connection closed by 127.0.0.1 port 53806
+srclimit_penalise: ipv4: new 127.0.0.1/32 deferred penalty of 1 seconds for penalty: connections without attempting authentication
+

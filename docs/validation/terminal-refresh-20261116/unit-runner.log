@@ -1,0 +1,19 @@
+Running native: 75 files; source 6c3db0fa
+{
+  "phase": "native",
+  "head_at_start": "6c3db0fa5e7586959a44c1dded0832a6b2c96871",
+  "started_utc": "2026-11-16T07:58:32.051108+00:00",
+  "watched_source_count": 5535,
+  "github_actions_queried_or_awaited": false,
+  "suite_count": 75,
+  "finished_utc": "2026-11-16T08:00:43.202592+00:00",
+  "seconds": 131.15,
+  "exit_code": 0,
+  "changed_sources": [],
+  "counts": {
+    "passed": 889,
+    "skipped": 2,
+    "failed": 0
+  },
+  "final_test_line": "01:32 +889 ~2: All tests passed!"
+}
