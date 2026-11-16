@@ -282,6 +282,7 @@ void main() {
     'every recovery string has translations in all supported locales',
     (tester) async {
       const keys = [
+        'Ready to start a session.',
         'Session recovery',
         'Remember terminal workspace',
         'Relaunch local shells',

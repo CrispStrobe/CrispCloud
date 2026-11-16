@@ -64,6 +64,8 @@ class TerminalWorkspaceRecovery {
   }
 
   static const preferencesKey = 'terminal_workspace_recovery_v1';
+
+  /// Maximum encoded string length in UTF-16 code units, as measured by Dart.
   static const maximumStorageLength = 128 * 1024;
   static final _preferencesAuthority = _RecoveryAuthority();
 

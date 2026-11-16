@@ -362,7 +362,8 @@ Corrupt or newer-format records remain intact until explicit **Forget**. A
 settings dialog can be closed while storage is pending; closing does not cancel
 an already accepted write.
 
-Recovery uses one bounded local preference record (128 KiB, version 1) with
+Recovery uses one bounded local preference record (128 Ki UTF-16 code units,
+version 1) with
 serialized writes and an exclusive workspace owner. Settings and an enabling
 checkpoint are written together. A replacement owner reads the previous owner's
 final checkpoint before restoring, including same-frame widget replacement.

@@ -20,6 +20,7 @@ import 'package:crisp_cloud/services/terminal_workspace_recovery.dart';
 import 'package:crisp_cloud/widgets/terminal_panel.dart';
 import 'package:crisp_cloud/widgets/terminal_tabs.dart';
 import 'package:crisp_cloud/widgets/terminal_workspace_recovery_dialog.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -96,6 +97,8 @@ void main() {
   testWidgets(
     'capture recovered workspace and settings at desktop and compact sizes',
     (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.linux;
+      addTearDown(() => debugDefaultTargetPlatformOverride = null);
       SharedPreferences.setMockInitialValues({});
       final snapshot = TerminalArrangement(
         name: 'Recovered workspace',
@@ -221,6 +224,7 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('terminal-recovery-close')));
       await tester.pumpAndSettle();
 
+      debugDefaultTargetPlatformOverride = TargetPlatform.android;
       tester.view.physicalSize = const Size(320, 320);
       await tester.pumpAndSettle();
       await openSettings(tester);
@@ -246,6 +250,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.pumpWidget(const SizedBox());
       await tester.pump();
+      debugDefaultTargetPlatformOverride = null;
     },
     skip: !_enabled,
   );

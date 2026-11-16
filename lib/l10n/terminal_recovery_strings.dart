@@ -10,6 +10,16 @@ extension TerminalRecoveryStrings on BuildContext {
 
 const _languages = ['de', 'fr', 'es', 'pt', 'zh', 'ja', 'ko', 'ar'];
 const _values = <String, List<String>>{
+  'Ready to start a session.': [
+    'Bereit, eine Sitzung zu starten.',
+    'Prêt à démarrer une session.',
+    'Listo para iniciar una sesión.',
+    'Pronto para iniciar uma sessão.',
+    '准备好启动会话。',
+    'セッションを開始できます。',
+    '세션을 시작할 준비가 되었습니다.',
+    'جاهز لبدء جلسة.',
+  ],
   'Session recovery is paused. Save settings to remember the current workspace.':
       [
         'Die Sitzungswiederherstellung ist pausiert. Speichern Sie die Einstellungen, um den aktuellen Arbeitsbereich zu merken.',
