@@ -26,7 +26,7 @@ content.
 The app mirrors the canonical Quds source and the standalone legacy parser.
 Exact revisions, source boundaries and the complete managed-file inventory are
 recorded in [the fidelity manifest](../tool/office_fidelity_manifest.json).
-The current checkpoint is `ea9d16edd489b3a4ccff7a25cc5277b686c4e263`; the
+The current checkpoint is `76c7087c22da8ace85b9a71ca266a90f84faa3ae`; the
 managed inventory contains 2,503 files. The host now exposes a sheet-only
 **Export as ODS** action backed by `OdsSheetWriter`; ordinary Save and the
 legacy-Excel path still produce new XLSX copies.
