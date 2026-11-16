@@ -520,6 +520,7 @@ abstract final class SmlAnalysis {
       borderRgb: src.borderRgb,
       borderWidth: src.borderWidth,
       locked: src.locked,
+      hyperlink: src.hyperlink,
     );
   }
 
