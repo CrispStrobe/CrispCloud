@@ -1,0 +1,21 @@
+{
+  "phase": "web",
+  "command": [
+    "flutter",
+    "build",
+    "web",
+    "--release",
+    "--no-pub",
+    "--no-wasm-dry-run",
+    "--dart-define=APP_VERSION=1.3.4+28",
+    "--dart-define=GIT_HASH=e4c559af"
+  ],
+  "head_at_start": "e4c559afcf22401a843cf0958276df04531d4775",
+  "started_utc": "2026-11-16T11:24:36.025983+00:00",
+  "watched_source_count": 5556,
+  "github_actions_queried_or_awaited": false,
+  "finished_utc": "2026-11-16T11:27:07.161823+00:00",
+  "seconds": 151.128,
+  "exit_code": 1,
+  "changed_sources": []
+}

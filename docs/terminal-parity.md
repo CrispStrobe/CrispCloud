@@ -23,6 +23,17 @@ ODS tab-colour/picture save regression is repaired in canonical Quds commit
 `[skip ci]`; no GitHub Actions are queried or awaited.
 [Current local qualification and source record](validation/terminal-session-optimization-20261116/README.md).
 
+That combined source passes **1,075 terminal tests with two platform skips across
+85 files**, **22 actual OpenSSH tests with three explicit skips**, and **209
+incoming Office/Zotero engine tests**. Analysis and formatting cover 164 Dart
+files; analysis has no errors or warnings and retains three existing
+informational lints. Nine production-widget captures cover desktop and 320×320
+layouts. The standard **O4/minified web release passes in 219.762 seconds**, with
+exact SDK restoration. All **5,556 watched source files** match across the seven
+accepted phases and committed source. Failed development/resource attempts,
+live multiplexer/platform limits and capture-font limits remain explicit in the
+current record.
+
 ### Previous workspace recovery continuation
 
 The preceding continuation adds **opt-in automatic terminal workspace recovery**, with a

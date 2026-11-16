@@ -1,0 +1,23 @@
+{
+  "recorded_utc": "2026-11-16T11:22:27.205433+00:00",
+  "original_files": {
+    "docs/validation/terminal-tmux-control/web-resource-runner.py": "8f606501584e87250698e504e958e1ed3339481702d7b0cb305e9bd6aeeaf0d1",
+    "docs/validation/terminal-tmux-control/web-resource-launcher.sh": "2f432b4e4f04ff0802a69093aa023216fa646e5405b0c13613da8da8a0868c22"
+  },
+  "new_files": {
+    "docs/validation/terminal-session-optimization-20261116/web-resource-runner.py": "e002060e201e30b7f9bbbbe77bd485cf632565c11d665cf4f5517e671b605f7d",
+    "docs/validation/terminal-session-optimization-20261116/web-resource-launcher.sh": "6f529db00019bef694d4887aed821c370ac31c55eea9e3037a8b810459d477aa"
+  },
+  "change": "Only parameterize and validate compiler old-generation heap choices 2048/3072/4096 MB; update reproduction paths. Pinned SDK identities, implicit compiler arguments, caller release arguments, locking and restoration are retained.",
+  "source_and_dependency_changes": false,
+  "independent_review": {
+    "recorded_utc": "2026-11-16T11:24:06.644207+00:00",
+    "result": "No blocker; only bounded compiler heap selection/recording and reproduction paths changed.",
+    "checked": [
+      "Allowed heap choices validated in Python and Bash",
+      "Only compile js intercepted; original implicit arguments and caller arguments retained",
+      "SDK pins, lock, modes, finally/signal restoration and restore-only unchanged"
+    ],
+    "diagnostic_limit": "Observed SIGKILL under memory pressure does not establish exact OOM cause or kill actor."
+  }
+}
