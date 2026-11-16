@@ -26,8 +26,8 @@ content.
 The app mirrors the canonical Quds source and the standalone legacy parser.
 Exact revisions, source boundaries and the complete managed-file inventory are
 recorded in [the fidelity manifest](../tool/office_fidelity_manifest.json).
-The current checkpoint is `2aee95e6aa7021869a198cf19ebbb43a44d7910f`; the
-managed inventory contains 2,422 files. The host now exposes a sheet-only
+The current checkpoint is `817982d580e990a5ca21d74c35135db4817e54b5`; the
+managed inventory contains 2,503 files. The host now exposes a sheet-only
 **Export as ODS** action backed by `OdsSheetWriter`; ordinary Save and the
 legacy-Excel path still produce new XLSX copies.
 Managed files must match those sources; the guarded sync and verifier enforce
@@ -94,7 +94,7 @@ validations, prompts and error styles are imported; tab colours, cell
 hyperlinks, named expressions, outline groups and comparison/empty filter predicates round-trip; conditional formats are painted and serialized with dxf styling. Hidden rows, columns and sheets
 survive an ODS→XLSX save. Absolute sheet references, clock components and
 elapsed time formats survive XLSX saves. The sheet/ODS development cohort is
-507 tests; the ODS reader+writer suite is 110 tests; the last clean full engine run was 2,205 tests, with two unrelated CLI
+508 tests; the ODS reader+writer suite is 111 tests; the last clean full engine run was 2,205 tests, with two unrelated CLI
 bookmark/content-control tests currently failing on main. The ODS writer emits
 the modeled workbook subset, including pictures, conditional formats,
 validations and a default page layout; authored page styles and ODT/ODP writers
