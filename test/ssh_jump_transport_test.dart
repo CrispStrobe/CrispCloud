@@ -593,15 +593,15 @@ class _Client implements SSHClient {
   }
 
   @override
-  Future<Uint8List> run(
+  Future<SSHSession> execute(
     String command, {
-    bool runInPty = false,
-    bool stdout = true,
-    bool stderr = true,
+    SSHPtyConfig? pty,
+    SSHX11Config? x11,
     Map<String, String>? environment,
   }) async {
     runs.add(command);
-    return Uint8List.fromList(utf8.encode(name));
+    expect(pty, isNull);
+    return _Command(name);
   }
 
   @override
@@ -613,6 +613,22 @@ class _Client implements SSHClient {
     if (!_done.isCompleted) _done.complete();
   }
 
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _Command implements SSHSession {
+  _Command(String text)
+    : stdout = Stream.value(Uint8List.fromList(utf8.encode(text)));
+
+  @override
+  final Stream<Uint8List> stdout;
+  @override
+  Stream<Uint8List> get stderr => const Stream.empty();
+  @override
+  Future<void> get done => Future.value();
+  @override
+  void close() {}
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

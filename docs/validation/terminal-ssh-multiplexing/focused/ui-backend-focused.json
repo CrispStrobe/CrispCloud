@@ -1,0 +1,131 @@
+{
+  "recorded_utc": "2026-11-16T08:41:53.738737+00:00",
+  "scope": "Focused UI/backend development verification. These cohorts are not the complete terminal regression suite and must not be added to overlapping acceptance totals.",
+  "cwd": "/workspace/scratch/b4bccf05666a/CrispCloud",
+  "git_head_at_packaging": "050c326fc7e0150c2f6ca03c95d0d4ddc51bed26",
+  "runs": {
+    "ownership": {
+      "argv": [
+        "../toolchain/run",
+        "flutter",
+        "test",
+        "--no-pub",
+        "--concurrency=2",
+        "--reporter",
+        "expanded",
+        "test/terminal_connection_sharing_test.dart",
+        "test/ssh_shared_terminal_adapters_test.dart",
+        "test/terminal_session_test.dart"
+      ],
+      "command_provenance": "Reproduction command matching the executed test-file cohort; the retained stdout does not itself embed the full original argv.",
+      "tested_files": [
+        "test/terminal_connection_sharing_test.dart",
+        "test/ssh_shared_terminal_adapters_test.dart",
+        "test/terminal_session_test.dart"
+      ],
+      "log": "sharing-opening-ownership.log",
+      "passed": 35,
+      "result": "All tests passed!",
+      "exit_code": 0,
+      "failed": 0,
+      "skipped": 0,
+      "log_provenance": {
+        "source_path": "/workspace/scratch/b4bccf05666a/toolchain/sharing-opening-ownership.log",
+        "destination_path": "docs/validation/terminal-ssh-multiplexing/focused/sharing-opening-ownership.log",
+        "sha256": "ba3ae5998fc08e1e4d46cdf0baf3b3f5a33bda8e31992d1f68be297e112a5893",
+        "bytes": 5693,
+        "source_file_mtime_utc": "2026-11-16T08:31:45.436346+00:00",
+        "copied_byte_for_byte": true
+      }
+    },
+    "widgets_and_visuals": {
+      "argv": [
+        "../toolchain/run",
+        "flutter",
+        "test",
+        "--no-pub",
+        "--concurrency=2",
+        "--reporter",
+        "expanded",
+        "--dart-define=SSH_SHARING_VISUALS=true",
+        "test/ssh_connection_sharing_widget_test.dart",
+        "test/terminal_tabs_test.dart",
+        "test/terminal_arrangements_widget_test.dart",
+        "test/ssh_tmux_panel_lifecycle_test.dart",
+        "test/ssh_connection_sharing_visual_test.dart"
+      ],
+      "command_provenance": "Exact invocation retained in the implementation session, with stdout/stderr redirected to ../toolchain/sharing-widgets-visuals.log.",
+      "tested_files": [
+        "test/ssh_connection_sharing_widget_test.dart",
+        "test/terminal_tabs_test.dart",
+        "test/terminal_arrangements_widget_test.dart",
+        "test/ssh_tmux_panel_lifecycle_test.dart",
+        "test/ssh_connection_sharing_visual_test.dart"
+      ],
+      "log": "sharing-widgets-visuals.log",
+      "passed": 44,
+      "result": "All tests passed!",
+      "exit_code": 0,
+      "failed": 0,
+      "skipped": 0,
+      "log_provenance": {
+        "source_path": "/workspace/scratch/b4bccf05666a/toolchain/sharing-widgets-visuals.log",
+        "destination_path": "docs/validation/terminal-ssh-multiplexing/focused/sharing-widgets-visuals.log",
+        "sha256": "bf74122d0e48d3f05d275e8911e2bc17279fe840ef3026e0b4a721d4378edcde",
+        "bytes": 7272,
+        "source_file_mtime_utc": "2026-11-16T08:33:52.139039+00:00",
+        "copied_byte_for_byte": true
+      }
+    },
+    "analysis": {
+      "argv": [
+        "../toolchain/run",
+        "dart",
+        "analyze",
+        "lib/services/terminal_connection.dart",
+        "lib/services/terminal_backends.dart",
+        "lib/services/tmux_terminal_connection.dart",
+        "lib/services/terminal_session.dart",
+        "lib/models/ssh_terminal_config.dart",
+        "lib/widgets/terminal_tabs.dart",
+        "lib/widgets/terminal_panel.dart",
+        "lib/l10n/ssh_connection_sharing_strings.dart",
+        "test/terminal_connection_sharing_test.dart",
+        "test/ssh_shared_terminal_adapters_test.dart",
+        "test/ssh_connection_sharing_widget_test.dart",
+        "test/ssh_connection_sharing_visual_test.dart"
+      ],
+      "command_provenance": "Reproduction command for the exact twelve files listed by the retained analyzer output.",
+      "analyzed_files": [
+        "lib/services/terminal_connection.dart",
+        "lib/services/terminal_backends.dart",
+        "lib/services/tmux_terminal_connection.dart",
+        "lib/services/terminal_session.dart",
+        "lib/models/ssh_terminal_config.dart",
+        "lib/widgets/terminal_tabs.dart",
+        "lib/widgets/terminal_panel.dart",
+        "lib/l10n/ssh_connection_sharing_strings.dart",
+        "test/terminal_connection_sharing_test.dart",
+        "test/ssh_shared_terminal_adapters_test.dart",
+        "test/ssh_connection_sharing_widget_test.dart",
+        "test/ssh_connection_sharing_visual_test.dart"
+      ],
+      "log": "sharing-ui-final-analysis-2.log",
+      "result": "No issues found!",
+      "exit_code": 0,
+      "log_provenance": {
+        "source_path": "/workspace/scratch/b4bccf05666a/toolchain/sharing-ui-final-analysis-2.log",
+        "destination_path": "docs/validation/terminal-ssh-multiplexing/focused/sharing-ui-final-analysis-2.log",
+        "sha256": "96602cf947a820a7322b5089c126432baad03d618a43bec8a68daccc0c1609df",
+        "bytes": 398,
+        "source_file_mtime_utc": "2026-11-16T08:34:29.190646+00:00",
+        "copied_byte_for_byte": true
+      }
+    }
+  },
+  "source_snapshot": "../screenshots/visual-source-snapshot.json",
+  "source_snapshot_sha256": "6a101f7385ea18a67644c051e852bba99a7fdf038e1da3b03bf9ccdf66ddb6f2",
+  "source_identity_limit": "Focused executions occurred before this packaging snapshot. Their stdout does not contain an execution-time full source inventory. This snapshot must not be represented as proof of a frozen full application run.",
+  "github_actions_queried_or_awaited": false,
+  "packaging_invoked_sdk": false
+}

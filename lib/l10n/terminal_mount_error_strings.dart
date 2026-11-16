@@ -47,6 +47,8 @@ SshAgentException? _knownAgentError(Object error) {
 
 const Map<String, Map<String, String>> _messages = {
   "en": {
+    "sshChannelLimit": "This SSH connection has too many active or unanswered channel requests. Close unused sessions or reconnect.",
+    "sshSharedPoolFull": "This SSH connection already has {max} sessions.",
     "sshPoolFull": "SSH session pool is full (max {max} concurrent sessions).",
     "sshDisconnected": "Session {session} is not connected",
     "sshNoShell": "No active shell for session {session}",
@@ -62,6 +64,8 @@ const Map<String, Map<String, String>> _messages = {
         "FUSE mounts are only available on macOS, Linux, and Windows desktop.",
   },
   "de": {
+    "sshChannelLimit": "Diese SSH-Verbindung hat zu viele aktive oder unbeantwortete Kanalanfragen. Schließen Sie ungenutzte Sitzungen oder verbinden Sie sich neu.",
+    "sshSharedPoolFull": "Diese SSH-Verbindung hat bereits {max} Sitzungen.",
     "sshPoolFull": "Der SSH-Sitzungspool ist voll (maximal {max} gleichzeitige Sitzungen).",
     "sshDisconnected": "Sitzung {session} ist nicht verbunden",
     "sshNoShell": "Keine aktive Shell für Sitzung {session}",
@@ -76,6 +80,8 @@ const Map<String, Map<String, String>> _messages = {
     "mountUnsupported": "FUSE-Laufwerke sind nur auf macOS-, Linux- und Windows-Desktops verfügbar.",
   },
   "fr": {
+    "sshChannelLimit": "Cette connexion SSH a trop de canaux actifs ou de demandes sans réponse. Fermez les sessions inutilisées ou reconnectez-vous.",
+    "sshSharedPoolFull": "Cette connexion SSH possède déjà {max} sessions.",
     "sshPoolFull":
         "Le nombre maximal de sessions SSH est atteint ({max} simultanées).",
     "sshDisconnected": "La session {session} n’est pas connectée",
@@ -91,6 +97,8 @@ const Map<String, Map<String, String>> _messages = {
     "mountUnsupported": "Les montages FUSE sont disponibles uniquement sur macOS, Linux et Windows.",
   },
   "es": {
+    "sshChannelLimit": "Esta conexión SSH tiene demasiados canales activos o solicitudes sin respuesta. Cierre las sesiones que no use o vuelva a conectarse.",
+    "sshSharedPoolFull": "Esta conexión SSH ya tiene {max} sesiones.",
     "sshPoolFull": "Se alcanzó el máximo de sesiones SSH ({max} simultáneas).",
     "sshDisconnected": "La sesión {session} no está conectada",
     "sshNoShell": "No hay una consola activa para la sesión {session}",
@@ -105,6 +113,8 @@ const Map<String, Map<String, String>> _messages = {
     "mountUnsupported": "Los montajes FUSE solo están disponibles en macOS, Linux y Windows de escritorio.",
   },
   "pt": {
+    "sshChannelLimit": "Esta ligação SSH tem demasiados canais ativos ou pedidos sem resposta. Feche as sessões não utilizadas ou volte a ligar-se.",
+    "sshSharedPoolFull": "Esta ligação SSH já tem {max} sessões.",
     "sshPoolFull":
         "Foi atingido o limite de sessões SSH ({max} em simultâneo).",
     "sshDisconnected": "A sessão {session} não está ligada",
@@ -120,6 +130,8 @@ const Map<String, Map<String, String>> _messages = {
     "mountUnsupported": "As montagens FUSE só estão disponíveis em macOS, Linux e Windows de ambiente de trabalho.",
   },
   "zh": {
+    "sshChannelLimit": "此 SSH 连接有过多活动通道或未响应的通道请求。请关闭未使用的会话或重新连接。",
+    "sshSharedPoolFull": "此 SSH 连接已有 {max} 个会话。",
     "sshPoolFull": "SSH 会话已满（最多同时 {max} 个会话）。",
     "sshDisconnected": "会话 {session} 未连接",
     "sshNoShell": "会话 {session} 没有活动的终端",
@@ -134,6 +146,9 @@ const Map<String, Map<String, String>> _messages = {
     "mountUnsupported": "FUSE 挂载仅适用于 macOS、Linux 和 Windows 桌面。",
   },
   "ja": {
+    "sshChannelLimit":
+        "この SSH 接続には、アクティブなチャネルまたは未応答のチャネル要求が多すぎます。未使用のセッションを閉じるか、再接続してください。",
+    "sshSharedPoolFull": "この SSH 接続には既に {max} 個のセッションがあります。",
     "sshPoolFull": "SSH セッションが上限に達しました（同時に最大 {max} 件）。",
     "sshDisconnected": "セッション {session} は接続されていません",
     "sshNoShell": "セッション {session} に有効なシェルがありません",
@@ -148,6 +163,9 @@ const Map<String, Map<String, String>> _messages = {
     "mountUnsupported": "FUSE マウントは macOS、Linux、Windows のデスクトップでのみ使用できます。",
   },
   "ko": {
+    "sshChannelLimit":
+        "이 SSH 연결에 활성 채널 또는 응답하지 않은 채널 요청이 너무 많습니다. 사용하지 않는 세션을 닫거나 다시 연결하세요.",
+    "sshSharedPoolFull": "이 SSH 연결에는 이미 {max}개의 세션이 있습니다.",
     "sshPoolFull": "SSH 세션이 가득 찼습니다 (동시 최대 {max}개).",
     "sshDisconnected": "세션 {session}이 연결되지 않았습니다",
     "sshNoShell": "세션 {session}에 활성 셸이 없습니다",
@@ -162,6 +180,8 @@ const Map<String, Map<String, String>> _messages = {
     "mountUnsupported": "FUSE 마운트는 macOS, Linux 및 Windows 데스크톱에서만 사용할 수 있습니다.",
   },
   "ar": {
+    "sshChannelLimit": "يحتوي اتصال SSH هذا على عدد كبير جدًا من القنوات النشطة أو الطلبات دون إجابة. أغلق الجلسات غير المستخدمة أو أعد الاتصال.",
+    "sshSharedPoolFull": "يتضمن اتصال SSH هذا بالفعل {max} جلسات.",
     "sshPoolFull": "بلغت جلسات SSH الحد الأقصى ({max} جلسات متزامنة).",
     "sshDisconnected": "الجلسة {session} غير متصلة",
     "sshNoShell": "لا توجد واجهة أوامر نشطة للجلسة {session}",

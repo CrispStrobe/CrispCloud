@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'ssh_port_forwarding.dart';
 import 'ssh_terminal_service.dart';
+import 'terminal_backends.dart';
 import 'terminal_connection.dart';
 import 'terminal_forwarding_connection.dart';
 import 'tmux_control_client.dart';
@@ -12,6 +13,7 @@ class TmuxTerminalConnection
     implements
         TerminalConnection,
         TerminalConnectionMetadata,
+        TerminalConnectionSharing,
         TerminalForwardingConnection,
         TerminalWorkspaceConnection {
   TmuxTerminalConnection(this.service, this.sessionId, this.client) {
@@ -81,6 +83,22 @@ class TmuxTerminalConnection
   bool get isSandbox => false;
   @override
   TerminalBackend get backend => TerminalBackend.ssh;
+  @override
+  bool get canOpenSibling => service.canShareSession(sessionId);
+  @override
+  int get sharedSessionCount => service.connectionSessionCount(sessionId);
+  @override
+  Future<TerminalConnection> openSibling(
+    int columns,
+    int rows, {
+    TerminalConnectionCancellation? cancellation,
+  }) => openSharedSshShell(
+    service,
+    sessionId,
+    columns,
+    rows,
+    cancellation: cancellation,
+  );
   @override
   bool get acceptsDirectInput => false;
   @override

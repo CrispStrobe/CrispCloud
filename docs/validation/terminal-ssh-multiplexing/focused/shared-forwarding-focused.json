@@ -1,0 +1,55 @@
+{
+  "recorded_utc": "2026-11-16T08:34:18.067000+00:00",
+  "scope": "Focused shared-manager forwarding coordination validation; integrated final acceptance remains separate.",
+  "command": [
+    "flutter",
+    "test",
+    "--no-pub",
+    "--concurrency=1",
+    "--reporter=expanded",
+    "test/ssh_shared_forwarding_profiles_test.dart",
+    "test/ssh_forwarding_profiles_test.dart",
+    "test/ssh_forwarding_profiles_widget_test.dart"
+  ],
+  "result": {
+    "exit_code": 0,
+    "passed": 54,
+    "skipped": 0,
+    "failed": 0,
+    "new_race_regressions": 16
+  },
+  "analysis": {
+    "exit_code": 0,
+    "files": [
+      "lib/services/ssh_forwarding_profiles.dart",
+      "test/ssh_shared_forwarding_profiles_test.dart"
+    ],
+    "result": "No issues found!"
+  },
+  "format": {
+    "exit_code": 0,
+    "files": [
+      "lib/services/ssh_forwarding_profiles.dart",
+      "test/ssh_shared_forwarding_profiles_test.dart"
+    ],
+    "changed": 0
+  },
+  "github_actions_queried_or_awaited": false,
+  "source_sha256": {
+    "lib/services/ssh_forwarding_profiles.dart": "731633798cd887c163a6d0b34f43d9b20c979bc9eecff3496e53cad2085830ec",
+    "test/ssh_shared_forwarding_profiles_test.dart": "e26463da7a2d6c23edf5b93ad9661d7edec736b695c3546a31ba93f942b92340",
+    "test/ssh_forwarding_profiles_test.dart": "ef7a4996aa5c86b8c6c9e5b71e8555ffdd5893e934b830d940f8bd88fe53d5af",
+    "test/ssh_forwarding_profiles_widget_test.dart": "4a51c61e3806adefb5840a1a85845cdb8d1cf6f50dfefc2474682cff0617bfa9",
+    "test/support/ssh_forwarding_profile_fixture.dart": "d95b7447177b8845e8f1913adbf1ecb039fbeebb72a10cf8156cff133686dfd7",
+    "lib/models/ssh_forwarding_profile.dart": "228d2989c47ea4482f14d77feeb922d36c87117e9c2c9fc311a9efbc41864864",
+    "lib/services/ssh_port_forwarding.dart": "a9116ef72a4788084aa67cc17b1f8ed803741539a9f4a95d917cc4c645cb324c",
+    "lib/services/ssh_port_forwarding_io.dart": "7ed64ab7c803eaea32e5177c5bfcdb4dfffd89c27ed32aba994e2992af19070c",
+    "pubspec.yaml": "d82a1bb2d1a015e37d5a7283cf8041039c3eb01f6dbf1d3feb139b1b837ea998",
+    "pubspec.lock": "58560e3fdba68d18b767f4c934b913283df5297468141defbeb816dbb55a0326"
+  },
+  "logs": {
+    "shared-forwarding-focused.log": "6b99dca9ca50c83687d462e3677d01251d8aaadb9aa52921eeb4261cd7ba357c",
+    "shared-forwarding-analysis.log": "c6c0a15eafeacbbf0e26a27291c3ae5008e7cdfb6c03891364918673e28618b3",
+    "shared-forwarding-format.log": "496e595f1c6c48775fe87dc8f716b26746dc64a8405f3168ac13bf5d14248b1a"
+  }
+}

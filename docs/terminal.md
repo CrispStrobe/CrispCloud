@@ -134,8 +134,9 @@ and fixes the case exposed by Flutter's headless test runner.
   detached background process manager. If output closes while the process is
   still alive, the panel shows "Waiting for exit…" and keeps Disconnect enabled.
 - A hidden terminal can retain its in-memory session while the file browser is
-  open. App shutdown, explicit disconnect and connection failure end the
-  connection. A plain SSH reconnect starts a new shell and cannot restore an
+  open. Explicit disconnect releases that terminal's channels; a shared SSH
+  route remains until its final owner closes. App shutdown and connection
+  failure end the complete route. A plain SSH reconnect starts a new shell and cannot restore an
   exited process. A named tmux session can be reattached after disconnecting,
   subject to the remote host and tmux server remaining alive (see below).
 - Each native local connection holds its own security-scoped folder grant for
@@ -191,8 +192,10 @@ the active pane side by side or top and bottom. Each split adds another
 terminal, and splits can be nested to display up to eight panes. Clicking a
 pane makes it the keyboard target. Selecting a hidden tab replaces the active
 leaf while preserving every other visible pane.
-The existing SSH service permits five concurrent SSH connections across the
-app; the eight-tab limit also accommodates local and disconnected terminals.
+The SSH service permits five distinct concurrent SSH connections across the
+app. An explicitly shared connection supports up to eight independent logical
+sessions; the eight-tab workspace limit also accommodates local and disconnected
+terminals. See [connection sharing](#share-an-existing-ssh-connection).
 
 Each split keeps its own direction and divider proportion. When the requested
 layout cannot fit the available width or height, the active pane is displayed
@@ -238,6 +241,57 @@ Workspace shortcuts also work from the terminal search field. These shortcuts
 apply while a terminal owns the keyboard; Ctrl+C remains a terminal interrupt.
 Browser-reserved shortcuts can be intercepted by the browser before reaching
 the app; the terminal strip and actions menu provide the corresponding controls.
+
+## Share an existing SSH connection
+
+With a connected SSH terminal selected, open **Terminal layout** and choose:
+
+- **New SSH shell** for another tab.
+- **Split SSH side by side** for a new pane beside it.
+- **Split SSH top and bottom** for a new pane below it.
+
+These actions open an independent plain shell over that terminal's already
+verified SSH route. They do not ask for another password or agent signature,
+open another TCP/gateway connection, or repeat the jump-host login sequence.
+Starting from an ordinary tmux/Screen attachment or a native tmux workspace
+still opens a **plain shell**, without attaching another multiplexer client.
+The ordinary **+**, split shortcuts and local split actions retain their
+existing local-shell behavior.
+
+Each shell has separate input, output, scrollback, selection, search, geometry
+and exit status. Font size and credential-free destination metadata are copied
+for convenience. Passwords, private keys, passphrases, live broadcast membership,
+local folder grants and tmux/Screen launch options are not copied. A menu opened
+for an old connection cannot silently use a later reconnect or a different tab.
+
+The shared-connection icon explains how many logical terminals retain the
+route. Closing one ends its channel and owned one-off commands; it does not
+close sibling shells. Port-forwarding listeners and previously permitted agent
+access belong to the shared route and remain until its last owner closes.
+Stopping a listener from any shared terminal affects that listener for every
+owner. A failed/closed transport or global disconnect ends all of its owners.
+
+There are at most eight logical sessions per route and five distinct SSH routes
+across the application. A server may enforce a smaller SSH channel limit; a
+rejected new shell leaves existing shells usable. The 30-minute idle timeout is
+shared: activity from any shell or port forward keeps the route alive.
+Canceling a new shell releases its reserved session promptly, even when the
+server has not answered the channel request; a later channel is closed.
+New terminal channel requests have a 32-slot admission budget on the route.
+Unanswered opens and locally closed channels still awaiting the peer's close
+acknowledgement remain charged. Other retained channels also count when admitting
+a new terminal request, so repeated terminal cancellation cannot grow the SSH
+client's channel table indefinitely while the peer is silent.
+The limit leaves existing shell input usable; close unused sessions or reconnect
+if a server has stopped answering. Channel teardown sends a complete SSH close
+instead of waiting indefinitely after closing only its input side.
+
+Sharing is explicit and lasts while the authenticated route is live. Matching
+destinations never reuse each other's authentication automatically. After the
+last owner closes, reconnect requires the normal connection workflow. Routes,
+running processes and shared ownership are not restored after app restart.
+Saved arrangements reopen disconnected destinations and do not retain sharing
+relationships. Use tmux or Screen when remote processes must survive detach.
 
 ## Saved arrangements and split sizing
 
@@ -368,8 +422,9 @@ destination closes that client while leaving the listener available for later
 attempts. Traffic refreshes the SSH activity clock.
 
 Closing the dialog leaves listeners running. **Stop** ends a listener and all
-its clients. Disconnect, natural SSH closure, session replacement and service
-disposal also close owned listeners. Nothing is persisted or restarted on
+its clients. Closing or replacing the last terminal on a route, natural SSH
+closure and service disposal also close owned listeners. Other shared terminals
+keep the same listeners alive. Nothing is persisted or restarted on
 reconnect unless you explicitly save a forwarding profile and enable its
 **Auto-start** setting. Live listener IDs and allocated ports are never saved.
 Late socket/channel results are closed after cancellation; a pending
@@ -381,9 +436,9 @@ The forwarding bridge preserves backpressure and both half-close directions,
 allowing a server to send its final response after the requesting client closes
 its write side. Dial operations have a 15-second deadline and SOCKS negotiation
 has a 10-second deadline. Browser builds cannot listen on native TCP sockets;
-the forwarding action remains unavailable there. Sharing SSH connections across
-terminal tabs remains separate work. Native tmux panes share one verified SSH
-route within their own control workspace, as described below.
+the forwarding action remains unavailable there. Explicitly shared SSH tabs use
+the same manager, listener limits and allocated ports. Native tmux panes share
+one verified SSH route within their own control workspace, as described below.
 
 ### Saved forwarding profiles
 
@@ -415,6 +470,13 @@ current listeners running. **Delete and stop** stops matching listeners across
 open sessions and removes the recipe. If cleanup cannot be confirmed, the
 recipe remains available and the error is shown. These actions also cancel
 queued starts, so a late result cannot recreate a deleted or replaced recipe.
+
+Shared terminals coordinate starts and stops through their common connection.
+Concurrent starts of the same profile resolve to one listener. If the initiating
+terminal closes during automatic startup, another eligible shared terminal can
+finish it. Closing a profile panel does not abandon a pending stop, edit or
+deletion; a late listener is still cleaned up. A manually requested start keeps
+its authority even when automatic startup joins the same operation.
 
 Startup errors stay beside the saved profile and failed listener, and automatic
 startup failures also appear as an in-app message. A failed listener does not
@@ -484,9 +546,10 @@ Forwarding exposes a frozen public-key list and signing for those keys only.
 Keys added to the local agent later do not become visible to the existing
 connection. Removing a key or locking the agent can make later requests fail.
 Adding/removing keys, locking/unlocking the agent, arbitrary extensions and
-requests for a different key are rejected. Disconnect, remote closure and
-session replacement revoke this connection's agent access before asynchronous
-transport cleanup begins.
+requests for a different key are rejected. Closing the final logical owner,
+remote closure and global disconnect revoke this route's agent access before
+asynchronous transport cleanup begins. Explicitly shared shells retain exactly
+the original route's permission and frozen key list while any owner remains.
 
 The saved authentication choice and forwarding permission are visible again in
 the reconnect form. No agent socket path, public-key comment or private-key
@@ -667,11 +730,13 @@ authentication methods, but recursively remove every hop's password, private
 key and passphrase. Reopening a saved route requests credentials for every
 endpoint that uses password/key authentication; agent hops use the current local
 agent. Repeated endpoints and routes longer than three hops are rejected.
-One complete route occupies one slot in the existing five-session application
-pool, although it owns multiple SSH clients internally.
+One complete route occupies one slot in the five-connection application pool,
+although it owns multiple SSH clients internally. Up to eight explicitly shared
+logical sessions can reuse that exact route without another handshake.
 
 Jump hosts support independent agent authentication, but never receive forwarded
-agent access. Persistent connection multiplexing remains unimplemented.
+agent access. Shared routes end when their last logical owner closes; idle
+master retention and cross-process sharing remain unimplemented.
 Native forwarding controls use the final verified
 connection, as described in [SSH port forwarding](#ssh-port-forwarding).
 OpenSSH destination import is available separately from saved profiles below.

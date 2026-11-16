@@ -1,0 +1,264 @@
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_shared_channel_cleanup_test.dart
+00:00 +0: disconnect destroys a silent shell without closing the shared transport
+ℹ️ [SshTerminalService] Session ho7k9ww4i50 established to shared.example:22
+ℹ️ [SshTerminalService] startShell(ho7k9ww4i50)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9ww4i50
+ℹ️ [SshTerminalService] startShell(ho7k9wwcnw1)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9wwcnw1
+00:00 +1: canceling output destroys the silent shell channel while its peer survives
+ℹ️ [SshTerminalService] Session ho7k9wy32s0 established to shared.example:22
+ℹ️ [SshTerminalService] startShell(ho7k9wy32s0)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9wy32s0
+ℹ️ [SshTerminalService] startShell(ho7k9wy3b21)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9wy3b21
+00:00 +2: canceling a quiet execute destroys the channel before a peer reply
+ℹ️ [SshTerminalService] Session ho7k9wy9990 established to shared.example:22
+ℹ️ [SshTerminalService] execute(ho7k9wy9990)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9wy9990
+❌ [SshTerminalService] execute error
+  Error: Bad state: SSH command was cancelled
+ℹ️ [SshTerminalService] startShell(ho7k9wy9mr1)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9wy9mr1
+00:00 +3: native control disconnect destroys its silent channel independently
+ℹ️ [SshTerminalService] Session ho7k9wym7l0 established to shared.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7k9wym7l0
+ℹ️ [SshTerminalService] startShell(ho7k9wymlx1)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9wymlx1
+00:00 +4: replacing a shell destroys the silent predecessor without closing its successor
+ℹ️ [SshTerminalService] Session ho7k9wyuwa0 established to shared.example:22
+ℹ️ [SshTerminalService] startShell(ho7k9wyuwa0)
+ℹ️ [SshTerminalService] startShell(ho7k9wyuwa0)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9wyuwa0
+ℹ️ [SshTerminalService] startShell(ho7k9wyvah1)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9wyvah1
+00:00 +5: canceled unpublished channels retain their bounded route admission
+ℹ️ [SshTerminalService] Session ho7k9wz2310 established to shared.example:22
+ℹ️ [SshTerminalService] startShell(ho7k9wz2ib1)
+ℹ️ [SshTerminalService] startShell(ho7k9wz3ye2)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9wz3ye2
+ℹ️ [SshTerminalService] startShell(ho7k9wz6dt3)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9wz6dt3
+ℹ️ [SshTerminalService] startShell(ho7k9wz74w4)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9wz74w4
+ℹ️ [SshTerminalService] startShell(ho7k9wz7t45)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9wz7t45
+ℹ️ [SshTerminalService] startShell(ho7k9wz8kg6)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9wz8kg6
+ℹ️ [SshTerminalService] startShell(ho7k9wz99b7)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9wz99b7
+ℹ️ [SshTerminalService] startShell(ho7k9wzan98)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9wzan98
+ℹ️ [SshTerminalService] startShell(ho7k9wzcgd9)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9wzcgd9
+ℹ️ [SshTerminalService] startShell(ho7k9wzdkma)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9wzdkma
+ℹ️ [SshTerminalService] startShell(ho7k9wzer7b)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9wzer7b
+ℹ️ [SshTerminalService] startShell(ho7k9wzfymc)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9wzfymc
+ℹ️ [SshTerminalService] startShell(ho7k9wzhdqd)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9wzhdqd
+ℹ️ [SshTerminalService] startShell(ho7k9wzihce)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9wzihce
+ℹ️ [SshTerminalService] startShell(ho7k9wzjhjf)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9wzjhjf
+ℹ️ [SshTerminalService] startShell(ho7k9wzk7pg)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9wzk7pg
+ℹ️ [SshTerminalService] startShell(ho7k9wzl16h)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9wzl16h
+ℹ️ [SshTerminalService] startShell(ho7k9wzmmsi)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9wzmmsi
+ℹ️ [SshTerminalService] startShell(ho7k9wznmtj)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9wznmtj
+ℹ️ [SshTerminalService] startShell(ho7k9wzosvk)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9wzosvk
+ℹ️ [SshTerminalService] startShell(ho7k9wzpqal)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9wzpqal
+ℹ️ [SshTerminalService] startShell(ho7k9wzqg9m)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9wzqg9m
+ℹ️ [SshTerminalService] startShell(ho7k9wzra5n)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9wzra5n
+ℹ️ [SshTerminalService] startShell(ho7k9wzs2so)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9wzs2so
+ℹ️ [SshTerminalService] startShell(ho7k9wzsxzp)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9wzsxzp
+ℹ️ [SshTerminalService] startShell(ho7k9wztnhq)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9wztnhq
+ℹ️ [SshTerminalService] startShell(ho7k9wzuhwr)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9wzuhwr
+ℹ️ [SshTerminalService] startShell(ho7k9wzvgcs)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9wzvgcs
+ℹ️ [SshTerminalService] startShell(ho7k9wzw5ft)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9wzw5ft
+ℹ️ [SshTerminalService] startShell(ho7k9wzwx5u)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9wzwx5u
+ℹ️ [SshTerminalService] startShell(ho7k9wzxm0v)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9wzxm0v
+ℹ️ [SshTerminalService] startShell(ho7k9wzyizw)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9wzyizw
+ℹ️ [SshTerminalService] startShell(ho7k9wz2310)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9wz2310
+ℹ️ [SshTerminalService] startShell(ho7k9x01d0x)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9x01d0x
+ℹ️ [SshTerminalService] Disconnecting session ho7k9wz2ib1
+00:00 +6: execute retains queued final output when channel and transport finish during open
+ℹ️ [SshTerminalService] Session ho7k9x05ej0 established to shared.example:22
+ℹ️ [SshTerminalService] execute(ho7k9x05ej0)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9x05jv1
+ℹ️ [SshTerminalService] Disconnecting session ho7k9x05ej0
+00:00 +7: a completed command preserves another pending command on the same disconnected owner
+ℹ️ [SshTerminalService] Session ho7k9x0bhw0 established to shared.example:22
+ℹ️ [SshTerminalService] execute(ho7k9x0bhw0)
+ℹ️ [SshTerminalService] execute(ho7k9x0bhw0)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9x0bnm1
+ℹ️ [SshTerminalService] Disconnecting session ho7k9x0bhw0
+00:00 +8: shell retains queued final output when channel and transport finish during open
+ℹ️ [SshTerminalService] Session ho7k9x0fup0 established to shared.example:22
+ℹ️ [SshTerminalService] startShell(ho7k9x0fup0)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9x0g321
+ℹ️ [SshTerminalService] Disconnecting session ho7k9x0fup0
+00:00 +9: real client retains closed channel admission until the peer acknowledges
+ℹ️ [SshTerminalService] Session ho7k9x0jem0 established to shared.example:22
+ℹ️ [SshTerminalService] Session ho7k9x0qt60 established to packet-peer.example:22
+ℹ️ [SshTerminalService] startShell(ho7k9x0qt60)
+ℹ️ [SshTerminalService] execute(ho7k9x16721)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9x16721
+❌ [SshTerminalService] execute error
+  Error: Bad state: SSH command was cancelled
+ℹ️ [SshTerminalService] execute(ho7k9x1drl2)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9x1drl2
+❌ [SshTerminalService] execute error
+  Error: Bad state: SSH command was cancelled
+ℹ️ [SshTerminalService] execute(ho7k9x1fwa3)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9x1fwa3
+❌ [SshTerminalService] execute error
+  Error: Bad state: SSH command was cancelled
+ℹ️ [SshTerminalService] execute(ho7k9x1ix24)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9x1ix24
+❌ [SshTerminalService] execute error
+  Error: Bad state: SSH command was cancelled
+ℹ️ [SshTerminalService] execute(ho7k9x1lil5)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9x1lil5
+❌ [SshTerminalService] execute error
+  Error: Bad state: SSH command was cancelled
+ℹ️ [SshTerminalService] execute(ho7k9x1o7b6)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9x1o7b6
+❌ [SshTerminalService] execute error
+  Error: Bad state: SSH command was cancelled
+ℹ️ [SshTerminalService] execute(ho7k9x1q9y7)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9x1q9y7
+❌ [SshTerminalService] execute error
+  Error: Bad state: SSH command was cancelled
+ℹ️ [SshTerminalService] execute(ho7k9x1sid8)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9x1sid8
+❌ [SshTerminalService] execute error
+  Error: Bad state: SSH command was cancelled
+ℹ️ [SshTerminalService] execute(ho7k9x1woy9)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9x1woy9
+❌ [SshTerminalService] execute error
+  Error: Bad state: SSH command was cancelled
+ℹ️ [SshTerminalService] execute(ho7k9x1yhta)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9x1yhta
+❌ [SshTerminalService] execute error
+  Error: Bad state: SSH command was cancelled
+ℹ️ [SshTerminalService] execute(ho7k9x1zzib)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9x1zzib
+❌ [SshTerminalService] execute error
+  Error: Bad state: SSH command was cancelled
+ℹ️ [SshTerminalService] execute(ho7k9x21o4c)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9x21o4c
+❌ [SshTerminalService] execute error
+  Error: Bad state: SSH command was cancelled
+ℹ️ [SshTerminalService] execute(ho7k9x23h1d)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9x23h1d
+❌ [SshTerminalService] execute error
+  Error: Bad state: SSH command was cancelled
+ℹ️ [SshTerminalService] execute(ho7k9x257me)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9x257me
+❌ [SshTerminalService] execute error
+  Error: Bad state: SSH command was cancelled
+ℹ️ [SshTerminalService] execute(ho7k9x26r3f)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9x26r3f
+❌ [SshTerminalService] execute error
+  Error: Bad state: SSH command was cancelled
+ℹ️ [SshTerminalService] execute(ho7k9x28czg)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9x28czg
+❌ [SshTerminalService] execute error
+  Error: Bad state: SSH command was cancelled
+ℹ️ [SshTerminalService] execute(ho7k9x2a8kh)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9x2a8kh
+❌ [SshTerminalService] execute error
+  Error: Bad state: SSH command was cancelled
+ℹ️ [SshTerminalService] execute(ho7k9x2fhoi)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9x2fhoi
+❌ [SshTerminalService] execute error
+  Error: Bad state: SSH command was cancelled
+ℹ️ [SshTerminalService] execute(ho7k9x2h68j)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9x2h68j
+❌ [SshTerminalService] execute error
+  Error: Bad state: SSH command was cancelled
+ℹ️ [SshTerminalService] execute(ho7k9x2itkk)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9x2itkk
+❌ [SshTerminalService] execute error
+  Error: Bad state: SSH command was cancelled
+ℹ️ [SshTerminalService] execute(ho7k9x2le5l)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9x2le5l
+❌ [SshTerminalService] execute error
+  Error: Bad state: SSH command was cancelled
+ℹ️ [SshTerminalService] execute(ho7k9x2n3em)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9x2n3em
+❌ [SshTerminalService] execute error
+  Error: Bad state: SSH command was cancelled
+ℹ️ [SshTerminalService] execute(ho7k9x2qqyn)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9x2qqyn
+❌ [SshTerminalService] execute error
+  Error: Bad state: SSH command was cancelled
+ℹ️ [SshTerminalService] execute(ho7k9x2smxo)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9x2smxo
+❌ [SshTerminalService] execute error
+  Error: Bad state: SSH command was cancelled
+ℹ️ [SshTerminalService] execute(ho7k9x2uptp)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9x2uptp
+❌ [SshTerminalService] execute error
+  Error: Bad state: SSH command was cancelled
+ℹ️ [SshTerminalService] execute(ho7k9x2whwq)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9x2whwq
+❌ [SshTerminalService] execute error
+  Error: Bad state: SSH command was cancelled
+ℹ️ [SshTerminalService] execute(ho7k9x2ybjr)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9x2ybjr
+❌ [SshTerminalService] execute error
+  Error: Bad state: SSH command was cancelled
+ℹ️ [SshTerminalService] execute(ho7k9x300us)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9x300us
+❌ [SshTerminalService] execute error
+  Error: Bad state: SSH command was cancelled
+ℹ️ [SshTerminalService] execute(ho7k9x31pzt)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9x31pzt
+❌ [SshTerminalService] execute error
+  Error: Bad state: SSH command was cancelled
+ℹ️ [SshTerminalService] execute(ho7k9x335gu)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9x335gu
+❌ [SshTerminalService] execute error
+  Error: Bad state: SSH command was cancelled
+ℹ️ [SshTerminalService] execute(ho7k9x34syv)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9x34syv
+❌ [SshTerminalService] execute error
+  Error: Bad state: SSH command was cancelled
+ℹ️ [SshTerminalService] execute(ho7k9x0qt60)
+❌ [SshTerminalService] execute error
+  Error: Bad state: This SSH connection has too many active or unanswered channel requests. Close unused sessions or reconnect.
+ℹ️ [SshTerminalService] startShell(ho7k9x38l4w)
+ℹ️ [SshTerminalService] Disconnecting session ho7k9x38l4w
+ℹ️ [SshTerminalService] Disconnecting session ho7k9x0qt60
+ℹ️ [SshTerminalService] Disconnecting session ho7k9x0jem0
+ℹ️ [SshTerminalService] Disconnecting session ho7k9x0jlt1
+00:00 +10: native control retains queued bytes when channel and transport finish during open
+ℹ️ [SshTerminalService] Session ho7k9x3f8a0 established to shared.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7k9x3fu21
+00:00 +11: a late shell channel is destroyed without waiting for remote EOF
+00:00 +12: a late execute channel is destroyed without waiting for remote EOF
+00:00 +13: a late native control channel is destroyed without waiting for remote EOF
+00:00 +14: All tests passed!

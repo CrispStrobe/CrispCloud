@@ -854,8 +854,16 @@ void main() {
   );
 
   test('noninteractive execute also decodes UTF-8', () async {
-    client.runOutput = Uint8List.fromList(utf8.encode('日本語\n'));
-    expect(await service.execute(session.id, 'pwd'), '日本語\n');
+    final executing = service.execute(session.id, 'pwd');
+    await _flushEvents();
+    final command = client.shells.single;
+    final bytes = utf8.encode('日本語\n');
+    command.output.add(Uint8List.fromList(bytes.sublist(0, 2)));
+    command.output.add(Uint8List.fromList(bytes.sublist(2)));
+    await command.finish();
+    expect(await executing, '日本語\n');
+    expect(client.pty, isNull);
+    expect(command.closed, isTrue);
   });
 
   test(

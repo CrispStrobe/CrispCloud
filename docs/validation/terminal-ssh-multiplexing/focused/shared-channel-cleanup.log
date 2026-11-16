@@ -1,0 +1,125 @@
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_shared_channel_cleanup_test.dart
+00:00 +0: disconnect destroys a silent shell without closing the shared transport
+ℹ️ [SshTerminalService] Session ho7k1vcc2f0 established to shared.example:22
+ℹ️ [SshTerminalService] startShell(ho7k1vcc2f0)
+ℹ️ [SshTerminalService] Disconnecting session ho7k1vcc2f0
+ℹ️ [SshTerminalService] startShell(ho7k1vcgk51)
+ℹ️ [SshTerminalService] Disconnecting session ho7k1vcgk51
+00:00 +1: canceling output destroys the silent shell channel while its peer survives
+ℹ️ [SshTerminalService] Session ho7k1vda5n0 established to shared.example:22
+ℹ️ [SshTerminalService] startShell(ho7k1vda5n0)
+ℹ️ [SshTerminalService] Disconnecting session ho7k1vda5n0
+ℹ️ [SshTerminalService] startShell(ho7k1vdacj1)
+ℹ️ [SshTerminalService] Disconnecting session ho7k1vdacj1
+00:00 +2: canceling a quiet execute destroys the channel before a peer reply
+ℹ️ [SshTerminalService] Session ho7k1vdeu70 established to shared.example:22
+ℹ️ [SshTerminalService] execute(ho7k1vdeu70)
+ℹ️ [SshTerminalService] Disconnecting session ho7k1vdeu70
+❌ [SshTerminalService] execute error
+  Error: Bad state: SSH command was cancelled
+ℹ️ [SshTerminalService] startShell(ho7k1vdf5j1)
+ℹ️ [SshTerminalService] Disconnecting session ho7k1vdf5j1
+00:00 +3: native control disconnect destroys its silent channel independently
+ℹ️ [SshTerminalService] Session ho7k1vdo3g0 established to shared.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7k1vdo3g0
+ℹ️ [SshTerminalService] startShell(ho7k1vdoad1)
+ℹ️ [SshTerminalService] Disconnecting session ho7k1vdoad1
+00:00 +4: replacing a shell destroys the silent predecessor without closing its successor
+ℹ️ [SshTerminalService] Session ho7k1vdu430 established to shared.example:22
+ℹ️ [SshTerminalService] startShell(ho7k1vdu430)
+ℹ️ [SshTerminalService] startShell(ho7k1vdu430)
+ℹ️ [SshTerminalService] Disconnecting session ho7k1vdu430
+ℹ️ [SshTerminalService] startShell(ho7k1vduab1)
+ℹ️ [SshTerminalService] Disconnecting session ho7k1vduab1
+00:00 +5: canceled unpublished channels retain their bounded route admission
+ℹ️ [SshTerminalService] Session ho7k1vdzgs0 established to shared.example:22
+ℹ️ [SshTerminalService] startShell(ho7k1vdzqm1)
+ℹ️ [SshTerminalService] startShell(ho7k1ve0ry2)
+ℹ️ [SshTerminalService] Disconnecting session ho7k1ve0ry2
+ℹ️ [SshTerminalService] startShell(ho7k1ve2pw3)
+ℹ️ [SshTerminalService] Disconnecting session ho7k1ve2pw3
+ℹ️ [SshTerminalService] startShell(ho7k1ve3ha4)
+ℹ️ [SshTerminalService] Disconnecting session ho7k1ve3ha4
+ℹ️ [SshTerminalService] startShell(ho7k1ve4eg5)
+ℹ️ [SshTerminalService] Disconnecting session ho7k1ve4eg5
+ℹ️ [SshTerminalService] startShell(ho7k1ve5h86)
+ℹ️ [SshTerminalService] Disconnecting session ho7k1ve5h86
+ℹ️ [SshTerminalService] startShell(ho7k1ve6ga7)
+ℹ️ [SshTerminalService] Disconnecting session ho7k1ve6ga7
+ℹ️ [SshTerminalService] startShell(ho7k1ve79y8)
+ℹ️ [SshTerminalService] Disconnecting session ho7k1ve79y8
+ℹ️ [SshTerminalService] startShell(ho7k1ve8dc9)
+ℹ️ [SshTerminalService] Disconnecting session ho7k1ve8dc9
+ℹ️ [SshTerminalService] startShell(ho7k1ve99ia)
+ℹ️ [SshTerminalService] Disconnecting session ho7k1ve99ia
+ℹ️ [SshTerminalService] startShell(ho7k1vea98b)
+ℹ️ [SshTerminalService] Disconnecting session ho7k1vea98b
+ℹ️ [SshTerminalService] startShell(ho7k1veb0ac)
+ℹ️ [SshTerminalService] Disconnecting session ho7k1veb0ac
+ℹ️ [SshTerminalService] startShell(ho7k1vebw1d)
+ℹ️ [SshTerminalService] Disconnecting session ho7k1vebw1d
+ℹ️ [SshTerminalService] startShell(ho7k1vecpje)
+ℹ️ [SshTerminalService] Disconnecting session ho7k1vecpje
+ℹ️ [SshTerminalService] startShell(ho7k1vedksf)
+ℹ️ [SshTerminalService] Disconnecting session ho7k1vedksf
+ℹ️ [SshTerminalService] startShell(ho7k1veekyg)
+ℹ️ [SshTerminalService] Disconnecting session ho7k1veekyg
+ℹ️ [SshTerminalService] startShell(ho7k1vefc5h)
+ℹ️ [SshTerminalService] Disconnecting session ho7k1vefc5h
+ℹ️ [SshTerminalService] startShell(ho7k1veg6di)
+ℹ️ [SshTerminalService] Disconnecting session ho7k1veg6di
+ℹ️ [SshTerminalService] startShell(ho7k1vegy6j)
+ℹ️ [SshTerminalService] Disconnecting session ho7k1vegy6j
+ℹ️ [SshTerminalService] startShell(ho7k1veipqk)
+ℹ️ [SshTerminalService] Disconnecting session ho7k1veipqk
+ℹ️ [SshTerminalService] startShell(ho7k1vejm6l)
+ℹ️ [SshTerminalService] Disconnecting session ho7k1vejm6l
+ℹ️ [SshTerminalService] startShell(ho7k1vekc0m)
+ℹ️ [SshTerminalService] Disconnecting session ho7k1vekc0m
+ℹ️ [SshTerminalService] startShell(ho7k1vel43n)
+ℹ️ [SshTerminalService] Disconnecting session ho7k1vel43n
+ℹ️ [SshTerminalService] startShell(ho7k1vem1to)
+ℹ️ [SshTerminalService] Disconnecting session ho7k1vem1to
+ℹ️ [SshTerminalService] startShell(ho7k1vemvrp)
+ℹ️ [SshTerminalService] Disconnecting session ho7k1vemvrp
+ℹ️ [SshTerminalService] startShell(ho7k1venxiq)
+ℹ️ [SshTerminalService] Disconnecting session ho7k1venxiq
+ℹ️ [SshTerminalService] startShell(ho7k1veot8r)
+ℹ️ [SshTerminalService] Disconnecting session ho7k1veot8r
+ℹ️ [SshTerminalService] startShell(ho7k1vepmts)
+ℹ️ [SshTerminalService] Disconnecting session ho7k1vepmts
+ℹ️ [SshTerminalService] startShell(ho7k1veqf3t)
+ℹ️ [SshTerminalService] Disconnecting session ho7k1veqf3t
+ℹ️ [SshTerminalService] startShell(ho7k1ver76u)
+ℹ️ [SshTerminalService] Disconnecting session ho7k1ver76u
+ℹ️ [SshTerminalService] startShell(ho7k1ves31v)
+ℹ️ [SshTerminalService] Disconnecting session ho7k1ves31v
+ℹ️ [SshTerminalService] startShell(ho7k1vet24w)
+ℹ️ [SshTerminalService] Disconnecting session ho7k1vet24w
+ℹ️ [SshTerminalService] startShell(ho7k1vdzgs0)
+ℹ️ [SshTerminalService] Disconnecting session ho7k1vdzgs0
+ℹ️ [SshTerminalService] startShell(ho7k1vew3ux)
+ℹ️ [SshTerminalService] Disconnecting session ho7k1vew3ux
+ℹ️ [SshTerminalService] Disconnecting session ho7k1vdzqm1
+00:00 +6: a late shell channel is destroyed without waiting for remote EOF
+ℹ️ [SshTerminalService] Session ho7k1vf0iu0 established to shared.example:22
+ℹ️ [SshTerminalService] startShell(ho7k1vf0iu0)
+ℹ️ [SshTerminalService] Disconnecting session ho7k1vf0iu0
+ℹ️ [SshTerminalService] startShell(ho7k1vf0qq1)
+ℹ️ [SshTerminalService] Disconnecting session ho7k1vf0qq1
+00:00 +7: a late execute channel is destroyed without waiting for remote EOF
+ℹ️ [SshTerminalService] Session ho7k1vf6570 established to shared.example:22
+ℹ️ [SshTerminalService] execute(ho7k1vf6570)
+ℹ️ [SshTerminalService] Disconnecting session ho7k1vf6570
+❌ [SshTerminalService] execute error
+  Error: Bad state: SSH command was cancelled
+ℹ️ [SshTerminalService] startShell(ho7k1vf6bp1)
+ℹ️ [SshTerminalService] Disconnecting session ho7k1vf6bp1
+00:00 +8: a late native control channel is destroyed without waiting for remote EOF
+ℹ️ [SshTerminalService] Session ho7k1vfb0g0 established to shared.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7k1vfb0g0
+ℹ️ [SshTerminalService] startShell(ho7k1vfb6l1)
+ℹ️ [SshTerminalService] Disconnecting session ho7k1vfb6l1
+00:00 +9: All tests passed!

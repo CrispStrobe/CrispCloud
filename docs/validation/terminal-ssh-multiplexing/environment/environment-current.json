@@ -1,0 +1,200 @@
+{
+  "scope": "Toolchain restoration prerequisites only; feature acceptance is separate.",
+  "production_manifests_modified": false,
+  "native_hooks_disabled": false,
+  "github_actions_queried_or_awaited": false,
+  "pinned_flutter_revision": "737ba8f885dc774b53b442759999a312c9461e4e",
+  "sdk_source_status": "",
+  "hosted_archives_verified": 322,
+  "manifest_sha256": {
+    "pubspec.yaml": "d82a1bb2d1a015e37d5a7283cf8041039c3eb01f6dbf1d3feb139b1b837ea998",
+    "pubspec.lock": "58560e3fdba68d18b767f4c934b913283df5297468141defbeb816dbb55a0326"
+  },
+  "versions": {
+    "dart": {
+      "returncode": 0,
+      "stdout": "Dart SDK version: 3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\"\n",
+      "stderr": ""
+    },
+    "clang": {
+      "returncode": 0,
+      "stdout": "Debian clang version 19.1.7 (3+b1)\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /workspace/scratch/b4bccf05666a/toolchain/native/usr/lib/llvm-19/bin\n",
+      "stderr": ""
+    },
+    "cargo": {
+      "returncode": 0,
+      "stdout": "cargo 1.100.0 (3acc79c0c 2026-11-05)\n",
+      "stderr": ""
+    },
+    "rustc": {
+      "returncode": 0,
+      "stdout": "rustc 1.100.0 (0ef1bc386 2026-11-09)\n",
+      "stderr": ""
+    },
+    "cmake": {
+      "returncode": 0,
+      "stdout": "cmake version 3.31.6\n\nCMake suite maintained and supported by Kitware (kitware.com/cmake).\n",
+      "stderr": ""
+    },
+    "ninja": {
+      "returncode": 0,
+      "stdout": "1.12.1\n",
+      "stderr": ""
+    },
+    "tmux": {
+      "returncode": 0,
+      "stdout": "tmux 3.5a\n",
+      "stderr": ""
+    },
+    "flutter": {
+      "frameworkVersion": "3.47.8",
+      "channel": "stable",
+      "repositoryUrl": "https://github.com/flutter/flutter.git",
+      "frameworkRevision": "737ba8f885dc774b53b442759999a312c9461e4e",
+      "frameworkCommitDate": "2026-10-22 21:37:31 -0700",
+      "engineRevision": "cf636b1dfb818dd6a3ff16e390e93b1a036969c8",
+      "engineCommitDate": "2026-10-23 02:13:38.000Z",
+      "engineContentHash": "dfd2e6cb7d319db05e3bf1503f3e2ac60f6288a2",
+      "engineBuildDate": "2026-10-23 05:34:48.330",
+      "dartSdkVersion": "3.13.7",
+      "devToolsVersion": "2.60.0",
+      "flutterVersion": "3.47.8",
+      "flutterRoot": "/workspace/scratch/b4bccf05666a/toolchain/flutter"
+    }
+  },
+  "socket_prerequisites": {
+    "unix": {
+      "ok": false,
+      "error": "[Errno 1] Operation not permitted"
+    },
+    "tcp": {
+      "ok": true
+    }
+  },
+  "recorded_utc": "2026-11-16T08:19:37.862477+00:00",
+  "runner": "/workspace/scratch/b4bccf05666a/toolchain/run",
+  "pub_cache": "/workspace/scratch/b4bccf05666a/toolchain/pub-cache",
+  "cargo_cache": "/workspace/scratch/b4bccf05666a/toolchain/cargo",
+  "app_resolution_command": [
+    "flutter",
+    "pub",
+    "get",
+    "--enforce-lockfile",
+    "--offline"
+  ],
+  "app_resolution_exit_code": 0,
+  "app_resolution_log": "app-pub-offline.log",
+  "online_warmup": "Online app resolution populated exact Git mirrors and standard engine assets, then was interrupted during hosted metadata resolution. Offline enforced resolution succeeded.",
+  "sdk_binaries_sha256": {
+    "bin/cache/dart-sdk/bin/dart": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb",
+    "bin/cache/dart-sdk/bin/dartaotruntime": "3599c987228070f342c80d29353f496c8efc72c620c75fc4d59e5671666b2f72",
+    "bin/cache/dart-sdk/bin/snapshots/dart2js_aot.dart.snapshot": "29314b1f8e994436c5639a59df0243692cd83625fc587619a9c99e9a3804b1d6",
+    "bin/cache/flutter_tools.snapshot": "5507f70fd6f44a47aa3ce4df3e06196af4516d25ab7829520ee0925365087cf4"
+  },
+  "native_probes": [
+    {
+      "command": [
+        "clang",
+        "toolchain/tmp/probe.c",
+        "-o",
+        "toolchain/tmp/probe-c"
+      ],
+      "compile_exit_code": 0,
+      "execution_exit_code": 0
+    },
+    {
+      "command": [
+        "rustc",
+        "toolchain/tmp/probe.rs",
+        "-o",
+        "toolchain/tmp/probe-rs"
+      ],
+      "compile_exit_code": 0,
+      "execution_exit_code": 0
+    }
+  ],
+  "native_pty_bootstrap_attempt1": {
+    "command": [
+      "flutter",
+      "test",
+      "--no-pub",
+      "--concurrency=1",
+      "--reporter=expanded",
+      "test/terminal_process_test.dart"
+    ],
+    "exit_code": 1,
+    "feature_tests_completed": 0,
+    "log": "native-pty-bootstrap-attempt1.log",
+    "reason": "Compilation encountered nullable SSHSession accesses at lib/services/ssh_terminal_service.dart:890-897 while application implementation was in progress; all normal native hooks completed."
+  },
+  "native_hook_outputs": [
+    {
+      "package": "sqlite3",
+      "output_sha256": "079b11ee62e89ebb7af681764be8d1d0ba0801fc5cadadf3c36bc863588010f0"
+    },
+    {
+      "package": "flutter_pty2",
+      "output_sha256": "7ed560ad9e391f0444e949f8f14f3b1f6f7ba5ab56a3d53b6f2c5f0af5547e63"
+    },
+    {
+      "package": "objective_c",
+      "output_sha256": "e1063e64529085b7215995a2e9172e97c564f6c55bef628f727c42152db12b58"
+    },
+    {
+      "package": "crisp_catalog",
+      "output_sha256": "790ec9c46d2dc4dc68731bda8ad5519a508b3fe4bf56fcbe71a0c80750463af7"
+    },
+    {
+      "package": "crisp_storage",
+      "output_sha256": "ca2eb3bdfc65e5eabf5ca1e1a399d1b0d6197b8224d1c8199eb2683f6fba0a97"
+    },
+    {
+      "package": "crisp_ebook_conversion",
+      "output_sha256": "b90a2897b674ea77939b8df718887bf2bd9618a1140cc9f1d5193a9f5942eb66"
+    }
+  ],
+  "native_pty_bootstrap": {
+    "command": [
+      "flutter",
+      "test",
+      "--no-pub",
+      "--concurrency=1",
+      "--reporter=expanded",
+      "test/terminal_process_test.dart"
+    ],
+    "exit_code": 0,
+    "counts": {
+      "passed": 6,
+      "skipped": 1,
+      "failed": 0
+    },
+    "log": "native-pty-bootstrap.log",
+    "log_sha256": "91fbf5611c3856a800ff6861274b236d0a94947ae03caddca5efa17f281fbad3",
+    "scope": "Environment prerequisite; run during continued feature development. Full feature acceptance is separate.",
+    "platform_skip": "Windows ConPTY fixture on Linux"
+  },
+  "app_package_count": 275,
+  "production_manifest_unchanged": {
+    "pubspec.yaml": true,
+    "pubspec.lock": true
+  },
+  "sdk_binary_modes": {
+    "bin/cache/dart-sdk/bin/dart": 33261,
+    "bin/cache/dart-sdk/bin/dartaotruntime": 33261,
+    "bin/cache/dart-sdk/bin/snapshots/dart2js_aot.dart.snapshot": 33188,
+    "bin/cache/flutter_tools.snapshot": 33188
+  },
+  "restoration_files": {
+    "run": "b5c0fdefe86e6fd9dff8c55a6f559a310b45eb67738afb731ef7f9b2c3c35ca6",
+    "bin/flutter-direct": "699e9f196bcb9a121406e1bdff4b894efaa0c73254605fa72ccbe52d53590cab",
+    "bin/cargo": "899377d5f6b7070c0508b199730aa2de862b355efe82d013bb7803627df9562c",
+    "bin/clang": "aa67fdac76b664b878400d5b3da01258d707575640323f2aa69f171ae2da053f",
+    "bin/cmake": "0f676f516b3f2823589905c9e145f08af4dc0076d41d8e9051527f6fde900ffd",
+    "warm_pub.py": "3180d047f3317438b3afed5d6ee29c566bc73875a6b2379c506562d52ddd8f77",
+    "restore_native.py": "a196e531293df0ffcd38425fd73c5e91e9b7d2e9cbf0f7743864c48058e9ddae",
+    "app-pub-offline.log": "0b3b287008a5d1ee2256119d70633bea2117133cb39201cc9b6a0838f4e9f550",
+    "pub-downloads.json": "c79616029dfa867b3247dd9470028009745de3b267f645175cb853ca2e149cfa",
+    "native-downloads.json": "3d78a1b9821a30a76bc3d96e63a2e13926c819e0d34fbbca82e0fe71050c460b",
+    "tmux-downloads.json": "43d07fcfa86982ab6a31f4d4d17fb96bd866410e1b42acf8f1dec014f238c049"
+  }
+}

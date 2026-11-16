@@ -1,0 +1,412 @@
+{
+  "recorded_utc": "2026-11-16T08:41:53.738737+00:00",
+  "git_head_at_packaging": "050c326fc7e0150c2f6ca03c95d0d4ddc51bed26",
+  "identity_basis": "Exact bytes in the current working tree when this evidence was packaged; HEAD alone does not identify uncommitted source.",
+  "scope": "Capture fixture, owned UI/backend sources and focused tests, direct project imports of fixture/widgets/session, production dependency manifests and explicit fonts. This is not a complete application dependency closure.",
+  "run_identity_limit": "Focused executions occurred before this packaging snapshot. Their stdout does not contain an execution-time full source inventory. This snapshot must not be represented as proof of a frozen full application run.",
+  "selected_worktree_status": [
+    " M lib/l10n/terminal_mount_error_strings.dart",
+    " M lib/services/ssh_forwarding_profiles.dart",
+    " M lib/services/ssh_terminal_service.dart",
+    " M lib/services/terminal_connection.dart",
+    " M lib/services/terminal_mount_failure.dart",
+    " M lib/services/terminal_session.dart",
+    " M lib/widgets/terminal_tabs.dart",
+    " M test/terminal_connection_sharing_test.dart",
+    "?? test/ssh_connection_sharing_visual_test.dart"
+  ],
+  "files": {
+    "assets/fonts/Roboto-Regular.ttf": {
+      "sha256": "79e851404657dac2106b3d22ad256d47824a9a5765458edb72c9102a45816d95",
+      "bytes": 171676,
+      "mtime_utc": "2026-11-16T08:09:48.275782+00:00"
+    },
+    "assets/fonts/RobotoMono-Regular.ttf": {
+      "sha256": "c59ecb6c18e38d4194249b6e1c555eb55c8e809258cf6d9b624d19d9268253bf",
+      "bytes": 109212,
+      "mtime_utc": "2026-11-16T08:09:48.275782+00:00"
+    },
+    "lib/l10n/external_terminal_strings.dart": {
+      "sha256": "d23da3fc0b12c5f7d877f7003d8d13b6d36886051a53c08dc458c54fea556f35",
+      "bytes": 16151,
+      "mtime_utc": "2026-11-16T08:09:49.438143+00:00"
+    },
+    "lib/l10n/screen_terminal_strings.dart": {
+      "sha256": "2c92b6c07396cfbae3dc27e1b1e28bbff72a9bd4a2913b6c0474b285b500bbcf",
+      "bytes": 5542,
+      "mtime_utc": "2026-11-16T08:09:49.446143+00:00"
+    },
+    "lib/l10n/ssh_connection_sharing_strings.dart": {
+      "sha256": "1907bb9fc564c8f65db48c752cc2b9beaee44c5f02abd9b8e15a467d903ceedd",
+      "bytes": 4938,
+      "mtime_utc": "2026-11-16T08:19:01.220456+00:00"
+    },
+    "lib/l10n/ssh_multiplexer_strings.dart": {
+      "sha256": "7540e97b02b95271e50531a2ff23f5e02d282743c852f25ecaf22f880e8fd0a3",
+      "bytes": 7926,
+      "mtime_utc": "2026-11-16T08:09:49.450143+00:00"
+    },
+    "lib/l10n/ssh_port_forwarding_strings.dart": {
+      "sha256": "f5169e43b2110c79cb5d90435a8c9b0520372e0d11e61dd662693c9e6a37a21a",
+      "bytes": 18466,
+      "mtime_utc": "2026-11-16T08:09:49.450143+00:00"
+    },
+    "lib/l10n/terminal_arrangement_strings.dart": {
+      "sha256": "1a4f9b913770bed7da1e8081caf3b69ec09a645775148b5c743f4519d3063ad6",
+      "bytes": 10892,
+      "mtime_utc": "2026-11-16T08:09:49.450143+00:00"
+    },
+    "lib/l10n/terminal_broadcast_strings.dart": {
+      "sha256": "36a3d38f6e8f7ef413c5b78358986c256a15cfb74909608bf78e9b7f42952f40",
+      "bytes": 5899,
+      "mtime_utc": "2026-11-16T08:09:49.450143+00:00"
+    },
+    "lib/l10n/terminal_controls_strings.dart": {
+      "sha256": "7551891db6bcc66cd23489c54cc00f965001fda6994b19dd4dab2c28945ed665",
+      "bytes": 10997,
+      "mtime_utc": "2026-11-16T08:09:49.450143+00:00"
+    },
+    "lib/l10n/terminal_key_binding_strings.dart": {
+      "sha256": "6e7376d49dda2bae35627c4e95629f2246da1b3cc7cafe753f50f50e108a26e9",
+      "bytes": 9387,
+      "mtime_utc": "2026-11-16T08:09:49.450143+00:00"
+    },
+    "lib/l10n/terminal_mount_error_strings.dart": {
+      "sha256": "1f26830a2774aed020daf9e301bb00431c825ab37eecad5f084153ec8eb2d0df",
+      "bytes": 11389,
+      "mtime_utc": "2026-11-16T08:32:52.623713+00:00"
+    },
+    "lib/l10n/terminal_shell_strings.dart": {
+      "sha256": "a8ef9e7f1086847bc4e91a68bedfb6ed018334e054274ed9be91b1774742d08f",
+      "bytes": 9195,
+      "mtime_utc": "2026-11-16T08:09:49.450143+00:00"
+    },
+    "lib/l10n/terminal_strings.dart": {
+      "sha256": "9917de10c034c4455ebb36dd4bc522daba62dbfd5a553a39fa89f3b26ae9aa95",
+      "bytes": 39078,
+      "mtime_utc": "2026-11-16T08:09:49.450143+00:00"
+    },
+    "lib/l10n/terminal_trigger_strings.dart": {
+      "sha256": "587c0b3dfdea77fd9acde328a2fd95d3493c9bd5022981147c315d1402beab30",
+      "bytes": 12325,
+      "mtime_utc": "2026-11-16T08:09:49.450143+00:00"
+    },
+    "lib/l10n/terminal_workspace_strings.dart": {
+      "sha256": "78f737372473e41069bfb46716e9f08f6374a45ce81bf2adfc3ca66a6deefa1d",
+      "bytes": 9454,
+      "mtime_utc": "2026-11-16T08:09:49.450143+00:00"
+    },
+    "lib/models/panel_side.dart": {
+      "sha256": "9419b657677ad9717441eb396bdb1019a486213e2570e9420a460ce384971140",
+      "bytes": 33,
+      "mtime_utc": "2026-11-16T08:09:49.459969+00:00"
+    },
+    "lib/models/ssh_multiplexer_session.dart": {
+      "sha256": "27c3b467dc473795d9a7d37b8babc0726cb1b7f94346a77c1c2f339b50a6a9a5",
+      "bytes": 9148,
+      "mtime_utc": "2026-11-16T08:09:49.459969+00:00"
+    },
+    "lib/models/ssh_terminal_config.dart": {
+      "sha256": "3f2ac926d278068167b4898c064b626ce6170c24fbb629e198896c5d9289806f",
+      "bytes": 3238,
+      "mtime_utc": "2026-11-16T08:13:44.871745+00:00"
+    },
+    "lib/models/terminal_arrangement.dart": {
+      "sha256": "f8fa3c055ce792c3759e7a1a78bc0210d394b8a7b3a21e306cbfedbf3f7976c1",
+      "bytes": 8050,
+      "mtime_utc": "2026-11-16T08:09:49.459969+00:00"
+    },
+    "lib/models/terminal_trigger.dart": {
+      "sha256": "1405c6397fa6e73ed37d54b9d51406c74638bcefe2e9b8dd0532d97c2b5d0274",
+      "bytes": 10372,
+      "mtime_utc": "2026-11-16T08:09:49.459969+00:00"
+    },
+    "lib/providers/core_providers.dart": {
+      "sha256": "c079a463d07fc2d17050224cbcaa64fa1d34dbc64b26ab921649296fe6fd9d23",
+      "bytes": 12819,
+      "mtime_utc": "2026-11-16T08:09:49.463224+00:00"
+    },
+    "lib/providers/focus_area_provider.dart": {
+      "sha256": "1f07809bf1035b766e769ac9983e0622b4b8f1d43ef51abe6d3b01f7662127c9",
+      "bytes": 700,
+      "mtime_utc": "2026-11-16T08:09:49.463224+00:00"
+    },
+    "lib/providers/providers.dart": {
+      "sha256": "822fdf405bbdf34a41c567ea180e18dd82c76febc2473e75ac886627b9dc19e0",
+      "bytes": 849,
+      "mtime_utc": "2026-11-16T08:09:49.463224+00:00"
+    },
+    "lib/providers/ssh_forwarding_profiles_provider.dart": {
+      "sha256": "c0584b7ead4de73bb6ec1765d60a6fba1cd1707b20c0d5e759507056a1a9ebb1",
+      "bytes": 281,
+      "mtime_utc": "2026-11-16T08:09:49.463224+00:00"
+    },
+    "lib/providers/ssh_terminal_profiles_provider.dart": {
+      "sha256": "87f97685597b21ed6d8221705fb404921298ebb0d29095e9dcce1de0567e1176",
+      "bytes": 212,
+      "mtime_utc": "2026-11-16T08:09:49.463224+00:00"
+    },
+    "lib/providers/terminal_key_bindings_provider.dart": {
+      "sha256": "4a94bae909cb4f909f360ae9dbca4de95cdda7bc5667b1a00435528c717903cf",
+      "bytes": 792,
+      "mtime_utc": "2026-11-16T08:09:49.463224+00:00"
+    },
+    "lib/providers/terminal_provider.dart": {
+      "sha256": "61ca2519b0138158136e9228def1a3acf4ae514c9ee3c63e6c94173d665fb60b",
+      "bytes": 1138,
+      "mtime_utc": "2026-11-16T08:09:49.463224+00:00"
+    },
+    "lib/providers/terminal_triggers_provider.dart": {
+      "sha256": "106321fc5ee7ee46278c43e2c927deb1b3a4ed2815d20008041c8fff3164e991",
+      "bytes": 375,
+      "mtime_utc": "2026-11-16T08:09:49.463224+00:00"
+    },
+    "lib/providers/terminal_workspace_provider.dart": {
+      "sha256": "2a1b11c75f82483eb53115c1757d01735b2ba3d5697ea326fc6a13d77291ec98",
+      "bytes": 311,
+      "mtime_utc": "2026-11-16T08:09:49.463224+00:00"
+    },
+    "lib/services/keyboard_shortcut_service.dart": {
+      "sha256": "9c16b8b54132f647ed5036eb69209150590be7387cf27ebdce650276b32a0aff",
+      "bytes": 23313,
+      "mtime_utc": "2026-11-16T08:09:49.502344+00:00"
+    },
+    "lib/services/panel_source_service.dart": {
+      "sha256": "0afc278fd52d0416a632c075234d37be8f6ee9fe5f25d5fd88c8d41e1e83c667",
+      "bytes": 19542,
+      "mtime_utc": "2026-11-16T08:09:49.506143+00:00"
+    },
+    "lib/services/secure_storage_service.dart": {
+      "sha256": "204360074dff3e08d4b02e2dcfc7703d3f0033bc0019966e30f59cd9a20bf38c",
+      "bytes": 9843,
+      "mtime_utc": "2026-11-16T08:09:49.510143+00:00"
+    },
+    "lib/services/ssh_forwarding_profiles.dart": {
+      "sha256": "731633798cd887c163a6d0b34f43d9b20c979bc9eecff3496e53cad2085830ec",
+      "bytes": 24034,
+      "mtime_utc": "2026-11-16T08:31:15.360661+00:00"
+    },
+    "lib/services/ssh_port_forwarding.dart": {
+      "sha256": "a9116ef72a4788084aa67cc17b1f8ed803741539a9f4a95d917cc4c645cb324c",
+      "bytes": 1303,
+      "mtime_utc": "2026-11-16T08:09:49.514143+00:00"
+    },
+    "lib/services/ssh_terminal_service.dart": {
+      "sha256": "ee66db80e97231281feec81fd5b218a252f4b551500e2f2516168915c73e15b9",
+      "bytes": 56339,
+      "mtime_utc": "2026-11-16T08:41:28.406229+00:00"
+    },
+    "lib/services/terminal_backends.dart": {
+      "sha256": "fcca2a07301c72f64ec4c73904b46d9b2ca07a513ea4a3d7ad20ea688a05c7e2",
+      "bytes": 9306,
+      "mtime_utc": "2026-11-16T08:26:28.879683+00:00"
+    },
+    "lib/services/terminal_broadcast.dart": {
+      "sha256": "9097c8a6920d8b24da031b865f7f680126d25a36f4dd1f64d9ad4cac4ce89196",
+      "bytes": 5622,
+      "mtime_utc": "2026-11-16T08:09:49.518142+00:00"
+    },
+    "lib/services/terminal_connection.dart": {
+      "sha256": "b75bea66577db7c4010ea9d616034aec4c4c96144f08f9a46f07427c69cd66c8",
+      "bytes": 5276,
+      "mtime_utc": "2026-11-16T08:31:09.656721+00:00"
+    },
+    "lib/services/terminal_directory.dart": {
+      "sha256": "7b361015467c4988fa34de6c913c92172d0ac3370f578b16e4282945496433b2",
+      "bytes": 868,
+      "mtime_utc": "2026-11-16T08:09:49.518142+00:00"
+    },
+    "lib/services/terminal_forwarding_connection.dart": {
+      "sha256": "b6d0d5cb0fb3db20321e3a0e6583fd7d033287199de612f4aec640615fd3eefc",
+      "bytes": 212,
+      "mtime_utc": "2026-11-16T08:09:49.518142+00:00"
+    },
+    "lib/services/terminal_menu.dart": {
+      "sha256": "c042c61264b1a67126c1f45996a63f31b864b4bc0726be7639f351fc7dea48ee",
+      "bytes": 686,
+      "mtime_utc": "2026-11-16T08:09:49.518142+00:00"
+    },
+    "lib/services/terminal_mount_failure.dart": {
+      "sha256": "c05c35912d1aff276e57f36cf762a12206350916344ad33a2e8a015bcc784898",
+      "bytes": 2081,
+      "mtime_utc": "2026-11-16T08:32:52.255718+00:00"
+    },
+    "lib/services/terminal_session.dart": {
+      "sha256": "478244e05258855d15a941a8c30d636c41e8b22811fe90f3727aa15a2c3815f4",
+      "bytes": 21209,
+      "mtime_utc": "2026-11-16T08:31:27.748531+00:00"
+    },
+    "lib/services/terminal_shell_integration.dart": {
+      "sha256": "0120afdf835981fa0098630ccc05c0dda891087a23ad69ba4bc1bb1d49c81eab",
+      "bytes": 10663,
+      "mtime_utc": "2026-11-16T08:09:49.518142+00:00"
+    },
+    "lib/services/terminal_triggers.dart": {
+      "sha256": "a6495cf3bd2481efc46afefbbd97356444086f9c6910a744bb81e398e8f5f4ae",
+      "bytes": 14480,
+      "mtime_utc": "2026-11-16T08:09:49.518142+00:00"
+    },
+    "lib/services/terminal_user_input.dart": {
+      "sha256": "ed1ea49c53ce910c9355317f8f3d4edca5d88c03a3d87383e1915d1c97b8a040",
+      "bytes": 5225,
+      "mtime_utc": "2026-11-16T08:09:49.518142+00:00"
+    },
+    "lib/services/terminal_workspace_service.dart": {
+      "sha256": "b7ba81b91434f8c355acdf73d82f3b57501503fee75e860357dfa6a543218b46",
+      "bytes": 1980,
+      "mtime_utc": "2026-11-16T08:09:49.518142+00:00"
+    },
+    "lib/services/tmux_control_client.dart": {
+      "sha256": "22284136913c2341f3b3e81d62f5a71f6d09c91424903c1c2c3acc211f75f2e9",
+      "bytes": 42568,
+      "mtime_utc": "2026-11-16T08:09:49.518142+00:00"
+    },
+    "lib/services/tmux_terminal_connection.dart": {
+      "sha256": "c469877b01fde84e65ed25a12fac5a7ba4a72f67a796a1ab9b03c7efa4332c95",
+      "bytes": 3729,
+      "mtime_utc": "2026-11-16T08:24:53.996679+00:00"
+    },
+    "lib/widgets/external_terminal_dialog.dart": {
+      "sha256": "47e35f5ae9b69026512fb68125ba7dbb3088dcfed1c1d69223b1571708738d03",
+      "bytes": 8153,
+      "mtime_utc": "2026-11-16T08:09:49.530142+00:00"
+    },
+    "lib/widgets/ssh_multiplexer_sessions_dialog.dart": {
+      "sha256": "f9bad5f7a4d9d2d8581b5fcdd793d074a485edddcf76299caa6ae6d2cfd178b4",
+      "bytes": 5904,
+      "mtime_utc": "2026-11-16T08:09:49.546142+00:00"
+    },
+    "lib/widgets/ssh_port_forwarding_dialog.dart": {
+      "sha256": "fa2e0cd947f89592bcb651a2215d8347f92d8d40f44a7cc58a0c31f722d93885",
+      "bytes": 31923,
+      "mtime_utc": "2026-11-16T08:09:49.546142+00:00"
+    },
+    "lib/widgets/ssh_terminal_connect_dialog.dart": {
+      "sha256": "03c51d6527dc490fe97336e1cae7f62ee58289a6cbf618b362361abd498dd7fa",
+      "bytes": 31792,
+      "mtime_utc": "2026-11-16T08:09:49.546142+00:00"
+    },
+    "lib/widgets/ssh_terminal_profiles_dialog.dart": {
+      "sha256": "05f42ff29812cb7071fb4e547073161983b8e56c32309b3e125d1dd40790f151",
+      "bytes": 9218,
+      "mtime_utc": "2026-11-16T08:09:49.546142+00:00"
+    },
+    "lib/widgets/terminal_arrangements_dialog.dart": {
+      "sha256": "194427a2038faa359d3585358fcb8176ee46b257e0a8877a54841bb66ba176e3",
+      "bytes": 9559,
+      "mtime_utc": "2026-11-16T08:09:49.546142+00:00"
+    },
+    "lib/widgets/terminal_broadcast_dialog.dart": {
+      "sha256": "2a5102d4131f5bc8ea34808869205fe77eb0840574661be96395630b0fd6bf41",
+      "bytes": 4483,
+      "mtime_utc": "2026-11-16T08:09:49.546142+00:00"
+    },
+    "lib/widgets/terminal_command_history_dialog.dart": {
+      "sha256": "da7b3417ae7c97709fef3b3bc603574c89f08f62b880da6255a245b6d262fde7",
+      "bytes": 5457,
+      "mtime_utc": "2026-11-16T08:09:49.546142+00:00"
+    },
+    "lib/widgets/terminal_key_bindings_dialog.dart": {
+      "sha256": "dbab8a3c035885ea3d72678e240bca7564ab10c6ff0383d335bc62bf4c6f035d",
+      "bytes": 20362,
+      "mtime_utc": "2026-11-16T08:09:49.546142+00:00"
+    },
+    "lib/widgets/terminal_panel.dart": {
+      "sha256": "0cb65ac7e8d97aa204c70ebd76135b36d7ff84409c44053b9024a0b58c696f16",
+      "bytes": 81305,
+      "mtime_utc": "2026-11-16T08:19:01.216456+00:00"
+    },
+    "lib/widgets/terminal_search_bar.dart": {
+      "sha256": "366a019f9aec226d67512d76f498cb2ce1d382ca32f337d7269ab808698f3a7b",
+      "bytes": 13023,
+      "mtime_utc": "2026-11-16T08:09:49.546142+00:00"
+    },
+    "lib/widgets/terminal_shell_setup_dialog.dart": {
+      "sha256": "a19da1a8d10e92d09352f40a2f37a0755c7d7fbffe32758e3f71de36f98fa611",
+      "bytes": 2964,
+      "mtime_utc": "2026-11-16T08:09:49.546142+00:00"
+    },
+    "lib/widgets/terminal_tabs.dart": {
+      "sha256": "121a45282800f080966343f4519e7cb4e505e2d49377cdc7ac0cd673a856eb38",
+      "bytes": 49196,
+      "mtime_utc": "2026-11-16T08:27:31.359022+00:00"
+    },
+    "lib/widgets/terminal_triggers_dialog.dart": {
+      "sha256": "2fee745bbcf3fd260e166c50abf7c3367086daf4d071cef61d44f75cecc86c51",
+      "bytes": 21000,
+      "mtime_utc": "2026-11-16T08:09:49.550142+00:00"
+    },
+    "lib/widgets/terminal_workspace_dialog.dart": {
+      "sha256": "5221daeff9b4da714e1eab8912c7d4f7df7b4b14364a892ba89a95b0308c5638",
+      "bytes": 16244,
+      "mtime_utc": "2026-11-16T08:09:49.550142+00:00"
+    },
+    "lib/widgets/tmux_control_workspace.dart": {
+      "sha256": "83a99c146f75c9a873d7168ec5e1cb2599276e244c8883c2d82489d1ad8a2df7",
+      "bytes": 38980,
+      "mtime_utc": "2026-11-16T08:09:49.550142+00:00"
+    },
+    "pubspec.lock": {
+      "sha256": "58560e3fdba68d18b767f4c934b913283df5297468141defbeb816dbb55a0326",
+      "bytes": 63296,
+      "mtime_utc": "2026-11-16T08:09:50.722131+00:00"
+    },
+    "pubspec.yaml": {
+      "sha256": "d82a1bb2d1a015e37d5a7283cf8041039c3eb01f6dbf1d3feb139b1b837ea998",
+      "bytes": 11941,
+      "mtime_utc": "2026-11-16T08:09:50.722131+00:00"
+    },
+    "test/ssh_connection_sharing_visual_test.dart": {
+      "sha256": "6bbcd9b324c154f6289d3b6daf34e223c2932515d28b2dd7085815cf60b2b30f",
+      "bytes": 7472,
+      "mtime_utc": "2026-11-16T08:32:36.995856+00:00"
+    },
+    "test/ssh_connection_sharing_widget_test.dart": {
+      "sha256": "6936d469dbb5cf43ffa3a18c702bc9c863ecde2caa90a315deac6b9ff6efe783",
+      "bytes": 12862,
+      "mtime_utc": "2026-11-16T08:26:29.059681+00:00"
+    },
+    "test/ssh_shared_terminal_adapters_test.dart": {
+      "sha256": "5590d4a8824792e2ee61e099d1e27df46925f7c071991dfc0161c7c91368d7ca",
+      "bytes": 9059,
+      "mtime_utc": "2026-11-16T08:26:29.051681+00:00"
+    },
+    "test/ssh_tmux_panel_lifecycle_test.dart": {
+      "sha256": "80c5c3b77fb3eb0b0a76ebdabd4b53f6947c8f14aa6bb6d54db66a0f19bd542f",
+      "bytes": 11084,
+      "mtime_utc": "2026-11-16T08:09:50.858129+00:00"
+    },
+    "test/terminal_arrangements_widget_test.dart": {
+      "sha256": "1ae4b5a5819b12893a26e7b257bbe3d9cc93ef86a984b68afa886d4b391bf2ab",
+      "bytes": 19590,
+      "mtime_utc": "2026-11-16T08:09:50.930128+00:00"
+    },
+    "test/terminal_connection_sharing_test.dart": {
+      "sha256": "23ccced0626412777809857e0d74a91b093296cf0721f69edeaf7da5a2c9d0e9",
+      "bytes": 14513,
+      "mtime_utc": "2026-11-16T08:33:45.987092+00:00"
+    },
+    "test/terminal_session_test.dart": {
+      "sha256": "a74092a9ccd7666038574d14a26f0a802b383a126edbbe052763c82e0d5d4b09",
+      "bytes": 10069,
+      "mtime_utc": "2026-11-16T08:09:50.930128+00:00"
+    },
+    "test/terminal_tabs_test.dart": {
+      "sha256": "fb258e68375b31c02e6bb182476b5719fe886c8d99580a884d918b6019ea1fb4",
+      "bytes": 35685,
+      "mtime_utc": "2026-11-16T08:09:50.934128+00:00"
+    }
+  },
+  "external_inputs": {
+    "toolchain_wrapper": {
+      "path": "/workspace/scratch/b4bccf05666a/toolchain/run",
+      "sha256": "b5c0fdefe86e6fd9dff8c55a6f559a310b45eb67738afb731ef7f9b2c3c35ca6",
+      "bytes": 692
+    },
+    "material_icons_font": {
+      "path": "/workspace/scratch/b4bccf05666a/toolchain/flutter/bin/cache/artifacts/material_fonts/MaterialIcons-Regular.otf",
+      "sha256": "d9865b671a09d683d13a863089d8825e0f61a37696ce5d7d448bc8023aa62453",
+      "bytes": 1645184
+    }
+  }
+}

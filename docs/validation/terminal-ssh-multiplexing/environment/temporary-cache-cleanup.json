@@ -1,0 +1,31 @@
+{
+  "utc": "2026-11-16T08:44:03.488993+00:00",
+  "reason": "Remove abandoned compiler test temporary directories after all focused test runners completed, before frozen acceptance. Source and evidence are retained.",
+  "removed": [
+    {
+      "path": "../toolchain/tmp/flutter_tools.BEBGOM",
+      "bytes": 143690293
+    },
+    {
+      "path": "../toolchain/tmp/flutter_tools.HLOCAR",
+      "bytes": 237777361
+    },
+    {
+      "path": "../toolchain/tmp/flutter_tools.MKSCQN",
+      "bytes": 109392325
+    },
+    {
+      "path": "../toolchain/tmp/flutter_tools.NKXDHS",
+      "bytes": 143689829
+    },
+    {
+      "path": "../toolchain/tmp/flutter_tools.QSKFNJ",
+      "bytes": 248934819
+    },
+    {
+      "path": "../toolchain/tmp/flutter_tools.YFYYHS",
+      "bytes": 143689829
+    }
+  ],
+  "bytes": 1027174456
+}

@@ -167,6 +167,50 @@ class TerminalSession extends ChangeNotifier {
   TerminalConnection? _connection;
   TerminalWorkspaceConnection? _workspaceConnection;
 
+  /// A snapshot capability: a menu opened for one connection cannot silently
+  /// acquire a shell on its replacement. After acquisition, the new shell's
+  /// lease belongs to its own session and survives closure of this source.
+  TerminalConnectionOpening? get siblingConnectionOpening {
+    final connection = _connection;
+    if (!isConnected ||
+        connection is! TerminalConnectionSharing ||
+        !(connection as TerminalConnectionSharing).canOpenSibling) {
+      return null;
+    }
+    final sharing = connection as TerminalConnectionSharing;
+    final generation = _generation;
+    final cancellation = TerminalConnectionCancellation();
+    return TerminalConnectionOpening((columns, rows) async {
+      if (cancellation.isCancelled ||
+          !_current(generation) ||
+          !isConnected ||
+          !identical(_connection, connection) ||
+          !sharing.canOpenSibling) {
+        throw StateError('The source SSH connection is no longer available.');
+      }
+      return sharing.openSibling(columns, rows, cancellation: cancellation);
+    }, cancellation);
+  }
+
+  /// Starts an explicitly shared shell with ownership of its pending lease.
+  Future<void> connectOpening(
+    TerminalConnectionOpening opening, {
+    required TerminalSessionKind kind,
+    String? label,
+  }) => connect(
+    opening.claim(),
+    kind: kind,
+    label: label,
+    openingCleanup: opening,
+  );
+
+  int get sharedConnectionSessionCount {
+    final connection = _connection;
+    return isConnected && connection is TerminalConnectionSharing
+        ? (connection as TerminalConnectionSharing).sharedSessionCount
+        : 0;
+  }
+
   /// A workspace survives viewport removal and transport disconnect. The
   /// session releases its buffers only when replaced or explicitly disposed.
   TerminalWorkspaceConnection? get workspaceConnection => _workspaceConnection;
@@ -184,8 +228,9 @@ class TerminalSession extends ChangeNotifier {
   Future<void> _resizes = Future<void>.value();
   int _generation = 0;
   bool _disposed = false;
-  final _failedCleanup = <TerminalConnection, Object>{};
-  final _pendingCleanup = <TerminalConnection, Future<void>>{};
+  final _failedCleanup = <TerminalCloseable, Object>{};
+  final _pendingCleanup = <TerminalCloseable, Future<void>>{};
+  final _pendingOpenings = <TerminalCloseable>{};
   int _pendingOpeners = 0;
   int _inputReplayDepth = 0;
   bool Function()? _inputLease;
@@ -228,6 +273,7 @@ class TerminalSession extends ChangeNotifier {
       (_connection != null ||
           _failedCleanup.isNotEmpty ||
           _pendingCleanup.isNotEmpty ||
+          _pendingOpenings.isNotEmpty ||
           _pendingOpeners != 0 ||
           isConnecting ||
           isConnected ||
@@ -242,9 +288,46 @@ class TerminalSession extends ChangeNotifier {
     TerminalConnectionFactory open, {
     required TerminalSessionKind kind,
     String? label,
+    TerminalCloseable? openingCleanup,
+  }) async {
+    if (_disposed) {
+      if (openingCleanup != null) await _closeConnection(openingCleanup);
+      return;
+    }
+    if (openingCleanup != null) _pendingOpenings.add(openingCleanup);
+    try {
+      await _connect(
+        open,
+        kind: kind,
+        label: label,
+        openingCleanup: openingCleanup,
+      );
+    } finally {
+      // A destination may cancel before the adapter registers the child-ID
+      // release callback. Revisit the opening when it settles so a late failed
+      // release remains tracked and retryable even after a generation change.
+      // Successful adapters transfer ownership and unregister before returning.
+      if (openingCleanup != null) await _release(openingCleanup, null);
+      final removed = _pendingOpenings.remove(openingCleanup);
+      if (removed && !_disposed) notifyListeners();
+    }
+  }
+
+  Future<void> _connect(
+    TerminalConnectionFactory open, {
+    required TerminalSessionKind kind,
+    String? label,
+    TerminalCloseable? openingCleanup,
   }) async {
     if (_disposed) return;
     final generation = ++_generation;
+    // Replacing a pending opener revokes its reserved lease immediately, even
+    // when the remote server has not answered its channel-open request.
+    for (final pending in _pendingOpenings.toList()) {
+      if (!identical(pending, openingCleanup)) {
+        unawaited(_closeConnection(pending));
+      }
+    }
     final previous = _connection;
     final subscription = _subscription;
     final pendingCleanup = _failedCleanup.keys.toList();
@@ -400,6 +483,9 @@ class TerminalSession extends ChangeNotifier {
   void _fail(int generation, Object failure) {
     if (!_current(generation)) return;
     ++_generation;
+    for (final pending in _pendingOpenings.toList()) {
+      unawaited(_closeConnection(pending));
+    }
     _pendingInputCodeUnits = 0;
     final connection = _connection;
     final subscription = _subscription;
@@ -415,6 +501,9 @@ class TerminalSession extends ChangeNotifier {
   Future<void> disconnect() async {
     if (_disposed) return;
     final generation = ++_generation;
+    for (final pending in _pendingOpenings.toList()) {
+      unawaited(_closeConnection(pending));
+    }
     _pendingInputCodeUnits = 0;
     final connection = _connection;
     final subscription = _subscription;
@@ -439,7 +528,7 @@ class TerminalSession extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> _retryCleanup(List<TerminalConnection> connections) async {
+  Future<void> _retryCleanup(List<TerminalCloseable> connections) async {
     for (final connection in connections) {
       if (_failedCleanup.containsKey(connection)) {
         await _release(connection, null);
@@ -448,7 +537,7 @@ class TerminalSession extends ChangeNotifier {
   }
 
   Future<void> _release(
-    TerminalConnection? connection,
+    TerminalCloseable? connection,
     StreamSubscription<String>? subscription,
   ) async {
     // Register shutdown before cancellation: a stream's onCancel may itself
@@ -480,7 +569,7 @@ class TerminalSession extends ChangeNotifier {
     }
   }
 
-  Future<void> _closeConnection(TerminalConnection connection) {
+  Future<void> _closeConnection(TerminalCloseable connection) {
     final existing = _pendingCleanup[connection];
     if (existing != null) return existing;
     final completion = Completer<void>();
@@ -506,6 +595,9 @@ class TerminalSession extends ChangeNotifier {
     if (_disposed) return;
     _disposed = true;
     ++_generation;
+    for (final pending in _pendingOpenings.toList()) {
+      unawaited(_closeConnection(pending));
+    }
     _pendingInputCodeUnits = 0;
     shellIntegration.dispose();
     onUserInput = null;

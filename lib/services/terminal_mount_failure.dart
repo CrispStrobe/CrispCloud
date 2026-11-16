@@ -5,6 +5,8 @@ enum TerminalMountCode {
   sshInvalidKey,
   sshCommand,
   sshPoolFull,
+  sshSharedPoolFull,
+  sshChannelLimit,
   sshDisconnected,
   sshNoShell,
   sshUnknownSession,

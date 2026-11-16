@@ -92,4 +92,19 @@ class SshTerminalConfig {
     tmux: tmux,
     screen: screen,
   );
+
+  /// Reconnect metadata for an explicitly shared plain shell. The live route
+  /// supplies authentication; neither secrets nor tmux/Screen launch options
+  /// belong to the new terminal's saved destination.
+  SshTerminalConfig forSharedShell() => SshTerminalConfig(
+    host: host,
+    port: port,
+    username: username,
+    authentication: authentication,
+    forwardAgent: forwardAgent,
+    gateway: gateway,
+    jumpHosts: List.unmodifiable(
+      jumpHosts.map((jump) => jump.withoutSecrets()),
+    ),
+  );
 }

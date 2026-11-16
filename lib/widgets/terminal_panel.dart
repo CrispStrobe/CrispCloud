@@ -12,6 +12,7 @@ import '../l10n/terminal_controls_strings.dart';
 import '../l10n/terminal_key_binding_strings.dart';
 import '../l10n/terminal_trigger_strings.dart';
 import '../l10n/ssh_port_forwarding_strings.dart';
+import '../l10n/ssh_connection_sharing_strings.dart';
 import '../l10n/terminal_shell_strings.dart';
 import '../l10n/ssh_multiplexer_strings.dart';
 import '../l10n/screen_terminal_strings.dart';
@@ -100,6 +101,7 @@ class TerminalPanel extends ConsumerStatefulWidget {
     this.active = true,
     this.embedded = false,
     this.autoStart = false,
+    this.sharedConnection = false,
     this.focusRequest = 0,
     this.isActivePane,
     this.onActivate,
@@ -114,6 +116,9 @@ class TerminalPanel extends ConsumerStatefulWidget {
   final bool active;
   final bool embedded;
   final bool autoStart;
+
+  /// The injected first shell was explicitly opened on an existing SSH route.
+  final bool sharedConnection;
   final int focusRequest;
   final bool Function()? isActivePane;
   final VoidCallback? onActivate;
@@ -178,6 +183,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
   // Reconnect remembers the destination and session mode, never credentials.
   SshTerminalConfig? _lastSshConfig;
   SshForwardingProfileSession? _forwardingProfiles;
+  Terminal? _sharedForwardingTerminal;
   final _forwardingDialogLeases = <SshForwardingProfileSession, int>{};
   Terminal? _tmuxTerminal;
   TmuxTerminalConnection? _tmuxWorkspaceConnection;
@@ -302,9 +308,23 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
   void _attachSession(TerminalSession? session) {
     _ownsSession = session == null;
     _session = session ?? TerminalSession();
+    _sharedForwardingTerminal = widget.sharedConnection
+        ? _session.terminal
+        : null;
     _session.addListener(_onSessionChanged);
     _attachTerminal();
     _syncTmuxWorkspace();
+    _initializeSharedForwarding();
+  }
+
+  void _initializeSharedForwarding() {
+    if (!identical(_sharedForwardingTerminal, _session.terminal) ||
+        !_session.isConnected) {
+      return;
+    }
+    _sharedForwardingTerminal = null;
+    final config = _lastSshConfig;
+    if (config != null) _startSavedForwarding(config);
   }
 
   void _detachTitleHandler() {
@@ -378,6 +398,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     if (forwardingProfiles != null && !forwardingProfiles.isCurrent) {
       _clearForwardingProfiles();
     }
+    _initializeSharedForwarding();
     if (!identical(_observedTerminal, _session.terminal)) _attachTerminal();
     final shell = _session.shellIntegration;
     if (_session.triggerNotificationSerial != _triggerNotificationSerial &&
@@ -1523,6 +1544,29 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
                       ),
                     ),
                   ),
+                  if (_session.sharedConnectionSessionCount > 1 &&
+                      constraints.maxWidth >= 280)
+                    Tooltip(
+                      message: context
+                          .sshSharingTr(
+                            'This SSH connection is shared by {count} terminals. Port forwards and permitted agent access stay active until the last terminal closes.',
+                          )
+                          .replaceAll(
+                            '{count}',
+                            '${_session.sharedConnectionSessionCount}',
+                          ),
+                      child: Padding(
+                        key: const ValueKey('terminal-shared-connection'),
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        child: Icon(
+                          Icons.hub_outlined,
+                          size: 18,
+                          semanticLabel: context.sshSharingTr(
+                            'Shared SSH connection',
+                          ),
+                        ),
+                      ),
+                    ),
                   if (constraints.maxWidth >= 480)
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 8),

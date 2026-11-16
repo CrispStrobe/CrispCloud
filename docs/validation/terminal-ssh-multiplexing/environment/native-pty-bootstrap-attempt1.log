@@ -1,0 +1,48 @@
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_process_test.dart
+lib/services/ssh_terminal_service.dart:890:17: Error: Property 'stdout' cannot be accessed on 'SSHSession?' because it is potentially null.
+ - 'SSHSession' is from 'package:dartssh2/src/ssh_session.dart' ('packages/dartssh2/lib/src/ssh_session.dart').
+Try accessing using ?. instead.
+        channel.stdout,
+                ^^^^^^
+lib/services/ssh_terminal_service.dart:891:17: Error: Property 'stderr' cannot be accessed on 'SSHSession?' because it is potentially null.
+ - 'SSHSession' is from 'package:dartssh2/src/ssh_session.dart' ('packages/dartssh2/lib/src/ssh_session.dart').
+Try accessing using ?. instead.
+        channel.stderr,
+                ^^^^^^
+lib/services/ssh_terminal_service.dart:894:22: Error: A value of type 'SSHSession?' can't be assigned to a variable of type 'SSHSession'.
+ - 'SSHSession' is from 'package:dartssh2/src/ssh_session.dart' ('packages/dartssh2/lib/src/ssh_session.dart').
+      state.commands[channel] = commandOutput;
+                     ^
+lib/services/ssh_terminal_service.dart:897:17: Error: Property 'done' cannot be accessed on 'SSHSession?' because it is potentially null.
+ - 'SSHSession' is from 'package:dartssh2/src/ssh_session.dart' ('packages/dartssh2/lib/src/ssh_session.dart').
+Try accessing using ?. instead.
+        channel.done,
+                ^^^^
+00:00 +0 -1: loading /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_process_test.dart [E]
+  Failed to load "/workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_process_test.dart":
+  Compilation failed for testPath=/workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_process_test.dart: lib/services/ssh_terminal_service.dart:890:17: Error: Property 'stdout' cannot be accessed on 'SSHSession?' because it is potentially null.
+   - 'SSHSession' is from 'package:dartssh2/src/ssh_session.dart' ('packages/dartssh2/lib/src/ssh_session.dart').
+  Try accessing using ?. instead.
+          channel.stdout,
+                  ^^^^^^
+  lib/services/ssh_terminal_service.dart:891:17: Error: Property 'stderr' cannot be accessed on 'SSHSession?' because it is potentially null.
+   - 'SSHSession' is from 'package:dartssh2/src/ssh_session.dart' ('packages/dartssh2/lib/src/ssh_session.dart').
+  Try accessing using ?. instead.
+          channel.stderr,
+                  ^^^^^^
+  lib/services/ssh_terminal_service.dart:894:22: Error: A value of type 'SSHSession?' can't be assigned to a variable of type 'SSHSession'.
+   - 'SSHSession' is from 'package:dartssh2/src/ssh_session.dart' ('packages/dartssh2/lib/src/ssh_session.dart').
+        state.commands[channel] = commandOutput;
+                       ^
+  lib/services/ssh_terminal_service.dart:897:17: Error: Property 'done' cannot be accessed on 'SSHSession?' because it is potentially null.
+   - 'SSHSession' is from 'package:dartssh2/src/ssh_session.dart' ('packages/dartssh2/lib/src/ssh_session.dart').
+  Try accessing using ?. instead.
+          channel.done,
+                  ^^^^
+  .
+00:00 +0 -1: Some tests failed.
+
+Failing tests:
+  /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_process_test.dart: loading /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_process_test.dart

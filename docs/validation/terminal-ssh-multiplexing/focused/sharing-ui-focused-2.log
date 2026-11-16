@@ -1,0 +1,24 @@
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_connection_sharing_test.dart
+00:00 +0: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_connection_sharing_test.dart: a sibling gets its own emulator, input and lifecycle
+00:00 +1: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_connection_sharing_test.dart: a captured factory rejects a replaced source before acquiring
+00:00 +2: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_connection_sharing_test.dart: a captured factory rejects a disconnected source
+00:00 +3: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_connection_sharing_test.dart: a captured factory rechecks route availability at use time
+00:00 +4: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_connection_sharing_test.dart: source disposal after acquisition preserves the pending sibling
+00:00 +5: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_connection_sharing_test.dart: destination cancellation releases its late sibling only
+00:00 +6: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_connection_sharing_test.dart: ordinary transports keep the capability absent
+00:00 +7: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_connection_sharing_test.dart: plain sibling metadata strips every secret and multiplexer option
+00:00 +8: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_shared_terminal_adapters_test.dart: SSH adapter reserves a new ID and always opens an ordinary shell
+00:00 +9: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_shared_terminal_adapters_test.dart: native tmux adapter opens a plain sibling without using its control client
+00:00 +10: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_shared_terminal_adapters_test.dart: opening failure releases the sibling and preserves the source
+00:00 +11: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_shared_terminal_adapters_test.dart: a closed source cannot create a sibling
+00:00 +12: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_shared_terminal_adapters_test.dart: source can close while the separately reserved channel opens
+00:13 +13: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_connection_sharing_widget_test.dart: new SSH shell copies presentation and plain destination only
+00:14 +14: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_connection_sharing_widget_test.dart: explicit SSH split opens an independent side pane
+00:15 +15: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_connection_sharing_widget_test.dart: explicit SSH split opens an independent lower pane
+00:15 +16: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_connection_sharing_widget_test.dart: ordinary new tab does not acquire SSH sharing authority
+00:15 +17: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_connection_sharing_widget_test.dart: menu capability does not follow a reconnected source
+00:16 +18: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_connection_sharing_widget_test.dart: pending sibling cancellation keeps the original route lease
+00:16 +19: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_connection_sharing_widget_test.dart: all eight translations retain shared lifetime and count
+00:16 +20: All tests passed!

@@ -1,0 +1,9 @@
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_connection_sharing_test.dart
+00:00 +0: explicit SSH connection sharing activity on one sibling keeps every lease until the route idles
+ℹ️ [SshTerminalService] Session ho75uuuio00 established to shared.example:2222
+ℹ️ [SshTerminalService] startShell(ho75uuuio01)
+ℹ️ [SshTerminalService] Auto-disconnecting idle SSH route
+ℹ️ [SshTerminalService] Disconnecting session ho75uuuio00
+ℹ️ [SshTerminalService] Disconnecting session ho75uuuio01

@@ -1,0 +1,355 @@
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_terminal_transport_test.dart
+00:00 +0: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_terminal_transport_test.dart: requests the actual terminal geometry and resizes the active PTY
+ℹ️ [SshTerminalService] Session ho7joiartr0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7joiartr0)
+ℹ️ [SshTerminalService] resizeTerminal(ho7joiartr0): 95x31
+ℹ️ [SshTerminalService] Disconnecting session ho7joiartr0
+00:00 +1: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_terminal_transport_test.dart: starts tmux through an exec PTY and preserves input and resize
+ℹ️ [SshTerminalService] Session ho7joibn210 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7joibn210)
+ℹ️ [SshTerminalService] resizeTerminal(ho7joibn210): 95x31
+ℹ️ [SshTerminalService] Disconnecting session ho7joibn210
+00:00 +2: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_terminal_transport_test.dart: attach uses an exact tmux target and never creates a fallback shell
+ℹ️ [SshTerminalService] Session ho7joibrwn0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7joibrwn0)
+ℹ️ [SshTerminalService] Disconnecting session ho7joibrwn0
+00:00 +3: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_terminal_transport_test.dart: native control cleanup remains retryable after transport failure
+ℹ️ [SshTerminalService] Session ho7joibuyp0 established to test.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7joibuyp0
+00:00 +4: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_terminal_transport_test.dart: native cancellation releases its route even if a stream fails
+ℹ️ [SshTerminalService] Session ho7joic37i0 established to test.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7joic37i0
+00:00 +5: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_terminal_transport_test.dart: native tmux preserves raw stdout and separates stderr without a PTY
+ℹ️ [SshTerminalService] Session ho7joic6lh0 established to test.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7joic6lh0
+00:00 +6: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_terminal_transport_test.dart: raw tmux validates mode and name before replacing a running shell
+ℹ️ [SshTerminalService] Session ho7joicjo20 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7joicjo20)
+ℹ️ [SshTerminalService] Disconnecting session ho7joicjo20
+00:00 +7: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_terminal_transport_test.dart: disconnect during native tmux startup closes a late channel
+ℹ️ [SshTerminalService] Session ho7joicpzb0 established to test.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7joicpzb0
+00:00 +8: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_terminal_transport_test.dart: replaced native controller cannot write to or close its replacement
+ℹ️ [SshTerminalService] Session ho7joicugr0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7joicugr0)
+ℹ️ [SshTerminalService] Disconnecting session ho7joicugr0
+00:00 +9: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_terminal_transport_test.dart: native control cancellation releases channel, route and pool slot
+ℹ️ [SshTerminalService] Session ho7joid0kw0 established to test.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7joid0kw0
+00:00 +10: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_terminal_transport_test.dart: native startup output is bounded before the client listens
+ℹ️ [SshTerminalService] Session ho7joid5jv0 established to test.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7joid5jv0
+00:00 +11: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_terminal_transport_test.dart: invalid tmux names leave an existing shell untouched
+ℹ️ [SshTerminalService] Session ho7joidk3s0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7joidk3s0)
+ℹ️ [SshTerminalService] Disconnecting session ho7joidk3s0
+00:00 +12: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_terminal_transport_test.dart: screen uses an exec PTY and preserves input and geometry
+ℹ️ [SshTerminalService] Session ho7joidrmp0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7joidrmp0)
+ℹ️ [SshTerminalService] resizeTerminal(ho7joidrmp0): 95x31
+ℹ️ [SshTerminalService] Disconnecting session ho7joidrmp0
+00:00 +13: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_terminal_transport_test.dart: invalid or conflicting screen options preserve the running shell
+ℹ️ [SshTerminalService] Session ho7joidwkh0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7joidwkh0)
+ℹ️ [SshTerminalService] Disconnecting session ho7joidwkh0
+00:00 +14: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_terminal_transport_test.dart: disconnect during screen startup closes the late channel
+ℹ️ [SshTerminalService] Session ho7joidzgq0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7joidzgq0)
+ℹ️ [SshTerminalService] Disconnecting session ho7joidzgq0
+00:00 +15: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_terminal_transport_test.dart: failed screen exec closes its pool slot without shell fallback
+ℹ️ [SshTerminalService] Session ho7joie2270 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7joie2270)
+ℹ️ [SshTerminalService] Disconnecting session ho7joie2270
+00:00 +16: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_terminal_transport_test.dart: closing screen disconnects only this SSH client without remote commands
+ℹ️ [SshTerminalService] Session ho7joie58c0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7joie58c0)
+ℹ️ [SshTerminalService] Disconnecting session ho7joie58c0
+00:00 +17: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_terminal_transport_test.dart: disconnect during tmux startup closes its late exec channel
+ℹ️ [SshTerminalService] Session ho7joie87x0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7joie87x0)
+ℹ️ [SshTerminalService] Disconnecting session ho7joie87x0
+00:00 +18: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_terminal_transport_test.dart: failed tmux exec releases its pool slot without shell fallback
+ℹ️ [SshTerminalService] Session ho7joieb210 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7joieb210)
+ℹ️ [SshTerminalService] Disconnecting session ho7joieb210
+00:00 +19: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_terminal_transport_test.dart: disconnect closes only the tmux client without sending kill or exit
+ℹ️ [SshTerminalService] Session ho7joiedsz0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7joiedsz0)
+ℹ️ [SshTerminalService] Disconnecting session ho7joiedsz0
+00:00 +20: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_terminal_transport_test.dart: preserves remote exit status without losing final tmux output
+ℹ️ [SshTerminalService] Session ho7joiegf00 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7joiegf00)
+ℹ️ [SshTerminalService] Disconnecting session ho7joiegf00
+00:00 +21: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_terminal_transport_test.dart: output EOF waits for the later SSH exit status before cleanup
+ℹ️ [SshTerminalService] Session ho7joiem6n0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7joiem6n0)
+ℹ️ [SshTerminalService] Disconnecting session ho7joiem6n0
+00:00 +22: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_terminal_transport_test.dart: explicit disconnect still closes SSH while waiting after output EOF
+ℹ️ [SshTerminalService] Session ho7joieose0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7joieose0)
+ℹ️ [SshTerminalService] Disconnecting session ho7joieose0
+00:00 +23: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_terminal_transport_test.dart: observes early channel errors and preserves them for the exit reader
+ℹ️ [SshTerminalService] Session ho7joierb30 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7joierb30)
+ℹ️ [SshTerminalService] Disconnecting session ho7joierb30
+00:00 +24: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_terminal_transport_test.dart: plain output streams remain compatible without exit metadata
+ℹ️ [SshTerminalService] Session ho7joieuax0 established to test.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7joieuax0
+00:00 +25: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_terminal_transport_test.dart: decrypts an encrypted key without sending its passphrase as a password
+ℹ️ [SshTerminalService] Session ho7joiew8c0 established to test.example:22
+ℹ️ [SshTerminalService] Session ho7joiguqo0 established to key.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7joiguqo0
+ℹ️ [SshTerminalService] Disconnecting session ho7joiew8c0
+00:00 +26: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_jump_transport_test.dart: opens one outer socket, authenticates each hop, executes at final host
+00:00 +26: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_terminal_transport_test.dart: rejects missing or incorrect key passphrases before connecting
+ℹ️ [SshTerminalService] Session ho7joigxzb0 established to test.example:22
+❌ [SshTerminalService] Failed to parse or decrypt SSH private key
+❌ [SshTerminalService] Failed to parse or decrypt SSH private key
+00:00 +26: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_jump_transport_test.dart: opens one outer socket, authenticates each hop, executes at final host
+ℹ️ [SshTerminalService] Session ho7joigydx0 established to target.example:2200
+ℹ️ [SshTerminalService] execute(ho7joigydx0)
+ℹ️ [SshTerminalService] Disconnecting session ho7joigydx0
+00:00 +27: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_terminal_transport_test.dart: rejects missing or incorrect key passphrases before connecting
+00:00 +27: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_jump_transport_test.dart: direct connections still use verified socket path when no seam is set
+ℹ️ [SshTerminalService] Session ho7joihqd50 established to target.example:2200
+ℹ️ [SshTerminalService] Disconnecting session ho7joihqd50
+00:00 +28: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_terminal_transport_test.dart: rejects missing or incorrect key passphrases before connecting
+❌ [SshTerminalService] Failed to parse or decrypt SSH private key
+ℹ️ [SshTerminalService] Disconnecting session ho7joigxzb0
+00:00 +29: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_jump_transport_test.dart: mixed hop key authentication never sends a passphrase as a password
+00:00 +29: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_terminal_transport_test.dart: accepts unencrypted keys with omitted or empty passphrases
+ℹ️ [SshTerminalService] Session ho7joik7kk0 established to test.example:22
+00:00 +29: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_jump_transport_test.dart: mixed hop key authentication never sends a passphrase as a password
+ℹ️ [SshTerminalService] Session ho7joikmyj0 established to target.example:2200
+ℹ️ [SshTerminalService] Disconnecting session ho7joikmyj0
+00:00 +30: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_terminal_transport_test.dart: accepts unencrypted keys with omitted or empty passphrases
+ℹ️ [SshTerminalService] Session ho7joilo6t1 established to key.example:22
+ℹ️ [SshTerminalService] Session ho7joilp6m2 established to key.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7joik7kk0
+ℹ️ [SshTerminalService] Disconnecting session ho7joilo6t1
+ℹ️ [SshTerminalService] Disconnecting session ho7joilp6m2
+00:00 +31: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_jump_transport_test.dart: invalid key at any later hop fails before opening the outer socket
+00:00 +31: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_terminal_transport_test.dart: writes UTF-8, arrow keys, tab and control characters without line buffering
+ℹ️ [SshTerminalService] Session ho7joilsu10 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7joilsu10)
+ℹ️ [SshTerminalService] Disconnecting session ho7joilsu10
+00:00 +32: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_jump_transport_test.dart: invalid key at any later hop fails before opening the outer socket
+00:00 +32: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_terminal_transport_test.dart: buffers initial prompt and decodes UTF-8 split across packets
+ℹ️ [SshTerminalService] Session ho7joilycv0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7joilycv0)
+ℹ️ [SshTerminalService] Disconnecting session ho7joilycv0
+00:00 +33: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_jump_transport_test.dart: invalid key at any later hop fails before opening the outer socket
+00:00 +33: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_terminal_transport_test.dart: waits for stderr after stdout EOF and keeps its UTF-8 decoder separate
+ℹ️ [SshTerminalService] Session ho7joim4co0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7joim4co0)
+ℹ️ [SshTerminalService] Disconnecting session ho7joim4co0
+00:00 +34: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_jump_transport_test.dart: invalid key at any later hop fails before opening the outer socket
+00:00 +34: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_terminal_transport_test.dart: reports channel errors instead of silently swallowing stderr errors
+ℹ️ [SshTerminalService] Session ho7joim9az0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7joim9az0)
+ℹ️ [SshTerminalService] Disconnecting session ho7joim9az0
+00:00 +35: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_jump_transport_test.dart: invalid key at any later hop fails before opening the outer socket
+❌ [SshTerminalService] Failed to parse or decrypt SSH private key
+00:00 +35: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_terminal_transport_test.dart: disconnect completes before any output consumer attaches
+ℹ️ [SshTerminalService] Session ho7joimef40 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7joimef40)
+00:00 +36: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_terminal_transport_test.dart: disconnect completes before any output consumer attaches
+ℹ️ [SshTerminalService] Disconnecting session ho7joimef40
+00:00 +37: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_jump_transport_test.dart: unencrypted jump key accepts the default empty passphrase
+00:00 +37: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_terminal_transport_test.dart: cancelling the terminal subscription closes the SSH connection
+ℹ️ [SshTerminalService] Session ho7joimnwx0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7joimnwx0)
+ℹ️ [SshTerminalService] Disconnecting session ho7joimnwx0
+00:00 +38: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_jump_transport_test.dart: unencrypted jump key accepts the default empty passphrase
+00:00 +38: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_terminal_transport_test.dart: restart closes the old shell without disconnecting the replacement
+ℹ️ [SshTerminalService] Session ho7joimr4a0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7joimr4a0)
+ℹ️ [SshTerminalService] startShell(ho7joimr4a0)
+ℹ️ [SshTerminalService] Disconnecting session ho7joimr4a0
+00:00 +39: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_jump_transport_test.dart: unencrypted jump key accepts the default empty passphrase
+00:00 +39: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_terminal_transport_test.dart: disconnect during shell setup closes the late shell
+ℹ️ [SshTerminalService] Session ho7joimuxg0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7joimuxg0)
+ℹ️ [SshTerminalService] Disconnecting session ho7joimuxg0
+00:00 +40: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_jump_transport_test.dart: unencrypted jump key accepts the default empty passphrase
+00:00 +40: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_terminal_transport_test.dart: failed shell setup releases the connection and its pool slot
+ℹ️ [SshTerminalService] Session ho7joimy2p0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7joimy2p0)
+ℹ️ [SshTerminalService] Disconnecting session ho7joimy2p0
+00:00 +41: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_jump_transport_test.dart: unencrypted jump key accepts the default empty passphrase
+00:00 +41: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_terminal_transport_test.dart: transport completion does not discard output still queued in channels
+ℹ️ [SshTerminalService] Session ho7join15r0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7join15r0)
+ℹ️ [SshTerminalService] Disconnecting session ho7join15r0
+00:00 +42: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_jump_transport_test.dart: unencrypted jump key accepts the default empty passphrase
+00:00 +42: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_terminal_transport_test.dart: noninteractive execute also decodes UTF-8
+ℹ️ [SshTerminalService] Session ho7join4g10 established to test.example:22
+ℹ️ [SshTerminalService] execute(ho7join4g10)
+ℹ️ [SshTerminalService] Disconnecting session ho7join4g10
+00:00 +43: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_jump_transport_test.dart: unencrypted jump key accepts the default empty passphrase
+00:00 +43: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_terminal_transport_test.dart: validates actual start and resize entry points before requesting a PTY
+ℹ️ [SshTerminalService] Session ho7joinbde0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho7joinbde0)
+ℹ️ [SshTerminalService] Disconnecting session ho7joinbde0
+00:00 +44: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_jump_transport_test.dart: unencrypted jump key accepts the default empty passphrase
+00:00 +44: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_terminal_transport_test.dart: dispose rejects and closes a connection that completes later
+ℹ️ [SshTerminalService] Session ho7joine8j0 established to test.example:22
+❌ [SshTerminalService] SSH connect failed
+  Error: Bad state: SSH connection was cancelled
+ℹ️ [SshTerminalService] Disconnecting session ho7joine8j0
+00:00 +45: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_jump_transport_test.dart: unencrypted jump key accepts the default empty passphrase
+00:00 +45: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_terminal_transport_test.dart: pool limit includes connections still authenticating
+ℹ️ [SshTerminalService] Session ho7joinhbc0 established to test.example:22
+ℹ️ [SshTerminalService] Session ho7joiniti0 established to host0:22
+ℹ️ [SshTerminalService] Session ho7joinj271 established to host1:22
+ℹ️ [SshTerminalService] Session ho7joinj772 established to host2:22
+ℹ️ [SshTerminalService] Session ho7joinjbl3 established to host3:22
+ℹ️ [SshTerminalService] Session ho7joinjg84 established to host4:22
+ℹ️ [SshTerminalService] Disconnecting session ho7joiniti0
+ℹ️ [SshTerminalService] Disconnecting session ho7joinj271
+ℹ️ [SshTerminalService] Disconnecting session ho7joinj772
+ℹ️ [SshTerminalService] Disconnecting session ho7joinjbl3
+ℹ️ [SshTerminalService] Disconnecting session ho7joinjg84
+ℹ️ [SshTerminalService] Disconnecting session ho7joinhbc0
+00:00 +46: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_jump_transport_test.dart: unencrypted jump key accepts the default empty passphrase
+ℹ️ [SshTerminalService] Session ho7joio1wu0 established to target.example:2200
+ℹ️ [SshTerminalService] Disconnecting session ho7joio1wu0
+00:00 +47: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_jump_transport_test.dart: private-key targets retain the password-authenticated jump route
+ℹ️ [SshTerminalService] Session ho7joiqm5g0 established to target.example:2200
+ℹ️ [SshTerminalService] Disconnecting session ho7joiqm5g0
+00:00 +48: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_jump_transport_test.dart: disconnect releases channels without waiting for a remote close reply
+ℹ️ [SshTerminalService] Session ho7joiqs5z0 established to target.example:2200
+ℹ️ [SshTerminalService] Disconnecting session ho7joiqs5z0
+00:00 +49: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_jump_transport_test.dart: rejecting a middle host key prevents downstream auth and closes route
+❌ [SshTerminalService] SSH connect failed
+  Error: Verify this server’s SSH host key before connecting: SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+00:00 +50: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_jump_transport_test.dart: changed middle host key fails closed without offering a trust override
+❌ [SshTerminalService] SSH connect failed
+  Error: SSH host key changed for inner.example:22. Expected SHA256:ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ; received SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA.
+00:00 +51: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_jump_transport_test.dart: forwarding failure releases already authenticated hops
+❌ [SshTerminalService] SSH connect failed
+  Error: Bad state: Forwarding rejected
+00:00 +52: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_jump_transport_test.dart: final authentication failure closes the final client and its ancestors
+❌ [SshTerminalService] SSH connect failed
+  Error: Bad state: Authentication failed
+00:00 +53: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_jump_transport_test.dart: disconnectAll closes a client while its host-key prompt is pending
+❌ [SshTerminalService] SSH connect failed
+  Error: Verify this server’s SSH host key before connecting: SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+00:00 +54: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_jump_transport_test.dart: cancellation closes a forwarded socket that arrives later
+❌ [SshTerminalService] SSH connect failed
+  Error: Bad state: SSH connection was cancelled
+00:00 +55: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_jump_transport_test.dart: dispose closes an outer socket that arrives after cancellation
+❌ [SshTerminalService] SSH connect failed
+  Error: Bad state: SSH connection was cancelled
+00:00 +56: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_jump_transport_test.dart: route snapshot cannot change while the first connection awaits I/O
+ℹ️ [SshTerminalService] Session ho7jois47z0 established to target.example:2200
+ℹ️ [SshTerminalService] Disconnecting session ho7jois47z0
+00:00 +57: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_jump_transport_test.dart: each attempt retains its captured host-key prompt for every hop
+ℹ️ [SshTerminalService] Session ho7jois8h20 established to target.example:2200
+ℹ️ [SshTerminalService] Disconnecting session ho7jois8h20
+00:00 +58: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_jump_transport_test.dart: invalid duplicate or oversized routes fail before network I/O
+00:00 +59: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_jump_transport_test.dart: tab cancellation prevents later hops without disconnecting other tabs
+ℹ️ [SshTerminalService] Session ho7joisgrt0 established to other.example:22
+❌ [SshTerminalService] SSH connect failed
+  Error: Bad state: SSH connection was cancelled
+ℹ️ [SshTerminalService] execute(ho7joisgrt0)
+ℹ️ [SshTerminalService] Disconnecting session ho7joisgrt0
+00:00 +60: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_jump_transport_test.dart: already stale tab attempts never open a socket
+00:00 +61: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_jump_transport_test.dart: a route consumes one terminal pool slot and cleanup makes it reusable
+ℹ️ [SshTerminalService] Session ho7joisnde0 established to target.example:2200
+ℹ️ [SshTerminalService] Session ho7joisnwv1 established to other1.example:22
+ℹ️ [SshTerminalService] Session ho7joisoad2 established to other2.example:22
+ℹ️ [SshTerminalService] Session ho7joisotb3 established to other3.example:22
+ℹ️ [SshTerminalService] Session ho7joisp8q4 established to other4.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7joisnde0
+ℹ️ [SshTerminalService] Session ho7joisqyt5 established to target.example:2200
+ℹ️ [SshTerminalService] Disconnecting session ho7joisnwv1
+ℹ️ [SshTerminalService] Disconnecting session ho7joisoad2
+ℹ️ [SshTerminalService] Disconnecting session ho7joisotb3
+ℹ️ [SshTerminalService] Disconnecting session ho7joisp8q4
+ℹ️ [SshTerminalService] Disconnecting session ho7joisqyt5
+00:00 +62: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_jump_transport_test.dart: a failed client constructor closes its socket and previous hops
+❌ [SshTerminalService] SSH connect failed
+  Error: Bad state: Client constructor failed
+00:01 +63: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_agent_route_test.dart: each agent-authenticated hop verifies its host before signing
+ℹ️ [SshTerminalService] Session ho7joj8kvf0 established to final.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7joj8kvf0
+00:01 +64: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_agent_route_test.dart: agent authentication alone never forwards the agent
+ℹ️ [SshTerminalService] Session ho7joj9n2y0 established to final.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7joj9n2y0
+00:01 +65: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_agent_route_test.dart: password authentication forwards only after explicit permission at final host
+ℹ️ [SshTerminalService] Session ho7joj9sp70 established to final.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7joj9sp70
+00:01 +66: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_agent_route_test.dart: published route retains agent access after the opener lease ends
+ℹ️ [SshTerminalService] Session ho7joja3kl0 established to final.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7joja3kl0
+00:01 +67: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_agent_route_test.dart: outer host-key rejection never requests an agent signature
+❌ [SshTerminalService] SSH connect failed
+  Error: Verify this server’s SSH host key before connecting: SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+00:01 +68: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_agent_route_test.dart: final host-key rejection allows only the already verified jump signature
+❌ [SshTerminalService] SSH connect failed
+  Error: Verify this server’s SSH host key before connecting: SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+00:01 +69: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_agent_route_test.dart: ordinary password routes never create an agent capability
+ℹ️ [SshTerminalService] Session ho7jojawc10 established to final.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7jojawc10
+00:01 +70: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_agent_route_test.dart: mixed agent jump and password final target do not change authentication intent
+ℹ️ [SshTerminalService] Session ho7jojb3mq0 established to final.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7jojb3mq0
+00:01 +71: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_agent_route_test.dart: dispose cancels pending agent open and closes the late transport
+❌ [SshTerminalService] SSH connect failed
+  Error: SSH agent access has ended.
+00:01 +72: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_agent_route_test.dart: dispose during signature revokes local requests and publishes no session
+❌ [SshTerminalService] SSH connect failed
+  Error: SSH agent access has ended.
+00:01 +73: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_agent_route_test.dart: remote closure immediately revokes forwarding authority
+ℹ️ [SshTerminalService] Session ho7jojbpa90 established to final.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7jojbpa90
+00:01 +74: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_agent_route_test.dart: already canceled attempt never opens the local agent
+00:01 +75: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_multiplexer_discovery_test.dart: uses only the fixed no-PTY command and closes a successful channel
+ℹ️ [SshTerminalService] Session ho7jojdxrl0 established to host.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7jojdxrl0
+00:01 +76: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_multiplexer_discovery_test.dart: waits for a late exit status after both streams reach EOF
+ℹ️ [SshTerminalService] Session ho7jojeg8e0 established to host.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7jojeg8e0
+00:01 +77: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_multiplexer_discovery_test.dart: exit status never discards output queued afterwards
+ℹ️ [SshTerminalService] Session ho7jojejay0 established to host.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7jojejay0
+00:01 +78: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_multiplexer_discovery_test.dart: stdout and stderr share one byte budget
+ℹ️ [SshTerminalService] Session ho7jojemia0 established to host.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7jojemia0
+00:01 +79: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_multiplexer_discovery_test.dart: missing tool errors remain errors and still close the channel
+ℹ️ [SshTerminalService] Session ho7jojeuuw0 established to host.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7jojeuuw0
+00:01 +80: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_multiplexer_discovery_test.dart: screen discovery uses full IDs without opening an interactive shell
+ℹ️ [SshTerminalService] Session ho7jojextn0 established to host.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7jojextn0
+00:01 +81: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_multiplexer_discovery_test.dart: invalid UTF-8 is rejected instead of changing an attach target
+ℹ️ [SshTerminalService] Session ho7jojf28r0 established to host.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7jojf28r0
+00:01 +82: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_multiplexer_discovery_test.dart: a quiet stale tab cancels without killing the verified connection
+ℹ️ [SshTerminalService] Session ho7jojf5bv0 established to host.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7jojf5bv0
+00:02 +83: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_multiplexer_discovery_test.dart: a request returning after cancellation closes its late channel
+ℹ️ [SshTerminalService] Session ho7jojhgk40 established to host.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7jojhgk40
+00:02 +84: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_multiplexer_discovery_test.dart: disconnecting the connection cancels an in-flight listing
+ℹ️ [SshTerminalService] Session ho7jojjqcc0 established to host.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7jojjqcc0
+00:02 +85: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_multiplexer_discovery_test.dart: one session cannot accumulate concurrent discovery channels
+ℹ️ [SshTerminalService] Session ho7jojjtka0 established to host.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7jojjtka0
+00:02 +86: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_multiplexer_discovery_test.dart: transport stream errors fail and release the listing channel
+ℹ️ [SshTerminalService] Session ho7jojjxe70 established to host.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7jojjxe70
+00:02 +87: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+ℹ️ [SshTerminalService] Session ho7jojk0nm0 established to host.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7jojk0nm0
+00:12 +88: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_multiplexer_discovery_test.dart: synchronous exec failures use the same bounded cleanup path
+ℹ️ [SshTerminalService] Session ho7jopk7oy0 established to host.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7jopk7oy0
+00:12 +89: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_multiplexer_discovery_test.dart: already stale requests never send a server command
+ℹ️ [SshTerminalService] Session ho7jopkglv0 established to host.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7jopkglv0
+00:12 +90: All tests passed!
