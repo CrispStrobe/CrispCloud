@@ -1,0 +1,44 @@
+{
+  "phase": "web",
+  "command": [
+    "flutter",
+    "build",
+    "web",
+    "--release",
+    "--no-pub",
+    "--no-wasm-dry-run",
+    "--dart-define=APP_VERSION=1.3.4+28",
+    "--dart-define=GIT_HASH=e4c559af"
+  ],
+  "head_at_start": "e4c559afcf22401a843cf0958276df04531d4775",
+  "started_utc": "2026-11-16T11:29:15.996487+00:00",
+  "watched_source_count": 5556,
+  "github_actions_queried_or_awaited": false,
+  "finished_utc": "2026-11-16T11:32:55.762231+00:00",
+  "seconds": 219.762,
+  "exit_code": 0,
+  "changed_sources": [],
+  "main_dart_js": {
+    "bytes": 29534676,
+    "sha256": "a52c8d5fbab1980585e815d2ee5108a8aa1c8c33a9a5a8d88e87c3e649d88e69"
+  },
+  "invocation": [
+    "../toolchain/run",
+    "env",
+    "CARGO_NET_OFFLINE=true",
+    "python3",
+    "docs/validation/terminal-session-optimization-20261116/web-resource-runner.py",
+    "--run",
+    "--heap-mb",
+    "4096",
+    "--repo",
+    ".",
+    "--toolchain",
+    "../toolchain",
+    "--evidence",
+    "docs/validation/terminal-session-optimization-20261116"
+  ],
+  "environment": {
+    "CARGO_NET_OFFLINE": "true"
+  }
+}

@@ -1,0 +1,167 @@
+{
+  "recorded_utc": "2026-11-16T11:34:58.314589+00:00",
+  "source_commit": "047adfb944ad9f46acc65e0c8c38376b3949f3da",
+  "recorded_at_commit": "e4c559afcf22401a843cf0958276df04531d4775",
+  "scope": "The source/test/dependency file set selected by tool/run_terminal_validation.py.",
+  "watched_source_count": 5556,
+  "frozen_watched_source_count": 5556,
+  "watched_path_sets_equal": true,
+  "watched_files_match_frozen_and_current_committed_blobs_and_modes": true,
+  "source_errors": [],
+  "github_actions_queried_or_awaited": false,
+  "phases": {
+    "native": {
+      "head_at_start": "047adfb944ad9f46acc65e0c8c38376b3949f3da",
+      "phase_head_is_ancestor": true,
+      "watched_paths_changed_between_frozen_source_and_phase_head": [],
+      "receipt": "native.json",
+      "receipt_sha256": "470816e821b657cd2f9ebfec72a7390e8194272f7f094f9c111a2e4309548ed2",
+      "inventory": "native-source-sha256.json.gz",
+      "inventory_sha256": "807772852da14a2cb168821131fe6a027ad922086eef1ae247dc5775adbac6a0",
+      "source_inventory_matches_current": true,
+      "watched_source_count_matches": true,
+      "changed_sources_during_phase": [],
+      "exit_code": 0,
+      "seconds": 294.615,
+      "counts": {
+        "passed": 1075,
+        "skipped": 2,
+        "failed": 0
+      },
+      "required_command_suite_and_count_coverage": true
+    },
+    "engine-final": {
+      "head_at_start": "047adfb944ad9f46acc65e0c8c38376b3949f3da",
+      "phase_head_is_ancestor": true,
+      "watched_paths_changed_between_frozen_source_and_phase_head": [],
+      "receipt": "engine-final.json",
+      "receipt_sha256": "f117b976a8a272cbe1db83e0234dd000f29a3687803d7e0c08ffa96bc8939973",
+      "inventory": "engine-final-source-sha256.json.gz",
+      "inventory_sha256": "807772852da14a2cb168821131fe6a027ad922086eef1ae247dc5775adbac6a0",
+      "source_inventory_matches_current": true,
+      "watched_source_count_matches": true,
+      "changed_sources_during_phase": [],
+      "exit_code": 0,
+      "seconds": 6.472,
+      "counts": {
+        "passed": 209,
+        "skipped": 0,
+        "failed": 0
+      },
+      "required_command_suite_and_count_coverage": true
+    },
+    "live": {
+      "head_at_start": "047adfb944ad9f46acc65e0c8c38376b3949f3da",
+      "phase_head_is_ancestor": true,
+      "watched_paths_changed_between_frozen_source_and_phase_head": [],
+      "receipt": "live.json",
+      "receipt_sha256": "8b1987c6eae1b5a99128330c100467ea58e800c7cd5257b5c726a3be451fa432",
+      "inventory": "live-source-sha256.json.gz",
+      "inventory_sha256": "807772852da14a2cb168821131fe6a027ad922086eef1ae247dc5775adbac6a0",
+      "source_inventory_matches_current": true,
+      "watched_source_count_matches": true,
+      "changed_sources_during_phase": [],
+      "exit_code": 0,
+      "seconds": 156.502,
+      "counts": {
+        "passed": 22,
+        "skipped": 3,
+        "failed": 0
+      },
+      "required_command_suite_and_count_coverage": true
+    },
+    "visual": {
+      "head_at_start": "0a400e74876949ae9c3196c71936a785df123e36",
+      "phase_head_is_ancestor": true,
+      "watched_paths_changed_between_frozen_source_and_phase_head": [],
+      "receipt": "visual.json",
+      "receipt_sha256": "2754c8a4c1a0b406a70cfbf4c2ac479abc96dabb33256e8ee9f865466a0f5dc3",
+      "inventory": "visual-source-sha256.json.gz",
+      "inventory_sha256": "807772852da14a2cb168821131fe6a027ad922086eef1ae247dc5775adbac6a0",
+      "source_inventory_matches_current": true,
+      "watched_source_count_matches": true,
+      "changed_sources_during_phase": [],
+      "exit_code": 0,
+      "seconds": 76.37,
+      "counts": {
+        "passed": 2,
+        "skipped": 0,
+        "failed": 0
+      },
+      "required_command_suite_and_count_coverage": true
+    },
+    "analysis": {
+      "head_at_start": "0a400e74876949ae9c3196c71936a785df123e36",
+      "phase_head_is_ancestor": true,
+      "watched_paths_changed_between_frozen_source_and_phase_head": [],
+      "receipt": "analysis.json",
+      "receipt_sha256": "0311fa64d3985ef505ecd22b39eb5075f25f29c1d5fed6f978cd1fbf192ea487",
+      "inventory": "analysis-source-sha256.json.gz",
+      "inventory_sha256": "807772852da14a2cb168821131fe6a027ad922086eef1ae247dc5775adbac6a0",
+      "source_inventory_matches_current": true,
+      "watched_source_count_matches": true,
+      "changed_sources_during_phase": [],
+      "exit_code": 0,
+      "seconds": 27.231,
+      "counts": null,
+      "required_command_suite_and_count_coverage": true
+    },
+    "format": {
+      "head_at_start": "0a400e74876949ae9c3196c71936a785df123e36",
+      "phase_head_is_ancestor": true,
+      "watched_paths_changed_between_frozen_source_and_phase_head": [],
+      "receipt": "format.json",
+      "receipt_sha256": "fc7898feff926d102b23d00bea8a3ec5edab1ab878ef0b19abee471b115560ca",
+      "inventory": "format-source-sha256.json.gz",
+      "inventory_sha256": "807772852da14a2cb168821131fe6a027ad922086eef1ae247dc5775adbac6a0",
+      "source_inventory_matches_current": true,
+      "watched_source_count_matches": true,
+      "changed_sources_during_phase": [],
+      "exit_code": 0,
+      "seconds": 1.344,
+      "counts": null,
+      "required_command_suite_and_count_coverage": true
+    },
+    "web": {
+      "head_at_start": "e4c559afcf22401a843cf0958276df04531d4775",
+      "phase_head_is_ancestor": true,
+      "watched_paths_changed_between_frozen_source_and_phase_head": [],
+      "receipt": "web.json",
+      "receipt_sha256": "e1d3414cb5bb017a7454d1b2107047fa4124b143cd41b1468d81588966ef99be",
+      "inventory": "web-source-sha256.json.gz",
+      "inventory_sha256": "807772852da14a2cb168821131fe6a027ad922086eef1ae247dc5775adbac6a0",
+      "source_inventory_matches_current": true,
+      "watched_source_count_matches": true,
+      "changed_sources_during_phase": [],
+      "exit_code": 0,
+      "seconds": 219.762,
+      "counts": null,
+      "required_command_suite_and_count_coverage": true
+    }
+  },
+  "web": {
+    "heap_mb": 4096,
+    "observed_compiler_commands": [
+      "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartaotruntime --old_gen_heap_size=4096 /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/snapshots/dart2js_aot.dart.snapshot --libraries-spec=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/lib/libraries.json --cfe-invocation-modes=compile --invoker=dart_cli --platform-binaries=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_web_sdk/kernel --invoker=flutter_tool -Ddart.vm.product=true -DAPP_VERSION=1.3.4+28 -DGIT_HASH=e4c559af -DFLUTTER_BUILD_NAME=1.3.4 -DFLUTTER_BUILD_NUMBER=28 -DFLUTTER_VERSION=3.47.8 -DFLUTTER_CHANNEL=[user-branch] -DFLUTTER_GIT_URL=https://github.com/flutter/flutter.git -DFLUTTER_FRAMEWORK_REVISION=737ba8f885 -DFLUTTER_ENGINE_REVISION=cf636b1dfb -DFLUTTER_DART_VERSION=3.13.7 -DFLUTTER_WEB_USE_SKIA=true -DFLUTTER_WEB_USE_SKWASM=false -DFLUTTER_WEB_CANVASKIT_URL=https://www.gstatic.com/flutter-canvaskit/cf636b1dfb818dd6a3ff16e390e93b1a036969c8/ --write-resources --native-null-assertions --no-source-maps -O4 --minify -o /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/377ba1b2b04ecc42e686a9857da0a0fa/app.dill --packages=/workspace/scratch/cb0df5963965/crispcloud/.dart_tool/package_config.json --cfe-only /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/377ba1b2b04ecc42e686a9857da0a0fa/main.dart",
+      "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartaotruntime --old_gen_heap_size=4096 /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/snapshots/dart2js_aot.dart.snapshot --libraries-spec=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/lib/libraries.json --cfe-invocation-modes=compile --invoker=dart_cli --platform-binaries=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_web_sdk/kernel --invoker=flutter_tool -Ddart.vm.product=true -DAPP_VERSION=1.3.4+28 -DGIT_HASH=e4c559af -DFLUTTER_BUILD_NAME=1.3.4 -DFLUTTER_BUILD_NUMBER=28 -DFLUTTER_VERSION=3.47.8 -DFLUTTER_CHANNEL=[user-branch] -DFLUTTER_GIT_URL=https://github.com/flutter/flutter.git -DFLUTTER_FRAMEWORK_REVISION=737ba8f885 -DFLUTTER_ENGINE_REVISION=cf636b1dfb -DFLUTTER_DART_VERSION=3.13.7 -DFLUTTER_WEB_USE_SKIA=true -DFLUTTER_WEB_USE_SKWASM=false -DFLUTTER_WEB_CANVASKIT_URL=https://www.gstatic.com/flutter-canvaskit/cf636b1dfb818dd6a3ff16e390e93b1a036969c8/ --write-resources --native-null-assertions --no-source-maps -O4 --minify -o /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/377ba1b2b04ecc42e686a9857da0a0fa/main.dart.js /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/377ba1b2b04ecc42e686a9857da0a0fa/app.dill"
+    ],
+    "standard_o4_and_minify_observed": true,
+    "sdk_restored_exactly": true,
+    "same_successful_build_attempt": true,
+    "compiler_git_hash_matches_receipt": true,
+    "sdk_path_matches_prepared_toolchain": true,
+    "sdk_receipt_matches_pinned_sdk": true,
+    "sdk_receipt_modes_match_pinned_sdk": true,
+    "current_sdk_hashes_match_original": true,
+    "current_sdk_modes_match_original": true,
+    "main_dart_js": {
+      "bytes": 29534676,
+      "sha256": "a52c8d5fbab1980585e815d2ee5108a8aa1c8c33a9a5a8d88e87c3e649d88e69"
+    },
+    "artifact_matches_receipt": true
+  },
+  "all_source_inventories_identical_and_unchanged": true,
+  "all_selected_phases_passed": true,
+  "sdk_integrity_passed": true,
+  "complete_acceptance": true
+}

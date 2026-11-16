@@ -105,6 +105,7 @@ pass against the final pin and SSH dependency.
 | Formatting | **164 Dart files**, zero changes | [Format receipt](format.json), [log](format.log.gz) |
 | Production-widget capture tests | **2 passed**, nine desktop/320×320 PNGs, no test failures | [Visual receipt](visual.json), [captures](visuals/) |
 | Exact Screen resolver | 15 initial shell cases and 32 additional tab-boundary cases pass | [Initial proof](screen-resolver-regression.json), [tab proof](screen-tab-regression.json) |
+| Standard optimized web release | **Passed**, O4 and minification retained; 219.762 seconds | [Web receipt](web.json), [log](web.log.gz), [resource/restoration record](web-resource-run.json) |
 
 The native skips are the macOS-only shell case and Windows ConPTY on this Linux
 host. Actual Linux PTY allocation, resizing, Unicode input/output, Ctrl+C and
@@ -112,9 +113,13 @@ disposal run in the complete cohort. Native and engine source fingerprints match
 exactly, and neither run changed a watched file. Live SSH uses disposable local
 servers and keys. It passes jump-route authentication, forwarding, rekeying and
 shared-route cleanup; two optional SSH PTY tests and one real Unix-agent test
-are skipped with their reasons retained in the log. All six completed phases
-have identical source fingerprints and no changed watched files. Only the full
-optimized web release remains in progress.
+are skipped with their reasons retained in the log. **All seven completed
+phases have identical source fingerprints and no changed watched files.**
+The [final acceptance verification](acceptance-source-verification.json) binds
+the immutable frozen path set, every committed blob/mode, required commands and
+suite counts, successful web-attempt timestamps/checksums, compiler arguments,
+output hash and fixed SDK identities. Its [reproducible verifier](verify-final-source.py)
+passes, and an independent review confirms those checks.
 
 The captured recovery dialog keeps its actions visible while its compact body
 scrolls; native tmux retains a pane picker when only one pane fits. Captures use
@@ -139,7 +144,37 @@ implicit compiler arguments, release flags, lock and restoration paths while
 allowing only 2,048/3,072/4,096 MB compiler heap caps. The
 [3,072 MB preflight](resource-3072-preflight/web-resource-preflight.json) verifies
 the effective VM flag and compiles/runs an O4/minified probe without replacing
-SDK files. It is preparation for the complete retry, not full app acceptance.
+SDK files. The full 3,072 MB attempt then reports compiler exit **253**, explicitly
+exhausting its heap during global type inference. That separate result is kept
+under [`development/web-3072-heap-exhaustion`](development/web-3072-heap-exhaustion/).
+
+The final **4,096 MB** retry succeeds under the reduced system memory pressure:
+219.762 seconds for validation and 220.337 seconds including resource monitoring
+and cleanup. The observed compiler command retains **`-O4 --minify`**. Peak owned
+RSS is 3,416,720 kB and minimum available memory is 3,804,452 kB. All three pinned
+SDK binaries/snapshots and their modes are restored exactly. The final output is
+**29,534,676 bytes**, SHA-256
+`a52c8d5fbab1980585e815d2ee5108a8aa1c8c33a9a5a8d88e87c3e649d88e69`.
+It embeds application version `1.3.4+28` and source-equivalent build commit
+`e4c559af`. Flutter is **3.47.8** and Dart is **3.13.7**. No optimization flag,
+application source, dependency declaration or lockfile was weakened to obtain
+the successful build.
+
+## Remaining platform checks
+
+These are limits of this host and the selected local qualification:
+
+- The macOS shell and Windows ConPTY cases require their respective operating
+  systems. The two optional live-SSH PTY cases were not enabled on this host.
+- The host rejects Unix-socket creation. The actual Unix-agent case is skipped,
+  and the [real tmux probe](live-tmux/live-tmux.json) completes **zero feature
+  tests**. Screen shell fixtures do not claim a live GNU Screen daemon run.
+- Production-widget captures and a successful optimized web compile do not
+  establish packaged-platform or browser-runtime acceptance. The capture-font
+  and visual-accessibility limits are recorded in the image review.
+
+Focused development test counts overlap the final cohorts and must not be
+added to them. No GitHub Actions run was queried, awaited or rerun.
 
 ## Development findings retained
 

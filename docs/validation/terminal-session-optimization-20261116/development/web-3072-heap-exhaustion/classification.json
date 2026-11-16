@@ -1,0 +1,12 @@
+{
+  "recorded_utc": "2026-11-16T11:29:15.189963+00:00",
+  "classification": "Dart2js explicitly reports Out of Memory and exhausted heap space under the 3072 MB old-generation limit.",
+  "compiler_exit_code": 253,
+  "application_validation_exit_code": 1,
+  "sdk_restored_exactly": true,
+  "unchanged_source_count": 5556,
+  "peak_owned_rss_kb": 3320928,
+  "minimum_available_memory_kb": 3727936,
+  "next_step": "The lower heap cannot complete global type inference. Retry the original 4096 MB compiler-only budget under the currently reduced system memory pressure, preserving O4/minification and all application inputs.",
+  "github_actions_queried_or_awaited": false
+}
