@@ -227,6 +227,10 @@ abstract final class OdsSheetReader {
           : _attribute(master, 'page-layout-name', _style);
       final layout = layoutName == null ? null : pageLayouts[layoutName];
       if (layout != null) sheet.pageSetup = _odsPageSetup(layout);
+      if (master != null) {
+        final headerFooter = _odsHeaderFooter(master);
+        if (headerFooter != null) sheet.headerFooter = headerFooter;
+      }
       final printRanges = _attribute(table, 'print-ranges', _table);
       if (printRanges != null) {
         for (final part in printRanges.split(RegExp(r'\s+'))) {
@@ -1921,6 +1925,99 @@ abstract final class OdsSheetReader {
     // properties; append them after the named chain so explicit styles win.
     if (defaultStyle != null) result.add(defaultStyle);
     return result;
+  }
+
+  static SmlHeaderFooter? _odsHeaderFooter(XmlElement master) {
+    final headerFooter = SmlHeaderFooter();
+    var found = false;
+    void read(XmlElement container, {required bool header}) {
+      final sections = <String, String>{};
+      var hasRegion = false;
+      for (final child in container.childElements) {
+        if (child.localName.startsWith('region-')) {
+          hasRegion = true;
+          sections[child.localName.substring(7)] = _odsHeaderText(child);
+        }
+      }
+      if (!hasRegion) {
+        final text = _odsHeaderText(container);
+        if (text.isNotEmpty) sections['center'] = text;
+      }
+      for (final entry in sections.entries) {
+        final value = entry.value.trim();
+        if (value.isEmpty) continue;
+        found = true;
+        switch (header ? entry.key : 'footer-${entry.key}') {
+          case 'left':
+            headerFooter.headerLeft = value;
+          case 'center':
+            headerFooter.headerCenter = value;
+          case 'right':
+            headerFooter.headerRight = value;
+          case 'footer-left':
+            headerFooter.footerLeft = value;
+          case 'footer-center':
+            headerFooter.footerCenter = value;
+          case 'footer-right':
+            headerFooter.footerRight = value;
+        }
+      }
+    }
+
+    for (final child in master.childElements) {
+      if (child.localName == 'header') read(child, header: true);
+      if (child.localName == 'footer') read(child, header: false);
+    }
+    return found ? headerFooter : null;
+  }
+
+  static String _odsHeaderText(XmlElement root) {
+    final text = StringBuffer();
+    var paragraphs = 0;
+    void walk(XmlNode node) {
+      if (node is XmlText) {
+        text.write(node.text);
+        return;
+      }
+      if (node is XmlCdata) {
+        text.write(node.text);
+        return;
+      }
+      if (node is! XmlElement) return;
+      switch (node.localName) {
+        case 'p':
+          if (paragraphs++ > 0) text.write(' ');
+          for (final child in node.children) {
+            walk(child);
+          }
+        case 's':
+          text.write(' ' * (int.tryParse(node.getAttribute('c') ?? '') ?? 1));
+        case 'tab':
+          text.write('\t');
+        case 'line-break':
+          text.write('\n');
+        case 'page-number':
+          text.write('&P');
+        case 'page-count':
+          text.write('&N');
+        case 'date':
+          text.write('&D');
+        case 'time':
+          text.write('&T');
+        case 'sheet-name':
+          text.write('&A');
+        case 'title':
+        case 'file-name':
+          text.write('&F');
+        default:
+          for (final child in node.children) {
+            walk(child);
+          }
+      }
+    }
+
+    walk(root);
+    return text.toString().replaceAll(RegExp(r'[ \t]+'), ' ').trim();
   }
 
   static SmlPageSetup _odsPageSetup(XmlElement layout) {

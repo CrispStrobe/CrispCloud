@@ -80,6 +80,28 @@ void main() {
     expect(reopened.formulaNames.single.name, 'Total');
   });
 
+  test('writes header and footer sections', () {
+    final sheet = SmlWorksheet(name: 'Data', sheetId: 1)
+      ..headerFooter = SmlHeaderFooter(
+        headerLeft: 'Left',
+        headerCenter: 'Page &P of &N',
+        headerRight: '&A',
+        footerLeft: '&D',
+        footerCenter: '&F',
+        footerRight: '&T',
+      );
+    final reopened = OdsSheetReader.readBytes(
+      OdsSheetWriter.writeBytes(SmlWorkbook(sheets: [sheet])),
+    );
+    final headerFooter = reopened.sheets.first.headerFooter!;
+    expect(headerFooter.headerLeft, 'Left');
+    expect(headerFooter.headerCenter, 'Page &P of &N');
+    expect(headerFooter.headerRight, '&A');
+    expect(headerFooter.footerLeft, '&D');
+    expect(headerFooter.footerCenter, '&F');
+    expect(headerFooter.footerRight, '&T');
+  });
+
   test('writes authored page setup', () {
     final sheet = SmlWorksheet(name: 'Data', sheetId: 1)
       ..pageSetup = SmlPageSetup(
