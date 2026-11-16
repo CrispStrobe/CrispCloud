@@ -1,0 +1,132 @@
+[
+  {
+    "phase": "tmux-live",
+    "head": "76f38f861c836f3f646360bf34175059db5e44db",
+    "command": [
+      "python3",
+      "tool/run_tmux_control_live_smoke.py",
+      "--flutter",
+      "/Users/christianstrobele/flutter-3.47.8/bin/flutter",
+      "--tmux",
+      "/opt/homebrew/bin/tmux",
+      "--evidence",
+      "/private/tmp/crispcloud-terminal-ods-isolated/docs/validation/terminal-ods-refresh-20261116/live-tmux"
+    ],
+    "cwd": "/private/tmp/crispcloud-terminal-ods-isolated",
+    "started_utc": "2026-11-16T09:37:17.349129+00:00",
+    "seconds": 36.474,
+    "exit_code": 0,
+    "changed_sources": [],
+    "log": "tmux-live.log",
+    "source_sha256": "252c440801e5c78e5ce0d8773d484fdceec4a39e7d022d4194f53c4873006486",
+    "final_line": "00:01 +1: All tests passed!",
+    "counts": {
+      "passed": 1,
+      "skipped": 0,
+      "failed": 0
+    }
+  },
+  {
+    "phase": "ods-host",
+    "head": "76f38f861c836f3f646360bf34175059db5e44db",
+    "command": [
+      "/Users/christianstrobele/flutter-3.47.8/bin/flutter",
+      "test",
+      "--no-pub",
+      "--concurrency=2",
+      "--reporter=expanded",
+      "test/office_document_service_test.dart",
+      "test/widget/ods_viewer_grid_test.dart",
+      "test/widget/ods_viewer_workflow_test.dart",
+      "test/widget/ods_editor_workflow_test.dart",
+      "test/widget/office_editor_dialog_test.dart",
+      "test/local_odf_corpus_test.dart"
+    ],
+    "cwd": "/private/tmp/crispcloud-terminal-ods-isolated",
+    "started_utc": "2026-11-16T09:37:54.828511+00:00",
+    "seconds": 116.356,
+    "exit_code": 0,
+    "changed_sources": [],
+    "log": "ods-host.log",
+    "source_sha256": "252c440801e5c78e5ce0d8773d484fdceec4a39e7d022d4194f53c4873006486",
+    "final_line": "01:23 +53: All tests passed!",
+    "counts": {
+      "passed": 53,
+      "skipped": 0,
+      "failed": 0
+    }
+  },
+  {
+    "phase": "ods-engine",
+    "head": "76f38f861c836f3f646360bf34175059db5e44db",
+    "command": [
+      "/Users/christianstrobele/flutter-3.47.8/bin/cache/dart-sdk/bin/dart",
+      "test",
+      "--concurrency=2",
+      "--reporter=expanded",
+      "test/sheet_authored_number_format_test.dart",
+      "test/sheet_cell_state_preservation_test.dart",
+      "test/sheet_comments_namespace_test.dart",
+      "test/sheet_comments_schema_test.dart",
+      "test/sheet_explicit_style_fidelity_test.dart",
+      "test/sheet_fill_fidelity_test.dart",
+      "test/sheet_formula_cache_fidelity_test.dart",
+      "test/sheet_formula_dependency_cache_test.dart",
+      "test/sheet_formula_test.dart",
+      "test/sheet_import_fidelity_test.dart",
+      "test/sheet_macro_preservation_test.dart",
+      "test/sheet_nav_test.dart",
+      "test/sheet_normal_font_metrics_test.dart",
+      "test/sheet_qualified_name_error_test.dart",
+      "test/sheet_qualified_names_test.dart",
+      "test/sheet_rename_adversarial_test.dart",
+      "test/sheet_rename_fidelity_test.dart",
+      "test/sheet_save_cache_and_freeze_test.dart",
+      "test/sheet_schema_fidelity_test.dart",
+      "test/sheet_style_namespace_fidelity_test.dart",
+      "test/sheet_time_number_format_test.dart",
+      "test/sheet_wrap_text_fidelity_test.dart",
+      "test/legacy_sheet_reader_test.dart",
+      "test/ods_sheet_reader_test.dart",
+      "test/sml_styles_date_test.dart"
+    ],
+    "cwd": "/private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_engine",
+    "started_utc": "2026-11-16T09:39:51.942922+00:00",
+    "seconds": 44.609,
+    "exit_code": 0,
+    "changed_sources": [],
+    "log": "ods-engine.log",
+    "source_sha256": "252c440801e5c78e5ce0d8773d484fdceec4a39e7d022d4194f53c4873006486",
+    "final_line": "00:19 +507: All tests passed!",
+    "counts": {
+      "passed": 507,
+      "skipped": 0,
+      "failed": 0
+    }
+  },
+  {
+    "phase": "ods-local",
+    "head": "76f38f861c836f3f646360bf34175059db5e44db",
+    "command": [
+      "/Users/christianstrobele/flutter-3.47.8/bin/cache/dart-sdk/bin/dart",
+      "test",
+      "test/local_spreadsheet_corpus_test.dart",
+      "--name",
+      "local ODS corpus",
+      "--reporter=expanded"
+    ],
+    "cwd": "/private/tmp/crispcloud-terminal-ods-isolated/packages/quds_office_engine",
+    "started_utc": "2026-11-16T09:40:37.122136+00:00",
+    "seconds": 12.169,
+    "exit_code": 0,
+    "changed_sources": [],
+    "log": "ods-local.log",
+    "source_sha256": "252c440801e5c78e5ce0d8773d484fdceec4a39e7d022d4194f53c4873006486",
+    "final_line": "00:01 +1: All tests passed!",
+    "counts": {
+      "passed": 1,
+      "skipped": 0,
+      "failed": 0
+    }
+  }
+]

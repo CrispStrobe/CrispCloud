@@ -1,0 +1,20 @@
+Running native: 81 files; source de3fff08
+{
+  "phase": "native",
+  "head_at_start": "de3fff08b4e65cb4dc8383544009d816f520325f",
+  "started_utc": "2026-11-16T09:09:53.965244+00:00",
+  "watched_source_count": 5544,
+  "github_actions_queried_or_awaited": false,
+  "suite_count": 81,
+  "isolated_zsh_startup": true,
+  "finished_utc": "2026-11-16T09:19:32.362703+00:00",
+  "seconds": 578.378,
+  "exit_code": 0,
+  "changed_sources": [],
+  "counts": {
+    "passed": 982,
+    "skipped": 2,
+    "failed": 0
+  },
+  "final_test_line": "08:23 +982 ~2: All tests passed!"
+}

@@ -1,0 +1,401 @@
+Identity added: /tmp/ccssh-h53dag5k/client (christianstrobele@AirCS.local)
+Lifetime set to 120 seconds
+00:00 +0: loading /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_live_test.dart
+00:00 +0: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_live_test.dart: real OpenSSH loopback route verifies both servers and preserves Unicode execution through a jump
+ℹ️ [SshTerminalService] Session ho7jyw1g060 established to 127.0.0.1:60919
+ℹ️ [SshTerminalService] execute(ho7jyw1g060)
+ℹ️ [SshTerminalService] Disconnecting session ho7jyw1g060
+ℹ️ [SshTerminalService] Session ho7jywavvy1 established to 127.0.0.1:60919
+ℹ️ [SshTerminalService] execute(ho7jywavvy1)
+ℹ️ [SshTerminalService] Disconnecting session ho7jywavvy1
+00:01 +1: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_live_test.dart: real OpenSSH loopback route rejects a changed target host key without trusting or registering the route
+ℹ️ [SshTerminalService] Session ho7jywj4900 established to 127.0.0.1:60919
+ℹ️ [SshTerminalService] Disconnecting session ho7jywj4900
+❌ [SshTerminalService] SSH connect failed
+  Error: SSH host key changed for 127.0.0.1:60919. Expected SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA; received SHA256:hbbpgMcda/PSp+CmOljLIhUxTRxrovLj0LTA4p9J16U.
+00:02 +2: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_live_test.dart: real OpenSSH loopback route real PTY receives size changes and preserves final output and exit status
+ℹ️ [SshTerminalService] Session ho7jywtbur0 established to 127.0.0.1:60919
+ℹ️ [SshTerminalService] startShell(ho7jywtbur0)
+00:12 +2 -1: /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_live_test.dart: real OpenSSH loopback route real PTY receives size changes and preserves final output and exit status [E]
+  TimeoutException after 0:00:10.000000: Future not completed
+  dart:async  _startMicrotaskLoop
+  
+ℹ️ [SshTerminalService] Disconnecting session ho7jywtbur0
+00:12 +2 -1: loading /Users/christianstrobele/code/local/CrispCloud/test/ssh_port_forwarding_live_test.dart
+00:17 +2 -1: /Users/christianstrobele/code/local/CrispCloud/test/ssh_port_forwarding_live_test.dart: real OpenSSH forwarding through a verified jump route local allocates a listener, drains binary response after half-close, and cancels
+ℹ️ [SshTerminalService] Session ho7jz687610 established to 127.0.0.1:60919
+01:03 +2 -2: /Users/christianstrobele/code/local/CrispCloud/test/ssh_port_forwarding_live_test.dart: real OpenSSH forwarding through a verified jump route local allocates a listener, drains binary response after half-close, and cancels [E]
+  TimeoutException after 0:00:20.000000: Future not completed
+  dart:async  _startMicrotaskLoop
+  
+ℹ️ [SshTerminalService] Disconnecting session ho7jz687610
+01:03 +2 -2: /Users/christianstrobele/code/local/CrispCloud/test/ssh_port_forwarding_live_test.dart: real OpenSSH forwarding through a verified jump route remote allocates a listener, drains binary response after half-close, and cancels
+ℹ️ [SshTerminalService] Session ho7jzx3sjk0 established to 127.0.0.1:60919
+01:28 +2 -3: /Users/christianstrobele/code/local/CrispCloud/test/ssh_port_forwarding_live_test.dart: real OpenSSH forwarding through a verified jump route remote allocates a listener, drains binary response after half-close, and cancels [E]
+  TimeoutException after 0:00:20.000000: Future not completed
+  dart:async  _startMicrotaskLoop
+  
+ℹ️ [SshTerminalService] Disconnecting session ho7jzx3sjk0
+01:28 +2 -3: /Users/christianstrobele/code/local/CrispCloud/test/ssh_port_forwarding_live_test.dart: real OpenSSH forwarding through a verified jump route SOCKS domain request and pipelined binary payload survive request half-close
+ℹ️ [SshTerminalService] Session ho7k0c2rvw0 established to 127.0.0.1:60919
+01:48 +2 -4: /Users/christianstrobele/code/local/CrispCloud/test/ssh_port_forwarding_live_test.dart: real OpenSSH forwarding through a verified jump route SOCKS domain request and pipelined binary payload survive request half-close [E]
+  TimeoutException after 0:00:20.000000: Future not completed
+  dart:async  _startMicrotaskLoop
+  
+ℹ️ [SshTerminalService] Disconnecting session ho7k0c2rvw0
+01:48 +2 -4: /Users/christianstrobele/code/local/CrispCloud/test/ssh_port_forwarding_live_test.dart: real OpenSSH forwarding through a verified jump route disconnect closes active client sockets and both local and remote listeners
+ℹ️ [SshTerminalService] Session ho7k0ogqqx0 established to 127.0.0.1:60919
+ℹ️ [SshTerminalService] Disconnecting session ho7k0ogqqx0
+01:49 +3 -4: loading /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_live_test.dart
+01:53 +3 -4: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture Ed25519 waits for host approval before direct signing
+ℹ️ [SshTerminalService] Session ho7k0riy6t0 established to 127.0.0.1:60919
+ℹ️ [SshTerminalService] execute(ho7k0riy6t0)
+ℹ️ [SshTerminalService] Disconnecting session ho7k0riy6t0
+01:54 +4 -4: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture Ed25519 signs independently after each verified jump hop
+ℹ️ [SshTerminalService] Session ho7k0rs2hz0 established to 127.0.0.1:60919
+ℹ️ [SshTerminalService] execute(ho7k0rs2hz0)
+ℹ️ [SshTerminalService] Disconnecting session ho7k0rs2hz0
+01:54 +5 -4: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture RSA SHA-2 waits for host approval before direct signing
+ℹ️ [SshTerminalService] Session ho7k0ryi9j0 established to 127.0.0.1:60919
+ℹ️ [SshTerminalService] execute(ho7k0ryi9j0)
+ℹ️ [SshTerminalService] Disconnecting session ho7k0ryi9j0
+01:55 +6 -4: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture RSA SHA-2 signs independently after each verified jump hop
+ℹ️ [SshTerminalService] Session ho7k0s4o7h0 established to 127.0.0.1:60919
+ℹ️ [SshTerminalService] execute(ho7k0s4o7h0)
+ℹ️ [SshTerminalService] Disconnecting session ho7k0s4o7h0
+01:55 +7 -4: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture session output drains across a live OpenSSH rekey
+ℹ️ [SshTerminalService] Session ho7k0sa4wp0 established to 127.0.0.1:60919
+ℹ️ [SshTerminalService] execute(ho7k0sa4wp0)
+ℹ️ [SshTerminalService] Disconnecting session ho7k0sa4wp0
+02:05 +8 -4: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture rejecting a real host key never asks the agent to sign
+❌ [SshTerminalService] SSH connect failed
+  Error: Verify this server’s SSH host key before connecting: SHA256:hbbpgMcda/PSp+CmOljLIhUxTRxrovLj0LTA4p9J16U
+02:05 +9 -4: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture a changed direct host key fails before any signature
+❌ [SshTerminalService] SSH connect failed
+  Error: SSH host key changed for 127.0.0.1:60919. Expected SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA; received SHA256:hbbpgMcda/PSp+CmOljLIhUxTRxrovLj0LTA4p9J16U.
+02:05 +10 -4: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture a changed final key signs only for the independently trusted jump
+❌ [SshTerminalService] SSH connect failed
+  Error: SSH host key changed for 127.0.0.1:60919. Expected SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA; received SHA256:hbbpgMcda/PSp+CmOljLIhUxTRxrovLj0LTA4p9J16U.
+02:06 +11 -4: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture a refused agent signature has no password or interactive fallback
+❌ [SshTerminalService] SSH connect failed
+  Error: SSHAuthAbortError(Connection closed before authentication)
+02:06 +12 -4: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture disconnect revokes a pending local-agent signature on a live route
+ℹ️ [SshTerminalService] Session ho7k0yuj7y0 established to 127.0.0.1:60919
+ℹ️ [SshTerminalService] execute(ho7k0yuj7y0)
+ℹ️ [SshTerminalService] Disconnecting session ho7k0yuj7y0
+02:06 +13 -4: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture cancelling host approval closes authority before a late approval
+❌ [SshTerminalService] SSH connect failed
+  Error: SSHAuthAbortError(Connection closed before authentication)
+02:06 +14 -4: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_live_test.dart: actual disposable Unix ssh-agent authenticates and forwards to ssh-add
+❌ [SshTerminalService] SSH connect failed
+  Error: The SSH agent has no supported keys.
+02:07 +14 -5: /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_live_test.dart: actual disposable Unix ssh-agent authenticates and forwards to ssh-add [E]
+  The SSH agent has no supported keys.
+  package:crisp_cloud/services/ssh_agent.dart 112:9  SshAgentConnection._loadIdentities
+  
+02:07 +14 -5: Some tests failed.
+
+Failing tests:
+  /Users/christianstrobele/code/local/CrispCloud/test/ssh_agent_live_test.dart: actual disposable Unix ssh-agent authenticates and forwards to ssh-add
+  /Users/christianstrobele/code/local/CrispCloud/test/ssh_port_forwarding_live_test.dart: real OpenSSH forwarding through a verified jump route SOCKS domain request and pipelined binary payload survive request half-close
+  /Users/christianstrobele/code/local/CrispCloud/test/ssh_port_forwarding_live_test.dart: real OpenSSH forwarding through a verified jump route local allocates a listener, drains binary response after half-close, and cancels
+  /Users/christianstrobele/code/local/CrispCloud/test/ssh_port_forwarding_live_test.dart: real OpenSSH forwarding through a verified jump route remote allocates a listener, drains binary response after half-close, and cancels
+  /Users/christianstrobele/code/local/CrispCloud/test/ssh_terminal_live_test.dart: real OpenSSH loopback route real PTY receives size changes and preserves final output and exit status
+OpenSSH jump fixture log:
+Server listening on 127.0.0.1 port 60917.
+Connection from 127.0.0.1 port 60918 on 127.0.0.1 port 60917
+kex_exchange_identification: Connection closed by remote host
+Connection closed by 127.0.0.1 port 60918
+srclimit_penalise: ipv4: new 127.0.0.1/32 deferred penalty of 1 seconds for penalty: connections without attempting authentication
+Connection from 127.0.0.1 port 61431 on 127.0.0.1 port 60917
+Accepted key ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o found at /tmp/ccssh-h53dag5k/authorized_keys:1
+Accepted publickey for christianstrobele from 127.0.0.1 port 61431 ssh2: ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o
+BSM audit: bsm_audit_session_setup: setaudit_addr failed: Operation not permitted
+User child is on pid 4271
+Connection closed by 127.0.0.1 port 61431
+Transferred: sent 4036, received 2884 bytes
+Closing connection to 127.0.0.1 port 61431
+Connection from 127.0.0.1 port 61433 on 127.0.0.1 port 60917
+Accepted key ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o found at /tmp/ccssh-h53dag5k/authorized_keys:1
+Accepted publickey for christianstrobele from 127.0.0.1 port 61433 ssh2: ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o
+BSM audit: bsm_audit_session_setup: setaudit_addr failed: Operation not permitted
+User child is on pid 4298
+Connection closed by 127.0.0.1 port 61433
+Transferred: sent 4056, received 2868 bytes
+Closing connection to 127.0.0.1 port 61433
+Connection from 127.0.0.1 port 61435 on 127.0.0.1 port 60917
+Accepted key ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o found at /tmp/ccssh-h53dag5k/authorized_keys:1
+Accepted publickey for christianstrobele from 127.0.0.1 port 61435 ssh2: ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o
+BSM audit: bsm_audit_session_setup: setaudit_addr failed: Operation not permitted
+User child is on pid 4305
+Connection closed by 127.0.0.1 port 61435
+Transferred: sent 3312, received 2548 bytes
+Closing connection to 127.0.0.1 port 61435
+Connection from 127.0.0.1 port 61437 on 127.0.0.1 port 60917
+Accepted key ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o found at /tmp/ccssh-h53dag5k/authorized_keys:1
+Accepted publickey for christianstrobele from 127.0.0.1 port 61437 ssh2: ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o
+BSM audit: bsm_audit_session_setup: setaudit_addr failed: Operation not permitted
+User child is on pid 4312
+Connection closed by 127.0.0.1 port 61437
+Transferred: sent 3160, received 2152 bytes
+Closing connection to 127.0.0.1 port 61437
+Connection from 127.0.0.1 port 61439 on 127.0.0.1 port 60917
+Accepted key ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o found at /tmp/ccssh-h53dag5k/authorized_keys:1
+Accepted publickey for christianstrobele from 127.0.0.1 port 61439 ssh2: ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o
+BSM audit: bsm_audit_session_setup: setaudit_addr failed: Operation not permitted
+User child is on pid 4317
+Connection closed by 127.0.0.1 port 61439
+Transferred: sent 5284, received 3104 bytes
+Closing connection to 127.0.0.1 port 61439
+Connection from 127.0.0.1 port 61464 on 127.0.0.1 port 60917
+Accepted key ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o found at /tmp/ccssh-h53dag5k/authorized_keys:1
+Accepted publickey for christianstrobele from 127.0.0.1 port 61464 ssh2: ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o
+BSM audit: bsm_audit_session_setup: setaudit_addr failed: Operation not permitted
+User child is on pid 4747
+Connection closed by 127.0.0.1 port 61464
+Transferred: sent 3156944, received 3157488 bytes
+Closing connection to 127.0.0.1 port 61464
+Connection from 127.0.0.1 port 61521 on 127.0.0.1 port 60917
+Accepted key ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o found at /tmp/ccssh-h53dag5k/authorized_keys:1
+Accepted publickey for christianstrobele from 127.0.0.1 port 61521 ssh2: ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o
+BSM audit: bsm_audit_session_setup: setaudit_addr failed: Operation not permitted
+User child is on pid 5304
+Read error from remote host 127.0.0.1 port 61521: Connection reset by peer
+Connection from 127.0.0.1 port 61552 on 127.0.0.1 port 60917
+Accepted key ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o found at /tmp/ccssh-h53dag5k/authorized_keys:1
+Accepted publickey for christianstrobele from 127.0.0.1 port 61552 ssh2: ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o
+BSM audit: bsm_audit_session_setup: setaudit_addr failed: Operation not permitted
+User child is on pid 5643
+Connection closed by 127.0.0.1 port 61552
+Transferred: sent 5416, received 3157324 bytes
+Closing connection to 127.0.0.1 port 61552
+Connection from 127.0.0.1 port 61572 on 127.0.0.1 port 60917
+Accepted key ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o found at /tmp/ccssh-h53dag5k/authorized_keys:1
+Accepted publickey for christianstrobele from 127.0.0.1 port 61572 ssh2: ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o
+BSM audit: bsm_audit_session_setup: setaudit_addr failed: Operation not permitted
+User child is on pid 5938
+Connection closed by 127.0.0.1 port 61572
+Transferred: sent 4160, received 3236 bytes
+Closing connection to 127.0.0.1 port 61572
+Connection from 127.0.0.1 port 61593 on 127.0.0.1 port 60917
+Accepted key ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o found at /tmp/ccssh-h53dag5k/authorized_keys:1
+Postponed publickey for christianstrobele from 127.0.0.1 port 61593 ssh2 [preauth]
+Accepted key ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o found at /tmp/ccssh-h53dag5k/authorized_keys:1
+Accepted publickey for christianstrobele from 127.0.0.1 port 61593 ssh2: ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o
+BSM audit: bsm_audit_session_setup: setaudit_addr failed: Operation not permitted
+User child is on pid 6011
+Connection closed by 127.0.0.1 port 61593
+Transferred: sent 4548, received 3212 bytes
+Closing connection to 127.0.0.1 port 61593
+Connection from 127.0.0.1 port 61596 on 127.0.0.1 port 60917
+Accepted key RSA SHA256:/HDcYnwbKmOrpZ1AoVAzVFkgVfhcVDjOtq6pt3pORB4 found at /tmp/ccssh-h53dag5k/authorized_keys:2
+Postponed publickey for christianstrobele from 127.0.0.1 port 61596 ssh2 [preauth]
+Accepted key RSA SHA256:/HDcYnwbKmOrpZ1AoVAzVFkgVfhcVDjOtq6pt3pORB4 found at /tmp/ccssh-h53dag5k/authorized_keys:2
+Accepted publickey for christianstrobele from 127.0.0.1 port 61596 ssh2: RSA SHA256:/HDcYnwbKmOrpZ1AoVAzVFkgVfhcVDjOtq6pt3pORB4
+BSM audit: bsm_audit_session_setup: setaudit_addr failed: Operation not permitted
+User child is on pid 6022
+Connection closed by 127.0.0.1 port 61596
+Transferred: sent 4992, received 4492 bytes
+Closing connection to 127.0.0.1 port 61596
+Connection from 127.0.0.1 port 61598 on 127.0.0.1 port 60917
+Accepted key ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o found at /tmp/ccssh-h53dag5k/authorized_keys:1
+Postponed publickey for christianstrobele from 127.0.0.1 port 61598 ssh2 [preauth]
+Accepted key ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o found at /tmp/ccssh-h53dag5k/authorized_keys:1
+Accepted publickey for christianstrobele from 127.0.0.1 port 61598 ssh2: ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o
+BSM audit: bsm_audit_session_setup: setaudit_addr failed: Operation not permitted
+User child is on pid 6029
+Connection closed by 127.0.0.1 port 61598
+Transferred: sent 532276, received 530284 bytes
+Closing connection to 127.0.0.1 port 61598
+Connection from 127.0.0.1 port 61605 on 127.0.0.1 port 60917
+Accepted key ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o found at /tmp/ccssh-h53dag5k/authorized_keys:1
+Postponed publickey for christianstrobele from 127.0.0.1 port 61605 ssh2 [preauth]
+Accepted key ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o found at /tmp/ccssh-h53dag5k/authorized_keys:1
+Accepted publickey for christianstrobele from 127.0.0.1 port 61605 ssh2: ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o
+BSM audit: bsm_audit_session_setup: setaudit_addr failed: Operation not permitted
+User child is on pid 6230
+Connection closed by 127.0.0.1 port 61605
+Transferred: sent 3376, received 2300 bytes
+Closing connection to 127.0.0.1 port 61605
+Connection from 127.0.0.1 port 61608 on 127.0.0.1 port 60917
+Accepted key ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o found at /tmp/ccssh-h53dag5k/authorized_keys:1
+Postponed publickey for christianstrobele from 127.0.0.1 port 61608 ssh2 [preauth]
+Accepted key ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o found at /tmp/ccssh-h53dag5k/authorized_keys:1
+Accepted publickey for christianstrobele from 127.0.0.1 port 61608 ssh2: ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o
+BSM audit: bsm_audit_session_setup: setaudit_addr failed: Operation not permitted
+User child is on pid 6237
+Connection closed by 127.0.0.1 port 61608
+Transferred: sent 4476, received 3212 bytes
+Closing connection to 127.0.0.1 port 61608
+
+OpenSSH target fixture log:
+Server listening on 127.0.0.1 port 60919.
+Connection from 127.0.0.1 port 60921 on 127.0.0.1 port 60919
+kex_exchange_identification: Connection closed by remote host
+Connection closed by 127.0.0.1 port 60921
+srclimit_penalise: ipv4: new 127.0.0.1/32 deferred penalty of 1 seconds for penalty: connections without attempting authentication
+Connection from 127.0.0.1 port 61432 on 127.0.0.1 port 60919
+Accepted key ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o found at /tmp/ccssh-h53dag5k/authorized_keys:1
+Accepted publickey for christianstrobele from 127.0.0.1 port 61432 ssh2: ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o
+BSM audit: bsm_audit_session_setup: setaudit_addr failed: Operation not permitted
+User child is on pid 4294
+Starting session: command for christianstrobele from 127.0.0.1 port 61432 id 0
+Close session: user christianstrobele from 127.0.0.1 port 61432 id 0
+Connection closed by 127.0.0.1 port 61432
+Transferred: sent 1840, received 1248 bytes
+Closing connection to 127.0.0.1 port 61432
+Connection from 127.0.0.1 port 61434 on 127.0.0.1 port 60919
+Accepted key ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o found at /tmp/ccssh-h53dag5k/authorized_keys:1
+Accepted publickey for christianstrobele from 127.0.0.1 port 61434 ssh2: ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o
+BSM audit: bsm_audit_session_setup: setaudit_addr failed: Operation not permitted
+User child is on pid 4301
+Starting session: command for christianstrobele from 127.0.0.1 port 61434 id 0
+Close session: user christianstrobele from 127.0.0.1 port 61434 id 0
+Connection closed by 127.0.0.1 port 61434
+Transferred: sent 1824, received 1232 bytes
+Closing connection to 127.0.0.1 port 61434
+Connection from 127.0.0.1 port 61436 on 127.0.0.1 port 60919
+Accepted key ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o found at /tmp/ccssh-h53dag5k/authorized_keys:1
+Accepted publickey for christianstrobele from 127.0.0.1 port 61436 ssh2: ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o
+BSM audit: bsm_audit_session_setup: setaudit_addr failed: Operation not permitted
+User child is on pid 4308
+Read error from remote host 127.0.0.1 port 61436: Connection reset by peer
+Connection from 127.0.0.1 port 61438 on 127.0.0.1 port 60919
+Connection closed by 127.0.0.1 port 61438 [preauth]
+srclimit_penalise: ipv4: new 127.0.0.1/32 deferred penalty of 1 seconds for penalty: connections without attempting authentication
+Connection from 127.0.0.1 port 61440 on 127.0.0.1 port 60919
+Accepted key ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o found at /tmp/ccssh-h53dag5k/authorized_keys:1
+Accepted publickey for christianstrobele from 127.0.0.1 port 61440 ssh2: ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o
+BSM audit: bsm_audit_session_setup: setaudit_addr failed: Operation not permitted
+User child is on pid 4320
+Attempt to write login records by non-root user (aborting)
+Starting session: shell on ttys020 for christianstrobele from 127.0.0.1 port 61440 id 0
+Connection closed by 127.0.0.1 port 61440
+Close session: user christianstrobele from 127.0.0.1 port 61440 id 0
+Transferred: sent 2540, received 1336 bytes
+Closing connection to 127.0.0.1 port 61440
+Attempt to write login records by non-root user (aborting)
+Connection from 127.0.0.1 port 61465 on 127.0.0.1 port 60919
+Accepted key ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o found at /tmp/ccssh-h53dag5k/authorized_keys:1
+Accepted publickey for christianstrobele from 127.0.0.1 port 61465 ssh2: ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o
+BSM audit: bsm_audit_session_setup: setaudit_addr failed: Operation not permitted
+User child is on pid 4750
+Connection closed by 127.0.0.1 port 61465
+Transferred: sent 3149792, received 3149040 bytes
+Closing connection to 127.0.0.1 port 61465
+Connection from 127.0.0.1 port 61522 on 127.0.0.1 port 60919
+Accepted key ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o found at /tmp/ccssh-h53dag5k/authorized_keys:1
+Accepted publickey for christianstrobele from 127.0.0.1 port 61522 ssh2: ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o
+BSM audit: bsm_audit_session_setup: setaudit_addr failed: Operation not permitted
+User child is on pid 5307
+Connection closed by 127.0.0.1 port 61522
+Transferred: sent 3149708, received 1360 bytes
+Closing connection to 127.0.0.1 port 61522
+Connection from 127.0.0.1 port 61553 on 127.0.0.1 port 60919
+Accepted key ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o found at /tmp/ccssh-h53dag5k/authorized_keys:1
+Accepted publickey for christianstrobele from 127.0.0.1 port 61553 ssh2: ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o
+BSM audit: bsm_audit_session_setup: setaudit_addr failed: Operation not permitted
+User child is on pid 5646
+Connection closed by 127.0.0.1 port 61553
+Transferred: sent 1992, received 3149020 bytes
+Closing connection to 127.0.0.1 port 61553
+Connection from 127.0.0.1 port 61573 on 127.0.0.1 port 60919
+Accepted key ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o found at /tmp/ccssh-h53dag5k/authorized_keys:1
+Accepted publickey for christianstrobele from 127.0.0.1 port 61573 ssh2: ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o
+BSM audit: bsm_audit_session_setup: setaudit_addr failed: Operation not permitted
+User child is on pid 5941
+Connection closed by 127.0.0.1 port 61573
+Transferred: sent 1856, received 1408 bytes
+Closing connection to 127.0.0.1 port 61573
+Connection from 127.0.0.1 port 61592 on 127.0.0.1 port 60919
+Accepted key ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o found at /tmp/ccssh-h53dag5k/authorized_keys:1
+Postponed publickey for christianstrobele from 127.0.0.1 port 61592 ssh2 [preauth]
+Accepted key ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o found at /tmp/ccssh-h53dag5k/authorized_keys:1
+Accepted publickey for christianstrobele from 127.0.0.1 port 61592 ssh2: ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o
+BSM audit: bsm_audit_session_setup: setaudit_addr failed: Operation not permitted
+User child is on pid 6007
+Starting session: command for christianstrobele from 127.0.0.1 port 61592 id 0
+Close session: user christianstrobele from 127.0.0.1 port 61592 id 0
+Connection closed by 127.0.0.1 port 61592
+Transferred: sent 2056, received 1396 bytes
+Closing connection to 127.0.0.1 port 61592
+Connection from 127.0.0.1 port 61594 on 127.0.0.1 port 60919
+Accepted key ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o found at /tmp/ccssh-h53dag5k/authorized_keys:1
+Postponed publickey for christianstrobele from 127.0.0.1 port 61594 ssh2 [preauth]
+Accepted key ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o found at /tmp/ccssh-h53dag5k/authorized_keys:1
+Accepted publickey for christianstrobele from 127.0.0.1 port 61594 ssh2: ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o
+BSM audit: bsm_audit_session_setup: setaudit_addr failed: Operation not permitted
+User child is on pid 6014
+Starting session: command for christianstrobele from 127.0.0.1 port 61594 id 0
+Close session: user christianstrobele from 127.0.0.1 port 61594 id 0
+Connection closed by 127.0.0.1 port 61594
+Transferred: sent 2040, received 1380 bytes
+Closing connection to 127.0.0.1 port 61594
+Connection from 127.0.0.1 port 61595 on 127.0.0.1 port 60919
+Accepted key RSA SHA256:/HDcYnwbKmOrpZ1AoVAzVFkgVfhcVDjOtq6pt3pORB4 found at /tmp/ccssh-h53dag5k/authorized_keys:2
+Postponed publickey for christianstrobele from 127.0.0.1 port 61595 ssh2 [preauth]
+Accepted key RSA SHA256:/HDcYnwbKmOrpZ1AoVAzVFkgVfhcVDjOtq6pt3pORB4 found at /tmp/ccssh-h53dag5k/authorized_keys:2
+Accepted publickey for christianstrobele from 127.0.0.1 port 61595 ssh2: RSA SHA256:/HDcYnwbKmOrpZ1AoVAzVFkgVfhcVDjOtq6pt3pORB4
+BSM audit: bsm_audit_session_setup: setaudit_addr failed: Operation not permitted
+User child is on pid 6018
+Starting session: command for christianstrobele from 127.0.0.1 port 61595 id 0
+Close session: user christianstrobele from 127.0.0.1 port 61595 id 0
+Connection closed by 127.0.0.1 port 61595
+Transferred: sent 2296, received 2036 bytes
+Closing connection to 127.0.0.1 port 61595
+Connection from 127.0.0.1 port 61597 on 127.0.0.1 port 60919
+Accepted key RSA SHA256:/HDcYnwbKmOrpZ1AoVAzVFkgVfhcVDjOtq6pt3pORB4 found at /tmp/ccssh-h53dag5k/authorized_keys:2
+Postponed publickey for christianstrobele from 127.0.0.1 port 61597 ssh2 [preauth]
+Accepted key RSA SHA256:/HDcYnwbKmOrpZ1AoVAzVFkgVfhcVDjOtq6pt3pORB4 found at /tmp/ccssh-h53dag5k/authorized_keys:2
+Accepted publickey for christianstrobele from 127.0.0.1 port 61597 ssh2: RSA SHA256:/HDcYnwbKmOrpZ1AoVAzVFkgVfhcVDjOtq6pt3pORB4
+BSM audit: bsm_audit_session_setup: setaudit_addr failed: Operation not permitted
+User child is on pid 6025
+Starting session: command for christianstrobele from 127.0.0.1 port 61597 id 0
+Close session: user christianstrobele from 127.0.0.1 port 61597 id 0
+Connection closed by 127.0.0.1 port 61597
+Transferred: sent 2280, received 2020 bytes
+Closing connection to 127.0.0.1 port 61597
+Connection from 127.0.0.1 port 61599 on 127.0.0.1 port 60919
+Accepted key ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o found at /tmp/ccssh-h53dag5k/authorized_keys:1
+Postponed publickey for christianstrobele from 127.0.0.1 port 61599 ssh2 [preauth]
+Accepted key ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o found at /tmp/ccssh-h53dag5k/authorized_keys:1
+Accepted publickey for christianstrobele from 127.0.0.1 port 61599 ssh2: ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o
+BSM audit: bsm_audit_session_setup: setaudit_addr failed: Operation not permitted
+User child is on pid 6033
+Starting session: command for christianstrobele from 127.0.0.1 port 61599 id 0
+Close session: user christianstrobele from 127.0.0.1 port 61599 id 0
+Starting session: command for christianstrobele from 127.0.0.1 port 61599 id 1
+Close session: user christianstrobele from 127.0.0.1 port 61599 id 1
+Connection closed by 127.0.0.1 port 61599
+Transferred: sent 528148, received 526980 bytes
+Closing connection to 127.0.0.1 port 61599
+Connection from 127.0.0.1 port 61603 on 127.0.0.1 port 60919
+Connection closed by 127.0.0.1 port 61603 [preauth]
+srclimit_penalise: ipv4: new 127.0.0.1/32 deferred penalty of 1 seconds for penalty: connections without attempting authentication
+Connection from 127.0.0.1 port 61604 on 127.0.0.1 port 60919
+Connection closed by 127.0.0.1 port 61604 [preauth]
+Connection from 127.0.0.1 port 61606 on 127.0.0.1 port 60919
+Connection closed by 127.0.0.1 port 61606 [preauth]
+Connection from 127.0.0.1 port 61607 on 127.0.0.1 port 60919
+Accepted key ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o found at /tmp/ccssh-h53dag5k/authorized_keys:1
+Postponed publickey for christianstrobele from 127.0.0.1 port 61607 ssh2 [preauth]
+Connection closed by authenticating user christianstrobele 127.0.0.1 port 61607 [preauth]
+Connection from 127.0.0.1 port 61609 on 127.0.0.1 port 60919
+Accepted key ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o found at /tmp/ccssh-h53dag5k/authorized_keys:1
+Postponed publickey for christianstrobele from 127.0.0.1 port 61609 ssh2 [preauth]
+Accepted key ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o found at /tmp/ccssh-h53dag5k/authorized_keys:1
+Accepted publickey for christianstrobele from 127.0.0.1 port 61609 ssh2: ED25519 SHA256:dljUO+SuGNU8zCt9HRMRQ4xJQDhZVoOMuEzeg0MNi6o
+BSM audit: bsm_audit_session_setup: setaudit_addr failed: Operation not permitted
+User child is on pid 6240
+Starting session: command for christianstrobele from 127.0.0.1 port 61609 id 0
+Close session: user christianstrobele from 127.0.0.1 port 61609 id 0
+Connection closed by 127.0.0.1 port 61609
+Transferred: sent 2040, received 1380 bytes
+Closing connection to 127.0.0.1 port 61609
+Connection from 127.0.0.1 port 61610 on 127.0.0.1 port 60919
+Connection closed by 127.0.0.1 port 61610 [preauth]
+
+OpenSSH agent fixture log:
+SSH_AUTH_SOCK=/tmp/ccssh-h53dag5k/agent.sock; export SSH_AUTH_SOCK;
+echo Agent pid 3443;
+

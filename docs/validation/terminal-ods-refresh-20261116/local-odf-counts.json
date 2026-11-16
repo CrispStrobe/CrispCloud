@@ -1,8 +1,9 @@
 {
-  "available_local_files": {
+  "available_local_regular_files": {
     ".ods": 1,
     ".odt": 18,
     ".odp": 1
   },
+  "symlinks_not_read": 0,
   "content_or_filenames_tracked": false
 }

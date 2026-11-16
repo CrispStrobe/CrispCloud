@@ -380,3 +380,15 @@ The acceptance inventory requires 241 engine exports and 59 actual host saves
 (48 DOCX, 4 XLSX, 4 PPTX, and one DOCM/DOTX/DOTM each).
 See [the consolidation report](../docs/office-fidelity-consolidation-20261112.md)
 for current validation status; the earlier measurements above remain historical.
+
+## Terminal/ODS follow-up (16 November 2026)
+
+The combined source retains shared spreadsheet-level and blank-cell validation
+rules alongside the canonical whole-number, decimal, date and text-length
+operators. A regression binds a shared numeric rule on a blank input cell to
+its XLSX-copy round trip. Fresh qualification passed 507 engine spreadsheet/ODS
+tests and 53 host viewer/editor tests; the available local ODS imported without
+an unsupported-profile refusal. Dynamic list links, custom/formula-driven rules,
+full native prompt/error metadata and native ODS serialization remain outside
+this supported profile. Exact source identities and scope are recorded in
+`docs/validation/terminal-ods-refresh-20261116/summary.json`.

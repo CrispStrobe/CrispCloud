@@ -1,0 +1,81 @@
+{
+  "completed_utc": "2026-11-16T09:43:26.895251+00:00",
+  "branch": "integrate/current-repos-20261116",
+  "worktree": "/private/tmp/crispcloud-terminal-ods-isolated",
+  "final_qualified_code": "76f38f861c836f3f646360bf34175059db5e44db",
+  "quds_source": "d65649004960ebf7ea4edd356212c13864215810",
+  "managed_office_entries": 2410,
+  "terminal_unit_widget": {
+    "files": 81,
+    "passed": 982,
+    "skipped": 2,
+    "failed": 0,
+    "receipt": "unit/native.json",
+    "isolated_zsh_startup": true
+  },
+  "live_openssh": {
+    "passed": 25,
+    "skipped": 0,
+    "failed": 0,
+    "pty": true,
+    "actual_unix_agent": true,
+    "sharing": true,
+    "receipt": "accepted-ssh-execution.json",
+    "log": "ssh-live.log"
+  },
+  "live_tmux": {
+    "passed": 1,
+    "skipped": 0,
+    "failed": 0,
+    "version": "tmux 3.8",
+    "receipt": "live-tmux/live-tmux.json"
+  },
+  "ods_engine": {
+    "passed": 507,
+    "skipped": 0,
+    "failed": 0,
+    "log": "ods-engine.log"
+  },
+  "ods_host_workflows": {
+    "passed": 53,
+    "skipped": 0,
+    "failed": 0,
+    "log": "ods-host.log"
+  },
+  "local_ods": {
+    "passed": 1,
+    "skipped": 0,
+    "failed": 0,
+    "regular_workbooks_available": 1,
+    "unsupported_profile_refusals": 0,
+    "log": "ods-local.log"
+  },
+  "analysis": {
+    "files": 154,
+    "exit_code": 0,
+    "additional_changed_live_targets": [
+      "ssh-sharing-analysis.log",
+      "tmux-analysis.log"
+    ]
+  },
+  "source_scope": "The accepted unit and SSH source scopes are byte-identical to the final production/dependency scopes. Later changes affect only live tests outside those earlier scopes; see unit-source-equivalence.json.",
+  "ods_verified_scope": [
+    "shared spreadsheet-level validation definitions",
+    "blank input cells and bounded expansion",
+    "literal whole-number, decimal, date and text-length comparisons/bounds",
+    "list/range-source snapshots",
+    "typed viewer and Table fallback",
+    "XLSX copy save with original ODS source preserved"
+  ],
+  "ods_remaining": [
+    "dynamic range-backed list links",
+    "custom/formula-driven conditions",
+    "full native input/error message elements and styles",
+    "advanced conditional-format families",
+    "remaining workbook metadata and page properties",
+    "native ODS serialization; edits currently save as XLSX copies"
+  ],
+  "test_fixtures": "Isolated private zsh startup directories. Real agent keys load after compilation. Exact 3 MiB transfer/half-close/cleanup assertions use a 60-second debug-host deadline, not the earlier 20-second deadline.",
+  "previous_failures": "Retained under attempts/. Excluded from final pass counts. Initial shared checkout switched only after its recorded tests; final work uses this isolated checkout.",
+  "publication": "Local commits only; no remote merge, push or deployment."
+}

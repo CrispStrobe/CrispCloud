@@ -1,0 +1,67 @@
+00:00 +0: loading /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart
+00:00 +0: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODS keeps typed values, repeats and the real sheet name
+00:00 +1: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODS merged and covered cells each retain one grid position
+00:00 +2: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODS keeps leading and interior repeated gaps through row groups
+00:00 +3: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODF row positions do not depend on namespace prefixes
+00:00 +4: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODT tables retain covered cells and interior blank rows
+00:00 +5: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODF preview refuses data after an oversized row gap without a partial table
+00:00 +6: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODF preview refuses data after an oversized column gap without a partial table
+00:00 +7: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODF preview refuses repeated data beyond the row limit without a partial table
+00:00 +8: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODF preview refuses repeated data beyond the column limit without a partial table
+00:00 +9: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODF preview refuses a small XML Cartesian expansion without a partial table
+00:00 +10: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODF preview refuses padding earlier rows to a later wide row without a partial table
+00:00 +11: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODF preview shares expansion limits across tables
+00:00 +12: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODF preview bounds repeated text before rendering
+00:00 +13: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODF preview rejects invalid repeat counts
+00:00 +14: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODS with a merged cell keeps following columns aligned
+00:00 +15: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODS preserves internal blank runs and trims trailing padding
+00:00 +16: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODS CSV preserves leading blank rows and cell whitespace
+00:00 +17: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODS counts explicit and repeated covered cells only once
+00:00 +18: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODS refuses later data when empty padding exceeds the row limit
+00:00 +19: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODT renders lists and ODF table cells
+00:00 +20: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODT renders inline styles, links, notes and ordered lists
+00:00 +21: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODP exposes slide size, positioned text, fills and notes
+00:00 +22: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODP loads framed images from the package
+00:00 +23: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODT named styles and list styles come from styles.xml
+00:00 +24: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODT headers and footers keep text and skip page fields
+00:00 +25: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODT text boxes keep their visible labels
+00:00 +26: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODT embeds a bounded picture as a data image
+00:00 +27: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: DOCX produces Markdown with headings, bold runs and tables
+00:00 +28: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: XLSX produces CSV from shared strings and cell references
+00:00 +29: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: PPTX produces one section per slide
+00:00 +30: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: PPTX exposes slide geometry, text and fills
+00:00 +31: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: truncated legacy PPT has a structured extraction failure
+00:00 +32: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: ODT content.xml produces headings and paragraphs
+00:00 +33: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: EPUB chapters become Markdown
+00:00 +34: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: EPUB extraction follows relocated OPF spine and excludes navigation
+00:00 +35: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: malformed documents fail gracefully
+00:00 +36: /private/tmp/crispcloud-terminal-ods-isolated/test/office_document_service_test.dart: an RTF file named .doc is read as RTF
+00:56 +37: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/ods_viewer_grid_test.dart: ODS opens in the Quds grid and falls back to the typed table
+01:01 +38: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/ods_viewer_workflow_test.dart: ODS F3 grid and table fallback preserve typed cells and source bytes
+01:04 +39: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/ods_viewer_workflow_test.dart: ODS archive member uses its display name for grid and table fallback
+01:06 +40: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/ods_editor_workflow_test.dart: ODS editing saves an XLSX copy and preserves its source
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:11 +41: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/ods_editor_workflow_test.dart: ODS editing saves an XLSX copy and preserves its source
+01:11 +42: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_dialog_test.dart: office load translates an oversized verified file without reading it
+01:11 +42: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/ods_editor_workflow_test.dart: ODS copy outcome null retains unsaved edits
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:11 +42: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_dialog_test.dart: office load translates an oversized verified file without reading it
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:13 +43: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_dialog_test.dart: office load translates an oversized verified file without reading it
+01:13 +43: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/ods_editor_workflow_test.dart: ODS copy outcome OfficeCopyOutcome.downloadedCopy retains unsaved edits
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:13 +43: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_dialog_test.dart: office load translates an oversized verified file without reading it
+⚠️ [OfficeEditor] office editor load failed
+  Error: This file exceeds the 64 MiB editing limit.
+01:13 +44: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/ods_editor_workflow_test.dart: ODS copy outcome OfficeCopyOutcome.downloadedCopy retains unsaved edits
+01:14 +45: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_dialog_test.dart: captured editing limits stay typed and localized in all locales
+01:14 +45: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/ods_editor_workflow_test.dart: ODS copy completion cannot clean a newer edit
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:14 +46: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/ods_editor_workflow_test.dart: ODS copy completion cannot clean a newer edit
+01:15 +47: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_dialog_test.dart: PPTX opens in the slide editor
+01:16 +48: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_dialog_test.dart: DOCX opens in the Word editor with the ribbon
+01:18 +49: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_dialog_test.dart: closing the editor clears the native-menu bridge safely
+01:19 +50: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_dialog_test.dart: ODF/legacy files show a safe editing message
+01:20 +51: /private/tmp/crispcloud-terminal-ods-isolated/test/local_odf_corpus_test.dart: local ODF corpus parses into typed previews
+01:21 +52: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/office_editor_dialog_test.dart: macro-enabled workbooks open in the sheet editor
+01:23 +53: All tests passed!

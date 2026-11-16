@@ -1,0 +1,55 @@
+[
+  {
+    "phase": "unit",
+    "head": "de3fff08b4e65cb4dc8383544009d816f520325f",
+    "command": [
+      "python3",
+      "tool/run_terminal_validation.py",
+      "native",
+      "--flutter",
+      "/Users/christianstrobele/flutter-3.47.8/bin/flutter",
+      "--dart",
+      "/Users/christianstrobele/flutter-3.47.8/bin/cache/dart-sdk/bin/dart",
+      "--evidence",
+      "/private/tmp/crispcloud-terminal-ods-isolated/docs/validation/terminal-ods-refresh-20261116/unit"
+    ],
+    "cwd": "/private/tmp/crispcloud-terminal-ods-isolated",
+    "started_utc": "2026-11-16T09:09:51.656044+00:00",
+    "seconds": 582.156,
+    "exit_code": 0,
+    "changed_sources": [],
+    "log": "unit-runner.log",
+    "source_sha256": "7bff38ae47542218c114b7878209f7e85f8fb2a21fbe1e599964c8f8a6a41bb7",
+    "final_line": "08:23 +982 ~2: All tests passed!",
+    "counts": {
+      "passed": 982,
+      "skipped": 2,
+      "failed": 0
+    }
+  },
+  {
+    "phase": "ssh-live",
+    "head": "de3fff08b4e65cb4dc8383544009d816f520325f",
+    "command": [
+      "python3",
+      "tool/run_terminal_live_smoke.py",
+      "--flutter",
+      "/Users/christianstrobele/flutter-3.47.8/bin/flutter",
+      "--with-pty",
+      "--with-unix-agent"
+    ],
+    "cwd": "/private/tmp/crispcloud-terminal-ods-isolated",
+    "started_utc": "2026-11-16T09:19:35.198412+00:00",
+    "seconds": 421.482,
+    "exit_code": 1,
+    "changed_sources": [],
+    "log": "ssh-live.log",
+    "source_sha256": "7bff38ae47542218c114b7878209f7e85f8fb2a21fbe1e599964c8f8a6a41bb7",
+    "final_line": "05:16 +22 -3: Some tests failed.",
+    "counts": {
+      "passed": 22,
+      "skipped": 0,
+      "failed": 3
+    }
+  }
+]

@@ -1,0 +1,15 @@
+00:00 +0: loading /private/tmp/crispcloud-terminal-ods-isolated/test/tmux_control_live_test.dart
+00:00 +0: actual tmux maps panes, preserves Unicode, detaches and recaptures
+00:00 +0 -1: actual tmux maps panes, preserves Unicode, detaches and recaptures [E]
+  Expected: ['120 40']
+    Actual: ['120 ']
+     Which: at location [0] is '120 ' instead of '120 40'
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/tmux_control_live_test.dart 145:9              main.<fn>
+  
+00:00 +0 -1: Some tests failed.
+
+Failing tests:
+  /private/tmp/crispcloud-terminal-ods-isolated/test/tmux_control_live_test.dart: actual tmux maps panes, preserves Unicode, detaches and recaptures

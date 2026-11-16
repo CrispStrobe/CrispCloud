@@ -19,6 +19,12 @@ cells are now imported. Whole-number, decimal, date and text-length validation
 operators are integrated alongside list rules. Dynamic list links, custom and
 formula-driven validation, and full native prompt/error metadata remain open.
 Current qualification is recorded in `validation/terminal-ods-refresh-20261116/`.
+The final local follow-up passed 507 spreadsheet/ODS engine tests, 53 host
+viewer/editor workflow tests, and the local ODS import check (one workbook,
+no unsupported-profile refusal). These results qualify the supported import
+profile and XLSX-copy workflows; they do not establish complete ODF fidelity.
+See `validation/terminal-ods-refresh-20261116/summary.json` for exact source
+identities, commands and the separately qualified terminal results.
 
 ## Earlier verified state
 

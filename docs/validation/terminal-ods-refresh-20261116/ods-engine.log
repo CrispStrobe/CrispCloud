@@ -1,0 +1,509 @@
+00:00 +0: loading test/sheet_authored_number_format_test.dart
+00:00 +0: test/sheet_authored_number_format_test.dart: an authored custom number format is written and reloads
+00:00 +1: test/sheet_authored_number_format_test.dart: an authored custom number format is written and reloads
+00:00 +2: test/sheet_authored_number_format_test.dart: an authored custom number format is written and reloads
+00:00 +3: test/sheet_authored_number_format_test.dart: authored formats merge with a native numFmts collection
+00:00 +4: test/sheet_comments_namespace_test.dart: new worksheet does not claim valid unowned legacy comments when empty
+00:01 +5: test/sheet_comments_schema_test.dart: cell comments keep a valid author table and relationship
+00:01 +6: test/sheet_comments_schema_test.dart: cell comments keep a valid author table and relationship
+00:01 +7: test/sheet_comments_schema_test.dart: cell comments keep a valid author table and relationship
+00:01 +8: test/sheet_comments_schema_test.dart: cell comments keep a valid author table and relationship
+00:01 +9: test/sheet_comments_schema_test.dart: cell comments keep a valid author table and relationship
+00:01 +10: test/sheet_comments_schema_test.dart: cell comments keep a valid author table and relationship
+00:01 +11: test/sheet_comments_namespace_test.dart: clearing relocated comments cannot expose a legacy decoy
+00:01 +12: test/sheet_comments_namespace_test.dart: clearing relocated comments cannot expose a legacy decoy
+00:01 +13: test/sheet_comments_namespace_test.dart: clearing shared relocated comments cannot expose a legacy decoy
+00:01 +14: test/sheet_comments_namespace_test.dart: legacy fixed-name comments remain readable without a relationship
+00:01 +15: test/sheet_comments_namespace_test.dart: new comments resolve from a worksheet in a nested directory
+00:01 +16: test/sheet_comments_namespace_test.dart: invalid external comments target cannot alter package bytes
+00:01 +17: test/sheet_comments_namespace_test.dart: invalid missing comments target cannot alter package bytes
+00:01 +18: test/sheet_comments_namespace_test.dart: invalid wrong type comments target cannot alter package bytes
+00:01 +19: test/sheet_comments_namespace_test.dart: invalid wrong root comments target cannot alter package bytes
+00:01 +20: test/sheet_comments_namespace_test.dart: a non-comment part at the legacy filename is not overwritten
+00:01 +21: test/sheet_comments_namespace_test.dart: shared comments remain owned when one sheet edits
+00:01 +22: test/sheet_comments_namespace_test.dart: shared comments remain owned when one sheet clears
+00:01 +23: test/sheet_comments_namespace_test.dart: clearing standard comments removes them
+00:01 +24: test/sheet_comments_namespace_test.dart: clearing relocated comments removes them
+00:01 +25: test/sheet_comments_namespace_test.dart: every comment element belongs to the SpreadsheetML namespace
+00:01 +26: test/sheet_comments_namespace_test.dart: CT_Rst preserves ordinary text through three XLSX saves
+00:01 +27: test/sheet_comments_namespace_test.dart: CT_Rst preserves leading whitespace through three XLSX saves
+00:01 +28: test/sheet_comments_namespace_test.dart: CT_Rst preserves trailing whitespace through three XLSX saves
+00:01 +29: test/sheet_comments_namespace_test.dart: CT_Rst preserves multiline and tabs through three XLSX saves
+00:01 +30: test/sheet_comments_namespace_test.dart: CT_Rst preserves empty text through three XLSX saves
+00:01 +31: test/sheet_comments_namespace_test.dart: CT_Rst preserves escaped XML and Unicode through three XLSX saves
+00:02 +32: test/sheet_explicit_style_fidelity_test.dart: explicit native style zero survives three direct and isolate saves
+00:02 +33: test/sheet_explicit_style_fidelity_test.dart: an omitted source style remains omitted through repeated saves
+00:02 +34: test/sheet_fill_fidelity_test.dart: native fill reference checks first export and three saves: unrelated
+00:02 +35: test/sheet_fill_fidelity_test.dart: native fill reference checks first export and three saves: unrelated
+00:02 +36: test/sheet_fill_fidelity_test.dart: native fill reference checks first export and three saves: unrelated
+00:02 +37: test/sheet_fill_fidelity_test.dart: native fill reference checks first export and three saves: unrelated
+00:02 +38: test/sheet_fill_fidelity_test.dart: native fill reference checks first export and three saves: unrelated
+00:02 +39: test/sheet_fill_fidelity_test.dart: native fill reference checks first export and three saves: unrelated
+00:03 +40: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: '[Remote.xlsx]Data'!B2
+00:03 +41: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: '[Remote.xlsx]Data'!B2
+00:03 +42: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: '[Remote.xlsx]Data'!B2
+00:03 +43: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: '[Remote.xlsx]Data'!B2
+00:03 +44: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: '[Remote.xlsx]Data'!B2
+00:03 +45: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: '[Remote.xlsx]Data'!B2
+00:03 +46: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: '[Remote.xlsx]Data'!B2
+00:04 +47: test/sheet_formula_dependency_cache_test.dart: unsupported dependencies retain every cache; reverse=false
+00:04 +48: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: [1]Data!B2
+00:04 +49: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: [1]Data!B2
+00:04 +50: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: [1]Data!B2
+00:04 +51: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: [1]Data!B2
+00:04 +52: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: [1]Data!B2
+00:04 +53: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: [1]Data!B2
+00:04 +54: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: [1]Data!B2
+00:04 +55: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: [1]Data!B2
+00:04 +56: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: [1]Data!B2
+00:04 +57: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: [1]Data!B2
+00:04 +58: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: [1]Data!B2
+00:04 +59: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: [1]Data!B2
+00:04 +60: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: [1]Data!B2
+00:04 +61: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: [1]Data!B2
+00:04 +62: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: [1]Data!B2
+00:04 +63: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: [1]Data!B2
+00:04 +64: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: [1]Data!B2
+00:04 +65: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: [1]Data!B2
+00:04 +66: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: [1]Data!B2
+00:04 +67: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: [1]Data!B2
+00:04 +68: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: [1]Data!B2
+00:04 +69: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: [1]Data!B2
+00:04 +70: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: [1]Data!B2
+00:04 +71: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: [1]Data!B2
+00:04 +72: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: [1]Data!B2
+00:04 +73: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: [1]Data!B2
+00:04 +74: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: [1]Data!B2
+00:04 +75: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: [1]Data!B2
+00:04 +76: test/sheet_formula_dependency_cache_test.dart: cross-sheet runtime references read fresh values in their own scope
+00:04 +77: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: SUM(Data:Summary!B2)
+00:04 +78: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: SUM(Data:Summary!B2)
+00:04 +79: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: SUM(Data:Summary!B2)
+00:04 +80: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: SUM(Data:Summary!B2)
+00:04 +81: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: SUM(Data:Summary!B2)
+00:04 +82: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: SUM(Data:Summary!B2)
+00:04 +83: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: SUM(Data:Summary!B2)
+00:04 +84: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: SUM(Data:Summary!B2)
+00:04 +85: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: SUM(Data:Summary!B2)
+00:04 +86: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: SUM(Data:Summary!B2)
+00:04 +87: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: SUM(Data:Summary!B2)
+00:04 +88: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: SUM(Data:Summary!B2)
+00:04 +89: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: SUM(Data:Summary!B2)
+00:04 +90: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: SUM(Data:Summary!B2)
+00:04 +91: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: SUM(Data:Summary!B2)
+00:04 +92: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: SUM(Data:Summary!B2)
+00:04 +93: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: SUM(Data:Summary!B2)
+00:04 +94: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: SUM(Data:Summary!B2)
+00:04 +95: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: SUM(Data:Summary!B2)
+00:04 +96: test/sheet_formula_dependency_cache_test.dart: imported scalar cache types survive three direct/isolate saves
+00:04 +97: test/sheet_formula_dependency_cache_test.dart: imported scalar cache types survive three direct/isolate saves
+00:05 +98: test/sheet_formula_dependency_cache_test.dart: imported scalar cache types survive three direct/isolate saves
+00:05 +99: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: SUM(Data!A:B)
+00:05 +100: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: SUM('Data'!$A:$B)
+00:05 +101: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: SUM(Data!1:3)
+00:05 +102: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: SUM('Data'!$1:$3)
+00:05 +103: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: SUM(A:A)
+00:06 +104: test/sheet_formula_test.dart: evaluates arithmetic, logic, lookup, and text functions
+00:06 +105: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: 2+3 unparsed
+00:06 +106: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: 2+3 unparsed
+00:06 +107: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: 2+3 unparsed
+00:06 +108: test/sheet_formula_cache_fidelity_test.dart: unsupported evaluation retains imported cache: 2+3 unparsed
+00:06 +109: test/sheet_formula_test.dart: round-trips merged cells and center alignment
+00:06 +110: test/sheet_formula_test.dart: round-trips merged cells and center alignment
+00:06 +111: test/sheet_formula_cache_fidelity_test.dart: formula cache keeps its native scalar type: IF(Data!B2>0,"Data!A1 ""quoted""","unused")
+00:06 +112: test/sheet_formula_cache_fidelity_test.dart: formula cache keeps its native scalar type: IF(Data!B2>0,"Data!A1 ""quoted""","unused")
+00:06 +113: test/sheet_formula_cache_fidelity_test.dart: formula cache keeps its native scalar type: IF(Data!B2>0,"Data!A1 ""quoted""","unused")
+00:06 +114: test/sheet_formula_cache_fidelity_test.dart: formula cache keeps its native scalar type: IF(Data!B2>0,"Data!A1 ""quoted""","unused")
+00:06 +115: test/sheet_formula_cache_fidelity_test.dart: formula cache keeps its native scalar type: IF(Data!B2>0,"Data!A1 ""quoted""","unused")
+00:06 +116: test/sheet_formula_cache_fidelity_test.dart: formula cache keeps its native scalar type: IF(Data!B2>0,"Data!A1 ""quoted""","unused")
+00:06 +117: test/sheet_formula_cache_fidelity_test.dart: formula cache keeps its native scalar type: IF(Data!B2>0,"Data!A1 ""quoted""","unused")
+00:06 +118: test/sheet_formula_cache_fidelity_test.dart: formula cache keeps its native scalar type: IF(Data!B2>0,"Data!A1 ""quoted""","unused")
+00:06 +119: test/sheet_formula_test.dart: scans formula references with source offsets
+00:06 +120: test/sheet_formula_cache_fidelity_test.dart: formula cache keeps its native scalar type: IF(Data!B2>0,"0012","0099")
+00:06 +121: test/sheet_formula_cache_fidelity_test.dart: formula cache keeps its native scalar type: IF(Data!B2>0,"0012","0099")
+00:06 +122: test/sheet_formula_cache_fidelity_test.dart: formula cache keeps its native scalar type: IF(Data!B2>0,"0012","0099")
+00:06 +123: test/sheet_formula_cache_fidelity_test.dart: formula cache keeps its native scalar type: IF(Data!B2>0,"0012","0099")
+00:06 +124: test/sheet_formula_cache_fidelity_test.dart: formula cache keeps its native scalar type: IF(Data!B2>0,"0012","0099")
+00:06 +125: test/sheet_formula_cache_fidelity_test.dart: formula cache keeps its native scalar type: IF(Data!B2>0,"0012","0099")
+00:06 +126: test/sheet_formula_cache_fidelity_test.dart: formula cache keeps its native scalar type: IF(Data!B2>0,"0012","0099")
+00:06 +127: test/sheet_formula_cache_fidelity_test.dart: formula cache keeps its native scalar type: IF(Data!B2>0,"0012","0099")
+00:06 +128: test/sheet_formula_cache_fidelity_test.dart: formula cache keeps its native scalar type: IF(Data!B2>0,"0012","0099")
+00:06 +129: test/sheet_formula_cache_fidelity_test.dart: formula cache keeps its native scalar type: IF(Data!B2>0,"0012","0099")
+00:06 +130: test/sheet_formula_test.dart: persists validation comments tables and hides filtered rows
+00:06 +131: test/sheet_formula_cache_fidelity_test.dart: formula cache keeps its native scalar type: IF(Data!B2>0,"#literal","unused")
+00:06 +132: test/sheet_formula_cache_fidelity_test.dart: formula cache keeps its native scalar type: IF(Data!B2>0,"#literal","unused")
+00:06 +133: test/sheet_formula_cache_fidelity_test.dart: formula cache keeps its native scalar type: IF(Data!B2>0,"#literal","unused")
+00:06 +134: test/sheet_formula_cache_fidelity_test.dart: formula cache keeps its native scalar type: IF(Data!B2>0,"#literal","unused")
+00:06 +135: test/sheet_formula_cache_fidelity_test.dart: formula cache keeps its native scalar type: Data!B2>0
+00:06 +136: test/sheet_formula_cache_fidelity_test.dart: formula cache keeps its native scalar type: Data!B2<0
+00:07 +137: test/sheet_formula_cache_fidelity_test.dart: formula cache keeps its native scalar type: Missing!B2
+00:07 +138: test/sheet_import_fidelity_test.dart: headers and footers font codes stay inside their section
+00:07 +139: test/sheet_import_fidelity_test.dart: headers and footers font codes stay inside their section
+00:07 +140: test/sheet_formula_cache_fidelity_test.dart: formula cache keeps its native scalar type: Data!B2+Summary!B2
+00:07 +141: test/sheet_formula_cache_fidelity_test.dart: formula cache keeps its native scalar type: Data!B2+Summary!B2
+00:07 +142: test/sheet_formula_cache_fidelity_test.dart: formula cache keeps its native scalar type: Data!B2+Summary!B2
+00:07 +143: test/sheet_formula_cache_fidelity_test.dart: formula cache keeps its native scalar type: Data!B2+Summary!B2
+00:07 +144: test/sheet_formula_cache_fidelity_test.dart: formula cache keeps its native scalar type: Data!B2+Summary!B2
+00:07 +145: test/sheet_formula_cache_fidelity_test.dart: formula cache keeps its native scalar type: Data!B2+Summary!B2
+00:07 +146: test/sheet_formula_cache_fidelity_test.dart: formula cache keeps its native scalar type: Data!B2+Summary!B2
+00:07 +147: test/sheet_formula_cache_fidelity_test.dart: formula cache keeps its native scalar type: Data!B2+Summary!B2
+00:07 +148: test/sheet_import_fidelity_test.dart: charts without a value cache points come from the c:val range with c:cat labels
+00:07 +149: test/sheet_import_fidelity_test.dart: charts without a value cache points come from the c:val range with c:cat labels
+00:07 +150: test/sheet_formula_cache_fidelity_test.dart: error spelling is text when returned by literal: #REF!
+00:07 +151: test/sheet_formula_cache_fidelity_test.dart: error spelling is text when returned by literal: #REF!
+00:07 +152: test/sheet_formula_cache_fidelity_test.dart: error spelling is text when returned by IF: #REF!
+00:07 +153: test/sheet_formula_cache_fidelity_test.dart: error spelling is text when returned by reference: #REF!
+00:08 +154: test/sheet_formula_cache_fidelity_test.dart: error spelling is text when returned by literal: #N/A
+00:08 +155: test/sheet_macro_preservation_test.dart: editing an xlsm keeps the macro project and main content type
+00:08 +156: test/sheet_macro_preservation_test.dart: editing an xlsm keeps the macro project and main content type
+00:08 +157: test/sheet_macro_preservation_test.dart: editing an xlsm keeps the macro project and main content type
+00:08 +158: test/sheet_macro_preservation_test.dart: editing an xlsm keeps the macro project and main content type
+00:08 +159: test/sheet_formula_cache_fidelity_test.dart: error spelling is text when returned by IF: #NAME?
+00:08 +160: test/sheet_macro_preservation_test.dart: editing an xltx keeps the template main content type
+00:08 +161: test/sheet_formula_cache_fidelity_test.dart: error spelling is text when returned by reference: #NAME?
+00:08 +162: test/sheet_formula_cache_fidelity_test.dart: error spelling is text when returned by literal: #ERROR! literal
+00:09 +163: test/sheet_formula_cache_fidelity_test.dart: error spelling is text when returned by IF: #ERROR! literal
+00:09 +164: test/sheet_formula_cache_fidelity_test.dart: error spelling is text when returned by reference: #ERROR! literal
+00:09 +165: test/sheet_nav_test.dart: Ctrl-arrow jumps to the last cell of the same occupancy
+00:09 +166: test/sheet_formula_cache_fidelity_test.dart: real generated errors retain an error cache: NA()
+00:09 +167: test/sheet_formula_cache_fidelity_test.dart: real generated errors retain an error cache: NA()
+00:09 +168: test/sheet_formula_cache_fidelity_test.dart: real generated errors retain an error cache: NA()
+00:09 +169: test/sheet_formula_cache_fidelity_test.dart: real generated errors retain an error cache: NA()
+00:09 +170: test/sheet_formula_cache_fidelity_test.dart: real generated errors retain an error cache: NA()
+00:09 +171: test/sheet_formula_cache_fidelity_test.dart: real generated errors retain an error cache: 1/0
+00:09 +172: test/sheet_formula_cache_fidelity_test.dart: real generated errors retain an error cache: IF(TRUE,NA(),"#N/A")
+00:09 +173: test/sheet_formula_cache_fidelity_test.dart: real generated errors retain an error cache: CONCAT(NA())
+00:09 +174: test/sheet_formula_cache_fidelity_test.dart: referenced native error remains distinct from referenced text
+00:09 +175: test/sheet_normal_font_metrics_test.dart: Normal selection follows builtin identity and both indexed links
+00:09 +176: test/sheet_normal_font_metrics_test.dart: Normal selection follows builtin identity and both indexed links
+00:09 +177: test/sheet_normal_font_metrics_test.dart: Normal selection follows builtin identity and both indexed links
+00:09 +178: test/sheet_formula_cache_fidelity_test.dart: unsupported formula retains an explicit native e cache
+00:09 +179: test/sheet_formula_cache_fidelity_test.dart: unsupported formula retains an explicit native e cache
+00:09 +180: test/sheet_formula_cache_fidelity_test.dart: unsupported formula retains an explicit native e cache
+00:09 +181: test/sheet_normal_font_metrics_test.dart: ambiguous, invalid and absent Normal links remain unresolved
+00:09 +182: test/sheet_formula_cache_fidelity_test.dart: public scalar evaluators preserve their return types and error semantics
+00:09 +183: test/sheet_normal_font_metrics_test.dart: pure-engine unresolved opens preserve native widths and provenance
+00:09 +184: test/sheet_normal_font_metrics_test.dart: pure-engine unresolved opens preserve native widths and provenance
+00:09 +185: test/sheet_normal_font_metrics_test.dart: resolver projects native explicit and default widths before layout
+00:09 +186: test/sheet_normal_font_metrics_test.dart: base widths add pixel padding and omitted defaults remain bounded
+00:09 +187: test/sheet_normal_font_metrics_test.dart: new explicit default widths survive three copy saves
+00:10 +188: test/sheet_normal_font_metrics_test.dart: new base-only default widths survive three copy saves
+00:10 +189: test/sheet_normal_font_metrics_test.dart: new zero default widths survive three copy saves
+00:10 +190: test/sheet_normal_font_metrics_test.dart: existing native sheet format attributes remain complete and unique
+00:10 +191: test/sheet_normal_font_metrics_test.dart: zero native default width cannot divide hit-testing by zero
+00:10 +192: test/sheet_normal_font_metrics_test.dart: late metric resolution preserves explicit API and direct pixel edits
+00:10 +193: test/sheet_normal_font_metrics_test.dart: direct pixel edits cannot regain stale native provenance at a later metric
+00:10 +194: test/sheet_normal_font_metrics_test.dart: column and grid snapshots discard mismatched direct-edit provenance
+00:10 +195: test/sheet_normal_font_metrics_test.dart: observed direct removals and export mismatches invalidate native association
+00:10 +196: test/sheet_normal_font_metrics_test.dart: column history reprojects native states and preserves unrelated flags
+00:10 +197: test/sheet_normal_font_metrics_test.dart: grid history preserves native widths across inserts and font resolution
+00:10 +198: test/sheet_normal_font_metrics_test.dart: new sheets inherit the measured metric before native serialization
+00:10 +199: test/sheet_normal_font_metrics_test.dart: invalid metric results leave all sheets and provenance unchanged
+00:10 +200: test/sheet_normal_font_metrics_test.dart: font substitution is explicit and remeasurement is stable
+00:10 +201: test/sheet_normal_font_metrics_test.dart: unchanged native widths and styles survive three direct/isolate saves
+00:10 +202: test/sheet_normal_font_metrics_test.dart: native width precision and edited pixels survive three direct/isolate saves
+00:10 +203: test/sheet_qualified_name_error_test.dart: qualified-name LET shadowing agrees with graph for 
+00:10 +204: test/sheet_qualified_name_error_test.dart: qualified-name LET shadowing agrees with graph for _xlfn.
+00:10 +205: test/sheet_qualified_name_error_test.dart: qualified-name LET shadowing agrees with graph for _xlfn._xlws.
+00:10 +206: test/sheet_qualified_name_error_test.dart: numeric consumer retains a genuine named error: ABS(@)
+00:10 +207: test/sheet_qualified_name_error_test.dart: numeric consumer retains a genuine named error: ROUND(@,0)
+00:10 +208: test/sheet_qualified_name_error_test.dart: numeric consumer retains a genuine named error: ROUND(3,@)
+00:10 +209: test/sheet_qualified_name_error_test.dart: numeric consumer retains a genuine named error: ROUNDUP(@,0)
+00:10 +210: test/sheet_qualified_name_error_test.dart: numeric consumer retains a genuine named error: ROUNDDOWN(@,0)
+00:10 +211: test/sheet_qualified_name_error_test.dart: numeric consumer retains a genuine named error: MOD(@,2)
+00:10 +212: test/sheet_qualified_names_test.dart: localSheetId is the worksheet index and locals precede global names
+00:10 +213: test/sheet_qualified_names_test.dart: localSheetId is the worksheet index and locals precede global names
+00:10 +214: test/sheet_qualified_names_test.dart: localSheetId is the worksheet index and locals precede global names
+00:10 +215: test/sheet_qualified_names_test.dart: localSheetId is the worksheet index and locals precede global names
+00:10 +216: test/sheet_qualified_names_test.dart: localSheetId is the worksheet index and locals precede global names
+00:10 +217: test/sheet_qualified_names_test.dart: localSheetId is the worksheet index and locals precede global names
+00:11 +218: test/sheet_qualified_names_test.dart: localSheetId is the worksheet index and locals precede global names
+00:11 +219: test/sheet_qualified_names_test.dart: localSheetId is the worksheet index and locals precede global names
+00:11 +220: test/sheet_qualified_names_test.dart: localSheetId is the worksheet index and locals precede global names
+00:11 +221: test/sheet_qualified_names_test.dart: localSheetId is the worksheet index and locals precede global names
+00:11 +222: test/sheet_qualified_names_test.dart: localSheetId is the worksheet index and locals precede global names
+00:11 +223: test/sheet_qualified_names_test.dart: localSheetId is the worksheet index and locals precede global names
+00:11 +224: test/sheet_qualified_names_test.dart: localSheetId is the worksheet index and locals precede global names
+00:11 +225: test/sheet_qualified_names_test.dart: localSheetId is the worksheet index and locals precede global names
+00:11 +226: test/sheet_qualified_names_test.dart: localSheetId is the worksheet index and locals precede global names
+00:11 +227: test/sheet_qualified_names_test.dart: localSheetId is the worksheet index and locals precede global names
+00:11 +228: test/sheet_qualified_name_error_test.dart: numeric consumer retains a genuine named error: GCD(1,@)
+00:11 +229: test/sheet_qualified_names_test.dart: qualified names select their scope independently of the target sheet
+00:11 +230: test/sheet_qualified_names_test.dart: qualified names select their scope independently of the target sheet
+00:11 +231: test/sheet_qualified_names_test.dart: qualified names select their scope independently of the target sheet
+00:11 +232: test/sheet_qualified_names_test.dart: qualified names select their scope independently of the target sheet
+00:11 +233: test/sheet_qualified_name_error_test.dart: numeric consumer retains a genuine named error: MEDIAN(1,@)
+00:11 +234: test/sheet_qualified_names_test.dart: named scalar constants preserve boolean, text, error and numeric types
+00:11 +235: test/sheet_qualified_names_test.dart: named scalar constants preserve boolean, text, error and numeric types
+00:11 +236: test/sheet_qualified_names_test.dart: named scalar constants preserve boolean, text, error and numeric types
+00:11 +237: test/sheet_qualified_name_error_test.dart: numeric consumer retains a genuine named error: STDEVP(1,@)
+00:11 +238: test/sheet_qualified_names_test.dart: unsupported local definitions shadow globals and retain typed caches
+00:11 +239: test/sheet_qualified_names_test.dart: unsupported local definitions shadow globals and retain typed caches
+00:11 +240: test/sheet_qualified_names_test.dart: unsupported local definitions shadow globals and retain typed caches
+00:11 +241: test/sheet_qualified_names_test.dart: unsupported local definitions shadow globals and retain typed caches
+00:11 +242: test/sheet_qualified_name_error_test.dart: numeric consumer retains a genuine named error: IRR(@)
+00:11 +243: test/sheet_qualified_names_test.dart: named dependencies recalculate before users, including range ends
+00:11 +244: test/sheet_qualified_names_test.dart: named dependencies recalculate before users, including range ends
+00:11 +245: test/sheet_qualified_names_test.dart: named dependencies recalculate before users, including range ends
+00:11 +246: test/sheet_qualified_names_test.dart: named dependencies recalculate before users, including range ends
+00:11 +247: test/sheet_qualified_name_error_test.dart: numeric consumer retains a genuine named error: CHAR(@)
+00:11 +248: test/sheet_qualified_names_test.dart: cross-sheet lazy formulas evaluate in their own local scope
+00:11 +249: test/sheet_qualified_names_test.dart: cross-sheet lazy formulas evaluate in their own local scope
+00:11 +250: test/sheet_qualified_name_error_test.dart: numeric consumer retains a genuine named error: UNICHAR(@)
+00:11 +251: test/sheet_qualified_names_test.dart: every named cycle member loses its stale numeric cache
+00:11 +252: test/sheet_qualified_names_test.dart: every named cycle member loses its stale numeric cache
+00:11 +253: test/sheet_qualified_names_test.dart: every named cycle member loses its stale numeric cache
+00:11 +254: test/sheet_qualified_names_test.dart: every named cycle member loses its stale numeric cache
+00:11 +255: test/sheet_qualified_name_error_test.dart: numeric consumer retains a genuine named error: SEARCH("t",@)
+00:11 +256: test/sheet_qualified_names_test.dart: LET bindings and missing target sheets do not manufacture cycles
+00:11 +257: test/sheet_qualified_names_test.dart: LET bindings and missing target sheets do not manufacture cycles
+00:11 +258: test/sheet_qualified_names_test.dart: LET bindings and missing target sheets do not manufacture cycles
+00:11 +259: test/sheet_qualified_name_error_test.dart: numeric consumer retains a genuine named error: FIXED(@)
+00:11 +260: test/sheet_qualified_names_test.dart: unmodeled definition cannot partially calculate: SUM(Alpha!$B$2,Alpha!$B$3)
+00:11 +261: test/sheet_qualified_names_test.dart: unmodeled definition cannot partially calculate: SUM(Alpha!$B$2,Alpha!$B$3)
+00:11 +262: test/sheet_qualified_names_test.dart: unmodeled definition cannot partially calculate: SUM(Alpha!$B$2,Alpha!$B$3)
+00:11 +263: test/sheet_qualified_name_error_test.dart: numeric consumer retains a genuine named error: YEN(@)
+00:11 +264: test/sheet_qualified_names_test.dart: unmodeled definition cannot partially calculate: Alpha!B2
+00:11 +265: test/sheet_qualified_name_error_test.dart: numeric consumer retains a genuine named error: BAHTTEXT(@)
+00:11 +266: test/sheet_qualified_names_test.dart: unmodeled definition cannot partially calculate: Alpha!$B2
+00:11 +267: test/sheet_qualified_names_test.dart: unmodeled definition cannot partially calculate: Alpha!$B2
+00:11 +268: test/sheet_qualified_name_error_test.dart: numeric consumer retains a genuine named error: YEAR(@)
+00:11 +269: test/sheet_qualified_names_test.dart: unmodeled definition cannot partially calculate: Alpha!B$2
+00:11 +270: test/sheet_qualified_names_test.dart: unmodeled definition cannot partially calculate: Alpha!B$2
+00:11 +271: test/sheet_qualified_name_error_test.dart: numeric consumer retains a genuine named error: DAY(@)
+00:11 +272: test/sheet_qualified_names_test.dart: unmodeled definition cannot partially calculate: Alpha!$B:$B
+00:11 +273: test/sheet_qualified_name_error_test.dart: numeric consumer retains a genuine named error: HOUR(@)
+00:11 +274: test/sheet_qualified_names_test.dart: unmodeled definition cannot partially calculate: Alpha!$2:$3
+00:11 +275: test/sheet_qualified_names_test.dart: unmodeled definition cannot partially calculate: Alpha!$2:$3
+00:11 +276: test/sheet_qualified_name_error_test.dart: numeric consumer retains a genuine named error: SECOND(@)
+00:11 +277: test/sheet_qualified_names_test.dart: unmodeled definition cannot partially calculate: '[Remote.xlsx]Alpha'!$B$2
+00:11 +278: test/sheet_qualified_names_test.dart: unmodeled definition cannot partially calculate: '[Remote.xlsx]Alpha'!$B$2
+00:11 +279: test/sheet_qualified_name_error_test.dart: numeric consumer retains a genuine named error: PV(0.1,1,@)
+00:11 +280: test/sheet_qualified_names_test.dart: unmodeled definition cannot partially calculate: Alpha:Summary!$B$2
+00:11 +281: test/sheet_qualified_name_error_test.dart: numeric consumer retains a genuine named error: FV(0.1,1,@)
+00:11 +282: test/sheet_qualified_names_test.dart: unmodeled definition cannot partially calculate: [1]Alpha!$B$2
+00:11 +283: test/sheet_qualified_names_test.dart: unmodeled definition cannot partially calculate: [1]Alpha!$B$2
+00:11 +284: test/sheet_qualified_name_error_test.dart: numeric consumer retains a genuine named error: NPV(0.1,1,@)
+00:11 +285: test/sheet_qualified_names_test.dart: unmodeled definition cannot partially calculate: Alpha!$XFE$1
+00:11 +286: test/sheet_qualified_name_error_test.dart: numeric consumer retains a genuine named error: SIN(@)
+00:11 +287: test/sheet_qualified_names_test.dart: unmodeled definition cannot partially calculate: Alpha!$A$1048577
+00:11 +288: test/sheet_qualified_name_error_test.dart: numeric consumer retains a genuine named error: COS(@)
+00:11 +289: test/sheet_qualified_names_test.dart: unmodeled definition cannot partially calculate: OtherName
+00:11 +290: test/sheet_qualified_name_error_test.dart: numeric consumer retains a genuine named error: TAN(@)
+00:11 +291: test/sheet_qualified_names_test.dart: unmodeled definition cannot partially calculate: {1,2}
+00:11 +292: test/sheet_qualified_names_test.dart: unmodeled definition cannot partially calculate: {1,2}
+00:11 +293: test/sheet_qualified_name_error_test.dart: numeric consumer retains a genuine named error: EOMONTH(1,@)
+00:11 +294: test/sheet_qualified_names_test.dart: named native #NULL! is a real error, not unsupported evaluation
+00:11 +295: test/sheet_qualified_name_error_test.dart: numeric consumer retains a genuine named error: NETWORKDAYS(1,@)
+00:11 +296: test/sheet_qualified_names_test.dart: named native #DIV/0! is a real error, not unsupported evaluation
+00:11 +297: test/sheet_qualified_names_test.dart: named native #DIV/0! is a real error, not unsupported evaluation
+00:11 +298: test/sheet_qualified_name_error_test.dart: error handlers and type predicates consume genuine errors explicitly
+00:11 +299: test/sheet_qualified_names_test.dart: named native #VALUE! is a real error, not unsupported evaluation
+00:11 +300: test/sheet_qualified_name_error_test.dart: IF evaluates only its selected branch and preserves predicate errors
+00:11 +301: test/sheet_qualified_name_error_test.dart: IFERROR and IFNA evaluate fallback expressions only when selected
+00:11 +302: test/sheet_qualified_name_error_test.dart: IFERROR and IFNA evaluate fallback expressions only when selected
+00:11 +303: test/sheet_qualified_names_test.dart: named native #NAME? is a real error, not unsupported evaluation
+00:11 +304: test/sheet_qualified_name_error_test.dart: counting, criteria and type functions keep their explicit error policy
+00:11 +305: test/sheet_qualified_name_error_test.dart: counting, criteria and type functions keep their explicit error policy
+00:11 +306: test/sheet_qualified_names_test.dart: named native #N/A is a real error, not unsupported evaluation
+00:11 +307: test/sheet_qualified_name_error_test.dart: unsupported parser/function/name paths keep authored caches
+00:11 +308: test/sheet_qualified_name_error_test.dart: unsupported parser/function/name paths keep authored caches
+00:11 +309: test/sheet_qualified_names_test.dart: dynamic OFFSET on a newly scoped name retains its authored cache
+00:11 +310: test/sheet_qualified_name_error_test.dart: unused opaque constant branches cannot discard needed dependencies
+00:11 +311: test/sheet_qualified_names_test.dart: scoped caches and native definitions survive three saves and rename
+00:11 +312: test/sheet_qualified_names_test.dart: scoped caches and native definitions survive three saves and rename
+00:11 +313: test/sheet_qualified_names_test.dart: scoped caches and native definitions survive three saves and rename
+00:11 +314: test/sheet_qualified_names_test.dart: editing one range preserves opaque owners, scope and metadata on rebuild
+00:12 +315: test/sheet_rename_adversarial_test.dart: prepared rename preserves newer state atomically apply rejects newer formula
+00:12 +316: test/sheet_rename_adversarial_test.dart: prepared rename preserves newer state atomically apply rejects newer formula
+00:12 +317: test/sheet_rename_adversarial_test.dart: prepared rename preserves newer state atomically apply rejects newer formula
+00:12 +318: test/sheet_rename_adversarial_test.dart: prepared rename preserves newer state atomically apply rejects newer formula
+00:12 +319: test/sheet_rename_adversarial_test.dart: prepared rename preserves newer state atomically apply rejects newer formula
+00:12 +320: test/sheet_rename_adversarial_test.dart: prepared rename preserves newer state atomically apply rejects newer formula
+00:12 +321: test/sheet_rename_adversarial_test.dart: prepared rename preserves newer state atomically apply rejects newer formula
+00:12 +322: test/sheet_rename_adversarial_test.dart: prepared rename preserves newer state atomically apply rejects newer formula
+00:12 +323: test/sheet_rename_adversarial_test.dart: prepared rename preserves newer state atomically apply rejects newer formula
+00:12 +324: test/sheet_rename_adversarial_test.dart: prepared rename preserves newer state atomically apply rejects newer formula
+00:12 +325: test/sheet_rename_adversarial_test.dart: prepared rename preserves newer state atomically apply rejects newer formula
+00:12 +326: test/sheet_rename_adversarial_test.dart: prepared rename preserves newer state atomically apply rejects newer formula
+00:12 +327: test/sheet_rename_adversarial_test.dart: prepared rename preserves newer state atomically apply rejects newer formula
+00:12 +328: test/sheet_rename_adversarial_test.dart: prepared rename preserves newer state atomically apply rejects newer formula
+00:12 +329: test/sheet_rename_adversarial_test.dart: prepared rename preserves newer state atomically apply rejects newer formula
+00:12 +330: test/sheet_rename_adversarial_test.dart: prepared rename preserves newer state atomically apply rejects newer formula
+00:12 +331: test/sheet_rename_adversarial_test.dart: prepared rename preserves newer state atomically apply rejects newer formula
+00:12 +332: test/sheet_rename_fidelity_test.dart: independent native formula owners survive three saves
+00:12 +333: test/sheet_rename_fidelity_test.dart: independent native formula owners survive three saves
+00:12 +334: test/sheet_rename_fidelity_test.dart: independent native formula owners survive three saves
+00:13 +335: test/sheet_rename_fidelity_test.dart: independent native formula owners survive three saves
+00:13 +336: test/sheet_rename_fidelity_test.dart: independent native formula owners survive three saves
+00:13 +337: test/sheet_rename_adversarial_test.dart: prepared rename preserves newer state atomically undo rejects newer name collision
+00:13 +338: test/sheet_rename_fidelity_test.dart: unknown XML formula owner rejects without any model or native mutation
+00:13 +339: test/sheet_rename_adversarial_test.dart: qualified range endpoints remain separate from 3-D sheet names SUM(Data!A:Data!B)
+00:13 +340: test/sheet_rename_adversarial_test.dart: qualified range endpoints remain separate from 3-D sheet names SUM(Data!A:Data!B)
+00:13 +341: test/sheet_rename_fidelity_test.dart: unknown extension formula namespace rejects without any model or native mutation
+00:13 +342: test/sheet_rename_adversarial_test.dart: qualified range endpoints remain separate from 3-D sheet names SUM(Data!1:Data!3)
+00:13 +343: test/sheet_rename_adversarial_test.dart: qualified range endpoints remain separate from 3-D sheet names SUM(Data!1:Data!3)
+00:13 +344: test/sheet_rename_fidelity_test.dart: renaming after source cell changes keeps native chart references and fresh values
+00:13 +345: test/sheet_rename_fidelity_test.dart: renaming after source cell changes keeps native chart references and fresh values
+00:13 +346: test/sheet_rename_adversarial_test.dart: qualified range endpoints remain separate from 3-D sheet names SUM(Data!$1:Data!$3)
+00:13 +347: test/sheet_rename_adversarial_test.dart: qualified range endpoints remain separate from 3-D sheet names SUM(Data!$1:Data!$3)
+00:13 +348: test/sheet_rename_fidelity_test.dart: unrelated opaque text and a valid exclamation mark in a sheet name
+00:13 +349: test/sheet_rename_fidelity_test.dart: unrelated opaque text and a valid exclamation mark in a sheet name
+00:13 +350: test/sheet_rename_adversarial_test.dart: unrecognized affected native owners reject atomically unrecognized leaf in the SpreadsheetML namespace
+00:13 +351: test/sheet_rename_fidelity_test.dart: modified native name projection is guarded atomically
+00:13 +352: test/sheet_rename_adversarial_test.dart: external sparse chart cache stays opaque through three saves
+00:13 +353: test/sheet_rename_adversarial_test.dart: external sparse chart cache stays opaque through three saves
+00:13 +354: test/sheet_rename_adversarial_test.dart: external sparse chart cache stays opaque through three saves
+00:14 +355: test/sheet_rename_adversarial_test.dart: external sparse chart cache stays opaque through three saves
+00:14 +356: test/sheet_rename_adversarial_test.dart: external sparse chart cache stays opaque through three saves
+00:14 +357: test/sheet_rename_fidelity_test.dart: no-op is clean and undo/redo preserves saved values and native references
+00:14 +358: test/sheet_rename_adversarial_test.dart: duplicate-source native chart series survive rename and three saves
+00:14 +359: test/sheet_rename_fidelity_test.dart: script renames native references before three direct/isolate saves
+00:14 +360: test/sheet_rename_fidelity_test.dart: edited native formula =Data!B2+1 remains owned by the model across save and undo
+00:14 +361: test/sheet_rename_fidelity_test.dart: edited native formula null remains owned by the model across save and undo
+00:14 +362: test/sheet_save_cache_and_freeze_test.dart: a no-edit save keeps native formula caches
+00:14 +363: test/sheet_save_cache_and_freeze_test.dart: a no-edit save keeps native formula caches
+00:14 +364: test/sheet_save_cache_and_freeze_test.dart: a no-edit save keeps native formula caches
+00:14 +365: test/sheet_save_cache_and_freeze_test.dart: a no-edit save keeps native formula caches
+00:14 +366: test/sheet_save_cache_and_freeze_test.dart: a no-edit save keeps native formula caches
+00:14 +367: test/sheet_save_cache_and_freeze_test.dart: a frozen pane is anchored by topLeftCell, not xSplit
+00:15 +368: test/sheet_schema_fidelity_test.dart: absolute drawing targets remain a single relationship on save
+00:15 +369: test/sheet_schema_fidelity_test.dart: absolute drawing targets remain a single relationship on save
+00:15 +370: test/sheet_schema_fidelity_test.dart: absolute drawing targets remain a single relationship on save
+00:15 +371: test/sheet_schema_fidelity_test.dart: absolute drawing targets remain a single relationship on save
+00:15 +372: test/sheet_schema_fidelity_test.dart: absolute drawing targets remain a single relationship on save
+00:15 +373: test/sheet_schema_fidelity_test.dart: absolute drawing targets remain a single relationship on save
+00:15 +374: test/sheet_schema_fidelity_test.dart: absolute drawing targets remain a single relationship on save
+00:15 +375: test/sheet_schema_fidelity_test.dart: absolute drawing targets remain a single relationship on save
+00:15 +376: test/sheet_schema_fidelity_test.dart: absolute drawing targets remain a single relationship on save
+00:15 +377: test/sheet_schema_fidelity_test.dart: absolute drawing targets remain a single relationship on save
+00:15 +378: test/sheet_style_namespace_fidelity_test.dart: explicit equal RGB replaces native theme without style growth on repeated save
+00:15 +379: test/sheet_schema_fidelity_test.dart: repairs equivalent absolute and relative drawing relationships
+00:15 +380: test/sheet_style_namespace_fidelity_test.dart: explicit equal RGB intent survives isolate serialization
+00:15 +381: test/sheet_style_namespace_fidelity_test.dart: explicit equal RGB intent survives isolate serialization
+00:15 +382: test/sheet_schema_fidelity_test.dart: font edits retain imported formatting and use schema child order
+00:15 +383: test/sheet_schema_fidelity_test.dart: font edits retain imported formatting and use schema child order
+00:15 +384: test/sheet_schema_fidelity_test.dart: font edits retain imported formatting and use schema child order
+00:16 +385: test/sheet_style_namespace_fidelity_test.dart: prefixed imported styles keep cell formatting through workbook saves
+00:16 +386: test/sheet_style_namespace_fidelity_test.dart: prefixed imported styles keep cell formatting through workbook saves
+00:16 +387: test/sheet_style_namespace_fidelity_test.dart: prefixed imported styles keep cell formatting through workbook saves
+00:16 +388: test/sheet_schema_fidelity_test.dart: untouched width precision survives save cycles and column insertion
+00:16 +389: test/sheet_schema_fidelity_test.dart: an edited column exports the requested 96-pixel width
+00:16 +390: test/sheet_schema_fidelity_test.dart: column flags and default styles survive edits and width-less ranges
+00:16 +391: test/sheet_time_number_format_test.dart: date formats accept uppercase tokens and preserve escaped literals
+00:16 +392: test/sheet_time_number_format_test.dart: clock formats retain hours, minutes, seconds and AM/PM
+00:16 +393: test/sheet_time_number_format_test.dart: minutes before seconds do not use the calendar month
+00:16 +394: test/sheet_time_number_format_test.dart: date tokens reset minute context after a time
+00:16 +395: test/sheet_time_number_format_test.dart: quoted time tokens cannot change minute or elapsed context
+00:16 +396: test/sheet_time_number_format_test.dart: elapsed hours, minutes and seconds retain totals beyond one day
+00:16 +397: test/sheet_time_number_format_test.dart: standalone elapsed tokens support zero and padded uppercase units
+00:16 +398: test/sheet_time_number_format_test.dart: negative elapsed sections retain the sign and positive remainders
+00:16 +399: test/sheet_wrap_text_fidelity_test.dart: wrap flags keep exact XF indices (prefixed=false)
+00:16 +400: test/sheet_wrap_text_fidelity_test.dart: wrap flags keep exact XF indices (prefixed=true)
+00:16 +401: test/sheet_wrap_text_fidelity_test.dart: new unwrapped format does not reuse an existing wrapped format
+00:16 +402: test/sheet_wrap_text_fidelity_test.dart: alignment edits retain inherited wrap across repeated exports
+00:16 +403: test/sheet_wrap_text_fidelity_test.dart: explicit wrap false overrides a wrapped native style
+00:16 +404: test/sheet_wrap_text_fidelity_test.dart: a wrap-only edit creates a style and survives XLSX roundtrip
+00:16 +405: test/sheet_wrap_text_fidelity_test.dart: HTML table headers and cells retain wrap without growing styles
+00:17 +406: test/legacy_sheet_reader_test.dart: shared formula groups expand across their range
+00:17 +407: test/legacy_sheet_reader_test.dart: reads BIFF8 values, types, formulas and styles
+00:17 +408: test/legacy_sheet_reader_test.dart: keeps number formats, merges, widths and row heights
+00:17 +409: test/legacy_sheet_reader_test.dart: an imported .xls saves as a readable .xlsx
+00:17 +410: test/legacy_sheet_reader_test.dart: reads the HTML-table flavour of .xls
+00:17 +411: test/legacy_sheet_reader_test.dart: rejects non-BIFF and truncated input
+00:17 +412: test/ods_sheet_reader_test.dart: repeated annotations stay separate from cell values through save
+00:17 +413: test/ods_sheet_reader_test.dart: repeated annotations stay separate from cell values through save
+00:17 +414: test/ods_sheet_reader_test.dart: repeated annotations stay separate from cell values through save
+00:17 +415: test/ods_sheet_reader_test.dart: repeated annotations stay separate from cell values through save
+00:17 +416: test/ods_sheet_reader_test.dart: ambiguous and foreign annotations are refused without inventing a value
+00:17 +417: test/ods_sheet_reader_test.dart: repeated annotation text and author consume the expanded text budget
+00:17 +418: test/ods_sheet_reader_test.dart: annotation-only cells obey materialized-cell and grid bounds
+00:17 +419: test/ods_sheet_reader_test.dart: covered cells cannot silently discard annotations
+00:17 +420: test/ods_sheet_reader_test.dart: authored date literals retain spaces quotes and format-like text
+00:17 +421: test/ods_sheet_reader_test.dart: authored textual dates use namespace-aware widths and weekday names
+00:17 +422: test/ods_sheet_reader_test.dart: ODS keeps dates, times, booleans, formats and sheet references
+00:18 +423: test/ods_sheet_reader_test.dart: edge ODS survives an xlsx round trip
+00:18 +424: test/ods_sheet_reader_test.dart: currency symbols survive namespaced import and XLSX saves
+00:18 +425: test/ods_sheet_reader_test.dart: inherited styled padding stays sparse while explicit blanks survive
+00:18 +426: test/ods_sheet_reader_test.dart: ODS native column geometry survives a new XLSX copy
+00:18 +427: test/ods_sheet_reader_test.dart: cell then row then per-column styles survive repeated cells
+00:18 +428: test/ods_sheet_reader_test.dart: Default column and row padding stays sparse at large repeats
+00:18 +429: test/ods_sheet_reader_test.dart: column default bookkeeping shares the workbook dimension budget
+00:18 +430: test/ods_sheet_reader_test.dart: ODS hour and minute format survives XLSX save
+00:18 +431: test/ods_sheet_reader_test.dart: ODS minute and second format survives XLSX save
+00:18 +432: test/ods_sheet_reader_test.dart: ODS full clock format survives XLSX save
+00:18 +433: test/ods_sheet_reader_test.dart: ODS elapsed hours format survives XLSX save
+00:18 +434: test/ods_sheet_reader_test.dart: ODS elapsed minutes format survives XLSX save
+00:18 +435: test/ods_sheet_reader_test.dart: ODS elapsed minutes and seconds format survives XLSX save
+00:18 +436: test/ods_sheet_reader_test.dart: ODS elapsed seconds format survives XLSX save
+00:18 +437: test/ods_sheet_reader_test.dart: ODS document default style supplies the Normal cell font
+00:18 +438: test/ods_sheet_reader_test.dart: ODS document defaults supply column width and row height
+00:18 +439: test/ods_sheet_reader_test.dart: ODS hidden sheets survive save and reopen
+00:18 +440: test/ods_sheet_reader_test.dart: ODS hidden columns and rows survive save
+00:18 +441: test/ods_sheet_reader_test.dart: ODS text and duplicate conditions keep their type
+00:18 +442: test/ods_sheet_reader_test.dart: ODS begins-with and ends-with conditions keep their text
+00:18 +443: test/ods_sheet_reader_test.dart: ODS between conditions keep both bounds
+00:18 +444: test/ods_sheet_reader_test.dart: ODS conditional comparison operators keep their meaning
+00:18 +445: test/ods_sheet_reader_test.dart: ODS conditional formats import and serialize
+00:18 +446: test/ods_sheet_reader_test.dart: shared numeric rules on blank input cells survive an XLSX copy
+00:18 +447: test/ods_sheet_reader_test.dart: blank validation references obey expansion and grid limits
+00:18 +448: test/ods_sheet_reader_test.dart: spreadsheet-level list validations apply to every referring sheet
+00:18 +449: test/ods_sheet_reader_test.dart: spreadsheet-level range lists resolve a later source sheet
+00:18 +450: test/ods_sheet_reader_test.dart: table-local definitions stay isolated and override shared names
+00:18 +451: test/ods_sheet_reader_test.dart: foreign validation containers cannot define spreadsheet rules
+00:18 +452: test/ods_sheet_reader_test.dart: ODS whole, decimal, date and text-length validations import
+00:18 +453: test/ods_sheet_reader_test.dart: ODS list source preserves spaces in quoted sheet names
+00:18 +454: test/ods_sheet_reader_test.dart: ODS validation source range is bounded before scanning empty cells
+00:18 +455: test/ods_sheet_reader_test.dart: ODS range-source list validations resolve across sheets
+00:18 +456: test/ods_sheet_reader_test.dart: ODS validation source work is shared across definitions
+00:18 +457: test/ods_sheet_reader_test.dart: ODS list validations become typed XLSX validations
+00:18 +458: test/ods_sheet_reader_test.dart: ODS print areas, titles, names and autofilter survive save
+00:18 +459: test/ods_sheet_reader_test.dart: formula roundtrip preserves imported syntax: of:="a;b"
+00:18 +460: test/ods_sheet_reader_test.dart: formula roundtrip preserves imported syntax: of:="literal [.A1];COM.MICROSOFT.SUM"
+00:18 +461: test/ods_sheet_reader_test.dart: formula roundtrip preserves imported syntax: of:=IF([.A1]="a;b";"say ""[.B2];""";COM.MICROSOFT.SUM([.A1:.A2];1))
+00:18 +462: test/ods_sheet_reader_test.dart: formula roundtrip preserves imported syntax: of:=CONCATENATE("";"a;b";"[.A1]")
+00:18 +463: test/ods_sheet_reader_test.dart: formula roundtrip preserves imported syntax: of:=SUM(['Semi;Colon'.A1];1)
+00:18 +464: test/ods_sheet_reader_test.dart: formula roundtrip preserves imported syntax: of:=SUM(['COM.MICROSOFT.Data'.A1];1)
+00:18 +465: test/ods_sheet_reader_test.dart: formula namespace COM.MICROSOFT. only changes at a token boundary
+00:19 +466: test/ods_sheet_reader_test.dart: formula namespace ORG.OPENOFFICE. only changes at a token boundary
+00:19 +467: test/ods_sheet_reader_test.dart: declines a stored cell where a horizontal covered token is missing
+00:19 +468: test/ods_sheet_reader_test.dart: declines a stored cell inside an earlier vertical merged region
+00:19 +469: test/ods_sheet_reader_test.dart: annotations retain coordinates and do not leak into cell values
+00:19 +470: test/ods_sheet_reader_test.dart: reads ODS values, formulas, styles and merges
+00:19 +471: test/ods_sheet_reader_test.dart: an imported ODS saves as a readable .xlsx
+00:19 +472: test/ods_sheet_reader_test.dart: covered cells and internal repeated empty rows keep positions
+00:19 +473: test/ods_sheet_reader_test.dart: rejects a non-ODF package
+00:19 +474: test/ods_sheet_reader_test.dart: merged covered cells consume one coordinate and retain row spans
+00:19 +475: test/ods_sheet_reader_test.dart: repeated blank rows retain later data at exact coordinates
+00:19 +476: test/ods_sheet_reader_test.dart: row headers and groups retain blank row coordinates
+00:19 +477: test/ods_sheet_reader_test.dart: foreign lookalike elements and attributes cannot change sheet values
+00:19 +478: test/ods_sheet_reader_test.dart: named inherited cell wrap styles survive an XLSX roundtrip
+00:19 +479: test/ods_sheet_reader_test.dart: column groups retain dimensions and repeated values
+00:19 +480: test/ods_sheet_reader_test.dart: blank trailing padding is skipped without truncating data silently
+00:19 +481: test/ods_sheet_reader_test.dart: rejects cross-product expansion before materializing repeated cells
+00:19 +482: test/ods_sheet_reader_test.dart: workbook budget is shared by multiple individually small sheets
+00:19 +483: test/ods_sheet_reader_test.dart: repeated text is bounded before it can expand during XLSX save
+00:19 +484: test/ods_sheet_reader_test.dart: rejects invalid or out-of-range meaningful repeats instead of clipping
+00:19 +485: test/ods_sheet_reader_test.dart: formula conversion preserves delimiters and brackets inside literals
+00:19 +486: test/ods_sheet_reader_test.dart: repeated formulas decline rather than cloning incorrect references
+00:19 +487: test/ods_sheet_reader_test.dart: preserves ODF explicit spaces, tabs and paragraph boundaries
+00:19 +488: test/ods_sheet_reader_test.dart: rejects XML with spreadsheet local names in the wrong namespace
+00:19 +489: test/ods_sheet_reader_test.dart: rejects cyclic named styles and excessive XML nesting
+00:19 +490: test/ods_sheet_reader_test.dart: keeps internal repeated blank rows without expanding trailing padding
+00:19 +491: test/ods_sheet_reader_test.dart: blank runs retain in-range cells and refuse later out-of-range data
+00:19 +492: test/ods_sheet_reader_test.dart: horizontal merge consumes explicit placeholder once
+00:19 +493: test/ods_sheet_reader_test.dart: horizontal merge consumes repeated placeholders once
+00:19 +494: test/ods_sheet_reader_test.dart: horizontal merge consumes additional covered column once
+00:19 +495: test/ods_sheet_reader_test.dart: consecutive merged origins retain explicit covered positions
+00:19 +496: test/ods_sheet_reader_test.dart: merge spans retain in-range cells and refuse column overflow
+00:19 +497: test/ods_sheet_reader_test.dart: styled trailing row padding stays sparse within the admitted grid
+00:19 +498: test/ods_sheet_reader_test.dart: formula translation preserves literals in of:=MYCOM.MICROSOFT.FUNC(1)
+00:19 +499: test/ods_sheet_reader_test.dart: formula translation preserves literals in of:="a;b"
+00:19 +500: test/ods_sheet_reader_test.dart: formula translation preserves literals in of:="literal [.A1];COM.MICROSOFT.SUM"
+00:19 +501: test/ods_sheet_reader_test.dart: formula translation preserves literals in of:=IF([.A1]="a;b";"say ""[.B2];""";COM.MICROSOFT.SUM([.A1:.A2];1))
+00:19 +502: test/ods_sheet_reader_test.dart: formula translation preserves literals in of:=CONCATENATE("";"a;b";"[.A1]")
+00:19 +503: test/ods_sheet_reader_test.dart: formula translation preserves literals in of:=SUM(['Semi;Colon'.A1];1)
+00:19 +504: test/ods_sheet_reader_test.dart: formula translation preserves literals in of:=SUM(['COM.MICROSOFT.Data'.A1];1)
+00:19 +505: test/ods_sheet_reader_test.dart: formula translation preserves literals in of:=[$Sheet2.A1]+[.$A$1]
+00:19 +506: test/ods_sheet_reader_test.dart: formula translation preserves literals in of:=[$'Semi;Colon'.$A$1]
+00:19 +507: All tests passed!

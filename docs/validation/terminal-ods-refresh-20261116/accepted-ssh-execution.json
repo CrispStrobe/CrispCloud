@@ -1,0 +1,25 @@
+{
+  "phase": "ssh-live",
+  "head": "48ca7f2c04c11fa734c7024914eb171297e228a4",
+  "command": [
+    "python3",
+    "tool/run_terminal_live_smoke.py",
+    "--flutter",
+    "/Users/christianstrobele/flutter-3.47.8/bin/flutter",
+    "--with-pty",
+    "--with-unix-agent"
+  ],
+  "cwd": "/private/tmp/crispcloud-terminal-ods-isolated",
+  "started_utc": "2026-11-16T09:27:49.684967+00:00",
+  "seconds": 286.849,
+  "exit_code": 0,
+  "changed_sources": [],
+  "log": "ssh-live.log",
+  "source_sha256": "9c495a3853c7202b059af45abc63ea498ff515c53f8047661c1f651fa9d9a3c3",
+  "final_line": "03:52 +25: All tests passed!",
+  "counts": {
+    "passed": 25,
+    "skipped": 0,
+    "failed": 0
+  }
+}

@@ -1,9 +1,7 @@
 {
-  "audit_cutoff_utc": "2026-11-16T08:10:43.109919+00:00",
-  "qualified_source": "5f7f37922d7cda3de1aaf12b4472b2435553c320",
-  "quds_source": "9bf7b7aa9559d4d2a318152b9fe4eaa16c97ffd9",
+  "quds_source": "d65649004960ebf7ea4edd356212c13864215810",
   "managed_office_files": 2410,
-  "integration": "All 38 app and 24 Quds audited branch heads are included. New terminal resize/snapshot synchronization and final Zotero qualification commits were merged. The existing combined Quds source already includes the current Quds PR50 head.",
+  "integration": "All 40 app and 28 Quds fetched snapshot heads are included. App main through PR163, connection-sharing terminal head 01e231b5 and Quds main through PR52 are reconciled with the retained shared/blank-cell ODS fixes and live tmux fixes.",
   "retained_fixes": [
     "shared spreadsheet-level ODS list definitions",
     "validation rules on blank input cells with expansion/grid budgets",
@@ -12,5 +10,38 @@
     "Unicode tmux window labels",
     "short temporary Unix socket paths for real ssh-agent testing"
   ],
-  "ods_scope": "Previously implemented fixes remain supported. ODS is imported and edited as a new XLSX copy; native ODS serialization is absent. Range-backed validation lists remain value snapshots. Numeric/date/text-length/custom validation families, prompts/error metadata, broader conditional formatting and remaining workbook metadata are still open."
+  "ods_scope": [
+    "shared spreadsheet-level validation definitions",
+    "blank input cells and bounded expansion",
+    "literal whole-number, decimal, date and text-length comparisons/bounds",
+    "list/range-source snapshots",
+    "typed viewer and Table fallback",
+    "XLSX copy save with original ODS source preserved"
+  ],
+  "final_qualified_code": "76f38f861c836f3f646360bf34175059db5e44db",
+  "worktree": "/private/tmp/crispcloud-terminal-ods-isolated",
+  "new_app_main": "c7463402d878a418d6b31cfd0bfce5c8f6cca63c",
+  "new_terminal_head": "01e231b59d0873d8ada1b23085049612fc67622e",
+  "new_quds_main": "bd130094b4d1bc666aa9b166e6ed7fb1b447aeb3",
+  "integrated_ods_prs": {
+    "CrispCloud": [
+      162,
+      163
+    ],
+    "quds_office_suite": [
+      51,
+      52
+    ]
+  },
+  "ods_remaining": [
+    "dynamic range-backed list links",
+    "custom/formula-driven conditions",
+    "full native input/error message elements and styles",
+    "advanced conditional-format families",
+    "remaining workbook metadata and page properties",
+    "native ODS serialization; edits currently save as XLSX copies"
+  ],
+  "initial_audit_cutoff_utc": "2026-11-16T08:10:43.109919+00:00",
+  "initial_qualified_source": "5f7f37922d7cda3de1aaf12b4472b2435553c320",
+  "final_ref_snapshot_utc": "2026-11-16T08:56:46.083107+00:00"
 }

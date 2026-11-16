@@ -1,0 +1,6 @@
+{
+  "pubspec_sha256": "0efaf1c9de086ba52503ea2dff6831820e72612a127ea29be6190f7c84252b37",
+  "lock_sha256": "0332e894dbbb6b891b909bca49d50e5382381fabdc30bf57a81ca84a3da23618",
+  "sdk": "Dart 3.13.7",
+  "lock": "engine-pubspec.lock"
+}

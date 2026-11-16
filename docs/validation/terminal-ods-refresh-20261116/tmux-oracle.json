@@ -1,0 +1,8 @@
+{
+  "tmux": "3.8",
+  "observed_pipe_control_client_size": "120 ",
+  "observed_server_active_window_size": "120 40",
+  "assertion": "Accept only 120 40 or the known missing client-height field; independently require server active window to equal the exact requested 120 40.",
+  "upstream_format_implementation": "https://github.com/tmux/tmux/blob/3.8/format.c",
+  "reason": "client_height is gated on TTY_STARTED; a pipe-backed control client lacks this TTY flag."
+}
