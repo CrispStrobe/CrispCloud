@@ -1,0 +1,31 @@
+{
+  "recorded_utc": "2026-11-16T07:29:30.210444+00:00",
+  "head": "10c97e5ad8fe3ba4434831c6708784ba00552f9b",
+  "guards": [
+    {
+      "name": "office",
+      "command": [
+        "python3",
+        "tool/verify_office_fidelity.py",
+        "--require-tracked"
+      ],
+      "exit_code": 0,
+      "stdout": "Verified 2407 Office files; Quds source 9b31295bbf705b7aff8a732c16f9d010edbb4e3a.\nStandalone source packages/legacy_doc_parser: CrispStrobe/legacy-doc-parser at 4895712158127b2fc930d796e17035c3ca0dac62.\n",
+      "stderr": "",
+      "guard_sha256": "e6e2907c122b1e97d164b98f759243964de9b68804a191ab0af582a8bbb983ae"
+    },
+    {
+      "name": "ssh",
+      "command": [
+        "python3",
+        "tool/verify_dartssh2_vendor.py",
+        "--require-tracked"
+      ],
+      "exit_code": 0,
+      "stdout": "Verified 96 dartssh2 4.1.0 upstream files; 4 reviewed agent-channel patches.\n",
+      "stderr": "",
+      "guard_sha256": "42c384736c9780773b5a7b6a2fefb8efe172d8748df72ce8221200c26088c298"
+    }
+  ],
+  "github_actions_queried_or_awaited": false
+}

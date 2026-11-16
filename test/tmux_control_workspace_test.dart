@@ -8,6 +8,7 @@ import 'package:crisp_cloud/providers/terminal_provider.dart';
 import 'package:crisp_cloud/providers/terminal_triggers_provider.dart';
 import 'package:crisp_cloud/widgets/tmux_control_workspace.dart';
 import 'package:crisp_cloud/services/tmux_control_client.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -434,6 +435,122 @@ void main() {
       );
       await finish(tester);
     },
+  );
+
+  testWidgets(
+    'closed buffers allow local scrolling selection copying and window navigation without input',
+    (tester) async {
+      String? copied;
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(SystemChannels.platform, (call) async {
+            if (call.method == 'Clipboard.setData') {
+              copied = (call.arguments as Map)['text'] as String;
+            }
+            return null;
+          });
+      await mount(tester);
+      final terminal = client.panes['%1']!.session.terminal;
+      terminal.write(
+        [for (var line = 0; line < 160; line++) 'retained line $line\r\n']
+            .join(),
+      );
+      // Leave the remote mouse mode set at disconnect. The read-only view must
+      // route wheel gestures to local history, not emit mouse reports.
+      terminal.write('\x1b[?1000h\x1b[?1006h');
+      await tester.pump();
+      // Keep the fixture pane connections alive to prove that UI input is
+      // revoked immediately, before asynchronous pane teardown completes.
+      client.isClosed = true;
+      client.ready = false;
+      client.notifyListeners();
+      await tester.pump();
+      await tester.pump();
+      final paneFinder = find.byKey(const ValueKey('tmux-pane-%1'));
+      final terminalFinder = find.descendant(
+        of: paneFinder,
+        matching: find.byType(TerminalView),
+      );
+      final view = tester.widget<TerminalView>(terminalFinder);
+      expect(view.readOnly, isTrue);
+      expect(view.focusNode!.hasFocus, isFalse);
+      final scroll = view.scrollController!;
+      expect(scroll.position.maxScrollExtent, greaterThan(0));
+      scroll.jumpTo(scroll.position.maxScrollExtent);
+      final previousOffset = scroll.offset;
+      await tester.sendEventToBinding(
+        PointerScrollEvent(
+          position: tester.getCenter(terminalFinder),
+          scrollDelta: const Offset(0, -120),
+          kind: PointerDeviceKind.mouse,
+        ),
+      );
+      await tester.pump();
+      expect(scroll.offset, lessThan(previousOffset));
+
+      scroll.jumpTo(0);
+      await tester.pump();
+      final render = tester
+          .state<TerminalViewState>(terminalFinder)
+          .renderTerminal;
+      final start =
+          tester.getTopLeft(terminalFinder) +
+          Offset(render.cellSize.width / 2, render.lineHeight * 1.5);
+      final gesture = await tester.startGesture(
+        start,
+        kind: PointerDeviceKind.mouse,
+      );
+      await gesture.moveBy(Offset(render.cellSize.width * 16, 0));
+      await gesture.up();
+      await tester.pump();
+      final selection = view.controller!.selectionFor(terminal.buffer);
+      expect(selection, isNotNull);
+      final selectedText = terminal.buffer.getText(selection!, true);
+      expect(selectedText, contains('retained line'));
+      await tester.tap(find.byKey(const ValueKey('tmux-action-copy')));
+      await tester.pump();
+      expect(copied, selectedText);
+
+      await tester.tap(find.byKey(const ValueKey('tmux-activate-%2')));
+      await tester.pump();
+      expect(find.text('Pane %2'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('tmux-window-@2')));
+      await tester.pump();
+      expect(find.byKey(const ValueKey('tmux-pane-%3')), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('tmux-window-@1')));
+      await tester.pump();
+      expect(find.text('Pane %2'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('tmux-pane-selector')));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is CheckedPopupMenuItem<String> && widget.value == '%1',
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Pane %1'), findsOneWidget);
+      expect(client.activePaneId, '%1');
+      expect(client.activeWindowId, '@1');
+      expect(client.commands, isEmpty);
+      expect(
+        tester
+            .widget<IconButton>(find.byKey(const ValueKey('tmux-action-paste')))
+            .onPressed,
+        isNull,
+      );
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pump();
+      expect(
+        client.connections.values.every(
+          (connection) => connection.input.isEmpty,
+        ),
+        isTrue,
+      );
+      expect(focusChanges.last, false);
+      expect(tester.takeException(), isNull);
+      await finish(tester);
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.linux),
   );
 
   testWidgets(

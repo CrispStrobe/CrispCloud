@@ -1,0 +1,316 @@
+{
+  "recorded_utc": "2026-11-16T07:27:10.096776+00:00",
+  "head": "013daab50a178bf0392eb8c1109b44662afdbd8e",
+  "parsed_workflow_count": 33,
+  "parsed_workflows": [
+    {
+      "path": ".github/workflows/android-release-asset.yml",
+      "sha256": "6afc56f6d8b8fc49b241a79979d307d2b7448219acdcb7d0fa729005f4880de1",
+      "job_count": 1
+    },
+    {
+      "path": ".github/workflows/archive-commander-parity.yml",
+      "sha256": "7d025216043c05ac0151cc1674198d048ec9632a3192276054a13fd874900003",
+      "job_count": 1
+    },
+    {
+      "path": ".github/workflows/archive-containers.yml",
+      "sha256": "5673d9c4630bf92733cc11893511409fc72331a4fd077a5cb6c5eea85bcc42e6",
+      "job_count": 1
+    },
+    {
+      "path": ".github/workflows/archive-operation-queue.yml",
+      "sha256": "e5c2e6b378f0375d91dbfbea2356cbd850882a04cd2bdf5212dd5eb7359746b0",
+      "job_count": 1
+    },
+    {
+      "path": ".github/workflows/catalog-cli.yml",
+      "sha256": "7a2946c3e8cc883251607a523e1fb8a80ad29e49290dbdb7364adf707cf97768",
+      "job_count": 1
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "sha256": "62f9d69310cf3634b9236c498364e0f5b4f4ef19820428f41d1aa66c7538748b",
+      "job_count": 9
+    },
+    {
+      "path": ".github/workflows/deploy-pages.yml",
+      "sha256": "18ead9350fdd593cf32cd8abc5665aeb416a382530999b462cd4cbf51c8b7f98",
+      "job_count": 1
+    },
+    {
+      "path": ".github/workflows/deploy-web.yml",
+      "sha256": "f0d3b834edc9960ba9b1c341ce5971f567fdc88274b75523193c096a5e37b097",
+      "job_count": 1
+    },
+    {
+      "path": ".github/workflows/ebook-editor.yml",
+      "sha256": "fbca3ed26ced7112194f0f89b946818bf4fde48d6637204866677b23b8a78ac9",
+      "job_count": 1
+    },
+    {
+      "path": ".github/workflows/file-viewer-documents.yml",
+      "sha256": "486abd01ca601f724745ef75abea394d931a04ec51f21222acf340d4667b966e",
+      "job_count": 3
+    },
+    {
+      "path": ".github/workflows/firebase-app-distribution.yml",
+      "sha256": "049d8a69480652c9923e927ef1f5f848f8d2a8b1736663d6b1ae855fc736cad3",
+      "job_count": 1
+    },
+    {
+      "path": ".github/workflows/google-play-api.yml",
+      "sha256": "c881fd721fe672415805928c0a5672e08132dad013df08bf629d8592c1a55c72",
+      "job_count": 1
+    },
+    {
+      "path": ".github/workflows/google-play-bundle.yml",
+      "sha256": "40f59edce6b7b907d3a910c63878c65de99c8709ee62cda79280dafc983c7629",
+      "job_count": 1
+    },
+    {
+      "path": ".github/workflows/hex-apply-checkpoint.yml",
+      "sha256": "57773e5fc1a46fdfdad7235fa5c6e7f2627c87de3b5d890b25b665b1d66b85b9",
+      "job_count": 1
+    },
+    {
+      "path": ".github/workflows/hex-editor.yml",
+      "sha256": "c5f6e6468cf029c4b70c93bc07c081082669b65666764ad2cfc11d4c0ac71c9e",
+      "job_count": 2
+    },
+    {
+      "path": ".github/workflows/hex-fork-bootstrap.yml",
+      "sha256": "e8885eb676d4963e37e0d4774f4d6e75cb7610e0074a509f1c02875b95fe49b3",
+      "job_count": 1
+    },
+    {
+      "path": ".github/workflows/image-editor.yml",
+      "sha256": "6edf5188cb8ead7a2308546343632a52a852bd9d474c7929d67f4ea3fe1ac3ff",
+      "job_count": 3
+    },
+    {
+      "path": ".github/workflows/ios-release.yml",
+      "sha256": "5a4d16502953576e13fdfab616855326b2111d557baf8a86e31b4db32cad8329",
+      "job_count": 1
+    },
+    {
+      "path": ".github/workflows/macos-release.yml",
+      "sha256": "e67c4584a132f91b8212b66b4f0eb9ee07638a0f99e14f97a978d605a456c452",
+      "job_count": 1
+    },
+    {
+      "path": ".github/workflows/media-editor.yml",
+      "sha256": "347f24710a8c48192a32cfd458d3b02f44522d69035749587e6db2279feb31d9",
+      "job_count": 3
+    },
+    {
+      "path": ".github/workflows/nightly.yml",
+      "sha256": "32a82605667ac257c373b2916de65bd687b9a3db54939b4aeb26ca00165be3d4",
+      "job_count": 10
+    },
+    {
+      "path": ".github/workflows/office-fidelity.yml",
+      "sha256": "7a6a974fef71efc981045b405797d71835c735c2bf83391bf82b6c408af681dd",
+      "job_count": 3
+    },
+    {
+      "path": ".github/workflows/pdf-editor.yml",
+      "sha256": "a44e81249f1fdee0b950f184ec4401705de24b65102ec26fa816f163863d6a9f",
+      "job_count": 4
+    },
+    {
+      "path": ".github/workflows/provider-conformance.yml",
+      "sha256": "481dea21a43db168dd7f84df22f48ec48b908ebfef7ba8682e9dc261402e05e6",
+      "job_count": 1
+    },
+    {
+      "path": ".github/workflows/provider-engines.yml",
+      "sha256": "55a503dbd27ead8e870f72d079d331a9d43d4d9faa2e85fee564ddd2b1feb97f",
+      "job_count": 2
+    },
+    {
+      "path": ".github/workflows/release.yml",
+      "sha256": "98d8caa5f6310a5e560658e033642eb1e21c97ac318d825b6620151e26f61a69",
+      "job_count": 10
+    },
+    {
+      "path": ".github/workflows/rust-cloud.yml",
+      "sha256": "84684bf14b73a5b7d092fc4ebb59817db993104f799256dbd7d74740d93efebd",
+      "job_count": 3
+    },
+    {
+      "path": ".github/workflows/smb-rust.yml",
+      "sha256": "b3fb9fa8bee21cff41ef19fa9e4810e9c9bfcd90f007b54bdf39efcc6f89193d",
+      "job_count": 3
+    },
+    {
+      "path": ".github/workflows/storage-capabilities.yml",
+      "sha256": "ee7b88fe070bd7d227a506402939ea0126a298cf61e01a6faca914c8b917cf29",
+      "job_count": 2
+    },
+    {
+      "path": ".github/workflows/store-screenshots.yml",
+      "sha256": "6b54a3348395d8662c34e76f8490686e701271090981eb8b7bf9afe4ed84286f",
+      "job_count": 1
+    },
+    {
+      "path": ".github/workflows/testflight-external.yml",
+      "sha256": "1973ed3bc7ec116dc4518d78fc346df1cfc3cc84873e55876c93d9dcc93985d5",
+      "job_count": 1
+    },
+    {
+      "path": ".github/workflows/transfer-bandwidth.yml",
+      "sha256": "d0b9e3f75485c1f89da49fbd4395d299263dda9deb9aaf4852153d7980f8861c",
+      "job_count": 2
+    },
+    {
+      "path": ".github/workflows/workspace-ux.yml",
+      "sha256": "c39856b816e4b6bbeec9bcb8422e0fabf40738a71068e86532bd28292503306f",
+      "job_count": 1
+    }
+  ],
+  "tmux_registrations": [
+    {
+      "workflow": ".github/workflows/ci.yml",
+      "job": "collection-browser",
+      "step_index": 6,
+      "step_name": "Terminal input and explicit SSH gateway",
+      "job_runs_on": "ubuntu-latest",
+      "step_if": null,
+      "platform": "chrome",
+      "registered_new_suites": [
+        "test/tmux_control_protocol_test.dart",
+        "test/tmux_control_client_test.dart",
+        "test/tmux_control_workspace_test.dart",
+        "test/ssh_native_tmux_persistence_test.dart",
+        "test/terminal_input_budget_test.dart",
+        "test/ssh_tmux_panel_lifecycle_test.dart"
+      ],
+      "all_six_present": true,
+      "referenced_test_count": 46,
+      "missing_test_paths": []
+    },
+    {
+      "workflow": ".github/workflows/ci.yml",
+      "job": "build-windows",
+      "step_index": 9,
+      "step_name": "Terminal workspace and remote session regressions",
+      "job_runs_on": "windows-latest",
+      "step_if": null,
+      "platform": "native",
+      "registered_new_suites": [
+        "test/tmux_control_protocol_test.dart",
+        "test/tmux_control_client_test.dart",
+        "test/tmux_control_workspace_test.dart",
+        "test/ssh_native_tmux_persistence_test.dart",
+        "test/terminal_input_budget_test.dart",
+        "test/ssh_tmux_panel_lifecycle_test.dart"
+      ],
+      "all_six_present": true,
+      "referenced_test_count": 44,
+      "missing_test_paths": []
+    },
+    {
+      "workflow": ".github/workflows/ci.yml",
+      "job": "build-macos",
+      "step_index": 12,
+      "step_name": "macOS regression tests",
+      "job_runs_on": "macos-15-intel",
+      "step_if": null,
+      "platform": "native",
+      "registered_new_suites": [
+        "test/tmux_control_protocol_test.dart",
+        "test/tmux_control_client_test.dart",
+        "test/tmux_control_workspace_test.dart",
+        "test/ssh_native_tmux_persistence_test.dart",
+        "test/terminal_input_budget_test.dart",
+        "test/ssh_tmux_panel_lifecycle_test.dart"
+      ],
+      "all_six_present": true,
+      "referenced_test_count": 58,
+      "missing_test_paths": []
+    }
+  ],
+  "registration_errors": [],
+  "local_validation": {
+    "runner": "tool/run_terminal_validation.py",
+    "runner_sha256": "df34bb672692a31fd892f1d96dae4b1d490647fe957b6385e4d5f869e5e9c7d5",
+    "missing_new_suites": [],
+    "missing_files": [],
+    "native_cohort_file_count": 75,
+    "new_tmux_suites": [
+      "test/tmux_control_protocol_test.dart",
+      "test/tmux_control_client_test.dart",
+      "test/tmux_control_workspace_test.dart",
+      "test/ssh_native_tmux_persistence_test.dart",
+      "test/terminal_input_budget_test.dart",
+      "test/ssh_tmux_panel_lifecycle_test.dart"
+    ]
+  },
+  "ssh_vendor_guards": [
+    {
+      "workflow": ".github/workflows/ci.yml",
+      "ssh_guard_registered": true,
+      "matches": [
+        {
+          "job": "analyze",
+          "step_name": "Verify reviewed SSH runtime"
+        }
+      ]
+    },
+    {
+      "workflow": ".github/workflows/nightly.yml",
+      "ssh_guard_registered": true,
+      "matches": [
+        {
+          "job": "test",
+          "step_name": "Verify reviewed SSH runtime"
+        }
+      ]
+    },
+    {
+      "workflow": ".github/workflows/release.yml",
+      "ssh_guard_registered": true,
+      "matches": [
+        {
+          "job": "test",
+          "step_name": "Verify reviewed SSH runtime"
+        }
+      ]
+    }
+  ],
+  "dart_test_yaml_parses": true,
+  "dart_test_settings": {
+    "tags": {
+      "live-tmux": {
+        "timeout": "2m"
+      },
+      "live-ssh": {
+        "timeout": "2m"
+      },
+      "benchmark": {
+        "skip": "Benchmarks are load-sensitive. Run with: flutter test --tags benchmark --run-skipped"
+      },
+      "live": {
+        "skip": "Live tests require provider credentials. Run with: flutter test --tags live"
+      },
+      "integration": {
+        "skip": "Integration tests use mock servers with I/O. Run with: flutter test --tags integration"
+      },
+      "golden": {
+        "skip": "Golden tests require baseline images. Run with: flutter test --tags golden"
+      },
+      "store-assets": {
+        "skip": "Store asset rendering is opt-in. Run with: flutter test --tags store-assets --run-skipped"
+      },
+      "connection_dialog": {
+        "skip": "Connection dialog widget tests. Run with: flutter test --tags connection_dialog"
+      },
+      "deploy": {
+        "skip": "Live deployment verification. Run with: flutter test --tags deploy"
+      }
+    }
+  },
+  "github_actions_queried_or_awaited": false,
+  "limits": "YAML/registration and local file existence checks only; no workflow executed and no CI result queried."
+}

@@ -6,6 +6,7 @@ import 'package:crisp_cloud/models/screen_session_options.dart';
 import 'package:crisp_cloud/models/tmux_session_options.dart';
 import 'package:crisp_cloud/services/secure_storage_service.dart';
 import 'package:crisp_cloud/services/ssh_terminal_service.dart';
+import 'package:crisp_cloud/services/ssh_tmux_control_output.dart';
 import 'package:crisp_cloud/services/terminal_backends.dart';
 import 'package:crisp_cloud/services/terminal_mount_failure.dart';
 import 'package:dartssh2/dartssh2.dart';
@@ -99,6 +100,57 @@ void main() {
       );
       expect(client.commands, ["exec tmux attach-session -t '=build'"]);
       expect(client.shellRequests, 0);
+    },
+  );
+
+  test(
+    'native control cleanup remains retryable after transport failure',
+    () async {
+      final stdout = StreamController<List<int>>();
+      final stderr = StreamController<List<int>>();
+      var closes = 0;
+      final output = SshTmuxControlOutput(
+        stdout: stdout.stream,
+        stderr: stderr.stream,
+        exitCode: Future<int?>.value(),
+        write: (_) async {},
+        close: () async {
+          closes++;
+          if (closes == 1) throw StateError('temporary cleanup failure');
+        },
+      );
+      final subscription = output.output.listen((_) {});
+      await expectLater(output.close(), throwsStateError);
+      await output.close();
+      await output.close();
+      expect(closes, 2);
+      await output.dispose();
+      await subscription.cancel();
+      await stdout.close();
+      await stderr.close();
+    },
+  );
+
+  test(
+    'native cancellation releases its route even if a stream fails',
+    () async {
+      final stdout = StreamController<List<int>>(
+        onCancel: () => throw StateError('failed stdout cancellation'),
+      );
+      final stderr = StreamController<List<int>>();
+      var closes = 0;
+      final output = SshTmuxControlOutput(
+        stdout: stdout.stream,
+        stderr: stderr.stream,
+        exitCode: Future<int?>.value(),
+        write: (_) async {},
+        close: () async => closes++,
+      );
+      final subscription = output.output.listen((_) {});
+      await expectLater(subscription.cancel(), throwsStateError);
+      expect(closes, 1);
+      await stdout.close();
+      await stderr.close();
     },
   );
 

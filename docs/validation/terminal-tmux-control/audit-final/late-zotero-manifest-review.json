@@ -1,0 +1,205 @@
+{
+  "recorded_utc": "2026-11-16T07:29:11.608070+00:00",
+  "base": "ce386fd6c16268b782088b2e47e32bbab8b4ce43",
+  "head": "e980293cc7446899f1404372ee6296bb65710358",
+  "source_pin_before": "b24718cc1468c34f494805eb7fb433a87f565503",
+  "source_pin_after": "9b31295bbf705b7aff8a732c16f9d010edbb4e3a",
+  "manifest_count_before": 2399,
+  "manifest_count_after": 2407,
+  "standalone_sources_unchanged": true,
+  "added_entries": [
+    "packages/quds_office_editor/test/word_small_caps_test.dart",
+    "packages/quds_office_editor/test/word_zotero_saved_search_test.dart",
+    "packages/quds_office_engine/lib/src/pdf/pdf_canvas.dart",
+    "packages/quds_office_engine/lib/src/word/model/word_small_caps.dart",
+    "packages/quds_office_engine/test/word_small_caps_test.dart",
+    "packages/quds_office_engine/test/word_zotero_bibliography_layout_test.dart",
+    "packages/quds_office_engine/test/zotero_paragraph_runs_test.dart",
+    "packages/quds_office_engine/test/zotero_saved_search_test.dart"
+  ],
+  "removed_entries": [],
+  "changed_entry_count": 22,
+  "changed_entry_hash_checks": [
+    {
+      "path": "packages/quds_office_editor/test/word_small_caps_test.dart",
+      "expected": "0830487170358566b4916da849e2aef84c412e4d86971f9acbd2a2a58016bceb",
+      "actual": "0830487170358566b4916da849e2aef84c412e4d86971f9acbd2a2a58016bceb",
+      "matches": true
+    },
+    {
+      "path": "packages/quds_office_editor/test/word_zotero_saved_search_test.dart",
+      "expected": "2d939076b8817ab151987b33ab9fd99ea29aeace87974e647709732c48d967b2",
+      "actual": "2d939076b8817ab151987b33ab9fd99ea29aeace87974e647709732c48d967b2",
+      "matches": true
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/pdf/pdf_canvas.dart",
+      "expected": "72aa1872c98058c23c9d2915fb87e107a7a6b72024b333bf6793f46db822bdd9",
+      "actual": "72aa1872c98058c23c9d2915fb87e107a7a6b72024b333bf6793f46db822bdd9",
+      "matches": true
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/word/model/word_small_caps.dart",
+      "expected": "52cd7c93e6aee1b4fd0bddbee9b25701c0980f9db3d33d263ddc0ff64c4e156d",
+      "actual": "52cd7c93e6aee1b4fd0bddbee9b25701c0980f9db3d33d263ddc0ff64c4e156d",
+      "matches": true
+    },
+    {
+      "path": "packages/quds_office_engine/test/word_small_caps_test.dart",
+      "expected": "07a29f37d32aa908910df3867505f81fd7e686dfadce69858415df8e85cf79c7",
+      "actual": "07a29f37d32aa908910df3867505f81fd7e686dfadce69858415df8e85cf79c7",
+      "matches": true
+    },
+    {
+      "path": "packages/quds_office_engine/test/word_zotero_bibliography_layout_test.dart",
+      "expected": "faa43f14792cd2a3335eb0b258bd264860bbd8d087ead789581d0fe27df2e8aa",
+      "actual": "faa43f14792cd2a3335eb0b258bd264860bbd8d087ead789581d0fe27df2e8aa",
+      "matches": true
+    },
+    {
+      "path": "packages/quds_office_engine/test/zotero_paragraph_runs_test.dart",
+      "expected": "a33fddacd1f19588e6fa265b51689d8b33bdda76d7a6c1e70ee60e1f63afaef5",
+      "actual": "a33fddacd1f19588e6fa265b51689d8b33bdda76d7a6c1e70ee60e1f63afaef5",
+      "matches": true
+    },
+    {
+      "path": "packages/quds_office_engine/test/zotero_saved_search_test.dart",
+      "expected": "f69e461446f5eb5c12e125121f7308077a9c5bd7543c3775355faa7f81c338ce",
+      "actual": "f69e461446f5eb5c12e125121f7308077a9c5bd7543c3775355faa7f81c338ce",
+      "matches": true
+    },
+    {
+      "path": "packages/quds_office_editor/lib/src/editor_word/paint_run_text.dart",
+      "expected": "d7696f34f6383672e0986ab7688001e24a8cc228954b3068f50729ed4b407c1a",
+      "actual": "d7696f34f6383672e0986ab7688001e24a8cc228954b3068f50729ed4b407c1a",
+      "matches": true
+    },
+    {
+      "path": "packages/quds_office_editor/lib/src/embed/word_zotero_dialog.dart",
+      "expected": "90684218b993934acde519da473d3193d0de214c9788a21edfa277d4a59d5e90",
+      "actual": "90684218b993934acde519da473d3193d0de214c9788a21edfa277d4a59d5e90",
+      "matches": true
+    },
+    {
+      "path": "packages/quds_office_editor/test/word_zotero_catalog_citing_test.dart",
+      "expected": "2aec3dd55d00751c82e08051173eeedbd726b328f1eb1b925a25ff81951fbd5d",
+      "actual": "2aec3dd55d00751c82e08051173eeedbd726b328f1eb1b925a25ff81951fbd5d",
+      "matches": true
+    },
+    {
+      "path": "packages/quds_office_editor/test/word_zotero_citing_dialog_test.dart",
+      "expected": "09183cc80824c03afd954c954667214538d47611bdadddf9440bb74aa3cff8fb",
+      "actual": "09183cc80824c03afd954c954667214538d47611bdadddf9440bb74aa3cff8fb",
+      "matches": true
+    },
+    {
+      "path": "packages/quds_office_editor/test/word_zotero_dialog_test.dart",
+      "expected": "7bdca98302c5a71c5d37fc85a3d0c82df48dab8b37b40352576fff39a5cc2e8a",
+      "actual": "7bdca98302c5a71c5d37fc85a3d0c82df48dab8b37b40352576fff39a5cc2e8a",
+      "matches": true
+    },
+    {
+      "path": "packages/quds_office_engine/lib/quds_office_engine.dart",
+      "expected": "c580f7bc02af76468edc3efe7d564a2b8a83ab65e588f14e2df32fa08cca0c87",
+      "actual": "c580f7bc02af76468edc3efe7d564a2b8a83ab65e588f14e2df32fa08cca0c87",
+      "matches": true
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/pdf/office_pdf_export.dart",
+      "expected": "e6b70d33d5ffa851e369d0d044823add63d0613f2a47ab23fb0e6c1bcebbca83",
+      "actual": "e6b70d33d5ffa851e369d0d044823add63d0613f2a47ab23fb0e6c1bcebbca83",
+      "matches": true
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/word/layout/word_layout.dart",
+      "expected": "f0b1eef4b71b3e309b56623054ed851b589e491b9100200a8219773b079d7fae",
+      "actual": "f0b1eef4b71b3e309b56623054ed851b589e491b9100200a8219773b079d7fae",
+      "matches": true
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/word/layout/word_note_layout.dart",
+      "expected": "e3b2574895881b5b0e684494b8b74105108046b0d0c4347a07a08d6fc1dfebae",
+      "actual": "e3b2574895881b5b0e684494b8b74105108046b0d0c4347a07a08d6fc1dfebae",
+      "matches": true
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/word/model/wml_run_edit.dart",
+      "expected": "dddaa385c775914756760d87e196f44ec32b3cd979226891de2742823ede47cf",
+      "actual": "dddaa385c775914756760d87e196f44ec32b3cd979226891de2742823ede47cf",
+      "matches": true
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/word/model/word_zotero.dart",
+      "expected": "6c7b5694da9c75a7fc088c33c4b6ad1d37acd845ac1d4d1505d11a33c3876186",
+      "actual": "6c7b5694da9c75a7fc088c33c4b6ad1d37acd845ac1d4d1505d11a33c3876186",
+      "matches": true
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/word/model/word_zotero_citing.dart",
+      "expected": "d6470182f5d064d951acb22697f4a0a7d79da4f420f4aa8a9b827f332e8e0e88",
+      "actual": "d6470182f5d064d951acb22697f4a0a7d79da4f420f4aa8a9b827f332e8e0e88",
+      "matches": true
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/word/model/word_zotero_data.dart",
+      "expected": "7237f53590374d841151c0ec5b623ed1779e19c0fe9707299e3fa6c748a9f2be",
+      "actual": "7237f53590374d841151c0ec5b623ed1779e19c0fe9707299e3fa6c748a9f2be",
+      "matches": true
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/word/properties/wml_properties.dart",
+      "expected": "1eac25501fe7d698bb61dc931bf1d05702e105efbbd71c72fe981f107b25efd8",
+      "actual": "1eac25501fe7d698bb61dc931bf1d05702e105efbbd71c72fe981f107b25efd8",
+      "matches": true
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/word/serial/word_deserializer.dart",
+      "expected": "84223f14f02456b72c19645c96c6efd69448e28bac95ceebb15b34942fc4aa64",
+      "actual": "84223f14f02456b72c19645c96c6efd69448e28bac95ceebb15b34942fc4aa64",
+      "matches": true
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/word/serial/word_property_io.dart",
+      "expected": "70dc157c7df328574f951123e0f3b0d819cfc4d6ffe9bb3e92db6b76f46bf531",
+      "actual": "70dc157c7df328574f951123e0f3b0d819cfc4d6ffe9bb3e92db6b76f46bf531",
+      "matches": true
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/word/serial/word_serializer.dart",
+      "expected": "14f1728484e07443405aee2d02082af2380b7e532f116004bc3a03718cb9547d",
+      "actual": "14f1728484e07443405aee2d02082af2380b7e532f116004bc3a03718cb9547d",
+      "matches": true
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/zotero/zotero_client.dart",
+      "expected": "9683a590b26ad10a8f4c9ad6e671b70de8245fe7dc17e40ab49aafa553a5c45f",
+      "actual": "9683a590b26ad10a8f4c9ad6e671b70de8245fe7dc17e40ab49aafa553a5c45f",
+      "matches": true
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/zotero/zotero_formatted_text.dart",
+      "expected": "c62c917ad10dd7f6f7996da070f04fd6c0a2d5a4809290f1498cb1fbdb216478",
+      "actual": "c62c917ad10dd7f6f7996da070f04fd6c0a2d5a4809290f1498cb1fbdb216478",
+      "matches": true
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/zotero/zotero_models.dart",
+      "expected": "9896166faf4f1b1287a83dccc10625b0efc65a37bc5f7a864e40135eff17d295",
+      "actual": "9896166faf4f1b1287a83dccc10625b0efc65a37bc5f7a864e40135eff17d295",
+      "matches": true
+    },
+    {
+      "path": "packages/quds_office_engine/test/word_zotero_citing_test.dart",
+      "expected": "2a1acefee3367fb88048762151ae6dfb9252a06c8319ae46a09cb0bfafa90cfd",
+      "actual": "2a1acefee3367fb88048762151ae6dfb9252a06c8319ae46a09cb0bfafa90cfd",
+      "matches": true
+    },
+    {
+      "path": "packages/quds_office_engine/test/zotero_formatted_text_test.dart",
+      "expected": "83cb1ebecf4201c935df5c287619cab8c23265f930d2b2717fcd11747a7fec04",
+      "actual": "83cb1ebecf4201c935df5c287619cab8c23265f930d2b2717fcd11747a7fec04",
+      "matches": true
+    }
+  ],
+  "dependency_manifest_and_lockfile_changes": []
+}

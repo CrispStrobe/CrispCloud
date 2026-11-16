@@ -108,6 +108,8 @@ class _TmuxControlWorkspaceState extends ConsumerState<TmuxControlWorkspace> {
   bool _busy = false;
   String? _actionError;
   String? _lastActivePane;
+  String? _retainedWindowId;
+  final _retainedPaneIds = <String, String>{};
   bool _reportedFocus = false;
   bool _focusScheduled = false;
   int _searchFocusRequest = 0;
@@ -124,11 +126,31 @@ class _TmuxControlWorkspaceState extends ConsumerState<TmuxControlWorkspace> {
       widget.client.ready &&
       !widget.client.isClosed;
 
-  _PaneView? get _activeView => _views[widget.client.activePaneId];
+  // Once the transport closes, browsing retained buffers is entirely local.
+  // Never mutate the client's last remote selection or send select commands.
+  String? get _selectedWindowId => widget.client.isClosed
+      ? _retainedWindowId ?? widget.client.activeWindowId
+      : widget.client.activeWindowId;
+
+  String? get _selectedPaneId {
+    if (!widget.client.isClosed) return widget.client.activePaneId;
+    final windowId = _selectedWindowId;
+    final retained = _retainedPaneIds[windowId];
+    if (retained != null) return retained;
+    if (windowId == widget.client.activeWindowId) {
+      return widget.client.activePaneId;
+    }
+    for (final window in widget.client.windows) {
+      if (window.id == windowId) return window.activePaneId;
+    }
+    return null;
+  }
+
+  _PaneView? get _activeView => _views[_selectedPaneId];
 
   List<String> get _windowPaneIds => [
     for (final pane in widget.client.panes.values)
-      if (pane.windowId == widget.client.activeWindowId) pane.id,
+      if (pane.windowId == _selectedWindowId) pane.id,
   ];
 
   @override
@@ -151,6 +173,8 @@ class _TmuxControlWorkspaceState extends ConsumerState<TmuxControlWorkspace> {
       _actionError = null;
       _zoomed = false;
       _showSearch = false;
+      _retainedWindowId = null;
+      _retainedPaneIds.clear();
       _retireAllViews();
       widget.client.addListener(_clientChanged);
       _syncViews();
@@ -184,8 +208,9 @@ class _TmuxControlWorkspaceState extends ConsumerState<TmuxControlWorkspace> {
           () => _paneSessionChanged(entry.key),
         ),
       );
+      _updatePointerPolicy(_views[entry.key]!);
     }
-    final active = widget.client.activePaneId;
+    final active = _selectedPaneId;
     if (_lastActivePane != active) {
       _inputLease++;
       _lastActivePane = active;
@@ -200,6 +225,7 @@ class _TmuxControlWorkspaceState extends ConsumerState<TmuxControlWorkspace> {
     if (!mounted) return;
     _syncViews();
     if (!widget.client.ready || widget.client.isClosed) {
+      if (widget.client.isClosed) _busy = false;
       _inputLease++;
       _unfocusAll();
       _cancelResize();
@@ -211,10 +237,21 @@ class _TmuxControlWorkspaceState extends ConsumerState<TmuxControlWorkspace> {
     if (mounted) setState(() {});
   }
 
+  void _updatePointerPolicy(_PaneView view) {
+    // xterm's readOnly flag does not suppress wheel reports. Suspending the
+    // controller's pointer input makes mouse-enabled retained buffers scroll
+    // locally as well, without reporting gestures to a closed connection.
+    final suspended = widget.client.isClosed || !view.session.isConnected;
+    if (view.controller.suspendedPointerInputs != suspended) {
+      view.controller.setSuspendPointerInput(suspended);
+    }
+  }
+
   void _paneSessionChanged(String id) {
     if (!mounted) return;
     final view = _views[id];
     if (view == null) return;
+    _updatePointerPolicy(view);
     final session = view.session;
     if (view.triggerSerial != session.triggerNotificationSerial) {
       view.triggerSerial = session.triggerNotificationSerial;
@@ -340,10 +377,20 @@ class _TmuxControlWorkspaceState extends ConsumerState<TmuxControlWorkspace> {
   }
 
   void _selectPane(String id) {
-    if (!widget.visible || !widget.client.panes.containsKey(id)) return;
+    if (!widget.visible || _busy || !widget.client.panes.containsKey(id)) {
+      return;
+    }
     widget.onActivate?.call();
-    if (widget.client.activePaneId == id) {
+    if (_selectedPaneId == id) {
       _scheduleFocus();
+    } else if (widget.client.isClosed) {
+      _inputLease++;
+      _unfocusAll();
+      setState(() {
+        final windowId = widget.client.panes[id]!.windowId;
+        _retainedWindowId = windowId;
+        _retainedPaneIds[windowId] = id;
+      });
     } else {
       unawaited(
         _command(() => widget.client.selectPane(id), changesSelection: true),
@@ -352,9 +399,20 @@ class _TmuxControlWorkspaceState extends ConsumerState<TmuxControlWorkspace> {
   }
 
   void _selectWindow(String id) {
-    if (widget.client.activeWindowId == id) {
-      widget.onActivate?.call();
+    if (!widget.visible ||
+        _busy ||
+        !widget.client.windows.any((window) => window.id == id)) {
+      return;
+    }
+    widget.onActivate?.call();
+    if (_selectedWindowId == id) {
       _scheduleFocus();
+      return;
+    }
+    if (widget.client.isClosed) {
+      _inputLease++;
+      _unfocusAll();
+      setState(() => _retainedWindowId = id);
       return;
     }
     unawaited(
@@ -557,7 +615,7 @@ class _TmuxControlWorkspaceState extends ConsumerState<TmuxControlWorkspace> {
   }
 
   void _action(_TmuxAction action) {
-    final pane = widget.client.activePaneId;
+    final pane = _selectedPaneId;
     switch (action) {
       case _TmuxAction.newWindow:
         unawaited(_command(widget.client.newWindow, changesSelection: true));
@@ -666,8 +724,7 @@ class _TmuxControlWorkspaceState extends ConsumerState<TmuxControlWorkspace> {
     if (action == _TmuxAction.previousPane || action == _TmuxAction.nextPane) {
       return _windowPaneIds.length > 1 &&
           !_busy &&
-          widget.client.ready &&
-          !widget.client.isClosed;
+          (widget.client.ready || widget.client.isClosed);
     }
     return widget.client.ready && !widget.client.isClosed && !_busy;
   }
@@ -696,18 +753,19 @@ class _TmuxControlWorkspaceState extends ConsumerState<TmuxControlWorkspace> {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 3),
                     child: Semantics(
-                      selected: window.id == widget.client.activeWindowId,
+                      selected: window.id == _selectedWindowId,
                       child: TextButton(
                         key: ValueKey('tmux-window-${window.id}'),
                         onPressed:
-                            !_busy && widget.visible && !widget.client.isClosed
+                            !_busy &&
+                                widget.visible &&
+                                (widget.client.ready || widget.client.isClosed)
                             ? () => _selectWindow(window.id)
                             : null,
                         style: TextButton.styleFrom(
                           minimumSize: const Size(40, 32),
                           padding: const EdgeInsets.symmetric(horizontal: 10),
-                          backgroundColor:
-                              window.id == widget.client.activeWindowId
+                          backgroundColor: window.id == _selectedWindowId
                               ? Theme.of(context).colorScheme.secondaryContainer
                               : null,
                         ),
@@ -762,13 +820,13 @@ class _TmuxControlWorkspaceState extends ConsumerState<TmuxControlWorkspace> {
                     paneIds.isNotEmpty &&
                     !_busy &&
                     widget.visible &&
-                    !widget.client.isClosed,
+                    (widget.client.ready || widget.client.isClosed),
                 onSelected: _selectPane,
                 itemBuilder: (_) => [
                   for (final id in paneIds)
                     CheckedPopupMenuItem(
                       value: id,
-                      checked: id == widget.client.activePaneId,
+                      checked: id == _selectedPaneId,
                       child: Text(
                         context
                             .tmuxControlTr('Pane {id}')
@@ -788,10 +846,7 @@ class _TmuxControlWorkspaceState extends ConsumerState<TmuxControlWorkspace> {
                         child: Text(
                           context
                               .tmuxControlTr('Pane {id}')
-                              .replaceAll(
-                                '{id}',
-                                widget.client.activePaneId ?? '—',
-                              ),
+                              .replaceAll('{id}', _selectedPaneId ?? '—'),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -825,7 +880,8 @@ class _TmuxControlWorkspaceState extends ConsumerState<TmuxControlWorkspace> {
 
   Widget _pane(String id, {required bool selected}) {
     final view = _views[id]!;
-    final canInput = _enabled && selected && !_busy;
+    final canInteract = widget.visible && widget.active && selected && !_busy;
+    final canInput = _enabled && selected && !_busy && view.session.isConnected;
     return Semantics(
       label: context.tmuxControlTr('Pane {id}').replaceAll('{id}', id),
       selected: selected,
@@ -834,7 +890,7 @@ class _TmuxControlWorkspaceState extends ConsumerState<TmuxControlWorkspace> {
         children: [
           Positioned.fill(
             child: IgnorePointer(
-              ignoring: !canInput,
+              ignoring: !canInteract,
               child: Listener(
                 behavior: HitTestBehavior.translucent,
                 onPointerDown: (_) => _selectPane(id),
@@ -848,7 +904,7 @@ class _TmuxControlWorkspaceState extends ConsumerState<TmuxControlWorkspace> {
                     scrollController: view.scroll,
                     autoResize: false,
                     autofocus: false,
-                    readOnly: !canInput || !view.session.isConnected,
+                    readOnly: !canInput,
                     simulateScroll: canInput,
                     deleteDetection:
                         !kIsWeb &&
@@ -874,14 +930,12 @@ class _TmuxControlWorkspaceState extends ConsumerState<TmuxControlWorkspace> {
               ),
             ),
           ),
-          if (!canInput)
+          if (!canInteract)
             Positioned.fill(
               child: GestureDetector(
                 key: ValueKey('tmux-activate-$id'),
                 behavior: HitTestBehavior.opaque,
-                onTap: widget.visible && !_busy && !widget.client.isClosed
-                    ? () => _selectPane(id)
-                    : null,
+                onTap: widget.visible && !_busy ? () => _selectPane(id) : null,
               ),
             ),
           Positioned.fill(
@@ -932,8 +986,8 @@ class _TmuxControlWorkspaceState extends ConsumerState<TmuxControlWorkspace> {
         return size.width * pane.width / windowWidth < 180 ||
             size.height * pane.height / windowHeight < 72;
       });
-      final active = widget.client.activePaneId!;
-      if (_zoomed || compact) {
+      final active = _selectedPaneId!;
+      if (_zoomed || compact || !paneIds.contains(active)) {
         return KeyedSubtree(
           key: const ValueKey('tmux-single-pane-view'),
           child: _pane(active, selected: true),
@@ -966,7 +1020,7 @@ class _TmuxControlWorkspaceState extends ConsumerState<TmuxControlWorkspace> {
       view.session.updateTriggers(triggers);
     }
     final windows = widget.client.windows.where(
-      (window) => window.id == widget.client.activeWindowId,
+      (window) => window.id == _selectedWindowId,
     );
     final window = windows.isEmpty ? null : windows.first;
     final paneIds =

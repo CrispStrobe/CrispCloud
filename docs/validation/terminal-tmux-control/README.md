@@ -16,6 +16,17 @@ commit, including main and PR #161. No merge was required. Exact refs are in
 | --- | --- |
 | `8625aad7` | Fresh complete branch/PR ancestry audit |
 | `aa8c736f` | Incremental native tmux protocol, raw SSH transport and workspace implementation |
+| `6e11d2d6` | Screen restoration, ownership, focused regression coverage and visual evidence |
+| `4316f7fc` | Clean merge of the newer Zotero/Office head `e980293c` |
+
+The 07:26:39 UTC refresh found new PR #161 work after the initial snapshot.
+Checkpoint `4316f7fc` merges that exact head and contains all 189 refreshed refs.
+The incoming delta was confined to 33 Office/Zotero files and evidence; dependency
+pins and terminal code were unchanged. Its application transport suite passed
+16 tests. The updated Office guard verifies 2,407 files at Quds `9b31295b`;
+the SSH guard verifies 96 upstream files and four patches. All 33 workflow YAMLs
+parse, and the six new deterministic suites are registered in the applicable
+platform lists and the 75-file local cohort. See [`audit-final/README.md`](audit-final/README.md).
 
 Further implementation and acceptance checkpoints are recorded after the
 combined local validation finishes. Every checkpoint carries `[skip ci]`.
@@ -43,12 +54,18 @@ combined local validation finishes. Every checkpoint carries `[skip ci]`.
 ## Validation status at the implementation checkpoint
 
 Focused development runs passed: 83 SSH/configuration/persistence/broadcast
-tests; 35 protocol/client tests; 11 workspace behavior tests plus one visual
+tests; 35 protocol/client tests; 12 workspace behavior tests plus one visual
 capture; 36 ownership/broadcast/session tests; and three input-budget tests.
 These runs overlap and are **not** a combined acceptance count. The frozen-source
 cohort, static analysis, formatting, loopback OpenSSH checks and optimized web
 release build are still pending at this checkpoint. Their final records will
 replace this status once completed.
+
+A later 42-test SSH transport run covers cleanup retry and release even if a
+stream cancellation fails. The final workspace test additionally exercises real
+wheel/selection/copy gestures and local window/pane navigation after disconnect,
+with remote commands and input revoked. Protocol resize/output review remains
+in progress before the final source freeze.
 
 Four production-widget fixture captures were inspected: desktop split panes,
 local zoom, 320x320 compact layout and the compact pane picker. They verify

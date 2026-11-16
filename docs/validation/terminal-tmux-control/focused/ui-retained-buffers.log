@@ -1,0 +1,16 @@
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_workspace_test.dart
+00:00 +0: native windows keep independent pane grids and route keyboard to selected pane (variant: TargetPlatform.linux)
+00:01 +1: remote creation and split controls use active target; local zoom preserves remote layout
+00:02 +2: 320 by 320 shows active pane and native pane selector without overflow
+00:02 +3: hidden workspace revokes keyboard and does not reclaim focus after server events
+00:02 +4: narrow outer split keeps pane selection and overflow actions available
+00:03 +5: remote zoom retains hidden panes in the native selector
+00:03 +6: clipboard read is revoked on pane switch, while explicit current paste keeps bracketed mode
+00:03 +7: server pane selection does not take focus from the file browser
+00:03 +8: mapped press executes once and repeat or release cannot leak after remote pane selection (variant: TargetPlatform.linux)
+00:03 +9: saved output triggers run for hidden remote windows and identify their pane
+00:04 +10: closed buffers allow local scrolling selection copying and window navigation without input (variant: TargetPlatform.linux)
+00:04 +11: detach delegates to owner without closing or killing individual panes
+00:04 +12: All tests passed!

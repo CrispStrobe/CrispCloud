@@ -109,7 +109,12 @@ class SshTmuxControlOutput {
           });
 
   Future<void> _abort() async {
-    await dispose();
+    try {
+      await dispose();
+    } catch (_) {
+      // A failed stream cancellation must not skip releasing the SSH route.
+      // The stream already carries the startup failure to its consumer.
+    }
     try {
       await close();
     } catch (_) {
@@ -122,16 +127,22 @@ class SshTmuxControlOutput {
 
   Future<void> _dispose() async {
     _closed = true;
-    await Future.wait([
-      if (_stdout != null) _stdout!.cancel(),
-      if (_stderr != null) _stderr!.cancel(),
-    ]);
-    unawaited(_controller.close());
+    try {
+      await Future.wait([
+        if (_stdout != null) _stdout!.cancel(),
+        if (_stderr != null) _stderr!.cancel(),
+      ]);
+    } finally {
+      unawaited(_controller.close());
+    }
   }
 
   Future<void> _cancelFromListener() async {
     final wasClosed = _closed;
-    await dispose();
-    if (!wasClosed) await close();
+    try {
+      await dispose();
+    } finally {
+      if (!wasClosed) await close();
+    }
   }
 }
