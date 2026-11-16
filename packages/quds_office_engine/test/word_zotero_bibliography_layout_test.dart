@@ -152,7 +152,7 @@ void main() {
       _expectLayout(result);
       expect(
         result.paragraphs.first.inlines.whereType<WmlRun>().any(
-              (run) => run.text.trim() == 'Title' && run.properties.italic,
+          (run) => run.text.trim() == 'Title' && run.properties.italic,
         ),
         isTrue,
       );
@@ -344,6 +344,35 @@ void main() {
         WordZotero.fields(document).single.paragraph.properties.explicitIndent,
         isFalse,
       );
+    },
+  );
+
+  test(
+    'identical plain refresh does not certify flattened legacy entry boundaries',
+    () {
+      final document = WmlDocument.empty(text: 'Body');
+      document.zoteroDocumentData = WordZoteroDocumentData.toNative(_prefs());
+      final paragraph = WordZotero.bibliography(text: 'Alpha\nBeta');
+      document.sections.single.blocks.add(paragraph);
+      final session = _session(document);
+      _style(session);
+      _call(session, 'Field.setText', [
+        _fieldId(session),
+        'Alpha\nBeta',
+        false,
+      ]);
+      _call(session, 'Document.setDocumentData', [_prefs()]);
+      _finish(session);
+      expect(
+        session.formattingWarnings.single,
+        contains('ambiguous legacy line breaks'),
+      );
+      final field = WordZotero.fields(document).single;
+      expect(field.paragraphs, [paragraph]);
+      expect(field.cachedText, 'Alpha\nBeta');
+      expect(paragraph.properties.explicitIndent, isFalse);
+      final saved = jsonDecode(WordZoteroDocumentData.read(document)) as Map;
+      expect((saved['style'] as Map)['bibliographyStyleHasBeenSet'], isFalse);
     },
   );
 

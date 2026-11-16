@@ -74,6 +74,37 @@ void main() {
     );
   });
 
+  test('expanded capitals paint once and expose only authored caret stops', () {
+    final controller = _controller('ßﬃ');
+    final line = controller.documentLaidOut.pages.single.lines.single;
+    final segments = PaintRunText.paintSegments(line).toList();
+    expect(segments.map((run) => PaintRunText.runText('ßﬃ', run)), [
+      'SS',
+      'FFI',
+    ]);
+    expect(segments.map((run) => run.map((g) => g.displayOffset).toList()), [
+      [0, 1],
+      [0, 1, 2],
+    ]);
+    for (var index = 0; index < segments.length; index++) {
+      final group = segments[index];
+      final left = group.first.x;
+      final right = group.last.x + group.last.advance;
+      expect(group.every((g) => g.logicalEnd == index + 1), isTrue);
+      expect(CaretEngine.caretX(line, index), closeTo(left, 0.001));
+      expect(CaretEngine.caretX(line, index + 1), closeTo(right, 0.001));
+      expect(
+        CaretEngine.hitLogicalIndex(line, left + (right - left) * 0.2),
+        index,
+      );
+      expect(
+        CaretEngine.hitLogicalIndex(line, left + (right - left) * 0.8),
+        index + 1,
+      );
+    }
+    expect(controller.document.paragraphs.single.text, 'ßﬃ');
+  });
+
   test(
     'native small-capital refresh supports one undo step and DOCX reopen',
     () {

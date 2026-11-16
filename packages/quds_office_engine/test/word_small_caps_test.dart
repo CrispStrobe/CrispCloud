@@ -235,6 +235,11 @@ void main() {
         expect(group.every((g) => g.logicalEnd == segment.end), isTrue);
         expect(group.every((g) => g.displayText == segment.text), isTrue);
         expect(group.every((g) => g.fontSize == 8), isTrue);
+        var displayOffset = 0;
+        for (final glyph in group) {
+          expect(glyph.displayOffset, displayOffset);
+          displayOffset += glyph.glyph.codePoint > 0xffff ? 2 : 1;
+        }
       }
       expect(document.paragraphs.single.text, source);
       expect(
@@ -243,6 +248,67 @@ void main() {
         ),
         isTrue,
       );
+    },
+  );
+
+  test('full uppercase display retains marks and uppercase letter size', () {
+    final segments = WordSmallCaps.segments('ßﬃև\u1ffcα\u0345\u0301');
+    expect(segments.map((s) => (s.text, s.scale)), [
+      ('SS', 0.8),
+      ('FFI', 0.8),
+      ('ԵՒ', 0.8),
+      ('ΩΙ', 1.0),
+      ('Α\u0301Ι', 0.8),
+    ]);
+  });
+
+  test(
+    'narrow cells never split a display expansion or duplicate PDF text',
+    () {
+      final paragraph = _document('aßﬃb').paragraphs.single;
+      final document = WmlDocument(
+        sections: [
+          WmlSection(
+            blocks: [
+              WmlTable(
+                grid: [18],
+                rows: [
+                  WmlTableRow(
+                    cells: [
+                      WmlTableCell(blocks: [paragraph]),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      );
+      final lines = WordLayoutEngine(
+        font: null,
+        measure: (cp, size, props) => size / 2,
+      ).layout(document).pages.expand((page) => page.lines).toList();
+      expect(lines.length, greaterThan(1));
+      for (final (index, count) in [(0, 1), (1, 2), (2, 3), (3, 1)]) {
+        final owners = lines
+            .where(
+              (line) => line.glyphs.any((g) => g.glyph.logicalIndex == index),
+            )
+            .toList();
+        expect(owners, hasLength(1));
+        final glyphs = owners.single.glyphs.where(
+          (g) => g.glyph.logicalIndex == index,
+        );
+        expect(glyphs, hasLength(count));
+        expect(glyphs.every((g) => g.logicalEnd == index + 1), isTrue);
+      }
+      final font = SfntFont.parse(
+        File(
+          '../quds_office_editor/fonts/LiberationSans-Regular.ttf',
+        ).readAsBytesSync(),
+      );
+      final pdf = PdfFile.open(OfficePdfExport.word(document, font: font));
+      expect(PdfExtract.documentText(pdf).replaceAll('\n', ''), 'aßﬃb');
     },
   );
 
@@ -277,4 +343,54 @@ void main() {
     expect(PdfExtract.pageText(pdf, 0), 'Smith');
     expect(document.paragraphs.single.text, 'Smith');
   });
+
+  for (final endnote in [false, true]) {
+    test(
+      'PDF preserves authored expansions and ${endnote ? 'endnote' : 'footnote'} text',
+      () {
+        final font = SfntFont.parse(
+          File(
+            '../quds_office_editor/fonts/LiberationSans-Regular.ttf',
+          ).readAsBytesSync(),
+        );
+        final document = _document('Straße ﬃ');
+        document.paragraphs.single.inlines.add(
+          WmlRun(
+            text: '42',
+            noteRefId: 42,
+            noteRefEndnote: endnote,
+            properties: WmlRunProps(vertAlign: WmlVertAlign.superscript),
+          ),
+        );
+        (endnote ? document.endnotes : document.footnotes).add(
+          WmlNote(
+            id: 42,
+            endnote: endnote,
+            paragraphs: [
+              WmlParagraph(
+                inlines: [
+                  WmlRun(
+                    text: 'Müller',
+                    properties: WmlRunProps(smallCaps: true),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+        final pdf = PdfFile.open(OfficePdfExport.word(document, font: font));
+        final painted = [
+          for (var page = 0; page < pdf.pageCount; page++)
+            ...pdf.displayList(page).ops.whereType<PdfDrawText>(),
+        ].map((op) => op.text).join();
+        expect(painted, contains('STRASSE FFI'));
+        expect(painted, contains('MÜLLER'));
+        final extracted = PdfExtract.documentText(pdf);
+        expect(extracted, contains('Straße ﬃ'));
+        expect(extracted, contains('Müller'));
+        expect('ß'.allMatches(extracted), hasLength(1));
+        expect('ﬃ'.allMatches(extracted), hasLength(1));
+      },
+    );
+  }
 }
