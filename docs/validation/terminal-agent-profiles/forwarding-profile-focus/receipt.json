@@ -1,0 +1,41 @@
+{
+  "recorded_utc": "2026-11-16T06:25:27.091934+00:00",
+  "results": {
+    "passed": 67,
+    "failed": 0,
+    "skipped": 0,
+    "analyzer": "No issues found"
+  },
+  "breakdown": {
+    "profile_core": 28,
+    "profile_widgets": 10,
+    "panel": 10,
+    "existing_forwarding_widgets": 15,
+    "opt_in_visuals": 4
+  },
+  "test_command": "/workspace/scratch/5ee066981535/toolchain/run flutter test --no-pub --timeout 30s --dart-define=SSH_FORWARDING_PROFILE_VISUALS=true test/ssh_forwarding_profiles_test.dart test/ssh_forwarding_profiles_widget_test.dart test/ssh_forwarding_panel_test.dart test/ssh_port_forwarding_widget_test.dart test/ssh_forwarding_profiles_visual_test.dart",
+  "test_log": "build/ssh-forwarding-profile-validation/focused.log",
+  "analyzer_log": "build/ssh-forwarding-profile-validation/analyzer.log",
+  "source_sha256": {
+    "lib/models/ssh_forwarding_profile.dart": "228d2989c47ea4482f14d77feeb922d36c87117e9c2c9fc311a9efbc41864864",
+    "lib/services/ssh_forwarding_profiles.dart": "72d53bda86b22ab15d70f698d7c72ae1093e769c6b79ffb23b1ac8fac4dc30e7",
+    "lib/providers/ssh_forwarding_profiles_provider.dart": "c0584b7ead4de73bb6ec1765d60a6fba1cd1707b20c0d5e759507056a1a9ebb1",
+    "lib/widgets/ssh_port_forwarding_dialog.dart": "fa2e0cd947f89592bcb651a2215d8347f92d8d40f44a7cc58a0c31f722d93885",
+    "lib/l10n/ssh_forwarding_profile_strings.dart": "279cb35f2aca41c26e35449c976ee86e9c97f97e3c40578606cfb612f75737bd",
+    "lib/l10n/ssh_port_forwarding_strings.dart": "f5169e43b2110c79cb5d90435a8c9b0520372e0d11e61dd662693c9e6a37a21a",
+    "lib/widgets/terminal_panel.dart": "cc1a4a166981ab5e6d627abecbc1983d2a92fc241fe777f2ee18f49468dc90f0",
+    "test/support/ssh_forwarding_profile_fixture.dart": "d95b7447177b8845e8f1913adbf1ecb039fbeebb72a10cf8156cff133686dfd7",
+    "test/ssh_forwarding_profiles_test.dart": "ef7a4996aa5c86b8c6c9e5b71e8555ffdd5893e934b830d940f8bd88fe53d5af",
+    "test/ssh_forwarding_profiles_widget_test.dart": "4a51c61e3806adefb5840a1a85845cdb8d1cf6f50dfefc2474682cff0617bfa9",
+    "test/ssh_forwarding_panel_test.dart": "edda1e0a932024815550693e263929a755bc63ac60954598e441ea511920cd11",
+    "test/ssh_forwarding_profiles_visual_test.dart": "1565b4c5e2c5fc9996be37b3fa4412a3a73e6f2b04ba118b5519ad7f6211459e",
+    "test/ssh_port_forwarding_widget_test.dart": "3e8ee4b50a2753fedd323b572e1edbfd7a95d59278f1726bbf33e0d9161ded01"
+  },
+  "visual_sha256": {
+    "build/ssh-forwarding-profile-visuals/forwarding-profiles-editor-desktop.png": "a33b303afebd7c08d6f6924387bb51cbf4c68a01277cc50b2905bf557ee97cf6",
+    "build/ssh-forwarding-profile-visuals/forwarding-profiles-editor-narrow.png": "c682b8f74b13f83e2ddc059578e3a5bc2b65e295a07cf944303e06dd78f250d6",
+    "build/ssh-forwarding-profile-visuals/forwarding-profiles-manager-desktop.png": "8d772be84410c6498920435daa74beec26bd4f9abcb0e4dbb85e4c632a278b80",
+    "build/ssh-forwarding-profile-visuals/forwarding-profiles-manager-narrow.png": "b8549e229bb7f99baeac882ab7c675ea68df9f1d5c205697ee318e077434bb2f"
+  },
+  "limits": "Production widgets with a synthetic forwarding manager; visuals do not establish real socket or native-device acceptance. Source hashes cover this focused test cohort only."
+}

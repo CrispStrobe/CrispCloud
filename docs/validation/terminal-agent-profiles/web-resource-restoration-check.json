@@ -1,0 +1,47 @@
+{
+  "started_utc": "2026-11-16T06:28:12.135542+00:00",
+  "purpose": "Restoration fixture only; no application build or source change.",
+  "shared_sdk_files_replaced": false,
+  "full_web_build_started": false,
+  "runner_sha256": "46416eb25bc4fe262dfabc7cc737789da67733648754be27e1bf86328d4a310f",
+  "shared_sdk_before": {
+    "bin/dart": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb",
+    "bin/dartaotruntime": "3599c987228070f342c80d29353f496c8efc72c620c75fc4d59e5671666b2f72",
+    "bin/snapshots/dart2js_aot.dart.snapshot": "29314b1f8e994436c5639a59df0243692cd83625fc587619a9c99e9a3804b1d6"
+  },
+  "cases": [
+    {
+      "case": "child_exit_23",
+      "exit_code": 23,
+      "sdk_restored_exactly": true,
+      "verified_binary_hashes": {
+        "bin/dart": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb",
+        "bin/dartaotruntime": "3599c987228070f342c80d29353f496c8efc72c620c75fc4d59e5671666b2f72",
+        "bin/snapshots/dart2js_aot.dart.snapshot": "29314b1f8e994436c5639a59df0243692cd83625fc587619a9c99e9a3804b1d6"
+      },
+      "backup_removed": true,
+      "runner_error": null,
+      "log": "/workspace/scratch/5ee066981535/toolchain/receipts/web-restoration-child_exit_23.log"
+    },
+    {
+      "case": "runner_sigterm",
+      "exit_code": 1,
+      "sdk_restored_exactly": true,
+      "verified_binary_hashes": {
+        "bin/dart": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb",
+        "bin/dartaotruntime": "3599c987228070f342c80d29353f496c8efc72c620c75fc4d59e5671666b2f72",
+        "bin/snapshots/dart2js_aot.dart.snapshot": "29314b1f8e994436c5639a59df0243692cd83625fc587619a9c99e9a3804b1d6"
+      },
+      "backup_removed": true,
+      "runner_error": "InterruptedError: Received signal 15",
+      "log": "/workspace/scratch/5ee066981535/toolchain/receipts/web-restoration-runner_sigterm.log"
+    }
+  ],
+  "shared_sdk_after": {
+    "bin/dart": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb",
+    "bin/dartaotruntime": "3599c987228070f342c80d29353f496c8efc72c620c75fc4d59e5671666b2f72",
+    "bin/snapshots/dart2js_aot.dart.snapshot": "29314b1f8e994436c5639a59df0243692cd83625fc587619a9c99e9a3804b1d6"
+  },
+  "shared_sdk_unchanged": true,
+  "finished_utc": "2026-11-16T06:28:12.793288+00:00"
+}

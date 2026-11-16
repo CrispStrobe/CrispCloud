@@ -1,0 +1,31 @@
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_visual_test.dart
+00:00 +0: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_visual_test.dart: (setUpAll)
+00:00 +0: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_visual_test.dart: agent authority disclosure on desktop
+00:01 +1: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_visual_test.dart: agent authority disclosure on short narrow viewport
+00:01 +2: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_visual_test.dart: agent unavailable guidance on short narrow viewport
+00:01 +3: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_visual_test.dart: (tearDownAll)
+00:01 +3: loading /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_test.dart
+00:02 +3: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_test.dart: agent identities probe before signing and return actual Ed25519 signatures
+00:02 +4: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_test.dart: identity and signature frames survive every split and bytewise fragmentation
+00:03 +5: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_test.dart: empty signing payloads retain normal agent protocol semantics
+00:03 +6: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_test.dart: parallel identity reads share one frozen snapshot
+00:03 +7: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_test.dart: unknown key families skip and duplicate public keys are exposed once
+00:03 +8: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_test.dart: empty agents and unsupported-only agents fail without password fallback
+00:03 +9: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_test.dart: malformed identity responses reject before exposing any key
+00:03 +10: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_test.dart: oversized, zero, truncated and trailing frame bytes are rejected
+00:03 +11: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_test.dart: RSA uses SHA2 authentication algorithms and exact agent signing flags
+00:03 +12: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_test.dart: ECDSA curves validate their point geometry and signature components
+00:03 +13: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_test.dart: sign refusal is distinct; wrong types, lengths and trailing bytes reject
+00:03 +14: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_test.dart: forwarding allows only frozen keys, list and sign with exact flags
+00:03 +15: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_test.dart: forwarding rate limit resets and identity listing never queries new keys
+00:03 +16: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_test.dart: oversized signing data is rejected before touching the agent
+00:03 +17: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_test.dart: local request concurrency cap includes pending connections
+00:03 +18: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_test.dart: timeout destroys active sockets and reports a stable error
+00:03 +19: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_test.dart: cancel during pending open closes its late socket without writing
+00:03 +20: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_test.dart: timeout during open closes a late socket without using its response
+00:03 +21: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_test.dart: cancel during signature immediately revokes future authority
+00:03 +22: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_test.dart: expired caller lease refuses signing without a socket
+00:03 +23: /workspace/scratch/5ee066981535/CrispCloud/test/ssh_agent_test.dart: connection failures hide transport details and socket paths
+00:03 +24: All tests passed!

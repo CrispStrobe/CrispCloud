@@ -261,6 +261,32 @@ forwarding failure or an oversized input operation. The per-event bound is
 262,144 UTF-16 code units, not a byte count. Stop also revokes pending deliveries
 that have not reached their transports. Groups are never persisted.
 
+## Current agent/profile verification
+
+At source checkpoint `9753a980`, the full terminal cohort passed **813 tests,
+two platform skips and zero failures across 69 files**. Analysis and formatting
+are clean across **123 Dart files**. The combined real OpenSSH run passed
+**17 tests, two explicit skips and zero failures across three files**. All
+**5,511 watched source, dependency and test files** remained unchanged during
+these runs. Seven production-widget captures were inspected; their recorded
+source inputs match this checkpoint exactly.
+
+The live runs cover the prior 3 MiB local/remote/SOCKS5 transfers, verified direct
+and jump-host agent authentication, refusal/cancellation/revocation, and a real
+rekey preserving 512 KiB of binary data plus Unicode. Agent signatures in those
+cases come from a framed in-memory fixture signing disposable keys; the actual
+Unix-agent case is explicitly skipped because this host denies Unix sockets.
+The second live skip is the optional interactive SSH PTY fixture. Actual local
+Linux PTYs are exercised in the native cohort.
+
+The same-version checked-in SSH runtime is used by the production dependency
+graph. Its 96 upstream files and four local runtime changes pass the tracked
+vendor guard; the patch reproduces the exact changed source. The Office guard
+also verifies all 2,399 managed entries and their existing pins. The current
+full web release build is in progress. Complete commands, logs, source
+inventories and platform limits are in
+[the acceptance record](validation/terminal-agent-profiles/README.md).
+
 ## Previous forwarding/trigger verification
 
 The preceding normal-application cohort passed **676 native tests, two platform
