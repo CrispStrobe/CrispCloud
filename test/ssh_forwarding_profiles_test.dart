@@ -460,6 +460,60 @@ void main() {
       },
     );
 
+    test(
+      'a competing refresh cannot consume the automatic start snapshot',
+      () async {
+        final firstRead = Completer<void>();
+        final secondRead = Completer<void>();
+        final firstStarted = Completer<void>();
+        final secondStarted = Completer<void>();
+        final profile = forwardingProfile(autoStart: true);
+        final raw = jsonEncode({
+          'version': 1,
+          'profiles': [profile.toJson()],
+        });
+        var reads = 0;
+        final gatedStore = SshForwardingProfiles(
+          read: () async {
+            switch (++reads) {
+              case 1:
+                firstStarted.complete();
+                await firstRead.future;
+              case 2:
+                secondStarted.complete();
+                await secondRead.future;
+            }
+            return raw;
+          },
+          write: (_) async {},
+        );
+        final coordinator = SshForwardingProfileSession(
+          store: gatedStore,
+          route: profile.route,
+          forwarding: forwarding,
+        );
+        addTearDown(() {
+          coordinator.dispose();
+          gatedStore.dispose();
+        });
+
+        final automatic = coordinator.startAutomatic();
+        await firstStarted.future;
+        final refresh = coordinator.refresh();
+        firstRead.complete();
+        await secondStarted.future;
+        expect(coordinator.profiles, isEmpty);
+        expect(forwarding.requests, isEmpty);
+        secondRead.complete();
+        await Future.wait([automatic, refresh]);
+        await coordinator.startAutomatic();
+
+        expect(forwarding.requests.length, 1);
+        expect(forwarding.forwards.single.spec.targetPort, 5432);
+        expect(coordinator.profiles.single.id, profile.id);
+      },
+    );
+
     test('saving enabled profiles does not start current listeners; reconnect does', () async {
       await session.startAutomatic();
       final profile = forwardingProfile(autoStart: true);

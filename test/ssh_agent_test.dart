@@ -69,16 +69,25 @@ void main() {
     agent.close();
   });
 
-  test('empty signing payloads retain normal agent protocol semantics', () async {
-    final fixture = AgentFixture();
-    final agent = fixture.connection();
-    final identity = (await agent.loadIdentities()).single;
-    final empty = Uint8List(0);
-    expect((await identity.sign(empty)).encode(), fixtureAgentKey.sign(empty).encode());
-    final request = agentSignRequest(identity.toPublicKey().encode(), empty);
-    expect(await agent.handleRequest(request), await fixture.handler.handleRequest(request));
-    agent.close();
-  });
+  test(
+    'empty signing payloads retain normal agent protocol semantics',
+    () async {
+      final fixture = AgentFixture();
+      final agent = fixture.connection();
+      final identity = (await agent.loadIdentities()).single;
+      final empty = Uint8List(0);
+      expect(
+        (await identity.sign(empty)).encode(),
+        fixtureAgentKey.sign(empty).encode(),
+      );
+      final request = agentSignRequest(identity.toPublicKey().encode(), empty);
+      expect(
+        await agent.handleRequest(request),
+        await fixture.handler.handleRequest(request),
+      );
+      agent.close();
+    },
+  );
 
   test('parallel identity reads share one frozen snapshot', () async {
     final fixture = AgentFixture();

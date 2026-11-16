@@ -75,7 +75,7 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  Future<void> tap(WidgetTester tester, Finder finder) async {
+  Future<void> reveal(WidgetTester tester, Finder finder) async {
     if (finder.evaluate().isEmpty) {
       final owner = find.byType(AddSshPortForwardDialog).evaluate().isNotEmpty
           ? find.byType(AddSshPortForwardDialog)
@@ -90,6 +90,10 @@ void main() {
     }
     await tester.ensureVisible(finder);
     await tester.pumpAndSettle();
+  }
+
+  Future<void> tap(WidgetTester tester, Finder finder) async {
+    await reveal(tester, finder);
     expect(finder.hitTestable(), findsOneWidget);
     await tester.tap(finder);
     await tester.pumpAndSettle();
@@ -248,7 +252,7 @@ void main() {
       await profiles.startAutomatic();
       await mount(tester);
       final message = find.text('Could not update forwarding profiles.');
-      await tester.ensureVisible(message);
+      await reveal(tester, message);
       expect(message, findsOneWidget);
       expect(find.text('private diagnostic'), findsNothing);
       expect(tester.takeException(), isNull);

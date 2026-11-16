@@ -289,23 +289,32 @@ class SshForwardingProfileSession extends ChangeNotifier {
   void _forwardChanged() => _changed();
 
   Future<void> refresh() async {
+    await _refresh();
+  }
+
+  Future<List<SshForwardingProfile>?> _refresh() async {
     final generation = ++_refreshGeneration;
     try {
       final loaded = await store.load();
-      if (_disposed || generation != _refreshGeneration) return;
-      _profiles = List.unmodifiable(
+      final profiles = List<SshForwardingProfile>.unmodifiable(
         loaded.where((profile) => profile.route == route),
       );
-      _errors.removeWhere(
-        (id, _) => !_profiles.any((profile) => profile.id == id),
-      );
-      _error = null;
+      if (!_disposed && generation == _refreshGeneration) {
+        _profiles = profiles;
+        _errors.removeWhere(
+          (id, _) => !_profiles.any((profile) => profile.id == id),
+        );
+        _error = null;
+        _changed();
+      }
+      return profiles;
     } catch (_) {
-      if (_disposed || generation != _refreshGeneration) return;
-      _error =
-          'Saved forwarding could not be loaded. Existing data was preserved.';
+      if (!_disposed && generation == _refreshGeneration) {
+        _error = 'Saved forwarding could not be loaded. Existing data was preserved.';
+        _changed();
+      }
+      return null;
     }
-    _changed();
   }
 
   /// Idempotent even when a pane rebuild accidentally creates another
@@ -316,9 +325,12 @@ class SshForwardingProfileSession extends ChangeNotifier {
   Future<void> _startAutomatic() async {
     final shouldStart = _automaticManagers[forwarding] != true;
     _automaticManagers[forwarding] = true;
-    await refresh();
-    if (!shouldStart || !isCurrent || error != null) return;
-    final ids = profiles
+    // Keep this read's snapshot even if a dialog/store refresh supersedes its
+    // UI update. Reading the shared cache here can silently consume the one
+    // automatic attempt before a competing refresh has populated that cache.
+    final initialProfiles = await _refresh();
+    if (!shouldStart || !isCurrent || initialProfiles == null) return;
+    final ids = initialProfiles
         .where((profile) => profile.autoStart)
         .map((profile) => profile.id)
         .toList();

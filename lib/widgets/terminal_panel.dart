@@ -175,6 +175,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
   // Reconnect remembers the destination and session mode, never credentials.
   SshTerminalConfig? _lastSshConfig;
   SshForwardingProfileSession? _forwardingProfiles;
+  final _forwardingDialogLeases = <SshForwardingProfileSession, int>{};
   Terminal? _tmuxTerminal;
   Terminal? _screenTerminal;
   bool _showSearch = false;
@@ -797,7 +798,46 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
   void _clearForwardingProfiles() {
     final previous = _forwardingProfiles;
     _forwardingProfiles = null;
-    previous?.dispose();
+    // Connection identity revokes start authority immediately. An open dialog
+    // still owns a live notifier so saved recipes can be edited while offline.
+    if (previous != null && !_forwardingDialogLeases.containsKey(previous)) {
+      previous.dispose();
+    }
+  }
+
+  Future<void> _showForwardingDialog() async {
+    final forwarding = _session.portForwarding;
+    if (forwarding == null) return;
+    final profiles = _forwardingProfiles;
+    if (profiles != null) {
+      _forwardingDialogLeases.update(
+        profiles,
+        (leases) => leases + 1,
+        ifAbsent: () => 1,
+      );
+    }
+    try {
+      final navigator = Navigator.of(context, rootNavigator: true);
+      final route = DialogRoute<void>(
+        context: context,
+        themes: InheritedTheme.capture(from: context, to: navigator.context),
+        builder: (_) =>
+            SshPortForwardingDialog(forwarding: forwarding, profiles: profiles),
+      );
+      await navigator.push(route);
+      // A popped dialog remains mounted during its reverse transition.
+      await route.completed;
+    } finally {
+      if (profiles != null) {
+        final leases = _forwardingDialogLeases[profiles]! - 1;
+        if (leases == 0) {
+          _forwardingDialogLeases.remove(profiles);
+          if (!identical(_forwardingProfiles, profiles)) profiles.dispose();
+        } else {
+          _forwardingDialogLeases[profiles] = leases;
+        }
+      }
+    }
   }
 
   void _startSavedForwarding(SshTerminalConfig config) {
@@ -1285,18 +1325,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
           ),
         );
       case _PanelAction.forwarding:
-        final forwarding = _session.portForwarding;
-        if (forwarding != null) {
-          unawaited(
-            showDialog<void>(
-              context: context,
-              builder: (_) => SshPortForwardingDialog(
-                forwarding: forwarding,
-                profiles: _forwardingProfiles,
-              ),
-            ),
-          );
-        }
+        unawaited(_showForwardingDialog());
       case _PanelAction.zoomIn:
         _setFontSize(_fontSize + 1);
       case _PanelAction.zoomOut:

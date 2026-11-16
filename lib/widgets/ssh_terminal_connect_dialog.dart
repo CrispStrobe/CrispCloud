@@ -352,6 +352,7 @@ class _SshConnectDialogState extends State<SshTerminalConnectDialog> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
+    insetPadding: const EdgeInsets.all(16),
     title: Text(
       widget.jumpHostOnly
           ? context.sshJumpTr('SSH jump host')
@@ -596,6 +597,7 @@ class _SshConnectDialogState extends State<SshTerminalConnectDialog> {
                   key: const ValueKey('terminal-ssh-forward-agent'),
                   contentPadding: EdgeInsets.zero,
                   controlAffinity: ListTileControlAffinity.leading,
+                  titleAlignment: ListTileTitleAlignment.top,
                   value: _forwardAgent,
                   onChanged: (value) => setState(() {
                     _forwardAgent = value ?? false;
