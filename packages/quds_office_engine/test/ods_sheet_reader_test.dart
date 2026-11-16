@@ -2074,6 +2074,38 @@ void validationTests() {
 }
 
 void metadataTests() {
+  test('ODS outline groups survive XLSX and reopen', () async {
+    final book = OdsSheetReader.readBytes(
+      _ods(
+        '<t:table t:name="Data">'
+        '<t:table-column t:style-name="co1"/>'
+        '<t:table-column-group><t:table-column t:visibility="collapse" '
+        't:number-columns-repeated="2"/></t:table-column-group>'
+        '<t:table-row><t:table-cell><x:p>Head</x:p></t:table-cell>'
+        '</t:table-row>'
+        '<t:table-row-group><t:table-row t:visibility="collapse">'
+        '<t:table-cell><x:p>Grouped</x:p></t:table-cell>'
+        '</t:table-row></t:table-row-group></t:table>',
+      ),
+    );
+    final sheet = book.sheets.first;
+    expect(sheet.columnProperties[1]?['outlineLevel'], '1');
+    expect(sheet.columnProperties[1]?['hidden'], '1');
+    expect(sheet.columnProperties[2]?['outlineLevel'], '1');
+    expect(sheet.rowOutlineLevels[1], 1);
+    expect(sheet.hiddenRows, contains(1));
+
+    final saved = await OfficeIsolateSave.workbook(book, recalculate: false);
+    final archive = ZipDecoder().decodeBytes(saved);
+    final sheetXml = utf8.decode(
+      archive.findFile('xl/worksheets/sheet1.xml')!.content as List<int>,
+    );
+    expect(sheetXml, contains('outlineLevel="1"'));
+    final reopened = SheetDeserializer().readBytes(saved);
+    expect(reopened.sheets.first.rowOutlineLevels[1], 1);
+    expect(reopened.sheets.first.columnProperties[1]?['outlineLevel'], '1');
+  });
+
   test('ODS external and internal hyperlinks survive XLSX', () async {
     final book = OdsSheetReader.readBytes(
       _ods(
