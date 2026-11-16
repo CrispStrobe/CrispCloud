@@ -32,13 +32,13 @@ exact source identities, commands and the separately qualified terminal results.
 
 ## Earlier verified state
 
-- CrispCloud `main` snapshot: `91012624`
-- Vendored Quds source checkpoint: `817982d580e990a5ca21d74c35135db4817e54b5`
+- CrispCloud `main` snapshot: `4eea7d16`
+- Vendored Quds source checkpoint: `891ccc21cf91fb9f49fa0af98143468fbbd3eac7`
   (`packages/QUDS_FORKS.md`, 2,503 managed files)
-- Quds sheet/ODS cohort: **508 tests**; the last clean full engine run was
+- Quds sheet/ODS cohort: **509 tests**; the last clean full engine run was
   **2,205 tests** (two unrelated CLI bookmark/content-control tests currently
   fail on main)
-- CrispCloud vendored ODS reader+writer: **111 tests**
+- CrispCloud vendored ODS reader+writer: **112 tests**
 - CrispCloud combined F3/F4/ODF suite: **51 tests**
 - ODT parser/image suite: **37 tests**
 - Live corpus smoke tests: **20 ODF**, **9 XLS**, **1 ODS**
@@ -69,7 +69,7 @@ exact source identities, commands and the separately qualified terminal results.
 - `OdsSheetWriter` exports a new ODS package from the shared model: values,
   formulas, styles, number formats, merges, geometry, hidden state, comments,
   hyperlinks, names, print metadata, autofilter ranges, pictures, conditional
-  formats and validations, plus a defined default A4 page layout.
+  formats, validations, row outline groups and a defined default A4 page layout.
 - F4 sheet **Export as ODS** action; it writes a new package and leaves the
   ordinary XLSX save target and original file unchanged.
 - ODT named styles from `styles.xml`, inline pictures, text boxes, header/footer
