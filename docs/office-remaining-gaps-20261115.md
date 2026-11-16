@@ -33,12 +33,12 @@ exact source identities, commands and the separately qualified terminal results.
 ## Earlier verified state
 
 - CrispCloud `main` snapshot: `4eea7d16`
-- Vendored Quds source checkpoint: `c6a7eff46bcfcb806ee7c43252636b06c088963c`
+- Vendored Quds source checkpoint: `ea9d16edd489b3a4ccff7a25cc5277b686c4e263`
   (`packages/QUDS_FORKS.md`, 2,503 managed files)
-- Quds sheet/ODS cohort: **512 tests**; the last clean full engine run was
+- Quds sheet/ODS cohort: **514 tests**; the last clean full engine run was
   **2,205 tests** (two unrelated CLI bookmark/content-control tests currently
   fail on main)
-- CrispCloud vendored ODS reader+writer: **114 tests**
+- CrispCloud vendored ODS reader+writer: **115 tests**
 - CrispCloud combined F3/F4/ODF suite: **51 tests**
 - ODT parser/image suite: **37 tests**
 - Live corpus smoke tests: **20 ODF**, **9 XLS**, **1 ODS**
