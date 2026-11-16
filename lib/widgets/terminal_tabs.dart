@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
@@ -10,16 +11,21 @@ import '../l10n/terminal_controls_strings.dart';
 import '../l10n/terminal_arrangement_strings.dart';
 import '../l10n/terminal_broadcast_strings.dart';
 import '../l10n/terminal_strings.dart';
+import '../l10n/terminal_recovery_strings.dart';
 import '../l10n/ssh_connection_sharing_strings.dart';
 import '../models/terminal_arrangement.dart';
+import '../models/terminal_workspace_recovery.dart';
 import '../providers/terminal_provider.dart';
+import '../providers/terminal_workspace_recovery_provider.dart';
 import '../providers/focus_area_provider.dart';
 import '../services/terminal_session.dart';
 import '../services/terminal_broadcast.dart';
 import '../services/terminal_connection.dart';
+import '../services/terminal_workspace_recovery.dart';
 import 'terminal_panel.dart';
 import 'terminal_arrangements_dialog.dart';
 import 'terminal_broadcast_dialog.dart';
+import 'terminal_workspace_recovery_dialog.dart';
 
 class _TerminalTab {
   _TerminalTab(
@@ -70,7 +76,8 @@ class TerminalTabs extends ConsumerStatefulWidget {
   ConsumerState<TerminalTabs> createState() => _TerminalTabsState();
 }
 
-class _TerminalTabsState extends ConsumerState<TerminalTabs> {
+class _TerminalTabsState extends ConsumerState<TerminalTabs>
+    with WidgetsBindingObserver {
   final _tabs = <_TerminalTab>[];
   int _nextId = 1;
   late TerminalPaneLayout _layout;
@@ -84,6 +91,19 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
   late final TerminalBroadcast _broadcast;
   int _broadcastStopSerial = 0;
   _SharedShellRequest? _sharedShellRequest;
+  TerminalWorkspaceRecovery? _recovery;
+  TerminalWorkspaceRecoveryLease? _recoveryLease;
+  TerminalWorkspaceRecoveryRecord? _recoveryRecord;
+  Timer? _recoveryTimer;
+  String? _recoveryError;
+  String? _savedRecoveryJson;
+  String? _pendingRecoveryJson;
+  bool _recoveryLoading = false;
+  bool _recoveryBusy = false;
+  int _recoveryEpoch = 0;
+  int _recoverySaveSerial = 0;
+
+  bool get _ownsWorkspace => widget.session == null;
 
   @override
   void initState() {
@@ -99,6 +119,326 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
     final tab = _makeTab(initial: widget.session);
     _active = tab.id;
     _layout = TerminalPaneLeaf(tab.id);
+    WidgetsBinding.instance.addObserver(this);
+    _beginRecovery();
+  }
+
+  void _beginRecovery() {
+    if (!_ownsWorkspace) return;
+    final recovery = ref.read(terminalWorkspaceRecoveryProvider);
+    final lease = recovery.acquireLease();
+    _recovery = recovery;
+    _recoveryLease = lease;
+    _recoveryLoading = true;
+    final epoch = ++_recoveryEpoch;
+    unawaited(_loadRecovery(recovery, lease, epoch));
+  }
+
+  bool _currentRecovery(TerminalWorkspaceRecoveryLease lease, int epoch) =>
+      mounted &&
+      _ownsWorkspace &&
+      identical(lease, _recoveryLease) &&
+      lease.isCurrent &&
+      epoch == _recoveryEpoch;
+
+  Future<void> _loadRecovery(
+    TerminalWorkspaceRecovery recovery,
+    TerminalWorkspaceRecoveryLease lease,
+    int epoch,
+  ) async {
+    var restored = false;
+    try {
+      // A stalled settings backend must not prevent opening a terminal. A late
+      // read cannot publish a workspace after this timeout or ownership change.
+      final record = await recovery.load().timeout(const Duration(seconds: 3));
+      if (!_currentRecovery(lease, epoch)) return;
+      _recoveryRecord = record;
+      final snapshot = record.snapshot;
+      if (record.enabled && snapshot != null) {
+        final replacements = <_TerminalTab>[];
+        try {
+          for (final saved in snapshot.tabs) {
+            replacements.add(
+              _TerminalTab(
+                _nextId++,
+                widget.sessionFactory?.call() ?? TerminalSession(),
+                owned: true,
+                start:
+                    record.relaunchLocalShells &&
+                    saved.paneState.sshConfig == null,
+                paneState: saved.paneState,
+                name: saved.name,
+              ),
+            );
+          }
+        } catch (_) {
+          for (final tab in replacements) {
+            tab.session.dispose();
+          }
+          rethrow;
+        }
+        // No TerminalPanel has mounted while settings load, so the initial
+        // placeholder owns no process, transport, input or retained output.
+        _releaseTabs();
+        for (final tab in replacements) {
+          tab.session.addListener(_changed);
+        }
+        _tabs.addAll(replacements);
+        _layout = snapshot.layout.mapIds((index) => replacements[index].id);
+        _active = replacements[snapshot.activeIndex].id;
+        _savedRecoveryJson = jsonEncode(_recoverySnapshot().toJson());
+        restored = true;
+      }
+      _recoveryError = null;
+    } catch (_) {
+      if (!_currentRecovery(lease, epoch)) return;
+      _recoveryRecord = null;
+      _recoveryError = 'Could not load session recovery. Saved data was kept.';
+    }
+    if (!_currentRecovery(lease, epoch)) return;
+    setState(() => _recoveryLoading = false);
+    _queueRecoverySave();
+    if (restored) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_currentRecovery(lease, epoch) && widget.visible) {
+          ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+            SnackBar(
+              content: Text(
+                context.terminalRecoveryTr(
+                  'Workspace recovered. Connect each SSH destination when ready.',
+                ),
+              ),
+            ),
+          );
+        }
+      });
+    }
+  }
+
+  TerminalArrangement _recoverySnapshot() =>
+      _captureArrangement('Recovered workspace');
+
+  void _queueRecoverySave() {
+    if (!_ownsWorkspace ||
+        _recoveryLoading ||
+        _recoveryBusy ||
+        _recoveryError != null ||
+        _recoveryRecord?.enabled != true ||
+        _recoveryLease?.isCurrent != true ||
+        _tabs.isEmpty) {
+      return;
+    }
+    final encoded = jsonEncode(_recoverySnapshot().toJson());
+    if (encoded == _savedRecoveryJson || encoded == _pendingRecoveryJson) {
+      return;
+    }
+    _recoveryTimer?.cancel();
+    _recoveryTimer = Timer(
+      const Duration(milliseconds: 350),
+      () => unawaited(_flushRecovery()),
+    );
+  }
+
+  Future<void> _flushRecovery() async {
+    _recoveryTimer?.cancel();
+    _recoveryTimer = null;
+    final recovery = _recovery;
+    final lease = _recoveryLease;
+    if (recovery == null ||
+        lease == null ||
+        !lease.isCurrent ||
+        _recoveryLoading ||
+        _recoveryBusy ||
+        _recoveryError != null ||
+        _recoveryRecord?.enabled != true ||
+        _tabs.isEmpty) {
+      return;
+    }
+    final snapshot = _recoverySnapshot();
+    final encoded = jsonEncode(snapshot.toJson());
+    if (encoded == _savedRecoveryJson || encoded == _pendingRecoveryJson) {
+      return;
+    }
+    final epoch = _recoveryEpoch;
+    final serial = ++_recoverySaveSerial;
+    _pendingRecoveryJson = encoded;
+    try {
+      final record = await recovery.save(snapshot, lease: lease);
+      if (!_currentRecovery(lease, epoch) || serial != _recoverySaveSerial) {
+        return;
+      }
+      _recoveryRecord = record;
+      _savedRecoveryJson = encoded;
+    } on TerminalWorkspaceRecoveryLeaseExpired {
+      // A newer application-owned workspace now owns recovery writes.
+    } catch (_) {
+      if (_currentRecovery(lease, epoch) && serial == _recoverySaveSerial) {
+        setState(() {
+          _recoveryError =
+              'Session recovery is paused. Retry in Session recovery.';
+        });
+      }
+    } finally {
+      if (_currentRecovery(lease, epoch) && serial == _recoverySaveSerial) {
+        _pendingRecoveryJson = null;
+      }
+    }
+  }
+
+  Future<TerminalWorkspaceRecoveryRecord> _configureRecovery(
+    bool enabled,
+    bool relaunchLocalShells,
+  ) async {
+    final recovery = _recovery!;
+    final lease = _recoveryLease!;
+    _recoveryTimer?.cancel();
+    final epoch = ++_recoveryEpoch;
+    _recoveryBusy = true;
+    try {
+      var record = await recovery.configure(
+        lease: lease,
+        enabled: enabled,
+        relaunchLocalShells: enabled && relaunchLocalShells,
+      );
+      if (!_currentRecovery(lease, epoch)) {
+        throw const TerminalWorkspaceRecoveryLeaseExpired();
+      }
+      // Enabling takes a checkpoint immediately; it never applies an older
+      // saved layout over a workspace the user has already begun using.
+      if (enabled) {
+        final snapshot = _recoverySnapshot();
+        record = await recovery.save(snapshot, lease: lease);
+        if (!_currentRecovery(lease, epoch)) {
+          throw const TerminalWorkspaceRecoveryLeaseExpired();
+        }
+        _savedRecoveryJson = jsonEncode(snapshot.toJson());
+      }
+      setState(() {
+        _recoveryRecord = record;
+        _recoveryError = null;
+      });
+      return record;
+    } catch (_) {
+      if (_currentRecovery(lease, epoch)) {
+        setState(() => _recoveryError = 'Could not save session recovery.');
+      }
+      rethrow;
+    } finally {
+      if (_currentRecovery(lease, epoch)) {
+        _recoveryBusy = false;
+        _pendingRecoveryJson = null;
+        _queueRecoverySave();
+      }
+    }
+  }
+
+  Future<TerminalWorkspaceRecoveryRecord> _forgetRecovery() async {
+    final recovery = _recovery!;
+    final lease = _recoveryLease!;
+    _recoveryTimer?.cancel();
+    final epoch = ++_recoveryEpoch;
+    _recoveryBusy = true;
+    try {
+      final record = await recovery.forget(lease: lease);
+      if (!_currentRecovery(lease, epoch)) {
+        throw const TerminalWorkspaceRecoveryLeaseExpired();
+      }
+      setState(() {
+        _recoveryRecord = record;
+        _recoveryError = null;
+        _savedRecoveryJson = null;
+      });
+      return record;
+    } catch (_) {
+      if (_currentRecovery(lease, epoch)) {
+        setState(() => _recoveryError = 'Could not forget saved workspace.');
+      }
+      rethrow;
+    } finally {
+      if (_currentRecovery(lease, epoch)) {
+        _recoveryBusy = false;
+        _pendingRecoveryJson = null;
+      }
+    }
+  }
+
+  Future<TerminalWorkspaceRecoveryRecord> _retryRecovery() async {
+    final lease = _recoveryLease!;
+    final epoch = _recoveryEpoch;
+    final record = await _recovery!.load().timeout(const Duration(seconds: 3));
+    if (!_currentRecovery(lease, epoch)) {
+      throw const TerminalWorkspaceRecoveryLeaseExpired();
+    }
+    setState(() {
+      _recoveryRecord = record;
+      _recoveryError = null;
+      _savedRecoveryJson = null;
+    });
+    // Retry resumes saving the current workspace. It cannot restore over live
+    // sessions; automatic restoration belongs exclusively to initial loading.
+    await _flushRecovery();
+    if (_recoveryError != null) throw StateError(_recoveryError!);
+    return _recoveryRecord!;
+  }
+
+  Future<void> _showRecoverySettings() async {
+    if (!_ownsWorkspace ||
+        _recoveryLoading ||
+        _recoveryLease?.isCurrent != true) {
+      return;
+    }
+    await showDialog<bool>(
+      context: context,
+      builder: (_) => TerminalWorkspaceRecoveryDialog(
+        initialRecord: _recoveryRecord,
+        initialError: _recoveryError,
+        onSave: _configureRecovery,
+        onForget: _forgetRecovery,
+        onRetry: _retryRecovery,
+      ),
+    );
+  }
+
+  void _endRecovery() {
+    _recoveryTimer?.cancel();
+    _recoveryTimer = null;
+    final recovery = _recovery;
+    final lease = _recoveryLease;
+    final snapshot =
+        !_recoveryLoading &&
+            !_recoveryBusy &&
+            _recoveryError == null &&
+            _recoveryRecord?.enabled == true &&
+            _tabs.isNotEmpty
+        ? _recoverySnapshot()
+        : null;
+    _recoveryEpoch++;
+    _recoveryLease = null;
+    _recovery = null;
+    _recoveryRecord = null;
+    _recoveryError = null;
+    _savedRecoveryJson = null;
+    _pendingRecoveryJson = null;
+    _recoveryLoading = false;
+    _recoveryBusy = false;
+    if (recovery == null || lease == null) return;
+    if (snapshot == null || !lease.isCurrent) {
+      lease.close();
+      return;
+    }
+    // Capture before tab disposal. The service rejects this final write if a
+    // newer mount acquires ownership before it reaches the storage boundary.
+    unawaited(
+      recovery
+          .save(snapshot, lease: lease)
+          .then<void>((_) {}, onError: (Object _) {})
+          .whenComplete(lease.close),
+    );
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) unawaited(_flushRecovery());
   }
 
   _TerminalTab _makeTab({
@@ -159,13 +499,16 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
     super.didUpdateWidget(oldWidget);
     if (!widget.visible) {
       _broadcast.stop(reason: TerminalBroadcastStopReason.workspaceHidden);
+      unawaited(_flushRecovery());
     }
     if (!identical(oldWidget.session, widget.session)) {
+      _endRecovery();
       _releaseTabs();
       final tab = _makeTab(initial: widget.session);
       _active = tab.id;
       _layout = TerminalPaneLeaf(tab.id);
       _zoomed = false;
+      _beginRecovery();
     }
   }
 
@@ -191,6 +534,7 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
       }
       _active = id;
     });
+    _queueRecoverySave();
   }
 
   void _addTab() {
@@ -216,6 +560,7 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
       _zoomed = false;
       _focusRequest++;
     });
+    _queueRecoverySave();
   }
 
   void _captureSharedShellRequest() {
@@ -268,6 +613,7 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
       _zoomed = false;
       _focusRequest++;
     });
+    _queueRecoverySave();
     final config = request.paneState.sshConfig;
     // This factory is bound to the source connection captured when the menu
     // opened. The destination session owns any late result after cancellation.
@@ -287,6 +633,7 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
       _zoomed = false;
       _focusRequest++;
     });
+    _queueRecoverySave();
   }
 
   void _toggleZoom() {
@@ -379,6 +726,7 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
     );
     if (!mounted || name == null || !_tabs.contains(tab)) return;
     setState(() => tab.name = name.trim().isEmpty ? null : name.trim());
+    _queueRecoverySave();
   }
 
   Future<void> _closeTab(_TerminalTab tab) async {
@@ -430,6 +778,7 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
         _focusRequest++;
       });
       if (tab.owned) tab.session.dispose();
+      _queueRecoverySave();
     } finally {
       _closing = false;
     }
@@ -444,6 +793,7 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
       final tab = _tabs.removeAt(index);
       _tabs.insert(target, tab);
     });
+    _queueRecoverySave();
   }
 
   TerminalArrangement _captureArrangement(String name) => TerminalArrangement(
@@ -579,6 +929,7 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
       }
       ref.read(focusAreaProvider.notifier).state = FocusArea.terminal;
       _notice('Arrangement restored. Connect each terminal when ready.');
+      _queueRecoverySave();
     } catch (_) {
       _notice('Could not restore arrangement. All existing tabs were kept.');
     } finally {
@@ -816,6 +1167,7 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
     }
     if (fraction == current.fraction) return;
     setState(() => _layout = _layout.withSplitFraction(divider.path, fraction));
+    _queueRecoverySave();
   }
 
   Widget _buildPanes(Size size) {
@@ -851,7 +1203,10 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
                       sharedConnection: tab.sharedConnection,
                       initialPaneState: tab.paneState,
                       onPaneStateChanged: (state) {
-                        if (_tabs.contains(tab)) tab.paneState = state;
+                        if (_tabs.contains(tab)) {
+                          tab.paneState = state;
+                          _queueRecoverySave();
+                        }
                       },
                       embedded: true,
                       visible:
@@ -1029,6 +1384,17 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
                 : null,
             icon: const Icon(Icons.add, size: 20),
           ),
+          if (_recoveryError != null)
+            IconButton(
+              key: const ValueKey('terminal-recovery-error'),
+              tooltip: context.terminalRecoveryTr(_recoveryError!),
+              onPressed: () => unawaited(_showRecoverySettings()),
+              icon: Icon(
+                Icons.save_outlined,
+                size: 20,
+                color: Theme.of(context).colorScheme.error,
+              ),
+            ),
           PopupMenuButton<String>(
             key: const ValueKey('terminal-layout'),
             tooltip: context.terminalControlsTr('Terminal layout'),
@@ -1063,12 +1429,15 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
                   unawaited(_saveArrangement());
                 case 'arrangements':
                   unawaited(_chooseArrangement());
+                case 'recovery':
+                  unawaited(_showRecoverySettings());
                 case 'move-left':
                   _moveTab(-1);
                 case 'move-right':
                   _moveTab(1);
                 case 'balance':
                   setState(() => _layout = _layout.balance());
+                  _queueRecoverySave();
                 case 'broadcast':
                   unawaited(_chooseBroadcastGroup());
               }
@@ -1168,6 +1537,12 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
                     context.terminalArrangementTr('Saved arrangements'),
                   ),
                 ),
+                if (_ownsWorkspace)
+                  PopupMenuItem(
+                    value: 'recovery',
+                    enabled: _recoveryLease?.isCurrent == true,
+                    child: Text(context.terminalRecoveryTr('Session recovery')),
+                  ),
                 const PopupMenuDivider(),
                 PopupMenuItem(
                   value: 'broadcast',
@@ -1213,38 +1588,52 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
         return SizedBox(
           key: const ValueKey('terminal-tabs'),
           height: height,
-          child: Column(
-            children: [
-              MouseRegion(
-                cursor: SystemMouseCursors.resizeUpDown,
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onVerticalDragUpdate: (details) {
-                    ref
-                        .read(terminalHeightProvider.notifier)
-                        .state = (height - details.delta.dy)
-                        .clamp(math.min(180.0, maximum), maximum)
-                        .toDouble();
-                  },
-                  child: Container(
-                    height: 6,
-                    color: Theme.of(context).dividerColor,
+          child: _recoveryLoading
+              ? Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const CircularProgressIndicator(),
+                      const SizedBox(height: 12),
+                      Text(
+                        context.terminalRecoveryTr('Loading saved workspace…'),
+                      ),
+                    ],
                   ),
+                )
+              : Column(
+                  children: [
+                    MouseRegion(
+                      cursor: SystemMouseCursors.resizeUpDown,
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onVerticalDragUpdate: (details) {
+                          ref
+                              .read(terminalHeightProvider.notifier)
+                              .state = (height - details.delta.dy)
+                              .clamp(math.min(180.0, maximum), maximum)
+                              .toDouble();
+                        },
+                        child: Container(
+                          height: 6,
+                          color: Theme.of(context).dividerColor,
+                        ),
+                      ),
+                    ),
+                    // With very little height, keep the broadcast warning and Stop
+                    // control in the normal tab-bar slot so the terminal still fits.
+                    if (!_broadcast.isArmed || height >= 220) _tabBar(),
+                    if (_broadcast.isArmed)
+                      _broadcastBar(compact: height < 220),
+                    Expanded(
+                      child: LayoutBuilder(
+                        builder: (context, area) {
+                          return _buildPanes(area.biggest);
+                        },
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              // With very little height, keep the broadcast warning and Stop
-              // control in the normal tab-bar slot so the terminal still fits.
-              if (!_broadcast.isArmed || height >= 220) _tabBar(),
-              if (_broadcast.isArmed) _broadcastBar(compact: height < 220),
-              Expanded(
-                child: LayoutBuilder(
-                  builder: (context, area) {
-                    return _buildPanes(area.biggest);
-                  },
-                ),
-              ),
-            ],
-          ),
         );
       },
     );
@@ -1252,6 +1641,8 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _endRecovery();
     _broadcast.removeListener(_broadcastChanged);
     _broadcast.dispose();
     _releaseTabs();
