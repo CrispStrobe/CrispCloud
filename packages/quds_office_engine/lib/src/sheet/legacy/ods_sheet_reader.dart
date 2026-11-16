@@ -159,6 +159,15 @@ abstract final class OdsSheetReader {
           ),
         ) ??
         _odfDefaultRowHeightPoints;
+    // ODF stores shared definitions beside the worksheet tables. Keep legacy
+    // table-local definitions scoped to their own sheet for compatibility.
+    final sharedValidations = <String, _OdsValidation>{};
+    for (final container in spreadsheet.childrenNamed(
+      'content-validations',
+      namespaceUri: _table,
+    )) {
+      sharedValidations.addAll(_readValidationDefinitions(container));
+    }
     final pendingValidations =
         <
           ({
@@ -203,7 +212,10 @@ abstract final class OdsSheetReader {
         budget,
         defaultColumnWidthPoints,
       );
-      final validationDefinitions = _readValidationDefinitions(table);
+      final validationDefinitions = <String, _OdsValidation>{
+        ...sharedValidations,
+        ..._readValidationDefinitions(table),
+      };
       final validationRefs = <String, List<SmlCellRef>>{};
       var rowIndex = 0;
       final pendingRowHeights = <({int start, int count, double height})>[];
@@ -293,6 +305,14 @@ abstract final class OdsSheetReader {
           // Repetition can cross columns with different default cell styles.
           final content = _readCellContent(element, zip, budget);
           if (content.annotation != null) budget.comments(repeat * rowRepeat);
+          final validationName = _attribute(
+            element,
+            'content-validation-name',
+            _table,
+          );
+          final hasValidation = validationDefinitions.containsKey(
+            validationName,
+          );
           final explicitStyle = _attribute(element, 'style-name', _table);
           final defaultStyle = explicitStyle ?? rowDefault;
           for (final run in _cellStyleRuns(
@@ -312,7 +332,12 @@ abstract final class OdsSheetReader {
               preserveEmptyStyle:
                   explicitStyle != null && explicitStyle != 'Default',
             );
-            if (cell != null || colSpan > 1 || rowSpan > 1) {
+            if (cell != null || colSpan > 1 || rowSpan > 1 || hasValidation) {
+              if (cell == null && hasValidation) {
+                // Blank input cells still carry rules. Charge their expanded
+                // references to the same budget as materialized cells.
+                budget.cells(run.repeat * rowRepeat);
+              }
               if (run.column + run.repeat + colSpan - 1 > _maxColumns ||
                   rowIndex + rowRepeat + rowSpan - 1 > _maxRows) {
                 throw const OdsSheetFormatException(
@@ -359,11 +384,7 @@ abstract final class OdsSheetReader {
                 cell: cell,
                 annotation: content.annotation,
                 images: content.images,
-                validationName: _attribute(
-                  element,
-                  'content-validation-name',
-                  _table,
-                ),
+                validationName: validationName,
               ));
             }
           }

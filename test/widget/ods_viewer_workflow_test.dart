@@ -92,9 +92,8 @@ void main() {
             expect(find.text(title), findsOneWidget);
             expect(find.byTooltip('Edit (F4)'), findsNothing);
 
-            // The existing alternate-view control is labelled Legacy. For ODS
-            // it must select the native typed table, not the XLS browser route.
-            await tester.tap(find.text('Legacy'));
+            // ODS uses its native typed Table fallback.
+            await tester.tap(find.text('Table'));
             await officePumpUntil(
               tester,
               () => find.byType(CsvTableView).evaluate().isNotEmpty,

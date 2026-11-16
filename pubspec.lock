@@ -1088,11 +1088,11 @@ packages:
     dependency: "direct overridden"
     description:
       path: "."
-      ref: main
-      resolved-ref: "547b5bfce1d3cd663810a3ceae35336857956139"
+      ref: "1d2b0a9e25e0890fc113dd6f533309275dc66830"
+      resolved-ref: "1d2b0a9e25e0890fc113dd6f533309275dc66830"
       url: "https://github.com/CrispStrobe/libdbm"
     source: git
-    version: "0.2.1"
+    version: "0.4.1"
   lints:
     dependency: transitive
     description:

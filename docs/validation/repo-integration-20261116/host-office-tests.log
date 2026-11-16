@@ -1,0 +1,101 @@
+00:00 +0: loading /Users/christianstrobele/code/local/CrispCloud/test/office_document_service_test.dart
+00:00 +0: /Users/christianstrobele/code/local/CrispCloud/test/office_document_service_test.dart: ODS keeps typed values, repeats and the real sheet name
+00:00 +1: /Users/christianstrobele/code/local/CrispCloud/test/office_document_service_test.dart: ODS keeps typed values, repeats and the real sheet name
+00:00 +2: /Users/christianstrobele/code/local/CrispCloud/test/widget/office_editor_dialog_test.dart: office load translates an oversized verified file without reading it
+00:00 +3: /Users/christianstrobele/code/local/CrispCloud/test/widget/office_editor_dialog_test.dart: office load translates an oversized verified file without reading it
+00:00 +4: /Users/christianstrobele/code/local/CrispCloud/test/widget/office_editor_dialog_test.dart: office load translates an oversized verified file without reading it
+00:00 +5: /Users/christianstrobele/code/local/CrispCloud/test/widget/office_editor_dialog_test.dart: office load translates an oversized verified file without reading it
+00:00 +6: /Users/christianstrobele/code/local/CrispCloud/test/widget/office_editor_dialog_test.dart: office load translates an oversized verified file without reading it
+00:00 +7: /Users/christianstrobele/code/local/CrispCloud/test/widget/office_editor_dialog_test.dart: office load translates an oversized verified file without reading it
+00:00 +8: /Users/christianstrobele/code/local/CrispCloud/test/widget/office_editor_dialog_test.dart: office load translates an oversized verified file without reading it
+00:00 +9: /Users/christianstrobele/code/local/CrispCloud/test/widget/office_editor_dialog_test.dart: office load translates an oversized verified file without reading it
+00:01 +10: /Users/christianstrobele/code/local/CrispCloud/test/widget/office_editor_dialog_test.dart: office load translates an oversized verified file without reading it
+00:01 +11: /Users/christianstrobele/code/local/CrispCloud/test/widget/office_editor_dialog_test.dart: office load translates an oversized verified file without reading it
+00:01 +12: /Users/christianstrobele/code/local/CrispCloud/test/widget/office_editor_dialog_test.dart: office load translates an oversized verified file without reading it
+00:01 +13: /Users/christianstrobele/code/local/CrispCloud/test/widget/office_editor_dialog_test.dart: office load translates an oversized verified file without reading it
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:01 +14: /Users/christianstrobele/code/local/CrispCloud/test/widget/office_editor_dialog_test.dart: office load translates an oversized verified file without reading it
+00:01 +15: /Users/christianstrobele/code/local/CrispCloud/test/widget/office_editor_dialog_test.dart: office load translates an oversized verified file without reading it
+00:01 +16: /Users/christianstrobele/code/local/CrispCloud/test/widget/office_editor_dialog_test.dart: office load translates an oversized verified file without reading it
+00:01 +17: /Users/christianstrobele/code/local/CrispCloud/test/widget/office_editor_dialog_test.dart: office load translates an oversized verified file without reading it
+00:01 +18: /Users/christianstrobele/code/local/CrispCloud/test/widget/office_editor_dialog_test.dart: office load translates an oversized verified file without reading it
+00:01 +19: /Users/christianstrobele/code/local/CrispCloud/test/widget/office_editor_dialog_test.dart: office load translates an oversized verified file without reading it
+00:01 +20: /Users/christianstrobele/code/local/CrispCloud/test/widget/office_editor_dialog_test.dart: office load translates an oversized verified file without reading it
+00:01 +21: /Users/christianstrobele/code/local/CrispCloud/test/widget/office_editor_dialog_test.dart: office load translates an oversized verified file without reading it
+00:01 +22: /Users/christianstrobele/code/local/CrispCloud/test/widget/office_editor_dialog_test.dart: office load translates an oversized verified file without reading it
+00:01 +23: /Users/christianstrobele/code/local/CrispCloud/test/widget/office_editor_dialog_test.dart: office load translates an oversized verified file without reading it
+00:01 +24: /Users/christianstrobele/code/local/CrispCloud/test/widget/office_editor_dialog_test.dart: office load translates an oversized verified file without reading it
+00:01 +25: /Users/christianstrobele/code/local/CrispCloud/test/widget/office_editor_dialog_test.dart: office load translates an oversized verified file without reading it
+00:01 +26: /Users/christianstrobele/code/local/CrispCloud/test/widget/office_editor_dialog_test.dart: office load translates an oversized verified file without reading it
+00:01 +27: /Users/christianstrobele/code/local/CrispCloud/test/widget/office_editor_dialog_test.dart: office load translates an oversized verified file without reading it
+00:01 +28: /Users/christianstrobele/code/local/CrispCloud/test/widget/office_editor_dialog_test.dart: office load translates an oversized verified file without reading it
+00:02 +29: /Users/christianstrobele/code/local/CrispCloud/test/widget/office_editor_dialog_test.dart: office load translates an oversized verified file without reading it
+00:02 +30: /Users/christianstrobele/code/local/CrispCloud/test/widget/office_editor_dialog_test.dart: office load translates an oversized verified file without reading it
+00:02 +31: /Users/christianstrobele/code/local/CrispCloud/test/widget/office_editor_dialog_test.dart: office load translates an oversized verified file without reading it
+00:02 +32: /Users/christianstrobele/code/local/CrispCloud/test/widget/office_editor_dialog_test.dart: office load translates an oversized verified file without reading it
+00:02 +33: /Users/christianstrobele/code/local/CrispCloud/test/widget/office_editor_dialog_test.dart: office load translates an oversized verified file without reading it
+00:02 +34: /Users/christianstrobele/code/local/CrispCloud/test/widget/office_editor_dialog_test.dart: office load translates an oversized verified file without reading it
+00:02 +35: /Users/christianstrobele/code/local/CrispCloud/test/widget/office_editor_dialog_test.dart: office load translates an oversized verified file without reading it
+00:02 +36: /Users/christianstrobele/code/local/CrispCloud/test/widget/office_editor_dialog_test.dart: office load translates an oversized verified file without reading it
+00:02 +37: /Users/christianstrobele/code/local/CrispCloud/test/widget/office_editor_dialog_test.dart: office load translates an oversized verified file without reading it
+00:02 +38: /Users/christianstrobele/code/local/CrispCloud/test/widget/office_editor_dialog_test.dart: office load translates an oversized verified file without reading it
+⚠️ [OfficeEditor] office editor load failed
+  Error: This file exceeds the 64 MiB editing limit.
+00:04 +39: /Users/christianstrobele/code/local/CrispCloud/test/widget/office_editor_dialog_test.dart: captured editing limits stay typed and localized in all locales
+00:05 +40: /Users/christianstrobele/code/local/CrispCloud/test/widget/office_editor_dialog_test.dart: PPTX opens in the slide editor
+00:14 +41: /Users/christianstrobele/code/local/CrispCloud/test/widget/office_editor_dialog_test.dart: DOCX opens in the Word editor with the ribbon
+00:18 +42: /Users/christianstrobele/code/local/CrispCloud/test/widget/ods_viewer_workflow_test.dart: ODS F3 grid and table fallback preserve typed cells and source bytes
+00:21 +43: /Users/christianstrobele/code/local/CrispCloud/test/widget/ods_viewer_workflow_test.dart: ODS F3 grid and table fallback preserve typed cells and source bytes
+00:22 +44: /Users/christianstrobele/code/local/CrispCloud/test/widget/ods_viewer_workflow_test.dart: ODS F3 grid and table fallback preserve typed cells and source bytes
+00:25 +45: /Users/christianstrobele/code/local/CrispCloud/test/widget/office_editor_dialog_test.dart: macro-enabled workbooks open in the sheet editor
+00:28 +46: /Users/christianstrobele/code/local/CrispCloud/test/widget/ods_viewer_workflow_test.dart: ODS archive member uses its display name for grid and table fallback
+00:40 +47: /Users/christianstrobele/code/local/CrispCloud/test/widget/odt_image_viewer_test.dart: ODT pictures render from bounded package data
+00:45 +47: /Users/christianstrobele/code/local/CrispCloud/test/widget/ods_editor_workflow_test.dart: ODS editing saves an XLSX copy and preserves its source
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:48 +48: /Users/christianstrobele/code/local/CrispCloud/test/widget/ods_editor_workflow_test.dart: ODS editing saves an XLSX copy and preserves its source
+00:55 +49: /Users/christianstrobele/code/local/CrispCloud/test/widget/ods_editor_workflow_test.dart: ODS copy outcome null retains unsaved edits
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:59 +50: /Users/christianstrobele/code/local/CrispCloud/test/widget/ods_editor_workflow_test.dart: ODS copy outcome OfficeCopyOutcome.downloadedCopy retains unsaved edits
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:01 +51: /Users/christianstrobele/code/local/CrispCloud/test/widget/ods_viewer_grid_test.dart: ODS opens in the Quds grid and falls back to the typed table
+01:01 +51: /Users/christianstrobele/code/local/CrispCloud/test/widget/ods_editor_workflow_test.dart: ODS copy completion cannot clean a newer edit
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:03 +52: /Users/christianstrobele/code/local/CrispCloud/test/widget/ods_viewer_grid_test.dart: ODS opens in the Quds grid and falls back to the typed table
+01:10 +53: /Users/christianstrobele/code/local/CrispCloud/test/office_zotero_citing_transport_test.dart: citing execCommand sends only local UTF-8 JSON without redirects
+01:10 +54: /Users/christianstrobele/code/local/CrispCloud/test/office_zotero_citing_transport_test.dart: citing respond sends only local UTF-8 JSON without redirects
+01:10 +55: /Users/christianstrobele/code/local/CrispCloud/test/office_zotero_citing_transport_test.dart: citing rejects other origins and protocol routes before sending
+01:10 +56: /Users/christianstrobele/code/local/CrispCloud/test/office_zotero_citing_transport_test.dart: citing requires POST and rejects cloud or catalog request bodies
+01:10 +57: /Users/christianstrobele/code/local/CrispCloud/test/office_zotero_citing_transport_test.dart: citing accepts case-insensitive names but no secrets or extra headers
+01:10 +58: /Users/christianstrobele/code/local/CrispCloud/test/office_zotero_citing_transport_test.dart: citing request bodies are valid JSON with a UTF-8 byte bound
+01:10 +59: /Users/christianstrobele/code/local/CrispCloud/test/office_zotero_citing_transport_test.dart: citing redirects return once without forwarding document data
+01:10 +60: /Users/christianstrobele/code/local/CrispCloud/test/office_zotero_citing_transport_test.dart: citing responses reject declared and streamed excess bytes
+01:10 +61: /Users/christianstrobele/code/local/CrispCloud/test/office_zotero_citing_transport_test.dart: native dialog uses its own longer timeout
+01:10 +62: /Users/christianstrobele/code/local/CrispCloud/test/office_zotero_citing_transport_test.dart: request timeout can shorten but cannot extend host limit
+01:10 +63: /Users/christianstrobele/code/local/CrispCloud/test/office_zotero_citing_transport_test.dart: dispose settles pending citing immediately and ignores late response
+01:10 +64: /Users/christianstrobele/code/local/CrispCloud/test/office_zotero_citing_transport_test.dart: dispose cancels a response body already being read
+01:10 +65: /Users/christianstrobele/code/local/CrispCloud/test/office_zotero_citing_transport_test.dart: citing network failures never expose document or credential data
+01:10 +66: /Users/christianstrobele/code/local/CrispCloud/test/office_zotero_citing_transport_test.dart: citing and catalog limits must be positive before client creation
+01:13 +67: /Users/christianstrobele/code/local/CrispCloud/test/office_zotero_test.dart: credential loading target rejects changed documents and selections
+01:13 +68: /Users/christianstrobele/code/local/CrispCloud/test/office_zotero_test.dart: Zotero transport boundary desktop reads use only the explicitly supplied direct client
+01:13 +69: /Users/christianstrobele/code/local/CrispCloud/test/office_zotero_test.dart: Zotero transport boundary cloud requests retain the selected proxy factory with local enabled
+01:13 +70: /Users/christianstrobele/code/local/CrispCloud/test/office_zotero_test.dart: Zotero transport boundary desktop access requires host opt-in before creating any client
+01:13 +71: /Users/christianstrobele/code/local/CrispCloud/test/office_zotero_test.dart: Zotero transport boundary desktop rejects secrets and unexpected headers before client creation
+01:13 +72: /Users/christianstrobele/code/local/CrispCloud/test/office_zotero_test.dart: Zotero transport boundary desktop rejects other hosts, ports, paths and URL credentials
+01:13 +73: /Users/christianstrobele/code/local/CrispCloud/test/office_zotero_test.dart: Zotero transport boundary desktop redirects are returned without another request
+01:13 +74: /Users/christianstrobele/code/local/CrispCloud/test/office_zotero_test.dart: Zotero transport boundary desktop responses retain size and total timeout limits
+01:13 +75: /Users/christianstrobele/code/local/CrispCloud/test/office_zotero_test.dart: Zotero transport boundary disposal closes desktop requests and rejects later desktop reads
+01:13 +76: /Users/christianstrobele/code/local/CrispCloud/test/office_zotero_test.dart: Zotero transport boundary sends API-key header only to Zotero and never follows redirects
+01:13 +77: /Users/christianstrobele/code/local/CrispCloud/test/office_zotero_test.dart: Zotero transport boundary rejects non-Zotero destinations before creating a client
+01:13 +78: /Users/christianstrobele/code/local/CrispCloud/test/office_zotero_test.dart: Zotero transport boundary passes redirect status for the API client to reject
+01:13 +79: /Users/christianstrobele/code/local/CrispCloud/test/office_zotero_test.dart: Zotero transport boundary bounds declared and streamed response sizes
+01:13 +80: /Users/christianstrobele/code/local/CrispCloud/test/office_zotero_test.dart: Zotero transport boundary total request timeout closes the owned client
+01:13 +81: /Users/christianstrobele/code/local/CrispCloud/test/office_zotero_test.dart: Zotero transport boundary HTTP exceptions cannot expose the API key
+01:13 +82: /Users/christianstrobele/code/local/CrispCloud/test/office_zotero_test.dart: Zotero transport boundary timeout cancels a stalled response body subscription
+01:13 +83: /Users/christianstrobele/code/local/CrispCloud/test/office_zotero_test.dart: Zotero transport boundary disposal closes active requests and rejects new requests
+01:13 +84: /Users/christianstrobele/code/local/CrispCloud/test/office_zotero_test.dart: Zotero credential persistence writes, reads back and forgets only the Zotero entry
+01:13 +85: /Users/christianstrobele/code/local/CrispCloud/test/office_zotero_test.dart: Zotero credential persistence session-only backend never offers persistent credentials
+01:13 +86: /Users/christianstrobele/code/local/CrispCloud/test/office_zotero_test.dart: Zotero credential persistence failed read-back never reports a successful remember operation
+01:14 +87: /Users/christianstrobele/code/local/CrispCloud/test/office_zotero_test.dart: Zotero credential persistence backend failures are sanitized and invalid keys are rejected
+01:17 +88: /Users/christianstrobele/code/local/CrispCloud/test/office_zotero_ribbon_test.dart: Zotero is reachable from Word Insert menu and ribbon
+01:23 +89: /Users/christianstrobele/code/local/CrispCloud/test/office_zotero_ribbon_test.dart: hosts without Zotero integration keep the entry point hidden
+01:25 +90: All tests passed!

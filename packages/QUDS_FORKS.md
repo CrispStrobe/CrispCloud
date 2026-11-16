@@ -21,7 +21,7 @@ The goal of the fixes is simple: opening a real Word, LibreOffice, Excel or
 PowerPoint file, editing it and saving it must not silently change or lose
 content.
 
-## Current integrated state (15 November 2026)
+## Current integrated state (16 November 2026)
 
 The app mirrors the canonical Quds source and the standalone legacy parser.
 Exact revisions, source boundaries and the complete managed-file inventory are
@@ -39,6 +39,12 @@ same-workbook list-source snapshots. Validation source expansion shares a
 two-million-cell work budget across definitions, checks coordinate bounds before
 iteration, and preserves spaces in quoted sheet names. Dynamic validation links
 remain outside this snapshot contract.
+Shared spreadsheet-level list definitions now apply to every referring sheet,
+including blank input cells. Table-local definitions stay isolated, and blank
+validation references obey the expanded-cell and grid bounds. The 16 November
+integration includes the latest canonical main and rich Zotero/note-ordering
+continuation; its source and local checks are recorded under
+`docs/validation/repo-integration-20261116/`.
 
 Zotero support adds a shared references workspace, read-only online and desktop clients,
 offline CSL import/export, guarded DOCX citation and bibliography fields, and

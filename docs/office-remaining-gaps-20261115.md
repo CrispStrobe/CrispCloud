@@ -6,7 +6,19 @@ This is the current backlog for the Office/ODF work. It records what is
 verified, what is intentionally read-only, and what remains before the viewer
 and editor can claim full format coverage.
 
-## Verified state
+## Current continuation
+
+The 16 November integration reconciles CrispCloud's terminal forwarding/trigger
+and Zotero continuation branches with canonical Quds, preserving the standalone
+legacy parser pin. See `validation/repo-integration-20261116/` for the exact
+source cutoff, branch ancestry and fresh local validation. Earlier qualification
+counts and live-corpus results below retain their original source identities.
+
+Shared spreadsheet-level ODS list definitions and validation rules on blank
+input cells are now imported. Dynamic source-range links and non-list validation
+families remain open.
+
+## Earlier verified state
 
 - CrispCloud `main` snapshot: `924a2b5d`
 - Vendored Quds source checkpoint: `4fbd1687d3c0ada22d460cf5cadb9586c4f62905`
@@ -68,7 +80,8 @@ cfRule + dxf, and reopen in Excel.
 ### OG-03 — ODS data-validation breadth
 
 **Status:** Partial\
-**Covered:** literal `cell-content-is-in-list(...)` with `allow-empty-cell`.\
+**Covered:** literal `cell-content-is-in-list(...)` with `allow-empty-cell`,
+shared spreadsheet-level definitions and blank input cells.\
 **Remaining:** whole/decimal/date/text-length/custom conditions, input prompts,
 error titles/messages, error styles and unmodeled cross-sheet filter cases.
 Range-source lists are now resolved after all sheets are built.\

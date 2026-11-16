@@ -1,0 +1,37 @@
+{
+  "source_cutoff_utc": "2026-11-16T05:28:07.574851+00:00",
+  "app_branch": "integrate/current-repos-20261116",
+  "app_integration_commit": "d71b20675c3e47a980803dc8a91a90231103bc95",
+  "quds_branch": "fix/ods-global-validations-20261116",
+  "quds_commit": "2c6ff73eb8a5fac21c8ddfe60151de6a7d3ff06d",
+  "managed_office_files": 2400,
+  "parser_commit": "4895712158127b2fc930d796e17035c3ca0dac62",
+  "repository_decisions": {
+    "CrispStrobe/CrispCloud": "Fast-forwarded latest main; merged terminal forwarding/trigger PR #160 branch and newer Zotero continuation. All 38 audited remote branch heads are ancestors.",
+    "CrispStrobe/quds_office_suite": "Merged latest main and rich Zotero/note-ordering continuation; retained shared ODS validation fixes and corrected stale note/PDF test assertions. All 24 audited remote branch heads are ancestors.",
+    "CrispStrobe/legacy-doc-parser": "Existing standalone pin already equals latest main; retain exact source boundary.",
+    "CrispStrobe/crisperbooks": "Existing 505d3d7b pin already equals latest main; no open PRs or additional branches.",
+    "CrispStrobe/libdbm": "Updated from 547b5bfce1d3cd663810a3ceae35336857956139 (0.2.1) to 1d2b0a9e25e0890fc113dd6f533309275dc66830 (0.4.1); replaced moving main ref with exact revision. Fifteen commits include corruption guards, locking and persistence fixes.",
+    "CrispStrobe/madedit2": "Pinned review branch remains 912b1f7527e5f48793a8e0834cc7c7ab8dbb7f5f; feature PR #1 targets the earlier extraction branch. Hex vendor fingerprints verified.",
+    "CrispStrobe/filen-dart": "No new branch heads beyond the already documented November 12 provider/crypto work. Keep published-source provenance and existing host adaptations.",
+    "CrispStrobe/crisp-docx": "Audited as a related Office repository; not a dependency of the Quds/standalone-parser runtime. No source substitution.",
+    "CrispStrobe/crisp-cloud-rs": "No new work after November 13. Keep existing storage integration boundaries."
+  },
+  "fixes": [
+    "Read shared spreadsheet-level ODS list definitions once, scoped compatibly with table-local definitions.",
+    "Preserve validation rules on blank input cells, charging expanded references to cell/grid limits.",
+    "Align existing note-layout oracle with incoming reference-order numbering and default Roman endnotes.",
+    "Assert RTL PDF right-margin alignment using glyph metrics; optional Cairo and bundled Naskh wrap differently.",
+    "Use the current Table label in ODS viewer workflow tests."
+  ],
+  "limitations": [
+    "Range-source ODS lists remain bounded snapshots; dynamic links and non-list validation families remain open.",
+    "No live Zotero desktop acceptance or signed mobile/desktop release is claimed by this integration.",
+    "This work is committed on local integration branches; no remote merge or deployment is performed."
+  ],
+  "final_source_sha256": {
+    "pubspec.yaml": "52db5eff6e792c7f2bc2bd14ba4a89ae896cb2e78b22dac1e4857d130eeae1bf",
+    "pubspec.lock": "d6f880d281d6c62178fd3ecffa946e33c33e604364fb334c23e5e370ec59b6aa",
+    "tool/office_fidelity_manifest.json": "2346195333ce80885c4feecfffb37c29f9bb32a8d17ecd39a820503b3e05218e"
+  }
+}

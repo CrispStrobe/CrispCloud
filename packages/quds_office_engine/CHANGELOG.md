@@ -4,6 +4,13 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Import spreadsheet-level ODS list-validation definitions for all referring
+  worksheets, including lists resolved from a later source sheet. Retain
+  table-local definition compatibility without leaking it into other sheets;
+  foreign-namespace containers do not define shared rules.
+
+
+
 - Preserve mixed native Zotero citation character styles in protected Word
   field packets, including ordinary editing, clipboard operations, paragraph
   splits, native note conversion and DOCX round trips. Keep tracked-change

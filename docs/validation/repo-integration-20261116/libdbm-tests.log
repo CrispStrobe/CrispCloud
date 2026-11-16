@@ -1,0 +1,153 @@
+00:00 +0: loading test/btree_dbm_test.dart
+00:00 +0: test/btree_dbm_test.dart: BTreeDBM empty tree
+00:00 +1: test/btree_dbm_test.dart: BTreeDBM single insert and get
+00:00 +2: test/btree_dbm_test.dart: BTreeDBM overwrite returns old value
+00:00 +3: test/btree_dbm_test.dart: BTreeDBM sequential inserts
+00:00 +4: test/btree_dbm_test.dart: BTreeDBM random inserts
+00:00 +5: test/btree_dbm_test.dart: BTreeDBM sorted iteration order
+00:00 +6: test/btree_dbm_test.dart: BTreeDBM delete existing
+00:00 +7: test/persistent_map_map_test.dart: (setUpAll)
+00:00 +8: test/persistent_map_map_test.dart: (setUpAll)
+00:00 +9: test/persistent_map_map_test.dart: (setUpAll)
+00:00 +9: test/versioned_dbm_test.dart: VersionedHashDBM initial state has version 0
+00:00 +10: test/versioned_dbm_test.dart: VersionedHashDBM initial state has version 0
+00:01 +11: test/btree_dbm_test.dart: BTreeDBM delete all keys
+00:01 +12: test/btree_dbm_test.dart: BTreeDBM delete all keys
+00:01 +13: test/btree_dbm_test.dart: BTreeDBM delete all keys
+00:01 +14: test/versioned_dbm_test.dart: VersionedHashDBM committed data readable at version
+00:01 +15: test/persistent_map_map_test.dart: Map value map Test insertion from map
+00:01 +16: test/persistent_map_map_test.dart: Map value map Test insertion from map
+00:01 +17: test/btree_dbm_test.dart: BTreeDBM clear resets to empty
+00:01 +18: test/btree_dbm_test.dart: BTreeDBM clear resets to empty
+00:01 +19: test/btree_dbm_test.dart: BTreeDBM clear resets to empty
+00:01 +20: test/btree_dbm_test.dart: BTreeDBM clear resets to empty
+00:01 +21: test/btree_dbm_test.dart: BTreeDBM clear resets to empty
+00:01 +22: test/btree_dbm_test.dart: BTreeDBM clear resets to empty
+00:01 +23: test/hash_page_guard_test.dart: bucket-table page shorter than one pointer rejects with DBMException
+00:01 +24: test/hash_page_guard_test.dart: bucket-table page shorter than one pointer rejects with DBMException
+00:01 +25: test/hash_page_guard_test.dart: bucket-table page shorter than one pointer rejects with DBMException
+00:01 +26: test/hash_page_guard_test.dart: bucket-table page shorter than one pointer rejects with DBMException
+00:01 +27: test/hash_page_guard_test.dart: bucket-table page shorter than one pointer rejects with DBMException
+00:01 +28: test/hash_page_guard_test.dart: bucket-table page shorter than one pointer rejects with DBMException
+00:01 +29: test/hash_page_guard_test.dart: bucket-table page shorter than one pointer rejects with DBMException
+00:01 +30: test/hash_page_guard_test.dart: bucket-table page shorter than one pointer rejects with DBMException
+00:01 +31: test/hash_page_guard_test.dart: bucket-table page shorter than one pointer rejects with DBMException
+00:01 +32: test/hash_page_guard_test.dart: bucket-table page shorter than one pointer rejects with DBMException
+00:01 +33: test/btree_dbm_test.dart: BTreeDBM close and reopen persistence
+00:01 +34: test/btree_dbm_test.dart: BTreeDBM close and reopen persistence
+00:01 +35: test/btree_dbm_test.dart: BTreeDBM close and reopen persistence
+00:01 +36: test/btree_dbm_test.dart: BTreeDBM close and reopen persistence
+00:01 +37: test/btree_dbm_test.dart: BTreeDBM close and reopen persistence
+00:01 +38: test/versioned_dbm_test.dart: VersionedHashDBM merge with tombstone removes from base
+00:01 +39: test/btree_dbm_test.dart: BTreeDBM split stress with small order
+00:01 +40: test/btree_dbm_test.dart: BTreeDBM split stress with small order
+00:01 +41: test/btree_dbm_test.dart: BTreeDBM split stress with small order
+00:01 +42: test/btree_dbm_test.dart: BTreeDBM split stress with small order
+00:01 +43: test/btree_dbm_test.dart: BTreeDBM split stress with small order
+00:01 +44: test/btree_dbm_test.dart: BTreeDBM split stress with small order
+00:01 +45: test/btree_dbm_test.dart: BTreeDBM split stress with small order
+00:01 +46: test/btree_dbm_test.dart: BTreeDBM split stress with small order
+00:01 +47: test/btree_dbm_test.dart: BTreeDBM split stress with small order
+00:01 +48: test/btree_dbm_test.dart: BTreeDBM split stress with small order
+00:01 +49: test/btree_dbm_test.dart: BTreeDBM split stress with small order
+00:01 +50: test/btree_dbm_test.dart: BTreeDBM split stress with small order
+00:01 +51: test/btree_dbm_test.dart: BTreeDBM split stress with small order
+00:01 +52: test/btree_dbm_test.dart: BTreeDBM split stress with small order
+00:01 +53: test/versioned_dbm_test.dart: VersionedHashDBM clear resets version state
+00:01 +54: test/btree_dbm_test.dart: BTreeDBM first and last
+00:01 +55: test/versioned_dbm_test.dart: VersionedHashDBM putIfAbsent does not overwrite existing
+00:01 +56: test/btree_dbm_test.dart: BTreeDBM floor and ceiling
+00:01 +57: test/versioned_dbm_test.dart: VersionedHashDBM remove returns old value
+00:01 +58: test/btree_dbm_test.dart: BTreeDBM range bounded
+00:01 +59: test/btree_dbm_test.dart: BTreeDBM range bounded
+00:01 +60: test/btree_dbm_test.dart: BTreeDBM range bounded
+00:01 +61: test/btree_dbm_test.dart: BTreeDBM range bounded
+00:01 +62: test/btree_dbm_test.dart: BTreeDBM range bounded
+00:01 +63: test/versioned_dbm_test.dart: VersionedHashDBM flatten then reopen with VersionedHashDBM re-upgrades
+00:01 +64: test/btree_dbm_test.dart: BTreeDBM range unbounded start
+00:01 +65: test/btree_dbm_test.dart: BTreeDBM range unbounded start
+00:01 +66: test/btree_dbm_test.dart: BTreeDBM range unbounded start
+00:01 +67: test/versioned_dbm_test.dart: Format version migration opening versioned file with plain HashDBM throws
+00:01 +68: test/btree_dbm_test.dart: BTreeDBM range unbounded end
+00:01 +69: test/btree_dbm_test.dart: BTreeDBM range unbounded end
+00:01 +70: test/btree_node_test.dart: LeafNode encode/decode empty leaf
+00:01 +71: test/btree_dbm_test.dart: BTreeDBM range fully unbounded equals entries
+00:01 +72: test/btree_dbm_test.dart: BTreeDBM range fully unbounded equals entries
+00:01 +73: test/btree_dbm_test.dart: BTreeDBM range fully unbounded equals entries
+00:01 +74: test/btree_dbm_test.dart: BTreeDBM range fully unbounded equals entries
+00:01 +75: test/btree_node_test.dart: LeafNode encode/decode large keys and values
+00:01 +76: test/btree_node_test.dart: LeafNode encode/decode large keys and values
+00:01 +77: test/btree_node_test.dart: LeafNode encode/decode large keys and values
+00:01 +78: test/btree_node_test.dart: LeafNode encode/decode large keys and values
+00:01 +79: test/memory_pool_test.dart: Test alignment
+00:01 +80: test/memory_pool_test.dart: Test alignment
+00:01 +81: test/memory_pool_test.dart: Test alignment
+00:01 +82: test/memory_pool_test.dart: Test alignment
+00:01 +83: test/memory_pool_test.dart: Test alignment
+00:01 +84: test/memory_pool_test.dart: Test alignment
+00:01 +85: test/memory_pool_test.dart: Test alignment
+00:01 +86: test/memory_pool_test.dart: Test alignment
+00:01 +87: test/memory_pool_test.dart: Test alignment
+00:01 +88: test/memory_pool_test.dart: Test alignment
+00:01 +89: test/btree_dbm_test.dart: BTreeDBM stress: many inserts and deletes with small order
+00:01 +90: test/btree_dbm_test.dart: BTreeDBM stress: many inserts and deletes with small order
+00:01 +91: test/btree_dbm_test.dart: BTreeDBM stress: many inserts and deletes with small order
+00:01 +92: test/btree_dbm_test.dart: BTreeDBM stress: many inserts and deletes with small order
+00:01 +93: test/btree_dbm_test.dart: BTreeDBM stress: many inserts and deletes with small order
+00:01 +93: test/libdbm_test.dart: Create and retrieve with timing
+  Skip: Benchmark: run explicitly with --run-skipped
+00:01 +93 ~1: test/btree_dbm_test.dart: BTreeDBM stress: many inserts and deletes with small order
+00:01 +94 ~1: test/btree_dbm_test.dart: BTreeDBM stress: many inserts and deletes with small order
+00:01 +95 ~1: test/btree_dbm_test.dart: BTreeDBM stress: many inserts and deletes with small order
+00:01 +96 ~1: test/btree_dbm_test.dart: BTreeDBM stress: many inserts and deletes with small order
+00:02 +97 ~1: test/btree_dbm_test.dart: BTreeDBM stress: many inserts and deletes with small order
+00:02 +98 ~1: test/btree_dbm_test.dart: BTreeDBM stress: many inserts and deletes with small order
+00:02 +99 ~1: test/btree_dbm_test.dart: BTreeDBM stress: many inserts and deletes with small order
+00:02 +100 ~1: test/btree_dbm_test.dart: BTreeDBM stress: many inserts and deletes with small order
+00:02 +101 ~1: test/btree_dbm_test.dart: BTreeDBM stress: many inserts and deletes with small order
+00:02 +102 ~1: test/btree_dbm_test.dart: BTreeDBM stress: many inserts and deletes with small order
+00:02 +103 ~1: test/btree_dbm_test.dart: BTreeDBM stress: many inserts and deletes with small order
+00:02 +104 ~1: test/btree_dbm_test.dart: BTreeDBM stress: many inserts and deletes with small order
+00:02 +105 ~1: test/btree_dbm_test.dart: BTreeDBM stress: many inserts and deletes with small order
+00:02 +106 ~1: test/btree_dbm_test.dart: BTreeDBM stress: many inserts and deletes with small order
+00:02 +107 ~1: test/btree_dbm_test.dart: BTreeDBM stress: many inserts and deletes with small order
+00:02 +108 ~1: test/btree_dbm_test.dart: BTreeDBM stress: many inserts and deletes with small order
+00:02 +109 ~1: test/btree_dbm_test.dart: BTreeDBM stress: many inserts and deletes with small order
+00:02 +109 ~1: test/sorted_map_test.dart: SortedPersistentMap SortedPersistentMap performance
+  Skip: Benchmark: run explicitly with --run-skipped
+00:02 +109 ~2: test/btree_dbm_test.dart: BTreeDBM stress: many inserts and deletes with small order
+00:02 +110 ~2: test/libdbm_test.dart: Closing database preserves state.
+00:02 +111 ~2: test/libdbm_test.dart: Closing database preserves state.
+00:02 +112 ~2: test/libdbm_test.dart: Closing database preserves state.
+00:02 +113 ~2: test/libdbm_test.dart: Closing database preserves state.
+00:02 +113 ~2: test/btree_dbm_test.dart: BTreeDBM BTreeDBM performance
+  Skip: Benchmark: run explicitly with --run-skipped
+00:02 +113 ~3: test/libdbm_test.dart: Closing database preserves state.
+00:02 +113 ~3: test/btree_dbm_test.dart: BTreeDBM BTreeDBM vs HashDBM comparison
+  Skip: Benchmark: run explicitly with --run-skipped
+00:02 +113 ~4: test/libdbm_test.dart: Closing database preserves state.
+00:02 +113 ~4: test/btree_dbm_test.dart: BTreeDBM BTreeDBM random insert performance
+  Skip: Benchmark: run explicitly with --run-skipped
+00:02 +113 ~5: test/libdbm_test.dart: Closing database preserves state.
+00:02 +114 ~5: test/libdbm_test.dart: Closing database preserves state.
+00:02 +115 ~5: test/libdbm_test.dart: Closing database preserves state.
+00:02 +116 ~5: test/libdbm_test.dart: Closing database preserves state.
+00:02 +117 ~5: test/libdbm_test.dart: Closing database preserves state.
+00:02 +118 ~5: test/libdbm_test.dart: Closing database preserves state.
+00:02 +119 ~5: test/libdbm_test.dart: Closing database preserves state.
+00:02 +120 ~5: test/libdbm_test.dart: Closing database preserves state.
+00:02 +121 ~5: test/libdbm_test.dart: Closing database preserves state.
+00:03 +122 ~5: test/robustness_test.dart: mutated files reject with DBMException, never a raw error or hang
+00:06 +123 ~5: test/robustness_test.dart: mutated files reject with DBMException, never a raw error or hang
+00:07 +124 ~5: test/robustness_test.dart: mutated files reject with DBMException, never a raw error or hang
+00:10 +125 ~5: test/robustness_test.dart: mutated files reject with DBMException, never a raw error or hang
+00:13 +126 ~5: test/robustness_test.dart: mutated files reject with DBMException, never a raw error or hang
+00:13 +127 ~5: test/robustness_test.dart: mutated files reject with DBMException, never a raw error or hang
+00:13 +128 ~5: test/robustness_test.dart: mutated files reject with DBMException, never a raw error or hang
+00:13 +129 ~5: test/robustness_test.dart: mutated files reject with DBMException, never a raw error or hang
+00:14 +130 ~5: test/robustness_test.dart: mutated files reject with DBMException, never a raw error or hang
+00:16 +131 ~5: test/robustness_test.dart: mutated files reject with DBMException, never a raw error or hang
+00:16 +132 ~5: test/robustness_test.dart: mutated files reject with DBMException, never a raw error or hang
+00:21 +133 ~5: test/libdbm_test.dart: Stress test with small hash table.
+16:10 +134 ~5: test/libdbm_test.dart: readonly on new file throws
+16:10 +135 ~5: All tests passed!

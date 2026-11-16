@@ -1649,6 +1649,122 @@ void conditionalFormatTests() {
 }
 
 void validationTests() {
+  test('blank validation references obey expansion and grid limits', () {
+    for (final repeat in [
+      't:number-columns-repeated="16385"',
+      't:number-rows-repeated="100001"',
+    ]) {
+      final rowRepeat = repeat.contains('rows') ? repeat : '';
+      final cellRepeat = repeat.contains('columns') ? repeat : '';
+      expect(
+        () => OdsSheetReader.readBytes(
+          _ods(
+            '<t:content-validations><t:content-validation t:name="v" '
+            't:condition="of:cell-content-is-in-list(&quot;Yes&quot;)"/>'
+            '</t:content-validations><t:table><t:table-row $rowRepeat>'
+            '<t:table-cell $cellRepeat t:content-validation-name="v"/>'
+            '</t:table-row></t:table>',
+          ),
+        ),
+        _invalidOds,
+      );
+    }
+  });
+
+  test(
+    'spreadsheet-level list validations apply to every referring sheet',
+    () async {
+      final book = OdsSheetReader.readBytes(
+        _ods(
+          '<t:table t:name="First"><t:table-row>'
+          '<t:table-cell t:content-validation-name="shared"/>'
+          '</t:table-row></t:table>'
+          '<t:table t:name="Second"><t:table-row>'
+          '<t:table-cell t:content-validation-name="shared"/>'
+          '</t:table-row></t:table>',
+          extra:
+              '<t:content-validations><t:content-validation t:name="shared" '
+              't:condition="of:cell-content-is-in-list(&quot;Yes&quot;;&quot;No&quot;)" '
+              't:allow-empty-cell="false"/></t:content-validations>',
+        ),
+      );
+      void check(SmlWorkbook workbook) {
+        for (final sheet in workbook.sheets) {
+          final validation = sheet.validations.single;
+          expect(validation.listItems, ['Yes', 'No']);
+          expect(validation.allowBlank, isFalse);
+          expect(validation.range.start.a1, 'A1');
+          expect(validation.accepts('Yes'), isTrue);
+          expect(validation.accepts('Maybe'), isFalse);
+        }
+      }
+
+      check(book);
+      check(
+        SheetDeserializer().readBytes(
+          await OfficeIsolateSave.workbook(book, recalculate: false),
+        ),
+      );
+    },
+  );
+
+  test('spreadsheet-level range lists resolve a later source sheet', () async {
+    final book = OdsSheetReader.readBytes(
+      _ods(
+        '<t:content-validations><t:content-validation t:name="shared" '
+        't:condition="of:cell-content-is-in-list(\$Lists.\$A\$1:.\$A\$2)"/>'
+        '</t:content-validations>'
+        '<t:table t:name="Data"><t:table-row>'
+        '<t:table-cell t:content-validation-name="shared"/>'
+        '</t:table-row></t:table>'
+        '<t:table t:name="Lists"><t:table-row>${_value('Red')}</t:table-row>'
+        '<t:table-row>${_value('Green')}</t:table-row></t:table>',
+      ),
+    );
+    expect(book.firstSheet.validations.single.listItems, ['Red', 'Green']);
+    final reopened = SheetDeserializer().readBytes(
+      await OfficeIsolateSave.workbook(book, recalculate: false),
+    );
+    expect(reopened.firstSheet.validations.single.listItems, ['Red', 'Green']);
+  });
+
+  test('table-local definitions stay isolated and override shared names', () {
+    final book = OdsSheetReader.readBytes(
+      _ods(
+        '<t:table t:name="Local"><t:content-validations>'
+        '<t:content-validation t:name="v" '
+        't:condition="of:cell-content-is-in-list(&quot;Local&quot;)"/>'
+        '</t:content-validations><t:table-row>'
+        '<t:table-cell t:content-validation-name="v"/>'
+        '</t:table-row></t:table>'
+        '<t:table t:name="Shared"><t:table-row>'
+        '<t:table-cell t:content-validation-name="v"/>'
+        '</t:table-row></t:table>',
+        extra:
+            '<t:content-validations><t:content-validation t:name="v" '
+            't:condition="of:cell-content-is-in-list(&quot;Shared&quot;)"/>'
+            '</t:content-validations>',
+      ),
+    );
+    expect(book.sheets[0].validations.single.listItems, ['Local']);
+    expect(book.sheets[1].validations.single.listItems, ['Shared']);
+  });
+
+  test('foreign validation containers cannot define spreadsheet rules', () {
+    final book = OdsSheetReader.readBytes(
+      _ods(
+        '<t:table><t:table-row>'
+        '<t:table-cell t:content-validation-name="v"/>'
+        '</t:table-row></t:table>',
+        extra:
+            '<e:content-validations><t:content-validation t:name="v" '
+            't:condition="of:cell-content-is-in-list(&quot;Spoof&quot;)"/>'
+            '</e:content-validations>',
+      ),
+    );
+    expect(book.firstSheet.validations, isEmpty);
+  });
+
   test('ODS list source preserves spaces in quoted sheet names', () {
     final book = OdsSheetReader.readBytes(
       _ods(

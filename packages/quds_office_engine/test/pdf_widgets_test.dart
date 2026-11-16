@@ -385,10 +385,8 @@ void main() {
         pageFormat: pw.PdfPageFormat.a4,
         margin: const pw.EdgeInsets.all(40),
         textDirection: pw.TextDirection.rtl,
-        build: (pw.Context context) => pw.Paragraph(
-          text: word,
-          textAlign: pw.TextAlign.start,
-        ),
+        build: (pw.Context context) =>
+            pw.Paragraph(text: word, textAlign: pw.TextAlign.start),
       ),
     );
     final PdfDisplayList list = PdfFile.open(doc.save()).displayList(0);
@@ -475,10 +473,22 @@ void main() {
       for (final PdfDrawText op in bodyGlyphs)
         if ((op.y - lastY).abs() < 1) op,
     ];
-    final double lastLeft = lastLine
-        .map((PdfDrawText op) => op.x)
-        .reduce((double a, double b) => a < b ? a : b);
-    expect(lastLeft, greaterThan(200));
+    // Font metrics change how much text wraps onto the final line. Its right
+    // edge must still land on the right margin with either available face.
+    final double lastRight = lastLine
+        .map((PdfDrawText op) {
+          final width = op.text.runes.fold<double>(
+            0,
+            (sum, cp) =>
+                sum +
+                face.advanceWidth(face.glyphIdFor(cp)) *
+                    op.size /
+                    face.unitsPerEm,
+          );
+          return op.x + width;
+        })
+        .reduce((a, b) => a > b ? a : b);
+    expect(lastRight, closeTo(pw.PdfPageFormat.a4.width - 40, 0.01));
   });
 
   test('RTL text inside an LTR page keeps visual order', () {
@@ -709,15 +719,21 @@ void main() {
 
   test('directional insets and alignments flip with reading direction', () {
     expect(
-      const pw.EdgeInsetsDirectional.fromSTEB(8, 1, 2, 3)
-          .resolve(pw.TextDirection.ltr)
-          .left,
+      const pw.EdgeInsetsDirectional.fromSTEB(
+        8,
+        1,
+        2,
+        3,
+      ).resolve(pw.TextDirection.ltr).left,
       8,
     );
     expect(
-      const pw.EdgeInsetsDirectional.fromSTEB(8, 1, 2, 3)
-          .resolve(pw.TextDirection.rtl)
-          .left,
+      const pw.EdgeInsetsDirectional.fromSTEB(
+        8,
+        1,
+        2,
+        3,
+      ).resolve(pw.TextDirection.rtl).left,
       2,
     );
     expect(
@@ -760,16 +776,9 @@ void main() {
               ],
             ),
             pw.ClipOval(
-              child: pw.Container(
-                width: 20,
-                height: 20,
-                color: '0F766E',
-              ),
+              child: pw.Container(width: 20, height: 20, color: '0F766E'),
             ),
-            pw.Transform.rotate(
-              angle: -0.2,
-              child: pw.Text('draft'),
-            ),
+            pw.Transform.rotate(angle: -0.2, child: pw.Text('draft')),
           ],
         ),
       ),

@@ -1,0 +1,332 @@
+{
+  "CrispCloud": {
+    "integration_head": "d71b20675c3e47a980803dc8a91a90231103bc95",
+    "branches": [
+      {
+        "branch": "codex/ssh-terminal-tmux",
+        "commit": "378c036b392ee3ff9112d86aa21e7fdd8e722808",
+        "included": true
+      },
+      {
+        "branch": "codex/terminal-screen-workspace",
+        "commit": "4a6a03b94550378e77ba7b863d4dcbbaf19fcfcd",
+        "included": true
+      },
+      {
+        "branch": "codex/zotero-support-20261115",
+        "commit": "e678e17859f8d29e274d1abbf064b93d04a6fa42",
+        "included": true
+      },
+      {
+        "branch": "codex/zotero-support-20261116",
+        "commit": "e5dc3dc5b0919fd79f913e1ad7aee427bafef09e",
+        "included": true
+      },
+      {
+        "branch": "docs/conditional-affix",
+        "commit": "4919c87f0225599b9b2b963285d364d2c2bd1a1e",
+        "included": true
+      },
+      {
+        "branch": "docs/conditional-between",
+        "commit": "073713474ea62525d9f5832da918407de333cd03",
+        "included": true
+      },
+      {
+        "branch": "docs/conditional-complete",
+        "commit": "a49c3f14f96fed4c5551e45060ebbce3fa6883a1",
+        "included": true
+      },
+      {
+        "branch": "docs/conditional-formats",
+        "commit": "2281ad58aed9f97bc1d387d3c98728245a5e4bcf",
+        "included": true
+      },
+      {
+        "branch": "docs/metadata-closed",
+        "commit": "343a930ebdbc1b0ee45f16328be868d0f78ba624",
+        "included": true
+      },
+      {
+        "branch": "docs/ods-hidden-state",
+        "commit": "1cb0b4a6a01b4aabe58f95d9a9132171bbb11aa0",
+        "included": true
+      },
+      {
+        "branch": "docs/ods-pictures",
+        "commit": "128f55295107e3ada605b52d160165e03f726cb4",
+        "included": true
+      },
+      {
+        "branch": "docs/ods-validations",
+        "commit": "b420b45b6666ca0658ae74f2a682a3cb6b88134d",
+        "included": true
+      },
+      {
+        "branch": "docs/office-pin-20261115",
+        "commit": "5ed4f45cb758394dc2346041d826c10257c24dc1",
+        "included": true
+      },
+      {
+        "branch": "docs/remaining-gaps",
+        "commit": "a0df68710bbacdcbddf57f7fb7b77238566b65c3",
+        "included": true
+      },
+      {
+        "branch": "docs/remaining-gaps-link",
+        "commit": "854d2ff6a20206434c64173ddca1152b079c8277",
+        "included": true
+      },
+      {
+        "branch": "feat/hidden-sheets-ui",
+        "commit": "dacf219a094e8f309e3f2ea1e27afbdccaa69f3d",
+        "included": true
+      },
+      {
+        "branch": "feat/odt-headers",
+        "commit": "38a69f9a60bce92b6c2db60a71427ac47d98819d",
+        "included": true
+      },
+      {
+        "branch": "feat/odt-images",
+        "commit": "969c104a09dc2ad0732edb4a11a0300b52f20e2f",
+        "included": true
+      },
+      {
+        "branch": "feat/odt-styles",
+        "commit": "048ad97b6d4b1be94821dd29f1ffb1494a329ecb",
+        "included": true
+      },
+      {
+        "branch": "feat/odt-textboxes",
+        "commit": "b81105fe579d00b66c0a07b07d8ed36cee23ecfb",
+        "included": true
+      },
+      {
+        "branch": "fix/conditional-affix-vendor",
+        "commit": "1dbfa2125cd83d6ec4e0028d1584e612fccfb77c",
+        "included": true
+      },
+      {
+        "branch": "fix/conditional-between-vendor",
+        "commit": "a52efabd7d05a50b428eb337944d2b6aeee2400b",
+        "included": true
+      },
+      {
+        "branch": "fix/conditional-dxf-vendor",
+        "commit": "b9b7932eca6213973803b5bb227464cccd3051d6",
+        "included": true
+      },
+      {
+        "branch": "fix/conditional-operators-vendor",
+        "commit": "24ac26de023313dba726f8cdaabd16179c49da01",
+        "included": true
+      },
+      {
+        "branch": "fix/conditional-text-vendor",
+        "commit": "20e5c5b7f63f0b8335665ca131418023f6bc2ca7",
+        "included": true
+      },
+      {
+        "branch": "fix/hidden-state-vendor",
+        "commit": "fd69bc3ee8db4ecec4683a7b8161a643b758db6b",
+        "included": true
+      },
+      {
+        "branch": "fix/ods-conditional-vendor",
+        "commit": "4e3e45e619fa2983f1fa8394a9f28cf6c454a9f6",
+        "included": true
+      },
+      {
+        "branch": "fix/ods-default-geometry-vendor",
+        "commit": "29a2bb5158a316dcde5da776172e09027e04f78d",
+        "included": true
+      },
+      {
+        "branch": "fix/ods-default-style-vendor",
+        "commit": "0ba620fdc34ea7afd278468f3978997c3cc7ba8f",
+        "included": true
+      },
+      {
+        "branch": "fix/ods-images-vendor",
+        "commit": "d18dc14194bfa4d11e96552b77dc34cbe5a8b417",
+        "included": true
+      },
+      {
+        "branch": "fix/ods-metadata-vendor",
+        "commit": "8a62e0864ad4bae96063ec6f8a542db039a306cf",
+        "included": true
+      },
+      {
+        "branch": "fix/ods-validations-vendor",
+        "commit": "ee74601e71441fcac2b6defebff33ca04f538d12",
+        "included": true
+      },
+      {
+        "branch": "integrate/final-corpus-20261115",
+        "commit": "59b11b5647a8a07d36c0d2e0d579855f474ef4d2",
+        "included": true
+      },
+      {
+        "branch": "integrate/sdt-section-break-20261115",
+        "commit": "012314d440c49bc73b6726796fd9930eee6f1830",
+        "included": true
+      },
+      {
+        "branch": "integrate/utf16-custom-xml-20261115",
+        "commit": "abfcf08bd2bfbe87349fdacc3484b824b77fefa3",
+        "included": true
+      },
+      {
+        "branch": "integration/storage-carving-20261115",
+        "commit": "5018aebb709b35f1c4d730c06e0f91187727751c",
+        "included": true
+      },
+      {
+        "branch": "integration/storage-carving-local-20261115124645",
+        "commit": "10891b06a6da9f2502960cdbfe34b30eed271665",
+        "included": true
+      },
+      {
+        "branch": "main",
+        "commit": "45ed126a6d7da0ecd80f3a765155f54008b278f3",
+        "included": true
+      }
+    ]
+  },
+  "quds_office_suite": {
+    "integration_head": "2c6ff73eb8a5fac21c8ddfe60151de6a7d3ff06d",
+    "branches": [
+      {
+        "branch": "codex/zotero-support-20261115",
+        "commit": "fc37658c907edf6687eccb9564d3046283b49a3a",
+        "included": true
+      },
+      {
+        "branch": "codex/zotero-support-20261116",
+        "commit": "72691877bd9bafab761e655c13d0c9a0936b55bb",
+        "included": true
+      },
+      {
+        "branch": "docs/metadata-closed",
+        "commit": "a5febc3362d2fccdb979f012a5296af72e465797",
+        "included": true
+      },
+      {
+        "branch": "docs/readme-remaining-gaps",
+        "commit": "e6fdd16849aaf7ccbaf50f2593d7a92b6a82e630",
+        "included": true
+      },
+      {
+        "branch": "docs/remaining-gaps",
+        "commit": "0a26be7f136ad3e57dbe894b0bc4cdb0602addd0",
+        "included": true
+      },
+      {
+        "branch": "feat/conditional-affix",
+        "commit": "20681b8658392212c128f51b4c91f0b638942448",
+        "included": true
+      },
+      {
+        "branch": "feat/conditional-between",
+        "commit": "b69bad50fb235118a5334b325683cd1524b3e3d1",
+        "included": true
+      },
+      {
+        "branch": "feat/conditional-dxf",
+        "commit": "b0efe6c661009ffa463f2bf6d7945216ce1dae4c",
+        "included": true
+      },
+      {
+        "branch": "feat/conditional-operators",
+        "commit": "21de3c3963b0334068b87fb1c25c787660cb17cf",
+        "included": true
+      },
+      {
+        "branch": "feat/conditional-text",
+        "commit": "752a94dfddf69522429f3025f9d25702499cb6da",
+        "included": true
+      },
+      {
+        "branch": "feat/ods-conditional",
+        "commit": "e59751246a200e7477657d0e4835bf77b153422c",
+        "included": true
+      },
+      {
+        "branch": "feat/ods-default-geometry",
+        "commit": "912f26f21446ef9bdbf4f542535438dae0ded9a9",
+        "included": true
+      },
+      {
+        "branch": "feat/ods-default-style",
+        "commit": "49b447324159595c59e64d8425b54a09f79ec736",
+        "included": true
+      },
+      {
+        "branch": "feat/ods-images",
+        "commit": "7fe296e29e2e1b173580f6854507fc060cb4f080",
+        "included": true
+      },
+      {
+        "branch": "feat/ods-metadata",
+        "commit": "d6d6866c0f4ddbbaa196e1a5eb7ff9e31007fdea",
+        "included": true
+      },
+      {
+        "branch": "feat/ods-validations",
+        "commit": "b85501b2810e537e21040d82528d8dbaa6fdcf15",
+        "included": true
+      },
+      {
+        "branch": "feat/sheet-hidden-sheets",
+        "commit": "4c8036bbf16ac224c3fc102b5c44d8913a512b18",
+        "included": true
+      },
+      {
+        "branch": "feat/sheet-hidden-state",
+        "commit": "46850ae47e0241733750decb22417a0150e4b0e4",
+        "included": true
+      },
+      {
+        "branch": "fix/sdt-multi-section-control",
+        "commit": "866c14f0b3a876e11732bc544dc25a05d8f10524",
+        "included": true
+      },
+      {
+        "branch": "fix/sdt-trailing-section-break",
+        "commit": "8fc3d06be36da5c2176feb107c14245f61650d75",
+        "included": true
+      },
+      {
+        "branch": "fix/utf16-custom-xml",
+        "commit": "09a05d7d60d2a2e1d2547487ad4545c50472834b",
+        "included": true
+      },
+      {
+        "branch": "main",
+        "commit": "dc5f93b673e6087cccc6d66b33dfbfd099668f77",
+        "included": true
+      },
+      {
+        "branch": "vendor/ods-metadata",
+        "commit": "18dc693fbf4e39fc6c38e3d655d1e5b35eeef273",
+        "included": true
+      },
+      {
+        "branch": "vendor/ods-metadata-zotero",
+        "commit": "4fbd1687d3c0ada22d460cf5cadb9586c4f62905",
+        "included": true
+      }
+    ]
+  },
+  "legacy-doc-parser": {
+    "integration_head": "4895712158127b2fc930d796e17035c3ca0dac62",
+    "branches": [
+      {
+        "branch": "main",
+        "commit": "4895712158127b2fc930d796e17035c3ca0dac62",
+        "included": true
+      }
+    ]
+  }
+}

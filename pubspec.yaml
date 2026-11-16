@@ -264,7 +264,7 @@ dependency_overrides:
   libdbm:
     git:
       url: https://github.com/CrispStrobe/libdbm
-      ref: main
+      ref: 1d2b0a9e25e0890fc113dd6f533309275dc66830
   # system_tray (unmaintained) pins uuid ^3.x but pdfx needs ^4.x.
   # Force uuid 4.x — system_tray only uses uuid.v4() which is unchanged.
   uuid: 4.5.1

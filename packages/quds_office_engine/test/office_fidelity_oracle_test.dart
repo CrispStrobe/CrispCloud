@@ -9,23 +9,21 @@ WmlDocument openFixture() => WordDeserializer().readBytes(
 
 void main() {
   test('mixed note references and all note paragraphs appear on the page', () {
-    final LaidOutDocument layout = WordLayoutEngine(
-      font: null,
-    ).layout(openFixture());
+    final LaidOutDocument layout = WordLayoutEngine(font: null)
+        .layout(openFixture());
     expect(layout.pages, hasLength(1));
     final List<String?> lines = layout.pages.single.notes
         .map((LaidOutLine line) => line.text)
         .toList();
-    // The source has a marker followed by a space, with no invented period.
-    expect(
-      lines,
-      <String>[
-        '12 Footnote text',
-        'Note link',
-        'Endnotes',
-        '3 Endnote text',
-      ],
-    );
+    // Automatic labels follow reference order and the native numbering format.
+    // Source IDs 12 and 3 remain link identities, not visible note numbers.
+    // Keep the source marker separator, with no invented period.
+    expect(lines, <String>[
+      '1 Footnote text',
+      'Note link',
+      'Endnotes',
+      'i Endnote text',
+    ]);
   });
 
   test('multiple footnotes in one paragraph do not hide each other', () {
@@ -35,10 +33,12 @@ void main() {
     }
     WordNotes.insert(doc, doc.paragraphs.first, endnote: true, text: 'End');
     final LaidOutDocument layout = WordLayoutEngine(font: null).layout(doc);
-    expect(
-      layout.pages.single.notes.map((LaidOutLine l) => l.text),
-      <String>['1 First', '2 Second', 'Endnotes', '1 End'],
-    );
+    expect(layout.pages.single.notes.map((LaidOutLine l) => l.text), <String>[
+      '1 First',
+      '2 Second',
+      'Endnotes',
+      'i End',
+    ]);
   });
 
   test('multiline endnotes continue onto additional pages', () {
@@ -140,7 +140,7 @@ void main() {
     () {
       final WmlDocument doc = openFixture();
       final WmlParagraph p = doc.paragraphs.elementAt(1);
-      final int start = 'Body text'.length;
+      const int start = 'Body text'.length;
       WmlRunEdit.applyRange(
         p,
         start,

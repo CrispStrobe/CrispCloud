@@ -1,0 +1,76 @@
+Waiting for another flutter command to release the startup lock...
+00:00 +0: loading /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_note_numbering_test.dart
+00:00 +0: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_note_numbering_test.dart: display 1 for native ID 999 paints and hit-tests atomically
+00:00 +1: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_citing_dialog_test.dart: desktop tools are absent when the host has no local transport
+00:00 +2: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_citing_dialog_test.dart: desktop tools are absent when the host has no local transport
+00:00 +3: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_citing_dialog_test.dart: desktop tools are absent when the host has no local transport
+00:00 +4: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_citing_dialog_test.dart: desktop tools are absent when the host has no local transport
+00:00 +5: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_citing_dialog_test.dart: desktop tools are absent when the host has no local transport
+00:02 +6: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_citing_dialog_test.dart: desktop tools are absent when the host has no local transport
+00:02 +7: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_citing_dialog_test.dart: desktop tools are absent when the host has no local transport
+00:03 +8: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_catalog_citing_test.dart: first catalog insertion chooses placement 0 in one undo
+00:04 +9: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_catalog_citing_test.dart: first catalog insertion chooses placement 0 in one undo
+00:05 +10: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_catalog_citing_test.dart: first catalog insertion chooses placement 0 in one undo
+00:05 +11: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_catalog_citing_test.dart: first catalog insertion chooses placement 0 in one undo
+00:05 +12: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_catalog_citing_test.dart: first catalog insertion chooses placement 0 in one undo
+00:05 +13: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_catalog_citing_test.dart: first catalog insertion chooses placement 0 in one undo
+00:05 +14: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_catalog_citing_test.dart: first catalog insertion chooses placement 0 in one undo
+00:05 +15: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_catalog_citing_test.dart: first catalog insertion chooses placement 0 in one undo
+00:05 +16: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_catalog_citing_test.dart: first catalog insertion chooses placement 0 in one undo
+00:05 +17: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_catalog_citing_test.dart: first catalog insertion chooses placement 0 in one undo
+00:05 +18: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_dialog_test.dart: unsynced refresh keeps URI aliases and unknown citation data
+00:05 +19: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_dialog_test.dart: unsynced refresh keeps URI aliases and unknown citation data
+00:05 +20: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_catalog_citing_test.dart: first catalog insertion chooses placement 1 in one undo
+00:05 +21: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_catalog_citing_test.dart: first catalog insertion chooses placement 1 in one undo
+00:06 +22: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_dialog_test.dart: wrong desktop profile with the same item key cannot refresh
+00:06 +23: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_citing_dialog_test.dart: unsupported small caps are reviewed before mutation and can be discarded
+00:06 +24: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_catalog_citing_test.dart: first catalog insertion chooses placement 2 in one undo
+00:07 +25: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_dialog_test.dart: online operations reject local-only references before a request
+00:07 +26: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_citing_dialog_test.dart: mixed formatting applies styled runs while retaining one protected field
+00:07 +27: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_catalog_citing_test.dart: saved document style goes directly to the seeded native picker
+00:07 +28: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_dialog_test.dart: online refresh can use a numeric alias while retaining old local URI
+00:07 +29: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_citing_dialog_test.dart: moving the caret during review prevents a stale insertion
+00:08 +30: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_citing_dialog_test.dart: moving the caret during review prevents a stale insertion
+00:08 +31: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_dialog_test.dart: different local profiles are not combined through the same route
+00:08 +32: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_dialog_test.dart: different local profiles are not combined through the same route
+00:08 +33: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_citing_dialog_test.dart: Zotero alert button set 0 returns its exact OK code
+00:09 +34: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_citing_dialog_test.dart: Zotero alert button set 0 returns its exact OK code
+00:09 +35: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_dialog_test.dart: unsynced single-source preview verifies identity: mismatch false
+00:10 +36: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_dialog_test.dart: unsynced single-source preview verifies identity: mismatch false
+00:10 +37: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_citing_dialog_test.dart: Zotero alert button set 1 returns its exact Cancel code
+00:10 +38: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_catalog_citing_test.dart: Cancel operation discards both native stages
+00:10 +39: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_dialog_test.dart: unsynced single-source preview verifies identity: mismatch true
+00:10 +40: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_dialog_test.dart: unsynced single-source preview verifies identity: mismatch true
+00:10 +41: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_catalog_citing_test.dart: a changed insertion point discards both native stages
+00:11 +42: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_citing_dialog_test.dart: Zotero alert button set 3 returns its exact Yes code
+00:11 +43: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_dialog_test.dart: unsynced selected export verifies sources before copying reference data
+00:11 +44: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_citing_dialog_test.dart: desktop error alert 0 discards staged fields even after complete
+00:12 +45: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_dialog_test.dart: changed profile cannot copy another source under a selected item key
+00:12 +46: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_citing_dialog_test.dart: desktop error alert 2 discards staged fields even after complete
+00:12 +47: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_dialog_test.dart: unsynced bibliography verifies selection and requires review before insertion
+00:12 +48: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_citing_dialog_test.dart: cancel waits for a native response then drains without live mutation
+00:12 +49: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_dialog_test.dart: reviewed bibliography keeps rich runs through save and undo
+00:13 +50: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_dialog_test.dart: reviewed bibliography keeps rich runs through save and undo
+00:13 +51: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_dialog_test.dart: bibliography review offers an explicit editable plain result
+00:13 +52: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_dialog_test.dart: cancelling rich bibliography review keeps history unchanged
+00:14 +53: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_dialog_test.dart: a changed caret rejects a reviewed rich bibliography
+00:14 +54: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_dialog_test.dart: a changed revision rejects a reviewed rich bibliography
+00:15 +55: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_dialog_test.dart: rich review and format limitation fit a narrow viewport
+00:15 +56: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_dialog_test.dart: unchanged imported citation keeps its rich cache and native formatting metadata
+00:16 +57: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_dialog_test.dart: older desktop cannot render an unverified aggregate bibliography
+00:16 +58: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_dialog_test.dart: local source without CSL or identity is not refetched by a bare key
+00:17 +59: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_dialog_test.dart: desktop account source inserts without using the saved cloud key
+00:17 +60: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_dialog_test.dart: desktop unsynced source inserts without using the saved cloud key
+00:18 +61: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_dialog_test.dart: desktop citation-key source inserts without using the saved cloud key
+00:18 +62: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_dialog_test.dart: switching sources makes no requests and preserves the cloud credential
+00:18 +63: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_dialog_test.dart: a host without desktop transport offers only the supported source
+00:19 +64: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_dialog_test.dart: desktop connection and errors fit a 320 by 640 viewport
+00:19 +65: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_dialog_test.dart: offline CSL import inserts source metadata and can be undone
+00:19 +66: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_dialog_test.dart: cancelling the citation composer leaves document and history unchanged
+00:19 +67: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_dialog_test.dart: a changed caret while the composer is open blocks stale insertion
+00:20 +68: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_dialog_test.dart: a changed revision while the composer is open blocks stale insertion
+00:20 +69: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_dialog_test.dart: mock Web API connection, pagination and search keep the key outside the document
+00:21 +70: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_dialog_test.dart: unchecking Remember removes the saved key immediately without connecting
+00:21 +71: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_dialog_test.dart: imported bibliography customizations cannot be overwritten by basic update
+00:21 +72: /Users/christianstrobele/code/local/CrispCloud/packages/quds_office_editor/test/word_zotero_dialog_test.dart: dialog, offline import and composer fit a 320 by 640 viewport
+00:22 +73: All tests passed!

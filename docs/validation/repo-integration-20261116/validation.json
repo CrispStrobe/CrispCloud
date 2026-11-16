@@ -1,0 +1,89 @@
+{
+  "engine": {
+    "passed": 2285,
+    "skipped": 6,
+    "working_directory": "packages/quds_office_engine",
+    "command": "dart test --concurrency=2 --timeout=90s --reporter expanded",
+    "log": "engine-tests.log",
+    "sha256": "fe39a2977a660412048e04da435b6f7cb1c6119d17a3b4fbf977da780e88193b",
+    "final_line": "04:33 +2285 ~6: All tests passed!"
+  },
+  "host-office": {
+    "passed": 90,
+    "skipped": 0,
+    "working_directory": ".",
+    "command": "flutter test --no-pub --concurrency=2 [nine Office/ODF/Zotero suites] --reporter expanded",
+    "log": "host-office-tests.log",
+    "sha256": "55941437ae3a99ebfb72e0b259e40bc1206afc62e961d2ff824ba01449822659",
+    "final_line": "01:25 +90: All tests passed!"
+  },
+  "editor": {
+    "passed": 73,
+    "skipped": 0,
+    "working_directory": "packages/quds_office_editor",
+    "command": "flutter test --no-pub [five note/Zotero suites] --reporter expanded",
+    "log": "editor-tests.log",
+    "sha256": "e90300a3c20aff7606466a3af0b6223b6dec8b5d2aa0d9eae46a7ce285892596",
+    "final_line": "00:22 +73: All tests passed!"
+  },
+  "libdbm": {
+    "passed": 135,
+    "skipped": 5,
+    "working_directory": "CrispStrobe/libdbm at 1d2b0a9e25e0890fc113dd6f533309275dc66830",
+    "command": "dart test --reporter expanded",
+    "log": "libdbm-tests.log",
+    "sha256": "3c253c9422a7d86ffff38de64d38fe0c94743445e27edce35a8945b11e0ea370",
+    "final_line": "16:10 +135 ~5: All tests passed!"
+  },
+  "terminal-native": {
+    "exit_code": 0,
+    "receipt": "terminal/native.json",
+    "changed_sources_during_run": [
+      "packages/quds_office_engine/test/office_fidelity_oracle_test.dart"
+    ],
+    "passed": 676,
+    "skipped": 2,
+    "source_change_assessment": "Only the unexecuted engine office_fidelity_oracle_test.dart changed during the terminal run. No terminal runtime or suite source changed; the corrected engine oracle subsequently passed in the complete engine rerun."
+  },
+  "terminal-analysis": {
+    "exit_code": 0,
+    "receipt": "terminal/analysis.json",
+    "changed_sources_during_run": []
+  },
+  "ods-analysis": {
+    "log": "ods-analysis.log",
+    "exit_code": 0
+  },
+  "qualification": {
+    "flutter": "3.47.8",
+    "dart": "3.13.7",
+    "platform": "macOS arm64",
+    "total_passed": 3259,
+    "total_skipped": 13,
+    "note": "These are distinct package/host cohorts, not the complete CrispCloud root suite. Optional skips remain skips."
+  },
+  "pdf-font-check": {
+    "bundled_Naskh": "Passed in complete vendored engine suite.",
+    "optional_Cairo": "Passed against the complete canonical checkout at the same source pin.",
+    "log": "pdf-cairo-test.log"
+  },
+  "web-release": {
+    "exit_code": 0,
+    "command": "flutter build web --release --no-pub --no-wasm-dry-run",
+    "working_directory": ".",
+    "log": "web-build.log",
+    "output": "build/web",
+    "compile_seconds": 462.0,
+    "artifact_sha256": {
+      "build/web/index.html": "30a0f3c562c65352e1cb8eab221a162351964b383ac08ba5eeddb0a476dbb7be",
+      "build/web/main.dart.js": "dd47f51fe2190b57f6642804c0878606c109181aecfb870db360741a89056f62"
+    }
+  },
+  "completed_utc": "2026-11-16T06:08:12.162420+00:00",
+  "vendor": {
+    "managed_files": 2400,
+    "quds_commit": "2c6ff73eb8a5fac21c8ddfe60151de6a7d3ff06d",
+    "source_and_staged_inventory_verified": true,
+    "log": "vendor-verification.log"
+  }
+}
