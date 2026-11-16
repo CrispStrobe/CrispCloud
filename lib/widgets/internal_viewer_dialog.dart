@@ -4656,6 +4656,19 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           selectable: true,
           padding: const EdgeInsets.all(12),
           sizedImageBuilder: (config) {
+            if (config.uri.scheme == 'odt-image') {
+              final bytes = document.imageRegistry[config.uri.toString()];
+              if (bytes != null) {
+                return Image.memory(
+                  bytes,
+                  width: config.width,
+                  height: config.height,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => Text(config.alt ?? 'Image'),
+                );
+              }
+              return Text(config.alt ?? 'Image');
+            }
             final data = config.uri.data;
             if (data != null) {
               return Image.memory(
