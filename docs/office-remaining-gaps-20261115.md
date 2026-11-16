@@ -83,13 +83,15 @@ cfRule + dxf, and reopen in Excel.
 ### OG-03 — ODS data-validation breadth
 
 **Status:** Partial\
-**Covered:** literal `cell-content-is-in-list(...)` with `allow-empty-cell`,
-shared spreadsheet-level definitions and blank input cells.\
-**Remaining:** whole/decimal/date/text-length/custom conditions, input prompts,
-error titles/messages, error styles and unmodeled cross-sheet filter cases.
-Range-source lists are now resolved after all sheets are built.\
-**Next step:** map the remaining ODF conditions to
-`SmlDataValidationKind` and carry prompt/error metadata.\
+**Covered:** literal list rules and bounded range-source snapshots, shared
+spreadsheet-level definitions, blank input cells, and literal whole-number,
+decimal, date and text-length bounds with comparison/between operators. Basic
+title/message attributes are carried by the modeled rules.\
+**Remaining:** custom/formula-driven conditions, dynamic source-range links,
+full native input/error-message elements, error styles and unmodeled
+cross-sheet filter cases.\
+**Next step:** preserve native prompt/error metadata and extend the supported
+condition grammar without approximating arbitrary expressions.\
 **Acceptance:** list, numeric and date rules survive ODS → XLSX, with the same
 source ranges, bounds, blank policy and messages.
 
