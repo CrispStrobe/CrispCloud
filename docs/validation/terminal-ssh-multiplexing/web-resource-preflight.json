@@ -1,0 +1,41 @@
+{
+  "started_utc": "2026-11-16T08:55:42.313769+00:00",
+  "sdk": "/workspace/scratch/b4bccf05666a/toolchain/flutter/bin/cache/dart-sdk",
+  "heap_mb": 4096,
+  "sdk_before": {
+    "bin/dart": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb",
+    "bin/dartaotruntime": "3599c987228070f342c80d29353f496c8efc72c620c75fc4d59e5671666b2f72",
+    "bin/snapshots/dart2js_aot.dart.snapshot": "29314b1f8e994436c5639a59df0243692cd83625fc587619a9c99e9a3804b1d6"
+  },
+  "launcher_sha256": "2f432b4e4f04ff0802a69093aa023216fa646e5405b0c13613da8da8a0868c22",
+  "sdk_files_replaced": false,
+  "full_web_build_started": false,
+  "github_actions_queried_or_awaited": false,
+  "old_gen_heap_flag": "old_gen_heap_size: 4096 (Max size of old gen heap size in MB, or 0 for unlimited,e.g: --old_gen_heap_size=1024 allows up to 1024MB old gen heap)",
+  "tiny_release_probe": {
+    "command": [
+      "bash",
+      "/workspace/scratch/b4bccf05666a/CrispCloud/docs/validation/terminal-tmux-control/web-resource-launcher.sh",
+      "compile",
+      "js",
+      "-O4",
+      "--minify",
+      "--no-source-maps",
+      "/workspace/scratch/b4bccf05666a/toolchain/tmp/web-resource-preflight-loyw2bq2/probe.dart",
+      "-o",
+      "/workspace/scratch/b4bccf05666a/toolchain/tmp/web-resource-preflight-loyw2bq2/probe.js"
+    ],
+    "exit_code": 0,
+    "source_sha256": "56b8c24b248f3203b4bc68d96ea36793efeaf5f2fca961f823824bf2fdfa2ff3",
+    "javascript_sha256": "c4c01193c01c2c4c1a1e675f95f870abfffce201e1d32d4d924e812bd6f5339c",
+    "javascript_bytes": 5140,
+    "node_stdout": "compiler resource probe"
+  },
+  "finished_utc": "2026-11-16T08:55:43.624662+00:00",
+  "sdk_after": {
+    "bin/dart": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb",
+    "bin/dartaotruntime": "3599c987228070f342c80d29353f496c8efc72c620c75fc4d59e5671666b2f72",
+    "bin/snapshots/dart2js_aot.dart.snapshot": "29314b1f8e994436c5639a59df0243692cd83625fc587619a9c99e9a3804b1d6"
+  },
+  "sdk_unchanged": true
+}

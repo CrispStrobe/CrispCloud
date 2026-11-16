@@ -22,14 +22,37 @@ agent and forwarding manager until the final owner closes. Route failure,
 global disconnect and route-wide inactivity revoke all owners. Pending opens
 and stale menu capabilities cannot authorize replacement connections.
 
+Channel teardown releases a quiet SSH channel completely while retaining its
+siblings. New terminal requests have a 32-slot admission budget that includes
+pending opens and locally closed channels still awaiting peer acknowledgement.
+Final buffered output survives a transport ending during channel publication.
+Shared saved-forwarding operations coalesce and retain stop/edit/delete cleanup
+ownership when their original panel or terminal closes.
+
 The [sharing guide](terminal.md#share-an-existing-ssh-connection) describes the
 workflow and limits. The [local acceptance record](validation/terminal-ssh-multiplexing/README.md)
 tracks this continuation independently of the historical results below.
 The initial fresh fetch at **08:10:33 UTC on 16 November 2026** contained all
 **38 branch heads and 151 PR heads** as actual ancestors of `042a24e7`.
 Checkpoint `743801e2` preserves the complete inventory; `688c4011` saves the
-first implementation. Incremental remote saves continue with `[skip ci]`,
-without querying or waiting for GitHub Actions.
+first implementation. A later snapshot at **08:46:21 UTC** found newer main and
+PRs #162/#163 with ODS numeric/date validation. Checkpoint `2ca566a3` integrates
+all **40 branch heads and 153 PR heads as actual ancestors**, preserving both
+original squash-equivalent PR histories. Canonical Quds pin `4235e690` combines
+the new ODS files with existing Zotero work, with all **2,409** managed hashes
+and index modes verified. [Integration and source proof](validation/terminal-ssh-multiplexing/incoming-audit/README.md).
+
+That combined source passes **980 terminal tests with two platform skips across
+81 files**, clean analysis and formatting of **153 Dart files**, and **22 actual
+OpenSSH tests with three explicit environment skips**. Targeted incoming Office
+acceptance passes **116 tests** through the production graph. Five production
+widget captures cover desktop and 320×320 layouts. All **5,544 watched files**
+match across all five acceptance phases and the accepted Git source. The full
+O4/minified web release passes in **236.500 seconds**, with exact SDK restoration.
+The final **08:59:14 UTC** refresh still contains all 193 refs as actual ancestors.
+Incremental remote saves continue with `[skip ci]`,
+without querying or waiting for GitHub Actions. The current acceptance record
+contains the full optimized web build outcome and source-identity proof.
 
 This is live authenticated transport reuse. Routes are not retained after every
 owner closes, reconnected automatically, or restored across application restarts.
@@ -117,7 +140,7 @@ historical evidence; it no longer describes the current validation environment.
 Source changes are saved incrementally to `codex/terminal-screen-workspace`.
 GitHub Actions results are neither queried nor awaited; checkpoints carry
 `[skip ci]`. Local validation and its explicit platform limits are recorded below
-and in [the current evidence directory](validation/terminal-tmux-control/README.md).
+and in [the current evidence directory](validation/terminal-ssh-multiplexing/README.md).
 
 ## Previous integration baselines and refreshes
 
@@ -509,7 +532,7 @@ The earlier integration snapshots of 27, then 30 branch heads are retained in
 [the initial audit](validation/terminal-20261115/integration.json),
 [refresh record](validation/terminal-20261115/integration-refresh.json) and
 [cutoff record](validation/terminal-20261115/integration-cutoff.json). The
-16 November 38-head refresh above supersedes these earlier repository cutoffs.
+16 November 40-branch/153-PR integration above supersedes these earlier cutoffs.
 
 ## Primary references
 

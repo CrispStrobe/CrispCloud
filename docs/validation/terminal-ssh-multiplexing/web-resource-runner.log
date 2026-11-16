@@ -1,0 +1,16 @@
+Running web: 153 files; source 951b2450
+{
+  "phase": "web",
+  "head_at_start": "951b2450e16074a528a8d66eb62cc9749e06088d",
+  "started_utc": "2026-11-16T08:55:44.172385+00:00",
+  "watched_source_count": 5544,
+  "github_actions_queried_or_awaited": false,
+  "finished_utc": "2026-11-16T08:59:40.680887+00:00",
+  "seconds": 236.5,
+  "exit_code": 0,
+  "changed_sources": [],
+  "main_dart_js": {
+    "bytes": 29481748,
+    "sha256": "98a377535a9ebc1d0990a3fa9332ce408e43f635072ab8a4711b794e5b64c7a4"
+  }
+}

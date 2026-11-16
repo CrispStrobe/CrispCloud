@@ -34,6 +34,8 @@ def read_saved(path):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--pre-web', action='store_true')
+    parser.add_argument('--check-only', action='store_true',
+                        help='Verify the delivered checkout without rewriting its receipt.')
     args = parser.parse_args()
     phase_names = ['native', 'analysis', 'format', 'live']
     if not args.pre_web:
@@ -133,7 +135,8 @@ def main():
         record.update(sdk_sha256=identities, sdk_modes=modes,
                       sdk_restored_exactly=True, web_bundle=web['main_dart_js'])
     target = 'pre-web-source-verification.json' if args.pre_web else 'final-source-verification.json'
-    (OUT / target).write_text(json.dumps(record, indent=2) + '\n')
+    if not args.check_only:
+        (OUT / target).write_text(json.dumps(record, indent=2) + '\n')
     print(json.dumps(record, indent=2))
 
 
