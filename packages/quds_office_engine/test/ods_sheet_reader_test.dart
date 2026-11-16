@@ -1899,6 +1899,28 @@ void validationTests() {
 }
 
 void metadataTests() {
+  test('ODS tab colour survives save and reopen', () async {
+    final book = OdsSheetReader.readBytes(
+      _ods(
+        '<t:table t:name="Data" t:style-name="taColor">'
+        '<t:table-row><t:table-cell><x:p>Data</x:p></t:table-cell>'
+        '</t:table-row></t:table>',
+        styles:
+            '<s:style s:name="taColor" s:family="table">'
+            '<s:table-properties t:tab-color="#ff0000"/></s:style>',
+      ),
+    );
+    expect(book.sheets.first.tabColorRgb, 'FF0000');
+    final saved = await OfficeIsolateSave.workbook(book, recalculate: false);
+    final archive = ZipDecoder().decodeBytes(saved);
+    final sheetXml = utf8.decode(
+      archive.findFile('xl/worksheets/sheet1.xml')!.content as List<int>,
+    );
+    expect(sheetXml, contains('tabColor rgb="FFFF0000"'));
+    final reopened = SheetDeserializer().readBytes(saved);
+    expect(reopened.sheets.first.tabColorRgb, 'FF0000');
+  });
+
   test('ODS print areas, titles, names and autofilter survive save', () async {
     final book = OdsSheetReader.readBytes(
       _ods(
