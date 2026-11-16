@@ -3,6 +3,21 @@
 Open a Word document with F4, then choose **Insert → Zotero…** or the **Zotero**
 button in the Insert ribbon's References group.
 
+## Faster refresh with verified source identities
+
+**Document → Refresh basic citations** fetches up to 50 distinct linked sources
+in one request per library. Repeated citations share the same request, while
+personal libraries, group libraries and unsynced local profiles remain separate
+even when their item keys match. Every requested source and its CSL data must
+be present before any citation changes. Results from all libraries apply as one
+undo step; a changed document or insertion point stops further requests.
+
+Native **Refresh all with Zotero** now resolves field IDs directly and builds
+note order once per field-list response. Later responses recalculate that order
+after insertions, deletions and conversions. Existing protected-field and stale
+document checks remain in place. See the [optimization qualification](validation/zotero-optimization-20261116/README.md)
+for exact source pins, local tests and the engine benchmark's scope.
+
 ## Use Zotero's picker and format the whole document
 
 In a native Linux, Windows or macOS build, open Zotero on the same computer and
