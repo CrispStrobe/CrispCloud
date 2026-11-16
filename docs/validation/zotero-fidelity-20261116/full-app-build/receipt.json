@@ -1,0 +1,192 @@
+{
+  "started_utc": "2026-11-16T07:33:57.536071+00:00",
+  "source_commit": "de1259080074ca7918122d4790e9255269944b25",
+  "source": "/workspace/scratch/4156e4a05f09/CrispCloud",
+  "isolated_project": "/workspace/scratch/4156e4a05f09/zotero-toolchain/full-crisp-app",
+  "source_files": 6981,
+  "source_scopes": [
+    "lib",
+    "assets",
+    "packages",
+    "pubspec.yaml",
+    "pubspec.lock",
+    "analysis_options.yaml",
+    "l10n.yaml",
+    "LICENSE.txt",
+    "macos/vendor/fuse/COPYING.LIB",
+    "docs/USER_GUIDE.md",
+    "docs/help/USER_GUIDE.de.md",
+    "docs/help/USER_GUIDE.fr.md",
+    "docs/help/manifest.json",
+    "tool/office_fidelity_manifest.json"
+  ],
+  "source_before_sha256": "9f7b2c5b5fa7f61744e0807fd99e0744d534787d3b95b6ed98937ad0e76cc3bd",
+  "lib_copied_before_gen_l10n": true,
+  "dependency_manifests_unchanged": true,
+  "assets_packages_are_readonly_inputs_by_symlink": true,
+  "intended_command": [
+    "dart",
+    "flutter_tools.snapshot",
+    "build",
+    "bundle",
+    "--debug",
+    "--target-platform",
+    "linux-x64",
+    "--no-pub"
+  ],
+  "full_native_executable": false,
+  "gui_runtime_acceptance": false,
+  "uses_github_actions": false,
+  "commands": [
+    {
+      "name": "locked-restore",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/flutter_tools.snapshot",
+        "pub",
+        "get",
+        "--offline",
+        "--enforce-lockfile"
+      ],
+      "cwd": "/workspace/scratch/4156e4a05f09/zotero-toolchain/full-crisp-app",
+      "exit_code": 0,
+      "status": "passed",
+      "seconds": 2.327,
+      "log": "logs/full-crisp-locked-restore.log",
+      "log_sha256": "d351a0ae61755b19f3ce9412f305587526457f555b143a90283eba8df6383927"
+    },
+    {
+      "name": "bundle",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/flutter_tools.snapshot",
+        "build",
+        "bundle",
+        "--debug",
+        "--target-platform",
+        "linux-x64",
+        "--no-pub"
+      ],
+      "cwd": "/workspace/scratch/4156e4a05f09/zotero-toolchain/full-crisp-app",
+      "exit_code": 1,
+      "status": "failed",
+      "seconds": 56.775,
+      "log": "logs/full-crisp-bundle.log",
+      "log_sha256": "2d7af8fb0ca0950d669af33b657b6d7e047dd1bda01b483f144416bf3a1777ee"
+    }
+  ],
+  "source_unchanged": true,
+  "changed_source_paths": [],
+  "isolated_lock_unchanged": true,
+  "isolated_manifest_unchanged": true,
+  "finished_utc": "2026-11-16T07:36:07.474350+00:00",
+  "bundle_passed": false,
+  "bundle_files": {
+    "build/flutter_assets/.last_build_id": "3722c10282b936a5b3d64e4379442b8020c59f8b04a5f74ee8ba2c59686910ee"
+  },
+  "initial_attempts": {
+    "setup": "initial-attempts/setup.json",
+    "logs": [
+      {
+        "path": "initial-attempts/full-crisp-app-pub-get.log",
+        "sha256": "17fd955502fcba362854ade8d49b86219b741bc83b9fb8fa341752ae812c1731"
+      },
+      {
+        "path": "initial-attempts/full-crisp-app-pub-get-diagnostic.log",
+        "sha256": "d5c344d809118d08cbcbd262ad67ab4a62345dd9b13039fea42d21c608b7f53f"
+      },
+      {
+        "path": "initial-attempts/full-crisp-app-offline-diagnostic.log",
+        "sha256": "72df4e7df1f14d5f6ac2e52d8bdb80c8960216916faccd9d0660e7c8a1cad67d"
+      },
+      {
+        "path": "initial-attempts/full-crisp-cache-target.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ],
+    "note": "The initial online restore and diagnostic were bounded at 240s and 60s respectively. The offline diagnostic identified an uncached exact dependency. These attempts are retained, not counted as successful restore."
+  },
+  "cache_restore": "cache/receipt.json",
+  "source_before": "source-before.json",
+  "source_after": "source-after.json",
+  "source_after_sha256": "9f7b2c5b5fa7f61744e0807fd99e0744d534787d3b95b6ed98937ad0e76cc3bd",
+  "kernel_compilation": {
+    "status": "passed",
+    "target": "kernel_snapshot_program",
+    "entrypoint": "lib/main.dart",
+    "basis": "The actual Flutter bundle invocation completed its independent kernel target. The fresh target stamp is written only after KernelCompiler returns a non-null result with errorCount == 0; Flutter clears it if that target throws. The separate required native-assets hook failed.",
+    "kernel_path": "/workspace/scratch/4156e4a05f09/zotero-toolchain/full-crisp-app/.dart_tool/flutter_build/ad833f6fe41764e7ef07a4dacd9211b1/app.dill",
+    "kernel_sha256": "3e89525d6f2b153d9958de5c3eebe8f5df4dba3b3a24b36977c3b3b0ca73c3d9",
+    "kernel_bytes": 241861864,
+    "kernel_magic": "90abcdef",
+    "kernel_modified_utc": "2026-11-16T07:36:01.562900+00:00",
+    "stamp_modified_utc": "2026-11-16T07:36:06.918846+00:00",
+    "stamp": "compiler/kernel_snapshot_program.stamp",
+    "stamp_sha256": "4444592b5aa76f32768416ec05af1fdabe024016da666985f6e5d7d907705262",
+    "depfile": "compiler/kernel_snapshot_program.d",
+    "depfile_sha256": "96349cf53d523ab7bbf4926c8a5cdcb05099d53010056712d97ce5e38e657a96",
+    "compiler_inputs": "compiler/input-sha256.json",
+    "compiler_inputs_sha256": "0cc9882cc1c9278ad27dfdebad71d6ce8e624114b5da55e13f2ead8c9ff7c5d2",
+    "compiler_inputs_count": 8266,
+    "generated_localizations": "compiler/generated-localizations.json",
+    "kernel_archived": false,
+    "reason_binary_not_archived": "Large reproducible build output; source, exact dependencies, commands, target evidence and content hash retained."
+  },
+  "copied_lib_source": {
+    "source_root": "/workspace/scratch/4156e4a05f09/CrispCloud/lib",
+    "isolated_root": "/workspace/scratch/4156e4a05f09/zotero-toolchain/full-crisp-app/lib",
+    "pre_generation_copy_match": true,
+    "post_generation_matches_except_declared_outputs": true,
+    "generated_outputs": [
+      "lib/l10n/app_localizations_ar.dart",
+      "lib/l10n/app_localizations_de.dart",
+      "lib/l10n/app_localizations_en.dart",
+      "lib/l10n/app_localizations_es.dart",
+      "lib/l10n/app_localizations_fr.dart",
+      "lib/l10n/app_localizations_ja.dart",
+      "lib/l10n/app_localizations_ko.dart",
+      "lib/l10n/app_localizations_pt.dart",
+      "lib/l10n/app_localizations_zh.dart",
+      "lib/l10n/app_localizations.dart"
+    ],
+    "generated_hashes": "compiler/generated-localizations.json"
+  },
+  "native_assets": {
+    "status": "failed",
+    "package": "crisp_catalog",
+    "missing_executable": "cargo",
+    "command": [
+      "cargo",
+      "build",
+      "--release",
+      "--locked",
+      "--manifest-path",
+      "/workspace/scratch/4156e4a05f09/zotero-toolchain/full-crisp-app/packages/crisp_catalog/native/Cargo.toml",
+      "--target",
+      "x86_64-unknown-linux-gnu"
+    ],
+    "hooks_disabled": false,
+    "production_configuration_modified": false,
+    "native_toolchain_installed": false
+  },
+  "flutter_runtime": {
+    "frameworkVersion": "3.47.8",
+    "channel": "[user-branch]",
+    "repositoryUrl": "https://github.com/flutter/flutter.git",
+    "frameworkRevision": "737ba8f885dc774b53b442759999a312c9461e4e",
+    "frameworkCommitDate": "2026-10-22 21:37:31 -0700",
+    "engineRevision": "cf636b1dfb818dd6a3ff16e390e93b1a036969c8",
+    "engineCommitDate": "2026-10-23 02:13:38.000Z",
+    "engineContentHash": "dfd2e6cb7d319db05e3bf1503f3e2ac60f6288a2",
+    "engineBuildDate": "2026-10-23 05:34:48.330",
+    "dartSdkVersion": "3.13.7",
+    "devToolsVersion": "2.60.0",
+    "flutterVersion": "3.47.8"
+  },
+  "flutter_target_sources": {
+    "common.dart": "943403fcc5dfa121dd7bc7358c398c073ff730cbb790f87563ca424d2d53df8e",
+    "build_system.dart": "7e66da8bf11643da721fbf113359078f2d07ac7850fbaa13070af60a505745c4",
+    "LICENSE": "a598db94b6290ffbe10b5ecf911057b6a943351c727fdda9e5f2891d68700a20"
+  },
+  "packaged_utc": "2026-11-16T07:40:38.125529+00:00"
+}

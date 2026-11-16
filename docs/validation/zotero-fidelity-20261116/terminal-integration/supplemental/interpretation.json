@@ -1,0 +1,23 @@
+{
+  "status": "blocked_before_test_execution",
+  "selected_suites": [
+    "ssh_agent_widget_test.dart",
+    "terminal_mount_localization_test.dart",
+    "ssh_terminal_transport_test.dart",
+    "ssh_tmux_panel_lifecycle_test.dart",
+    "tmux_control_workspace_test.dart"
+  ],
+  "completed_tests": 0,
+  "reason": "The unchanged crisp_catalog native build hook required cargo, which was unavailable; Flutter failed native-assets preparation before emitting any test-protocol completion.",
+  "log": "terminal-supplemental.log",
+  "log_sha256": "8a9445a9c9b3e96e851020bb97cdad0f0ccd45805ebcc2bfa940299939dbfd71",
+  "receipt": "receipt.json",
+  "receipt_sha256": "fb91c3487d3fa0d29960863042de76bb71861df2c0a928b47e7c94d83b18c971",
+  "native_hooks_enabled": true,
+  "stubs_or_source_modifications": false,
+  "source_unchanged": true,
+  "dependencies_unchanged": true,
+  "canonical_inputs": 6987,
+  "isolated_library_files": 1188,
+  "isolated_library_matches_canonical": true
+}

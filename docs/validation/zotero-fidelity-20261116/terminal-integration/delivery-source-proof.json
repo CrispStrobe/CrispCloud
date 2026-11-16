@@ -1,0 +1,59 @@
+{
+  "recorded_at_utc": "2026-11-16T07:41:40.660570+00:00",
+  "source_commit": "fc09d3f5e0ecb74ca91f3c416b401b0897dc04da",
+  "incoming_terminal_commit": "6e11d2d6fda1486dc6968e01137ba7466356398f",
+  "source_maps": {
+    "core": {
+      "source_map": "source-after.json",
+      "source_map_sha256": "ac6aa2ea4df5011cacd210e8a7b7c87bb5d2d24bca2901036d898bccabfd052c",
+      "files": 221,
+      "matches_current_source": true,
+      "changed_files": []
+    },
+    "loopback": {
+      "source_map": "loopback/source-after.json",
+      "source_map_sha256": "ac6aa2ea4df5011cacd210e8a7b7c87bb5d2d24bca2901036d898bccabfd052c",
+      "files": 221,
+      "matches_current_source": true,
+      "changed_files": []
+    },
+    "supplemental-attempt": {
+      "source_map": "supplemental/source-after.json",
+      "source_map_sha256": "00335c68ee28cce4e594b88e1f2e7086c61c8346e343afec44abae3b6a28f85b",
+      "files": 6987,
+      "matches_current_source": true,
+      "changed_files": []
+    }
+  },
+  "gates": {
+    "core": true,
+    "loopback": true,
+    "supplemental": false
+  },
+  "counts": {
+    "distinct_passing_tests": 419,
+    "core_passed": 402,
+    "live_passed": 17,
+    "live_skipped": 2,
+    "shell_scenarios_passed": 3,
+    "supplemental_tests_completed": 0
+  },
+  "selected_test_files_are_disjoint": true,
+  "prior_initial_and_pre_tmux_counts_excluded": true,
+  "runner_hashes_match_executed_receipts": {
+    "run-checks.py": true,
+    "run-supplemental.py": true
+  },
+  "receipt_sha256": {
+    "receipt.json": "419b48a7b4e7fabc2adbbeb7db8cd11cc5155fcd4c8d3d6928f4d674559b051e",
+    "loopback/receipt.json": "872f37a72a5df63eba99d8c3664a8b4fe48efc23e5b11a3889e07419bed9414c",
+    "supplemental/receipt.json": "fb91c3487d3fa0d29960863042de76bb71861df2c0a928b47e7c94d83b18c971"
+  },
+  "uses_github_actions": false,
+  "integration_merge": "de1259080074ca7918122d4790e9255269944b25",
+  "integration_merge_parents": [
+    "0b1646f9fe64ac8f88ae24034a672c138647e50e",
+    "6e11d2d6fda1486dc6968e01137ba7466356398f"
+  ],
+  "incoming_terminal_is_actual_ancestor": true
+}

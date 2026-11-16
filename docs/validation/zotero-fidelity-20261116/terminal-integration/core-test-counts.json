@@ -1,0 +1,147 @@
+{
+  "ssh_agent_channel_test.dart": {
+    "failed": 0,
+    "passed": 20,
+    "skipped": 0
+  },
+  "ssh_agent_profiles_test.dart": {
+    "failed": 0,
+    "passed": 6,
+    "skipped": 0
+  },
+  "ssh_agent_route_test.dart": {
+    "failed": 0,
+    "passed": 12,
+    "skipped": 0
+  },
+  "ssh_agent_test.dart": {
+    "failed": 0,
+    "passed": 21,
+    "skipped": 0
+  },
+  "ssh_config_import_dialog_test.dart": {
+    "failed": 0,
+    "passed": 12,
+    "skipped": 0
+  },
+  "ssh_config_import_test.dart": {
+    "failed": 0,
+    "passed": 29,
+    "skipped": 0
+  },
+  "ssh_forwarding_profiles_test.dart": {
+    "failed": 0,
+    "passed": 28,
+    "skipped": 0
+  },
+  "ssh_forwarding_profiles_widget_test.dart": {
+    "failed": 0,
+    "passed": 10,
+    "skipped": 0
+  },
+  "ssh_jump_transport_test.dart": {
+    "failed": 0,
+    "passed": 21,
+    "skipped": 0
+  },
+  "ssh_native_tmux_persistence_test.dart": {
+    "failed": 0,
+    "passed": 4,
+    "skipped": 0
+  },
+  "ssh_port_forwarding_model_test.dart": {
+    "failed": 0,
+    "passed": 4,
+    "skipped": 0
+  },
+  "ssh_port_forwarding_test.dart": {
+    "failed": 0,
+    "passed": 29,
+    "skipped": 0
+  },
+  "ssh_port_forwarding_widget_test.dart": {
+    "failed": 0,
+    "passed": 15,
+    "skipped": 0
+  },
+  "ssh_public_key_auth_test.dart": {
+    "failed": 0,
+    "passed": 19,
+    "skipped": 0
+  },
+  "ssh_terminal_profiles_test.dart": {
+    "failed": 0,
+    "passed": 11,
+    "skipped": 0
+  },
+  "terminal_arrangements_dialog_test.dart": {
+    "failed": 0,
+    "passed": 5,
+    "skipped": 0
+  },
+  "terminal_arrangements_test.dart": {
+    "failed": 0,
+    "passed": 12,
+    "skipped": 0
+  },
+  "terminal_broadcast_test.dart": {
+    "failed": 0,
+    "passed": 14,
+    "skipped": 0
+  },
+  "terminal_input_budget_test.dart": {
+    "failed": 0,
+    "passed": 3,
+    "skipped": 0
+  },
+  "terminal_key_bindings_test.dart": {
+    "failed": 0,
+    "passed": 12,
+    "skipped": 0
+  },
+  "terminal_pane_layout_test.dart": {
+    "failed": 0,
+    "passed": 8,
+    "skipped": 0
+  },
+  "terminal_session_test.dart": {
+    "failed": 0,
+    "passed": 14,
+    "skipped": 0
+  },
+  "terminal_trigger_session_test.dart": {
+    "failed": 0,
+    "passed": 7,
+    "skipped": 0
+  },
+  "terminal_triggers_test.dart": {
+    "failed": 0,
+    "passed": 30,
+    "skipped": 0
+  },
+  "terminal_triggers_widget_test.dart": {
+    "failed": 0,
+    "passed": 5,
+    "skipped": 0
+  },
+  "terminal_user_input_test.dart": {
+    "failed": 0,
+    "passed": 12,
+    "skipped": 0
+  },
+  "tmux_control_client_test.dart": {
+    "failed": 0,
+    "passed": 24,
+    "skipped": 0
+  },
+  "tmux_control_protocol_test.dart": {
+    "failed": 0,
+    "passed": 11,
+    "skipped": 0
+  },
+  "tmux_session_options_test.dart": {
+    "failed": 0,
+    "passed": 4,
+    "skipped": 0
+  }
+}

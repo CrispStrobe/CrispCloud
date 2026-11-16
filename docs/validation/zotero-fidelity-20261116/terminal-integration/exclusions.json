@@ -1,0 +1,20 @@
+{
+  "recorded_at_utc": "2026-11-16T07:34:28.411181+00:00",
+  "source_commit": "de1259080074ca7918122d4790e9255269944b25",
+  "full_graph_suites_not_run_in_final_focused_selection": {
+    "test/ssh_agent_widget_test.dart": "ced619277436a5446af9f005a65982d715b274f40eb86a9276213a56ee7384ff",
+    "test/terminal_mount_localization_test.dart": "ae3609de00c8621191dae14b4437967244ed023b908fa8681c13369cace05664",
+    "test/ssh_terminal_transport_test.dart": "51e7c8674257339d94d807c0cfe00fefc3f8039c739234dcc2d5a4cb220230ed",
+    "test/ssh_tmux_panel_lifecycle_test.dart": "80c5c3b77fb3eb0b0a76ebdabd4b53f6947c8f14aa6bb6d54db66a0f19bd542f",
+    "test/tmux_control_workspace_test.dart": "c8d594f29a9e5e937eb94a5f1c44437bbf7c769d2ebc65f93eecea61e04683a8"
+  },
+  "earlier_compile_failures_retained": "first-pass/terminal-tests.log",
+  "reason": "These suites import core providers or terminal_backends and the full filesystem/archive/backend package graph. The isolated terminal harness does not reconstruct that full graph; no production file or import is patched or replaced.",
+  "live_tmux_prerequisite": {
+    "tmux_binary": null,
+    "status": "not run",
+    "reason": "No tmux executable was installed in this workspace PATH. No real-tmux case is counted."
+  },
+  "external_connections": false,
+  "uses_github_actions": false
+}

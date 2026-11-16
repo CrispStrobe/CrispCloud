@@ -1,0 +1,109 @@
+{
+  "recorded_at": "2026-11-16T07:09:07.805112+00:00",
+  "runtime_pins": {
+    "frameworkVersion": "3.47.8",
+    "frameworkRevision": "737ba8f885dc774b53b442759999a312c9461e4e",
+    "engineRevision": "cf636b1dfb818dd6a3ff16e390e93b1a036969c8",
+    "dartSdkVersion": "3.13.7"
+  },
+  "official_dart_and_tester_hashes_match_previous_receipt": true,
+  "sdk_tracked_status": "",
+  "recorded_harness_inputs_unchanged": true,
+  "harness_counts": {
+    "engine": 55,
+    "editor": 79,
+    "studio": 64,
+    "host": 96,
+    "terminal": 127
+  },
+  "bootstrap_exit": 0,
+  "terminal_pub_get_exit": 0,
+  "setup_smoke_results": {
+    "engine": {
+      "tests": 34,
+      "log": "logs/engine-runtime-smoke.log",
+      "purpose": "runtime setup only; exclude from final qualification counts"
+    },
+    "editor": {
+      "tests": 31,
+      "log": "logs/editor-runtime-smoke.log",
+      "purpose": "runtime setup only; exclude from final qualification counts"
+    }
+  },
+  "dartssh2_vendor_guard": {
+    "exit": 0,
+    "log": "logs/dartssh2-vendor-check.log"
+  },
+  "production_manifests": [
+    {
+      "repository": "quds_office_suite",
+      "path": "pubspec.yaml",
+      "sha256": "a28be038727f1340879544309b9d8f78f66ed90e5c0c8f3285a394c4c20441a2",
+      "matches_current_head": true
+    },
+    {
+      "repository": "quds_office_suite",
+      "path": "packages/quds_office_engine/pubspec.yaml",
+      "sha256": "049a5c838d0d1b8c482f984c27b66c5235411d93b5d06ff1c254dca4c6274408",
+      "matches_current_head": true
+    },
+    {
+      "repository": "quds_office_suite",
+      "path": "packages/quds_office_editor/pubspec.yaml",
+      "sha256": "f3cbfae1226252ba650d206e9f58eb0792d0cec6e8518355f47a8a9fc970b03d",
+      "matches_current_head": true
+    },
+    {
+      "repository": "quds_office_suite",
+      "path": "packages/legacy_doc_parser/pubspec.yaml",
+      "sha256": "150af8d89562635bf5a876c0a539c20ae48b58ea3666db071b5e4ebd3addf153",
+      "matches_current_head": true
+    },
+    {
+      "repository": "quds_office_suite",
+      "path": "packages/quds_office_editor/example/pubspec.yaml",
+      "sha256": "229bea40049a905fc76868677b9a5772672114071423db4529b31d0f90b63d1b",
+      "matches_current_head": true
+    },
+    {
+      "repository": "CrispCloud",
+      "path": "pubspec.yaml",
+      "sha256": "d82a1bb2d1a015e37d5a7283cf8041039c3eb01f6dbf1d3feb139b1b837ea998",
+      "matches_current_head": true
+    },
+    {
+      "repository": "CrispCloud",
+      "path": "pubspec.lock",
+      "sha256": "58560e3fdba68d18b767f4c934b913283df5297468141defbeb816dbb55a0326",
+      "matches_current_head": true
+    },
+    {
+      "repository": "CrispCloud",
+      "path": "packages/quds_office_engine/pubspec.yaml",
+      "sha256": "0efaf1c9de086ba52503ea2dff6831820e72612a127ea29be6190f7c84252b37",
+      "matches_current_head": true
+    },
+    {
+      "repository": "CrispCloud",
+      "path": "packages/quds_office_editor/pubspec.yaml",
+      "sha256": "61ec8cf9aebcde1a11cf2c09bdd4e5e7d1e10a62ba41c8ff9064c0166a46d13e",
+      "matches_current_head": true
+    },
+    {
+      "repository": "CrispCloud",
+      "path": "packages/legacy_doc_parser/pubspec.yaml",
+      "sha256": "e377855d3104e4c278672e3a6e5f6ff494e6303809bb8cf3a23a0736b60b8fe3",
+      "matches_current_head": true
+    }
+  ],
+  "full_native_linux_build_prerequisites": {
+    "missing_commands": [
+      "clang",
+      "cmake",
+      "ninja"
+    ],
+    "gtk_pkg_config_available": false,
+    "native_app_build_performed": false
+  },
+  "uses_github_actions": false
+}
