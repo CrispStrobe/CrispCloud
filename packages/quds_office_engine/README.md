@@ -1,5 +1,15 @@
 # quds_office_engine
 
+> **CrispCloud fork status — 16 November 2026.** This vendored copy reads
+> OOXML, bounded legacy inputs and OpenDocument files. It edits
+> DOCX/XLSX/PPTX models, imports BIFF8 worksheets and ODS workbooks, and exports
+> a modeled ODS package. It is therefore not “OOXML only”, and ODF is not
+> text-extraction-only: ODT/ODP are formatted read-only views while ODS has
+> typed import and a new-document export writer. Legacy writers, ODT/ODP
+> writers, VBA/ActiveX execution and full unknown-XML-preserving ODF fidelity
+> remain out of scope. The upstream notes below describe the original library
+> contract unless this fork note says otherwise.
+
 <p>
   <a href="https://pub.dev/packages/quds_office_engine"><img alt="pub package" src="https://img.shields.io/pub/v/quds_office_engine.svg"/></a>
   <a href="https://pub.dev/packages/quds_office_engine/score"><img alt="pub points" src="https://img.shields.io/pub/points/quds_office_engine"/></a>
@@ -10,7 +20,8 @@
 </p>
 
 **A pure Dart Office, PDF, and report engine.** Open, build, and write
-`.docx`, `.xlsx`, and `.pptx`. Open real PDF files. Design **band reports**
+`.docx`, `.xlsx`, and `.pptx`; import bounded legacy `.doc`/`.xls` and
+OpenDocument `.odt`/`.ods`/`.odp` inputs; export `.ods`. Open real PDF files. Design **band reports**
 (`.qrep`) with expressions, grouping, charts, and Arabic amount-in-words, then
 export them to PDF, XLSX, and DOCX. Compose pages with a Flutter-like widget
 layout, pick from **100+ direction-aware PDF templates**, export Office models
@@ -1273,7 +1284,7 @@ final found = OfficeFind.inPdf(
 );
 ```
 
-Text extraction covers DOCX, XLSX, PPTX, OpenDocument, and PDF page text
+Text extraction covers DOCX, XLSX, PPTX, OpenDocument and PDF page text; ODT/ODP also have formatted read-only models and ODS has a typed sheet model, so ODF support is not extraction-only
 (display-list runs, with redaction rectangles skipped). PDF find returns
 hits with a page index. Replacing inside a PDF content stream is not
 supported — Office replace is for Word, sheets, and slides.
@@ -1310,8 +1321,10 @@ These are not hidden TODOs. They are the contract.
 
 | Out of scope | What you get instead |
 | --- | --- |
-| Legacy `.doc` / `.xls` / `.ppt`, VBA, ActiveX | OOXML only |
+| Legacy `.doc` / `.xls` / `.ppt` writers, VBA, ActiveX | Bounded readers/imports only (Word 97–2007, BIFF8 worksheet, current-slide PPT text); macro and ActiveX payloads are never executed and no legacy writer is provided |
 | Full Excel LAMBDA, Power Pivot, Power Query | Formula subset, simple SUM pivot, CSV helper |
+| Full ODF round-trip editing | ODT/ODP are formatted read-only; ODS imports a modeled subset and exports a new ODS package. Unknown ODF XML, ODT/ODP writers and authored page styles are not preserved |
+| Arbitrary ODS conditional formats and validations | Numeric/text/duplicate/between rules and list/numeric/date/text-length/custom validations are modeled; expression rules, color scales, data bars, icon sets and dynamic source links are not |
 | Multi-series Office charts | One series per chart (`OfficeVisual.points`); further series are not drawn |
 | Slide text alignment and anchoring inherited from layouts and masters | Geometry and colors inherit; alignment comes from the shape's own paragraphs, and `bodyPr anchor` is not read |
 | PDF body reflow (edit text like Word) | Annotations, form fill, page assembly |
@@ -1386,9 +1399,15 @@ dart run example/rich_export_gallery.dart
 | Format | Read | Write | Notes |
 | --- | --- | --- | --- |
 | `.docx` | Yes | Yes | Sections, tables, drawings, comments, notes, TOC, OMML |
+| `.doc` / `.dot` | Partial | — | Word 97–2007 main-story preview/import; separate DOCX conversion in the host |
 | `.xlsx` | Yes | Yes | Styles, formulas, freeze, RTL, charts |
+| `.xls` / `.xlt` | Partial | — | BIFF8 import; the host saves a new XLSX copy |
+| `.xlsb` | — | — | Host preview only; no BIFF12 reader or writer |
 | `.pptx` | Yes | Yes | Shapes, notes, hidden slides, motion |
-| `.odt` / `.ods` / `.odp` | Extract | — | Text extraction |
+| `.ppt` / `.pps` / `.pot` | Partial | — | Current-slide text in the engine; rich preview is a host integration |
+| `.odt` | Yes | — | Formatted read-only model: headings, lists, tables, notes, pictures, text boxes, headers/footers |
+| `.ods` | Yes | Yes | Typed modeled subset; `OdsSheetWriter` emits a new package, not an in-place ODF rewrite |
+| `.odp` | Yes | — | Positioned read-only deck: page size, shapes, text, fills, images, notes |
 | `.pdf` | Yes | Yes | `PdfFile` open; native 1.7 write and toolbox graft |
 | `.qrep` | Yes | Yes | Band-report XML with line:column diagnostics; exports PDF, XLSX, DOCX |
 | Password-protected OOXML | Yes | Yes | When a password is supplied |
