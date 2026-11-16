@@ -2166,6 +2166,40 @@ void metadataTests() {
     expect(workbookXml, contains('name="Double"'));
   });
 
+  test('ODS filter predicates become XLSX filter columns', () async {
+    final book = OdsSheetReader.readBytes(
+      _ods(
+        '<t:table t:name="Data">'
+        '<t:table-row><t:table-cell><x:p>Name</x:p></t:table-cell>'
+        '</t:table-row>'
+        '<t:table-row><t:table-cell><x:p>x</x:p></t:table-cell>'
+        '</t:table-row>'
+        '<t:table-row><t:table-cell><x:p>y</x:p></t:table-cell>'
+        '</t:table-row>'
+        '<t:table-row><t:table-cell><x:p>x</x:p></t:table-cell>'
+        '</t:table-row></t:table>',
+        extra:
+            '<t:database-ranges><t:database-range '
+            't:target-range-address="Data.A1:Data.A4"><t:filter>'
+            '<t:filter-and><t:filter-condition t:field-number="0" '
+            't:value="x" t:operator="="/></t:filter-and></t:filter>'
+            '</t:database-range></t:database-ranges>',
+      ),
+    );
+    final sheet = book.sheets.first;
+    expect(sheet.autoFilter!.hiddenValues[0], {'y'});
+    expect(sheet.autoFilter!.isRowHidden(sheet, 2), isTrue);
+    expect(sheet.autoFilter!.isRowHidden(sheet, 1), isFalse);
+
+    final saved = await OfficeIsolateSave.workbook(book, recalculate: false);
+    final archive = ZipDecoder().decodeBytes(saved);
+    final sheetXml = utf8.decode(
+      archive.findFile('xl/worksheets/sheet1.xml')!.content as List<int>,
+    );
+    expect(sheetXml, contains('<filterColumn colId="0">'));
+    expect(sheetXml, contains('<filter val="x"/>'));
+  });
+
   test('ODS tab colour survives save and reopen', () async {
     final book = OdsSheetReader.readBytes(
       _ods(

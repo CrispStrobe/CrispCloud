@@ -1426,13 +1426,38 @@ class SheetSerializer {
     }
     w.writeEndElement();
     if (sheet.autoFilter != null) {
-      w.writeEmptyElement(
-        'autoFilter',
-        attributes: <String, String>{
-          'ref':
-              '${sheet.autoFilter!.range.start.a1}:${sheet.autoFilter!.range.end.a1}',
-        },
-      );
+      final filter = sheet.autoFilter!;
+      final ref = '${filter.range.start.a1}:${filter.range.end.a1}';
+      if (filter.hiddenValues.values.every((values) => values.isEmpty)) {
+        w.writeEmptyElement('autoFilter', attributes: {'ref': ref});
+      } else {
+        w.writeStartElement('autoFilter');
+        w.writeAttribute('ref', ref);
+        for (final entry in filter.hiddenValues.entries) {
+          if (entry.value.isEmpty) continue;
+          final column = filter.range.minCol + entry.key;
+          final values = <String>{};
+          for (
+            var row = filter.range.minRow + 1;
+            row <= filter.range.maxRow;
+            row++
+          ) {
+            final value = sheet.cell(SmlCellRef(column, row)).asString;
+            if (value.isNotEmpty) values.add(value);
+          }
+          final visible = values.difference(entry.value).toList()..sort();
+          if (visible.isEmpty) continue;
+          w.writeStartElement('filterColumn');
+          w.writeAttribute('colId', '${entry.key}');
+          w.writeStartElement('filters');
+          for (final value in visible) {
+            w.writeEmptyElement('filter', attributes: {'val': value});
+          }
+          w.writeEndElement();
+          w.writeEndElement();
+        }
+        w.writeEndElement();
+      }
     }
     if (sheet.protection != null && sheet.protection!.enabled) {
       w.writeEmptyElement(
