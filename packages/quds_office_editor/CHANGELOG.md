@@ -4,6 +4,17 @@ All notable changes to `quds_office_editor` are documented here.
 
 ## Unreleased
 
+- Keep Zotero collection pages unique by key, replacing renamed metadata while
+  preserving order, the selected collection and selected references. Discard
+  collection continuation responses after the library or dialog has changed.
+
+- Refresh basic Zotero citations with up to 1,000 distinct linked sources in
+  sequential batches of at most 50 per library. Keep all fetched metadata
+  staged until every batch succeeds and the document target remains current,
+  then apply the complete refresh as one undo step. Reject oversized requests
+  before contacting Zotero; formatted bibliographies retain their 50-source
+  single-request limit.
+
 - Make native Zotero catalog insertion the primary desktop action and open the
   document style chooser automatically when needed. Show the saved native
   style, language and placement. Commit the style and citation together as one

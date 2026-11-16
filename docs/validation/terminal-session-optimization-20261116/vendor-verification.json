@@ -23,5 +23,19 @@
       "standalone_parser_source": "4895712158127b2fc930d796e17035c3ca0dac62"
     }
   ],
-  "note": "Records checks executed in this continuation before acceptance; managed source files and dependency pins are unchanged from the integrated baseline."
+  "note": "Records checks executed in this continuation before acceptance; managed source files and dependency pins are unchanged from the integrated baseline.",
+  "post_integration": {
+    "recorded_utc": "2026-11-16T10:31:25.321664+00:00",
+    "source_head": "94857cf415965826b8ed08eafd3b05dafc29b353",
+    "command": [
+      "python3",
+      "tool/verify_office_fidelity.py",
+      "--require-tracked"
+    ],
+    "exit_code": 0,
+    "managed_files": 2411,
+    "quds_source": "91c725feb5517db3c5f686e80662e2cb4f77f0d4",
+    "standalone_parser_source": "4895712158127b2fc930d796e17035c3ca0dac62",
+    "canonical_changed_blob_and_mode_proof": "final-integration.json"
+  }
 }

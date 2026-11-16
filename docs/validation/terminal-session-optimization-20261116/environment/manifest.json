@@ -1,0 +1,66 @@
+{
+  "RESTORATION.md": {
+    "bytes": 1967,
+    "sha256": "78dd4930cc3fe3ff2f6a8cde6e17f2683a3b02060170c61e0c7398bed321b051"
+  },
+  "bin/flutter": {
+    "bytes": 364,
+    "sha256": "b26930ad566ba7e896668e28828560f56db86a7bc72e3de6f102fa8b9d3647d6"
+  },
+  "environment-setup.json": {
+    "bytes": 6501,
+    "sha256": "64e27aa3136f91682e8615239b868353a23bf0b3254f9d5fb5aee542105e781f"
+  },
+  "logs/app-pub-get-offline.log": {
+    "bytes": 1843,
+    "sha256": "0b3b287008a5d1ee2256119d70633bea2117133cb39201cc9b6a0838f4e9f550"
+  },
+  "logs/flutter-tools-compile.log": {
+    "bytes": 3063,
+    "sha256": "1c19716acd34af08344de9328b20cd978ce04ff49d8736e7f5485a552f201cba"
+  },
+  "logs/flutter-tools-offline.log": {
+    "bytes": 2356,
+    "sha256": "9c8df1911e33b7e40f8d4bd541017b7bf28706fedddd025ef2a2a234970e97d1"
+  },
+  "logs/flutter-version.json": {
+    "bytes": 637,
+    "sha256": "df47b265ff80c21c15967e3b31b37df7876388b614227d319a0dbec62b331fd2"
+  },
+  "logs/native-installation.json": {
+    "bytes": 7226,
+    "sha256": "ee64e0f553b8b98434f14ad1146ae01ecd95d39cebf7f02546fae5b272cfc199"
+  },
+  "logs/native-prerequisite.log": {
+    "bytes": 843,
+    "sha256": "09e6361c7be21a7024623f08d9b6a52726c5bc7995a91a81a92e6ccb864d1fdb"
+  },
+  "logs/production-manifests-initial.json": {
+    "bytes": 255,
+    "sha256": "5cc30ec8705107b0103fc2cf82ce6f248e7b7fb6d04d7613c279820d12372641"
+  },
+  "logs/pub-installation.json.gz": {
+    "bytes": 20505,
+    "sha256": "faa91df31a2c43deea83de3c8cfa69e8f614f21935988982d39ce74af9fc7ac6"
+  },
+  "logs/socket-probes.json": {
+    "bytes": 97,
+    "sha256": "ff2d8cb8ca350d386d4b08ce8ed50fd4c8e2d20880c2b701d2617087a7f10a76"
+  },
+  "logs/web-precache.log": {
+    "bytes": 73,
+    "sha256": "331573efad281cad9a8a956204ca55f36781633f83c7350c8429381274d456a2"
+  },
+  "restore_native.py": {
+    "bytes": 1570,
+    "sha256": "f6a675305c296dde5ad71b363b0f53090cbd9380c7449802e3eb8b5d09a087d5"
+  },
+  "run": {
+    "bytes": 708,
+    "sha256": "7413dda0efa550e7346a033df8b9045b042f7d26240dad02a7941ae85a6bbc63"
+  },
+  "warm_pub.py": {
+    "bytes": 2286,
+    "sha256": "d14a8183b39cc7049c3f129d9699d0855573441e4e8c6ec742621b0963bf0d94"
+  }
+}

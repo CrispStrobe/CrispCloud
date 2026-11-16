@@ -1,0 +1,4 @@
+{
+  "unix_socket": "PermissionError(1, 'Operation not permitted')",
+  "tcp_loopback": "passed"
+}

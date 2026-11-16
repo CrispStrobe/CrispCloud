@@ -5,12 +5,21 @@ button in the Insert ribbon's References group.
 
 ## Faster refresh with verified source identities
 
-**Document → Refresh basic citations** fetches up to 50 distinct linked sources
-in one request per library. Repeated citations share the same request, while
-personal libraries, group libraries and unsynced local profiles remain separate
-even when their item keys match. Every requested source and its CSL data must
-be present before any citation changes. Results from all libraries apply as one
-undo step; a changed document or insertion point stops further requests.
+**Document → Refresh basic citations** fetches up to 1,000 distinct linked
+sources in sequential requests of at most 50 per library. Repeated citations
+share the same request, while personal libraries, group libraries and unsynced
+local profiles remain separate even when their item keys match. For one library,
+101 sources require three requests and 1,000 require twenty. Every requested
+source and its CSL data must be present before any citation changes. Results
+from all batches apply as one undo step. A changed document or insertion point,
+a failed batch, an API pause, or closing the dialog discards staged results and
+prevents further requests. More than 1,000 distinct sources are rejected before
+fetching metadata.
+
+Collection pages keep one entry per collection key. Renamed or repeated entries
+update in place without losing the selected collection or selected references;
+responses for an obsolete library or a closed dialog are ignored. See the
+[large-library validation](validation/zotero-large-library-20261116/README.md).
 
 Native **Refresh all with Zotero** now resolves field IDs directly and builds
 note order once per field-list response. Later responses recalculate that order
@@ -307,7 +316,7 @@ bibliographies use one identity-verification request followed by one formatted
 request for at most 50 distinct sources in one library, then are reviewed with
 the rich-formatting or plain-text choice described above. Larger/mixed-library
 sets can use the basic bibliography or CSL export. Refresh updates Quds basic
-citations for at most 50 distinct linked sources atomically; imported and
+citations for at most 1,000 distinct linked sources atomically; imported and
 custom-style caches are left alone. Bibliographies with imported nonempty
 `uncited`, `omitted`, or `custom` settings refuse both basic and online updates
 to preserve those choices. Use Zotero's native bibliography controls to manage
