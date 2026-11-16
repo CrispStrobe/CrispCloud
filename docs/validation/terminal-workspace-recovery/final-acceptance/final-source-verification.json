@@ -1,0 +1,171 @@
+{
+  "verified_utc": "2026-11-16T11:23:16.639462+00:00",
+  "head": "fdc262e112aa29dd1e60a76cff9a2dfb5f2d7b4f",
+  "accepted_source": "fdc262e112aa29dd1e60a76cff9a2dfb5f2d7b4f",
+  "scope": "Re-enumerated watched application/test/native source, manifests, selected tools, exact package graphs, seven immutable host adapters, Office manifest and three fixtures. This is source identity, not an assertion that every validation phase passed.",
+  "watched_files": 5673,
+  "frozen_commit_proof": {
+    "accepted_commit": "fdc262e112aa29dd1e60a76cff9a2dfb5f2d7b4f",
+    "tracked_inputs_checked": 5664,
+    "mismatches": [],
+    "reviewed_subtrees": {
+      "lib": {
+        "expected": "8efc7ea40f30399c9a65ea1e9c82056b413d3c94",
+        "actual": "8efc7ea40f30399c9a65ea1e9c82056b413d3c94"
+      },
+      "test": {
+        "expected": "f57fa42a3c99acee60afb1a7007f7cba827edf72",
+        "actual": "f57fa42a3c99acee60afb1a7007f7cba827edf72"
+      },
+      "packages": {
+        "expected": "cd2bbbd7d574f7c3f16184c75206ff6ea47a55fe",
+        "actual": "cd2bbbd7d574f7c3f16184c75206ff6ea47a55fe"
+      },
+      "tool": {
+        "expected": "f8879d4ede3e4417c19d3f56df515dc69d5195ef",
+        "actual": "f8879d4ede3e4417c19d3f56df515dc69d5195ef"
+      }
+    }
+  },
+  "phase_count": 6,
+  "phase_inventories": {
+    "analysis": {
+      "phase_result_accepted": true,
+      "receipt_sha256": "8bc59ab035bd8b9b4d68d46c7b7dfc103cd56ca601d5eb5bf5c5e5495d9fc04d",
+      "inventories": {
+        "sources-before.json.gz": {
+          "watched_files": 5673,
+          "sha256": "95eab5ac65e583d2de18061763079b91307aec27246cf18d500c1c532989beeb",
+          "git_blob_sha": "a76cc499a547236b457ec3707c865bc7c64a7ad2",
+          "changes_from_final": []
+        },
+        "sources-after.json.gz": {
+          "watched_files": 5673,
+          "sha256": "95eab5ac65e583d2de18061763079b91307aec27246cf18d500c1c532989beeb",
+          "git_blob_sha": "a76cc499a547236b457ec3707c865bc7c64a7ad2",
+          "changes_from_final": []
+        }
+      }
+    },
+    "format": {
+      "phase_result_accepted": true,
+      "receipt_sha256": "9c40907eed0f25684d8e00614c9d6e0b1a379dfedbbe771375062e66a54ff1be",
+      "inventories": {
+        "sources-before.json.gz": {
+          "watched_files": 5673,
+          "sha256": "95eab5ac65e583d2de18061763079b91307aec27246cf18d500c1c532989beeb",
+          "git_blob_sha": "a76cc499a547236b457ec3707c865bc7c64a7ad2",
+          "changes_from_final": []
+        },
+        "sources-after.json.gz": {
+          "watched_files": 5673,
+          "sha256": "95eab5ac65e583d2de18061763079b91307aec27246cf18d500c1c532989beeb",
+          "git_blob_sha": "a76cc499a547236b457ec3707c865bc7c64a7ad2",
+          "changes_from_final": []
+        }
+      }
+    },
+    "vendor": {
+      "phase_result_accepted": true,
+      "receipt_sha256": "1b4ae8fbfbd98741a7bb3921ad8e653ed1ce7d923cdda434879a29f6b14aea6f",
+      "inventories": {
+        "sources-before.json.gz": {
+          "watched_files": 5673,
+          "sha256": "95eab5ac65e583d2de18061763079b91307aec27246cf18d500c1c532989beeb",
+          "git_blob_sha": "a76cc499a547236b457ec3707c865bc7c64a7ad2",
+          "changes_from_final": []
+        },
+        "sources-after.json.gz": {
+          "watched_files": 5673,
+          "sha256": "95eab5ac65e583d2de18061763079b91307aec27246cf18d500c1c532989beeb",
+          "git_blob_sha": "a76cc499a547236b457ec3707c865bc7c64a7ad2",
+          "changes_from_final": []
+        }
+      }
+    },
+    "combined": {
+      "phase_result_accepted": true,
+      "receipt_sha256": "2a794b551e459f4057d9ed2a120c59289b5298b6a72d7e3171f4552f3049478a",
+      "inventories": {
+        "sources-before.json.gz": {
+          "watched_files": 5673,
+          "sha256": "95eab5ac65e583d2de18061763079b91307aec27246cf18d500c1c532989beeb",
+          "git_blob_sha": "a76cc499a547236b457ec3707c865bc7c64a7ad2",
+          "changes_from_final": []
+        },
+        "sources-after.json.gz": {
+          "watched_files": 5673,
+          "sha256": "95eab5ac65e583d2de18061763079b91307aec27246cf18d500c1c532989beeb",
+          "git_blob_sha": "a76cc499a547236b457ec3707c865bc7c64a7ad2",
+          "changes_from_final": []
+        }
+      }
+    },
+    "resource-cleanup": {
+      "phase_result_accepted": true,
+      "receipt_sha256": "095f39614187469e820700cbe8f6a1b272b105480824770d3a5e8fd0fd540c98",
+      "inventories": {
+        "sources-before.json.gz": {
+          "watched_files": 5673,
+          "sha256": "95eab5ac65e583d2de18061763079b91307aec27246cf18d500c1c532989beeb",
+          "git_blob_sha": "a76cc499a547236b457ec3707c865bc7c64a7ad2",
+          "changes_from_final": []
+        },
+        "sources-after.json.gz": {
+          "watched_files": 5673,
+          "sha256": "95eab5ac65e583d2de18061763079b91307aec27246cf18d500c1c532989beeb",
+          "git_blob_sha": "a76cc499a547236b457ec3707c865bc7c64a7ad2",
+          "changes_from_final": []
+        }
+      }
+    },
+    "web": {
+      "phase_result_accepted": false,
+      "receipt_sha256": "894219e5117c0aa57a6abae85d78fccdffcc631d6f970b0e6b1d8233b5bf15da",
+      "inventories": {
+        "sources-before.json.gz": {
+          "watched_files": 5673,
+          "sha256": "95eab5ac65e583d2de18061763079b91307aec27246cf18d500c1c532989beeb",
+          "git_blob_sha": "a76cc499a547236b457ec3707c865bc7c64a7ad2",
+          "changes_from_final": []
+        },
+        "sources-after.json.gz": {
+          "watched_files": 5673,
+          "sha256": "95eab5ac65e583d2de18061763079b91307aec27246cf18d500c1c532989beeb",
+          "git_blob_sha": "a76cc499a547236b457ec3707c865bc7c64a7ad2",
+          "changes_from_final": []
+        }
+      }
+    }
+  },
+  "all_twelve_phase_inventories_match_current_bytes_and_modes": true,
+  "all_protected_office_inputs_and_adapters_unchanged": true,
+  "sdk_restoration_independently_reverified": true,
+  "git_status": "",
+  "final_inventory": {
+    "path": "final-sources.json.gz",
+    "sha256": "95eab5ac65e583d2de18061763079b91307aec27246cf18d500c1c532989beeb",
+    "git_blob_sha": "a76cc499a547236b457ec3707c865bc7c64a7ad2"
+  },
+  "validation_result_summary": {
+    "isolated_tests": {
+      "passed": 701,
+      "skipped": 1,
+      "failed": 0,
+      "files": 44
+    },
+    "static_semantic_targets": 175,
+    "static_diagnostics": {
+      "errors": 0,
+      "warnings": 0,
+      "pre_existing_infos": 3
+    },
+    "office_entries": 2411,
+    "ssh_upstream_files": 96,
+    "ssh_reviewed_patches": 4,
+    "normal_web_release_accepted": false,
+    "native_platform_qualification": false
+  },
+  "github_actions_queried_or_awaited": false,
+  "verification_passed": true
+}

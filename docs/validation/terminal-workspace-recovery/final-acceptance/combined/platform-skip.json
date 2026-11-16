@@ -1,0 +1,13 @@
+{
+  "accepted_source": "fdc262e112aa29dd1e60a76cff9a2dfb5f2d7b4f",
+  "suite": "test/terminal_panel_test.dart",
+  "counts": {
+    "passed": 2,
+    "skipped": 1,
+    "failed": 0
+  },
+  "source_condition": "skip: !Platform.isMacOS",
+  "source_line": 89,
+  "source_sha256": "c3b7f59860357c06b3bc2ede71ea75ae88ff15b60927e4b68044bebe693c29dc",
+  "qualification": "The existing native-shell case is explicitly macOS-only; this validation worker is Linux."
+}

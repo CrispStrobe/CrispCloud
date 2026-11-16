@@ -1,0 +1,264 @@
+{
+  "verified_utc": "2026-11-16 11:35:52 UTC",
+  "repository": "CrispStrobe/CrispCloud",
+  "branch": "codex/terminal-screen-workspace",
+  "checked_delivery_parent": "aba648f001c2481581ee8053350c78f50d22b0db",
+  "checked_delivery_parent_tree": "aba0728fbd3451622fce4bcd357c9f40c629981d",
+  "implementation_source": "fdc262e112aa29dd1e60a76cff9a2dfb5f2d7b4f",
+  "implementation_tree": "fff99a7be4dea648d37478be6402eeeb2f3ec703",
+  "source_comparison": {
+    "status": "ahead",
+    "ahead_by": 6,
+    "behind_by": 0,
+    "merge_base": "fdc262e112aa29dd1e60a76cff9a2dfb5f2d7b4f",
+    "changed_paths": 60,
+    "all_changed_paths_under_docs": true
+  },
+  "non_documentation_root_entries": [
+    {
+      "path": ".fvmrc",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4e46fba09bb9c1d654a226b7285b55b6949b3767"
+    },
+    {
+      "path": ".gitattributes",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b59b2cf6f2eb917c14199d110c10bfb4a09d8659"
+    },
+    {
+      "path": ".github",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "7a693e113bfa380fa660b0162553406b99825e87"
+    },
+    {
+      "path": ".gitignore",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1b9fa73200c7e76183d0b9697e7312b7d78dc987"
+    },
+    {
+      "path": ".metadata",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "05a8ab4423b79921abb08a68caccbb40166ebe5f"
+    },
+    {
+      "path": "CLAUDE.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3a9d79f5ef24b6a5535909a8bf1303b519c1a721"
+    },
+    {
+      "path": "HANDOVER.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "993b9db3ed229b2acdb7c23c70d2d1bcc9e5b411"
+    },
+    {
+      "path": "HISTORY.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b4580062705bbd8fe569a143cb8129c24db14cb4"
+    },
+    {
+      "path": "LICENSE.txt",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "aca14a4181f2aba548aa7ab35246919412f87a39"
+    },
+    {
+      "path": "PLAN.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0519ac4b49f0c21474afa5e260cb1080a1dcde6a"
+    },
+    {
+      "path": "README.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ef7daea711d7788a1ee74f23d8f8c73364ff7ef3"
+    },
+    {
+      "path": "SECURITY.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9e20deb1f844e7de73fa1c0ca632c42860964b6c"
+    },
+    {
+      "path": "analysis_options.yaml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "05fb0cae6f44c2d43322fe72b33a4d22b1702c03"
+    },
+    {
+      "path": "android",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "7cfa60a314169a91273ddeee1f551b87cf23d925"
+    },
+    {
+      "path": "assets",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "79c56692d83d8d0c7c724c93ee28ff15705dceb1"
+    },
+    {
+      "path": "cli",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "15b1bc78b81362e00f3f0c6625a3250e01bf1c39"
+    },
+    {
+      "path": "dart_test.yaml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "64dfce58f2a9d46ae8be2ef0839bc3e0a232ec0a"
+    },
+    {
+      "path": "integration_test",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "7a5927983fd93751c4ca5986171971ff00eb0de2"
+    },
+    {
+      "path": "ios",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "7df3e32958aa9ab7da0392cc3def075671870ff6"
+    },
+    {
+      "path": "l10n.yaml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "997792f55d4d2ae5762c24cd65d461c7779e79ef"
+    },
+    {
+      "path": "lib",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "8efc7ea40f30399c9a65ea1e9c82056b413d3c94"
+    },
+    {
+      "path": "linux",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "9e633d2ee75cd857eb310967a4d07986216c045a"
+    },
+    {
+      "path": "macos",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "d3383f95b6b2adee33af1f088b30ff91ff231dd0"
+    },
+    {
+      "path": "packages",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "cd2bbbd7d574f7c3f16184c75206ff6ea47a55fe"
+    },
+    {
+      "path": "pubspec.lock",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3a87fba873d399d74311e85f3fe42de370a81a74"
+    },
+    {
+      "path": "pubspec.yaml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5e0b052beca36973152101a542115df255d30595"
+    },
+    {
+      "path": "server",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "48efed3b3d2b080c51726f060c5d989e1689c455"
+    },
+    {
+      "path": "store",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "36b2a4348ba007ca2319b3efe532fdcd1a547105"
+    },
+    {
+      "path": "test",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "f57fa42a3c99acee60afb1a7007f7cba827edf72"
+    },
+    {
+      "path": "tool",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "f8879d4ede3e4417c19d3f56df515dc69d5195ef"
+    },
+    {
+      "path": "vercel.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "be27928de585d7bf3bcba9304682f8708aafae80"
+    },
+    {
+      "path": "web",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "6cd938e38c7096ac7d8f570c0932cfadee3cd19d"
+    },
+    {
+      "path": "windows",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "8bc88b5b86b3452a2a107b75eb5018b71f95e13f"
+    }
+  ],
+  "all_33_non_documentation_root_entries_match_frozen_source": true,
+  "integration": {
+    "cutoff_utc": "2026-11-16T10:43:14.260Z",
+    "branches": 46,
+    "pull_heads": 159,
+    "total_refs": 205,
+    "all_actual_ancestors_of_implementation": true,
+    "proof": "completion-incoming/post-integration.json",
+    "delivery_descends_from_implementation": true
+  },
+  "validation": {
+    "source": "fdc262e112aa29dd1e60a76cff9a2dfb5f2d7b4f",
+    "isolated_combined": {
+      "passed": 701,
+      "skipped": 1,
+      "failed": 0,
+      "suites": 44
+    },
+    "new_recovery_idle_passed": 76,
+    "static_targets": 175,
+    "static_errors": 0,
+    "static_warnings": 0,
+    "pre_existing_static_infos": 3,
+    "office_entries": 2411,
+    "ssh_upstream_files": 96,
+    "ssh_reviewed_patches": 4,
+    "watched_inputs": 5673,
+    "frozen_git_inputs": 5664,
+    "matching_phase_inventories": 12,
+    "recorded_phases": 6,
+    "inspected_pngs": 5,
+    "normal_web_release_accepted": false,
+    "native_platform_qualification": false,
+    "source_identity": "final-acceptance/final-source-verification.json",
+    "web_outcome": "final-acceptance/web/outcome.json",
+    "visual_review": "screenshots/review.json"
+  },
+  "pull_request": {
+    "number": 160,
+    "url": "https://github.com/CrispStrobe/CrispCloud/pull/160",
+    "title": "Add workspace recovery, shared SSH shells and native tmux panes",
+    "draft": true,
+    "body_matches_reviewed_summary": true,
+    "head_at_update": "aba648f001c2481581ee8053350c78f50d22b0db"
+  },
+  "scope": "This verifies the named delivery parent before adding this documentation-only receipt. No runtime source has changed after the accepted implementation. The source identity result does not turn the failed normal web release attempt or unrun native/platform qualification into passing results.",
+  "github_actions_queried_or_awaited": false
+}

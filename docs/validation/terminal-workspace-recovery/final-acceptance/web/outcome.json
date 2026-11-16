@@ -1,0 +1,19 @@
+{
+  "accepted_source": "fdc262e112aa29dd1e60a76cff9a2dfb5f2d7b4f",
+  "result": "external dart2js SIGKILL (-9), release not accepted",
+  "source_diagnostic_emitted": false,
+  "signal_cause_established": false,
+  "standard_O4_and_minification": true,
+  "normal_web_hooks": true,
+  "isolated_feature_flags_absent": true,
+  "compiler_heap_mb": 4096,
+  "seconds": 84.26313080799991,
+  "compiler_reported_seconds": 81.7,
+  "peak_visible_rss_kb": 2648828,
+  "minimum_available_memory_kb": 1297676,
+  "sdk_restored_and_independently_verified": true,
+  "watched_inputs": 5673,
+  "source_changes": [],
+  "release_artifact_available": false,
+  "earlier_attempts_are_historical": "Two earlier attempts used accepted source3cd50179 and are archived separately; this attempt uses final integrated fdc262e1."
+}

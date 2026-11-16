@@ -34,37 +34,52 @@ accepted phases and committed source. Failed development/resource attempts,
 live multiplexer/platform limits and capture-font limits remain explicit in the
 current record.
 
-### Previous workspace recovery continuation
+### Workspace recovery qualification on fdc262e1
+This continuation combines **opt-in automatic terminal workspace recovery** with
+the incoming terminal and native tmux optimizations. The final integrated
+implementation source is `fdc262e112aa29dd1e60a76cff9a2dfb5f2d7b4f`; its local qualification is
+**701 isolated checks passed across 44 suites; 175 static targets have zero errors/warnings and three pre-existing infos; the standard web release attempt was terminated externally and remains unqualified**. The
+[acceptance record](validation/terminal-workspace-recovery/README.md) separates
+results on that source from earlier checkpoints and reconstructed observations.
 
-The preceding continuation adds **opt-in automatic terminal workspace recovery**, with a
-separate choice to relaunch local shells. **Terminal layout → Session recovery**
-remembers the latest tab order/names, full split topology and proportions, active
-pane, font sizes and sanitized SSH/tmux/Screen destinations. Initial recovery
-finishes before any default shell is started. SSH destinations remain
-disconnected until the existing authentication flow is explicitly used.
+**Terminal layout → Session recovery** remembers tab order and names, nested
+splits and proportions, the active pane, font sizes, and sanitized SSH/tmux/Screen
+destinations. Recovery and local-shell relaunch both default off. Recovered idle
+panes offer an explicit local-start or SSH-reconnect action; remembered SSH
+identity remains visible in the pane header. The separate **Relaunch local
+shells** choice starts fresh local sessions using the current verified local
+folder or safe fallback. SSH authentication and host-key checks remain explicit.
 
-Recovery and relaunch both default off. Enabling atomically saves settings and
-the current workspace. Structural changes are debounced; lifecycle flushes and
-an ordered owner handoff preserve the last checkpoint during immediate remounts.
-Read failures time out without blocking terminals, storage errors pause saves,
-and stale panels/dialogs cannot overwrite a replacement workspace. Retry after a
-startup-read failure preserves the previously unseen checkpoint until explicit
-Save. Disable retains the last layout; confirmed Forget clears it and stops
-recovery while current terminals stay open. All controls cover the existing
-eight non-English locales.
+Enabling recovery saves settings and the current workspace together. Structural
+changes are debounced; lifecycle flushes and ordered owner handoff preserve the
+latest checkpoint during immediate remounts. Read failures time out without
+blocking terminals, storage errors pause saves, and stale panels/dialogs cannot
+overwrite a replacement workspace. Retry after a failed startup read preserves
+the unseen checkpoint until an explicit enabled Save selects the current
+workspace. Disable retains the checkpoint; confirmed Forget clears it while
+current terminals stay open. Controls cover the eight existing non-English
+locales.
 
-This restores workspace metadata and can launch fresh local shells. It does not
-restore commands, output, working directories, filesystem grants, credentials,
-live SSH ownership or operating-system process state. Local-shell relaunch uses
-the existing verified current-folder/fallback and platform backend. Abrupt
-termination can lose a pending preference write. [Usage and limits](terminal.md#automatic-session-recovery).
+The incoming optimization work bounds terminal and native tmux resize queues,
+preserves final geometry during rapid resize reversals, batches native tmux pane
+captures in groups of up to eight, and hardens GNU Screen exact attachment
+against truncated names and incomplete listings. Its
+[original qualification record](validation/terminal-session-optimization-20261116/README.md)
+retains its own source cutoff; the combined source receives separate acceptance.
 
-The initial full fetch found **40 branch heads and 153 PR heads**, all already
-ancestors of `74fbdd5a`. It preserves the newer shared-shell and ODS work beyond
-the pasted native-tmux handoff. [This continuation's integration and local
-validation record](validation/terminal-workspace-recovery/README.md) separates
-new acceptance from the historical counts below. Remote checkpoints carry
-`[skip ci]`; no GitHub Actions are queried or awaited.
+Recovery restores workspace metadata and can start new local shells. It does
+not restore commands, output, working directories, filesystem grants, credentials,
+live SSH-route ownership, broadcast membership or operating-system process
+state. Abrupt termination can lose an unfinished preference write.
+[Usage and limits](terminal.md#automatic-session-recovery).
+
+The incoming cutoff at **10:43:14 UTC on 16 November 2026** contains **46 branch heads and 159 PR heads
+(205 references)**. Final inclusion is **205 of 205** at
+integration `fdc262e112aa29dd1e60a76cff9a2dfb5f2d7b4f`; the
+[integration proof](validation/terminal-workspace-recovery/completion-incoming/post-integration.json)
+records the source and ancestry proof. Work remains on
+`codex/terminal-screen-workspace` with incremental remote checkpoints carrying
+`[skip ci]`. No GitHub Actions are queried, awaited or rerun.
 
 ### Previous shared SSH connection continuation
 
@@ -280,7 +295,7 @@ Earlier feature evidence retains its original source cutoff. Records:
 | --- | --- |
 | Terminal workspace | Up to eight independent tabs and eight nested visible panes; per-divider sizing and balancing; directional/cyclic pane selection; temporary zoom; compact active-pane fallback; retained hidden sessions |
 | Saved arrangements | Up to 20 named arrangements with full split topology, ratios, tab order/names, active pane, font sizes and sanitized SSH routes; reads legacy records, uses v3 for agent choices and v4 for native tmux |
-| Automatic workspace recovery | Default-off autosave/restore of the most recent layout and sanitized destinations; separate fresh-local-shell relaunch, explicit SSH reconnect, owner handoff, retry and confirmed Forget |
+| Automatic workspace recovery | Default-off recovery of layout and sanitized destinations; explicit ready-state local/SSH actions, separate fresh-local-shell relaunch, ordered owner handoff, retry and confirmed Forget |
 | SSH authentication | Password, encrypted/unencrypted key and native Linux/macOS SSH-agent login; verified host keys, explicit gateway, up to three independently authenticated and verified jump hosts |
 | SSH connection sharing | Explicit new shell or split on the exact verified route; up to eight logical owners, isolated channels, shared forwarding/agent lifetime, route-wide idle expiry and prompt pending-open cancellation |
 | SSH-agent forwarding | Separate default-off permission for the final host only; frozen supported keys, list/sign-only protocol, bounded requests/channels and immediate revocation on disconnect |

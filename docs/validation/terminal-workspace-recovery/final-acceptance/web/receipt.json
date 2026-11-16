@@ -1,0 +1,77 @@
+{
+  "phase": "web",
+  "source_head": "fdc262e112aa29dd1e60a76cff9a2dfb5f2d7b4f",
+  "accepted_source": "fdc262e112aa29dd1e60a76cff9a2dfb5f2d7b4f",
+  "started_utc": "2026-11-16T11:18:36.335917+00:00",
+  "command": [
+    "/workspace/scratch/732a154614f9/toolchain/run",
+    "python3",
+    "/workspace/scratch/732a154614f9/toolchain/web-resource-runner.py",
+    "--run",
+    "--repo",
+    "/workspace/scratch/732a154614f9/CrispCloud",
+    "--toolchain",
+    "/workspace/scratch/732a154614f9/toolchain",
+    "--evidence",
+    "/workspace/scratch/732a154614f9/toolchain/evidence/final-acceptance/web"
+  ],
+  "environment_overrides": {},
+  "isolated_feature_environment": {
+    "FLUTTER_NATIVE_ASSETS": null,
+    "FLUTTER_DART_DATA_ASSETS": null
+  },
+  "watched_files": 5673,
+  "frozen_commit_proof": {
+    "accepted_commit": "fdc262e112aa29dd1e60a76cff9a2dfb5f2d7b4f",
+    "tracked_inputs_checked": 5664,
+    "mismatches": [],
+    "reviewed_subtrees": {
+      "lib": {
+        "expected": "8efc7ea40f30399c9a65ea1e9c82056b413d3c94",
+        "actual": "8efc7ea40f30399c9a65ea1e9c82056b413d3c94"
+      },
+      "test": {
+        "expected": "f57fa42a3c99acee60afb1a7007f7cba827edf72",
+        "actual": "f57fa42a3c99acee60afb1a7007f7cba827edf72"
+      },
+      "packages": {
+        "expected": "cd2bbbd7d574f7c3f16184c75206ff6ea47a55fe",
+        "actual": "cd2bbbd7d574f7c3f16184c75206ff6ea47a55fe"
+      },
+      "tool": {
+        "expected": "f8879d4ede3e4417c19d3f56df515dc69d5195ef",
+        "actual": "f8879d4ede3e4417c19d3f56df515dc69d5195ef"
+      }
+    }
+  },
+  "github_actions_queried_or_awaited": false,
+  "runner_sha256": "36271c90e9a479f23b901249c6afeafa8764db9b3bb24f6f08cb3acbe9d472bb",
+  "toolchain_wrapper": {
+    "bytes": 495,
+    "sha256": "24ac509df9a1055dfd6667d3ed10b8460e09aeb2c45f1997132259e46558bf86",
+    "mode": "0o755"
+  },
+  "finished_utc": "2026-11-16T11:20:00.599257+00:00",
+  "seconds": 84.26313080799991,
+  "exit_code": 1,
+  "head_at_end": "fdc262e112aa29dd1e60a76cff9a2dfb5f2d7b4f",
+  "source_changes": [],
+  "log_sha256": "e3379aca02ecef6650ca5299ca2b0c6e071e1194fc2c6766fd260c4c480cb3dd",
+  "source_inventory_artifacts": {
+    "sources-before.json.gz": {
+      "bytes": 300640,
+      "sha256": "95eab5ac65e583d2de18061763079b91307aec27246cf18d500c1c532989beeb",
+      "mode": "0o644"
+    },
+    "sources-after.json.gz": {
+      "bytes": 300640,
+      "sha256": "95eab5ac65e583d2de18061763079b91307aec27246cf18d500c1c532989beeb",
+      "mode": "0o644"
+    }
+  },
+  "qualification": "Normal complete application release web build, standard O4/minification and normal web hooks; no browser/native-platform runtime qualification.",
+  "sdk_restored_exactly": true,
+  "main_dart_js": null,
+  "compiler_heap_mb": 4096,
+  "accepted": false
+}
