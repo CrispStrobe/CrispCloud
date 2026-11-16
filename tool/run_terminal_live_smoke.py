@@ -35,12 +35,14 @@ def main():
     if not sshd or not keygen:
         parser.error("Install OpenSSH server/client tools before running this check.")
     project = args.project.resolve()
-    scratch = project / ".dart_tool" / "terminal-live-smoke"
-    scratch.mkdir(parents=True, exist_ok=True)
+    # Unix-domain socket paths are limited to 104 bytes on macOS. A deep
+    # checkout or the platform's long TMPDIR can exceed that before agent.sock.
+    # TemporaryDirectory creates a private directory and removes keys/sockets.
+    scratch = "/tmp" if Path("/tmp").is_dir() else None
     processes = []
     logs = []
     log_names = []
-    with tempfile.TemporaryDirectory(prefix="route-", dir=scratch) as directory:
+    with tempfile.TemporaryDirectory(prefix="ccssh-", dir=scratch) as directory:
         root = Path(directory)
         username = getpass.getuser()
         try:

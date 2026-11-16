@@ -59,6 +59,34 @@ void main() {
     },
   );
 
+  test(
+    'fresh primary screen accepts tmux unset saved cursor coordinates',
+    () async {
+      server.savedCursor = '4294967295 4294967295';
+      await server.start(client);
+      expect(client.ready, isTrue);
+      expect(
+        client.panes['%0']!.session.terminal.buffer.getText(),
+        contains('captured %0'),
+      );
+    },
+  );
+
+  test('alternate screen refuses unset saved cursor coordinates', () async {
+    server.alternate = true;
+    server.savedCursor = '4294967295 4294967295';
+    await expectLater(
+      server.start(client),
+      throwsA(
+        predicate(
+          (error) =>
+              error.toString().contains('Invalid captured terminal state'),
+        ),
+      ),
+    );
+    expect(client.isClosed, isTrue);
+  });
+
   test('UTF-8 split between records is independent for every pane', () async {
     server.addSplit();
     await server.start(client);
@@ -453,6 +481,7 @@ class _Server {
   final panes = [_Pane('%0', '@0')];
   String activeWindow = '@0';
   String version = '3.3a';
+  String savedCursor = '0 0';
   String? holdPrefix,
       failPrefix,
       captureText,
@@ -574,7 +603,7 @@ class _Server {
         final id = RegExp(r'-t (%\d+)').firstMatch(command)![1]!;
         final pane = panes.firstWhere((pane) => pane.id == id);
         body = [
-          '$cursorX $cursorY ${alternate ? 1 : 0} 1 ${cursorMode ? 1 : 0} 0 0 1 0 ${bracketMode ? 1 : 0} 0 ${pane.height - 1} 0 0',
+          '$cursorX $cursorY ${alternate ? 1 : 0} 1 ${cursorMode ? 1 : 0} 0 0 1 0 ${bracketMode ? 1 : 0} 0 ${pane.height - 1} $savedCursor',
         ];
       } else if (command.startsWith('send-keys')) {
         inputBytes.addAll(
@@ -611,7 +640,7 @@ class _Server {
         response.writeln(line);
       }
       response.writeln('%${failure ? 'error' : 'end'} 1 $number 1');
-      if (command.endsWith(':continue') && afterCapture != null) {
+      if (command.endsWith(":continue'") && afterCapture != null) {
         final id = RegExp(r'(%\d+):continue').firstMatch(command)![1]!;
         response.writeln('%output $id $afterCapture');
       }

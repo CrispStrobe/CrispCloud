@@ -584,7 +584,7 @@ class TmuxControlClient extends ChangeNotifier {
     // it at the same server event-loop boundary as the snapshot. Capture is
     // applied in the reply callback, before subsequent records in that packet.
     await _batch([
-      _Command('refresh-client -A ${pane.id}:off'),
+      _Command("refresh-client -A '${pane.id}:off'"),
       _Command(
         'capture-pane -p -e -C -t ${pane.id} -S -$historyLines',
         (block) => screen = block,
@@ -603,8 +603,8 @@ class TmuxControlClient extends ChangeNotifier {
           state = block.text.split(' ');
         },
       ),
-      _Command('refresh-client -A ${pane.id}:on'),
-      _Command('refresh-client -A ${pane.id}:continue', (_) {
+      _Command("refresh-client -A '${pane.id}:on'"),
+      _Command("refresh-client -A '${pane.id}:continue'", (_) {
         if (_closed || !identical(_ownedPanes[pane.id], pane)) return;
         if (screen == null ||
             state == null ||
@@ -625,10 +625,20 @@ class TmuxControlClient extends ChangeNotifier {
     TmuxControlBlock parserPending,
     List<String> state,
   ) {
+    // tmux reports UINT_MAX for both saved cursor coordinates before an
+    // alternate screen has ever been entered. They are unused on the primary
+    // screen; do not accept this sentinel while restoring an alternate screen.
+    final unsetSavedCursor =
+        state.length == 14 &&
+        state[2] == '0' &&
+        state[12] == '4294967295' &&
+        state[13] == '4294967295';
     if (state.length != 14 ||
         state.take(2).any((value) => !_number.hasMatch(value)) ||
         state.skip(2).take(8).any((value) => value != '0' && value != '1') ||
-        state.skip(10).any((value) => !_number.hasMatch(value))) {
+        state.skip(10).take(2).any((value) => !_number.hasMatch(value)) ||
+        (!unsetSavedCursor &&
+            state.skip(12).any((value) => !_number.hasMatch(value)))) {
       throw const TmuxControlProtocolException(
         'Invalid captured terminal state.',
       );
@@ -637,8 +647,8 @@ class TmuxControlClient extends ChangeNotifier {
     final y = int.parse(state[1]);
     final top = int.parse(state[10]);
     final bottom = int.parse(state[11]);
-    final savedX = int.parse(state[12]);
-    final savedY = int.parse(state[13]);
+    final savedX = unsetSavedCursor ? 0 : int.parse(state[12]);
+    final savedY = unsetSavedCursor ? 0 : int.parse(state[13]);
     if (x > pane.width ||
         y >= pane.height ||
         top > bottom ||
