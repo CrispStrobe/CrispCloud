@@ -28,13 +28,13 @@ identities, commands and the separately qualified terminal results.
 
 ## Earlier verified state
 
-- CrispCloud `main` snapshot: `28db447a`
-- Vendored Quds source checkpoint: `14fde4b1bd2539f0c6168be4569ac1adcc5105cd`
-  (`packages/QUDS_FORKS.md`, 2,391 managed files)
-- Quds sheet/ODS cohort: **503 tests**; the last clean full engine run was
+- CrispCloud `main` snapshot: `514f7457`
+- Vendored Quds source checkpoint: `33a0508a502f5809aa997928e8428bdec3e02503`
+  (`packages/QUDS_FORKS.md`, 2,413 managed files)
+- Quds sheet/ODS cohort: **505 tests**; the last clean full engine run was
   **2,205 tests** (two unrelated CLI bookmark/content-control tests currently
   fail on main)
-- CrispCloud vendored ODS reader: **88 tests**
+- CrispCloud vendored ODS reader: **100 tests**
 - CrispCloud combined F3/F4/ODF suite: **51 tests**
 - ODT parser/image suite: **37 tests**
 - Live corpus smoke tests: **20 ODF**, **9 XLS**, **1 ODS**
@@ -59,8 +59,9 @@ identities, commands and the separately qualified terminal results.
 - ODS list/range-source, whole, decimal, date, text-length and custom-formula
   validations; operators, date serials, prompts, error title/message/style and
   XLSX attribute round-trips.
-- ODS print areas/titles, named ranges and basic database-range autofilters,
-  including XLSX print-area read/write.
+- ODS print areas/titles, named ranges/expressions, database-range
+  autofilters, tab colours, cell hyperlinks and row/column outline groups,
+  including XLSX round-trips.
 - ODT named styles from `styles.xml`, inline pictures, text boxes, header/footer
   text, tables, lists and footnotes.
 - Exact host goldens for the reviewed Word pages.
