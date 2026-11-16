@@ -1,0 +1,26 @@
+[
+  {
+    "phase": "ssh-live",
+    "head": "3e1c31d22e55a807593b05a2819c36b85af29443",
+    "command": [
+      "python3",
+      "tool/run_terminal_live_smoke.py",
+      "--flutter",
+      "/Users/christianstrobele/flutter-3.47.8/bin/flutter",
+      "--with-pty",
+      "--with-unix-agent"
+    ],
+    "started_utc": "2026-11-16T08:39:02.739169+00:00",
+    "seconds": 631.908,
+    "exit_code": 1,
+    "changed_sources": [],
+    "log": "ssh-live.log",
+    "source_sha256": "af1e2d6fac254d01b07176f00ff90bdd6f821cbea3af60adb2971172b7351ab9",
+    "final_line": "01:38 +17 -2: Some tests failed.",
+    "counts": {
+      "passed": 17,
+      "skipped": 0,
+      "failed": 2
+    }
+  }
+]

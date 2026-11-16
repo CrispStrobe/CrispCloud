@@ -1,0 +1,16 @@
+{
+  "audit_cutoff_utc": "2026-11-16T08:10:43.109919+00:00",
+  "qualified_source": "5f7f37922d7cda3de1aaf12b4472b2435553c320",
+  "quds_source": "9bf7b7aa9559d4d2a318152b9fe4eaa16c97ffd9",
+  "managed_office_files": 2410,
+  "integration": "All 38 app and 24 Quds audited branch heads are included. New terminal resize/snapshot synchronization and final Zotero qualification commits were merged. The existing combined Quds source already includes the current Quds PR50 head.",
+  "retained_fixes": [
+    "shared spreadsheet-level ODS list definitions",
+    "validation rules on blank input cells with expansion/grid budgets",
+    "tmux pane/action quoting",
+    "tmux fresh-primary-screen unset saved cursor handling adapted to the new 16-field capture",
+    "Unicode tmux window labels",
+    "short temporary Unix socket paths for real ssh-agent testing"
+  ],
+  "ods_scope": "Previously implemented fixes remain supported. ODS is imported and edited as a new XLSX copy; native ODS serialization is absent. Range-backed validation lists remain value snapshots. Numeric/date/text-length/custom validation families, prompts/error metadata, broader conditional formatting and remaining workbook metadata are still open."
+}

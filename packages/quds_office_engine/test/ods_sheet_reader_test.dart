@@ -196,41 +196,38 @@ void annotationAndAuthoredDateTests() {
     );
   });
 
-  test(
-    'authored date literals retain spaces quotes and format-like text',
-    () async {
-      final book = OdsSheetReader.readBytes(
-        _ods(
-          '<t:table><t:table-row><t:table-cell t:style-name="date" '
-          'o:value-type="date" o:date-value="2024-03-04T13:45:00"/>'
-          '</t:table-row></t:table>',
-          styles:
-              '<n:date-style xmlns:n="$_number" s:name="dateFormat">'
-              '<e:year/><n:year n:style="long"/><n:text>-</n:text>'
-              '<n:month n:style="long"/><n:text>-</n:text><n:day n:style="long"/>'
-              '<n:text>   </n:text><n:hours n:style="long"/>'
-              '<n:text>:</n:text><n:minutes n:style="long"/><n:text/>'
-              r'<n:text> "m;\H"</n:text>'
-              '</n:date-style><s:style s:name="date" s:family="table-cell" '
-              's:data-style-name="dateFormat"/>',
-        ),
+  test('authored date literals retain spaces quotes and format-like text', () async {
+    final book = OdsSheetReader.readBytes(
+      _ods(
+        '<t:table><t:table-row><t:table-cell t:style-name="date" '
+        'o:value-type="date" o:date-value="2024-03-04T13:45:00"/>'
+        '</t:table-row></t:table>',
+        styles:
+            '<n:date-style xmlns:n="$_number" s:name="dateFormat">'
+            '<e:year/><n:year n:style="long"/><n:text>-</n:text>'
+            '<n:month n:style="long"/><n:text>-</n:text><n:day n:style="long"/>'
+            '<n:text>   </n:text><n:hours n:style="long"/>'
+            '<n:text>:</n:text><n:minutes n:style="long"/><n:text/>'
+            r'<n:text> "m;\H"</n:text>'
+            '</n:date-style><s:style s:name="date" s:family="table-cell" '
+            's:data-style-name="dateFormat"/>',
+      ),
+    );
+    void check(SmlWorkbook value) {
+      final cell = value.firstSheet.cellA1('A1');
+      expect(
+        value.styles!.format(cell.value, cell.styleIndex),
+        r'2024-03-04   13:45 "m;\H"',
       );
-      void check(SmlWorkbook value) {
-        final cell = value.firstSheet.cellA1('A1');
-        expect(
-          value.styles!.format(cell.value, cell.styleIndex),
-          r'2024-03-04   13:45 "m;\H"',
-        );
-      }
+    }
 
-      check(book);
-      check(
-        SheetDeserializer().readBytes(
-          await OfficeIsolateSave.workbook(book, recalculate: false),
-        ),
-      );
-    },
-  );
+    check(book);
+    check(
+      SheetDeserializer().readBytes(
+        await OfficeIsolateSave.workbook(book, recalculate: false),
+      ),
+    );
+  });
 
   test(
     'authored textual dates use namespace-aware widths and weekday names',
@@ -281,25 +278,22 @@ void main() {
     "of:=SUM(['Semi;Colon'.A1];1)": "SUM('Semi;Colon'!A1,1)",
     "of:=SUM(['COM.MICROSOFT.Data'.A1];1)": "SUM('COM.MICROSOFT.Data'!A1,1)",
   }.entries) {
-    test(
-      'formula roundtrip preserves imported syntax: ${formula.key}',
-      () async {
-        final book = OdsSheetReader.readBytes(
-          _ods(
-            '<t:table><t:table-row><t:table-cell o:value-type="string" '
-            'o:string-value="cached" t:formula="${_xmlAttribute(formula.key)}"/>'
-            '</t:table-row></t:table>',
-          ),
-        );
-        final reopened = SheetDeserializer().readBytes(
-          await OfficeIsolateSave.workbook(book, recalculate: false),
-        );
-        for (final current in [book, reopened]) {
-          expect(current.firstSheet.cellA1('A1').formula, formula.value);
-          expect(current.firstSheet.cellA1('A1').value, 'cached');
-        }
-      },
-    );
+    test('formula roundtrip preserves imported syntax: ${formula.key}', () async {
+      final book = OdsSheetReader.readBytes(
+        _ods(
+          '<t:table><t:table-row><t:table-cell o:value-type="string" '
+          'o:string-value="cached" t:formula="${_xmlAttribute(formula.key)}"/>'
+          '</t:table-row></t:table>',
+        ),
+      );
+      final reopened = SheetDeserializer().readBytes(
+        await OfficeIsolateSave.workbook(book, recalculate: false),
+      );
+      for (final current in [book, reopened]) {
+        expect(current.firstSheet.cellA1('A1').formula, formula.value);
+        expect(current.firstSheet.cellA1('A1').value, 'cached');
+      }
+    });
   }
 
   for (final prefix in const ['COM.MICROSOFT.', 'ORG.OPENOFFICE.']) {
@@ -406,9 +400,8 @@ void main() {
     },
   );
 
-  final bytes = File(
-    'test/fixtures/fidelity/legacy-sheet.ods',
-  ).readAsBytesSync();
+  final bytes = File('test/fixtures/fidelity/legacy-sheet.ods')
+      .readAsBytesSync();
 
   test('reads ODS values, formulas, styles and merges', () {
     final book = OdsSheetReader.readBytes(bytes);
@@ -492,29 +485,26 @@ void main() {
     );
   });
 
-  test(
-    'merged covered cells consume one coordinate and retain row spans',
-    () async {
-      final book = OdsSheetReader.readBytes(
-        _ods(
-          '<t:table t:name="Grid"><t:table-row>'
-          '<t:table-cell t:number-columns-spanned="2" t:number-rows-spanned="2" '
-          'o:value-type="string"><x:p>Merge</x:p></t:table-cell>'
-          '<t:covered-table-cell/>${_value('C1')}</t:table-row>'
-          '<t:table-row><t:covered-table-cell t:number-columns-repeated="2"/>'
-          '${_value('C2')}</t:table-row></t:table>',
-        ),
-      );
-      expect(book.firstSheet.cellA1('C1').asString, 'C1');
-      expect(book.firstSheet.cellA1('C2').asString, 'C2');
-      expect(book.firstSheet.merges.single.a1, 'A1:B2');
-      final reopened = SheetDeserializer().readBytes(
-        await OfficeIsolateSave.workbook(book, recalculate: false),
-      );
-      expect(reopened.firstSheet.cellA1('C1').asString, 'C1');
-      expect(reopened.firstSheet.merges.single.a1, 'A1:B2');
-    },
-  );
+  test('merged covered cells consume one coordinate and retain row spans', () async {
+    final book = OdsSheetReader.readBytes(
+      _ods(
+        '<t:table t:name="Grid"><t:table-row>'
+        '<t:table-cell t:number-columns-spanned="2" t:number-rows-spanned="2" '
+        'o:value-type="string"><x:p>Merge</x:p></t:table-cell>'
+        '<t:covered-table-cell/>${_value('C1')}</t:table-row>'
+        '<t:table-row><t:covered-table-cell t:number-columns-repeated="2"/>'
+        '${_value('C2')}</t:table-row></t:table>',
+      ),
+    );
+    expect(book.firstSheet.cellA1('C1').asString, 'C1');
+    expect(book.firstSheet.cellA1('C2').asString, 'C2');
+    expect(book.firstSheet.merges.single.a1, 'A1:B2');
+    final reopened = SheetDeserializer().readBytes(
+      await OfficeIsolateSave.workbook(book, recalculate: false),
+    );
+    expect(reopened.firstSheet.cellA1('C1').asString, 'C1');
+    expect(reopened.firstSheet.merges.single.a1, 'A1:B2');
+  });
 
   test('repeated blank rows retain later data at exact coordinates', () {
     final sheet = OdsSheetReader.readBytes(
@@ -678,24 +668,21 @@ void main() {
     );
   });
 
-  test(
-    'rejects invalid or out-of-range meaningful repeats instead of clipping',
-    () {
-      for (final repeat in ['0', '-1', 'bad', '4097']) {
-        expect(
-          () => OdsSheetReader.readBytes(
-            _ods(
-              '<t:table><t:table-row><t:table-cell '
-              't:number-columns-repeated="$repeat" o:value-type="float" o:value="3"/>'
-              '</t:table-row></t:table>',
-            ),
+  test('rejects invalid or out-of-range meaningful repeats instead of clipping', () {
+    for (final repeat in ['0', '-1', 'bad', '4097']) {
+      expect(
+        () => OdsSheetReader.readBytes(
+          _ods(
+            '<t:table><t:table-row><t:table-cell '
+            't:number-columns-repeated="$repeat" o:value-type="float" o:value="3"/>'
+            '</t:table-row></t:table>',
           ),
-          _invalidOds,
-          reason: repeat,
-        );
-      }
-    },
-  );
+        ),
+        _invalidOds,
+        reason: repeat,
+      );
+    }
+  });
 
   test(
     'formula conversion preserves delimiters and brackets inside literals',
@@ -1030,38 +1017,35 @@ void defaultAndTimeTests() {
     }
   });
 
-  test(
-    'inherited styled padding stays sparse while explicit blanks survive',
-    () async {
-      final book = OdsSheetReader.readBytes(
-        _ods(
-          '<t:table><t:table-column t:default-cell-style-name="inherited" '
-          't:number-columns-repeated="4096"/>'
-          '<t:table-row t:default-cell-style-name="inherited" '
-          't:style-name="defaultHeight" t:number-rows-repeated="4000">'
-          '<t:table-cell t:number-columns-repeated="4096"/></t:table-row>'
-          '<t:table-row><t:table-cell o:value-type="float" o:value="9"/>'
-          '<t:table-cell t:style-name="accent"/></t:table-row></t:table>',
-          styles:
-              '<s:style s:name="inherited" s:family="table-cell">'
-              '<s:text-properties f:font-size="14pt"/></s:style>'
-              '<s:style s:name="accent" s:family="table-cell">'
-              '<s:table-cell-properties f:background-color="#FF0000"/></s:style>'
-              '<s:style s:name="defaultHeight" s:family="table-row">'
-              '<s:table-row-properties s:row-height="14.95pt"/></s:style>',
-        ),
-      );
-      expect(book.firstSheet.rowHeights, isEmpty);
-      for (final current in [book, await _roundTrip(book)]) {
-        final sheet = current.firstSheet;
-        expect(sheet.allCells, hasLength(2));
-        expect(sheet.cellA1('A4001').value, 9);
-        expect(sheet.cellA1('A4001').fontSize, 14);
-        final blank = sheet.cellA1('B4001');
-        expect(current.styles!.fillAt(blank.styleIndex), 'FF0000');
-      }
-    },
-  );
+  test('inherited styled padding stays sparse while explicit blanks survive', () async {
+    final book = OdsSheetReader.readBytes(
+      _ods(
+        '<t:table><t:table-column t:default-cell-style-name="inherited" '
+        't:number-columns-repeated="4096"/>'
+        '<t:table-row t:default-cell-style-name="inherited" '
+        't:style-name="defaultHeight" t:number-rows-repeated="4000">'
+        '<t:table-cell t:number-columns-repeated="4096"/></t:table-row>'
+        '<t:table-row><t:table-cell o:value-type="float" o:value="9"/>'
+        '<t:table-cell t:style-name="accent"/></t:table-row></t:table>',
+        styles:
+            '<s:style s:name="inherited" s:family="table-cell">'
+            '<s:text-properties f:font-size="14pt"/></s:style>'
+            '<s:style s:name="accent" s:family="table-cell">'
+            '<s:table-cell-properties f:background-color="#FF0000"/></s:style>'
+            '<s:style s:name="defaultHeight" s:family="table-row">'
+            '<s:table-row-properties s:row-height="14.95pt"/></s:style>',
+      ),
+    );
+    expect(book.firstSheet.rowHeights, isEmpty);
+    for (final current in [book, await _roundTrip(book)]) {
+      final sheet = current.firstSheet;
+      expect(sheet.allCells, hasLength(2));
+      expect(sheet.cellA1('A4001').value, 9);
+      expect(sheet.cellA1('A4001').fontSize, 14);
+      final blank = sheet.cellA1('B4001');
+      expect(current.styles!.fillAt(blank.styleIndex), 'FF0000');
+    }
+  });
 
   test('ODS native column geometry survives a new XLSX copy', () async {
     final book = OdsSheetReader.readBytes(
@@ -1258,9 +1242,8 @@ Uint8List _odsRows(String rows, {String styles = ''}) {
 }
 
 void edgeTests() {
-  final edge = File(
-    'test/fixtures/fidelity/legacy-sheet-edge.ods',
-  ).readAsBytesSync();
+  final edge = File('test/fixtures/fidelity/legacy-sheet-edge.ods')
+      .readAsBytesSync();
 
   test('ODS keeps dates, times, booleans, formats and sheet references', () {
     final book = OdsSheetReader.readBytes(edge);
@@ -1649,6 +1632,39 @@ void conditionalFormatTests() {
 }
 
 void validationTests() {
+  test(
+    'shared numeric rules on blank input cells survive an XLSX copy',
+    () async {
+      final book = OdsSheetReader.readBytes(
+        _ods(
+          '<t:content-validations><t:content-validation t:name="whole" '
+          't:allow-empty-cell="false" '
+          't:condition="of:cell-content-is-whole-number() '
+          'and cell-content-is-between(1,10)"/></t:content-validations>'
+          '<t:table t:name="Input"><t:table-row>'
+          '<t:table-cell t:content-validation-name="whole"/>'
+          '</t:table-row></t:table>',
+        ),
+      );
+      void check(SmlWorkbook workbook) {
+        final rule = workbook.firstSheet.validations.single;
+        expect(rule.kind, SmlValidationKind.whole);
+        expect(rule.range.start.a1, 'A1');
+        expect(rule.accepts('5'), isTrue);
+        expect(rule.accepts('1.5'), isFalse);
+        expect(rule.accepts('11'), isFalse);
+        expect(rule.accepts(''), isFalse);
+      }
+
+      check(book);
+      check(
+        SheetDeserializer().readBytes(
+          await OfficeIsolateSave.workbook(book, recalculate: false),
+        ),
+      );
+    },
+  );
+
   test('blank validation references obey expansion and grid limits', () {
     for (final repeat in [
       't:number-columns-repeated="16385"',
@@ -1765,6 +1781,71 @@ void validationTests() {
     expect(book.firstSheet.validations, isEmpty);
   });
 
+  test('ODS whole, decimal, date and text-length validations import', () async {
+    final book = OdsSheetReader.readBytes(
+      _ods(
+        '<t:table t:name="Data">'
+        '<t:table-row><t:table-cell t:content-validation-name="v1">'
+        '<x:p>5</x:p></t:table-cell></t:table-row>'
+        '<t:table-row><t:table-cell t:content-validation-name="v2">'
+        '<x:p>2.5</x:p></t:table-cell></t:table-row>'
+        '<t:table-row><t:table-cell t:content-validation-name="v3">'
+        '<x:p>2024-01-02</x:p></t:table-cell></t:table-row>'
+        '<t:table-row><t:table-cell t:content-validation-name="v4">'
+        '<x:p>abc</x:p></t:table-cell></t:table-row>'
+        '<t:content-validations>'
+        '<t:content-validation t:name="v1" t:title="Whole" '
+        't:message="Enter 1-10" t:condition="of:cell-content-is-whole-number() '
+        'and cell-content-is-between(1,10)"/>'
+        '<t:content-validation t:name="v2" '
+        't:condition="of:cell-content-is-decimal-number() '
+        'and cell-content()&gt;1.5"/>'
+        '<t:content-validation t:name="v3" '
+        't:condition="of:cell-content-is-date() '
+        'and cell-content()&gt;=2024-1-1"/>'
+        '<t:content-validation t:name="v4" '
+        't:condition="of:cell-content-text-length()&lt;=5"/>'
+        '</t:content-validations></t:table>',
+      ),
+    );
+    final sheet = book.sheets.first;
+    expect(sheet.validations.length, 4);
+    expect(sheet.validations[0].kind, SmlValidationKind.whole);
+    expect(sheet.validations[0].operator, SmlValidationOperator.between);
+    expect(sheet.validations[0].errorTitle, 'Whole');
+    expect(sheet.validations[0].error, 'Enter 1-10');
+    expect(sheet.validations[0].accepts('5'), isTrue);
+    expect(sheet.validations[0].accepts('11'), isFalse);
+    expect(sheet.validations[1].operator, SmlValidationOperator.greaterThan);
+    expect(sheet.validations[1].accepts('2'), isTrue);
+    expect(sheet.validations[1].accepts('1'), isFalse);
+    expect(sheet.validations[2].kind, SmlValidationKind.date);
+    expect(
+      sheet.validations[2].operator,
+      SmlValidationOperator.greaterThanOrEqual,
+    );
+    expect(sheet.validations[2].accepts('2024-01-02'), isTrue);
+    expect(sheet.validations[2].accepts('2023-12-31'), isFalse);
+    expect(sheet.validations[3].kind, SmlValidationKind.textLength);
+    expect(sheet.validations[3].accepts('abc'), isTrue);
+    expect(sheet.validations[3].accepts('abcdef'), isFalse);
+
+    final saved = await OfficeIsolateSave.workbook(book, recalculate: false);
+    final archive = ZipDecoder().decodeBytes(saved);
+    final sheetXml = utf8.decode(
+      archive.findFile('xl/worksheets/sheet1.xml')!.content as List<int>,
+    );
+    expect(sheetXml, contains('operator="greaterThan"'));
+    expect(sheetXml, contains('operator="greaterThanOrEqual"'));
+    expect(sheetXml, contains('operator="lessThanOrEqual"'));
+    expect(sheetXml, contains('type="textLength"'));
+    final reopened = SheetDeserializer().readBytes(saved);
+    expect(
+      reopened.sheets.first.validations[1].operator,
+      SmlValidationOperator.greaterThan,
+    );
+  });
+
   test('ODS list source preserves spaces in quoted sheet names', () {
     final book = OdsSheetReader.readBytes(
       _ods(
@@ -1782,28 +1863,31 @@ void validationTests() {
     expect(book.sheets.first.validations.single.listItems, ['Red', 'Green']);
   });
 
-  test('ODS validation source range is bounded before scanning empty cells', () {
-    expect(
-      () => OdsSheetReader.readBytes(
-        _ods(
-          '<t:table t:name="Data"><t:table-row><t:table-cell '
-          't:content-validation-name="v"><x:p>Pick</x:p></t:table-cell></t:table-row><t:content-validations>'
-          '<t:content-validation t:name="v" '
-          't:condition="of:cell-content-is-in-list(\$Lists.\$A\$1:.\$C\$1000000)"/>'
-          '</t:content-validations></t:table>'
-          '<t:table t:name="Lists"><t:table-row><t:table-cell>'
-          '<x:p>Red</x:p></t:table-cell></t:table-row></t:table>',
+  test(
+    'ODS validation source range is bounded before scanning empty cells',
+    () {
+      expect(
+        () => OdsSheetReader.readBytes(
+          _ods(
+            '<t:table t:name="Data"><t:table-row><t:table-cell '
+            't:content-validation-name="v"><x:p>Pick</x:p></t:table-cell></t:table-row><t:content-validations>'
+            '<t:content-validation t:name="v" '
+            't:condition="of:cell-content-is-in-list(\$Lists.\$A\$1:.\$C\$1000000)"/>'
+            '</t:content-validations></t:table>'
+            '<t:table t:name="Lists"><t:table-row><t:table-cell>'
+            '<x:p>Red</x:p></t:table-cell></t:table-row></t:table>',
+          ),
         ),
-      ),
-      throwsA(
-        isA<OdsSheetFormatException>().having(
-          (error) => error.toString(),
-          'reason',
-          contains('validation source work limit'),
+        throwsA(
+          isA<OdsSheetFormatException>().having(
+            (error) => error.toString(),
+            'reason',
+            contains('validation source work limit'),
+          ),
         ),
-      ),
-    );
-  });
+      );
+    },
+  );
 
   test('ODS range-source list validations resolve across sheets', () {
     final book = OdsSheetReader.readBytes(

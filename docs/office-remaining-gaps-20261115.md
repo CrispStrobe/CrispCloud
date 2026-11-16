@@ -20,11 +20,11 @@ families remain open.
 
 ## Earlier verified state
 
-- CrispCloud `main` snapshot: `924a2b5d`
-- Vendored Quds source checkpoint: `4fbd1687d3c0ada22d460cf5cadb9586c4f62905`
-  (`packages/QUDS_FORKS.md`, 2,384 managed files)
-- Quds sheet/ODS cohort: **497 tests**; full engine suite: **2,117 tests**
-- CrispCloud vendored ODS reader: **82 tests**
+- CrispCloud `main` snapshot: `3f7bc046`
+- Vendored Quds source checkpoint: `4ffdf113803806ba5f8ade4a0846eee85dcfbe68`
+  (`packages/QUDS_FORKS.md`, 2,391 managed files)
+- Quds sheet/ODS cohort: **501 tests**; full engine suite: **2,205 tests**
+- CrispCloud vendored ODS reader: **86 tests**
 - CrispCloud combined F3/F4/ODF suite: **51 tests**
 - ODT parser/image suite: **37 tests**
 - Live corpus smoke tests: **20 ODF**, **9 XLS**, **1 ODS**
@@ -46,8 +46,9 @@ families remain open.
   width and row height.
 - ODS conditional formats: numeric comparisons, between/not-between,
   contains-text, begins/ends-with, duplicate, with generated dxf fill/font.
-- ODS literal and range-source list validations with correct Excel list
-  formula quoting.
+- ODS list/range-source, whole, decimal, date and text-length validations,
+  operator-aware XLSX read/write, date serial conversion and validation
+  title/message.
 - ODS print areas/titles, named ranges and basic database-range autofilters,
   including XLSX print-area read/write.
 - ODT named styles from `styles.xml`, inline pictures, text boxes, header/footer
