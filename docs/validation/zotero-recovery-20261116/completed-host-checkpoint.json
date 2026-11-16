@@ -1,0 +1,11 @@
+{
+  "canonical_source": "b87f9d6c3a2532c9695024adf48ca9fbd3c0927a",
+  "host_inventory_sha256": "3e97382a519f19c1b75d405344cf462a5c4708aaaf0e6262641d1cfa154efdfb",
+  "host_receipt_sha256": "a4f8260da20cb0fcdf0d096e300d5783d167cdbfd157485f59e288094e20dd44",
+  "host_source": "07083d1983db87a9868c3e8ba0cda1efd283b445",
+  "host_tests": 41,
+  "partial_attempts_counted": false,
+  "python_tests": 28,
+  "schema_version": 1,
+  "status": "host_completed_canonical_in_progress"
+}

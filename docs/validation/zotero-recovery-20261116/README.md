@@ -1,3 +1,5 @@
+> **Completed host checkpoint:** the fresh host run at `07083d19`, pinned to canonical `b87f9d6c`, passed 41 host tests and 28 Python tests, all ten required commands, and its source/dependency restoration gates. [Complete host receipt and raw evidence](host/README.md). The full canonical retry is still in progress; earlier interrupted counts are excluded.
+
 # Zotero recovery — 16 November 2026
 
 ## Resume checkpoint
