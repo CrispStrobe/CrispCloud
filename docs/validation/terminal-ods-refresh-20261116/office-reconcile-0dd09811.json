@@ -1,0 +1,22 @@
+{
+  "parents": [
+    "d65649004960ebf7ea4edd356212c13864215810",
+    "0dd09811b1c02514c32c33bd13744dadb202e7af"
+  ],
+  "target": "a979e4ef9ea8afedaaac6b00e6ed923e86a95b40",
+  "managed_files": 2412,
+  "writes": [
+    {
+      "path": "packages/quds_office_engine/lib/src/sheet/model/sml_workbook.dart",
+      "before_sha256": "498d2e1936e0feae2552174ae55a7164d436d81c0d01269d9a357572978d4d0c",
+      "after_sha256": "f09ea9bf8464b480d62b68852957c9ce6d05a43a5ba6e686ff7822d76a02ffb5"
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+      "before_sha256": "f5d1457cdfe55d975be8be7450d93c58f49eeac965c352c7deb049addbe5133d",
+      "after_sha256": "a419fda8c408b98f10822475c05a5866bfd96c7d2540e847e72f72ef55000e45"
+    }
+  ],
+  "deleted": [],
+  "validation": "Every current file matched a merge-parent manifest or the exact combined canonical source before replacement; standalone parser remained unchanged."
+}

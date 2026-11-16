@@ -1,12 +1,7 @@
 {
   "source_repository": "CrispStrobe/quds_office_suite",
-<<<<<<< HEAD
   "source_branch": "fix/ods-global-validations-20261116",
-  "source_commit": "d65649004960ebf7ea4edd356212c13864215810",
-=======
-  "source_branch": "codex/zotero-optimization-20261116",
-  "source_commit": "0dd09811b1c02514c32c33bd13744dadb202e7af",
->>>>>>> origin/codex/zotero-optimization-20261116
+  "source_commit": "a979e4ef9ea8afedaaac6b00e6ed923e86a95b40",
   "files": {
     "packages/legacy_doc_parser/.gitattributes": "e03c93473e616ad6fcd8697f797b4774076aa6fc468bf0f72860d2c6512eebbf",
     "packages/legacy_doc_parser/.github/workflows/ci.yml": "111910a34c0e41774a325c0bc5c6c3d7517298254a08c79df6dce7d7f70e3605",
@@ -1987,11 +1982,7 @@
     "packages/quds_office_editor/test/word_zotero_format_test.dart": "6c9cd8a8130c1fcbdca6a4834e18c08590994ceb970efe6a0a6209e70025c650",
     "packages/quds_office_editor/test/word_zotero_rich_controller_test.dart": "8be7430271ea255a2891b36118dafdd7032e7146225717305b591783cbe42d00",
     "packages/quds_office_editor/test/word_zotero_saved_search_test.dart": "2d939076b8817ab151987b33ab9fd99ea29aeace87974e647709732c48d967b2",
-<<<<<<< HEAD
-    "packages/quds_office_engine/CHANGELOG.md": "df175d14276316af78b0deab693052b6a356919732e840d995abaeddb39aac38",
-=======
-    "packages/quds_office_engine/CHANGELOG.md": "14fd4184acde2fb81cce017c321a609dc551446d82b4dfd612a9740f581e874e",
->>>>>>> origin/codex/zotero-optimization-20261116
+    "packages/quds_office_engine/CHANGELOG.md": "cb7785f194e58695c970500f59d321b4ca78e667e7c47379a610594a1560fedb",
     "packages/quds_office_engine/lib/quds_office_engine.dart": "c580f7bc02af76468edc3efe7d564a2b8a83ab65e588f14e2df32fa08cca0c87",
     "packages/quds_office_engine/lib/src/bidi/grapheme_clusters.dart": "f04618334611bb31abcf34a7388c45c0068b161f09a56303d3c39226f859ce60",
     "packages/quds_office_engine/lib/src/bidi/line_breaker.dart": "8a6be39b03d91e963a5e64ffddbd5f7dc6121a99982e4c915f1538f1e3bf01e8",
@@ -2014,18 +2005,14 @@
     "packages/quds_office_engine/lib/src/sheet/formula/formula_eval.dart": "c9d13f08e8388c22e12567d50cc57c4f1ed70f340b338bfed39facac59c1d45b",
     "packages/quds_office_engine/lib/src/sheet/formula/formula_functions.dart": "53f4270baaa0aadf5b18da06fb86b81a084a199abdb2e9edb734e24f3a6f5d92",
     "packages/quds_office_engine/lib/src/sheet/legacy/legacy_sheet_reader.dart": "a7bc75d47fae7234699fb8c4c651a35a45fcc5186cb57a7c19efbd050175fc8b",
-<<<<<<< HEAD
-    "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart": "9ea8d818bb0d37eb3a93d05a4ea05a5be2137e18b3c20aafd8fde73ec590e8ee",
-=======
-    "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart": "8a3b55068bbb4f24a0f5b416829dde7e25c4c00b6458444448e5a1006b51df80",
->>>>>>> origin/codex/zotero-optimization-20261116
+    "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart": "b8b2bb92e8eba062f33d75e71427df5898a50ee84299ac720d1d069680abdb20",
     "packages/quds_office_engine/lib/src/sheet/model/sheet_rename.dart": "93e0c9103222bc05ddbc08929983129f3285da15839695bc3a2384c68a91089f",
     "packages/quds_office_engine/lib/src/sheet/model/sml_analysis.dart": "5ffbca17722e03c0c19ec65e24c56f7b3116c45b00e34fb7681692d10d1e960e",
     "packages/quds_office_engine/lib/src/sheet/model/sml_power_query.dart": "610f105eef406d0b80f0ac9e8c9c22fb7972a5cf82a9e28e618ce0bf4a19aae7",
-    "packages/quds_office_engine/lib/src/sheet/model/sml_workbook.dart": "498d2e1936e0feae2552174ae55a7164d436d81c0d01269d9a357572978d4d0c",
+    "packages/quds_office_engine/lib/src/sheet/model/sml_workbook.dart": "f09ea9bf8464b480d62b68852957c9ce6d05a43a5ba6e686ff7822d76a02ffb5",
     "packages/quds_office_engine/lib/src/sheet/serial/sheet_drawing_io.dart": "12bdcd3963ce4acb83bc6465f7d4343d9c4a0303d17d124ea76dbe5e83ac9f77",
     "packages/quds_office_engine/lib/src/sheet/serial/sheet_package_fidelity.dart": "f8984392e9f886bdbc121880643f05d22a28d451cc79a7a85f74962f9ad81864",
-    "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart": "f5d1457cdfe55d975be8be7450d93c58f49eeac965c352c7deb049addbe5133d",
+    "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart": "a419fda8c408b98f10822475c05a5866bfd96c7d2540e847e72f72ef55000e45",
     "packages/quds_office_engine/lib/src/sheet/styles/sml_styles.dart": "84be6e42c47c58872c451639722dd33af50005a9aab6e13ac766888f66311f5b",
     "packages/quds_office_engine/lib/src/slide/anim/pml_motion_io.dart": "c651ee0235ed5c96b47398ac86fa5ba8f414aad1bc2ae8066752de01af42e88c",
     "packages/quds_office_engine/lib/src/slide/model/pml_arrange.dart": "55b511cf38d76de917fcbde0d80990a2e5eb99f7caf80d5c9c51da48a05948b7",
@@ -2207,11 +2194,7 @@
     "packages/quds_office_engine/test/note_marker_merge_test.dart": "c5ea2e069021071299b1b191154fe98fcd870dbbc4e6edce174da775ad83e6e8",
     "packages/quds_office_engine/test/note_separator_fidelity_test.dart": "7f086b027fe9be2cd03e5326d9508573dbb14a3d77744ccae62c4585252cd195",
     "packages/quds_office_engine/test/numbering_collision_test.dart": "9b05f637b3965c98f2b16062c4052e8d18310db8724aab04a8f28e7f339e78ea",
-<<<<<<< HEAD
-    "packages/quds_office_engine/test/ods_sheet_reader_test.dart": "8c5155011f3b67f2824f632d311c740e2c7f72a7b8862c2218a279b3c4f1bcc4",
-=======
-    "packages/quds_office_engine/test/ods_sheet_reader_test.dart": "cfb175230aea4c494398ab348fbe2f034372120ba401afe4d7afe019fc25a415",
->>>>>>> origin/codex/zotero-optimization-20261116
+    "packages/quds_office_engine/test/ods_sheet_reader_test.dart": "04b8502694665256d97759faedadd8900d71dc25b61c053a78b8ba4d380c9cca",
     "packages/quds_office_engine/test/office_features_test.dart": "baf7bf76e6455acfc14bd8412e0d9aeccaac99b77cf076947939c350111ac7ec",
     "packages/quds_office_engine/test/office_fidelity_oracle_test.dart": "a5f4ec785f1a26c554454fc4936f2d6b3c58e3ad2c448650aa81aec8f7688eee",
     "packages/quds_office_engine/test/office_named_fonts_test.dart": "079c26e265a63814c80b748a643dbf6a8e9ce3ab81447e424c6745334b10ee83",

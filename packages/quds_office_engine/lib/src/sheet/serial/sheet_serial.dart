@@ -450,6 +450,16 @@ class SheetDeserializer {
         _applyHeaderFooterSection(sheet.headerFooter!, text, header: false);
       }
       if (reader.eventType == XmlEventType.startElement &&
+          reader.localName == 'tabColor') {
+        final rgb = reader.getAttribute('rgb');
+        if (rgb != null) {
+          final hex = rgb.length == 8 ? rgb.substring(2) : rgb;
+          if (RegExp(r'^[0-9A-Fa-f]{6}$').hasMatch(hex)) {
+            sheet.tabColorRgb = hex.toUpperCase();
+          }
+        }
+      }
+      if (reader.eventType == XmlEventType.startElement &&
           reader.localName == 'dataValidation') {
         final String? sqref = reader.getAttribute('sqref');
         final String type = reader.getAttribute('type') ?? 'custom';
@@ -1317,6 +1327,11 @@ class SheetSerializer {
     w.writeStartDocument();
     w.writeStartElement('worksheet');
     w.writeAttribute('xmlns', OfficeNamespaces.x);
+    if (sheet.tabColorRgb case final rgb?) {
+      w.writeStartElement('sheetPr');
+      w.writeEmptyElement('tabColor', attributes: {'rgb': 'FF$rgb'});
+      w.writeEndElement();
+    }
     if (sheet.drawings.isNotEmpty) {
       w.writeNamespace('r', OfficeNamespaces.r);
     }
