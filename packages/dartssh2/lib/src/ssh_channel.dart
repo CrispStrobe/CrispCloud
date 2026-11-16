@@ -277,6 +277,7 @@ class SSHChannelController {
   Future<void> close() async {
     if (_done.isCompleted) return;
 
+    _failPendingWrites(SSHStateError('Channel output closed before send'));
     _locaStreamConsumer.cancel();
     _sendEOFIfNeeded();
 
@@ -317,13 +318,17 @@ class SSHChannelController {
 
   void _finish(Object error, [StackTrace? stackTrace]) {
     _requestReplyQueue.closeWithError(error, stackTrace);
+    _failPendingWrites(error, stackTrace);
+    if (!_done.isCompleted) {
+      _done.complete();
+    }
+  }
+
+  void _failPendingWrites(Object error, [StackTrace? stackTrace]) {
     for (final pending in _pendingWrites) {
       if (!pending.isCompleted) pending.completeError(error, stackTrace);
     }
     _pendingWrites.clear();
-    if (!_done.isCompleted) {
-      _done.complete();
-    }
   }
 
   void _handleWindowAdjustMessage(int bytesToAdd) {
@@ -558,10 +563,16 @@ class SSHChannelController {
     if (bytes.isNotEmpty) {
       final sent = Completer<void>();
       _pendingWrites.add(sent);
-      _localStream.add(SSHChannelData(bytes, type: type, onSent: () {
-        if (_pendingWrites.remove(sent) && !sent.isCompleted) sent.complete();
-      }));
-      await sent.future;
+      try {
+        _localStream.add(SSHChannelData(bytes, type: type, onSent: () {
+          if (_pendingWrites.remove(sent) && !sent.isCompleted) sent.complete();
+        }));
+        await sent.future;
+      } finally {
+        // Enqueue may reject writes while a stream owns the channel sink.
+        // Such an unobserved completer must not survive until channel close.
+        _pendingWrites.remove(sent);
+      }
     }
     await flush();
   }

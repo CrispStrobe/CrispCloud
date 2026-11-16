@@ -22,6 +22,7 @@ NEW_TESTS = [
     'test/ssh_agent_route_test.dart',
     'test/ssh_agent_test.dart',
     'test/ssh_agent_widget_test.dart',
+    'test/ssh_public_key_auth_test.dart',
     'test/ssh_forwarding_panel_test.dart',
     'test/ssh_forwarding_profiles_test.dart',
     'test/ssh_forwarding_profiles_widget_test.dart',

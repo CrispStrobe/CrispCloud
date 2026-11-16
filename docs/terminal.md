@@ -468,6 +468,8 @@ SHA-2-256, and ECDSA `nistp256`, `nistp384` or `nistp521`. RSA/SHA-1 fallback,
 SSH certificates, `sk-*` security-key algorithms and agent extensions are not
 implemented. A device or external agent may still provide a supported ordinary
 key type; actual device/agent acceptance needs validation on that platform.
+Destination-restricted OpenSSH agent keys that require session-bind extensions
+are not supported by this implementation.
 
 **Forward SSH agent** is a separate, default-off checkbox. It can accompany
 password, private-key or agent authentication. The form explains that programs

@@ -1,3 +1,5 @@
+import 'package:dartssh2/dartssh2.dart'
+    show SSHAuthAbortError, SSHInternalError;
 import 'package:flutter/widgets.dart';
 
 import '../services/terminal_mount_failure.dart';
@@ -12,7 +14,8 @@ String localizedTerminalMountError(BuildContext context, Object error) =>
     );
 
 String localizedTerminalMountErrorForLanguage(String language, Object error) {
-  if (error is SshAgentException) return sshAgentText(language, error.message);
+  final agentError = _knownAgentError(error);
+  if (agentError != null) return sshAgentText(language, agentError.message);
   if (error is! TerminalMountFailure) {
     return localizedProviderErrorForLanguage(language, error);
   }
@@ -20,10 +23,26 @@ String localizedTerminalMountErrorForLanguage(String language, Object error) {
   return template.replaceAllMapped(RegExp(r'\{([A-Za-z]+)\}'), (match) {
     final value = error.arguments[match.group(1)];
     if (value == null) return match.group(0)!;
-    return value is TerminalMountFailure || value is SshAgentException
-        ? localizedTerminalMountErrorForLanguage(language, value)
-        : localizedProviderErrorForLanguage(language, value);
+    return localizedTerminalMountErrorForLanguage(language, value);
   });
+}
+
+SshAgentException? _knownAgentError(Object error) {
+  var cause = error;
+  // dartssh2 wraps asynchronous signer failures, then may wrap that transport
+  // failure again while aborting authentication. Only recognized agent causes
+  // are unwrapped; unrelated SSH errors retain their existing presentation.
+  for (var depth = 0; depth < 8; depth++) {
+    if (cause is SshAgentException) return cause;
+    if (cause is SSHInternalError) {
+      cause = cause.error;
+    } else if (cause is SSHAuthAbortError && cause.reason != null) {
+      cause = cause.reason!;
+    } else {
+      return null;
+    }
+  }
+  return null;
 }
 
 const Map<String, Map<String, String>> _messages = {

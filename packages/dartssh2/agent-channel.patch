@@ -229,20 +229,126 @@
    }
  
    Uint8List _appendBytes(Uint8List a, Uint8List b) {
+--- a/lib/src/ssh_channel.dart
++++ b/lib/src/ssh_channel.dart
+@@ -108,6 +108,10 @@
+   /// A [StreamController] that accepts data from local end of the channel.
+   final _localStream = StreamController<SSHChannelData>();
+ 
++  // Used by bounded consumers which need a real remote-window drain barrier.
++  // Ordinary sink/addData callers keep the existing fire-and-forget behavior.
++  final _pendingWrites = <Completer<void>>{};
++
+   late final _locaStreamConsumer = SSHChannelDataConsumer(_localStream.stream);
+ 
+   /// Handler of channel requests from the remote side.
+@@ -273,6 +277,7 @@
+   Future<void> close() async {
+     if (_done.isCompleted) return;
+ 
++    _failPendingWrites(SSHStateError('Channel output closed before send'));
+     _locaStreamConsumer.cancel();
+     _sendEOFIfNeeded();
+ 
+@@ -313,9 +318,17 @@
+ 
+   void _finish(Object error, [StackTrace? stackTrace]) {
+     _requestReplyQueue.closeWithError(error, stackTrace);
++    _failPendingWrites(error, stackTrace);
+     if (!_done.isCompleted) {
+       _done.complete();
+     }
++  }
++
++  void _failPendingWrites(Object error, [StackTrace? stackTrace]) {
++    for (final pending in _pendingWrites) {
++      if (!pending.isCompleted) pending.completeError(error, stackTrace);
++    }
++    _pendingWrites.clear();
+   }
+ 
+   void _handleWindowAdjustMessage(int bytesToAdd) {
+@@ -532,6 +545,7 @@
+       sendMessage(message);
+ 
+       _remoteWindow -= data.bytes.length;
++      data._onSent?.call();
+     }
+   });
+ 
+@@ -540,6 +554,28 @@
+       await onFlush?.call();
+     });
+   }
++
++  Future<void> sendDataAndWait(Uint8List bytes, {int? type}) async {
++    _terminalState.throwIfTerminated();
++    if (_hasSentEOF || _localStream.isClosed) {
++      throw SSHStateError('Channel output is closed');
++    }
++    if (bytes.isNotEmpty) {
++      final sent = Completer<void>();
++      _pendingWrites.add(sent);
++      try {
++        _localStream.add(SSHChannelData(bytes, type: type, onSent: () {
++          if (_pendingWrites.remove(sent) && !sent.isCompleted) sent.complete();
++        }));
++        await sent.future;
++      } finally {
++        // Enqueue may reject writes while a stream owns the channel sink.
++        // Such an unobserved completer must not survive until channel close.
++        _pendingWrites.remove(sent);
++      }
++    }
++    await flush();
++  }
+ }
+ 
+ class SSHChannel {
+@@ -569,6 +605,12 @@
+   void addData(Uint8List data, {int? type}) {
+     sink.add(SSHChannelData(data, type: type));
+   }
++
++  /// Send data, wait until every byte passes the remote channel window, and
++  /// flush the underlying transport. Closing the channel fails a pending wait.
++  /// The caller must await this before queuing another bounded message.
++  Future<void> sendDataAndWait(Uint8List data, {int? type}) =>
++      _controller.sendDataAndWait(data, type: type);
+ 
+   /// Force flush any buffered outgoing data on this channel to the socket.
+   Future<void> flush() => _controller.flush();
+@@ -637,7 +679,10 @@
+ 
+   bool get isExtendedData => type != null;
+ 
+-  SSHChannelData(this.bytes, {this.type});
++  final void Function()? _onSent;
++
++  SSHChannelData(this.bytes, {this.type, void Function()? onSent})
++      : _onSent = onSent;
+ }
+ 
+ class SSHChannelExtendedDataType {
+@@ -690,6 +735,7 @@
+     return SSHChannelData(
+       Uint8List.sublistView(chunk.bytes, start, end),
+       type: chunk.type,
++      onSent: end == chunk.bytes.length ? chunk._onSent : null,
+     );
+   }
+ }
 --- a/lib/src/ssh_client.dart
 +++ b/lib/src/ssh_client.dart
-@@ -31,8 +31,8 @@
- /// https://datatracker.ietf.org/doc/html/rfc4252#section-8
- typedef SSHPasswordRequestHandler = FutureOr<String?> Function();
- 
--typedef SSHChangePasswordRequestHandler = FutureOr<SSHChangePasswordResponse?>
--    Function(String prompt);
-+typedef SSHChangePasswordRequestHandler =
-+    FutureOr<SSHChangePasswordResponse?> Function(String prompt);
- 
- /// https://datatracker.ietf.org/doc/html/rfc4256#section-3.3
- typedef SSHUserInfoRequestHandler = FutureOr<List<String>?> Function(
-@@ -345,11 +345,7 @@
+@@ -17,6 +17,7 @@
+ import 'package:dartssh2/src/ssh_transport.dart';
+ import 'package:dartssh2/src/utils/async_queue.dart';
+ import 'package:dartssh2/src/utils/auth_methods.dart';
++import 'package:dartssh2/src/utils/list.dart';
+ import 'package:dartssh2/src/utils/pending_requests.dart';
+ import 'package:dartssh2/src/utils/terminal_state.dart';
+ import 'package:dartssh2/src/message/msg_channel.dart';
+@@ -345,11 +346,7 @@
  
    static String _validateIdent(String ident) {
      if (ident.isEmpty) {
@@ -255,27 +361,38 @@
      }
  
      if (ident.contains('\r') || ident.contains('\n')) {
-@@ -381,10 +377,17 @@
-   /// confirmation or failure has not yet been received.
-   late final _pendingChannelOpens =
-       PendingRequests<SSHChannelId, SSHChannelController>(
--    terminalState: _terminalState,
--  );
-+        terminalState: _terminalState,
-+      );
+@@ -386,6 +383,13 @@
  
    final _channels = <int, SSHChannelController>{};
-+
+ 
 +  /// Agent channels remain counted through local close until the peer confirms
 +  /// CHANNEL_CLOSE. A peer cannot evade admission limits by abandoning closes.
 +  static const maximumAgentChannels = 16;
 +  static const _agentWindowSize = 64 * 1024;
 +  final _agentChannelIds = <int>{};
 +  bool _agentForwardingRequested = false;
- 
++
    final _authMethodsLeft = Queue<SSHAuthMethod>();
  
-@@ -545,9 +548,7 @@
+   final _preferredAuthMethods = <SSHAuthMethod>[];
+@@ -404,7 +408,15 @@
+ 
+   SSHAuthMethod? _currentAuthMethod;
+ 
+-  SSHIdentity? _currentProbedIdentity;
++  // An asynchronous signer belongs to one authentication attempt, even when
++  // the next attempt uses the same method or the same identity object.
++  var _authAttempt = 0;
++  ({
++    SSHIdentity identity,
++    String algorithm,
++    Uint8List publicKey,
++    int attempt
++  })? _currentPublicKeyProbe;
+ 
+   var _transportReady = false;
+ 
+@@ -545,9 +557,7 @@
    /// remote side via a `direct-streamlocal@openssh.com` channel.
    ///
    /// This is the equivalent of `ssh -L localPort:remoteSocketPath`.
@@ -286,7 +403,7 @@
      await _authenticated.future;
      final channelController = await _openForwardLocalUnixChannel(
        remoteSocketPath,
-@@ -645,10 +646,13 @@
+@@ -645,10 +655,13 @@
      }
  
      if (agentHandler != null) {
@@ -304,22 +421,7 @@
      }
  
      if (pty != null) {
-@@ -723,10 +727,10 @@
-     final outcomes = [
-       for (final request in pipelined)
-         request.send().then<_SessionRequestOutcome>(
--              (accepted) => (accepted: accepted, error: null, stackTrace: null),
--              onError: (Object error, StackTrace stackTrace) =>
--                  (accepted: null, error: error, stackTrace: stackTrace),
--            ),
-+          (accepted) => (accepted: accepted, error: null, stackTrace: null),
-+          onError: (Object error, StackTrace stackTrace) =>
-+              (accepted: null, error: error, stackTrace: stackTrace),
-+        ),
-     ];
- 
-     // Deliberately not Future.wait, which propagates whichever error arrives
-@@ -864,10 +868,10 @@
+@@ -864,10 +877,10 @@
      // would leave the second one without an error handler until the first one
      // completes, turning an error on that stream into an uncaught error.
      try {
@@ -334,7 +436,7 @@
        await session.done;
      } catch (_) {
        await stdoutSubscription.cancel();
-@@ -936,6 +940,8 @@
+@@ -936,6 +949,8 @@
      }
  
      _channels.clear();
@@ -343,7 +445,101 @@
    }
  
    void _handleTransportReady() {
-@@ -1216,11 +1222,13 @@
+@@ -1103,6 +1118,8 @@
+   void _handleUserauthSuccess() {
+     printTrace?.call('<- $socket: SSH_Message_Userauth_Success');
+     printDebug?.call('SSHClient._handleUserauthSuccess');
++    if (_authenticated.isCompleted || isClosed) return;
++    _invalidateAuthAttempt();
+     _authTimeoutTimer?.cancel();
+     _authTimeoutTimer = null;
+     _authenticated.complete();
+@@ -1113,6 +1130,7 @@
+   void _handleHandshakeTimeout() {
+     if (_authenticated.isCompleted || _transportReady) return;
+ 
++    _invalidateAuthAttempt();
+     _handshakeTimeoutTimer = null;
+     final error = SSHHandshakeError('Handshake timed out');
+     _authenticated.completeError(error, StackTrace.current);
+@@ -1121,6 +1139,7 @@
+   void _handleAuthTimeout() {
+     if (_authenticated.isCompleted) return;
+ 
++    _invalidateAuthAttempt();
+     _authTimeoutTimer = null;
+     _authenticated.completeError(
+       SSHAuthAbortError('Authentication timed out'),
+@@ -1129,10 +1148,11 @@
+   }
+ 
+   void _handleUserauthFailure(Uint8List payload) {
++    if (_authenticated.isCompleted || isClosed) return;
+     final message = SSH_Message_Userauth_Failure.decode(payload);
+     printTrace?.call('<- $socket: $message');
+     printDebug?.call('SSHClient._handleUserauthFailure');
+-    _currentProbedIdentity = null;
++    _invalidateAuthAttempt();
+ 
+     if (message.partialSuccess) {
+       printDebug?.call(
+@@ -1166,7 +1186,7 @@
+       case SSHAuthMethod.keyboardInteractive:
+         return _catch(() => _handleUserauthInfoRequest(payload));
+       case SSHAuthMethod.publicKey:
+-        return _catch(() => _handleUserauthPKOk(payload));
++        return _catchPublicKeyAuth(() => _handleUserauthPKOk(payload));
+       default:
+         printDebug?.call('unknown auth method: $_currentAuthMethod');
+     }
+@@ -1177,29 +1197,30 @@
+     final message = SSH_Message_Userauth_PK_Ok.decode(payload);
+     printTrace?.call('<- $socket: $message');
+ 
+-    final identity = _currentProbedIdentity;
+-    if (identity == null) return;
+-    _currentProbedIdentity = null;
+-
+-    final publicKeyBlob = identity.toPublicKey().encode();
++    final probe = _currentPublicKeyProbe;
++    if (probe == null || !_isCurrentPublicKeyAttempt(probe.attempt)) return;
++    // Consume the probe before validation/signing. Duplicate replies cannot
++    // start another signer, including while a malformed reply is being closed.
++    _currentPublicKeyProbe = null;
++    if (message.publicKeyAlgorithm != probe.algorithm ||
++        !constantTimeEquals(message.publicKey, probe.publicKey)) {
++      throw SSHPacketError('Public key acceptance does not match the probe');
++    }
+     final challenge = _transport.composeChallenge(
+       username: username,
+       service: 'ssh-connection',
+-      publicKeyAlgorithm: identity.type,
+-      publicKey: publicKeyBlob,
+-    );
+-
+-    final signature = await identity.sign(challenge);
+-
+-    if (isClosed || _currentAuthMethod != SSHAuthMethod.publicKey) {
+-      return;
+-    }
++      publicKeyAlgorithm: probe.algorithm,
++      publicKey: probe.publicKey,
++    );
++
++    final signature = await probe.identity.sign(challenge);
++    if (!_isCurrentPublicKeyAttempt(probe.attempt)) return;
+ 
+     _sendMessage(
+       SSH_Message_Userauth_Request.publicKey(
+         username: username,
+-        publicKeyAlgorithm: identity.type,
+-        publicKey: publicKeyBlob,
++        publicKeyAlgorithm: probe.algorithm,
++        publicKey: probe.publicKey,
+         signature: signature.encode(),
+       ),
+     );
+@@ -1216,11 +1237,13 @@
        return _tryNextAuthMethod();
      }
  
@@ -362,7 +558,7 @@
    }
  
    Future<void> _handleUserauthInfoRequest(Uint8List payload) async {
-@@ -1400,7 +1408,7 @@
+@@ -1400,7 +1423,7 @@
  
    void _handleAgentChannelOpen(SSH_Message_Channel_Open message) {
      final handler = agentHandler;
@@ -371,10 +567,22 @@
        final reply = SSH_Message_Channel_Open_Failure(
          recipientChannel: message.senderChannel,
          reasonCode:
-@@ -1411,11 +1419,22 @@
+@@ -1411,11 +1434,34 @@
        return;
      }
  
++    if (message.maximumPacketSize == 0) {
++      _sendMessage(
++        SSH_Message_Channel_Open_Failure(
++          recipientChannel: message.senderChannel,
++          reasonCode:
++              SSH_Message_Channel_Open_Failure.codeAdministrativelyProhibited,
++          description: 'invalid agent channel packet size',
++        ),
++      );
++      return;
++    }
++
 +    if (_agentChannelIds.length >= maximumAgentChannels) {
 +      _sendMessage(
 +        SSH_Message_Channel_Open_Failure(
@@ -395,7 +603,7 @@
        maximumPacketSize: _maximumPacketSize,
        data: Uint8List(0),
      );
-@@ -1424,15 +1443,13 @@
+@@ -1424,15 +1470,13 @@
        remoteChannelId: message.senderChannel,
        remoteInitialWindowSize: message.initialWindowSize,
        remoteMaximumPacketSize: message.maximumPacketSize,
@@ -415,7 +623,7 @@
    }
  
    /// Finds a remote forward that matches the given host and port.
-@@ -1523,6 +1540,7 @@
+@@ -1523,6 +1567,7 @@
      if (channel != null) {
        channel.handleMessage(message);
        _channels.remove(message.recipientChannel);
@@ -423,39 +631,105 @@
        _channelIdAllocator.release(message.recipientChannel);
      }
    }
-@@ -1705,19 +1723,18 @@
+@@ -1563,6 +1608,8 @@
+ 
+   void _tryNextAuthMethod() {
+     printDebug?.call('SSHClient._tryNextAuthenticationMethod');
++    if (_authenticated.isCompleted || isClosed) return;
++    _invalidateAuthAttempt();
+ 
+     if (_authMethodsLeft.isEmpty) {
+       return _authenticated.completeError(
+@@ -1580,7 +1627,7 @@
+       case SSHAuthMethod.password:
+         return _catch(() => _authWithPassword());
+       case SSHAuthMethod.publicKey:
+-        return _catch(() => _authWithNextPublicKey());
++        return _catchPublicKeyAuth(() => _authWithNextPublicKey());
+       case SSHAuthMethod.keyboardInteractive:
+         return _authWithKeyboardInteractive();
+       case SSHAuthMethod.hostbased:
+@@ -1617,19 +1664,25 @@
+       return;
+     }
+ 
++    final attempt = _authAttempt;
+     final identity = _identitiesLeft.removeFirst();
+-    final publicKey = identity.toPublicKey();
+-    final publicKeyBlob = publicKey.encode();
++    final algorithm = identity.type;
++    final publicKeyBlob = Uint8List.fromList(identity.toPublicKey().encode());
+ 
+     if (identity.shouldProbe) {
+       printDebug?.call(
+         'Probing public key for identity: ${identity.comment ?? identity.type}',
+       );
+-      _currentProbedIdentity = identity;
++      _currentPublicKeyProbe = (
++        identity: identity,
++        algorithm: algorithm,
++        publicKey: publicKeyBlob,
++        attempt: attempt,
++      );
+       _sendMessage(
+         SSH_Message_Userauth_Request.publicKey(
+           username: username,
+-          publicKeyAlgorithm: identity.type,
++          publicKeyAlgorithm: algorithm,
+           publicKey: publicKeyBlob,
+           signature: null,
+         ),
+@@ -1640,24 +1693,43 @@
+     final challenge = _transport.composeChallenge(
+       username: username,
+       service: 'ssh-connection',
+-      publicKeyAlgorithm: identity.type,
++      publicKeyAlgorithm: algorithm,
+       publicKey: publicKeyBlob,
+     );
+ 
+     final signature = await identity.sign(challenge);
+-
+-    if (isClosed || _currentAuthMethod != SSHAuthMethod.publicKey) {
+-      return;
+-    }
++    if (!_isCurrentPublicKeyAttempt(attempt)) return;
+ 
+     _sendMessage(
+       SSH_Message_Userauth_Request.publicKey(
+         username: username,
+-        publicKeyAlgorithm: identity.type,
++        publicKeyAlgorithm: algorithm,
+         publicKey: publicKeyBlob,
+         signature: signature.encode(),
+       ),
+     );
++  }
++
++  void _invalidateAuthAttempt() {
++    _authAttempt++;
++    _currentPublicKeyProbe = null;
++  }
++
++  bool _isCurrentPublicKeyAttempt(int attempt) =>
++      !isClosed &&
++      !_authenticated.isCompleted &&
++      _currentAuthMethod == SSHAuthMethod.publicKey &&
++      attempt == _authAttempt;
++
++  void _catchPublicKeyAuth(FutureOr<dynamic> Function() fn) {
++    final attempt = _authAttempt;
++    Future.sync(fn).catchError((error, stackTrace) {
++      // A late device error must not abort a newer authentication attempt or
++      // an already authenticated connection. Current failures still propagate.
++      if (_isCurrentPublicKeyAttempt(attempt)) {
++        _transport.closeWithError(SSHInternalError(error), stackTrace);
++      }
++    });
    }
  
-   Set<SSHAuthMethod> get _availableAuthMethods => {
--        if (_identitiesLeft.isNotEmpty) SSHAuthMethod.publicKey,
--        if (!_exhaustedAuthMethods.contains(SSHAuthMethod.password) &&
--            onPasswordRequest != null)
--          SSHAuthMethod.password,
--        if (!_exhaustedAuthMethods
--                .contains(SSHAuthMethod.keyboardInteractive) &&
--            onUserInfoRequest != null)
--          SSHAuthMethod.keyboardInteractive,
--        if (_hostbasedIdentitiesLeft.isNotEmpty &&
--            hostName != null &&
--            userNameOnClientHost != null)
--          SSHAuthMethod.hostbased,
--      };
-+    if (_identitiesLeft.isNotEmpty) SSHAuthMethod.publicKey,
-+    if (!_exhaustedAuthMethods.contains(SSHAuthMethod.password) &&
-+        onPasswordRequest != null)
-+      SSHAuthMethod.password,
-+    if (!_exhaustedAuthMethods.contains(SSHAuthMethod.keyboardInteractive) &&
-+        onUserInfoRequest != null)
-+      SSHAuthMethod.keyboardInteractive,
-+    if (_hostbasedIdentitiesLeft.isNotEmpty &&
-+        hostName != null &&
-+        userNameOnClientHost != null)
-+      SSHAuthMethod.hostbased,
-+  };
- 
-   void _markCurrentAuthMethodAttempted() {
-     switch (_currentAuthMethod) {
-@@ -1782,9 +1799,7 @@
+   void _authWithKeyboardInteractive() {
+@@ -1782,9 +1854,7 @@
      return _openChannel(localChannelId, request);
    }
  
@@ -466,7 +740,7 @@
      final localChannelId = _channelIdAllocator.allocate();
  
      final request = SSH_Message_Channel_Open.directStreamLocal(
-@@ -1826,6 +1841,7 @@
+@@ -1826,6 +1896,7 @@
      required SSHChannelId remoteChannelId,
      required int remoteInitialWindowSize,
      required int remoteMaximumPacketSize,
@@ -474,7 +748,7 @@
    }) {
      if (_channels.containsKey(localChannelId)) {
        throw SSHStateError('Channel $localChannelId is already open');
-@@ -1833,7 +1849,7 @@
+@@ -1833,7 +1904,7 @@
  
      final channelController = SSHChannelController(
        localId: localChannelId,
@@ -483,91 +757,20 @@
        localMaximumPacketSize: _maximumPacketSize,
        remoteId: remoteChannelId,
        remoteInitialWindowSize: remoteInitialWindowSize,
---- a/lib/src/ssh_channel.dart
-+++ b/lib/src/ssh_channel.dart
-@@ -108,6 +108,10 @@
-   /// A [StreamController] that accepts data from local end of the channel.
-   final _localStream = StreamController<SSHChannelData>();
+--- a/lib/src/ssh_transport.dart
++++ b/lib/src/ssh_transport.dart
+@@ -618,6 +618,14 @@
  
-+  // Used by bounded consumers which need a real remote-window drain barrier.
-+  // Ordinary sink/addData callers keep the existing fire-and-forget behavior.
-+  final _pendingWrites = <Completer<void>>{};
-+
-   late final _locaStreamConsumer = SSHChannelDataConsumer(_localStream.stream);
- 
-   /// Handler of channel requests from the remote side.
-@@ -313,6 +317,10 @@
- 
-   void _finish(Object error, [StackTrace? stackTrace]) {
-     _requestReplyQueue.closeWithError(error, stackTrace);
-+    for (final pending in _pendingWrites) {
-+      if (!pending.isCompleted) pending.completeError(error, stackTrace);
+   /// Force flush any buffered outgoing data to the socket.
+   Future<void> flush() async {
++    if (isClosed) throw SSHStateError('Transport is closed');
++    // A socket flush alone cannot drain application packets held for NEWKEYS.
++    // Waiting only when packets are queued keeps a pre-handshake empty flush
++    // inert and never starts an additional key exchange.
++    if (_kexInProgress && _rekeyPendingPackets.isNotEmpty) {
++      await _waitForNewKeys();
 +    }
-+    _pendingWrites.clear();
-     if (!_done.isCompleted) {
-       _done.complete();
-     }
-@@ -532,6 +540,7 @@
-       sendMessage(message);
- 
-       _remoteWindow -= data.bytes.length;
-+      data._onSent?.call();
-     }
-   });
- 
-@@ -540,6 +549,22 @@
-       await onFlush?.call();
-     });
++    if (isClosed) throw SSHStateError('Transport is closed');
+     await socket.flush();
    }
-+
-+  Future<void> sendDataAndWait(Uint8List bytes, {int? type}) async {
-+    _terminalState.throwIfTerminated();
-+    if (_hasSentEOF || _localStream.isClosed) {
-+      throw SSHStateError('Channel output is closed');
-+    }
-+    if (bytes.isNotEmpty) {
-+      final sent = Completer<void>();
-+      _pendingWrites.add(sent);
-+      _localStream.add(SSHChannelData(bytes, type: type, onSent: () {
-+        if (_pendingWrites.remove(sent) && !sent.isCompleted) sent.complete();
-+      }));
-+      await sent.future;
-+    }
-+    await flush();
-+  }
- }
  
- class SSHChannel {
-@@ -569,6 +594,12 @@
-   void addData(Uint8List data, {int? type}) {
-     sink.add(SSHChannelData(data, type: type));
-   }
-+
-+  /// Send data, wait until every byte passes the remote channel window, and
-+  /// flush the underlying transport. Closing the channel fails a pending wait.
-+  /// The caller must await this before queuing another bounded message.
-+  Future<void> sendDataAndWait(Uint8List data, {int? type}) =>
-+      _controller.sendDataAndWait(data, type: type);
- 
-   /// Force flush any buffered outgoing data on this channel to the socket.
-   Future<void> flush() => _controller.flush();
-@@ -637,7 +668,10 @@
- 
-   bool get isExtendedData => type != null;
- 
--  SSHChannelData(this.bytes, {this.type});
-+  final void Function()? _onSent;
-+
-+  SSHChannelData(this.bytes, {this.type, void Function()? onSent})
-+      : _onSent = onSent;
- }
- 
- class SSHChannelExtendedDataType {
-@@ -690,6 +724,7 @@
-     return SSHChannelData(
-       Uint8List.sublistView(chunk.bytes, start, end),
-       type: chunk.type,
-+      onSent: end == chunk.bytes.length ? chunk._onSent : null,
-     );
-   }
- }

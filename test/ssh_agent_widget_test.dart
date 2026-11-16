@@ -1,7 +1,10 @@
 import 'package:crisp_cloud/l10n/ssh_agent_strings.dart';
 import 'package:crisp_cloud/l10n/terminal_mount_error_strings.dart';
 import 'package:crisp_cloud/services/ssh_agent.dart';
+import 'package:crisp_cloud/services/terminal_mount_failure.dart';
 import 'package:crisp_cloud/widgets/ssh_terminal_connect_dialog.dart';
+import 'package:dartssh2/dartssh2.dart'
+    show SSHAuthAbortError, SSHInternalError;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -192,6 +195,68 @@ void main() {
           );
         }
       }
+    },
+  );
+
+  for (final message in [
+    SshAgentException.refused,
+    SshAgentException.timeout,
+  ]) {
+    test('wrapped agent failure is translated: $message', () {
+      final agent = SshAgentException(message);
+      final internal = SSHInternalError(agent);
+      final aborted = SSHAuthAbortError(
+        'Connection closed before authentication',
+        internal,
+      );
+      for (final language in [
+        'en',
+        'de',
+        'fr',
+        'es',
+        'pt',
+        'zh',
+        'ja',
+        'ko',
+        'ar',
+      ]) {
+        final translated = sshAgentText(language, message);
+        for (final wrapper in [internal, aborted]) {
+          expect(
+            localizedTerminalMountErrorForLanguage(language, wrapper),
+            translated,
+          );
+          final mount = TerminalMountException(
+            TerminalMountCode.sshConnection,
+            'SSH connection failed: $wrapper',
+            {'error': wrapper},
+          );
+          final rendered = localizedTerminalMountErrorForLanguage(
+            language,
+            mount,
+          );
+          expect(rendered, contains(translated));
+          expect(rendered, isNot(contains('SSHInternalError')));
+          expect(rendered, isNot(contains('SSHAuthAbortError')));
+          if (language != 'en') expect(rendered, isNot(contains(message)));
+        }
+      }
+    });
+  }
+
+  test(
+    'unknown wrapped SSH causes retain their existing error presentation',
+    () {
+      final error = SSHInternalError(StateError('fixture transport detail'));
+      expect(
+        localizedTerminalMountErrorForLanguage('fr', error),
+        error.toString(),
+      );
+      final abort = SSHAuthAbortError('fixture authentication detail', error);
+      expect(
+        localizedTerminalMountErrorForLanguage('fr', abort),
+        abort.toString(),
+      );
     },
   );
 }

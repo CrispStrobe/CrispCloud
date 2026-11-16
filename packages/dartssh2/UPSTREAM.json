@@ -99,11 +99,13 @@
     "lib/src/sftp/sftp_statvfs.dart": "42c24c210038d9da92eaeeef78424a99e22272dc427b68e60b95d5ec864a9a93",
     "lib/src/sftp/sftp_request_id.dart": "f5f6ce49ec91f3ac44358645d5d8cd6e4c0c4509370c01183106fab53b2ca80f",
     "lib/src/sftp/sftp_errors.dart": "b22dd26656e436150024e1d1cd43b836df9935055e82fe1bb962395b7ec673a8",
-    "lib/src/sftp/sftp_file_open_mode.dart": "99374a1eb78955184cfa495d4e630af2950ea758c207cc06e0f46107f523a97c"
+    "lib/src/sftp/sftp_file_open_mode.dart": "99374a1eb78955184cfa495d4e630af2950ea758c207cc06e0f46107f523a97c",
+    "analysis_options.yaml": "eb64c3551483e70bf7f7750e1e8e66f49884401019dca3ca514fe8d1366fd7d7"
   },
   "patched_files": [
     "lib/src/ssh_agent.dart",
+    "lib/src/ssh_channel.dart",
     "lib/src/ssh_client.dart",
-    "lib/src/ssh_channel.dart"
+    "lib/src/ssh_transport.dart"
   ]
 }

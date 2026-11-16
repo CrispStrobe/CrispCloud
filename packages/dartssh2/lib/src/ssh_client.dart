@@ -17,6 +17,7 @@ import 'package:dartssh2/src/ssh_session.dart';
 import 'package:dartssh2/src/ssh_transport.dart';
 import 'package:dartssh2/src/utils/async_queue.dart';
 import 'package:dartssh2/src/utils/auth_methods.dart';
+import 'package:dartssh2/src/utils/list.dart';
 import 'package:dartssh2/src/utils/pending_requests.dart';
 import 'package:dartssh2/src/utils/terminal_state.dart';
 import 'package:dartssh2/src/message/msg_channel.dart';
@@ -31,8 +32,8 @@ import 'package:meta/meta.dart';
 /// https://datatracker.ietf.org/doc/html/rfc4252#section-8
 typedef SSHPasswordRequestHandler = FutureOr<String?> Function();
 
-typedef SSHChangePasswordRequestHandler =
-    FutureOr<SSHChangePasswordResponse?> Function(String prompt);
+typedef SSHChangePasswordRequestHandler = FutureOr<SSHChangePasswordResponse?>
+    Function(String prompt);
 
 /// https://datatracker.ietf.org/doc/html/rfc4256#section-3.3
 typedef SSHUserInfoRequestHandler = FutureOr<List<String>?> Function(
@@ -377,8 +378,8 @@ class SSHClient {
   /// confirmation or failure has not yet been received.
   late final _pendingChannelOpens =
       PendingRequests<SSHChannelId, SSHChannelController>(
-        terminalState: _terminalState,
-      );
+    terminalState: _terminalState,
+  );
 
   final _channels = <int, SSHChannelController>{};
 
@@ -407,7 +408,15 @@ class SSHClient {
 
   SSHAuthMethod? _currentAuthMethod;
 
-  SSHIdentity? _currentProbedIdentity;
+  // An asynchronous signer belongs to one authentication attempt, even when
+  // the next attempt uses the same method or the same identity object.
+  var _authAttempt = 0;
+  ({
+    SSHIdentity identity,
+    String algorithm,
+    Uint8List publicKey,
+    int attempt
+  })? _currentPublicKeyProbe;
 
   var _transportReady = false;
 
@@ -727,10 +736,10 @@ class SSHClient {
     final outcomes = [
       for (final request in pipelined)
         request.send().then<_SessionRequestOutcome>(
-          (accepted) => (accepted: accepted, error: null, stackTrace: null),
-          onError: (Object error, StackTrace stackTrace) =>
-              (accepted: null, error: error, stackTrace: stackTrace),
-        ),
+              (accepted) => (accepted: accepted, error: null, stackTrace: null),
+              onError: (Object error, StackTrace stackTrace) =>
+                  (accepted: null, error: error, stackTrace: stackTrace),
+            ),
     ];
 
     // Deliberately not Future.wait, which propagates whichever error arrives
@@ -1109,6 +1118,8 @@ class SSHClient {
   void _handleUserauthSuccess() {
     printTrace?.call('<- $socket: SSH_Message_Userauth_Success');
     printDebug?.call('SSHClient._handleUserauthSuccess');
+    if (_authenticated.isCompleted || isClosed) return;
+    _invalidateAuthAttempt();
     _authTimeoutTimer?.cancel();
     _authTimeoutTimer = null;
     _authenticated.complete();
@@ -1119,6 +1130,7 @@ class SSHClient {
   void _handleHandshakeTimeout() {
     if (_authenticated.isCompleted || _transportReady) return;
 
+    _invalidateAuthAttempt();
     _handshakeTimeoutTimer = null;
     final error = SSHHandshakeError('Handshake timed out');
     _authenticated.completeError(error, StackTrace.current);
@@ -1127,6 +1139,7 @@ class SSHClient {
   void _handleAuthTimeout() {
     if (_authenticated.isCompleted) return;
 
+    _invalidateAuthAttempt();
     _authTimeoutTimer = null;
     _authenticated.completeError(
       SSHAuthAbortError('Authentication timed out'),
@@ -1135,10 +1148,11 @@ class SSHClient {
   }
 
   void _handleUserauthFailure(Uint8List payload) {
+    if (_authenticated.isCompleted || isClosed) return;
     final message = SSH_Message_Userauth_Failure.decode(payload);
     printTrace?.call('<- $socket: $message');
     printDebug?.call('SSHClient._handleUserauthFailure');
-    _currentProbedIdentity = null;
+    _invalidateAuthAttempt();
 
     if (message.partialSuccess) {
       printDebug?.call(
@@ -1172,7 +1186,7 @@ class SSHClient {
       case SSHAuthMethod.keyboardInteractive:
         return _catch(() => _handleUserauthInfoRequest(payload));
       case SSHAuthMethod.publicKey:
-        return _catch(() => _handleUserauthPKOk(payload));
+        return _catchPublicKeyAuth(() => _handleUserauthPKOk(payload));
       default:
         printDebug?.call('unknown auth method: $_currentAuthMethod');
     }
@@ -1183,29 +1197,30 @@ class SSHClient {
     final message = SSH_Message_Userauth_PK_Ok.decode(payload);
     printTrace?.call('<- $socket: $message');
 
-    final identity = _currentProbedIdentity;
-    if (identity == null) return;
-    _currentProbedIdentity = null;
-
-    final publicKeyBlob = identity.toPublicKey().encode();
+    final probe = _currentPublicKeyProbe;
+    if (probe == null || !_isCurrentPublicKeyAttempt(probe.attempt)) return;
+    // Consume the probe before validation/signing. Duplicate replies cannot
+    // start another signer, including while a malformed reply is being closed.
+    _currentPublicKeyProbe = null;
+    if (message.publicKeyAlgorithm != probe.algorithm ||
+        !constantTimeEquals(message.publicKey, probe.publicKey)) {
+      throw SSHPacketError('Public key acceptance does not match the probe');
+    }
     final challenge = _transport.composeChallenge(
       username: username,
       service: 'ssh-connection',
-      publicKeyAlgorithm: identity.type,
-      publicKey: publicKeyBlob,
+      publicKeyAlgorithm: probe.algorithm,
+      publicKey: probe.publicKey,
     );
 
-    final signature = await identity.sign(challenge);
-
-    if (isClosed || _currentAuthMethod != SSHAuthMethod.publicKey) {
-      return;
-    }
+    final signature = await probe.identity.sign(challenge);
+    if (!_isCurrentPublicKeyAttempt(probe.attempt)) return;
 
     _sendMessage(
       SSH_Message_Userauth_Request.publicKey(
         username: username,
-        publicKeyAlgorithm: identity.type,
-        publicKey: publicKeyBlob,
+        publicKeyAlgorithm: probe.algorithm,
+        publicKey: probe.publicKey,
         signature: signature.encode(),
       ),
     );
@@ -1419,6 +1434,18 @@ class SSHClient {
       return;
     }
 
+    if (message.maximumPacketSize == 0) {
+      _sendMessage(
+        SSH_Message_Channel_Open_Failure(
+          recipientChannel: message.senderChannel,
+          reasonCode:
+              SSH_Message_Channel_Open_Failure.codeAdministrativelyProhibited,
+          description: 'invalid agent channel packet size',
+        ),
+      );
+      return;
+    }
+
     if (_agentChannelIds.length >= maximumAgentChannels) {
       _sendMessage(
         SSH_Message_Channel_Open_Failure(
@@ -1581,6 +1608,8 @@ class SSHClient {
 
   void _tryNextAuthMethod() {
     printDebug?.call('SSHClient._tryNextAuthenticationMethod');
+    if (_authenticated.isCompleted || isClosed) return;
+    _invalidateAuthAttempt();
 
     if (_authMethodsLeft.isEmpty) {
       return _authenticated.completeError(
@@ -1598,7 +1627,7 @@ class SSHClient {
       case SSHAuthMethod.password:
         return _catch(() => _authWithPassword());
       case SSHAuthMethod.publicKey:
-        return _catch(() => _authWithNextPublicKey());
+        return _catchPublicKeyAuth(() => _authWithNextPublicKey());
       case SSHAuthMethod.keyboardInteractive:
         return _authWithKeyboardInteractive();
       case SSHAuthMethod.hostbased:
@@ -1635,19 +1664,25 @@ class SSHClient {
       return;
     }
 
+    final attempt = _authAttempt;
     final identity = _identitiesLeft.removeFirst();
-    final publicKey = identity.toPublicKey();
-    final publicKeyBlob = publicKey.encode();
+    final algorithm = identity.type;
+    final publicKeyBlob = Uint8List.fromList(identity.toPublicKey().encode());
 
     if (identity.shouldProbe) {
       printDebug?.call(
         'Probing public key for identity: ${identity.comment ?? identity.type}',
       );
-      _currentProbedIdentity = identity;
+      _currentPublicKeyProbe = (
+        identity: identity,
+        algorithm: algorithm,
+        publicKey: publicKeyBlob,
+        attempt: attempt,
+      );
       _sendMessage(
         SSH_Message_Userauth_Request.publicKey(
           username: username,
-          publicKeyAlgorithm: identity.type,
+          publicKeyAlgorithm: algorithm,
           publicKey: publicKeyBlob,
           signature: null,
         ),
@@ -1658,24 +1693,43 @@ class SSHClient {
     final challenge = _transport.composeChallenge(
       username: username,
       service: 'ssh-connection',
-      publicKeyAlgorithm: identity.type,
+      publicKeyAlgorithm: algorithm,
       publicKey: publicKeyBlob,
     );
 
     final signature = await identity.sign(challenge);
-
-    if (isClosed || _currentAuthMethod != SSHAuthMethod.publicKey) {
-      return;
-    }
+    if (!_isCurrentPublicKeyAttempt(attempt)) return;
 
     _sendMessage(
       SSH_Message_Userauth_Request.publicKey(
         username: username,
-        publicKeyAlgorithm: identity.type,
+        publicKeyAlgorithm: algorithm,
         publicKey: publicKeyBlob,
         signature: signature.encode(),
       ),
     );
+  }
+
+  void _invalidateAuthAttempt() {
+    _authAttempt++;
+    _currentPublicKeyProbe = null;
+  }
+
+  bool _isCurrentPublicKeyAttempt(int attempt) =>
+      !isClosed &&
+      !_authenticated.isCompleted &&
+      _currentAuthMethod == SSHAuthMethod.publicKey &&
+      attempt == _authAttempt;
+
+  void _catchPublicKeyAuth(FutureOr<dynamic> Function() fn) {
+    final attempt = _authAttempt;
+    Future.sync(fn).catchError((error, stackTrace) {
+      // A late device error must not abort a newer authentication attempt or
+      // an already authenticated connection. Current failures still propagate.
+      if (_isCurrentPublicKeyAttempt(attempt)) {
+        _transport.closeWithError(SSHInternalError(error), stackTrace);
+      }
+    });
   }
 
   void _authWithKeyboardInteractive() {
@@ -1723,18 +1777,19 @@ class SSHClient {
   }
 
   Set<SSHAuthMethod> get _availableAuthMethods => {
-    if (_identitiesLeft.isNotEmpty) SSHAuthMethod.publicKey,
-    if (!_exhaustedAuthMethods.contains(SSHAuthMethod.password) &&
-        onPasswordRequest != null)
-      SSHAuthMethod.password,
-    if (!_exhaustedAuthMethods.contains(SSHAuthMethod.keyboardInteractive) &&
-        onUserInfoRequest != null)
-      SSHAuthMethod.keyboardInteractive,
-    if (_hostbasedIdentitiesLeft.isNotEmpty &&
-        hostName != null &&
-        userNameOnClientHost != null)
-      SSHAuthMethod.hostbased,
-  };
+        if (_identitiesLeft.isNotEmpty) SSHAuthMethod.publicKey,
+        if (!_exhaustedAuthMethods.contains(SSHAuthMethod.password) &&
+            onPasswordRequest != null)
+          SSHAuthMethod.password,
+        if (!_exhaustedAuthMethods
+                .contains(SSHAuthMethod.keyboardInteractive) &&
+            onUserInfoRequest != null)
+          SSHAuthMethod.keyboardInteractive,
+        if (_hostbasedIdentitiesLeft.isNotEmpty &&
+            hostName != null &&
+            userNameOnClientHost != null)
+          SSHAuthMethod.hostbased,
+      };
 
   void _markCurrentAuthMethodAttempted() {
     switch (_currentAuthMethod) {

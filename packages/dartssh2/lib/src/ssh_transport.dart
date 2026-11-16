@@ -618,6 +618,14 @@ class SSHTransport {
 
   /// Force flush any buffered outgoing data to the socket.
   Future<void> flush() async {
+    if (isClosed) throw SSHStateError('Transport is closed');
+    // A socket flush alone cannot drain application packets held for NEWKEYS.
+    // Waiting only when packets are queued keeps a pre-handshake empty flush
+    // inert and never starts an additional key exchange.
+    if (_kexInProgress && _rekeyPendingPackets.isNotEmpty) {
+      await _waitForNewKeys();
+    }
+    if (isClosed) throw SSHStateError('Transport is closed');
     await socket.flush();
   }
 

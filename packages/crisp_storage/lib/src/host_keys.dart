@@ -6,10 +6,8 @@ import 'package:dartssh2/dartssh2.dart';
 
 import 'remote_client.dart';
 
-typedef HostKeyPrompt = Future<bool> Function(
-  String endpoint,
-  String fingerprint,
-);
+typedef HostKeyPrompt =
+    Future<bool> Function(String endpoint, String fingerprint);
 
 class SftpHostKeyException extends RemoteException {
   final String fingerprint;

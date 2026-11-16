@@ -267,14 +267,128 @@ void main() {
     },
   );
 
+  test('transport flush waits for queued rekey packets and close revokes it', () async {
+    final socket = _Socket();
+    final transport = SSHTransport(socket);
+    // An empty initial flush retains upstream behavior and does not begin KEX.
+    await transport.flush();
+    expect(socket.flushCount, 1);
+    transport.sendPacket(
+      SSH_Message_Channel_Data(recipientChannel: 1, data: _frame([5])).encode(),
+    );
+    var flushed = false;
+    final pending = transport.flush().then((_) => flushed = true);
+    final failed = expectLater(pending, throwsA(isA<SSHStateError>()));
+    await _events();
+    expect(flushed, isFalse);
+    expect(socket.flushCount, 1);
+    await transport.close();
+    await failed;
+    await expectLater(transport.flush(), throwsA(isA<SSHStateError>()));
+  });
+
+  test(
+    'send barrier waits through every packet and remote-window split',
+    () async {
+      final sent = <SSHMessage>[];
+      final controller = SSHChannelController(
+        localId: 1,
+        localMaximumPacketSize: 1024,
+        localInitialWindowSize: 1024,
+        remoteId: 2,
+        remoteMaximumPacketSize: 3,
+        remoteInitialWindowSize: 4,
+        sendMessage: sent.add,
+      );
+      addTearDown(controller.destroy);
+      var completed = false;
+      final pending = controller.channel
+          .sendDataAndWait(Uint8List.fromList([1, 2, 3, 4, 5, 6, 7]))
+          .then((_) => completed = true);
+      await _events();
+      expect(completed, isFalse);
+      expect(
+        sent
+            .whereType<SSH_Message_Channel_Data>()
+            .expand((m) => m.data)
+            .toList(),
+        [1, 2, 3, 4],
+      );
+      controller.handleMessage(
+        SSH_Message_Channel_Window_Adjust(recipientChannel: 1, bytesToAdd: 2),
+      );
+      await _events();
+      expect(completed, isFalse);
+      controller.handleMessage(
+        SSH_Message_Channel_Window_Adjust(recipientChannel: 1, bytesToAdd: 1),
+      );
+      await pending;
+      expect(completed, isTrue);
+      expect(
+        sent
+            .whereType<SSH_Message_Channel_Data>()
+            .expand((m) => m.data)
+            .toList(),
+        [1, 2, 3, 4, 5, 6, 7],
+      );
+    },
+  );
+
+  test('local close fails queued sends without waiting for the peer', () async {
+    final controller = SSHChannelController(
+      localId: 1,
+      localMaximumPacketSize: 1024,
+      localInitialWindowSize: 1024,
+      remoteId: 2,
+      remoteMaximumPacketSize: 1024,
+      remoteInitialWindowSize: 0,
+      sendMessage: (_) {},
+    );
+    addTearDown(controller.destroy);
+    final sending = controller.channel.sendDataAndWait(Uint8List(10));
+    final failed = expectLater(sending, throwsA(isA<SSHStateError>()));
+    await _events();
+    var closed = false;
+    final closing = controller.close().then((_) => closed = true);
+    await failed.timeout(const Duration(seconds: 1));
+    expect(closed, isFalse);
+    controller.destroy();
+    await closing;
+  });
+
+  test('rejected enqueue leaves no pending send error behind', () async {
+    final controller = SSHChannelController(
+      localId: 1,
+      localMaximumPacketSize: 1024,
+      localInitialWindowSize: 1024,
+      remoteId: 2,
+      remoteMaximumPacketSize: 1024,
+      remoteInitialWindowSize: 1024,
+      sendMessage: (_) {},
+    );
+    addTearDown(controller.destroy);
+    final input = StreamController<SSHChannelData>();
+    final feeding = controller.channel.sink.addStream(input.stream);
+    await expectLater(
+      controller.channel.sendDataAndWait(Uint8List(10)),
+      throwsA(isA<StateError>()),
+    );
+    await input.close();
+    await feeding;
+    controller.destroy();
+    await _events();
+  });
+
   test(
     'client bounds agent channels and releases a slot only on peer close',
     () async {
       final handler = _Handler((_) async => Uint8List.fromList([5]));
+      final trace = <String>[];
       final client = SSHClient(
         _Socket(),
         username: 'fixture',
         agentHandler: handler,
+        printTrace: (message) => trace.add(message ?? ''),
       );
       addTearDown(client.close);
       client.handlePacket(SSH_Message_Userauth_Success().encode());
@@ -298,6 +412,13 @@ void main() {
         SSH_Message_Channel_Success(recipientChannel: 0).encode(),
       );
       await opening;
+      // A zero packet size cannot make forward progress. Reject it before an
+      // ID or admission slot is consumed, without feeding data to that channel.
+      client.handlePacket(_openAgent(100, maximumPacketSize: 0).encode());
+      expect(
+        trace.last,
+        contains('description: invalid agent channel packet size'),
+      );
       for (var i = 1; i <= SSHClient.maximumAgentChannels + 1; i++) {
         client.handlePacket(_openAgent(100 + i).encode());
         client.handlePacket(
@@ -404,14 +525,18 @@ class _ChannelHarness {
   void close() => controller.destroy();
 }
 
-SSH_Message_Channel_Open _openAgent(int remoteId) => SSH_Message_Channel_Open(
+SSH_Message_Channel_Open _openAgent(
+  int remoteId, {
+  int maximumPacketSize = 32768,
+}) => SSH_Message_Channel_Open(
   channelType: 'auth-agent@openssh.com',
   senderChannel: remoteId,
   initialWindowSize: 65536,
-  maximumPacketSize: 32768,
+  maximumPacketSize: maximumPacketSize,
 );
 
 class _Socket implements SSHSocket {
+  int flushCount = 0;
   final _input = StreamController<Uint8List>();
   final _output = StreamController<List<int>>();
   _Socket() {
@@ -424,7 +549,10 @@ class _Socket implements SSHSocket {
   @override
   Future<void> get done => _input.done;
   @override
-  Future<void> flush() async {}
+  Future<void> flush() async {
+    flushCount++;
+  }
+
   @override
   Future<void> close() async {
     await _input.close();

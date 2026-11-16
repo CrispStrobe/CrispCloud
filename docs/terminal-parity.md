@@ -6,17 +6,26 @@ toward desktop terminal workflows. It does not claim complete iTerm2 compatibili
 
 ## Current status
 
-The current continuation adds **local, remote and SOCKS5 SSH forwarding** and
-**persistent output triggers with marks and in-app alerts**, in draft PR #160.
-The implementation and exact behavior are described in the
-[terminal guide](terminal.md#output-triggers). Current local validation and
-integration evidence are recorded in
+The current continuation adds **native Linux/macOS SSH-agent authentication**,
+**explicit agent forwarding to the final host**, and **saved forwarding profiles
+with opt-in startup after a verified connection or reconnect**, in draft PR #160.
+These build on local/remote/SOCKS5 forwarding and persistent output triggers.
+The [terminal guide](terminal.md#local-ssh-agent-and-agent-forwarding) describes
+the workflow and limits. Current local validation and integration evidence are
+recorded in [the agent/profile acceptance directory](validation/terminal-agent-profiles/README.md).
+
+Agent access is scoped to one verified route, uses a frozen public-key list, and
+ends on disconnect. Saved listeners match the exact server, user, gateway and
+ordered jump route. Auto-start is off by default. The production graph now pins
+the same dartssh2 4.1.0 source locally with reviewed protocol/lifecycle patches;
+[the runtime provenance record](../packages/dartssh2/UPSTREAM.md) identifies the
+upstream archive and every changed source file.
+
+The preceding forwarding/trigger checkpoint passed **676 native tests with two
+platform skips across 60 files**, clean analysis/formatting of **99 Dart files**,
+**six real OpenSSH tests with one optional PTY skip**, and the standard optimized
+web release build. Those historical results retain their own source identity in
 [the forwarding/trigger evidence directory](validation/terminal-forwarding-triggers/README.md).
-The completed native cohort passed **676 tests with two platform skips and zero
-failures across 60 files**. Analysis and formatting are clean across **99 Dart
-files**; the separate real OpenSSH run passed **six tests with one optional PTY
-skip**. The full web release build passed with standard O4 optimization and a
-3,072 MB compiler VM heap limit.
 
 The preceding continuation started at `4cd8065a` in PR #140, now merged. It added **up to
 eight nested panes, OpenSSH destination import and custom terminal key bindings**,
@@ -29,9 +38,19 @@ historical evidence; it no longer describes the current validation environment.
 Source changes are saved incrementally to `codex/terminal-screen-workspace`.
 GitHub Actions results are neither queried nor awaited; checkpoints carry
 `[skip ci]`. Local validation and its explicit platform limits are recorded below
-and in [the current evidence directory](validation/terminal-forwarding-triggers/README.md).
+and in [the current evidence directory](validation/terminal-agent-profiles/README.md).
 
 ## Integration baseline and refresh
+
+This continuation began from `e6cb6eee` and first integrated the newer Zotero and
+Office head `cf442dd2` from PR #161. Merge checkpoint `7203aa28` contains all
+**38 advertised branch heads and 151 available PR heads** as actual ancestors.
+The ordinary merge preserved the terminal work and brought in the incoming
+canonical Quds pin `b24718cc1468c34f494805eb7fb433a87f565503`. All **2,399** managed
+Office source hashes and tracked modes pass the vendor guard. The
+[integration snapshot](validation/terminal-agent-profiles/integration.json)
+records the complete 189-reference inventory and exact merge tree. Earlier
+snapshots below describe previous checkpoints.
 
 The 16 November continuation first advanced the branch from `01b3f609` to main
 `45ed126a`, bringing in the newer terminal fixes, canonical Office/Zotero work
@@ -96,10 +115,12 @@ Earlier feature evidence retains its original source cutoff. Records:
 | Area | Current behavior |
 | --- | --- |
 | Terminal workspace | Up to eight independent tabs and eight nested visible panes; per-divider sizing and balancing; directional/cyclic pane selection; temporary zoom; compact active-pane fallback; retained hidden sessions |
-| Saved arrangements | Up to 20 named arrangements with full split topology, ratios, tab order/names, active pane, font sizes and sanitized SSH routes; reads legacy schema v1 and writes v2 |
-| SSH authentication | Password and encrypted/unencrypted key login, verified host keys, explicit gateway, up to three independently authenticated and verified jump hosts |
+| Saved arrangements | Up to 20 named arrangements with full split topology, ratios, tab order/names, active pane, font sizes and sanitized SSH routes; reads v1/v2 and uses v3 when saving agent choices |
+| SSH authentication | Password, encrypted/unencrypted key and native Linux/macOS SSH-agent login; verified host keys, explicit gateway, up to three independently authenticated and verified jump hosts |
+| SSH-agent forwarding | Separate default-off permission for the final host only; frozen supported keys, list/sign-only protocol, bounded requests/channels and immediate revocation on disconnect |
 | SSH forwarding | Native local, remote and SOCKS5 TCP CONNECT listeners on existing verified routes; actual assigned ports; per-listener clients and errors; bounded ownership and cleanup |
-| Saved destinations | Up to 50 secret-free profiles; shell/tmux/Screen modes and jump-route persistence; atomic import from a bounded OpenSSH configuration subset |
+| Saved forwarding | Up to 50 credential-free recipes, 16 per exact route; explicit Auto-start after verified shell connection/reconnect, duplicate suppression, offline editing and delete-and-stop |
+| Saved destinations | Up to 50 secret-free profiles; shell/tmux/Screen modes, jump routes, agent authentication choices and explicit forwarding permission; atomic import from a bounded OpenSSH configuration subset |
 | Key bindings | Capture, add, edit, enable/disable and delete exact shortcuts; explicit text or complete terminal-key taps; recipient-specific keyboard protocols and broadcast integration |
 | tmux and GNU screen | Create/attach, exact targets, non-evicting detach, manual reconnect and authenticated bounded session discovery |
 | Navigation | Unicode/wrap-aware literal scrollback search, per-tab font size, OSC 133/633 command history, previous/next marks, manual/iTerm2 marks and completed-command output selection |
@@ -177,8 +198,9 @@ selection.
 A complete route uses one of the five SSH session slots and retains the existing
 30-minute activity timeout. Up to three jump hosts precede the final destination;
 a configured gateway reaches the first hop. The final verified client now also
-supports native local/remote/SOCKS5 forwarding controls. Intermediate direct-TCP
-channels and forwarding do not provide SSH-agent authentication or agent forwarding.
+supports native local/remote/SOCKS5 forwarding controls. Agent authentication is
+chosen separately for each server; every host key is verified before signing.
+Only the final client can receive the separately enabled forwarded agent.
 Empty key passphrases normalize to absent passphrases so unencrypted jump keys
 behave like direct connections; nonempty passphrases remain exact.
 
@@ -189,6 +211,28 @@ picker releases its connection; stale results cannot launch a target. Screen
 uses full PID.name and the exact resolver rechecks it before attach. Unsupported
 names remain visible but disabled. Listing and attachment are subject to remote
 rename/exit races.
+
+### Agent and saved-forwarding boundaries
+
+The Unix agent adapter uses the exact absolute `SSH_AUTH_SOCK` supplied to the
+native Linux/macOS app. It never reads private keys. Ordinary Ed25519, RSA SHA-2
+and NIST ECDSA keys are supported; certificates, FIDO/security-key algorithms,
+agent extensions and Windows named pipes remain unimplemented. In particular,
+OpenSSH destination-restricted keys requiring session-bind extensions are not
+qualified. Forwarding lets programs on the final server request signatures from
+the frozen supported key list for the life of that connection. It is explicitly
+off by default and is never granted to jump hosts.
+
+Saved port-forwarding recipes contain the exact route and listener settings,
+without credentials or agent permission. Auto-start occurs only after a verified
+shell is published; failed authentication, canceled discovery and stale
+connection attempts cannot start listeners. Stop leaves a listener stopped for
+the current connection. Editing forwarding settings or deleting a recipe stops
+its matching live listeners before persistence, including related mounted
+panes. Editing remains available when an already-open manager loses its SSH
+connection. Reconnect uses a new coordinator and can apply opted-in recipes
+again; it does not resume the old socket, active clients or dynamically allocated
+port number.
 
 ### Shell integration
 
@@ -217,9 +261,9 @@ forwarding failure or an oversized input operation. The per-event bound is
 262,144 UTF-16 code units, not a byte count. Stop also revokes pending deliveries
 that have not reached their transports. Groups are never persisted.
 
-## Current continuation verification
+## Previous forwarding/trigger verification
 
-The final normal-application cohort passed **676 native tests, two platform
+The preceding normal-application cohort passed **676 native tests, two platform
 skips and zero failures across 60 files**, using pinned Flutter **3.47.8** / Dart
 **3.13.7**, the unchanged production lockfile and normal native build hooks.
 Static analysis and formatting are clean across the same **99 terminal-related
@@ -313,8 +357,8 @@ Reproduction commands and manual checks are in
 ## Remaining larger parity areas
 
 - Native tmux control-mode mapping of remote windows and panes.
-- SSH-agent authentication/forwarding, reusable forwarding profiles and
-  persistent connection multiplexing.
+- Persistent connection multiplexing and broader agent support, including
+  Windows named pipes, certificates/security-key algorithms and session binding.
 - Independent terminal windows and layouts beyond the current eight-tab limit.
 - Automatic process/session restoration and secure reusable credential/identity
   integration beyond secret-free destination stores.
