@@ -1012,21 +1012,32 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
       );
     }
     final fetched = <String, Map<String, dynamic>>{};
-    for (final entry in addresses.entries) {
-      final address = entry.value;
-      final remote = await _connectedClient(address).item(
-        address.library,
-        address.key,
-        expectedCitationUri: address.canonicalUri,
-        includeFormatted: false,
+    final libraries = <String, List<ZoteroSourceAddress>>{};
+    for (final address in addresses.values) {
+      (libraries[address.scope] ??= []).add(address);
+    }
+    // One exact-set metadata response per durable library scope. Item keys
+    // alone are not identities: different libraries can reuse the same key.
+    // Keep every result staged until all batches and the edit target verify.
+    for (final sources in libraries.values) {
+      _checkTarget();
+      final first = sources.first;
+      final items = await _connectedClient(first).metadataItems(
+        first.library,
+        expectedItemUris: {
+          for (final address in sources) address.key: address.canonicalUri,
+        },
       );
       if (!mounted) return;
-      if (remote.cslJson == null) {
-        throw const FormatException(
-          'A source has no CSL data. Existing citations were kept.',
-        );
+      _checkTarget();
+      for (final remote in items) {
+        if (remote.cslJson == null) {
+          throw const FormatException(
+            'A source has no CSL data. Existing citations were kept.',
+          );
+        }
+        fetched[remote.canonicalUri.toString()] = remote.cslJson!;
       }
-      fetched[entry.key] = remote.cslJson!;
     }
     final updates = <String, ZoteroCitation>{};
     for (final field in fields) {

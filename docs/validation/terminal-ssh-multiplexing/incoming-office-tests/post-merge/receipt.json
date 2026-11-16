@@ -1,0 +1,249 @@
+{
+  "scope": "Targeted incoming ODS reader, validation model and XLSX serialization regression acceptance; not full Office qualification.",
+  "prepared_utc": "2026-11-16T08:51:07.156543+00:00",
+  "cwd": "/workspace/scratch/b4bccf05666a/CrispCloud",
+  "source_head": "2ca566a3a386b5876274d36ff7d93ea21c93fa80",
+  "source_worktree_status": [
+    "?? docs/validation/terminal-ssh-multiplexing/analysis-source-sha256.json",
+    "?? docs/validation/terminal-ssh-multiplexing/format-source-sha256.json",
+    "?? docs/validation/terminal-ssh-multiplexing/format.json",
+    "?? docs/validation/terminal-ssh-multiplexing/incoming-audit/advertised-refs.txt",
+    "?? docs/validation/terminal-ssh-multiplexing/incoming-audit/combined-vendor-inventory.json",
+    "?? docs/validation/terminal-ssh-multiplexing/incoming-audit/combined-vendor-inventory.json.xz",
+    "?? docs/validation/terminal-ssh-multiplexing/incoming-audit/combined-vendor-proof.json",
+    "?? docs/validation/terminal-ssh-multiplexing/incoming-audit/incoming-main.diff",
+    "?? docs/validation/terminal-ssh-multiplexing/incoming-audit/merge-tree.txt",
+    "?? docs/validation/terminal-ssh-multiplexing/incoming-audit/pre-integration-vendor-proof.json",
+    "?? docs/validation/terminal-ssh-multiplexing/incoming-audit/quds-advertised-refs.txt",
+    "?? docs/validation/terminal-ssh-multiplexing/incoming-audit/quds-combination-preparation.json",
+    "?? docs/validation/terminal-ssh-multiplexing/incoming-audit/quds-combined.diff",
+    "?? docs/validation/terminal-ssh-multiplexing/incoming-audit/quds-ref-inventory.json",
+    "?? docs/validation/terminal-ssh-multiplexing/incoming-audit/ref-inventory.json",
+    "?? docs/validation/terminal-ssh-multiplexing/incoming-audit/verify_combined_vendor.py",
+    "?? docs/validation/terminal-ssh-multiplexing/incoming-office-tests/",
+    "?? docs/validation/terminal-ssh-multiplexing/live-source-sha256.json",
+    "?? docs/validation/terminal-ssh-multiplexing/native-source-sha256.json"
+  ],
+  "command": [
+    "/workspace/scratch/b4bccf05666a/toolchain/run",
+    "flutter",
+    "test",
+    "--no-pub",
+    "--concurrency=1",
+    "--reporter=expanded",
+    "build/office-incoming-tests/ods_sheet_reader_test.dart",
+    "build/office-incoming-tests/sheet_formula_test.dart",
+    "test/widget/ods_editor_workflow_test.dart"
+  ],
+  "original_test_files": [
+    "packages/quds_office_engine/test/ods_sheet_reader_test.dart",
+    "packages/quds_office_engine/test/sheet_formula_test.dart",
+    "test/widget/ods_editor_workflow_test.dart"
+  ],
+  "executed_test_files": [
+    "build/office-incoming-tests/ods_sheet_reader_test.dart",
+    "build/office-incoming-tests/sheet_formula_test.dart",
+    "test/widget/ods_editor_workflow_test.dart"
+  ],
+  "adapters": [
+    {
+      "original_path": "packages/quds_office_engine/test/ods_sheet_reader_test.dart",
+      "original": {
+        "sha256": "49c092f4c3101058bad20c9a09d93ffb32c3434d344f73b23cccdc387a7fcc07",
+        "bytes": 72704,
+        "mode": "0o644"
+      },
+      "adapted_path": "build/office-incoming-tests/ods_sheet_reader_test.dart",
+      "adapted": {
+        "sha256": "a4fe23f5e49401d1c32867ef97175f369489b9a17817c263f5ab5f300d2879d1",
+        "bytes": 72776,
+        "mode": "0o644"
+      },
+      "substitutions": [
+        {
+          "from": "import 'package:test/test.dart';",
+          "to": "import 'package:flutter_test/flutter_test.dart';",
+          "occurrences": 1
+        },
+        {
+          "from": "'test/fixtures/fidelity/legacy-sheet.ods'",
+          "to": "'packages/quds_office_engine/test/fixtures/fidelity/legacy-sheet.ods'",
+          "occurrences": 1
+        },
+        {
+          "from": "'test/fixtures/fidelity/legacy-sheet-edge.ods'",
+          "to": "'packages/quds_office_engine/test/fixtures/fidelity/legacy-sheet-edge.ods'",
+          "occurrences": 1
+        }
+      ],
+      "reverse_substitutions_recover_original_bytes": true
+    },
+    {
+      "original_path": "packages/quds_office_engine/test/sheet_formula_test.dart",
+      "original": {
+        "sha256": "93f6c6942dedbfee64b1954185efdd714ab6822b9fb19a47d67c4b4f85e181a6",
+        "bytes": 24601,
+        "mode": "0o644"
+      },
+      "adapted_path": "build/office-incoming-tests/sheet_formula_test.dart",
+      "adapted": {
+        "sha256": "01cd457cf694124bbc2561bc3b5c6a09e424b4e6125df1ae9e011924e9aa8828",
+        "bytes": 24617,
+        "mode": "0o644"
+      },
+      "substitutions": [
+        {
+          "from": "import 'package:test/test.dart';",
+          "to": "import 'package:flutter_test/flutter_test.dart';",
+          "occurrences": 1
+        }
+      ],
+      "reverse_substitutions_recover_original_bytes": true
+    }
+  ],
+  "adapter_patch": {
+    "path": "adapters.patch",
+    "sha256": "7c5ad844263d7d253a136bcdc56dd344c2d5a3773f7a91bf651faba3eb2b15af",
+    "bytes": 1401,
+    "mode": "0o644"
+  },
+  "protected_inputs_before": {
+    "packages/quds_office_engine/test/ods_sheet_reader_test.dart": {
+      "sha256": "49c092f4c3101058bad20c9a09d93ffb32c3434d344f73b23cccdc387a7fcc07",
+      "bytes": 72704,
+      "mode": "0o644"
+    },
+    "packages/quds_office_engine/test/sheet_formula_test.dart": {
+      "sha256": "93f6c6942dedbfee64b1954185efdd714ab6822b9fb19a47d67c4b4f85e181a6",
+      "bytes": 24601,
+      "mode": "0o644"
+    },
+    "packages/quds_office_engine/test/fixtures/fidelity/legacy-sheet.ods": {
+      "sha256": "6c1d5b72fc828d33124e60cd0bf93a860302dfdc30fc13f76b74aaa306c428cc",
+      "bytes": 13562,
+      "mode": "0o644"
+    },
+    "packages/quds_office_engine/test/fixtures/fidelity/legacy-sheet-edge.ods": {
+      "sha256": "49c6fd906a7e1892731dc7f7b32a9823e165751a8068632488faf1cde8ea40d9",
+      "bytes": 12197,
+      "mode": "0o644"
+    },
+    "test/widget/ods_editor_workflow_test.dart": {
+      "sha256": "a969f0c5b8e8d5668916f5fefdee445252953f873a35231d069958e30ece17cd",
+      "bytes": 5715,
+      "mode": "0o644"
+    },
+    "pubspec.yaml": {
+      "sha256": "d82a1bb2d1a015e37d5a7283cf8041039c3eb01f6dbf1d3feb139b1b837ea998",
+      "bytes": 11941,
+      "mode": "0o644"
+    },
+    "pubspec.lock": {
+      "sha256": "58560e3fdba68d18b767f4c934b913283df5297468141defbeb816dbb55a0326",
+      "bytes": 63296,
+      "mode": "0o644"
+    },
+    ".dart_tool/package_config.json": {
+      "sha256": "0f454823a7038b5e1a79bd1df6392612fcdd8b3daea0cdf14bcb7e07348d30d6",
+      "bytes": 59168,
+      "mode": "0o644"
+    },
+    "tool/office_fidelity_manifest.json": {
+      "sha256": "dc237468b7200c311b0f7639e152d91ae2b4dd24912fc1b67f9a63af97d37bcb",
+      "bytes": 379114,
+      "mode": "0o644"
+    }
+  },
+  "source_inventory": {
+    "path": "source-before-sha256.json",
+    "sha256": "210f00e7b4801ab59fbdc622f99fedfb1ea425a4f2ce949d12ffd6aac89bbe3a",
+    "count": 5544,
+    "selection": "Tracked and nonignored lib/, test/ and packages/ files with .dart/.rs/.c/.cpp/.h/.yaml/.lock/.toml suffixes, plus .fvmrc, pubspec.yaml, pubspec.lock and analysis_options.yaml."
+  },
+  "toolchain_wrapper": {
+    "path": "/workspace/scratch/b4bccf05666a/toolchain/run",
+    "sha256": "b5c0fdefe86e6fd9dff8c55a6f559a310b45eb67738afb731ef7f9b2c3c35ca6",
+    "bytes": 692,
+    "mode": "0o755"
+  },
+  "adapter_script": {
+    "path": "docs/validation/terminal-ssh-multiplexing/incoming-office-tests/run.py",
+    "sha256": "2267a0f70711b9c41ce07e418540535a3988a902c494baaa8167b90acf730537",
+    "bytes": 10487,
+    "mode": "0o644"
+  },
+  "normal_production_graph": true,
+  "dependency_resolution_invoked": false,
+  "native_hooks_disabled": false,
+  "github_actions_queried_or_awaited": false,
+  "sdk_invoked": true,
+  "started_utc": "2026-11-16T08:51:07.501361+00:00",
+  "finished_utc": "2026-11-16T08:52:00.008292+00:00",
+  "seconds": 52.507,
+  "exit_code": 0,
+  "runner_error": null,
+  "head_at_end": "2ca566a3a386b5876274d36ff7d93ea21c93fa80",
+  "changed_sources": [],
+  "changed_protected_inputs": [],
+  "changed_adapters": [],
+  "protected_inputs_after": {
+    "packages/quds_office_engine/test/ods_sheet_reader_test.dart": {
+      "sha256": "49c092f4c3101058bad20c9a09d93ffb32c3434d344f73b23cccdc387a7fcc07",
+      "bytes": 72704,
+      "mode": "0o644"
+    },
+    "packages/quds_office_engine/test/sheet_formula_test.dart": {
+      "sha256": "93f6c6942dedbfee64b1954185efdd714ab6822b9fb19a47d67c4b4f85e181a6",
+      "bytes": 24601,
+      "mode": "0o644"
+    },
+    "packages/quds_office_engine/test/fixtures/fidelity/legacy-sheet.ods": {
+      "sha256": "6c1d5b72fc828d33124e60cd0bf93a860302dfdc30fc13f76b74aaa306c428cc",
+      "bytes": 13562,
+      "mode": "0o644"
+    },
+    "packages/quds_office_engine/test/fixtures/fidelity/legacy-sheet-edge.ods": {
+      "sha256": "49c6fd906a7e1892731dc7f7b32a9823e165751a8068632488faf1cde8ea40d9",
+      "bytes": 12197,
+      "mode": "0o644"
+    },
+    "test/widget/ods_editor_workflow_test.dart": {
+      "sha256": "a969f0c5b8e8d5668916f5fefdee445252953f873a35231d069958e30ece17cd",
+      "bytes": 5715,
+      "mode": "0o644"
+    },
+    "pubspec.yaml": {
+      "sha256": "d82a1bb2d1a015e37d5a7283cf8041039c3eb01f6dbf1d3feb139b1b837ea998",
+      "bytes": 11941,
+      "mode": "0o644"
+    },
+    "pubspec.lock": {
+      "sha256": "58560e3fdba68d18b767f4c934b913283df5297468141defbeb816dbb55a0326",
+      "bytes": 63296,
+      "mode": "0o644"
+    },
+    ".dart_tool/package_config.json": {
+      "sha256": "0f454823a7038b5e1a79bd1df6392612fcdd8b3daea0cdf14bcb7e07348d30d6",
+      "bytes": 59168,
+      "mode": "0o644"
+    },
+    "tool/office_fidelity_manifest.json": {
+      "sha256": "dc237468b7200c311b0f7639e152d91ae2b4dd24912fc1b67f9a63af97d37bcb",
+      "bytes": 379114,
+      "mode": "0o644"
+    }
+  },
+  "final_test_line": "00:18 +116: All tests passed!",
+  "log": {
+    "path": "run.log",
+    "sha256": "ec6eac9f4bc53d6b3555b9d4fc2807aa3d03199625f0b90d49cd63ef352c3fb1",
+    "bytes": 20114,
+    "mode": "0o644"
+  },
+  "counts": {
+    "passed": 116,
+    "skipped": 0,
+    "failed": 0
+  },
+  "accepted": true
+}

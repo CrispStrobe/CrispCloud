@@ -1781,6 +1781,64 @@ void validationTests() {
     expect(book.firstSheet.validations, isEmpty);
   });
 
+  test('ODS validation prompts and error styles round-trip', () async {
+    final book = OdsSheetReader.readBytes(
+      _ods(
+        '<t:table t:name="Data"><t:table-row><t:table-cell '
+        't:content-validation-name="v"><x:p>1</x:p></t:table-cell>'
+        '</t:table-row><t:content-validations>'
+        '<t:content-validation t:name="v" '
+        't:condition="of:cell-content-is-whole-number() '
+        'and cell-content-is-between(1,5)">'
+        '<t:help-message t:title="Enter"><x:p>One to five</x:p>'
+        '</t:help-message>'
+        '<t:error-message t:message-type="warning" t:title="Bad">'
+        '<x:p>Out of range</x:p></t:error-message>'
+        '</t:content-validation></t:content-validations></t:table>',
+      ),
+    );
+    final validation = book.sheets.first.validations.single;
+    expect(validation.promptTitle, 'Enter');
+    expect(validation.prompt, 'One to five');
+    expect(validation.errorTitle, 'Bad');
+    expect(validation.error, 'Out of range');
+    expect(validation.errorStyle, 'warning');
+
+    final saved = await OfficeIsolateSave.workbook(book, recalculate: false);
+    final archive = ZipDecoder().decodeBytes(saved);
+    final sheetXml = utf8.decode(
+      archive.findFile('xl/worksheets/sheet1.xml')!.content as List<int>,
+    );
+    expect(sheetXml, contains('promptTitle="Enter"'));
+    expect(sheetXml, contains('prompt="One to five"'));
+    expect(sheetXml, contains('errorStyle="warning"'));
+  });
+
+  test('ODS custom formula validations translate relative refs', () async {
+    final book = OdsSheetReader.readBytes(
+      _ods(
+        '<t:table t:name="Data"><t:table-row><t:table-cell '
+        't:content-validation-name="v"><x:p>1</x:p></t:table-cell>'
+        '</t:table-row><t:content-validations>'
+        '<t:content-validation t:name="v" '
+        't:condition="of:is-true-formula([.A1]&gt;0)"/>'
+        '</t:content-validations></t:table>',
+      ),
+    );
+    final validation = book.sheets.first.validations.single;
+    expect(validation.kind, SmlValidationKind.custom);
+    expect(validation.formula1, 'A1>0');
+    expect(validation.accepts('1'), isTrue);
+
+    final saved = await OfficeIsolateSave.workbook(book, recalculate: false);
+    final archive = ZipDecoder().decodeBytes(saved);
+    final sheetXml = utf8.decode(
+      archive.findFile('xl/worksheets/sheet1.xml')!.content as List<int>,
+    );
+    expect(sheetXml, contains('type="custom"'));
+    expect(sheetXml, contains('A1&gt;0'));
+  });
+
   test('ODS whole, decimal, date and text-length validations import', () async {
     final book = OdsSheetReader.readBytes(
       _ods(
@@ -1976,6 +2034,28 @@ void validationTests() {
 }
 
 void metadataTests() {
+  test('ODS tab colour survives save and reopen', () async {
+    final book = OdsSheetReader.readBytes(
+      _ods(
+        '<t:table t:name="Data" t:style-name="taColor">'
+        '<t:table-row><t:table-cell><x:p>Data</x:p></t:table-cell>'
+        '</t:table-row></t:table>',
+        styles:
+            '<s:style s:name="taColor" s:family="table">'
+            '<s:table-properties t:tab-color="#ff0000"/></s:style>',
+      ),
+    );
+    expect(book.sheets.first.tabColorRgb, 'FF0000');
+    final saved = await OfficeIsolateSave.workbook(book, recalculate: false);
+    final archive = ZipDecoder().decodeBytes(saved);
+    final sheetXml = utf8.decode(
+      archive.findFile('xl/worksheets/sheet1.xml')!.content as List<int>,
+    );
+    expect(sheetXml, contains('tabColor rgb="FFFF0000"'));
+    final reopened = SheetDeserializer().readBytes(saved);
+    expect(reopened.sheets.first.tabColorRgb, 'FF0000');
+  });
+
   test('ODS print areas, titles, names and autofilter survive save', () async {
     final book = OdsSheetReader.readBytes(
       _ods(

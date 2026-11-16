@@ -1,0 +1,493 @@
+diff --git a/packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart b/packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart
+index 753abbb..3731596 100644
+--- a/packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart
++++ b/packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart
+@@ -27,8 +27,14 @@ typedef _OdsImage = ({
+   double height,
+ });
+ typedef _OdsValidation = ({
++  SmlValidationKind kind,
++  SmlValidationOperator operator,
++  String formula1,
++  String formula2,
+   List<String> items,
+   bool allowBlank,
++  String errorTitle,
++  String error,
+   SmlRange? sourceRange,
+   String? sourceSheet,
+ });
+@@ -489,13 +495,7 @@ abstract final class OdsSheetReader {
+           ));
+           continue;
+         }
+-        _addListValidations(
+-          sheet,
+-          refs,
+-          definition.value.items,
+-          definition.value.allowBlank,
+-          budget,
+-        );
++        _addValidations(sheet, refs, definition.value, budget);
+       }
+       book.sheets.add(sheet);
+     }
+@@ -525,13 +525,18 @@ abstract final class OdsSheetReader {
+         if (items.length >= 1000) break;
+       }
+       if (items.isEmpty) continue;
+-      _addListValidations(
+-        pending.sheet,
+-        pending.refs,
+-        items,
+-        definition.allowBlank,
+-        budget,
+-      );
++      _addValidations(pending.sheet, pending.refs, (
++        kind: SmlValidationKind.list,
++        operator: SmlValidationOperator.between,
++        formula1: items.join(','),
++        formula2: '',
++        items: items,
++        allowBlank: definition.allowBlank,
++        errorTitle: definition.errorTitle,
++        error: definition.error,
++        sourceRange: null,
++        sourceSheet: null,
++      ), budget);
+     }
+     _readOdsNamedMetadata(spreadsheet, book);
+     return book;
+@@ -668,11 +673,10 @@ abstract final class OdsSheetReader {
+     return defaults;
+   }
+ 
+-  static void _addListValidations(
++  static void _addValidations(
+     SmlWorksheet sheet,
+     List<SmlCellRef> refs,
+-    List<String> items,
+-    bool allowBlank,
++    _OdsValidation definition,
+     _OdsBudget budget,
+   ) {
+     refs.sort(
+@@ -691,9 +695,13 @@ abstract final class OdsSheetReader {
+       sheet.validations.add(
+         SmlDataValidation(
+           range: SmlRange.parse('${refs[index].a1}:${refs[end].a1}'),
+-          kind: SmlValidationKind.list,
+-          formula1: items.join(','),
+-          allowBlank: allowBlank,
++          kind: definition.kind,
++          operator: definition.operator,
++          formula1: definition.formula1,
++          formula2: definition.formula2,
++          allowBlank: definition.allowBlank,
++          errorTitle: definition.errorTitle,
++          error: definition.error,
+         ),
+       );
+       index = end + 1;
+@@ -704,6 +712,14 @@ abstract final class OdsSheetReader {
+     XmlElement table,
+   ) {
+     final definitions = <String, _OdsValidation>{};
++    final listCondition = RegExp(
++      r'cell-content-is-in-list\((.*)\)\s*$',
++      dotAll: true,
++    );
++    final between = RegExp(r'cell-content-is-between\(([^,]+),([^)]+)\)');
++    final comparison = RegExp(
++      r'cell-content(?:-text-length)?\(\)\s*(>=|<=|<>|!=|>|<|=)\s*([^\s)]+)',
++    );
+     for (final validation in _descendants(
+       table,
+       'content-validation',
+@@ -712,42 +728,120 @@ abstract final class OdsSheetReader {
+       final name = _attribute(validation, 'name', _table);
+       final condition = _attribute(validation, 'condition', _table);
+       if (name == null || condition == null) continue;
+-      final match = RegExp(
+-        r'cell-content-is-in-list\((.*)\)\s*$',
+-        dotAll: true,
+-      ).firstMatch(condition);
+-      if (match == null) continue;
+-      final argument = match.group(1)!.trim();
+-      final items = <String>[];
+-      SmlRange? sourceRange;
+-      String? sourceSheet;
+-      if (argument.contains(':') &&
+-          !argument.contains(';') &&
+-          !argument.contains('"')) {
+-        final parsed = _odsRangeAddress(argument);
+-        sourceRange = parsed?.range;
+-        sourceSheet = parsed?.sheet;
+-      } else {
+-        for (final raw in argument.split(';')) {
+-          var item = raw.trim();
+-          if (item.length >= 2 && item.startsWith('"') && item.endsWith('"')) {
+-            item = item.substring(1, item.length - 1).replaceAll('""', '"');
++      final lowerCondition = condition.toLowerCase();
++      final allowBlank =
++          _attribute(validation, 'allow-empty-cell', _table) != 'false';
++      final errorTitle = _attribute(validation, 'title', _table) ?? '';
++      final error = _attribute(validation, 'message', _table) ?? '';
++      final listMatch = listCondition.firstMatch(condition);
++      if (listMatch != null) {
++        final argument = listMatch.group(1)!.trim();
++        final items = <String>[];
++        SmlRange? sourceRange;
++        String? sourceSheet;
++        if (argument.contains(':') &&
++            !argument.contains(';') &&
++            !argument.contains('"')) {
++          final parsed = _odsRangeAddress(argument);
++          sourceRange = parsed?.range;
++          sourceSheet = parsed?.sheet;
++        } else {
++          for (final raw in argument.split(';')) {
++            var item = raw.trim();
++            if (item.length >= 2 &&
++                item.startsWith('"') &&
++                item.endsWith('"')) {
++              item = item.substring(1, item.length - 1).replaceAll('""', '"');
++            }
++            if (item.isNotEmpty) items.add(item);
+           }
+-          if (item.isNotEmpty) items.add(item);
+         }
++        if (items.isEmpty && sourceRange == null) continue;
++        definitions[name] = (
++          kind: SmlValidationKind.list,
++          operator: SmlValidationOperator.between,
++          formula1: items.join(','),
++          formula2: '',
++          items: items,
++          allowBlank: allowBlank,
++          errorTitle: errorTitle,
++          error: error,
++          sourceRange: sourceRange,
++          sourceSheet: sourceSheet,
++        );
++        continue;
++      }
++
++      final SmlValidationKind kind;
++      if (lowerCondition.contains('cell-content-is-whole-number')) {
++        kind = SmlValidationKind.whole;
++      } else if (lowerCondition.contains('cell-content-is-decimal-number')) {
++        kind = SmlValidationKind.decimal;
++      } else if (lowerCondition.contains('cell-content-is-date')) {
++        kind = SmlValidationKind.date;
++      } else if (lowerCondition.contains('cell-content-text-length')) {
++        kind = SmlValidationKind.textLength;
++      } else {
++        continue;
++      }
++      var operator = SmlValidationOperator.between;
++      var formula1 = '';
++      var formula2 = '';
++      final betweenMatch = between.firstMatch(condition);
++      if (betweenMatch != null) {
++        formula1 = betweenMatch.group(1)!.trim();
++        formula2 = betweenMatch.group(2)!.trim();
++      } else {
++        final comparisonMatch = comparison.firstMatch(condition);
++        if (comparisonMatch == null) continue;
++        formula1 = comparisonMatch.group(2)!.trim();
++        operator = switch (comparisonMatch.group(1)!) {
++          '>=' => SmlValidationOperator.greaterThanOrEqual,
++          '<=' => SmlValidationOperator.lessThanOrEqual,
++          '<>' || '!=' => SmlValidationOperator.notEqual,
++          '>' => SmlValidationOperator.greaterThan,
++          '<' => SmlValidationOperator.lessThan,
++          '=' => SmlValidationOperator.equal,
++          _ => SmlValidationOperator.between,
++        };
++      }
++      if (kind == SmlValidationKind.date) {
++        formula1 = _validationDateValue(formula1);
++        if (formula2.isNotEmpty) formula2 = _validationDateValue(formula2);
+       }
+-      if (items.isEmpty && sourceRange == null) continue;
+       definitions[name] = (
+-        items: items,
+-        allowBlank:
+-            _attribute(validation, 'allow-empty-cell', _table) != 'false',
+-        sourceRange: sourceRange,
+-        sourceSheet: sourceSheet,
++        kind: kind,
++        operator: operator,
++        formula1: formula1,
++        formula2: formula2,
++        items: const <String>[],
++        allowBlank: allowBlank,
++        errorTitle: errorTitle,
++        error: error,
++        sourceRange: null,
++        sourceSheet: null,
+       );
+     }
+     return definitions;
+   }
+ 
++  static String _validationDateValue(String raw) {
++    final match = RegExp(
++      r'^(\d{4})-(\d{1,2})-(\d{1,2})(?:[T ].*)?$',
++    ).firstMatch(raw.trim());
++    if (match == null) return raw;
++    final date = DateTime.utc(
++      int.parse(match.group(1)!),
++      int.parse(match.group(2)!),
++      int.parse(match.group(3)!),
++    );
++    final serial =
++        date.difference(DateTime.utc(1899, 12, 30)).inMilliseconds / 86400000;
++    return serial == serial.roundToDouble()
++        ? serial.toStringAsFixed(0)
++        : '$serial';
++  }
++
+   static void _readOdsNamedMetadata(XmlElement spreadsheet, SmlWorkbook book) {
+     int? localScope(XmlElement element) {
+       XmlElement? parent = element.parent;
+diff --git a/packages/quds_office_engine/lib/src/sheet/model/sml_analysis.dart b/packages/quds_office_engine/lib/src/sheet/model/sml_analysis.dart
+index 13a2400..fe5cb7c 100644
+--- a/packages/quds_office_engine/lib/src/sheet/model/sml_analysis.dart
++++ b/packages/quds_office_engine/lib/src/sheet/model/sml_analysis.dart
+@@ -66,6 +66,18 @@ class SmlFormulaName extends SmlDefinedName {
+ /// How a cell value is validated.
+ enum SmlValidationKind { list, whole, decimal, date, textLength, custom }
+ 
++/// Comparison operator used by non-list data validations.
++enum SmlValidationOperator {
++  between,
++  notBetween,
++  equal,
++  notEqual,
++  greaterThan,
++  lessThan,
++  greaterThanOrEqual,
++  lessThanOrEqual,
++}
++
+ /// Data-validation rule on a range.
+ class SmlDataValidation {
+   /// SmlDataValidation API.
+@@ -74,6 +86,7 @@ class SmlDataValidation {
+     required this.kind,
+     this.formula1 = '',
+     this.formula2 = '',
++    this.operator = SmlValidationOperator.between,
+     this.allowBlank = true,
+     this.errorTitle = '',
+     this.error = '',
+@@ -91,6 +104,9 @@ class SmlDataValidation {
+   /// formula2 API.
+   String formula2;
+ 
++  /// operator API.
++  SmlValidationOperator operator;
++
+   /// allowBlank API.
+   bool allowBlank;
+ 
+@@ -127,12 +143,16 @@ class SmlDataValidation {
+           (String item) => item.toLowerCase() == raw.toLowerCase(),
+         );
+       case SmlValidationKind.whole:
+-        return int.tryParse(raw) != null && _inNumericBounds(double.parse(raw));
++        final double? n = double.tryParse(raw);
++        return n != null && n == n.truncateToDouble() && _inNumericBounds(n);
+       case SmlValidationKind.decimal:
+         final double? n = double.tryParse(raw);
+         return n != null && _inNumericBounds(n);
+       case SmlValidationKind.date:
+-        return DateTime.tryParse(raw) != null;
++        final value = _dateBound(raw);
++        final lower = _dateBound(formula1);
++        final upper = _dateBound(formula2);
++        return value != null && _inBounds(value, lower, upper);
+       case SmlValidationKind.textLength:
+         return _inNumericBounds(raw.length.toDouble());
+       case SmlValidationKind.custom:
+@@ -141,15 +161,54 @@ class SmlDataValidation {
+   }
+ 
+   bool _inNumericBounds(double value) {
+-    final double? min = double.tryParse(formula1);
+-    final double? max = double.tryParse(formula2);
+-    if (min != null && value < min) {
+-      return false;
++    final lower = double.tryParse(formula1);
++    final upper = double.tryParse(formula2);
++    return _inBounds(value, lower, upper);
++  }
++
++  bool _inBounds(double value, double? lower, double? upper) {
++    switch (operator) {
++      case SmlValidationOperator.between:
++        return (lower == null || value >= lower) &&
++            (upper == null || value <= upper);
++      case SmlValidationOperator.notBetween:
++        return (lower == null || value < lower) ||
++            (upper == null || value > upper);
++      case SmlValidationOperator.equal:
++        return lower != null && value == lower;
++      case SmlValidationOperator.notEqual:
++        return lower != null && value != lower;
++      case SmlValidationOperator.greaterThan:
++        return lower != null && value > lower;
++      case SmlValidationOperator.lessThan:
++        return lower != null && value < lower;
++      case SmlValidationOperator.greaterThanOrEqual:
++        return lower != null && value >= lower;
++      case SmlValidationOperator.lessThanOrEqual:
++        return lower != null && value <= lower;
+     }
+-    if (max != null && value > max) {
+-      return false;
++  }
++
++  double? _dateBound(String raw) {
++    final text = raw.trim();
++    if (text.isEmpty) return null;
++    final serial = double.tryParse(text);
++    if (serial != null) return serial;
++    final match = RegExp(
++      r'^(\d{4})-(\d{1,2})-(\d{1,2})(?:[T ].*)?$',
++    ).firstMatch(text);
++    if (match == null) return null;
++    try {
++      final date = DateTime.utc(
++        int.parse(match.group(1)!),
++        int.parse(match.group(2)!),
++        int.parse(match.group(3)!),
++      );
++      return date.difference(DateTime.utc(1899, 12, 30)).inMilliseconds /
++          86400000;
++    } on ArgumentError {
++      return null;
+     }
+-    return true;
+   }
+ }
+ 
+diff --git a/packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart b/packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart
+index c0147da..2c6971a 100644
+--- a/packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart
++++ b/packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart
+@@ -466,6 +466,17 @@ class SheetDeserializer {
+                 _ => SmlValidationKind.custom,
+               },
+               formula1: '',
++              operator: switch (reader.getAttribute('operator')) {
++                'notBetween' => SmlValidationOperator.notBetween,
++                'equal' => SmlValidationOperator.equal,
++                'notEqual' => SmlValidationOperator.notEqual,
++                'greaterThan' => SmlValidationOperator.greaterThan,
++                'lessThan' => SmlValidationOperator.lessThan,
++                'greaterThanOrEqual' =>
++                  SmlValidationOperator.greaterThanOrEqual,
++                'lessThanOrEqual' => SmlValidationOperator.lessThanOrEqual,
++                _ => SmlValidationOperator.between,
++              },
+               allowBlank: reader.getAttribute('allowBlank') != '0',
+             ),
+           );
+@@ -1412,6 +1423,18 @@ class SheetSerializer {
+           '${rule.range.start.a1}:${rule.range.end.a1}',
+         );
+         w.writeAttribute('allowBlank', rule.allowBlank ? '1' : '0');
++        if (rule.kind != SmlValidationKind.list) {
++          w.writeAttribute('operator', switch (rule.operator) {
++            SmlValidationOperator.between => 'between',
++            SmlValidationOperator.notBetween => 'notBetween',
++            SmlValidationOperator.equal => 'equal',
++            SmlValidationOperator.notEqual => 'notEqual',
++            SmlValidationOperator.greaterThan => 'greaterThan',
++            SmlValidationOperator.lessThan => 'lessThan',
++            SmlValidationOperator.greaterThanOrEqual => 'greaterThanOrEqual',
++            SmlValidationOperator.lessThanOrEqual => 'lessThanOrEqual',
++          });
++        }
+         final formula1 = rule.kind == SmlValidationKind.list
+             ? '"${rule.listItems.join(',')}"'
+             : rule.formula1;
+diff --git a/packages/quds_office_engine/test/ods_sheet_reader_test.dart b/packages/quds_office_engine/test/ods_sheet_reader_test.dart
+index f9e8457..3d3f677 100644
+--- a/packages/quds_office_engine/test/ods_sheet_reader_test.dart
++++ b/packages/quds_office_engine/test/ods_sheet_reader_test.dart
+@@ -1649,6 +1649,71 @@ void conditionalFormatTests() {
+ }
+ 
+ void validationTests() {
++  test('ODS whole, decimal, date and text-length validations import', () async {
++    final book = OdsSheetReader.readBytes(
++      _ods(
++        '<t:table t:name="Data">'
++        '<t:table-row><t:table-cell t:content-validation-name="v1">'
++        '<x:p>5</x:p></t:table-cell></t:table-row>'
++        '<t:table-row><t:table-cell t:content-validation-name="v2">'
++        '<x:p>2.5</x:p></t:table-cell></t:table-row>'
++        '<t:table-row><t:table-cell t:content-validation-name="v3">'
++        '<x:p>2024-01-02</x:p></t:table-cell></t:table-row>'
++        '<t:table-row><t:table-cell t:content-validation-name="v4">'
++        '<x:p>abc</x:p></t:table-cell></t:table-row>'
++        '<t:content-validations>'
++        '<t:content-validation t:name="v1" t:title="Whole" '
++        't:message="Enter 1-10" t:condition="of:cell-content-is-whole-number() '
++        'and cell-content-is-between(1,10)"/>'
++        '<t:content-validation t:name="v2" '
++        't:condition="of:cell-content-is-decimal-number() '
++        'and cell-content()&gt;1.5"/>'
++        '<t:content-validation t:name="v3" '
++        't:condition="of:cell-content-is-date() '
++        'and cell-content()&gt;=2024-1-1"/>'
++        '<t:content-validation t:name="v4" '
++        't:condition="of:cell-content-text-length()&lt;=5"/>'
++        '</t:content-validations></t:table>',
++      ),
++    );
++    final sheet = book.sheets.first;
++    expect(sheet.validations.length, 4);
++    expect(sheet.validations[0].kind, SmlValidationKind.whole);
++    expect(sheet.validations[0].operator, SmlValidationOperator.between);
++    expect(sheet.validations[0].errorTitle, 'Whole');
++    expect(sheet.validations[0].error, 'Enter 1-10');
++    expect(sheet.validations[0].accepts('5'), isTrue);
++    expect(sheet.validations[0].accepts('11'), isFalse);
++    expect(sheet.validations[1].operator, SmlValidationOperator.greaterThan);
++    expect(sheet.validations[1].accepts('2'), isTrue);
++    expect(sheet.validations[1].accepts('1'), isFalse);
++    expect(sheet.validations[2].kind, SmlValidationKind.date);
++    expect(
++      sheet.validations[2].operator,
++      SmlValidationOperator.greaterThanOrEqual,
++    );
++    expect(sheet.validations[2].accepts('2024-01-02'), isTrue);
++    expect(sheet.validations[2].accepts('2023-12-31'), isFalse);
++    expect(sheet.validations[3].kind, SmlValidationKind.textLength);
++    expect(sheet.validations[3].accepts('abc'), isTrue);
++    expect(sheet.validations[3].accepts('abcdef'), isFalse);
++
++    final saved = await OfficeIsolateSave.workbook(book, recalculate: false);
++    final archive = ZipDecoder().decodeBytes(saved);
++    final sheetXml = utf8.decode(
++      archive.findFile('xl/worksheets/sheet1.xml')!.content as List<int>,
++    );
++    expect(sheetXml, contains('operator="greaterThan"'));
++    expect(sheetXml, contains('operator="greaterThanOrEqual"'));
++    expect(sheetXml, contains('operator="lessThanOrEqual"'));
++    expect(sheetXml, contains('type="textLength"'));
++    final reopened = SheetDeserializer().readBytes(saved);
++    expect(
++      reopened.sheets.first.validations[1].operator,
++      SmlValidationOperator.greaterThan,
++    );
++  });
++
+   test('ODS list source preserves spaces in quoted sheet names', () {
+     final book = OdsSheetReader.readBytes(
+       _ods(

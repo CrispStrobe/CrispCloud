@@ -478,6 +478,9 @@ class SheetDeserializer {
                 _ => SmlValidationOperator.between,
               },
               allowBlank: reader.getAttribute('allowBlank') != '0',
+              promptTitle: reader.getAttribute('promptTitle') ?? '',
+              prompt: reader.getAttribute('prompt') ?? '',
+              errorStyle: reader.getAttribute('errorStyle') ?? 'stop',
             ),
           );
         }
@@ -1423,6 +1426,21 @@ class SheetSerializer {
           '${rule.range.start.a1}:${rule.range.end.a1}',
         );
         w.writeAttribute('allowBlank', rule.allowBlank ? '1' : '0');
+        if (rule.promptTitle.isNotEmpty) {
+          w.writeAttribute('promptTitle', rule.promptTitle);
+        }
+        if (rule.prompt.isNotEmpty) {
+          w.writeAttribute('prompt', rule.prompt);
+        }
+        if (rule.errorTitle.isNotEmpty) {
+          w.writeAttribute('errorTitle', rule.errorTitle);
+        }
+        if (rule.error.isNotEmpty) {
+          w.writeAttribute('error', rule.error);
+        }
+        if (rule.errorStyle != 'stop') {
+          w.writeAttribute('errorStyle', rule.errorStyle);
+        }
         if (rule.kind != SmlValidationKind.list) {
           w.writeAttribute('operator', switch (rule.operator) {
             SmlValidationOperator.between => 'between',

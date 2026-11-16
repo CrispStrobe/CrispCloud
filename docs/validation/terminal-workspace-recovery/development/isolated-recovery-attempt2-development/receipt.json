@@ -1,0 +1,16 @@
+{
+  "qualification": "Development isolated Dart/widget run, no acceptance claim",
+  "environment_overrides": {
+    "FLUTTER_NATIVE_ASSETS": "false",
+    "FLUTTER_DART_DATA_ASSETS": "true"
+  },
+  "counts_before_interrupt": {
+    "passed": 55,
+    "failed": 13
+  },
+  "interrupted": true,
+  "reason": "Workspace tests failed repeatedly and final fixture cleanup remained pending after the last failure; preserve failures for correction. Host also reached ENOSPC during the run.",
+  "watched_files": 5394,
+  "source_changes_during_run": [],
+  "log_sha256": "bb9a9d7f3006fc30e1235c268b5b12795bd5f68e86333c47f43ecc1109294d2f"
+}

@@ -1,0 +1,107 @@
+[
+  {
+    "source": "environment-current.json",
+    "saved": "environment-current.json",
+    "bytes": 6730,
+    "sha256": "d7246ba62791c68b24e285cb7817866a3ecb67fe8f206afab1eba98beeaf5463",
+    "saved_sha256": "d7246ba62791c68b24e285cb7817866a3ecb67fe8f206afab1eba98beeaf5463"
+  },
+  {
+    "source": "flutter-version.json",
+    "saved": "flutter-version.json",
+    "bytes": 637,
+    "sha256": "64ded489b7a5896b035e73c23e8167702544b3fd1b334f95c51bc9b852393017",
+    "saved_sha256": "64ded489b7a5896b035e73c23e8167702544b3fd1b334f95c51bc9b852393017"
+  },
+  {
+    "source": "pub-downloads-current.json",
+    "saved": "pub-downloads-current.json",
+    "bytes": 22163,
+    "sha256": "e2dfe60da19d03e05de579aeeade431315a883d70d34c3d56e72b91c90b04efd",
+    "saved_sha256": "e2dfe60da19d03e05de579aeeade431315a883d70d34c3d56e72b91c90b04efd"
+  },
+  {
+    "source": "pub-omitted-nonruntime-trees.json",
+    "saved": "pub-omitted-nonruntime-trees.json",
+    "bytes": 13476,
+    "sha256": "9e20c5effeeefa8bc57287644344f8b6758ec735ce62ab75ca59551247d20a06",
+    "saved_sha256": "9e20c5effeeefa8bc57287644344f8b6758ec735ce62ab75ca59551247d20a06"
+  },
+  {
+    "source": "omitted-sdk-optional-binaries.json",
+    "saved": "omitted-sdk-optional-binaries.json",
+    "bytes": 1284,
+    "sha256": "8514966f0c1cbeed88b4257f7e7cf5817ba1ac63c8a2c39a93e2f06bbadf6f4f",
+    "saved_sha256": "8514966f0c1cbeed88b4257f7e7cf5817ba1ac63c8a2c39a93e2f06bbadf6f4f"
+  },
+  {
+    "source": "omitted-sdk-devtools-ui.json",
+    "saved": "omitted-sdk-devtools-ui.json",
+    "bytes": 102835,
+    "sha256": "8405a9ffd6abe80a74010dfe8c821f148822855130f1ae18daa5b7282700b2a5",
+    "saved_sha256": "8405a9ffd6abe80a74010dfe8c821f148822855130f1ae18daa5b7282700b2a5"
+  },
+  {
+    "source": "native-downloads-current.json",
+    "saved": "native-downloads-current.json",
+    "bytes": 2290,
+    "sha256": "1fd5abf62753e5fb2f3371690ab050460e857a918f39246e9ec2cd8dea17f5cb",
+    "saved_sha256": "1fd5abf62753e5fb2f3371690ab050460e857a918f39246e9ec2cd8dea17f5cb"
+  },
+  {
+    "source": "rust-install-inventory.json",
+    "saved": "rust-install-inventory.json",
+    "bytes": 30001,
+    "sha256": "80efb01e570d271c6abc9fe09a5bd72905414f4b143287877bef29488a0ffde2",
+    "saved_sha256": "80efb01e570d271c6abc9fe09a5bd72905414f4b143287877bef29488a0ffde2"
+  },
+  {
+    "source": "removed-unused-native-tools.json",
+    "saved": "removed-unused-native-tools.json",
+    "bytes": 246,
+    "sha256": "20dc88d866cb024fb25e9c3660cbb695ce4214a36e760bd001706e04e0ee33b2",
+    "saved_sha256": "20dc88d866cb024fb25e9c3660cbb695ce4214a36e760bd001706e04e0ee33b2"
+  },
+  {
+    "source": "app-pub-offline.log",
+    "saved": "app-pub-offline.log.gz",
+    "bytes": 1803,
+    "sha256": "8de7fff080383d9c369401443917e53eebfaaf9134a3eda0e86fb04e98ada077",
+    "saved_sha256": "1998d928a730c7d34c634738d5f44a48f5c8de122d4d4a2f4ae494816dedf584"
+  },
+  {
+    "source": "native-prerequisite.log",
+    "saved": "native-prerequisite.log.gz",
+    "bytes": 2662,
+    "sha256": "c52ce43c33bcf344d835394054b55309c28097b9d15272d439c731a4e96c642d",
+    "saved_sha256": "46ae9157ce0607a73309169563e6c55e050666a5597f1d040251331d3a229f4c"
+  },
+  {
+    "source": "recovery-browser-prerequisite.log",
+    "saved": "recovery-browser-prerequisite.log.gz",
+    "bytes": 2662,
+    "sha256": "c52ce43c33bcf344d835394054b55309c28097b9d15272d439c731a4e96c642d",
+    "saved_sha256": "46ae9157ce0607a73309169563e6c55e050666a5597f1d040251331d3a229f4c"
+  },
+  {
+    "source": "chrome-probe.log",
+    "saved": "chrome-probe.log.gz",
+    "bytes": 269,
+    "sha256": "bb9e78d7003f140d32df263900450d9a10d9aa46efc14d330cf16946d6efa0d9",
+    "saved_sha256": "b07a2fb4a9ca75240326f71a96f5f5475271032d7886570a97e3ee76214d903b"
+  },
+  {
+    "source": "recovery-web-build.log",
+    "saved": "recovery-web-build.log.gz",
+    "bytes": 394,
+    "sha256": "de30dbadc5bed916bde73b7c2fdb5961b3753551397e7ea1047129883cb1d54a",
+    "saved_sha256": "e477ae6063492ae0f2b4ff2394f61ccbdd2e533d71c1ddfce39bcad0110b4fe1"
+  },
+  {
+    "source": "recovery-web-build-reusable.log",
+    "saved": "recovery-web-build-reusable.log.gz",
+    "bytes": 111,
+    "sha256": "a315600661cea9f8862bfa1f5fc7eb56a35460768a8bded168dde485bda211f7",
+    "saved_sha256": "9000e1966a09102a96b406c82f7621bbe86f46f01ab2fbbe1637ed84964e6847"
+  }
+]

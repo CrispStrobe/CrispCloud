@@ -119,7 +119,9 @@ and fixes the case exposed by Flutter's headless test runner.
 
 - `TerminalView` renders the `Terminal` model and reports its measured columns
   and rows. Initial PTY dimensions and later resizes reach both local and SSH
-  backends. The PTY uses an xterm-compatible terminal type.
+  backends. Resize bursts retain one in-flight request and only the newest
+  pending dimensions, so a slow SSH connection does not accumulate redundant
+  layout work. The PTY uses an xterm-compatible terminal type.
 - Local PTY output is one ordered byte stream. SSH standard output and standard
   error are each decoded incrementally, then delivered to the terminal without
   stripping escape sequences. UTF-8 characters may span transport chunks.
@@ -207,8 +209,9 @@ Double-click a tab or choose
 **Rename terminal** to give it a local label; that label does not replace the
 trusted SSH endpoint in the pane header. Closing a running tab asks before
 disconnecting it. The last tab remains available; use Disconnect or Hide for it.
-The current workspace stays in memory. Explicitly saved arrangements survive
-app restarts, as described below; they reopen disconnected.
+The current workspace stays in memory while the app is open. Explicitly saved
+arrangements survive app restarts and reopen disconnected. Opt-in **Session
+recovery** can also remember the most recent workspace automatically.
 
 Choose **Terminal actions → Find in terminal** for literal search over the
 active screen and its scrollback. Case-sensitive and whole-word options, next
@@ -320,6 +323,63 @@ or newer-format records are preserved instead of silently overwritten. The
 arrangement store reads the earlier two-pane schema v1 and writes schema v2.
 Migration happens only on a save/delete operation. Older app versions reject
 v2 instead of silently discarding nested panes.
+
+## Automatic session recovery
+
+Open **Terminal layout → Session recovery** and enable **Remember terminal
+workspace**, then choose **Save**. Recovery is off by default. Enabling saves
+the current workspace immediately; subsequent changes save automatically after
+a short delay. The next time the terminal first opens in a new app session, it
+restores the saved tabs before starting any local shell.
+
+The checkpoint includes all eight supported tabs, their order and custom names,
+full nested split topology and proportions, active pane, font sizes, and
+credential-free SSH destinations. SSH destinations retain jump routes, agent
+authentication choices, forwarding permission preferences, and ordinary or
+native tmux/Screen modes. Live connections, shared-route ownership and broadcast
+membership are created afresh only through the existing explicit controls.
+Named **Saved arrangements** remain independent of automatic recovery.
+
+By default, every recovered tab is disconnected. Enable the separate **Relaunch
+local shells** option to start new local shells for recovered tabs that have no
+SSH destination. These shells use the current verified local folder or the
+existing safe fallback and follow the platform's normal local-shell backend.
+The previous working directory, command line and process are not resumed.
+Recovered SSH tabs always require **Reconnect SSH** and the existing
+authentication and host-key flow; recovery does not automatically contact a
+remote server. An existing remote tmux or Screen session can then be attached
+using its remembered destination and mode.
+
+Turning off **Remember terminal workspace** stops automatic saves and leaves
+the last checkpoint intact. **Forget saved workspace** asks for confirmation,
+turns recovery off, resets local-shell relaunch, and clears the checkpoint.
+Both controls leave current terminals open. Enabling again explicitly saves
+the current workspace rather than applying an old layout over live sessions.
+
+A save error shows a recovery status icon and pauses further automatic writes.
+**Retry** resumes a failed autosave. If startup could not read the checkpoint,
+Retry loads its settings without replacing current terminals or overwriting the
+previously unseen checkpoint; **Save** explicitly chooses the current workspace.
+Corrupt or newer-format records remain intact until explicit **Forget**. A
+settings dialog can be closed while storage is pending; closing does not cancel
+an already accepted write.
+
+Recovery uses one bounded local preference record (128 Ki UTF-16 code units,
+version 1) with
+serialized writes and an exclusive workspace owner. Settings and an enabling
+checkpoint are written together. A replacement owner reads the previous owner's
+final checkpoint before restoring, including same-frame widget replacement.
+Background lifecycle transitions and orderly disposal flush pending structural
+changes. An abrupt process kill or storage failure can still lose changes that
+have not finished saving; this is not a crash-proof transaction log.
+
+Passwords, private keys, passphrases, terminal output, command history, selection,
+filesystem grants, staged-workspace authority and operating-system process
+memory are never part of the recovery model. Saved destination addresses and
+user-entered tab names remain in the app's local preferences. Browser recovery
+is scoped to the same browser profile and site origin. Clearing app/site data
+removes it. Full process resurrection and automatic SSH reconnection remain
+separate parity work.
 
 ## Custom terminal key bindings
 
@@ -603,6 +663,10 @@ not force-detach other displays, log out other clients, or fall back to a new
 session or shell. Screen's CLI can still race with another process renaming or
 creating sessions between listing and attachment; this is a conservative
 listing check, not an atomic server-side exact-only attachment primitive.
+Full listed identifiers remain intact even when an unsupported name contains
+spaces or parentheses; those entries still participate in prefix checks.
+Malformed rows, duplicate IDs or summaries, inconsistent socket counts and
+listings over 512 sessions stop attachment instead of selecting a partial name.
 
 The terminal header includes the trusted SSH endpoint and selected session.
 **Detach from tmux** closes CrispCloud's SSH connection without sending `exit`
@@ -661,6 +725,10 @@ view. Resizing updates this client's overall size; the remote tmux window-size
 policy still determines shared geometry. Custom terminal key bindings and
 saved output triggers apply to the individual pane emulators. Clipboard access
 is explicit; output escape sequences cannot read or write the local clipboard.
+Rapid size changes coalesce through both the viewport and control client.
+Returning to the original size cancels an unsent intermediate resize or queues
+the correct final size after an already-sent change. Pending callers share one
+completion instead of accumulating one waiter for every layout notification.
 
 **Detach** closes this control client and its SSH route without sending a
 kill-session, kill-window or kill-pane command. It leaves remote processes
@@ -688,6 +756,10 @@ This first native workspace has explicit limits:
   full-screen applications may need to redraw after attachment.
   A real size change can trim previously retained history to this capture
   budget; focus changes and pane moves without a size change preserve it.
+  Captures use synchronous command groups of up to eight panes: 64 panes need
+  at most eight capture groups instead of one round trip per pane. A complete
+  window/pane snapshot is published only after its captures succeed. This is a
+  protocol round-trip reduction, not a measured latency guarantee.
   On tmux versions without the `bracket_paste_flag` format, already-enabled
   bracketed paste cannot be inferred on initial attachment. A subsequent live
   mode change establishes the local paste mode, which survives later captures.

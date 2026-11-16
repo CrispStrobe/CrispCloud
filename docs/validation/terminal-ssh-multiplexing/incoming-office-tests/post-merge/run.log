@@ -1,0 +1,126 @@
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart
+00:00 +0: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: repeated annotations stay separate from cell values through save
+00:00 +1: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: ambiguous and foreign annotations are refused without inventing a value
+00:00 +2: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: repeated annotation text and author consume the expanded text budget
+00:00 +3: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: annotation-only cells obey materialized-cell and grid bounds
+00:00 +4: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: covered cells cannot silently discard annotations
+00:00 +5: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: authored date literals retain spaces quotes and format-like text
+00:00 +6: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: authored textual dates use namespace-aware widths and weekday names
+00:00 +7: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: ODS keeps dates, times, booleans, formats and sheet references
+00:00 +8: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: edge ODS survives an xlsx round trip
+00:00 +9: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: currency symbols survive namespaced import and XLSX saves
+00:00 +10: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: inherited styled padding stays sparse while explicit blanks survive
+00:00 +11: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: ODS native column geometry survives a new XLSX copy
+00:00 +12: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: cell then row then per-column styles survive repeated cells
+00:00 +13: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: Default column and row padding stays sparse at large repeats
+00:00 +14: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: column default bookkeeping shares the workbook dimension budget
+00:00 +15: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: ODS hour and minute format survives XLSX save
+00:00 +16: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: ODS minute and second format survives XLSX save
+00:00 +17: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: ODS full clock format survives XLSX save
+00:00 +18: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: ODS elapsed hours format survives XLSX save
+00:00 +19: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: ODS elapsed minutes format survives XLSX save
+00:00 +20: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: ODS elapsed minutes and seconds format survives XLSX save
+00:00 +21: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: ODS elapsed seconds format survives XLSX save
+00:00 +22: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: ODS document default style supplies the Normal cell font
+00:00 +23: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: ODS document defaults supply column width and row height
+00:00 +24: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: ODS hidden sheets survive save and reopen
+00:00 +25: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: ODS hidden columns and rows survive save
+00:00 +26: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: ODS text and duplicate conditions keep their type
+00:00 +27: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: ODS begins-with and ends-with conditions keep their text
+00:00 +28: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: ODS between conditions keep both bounds
+00:00 +29: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: ODS conditional comparison operators keep their meaning
+00:00 +30: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: ODS conditional formats import and serialize
+00:00 +31: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: ODS whole, decimal, date and text-length validations import
+00:00 +32: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: ODS list source preserves spaces in quoted sheet names
+00:00 +33: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: ODS validation source range is bounded before scanning empty cells
+00:00 +34: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: ODS range-source list validations resolve across sheets
+00:00 +35: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: ODS validation source work is shared across definitions
+00:00 +36: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: ODS list validations become typed XLSX validations
+00:00 +37: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: ODS print areas, titles, names and autofilter survive save
+00:00 +38: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: formula roundtrip preserves imported syntax: of:="a;b"
+00:00 +39: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: formula roundtrip preserves imported syntax: of:="literal [.A1];COM.MICROSOFT.SUM"
+00:00 +40: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: formula roundtrip preserves imported syntax: of:=IF([.A1]="a;b";"say ""[.B2];""";COM.MICROSOFT.SUM([.A1:.A2];1))
+00:00 +41: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: formula roundtrip preserves imported syntax: of:=CONCATENATE("";"a;b";"[.A1]")
+00:00 +42: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: formula roundtrip preserves imported syntax: of:=SUM(['Semi;Colon'.A1];1)
+00:00 +43: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: formula roundtrip preserves imported syntax: of:=SUM(['COM.MICROSOFT.Data'.A1];1)
+00:00 +44: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: formula namespace COM.MICROSOFT. only changes at a token boundary
+00:00 +45: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: formula namespace ORG.OPENOFFICE. only changes at a token boundary
+00:00 +46: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: declines a stored cell where a horizontal covered token is missing
+00:00 +47: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: declines a stored cell inside an earlier vertical merged region
+00:00 +48: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: annotations retain coordinates and do not leak into cell values
+00:00 +49: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: reads ODS values, formulas, styles and merges
+00:00 +50: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: an imported ODS saves as a readable .xlsx
+00:00 +51: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: covered cells and internal repeated empty rows keep positions
+00:00 +52: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: rejects a non-ODF package
+00:00 +53: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: merged covered cells consume one coordinate and retain row spans
+00:00 +54: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: repeated blank rows retain later data at exact coordinates
+00:00 +55: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: row headers and groups retain blank row coordinates
+00:00 +56: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: foreign lookalike elements and attributes cannot change sheet values
+00:00 +57: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: named inherited cell wrap styles survive an XLSX roundtrip
+00:00 +58: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: column groups retain dimensions and repeated values
+00:00 +59: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: blank trailing padding is skipped without truncating data silently
+00:00 +60: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: rejects cross-product expansion before materializing repeated cells
+00:00 +61: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: workbook budget is shared by multiple individually small sheets
+00:00 +62: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: repeated text is bounded before it can expand during XLSX save
+00:00 +63: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: rejects invalid or out-of-range meaningful repeats instead of clipping
+00:00 +64: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: formula conversion preserves delimiters and brackets inside literals
+00:01 +65: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: repeated formulas decline rather than cloning incorrect references
+00:01 +66: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: preserves ODF explicit spaces, tabs and paragraph boundaries
+00:01 +67: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: rejects XML with spreadsheet local names in the wrong namespace
+00:01 +68: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: rejects cyclic named styles and excessive XML nesting
+00:01 +69: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: keeps internal repeated blank rows without expanding trailing padding
+00:01 +70: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: blank runs retain in-range cells and refuse later out-of-range data
+00:01 +71: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: horizontal merge consumes explicit placeholder once
+00:01 +72: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: horizontal merge consumes repeated placeholders once
+00:01 +73: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: horizontal merge consumes additional covered column once
+00:01 +74: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: consecutive merged origins retain explicit covered positions
+00:01 +75: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: merge spans retain in-range cells and refuse column overflow
+00:01 +76: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: styled trailing row padding stays sparse within the admitted grid
+00:01 +77: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: formula translation preserves literals in of:=MYCOM.MICROSOFT.FUNC(1)
+00:01 +78: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: formula translation preserves literals in of:="a;b"
+00:01 +79: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: formula translation preserves literals in of:="literal [.A1];COM.MICROSOFT.SUM"
+00:01 +80: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: formula translation preserves literals in of:=IF([.A1]="a;b";"say ""[.B2];""";COM.MICROSOFT.SUM([.A1:.A2];1))
+00:01 +81: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: formula translation preserves literals in of:=CONCATENATE("";"a;b";"[.A1]")
+00:01 +82: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: formula translation preserves literals in of:=SUM(['Semi;Colon'.A1];1)
+00:01 +83: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: formula translation preserves literals in of:=SUM(['COM.MICROSOFT.Data'.A1];1)
+00:01 +84: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: formula translation preserves literals in of:=[$Sheet2.A1]+[.$A$1]
+00:01 +85: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/ods_sheet_reader_test.dart: formula translation preserves literals in of:=[$'Semi;Colon'.$A$1]
+00:01 +86: loading /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/sheet_formula_test.dart
+00:01 +86: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/sheet_formula_test.dart: evaluates arithmetic, logic, lookup, and text functions
+00:01 +87: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/sheet_formula_test.dart: detects circular references and recalculates a workbook
+00:01 +88: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/sheet_formula_test.dart: merge and center keeps the origin and clears the rest
+00:01 +89: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/sheet_formula_test.dart: parses solid fills and paints them as RGB on the cell
+00:01 +90: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/sheet_formula_test.dart: round-trips merged cells and center alignment
+00:01 +91: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/sheet_formula_test.dart: round-trips cell fill and font colors
+00:01 +92: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/sheet_formula_test.dart: insert and delete rows shift merged ranges
+00:01 +93: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/sheet_formula_test.dart: round-trips frozen panes
+00:01 +94: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/sheet_formula_test.dart: round-trips sheetView rightToLeft
+00:01 +95: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/sheet_formula_test.dart: round-trips a multi-sheet workbook
+00:01 +96: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/sheet_formula_test.dart: parses quoted and unicode sheet names
+00:01 +97: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/sheet_formula_test.dart: applyInput caches the computed value and recalculate updates dependents
+00:01 +98: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/sheet_formula_test.dart: scans formula references with source offsets
+00:01 +99: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/sheet_formula_test.dart: function guide searches names and ignores cell refs
+00:01 +100: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/sheet_formula_test.dart: formats numbers via styles.xml codes
+00:01 +101: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/sheet_formula_test.dart: swaps Excel theme lt/dk indices when resolving colors
+00:01 +102: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/sheet_formula_test.dart: column and row metrics stay inside Excel limits
+00:01 +103: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/sheet_formula_test.dart: reads Gantt-like builder fills, fonts, merges and freeze
+00:01 +104: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/sheet_formula_test.dart: round-trips custom column widths and row heights
+00:01 +105: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/sheet_formula_test.dart: FILTER UNIQUE SORT and LET evaluate
+00:02 +106: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/sheet_formula_test.dart: sorts filters and names a worksheet range
+00:02 +107: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/sheet_formula_test.dart: resolves names and high-use formulas including SEQUENCE spill
+00:02 +108: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/sheet_formula_test.dart: persists validation comments tables and hides filtered rows
+00:02 +109: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/sheet_formula_test.dart: evaluates a pivot table
+00:02 +110: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/sheet_formula_test.dart: honest formulas structured refs fill and filter hide
+00:02 +111: /workspace/scratch/b4bccf05666a/CrispCloud/build/office-incoming-tests/sheet_formula_test.dart: evaluates hyperlink address cell info fixed and dollar
+00:02 +112: loading /workspace/scratch/b4bccf05666a/CrispCloud/test/widget/ods_editor_workflow_test.dart
+00:14 +112: /workspace/scratch/b4bccf05666a/CrispCloud/test/widget/ods_editor_workflow_test.dart: ODS editing saves an XLSX copy and preserves its source
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:17 +113: /workspace/scratch/b4bccf05666a/CrispCloud/test/widget/ods_editor_workflow_test.dart: ODS copy outcome null retains unsaved edits
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:17 +114: /workspace/scratch/b4bccf05666a/CrispCloud/test/widget/ods_editor_workflow_test.dart: ODS copy outcome OfficeCopyOutcome.downloadedCopy retains unsaved edits
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:17 +115: /workspace/scratch/b4bccf05666a/CrispCloud/test/widget/ods_editor_workflow_test.dart: ODS copy completion cannot clean a newer edit
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:18 +116: All tests passed!

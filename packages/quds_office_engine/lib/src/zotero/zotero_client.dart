@@ -378,6 +378,31 @@ class ZoteroClient {
     return item;
   }
 
+  /// Retrieves metadata for 1–50 linked sources in one library identity.
+  ///
+  /// Every returned key and durable URI must match [expectedItemUris]. Missing,
+  /// duplicate or substituted records refuse the entire result. Results retain
+  /// the map's insertion order even when Zotero returns another order.
+  ///
+  /// This makes one bounded request without loading a style or rendering a
+  /// citation. Unlike a subsequent raw export, the same response proves every
+  /// source identity, so older desktop versions need no database/version header.
+  /// Hosts refreshing multiple libraries should group by durable library scope
+  /// (including the local profile), then apply changes only after every group
+  /// succeeds. Local and online versions are never compared.
+  Future<List<ZoteroItem>> metadataItems(
+    ZoteroLibrary library, {
+    required Map<String, Uri> expectedItemUris,
+  }) async {
+    final keys = _selection(expectedItemUris.keys.toList());
+    final expected = _expectedSelection(library, keys, expectedItemUris)!;
+    final response = await _selectionMetadata(
+      '${_libraryPath(library)}/items',
+      expected,
+    );
+    return _verifiedSelection(response, library, expected);
+  }
+
   Future<List<Map<String, dynamic>>> cslItems(
     ZoteroLibrary library,
     List<String> itemKeys,
@@ -515,24 +540,8 @@ class ZoteroClient {
     ZoteroLibrary library,
     Map<String, Uri> expected,
   ) async {
-    final response = await _get(path, {
-      'itemKey': expected.keys.join(','),
-      'format': 'json',
-      'include': 'data,csljson',
-      'limit': '${expected.length}',
-    });
-    final records = _array(_decode(response));
-    _verifyAggregateResponse(response, expected.length, null);
-    if (records.length != expected.length) throw _identityMismatch();
-    final seen = <String>{};
-    for (final record in records) {
-      final item = _item(_object(record), library);
-      if (!seen.add(item.key) ||
-          !expected.containsKey(item.key) ||
-          item.citationUri != expected[item.key]) {
-        throw _identityMismatch();
-      }
-    }
+    final response = await _selectionMetadata(path, expected);
+    _verifiedSelection(response, library, expected);
     final versionHeader = response.header('Last-Modified-Version');
     final version = int.tryParse(versionHeader ?? '');
     if (versionHeader != null && (version == null || version < 0)) {
@@ -546,6 +555,37 @@ class ZoteroClient {
       );
     }
     return version;
+  }
+
+  Future<ZoteroHttpResponse> _selectionMetadata(
+    String path,
+    Map<String, Uri> expected,
+  ) => _get(path, {
+    'itemKey': expected.keys.join(','),
+    'format': 'json',
+    'include': 'data,csljson',
+    'limit': '${expected.length}',
+  });
+
+  List<ZoteroItem> _verifiedSelection(
+    ZoteroHttpResponse response,
+    ZoteroLibrary library,
+    Map<String, Uri> expected,
+  ) {
+    final records = _array(_decode(response));
+    _verifyAggregateResponse(response, expected.length, null);
+    if (records.length != expected.length) throw _identityMismatch();
+    final items = <String, ZoteroItem>{};
+    for (final record in records) {
+      final item = _item(_object(record), library);
+      if (items.containsKey(item.key) ||
+          !expected.containsKey(item.key) ||
+          item.citationUri != expected[item.key]) {
+        throw _identityMismatch();
+      }
+      items[item.key] = item;
+    }
+    return List.unmodifiable(expected.keys.map((key) => items[key]!));
   }
 
   static void _verifyAggregateResponse(

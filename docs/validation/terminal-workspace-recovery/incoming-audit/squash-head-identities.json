@@ -1,0 +1,32 @@
+{
+  "incoming_main": "5d3a020d4d3c5e1a89c0209378df0fce3f78efe3",
+  "pull_requests": [
+    {
+      "pull_request": 164,
+      "original_head": "9898961e5cb64cdfc704f85c8f6f5ebedad3c39a",
+      "squash_commit": "621a510aec044ca9a26180a43f9ecd8ec43ce10b",
+      "head_tree": "adb75cedb80aec931e27b9b3bf41127d9e10849f",
+      "squash_tree": "adb75cedb80aec931e27b9b3bf41127d9e10849f",
+      "trees_equal": true,
+      "squash_is_ancestor_of_incoming_main": true
+    },
+    {
+      "pull_request": 165,
+      "original_head": "a617e188cf69f3d3c14dba614593f953dadf1436",
+      "squash_commit": "28db447a9550ffc03ea1891147deed920cdbed79",
+      "head_tree": "b17e5e3c662ce95e09185aa44ab47e796a29ddbb",
+      "squash_tree": "b17e5e3c662ce95e09185aa44ab47e796a29ddbb",
+      "trees_equal": true,
+      "squash_is_ancestor_of_incoming_main": true
+    },
+    {
+      "pull_request": 166,
+      "original_head": "8197b59177827cfa7b426c55acd0cdca19f9b6eb",
+      "squash_commit": "5d3a020d4d3c5e1a89c0209378df0fce3f78efe3",
+      "head_tree": "331cebc95dc3fe54d756d194a39de2cc0c7457a1",
+      "squash_tree": "331cebc95dc3fe54d756d194a39de2cc0c7457a1",
+      "trees_equal": true,
+      "squash_is_ancestor_of_incoming_main": true
+    }
+  ]
+}

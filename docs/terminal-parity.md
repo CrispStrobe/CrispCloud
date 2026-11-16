@@ -6,7 +6,49 @@ toward desktop terminal workflows. It does not claim complete iTerm2 compatibili
 
 ## Current status
 
-This continuation adds **explicit SSH connection sharing across tabs and panes**.
+The current continuation bounds terminal and native tmux resize queues,
+preserves the final geometry during rapid resize reversals, batches native tmux
+pane captures in groups of up to eight, and hardens GNU Screen exact attachment
+against truncated names and incomplete listings. All 43 pre-existing branch
+heads and 156 PR heads are included in baseline `0c43c476`; work is saved to
+`codex/terminal-session-optimization-20261116` with `[skip ci]`.
+[Current local qualification and source record](validation/terminal-session-optimization-20261116/README.md).
+
+### Previous workspace recovery continuation
+
+The preceding continuation adds **opt-in automatic terminal workspace recovery**, with a
+separate choice to relaunch local shells. **Terminal layout → Session recovery**
+remembers the latest tab order/names, full split topology and proportions, active
+pane, font sizes and sanitized SSH/tmux/Screen destinations. Initial recovery
+finishes before any default shell is started. SSH destinations remain
+disconnected until the existing authentication flow is explicitly used.
+
+Recovery and relaunch both default off. Enabling atomically saves settings and
+the current workspace. Structural changes are debounced; lifecycle flushes and
+an ordered owner handoff preserve the last checkpoint during immediate remounts.
+Read failures time out without blocking terminals, storage errors pause saves,
+and stale panels/dialogs cannot overwrite a replacement workspace. Retry after a
+startup-read failure preserves the previously unseen checkpoint until explicit
+Save. Disable retains the last layout; confirmed Forget clears it and stops
+recovery while current terminals stay open. All controls cover the existing
+eight non-English locales.
+
+This restores workspace metadata and can launch fresh local shells. It does not
+restore commands, output, working directories, filesystem grants, credentials,
+live SSH ownership or operating-system process state. Local-shell relaunch uses
+the existing verified current-folder/fallback and platform backend. Abrupt
+termination can lose a pending preference write. [Usage and limits](terminal.md#automatic-session-recovery).
+
+The initial full fetch found **40 branch heads and 153 PR heads**, all already
+ancestors of `74fbdd5a`. It preserves the newer shared-shell and ODS work beyond
+the pasted native-tmux handoff. [This continuation's integration and local
+validation record](validation/terminal-workspace-recovery/README.md) separates
+new acceptance from the historical counts below. Remote checkpoints carry
+`[skip ci]`; no GitHub Actions are queried or awaited.
+
+### Previous shared SSH connection continuation
+
+The previous continuation added **explicit SSH connection sharing across tabs and panes**.
 On a connected SSH terminal, **Terminal layout** offers **New SSH shell**,
 **Split SSH side by side**, and **Split SSH top and bottom**. Each opens a plain
 shell with its own channel, emulator, input, geometry, exit status and connection
@@ -22,14 +64,37 @@ agent and forwarding manager until the final owner closes. Route failure,
 global disconnect and route-wide inactivity revoke all owners. Pending opens
 and stale menu capabilities cannot authorize replacement connections.
 
+Channel teardown releases a quiet SSH channel completely while retaining its
+siblings. New terminal requests have a 32-slot admission budget that includes
+pending opens and locally closed channels still awaiting peer acknowledgement.
+Final buffered output survives a transport ending during channel publication.
+Shared saved-forwarding operations coalesce and retain stop/edit/delete cleanup
+ownership when their original panel or terminal closes.
+
 The [sharing guide](terminal.md#share-an-existing-ssh-connection) describes the
 workflow and limits. The [local acceptance record](validation/terminal-ssh-multiplexing/README.md)
 tracks this continuation independently of the historical results below.
 The initial fresh fetch at **08:10:33 UTC on 16 November 2026** contained all
 **38 branch heads and 151 PR heads** as actual ancestors of `042a24e7`.
 Checkpoint `743801e2` preserves the complete inventory; `688c4011` saves the
-first implementation. Incremental remote saves continue with `[skip ci]`,
-without querying or waiting for GitHub Actions.
+first implementation. A later snapshot at **08:46:21 UTC** found newer main and
+PRs #162/#163 with ODS numeric/date validation. Checkpoint `2ca566a3` integrates
+all **40 branch heads and 153 PR heads as actual ancestors**, preserving both
+original squash-equivalent PR histories. Canonical Quds pin `4235e690` combines
+the new ODS files with existing Zotero work, with all **2,409** managed hashes
+and index modes verified. [Integration and source proof](validation/terminal-ssh-multiplexing/incoming-audit/README.md).
+
+That combined source passes **980 terminal tests with two platform skips across
+81 files**, clean analysis and formatting of **153 Dart files**, and **22 actual
+OpenSSH tests with three explicit environment skips**. Targeted incoming Office
+acceptance passes **116 tests** through the production graph. Five production
+widget captures cover desktop and 320×320 layouts. All **5,544 watched files**
+match across all five acceptance phases and the accepted Git source. The full
+O4/minified web release passes in **236.500 seconds**, with exact SDK restoration.
+The final **08:59:14 UTC** refresh still contains all 193 refs as actual ancestors.
+Incremental remote saves continue with `[skip ci]`,
+without querying or waiting for GitHub Actions. The current acceptance record
+contains the full optimized web build outcome and source-identity proof.
 
 This is live authenticated transport reuse. Routes are not retained after every
 owner closes, reconnected automatically, or restored across application restarts.
@@ -117,7 +182,7 @@ historical evidence; it no longer describes the current validation environment.
 Source changes are saved incrementally to `codex/terminal-screen-workspace`.
 GitHub Actions results are neither queried nor awaited; checkpoints carry
 `[skip ci]`. Local validation and its explicit platform limits are recorded below
-and in [the current evidence directory](validation/terminal-tmux-control/README.md).
+and in [the current evidence directory](validation/terminal-ssh-multiplexing/README.md).
 
 ## Previous integration baselines and refreshes
 
@@ -195,6 +260,7 @@ Earlier feature evidence retains its original source cutoff. Records:
 | --- | --- |
 | Terminal workspace | Up to eight independent tabs and eight nested visible panes; per-divider sizing and balancing; directional/cyclic pane selection; temporary zoom; compact active-pane fallback; retained hidden sessions |
 | Saved arrangements | Up to 20 named arrangements with full split topology, ratios, tab order/names, active pane, font sizes and sanitized SSH routes; reads legacy records, uses v3 for agent choices and v4 for native tmux |
+| Automatic workspace recovery | Default-off autosave/restore of the most recent layout and sanitized destinations; separate fresh-local-shell relaunch, explicit SSH reconnect, owner handoff, retry and confirmed Forget |
 | SSH authentication | Password, encrypted/unencrypted key and native Linux/macOS SSH-agent login; verified host keys, explicit gateway, up to three independently authenticated and verified jump hosts |
 | SSH connection sharing | Explicit new shell or split on the exact verified route; up to eight logical owners, isolated channels, shared forwarding/agent lifetime, route-wide idle expiry and prompt pending-open cancellation |
 | SSH-agent forwarding | Separate default-off permission for the final host only; frozen supported keys, list/sign-only protocol, bounded requests/channels and immediate revocation on disconnect |
@@ -477,8 +543,9 @@ Reproduction commands and manual checks are in
   cross-process SSH sharing and broader agent support, including Windows named
   pipes, certificates/security-key algorithms and session binding.
 - Independent terminal windows and layouts beyond the current eight-tab limit.
-- Automatic process/session restoration and secure reusable credential/identity
-  integration beyond secret-free destination stores.
+- Process resurrection, scrollback/working-directory recovery, automatic SSH
+  reconnection and secure reusable credential/identity integration beyond the
+  opt-in layout recovery and fresh-local-shell relaunch.
 - Script/coprocess trigger actions, command automation, richer key-binding
   actions and broader shell integration beyond the current Bash/Zsh helpers.
 - Qualification of graphics/file-transfer protocols and their app-level controls.
@@ -509,7 +576,7 @@ The earlier integration snapshots of 27, then 30 branch heads are retained in
 [the initial audit](validation/terminal-20261115/integration.json),
 [refresh record](validation/terminal-20261115/integration-refresh.json) and
 [cutoff record](validation/terminal-20261115/integration-cutoff.json). The
-16 November 38-head refresh above supersedes these earlier repository cutoffs.
+16 November 40-branch/153-PR integration above supersedes these earlier cutoffs.
 
 ## Primary references
 

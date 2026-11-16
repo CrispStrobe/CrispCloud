@@ -1,0 +1,510 @@
+{
+  "snapshot_started_utc": "2026-11-16T08:49:02.721798+00:00",
+  "snapshot_finished_utc": "2026-11-16T08:49:17.041522+00:00",
+  "parents": [
+    "428679a33381f943a8ae63117d4207f01dd15462",
+    "4ffdf113803806ba5f8ade4a0846eee85dcfbe68"
+  ],
+  "counts": {
+    "branches": 29,
+    "pull_heads": 52,
+    "all": 81
+  },
+  "refs": [
+    {
+      "ref": "refs/heads/codex/terminal-sharing-office-20261116",
+      "sha": "4235e690602195cc504438a6b937972c71f1ad39",
+      "contains_zotero": true,
+      "contains_ods_validation": true
+    },
+    {
+      "ref": "refs/heads/codex/zotero-support-20261115",
+      "sha": "fc37658c907edf6687eccb9564d3046283b49a3a",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/heads/codex/zotero-support-20261116",
+      "sha": "428679a33381f943a8ae63117d4207f01dd15462",
+      "contains_zotero": true,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/heads/docs/metadata-closed",
+      "sha": "a5febc3362d2fccdb979f012a5296af72e465797",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/heads/docs/readme-remaining-gaps",
+      "sha": "e6fdd16849aaf7ccbaf50f2593d7a92b6a82e630",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/heads/docs/remaining-gaps",
+      "sha": "0a26be7f136ad3e57dbe894b0bc4cdb0602addd0",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/heads/docs/validation-operators",
+      "sha": "01f62eb1812ca54827cc14e074e03abd82f963d7",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/heads/feat/conditional-affix",
+      "sha": "20681b8658392212c128f51b4c91f0b638942448",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/heads/feat/conditional-between",
+      "sha": "b69bad50fb235118a5334b325683cd1524b3e3d1",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/heads/feat/conditional-dxf",
+      "sha": "b0efe6c661009ffa463f2bf6d7945216ce1dae4c",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/heads/feat/conditional-operators",
+      "sha": "21de3c3963b0334068b87fb1c25c787660cb17cf",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/heads/feat/conditional-text",
+      "sha": "752a94dfddf69522429f3025f9d25702499cb6da",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/heads/feat/ods-conditional",
+      "sha": "e59751246a200e7477657d0e4835bf77b153422c",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/heads/feat/ods-default-geometry",
+      "sha": "912f26f21446ef9bdbf4f542535438dae0ded9a9",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/heads/feat/ods-default-style",
+      "sha": "49b447324159595c59e64d8425b54a09f79ec736",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/heads/feat/ods-images",
+      "sha": "7fe296e29e2e1b173580f6854507fc060cb4f080",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/heads/feat/ods-metadata",
+      "sha": "d6d6866c0f4ddbbaa196e1a5eb7ff9e31007fdea",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/heads/feat/ods-validation-operators",
+      "sha": "8769019fb8be5483939edd4655dd88005e2515c4",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/heads/feat/ods-validations",
+      "sha": "b85501b2810e537e21040d82528d8dbaa6fdcf15",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/heads/feat/sheet-hidden-sheets",
+      "sha": "4c8036bbf16ac224c3fc102b5c44d8913a512b18",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/heads/feat/sheet-hidden-state",
+      "sha": "46850ae47e0241733750decb22417a0150e4b0e4",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/heads/fix/sdt-multi-section-control",
+      "sha": "866c14f0b3a876e11732bc544dc25a05d8f10524",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/heads/fix/sdt-trailing-section-break",
+      "sha": "8fc3d06be36da5c2176feb107c14245f61650d75",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/heads/fix/utf16-custom-xml",
+      "sha": "09a05d7d60d2a2e1d2547487ad4545c50472834b",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/heads/main",
+      "sha": "bd130094b4d1bc666aa9b166e6ed7fb1b447aeb3",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/heads/vendor/ods-metadata",
+      "sha": "18dc693fbf4e39fc6c38e3d655d1e5b35eeef273",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/heads/vendor/ods-metadata-zotero",
+      "sha": "4fbd1687d3c0ada22d460cf5cadb9586c4f62905",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/heads/vendor/ods-validation",
+      "sha": "c7bb6d6f51885e4082882252f502bbf2de81d552",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/heads/vendor/ods-validation-current",
+      "sha": "4ffdf113803806ba5f8ade4a0846eee85dcfbe68",
+      "contains_zotero": false,
+      "contains_ods_validation": true
+    },
+    {
+      "ref": "refs/pull/1/head",
+      "sha": "54f0f8de01416640560519aa9d732f668f603709",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/pull/10/head",
+      "sha": "1b1bac125f426b05f868d482e9fbd657d4ffb73a",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/pull/11/head",
+      "sha": "5c1ab430c6911bb11f71d29efa35027ead5ac1d5",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/pull/12/head",
+      "sha": "579f2105cf7fca61536f7e3f9b59004929bdb6c5",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/pull/13/head",
+      "sha": "73b354efdf0f2e7fbe0e87bc67f332a9dfb4903e",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/pull/14/head",
+      "sha": "d4e2a0fcf1fe18e0e5158ac7d86b1f71bf3b70da",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/pull/15/head",
+      "sha": "448eff5aac55054a34eccd4f8a1e79e754909a05",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/pull/16/head",
+      "sha": "78a7b6f4e613c7d18d4bcc6434cda12b50ed184e",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/pull/17/head",
+      "sha": "89c7f06c592edde0c67774e9c7e087d96f52184b",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/pull/18/head",
+      "sha": "f31cf308013ceb4527e3f4de677785894bb1bfc0",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/pull/19/head",
+      "sha": "e8227569a3b90fb21db598483690bd13fe74ddef",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/pull/2/head",
+      "sha": "08b09485588d2b6270f594a07c983689c087587d",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/pull/20/head",
+      "sha": "5278aafd512640608fe06b8f7d357c4cffe8520a",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/pull/21/head",
+      "sha": "1f30a823b30678e3684c98fee6a2cd5c4945c4f2",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/pull/22/head",
+      "sha": "4637ddce4154f4b50105c7322fedc1c75fd02193",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/pull/23/head",
+      "sha": "e002b9584bead9761fac8c7cf818431966d1b1c3",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/pull/24/head",
+      "sha": "9cc8c6e91ff9acf0f52a68aea7c0da69934a2661",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/pull/25/head",
+      "sha": "b6d27c84a72d622f670a7e646e36ba4bd920cfc8",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/pull/26/head",
+      "sha": "5b9ac71db1934252c4b8ae48ac03d4cd976e15ae",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/pull/27/head",
+      "sha": "cde05b85bcd00c26d519d43283fcc6b55a1884e7",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/pull/28/head",
+      "sha": "a8cd28d8af8ca966e8c4259862587ecc9aade2f4",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/pull/29/head",
+      "sha": "7fe296e29e2e1b173580f6854507fc060cb4f080",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/pull/3/head",
+      "sha": "e550723b0f2a7cd849970f58820d260c36857502",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/pull/30/head",
+      "sha": "49b447324159595c59e64d8425b54a09f79ec736",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/pull/31/head",
+      "sha": "912f26f21446ef9bdbf4f542535438dae0ded9a9",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/pull/32/head",
+      "sha": "46850ae47e0241733750decb22417a0150e4b0e4",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/pull/33/head",
+      "sha": "4c8036bbf16ac224c3fc102b5c44d8913a512b18",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/pull/34/head",
+      "sha": "09a05d7d60d2a2e1d2547487ad4545c50472834b",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/pull/35/head",
+      "sha": "e59751246a200e7477657d0e4835bf77b153422c",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/pull/36/head",
+      "sha": "21de3c3963b0334068b87fb1c25c787660cb17cf",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/pull/37/head",
+      "sha": "b0efe6c661009ffa463f2bf6d7945216ce1dae4c",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/pull/38/head",
+      "sha": "752a94dfddf69522429f3025f9d25702499cb6da",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/pull/39/head",
+      "sha": "b85501b2810e537e21040d82528d8dbaa6fdcf15",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/pull/4/head",
+      "sha": "09f5ec4b8eba290ff4d65678179854fb6ff6a468",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/pull/40/head",
+      "sha": "8855b88a96b5c94349e3b5278c339228a1688c3e",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/pull/41/head",
+      "sha": "b69bad50fb235118a5334b325683cd1524b3e3d1",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/pull/42/head",
+      "sha": "8fc3d06be36da5c2176feb107c14245f61650d75",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/pull/43/head",
+      "sha": "20681b8658392212c128f51b4c91f0b638942448",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/pull/44/head",
+      "sha": "866c14f0b3a876e11732bc544dc25a05d8f10524",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/pull/45/head",
+      "sha": "0a26be7f136ad3e57dbe894b0bc4cdb0602addd0",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/pull/46/head",
+      "sha": "e6fdd16849aaf7ccbaf50f2593d7a92b6a82e630",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/pull/47/head",
+      "sha": "fc37658c907edf6687eccb9564d3046283b49a3a",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/pull/48/head",
+      "sha": "d6d6866c0f4ddbbaa196e1a5eb7ff9e31007fdea",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/pull/49/head",
+      "sha": "a5febc3362d2fccdb979f012a5296af72e465797",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/pull/5/head",
+      "sha": "da0979a5c6c4273ea68f360ce9a079bfa747384f",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/pull/50/head",
+      "sha": "428679a33381f943a8ae63117d4207f01dd15462",
+      "contains_zotero": true,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/pull/51/head",
+      "sha": "8769019fb8be5483939edd4655dd88005e2515c4",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/pull/52/head",
+      "sha": "01f62eb1812ca54827cc14e074e03abd82f963d7",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/pull/6/head",
+      "sha": "78ed85f5fd19d44f672dee11420fed261c974f4a",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/pull/7/head",
+      "sha": "e82c997b6df8746fe86fb83b9f416a89bb3e3b80",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/pull/8/head",
+      "sha": "a86a360bf9bd45c729e00b31dd9a97492e23f2e7",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/pull/9/head",
+      "sha": "58de54567d45e38c05dd77064b7607c577374b9d",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    }
+  ],
+  "combined_refs": [
+    {
+      "ref": "refs/heads/codex/terminal-sharing-office-20261116",
+      "sha": "4235e690602195cc504438a6b937972c71f1ad39",
+      "contains_zotero": true,
+      "contains_ods_validation": true
+    }
+  ],
+  "combination_note": "The integration branch was published while this independent snapshot was being gathered. It is the sole combined ref; the other 28 branch heads and all 52 PR heads lack at least one of the two exact parents."
+}

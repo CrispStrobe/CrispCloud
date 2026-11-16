@@ -424,6 +424,8 @@ jobs:
           test/ssh_jump_host_test.dart test/ssh_jump_transport_test.dart
           test/ssh_jump_dialog_test.dart
           test/terminal_arrangements_test.dart test/terminal_arrangements_widget_test.dart
+          test/terminal_workspace_recovery_test.dart test/terminal_workspace_recovery_dialog_test.dart
+          test/terminal_workspace_recovery_widget_test.dart test/terminal_panel_recovery_idle_test.dart
           test/terminal_arrangements_dialog_test.dart
           test/terminal_shell_integration_test.dart test/terminal_shell_directory_labels_test.dart
           test/terminal_user_input_test.dart
@@ -685,6 +687,8 @@ jobs:
           test/ssh_jump_host_test.dart test/ssh_jump_transport_test.dart
           test/ssh_jump_dialog_test.dart
           test/terminal_arrangements_test.dart test/terminal_arrangements_widget_test.dart
+          test/terminal_workspace_recovery_test.dart test/terminal_workspace_recovery_dialog_test.dart
+          test/terminal_workspace_recovery_widget_test.dart test/terminal_panel_recovery_idle_test.dart
           test/terminal_arrangements_dialog_test.dart
           test/terminal_shell_integration_test.dart test/terminal_shell_directory_labels_test.dart
           test/terminal_user_input_test.dart
@@ -816,6 +820,8 @@ jobs:
           test/ssh_jump_host_test.dart test/ssh_jump_transport_test.dart
           test/ssh_jump_dialog_test.dart
           test/terminal_arrangements_test.dart test/terminal_arrangements_widget_test.dart
+          test/terminal_workspace_recovery_test.dart test/terminal_workspace_recovery_dialog_test.dart
+          test/terminal_workspace_recovery_widget_test.dart test/terminal_panel_recovery_idle_test.dart
           test/terminal_arrangements_dialog_test.dart
           test/terminal_shell_integration_test.dart test/terminal_shell_directory_labels_test.dart
           test/terminal_user_input_test.dart

@@ -1,0 +1,22 @@
+{
+  "repository": "CrispStrobe/quds_office_suite",
+  "branch": "codex/terminal-recovery-office-20261116",
+  "commit": "be2c3a91b0dd5b4abb1b9a7baa8f5e10769bc87a",
+  "tree": "f0e47bfd8f0be406ba6aa69886e76371faa86b03",
+  "parents": [
+    "4235e690602195cc504438a6b937972c71f1ad39",
+    "14fde4b1bd2539f0c6168be4569ac1adcc5105cd"
+  ],
+  "source_merge_base": "4ffdf113803806ba5f8ade4a0846eee85dcfbe68",
+  "clean_local_merge_tree": "f0e47bfd8f0be406ba6aa69886e76371faa86b03",
+  "remote_commit_tree_matches_local_merge": true,
+  "retained_parent_is_ancestor": true,
+  "incoming_parent_is_ancestor": true,
+  "changed_paths": [
+    "M\tpackages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+    "M\tpackages/quds_office_engine/lib/src/sheet/model/sml_analysis.dart",
+    "M\tpackages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+    "M\tpackages/quds_office_engine/test/ods_sheet_reader_test.dart"
+  ],
+  "publication": "GitHub Git Data tree/commit/new branch; no Actions queried or awaited"
+}

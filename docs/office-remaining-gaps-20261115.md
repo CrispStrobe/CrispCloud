@@ -28,11 +28,13 @@ identities, commands and the separately qualified terminal results.
 
 ## Earlier verified state
 
-- CrispCloud `main` snapshot: `3f7bc046`
-- Vendored Quds source checkpoint: `4ffdf113803806ba5f8ade4a0846eee85dcfbe68`
+- CrispCloud `main` snapshot: `28db447a`
+- Vendored Quds source checkpoint: `14fde4b1bd2539f0c6168be4569ac1adcc5105cd`
   (`packages/QUDS_FORKS.md`, 2,391 managed files)
-- Quds sheet/ODS cohort: **501 tests**; full engine suite: **2,205 tests**
-- CrispCloud vendored ODS reader: **86 tests**
+- Quds sheet/ODS cohort: **503 tests**; the last clean full engine run was
+  **2,205 tests** (two unrelated CLI bookmark/content-control tests currently
+  fail on main)
+- CrispCloud vendored ODS reader: **88 tests**
 - CrispCloud combined F3/F4/ODF suite: **51 tests**
 - ODT parser/image suite: **37 tests**
 - Live corpus smoke tests: **20 ODF**, **9 XLS**, **1 ODS**
@@ -54,9 +56,9 @@ identities, commands and the separately qualified terminal results.
   width and row height.
 - ODS conditional formats: numeric comparisons, between/not-between,
   contains-text, begins/ends-with, duplicate, with generated dxf fill/font.
-- ODS list/range-source, whole, decimal, date and text-length validations,
-  operator-aware XLSX read/write, date serial conversion and validation
-  title/message.
+- ODS list/range-source, whole, decimal, date, text-length and custom-formula
+  validations; operators, date serials, prompts, error title/message/style and
+  XLSX attribute round-trips.
 - ODS print areas/titles, named ranges and basic database-range autofilters,
   including XLSX print-area read/write.
 - ODT named styles from `styles.xml`, inline pictures, text boxes, header/footer

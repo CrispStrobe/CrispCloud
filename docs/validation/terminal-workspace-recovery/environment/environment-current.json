@@ -1,0 +1,147 @@
+{
+  "recorded_at_utc": "2026-11-16T09:27:07.097152+00:00",
+  "purpose": "Fresh local environment restoration; browser build prerequisite, not successful test execution",
+  "flutter": {
+    "frameworkVersion": "3.47.8",
+    "channel": "[user-branch]",
+    "repositoryUrl": "https://github.com/flutter/flutter.git",
+    "frameworkRevision": "737ba8f885dc774b53b442759999a312c9461e4e",
+    "frameworkCommitDate": "2026-10-22 21:37:31 -0700",
+    "engineRevision": "cf636b1dfb818dd6a3ff16e390e93b1a036969c8",
+    "engineCommitDate": "2026-10-23 02:13:38.000Z",
+    "engineContentHash": "dfd2e6cb7d319db05e3bf1503f3e2ac60f6288a2",
+    "engineBuildDate": "2026-10-23 05:34:48.330",
+    "dartSdkVersion": "3.13.7",
+    "devToolsVersion": "2.60.0",
+    "flutterVersion": "3.47.8",
+    "flutterRoot": "/workspace/scratch/732a154614f9/toolchain/flutter"
+  },
+  "sdk_source_diff": [],
+  "sdk_sparse_source_dirs": [
+    "bin",
+    "packages",
+    "engine/src/flutter/txt/third_party/fonts"
+  ],
+  "bootstrap": "Official Dart SDK fetched by unmodified Flutter launcher; exact hosted packages restored with verified archive digests; Flutter tools resolved offline and compiled using standard shared.sh snapshot flags, without changing SDK source.",
+  "runner": "/workspace/scratch/732a154614f9/toolchain/run",
+  "hosted_app_archives": {
+    "count": 238,
+    "all_match_production_lockfile": true
+  },
+  "hosted_cache_qualification": "Archives verified to prior manifest/production lockfile SHA-256; runtime lib/native sources retained. Package docs/example/test/benchmark trees omitted to conserve disk, recorded in cache receipts. Optional alternate JIT/sanitizer/DevTools UI binaries omitted and listed in separate receipts; active CLI compiler/runtime binaries unchanged.",
+  "production_manifest_diffs": [],
+  "production_manifests": {
+    "pubspec.yaml": {
+      "bytes": 11941,
+      "sha256": "d82a1bb2d1a015e37d5a7283cf8041039c3eb01f6dbf1d3feb139b1b837ea998"
+    },
+    "pubspec.lock": {
+      "bytes": 63296,
+      "sha256": "58560e3fdba68d18b767f4c934b913283df5297468141defbeb816dbb55a0326"
+    },
+    ".fvmrc": {
+      "bytes": 26,
+      "sha256": "90bf8f8884c05a407f51d6ef651ba033fef99a656010f8bfcb65951e921f4294"
+    }
+  },
+  "active_binaries": {
+    "flutter/bin/cache/dart-sdk/bin/dart": {
+      "bytes": 4835712,
+      "sha256": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb"
+    },
+    "flutter/bin/cache/dart-sdk/bin/dartvm": {
+      "bytes": 42998912,
+      "sha256": "ec532a0620beed626fbf89234f1dcc857c15f4e064fb8e99715345027bfb129d"
+    },
+    "flutter/bin/cache/dart-sdk/bin/dartaotruntime": {
+      "bytes": 5710176,
+      "sha256": "3599c987228070f342c80d29353f496c8efc72c620c75fc4d59e5671666b2f72"
+    },
+    "flutter/bin/cache/flutter_tools.snapshot": {
+      "bytes": 47269104,
+      "sha256": "f246d1bc11c2822f9536dd076c72bb22c6ecdea5465ebbaa4d471a08f131065f"
+    }
+  },
+  "passing_commands": [
+    "../toolchain/run flutter pub get --enforce-lockfile --offline",
+    "../toolchain/run dart analyze lib/models/terminal_workspace_recovery.dart",
+    "../toolchain/run flutter build web --debug --no-pub --no-wasm-dry-run --no-web-resources-cdn --target=tool/terminal_recovery_web_test.dart --output=../toolchain/recovery-web"
+  ],
+  "browser_harness": {
+    "entry": "tool/terminal_recovery_web_test.dart",
+    "build_seconds": 75.9,
+    "main_js": {
+      "bytes": 21330554,
+      "sha256": "91e8ddb942ad881c9335a84fb18ca80075118595e434417869dc18a460b24d7b"
+    },
+    "build_passed": true,
+    "tests_executed": 0,
+    "execution_not_qualified": true
+  },
+  "actual_blocked_attempts": [
+    {
+      "log": "native-prerequisite.log",
+      "command": "flutter test --no-pub --concurrency=1 --reporter=expanded test/terminal_process_test.dart",
+      "exit": 1,
+      "tests_executed": 0,
+      "reason": "Normal crisp_catalog native hook cannot start absent cargo executable."
+    },
+    {
+      "log": "recovery-browser-prerequisite.log",
+      "command": "flutter test --no-pub --platform chrome --concurrency=1 --reporter=expanded test/terminal_workspace_recovery_test.dart test/terminal_workspace_recovery_dialog_test.dart",
+      "exit": 1,
+      "tests_executed": 0,
+      "reason": "Flutter test command builds host native assets even for chrome, before test execution; absent cargo."
+    },
+    {
+      "log": "chrome-probe.log",
+      "command": "System Chromium headless smoke probe",
+      "exit": 134,
+      "reason": "Host denies process singleton Unix socket creation with EPERM."
+    },
+    {
+      "log": "recovery-web-build.log",
+      "command": "Normal debug web build of temporary two-suite scratch entry",
+      "exit": 1,
+      "reason": "Compilation succeeded; bundle failed because sparse SDK lacked Roboto. Official font source then restored and reusable harness build passed."
+    }
+  ],
+  "native_toolchain": {
+    "clang": "19.1.7",
+    "cmake": "3.31.6",
+    "ninja": "1.12.1",
+    "rust_cargo": "Not installed. Exact official artifact inventory records minimum runtime beyond remaining disk, before build/source caches.",
+    "current_installation": "C compiler/CMake/Ninja extracted files removed after version probes to reclaim disk. Native Rust/Cargo never installed."
+  },
+  "disk_free_bytes": 293548032,
+  "notes": [
+    "No GitHub Actions queried or waited on.",
+    "No app dependency override introduced and no hook disabled.",
+    "Toolchain caches and test-build outputs are reproducible scratch assets; repository source remains untouched by this agent."
+  ],
+  "last_updated_utc": "2026-11-16T09:38:45.424899+00:00",
+  "current_web_cache": "Removed reproducible web SDK cache and compiled browser harness output under disk pressure after passing build and recording main.dart.js hash; normal flutter precache --web restores SDK. Browser runtime remains unverified.",
+  "isolated_validation_mechanism": {
+    "environment_overrides": {
+      "FLUTTER_NATIVE_ASSETS": "false",
+      "FLUTTER_DART_DATA_ASSETS": "true"
+    },
+    "qualification": "Only isolated Dart/widget checks, not normal-native or native bridge acceptance. No persistent config/manifest/app/test/hook edits.",
+    "first_development_result": {
+      "passed": 55,
+      "failed": 13,
+      "interrupted": true,
+      "evidence": "isolated-recovery-attempt2-development"
+    },
+    "post_queue_fix_result": {
+      "passed": 67,
+      "failed": 2,
+      "evidence": "isolated-recovery-attempt3-auth-fixture"
+    },
+    "targeted_followups": {
+      "queue_regression": "2 passed; queue-regression.log",
+      "relaunch_fixture_regression": "2 passed; relaunch-fixture-regression.log"
+    },
+    "final_combined_run": "Pending root/agent acceptance after visual fixture is added"
+  }
+}

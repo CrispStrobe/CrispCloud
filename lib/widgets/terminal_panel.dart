@@ -17,6 +17,7 @@ import '../l10n/terminal_shell_strings.dart';
 import '../l10n/ssh_multiplexer_strings.dart';
 import '../l10n/screen_terminal_strings.dart';
 import '../l10n/terminal_mount_error_strings.dart';
+import '../l10n/terminal_recovery_strings.dart';
 import '../l10n/terminal_workspace_strings.dart';
 import '../models/panel_side.dart';
 import '../models/ssh_multiplexer_session.dart';
@@ -222,6 +223,10 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
       };
 
   bool get _canDisconnect => _session.canDisconnect;
+  bool get _awaitingExplicitStart =>
+      _session.status == TerminalSessionStatus.idle &&
+      !_ownsSession &&
+      !widget.autoStart;
   bool get _activePane =>
       widget.active && (widget.isActivePane?.call() ?? true);
 
@@ -1409,6 +1414,9 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
           : 'Shell failed to start';
       return '${context.terminalTr(heading)}: $detail';
     }
+    if (_awaitingExplicitStart) {
+      return context.terminalRecoveryTr('Ready to start a session.');
+    }
     if (kIsWeb && _session.status == TerminalSessionStatus.idle) {
       return context.terminalTr('Starting the built-in browser shell…');
     }
@@ -1502,7 +1510,11 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
                 ? 'Local shell'
                 : 'Terminal',
           );
-    final connectionLabel = _session.kind == TerminalSessionKind.ssh
+    final rememberedSsh = _awaitingExplicitStart ? _lastSshConfig : null;
+    final connectionLabel = rememberedSsh != null
+        ? '${rememberedSsh.username}@${rememberedSsh.host}'
+              '${rememberedSsh.port == 22 ? '' : ':${rememberedSsh.port}'}'
+        : _session.kind == TerminalSessionKind.ssh
         ? _session.label ?? backendLabel
         : _workspace == null
         ? backendLabel
@@ -2120,15 +2132,52 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
                                           .errorContainer,
                                 child: SingleChildScrollView(
                                   padding: const EdgeInsets.all(12),
-                                  child: Text(
-                                    message,
-                                    style: TextStyle(
-                                      color: _session.error == null
-                                          ? const Color(0xffcccccc)
-                                          : Theme.of(context)
-                                                .colorScheme
-                                                .onErrorContainer,
-                                    ),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        message,
+                                        textAlign: _awaitingExplicitStart
+                                            ? TextAlign.center
+                                            : null,
+                                        style: TextStyle(
+                                          color: _session.error == null
+                                              ? const Color(0xffcccccc)
+                                              : Theme.of(context)
+                                                    .colorScheme
+                                                    .onErrorContainer,
+                                        ),
+                                      ),
+                                      if (_awaitingExplicitStart) ...[
+                                        const SizedBox(height: 8),
+                                        FilledButton(
+                                          key: const ValueKey(
+                                            'terminal-start-session',
+                                          ),
+                                          onPressed: widget.visible
+                                              ? () => _performAction(
+                                                  _lastSshConfig != null
+                                                      ? _PanelAction.reconnect
+                                                      : _PanelAction.local,
+                                                )
+                                              : null,
+                                          child: Text(
+                                            context.terminalTr(
+                                              _lastSshConfig != null
+                                                  ? 'Reconnect SSH'
+                                                  : _desktop ||
+                                                        (!kIsWeb &&
+                                                            defaultTargetPlatform ==
+                                                                TargetPlatform
+                                                                    .iOS)
+                                                  ? 'Start local shell'
+                                                  : 'Start built-in shell',
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ),
+                                      ],
+                                    ],
                                   ),
                                 ),
                               ),

@@ -85,11 +85,12 @@ counts covered merge placeholders only once, and translates formula syntax
 without changing quoted literals or quoted sheet identifiers. Explicit cell, row
 default and column default styles retain their precedence; the document Normal
 style and default column/row geometry are applied when no explicit style exists.
-ODS pictures import as worksheet drawings; conditional formats (numeric, between, contains-text, begins/ends-with and duplicate) and list/range-source, whole, decimal, date and text-length validations
-are imported; conditional formats are painted and serialized with dxf styling. Hidden rows, columns and sheets
+ODS pictures import as worksheet drawings; conditional formats (numeric, between, contains-text, begins/ends-with and duplicate) and list/range-source, whole, decimal, date, text-length and custom-formula
+validations, prompts and error styles are imported; conditional formats are painted and serialized with dxf styling. Hidden rows, columns and sheets
 survive an ODS→XLSX save. Absolute sheet references, clock components and
 elapsed time formats survive XLSX saves. The sheet/ODS development cohort is
-501 tests and the full engine suite is 2,205 tests in the current source. The combined host qualification remains separately source-bound
+503 tests; the last clean full engine run was 2,205 tests, with two unrelated CLI
+bookmark/content-control tests currently failing on main. The combined host qualification remains separately source-bound
 in the storage evidence.
 
 The resumed storage qualification also integrates Word inline-picture retention

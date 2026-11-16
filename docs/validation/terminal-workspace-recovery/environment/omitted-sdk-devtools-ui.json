@@ -1,0 +1,2180 @@
+{
+  "reason": "Host disk capacity; DevTools browser UI unused by headless CLI analysis/test/build commands. Flutter/Dart runtime and build inputs retained.",
+  "files": [
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/flutter_bootstrap.js",
+      "bytes": 16305,
+      "sha256": "3f7e30af2a11da8b2585832ccdcfa229fefbeee972c3efa385843dfe2adb6c78"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/flutter_service_worker.js",
+      "bytes": 784,
+      "sha256": "a131df5ca46154cc4eb79044f7f5a14029c2f8bfccf8cef34e3ec3b5a9f5a88c"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/version.json",
+      "bytes": 76,
+      "sha256": "f1a891e99944fcd01ce2bcd23532de53eafeea3ceeb728b4fcea30405a9589b2"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/manifest.json",
+      "bytes": 609,
+      "sha256": "47da58b61661aef5364745381d33d6bb610c7be483920dacececfa7ec8ebc2d4"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/main.dart.mjs",
+      "bytes": 40124,
+      "sha256": "a2d51e8408db7b978310a805b12a54e7e521c2dadf189af71abbfa43575c3986"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/main.dart.wasm.map",
+      "bytes": 5728036,
+      "sha256": "a406fe1285f25bf981689ed942a0434d2e1f262ed77ebc2deca3a4e2b2289c8f"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/main.dart.js.map",
+      "bytes": 5529415,
+      "sha256": "574879317fa42da96d64e94d09e79c4828a926df1353f9ce25ab3118f93f0321"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/main.dart.wasm",
+      "bytes": 5307350,
+      "sha256": "69b92a02245da9c0d46212bdb5afdbc7533a217c16802a7415f5494988a5cb76"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/main.dart.js",
+      "bytes": 5598169,
+      "sha256": "6ac11f4be4750896a1ca2ae03ab3c491818e9d7294adb45001d0a5c4bf601090"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/flutter.js",
+      "bytes": 10646,
+      "sha256": "33f6b6179a8179cf540cab48f4a0f7c65e7a8c94356a8b4161a4996d5e8554e3"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/unsupported-browser.html",
+      "bytes": 622,
+      "sha256": "b64ee92ab0f48604cc68a87c8a0aea402e9e2aebf94747fc13d87b0c78a0f028"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/styles.css",
+      "bytes": 243,
+      "sha256": "8546bdf1e788e689736700a55d6802c2b894d3a9b41e92775a0710d61bb83f8f"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/.last_build_id",
+      "bytes": 32,
+      "sha256": "430b7d5da4ced335b3eff2241245e92e2c9a4e8237883f83901ec836d60f708d"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/favicon.png",
+      "bytes": 1767,
+      "sha256": "63351a53a8a87676dbb345d3458246abc3d7cfaa7be1d331952a019866e33b6a"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/index.html",
+      "bytes": 941,
+      "sha256": "70aa8f062a73020882ba6017014cec1636a9ec834e2594c7f6a39a45624e10fe"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/FontManifest.json",
+      "bytes": 1954,
+      "sha256": "5df02fb5c0a516503de5dad5926455a7f2f540de454874f4cf103a4f042c102c"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/NOTICES",
+      "bytes": 2482128,
+      "sha256": "d12c1532e0a67d79923ee02967d7fc768563aacfe146b33cd53d275e4c39e3ed"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/AssetManifest.bin",
+      "bytes": 34373,
+      "sha256": "d8b6d72b21eb257025b86549eb07d44b44ccdd8dbd3a8d0ef9e898b3f1cd8d34"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/AssetManifest.bin.json",
+      "bytes": 45834,
+      "sha256": "1743f9b5d5e4a257211fa97f84979c41fed8f6bcf4513b9378b84074d141f0b0"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/canvaskit/canvaskit.wasm",
+      "bytes": 7284331,
+      "sha256": "6f8003ed949d195743ab376a8a54ad030ea5f08778051558f97ac2fe1aaa6c41"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/canvaskit/canvaskit.js",
+      "bytes": 86987,
+      "sha256": "bb559f6080c7d312ac2a912b4abec9f68ff3d3022d4a603c7796b9b31460642b"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/canvaskit/skwasm.js",
+      "bytes": 63537,
+      "sha256": "71d7d3e34bf71b52bdba3b588b103bba8148ba28de5754083e01b3398e7a6e1c"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/canvaskit/skwasm.wasm",
+      "bytes": 3593476,
+      "sha256": "17c6ea326bae65d0e3e04fcb8a7e653b2ea4bc94984dcb60ee846cb560e6468e"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/canvaskit/wimp.js.symbols",
+      "bytes": 1824985,
+      "sha256": "8af673f45e510796be789cbf54cc286912172a934f24b0c5124ae7468b53a331"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/canvaskit/skwasm.js.symbols",
+      "bytes": 1540129,
+      "sha256": "cc24131c41cb5fe8b16ffef13fbb25617f82007a806f04d1a17ff545fddfa838"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/canvaskit/skwasm_heavy.js.symbols",
+      "bytes": 1672275,
+      "sha256": "694343a36578797dec0035ca6dfa3dc201ded075042ae2f49e23a4150e19e72f"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/canvaskit/skwasm_heavy.js",
+      "bytes": 63650,
+      "sha256": "cec554b46ddcf4c0e63d799e0556d546f42d2c3f69316fb4f67ed776f6104558"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/canvaskit/canvaskit.js.symbols",
+      "bytes": 1357036,
+      "sha256": "165c5357a4c8e54ce26e41a9d607bb9423d7c19ade9738bdbfba440c467a3511"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/canvaskit/wimp.js",
+      "bytes": 59127,
+      "sha256": "8fd8a47480c6eb0a374d159912d0b3fb15661b41f5c113ecdd39c2f01f2bee46"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/canvaskit/skwasm_heavy.wasm",
+      "bytes": 5215978,
+      "sha256": "a03415969934e8c6316431c2abd1f97716887d125a711f7e051f09e90ef5e2ea"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/canvaskit/wimp.wasm",
+      "bytes": 3580226,
+      "sha256": "3ad93468b9464843ec5ebd1123a6943b5c2fe9cc0ed2ba599854218f89071fe3"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/shaders/stretch_effect.frag",
+      "bytes": 6737,
+      "sha256": "ab412f07a5b9b50b67a885b24dbe16929738ae28630407d6490c924caf0a3220"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/shaders/ink_sparkle.frag",
+      "bytes": 8890,
+      "sha256": "2dca5ab93d4ec29e963f996f3916320ba60825e9537dfb149a68008c7a16b026"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/assets/dart_syntax.json",
+      "bytes": 10773,
+      "sha256": "f56fe824d1873adcab79f5c09a604a9d6fbea54f8b68360d1752a76c1056e36f"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/fonts/MaterialIcons-Regular.otf",
+      "bytes": 1645184,
+      "sha256": "d9865b671a09d683d13a863089d8825e0f61a37696ce5d7d448bc8023aa62453"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/fonts/Octicons.ttf",
+      "bytes": 27440,
+      "sha256": "f0a238d46d6749e601c12f20f8fc03201f197b9fe347be4c2c944ffc5c4b6035"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/images-dgrey.png",
+      "bytes": 768,
+      "sha256": "02a473e6f4a77921ab8af478202392cfa1b4c1499a199c9c97c06ff0abb2e2f4"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/hot-reload@2x.png",
+      "bytes": 764,
+      "sha256": "4a68893fbafb51b4bdbe754465b4400d68e12a4abd00ece2a4ed45372375db8d"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/flutter_badge@2x.png",
+      "bytes": 2132,
+      "sha256": "22245a524b114bc6d54302c0473bc0edfd2a4da0c91688305f35a92fdb3ee581"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/performance-lgrey.png",
+      "bytes": 389,
+      "sha256": "b4c8eeccef3e50c8a382486dbb5bd36318d0d733371862de96b504bb4eaef4d4"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/feedback.png",
+      "bytes": 232,
+      "sha256": "6ba8aa88b0e71bb1acc7071d2741949853a62a0f1b78739b1f4d4063710bf5ec"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/bazel_run.png",
+      "bytes": 1776,
+      "sha256": "70bd8a7112aef0096920ea729e0ca5ad378be132a745ae0c2503e6a951562771"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/debug_banner@2x.png",
+      "bytes": 2762,
+      "sha256": "117906974ba4f9ae362a11dfef90395cfd5e156d9c99cc3b83d14ade5564ed55"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/trackwidget-lgrey.png",
+      "bytes": 703,
+      "sha256": "0460c29ecafc3d054c6770e87f59a4a736d07bb8bb833c91d6e822e20ded1c3a"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/trackwidget-dgrey.png",
+      "bytes": 674,
+      "sha256": "fe60070d44ae9a8b769c8ce0aeb4834e2a0f192a3b8c38b8675c521a5f038a29"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/slow-dgrey.png",
+      "bytes": 1571,
+      "sha256": "06fc58ab0714b2ca6d9b2c67889d9d91b759bf6645635f5e38f21c453da0d6ce"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/flutter_64.png",
+      "bytes": 2948,
+      "sha256": "27eb48bf6438e53f270b30f71218d9eb968a5524d7426936842310de3b74f2fa"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/flutter_13.png",
+      "bytes": 1616,
+      "sha256": "c491aac23672912d1034ae19eb5acb7a7f7dfb0d2c6c1755d41351db4774b7f2"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/images-lgrey.png",
+      "bytes": 776,
+      "sha256": "96492da4ee0a36982f5b7674c7086df69f0dad14e018a5d53732a2479905e539"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/flutter_inspect.png",
+      "bytes": 1705,
+      "sha256": "adb344dcfe5551755c8d5a851c1b0aad3cee4b2b8b06c2a2b3a3ccb8cb9407a3"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/repaints-lgrey.png",
+      "bytes": 1475,
+      "sha256": "f298d0b65d260373f63e5f2e4eb4c280e2b8dd1ef3e1fd86be2b5d49c2b73870"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/bazel_run@2x.png",
+      "bytes": 2615,
+      "sha256": "1825344fb1d87ddb4143e0566a05fc2767e7d012882e58941da2b819e447f8fd"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/template_new_package.png",
+      "bytes": 15328,
+      "sha256": "5dbc826366c99f9231eedfca2f6067242dc42025525aadb415f0adb136c394ad"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/Icon-512.png",
+      "bytes": 8252,
+      "sha256": "baccb205ae45f0b421be1657259b4943ac40c95094ab877f3bcbe12cd544dcbe"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/baselines-dgrey.png",
+      "bytes": 1498,
+      "sha256": "eb309f9e758f8f14242ccc745ab078c2f2016862dee2acfa805ffddfa8abc079"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/repaints-white.png",
+      "bytes": 1049,
+      "sha256": "904d623914c96820cd28c577983af06e8368ca1ecaad463eb769a4e63d3af5ff"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/restart@2x.png",
+      "bytes": 2323,
+      "sha256": "f4ce93b1fa4e9ac4048c5be4aecb3c3f9266ec35ee07731d4e317cd40399639c"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/cancel.png",
+      "bytes": 438,
+      "sha256": "6725dc58ef8a983945c8bb52a8be7287df55638bc1bc27e8de5f03a9041f94d9"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/baselines-lgrey.png",
+      "bytes": 1568,
+      "sha256": "c4d5a8c5a10aefc730b4d411b3b08a09bff541ab55a27581140cbf9e972d5ba4"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/timeline@2x.png",
+      "bytes": 335,
+      "sha256": "e63d54368634c7f0b591138049f73cd8744dff188518dfb4d2b9f025283151ee"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/template_new_project.png",
+      "bytes": 13740,
+      "sha256": "d918a7182f386ec51577de7ea49138803a3af406e6ec1d31b525d6f077776baf"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/memory_dashboard@2x.png",
+      "bytes": 887,
+      "sha256": "6d3e3c36a1b73895f3bf9425bb0ed374619d918e39bcf16c357ec4edd4759383"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/slow-white.png",
+      "bytes": 1128,
+      "sha256": "24680b8b3b866a574fee1167655710e748b2ada684722f67878017cfbeb031c3"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/refresh-white.png",
+      "bytes": 859,
+      "sha256": "9a609ecb8c752b925602447c3b135a3a59d57998a090c306b8efaa1053f9f886"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/hot-restart@2x.png",
+      "bytes": 2584,
+      "sha256": "749484904aabb450f06da52379ed19c7d4111a8731109aded75069c24c7ad2a9"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/repaints-dgrey.png",
+      "bytes": 1429,
+      "sha256": "510d8dc3067821366c6e96944b38b8acaefd97203d9680f28629f0aafbb5b3df"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/hot-restart-white.png",
+      "bytes": 1644,
+      "sha256": "c33ae70a32382117a59bad060b9300ca2729f9e1a9c3d06b8b040e089495bd4c"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/attachDebugger.png",
+      "bytes": 1666,
+      "sha256": "650492f1bac5bfb366b32a7330e92fb9922ced395b10ad5d5a1458ee2f9c0eda"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/reload_debug@2x.png",
+      "bytes": 2667,
+      "sha256": "2177b2f2c1e677d004023362d6b2a4c9115b48bf7586950cf9b83da82c5b0d8a"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/reload_both.png",
+      "bytes": 1360,
+      "sha256": "8455dcb4f67f92d289c2f8c65588582d55c22ae29cb6f92b7eaaa8aa082b9c64"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/template_new_module.png",
+      "bytes": 14319,
+      "sha256": "45b3fc29039a35be0888082d817538db568e1157d6b5653386c9551a7a58c1a3"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/refresh-lgrey.png",
+      "bytes": 1320,
+      "sha256": "35dc62ebf400fc8c0e521ad433b49e70264ab1d3d67077a8964a8fb5dfc1d6ee"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/refresh-dgrey.png",
+      "bytes": 1318,
+      "sha256": "4d41e5f01b3e9ccd3c5e640296f0266768d8e4f6a01bf89a34045bdf6dc07df3"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/flutter_13@2x.png",
+      "bytes": 2211,
+      "sha256": "ac9311d001a5e5b0641980363fd838aa1dbf067540336aa927681f19e65c3611"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/timeline.png",
+      "bytes": 236,
+      "sha256": "569ff8ad84c84a70165ed70a0b16e7e690f66ff2fe1a52246a3b6c4727183295"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/restart.png",
+      "bytes": 1697,
+      "sha256": "2e1386fb8a4ed70966a42fe8b40853614cdb0e0de17cea6086ae2b56ae6d7e0a"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/hot-reload-white@2x.png",
+      "bytes": 1479,
+      "sha256": "8b431d7d64502443a0cc67c315bd6676465e44434e8a5f7f60a4ea4b970fddea"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/hot-reload.png",
+      "bytes": 367,
+      "sha256": "cc4886ed8e837733da7d35b6f514b3395d833b9c1fd6bfe98843c0482fccde78"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/baselines-white.png",
+      "bytes": 1102,
+      "sha256": "e3a957796106072978979a3a2380ab699f83fb653d43a2b53602ea1114c87f33"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/hot-restart-white@2x.png",
+      "bytes": 2273,
+      "sha256": "83167f384df300d2445d72efa08d97e55adc08c66861a9d7ec7a7ab499b0516d"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/flutter_inspect@2x.png",
+      "bytes": 1993,
+      "sha256": "2f34dde69b09410484df451b26dbb80fe53f216a8faf522dd6fd47c85f552144"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/flutter_badge.png",
+      "bytes": 1532,
+      "sha256": "0c49358f481fa982bb0ae24195698fc718eac6b2e5d600bc14422b4177ed40d0"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/performance-dgrey.png",
+      "bytes": 385,
+      "sha256": "033f8a6f00b92d3271e12710cc9c533b65222e8a090341b3f0a78a04ced32ded"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/flutter_test.png",
+      "bytes": 1740,
+      "sha256": "93fd79b2fc096ff3dce32abdf0bc1fee8c2f966b254f0cd16f7cabef176cccf9"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/phone@2x.png",
+      "bytes": 416,
+      "sha256": "540846659c4800125a57991d0a283eda9e0a05894b904ee17a48c53ba5d38bf4"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/reload_both@2x.png",
+      "bytes": 850,
+      "sha256": "db277e1f97e4ebe7d566653ca1445a83e2abeacaa13f11c2bf1dc0523105a2b5"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/flutter_64@2x.png",
+      "bytes": 3490,
+      "sha256": "00d96c26a9d3406fa8b304eab9e7ef8927717afd49d5cce9d0232ffdac17f50b"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/observatory@2x.png",
+      "bytes": 2049,
+      "sha256": "83ee39670f87e36ba8b69d4cbf7c23eb5dd1c0aab5558a7d9a3ffe7b9c7531e9"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/reload_debug.png",
+      "bytes": 1824,
+      "sha256": "00b6d2719210511759ba2de09edf54e6f67ee8b9d6cefa5cd58bf3cf16176958"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/template_new_plugin.png",
+      "bytes": 14621,
+      "sha256": "0e8c4c904f203037a87e0910344122fb85238588ab006789ae8c01ae02bd0824"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/attachDebugger@2x.png",
+      "bytes": 2180,
+      "sha256": "f9cf9d510dc806882643e4a268c1ca8a1a90e6a2459dede2b2ce59d10789de6e"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/guidelines-dgrey.png",
+      "bytes": 608,
+      "sha256": "36feb7f6870fec021f55272b261569031cd7106b5c474c9a25d35a0f571e26ad"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/observatory_overflow@2x.png",
+      "bytes": 2281,
+      "sha256": "4bcebd2b9927c34bec3b2863c27eb856cd17d092c8b9d0915e661235f9a433aa"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/reload_run.png",
+      "bytes": 1356,
+      "sha256": "f5cab3da890b323a71c81763b4ebd256632bdeed9a897a1fecd58e017d3aded2"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/trackwidget-white.png",
+      "bytes": 548,
+      "sha256": "e65e9c75822a8957322eee6d6f3cc7a14e6859e12a5d41caa5737d07be79d01d"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/flutter@2x.png",
+      "bytes": 2437,
+      "sha256": "1e7e3aecec06d0abd975a6b7c9f16b98a3888b8443828b01870978960898eef5"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/hot-restart.png",
+      "bytes": 1757,
+      "sha256": "f41dff2b988a11409ba1ba2a8a62a58066448621a0934e42c9ff64ff59d5d3c0"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/performance-white.png",
+      "bytes": 365,
+      "sha256": "dfceb1d340f8c59b9bee0e5d38febc3c1657e717d03279ce5fbc912a06e6f7be"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/reload_run@2x.png",
+      "bytes": 741,
+      "sha256": "a5756c615c5886eeb62130653dfc93da15a7033ca5618a2cf3459c461fcb01eb"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/phone.png",
+      "bytes": 320,
+      "sha256": "6bf803a711db7363e599f3f382986474e2340c20c029d5e8109d408dd075ea68"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/images-white.png",
+      "bytes": 698,
+      "sha256": "91cce6c173a488ea68403de447400e76bc9f891d3778f107279a1cc6d19c74a9"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/flutter_test@2x.png",
+      "bytes": 2167,
+      "sha256": "b054cf2a9a87970e6d4c0177a3eb918b0fb40210b30aecb210277632d82484f9"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/guidelines-white.png",
+      "bytes": 536,
+      "sha256": "10495ea027146740084140c3b853c33c55ba352135dae3213ac6fb3fce6b9deb"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/guidelines-lgrey.png",
+      "bytes": 627,
+      "sha256": "a72e13f68aeb120a8ac3ec83b0c479cbf688b56613ef6f1f8c386d61a8203aac"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/feedback@2x.png",
+      "bytes": 255,
+      "sha256": "4726045bceea88988762532c3f3088eb1b5fe5452016f34004f7d3d5aa2937c1"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/flutter.png",
+      "bytes": 1714,
+      "sha256": "1866feeedcf94339ae885fd81aef9dafa9c2391fd07e1c435141ad1bfd22654e"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/hot-reload-white.png",
+      "bytes": 1500,
+      "sha256": "ea2c7a4b3bc35eaab8a6fd0c3cb7f904c6d2ed9fe5df7a8e22023c8a7ddda7f2"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/observatory_overflow.png",
+      "bytes": 1596,
+      "sha256": "b02db1f2db6dfca8c189e96c50eedc31775b1bac79087571d22ccceb5352c933"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/Icon-192.png",
+      "bytes": 5292,
+      "sha256": "3dce99077602f70421c1c6b2a240bc9b83d64d86681d45f2154143310c980be3"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/observatory.png",
+      "bytes": 1624,
+      "sha256": "ba41c2a3b25a56aa3fc744459e1eadb35d724c40fb3549489232da1c8651a162"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/memory_dashboard.png",
+      "bytes": 520,
+      "sha256": "2d197698516e71c228f5e0ec22ee728025cbe90cb9f66b4e253fc4d9e3d00776"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/debug_banner.png",
+      "bytes": 2762,
+      "sha256": "117906974ba4f9ae362a11dfef90395cfd5e156d9c99cc3b83d14ade5564ed55"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/slow-lgrey.png",
+      "bytes": 1636,
+      "sha256": "b11eceb05d2748e6683dc82701400ddba4e9800acfc446a7e4eba73cdb4e8a69"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/cancel@2x.png",
+      "bytes": 797,
+      "sha256": "7fbd8948727d9938d5c01451aff15d0d08e73578b9bcb6e6753b3ddbf1ab4468"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/packages/devtools_app_shared/fonts/Roboto_Mono/RobotoMono-Bold.ttf",
+      "bytes": 109500,
+      "sha256": "d580ebfd08b9b1bb637021ac9a34d30abdf3a1a731865886ec01e0c5859f29c8"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/packages/devtools_app_shared/fonts/Roboto_Mono/RobotoMono-Medium.ttf",
+      "bytes": 109292,
+      "sha256": "8e3fc643b30cff29c10e5f57534d2ffcf791f1319dff30c3e37c2b6b5e3d679f"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/packages/devtools_app_shared/fonts/Roboto_Mono/RobotoMono-Light.ttf",
+      "bytes": 113488,
+      "sha256": "fcd6fe9fb554079661b04d652e8ee5a48b9158970c57c86e76ab915fe3efbcc0"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/packages/devtools_app_shared/fonts/Roboto_Mono/RobotoMono-Regular.ttf",
+      "bytes": 109212,
+      "sha256": "c59ecb6c18e38d4194249b6e1c555eb55c8e809258cf6d9b624d19d9268253bf"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/packages/devtools_app_shared/fonts/Roboto_Mono/RobotoMono-Thin.ttf",
+      "bytes": 112480,
+      "sha256": "3d41efb1035b717af6fa01eca387db278bff418c1d8d44f472b00ed7a0130645"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/packages/devtools_app_shared/fonts/Roboto/Roboto-Bold.ttf",
+      "bytes": 170760,
+      "sha256": "7d0b991ee3e0be7af01ad7ea8cd2beea6c00a25e679a0226b6737f079aafff86"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/packages/devtools_app_shared/fonts/Roboto/Roboto-Thin.ttf",
+      "bytes": 171904,
+      "sha256": "3d91f7aa69cb7f7064035895c566ac5cb9b2084582d351af7267bb4e0fba60f5"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/packages/devtools_app_shared/fonts/Roboto/Roboto-Regular.ttf",
+      "bytes": 171676,
+      "sha256": "79e851404657dac2106b3d22ad256d47824a9a5765458edb72c9102a45816d95"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/packages/devtools_app_shared/fonts/Roboto/Roboto-Light.ttf",
+      "bytes": 170420,
+      "sha256": "a6d343d425bc38db90152fa06058b1c7391eca9264f334ef65c1ce175085c6f6"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/packages/devtools_app_shared/fonts/Roboto/Roboto-Black.ttf",
+      "bytes": 171480,
+      "sha256": "3872e9b39760a1b59ac1e192633dbb3b58e595b4d423930ac7ded525e9ae25e0"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/packages/devtools_app_shared/fonts/Roboto/Roboto-Medium.ttf",
+      "bytes": 172064,
+      "sha256": "f205cc511821ea56078a105557fcea6253129404d411c997e1866fbd006abb68"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/packages/perfetto_ui_compiled/dist/service_worker.js",
+      "bytes": 9232,
+      "sha256": "57c5594ede266cb79a70bc65f6ac9a2b51f7b15e7981b0f28dac2d5a4474a108"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/packages/perfetto_ui_compiled/dist/index.html",
+      "bytes": 5644,
+      "sha256": "dc7d6f752cb5c5fc6ea4f6d3dc9b26ece84c0df6d61e203069164350f1497409"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/packages/perfetto_ui_compiled/dist/devtools/devtools_shared.css",
+      "bytes": 1958,
+      "sha256": "6c1d551e8cf624ca065ab1f8a97e9ca4427bfe33e3519dc07e25a5e14edbacea"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/packages/perfetto_ui_compiled/dist/devtools/devtools_theme_handler.js",
+      "bytes": 1165,
+      "sha256": "b06a6c8cb5675cff1dc2a2b955b4b89b1f7fbd5c58d992dcd62ab0b4fbe2fc94"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/packages/perfetto_ui_compiled/dist/devtools/devtools_light.css",
+      "bytes": 956,
+      "sha256": "dd172cefc022df68ae60789f95e26e2588f9190b27cc38ee39f6349d5a81f567"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/packages/perfetto_ui_compiled/dist/devtools/devtools_dark.css",
+      "bytes": 6476,
+      "sha256": "9c1ab2df306ea4a72333f550f9b04f94b2483486eb11d443fee257980778b3dc"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/packages/perfetto_ui_compiled/dist/v34.0-16f63abe3/manifest.json",
+      "bytes": 3854,
+      "sha256": "daafe8e69fec862c3267abe7fb1d25065b257a89e105d3586540f9d16a03a73b"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/packages/perfetto_ui_compiled/dist/v34.0-16f63abe3/perfetto.css",
+      "bytes": 118361,
+      "sha256": "c5ce36a5577f6759110b58ea9ee0802206773be5d38735fcefdda4c03b557b12"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/packages/perfetto_ui_compiled/dist/v34.0-16f63abe3/trace_processor.wasm",
+      "bytes": 8095438,
+      "sha256": "639f53867f389218d38bbc123e3616c23637cf5985a2340754fc62d6b068ada7"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/packages/perfetto_ui_compiled/dist/v34.0-16f63abe3/engine_bundle.js",
+      "bytes": 238036,
+      "sha256": "aa9af04cd2f3f652c07725e7093c1fb8c99caade856c39bfbafec71196b33f7c"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/packages/perfetto_ui_compiled/dist/v34.0-16f63abe3/frontend_bundle.js",
+      "bytes": 15564539,
+      "sha256": "2f36cc72162e441a72407974ac4f8fa23a87c114f07685cc2cd5f0840cd10cde"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/packages/perfetto_ui_compiled/dist/v34.0-16f63abe3/assets/RobotoCondensed-Regular.woff2",
+      "bytes": 10968,
+      "sha256": "49a1b4e1296645aa2f513c87a0e5fe56a305a7ed678c2f6499631ec1f3b35856"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/packages/perfetto_ui_compiled/dist/v34.0-16f63abe3/assets/RobotoCondensed-Light.woff2",
+      "bytes": 11052,
+      "sha256": "ac42e86ff1d0fc78a7870a72cf5d1bbf0a509a852dba1d8abdc734892b0d4844"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/packages/perfetto_ui_compiled/dist/v34.0-16f63abe3/assets/scheduling_latency.png",
+      "bytes": 10720,
+      "sha256": "7c32aedfbe12a19a40479c7de9f6a01f1860f5b6daf6c033872aeec482e5ec35"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/packages/perfetto_ui_compiled/dist/v34.0-16f63abe3/assets/logo-3d.png",
+      "bytes": 48137,
+      "sha256": "70da6ec909da53b251a16f93f9095d3396b9c64e07c0a55f7f0e39576b6229ed"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/packages/perfetto_ui_compiled/dist/v34.0-16f63abe3/assets/Roboto-100.woff2",
+      "bytes": 15712,
+      "sha256": "22482584aeaa7b1d74de072793246c65e38b402ac231f38bb0d9102802543230"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/packages/perfetto_ui_compiled/dist/v34.0-16f63abe3/assets/Roboto-300.woff2",
+      "bytes": 15732,
+      "sha256": "33530b007071281a97e79baab13ddf7cc4b9de942ebd3e212224857335f7cb97"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/packages/perfetto_ui_compiled/dist/v34.0-16f63abe3/assets/brand.png",
+      "bytes": 4000,
+      "sha256": "537e27836bca36acc84f1c24185f8f3cb42233a61d0797ef0ddab21cf1ea88ba"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/packages/perfetto_ui_compiled/dist/v34.0-16f63abe3/assets/Roboto-500.woff2",
+      "bytes": 15920,
+      "sha256": "bb46ed079c3dd3c39af5051b4ada48f29f49151dad4fa218117bad2fdb5e616f"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/packages/perfetto_ui_compiled/dist/v34.0-16f63abe3/assets/logo-128.png",
+      "bytes": 14930,
+      "sha256": "73e0fcf7caf229855c82434b795e4f7f6e728bf0ff9c8bf43885f09ac1aff27b"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/packages/perfetto_ui_compiled/dist/v34.0-16f63abe3/assets/favicon.png",
+      "bytes": 2238,
+      "sha256": "d2481ee71e1422b4b606a384286cd977d97bb61ac0389b288a58a2c297e7e1a1"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/packages/perfetto_ui_compiled/dist/v34.0-16f63abe3/assets/MaterialSymbolsOutlined.woff2",
+      "bytes": 2287204,
+      "sha256": "fe7f3ad0cc1b8c15cdbbd7a507bc3ecb489b85c8a46efc382098f3d469e61061"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/packages/perfetto_ui_compiled/dist/v34.0-16f63abe3/assets/RobotoMono-Regular.woff2",
+      "bytes": 16028,
+      "sha256": "e432bb825ca3e0267d628fadb6a8ca63b0cca3fc7345f15c7f080f7a8b82165e"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/packages/perfetto_ui_compiled/dist/v34.0-16f63abe3/assets/Roboto-400.woff2",
+      "bytes": 15688,
+      "sha256": "cc46322d5c4d41da447f26f7fa714827f2ec9a112968c12ef5736c7494985eca"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/assets/img/star.png",
+      "bytes": 1221,
+      "sha256": "7c4fe135bc5ad543139f871c3a489e9e449fe9b174fe73db271ebcc8b7f9afb6"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/assets/img/legend/monitor_glyph.png",
+      "bytes": 842,
+      "sha256": "27a6698ba0f3d9280e7a9b55d330ecdd4ceb85bfc93cadd7aa57c8bcbab18c46"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/assets/img/legend/event_glyph.png",
+      "bytes": 621,
+      "sha256": "2b19ea650d7ffc2cf758238cccaa05930144e4d3f4efe068909c433baa54b3cb"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/assets/img/legend/reset_glyph_dark.png",
+      "bytes": 11895,
+      "sha256": "3457bc1dd571b973b2fe768291011a9319cdd68a590f6f33e9de6783f10f6b1a"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/assets/img/legend/events_glyph.png",
+      "bytes": 621,
+      "sha256": "8804ef6075002b3ff645eed1f5344aa59798adfbe6198d4a57c12e4c86939c8f"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/assets/img/legend/gc_manual_glyph.png",
+      "bytes": 868,
+      "sha256": "6db6eeb065bb0bc934b9863a6de0b58c14ea4b49280eb2a22c57297c50771ce0"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/assets/img/legend/gc_vm_glyph.png",
+      "bytes": 666,
+      "sha256": "78482b5942d67e8262e059862ac72b5762320d871e813f2262e3340dc1ce85c2"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/assets/img/legend/reset_glyph_light.png",
+      "bytes": 10979,
+      "sha256": "9bddbede63cb594b519eea0a6ca24d5d4aa2fefeb97d42bbf5282cfd336b8cdd"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/assets/img/legend/snapshot_manual_glyph.png",
+      "bytes": 924,
+      "sha256": "8d8b9ae97b9cd69db80618b6cac02e3a47dc5b3776f347fc7e1c2bde2f3a639d"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/assets/img/legend/snapshot_auto_glyph.png",
+      "bytes": 5922,
+      "sha256": "08a86cf3ed64f405b09821331fb377cf0abe659ec7dd7a100e15a7811d119695"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/assets/img/layout_explorer/negative_space_dark.png",
+      "bytes": 11189,
+      "sha256": "8eb196c1a0d034abbf7eb7a55694ef75b52472077b628ac6640c69ff49bcdb4e"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/assets/img/layout_explorer/negative_space_light.png",
+      "bytes": 2990,
+      "sha256": "f0b4325c877e818018190725b548c41a7237f6f3fc19359228f13e966192027d"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/assets/img/doc/upload_dark.png",
+      "bytes": 2067,
+      "sha256": "75ff26f286937e2d94d27b2fe07d86d3aac71f3e36352dcb630af2955d47312e"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/assets/img/doc/upload_light.png",
+      "bytes": 1794,
+      "sha256": "a23aaa6135b7b4b82cf5d5fb8633db3234bb9f3a47ba4a891b122972c7de507d"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/assets/img/layout_explorer/cross_axis_alignment/column_stretch.png",
+      "bytes": 296,
+      "sha256": "46e88bf31f256be4b027c366809257dc94478dc1d909acde703fcc6f7b43ddea"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/assets/img/layout_explorer/cross_axis_alignment/row_start.png",
+      "bytes": 288,
+      "sha256": "d01a4443e4b02f4816caec255c626af6aec883ce4f6d6cc3fa48c4a0d7df1581"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/assets/img/layout_explorer/cross_axis_alignment/stretch.png",
+      "bytes": 1255,
+      "sha256": "8b2c880827c46c95d13d809c727ae4aa369e7e7655019798cf245377df9121ac"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/assets/img/layout_explorer/cross_axis_alignment/nobaseline.png",
+      "bytes": 6751,
+      "sha256": "7124468644215b6e2ebb4f7f798a65574aa2b79ebdeade98ae7dfa38ff77c0ad"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/assets/img/layout_explorer/cross_axis_alignment/end.png",
+      "bytes": 2175,
+      "sha256": "700cad0e01640ef7119547d6ffed0fbc5abd883e9a4cf15ec3de4051eb328d84"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/assets/img/layout_explorer/cross_axis_alignment/baseline.png",
+      "bytes": 7443,
+      "sha256": "4eee8674f5678f9e19b45fa7ddb1a6c24e758d90755e41ddb4d1f8c441268e59"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/assets/img/layout_explorer/cross_axis_alignment/column_start.png",
+      "bytes": 287,
+      "sha256": "e2422056ba3561d25ad1155282793e88cb1ecfc992b27f3fc4ec9113908d86c0"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/assets/img/layout_explorer/cross_axis_alignment/row_stretch.png",
+      "bytes": 306,
+      "sha256": "ad195b0fe0761c3a007f85a0bcabed212fbd51bdea094dda83e669b85ab25f02"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/assets/img/layout_explorer/cross_axis_alignment/column_end.png",
+      "bytes": 290,
+      "sha256": "eac37ec1251415a60a00a7ee806490c8594d9b4d446b2e0e70340f1456d9e5c4"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/assets/img/layout_explorer/cross_axis_alignment/center.png",
+      "bytes": 1373,
+      "sha256": "46a8e1c319be02eb63592e414575c425197b842be49d0e86939d560fd0785d8d"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/assets/img/layout_explorer/cross_axis_alignment/column_center.png",
+      "bytes": 301,
+      "sha256": "9aa4d17e99879a75f9bf3fe9ec3e06fa6f94c046425a143439b9b5df40d38381"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/assets/img/layout_explorer/cross_axis_alignment/start.png",
+      "bytes": 1327,
+      "sha256": "76eddbd4023dbcaac8d89f0528163193c74f0b5fbc8ea2136d9a4538798cf295"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/assets/img/layout_explorer/cross_axis_alignment/row_center.png",
+      "bytes": 291,
+      "sha256": "b74341a16754e3d1c4ae6f84bc56d519ed2f72201159114631063f9c20e45e64"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/assets/img/layout_explorer/cross_axis_alignment/row_end.png",
+      "bytes": 287,
+      "sha256": "fd9a4c4c6ce39f8a61bc16fc503d5d738df4f22e7abb3a9f86cc63d3ef6467b2"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/assets/img/layout_explorer/main_axis_alignment/row_spaceAround.png",
+      "bytes": 306,
+      "sha256": "c6a9604d077a551155268aa4a40ad2148de215f5b155768bcf4eb623ee81b069"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/assets/img/layout_explorer/main_axis_alignment/column_spaceBetween.png",
+      "bytes": 308,
+      "sha256": "52e4103646ef73e28cf8d95120dc8b5d54b6b80abc4431ceb77aa04bd7830e28"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/assets/img/layout_explorer/main_axis_alignment/row_start.png",
+      "bytes": 295,
+      "sha256": "636e1191de6d96a4d30b1f32c0bb35f6f9e6b196bdc965cab77b24c6bc50edfb"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/assets/img/layout_explorer/main_axis_alignment/spaceAround.png",
+      "bytes": 1416,
+      "sha256": "f63e55828ee36537bb37e9f67544b23be32ff1bded76f31f641fc2157b7b952d"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/assets/img/layout_explorer/main_axis_alignment/column_spaceEvenly.png",
+      "bytes": 298,
+      "sha256": "79eecce4c32cb677007e1414db587c34677c7143d35ff59e50c9cb0370445da0"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/assets/img/layout_explorer/main_axis_alignment/end.png",
+      "bytes": 1356,
+      "sha256": "dc8fb9e8f2a9e2d3a267b43de6e68162c5332ba403d46ac61d88b8a0231e9229"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/assets/img/layout_explorer/main_axis_alignment/column_spaceAround.png",
+      "bytes": 298,
+      "sha256": "f40ff8cb182da4a659a708847a870e4b095fc96909359d8b1588b9cb4ff1fc70"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/assets/img/layout_explorer/main_axis_alignment/row_spaceEvenly.png",
+      "bytes": 306,
+      "sha256": "480156a8e25714db7726d09989f27b3fdde3af6c2e6a7a556e521ea2f752f729"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/assets/img/layout_explorer/main_axis_alignment/column_start.png",
+      "bytes": 298,
+      "sha256": "58b7772af3ef3ad321086c738423c22c4e2dd1dd9f52a26e2126f3520a73710b"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/assets/img/layout_explorer/main_axis_alignment/row_spaceBetween.png",
+      "bytes": 314,
+      "sha256": "1d84b52da7b1489033390d451e786bf22dfa967f58d5f183ba40c20f2798f82a"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/assets/img/layout_explorer/main_axis_alignment/column_end.png",
+      "bytes": 296,
+      "sha256": "d52839b83043bc350e02f9e540814dc9a7841ef5179bcc091908c245e1fee632"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/assets/img/layout_explorer/main_axis_alignment/spaceBetween.png",
+      "bytes": 1375,
+      "sha256": "c9e73d18c303628bfed50398f36df3b18302296f456d54cf9323b2d2ebe2d211"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/assets/img/layout_explorer/main_axis_alignment/center.png",
+      "bytes": 1459,
+      "sha256": "d88919566c224235ecdd6430c688169870769fb113ad43151905b3f61e459a04"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/assets/img/layout_explorer/main_axis_alignment/column_center.png",
+      "bytes": 295,
+      "sha256": "20be146a9068d890173976a7d389105e4a979489fc59fdcbb06544ec19104936"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/assets/img/layout_explorer/main_axis_alignment/start.png",
+      "bytes": 1388,
+      "sha256": "b8db7420d2f6a0465751787be86d9418a7d292a1d264d02e0f5e7b1621eaed87"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/assets/img/layout_explorer/main_axis_alignment/row_center.png",
+      "bytes": 299,
+      "sha256": "92ee06f9313534350133faf0a5d46d57260d2914f6c8f37ba3bc05bbd1e0e574"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/assets/img/layout_explorer/main_axis_alignment/spaceEvenly.png",
+      "bytes": 1523,
+      "sha256": "d5dfc746b47717acc17643ce942557a36ca87dd0803d85cdd2e2ad507cd905bb"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/assets/img/layout_explorer/main_axis_alignment/row_end.png",
+      "bytes": 299,
+      "sha256": "390a643edb4461a18fa3e5329fcd4c1e0a8de38f0ecaaa9a3a32e895726af951"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/fonts/Roboto_Mono/RobotoMono-Bold.ttf",
+      "bytes": 109500,
+      "sha256": "d580ebfd08b9b1bb637021ac9a34d30abdf3a1a731865886ec01e0c5859f29c8"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/fonts/Roboto_Mono/RobotoMono-Medium.ttf",
+      "bytes": 109292,
+      "sha256": "8e3fc643b30cff29c10e5f57534d2ffcf791f1319dff30c3e37c2b6b5e3d679f"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/fonts/Roboto_Mono/RobotoMono-Light.ttf",
+      "bytes": 113488,
+      "sha256": "fcd6fe9fb554079661b04d652e8ee5a48b9158970c57c86e76ab915fe3efbcc0"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/fonts/Roboto_Mono/RobotoMono-Regular.ttf",
+      "bytes": 109212,
+      "sha256": "c59ecb6c18e38d4194249b6e1c555eb55c8e809258cf6d9b624d19d9268253bf"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/fonts/Roboto_Mono/RobotoMono-Thin.ttf",
+      "bytes": 112480,
+      "sha256": "3d41efb1035b717af6fa01eca387db278bff418c1d8d44f472b00ed7a0130645"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/fonts/Roboto/Roboto-Bold.ttf",
+      "bytes": 170760,
+      "sha256": "7d0b991ee3e0be7af01ad7ea8cd2beea6c00a25e679a0226b6737f079aafff86"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/fonts/Roboto/Roboto-Thin.ttf",
+      "bytes": 171904,
+      "sha256": "3d91f7aa69cb7f7064035895c566ac5cb9b2084582d351af7267bb4e0fba60f5"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/fonts/Roboto/Roboto-Regular.ttf",
+      "bytes": 171676,
+      "sha256": "79e851404657dac2106b3d22ad256d47824a9a5765458edb72c9102a45816d95"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/fonts/Roboto/Roboto-Light.ttf",
+      "bytes": 170420,
+      "sha256": "a6d343d425bc38db90152fa06058b1c7391eca9264f334ef65c1ce175085c6f6"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/fonts/Roboto/Roboto-Black.ttf",
+      "bytes": 171480,
+      "sha256": "3872e9b39760a1b59ac1e192633dbb3b58e595b4d423930ac7ded525e9ae25e0"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/fonts/Roboto/Roboto-Medium.ttf",
+      "bytes": 172064,
+      "sha256": "f205cc511821ea56078a105557fcea6253129404d411c997e1866fbd006abb68"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/extAnnotation.png",
+      "bytes": 224,
+      "sha256": "7b2ed2e33d271f69a88c2929d6bafdbbda609fa2a29d692938b433a36ee56aab"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/renderer@2x.png",
+      "bytes": 247,
+      "sha256": "4dbb5d293cbaefb5c2f5cfd27280f0b6eac08ca9249fad4b5d105230124b69c5"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/diagram.png",
+      "bytes": 129,
+      "sha256": "36fc70ec31dee28a6143cd43a1a7a2d299771c1490351b1b89b6f759e737408a"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/expand_property.png",
+      "bytes": 1688,
+      "sha256": "a31c6b43ace4fc3f94df0d7151f338f33481920c63b37519f9aff4b5c7929570"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/renderer.png",
+      "bytes": 166,
+      "sha256": "e9c94ff55dd406fa1c68be705e2c072cb6188616733dc7c80881006c2c5b3459"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/colors.png",
+      "bytes": 124,
+      "sha256": "7a53709b02e06aa8a40971a2456c4e9c2fe933e2526423074c8389b14009e75a"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/textArea.png",
+      "bytes": 210,
+      "sha256": "35301aa732bb73de978563f9eecf69faf08dfe35aad47d728ad82d65c0a5e510"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/colors@2x.png",
+      "bytes": 127,
+      "sha256": "ae6b572ccf49a3b5271672360ed9d78835c905d1cc520efc93cf41b56d1b0c42"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/atrule.png",
+      "bytes": 215,
+      "sha256": "ba52de16a749a54c90736702505d99582eab45c565e901b06dda18745fb43cf8"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/expand_property@2x.png",
+      "bytes": 1697,
+      "sha256": "ada108faaf940ae40e4e2cf897d7a10b0cbacaa693d9d10a0a23227f3d5b850e"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/value@2x.png",
+      "bytes": 112,
+      "sha256": "6e3f82ae7def4203b76b38ed72881a68a7c1f5af0c1408e4908465d62ff5fc79"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/diagram@2x.png",
+      "bytes": 198,
+      "sha256": "8df9728d21ae50bd4ee7d1c111f39f5f80f343826df0e03027f15b85a7286ecc"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/class.png",
+      "bytes": 184,
+      "sha256": "5473919f5d5ff67808ec015f72b447d8676a574280b8d878167b0bca5fae4b9b"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/class@2x.png",
+      "bytes": 345,
+      "sha256": "e8086fbff2f122872908b9145ff3ed463b86b36cae75993fc4b472c92de64798"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/scrollbar@2x.png",
+      "bytes": 483,
+      "sha256": "0c47c1fa76ace6e672203a0dd7839d7185af588200b1818bee15852ea4780806"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/collapse_property@2x.png",
+      "bytes": 1870,
+      "sha256": "9f66b4bc56955d2334b3241f670a4f6de3e651f7f8bcee46b49a1ed9c097b487"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/threads.png",
+      "bytes": 347,
+      "sha256": "cc87c5dff636e8661cff4dc3f9a334a31cf5d626e8be540e413cae364f77993b"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/atrule@2x.png",
+      "bytes": 465,
+      "sha256": "ca87c9bd166c7b6f7a4a3e3c57269053d43744f3c1791126102fa069b54e8f8a"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/balloonInformation.png",
+      "bytes": 456,
+      "sha256": "030a524eda8851829508a8f650fd029e14faaeb4cd224459fd9598dc6ea206da"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/collapse_property.png",
+      "bytes": 1860,
+      "sha256": "98b027671d30e5749a0bba8d873e688857bcd0e81bed80cf60833cf98ca8ecad"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/scrollbar.png",
+      "bytes": 256,
+      "sha256": "79b29c910fdf353ebe3bb539604d948b173077c50e8563a430f67bee87ca288e"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/balloonInformation@2x.png",
+      "bytes": 987,
+      "sha256": "29bb1dee9375d8985ca7b9c3ef021cb84141692e92e5f73e3a17225ae65c8f5b"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/extAnnotation@2x.png",
+      "bytes": 569,
+      "sha256": "15d7d54fa6fd3e0c9b3244a1cbd0dba5b1ac005e686201c49b1aaaa09b0e3076"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/threads@2x.png",
+      "bytes": 595,
+      "sha256": "33961535526a43213b676cdcdb9bf5d67f37856b2d87145e2d20b59b411c5710"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/resume.png",
+      "bytes": 397,
+      "sha256": "e8fe841a9865baeaeb2c3c6909fcd4bab409f55016d71087d9cfd23d4cacdddf"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/resume@2x.png",
+      "bytes": 888,
+      "sha256": "572783e283a012682d418758ba9aaaf722ef1b485c63a69f849c1d7a6ae49ce1"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/any_type@2x.png",
+      "bytes": 146,
+      "sha256": "728a97378af746b40725301439f14acf46680db6920e848d123f4b440900b5ee"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/textArea@2x.png",
+      "bytes": 301,
+      "sha256": "102fddc98ff436dfd1e3cbb64152b1c7e52a609ea5cfbefb3878707855472ee7"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/formattedTextField.png",
+      "bytes": 160,
+      "sha256": "6092bc4f682f1fea045436a40227158cd40c156c9b80e37a9f6f04cdc376552d"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/formattedTextField@2x.png",
+      "bytes": 249,
+      "sha256": "a8f4d15d07e5211c1fbffc1d62abac9691ee8e3a6d4b9bd00e66341f5687314d"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/value.png",
+      "bytes": 95,
+      "sha256": "3f830ef1732fce8124fc57e0d1de0dde00cdfe76e1e86ffcba541a1f2a6fb87b"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/any_type.png",
+      "bytes": 111,
+      "sha256": "101d3737b3d83699d6ec9f5967a57b2ec16f32d12fc51f4c042608604587df1d"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/actions/forceRefresh_dark.svg",
+      "bytes": 984,
+      "sha256": "86af8e4753ec3f3ca577df68b74f3e813d13cd11f1b63073bca5116d1dbcfa8b"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/actions/forceRefresh@2x.png",
+      "bytes": 2125,
+      "sha256": "e3aa013c6458056569ca5951025da3d4e69787b01edbe076578c3b5283c41303"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/actions/forceRefresh.png",
+      "bytes": 2125,
+      "sha256": "e3aa013c6458056569ca5951025da3d4e69787b01edbe076578c3b5283c41303"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/gutter/colors.png",
+      "bytes": 124,
+      "sha256": "7a53709b02e06aa8a40971a2456c4e9c2fe933e2526423074c8389b14009e75a"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/gutter/colors@2x.png",
+      "bytes": 128,
+      "sha256": "3f8a807f96347a006ab09e475ffdc354bf6148607a48166107381408f65212fb"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/app_bar/devtools.png",
+      "bytes": 774,
+      "sha256": "8b2a2db9893efff89e51de339ac175dc9887e33c486358d7ce8bcc4335c696bf"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/app_bar/cpu_profiler.png",
+      "bytes": 602,
+      "sha256": "033a5968de76523e293ec52dc503c1a131881e59e63c14db7995c1ed90e1b858"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/app_bar/deep_links.png",
+      "bytes": 462,
+      "sha256": "f7d9cf893bc1e1be83cb8c20cddf54e85bb9bd2803976b7c26c927aebf2eb3a1"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/app_bar/devtools_extensions.png",
+      "bytes": 680,
+      "sha256": "5bced0bbe784abd100d5143027c957ffa853c466e517cd9514a66d1b06cf75ed"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/app_bar/logging.png",
+      "bytes": 476,
+      "sha256": "70af45b2c60b8d4b71d3866b34378cbdec06248069c74c41c2f25e6de883c407"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/app_bar/inspector.png",
+      "bytes": 660,
+      "sha256": "7b88096f0ca3a8d68477338d9fed55bb24317358d67f2869862a29fee9f5037b"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/app_bar/app_size.png",
+      "bytes": 411,
+      "sha256": "5f948a66c4f86d18c7e9bd72d0a8f41ca5d663583058dff107a6f8dc4ad250f5"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/app_bar/network.png",
+      "bytes": 513,
+      "sha256": "61e0b60a731f6d9483e57790859a4c18196850a221bb5bdbe8d6a15be2ec136b"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/app_bar/memory.png",
+      "bytes": 582,
+      "sha256": "0d02a6fa1bfd1a66306888559d50565ab0142e92c18ed52e16cce8d26c9013ef"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/app_bar/performance.png",
+      "bytes": 408,
+      "sha256": "50658f40aa0d0048b867852cab91fe77a2db547818aa8eb7330f3749a7138199"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/general/resume_black@2x.png",
+      "bytes": 492,
+      "sha256": "5316c32f1b3a17f408bf05f591d0750e8e6a517ae23003dfb5232849488a5ea0"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/general/pause_white_disabled@2x.png",
+      "bytes": 208,
+      "sha256": "e0123b3cf49beb90a6f98057a2990d43720ab3761874d2544d2aeb713d6519a1"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/general/locate@2x.png",
+      "bytes": 405,
+      "sha256": "54510326134668bd252bf4d88ecf31c6757d3c488ffacc47715d7f56dfaec43b"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/general/locateHover@2x_dark.png",
+      "bytes": 406,
+      "sha256": "8e86ea330cdd493409cc83ceb6b4e1f718d9013304f6220f0fc1ecccf3f72ada"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/general/resume_white_disabled.png",
+      "bytes": 220,
+      "sha256": "a24ff5c9f9dec91e0d1a3d5f086c42df5fea8a8176cefe164643f4e073483bbf"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/general/pause_black.png",
+      "bytes": 176,
+      "sha256": "b84e2f7a186dce21100f7a7d86503554e77dd83e89afc2fc491364d01dfefa10"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/general/pause_white_disabled.png",
+      "bytes": 160,
+      "sha256": "2a58afd15bcac7b4e95f683ce31d9c7814186ccb6aa5e7428af9bfc50bb37c55"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/general/pause_black_disabled.png",
+      "bytes": 168,
+      "sha256": "df80df38145bf814f790ac1aaf9fd9a302e02b53b30b909ee5a7173c735eb2bf"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/general/lightbulb_outline@2x.png",
+      "bytes": 751,
+      "sha256": "8078e282d8c57ed82e7838b5b02376a1f19870b644bd0bf7bd78642cd61d0d30"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/general/pause_black_disabled@2x.png",
+      "bytes": 209,
+      "sha256": "f5443d4b2591302524355e5d215869cfbf5bf4ccb65ced56bf8c021ced83faf9"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/general/pause_white.png",
+      "bytes": 155,
+      "sha256": "4e045370f074cce9b0ac51ed188febdbc84671da3d204fe0144be1b193bafc2e"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/general/locate@2x_dark.png",
+      "bytes": 406,
+      "sha256": "55cc911ff7dbeaa0568fce823d7c653797bd8816098d8de8d0c8709d671892f9"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/general/locateHover@2x.png",
+      "bytes": 406,
+      "sha256": "d0be8665ca5f0b5530971869460b433aafe6eb579146b611489fb986c5c1b9f1"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/general/pause_black@2x.png",
+      "bytes": 217,
+      "sha256": "2a6d53fedaf1e467fc62c2457908d2b80ce6ed7023a3ae71ef370107908aa320"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/general/resume_black_disabled.png",
+      "bytes": 233,
+      "sha256": "4b1be3d96cfa169f0e3a494ce9fd0efa029a0af482fbb4ce99b801726dfab105"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/general/resume_black_disabled@2x.png",
+      "bytes": 486,
+      "sha256": "525ac3c927d728b7ba3b42d1c1ae7e0652325ce2d468aee9647b4955387c7ad9"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/general/resume_white.png",
+      "bytes": 178,
+      "sha256": "1a65fbe17b6020bfde7214015e1b4b3b9dc8a381e23675ea1b28363667f525ce"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/general/locateHover.png",
+      "bytes": 225,
+      "sha256": "d8e1331ce55c09922fbb9b167bd9f7a7022318bceb395cdb787d0814372423f7"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/general/locate.png",
+      "bytes": 224,
+      "sha256": "3ab6675ee4932116c392b5d2c6859867a9074214dd709b8f015048d770a6f9ec"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/general/pause_white@2x.png",
+      "bytes": 186,
+      "sha256": "c0bb9d9b874946e49f4152e9efdff42ad747de619ee335bf8e7afbd75ca14aef"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/general/resume_white_disabled@2x.png",
+      "bytes": 440,
+      "sha256": "e453d02d72bb1bfecfa115cef9db64755f6484f756ad71843f901478c7beb2ef"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/general/information.png",
+      "bytes": 371,
+      "sha256": "cbacd68bcf0edb38ef4d9abf2a38b897d5ef0cfb378e4b3de71b7b1215908ad2"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/general/locate_dark.png",
+      "bytes": 225,
+      "sha256": "0874f7a27eb158e9c23fbe92e80b00eebf6beb976654391cc913c3b55b368620"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/general/resume_black.png",
+      "bytes": 259,
+      "sha256": "2d05314a7efa59a458c8692cb8e269898611d92bea9b19d6c8faba8a1ba007d5"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/general/tbShown.svg",
+      "bytes": 317,
+      "sha256": "d1b9bfbfb683128fd621d077ed076ebf9623a995842bf93640fe36cc52ff4460"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/general/tbShown_dark.svg",
+      "bytes": 352,
+      "sha256": "a87973f79774b5fc101325e7e1f47d35f9b7ef53dc84fd04e12bd22105612ea8"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/general/resume_white@2x.png",
+      "bytes": 352,
+      "sha256": "5ad5f126f8d2132bdd33e48b1b160a31a18dfe920171856264015eb0fe734a4d"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/general/lightbulb_outline.png",
+      "bytes": 400,
+      "sha256": "2773ec3c5f2e61d17375dc65b50bb68cb19dd7ba0efcb4eb9168f01a48ff1b2a"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/general/locateHover_dark.png",
+      "bytes": 225,
+      "sha256": "af0b8f5ba2ed8b5635d34725777c1da53d1dcbbcf102c7cca51674ceb5b5fc60"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/material_symbols/step_out.png",
+      "bytes": 1383,
+      "sha256": "2f1de171281388b260e91ea2d17222a1b97f03b047f87a9269ad291bdc4e25f1"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/material_symbols/step_over.png",
+      "bytes": 1867,
+      "sha256": "38662f82e87b54deceac5ba0e1876332b6cad418eb8dfbf3017ea69a3fd52b2f"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/material_symbols/step_into.png",
+      "bytes": 1404,
+      "sha256": "9f403e9034ee2405586784c211afb590843bbb1bda24e61d70e8db1ec11ad3dd"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/material_symbols/LICENSE",
+      "bytes": 595,
+      "sha256": "6e783d7538ebf07775574786239850ac39843d1aca982da790bb0225e8d9987d"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/material_symbols/resume.png",
+      "bytes": 1121,
+      "sha256": "b3de0b9d75bc0b98c92653bf7f13e41ded4e01ae497882a07ef155eb91dae777"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/custom/method_abstract.png",
+      "bytes": 859,
+      "sha256": "7b621598972ed7956df969deaad107718b17e032e43c30ae79e09352aa9d7f5a"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/custom/interface.png",
+      "bytes": 206,
+      "sha256": "348f7b6afab2a3b8c144ace7f9760ddbaa03960814682df57b4fd262e8311f00"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/custom/bg-green.png",
+      "bytes": 835,
+      "sha256": "8d039dee31515bfe689cd6a8e94328f1891531e134ee5522c9fff78890e9e00b"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/custom/fields.png",
+      "bytes": 214,
+      "sha256": "b47d8dd50a8f23a12c522a85226e977042ee157a12e19eb2e5f13a67e7a987d8"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/custom/property.png",
+      "bytes": 192,
+      "sha256": "852a20109c2f31cb9bf5c752cc9b83827f09c8d05f1febeff01c3f7cffc6d480"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/custom/info@2x.png",
+      "bytes": 1763,
+      "sha256": "5799481d01e13cd572c8326dd94ba53a7b6c28e2d5661b4667d0a8c6da146b83"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/custom/method@2x.png",
+      "bytes": 294,
+      "sha256": "4541262c9ecfce46c4efcc521dc1001d6fd7b3401ca286494378f05f1a069d09"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/custom/fields@2x.png",
+      "bytes": 304,
+      "sha256": "ddc71ce6390ffbe11d3cc703463ed6ab116dba8db5359d1604b789e819783bde"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/custom/class_abstract.png",
+      "bytes": 866,
+      "sha256": "b586dc7bacfa4ea7413c28437f4b2fc2532b61a47f0a20c33b8b5ae045c564e7"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/custom/class.png",
+      "bytes": 841,
+      "sha256": "8e3274bd2d6d859f57af442e4cd4a8d180df48ba1c6b8fc5f5c57e2fbcad6941"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/custom/property@2x.png",
+      "bytes": 294,
+      "sha256": "1c1259cbe23d055c74208da754d57563678f4b37d9adcd4c296ff3261a2a9ece"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/custom/interface@2x.png",
+      "bytes": 311,
+      "sha256": "0c40beeb5c818d3dac6b02592fc0535729481f71d9267e7b43c07bf3d6ef238c"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/custom/bg-new-red.png",
+      "bytes": 848,
+      "sha256": "ad5e723101441bf0f77e01a874d4cf4c15a7f9d37c9f376b0e32bb50e304191e"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/custom/info.png",
+      "bytes": 806,
+      "sha256": "4c05bbf0dfc9f78733a664fc7ad66e1d6659a4fdac5a60a22eb14664cae489ec"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/custom/bg-gray-red.png",
+      "bytes": 869,
+      "sha256": "b17c9e2c8268bb13ddc5dd7bbecda340e059b894df06ef2daf7a2a8cc78fad02"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/custom/method.png",
+      "bytes": 834,
+      "sha256": "32074219b08cd50f081308f31b386d6a54b578492f91e15ae00d2afa6c93a6a5"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/GreyProgr_5@2x.png",
+      "bytes": 921,
+      "sha256": "c86e996af013cf1a89f07f09b3d316fa258931806f226eb7471c6e63acdb2920"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/RedProgr_4@2x.png",
+      "bytes": 2436,
+      "sha256": "67e48ed2e936af5e9945f8f6bd8b0053bab3f85ade695c849d522b0000c5d855"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/grey_progress.gif",
+      "bytes": 2238,
+      "sha256": "8e7e83a7b9fd80ef75ef8d35d45176ee53251431075bc9d1da69be9eab838805"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/YellowProgr_1@2x.png",
+      "bytes": 2729,
+      "sha256": "a90046b93930f84d447fe347969f096cd236c2feb164a111102f710e796fef2c"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/red_progress.gif",
+      "bytes": 2238,
+      "sha256": "1394f71bde7f0d700c1d36f949544a3f43c02df4b2ad9a3a9d96e73bcdf36cac"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/YellowProgr_4@2x.png",
+      "bytes": 2719,
+      "sha256": "33683795713993df2d9030859a6ec4d698b7dbd9c400453b1a61782b24b98f88"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/YellowStr@2x.png",
+      "bytes": 845,
+      "sha256": "099bc3a3fa408fa3607defcd4c41e01d25c05030b4b047dfd5b2311d7c0387a6"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/GreyProgr_6@2x.png",
+      "bytes": 976,
+      "sha256": "258bab00b5a62ffc37bc0ec4df2b3d681b8f3b445a4cabcdfbe7cc0afb3e135e"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/GreenOK@2x.png",
+      "bytes": 1016,
+      "sha256": "df95b91bbf5fd3944779a9d7c70c3f154b3023d06892eb50cabcee5ba447f08d"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/YellowProgr@2x.png",
+      "bytes": 2723,
+      "sha256": "1fe4066cbc2f19423dfe13c619575b74a1a444dbf9990c5089ee008e554d0bfe"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/GreyProgr_7@2x.png",
+      "bytes": 954,
+      "sha256": "62de79395ed30a4cf7c4f746666a5205c8e13ed5b3c35e912761a501e18afdba"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/GreyProgr_8@2x.png",
+      "bytes": 982,
+      "sha256": "7de60c4cf7892a6ac1ff5aa0ee7d89609c387eccd66d03e8700a51397c76be98"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/YellowProgr_7@2x.png",
+      "bytes": 2687,
+      "sha256": "16f3b91c313dffa62887764cbdefa64fc34e091cf64f042f19f3772d959faa93"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/GreyProgr_4@2x.png",
+      "bytes": 957,
+      "sha256": "b4a8d4f8d019c940430d55cdd0b699590a2227b9e465ba394ccf162384157859"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/yellow_progress.gif",
+      "bytes": 2238,
+      "sha256": "f51704747bec2eca3f8cc086880cb5fdf15f6b04b65e5fab707241a9539a64dd"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/GreyProgr_7.png",
+      "bytes": 400,
+      "sha256": "8f9dfed62b9078e053cc3a04e667d96e8b6137b982478daf01441711282ee1bd"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/YellowProgr_4.png",
+      "bytes": 2044,
+      "sha256": "1db3d830286804775077a143b37c0d341b08678c80ec0584e4ab39a344e04bf8"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/YellowProgr_7.png",
+      "bytes": 2019,
+      "sha256": "96313f998aba6e6cf5b42acda5e863ecec612b8b826a71a17215f0bb8312034d"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/RedProgr_6@2x.png",
+      "bytes": 2434,
+      "sha256": "328c2a860dd569bb4636ec6cf74b1b2ddd0d825e6e5d50c2c3fcde4393d3b0c4"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/YellowProgr.png",
+      "bytes": 2046,
+      "sha256": "c79d212cd1b20111e6f7ccab1af6838ce7e0660be5a68e656dbac21a1fa4f1c7"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/GreyProgr_6.png",
+      "bytes": 440,
+      "sha256": "0987039c7849ee90151787ddb15d4f43474c634838017c0457a53e2a145a9251"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/RedProgr@2x.png",
+      "bytes": 2469,
+      "sha256": "b2871b1f37b03e85a1ca8a0c81f3765a51f81fbfbc335005571a6adb251bf753"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/GreyProgr_3.png",
+      "bytes": 386,
+      "sha256": "42f36e0a0fba8612a5da97ca00c00e875be284c484952397242621176644bef6"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/RedProgr_7.png",
+      "bytes": 1810,
+      "sha256": "4871089162db045616637d465001e19803662c6d2806efe3b5dd6f884b2ec30f"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/RedProgr_4.png",
+      "bytes": 1820,
+      "sha256": "8027393b51175f4c696d0468711e3f1f1c17309023e4e6d06612476a27b7634b"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/RedProgr_8@2x.png",
+      "bytes": 2453,
+      "sha256": "0dbe2d8490765879fe66cd101e5b651e1a8e48cac8bbdc4007e1b626a7be5d31"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/YellowProgr_5@2x.png",
+      "bytes": 2677,
+      "sha256": "726ba7e768dc3feb12b5544ef78ca048d11eed42db9b8ad97582908f4fe2be8e"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/RedProgr_5.png",
+      "bytes": 1806,
+      "sha256": "9db599d921e2c20453a91aa31703bdacf33f259bad0ef5f4c1871c00d2b2ad3d"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/YellowProgr_8.png",
+      "bytes": 2040,
+      "sha256": "eebbdf3ccc0069fa1e451426d920756cfaa4a47948936d2fd8618be286ba0a14"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/GreyProgr_1.png",
+      "bytes": 380,
+      "sha256": "46669eeb6d164aeb9cf38455dddd7e77bc01054895aae0f709be3e1bb0544ffa"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/RedProgr.png",
+      "bytes": 1801,
+      "sha256": "b2ecc5e7c970192ff54621c19486dad8c5eeb16322227ba03567e5a511a126eb"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/GreyProgr_5.png",
+      "bytes": 386,
+      "sha256": "0bd44be8c37b15cdca6519f5ee9bf0c86afa6b0f5301a9c7c7c2f109b29b01e0"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/RedProgr_2.png",
+      "bytes": 1797,
+      "sha256": "e2162f4d92d3a634b28484b283900800ed500b0e5b2c5c83a9e0740cdb00c476"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/YellowProgr_6.png",
+      "bytes": 2018,
+      "sha256": "fe89b2d1df374947839cc7e0fc064361d99aa525db01179a73dcea93116a4d29"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/RedProgr_3.png",
+      "bytes": 1795,
+      "sha256": "95e5b723cec58823105f12bf56d509ac9d6036810bc49904c1a68ffd8a5f238e"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/YellowProgr_8@2x.png",
+      "bytes": 2719,
+      "sha256": "af5116f4c5b46f8d0ecb8a48b64e766afe4189b68249608d4c5480ff559da966"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/RedProgr_3@2x.png",
+      "bytes": 2424,
+      "sha256": "5c831ab194260ea5cfb32238b749aa65ad3db260c65204f955519cc6fbfbed2b"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/YellowStr.png",
+      "bytes": 374,
+      "sha256": "68601a64e78beeb9981bae9be8901af4ac30651cd5c9f00b8b5cfe43aad2a251"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/RedExcl.png",
+      "bytes": 362,
+      "sha256": "75d1c23ee6890f900a61e43b424f994b90018e1f2fff0ab2392d87da37e60c3b"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/YellowProgr_2@2x.png",
+      "bytes": 2717,
+      "sha256": "848b995a6ae5d569caa57e34ed883ef635febf459995220e5875ad17c9049948"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/YellowProgr_1.png",
+      "bytes": 2009,
+      "sha256": "f0e44b952f39ed7629206532faafc070a3ba16c13a6d185161eb691c01764ea4"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/RedExcl@2x.png",
+      "bytes": 800,
+      "sha256": "001b6bc3813ad713fe2f3798b4e2f5c4a526343cfd29f6c7849867b8f05a428c"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/GreyProgr.png",
+      "bytes": 379,
+      "sha256": "0cdc06b6eb37f47160da9e9c62de5aea85ea42e4d8fe0a232c1f10b763ac0d07"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/GreyProgr_3@2x.png",
+      "bytes": 953,
+      "sha256": "cd280307ca9af2c25c8bf15d2fd44806b4667f9a116e8828e479efb7af19f7e8"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/RedProgr_7@2x.png",
+      "bytes": 2415,
+      "sha256": "9f2b7530c6c1008bd4ad69bd0883d755be93f52ac637e3e1fd7a49953edaf23b"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/RedProgr_6.png",
+      "bytes": 1804,
+      "sha256": "7f5c3f5a4dfc18a1e7674ba3414a1e2fe4a2c09850a53eb0e5987bd569b43acf"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/RedProgr_2@2x.png",
+      "bytes": 2441,
+      "sha256": "4307220b09ce6ba3569963dc9b08a4b3ef088f9c9f5a87d6c8c5ee9a86d0246a"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/GreyProgr@2x.png",
+      "bytes": 915,
+      "sha256": "e00fe087366c8d00ad0a738c2ecd17f0a91a632ee18c3e69e98969f9ef2ac25f"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/YellowProgr_2.png",
+      "bytes": 2019,
+      "sha256": "3ecd4319571a03920c7cce8e3d72cab12132bf6a2c8efcd55f1b931a4db807bd"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/GreyProgr_2.png",
+      "bytes": 426,
+      "sha256": "4088626c786b56b6635a7f3d5f85102853784f1718e541f791716aa378fb80a2"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/YellowStr_dark.png",
+      "bytes": 378,
+      "sha256": "c10107683f0d19fef88fd8b3a38f7b909e6ccbf0ba7ec7ebe525729cfeab9783"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/RedProgr_1@2x.png",
+      "bytes": 2475,
+      "sha256": "edd7867866c66bb27b13e01f0ffae31a9653a92532e2a562a1dc8f5bc0727fd0"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/YellowProgr_3.png",
+      "bytes": 2027,
+      "sha256": "0f15e47285dbba2485ba6a1d7a9b22a30af5ecb7bf2013ef4d52668cd1c9ffdc"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/YellowProgr_6@2x.png",
+      "bytes": 2706,
+      "sha256": "906fc50e4c04d6619a4350257b6c415983dacb877b9f2505930671f370ea86c2"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/GreenOK.png",
+      "bytes": 361,
+      "sha256": "a1bc5301df49fcc0123b11823142d851562086594afc47348851efb5027d2cc1"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/YellowProgr_3@2x.png",
+      "bytes": 2701,
+      "sha256": "fdd6047cf5255fe9bf67e167a38fccad2f818cac9aaf5375287b8b9a0d88f1d4"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/GreyProgr_8.png",
+      "bytes": 439,
+      "sha256": "2899e726e6d283fb1e144a2a6b39bb3b7631c1bf60e385e26c6532650b89ec3f"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/GreyProgr_2@2x.png",
+      "bytes": 967,
+      "sha256": "2bcae9388d4cf6a6d4123882d7f07bcb09d35c540d5c392d1acacd5de7fe98ba"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/RedProgr_1.png",
+      "bytes": 1784,
+      "sha256": "6dacf99475ef333c5480fb81e7e3419758a3e2226e57fa28444696a9e0c66cf8"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/YellowProgr_5.png",
+      "bytes": 1995,
+      "sha256": "798b5d0c82734a2a58070aeac0c94c9283d8f0e6e78d578ab58dc2f8bcc4ac9e"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/GreyProgr_4.png",
+      "bytes": 439,
+      "sha256": "068546a068620740282dc72063695b7bd60c859d40dfd0a94d4126d914ed6a66"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/YellowStr@2x_dark.png",
+      "bytes": 775,
+      "sha256": "6ba6b6d712eb0dc14a5f1b546979037a0ecf469a0cedfa88e091fa2d43187dac"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/GreyProgr_1@2x.png",
+      "bytes": 915,
+      "sha256": "e00fe087366c8d00ad0a738c2ecd17f0a91a632ee18c3e69e98969f9ef2ac25f"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/RedProgr_8.png",
+      "bytes": 1823,
+      "sha256": "c2f8b1344fed066e5e01102cba8cd99f0aa1775540e83449613ec070991c1c3a"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/perf/RedProgr_5@2x.png",
+      "bytes": 2431,
+      "sha256": "cfe8fe8e8d9f92bde82176a12969c44b3c1d85f37b6f79ec56a59e75ec0d703a"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/memory/reset_icon_black.png",
+      "bytes": 6472,
+      "sha256": "2ebb8671bfb5b96c1570fc6c6c7fe283a6b95e0eff8c43e9ae2fd491f2cbae41"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/memory/ic_delete_outline_black.png",
+      "bytes": 114,
+      "sha256": "e6a075009c6fc71315bb5619faf9cdab4011faf9304e3f91c117147259425696"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/memory/alloc_icon.png",
+      "bytes": 202,
+      "sha256": "359484034b479cac00b6f59d0a3b2f2eba513aad36ddd8d6f576d4598c46736e"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/memory/ic_search@2x.png",
+      "bytes": 464,
+      "sha256": "914e284afb7ed95d61f1c0877c82764bec9f05b8d333840a65a632428f0a0c72"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/memory/ic_filter_list_alt_black@2x.png",
+      "bytes": 223,
+      "sha256": "4b7d48517c92a86d850dc51e4ff92d71b45158a15d8a95542d146a4330f0ab6f"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/memory/snapshot_color.png",
+      "bytes": 1013,
+      "sha256": "3503921852058640380ccddc8ab7a1e2b84280089daa23bc3c2a77b7dc7af4dc"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/memory/reset_icon_white.png",
+      "bytes": 8722,
+      "sha256": "bb88c3dd4db8d419548d7f2de2d730f2283562c3add97ec6d6cbbffb7a5b4198"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/memory/ic_delete_outline_black@2x.png",
+      "bytes": 114,
+      "sha256": "e6a075009c6fc71315bb5619faf9cdab4011faf9304e3f91c117147259425696"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/memory/ic_filter_list_alt_black.png",
+      "bytes": 154,
+      "sha256": "efe60367d10c193484b03e72ae868b7daf0563afe80b6ce7c3d70612d2ede966"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/memory/snapshot_color@2x.png",
+      "bytes": 2140,
+      "sha256": "4a33a527daeef37f2b55e4471c94e3abba8e035227ba443a2882233ab3dae8fe"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/memory/ic_filter_alt_black_1x_web_24dp@2x.png",
+      "bytes": 154,
+      "sha256": "efe60367d10c193484b03e72ae868b7daf0563afe80b6ce7c3d70612d2ede966"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/memory/alloc_icon@2x.png",
+      "bytes": 253,
+      "sha256": "a6a41d924837b55cf01ba890e3255ea531f89214be9b1dce9c28fed3341713da"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/memory/communities_white.png",
+      "bytes": 652,
+      "sha256": "b5e8b505bb58900da24387e8618ba7e20e52713a971837d2d73dcc83304b2478"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/memory/settings@2x.png",
+      "bytes": 597,
+      "sha256": "f805a5f99ede9149c65911502a655ec674c7fce42322d1f14c3c0dcd2552b4f9"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/memory/ic_search.png",
+      "bytes": 282,
+      "sha256": "091f328377c1e5a1328d30bb086de98a14c3084127fff09d121b440fde9bc5be"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/memory/settings.png",
+      "bytes": 296,
+      "sha256": "21a7b6024d8818fda15c476605da3191ecd69df16c7cea0cd61f8da68fdc68aa"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/memory/communities_black.png",
+      "bytes": 5716,
+      "sha256": "309d0a3b1fd98956971ddae0653bb9e57d79ef81b509173e3e34cb0bc26f8d99"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/widget_icons/alertdialog.png",
+      "bytes": 559,
+      "sha256": "39692ef5223fdda3f3e57b8797a24d7dffebd6808a2858435182cf8ab3b77b3d"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/widget_icons/tab.png",
+      "bytes": 509,
+      "sha256": "3890fe9e2bedc918b16dacaca29a63f0bfb52dff7897587ec6fef3986a20ca5d"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/widget_icons/icon.png",
+      "bytes": 1576,
+      "sha256": "99bd5420290a4fefdffb086b6b8e47d75c09bf5fad9aa5757b79daad8e295b2e"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/widget_icons/text.png",
+      "bytes": 649,
+      "sha256": "99a4b2278e95e2c140426747ee157c41ad90086b8e6acf8fba26588b1cd8d621"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/widget_icons/root.png",
+      "bytes": 481,
+      "sha256": "22a8ab3cee30bc6c0bd1930a09861b0e877eba1f8da12359006dd342ded4d678"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/widget_icons/scaffold.png",
+      "bytes": 1172,
+      "sha256": "eb097962e69dfde1fc261dbed53c4f65adee66898830d692ef7d806bf725f4ff"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/widget_icons/divider.png",
+      "bytes": 581,
+      "sha256": "b2a7d68436acdead3e18aaf678080e66acbe97ca6d24f4a900e56d334af9fc6b"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/widget_icons/floatingab.png",
+      "bytes": 951,
+      "sha256": "2cfddb47cf779162064ba357f54e8e5f1a2029e2320f7151b5de83fd8563d521"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/widget_icons/inkwell.png",
+      "bytes": 1557,
+      "sha256": "d1db01d4648e7daf414539cb6c65f63217fe9badafc6989d53de813be9633cba"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/widget_icons/stack.png",
+      "bytes": 1588,
+      "sha256": "9923b1c15ab2060ef938686c8cc17e155dd5bd6d6b61d5d059a5ea164842028e"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/widget_icons/container.png",
+      "bytes": 668,
+      "sha256": "79a9878481070e2ae06369d65b44a0c7b6dc7221f3df5c9de7936558581f5e6a"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/widget_icons/pageView.png",
+      "bytes": 902,
+      "sha256": "a6e379b2c286210901e234596d1312b3301a50c246cd467f06f2688e6c2cfbda"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/widget_icons/wrap.png",
+      "bytes": 792,
+      "sha256": "8347a84fb881e3568a998af3853ef5f534f58edd164bf5ae6fa9babb2d640b89"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/widget_icons/opacity.png",
+      "bytes": 1293,
+      "sha256": "33412241dee6f56e0cb59e5caa3e51016bd7242bc8727dc4523d5fc1fe789b96"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/widget_icons/onedot.png",
+      "bytes": 146,
+      "sha256": "7ca13c93c9ace0bceeaf32742bf6036edf3bb62818274e930d209907112e620d"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/widget_icons/column.png",
+      "bytes": 618,
+      "sha256": "476631c4d51b1e4a6d4dcc320d6cf4f21098be54466dafa50166d98337da5fcd"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/widget_icons/align.png",
+      "bytes": 424,
+      "sha256": "76b6b29087471acfb609a47b9d48a1fa582e3e90f7ef18d447b0f43ae1eb9bb5"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/widget_icons/checkbox.png",
+      "bytes": 718,
+      "sha256": "183ad000fa5a5a6d91ec8fff1000cf3d6163d636bec426e428a7083b87ddfea2"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/widget_icons/circleavatar.png",
+      "bytes": 1508,
+      "sha256": "45d30e2c6084d0f61f7d9e566348bbf08fb83ab1186727f23c0742f9b8943173"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/widget_icons/radio.png",
+      "bytes": 1379,
+      "sha256": "9fb7f6f2d1244cc864224b6ba2622e80c3b975e70c94a1224be46145172640af"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/widget_icons/row.png",
+      "bytes": 531,
+      "sha256": "0db174c625328d61f3b3a83be5f2224f9cf015889ba675063e341ff2384918a8"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/widget_icons/transition.png",
+      "bytes": 2140,
+      "sha256": "16f3bc46855c74814460eba695fcb64637a5d1b1aee83727984b8d10f1069c4b"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/widget_icons/image.png",
+      "bytes": 773,
+      "sha256": "7d760ff1f7f085ba40cfe8a544bbd937e09f086ee7ed38f75c2d673614773d67"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/widget_icons/material.png",
+      "bytes": 1866,
+      "sha256": "6a8aaa865625fba28ad917fbeaad9b6518fb826271d3d90af71cc9173c7f0404"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/widget_icons/constrainedbox.png",
+      "bytes": 1328,
+      "sha256": "61daf3dffc9e7935bb0775e5e32141e4d79293066ba8a1bbcf9d56badbf17a88"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/widget_icons/scroll.png",
+      "bytes": 401,
+      "sha256": "714f079c269d1687e012fd8359b138263eca9788840b2f3d06e92ea178b1c005"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/widget_icons/bottomnavigationbar.png",
+      "bytes": 544,
+      "sha256": "1696669395c08461a78122da0a18d6ea1f668a993edd2db2ca14c996c7e51901"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/widget_icons/sizedbox.png",
+      "bytes": 731,
+      "sha256": "48f38b9580f0c86aa681d6acbe9b470805d9355447f81a6eec1e4ac177facf2a"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/widget_icons/hero.png",
+      "bytes": 970,
+      "sha256": "9fac1dcb4bb6d47a5bd13d25752af66970b7457f2f8c0a191980f60820ce4613"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/widget_icons/animated.png",
+      "bytes": 663,
+      "sha256": "a28c02aed45eac9e7686ebc08bd0b65a3b79694706dcd362cc717e4d1ae1cc79"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/widget_icons/gridview.png",
+      "bytes": 500,
+      "sha256": "5e5e4ece3acfb1a0c89028ed09830c9aa5c680a164c31126f3590c0af34f4e77"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/widget_icons/materialapp.png",
+      "bytes": 1718,
+      "sha256": "382bdb9fa2b15e97e04f50955275a99022d14fa0d5acdd25064510513d8fee8f"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/widget_icons/gesture.png",
+      "bytes": 1337,
+      "sha256": "59f1d67b2771764b994bc7140325fe4242ec0038a24049d4f634acbc863a8329"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/widget_icons/outlinedbutton.png",
+      "bytes": 764,
+      "sha256": "de686f48c187e20c9cbecd16d9a90b02bb4f7529b79bd384b3ea1934117b79a1"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/widget_icons/toggle.png",
+      "bytes": 902,
+      "sha256": "8c8277d32c6941c777e628521a5a86a04df4fdccdafff524f4f49c87eaffd54e"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/widget_icons/appbar.png",
+      "bytes": 551,
+      "sha256": "9b09961fea2aecd36ecbca578769aeff9774dc7cb9888d218cb7a37f5ffa2a4d"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/widget_icons/center.png",
+      "bytes": 511,
+      "sha256": "3c2111d4e685982c7c39ba31cdb3788d5f2b03c815a5da412bf889c0520c23a5"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/widget_icons/card.png",
+      "bytes": 701,
+      "sha256": "57517e162e8651022961638a5f91c9e71d7e48218f88f8ff663d308e32374027"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/widget_icons/drawer.png",
+      "bytes": 253,
+      "sha256": "3384cdcc65e8443e7f5def4f078771b6ee1c18012ac7be1c30372f436bfa9fd1"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/widget_icons/circularprogress.png",
+      "bytes": 1192,
+      "sha256": "01975a4b41c7110fc83f2b127692dae147ae38961f45a241f8216dd0a1cd7ef4"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/widget_icons/textbutton.png",
+      "bytes": 638,
+      "sha256": "16967538a2fb97b39aebda6eea562f65692b1165297fea7b97a260e542a901ce"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/widget_icons/padding.png",
+      "bytes": 1019,
+      "sha256": "6b8e60c45ea9e528d311ccad0573637326f7a6fd6fb2691ec69a73843ab6622c"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/widget_icons/listview.png",
+      "bytes": 654,
+      "sha256": "652d2dd53374e39676f9b230415c94567293e9006c5b3e157bdb8d723d38f592"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/assets/icons/inspector/widget_icons/expand.png",
+      "bytes": 627,
+      "sha256": "d42289c56cfdd7ffa7a21fe35627a6a7a7231acd5ff95c8d5ed75247ac164918"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/canvaskit/chromium/canvaskit.wasm",
+      "bytes": 5428535,
+      "sha256": "9a3ab16d04942282f771ab1204dee279def1b076ec718d885195f25bbd25cb5f"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/canvaskit/chromium/canvaskit.js",
+      "bytes": 86226,
+      "sha256": "6018b12bd8ed37e6952eee72d59c1cf7ad707ccdb74a0a45190010f77edd9068"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/canvaskit/chromium/canvaskit.js.symbols",
+      "bytes": 1235980,
+      "sha256": "c6c6199e54acee9392d2b8b37650637eb27d6f2e7dc9d4df2d07677b310d3689"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/canvaskit/webparagraph/canvaskit.wasm",
+      "bytes": 3729055,
+      "sha256": "d32fa4acc3c280b213c147f7d2ba1259214d06fa74a75fda8bdaac66118af0dd"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/canvaskit/webparagraph/canvaskit.js",
+      "bytes": 76114,
+      "sha256": "3110e3e4d9b7b5657d336f253aaca8acca5777cde9319fb69ac302d6ff5a8b23"
+    },
+    {
+      "path": "toolchain/flutter/bin/cache/dart-sdk/bin/resources/devtools/canvaskit/webparagraph/canvaskit.js.symbols",
+      "bytes": 963751,
+      "sha256": "67c5be2ee214c4ad34f1a4b91e438615d3dd21229ad1f8f55b55568ed5334e41"
+    }
+  ]
+}
