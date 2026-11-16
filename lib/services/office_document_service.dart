@@ -72,6 +72,17 @@ class OfficeGeneratedHeading {
   const OfficeGeneratedHeading(this.start, this.end, this.kind, this.number);
 }
 
+/// Bounded display metadata for a registry-backed ODT picture.
+class OfficeImageInfo {
+  const OfficeImageInfo({this.width, this.height});
+
+  /// Logical pixel width derived from the ODF frame.
+  final double? width;
+
+  /// Logical pixel height derived from the ODF frame.
+  final double? height;
+}
+
 class OfficeDocument {
   final OfficeDocumentKind kind;
   final String markdown;
@@ -96,6 +107,9 @@ class OfficeDocument {
   /// plain text, search text and the rich-render budget.
   final Map<String, Uint8List> imageRegistry;
 
+  /// Optional display geometry for [imageRegistry] entries.
+  final Map<String, OfficeImageInfo> imageInfo;
+
   const OfficeDocument({
     required this.kind,
     required this.markdown,
@@ -112,6 +126,7 @@ class OfficeDocument {
     this.textHeadings = const [],
     this.csvHeadings = const [],
     this.imageRegistry = const {},
+    this.imageInfo = const {},
   });
 }
 
@@ -1550,6 +1565,12 @@ int _odfLengthToEmu(String? raw, {required int fallback}) {
   return emu <= 0 ? fallback : emu;
 }
 
+double? _odfOptionalLength(String? raw) {
+  if (raw == null || raw.trim().isEmpty) return null;
+  final points = _odfLengthToPoints(raw, fallback: 0);
+  return points > 0 ? points : null;
+}
+
 double _odfLengthToPoints(String? raw, {required double fallback}) {
   final match = RegExp(
     r'^\s*([0-9]+(?:\.[0-9]+)?)\s*(cm|mm|in|pt|pc|px)?\s*$',
@@ -1583,10 +1604,11 @@ String? _odfColor(String? raw) {
 // ---------------------------------------------------------------------------
 
 class _OdtPictures {
-  const _OdtPictures(this.hrefs, this.registry);
+  const _OdtPictures(this.hrefs, this.registry, this.info);
 
   final Map<String, String> hrefs;
   final Map<String, Uint8List> registry;
+  final Map<String, OfficeImageInfo> info;
 }
 
 Future<_OdtPictures> _odtPictures(ViewerArchive archive) async {
@@ -1594,6 +1616,7 @@ Future<_OdtPictures> _odtPictures(ViewerArchive archive) async {
   const totalCap = 24 * 1024 * 1024;
   final hrefs = <String, String>{};
   final registry = <String, Uint8List>{};
+  final info = <String, OfficeImageInfo>{};
   var used = 0;
   for (final member in archive.members) {
     if (!member.isFile || !member.name.startsWith('Pictures/')) continue;
@@ -1611,7 +1634,7 @@ Future<_OdtPictures> _odtPictures(ViewerArchive archive) async {
     hrefs[member.name] = key;
     registry[key] = bytes;
   }
-  return _OdtPictures(hrefs, registry);
+  return _OdtPictures(hrefs, registry, info);
 }
 
 Future<OfficeDocument> _parseOdt(ViewerArchive archive) async {
@@ -1746,6 +1769,14 @@ Future<OfficeDocument> _parseOdt(ViewerArchive archive) async {
               ?.getAttribute('xlink:href');
           final data = href == null ? null : pictures.hrefs[href];
           if (data != null) {
+            final width = _odfOptionalLength(child.getAttribute('svg:width'));
+            final height = _odfOptionalLength(child.getAttribute('svg:height'));
+            if (width != null || height != null) {
+              pictures.info[data] = OfficeImageInfo(
+                width: width == null ? null : width * 96 / 72,
+                height: height == null ? null : height * 96 / 72,
+              );
+            }
             final alt = (name ?? 'Image').replaceAll(RegExp(r'[\[\]]'), '');
             buffer.write('![$alt]($data)');
           } else if (href != null && href.isNotEmpty) {
@@ -1910,6 +1941,7 @@ Future<OfficeDocument> _parseOdt(ViewerArchive archive) async {
     plainText: _stripMarkdown(markdown),
     rawXml: _capRaw(xml, 'content.xml'),
     imageRegistry: pictures.registry,
+    imageInfo: pictures.info,
   );
 }
 
