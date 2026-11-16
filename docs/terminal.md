@@ -760,6 +760,9 @@ This first native workspace has explicit limits:
   at most eight capture groups instead of one round trip per pane. A complete
   window/pane snapshot is published only after its captures succeed. This is a
   protocol round-trip reduction, not a measured latency guarantee.
+  Each pane keeps its existing hard response deadline once it reaches the
+  reply queue head. Later panes and user input do not consume their timeout
+  while earlier captures drain; partial replies cannot extend a pane's deadline.
   On tmux versions without the `bracket_paste_flag` format, already-enabled
   bracketed paste cannot be inferred on initial attachment. A subsequent live
   mode change establishes the local paste mode, which survives later captures.

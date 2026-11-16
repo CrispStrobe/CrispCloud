@@ -645,6 +645,82 @@ void main() {
     },
   );
 
+  testWidgets(
+    'progressing captures retain per-pane deadlines and queued input budget',
+    (tester) async {
+      server.setPaneRows(8);
+      await server.start(client);
+      await tester.pump(const Duration(milliseconds: 40));
+      server.afterCommand = (command) {
+        if (command.startsWith('list-panes')) {
+          server.afterCommand = null;
+          server.deferReplies = true;
+        }
+      };
+      server.notification('%layout-change @0 recapture-all-panes');
+      await tester.pump(const Duration(milliseconds: 40));
+      expect(server.deferredReplies, hasLength(56));
+      final session = client.panes['%0']!.session;
+      session.terminal.textInput('queued behind the snapshot');
+      await tester.pump();
+      expect(server.deferredReplies, hasLength(57));
+
+      // This fixture's timeout is three seconds. A complete pane arrives
+      // every two seconds, so all eight retain their original budget even
+      // though the grouped capture takes sixteen seconds overall.
+      for (var pane = 0; pane < 8; pane++) {
+        await tester.pump(const Duration(seconds: 2));
+        expect(client.ready, isTrue, reason: 'waiting for pane $pane');
+        server.flushReplies(limit: 7);
+        await tester.pump();
+      }
+      expect(server.deferredReplies, hasLength(1));
+      await tester.pump(const Duration(seconds: 2));
+      expect(client.ready, isTrue);
+      expect(session.isConnected, isTrue);
+      server.deferReplies = false;
+      server.flushReplies();
+      await tester.pump();
+      expect(client.error, isNull);
+      expect(session.error, isNull);
+      expect(utf8.decode(server.inputBytes), 'queued behind the snapshot');
+    },
+  );
+
+  testWidgets(
+    'partial pane replies cannot extend a grouped capture hard deadline',
+    (tester) async {
+      server.setPaneRows(8);
+      server.afterCommand = (command) {
+        if (command.startsWith('list-panes')) {
+          server.afterCommand = null;
+          server.deferReplies = true;
+        }
+      };
+      final starting = server.start(client);
+      final failed = expectLater(
+        starting,
+        throwsA(isA<TmuxControlException>()),
+      );
+      await tester.pump();
+      expect(server.deferredReplies, hasLength(56));
+      await tester.pump(const Duration(seconds: 2));
+      server.flushReplies(limit: 1);
+      await tester.pump();
+      expect(client.isClosed, isFalse);
+      // The first pane still has six pending replies. Progress on its first
+      // command must not renew the complete pane's three-second hard cap.
+      await tester.pump(const Duration(seconds: 1));
+      await failed;
+      expect(client.isClosed, isTrue);
+      expect(client.error.toString(), contains('timed out'));
+      expect(client.panes, isEmpty);
+      server.flushReplies();
+      await tester.pump();
+      expect(server.closeCount, 1);
+    },
+  );
+
   test('close revokes queued input and keeps read-only pane buffers', () async {
     await server.start(client);
     final session = client.panes['%0']!.session;
@@ -869,9 +945,11 @@ class _Server {
       );
   }
 
-  void flushReplies() {
-    final replies = deferredReplies.toList();
-    deferredReplies.clear();
+  void flushReplies({int? limit}) {
+    final replies = deferredReplies
+        .take(limit ?? deferredReplies.length)
+        .toList();
+    deferredReplies.removeRange(0, replies.length);
     for (final reply in replies) {
       if (!output.isClosed) output.add(reply);
     }

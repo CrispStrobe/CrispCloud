@@ -85,7 +85,7 @@ class TerminalSession extends ChangeNotifier {
 
   void _bindTerminal() {
     terminal.onOutput = _write;
-    terminal.onResize = (_, __, ___, ____) => _resize();
+    terminal.onResize = (columns, rows, _, __) => _resize(columns, rows);
     shellIntegration = TerminalShellIntegration(terminal)
       ..addListener(_shellChanged);
   }
@@ -442,11 +442,17 @@ class TerminalSession extends ChangeNotifier {
     }
   }
 
-  void _resize() {
+  void _resize([int? columns, int? rows]) {
     final connection = _connection;
     final generation = _generation;
     if (!isConnected || connection == null) return;
-    _pendingResize = (columns, rows);
+    // xterm invokes onResize before committing its own viewport dimensions.
+    // Use that callback's new geometry; only connection startup samples the
+    // emulator's already-committed size.
+    _pendingResize = (
+      (columns ?? this.columns).clamp(1, 10000),
+      (rows ?? this.rows).clamp(1, 10000),
+    );
     if (_resizingGeneration == generation) return;
     _resizingGeneration = generation;
     // Layout can notify synchronously; keep transport effects out of layout
