@@ -85,6 +85,17 @@ class ZoteroApiException implements Exception {
   String toString() => message;
 }
 
+/// A session's pause requested by the online Zotero API.
+///
+/// Reuse this state when replacing online clients so reconnecting, changing a
+/// library or closing a dialog cannot discard an unexpired server backoff.
+/// It contains only a deadline, never credentials or library/document data,
+/// and schedules no timer or retry. Clients sharing it must use the same clock.
+/// Desktop clients retain their own independent pause state.
+class ZoteroBackoffState {
+  DateTime? _until;
+}
+
 /// Read-only client for Zotero Web API v3 and the opt-in desktop local API.
 ///
 /// The default constructor uses only Zotero's fixed HTTPS origin. [ZoteroClient.local]
@@ -95,9 +106,11 @@ class ZoteroClient {
     required this.transport,
     String? apiKey,
     DateTime Function()? clock,
+    ZoteroBackoffState? backoffState,
   }) : isLocal = false,
        _apiKey = apiKey?.trim(),
-       _clock = clock ?? DateTime.now {
+       _clock = clock ?? DateTime.now,
+       _backoffState = backoffState ?? ZoteroBackoffState() {
     if (_apiKey != null && RegExp(r'[\r\n\x00-\x1f\x7f]').hasMatch(_apiKey)) {
       throw ArgumentError('The Zotero API key contains invalid characters.');
     }
@@ -108,21 +121,22 @@ class ZoteroClient {
   ZoteroClient.local({required this.transport, DateTime Function()? clock})
     : isLocal = true,
       _apiKey = null,
-      _clock = clock ?? DateTime.now;
+      _clock = clock ?? DateTime.now,
+      _backoffState = ZoteroBackoffState();
 
   final ZoteroTransport transport;
   final bool isLocal;
   final String? _apiKey;
   String? _localServerId;
   final DateTime Function() _clock;
-  DateTime? _backoffUntil;
+  final ZoteroBackoffState _backoffState;
 
   /// If Zotero requests a pause, later calls fail immediately with a typed
   /// retry duration until it expires. The host can present a retry affordance;
   /// this client never waits or retries indefinitely.
-  DateTime? get backoffUntil => _backoffUntil;
+  DateTime? get backoffUntil => _backoffState._until;
   Duration? get retryAfter {
-    final until = _backoffUntil;
+    final until = backoffUntil;
     if (until == null) return null;
     final remaining = until.difference(_clock());
     return remaining > Duration.zero ? remaining : null;
@@ -716,8 +730,8 @@ class ZoteroClient {
     if (backoff != null && backoff > Duration.zero) {
       final until = _clock().add(backoff);
       // Concurrent in-flight responses must not shorten an existing pause.
-      if (_backoffUntil == null || until.isAfter(_backoffUntil!)) {
-        _backoffUntil = until;
+      if (backoffUntil == null || until.isAfter(backoffUntil!)) {
+        _backoffState._until = until;
       }
     }
     if (isLocal && response.statusCode == 412) {
