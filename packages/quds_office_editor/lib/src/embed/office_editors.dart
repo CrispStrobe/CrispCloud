@@ -216,6 +216,12 @@ class _QudsWordEditorState extends State<QudsWordEditor>
   late final bool _ownsFocus;
   late final Ticker _ticker;
   OverlayEntry? _contextMenu;
+  ModalRoute<dynamic>? _inputRoute;
+  late final bool Function() _inputGuard = () =>
+      mounted &&
+      _focus.hasPrimaryFocus &&
+      (_inputRoute?.isCurrent ?? true) &&
+      _c.config.allowsMutation;
 
   /// controller API.
   WordEditorController get _c => widget.controller;
@@ -226,6 +232,8 @@ class _QudsWordEditorState extends State<QudsWordEditor>
     super.initState();
     _ownsFocus = widget.focusNode == null;
     _focus = widget.focusNode ?? FocusNode(debugLabel: 'QudsWordEditor');
+    _c.input.inputAllowed = _inputGuard;
+    _c.detachInput();
     _ticker = createTicker((Duration elapsed) {
       if (!_c.config.showsCaret) {
         return;
@@ -239,7 +247,7 @@ class _QudsWordEditorState extends State<QudsWordEditor>
     _c.addListener(_onCtrl);
     PaintingBinding.instance.systemFonts.addListener(_onSystemFonts);
     _c.onRequestFocus = () {
-      if (mounted) {
+      if (mounted && (_inputRoute?.isCurrent ?? true)) {
         _focus.requestFocus();
       }
     };
@@ -251,6 +259,12 @@ class _QudsWordEditorState extends State<QudsWordEditor>
         (_) => _focus.requestFocus(),
       );
     }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _inputRoute = ModalRoute.of(context);
   }
 
   @override
@@ -280,6 +294,10 @@ class _QudsWordEditorState extends State<QudsWordEditor>
   /// dispose API.
   void dispose() {
     _dismissContextMenu();
+    if (identical(_c.input.inputAllowed, _inputGuard)) {
+      _c.detachInput();
+      _c.input.inputAllowed = () => false;
+    }
     _ticker.dispose();
     _c.removeListener(_onCtrl);
     PaintingBinding.instance.systemFonts.removeListener(_onSystemFonts);
@@ -373,9 +391,9 @@ class _QudsWordEditorState extends State<QudsWordEditor>
   }
 
   void _onFocus() {
-    if (_focus.hasFocus && _c.config.allowsMutation) {
+    if (_inputGuard()) {
       _c.attachInput();
-    } else if (!_c.config.allowsMutation) {
+    } else {
       _c.detachInput();
     }
     if (mounted) {

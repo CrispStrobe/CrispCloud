@@ -326,11 +326,16 @@ abstract final class WordRuler {
   }
 
   /// Snap [points] to 1/16", unless [disable] (Alt).
-  static double snap(double points, {required bool disable}) {
+  static double snap(
+    double points, {
+    required bool disable,
+    OfficeLengthUnit unit = OfficeLengthUnit.inches,
+  }) {
     if (disable) {
       return points;
     }
-    return (points / snapStep).round() * snapStep;
+    final step = unit.snapPoints;
+    return (points / step).round() * step;
   }
 
   /// First-line marker page X (from the page left edge).
@@ -731,6 +736,7 @@ abstract final class WordRuler {
     required List<WmlTabStop> tabs,
     required bool rtl,
     required OfficeTheme theme,
+    OfficeLengthUnit unit = OfficeLengthUnit.inches,
     RulerHit? hover,
     RulerHit? active,
     String? readout,
@@ -805,6 +811,7 @@ abstract final class WordRuler {
       scale: scale,
       pageWidth: pageWidth,
       originPageX: originX,
+      unit: unit,
       rtl: rtl,
       color: tickColor,
     );
@@ -834,6 +841,7 @@ abstract final class WordRuler {
       scale: scale,
       pageHeight: pageHeight,
       originPageY: originY,
+      unit: unit,
       color: tickColor,
     );
     canvas.restore();
@@ -1091,12 +1099,13 @@ abstract final class WordRuler {
     required double originPageX,
     required bool rtl,
     required Color color,
+    required OfficeLengthUnit unit,
   }) {
     final Paint tick = Paint()
       ..color = color.withValues(alpha: 0.55)
       ..strokeWidth = 1;
     final double sign = rtl ? -1 : 1;
-    final double eighth = _inch / 8;
+    final double eighth = unit.rulerMajorPoints / unit.rulerDivisions;
     final int span =
         ((math.max(originPageX, pageWidth - originPageX) + _inch) / eighth)
             .ceil() +
@@ -1107,12 +1116,17 @@ abstract final class WordRuler {
         continue;
       }
       final double x = localX(page, pageLeft: pageLeft, scale: scale);
-      final bool inch = n % 8 == 0;
-      final bool half = n % 4 == 0;
+      final bool inch = n % unit.rulerDivisions == 0;
+      final bool half = n % (unit.rulerDivisions ~/ 2) == 0;
       final double top = inch ? 6 : (half ? 9 : 12);
       canvas.drawLine(Offset(x, top), Offset(x, size - 3), tick);
       if (inch) {
-        _labelCentered(canvas, '${n ~/ 8}', Offset(x, 3.5), color);
+        _labelCentered(
+          canvas,
+          '${n ~/ unit.rulerDivisions * unit.rulerLabelMultiplier}',
+          Offset(x, 3.5),
+          color,
+        );
       }
     }
   }
@@ -1124,11 +1138,12 @@ abstract final class WordRuler {
     required double pageHeight,
     required double originPageY,
     required Color color,
+    required OfficeLengthUnit unit,
   }) {
     final Paint tick = Paint()
       ..color = color.withValues(alpha: 0.55)
       ..strokeWidth = 1;
-    final double eighth = _inch / 8;
+    final double eighth = unit.rulerMajorPoints / unit.rulerDivisions;
     final int start = ((0 - originPageY) / eighth).floor() - 1;
     final int end = ((pageHeight - originPageY) / eighth).ceil() + 1;
     for (int n = start; n <= end; n++) {
@@ -1137,12 +1152,17 @@ abstract final class WordRuler {
         continue;
       }
       final double y = localY(page, pageTop: pageTop, scale: scale);
-      final bool inch = n % 8 == 0;
-      final bool half = n % 4 == 0;
+      final bool inch = n % unit.rulerDivisions == 0;
+      final bool half = n % (unit.rulerDivisions ~/ 2) == 0;
       final double left = inch ? 6 : (half ? 9 : 12);
       canvas.drawLine(Offset(left, y), Offset(size - 3, y), tick);
       if (inch) {
-        _labelCentered(canvas, '${n ~/ 8}', Offset(size / 2, y - 5.5), color);
+        _labelCentered(
+          canvas,
+          '${n ~/ unit.rulerDivisions * unit.rulerLabelMultiplier}',
+          Offset(size / 2, y - 5.5),
+          color,
+        );
       }
     }
   }
@@ -1442,6 +1462,14 @@ abstract final class WordRuler {
         ..style = PaintingStyle.stroke,
     );
     canvas.drawParagraph(p, Offset(box.left, box.top + 3));
+  }
+
+  static String measurementLabel(
+    double points, {
+    OfficeLengthUnit unit = OfficeLengthUnit.inches,
+  }) {
+    if (unit == OfficeLengthUnit.inches) return inchLabel(points);
+    return '${unit.fromPoints(points).toStringAsFixed(2)} ${unit.suffix}';
   }
 
   /// Inches label for a page-X drag.

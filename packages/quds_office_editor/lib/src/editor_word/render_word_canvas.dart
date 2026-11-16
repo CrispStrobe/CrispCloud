@@ -739,6 +739,12 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
   /// theme API.
   OfficeTheme get _theme => config.theme;
 
+  double _snapRuler(double points, {required bool disable}) =>
+      WordRuler.snap(points, disable: disable, unit: config.lengthUnit);
+
+  String _rulerLabel(double points) =>
+      WordRuler.measurementLabel(points, unit: config.lengthUnit);
+
   double get _viewScale => viewport.scale * _pointsToPixels;
 
   @override
@@ -1607,9 +1613,8 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
     for (final section in document.sections) {
       for (final block in WordTree.descendants(section.blocks)) {
         if (block is WmlFrame &&
-            WordTree.paragraphs(
-              block.blocks,
-            ).any((p) => identical(p, target))) {
+            WordTree.paragraphs(block.blocks)
+                .any((p) => identical(p, target))) {
           // Descendants follow their parent, so the innermost frame wins.
           result = block;
         }
@@ -1653,7 +1658,7 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
     onBeginRulerEdit?.call();
     if (hit.kind == RulerHitKind.track && local.dy <= WordRuler.size) {
       final bool snapOff = HardwareKeyboard.instance.isAltPressed;
-      final double px = WordRuler.snap(
+      final double px = _snapRuler(
         WordRuler.pageX(local.dx, pageLeft: view.pageLeft, scale: view.scale),
         disable: snapOff,
       );
@@ -1702,7 +1707,7 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
         markNeedsPaint();
         return;
       }
-      final double px = WordRuler.snap(
+      final double px = _snapRuler(
         WordRuler.pageX(local.dx, pageLeft: view.pageLeft, scale: view.scale),
         disable: snapOff,
       );
@@ -1728,7 +1733,7 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
             else
               _rulerTabs![t],
         ];
-        _rulerReadout = WordRuler.inchLabel(pos);
+        _rulerReadout = _rulerLabel(pos);
         onPreviewRulerEdit?.call(WordRulerEdit(tabs: _rulerTabs));
       }
       markNeedsPaint();
@@ -1741,7 +1746,7 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
       final double pos =
           drag.kind == RulerHitKind.marginTop ||
               drag.kind == RulerHitKind.marginBottom
-          ? WordRuler.snap(
+          ? _snapRuler(
               WordRuler.pageY(
                 local.dy,
                 pageTop: view.pageTop,
@@ -1749,7 +1754,7 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
               ),
               disable: snapOff,
             )
-          : WordRuler.snap(
+          : _snapRuler(
               WordRuler.pageX(
                 local.dx,
                 pageLeft: view.pageLeft,
@@ -1764,12 +1769,12 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
         pageWidth: view.pageWidth,
         pageHeight: view.pageHeight,
       );
-      _rulerReadout = WordRuler.inchLabel(pos);
+      _rulerReadout = _rulerLabel(pos);
       onPreviewRulerEdit?.call(WordRulerEdit(margins: _rulerMargins));
       markNeedsPaint();
       return;
     }
-    final double px = WordRuler.snap(
+    final double px = _snapRuler(
       WordRuler.pageX(local.dx, pageLeft: view.pageLeft, scale: view.scale),
       disable: snapOff,
     );
@@ -1783,7 +1788,7 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
       contentLeft: view.contentLeft,
       contentRight: view.contentRight,
     );
-    _rulerReadout = WordRuler.inchLabel(
+    _rulerReadout = _rulerLabel(
       view.rtl ? view.contentRight - px : px - view.contentLeft,
     );
     onPreviewRulerEdit?.call(WordRulerEdit(indent: _rulerIndent));
@@ -3398,6 +3403,7 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
         tabs: ruler.tabs,
         rtl: ruler.rtl,
         theme: _theme,
+        unit: config.lengthUnit,
         hover: _rulerHover,
         active: _rulerDrag,
         readout: _rulerReadout,
@@ -3766,16 +3772,15 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
       if (box.kind == LaidOutBoxKind.frame &&
           box.frame != null &&
           identical(box.frame, selectedFrame)) {
-        TransformHandles(
-          Rect.fromLTWH(box.x, box.y, box.width, box.height),
-        ).paint(
-          canvas,
-          strokeColor: _theme.focusRing,
-          fillColor: _theme.pageBackground,
-          showKnobs: !editingFrame,
-          showRotate: false,
-          knobSize: 9,
-        );
+        TransformHandles(Rect.fromLTWH(box.x, box.y, box.width, box.height))
+            .paint(
+              canvas,
+              strokeColor: _theme.focusRing,
+              fillColor: _theme.pageBackground,
+              showKnobs: !editingFrame,
+              showRotate: false,
+              knobSize: 9,
+            );
         continue;
       }
       final OfficeVisual? visual = box.visual;
@@ -3788,19 +3793,18 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
         // In-range pictures are tinted in [_paintFrames], not handled.
         continue;
       }
-      TransformHandles(
-        Rect.fromLTWH(box.x, box.y, box.width, box.height),
-      ).paint(
-        canvas,
-        strokeColor: pictureCropMode
-            ? const Color(0xFFFF8C1A)
-            : _theme.focusRing,
-        fillColor: _theme.pageBackground,
-        showKnobs: true,
-        showRotate: !pictureCropMode,
-        cropMode: pictureCropMode && visual.isPicture,
-        knobSize: 9,
-      );
+      TransformHandles(Rect.fromLTWH(box.x, box.y, box.width, box.height))
+          .paint(
+            canvas,
+            strokeColor: pictureCropMode
+                ? const Color(0xFFFF8C1A)
+                : _theme.focusRing,
+            fillColor: _theme.pageBackground,
+            showKnobs: true,
+            showRotate: !pictureCropMode,
+            cropMode: pictureCropMode && visual.isPicture,
+            knobSize: 9,
+          );
     }
   }
 
@@ -4223,9 +4227,8 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
         canvas.drawRect(
           Rect.fromLTWH(x0, line.y, x1 - x0, line.height),
           Paint()
-            ..color = Color(
-              active ? 0xFFF4B183 : 0xFFFFF2CC,
-            ).withValues(alpha: 0.88),
+            ..color = Color(active ? 0xFFF4B183 : 0xFFFFF2CC)
+                .withValues(alpha: 0.88),
         );
       }
       if (first.highlight != null) {

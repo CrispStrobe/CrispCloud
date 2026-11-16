@@ -1,5 +1,8 @@
 import 'dart:ui';
 
+import 'office_units.dart';
+export 'office_units.dart';
+
 import 'package:flutter/foundation.dart' show TargetPlatform;
 
 /// How the host wants the surface to behave when embedded.
@@ -251,6 +254,7 @@ class OfficeSurfaceConfig {
     this.mode = OfficeInteractionMode.editing,
     this.theme = OfficeTheme.light,
     this.showRulers = true,
+    this.lengthUnit = OfficeLengthUnit.inches,
     this.showFormulaBar = true,
     this.showGridHeaders = true,
     this.showGridlines = true,
@@ -276,6 +280,8 @@ class OfficeSurfaceConfig {
 
   /// showRulers API.
   final bool showRulers;
+
+  final OfficeLengthUnit lengthUnit;
 
   /// showFormulaBar API.
   final bool showFormulaBar;
@@ -388,6 +394,7 @@ class OfficeSurfaceConfig {
     OfficeInteractionMode? mode,
     OfficeTheme? theme,
     bool? showRulers,
+    OfficeLengthUnit? lengthUnit,
     bool? showFormulaBar,
     bool? showGridHeaders,
     bool? showGridlines,
@@ -408,6 +415,7 @@ class OfficeSurfaceConfig {
       mode: mode ?? this.mode,
       theme: theme ?? this.theme,
       showRulers: showRulers ?? this.showRulers,
+      lengthUnit: lengthUnit ?? this.lengthUnit,
       showFormulaBar: showFormulaBar ?? this.showFormulaBar,
       showGridHeaders: showGridHeaders ?? this.showGridHeaders,
       showGridlines: showGridlines ?? this.showGridlines,
@@ -451,8 +459,7 @@ class OfficeStrings {
     this.pasteTextOnly = 'Keep text only',
     this.pictureLabel = 'Picture',
     this.cropMode = 'Crop mode',
-    this.pictureHint =
-        'Drag handles to resize. Drag the picture to move. Press C to crop. Shift plus arrows resize.',
+    this.pictureHint = 'Drag handles to resize. Drag the picture to move. Press C to crop. Shift plus arrows resize.',
     this.followLinkHint = 'Press Ctrl and click to follow the link',
     this.selectAll = 'Select all',
     this.insertComment = 'New comment',
@@ -784,8 +791,7 @@ class OfficeStrings {
     pasteTextOnly: 'Keep text only',
     pictureLabel: 'Picture',
     cropMode: 'Crop mode',
-    pictureHint:
-        'Drag handles to resize. Drag the picture to move. Press C to crop. Shift plus arrows resize.',
+    pictureHint: 'Drag handles to resize. Drag the picture to move. Press C to crop. Shift plus arrows resize.',
     followLinkHint: 'Press Ctrl and click to follow the link',
     selectAll: 'Select all',
     insertComment: 'New comment',
@@ -871,8 +877,7 @@ class OfficeStrings {
     pasteTextOnly: 'الاحتفاظ بالنص فقط',
     pictureLabel: 'صورة',
     cropMode: 'وضع القص',
-    pictureHint:
-        'اسحب المقابض لتغيير الحجم. اسحب الصورة لنقلها. اضغط C للقص. Shift مع الأسهم لتغيير الحجم.',
+    pictureHint: 'اسحب المقابض لتغيير الحجم. اسحب الصورة لنقلها. اضغط C للقص. Shift مع الأسهم لتغيير الحجم.',
     followLinkHint: 'اضغط Ctrl ثم انقر للانتقال',
     selectAll: 'تحديد الكل',
     insertComment: 'تعليق جديد',
