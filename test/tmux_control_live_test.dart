@@ -142,9 +142,21 @@ void main() {
         expect(clientGeometry.exitCode, 0, reason: '${clientGeometry.stderr}');
         // Compare with the requested size, not merely two mutually stale
         // snapshots. tmux still owns its shared-window sizing policy.
-        expect(const LineSplitter().convert(clientGeometry.stdout.toString()), [
-          '120 40',
+        // tmux 3.8 exposes client_height only for TTY_STARTED clients. A
+        // pipe-backed control client still sizes its active window normally.
+        expect(
+          const LineSplitter().convert(clientGeometry.stdout.toString()),
+          anyOf(equals(['120 40']), equals(['120 '])),
+        );
+        final activeGeometry = await command([
+          'display-message',
+          '-p',
+          '-t',
+          firstPane,
+          '#{window_width} #{window_height}',
         ]);
+        expect(activeGeometry.exitCode, 0, reason: '${activeGeometry.stderr}');
+        expect(activeGeometry.stdout.toString().trim(), '120 40');
         final geometry = await command([
           'list-windows',
           '-F',
