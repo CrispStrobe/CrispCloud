@@ -309,6 +309,10 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs>
     } finally {
       if (_currentRecovery(lease, epoch) && serial == _recoverySaveSerial) {
         _pendingRecoveryJson = null;
+        // A layout change can return to the last saved snapshot while this
+        // write is pending. Recheck after it settles: the old saved value is
+        // no longer the checkpoint, even when that change needed no timer.
+        _queueRecoverySave();
       }
     }
   }

@@ -5,6 +5,7 @@ import 'package:crisp_cloud/models/terminal_arrangement.dart';
 import 'package:crisp_cloud/models/tmux_session_options.dart';
 import 'package:crisp_cloud/providers/core_providers.dart';
 import 'package:crisp_cloud/providers/focus_area_provider.dart';
+import 'package:crisp_cloud/providers/panel_provider.dart';
 import 'package:crisp_cloud/providers/terminal_provider.dart';
 import 'package:crisp_cloud/providers/terminal_workspace_recovery_provider.dart';
 import 'package:crisp_cloud/services/secure_storage_service.dart';
@@ -47,6 +48,12 @@ void main() {
     container = ProviderContainer(
       overrides: [
         secureStorageProvider.overrideWithValue(InMemorySecureStorage()),
+        // The transport fixture does not mount the application's cloud login
+        // or browser panes. Exercise the existing unavailable-origin fallback
+        // before the session substitutes its in-memory local connection.
+        panelProvider.overrideWith((ref, side) {
+          throw StateError('No browser folder is selected in this fixture');
+        }),
         terminalWorkspaceRecoveryProvider.overrideWithValue(store),
       ],
     );
@@ -337,6 +344,53 @@ void main() {
     await tester.pumpAndSettle();
     expect(panels(tester), hasLength(4));
     expect(record().snapshot!.tabs, hasLength(4));
+    expect(tester.takeException(), isNull);
+    await unmount(tester);
+  });
+
+  testWidgets('layout reverted during a pending write is checkpointed again', (
+    tester,
+  ) async {
+    final original = savedWorkspace();
+    seed(original);
+    await mount(tester);
+    await tester.pumpAndSettle();
+    final pending = Completer<void>();
+    var pendingWrites = 0;
+    deferredWrite = (_) {
+      pendingWrites++;
+      return pending.future;
+    };
+
+    await action(tester, 'Rename terminal');
+    await tester.enterText(
+      find.byKey(const ValueKey('terminal-tab-name')),
+      'Temporary name',
+    );
+    await tester.tap(find.widgetWithText(FilledButton, 'Rename'));
+    await tester.pumpAndSettle();
+    await checkpoint(tester);
+    expect(pendingWrites, 1);
+    expect(writes, 0);
+
+    // Return to the already-saved layout while the older change is in flight.
+    // No other session event, lifecycle flush or unmount should be required.
+    await action(tester, 'Rename terminal');
+    await tester.enterText(
+      find.byKey(const ValueKey('terminal-tab-name')),
+      'Remote tmux',
+    );
+    await tester.tap(find.widgetWithText(FilledButton, 'Rename'));
+    await tester.pumpAndSettle();
+    await checkpoint(tester);
+    expect(pendingWrites, 1);
+
+    deferredWrite = null;
+    pending.complete();
+    await tester.pump();
+    await checkpoint(tester);
+    expect(writes, 2);
+    expect(record().snapshot!.toJson(), original.toJson());
     expect(tester.takeException(), isNull);
     await unmount(tester);
   });

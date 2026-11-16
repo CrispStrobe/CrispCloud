@@ -1183,6 +1183,70 @@ void main() {
     expect((await store.load()).snapshot!.tabs.single.name, 'After retry');
   });
 
+  group('widget scheduling', () {
+    late TerminalWorkspaceRecovery store;
+    late String? raw;
+    late int reads;
+
+    setUp(() {
+      // The service is constructed in the test runner's outer zone, before
+      // testWidgets enters its controlled scheduler. Production providers can
+      // likewise be created separately from their eventual caller's zone.
+      raw = jsonEncode(
+        TerminalWorkspaceRecoveryRecord(
+          enabled: true,
+          snapshot: _snapshot('Existing'),
+          savedAt: savedAt,
+        ).toJson(),
+      );
+      reads = 0;
+      store = TerminalWorkspaceRecovery(
+        read: () async {
+          reads++;
+          return raw;
+        },
+        write: (value) async => raw = value,
+      );
+    });
+
+    testWidgets('outer-zone store starts and drains in caller scheduler', (
+      tester,
+    ) async {
+      final lease = store.acquireLease();
+      addTearDown(lease.close);
+      TerminalWorkspaceRecoveryRecord? loaded;
+      final loading = store.load().then((value) => loaded = value);
+      await tester.pump();
+      expect(reads, 1);
+      expect(loaded?.snapshot?.tabs.single.name, 'Existing');
+      await loading;
+
+      // The queue is idle again. Its next first operation must also drain in
+      // this caller's scheduler without real-time pumping or timeout changes.
+      var configured = false;
+      final configuring = store
+          .configure(
+            lease: lease,
+            enabled: true,
+            relaunchLocalShells: false,
+            snapshot: _snapshot('Current'),
+          )
+          .then((_) => configured = true);
+      await tester.pump();
+      expect(configured, isTrue);
+      expect(reads, 2);
+      expect(
+        TerminalWorkspaceRecoveryRecord.fromJson(jsonDecode(raw!))
+            .snapshot!
+            .tabs
+            .single
+            .name,
+        'Current',
+      );
+      await configuring;
+    });
+  });
+
   test(
     'default services share preferences and exclusive mount authority',
     () async {
