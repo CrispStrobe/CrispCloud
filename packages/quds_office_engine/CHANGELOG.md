@@ -4,6 +4,16 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Preserve mixed native Zotero citation character styles in protected Word
+  field packets, including ordinary editing, clipboard operations, paragraph
+  splits, native note conversion and DOCX round trips. Keep tracked-change
+  source ranges intact during import. Continue first-use style selection and
+  catalog insertion inside one staged document transaction.
+- Render automatic footnote/endnote labels in body order without renumbering
+  stored link IDs. Honor common native number formats and section settings,
+  preserve custom marks and keep display/caret offsets aligned when label
+  lengths differ from source IDs.
+
 - Add Zotero's native HTTP Citing Protocol with bounded, credential-free
   loopback transactions, exact command/field validation, cooperative cancellation
   and error cleanup. Stage complete Word citation/bibliography refreshes,

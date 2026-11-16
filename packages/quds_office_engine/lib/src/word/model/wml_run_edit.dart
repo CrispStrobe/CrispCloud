@@ -3,6 +3,7 @@ import 'wml_clone.dart';
 import 'wml_document.dart';
 import 'word_bookmarks.dart';
 import 'word_content_controls.dart';
+import 'word_field_spans.dart';
 
 /// Split and format [WmlRun] spans inside a paragraph.
 abstract final class WmlRunEdit {
@@ -26,6 +27,7 @@ abstract final class WmlRunEdit {
 
   /// splitAt API.
   static void splitAt(WmlParagraph paragraph, int index) {
+    if (normalizeRange(paragraph, index, index).start != index) return;
     var offset = 0;
     for (int i = 0; i < paragraph.inlines.length; i++) {
       final WmlInline inline = paragraph.inlines[i];
@@ -46,6 +48,7 @@ abstract final class WmlRunEdit {
             noteRefId: inline.noteRefId,
             inlineVisual: inline.inlineVisual,
             noteRefEndnote: inline.noteRefEndnote,
+            noteRefCustomMark: inline.noteRefCustomMark,
             fieldInstruction: inline.fieldInstruction,
             fieldLocked: inline.fieldLocked,
             fieldDirty: inline.fieldDirty,
@@ -58,6 +61,7 @@ abstract final class WmlRunEdit {
             noteRefId: inline.noteRefId,
             inlineVisual: inline.inlineVisual,
             noteRefEndnote: inline.noteRefEndnote,
+            noteRefCustomMark: inline.noteRefCustomMark,
             fieldInstruction: inline.fieldInstruction,
             fieldLocked: inline.fieldLocked,
             fieldDirty: inline.fieldDirty,
@@ -105,19 +109,28 @@ abstract final class WmlRunEdit {
       }
     }
     splitAt(paragraph, index);
+    final citationSide = <WmlInline, bool>{
+      for (final span in WordFieldSpans.zoteroCitations(paragraph))
+        for (var i = span.first; i <= span.last; i++)
+          paragraph.inlines[i]: span.end <= index,
+    };
     position = 0;
     final head = <WmlInline>[];
     final tail = <WmlInline>[];
     for (final inline in paragraph.inlines) {
-      final onLeft = inline is WmlRun
-          ? position + inline.text.length <= index
-          : inline is WmlContentControlBoundary
-          ? leftControls.contains(inline.control)
-          : inline is WmlBookmarkBoundary &&
-                !inline.isStart &&
-                !emptyBookmarks.contains(WordBookmarks.canonicalId(inline.id))
-          ? position <= index
-          : position < index;
+      final onLeft =
+          citationSide[inline] ??
+          (inline is WmlRun
+              ? position + inline.text.length <= index
+              : inline is WmlContentControlBoundary
+              ? leftControls.contains(inline.control)
+              : inline is WmlBookmarkBoundary &&
+                    !inline.isStart &&
+                    !emptyBookmarks.contains(
+                      WordBookmarks.canonicalId(inline.id),
+                    )
+              ? position <= index
+              : position < index);
       (onLeft ? head : tail).add(inline);
       if (inline is WmlRun) position += inline.text.length;
     }
@@ -150,6 +163,9 @@ abstract final class WmlRunEdit {
       }
       return;
     }
+    final range = normalizeRange(paragraph, start, end);
+    start = range.start;
+    end = range.end;
     splitAt(paragraph, end);
     splitAt(paragraph, start);
     var offset = 0;
@@ -179,6 +195,14 @@ abstract final class WmlRunEdit {
     start = range.start;
     end = range.end;
     WordContentControls.assertCanEdit(paragraph, start, end);
+    final removedCitationMarkers = <WmlInline>{
+      if (start < end)
+        for (final span in WordFieldSpans.zoteroCitations(paragraph))
+          if (start <= span.start && end >= span.end)
+            for (var i = span.first; i <= span.last; i++)
+              if (paragraph.inlines[i] is WmlFieldBoundary)
+                paragraph.inlines[i],
+    };
     final int length = paragraph.text.length;
     final WmlRunProps props = propsAt(
       paragraph,
@@ -188,7 +212,9 @@ abstract final class WmlRunEdit {
       paragraph,
       start == length ? start - 1 : start,
     );
-    if (start == end && WordContentControls.hasInlineControls(paragraph)) {
+    if (start == end &&
+        (WordContentControls.hasInlineControls(paragraph) ||
+            WordFieldSpans.zoteroCitations(paragraph).isNotEmpty)) {
       if (insert.isNotEmpty) {
         insertRuns(paragraph, start, <WmlRun>[
           WmlRun(
@@ -207,7 +233,7 @@ abstract final class WmlRunEdit {
     var inserted = false;
     for (final WmlInline inline in paragraph.inlines) {
       if (inline is! WmlRun) {
-        next.add(inline);
+        if (!removedCitationMarkers.contains(inline)) next.add(inline);
         continue;
       }
       final int runEnd = offset + inline.text.length;
@@ -268,8 +294,9 @@ abstract final class WmlRunEdit {
   static ({int start, int end}) normalizeRange(
     WmlParagraph paragraph,
     int start,
-    int end,
-  ) {
+    int end, {
+    bool protectZoteroCitations = true,
+  }) {
     if (start > end) {
       final int swap = start;
       start = end;
@@ -279,6 +306,26 @@ abstract final class WmlRunEdit {
     start = start.clamp(0, length);
     end = end.clamp(0, length);
     final bool collapsed = start == end;
+    final citations = protectZoteroCitations
+        ? WordFieldSpans.zoteroCitations(paragraph)
+        : const <WmlZoteroEditSpan>[];
+    for (final span in citations) {
+      if (!span.canEdit && span.touches(start, end)) {
+        throw UnsupportedError(
+          'This Zotero citation has locked, nested, malformed or unsupported '
+          'field content. Resolve or unlink it before editing its text.',
+        );
+      }
+    }
+    for (final span in citations) {
+      if (collapsed && start > span.start && start < span.end) {
+        return (start: span.end, end: span.end);
+      }
+      if (!collapsed && span.touches(start, end)) {
+        if (start > span.start) start = span.start;
+        if (end < span.end) end = span.end;
+      }
+    }
     var offset = 0;
     for (final WmlRun run in paragraph.inlines.whereType<WmlRun>()) {
       final int runEnd = offset + run.text.length;
@@ -330,6 +377,7 @@ abstract final class WmlRunEdit {
             noteRefId: inline.noteRefId,
             inlineVisual: inline.inlineVisual,
             noteRefEndnote: inline.noteRefEndnote,
+            noteRefCustomMark: inline.noteRefCustomMark,
             fieldInstruction: inline.fieldInstruction,
             fieldLocked: inline.fieldLocked,
             fieldDirty: inline.fieldDirty,
@@ -373,6 +421,11 @@ abstract final class WmlRunEdit {
       }
       offset += inline.text.length;
       insertAt = i + 1;
+    }
+    for (final span in WordFieldSpans.zoteroCitations(paragraph)) {
+      if (insertAt > span.first && insertAt <= span.last) {
+        insertAt = index <= span.start ? span.first : span.last + 1;
+      }
     }
     paragraph.inlines.insertAll(insertAt, WmlClone.inlines(inlines));
     coalesce(paragraph);
