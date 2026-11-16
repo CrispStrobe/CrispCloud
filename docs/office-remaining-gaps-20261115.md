@@ -24,7 +24,8 @@ action; ordinary Save still writes a new `.xlsx` copy.
 Current qualification is recorded in `validation/terminal-ods-refresh-20261116/`.
 The final local follow-up passed 507 spreadsheet/ODS engine tests, 53 host
 viewer/editor workflow tests, and the local ODS import check (one workbook,
-no unsupported-profile refusal). These results qualify the supported import
+no unsupported-profile refusal); a subsequent widget regression covers the new
+**Export as ODS** action. These results qualify the supported import
 profile, XLSX-copy and new-ODS-export workflows; they do not establish complete
 ODF fidelity. See `validation/terminal-ods-refresh-20261116/summary.json` for
 exact source identities, commands and the separately qualified terminal results.
