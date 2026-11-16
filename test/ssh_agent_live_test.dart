@@ -375,6 +375,14 @@ void main() {
   test(
     'actual disposable Unix ssh-agent authenticates and forwards to ssh-add',
     () async {
+      // Cold native builds can outlive an agent key's TTL. Load this fixture's
+      // key only when its actual authentication/forwarding check begins.
+      final loaded = await Process.run('ssh-add', ['-t', '120', keyPath!]);
+      expect(
+        loaded.exitCode,
+        0,
+        reason: 'Could not load the disposable agent key.',
+      );
       final service = SshTerminalService(
         secureStorage: InMemorySecureStorage(),
         confirmHostKey: (_, _) async => true,

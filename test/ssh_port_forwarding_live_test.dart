@@ -94,6 +94,8 @@ void main() {
       }
 
       // Exceeds dartssh2's initial 2 MiB channel window in both directions.
+      // Allow a loaded debug host to encrypt the full round trip through a jump.
+      const transferTimeout = Duration(seconds: 60);
       final payload = Uint8List.fromList([
         ...utf8.encode('forward-✓-日本語\n'),
         ...List<int>.generate(3 * 1024 * 1024, (index) => index % 256),
@@ -122,9 +124,8 @@ void main() {
             );
             socket.add(payload);
             await socket.close();
-            final received = (await response.timeout(
-              const Duration(seconds: 20),
-            )).takeBytes();
+            final received = (await response.timeout(transferTimeout))
+                .takeBytes();
             expect(received, payload);
             await manager.stop(forward.id);
             expect(manager.forwards, isEmpty);
@@ -170,8 +171,7 @@ void main() {
           ...payload,
         ]);
         await socket.close();
-        final received = (await response.timeout(const Duration(seconds: 20)))
-            .takeBytes();
+        final received = (await response.timeout(transferTimeout)).takeBytes();
         expect(received.take(2), [5, 0]);
         expect(received.sublist(2, 4), [5, 0]);
         expect(received.sublist(12), payload);

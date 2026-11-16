@@ -128,7 +128,7 @@ LogLevel VERBOSE
                         else:
                             raise RuntimeError("ssh-agent fixture did not start within five seconds")
                         environment.update({"SSH_AUTH_SOCK": str(agent_socket), "SSH_ASKPASS_REQUIRE": "never"})
-                        subprocess.run([add, "-t", "600", str(root / "client")], env=environment, stdin=subprocess.DEVNULL, check=True)
+                        # The live case loads its disposable key after native compilation.
                         unix_agent = True
                         unix_agent_reason = ""
                 if not unix_agent:
