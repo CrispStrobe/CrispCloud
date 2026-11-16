@@ -1,0 +1,35 @@
+{
+  "phase": "visual",
+  "command": [
+    "flutter",
+    "test",
+    "--no-pub",
+    "--concurrency=1",
+    "--reporter=expanded",
+    "--dart-define=TERMINAL_RECOVERY_VISUALS=true",
+    "--dart-define=TERMINAL_RECOVERY_VISUAL_DIR=docs/validation/terminal-session-optimization-20261116/visuals/recovery",
+    "--dart-define=TMUX_CONTROL_VISUALS=true",
+    "--dart-define=TMUX_CONTROL_VISUAL_DIR=docs/validation/terminal-session-optimization-20261116/visuals/tmux",
+    "test/terminal_workspace_recovery_visual_test.dart",
+    "test/tmux_control_visual_test.dart"
+  ],
+  "cwd": "/workspace/scratch/cb0df5963965/crispcloud",
+  "head_at_start": "0a400e74876949ae9c3196c71936a785df123e36",
+  "started_utc": "2026-11-16T11:13:29.609857+00:00",
+  "source_scope": "all",
+  "watched_source_count": 5556,
+  "github_actions_queried_or_awaited": false,
+  "finished_utc": "2026-11-16T11:14:46.012277+00:00",
+  "seconds": 76.37,
+  "exit_code": 0,
+  "changed_sources": [],
+  "counts": {
+    "passed": 2,
+    "skipped": 0,
+    "failed": 0
+  },
+  "final_test_line": "00:05 +2: All tests passed!",
+  "environment": {
+    "CARGO_NET_OFFLINE": "true"
+  }
+}

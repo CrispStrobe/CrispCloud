@@ -168,9 +168,9 @@
     "test/tmux_control_workspace_test.dart",
     "test/tmux_session_options_test.dart"
   ],
-  "head_at_start": "5010751403ea9b037f218e5558c2de2d3d49569d",
-  "started_utc": "2026-11-16T10:16:46.135007+00:00",
-  "watched_source_count": 5554,
+  "head_at_start": "0a400e74876949ae9c3196c71936a785df123e36",
+  "started_utc": "2026-11-16T11:14:59.467763+00:00",
+  "watched_source_count": 5556,
   "github_actions_queried_or_awaited": false,
   "file_count": 164,
   "files": [
@@ -339,8 +339,8 @@
     "test/tmux_control_workspace_test.dart",
     "test/tmux_session_options_test.dart"
   ],
-  "finished_utc": "2026-11-16T10:17:11.025342+00:00",
-  "seconds": 24.887,
+  "finished_utc": "2026-11-16T11:15:26.703744+00:00",
+  "seconds": 27.231,
   "exit_code": 0,
   "changed_sources": []
 }

@@ -99,14 +99,29 @@ pass against the final pin and SSH dependency.
 | Completed check | Result | Evidence |
 | --- | --- | --- |
 | Full terminal/SSH/tmux native cohort | **1,075 passed, 2 skipped, 0 failed**, 85 files; 294.615 seconds | [Native receipt](native.json), [log](native.log.gz) |
+| Actual loopback OpenSSH | **22 passed, 3 skipped, 0 failed**, 4 files; 156.502 seconds | [Live receipt](live.json), [log](live.log.gz) |
 | Final vendored Office/Zotero engine cohort | **209 passed, 0 skipped, 0 failed**, 5 files; 6.472 seconds | [Engine receipt](engine-final.json), [log](engine-final.log.gz) |
+| Static analysis | **164 Dart files**, no errors or warnings; three existing informational lints | [Analysis receipt](analysis.json), [log](analysis.log.gz) |
+| Formatting | **164 Dart files**, zero changes | [Format receipt](format.json), [log](format.log.gz) |
+| Production-widget capture tests | **2 passed**, nine desktop/320×320 PNGs, no test failures | [Visual receipt](visual.json), [captures](visuals/) |
 | Exact Screen resolver | 15 initial shell cases and 32 additional tab-boundary cases pass | [Initial proof](screen-resolver-regression.json), [tab proof](screen-tab-regression.json) |
 
 The native skips are the macOS-only shell case and Windows ConPTY on this Linux
 host. Actual Linux PTY allocation, resizing, Unicode input/output, Ctrl+C and
 disposal run in the complete cohort. Native and engine source fingerprints match
-exactly, and neither run changed a watched file. Live SSH, static checks, widget
-captures and the full optimized web build are still being qualified.
+exactly, and neither run changed a watched file. Live SSH uses disposable local
+servers and keys. It passes jump-route authentication, forwarding, rekeying and
+shared-route cleanup; two optional SSH PTY tests and one real Unix-agent test
+are skipped with their reasons retained in the log. All six completed phases
+have identical source fingerprints and no changed watched files. Only the full
+optimized web release remains in progress.
+
+The captured recovery dialog keeps its actions visible while its compact body
+scrolls; native tmux retains a pane picker when only one pane fits. Captures use
+in-memory connections and disconnected recovery sessions, so they establish
+widget layout rather than a live multiplexer or browser runtime. The desktop
+tmux fixture lacks a Chinese font fallback and displays two missing-glyph boxes;
+these images do not qualify complete Unicode glyph coverage.
 
 ## Development findings retained
 
@@ -133,3 +148,11 @@ without reporting an assertion failure. It was interrupted with exit 130;
 command, last-progress timestamp and source inventory. The last printed test is
 not evidence of the cause. The validation runner now accepts `--concurrency 1`
 so the final full cohort can run serially on this constrained host.
+
+The first final live-SSH launch stopped before executing a feature test because
+a normal native Cargo hook tried to refresh the registry and the host rejected
+the network tunnel. Its complete source inventory and diagnostic are retained
+under [`development/live-cargo-registry`](development/live-cargo-registry/).
+The retry sets `CARGO_NET_OFFLINE=true` and uses the already populated verified
+cache, retaining the normal build hooks and unchanged sources, manifests and
+lockfiles. This prerequisite failure is separate from SSH test outcomes.
