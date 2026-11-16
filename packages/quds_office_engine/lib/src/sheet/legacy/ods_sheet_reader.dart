@@ -781,6 +781,27 @@ abstract final class OdsSheetReader {
         kind = SmlValidationKind.date;
       } else if (lowerCondition.contains('cell-content-text-length')) {
         kind = SmlValidationKind.textLength;
+      } else if (lowerCondition.contains('is-true-formula(')) {
+        final start = condition.indexOf('is-true-formula(');
+        final open = condition.indexOf('(', start);
+        final close = condition.lastIndexOf(')');
+        if (open < 0 || close <= open) continue;
+        final expression = condition.substring(open + 1, close).trim();
+        final translated = _translateFormula('of:=$expression');
+        if (translated == null || translated.isEmpty) continue;
+        definitions[name] = (
+          kind: SmlValidationKind.custom,
+          operator: SmlValidationOperator.between,
+          formula1: translated,
+          formula2: '',
+          items: const <String>[],
+          allowBlank: allowBlank,
+          errorTitle: errorTitle,
+          error: error,
+          sourceRange: null,
+          sourceSheet: null,
+        );
+        continue;
       } else {
         continue;
       }
