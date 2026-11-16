@@ -1,0 +1,21 @@
+{
+  "count": 226,
+  "passed_by_test_file": {
+    "ssh_config_import_dialog_test.dart": 12,
+    "ssh_config_import_test.dart": 29,
+    "ssh_jump_transport_test.dart": 21,
+    "ssh_port_forwarding_model_test.dart": 4,
+    "ssh_port_forwarding_test.dart": 29,
+    "ssh_port_forwarding_widget_test.dart": 13,
+    "terminal_arrangements_dialog_test.dart": 5,
+    "terminal_arrangements_test.dart": 12,
+    "terminal_broadcast_test.dart": 13,
+    "terminal_key_bindings_test.dart": 12,
+    "terminal_pane_layout_test.dart": 8,
+    "terminal_session_test.dart": 14,
+    "terminal_trigger_session_test.dart": 7,
+    "terminal_triggers_test.dart": 30,
+    "terminal_triggers_widget_test.dart": 5,
+    "terminal_user_input_test.dart": 12
+  }
+}

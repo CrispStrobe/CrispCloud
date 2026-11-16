@@ -1,0 +1,181 @@
+{"protocolVersion":"0.1.1","runnerVersion":null,"pid":306,"type":"start","time":0}
+{"suite":{"id":0,"platform":"vm","path":"/workspace/scratch/7b8555dd0115/zotero-toolchain/crisp-terminal-harness/test/ssh_terminal_live_test.dart"},"type":"suite","time":0}
+{"test":{"id":1,"name":"loading /workspace/scratch/7b8555dd0115/zotero-toolchain/crisp-terminal-harness/test/ssh_terminal_live_test.dart","suiteID":0,"groupIDs":[],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":2}
+{"count":2,"time":10,"type":"allSuites"}
+{"testID":1,"messageType":"print","message":"Warning: A tag was used that wasn't specified in dart_test.yaml.\n  live-ssh was used in the suite itself\n","type":"print","time":3854}
+{"testID":1,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":3875}
+{"group":{"id":2,"suiteID":0,"parentID":null,"name":"","metadata":{"skip":false,"skipReason":null},"testCount":3,"line":null,"column":null,"url":null},"type":"group","time":3881}
+{"group":{"id":3,"suiteID":0,"parentID":2,"name":"real OpenSSH loopback route","metadata":{"skip":false,"skipReason":null},"testCount":3,"line":30,"column":3,"url":"file:///workspace/scratch/7b8555dd0115/zotero-toolchain/crisp-terminal-harness/test/ssh_terminal_live_test.dart"},"type":"group","time":3882}
+{"test":{"id":4,"name":"real OpenSSH loopback route verifies both servers and preserves Unicode execution through a jump","suiteID":0,"groupIDs":[2,3],"metadata":{"skip":false,"skipReason":null},"line":71,"column":7,"url":"file:///workspace/scratch/7b8555dd0115/zotero-toolchain/crisp-terminal-harness/test/ssh_terminal_live_test.dart"},"type":"testStart","time":3882}
+{"testID":4,"messageType":"print","message":"ℹ️ [SshTerminalService] Session ho7et3jpjw0 established to 127.0.0.1:50545","type":"print","time":4499}
+{"testID":4,"messageType":"print","message":"ℹ️ [SshTerminalService] execute(ho7et3jpjw0)","type":"print","time":4502}
+{"testID":4,"messageType":"print","message":"ℹ️ [SshTerminalService] Disconnecting session ho7et3jpjw0","type":"print","time":4555}
+{"testID":4,"messageType":"print","message":"ℹ️ [SshTerminalService] Session ho7et3qawx1 established to 127.0.0.1:50545","type":"print","time":4790}
+{"testID":4,"messageType":"print","message":"ℹ️ [SshTerminalService] execute(ho7et3qawx1)","type":"print","time":4790}
+{"testID":4,"messageType":"print","message":"ℹ️ [SshTerminalService] Disconnecting session ho7et3qawx1","type":"print","time":4818}
+{"testID":4,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":4822}
+{"test":{"id":5,"name":"real OpenSSH loopback route rejects a changed target host key without trusting or registering the route","suiteID":0,"groupIDs":[2,3],"metadata":{"skip":false,"skipReason":null},"line":104,"column":7,"url":"file:///workspace/scratch/7b8555dd0115/zotero-toolchain/crisp-terminal-harness/test/ssh_terminal_live_test.dart"},"type":"testStart","time":4835}
+{"testID":5,"messageType":"print","message":"ℹ️ [SshTerminalService] Session ho7et3vwmn0 established to 127.0.0.1:50545","type":"print","time":5048}
+{"testID":5,"messageType":"print","message":"ℹ️ [SshTerminalService] Disconnecting session ho7et3vwmn0","type":"print","time":5048}
+{"testID":5,"messageType":"print","message":"❌ [SshTerminalService] SSH connect failed","type":"print","time":5204}
+{"testID":5,"messageType":"print","message":"  Error: SSH host key changed for 127.0.0.1:50545. Expected SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA; received SHA256:SlejjbbfZo/ecyyY2N4kJOFTgNmsw/cjE+M2e4T9Oq0.","type":"print","time":5204}
+{"testID":5,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":5205}
+{"test":{"id":6,"name":"real OpenSSH loopback route real PTY receives size changes and preserves final output and exit status","suiteID":0,"groupIDs":[2,3],"metadata":{"skip":true,"skipReason":"Use --with-pty with an sshd allowed to write login records."},"line":124,"column":7,"url":"file:///workspace/scratch/7b8555dd0115/zotero-toolchain/crisp-terminal-harness/test/ssh_terminal_live_test.dart"},"type":"testStart","time":5211}
+{"testID":6,"messageType":"skip","message":"Skip: Use --with-pty with an sshd allowed to write login records.","type":"print","time":5212}
+{"testID":6,"result":"success","skipped":true,"hidden":false,"type":"testDone","time":5212}
+{"suite":{"id":7,"platform":"vm","path":"/workspace/scratch/7b8555dd0115/zotero-toolchain/crisp-terminal-harness/test/ssh_port_forwarding_live_test.dart"},"type":"suite","time":5242}
+{"test":{"id":8,"name":"loading /workspace/scratch/7b8555dd0115/zotero-toolchain/crisp-terminal-harness/test/ssh_port_forwarding_live_test.dart","suiteID":7,"groupIDs":[],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":5242}
+{"testID":8,"messageType":"print","message":"Warning: A tag was used that wasn't specified in dart_test.yaml.\n  live-ssh was used in the suite itself\n","type":"print","time":6291}
+{"testID":8,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":6292}
+{"group":{"id":9,"suiteID":7,"parentID":null,"name":"","metadata":{"skip":false,"skipReason":null},"testCount":4,"line":null,"column":null,"url":null},"type":"group","time":6292}
+{"group":{"id":10,"suiteID":7,"parentID":9,"name":"real OpenSSH forwarding through a verified jump route","metadata":{"skip":false,"skipReason":null},"testCount":4,"line":30,"column":3,"url":"file:///workspace/scratch/7b8555dd0115/zotero-toolchain/crisp-terminal-harness/test/ssh_port_forwarding_live_test.dart"},"type":"group","time":6292}
+{"test":{"id":11,"name":"real OpenSSH forwarding through a verified jump route local allocates a listener, drains binary response after half-close, and cancels","suiteID":7,"groupIDs":[9,10],"metadata":{"skip":false,"skipReason":null},"line":106,"column":9,"url":"file:///workspace/scratch/7b8555dd0115/zotero-toolchain/crisp-terminal-harness/test/ssh_port_forwarding_live_test.dart"},"type":"testStart","time":6292}
+{"testID":11,"messageType":"print","message":"ℹ️ [SshTerminalService] Session ho7et4wram0 established to 127.0.0.1:50545","type":"print","time":6787}
+{"testID":11,"messageType":"print","message":"ℹ️ [SshTerminalService] execute(ho7et4wram0)","type":"print","time":22524}
+{"testID":11,"messageType":"print","message":"ℹ️ [SshTerminalService] Disconnecting session ho7et4wram0","type":"print","time":22558}
+{"testID":11,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":22563}
+{"test":{"id":12,"name":"real OpenSSH forwarding through a verified jump route remote allocates a listener, drains binary response after half-close, and cancels","suiteID":7,"groupIDs":[9,10],"metadata":{"skip":false,"skipReason":null},"line":106,"column":9,"url":"file:///workspace/scratch/7b8555dd0115/zotero-toolchain/crisp-terminal-harness/test/ssh_port_forwarding_live_test.dart"},"type":"testStart","time":22563}
+{"testID":12,"messageType":"print","message":"ℹ️ [SshTerminalService] Session ho7eteffnx0 established to 127.0.0.1:50545","type":"print","time":22755}
+{"testID":12,"messageType":"print","message":"ℹ️ [SshTerminalService] execute(ho7eteffnx0)","type":"print","time":38718}
+{"testID":12,"messageType":"print","message":"ℹ️ [SshTerminalService] Disconnecting session ho7eteffnx0","type":"print","time":38731}
+{"testID":12,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":38736}
+{"test":{"id":13,"name":"real OpenSSH forwarding through a verified jump route SOCKS domain request and pipelined binary payload survive request half-close","suiteID":7,"groupIDs":[9,10],"metadata":{"skip":false,"skipReason":null},"line":147,"column":7,"url":"file:///workspace/scratch/7b8555dd0115/zotero-toolchain/crisp-terminal-harness/test/ssh_port_forwarding_live_test.dart"},"type":"testStart","time":38737}
+{"testID":13,"messageType":"print","message":"ℹ️ [SshTerminalService] Session ho7eto21k70 established to 127.0.0.1:50545","type":"print","time":38927}
+{"testID":13,"error":"TimeoutException after 0:00:20.000000: Future not completed","stackTrace":"dart:async  _startMicrotaskLoop\n","isFailure":false,"type":"error","time":65573}
+{"testID":13,"messageType":"print","message":"ℹ️ [SshTerminalService] Disconnecting session ho7eto21k70","type":"print","time":65574}
+{"testID":13,"result":"error","skipped":false,"hidden":false,"type":"testDone","time":65574}
+{"test":{"id":14,"name":"real OpenSSH forwarding through a verified jump route disconnect closes active client sockets and both local and remote listeners","suiteID":7,"groupIDs":[9,10],"metadata":{"skip":false,"skipReason":null},"line":185,"column":7,"url":"file:///workspace/scratch/7b8555dd0115/zotero-toolchain/crisp-terminal-harness/test/ssh_port_forwarding_live_test.dart"},"type":"testStart","time":65575}
+{"testID":14,"messageType":"print","message":"ℹ️ [SshTerminalService] Session ho7eu41h6j0 established to 127.0.0.1:50545","type":"print","time":65774}
+{"testID":14,"messageType":"print","message":"ℹ️ [SshTerminalService] Disconnecting session ho7eu41h6j0","type":"print","time":65798}
+{"testID":14,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":65814}
+{"success":false,"type":"done","time":65829}
+OpenSSH jump fixture log:
+Server listening on 127.0.0.1 port 56943.
+Connection from 127.0.0.1 port 58534 on 127.0.0.1 port 56943 rdomain ""
+kex_exchange_identification: Connection closed by remote host
+Connection closed by 127.0.0.1 port 58534
+srclimit_penalise: ipv4: new 127.0.0.1/32 deferred penalty of 1 seconds for penalty: connections without attempting authentication
+Connection from 127.0.0.1 port 58546 on 127.0.0.1 port 56943 rdomain ""
+Accepted key ED25519 SHA256:BqVADwL1+SA5q3ng/LinN+Uhl+TYnnqyxhVghGnE6Ys found at /workspace/scratch/7b8555dd0115/zotero-toolchain/crisp-terminal-harness/.dart_tool/terminal-live-smoke/route-x59mz59k/client.pub:1
+Accepted publickey for agent from 127.0.0.1 port 58546 ssh2: ED25519 SHA256:BqVADwL1+SA5q3ng/LinN+Uhl+TYnnqyxhVghGnE6Ys
+User child is on pid 341
+Connection closed by 127.0.0.1 port 58546
+Transferred: sent 4444, received 2852 bytes
+Closing connection to 127.0.0.1 port 58546
+Connection from 127.0.0.1 port 58556 on 127.0.0.1 port 56943 rdomain ""
+Accepted key ED25519 SHA256:BqVADwL1+SA5q3ng/LinN+Uhl+TYnnqyxhVghGnE6Ys found at /workspace/scratch/7b8555dd0115/zotero-toolchain/crisp-terminal-harness/.dart_tool/terminal-live-smoke/route-x59mz59k/client.pub:1
+Accepted publickey for agent from 127.0.0.1 port 58556 ssh2: ED25519 SHA256:BqVADwL1+SA5q3ng/LinN+Uhl+TYnnqyxhVghGnE6Ys
+User child is on pid 348
+Connection closed by 127.0.0.1 port 58556
+Transferred: sent 4392, received 2836 bytes
+Closing connection to 127.0.0.1 port 58556
+Connection from 127.0.0.1 port 58560 on 127.0.0.1 port 56943 rdomain ""
+Accepted key ED25519 SHA256:BqVADwL1+SA5q3ng/LinN+Uhl+TYnnqyxhVghGnE6Ys found at /workspace/scratch/7b8555dd0115/zotero-toolchain/crisp-terminal-harness/.dart_tool/terminal-live-smoke/route-x59mz59k/client.pub:1
+Accepted publickey for agent from 127.0.0.1 port 58560 ssh2: ED25519 SHA256:BqVADwL1+SA5q3ng/LinN+Uhl+TYnnqyxhVghGnE6Ys
+User child is on pid 355
+Connection closed by 127.0.0.1 port 58560
+Transferred: sent 3680, received 2516 bytes
+Closing connection to 127.0.0.1 port 58560
+Connection from 127.0.0.1 port 58566 on 127.0.0.1 port 56943 rdomain ""
+Accepted key ED25519 SHA256:BqVADwL1+SA5q3ng/LinN+Uhl+TYnnqyxhVghGnE6Ys found at /workspace/scratch/7b8555dd0115/zotero-toolchain/crisp-terminal-harness/.dart_tool/terminal-live-smoke/route-x59mz59k/client.pub:1
+Accepted publickey for agent from 127.0.0.1 port 58566 ssh2: ED25519 SHA256:BqVADwL1+SA5q3ng/LinN+Uhl+TYnnqyxhVghGnE6Ys
+User child is on pid 361
+Connection closed by 127.0.0.1 port 58566
+Transferred: sent 3528, received 2136 bytes
+Closing connection to 127.0.0.1 port 58566
+Connection from 127.0.0.1 port 58580 on 127.0.0.1 port 56943 rdomain ""
+Accepted key ED25519 SHA256:BqVADwL1+SA5q3ng/LinN+Uhl+TYnnqyxhVghGnE6Ys found at /workspace/scratch/7b8555dd0115/zotero-toolchain/crisp-terminal-harness/.dart_tool/terminal-live-smoke/route-x59mz59k/client.pub:1
+Accepted publickey for agent from 127.0.0.1 port 58580 ssh2: ED25519 SHA256:BqVADwL1+SA5q3ng/LinN+Uhl+TYnnqyxhVghGnE6Ys
+User child is on pid 378
+Connection closed by 127.0.0.1 port 58580
+Transferred: sent 3158260, received 3157692 bytes
+Closing connection to 127.0.0.1 port 58580
+Connection from 127.0.0.1 port 42918 on 127.0.0.1 port 56943 rdomain ""
+Accepted key ED25519 SHA256:BqVADwL1+SA5q3ng/LinN+Uhl+TYnnqyxhVghGnE6Ys found at /workspace/scratch/7b8555dd0115/zotero-toolchain/crisp-terminal-harness/.dart_tool/terminal-live-smoke/route-x59mz59k/client.pub:1
+Accepted publickey for agent from 127.0.0.1 port 42918 ssh2: ED25519 SHA256:BqVADwL1+SA5q3ng/LinN+Uhl+TYnnqyxhVghGnE6Ys
+User child is on pid 391
+Connection closed by 127.0.0.1 port 42918
+Transferred: sent 3159228, received 3157864 bytes
+Closing connection to 127.0.0.1 port 42918
+Connection from 127.0.0.1 port 47052 on 127.0.0.1 port 56943 rdomain ""
+Accepted key ED25519 SHA256:BqVADwL1+SA5q3ng/LinN+Uhl+TYnnqyxhVghGnE6Ys found at /workspace/scratch/7b8555dd0115/zotero-toolchain/crisp-terminal-harness/.dart_tool/terminal-live-smoke/route-x59mz59k/client.pub:1
+Accepted publickey for agent from 127.0.0.1 port 47052 ssh2: ED25519 SHA256:BqVADwL1+SA5q3ng/LinN+Uhl+TYnnqyxhVghGnE6Ys
+User child is on pid 403
+Connection closed by 127.0.0.1 port 47052
+Transferred: sent 3159356, received 3157564 bytes
+Closing connection to 127.0.0.1 port 47052
+Connection from 127.0.0.1 port 37146 on 127.0.0.1 port 56943 rdomain ""
+Accepted key ED25519 SHA256:BqVADwL1+SA5q3ng/LinN+Uhl+TYnnqyxhVghGnE6Ys found at /workspace/scratch/7b8555dd0115/zotero-toolchain/crisp-terminal-harness/.dart_tool/terminal-live-smoke/route-x59mz59k/client.pub:1
+Accepted publickey for agent from 127.0.0.1 port 37146 ssh2: ED25519 SHA256:BqVADwL1+SA5q3ng/LinN+Uhl+TYnnqyxhVghGnE6Ys
+User child is on pid 415
+Connection closed by 127.0.0.1 port 37146
+Transferred: sent 4656, received 3204 bytes
+Closing connection to 127.0.0.1 port 37146
+
+OpenSSH target fixture log:
+Server listening on 127.0.0.1 port 50545.
+Connection from 127.0.0.1 port 49692 on 127.0.0.1 port 50545 rdomain ""
+kex_exchange_identification: Connection closed by remote host
+Connection closed by 127.0.0.1 port 49692
+srclimit_penalise: ipv4: new 127.0.0.1/32 deferred penalty of 1 seconds for penalty: connections without attempting authentication
+Connection from 127.0.0.1 port 49704 on 127.0.0.1 port 50545 rdomain ""
+Accepted key ED25519 SHA256:BqVADwL1+SA5q3ng/LinN+Uhl+TYnnqyxhVghGnE6Ys found at /workspace/scratch/7b8555dd0115/zotero-toolchain/crisp-terminal-harness/.dart_tool/terminal-live-smoke/route-x59mz59k/client.pub:1
+Accepted publickey for agent from 127.0.0.1 port 49704 ssh2: ED25519 SHA256:BqVADwL1+SA5q3ng/LinN+Uhl+TYnnqyxhVghGnE6Ys
+User child is on pid 344
+Starting session: command for agent from 127.0.0.1 port 49704 id 0
+Close session: user agent from 127.0.0.1 port 49704 id 0
+Connection closed by 127.0.0.1 port 49704
+Transferred: sent 2064, received 1232 bytes
+Closing connection to 127.0.0.1 port 49704
+Connection from 127.0.0.1 port 49720 on 127.0.0.1 port 50545 rdomain ""
+Accepted key ED25519 SHA256:BqVADwL1+SA5q3ng/LinN+Uhl+TYnnqyxhVghGnE6Ys found at /workspace/scratch/7b8555dd0115/zotero-toolchain/crisp-terminal-harness/.dart_tool/terminal-live-smoke/route-x59mz59k/client.pub:1
+Accepted publickey for agent from 127.0.0.1 port 49720 ssh2: ED25519 SHA256:BqVADwL1+SA5q3ng/LinN+Uhl+TYnnqyxhVghGnE6Ys
+User child is on pid 351
+Starting session: command for agent from 127.0.0.1 port 49720 id 0
+Close session: user agent from 127.0.0.1 port 49720 id 0
+Connection closed by 127.0.0.1 port 49720
+Transferred: sent 2048, received 1216 bytes
+Closing connection to 127.0.0.1 port 49720
+Connection from 127.0.0.1 port 49732 on 127.0.0.1 port 50545 rdomain ""
+Accepted key ED25519 SHA256:BqVADwL1+SA5q3ng/LinN+Uhl+TYnnqyxhVghGnE6Ys found at /workspace/scratch/7b8555dd0115/zotero-toolchain/crisp-terminal-harness/.dart_tool/terminal-live-smoke/route-x59mz59k/client.pub:1
+Accepted publickey for agent from 127.0.0.1 port 49732 ssh2: ED25519 SHA256:BqVADwL1+SA5q3ng/LinN+Uhl+TYnnqyxhVghGnE6Ys
+User child is on pid 358
+Connection closed by 127.0.0.1 port 49732
+Transferred: sent 1860, received 1088 bytes
+Closing connection to 127.0.0.1 port 49732
+Connection from 127.0.0.1 port 49738 on 127.0.0.1 port 50545 rdomain ""
+Connection closed by 127.0.0.1 port 49738 [preauth]
+srclimit_penalise: ipv4: new 127.0.0.1/32 deferred penalty of 1 seconds for penalty: connections without attempting authentication
+Connection from 127.0.0.1 port 49740 on 127.0.0.1 port 50545 rdomain ""
+Accepted key ED25519 SHA256:BqVADwL1+SA5q3ng/LinN+Uhl+TYnnqyxhVghGnE6Ys found at /workspace/scratch/7b8555dd0115/zotero-toolchain/crisp-terminal-harness/.dart_tool/terminal-live-smoke/route-x59mz59k/client.pub:1
+Accepted publickey for agent from 127.0.0.1 port 49740 ssh2: ED25519 SHA256:BqVADwL1+SA5q3ng/LinN+Uhl+TYnnqyxhVghGnE6Ys
+User child is on pid 381
+Starting session: command for agent from 127.0.0.1 port 49740 id 0
+Close session: user agent from 127.0.0.1 port 49740 id 0
+Connection closed by 127.0.0.1 port 49740
+Transferred: sent 3150360, received 3149132 bytes
+Closing connection to 127.0.0.1 port 49740
+Connection from 127.0.0.1 port 40082 on 127.0.0.1 port 50545 rdomain ""
+Accepted key ED25519 SHA256:BqVADwL1+SA5q3ng/LinN+Uhl+TYnnqyxhVghGnE6Ys found at /workspace/scratch/7b8555dd0115/zotero-toolchain/crisp-terminal-harness/.dart_tool/terminal-live-smoke/route-x59mz59k/client.pub:1
+Accepted publickey for agent from 127.0.0.1 port 40082 ssh2: ED25519 SHA256:BqVADwL1+SA5q3ng/LinN+Uhl+TYnnqyxhVghGnE6Ys
+User child is on pid 395
+Starting session: command for agent from 127.0.0.1 port 40082 id 0
+Close session: user agent from 127.0.0.1 port 40082 id 0
+Connection closed by 127.0.0.1 port 40082
+Transferred: sent 3150504, received 3149188 bytes
+Closing connection to 127.0.0.1 port 40082
+Connection from 127.0.0.1 port 42226 on 127.0.0.1 port 50545 rdomain ""
+Accepted key ED25519 SHA256:BqVADwL1+SA5q3ng/LinN+Uhl+TYnnqyxhVghGnE6Ys found at /workspace/scratch/7b8555dd0115/zotero-toolchain/crisp-terminal-harness/.dart_tool/terminal-live-smoke/route-x59mz59k/client.pub:1
+Accepted publickey for agent from 127.0.0.1 port 42226 ssh2: ED25519 SHA256:BqVADwL1+SA5q3ng/LinN+Uhl+TYnnqyxhVghGnE6Ys
+User child is on pid 406
+Connection closed by 127.0.0.1 port 42226
+Transferred: sent 3150156, received 3149044 bytes
+Closing connection to 127.0.0.1 port 42226
+Connection from 127.0.0.1 port 44374 on 127.0.0.1 port 50545 rdomain ""
+Accepted key ED25519 SHA256:BqVADwL1+SA5q3ng/LinN+Uhl+TYnnqyxhVghGnE6Ys found at /workspace/scratch/7b8555dd0115/zotero-toolchain/crisp-terminal-harness/.dart_tool/terminal-live-smoke/route-x59mz59k/client.pub:1
+Accepted publickey for agent from 127.0.0.1 port 44374 ssh2: ED25519 SHA256:BqVADwL1+SA5q3ng/LinN+Uhl+TYnnqyxhVghGnE6Ys
+User child is on pid 418
+Connection closed by 127.0.0.1 port 44374
+Transferred: sent 2100, received 1392 bytes
+Closing connection to 127.0.0.1 port 44374
+
