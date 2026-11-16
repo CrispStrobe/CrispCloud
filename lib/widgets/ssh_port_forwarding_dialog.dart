@@ -35,8 +35,14 @@ class _SshPortForwardingDialogState extends State<SshPortForwardingDialog> {
     setState(() => _error = null);
     try {
       await widget.forwarding.stop(id);
-    } catch (_) {
-      if (mounted) setState(() => _error = 'Could not stop forwarding.');
+    } catch (error) {
+      if (mounted) {
+        setState(
+          () => _error = error is SshPortForwardException
+              ? error.message
+              : 'Could not stop forwarding.',
+        );
+      }
     } finally {
       _stopping.remove(id);
       if (mounted) setState(() {});
@@ -277,11 +283,10 @@ class _AddSshPortForwardDialogState extends State<AddSshPortForwardDialog> {
         setState(() => _busy = false);
         Navigator.of(context).pop();
       }
-    } catch (_) {
+    } catch (error) {
       if (mounted) {
         setState(
-          () => _error =
-              'Could not start forwarding. Check the listener and destination.',
+          () => _error = error is SshPortForwardException ? error.message : 'Could not start forwarding. Check the listener and destination.',
         );
       }
     } finally {

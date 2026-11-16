@@ -1010,6 +1010,16 @@ class SshTerminalService {
 
   /// Runtime tunnels belong to this exact verified connection. A reconnect
   /// gets a fresh manager; listeners and destinations are never persisted.
+  /// Capability probes never create a manager or throw for expired sessions.
+  bool canForwardPorts(String sessionId) {
+    final state = _sessions[sessionId];
+    return SshPortForwarding.supported &&
+        !_disposed &&
+        state != null &&
+        state.session.connected &&
+        !state.client.isClosed;
+  }
+
   SshPortForwarding forwarding(String sessionId) {
     final state = _requireSession(sessionId);
     if (_disposed || !state.session.connected || state.client.isClosed) {

@@ -644,9 +644,12 @@ void main() {
       await tester.tap(find.text('Connect'));
       // Reconnect drains an existing stream before opening the picker. Its
       // progress remains active while the user chooses a session.
-      for (var frame = 0;
-          frame < 30 && find.byType(SshMultiplexerSessionsDialog).evaluate().isEmpty;
-          frame++) {
+      for (
+        var frame = 0;
+        frame < 30 &&
+            find.byType(SshMultiplexerSessionsDialog).evaluate().isEmpty;
+        frame++
+      ) {
         await tester.pump(const Duration(milliseconds: 100));
         await tester.runAsync(() => Future<void>.delayed(Duration.zero));
       }

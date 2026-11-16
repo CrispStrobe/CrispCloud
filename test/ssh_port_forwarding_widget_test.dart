@@ -387,6 +387,34 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('remote startup cleanup explains why SSH was closed', (
+    tester,
+  ) async {
+    const reason =
+        'The remote forwarding request could not be confirmed; the SSH connection was closed.';
+    forwarding.startError = const SshPortForwardException(reason);
+    await mount(tester);
+    await add(tester);
+    await enter(tester, _targetPort, '5432');
+    await start(tester);
+    expect(find.text(reason), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('remote stop cleanup preserves its actionable explanation', (
+    tester,
+  ) async {
+    const reason =
+        'The server did not confirm stopping the forward; the SSH connection was closed.';
+    forwarding.seed(SshPortForwardKind.remote);
+    forwarding.stopError = const SshPortForwardException(reason);
+    await mount(tester);
+    await tester.tap(find.text('Stop'));
+    await tester.pumpAndSettle();
+    expect(find.text(reason), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('manager and form remain usable at 320 by 320', (tester) async {
     forwarding.seed(SshPortForwardKind.remote);
     await mount(tester, size: const Size(320, 320));

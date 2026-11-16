@@ -174,13 +174,16 @@ void main() {
     await unmount(tester);
   });
 
-  testWidgets('split resize accessibility describes and applies each step', (tester) async {
+  testWidgets('split resize accessibility describes and applies each step', (
+    tester,
+  ) async {
     final semantics = tester.ensureSemantics();
     try {
       await mount(tester);
       await layout(tester, 'Split side by side');
       final resize = find.byWidgetPredicate(
-        (widget) => widget is Semantics && widget.properties.label == 'Resize split',
+        (widget) =>
+            widget is Semantics && widget.properties.label == 'Resize split',
       );
       Semantics control() => tester.widget<Semantics>(resize);
       expect(control().properties.value, '50%');

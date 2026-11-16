@@ -216,14 +216,11 @@ class SshTerminalConnection
 
   @override
   SshPortForwarding? get portForwarding {
-    if (!_active || !SshPortForwarding.supported) return null;
-    try {
-      return service.forwarding(sessionId);
-    } on SshPortForwardException {
-      // SSH can already be closed before its completion callback updates the
-      // service's session snapshot. Capability lookup during a rebuild is inert.
-      return null;
-    }
+    // Optional capabilities must remain inert for expired sessions and
+    // embedders which supply their own shell implementation without tunnels.
+    return service.canForwardPorts(sessionId)
+        ? service.forwarding(sessionId)
+        : null;
   }
 
   // The service can reap a shell after its channels drain but before the UI
