@@ -1,0 +1,86 @@
+00:00 +0: loading /private/tmp/crispcloud-terminal-ods-isolated/test/widget/path_favorites_test.dart
+00:00 +0: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/path_favorites_test.dart: both star menus open a favorite in the pane that owns the menu
+🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] listDirectory("/") returned 0 entities
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:01 +0: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/path_favorites_exchange_test.dart: picker combines group and word search; Enter opens its pane only
+🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] listDirectory("/") returned 0 entities
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:04 +0: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/path_favorites_test.dart: both star menus open a favorite in the pane that owns the menu
+ℹ️ [PanelNotifier] navigateToPath: /one (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Memory path=/one side=PanelSide.remote
+ℹ️ [PanelNotifier] navigateToPath: /one (side=PanelSide.local, web=false)
+🐛 [PanelSource] setSource: Memory path=/one side=PanelSide.local
+00:05 +1: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/path_favorites_exchange_test.dart: picker combines group and word search; Enter opens its pane only
+00:05 +1: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/path_favorites_test.dart: an open menu cannot navigate a pane that has since changed
+🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] listDirectory("/") returned 0 entities
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateToPath: /other (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Memory path=/other side=PanelSide.remote
+00:05 +2: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/path_favorites_exchange_test.dart: picker combines group and word search; Enter opens its pane only
+00:05 +2: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/path_favorites_test.dart: adding a favorite captures the source and supports a custom path
+🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] listDirectory("/") returned 0 entities
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateToPath: /one (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Memory path=/one side=PanelSide.remote
+00:07 +2: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/path_favorites_exchange_test.dart: picker combines group and word search; Enter opens its pane only
+ℹ️ [PanelNotifier] navigateToPath: /one (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Memory path=/one side=PanelSide.remote
+00:07 +2: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/path_favorites_test.dart: adding a favorite captures the source and supports a custom path
+ℹ️ [PanelNotifier] navigateToPath: /other (side=PanelSide.remote, web=false)
+00:07 +3: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/path_favorites_test.dart: adding a favorite captures the source and supports a custom path
+00:07 +3: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/path_favorites_exchange_test.dart: renaming and removing a group keeps its favorites and sources
+🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] listDirectory("/") returned 0 entities
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:07 +4: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/path_favorites_exchange_test.dart: renaming and removing a group keeps its favorites and sources
+00:07 +4: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/path_favorites_test.dart: editor validates paths and never overwrites a duplicate on retry
+🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] listDirectory("/") returned 0 entities
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:09 +5: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/path_favorites_test.dart: editor validates paths and never overwrites a duplicate on retry
+00:09 +5: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/path_favorites_exchange_test.dart: import preview can be cancelled; merge preserves unknown accounts and skips duplicates
+🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] listDirectory("/") returned 0 entities
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:10 +6: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/path_favorites_exchange_test.dart: import preview can be cancelled; merge preserves unknown accounts and skips duplicates
+00:10 +6: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/path_favorites_test.dart: editor reorders, filters and removes saved favorites
+🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] listDirectory("/") returned 0 entities
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:11 +7: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/path_favorites_exchange_test.dart: import preview can be cancelled; merge preserves unknown accounts and skips duplicates
+00:11 +7: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/path_favorites_test.dart: legacy bookmarks require explicit binding and remain editable
+🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] listDirectory("/") returned 0 entities
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:12 +8: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/path_favorites_exchange_test.dart: import preview can be cancelled; merge preserves unknown accounts and skips duplicates
+00:12 +8: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/path_favorites_test.dart: archives retain the menu without saving virtual paths as favorites
+🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] listDirectory("/") returned 0 entities
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] enterArchive: /bundle.zip (Memory)
+00:12 +9: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/path_favorites_test.dart: archives retain the menu without saving virtual paths as favorites
+00:12 +9: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/path_favorites_exchange_test.dart: invalid import never opens merge and export waits for explicit copy
+🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] listDirectory("/") returned 0 entities
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:12 +9: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/path_favorites_test.dart: archives retain the menu without saving virtual paths as favorites
+ℹ️ [PanelNotifier] navigateToPath: / (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Memory path=/ side=PanelSide.remote
+00:12 +10: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/path_favorites_exchange_test.dart: invalid import never opens merge and export waits for explicit copy
+00:14 +11: All tests passed!

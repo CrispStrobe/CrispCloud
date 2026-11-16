@@ -1,0 +1,29 @@
+{
+  "qualified_source": "0f87058b4ae8001b92558cb7bffd9f3632e7609e",
+  "focused_tests_passed": 76,
+  "focused_tests_failed": 0,
+  "final_favorites_rerun_passed": 11,
+  "rerun_is_subset_not_additional_unique_tests": true,
+  "native_security_fixture": "passed; default flags off, four independent flag combinations persisted, timeout bounds, selected-file isolation, unchanged default/search list and existing credential/grant tests",
+  "static_analysis": "11 Dart targets, no issues",
+  "format": "11 Dart files, unchanged",
+  "native_channel_parse": "passed",
+  "source_sha256": {
+    "lib/l10n/settings_strings.dart": "162423759d5f036882020fcbff39c7362e5ee1f7da775c162a1fd76405d61b36",
+    "lib/services/macos_keychain_lock_settings.dart": "9229c38a424b113877f4cd8e4ed46487dbd9a344d662e64e748a797f695db29f",
+    "lib/services/secure_storage_macos_keychain.dart": "5b65ac231b91fe7d3c349cd4842ad60996f2d09b1c4d7df965c099b7a74c325f",
+    "lib/widgets/keychain_lock_settings.dart": "33d4880140308ef0ab85c72c548062db2a0b0a3df113ce34f3c6bf510ba51816",
+    "lib/widgets/panel_header.dart": "bc44b8fe50aae80d053e74cc1d6bd9dac104836ed936f0aa4dd82f267f0af9f4",
+    "lib/widgets/path_favorites.dart": "99dcb027a00e26f628255ef7ff9119c7575b457a682fff06a5a70c4685b106cb",
+    "lib/widgets/settings_dialog.dart": "841ab836faed337c5c1d421a39136abc718d9403a60cad421e6d52967c9f4af4",
+    "macos/Runner/AppDelegate.swift": "34a60bd0effc08cd969b35cb3334eb1846a4a449d24e02dafab4575a78a5b51e",
+    "macos/Runner/CustomKeychainStore.swift": "0c3da918ffd30bc0567e9d917aa90974208eecc37e9b24e5e97afd863d2f5456",
+    "test/native/custom_keychain_store_test.swift": "b4ece427004b1abcab8a2c64a7b5f15454a56a8cfae311d0ce0b53e477e3d577",
+    "test/widget/keychain_lock_settings_test.dart": "4e54f9d13bbe271c6345f5e864c034d766ccb7b0b977ae7be045dbbaafa489e5",
+    "test/widget/panel_header_navigation_test.dart": "fa8472f1ee38575b7086dcdb514424eaa58a942f5c68cfaa13498ccab319da3a",
+    "test/widget/path_favorites_exchange_test.dart": "387485e95efc428834c88f43f8abdfbbf62f3f02b63a8fd81559116e054b455b",
+    "test/widget/path_favorites_test.dart": "4c292b490a7a47d88b41505c2abaca334c550e95378504b379eb8b0ed67057c9"
+  },
+  "github_actions_queried_or_awaited": false,
+  "packaged_application_rebuilt": false
+}

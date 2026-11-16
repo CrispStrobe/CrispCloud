@@ -1,0 +1,1 @@
+Custom keychain native tests passed: creation, scope, namespace, updates, collisions, missing/locked paths, same-file recovery, bookmarks and unchanged preferences.
