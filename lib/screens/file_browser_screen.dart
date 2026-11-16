@@ -1377,6 +1377,13 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           OfficeEditorAction.exportOds,
           editor,
         ),
+      if (editor.kind == OfficeEditorKind.word)
+        _editorItem(
+          context,
+          'Export as ODT',
+          OfficeEditorAction.exportOdt,
+          editor,
+        ),
       _editorItem(
         context,
         'Close Editor',
