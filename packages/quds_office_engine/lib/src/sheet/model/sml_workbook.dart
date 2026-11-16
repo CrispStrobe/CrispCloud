@@ -381,6 +381,100 @@ class SmlHeaderFooter {
   );
 }
 
+/// Paper orientation for a worksheet print layout.
+enum SmlPageOrientation { portrait, landscape }
+
+/// Worksheet print page setup retained across ODS and XLSX round-trips.
+class SmlPageSetup {
+  /// SmlPageSetup API.
+  SmlPageSetup({
+    this.orientation = SmlPageOrientation.portrait,
+    this.paperSize = 9,
+    this.paperWidthIn = 8.2677,
+    this.paperHeightIn = 11.6929,
+    this.marginLeftIn = 0.7874,
+    this.marginRightIn = 0.7874,
+    this.marginTopIn = 0.7874,
+    this.marginBottomIn = 0.7874,
+    this.headerMarginIn = 0.3937,
+    this.footerMarginIn = 0.3937,
+    this.scale = 100,
+    this.fitToWidth = 1,
+    this.fitToHeight = 1,
+    this.printGridlines = false,
+    this.printHeadings = false,
+    this.centerHorizontally = false,
+    this.centerVertically = false,
+    this.firstPageNumber,
+    this.useFirstPageNumber = false,
+    this.blackAndWhite = false,
+    this.draft = false,
+  });
+
+  /// Page orientation.
+  SmlPageOrientation orientation;
+
+  /// Excel `pageSetup/@paperSize` code (9 is A4).
+  int paperSize;
+
+  /// Page width in inches, used by ODF page layouts.
+  double paperWidthIn;
+
+  /// Page height in inches, used by ODF page layouts.
+  double paperHeightIn;
+
+  /// Left margin in inches.
+  double marginLeftIn;
+
+  /// Right margin in inches.
+  double marginRightIn;
+
+  /// Top margin in inches.
+  double marginTopIn;
+
+  /// Bottom margin in inches.
+  double marginBottomIn;
+
+  /// Header margin in inches.
+  double headerMarginIn;
+
+  /// Footer margin in inches.
+  double footerMarginIn;
+
+  /// Print scale percentage.
+  int scale;
+
+  /// Fit-to-width page count (0 means automatic).
+  int fitToWidth;
+
+  /// Fit-to-height page count (0 means automatic).
+  int fitToHeight;
+
+  /// Whether grid lines print.
+  bool printGridlines;
+
+  /// Whether row and column headings print.
+  bool printHeadings;
+
+  /// Center the printed sheet horizontally.
+  bool centerHorizontally;
+
+  /// Center the printed sheet vertically.
+  bool centerVertically;
+
+  /// Explicit first printed page number.
+  int? firstPageNumber;
+
+  /// Whether [firstPageNumber] is honored.
+  bool useFirstPageNumber;
+
+  /// Print in black and white.
+  bool blackAndWhite;
+
+  /// Print in draft quality.
+  bool draft;
+}
+
 /// Reversible column state, retaining imported width precision and the metric
 /// under which its pixel projection was captured.
 class SmlColumnSnapshot {
@@ -424,6 +518,7 @@ class SmlWorksheet {
     this.printTitleRows,
     this.printTitleCols,
     this.headerFooter,
+    this.pageSetup,
     this.protection,
     List<SmlComment>? comments,
     List<SmlTable>? tables,
@@ -736,6 +831,9 @@ class SmlWorksheet {
 
   /// Optional sheet header/footer texts (`headerFooter`).
   SmlHeaderFooter? headerFooter;
+
+  /// Optional worksheet print layout.
+  SmlPageSetup? pageSetup;
 
   /// protection API.
   SmlSheetProtection? protection;
