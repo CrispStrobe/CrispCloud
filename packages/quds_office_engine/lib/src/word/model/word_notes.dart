@@ -12,6 +12,8 @@ import 'word_bookmarks.dart';
 import 'word_content_controls.dart';
 import 'word_tree.dart';
 
+part 'word_note_numbering.dart';
+
 /// Footnote or endnote body.
 class WmlNote {
   /// WmlNote API.

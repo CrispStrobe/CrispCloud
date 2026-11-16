@@ -79,10 +79,8 @@ class _WordNotesPaneState extends State<WordNotesPane> {
   @override
   Widget build(BuildContext context) {
     final OfficeTheme theme = _c.config.theme;
-    final List<WmlNote> notes = <WmlNote>[
-      ..._c.document.footnotes,
-      ..._c.document.endnotes,
-    ];
+    final numbering = WordNoteNumbering(_c.document);
+    final List<WmlNote> notes = numbering.notes;
     _dropStale(notes);
     final bool editable = _c.config.allowsMutation;
     return ColoredBox(
@@ -132,9 +130,23 @@ class _WordNotesPaneState extends State<WordNotesPane> {
               )
             else
               ...notes.map((WmlNote note) {
-                final String mark = note.endnote ? 'E${note.id}' : '${note.id}';
+                final String label = numbering.labelFor(note);
+                final String mark = label.isEmpty
+                    ? (widget.arabic ? 'مخصصة' : 'custom')
+                    : (note.endnote ? 'E$label' : label);
+                // Widget identity follows the native link, not its changing
+                // visible number, so edits and focus survive renumbering.
+                final String identity = note.endnote
+                    ? 'E${note.id}'
+                    : '${note.id}';
+                final String title = numbering.hasExactLabel(note)
+                    ? (widget.arabic ? 'حاشية $mark' : 'Note $mark')
+                    : (widget.arabic
+                          ? 'حاشية (معرّف المصدر $identity)'
+                          : 'Note (source ID $identity)');
                 final TextEditingController edit = _editFor(note);
                 return Padding(
+                  key: ValueKey<WmlNote>(note),
                   padding: const EdgeInsets.only(bottom: 8),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -145,7 +157,7 @@ class _WordNotesPaneState extends State<WordNotesPane> {
                             child: GestureDetector(
                               onTap: () => _c.jumpToNote(note),
                               child: Text(
-                                widget.arabic ? 'حاشية $mark' : 'Note $mark',
+                                title,
                                 style: TextStyle(
                                   color: theme.focusRing,
                                   fontSize: 11,
@@ -156,7 +168,7 @@ class _WordNotesPaneState extends State<WordNotesPane> {
                           ),
                           if (editable)
                             GestureDetector(
-                              key: ValueKey<String>('notes-delete-$mark'),
+                              key: ValueKey<String>('notes-delete-$identity'),
                               onTap: () => _c.deleteNote(note),
                               child: Text(
                                 widget.arabic ? 'حذف' : 'Delete',
@@ -170,7 +182,7 @@ class _WordNotesPaneState extends State<WordNotesPane> {
                       ),
                       const SizedBox(height: 4),
                       TextField(
-                        key: ValueKey<String>('notes-edit-$mark'),
+                        key: ValueKey<String>('notes-edit-$identity'),
                         controller: edit,
                         focusNode: _focusFor(note),
                         minLines: 1,

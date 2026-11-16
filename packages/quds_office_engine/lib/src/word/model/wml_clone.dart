@@ -2,6 +2,7 @@ import 'wml_document.dart';
 import 'wml_run_edit.dart';
 import 'word_bookmarks.dart';
 import 'word_content_controls.dart';
+import 'word_field_spans.dart';
 import 'word_tree.dart';
 
 /// Deep copies of Word blocks so cut / paste / undo never share mutable state.
@@ -275,6 +276,7 @@ abstract final class WmlClone {
             ? null
             : WmlClone.block(inline.inlineVisual!) as WmlVisual,
         noteRefEndnote: inline.noteRefEndnote,
+        noteRefCustomMark: inline.noteRefCustomMark,
         fieldInstruction: inline.fieldInstruction,
         fieldLocked: inline.fieldLocked,
         fieldDirty: inline.fieldDirty,
@@ -301,19 +303,31 @@ abstract final class WmlClone {
     if (to <= from) {
       return <WmlInline>[];
     }
+    final range = WmlRunEdit.normalizeRange(source, from, to);
+    from = range.start;
+    to = range.end;
     final controls = WordContentControls.controlsInSlice(source, from, to);
+    final citationMarkers = <WmlInline, bool>{
+      for (final span in WordFieldSpans.zoteroCitations(source))
+        for (var i = span.first; i <= span.last; i++)
+          if (source.inlines[i] is WmlFieldBoundary)
+            source.inlines[i]: from <= span.start && to >= span.end,
+    };
     final emptyBookmarks = _emptyBookmarks(source);
     final List<WmlInline> out = <WmlInline>[];
     var offset = 0;
     for (final WmlInline inline in source.inlines) {
       if (inline is! WmlRun) {
-        if (inline is WmlContentControlBoundary
-            ? controls.contains(inline.control)
-            : inline is WmlBookmarkBoundary &&
-                  !inline.isStart &&
-                  !emptyBookmarks.contains(WordBookmarks.canonicalId(inline.id))
-            ? offset > from && offset <= to
-            : offset >= from && offset < to) {
+        if (citationMarkers[inline] ??
+            (inline is WmlContentControlBoundary
+                ? controls.contains(inline.control)
+                : inline is WmlBookmarkBoundary &&
+                      !inline.isStart &&
+                      !emptyBookmarks.contains(
+                        WordBookmarks.canonicalId(inline.id),
+                      )
+                ? offset > from && offset <= to
+                : offset >= from && offset < to)) {
           out.add(_inline(inline));
         }
         continue;
@@ -339,6 +353,7 @@ abstract final class WmlClone {
               ? null
               : WmlClone.block(inline.inlineVisual!) as WmlVisual,
           noteRefEndnote: inline.noteRefEndnote,
+          noteRefCustomMark: inline.noteRefCustomMark,
           fieldInstruction: inline.fieldInstruction,
           fieldLocked: inline.fieldLocked,
           fieldDirty: inline.fieldDirty,
@@ -367,6 +382,11 @@ abstract final class WmlClone {
     final emptyBookmarks = _emptyBookmarks(source);
     final head = <WmlInline>[];
     final tail = <WmlInline>[];
+    final citationSide = <WmlInline, bool>{
+      for (final span in WordFieldSpans.zoteroCitations(source))
+        for (var i = span.first; i <= span.last; i++)
+          source.inlines[i]: span.end <= at,
+    };
     var position = 0;
     for (final inline in source.inlines) {
       if (inline is WmlRun) {
@@ -387,13 +407,17 @@ abstract final class WmlClone {
         }
         position = end;
       } else {
-        final onLeft = inline is WmlContentControlBoundary
-            ? leftControls.contains(inline.control)
-            : inline is WmlBookmarkBoundary &&
-                  !inline.isStart &&
-                  !emptyBookmarks.contains(WordBookmarks.canonicalId(inline.id))
-            ? position <= at
-            : position < at;
+        final onLeft =
+            citationSide[inline] ??
+            (inline is WmlContentControlBoundary
+                ? leftControls.contains(inline.control)
+                : inline is WmlBookmarkBoundary &&
+                      !inline.isStart &&
+                      !emptyBookmarks.contains(
+                        WordBookmarks.canonicalId(inline.id),
+                      )
+                ? position <= at
+                : position < at);
         (onLeft ? head : tail).add(_inline(inline));
       }
     }

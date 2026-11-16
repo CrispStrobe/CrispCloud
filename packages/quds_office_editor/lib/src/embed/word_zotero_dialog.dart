@@ -525,79 +525,114 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
     }
     final id =
         'quds-${DateTime.now().microsecondsSinceEpoch}-${Random.secure().nextInt(1 << 30)}';
+    final seed = items == null
+        ? null
+        : ZoteroCitation(
+            citationId: '$id-citation',
+            items: List<ZoteroCitationItem>.of(items),
+            plainCitation: zoteroBasicCitation(items),
+          );
+    final chooseStyle =
+        seed != null &&
+        WordZoteroDocumentData.stylePreferences(
+              WordZoteroDocumentData.read(_controller.document),
+            ) ==
+            null;
     final transaction = _controller.beginZoteroTransaction(
       documentId: id,
       selectedField: field,
-      seedCitation: items == null
-          ? null
-          : ZoteroCitation(
-              citationId: '$id-citation',
-              items: items,
-              plainCitation: zoteroBasicCitation(items),
-            ),
+      seedCitation: chooseStyle ? null : seed,
     );
     final cancellation = ZoteroCitingCancellation();
     setState(() => _citingCancellation = cancellation);
     try {
-      await ZoteroCitingClient(transport: transport).execute(
-        command: command,
-        documentId: id,
-        cancellation: cancellation,
-        guard: () {
-          _checkTarget();
-          transaction.assertCurrent();
-        },
-        handler: (name, arguments) async {
-          if (name == 'Document.displayAlert') {
-            if (arguments.length != 4 ||
-                arguments[0] != id ||
-                arguments[1] is! String ||
-                (arguments[1] as String).length > 20000 ||
-                arguments[3] is! int) {
-              throw const FormatException('Zotero returned an invalid dialog.');
-            }
-            final buttons = arguments[3] as int;
-            final choices = switch (buttons) {
-              0 => <(String, int)>[('OK', 1)],
-              1 => <(String, int)>[('Cancel', 0), ('OK', 1)],
-              2 => <(String, int)>[('No', 0), ('Yes', 1)],
-              3 => <(String, int)>[('Cancel', 0), ('No', 1), ('Yes', 2)],
-              _ => throw const FormatException(
-                'Zotero requested an unsupported dialog.',
-              ),
-            };
-            final answer = await _showReview<int>(
-              (dialogContext) => PopScope(
-                canPop: false,
-                child: AlertDialog(
-                  title: const Text('Zotero'),
-                  content: SizedBox(
-                    width: 560,
-                    child: SingleChildScrollView(
-                      child: SelectableText(arguments[1] as String),
+      Future<void> execute(ZoteroCitingCommand operation) =>
+          ZoteroCitingClient(transport: transport).execute(
+            command: operation,
+            documentId: id,
+            cancellation: cancellation,
+            guard: () {
+              _checkTarget();
+              transaction.assertCurrent();
+            },
+            handler: (name, arguments) async {
+              if (name == 'Document.displayAlert') {
+                if (arguments.length != 4 ||
+                    arguments[0] != id ||
+                    arguments[1] is! String ||
+                    (arguments[1] as String).length > 20000 ||
+                    arguments[3] is! int) {
+                  throw const FormatException(
+                    'Zotero returned an invalid dialog.',
+                  );
+                }
+                final buttons = arguments[3] as int;
+                final choices = switch (buttons) {
+                  0 => <(String, int)>[('OK', 1)],
+                  1 => <(String, int)>[('Cancel', 0), ('OK', 1)],
+                  2 => <(String, int)>[('No', 0), ('Yes', 1)],
+                  3 => <(String, int)>[('Cancel', 0), ('No', 1), ('Yes', 2)],
+                  _ => throw const FormatException(
+                    'Zotero requested an unsupported dialog.',
+                  ),
+                };
+                final answer = await _showReview<int>(
+                  (dialogContext) => PopScope(
+                    canPop: false,
+                    child: AlertDialog(
+                      title: const Text('Zotero'),
+                      content: SizedBox(
+                        width: 560,
+                        child: SingleChildScrollView(
+                          child: SelectableText(arguments[1] as String),
+                        ),
+                      ),
+                      actions: [
+                        for (final (label, value) in choices)
+                          TextButton(
+                            onPressed: () =>
+                                Navigator.pop(dialogContext, value),
+                            child: Text(label),
+                          ),
+                      ],
                     ),
                   ),
-                  actions: [
-                    for (final (label, value) in choices)
-                      TextButton(
-                        onPressed: () => Navigator.pop(dialogContext, value),
-                        child: Text(label),
-                      ),
-                  ],
-                ),
-              ),
-              barrierDismissible: false,
-            );
-            transaction.assertCurrent();
-            return answer ?? (buttons == 0 ? 1 : 0);
-          }
-          return transaction.session.handle(name, arguments);
-        },
-      );
+                  barrierDismissible: false,
+                );
+                transaction.assertCurrent();
+                return answer ?? (buttons == 0 ? 1 : 0);
+              }
+              return transaction.session.handle(name, arguments);
+            },
+          );
+      if (chooseStyle) {
+        await execute(ZoteroCitingCommand.setDocPrefs);
+        _checkTarget();
+        transaction.assertCurrent();
+        if (WordZoteroDocumentData.stylePreferences(
+              transaction.session.documentData,
+            ) ==
+            null) {
+          setState(
+            () => _notice =
+                'No document style was selected. The document and selected sources were kept.',
+          );
+          return;
+        }
+        transaction.session.continueWithCitation(seed);
+      }
+      await execute(command);
       _checkTarget();
       transaction.assertCurrent();
       final result = transaction.session;
       result.prepareReview();
+      if (seed != null && !result.hasAcceptedSeedCitation) {
+        setState(
+          () => _notice =
+              'No citation was inserted. The document and selected sources were kept.',
+        );
+        return;
+      }
       if (!result.hasChanges) {
         setState(
           () => _notice = 'Zotero finished without changing the document.',
@@ -688,6 +723,8 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
             'Use Zotero’s source picker and installed citation styles. Refresh processes the whole document together, including numbering, disambiguation and style-dependent ibid. / Ebd. with page locators.',
           ),
           const SizedBox(height: 8),
+          _documentStyleSummary(),
+          const SizedBox(height: 8),
           Wrap(
             spacing: 8,
             runSpacing: 6,
@@ -730,6 +767,41 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
       ),
     ),
   );
+
+  Widget _documentStyleSummary() {
+    ({String id, String? locale, int noteType})? preferences;
+    try {
+      preferences = WordZoteroDocumentData.stylePreferences(
+        WordZoteroDocumentData.read(_controller.document),
+      );
+    } on FormatException {
+      return const Text(
+        'The saved Zotero document style could not be read. Open Document style… to review it.',
+        key: ValueKey('zotero-document-style-summary'),
+      );
+    }
+    if (preferences == null) {
+      return const Text(
+        'No document style selected. Insert with Zotero… opens the style chooser before inserting your first catalog citation.',
+        key: ValueKey('zotero-document-style-summary'),
+      );
+    }
+    final id = preferences.id;
+    final uri = Uri.tryParse(id);
+    final style = uri != null && uri.pathSegments.isNotEmpty
+        ? uri.pathSegments.last
+        : id;
+    final placement = switch (preferences.noteType) {
+      1 => 'Footnotes',
+      2 => 'Endnotes',
+      _ => 'In text',
+    };
+    return Text(
+      'Document style: $style\n'
+      'Language: ${preferences.locale ?? 'Style default'} · $placement',
+      key: const ValueKey('zotero-document-style-summary'),
+    );
+  }
 
   void _saveFormat() {
     _session.style = _style.text.trim();
@@ -1459,15 +1531,8 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
                   : () => setState(_selected.clear),
               child: const Text('Clear selection'),
             ),
-            FilledButton.icon(
-              onPressed: _busy || !_canEdit || _selected.isEmpty
-                  ? null
-                  : () => _compose(_selected.values.toList()),
-              icon: const Icon(Icons.format_quote),
-              label: const Text('Insert citation'),
-            ),
             if (widget.localTransport != null)
-              OutlinedButton(
+              FilledButton(
                 onPressed:
                     _busy ||
                         !_canEdit ||
@@ -1480,9 +1545,25 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
                       ),
                 child: const Tooltip(
                   message:
-                      'Choose Document → Document style… first, then insert selected sources in that style.',
+                      'Insert selected sources using the document style. Zotero asks for a style when none has been selected.',
                   child: Text('Insert with Zotero…'),
                 ),
+              ),
+            if (widget.localTransport != null)
+              OutlinedButton.icon(
+                onPressed: _busy || !_canEdit || _selected.isEmpty
+                    ? null
+                    : () => _compose(_selected.values.toList()),
+                icon: const Icon(Icons.format_quote),
+                label: const Text('Insert basic citation'),
+              )
+            else
+              FilledButton.icon(
+                onPressed: _busy || !_canEdit || _selected.isEmpty
+                    ? null
+                    : () => _compose(_selected.values.toList()),
+                icon: const Icon(Icons.format_quote),
+                label: const Text('Insert citation'),
               ),
             PopupMenuButton<ZoteroExportFormat>(
               enabled: !_busy && _selected.isNotEmpty,

@@ -270,6 +270,37 @@ void main() {
     }
   });
 
+  test(
+    'disjoint imported tracked ranges inside one rich citation remain exact',
+    () {
+      final citation = _citation('two-tracked-ranges', 'Alpha Beta');
+      var document = _document(
+        _simple(
+          citation.fieldInstruction,
+          '<w:ins w:id="9" w:author="First"><w:r><w:rPr><w:i/></w:rPr>'
+          '<w:t>Alpha</w:t></w:r></w:ins>'
+          '<w:ins w:id="10" w:author="Second"><w:r><w:t xml:space="preserve"> Beta</w:t></w:r></w:ins>',
+        ),
+      );
+      for (var cycle = 0; cycle < 3; cycle++) {
+        expect(
+          document.revisions.map((r) => (r.start, r.end, r.text)).toList(),
+          [(7, 12, 'Alpha'), (12, 17, ' Beta')],
+        );
+        expect(WordZotero.fields(document).single.cachedText, 'Alpha Beta');
+        expect(() => WordRevisions.validate(document), returnsNormally);
+        document = _reopen(document);
+      }
+      // Removing one revision would affect its neighbor through field-wide
+      // protection, so actual revision resolution still refuses the overlap.
+      expect(
+        () => WordRevisions.reject(document, document.revisions.first),
+        throwsStateError,
+      );
+      expect(WordZotero.fields(document).single.cachedText, 'Alpha Beta');
+    },
+  );
+
   final base = _citation('page-locator', 'Ada 1843');
   final pageCitation = base.withItems([
     ZoteroCitationItem.fromJson({

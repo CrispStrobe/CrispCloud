@@ -168,6 +168,7 @@ abstract final class WordRevisions {
     required String text,
     String author = 'Quds Office',
     WmlParagraph? paragraph,
+    bool preserveSourceRange = false,
   }) {
     document.trackRevisions = true;
     var id = 1;
@@ -180,7 +181,8 @@ abstract final class WordRevisions {
         paragraph ?? _bodyParagraph(document, paragraphIndex);
     // A field or note reference is indivisible. Expand a valid partial
     // request at creation, so its stored text and native bounds agree.
-    if (target != null &&
+    if (!preserveSourceRange &&
+        target != null &&
         start >= 0 &&
         end >= start &&
         end <= target.text.length &&
@@ -388,7 +390,7 @@ abstract final class WordRevisions {
       resolved[revision] = _resolveIn(document, revision, attached);
     }
     for (final revision in document.revisions) {
-      validateRevision(document, revision, resolved: resolved);
+      validateRevision(document, revision, resolved: resolved, forExport: true);
     }
   }
 
@@ -399,10 +401,10 @@ abstract final class WordRevisions {
     WmlDocument document,
     WmlRevision revision, {
     Map<WmlRevision, WmlParagraph?>? resolved,
+    bool forExport = false,
   }) {
-    WmlParagraph? targetOf(WmlRevision r) => resolved != null
-        ? resolved[r]
-        : resolveParagraph(document, r);
+    WmlParagraph? targetOf(WmlRevision r) =>
+        resolved != null ? resolved[r] : resolveParagraph(document, r);
     final paragraph = targetOf(revision);
     final problem = paragraph == null
         ? 'Its target paragraph is no longer in the document.'
@@ -417,6 +419,10 @@ abstract final class WordRevisions {
       paragraph!,
       revision.start,
       revision.end,
+      // Native tracked caches may legitimately have several independent
+      // revision ranges inside one complex citation. Export preserves those
+      // exact ranges; resolving a revision still uses whole-field edit bounds.
+      protectZoteroCitations: !forExport,
     );
     WordContentControls.assertCanEdit(paragraph, range.start, range.end);
     for (final other in document.revisions) {

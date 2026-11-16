@@ -1092,18 +1092,39 @@ class WordDeserializer {
               reader.getAttribute('id', namespaceUri: OfficeNamespaces.w) ?? '',
             ) ??
             1;
-        run.noteRefId = id;
-        run.noteRefEndnote = reader.localName == 'endnoteReference';
-        if (run.text.isEmpty) {
-          run.text = '$id';
+        final endnote = reader.localName == 'endnoteReference';
+        final custom = const {'1', 'true', 'on'}.contains(
+          reader.getAttribute(
+            'customMarkFollows',
+            namespaceUri: OfficeNamespaces.w,
+          ),
+        );
+        // Keep the marker separate from adjacent native text, including a
+        // custom symbol in the same w:r. The invisible custom reference still
+        // owns one stable editor offset and the link to its note story.
+        if (run.text.isNotEmpty) {
+          inlines.add(
+            WmlRun(
+              text: run.text,
+              properties: run.properties.copy(),
+              commentIds: List<int>.of(_openCommentIds),
+            ),
+          );
+          run.text = '';
         }
-        // A footnote/endnote mark is superscript by definition. Word stores
-        // this in the FootnoteReference character style, which the importer
-        // does not resolve, so apply it directly or the mark renders as a
-        // normal baseline digit.
-        run.properties.vertAlign = WmlVertAlign.superscript;
+        inlines.add(
+          WmlRun(
+            text: custom ? '\uFFFC' : '$id',
+            noteRefId: id,
+            noteRefEndnote: endnote,
+            noteRefCustomMark: custom,
+            properties: run.properties.copy()
+              ..vertAlign = WmlVertAlign.superscript,
+            commentIds: List<int>.of(_openCommentIds),
+          ),
+        );
         paragraph.properties.noteId = id;
-        paragraph.properties.endnoteRef = run.noteRefEndnote;
+        paragraph.properties.endnoteRef = endnote;
       } else if (reader.localName == 'footnoteRef' ||
           reader.localName == 'endnoteRef') {
         if (run.text.isNotEmpty) {
@@ -1324,6 +1345,7 @@ class WordDeserializer {
       kind: deleted ? WmlRevisionKind.delete : WmlRevisionKind.insert,
       paragraphIndex: -1,
       paragraph: paragraph,
+      preserveSourceRange: true,
       start: start,
       end: start + text.length,
       text: text,

@@ -1,0 +1,33 @@
+{
+  "before_source_fingerprint": "c52da77dc58e4aca5b6a56a3210b6177e8874098b84467c09df42f9e818b2549",
+  "command": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+    "tool/run_terminal_live_smoke.py",
+    "--flutter",
+    "/workspace/scratch/7b8555dd0115/zotero-toolchain/crisp-terminal-harness/.dart_tool/terminal-socks-diagnostic-flutter",
+    "--project",
+    "/workspace/scratch/7b8555dd0115/zotero-toolchain/crisp-terminal-harness"
+  ],
+  "completion_summary_found": true,
+  "cwd": "/workspace/scratch/7b8555dd0115/CrispCloud",
+  "exit_code": 0,
+  "failed_test_names": [],
+  "failed_tests": 0,
+  "finished_at_utc": "2026-11-16T05:27:22.421186+00:00",
+  "first_pass_receipt": "first-pass/receipt.json",
+  "hidden_loader_events": 2,
+  "log_sha256": "721d25e50eda1b4437e89f7ce0e17d9a9f5176a045403b462d96a9b2010e54fd",
+  "passed_test_names": [
+    "real OpenSSH forwarding through a verified jump route SOCKS domain request and pipelined binary payload survive request half-close"
+  ],
+  "passed_tests": 1,
+  "reason": "The first loopback run overlapped both concurrent Office/host qualifiers. Repeat only the failing unchanged SOCKS case after those gates finish to distinguish runtime contention.",
+  "seconds": 20.286,
+  "skipped_test_names": [],
+  "skipped_tests": 0,
+  "source_code_changed": false,
+  "source_unchanged": true,
+  "started_at_utc": "2026-11-16T05:27:02.134713+00:00",
+  "test_protocol_success": true,
+  "test_timeout_changed": false
+}

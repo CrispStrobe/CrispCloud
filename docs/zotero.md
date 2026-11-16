@@ -18,9 +18,14 @@ connection is needed for these controls:
 | Citation menu → **Edit in Zotero…** | Edit that existing citation in the native picker |
 | Library selection → **Insert with Zotero…** | Seed the native picker with linked sources selected in CrispCloud |
 
-Choose **Document style…** before inserting selected catalog sources, so the
-seed uses the correct inline, footnote or endnote placement. For a new document,
-**Citation in Zotero…** can ask for preferences as part of its first insertion.
+**Insert with Zotero…** is the primary desktop catalog action. If the document
+has no selected style, it opens Zotero's style chooser first, then carries the
+selected sources into the citation picker with the chosen inline, footnote or
+endnote placement. The two stages become one undo step; cancelling either stage
+or losing the connection keeps the document and source selection. The Document
+tab shows the saved style ID, language and placement. You can choose **Document
+style…** directly at any time, or use **Citation in Zotero…** without selecting
+catalog sources.
 If Zotero changes the note placement while opening a catalog seed, the result
 is discarded and you are asked to select the style before retrying.
 
@@ -47,10 +52,13 @@ too. Conversion between inline, footnote and endnote is supported for a note
 containing only its citation and optional whitespace/reference marker.
 Explanation-bearing notes, multiple citations in one note or extra structural
 fields refuse conversion. Supported citations in those notes can still refresh.
-Quds currently displays stored note IDs in its preview, so displayed labels can
-differ from the sequence after insertion/conversion. CSL note indices use body
-order, and DOCX retains automatic note references; verify displayed numbering
-in the target word processor.
+Automatic note labels now follow document order in the canvas, note bodies and
+Notes pane, including after earlier insertion or conversion. Native link IDs
+remain unchanged. Common decimal, letter and Roman formats, starting numbers
+and section restarts are supported; custom marks remain authored text.
+Page-based restarts and unsupported native number formats retain their settings
+and use source-ID labels in the Notes pane; check those in the target word
+processor.
 
 Zotero may open its native window behind CrispCloud. Finish or cancel that
 window to let a pending operation return. **Cancel operation** requests
@@ -66,7 +74,9 @@ can wait up to ten minutes. Requests are never automatically retried.
    numeric ID without a key.
 2. Enter the key and choose **Connect**. The Library tab browses personal/group
    libraries, collections, and paged title/creator/year search results.
-3. Select sources and choose **Insert citation**. Review basic author-year text,
+3. Select sources and choose **Insert with Zotero…** for the document's native
+   style, or **Insert basic citation** for the offline author–year workflow
+   (**Insert citation** in hosts without native transport). Review basic text,
    optional single-source Zotero style text, and each source's locator, label,
    prefix/suffix and author options before inserting.
 4. Use the Document tab to inspect/edit citations, create a bibliography,
@@ -211,41 +221,50 @@ the bibliography here.
 The desktop adapter now delegates complete CSL processing to Zotero, including
 style-dependent numbering, disambiguation and *ibid.*. Native processing marks
 its citations separately so **Refresh basic citations** cannot overwrite them.
-Uniform inline character formatting, including superscript, remains one
-protected field. Mixed inline styling and unsupported bibliography layout are
-simplified only after a review explains the change. Rich bibliography runs
-retain their supported character formatting.
+Uniform and mixed inline character formatting, including italic titles, bold
+text and superscript, remain inside one protected citation field. Typing,
+deleting, copying, pasting and splitting paragraphs preserve the complete linked
+field. Unsupported character styling and bibliography layout are simplified only
+after a review explains the change. Rich bibliography runs retain their
+supported character formatting.
 
 Document-wide native processing refuses active Track changes, any unresolved
 revision, protected documents, uneditable Zotero fields and citations in
 unsupported stories such as headers, footers, comments and text boxes. This
 keeps Zotero from processing a silently incomplete citation sequence.
 
-ODT active-citation transfer, faithful small caps/paragraph layout, general note
-preview numbering, full native builds and live native Word/Zotero refresh
-acceptance remain outside the executed qualification. Protocol, controller and
-UI tests use deterministic transports; real CSL fixtures exercise Zotero's
-pinned processor, but do not constitute a live desktop session. The native app
-talks directly to localhost and never through a server-side proxy.
+ODT active-citation transfer, faithful small caps/bibliography layout and
+page-based note restarts remain implementation boundaries. The actual Quds
+catalog/Studio transport and citing driver/Word adapter passed live desktop
+Zotero style-selection, refresh, first-use seeded picker acceptance and DOCX
+save/reopen checks with synthetic sources, including German `Ebd.` and page
+locators. Native locator-popup editing remains outside the successful live
+acceptance scope; the seeded locator was accepted and preserved. Protocol, controller and UI
+regressions also use deterministic transports and pinned real CSL fixtures.
+Full compiled application builds, private-account/keychain acceptance and
+opening the exported DOCX in Microsoft Word or LibreOffice remain separate
+acceptance steps. The native app talks directly to localhost without a
+server-side proxy.
 
 ## Shared source and local checks
 
 The implementation is maintained in
-[Quds Office](https://github.com/CrispStrobe/quds_office_suite/tree/codex/zotero-support-20261115).
+[Quds Office](https://github.com/CrispStrobe/quds_office_suite/tree/codex/zotero-support-20261116).
 `tool/office_fidelity_manifest.json` records the exact immutable Quds source and
 hashes of managed files. Its standalone legacy DOC parser pin is unchanged.
 
-The native-citing continuation audited all 45 live branches and all 42 Quds /
-50 recent CrispCloud PR heads first. Main through Quds #42 and CrispCloud #152,
-plus terminal #140, was already integrated. Five retained Quds heads were exact
-tree equivalents of integrated squash changes. Work is saved incrementally
-to remote branches using `[skip ci]`. No GitHub Actions queue was awaited.
+This continuation starts after the prior Quds #47, CrispCloud #149 and terminal
+#140 work was merged. Before feature edits, all **60 branch heads and 198 PR
+heads** were accounted for. The final incoming-work snapshot at **16 November
+2026, 05:17:13 UTC** accounts for **62 branches and 199 PR heads**. It includes
+the new terminal #160 at `49d63f78d0b854ba76289dba69fdb6584f8a1260`, with both
+merge parents retained. All 259 external refs are actual ancestors; the two
+continuation branches are listed separately. Later concurrent commits are
+outside that explicit cutoff.
 
-The final reconciliation also integrates work that arrived during the task:
-Quds main through **#46**, CrispCloud main through **#156**, and terminal #140
-through `a965bfd4a61ca01e6f50bf4d8c433c3fdc9e1423`. Both parents are retained in
-the main and terminal merges. Quds #40 was merged during implementation; its
-remaining continuation is reviewed in [draft PR #47](https://github.com/CrispStrobe/quds_office_suite/pull/47).
+Work is saved incrementally to `codex/zotero-support-20261116` in both
+repositories. Every new checkpoint uses `[skip ci]`. No GitHub Actions are
+queried, polled, awaited or rerun.
 
 Local execution uses official Flutter/Dart and genuine locked dependency
 graphs. This increment adds protocol, native preference, document adapter,

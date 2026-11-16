@@ -1131,7 +1131,7 @@ void main() {
   );
 
   test(
-    'mixed inline formatting is disclosed while preserving one atomic field',
+    'mixed inline formatting retains styled runs in one protected field',
     () {
       final document = WmlDocument.empty(text: 'Text ');
       final session = _session(document, offset: 5);
@@ -1144,16 +1144,28 @@ void main() {
       );
       _call(session, 'Document.complete');
       session.prepareReview();
-      expect(
-        session.formattingWarnings.any(
-          (v) => v.contains('Mixed character formatting'),
-        ),
-        isTrue,
-      );
+      expect(session.formattingWarnings, isEmpty);
       session.apply();
       final result = WordZotero.fields(document).single;
       expect(result.cachedText, 'Book 12');
-      expect(result.run!.isAtomic, isTrue);
+      expect(result.run, isNull);
+      expect(result.canEdit, isTrue);
+      expect(
+        result.paragraph.inlines
+            .whereType<WmlRun>()
+            .singleWhere((run) => run.text == 'Book')
+            .properties
+            .italic,
+        isTrue,
+      );
+      expect(
+        WmlRunEdit.normalizeRange(
+          result.paragraph,
+          result.start + 1,
+          result.end - 1,
+        ),
+        (start: result.start, end: result.end),
+      );
     },
   );
 

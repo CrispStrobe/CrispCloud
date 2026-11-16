@@ -4,10 +4,18 @@ All notable changes to `quds_office_editor` are documented here.
 
 ## Unreleased
 
+- Make native Zotero catalog insertion the primary desktop action and open the
+  document style chooser automatically when needed. Show the saved native
+  style, language and placement. Commit the style and citation together as one
+  undo step; keep the document and selected sources on cancellation or failure.
+- Preserve mixed citation styling while protecting the complete linked field
+  during editing and clipboard operations. Display footnote/endnote sequence
+  labels consistently in the canvas, note bodies and Notes pane.
+
 - Add native Zotero source-picker, document-style, bibliography and complete
   document-refresh controls, including catalog-seeded insertion. Apply staged
   results as one undo step with note/preferences restoration and stale-target
-  guards. Review mixed inline styling and unsupported bibliography layout before
+  guards. Review unsupported character styles and bibliography layout before
   applying simplifications; discard staged changes on desktop error alerts.
   Preserve the original selection on undo and place the caret after new fields.
   Full native app and live Zotero/Word acceptance remain pending.

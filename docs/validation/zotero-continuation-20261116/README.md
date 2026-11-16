@@ -1,4 +1,127 @@
-# Zotero continuation: incoming source audit
+# CrispCloud Zotero continuation — 16 November 2026
+
+CrispCloud now uses the continued Quds source for first-use native catalog
+insertion, protected mixed citation formatting and automatic note numbering.
+The canonical implementation qualified at
+**`72691877bd9bafab761e655c13d0c9a0936b55bb`**; documentation-only source-pin
+updates retain those measured production and test bytes.
+
+The final manifest pins **`b24718cc1468c34f494805eb7fb433a87f565503`**. The
+[delivery source proof](delivery-source-proof.json) verifies every recorded Quds,
+host and terminal input, unchanged managed inventory, and a documentation-only
+Quds advance. The final sync wrote or deleted **zero managed files**; both vendor
+guards were rerun against the final pin.
+
+## Executed host qualification
+
+The [actual host receipt](final/host-validation-receipt.json) records **37
+passing tests**, clean strict analysis of eight host targets, clean formatting,
+and both normal and tracked vendor checks. It measured **1,595 unchanged source
+files** and an unchanged manifest with **2,399 entries**: **542 Quds files and
+1,857 standalone parser files**. The standalone parser proof checks actual
+bytes, hashes, executable modes and its unchanged
+`4895712158127b2fc930d796e17035c3ca0dac62` source pin.
+
+The host tree is `e56518372313b5d9c9698a26d25488bf331c1915`, saved at
+`e5dc3dc5b0919fd79f913e1ad7aee427bafef09e`. Its content is identical to the local
+`a81f686f0e96958da42b055f4264b6f87b9c7b95` commit recorded during execution.
+The connected GitHub checkpoint changes commit identity, not the tested tree.
+Subsequent evidence/docs and source-pin updates are checked for implementation
+identity.
+
+The runtime is official **Flutter 3.47.8 / Dart 3.13.7**. The **96-package**
+host graph is genuinely resolved with its lockfile enforced. Actual production
+services, transports, editor packages and ribbon are compiled directly; no
+implementation stubs or relaxed production dependency constraints are used.
+
+## Combined local results
+
+| Selected unit/widget cohort | Passed |
+| --- | ---: |
+| Canonical engine/client/Word field, revision and note selection | 579 |
+| Canonical shared editor/controller/dialog/note/paste selection | 195 |
+| Actual Studio native transport | 16 |
+| Actual CrispCloud host selection | 37 |
+| Incoming ODS metadata/conditional-affix integration | 85 |
+| Incoming terminal/session/forwarding/output-trigger selection | 226 |
+| **Total** | **1,138** |
+
+The [terminal evidence](terminal-integration/README.md) separately records three
+passing shell smoke scenarios and **six executed passes** against disposable
+loopback SSH servers, with one separate optional PTY case skipped. An initial
+SOCKS timeout during concurrent heavy qualification, the unchanged diagnostic
+retry, and the final full pass are all retained. No source, test or timeout
+changed. Live/shell acceptance and overlapping intermediate runs are not added
+to the unit/widget total.
+
+Canonical qualification covers all **32 changed Dart targets** with strict
+analysis and formatting. The Quds receipt records **1,568 unchanged
+source/dependency-input hashes**, stable HEAD and unchanged harness inputs.
+See the [canonical evidence and reproduction](https://github.com/CrispStrobe/quds_office_suite/tree/codex/zotero-support-20261116/docs/validation/zotero-continuation-20261116).
+
+## Real native Zotero acceptance
+
+The actual Quds catalog/Studio transport and citing driver/Word adapter passed
+live local catalog and document-processing checks against official Zotero
+10.0.8 with three synthetic sources. Native Document Preferences selected the
+pinned Chicago subsequent-ibid style and German locale. DOCX save/reopen retains
+a full first citation, `Ebd.`, `Ebd., 34.`, mixed italics and the regenerated
+bibliography. The expected bibliography paragraph-layout review was accepted
+by the synthetic fixture.
+
+A third native scenario passed the new first-use sequence: a document without
+a style opens preferences, then the seeded picker on the same staged session,
+and accepts the selected source/page 12. Both commands leave the original
+document unchanged until one apply. DOCX roundtrip preserves the exact caret
+placement, linked footnote, locator and native style. This scenario records
+455 production input hashes and the exact executed kernel hash.
+
+These three scenarios are reported separately from the local unit/widget counts.
+Native locator-popup editing remains unverified; the bounded initial input
+attempt is retained and excluded from pass counts. The scenarios verify the
+shared native integration path, not a full compiled CrispCloud
+application, private accounts or OS-keychain behavior. Microsoft Word/LibreOffice
+interoperability remains unverified. Exact scripts, output DOCX files, protocol
+logs and source/runtime scope are in the
+[live acceptance evidence](https://github.com/CrispStrobe/quds_office_suite/blob/codex/zotero-support-20261116/docs/validation/zotero-continuation-20261116/live-zotero/INDEX.md).
+
+Small caps and bibliography paragraph layout still require reviewed
+simplification. Page-based note restarts and unsupported numbering formats
+show source-ID fallback. Active ODT transfer is absent; unsupported stories,
+protected/ambiguous fields and unsafe note conversions refuse processing.
+
+## Reproduce locally
+
+Reconstruct the genuine host harness from the recorded dependency inputs and
+canonical `setup/` scripts. Set `FLUTTER_ROOT` and `PUB_CACHE` to the pinned
+runtime/environment, then use the current exact Quds pin from
+`tool/office_fidelity_manifest.json`:
+
+```sh
+python3 docs/validation/zotero-continuation-20261116/run-continuation-host.py \
+  --harness /path/to/zotero-toolchain/crisp-host-harness \
+  --quds-source /path/to/quds_office_suite \
+  --expected-quds QUDS_COMMIT \
+  --output /path/to/new-host-evidence
+```
+
+The wrapper derives a temporary canonical analyzer graph from the real harness
+and restores the previous configuration. The underlying runner enforces the
+lockfile offline, compiles unchanged sources, verifies both vendor modes, and
+checks source/manifests before and after. No CI is invoked. Terminal reproduction
+is documented with its separate genuine harness and exact source inventory.
+
+## Incoming-work reconciliation
+
+The [final source audit](final-integration.json) uses **2026-11-16 05:17:13 UTC**
+as its explicit cutoff: **62 branch heads and 199 PR heads**, with the two
+continuation branches identified separately. All **259 external refs** are
+actual ancestors after merging terminal PR #160 at
+`49d63f78d0b854ba76289dba69fdb6584f8a1260`. The durable merge commit is
+`d916a841c54ddcca8f6327e45939c4372ba1d3a9`; both parents are retained. No claim
+is made about later concurrent commits.
+
+### Initial audit before feature edits
 
 Initial source cutoff: **2026-11-16 05:00:31 UTC**. All incoming work was accounted for before this continuation's feature edits.
 
@@ -12,7 +135,7 @@ The [machine-readable audit](incoming-integration.json) records each observed re
 
 The companion repository was audited at the same cutoff: together the snapshots account for **60 branch heads and 198 PR heads**. Both earlier Zotero PRs (Quds #47 and CrispCloud #149) and terminal PR #140 have been merged. Both continuation branches start from current main.
 
-No GitHub Actions or check/status endpoints were queried, polled, awaited or rerun. This is source-reconciliation evidence; it is not new feature-test or native acceptance evidence.
+No GitHub Actions or check/status endpoints were queried, polled, awaited or rerun. The audit itself records reconciliation; the executed qualification and live evidence are described above.
 
 ## Exact-tree equivalents
 
