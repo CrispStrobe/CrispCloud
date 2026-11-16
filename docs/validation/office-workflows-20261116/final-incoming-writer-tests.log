@@ -1,0 +1,146 @@
+00:00 +0: loading test/ods_sheet_reader_test.dart
+00:00 +0: test/ods_sheet_reader_test.dart: repeated annotations stay separate from cell values through save
+00:00 +1: test/ods_sheet_reader_test.dart: repeated annotations stay separate from cell values through save
+00:00 +2: test/ods_sheet_reader_test.dart: repeated annotations stay separate from cell values through save
+00:00 +3: test/ods_sheet_reader_test.dart: repeated annotations stay separate from cell values through save
+00:00 +4: test/ods_sheet_reader_test.dart: repeated annotations stay separate from cell values through save
+00:00 +5: test/ods_sheet_reader_test.dart: repeated annotations stay separate from cell values through save
+00:00 +6: test/ods_sheet_reader_test.dart: repeated annotations stay separate from cell values through save
+00:00 +7: test/ods_sheet_reader_test.dart: repeated annotations stay separate from cell values through save
+00:00 +8: test/ods_sheet_reader_test.dart: repeated annotations stay separate from cell values through save
+00:00 +9: test/ods_sheet_reader_test.dart: repeated annotations stay separate from cell values through save
+00:00 +10: test/ods_sheet_reader_test.dart: repeated annotations stay separate from cell values through save
+00:00 +11: test/ods_sheet_reader_test.dart: repeated annotations stay separate from cell values through save
+00:00 +12: test/ods_sheet_reader_test.dart: repeated annotations stay separate from cell values through save
+00:00 +13: test/ods_sheet_reader_test.dart: repeated annotations stay separate from cell values through save
+00:00 +14: test/ods_sheet_reader_test.dart: repeated annotations stay separate from cell values through save
+00:00 +15: test/ods_sheet_reader_test.dart: repeated annotations stay separate from cell values through save
+00:00 +16: test/ods_sheet_reader_test.dart: repeated annotations stay separate from cell values through save
+00:00 +17: test/ods_sheet_reader_test.dart: repeated annotations stay separate from cell values through save
+00:00 +18: test/ods_sheet_reader_test.dart: repeated annotations stay separate from cell values through save
+00:00 +19: test/ods_sheet_writer_test.dart: writes a readable ODS package with values, formulas and metadata
+00:00 +20: test/ods_sheet_writer_test.dart: writes a readable ODS package with values, formulas and metadata
+00:00 +21: test/ods_sheet_reader_test.dart: repeated annotation text and author consume the expanded text budget
+00:00 +22: test/word_layout_test.dart: table cells are laid out in columns, not stacked
+00:00 +23: test/word_layout_test.dart: table cells are laid out in columns, not stacked
+00:00 +24: test/word_layout_test.dart: table cells are laid out in columns, not stacked
+00:00 +25: test/word_layout_test.dart: table cells are laid out in columns, not stacked
+00:00 +26: test/word_layout_test.dart: table cells are laid out in columns, not stacked
+00:00 +27: test/word_layout_test.dart: table cells are laid out in columns, not stacked
+00:00 +28: test/word_layout_test.dart: table cells are laid out in columns, not stacked
+00:00 +29: test/ods_sheet_writer_test.dart: writes worksheet pictures into the package
+00:00 +30: test/ods_sheet_writer_test.dart: writes worksheet pictures into the package
+00:00 +31: test/ods_sheet_writer_test.dart: writes worksheet pictures into the package
+00:00 +32: test/ods_sheet_reader_test.dart: edge ODS survives an xlsx round trip
+00:00 +33: test/ods_sheet_reader_test.dart: edge ODS survives an xlsx round trip
+00:00 +34: test/ods_sheet_writer_test.dart: writes list validation prompts and errors
+00:00 +35: test/ods_sheet_writer_test.dart: writes list validation prompts and errors
+00:00 +36: test/ods_sheet_writer_test.dart: writes list validation prompts and errors
+00:00 +37: test/ods_sheet_writer_test.dart: writes list validation prompts and errors
+00:00 +38: test/word_layout_test.dart: absolute frames do not advance the story and keep inner text
+00:00 +39: test/ods_sheet_reader_test.dart: inherited styled padding stays sparse while explicit blanks survive
+00:00 +40: test/ods_sheet_reader_test.dart: inherited styled padding stays sparse while explicit blanks survive
+00:00 +41: test/ods_sheet_reader_test.dart: inherited styled padding stays sparse while explicit blanks survive
+00:00 +42: test/ods_sheet_writer_test.dart: writes conditional formats and validates them on read
+00:00 +43: test/ods_sheet_writer_test.dart: writes conditional formats and validates them on read
+00:00 +44: test/ods_sheet_writer_test.dart: writes conditional formats and validates them on read
+00:00 +45: test/ods_sheet_writer_test.dart: writes conditional formats and validates them on read
+00:00 +46: test/ods_sheet_writer_test.dart: writes conditional formats and validates them on read
+00:00 +47: test/ods_sheet_writer_test.dart: writes conditional formats and validates them on read
+00:00 +48: test/ods_sheet_writer_test.dart: writes conditional formats and validates them on read
+00:00 +49: test/ods_sheet_writer_test.dart: writes conditional formats and validates them on read
+00:00 +50: test/ods_sheet_writer_test.dart: writes conditional formats and validates them on read
+00:00 +51: test/ods_sheet_writer_test.dart: writes conditional formats and validates them on read
+00:00 +52: test/ods_sheet_writer_test.dart: writes conditional formats and validates them on read
+00:00 +53: test/ods_sheet_writer_test.dart: writes conditional formats and validates them on read
+00:00 +54: test/ods_sheet_writer_test.dart: writes conditional formats and validates them on read
+00:00 +55: test/ods_sheet_reader_test.dart: ODS minute and second format survives XLSX save
+00:00 +56: test/ods_sheet_writer_test.dart: writes authored number formats
+00:00 +57: test/ods_sheet_writer_test.dart: writes authored number formats
+00:00 +58: test/ods_sheet_writer_test.dart: writes authored number formats
+00:00 +59: test/ods_sheet_reader_test.dart: ODS elapsed minutes format survives XLSX save
+00:00 +60: test/ods_sheet_writer_test.dart: writes multiple sheets, hidden state and tab colours
+00:00 +61: test/ods_sheet_writer_test.dart: writes multiple sheets, hidden state and tab colours
+00:00 +62: test/ods_sheet_writer_test.dart: writes multiple sheets, hidden state and tab colours
+00:00 +63: test/ods_sheet_writer_test.dart: writes multiple sheets, hidden state and tab colours
+00:00 +64: test/ods_sheet_writer_test.dart: writes multiple sheets, hidden state and tab colours
+00:00 +65: test/ods_sheet_writer_test.dart: writes multiple sheets, hidden state and tab colours
+00:00 +66: test/ods_sheet_writer_test.dart: writes multiple sheets, hidden state and tab colours
+00:00 +67: test/ods_sheet_writer_test.dart: writes multiple sheets, hidden state and tab colours
+00:00 +68: test/ods_sheet_writer_test.dart: writes multiple sheets, hidden state and tab colours
+00:00 +69: test/ods_sheet_reader_test.dart: ODS text and duplicate conditions keep their type
+00:00 +70: test/ods_sheet_writer_test.dart: translates a sheet-qualified formula before writing
+00:00 +71: test/ods_sheet_writer_test.dart: translates a sheet-qualified formula before writing
+00:00 +72: test/ods_sheet_reader_test.dart: ODS between conditions keep both bounds
+00:00 +73: test/ods_sheet_reader_test.dart: ODS conditional comparison operators keep their meaning
+00:00 +74: test/ods_sheet_reader_test.dart: ODS conditional formats import and serialize
+00:00 +75: test/ods_sheet_reader_test.dart: shared numeric rules on blank input cells survive an XLSX copy
+00:00 +76: test/ods_sheet_reader_test.dart: blank validation references obey expansion and grid limits
+00:00 +77: test/ods_sheet_reader_test.dart: spreadsheet-level list validations apply to every referring sheet
+00:00 +78: test/ods_sheet_reader_test.dart: spreadsheet-level range lists resolve a later source sheet
+00:00 +79: test/ods_sheet_reader_test.dart: table-local definitions stay isolated and override shared names
+00:00 +80: test/ods_sheet_reader_test.dart: foreign validation containers cannot define spreadsheet rules
+00:00 +81: test/ods_sheet_reader_test.dart: ODS validation prompts and error styles round-trip
+00:00 +82: test/ods_sheet_reader_test.dart: ODS custom formula validations translate relative refs
+00:00 +83: test/ods_sheet_reader_test.dart: ODS whole, decimal, date and text-length validations import
+00:00 +84: test/ods_sheet_reader_test.dart: ODS list source preserves spaces in quoted sheet names
+00:00 +85: test/ods_sheet_reader_test.dart: ODS validation source range is bounded before scanning empty cells
+00:00 +86: test/ods_sheet_reader_test.dart: ODS range-source list validations resolve across sheets
+00:00 +87: test/ods_sheet_reader_test.dart: ODS validation source work is shared across definitions
+00:01 +88: test/ods_sheet_reader_test.dart: ODS list validations become typed XLSX validations
+00:01 +89: test/ods_sheet_reader_test.dart: ODS outline groups survive XLSX and reopen
+00:01 +90: test/ods_sheet_reader_test.dart: ODS external and internal hyperlinks survive XLSX
+00:01 +91: test/ods_sheet_reader_test.dart: ODS named expressions translate to XLSX formulas
+00:01 +92: test/ods_sheet_reader_test.dart: ODS range filter predicates select visible values
+00:01 +93: test/ods_sheet_reader_test.dart: ODS filter predicates become XLSX filter columns
+00:01 +94: test/ods_sheet_reader_test.dart: ODS tab colour survives save and reopen
+00:01 +95: test/ods_sheet_reader_test.dart: ODS print areas, titles, names and autofilter survive save
+00:01 +96: test/ods_sheet_reader_test.dart: formula roundtrip preserves imported syntax: of:="a;b"
+00:01 +97: test/ods_sheet_reader_test.dart: formula roundtrip preserves imported syntax: of:="literal [.A1];COM.MICROSOFT.SUM"
+00:01 +98: test/ods_sheet_reader_test.dart: formula roundtrip preserves imported syntax: of:=IF([.A1]="a;b";"say ""[.B2];""";COM.MICROSOFT.SUM([.A1:.A2];1))
+00:01 +99: test/ods_sheet_reader_test.dart: formula roundtrip preserves imported syntax: of:=CONCATENATE("";"a;b";"[.A1]")
+00:01 +100: test/ods_sheet_reader_test.dart: formula roundtrip preserves imported syntax: of:=SUM(['Semi;Colon'.A1];1)
+00:01 +101: test/ods_sheet_reader_test.dart: formula roundtrip preserves imported syntax: of:=SUM(['COM.MICROSOFT.Data'.A1];1)
+00:01 +102: test/ods_sheet_reader_test.dart: formula namespace COM.MICROSOFT. only changes at a token boundary
+00:01 +103: test/ods_sheet_reader_test.dart: formula namespace ORG.OPENOFFICE. only changes at a token boundary
+00:01 +104: test/ods_sheet_reader_test.dart: declines a stored cell where a horizontal covered token is missing
+00:01 +105: test/ods_sheet_reader_test.dart: declines a stored cell inside an earlier vertical merged region
+00:01 +106: test/ods_sheet_reader_test.dart: annotations retain coordinates and do not leak into cell values
+00:01 +107: test/ods_sheet_reader_test.dart: reads ODS values, formulas, styles and merges
+00:01 +108: test/ods_sheet_reader_test.dart: an imported ODS saves as a readable .xlsx
+00:01 +109: test/ods_sheet_reader_test.dart: covered cells and internal repeated empty rows keep positions
+00:01 +110: test/ods_sheet_reader_test.dart: rejects a non-ODF package
+00:01 +111: test/ods_sheet_reader_test.dart: merged covered cells consume one coordinate and retain row spans
+00:01 +112: test/ods_sheet_reader_test.dart: repeated blank rows retain later data at exact coordinates
+00:01 +113: test/ods_sheet_reader_test.dart: row headers and groups retain blank row coordinates
+00:01 +114: test/ods_sheet_reader_test.dart: foreign lookalike elements and attributes cannot change sheet values
+00:01 +115: test/ods_sheet_reader_test.dart: named inherited cell wrap styles survive an XLSX roundtrip
+00:01 +116: test/ods_sheet_reader_test.dart: column groups retain dimensions and repeated values
+00:01 +117: test/ods_sheet_reader_test.dart: blank trailing padding is skipped without truncating data silently
+00:01 +118: test/ods_sheet_reader_test.dart: rejects cross-product expansion before materializing repeated cells
+00:01 +119: test/ods_sheet_reader_test.dart: workbook budget is shared by multiple individually small sheets
+00:01 +120: test/ods_sheet_reader_test.dart: repeated text is bounded before it can expand during XLSX save
+00:01 +121: test/ods_sheet_reader_test.dart: rejects invalid or out-of-range meaningful repeats instead of clipping
+00:01 +122: test/ods_sheet_reader_test.dart: formula conversion preserves delimiters and brackets inside literals
+00:01 +123: test/ods_sheet_reader_test.dart: repeated formulas decline rather than cloning incorrect references
+00:01 +124: test/ods_sheet_reader_test.dart: preserves ODF explicit spaces, tabs and paragraph boundaries
+00:01 +125: test/ods_sheet_reader_test.dart: rejects XML with spreadsheet local names in the wrong namespace
+00:01 +126: test/ods_sheet_reader_test.dart: rejects cyclic named styles and excessive XML nesting
+00:01 +127: test/ods_sheet_reader_test.dart: keeps internal repeated blank rows without expanding trailing padding
+00:01 +128: test/ods_sheet_reader_test.dart: blank runs retain in-range cells and refuse later out-of-range data
+00:01 +129: test/ods_sheet_reader_test.dart: horizontal merge consumes explicit placeholder once
+00:01 +130: test/ods_sheet_reader_test.dart: horizontal merge consumes repeated placeholders once
+00:01 +131: test/ods_sheet_reader_test.dart: horizontal merge consumes additional covered column once
+00:01 +132: test/ods_sheet_reader_test.dart: consecutive merged origins retain explicit covered positions
+00:01 +133: test/ods_sheet_reader_test.dart: merge spans retain in-range cells and refuse column overflow
+00:01 +134: test/ods_sheet_reader_test.dart: styled trailing row padding stays sparse within the admitted grid
+00:01 +135: test/ods_sheet_reader_test.dart: formula translation preserves literals in of:=MYCOM.MICROSOFT.FUNC(1)
+00:01 +136: test/ods_sheet_reader_test.dart: formula translation preserves literals in of:="a;b"
+00:01 +137: test/ods_sheet_reader_test.dart: formula translation preserves literals in of:="literal [.A1];COM.MICROSOFT.SUM"
+00:01 +138: test/ods_sheet_reader_test.dart: formula translation preserves literals in of:=IF([.A1]="a;b";"say ""[.B2];""";COM.MICROSOFT.SUM([.A1:.A2];1))
+00:01 +139: test/ods_sheet_reader_test.dart: formula translation preserves literals in of:=CONCATENATE("";"a;b";"[.A1]")
+00:01 +140: test/ods_sheet_reader_test.dart: formula translation preserves literals in of:=SUM(['Semi;Colon'.A1];1)
+00:01 +141: test/ods_sheet_reader_test.dart: formula translation preserves literals in of:=SUM(['COM.MICROSOFT.Data'.A1];1)
+00:01 +142: test/ods_sheet_reader_test.dart: formula translation preserves literals in of:=[$Sheet2.A1]+[.$A$1]
+00:01 +143: test/ods_sheet_reader_test.dart: formula translation preserves literals in of:=[$'Semi;Colon'.$A$1]
+00:01 +144: All tests passed!

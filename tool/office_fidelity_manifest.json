@@ -1,7 +1,7 @@
 {
   "source_repository": "CrispStrobe/quds_office_suite",
-  "source_branch": "vendor/ods-writer-images",
-  "source_commit": "546368fe3aad7ccb65c72f897b6585513b0199f1",
+  "source_branch": "main",
+  "source_commit": "ed5facb4bd503667749ed3d13378da6a1b34738b",
   "files": {
     "packages/legacy_doc_parser/.gitattributes": "e03c93473e616ad6fcd8697f797b4774076aa6fc468bf0f72860d2c6512eebbf",
     "packages/legacy_doc_parser/.github/workflows/ci.yml": "111910a34c0e41774a325c0bc5c6c3d7517298254a08c79df6dce7d7f70e3605",
@@ -1990,7 +1990,7 @@
     "packages/quds_office_editor/test/word_zotero_format_test.dart": "6c9cd8a8130c1fcbdca6a4834e18c08590994ceb970efe6a0a6209e70025c650",
     "packages/quds_office_editor/test/word_zotero_rich_controller_test.dart": "8be7430271ea255a2891b36118dafdd7032e7146225717305b591783cbe42d00",
     "packages/quds_office_editor/test/word_zotero_saved_search_test.dart": "2d939076b8817ab151987b33ab9fd99ea29aeace87974e647709732c48d967b2",
-    "packages/quds_office_engine/CHANGELOG.md": "c40234532c92b8281bac07a6366edc3bc9df0772a033507bf97b174a78a4b87d",
+    "packages/quds_office_engine/CHANGELOG.md": "e2036ed8c8d15198c3d902b901bef8ee86eb5d63027e8748d2ca041e4cc9e476",
     "packages/quds_office_engine/lib/quds_office_engine.dart": "a3d556a3d4faacce80c5458ab2d18414a30963758bf347f6f0845b59da5132e0",
     "packages/quds_office_engine/lib/src/bidi/grapheme_clusters.dart": "f04618334611bb31abcf34a7388c45c0068b161f09a56303d3c39226f859ce60",
     "packages/quds_office_engine/lib/src/bidi/line_breaker.dart": "e80a0ac66ed78daec5b194e712b6d3ba01ee408a009e493f1c7957512a306fad",

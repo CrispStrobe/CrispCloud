@@ -42,5 +42,11 @@
     "independent_application": "LibreOffice Calc, isolated headless profile",
     "checks": "values, formula/result, bold, merge, comment, hyperlink, percentage, named range, print area",
     "note": "Hyperlinks and named metadata checked directly in independent OOXML; engine deserializer does not hydrate every metadata field."
+  },
+  "final_incoming_refresh": {
+    "source_pin": "ed5facb4bd503667749ed3d13378da6a1b34738b",
+    "managed_files": 2422,
+    "engine_tests_passed": 144,
+    "notes": "Concurrent ODS writer conditional-format/validation and picture updates, followed by changelog-only reconciliation; Office UI code unchanged."
   }
 }
