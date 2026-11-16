@@ -44,6 +44,113 @@ http.StreamedResponse _ok() => http.StreamedResponse(
 );
 
 void main() {
+  test(
+    'saved-search reads stay on direct loopback with the pinned database',
+    () async {
+      var clouds = 0;
+      final clients = <_Client>[];
+      final paths = <String>[];
+      final transport = OfficeZoteroTransport(
+        createClient: () {
+          clouds++;
+          throw StateError('Saved searches must stay on this computer.');
+        },
+        createLocalClient: () {
+          final client = _Client((request) async {
+            paths.add(request.url.path);
+            expect(request.method, 'GET');
+            expect(request.headers['Zotero-Server-ID'], 'desktop-1');
+            expect(request.headers['Zotero-API-Key'], isNull);
+            expect(request.headers['Authorization'], isNull);
+            expect(request.followRedirects, isFalse);
+            expect((request as http.Request).bodyBytes, isEmpty);
+            return http.StreamedResponse(
+              Stream.value(utf8.encode('[]')),
+              200,
+              headers: const {'Zotero-Server-ID': 'desktop-1'},
+            );
+          });
+          clients.add(client);
+          return client;
+        },
+      );
+      addTearDown(transport.dispose);
+      for (final library in ['users/0', 'groups/42']) {
+        for (final resource in ['searches', 'searches/SEARCH01/items']) {
+          final response = await transport.send(
+            ZoteroHttpRequest(
+              uri: Uri.parse(
+                'http://localhost:23119/api/$library/$resource?start=0&limit=50',
+              ),
+              headers: const {
+                'Zotero-API-Version': '3',
+                'Zotero-Allowed-Request': '1',
+                'Zotero-Server-ID': 'desktop-1',
+              },
+            ),
+          );
+          expect(response.body, '[]');
+          expect(response.header('Zotero-Server-ID'), 'desktop-1');
+        }
+      }
+      expect(paths, [
+        '/api/users/0/searches',
+        '/api/users/0/searches/SEARCH01/items',
+        '/api/groups/42/searches',
+        '/api/groups/42/searches/SEARCH01/items',
+      ]);
+      expect(clouds, 0);
+      expect(clients.every((client) => client.closeCount == 1), isTrue);
+    },
+  );
+
+  test(
+    'saved-search writes and encoded route injection are refused before sending',
+    () async {
+      var clients = 0;
+      http.Client create() {
+        clients++;
+        throw StateError('Must not send invalid saved-search requests.');
+      }
+
+      final transport = OfficeZoteroTransport(
+        createClient: create,
+        createLocalClient: create,
+      );
+      addTearDown(transport.dispose);
+      const headers = {
+        'Zotero-API-Version': '3',
+        'Zotero-Allowed-Request': '1',
+      };
+      for (final request in [
+        ZoteroHttpRequest(
+          uri: Uri.parse('http://localhost:23119/api/users/0/searches'),
+          method: 'POST',
+          headers: headers,
+          body: '{}',
+        ),
+        ZoteroHttpRequest(
+          uri: Uri.parse(
+            'http://localhost:23119/api/users/0/searches/SEARCH01%2Fitems',
+          ),
+          headers: headers,
+        ),
+        ZoteroHttpRequest(
+          uri: Uri.parse(
+            'http://localhost:23119/api/users/0/searches/SEARCH01/items?key=secret',
+          ),
+          headers: headers,
+        ),
+      ]) {
+        await expectLater(
+          transport.send(request),
+          throwsA(isA<OfficeZoteroException>()),
+        );
+      }
+      expect(clients, 0);
+    },
+  );
+
   for (final route in ['execCommand', 'respond']) {
     test(
       'citing $route sends only local UTF-8 JSON without redirects',

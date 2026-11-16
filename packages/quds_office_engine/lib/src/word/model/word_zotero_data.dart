@@ -41,6 +41,33 @@ abstract final class WordZoteroDocumentData {
   /// Adapts the storage preference back to Word fields before DOCX storage.
   static String toNative(String data) => _convert(data, 'Field');
 
+  /// Requests a fresh native bibliography layout without changing the chosen
+  /// style or any unrelated preference. Earlier simplified results must not
+  /// permanently advertise that their paragraph layout was already applied.
+  static String requestBibliographyStyle(String data) {
+    final native = toNative(data);
+    if (native.isEmpty) return native;
+    if (native.trim().startsWith('{')) {
+      final json = jsonDecode(native) as Map<String, dynamic>;
+      final style = json['style'];
+      if (style is! Map<String, dynamic>) return native;
+      if (style['bibliographyStyleHasBeenSet'] != true) return native;
+      style['bibliographyStyleHasBeenSet'] = false;
+      return _bounded(jsonEncode(json));
+    }
+    final root = _parseXml(native);
+    final styles = root.childrenNamed('style', namespaceUri: '');
+    if (styles.length > 1) {
+      throw const FormatException('Duplicate Zotero document styles');
+    }
+    if (styles.length != 1 ||
+        styles.single.getAttribute('bibliographyStyleHasBeenSet') != '1') {
+      return native;
+    }
+    styles.single.setAttribute('bibliographyStyleHasBeenSet', '0');
+    return _bounded(XmlDocument(root: root).toXmlString(declaration: false));
+  }
+
   /// Note placement for a catalog selection seeded into the native picker.
   /// Zotero treats that seed as an existing field, so its document style must
   /// already be chosen before the seed is created.

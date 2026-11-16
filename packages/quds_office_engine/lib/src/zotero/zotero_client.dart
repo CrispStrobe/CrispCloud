@@ -223,6 +223,85 @@ class ZoteroClient {
     return _page(collections, response, uri, start, limit);
   }
 
+  /// Lists saved searches from the connected desktop library. The online API
+  /// cannot execute these searches, so this workflow is local-only.
+  Future<ZoteroPage<ZoteroSavedSearch>> savedSearches(
+    ZoteroLibrary library, {
+    int start = 0,
+    int limit = 50,
+  }) async {
+    _requireLocalSearches();
+    final uri = _uri(
+      '${_libraryPath(library)}/searches',
+      _pagination(start, limit),
+    );
+    final response = await _request(uri);
+    final seen = <String>{};
+    final searches = _array(_decode(response)).map((value) {
+      final json = _object(value);
+      final data = _object(json['data']);
+      final key = _responseKey(json['key'] ?? data['key']);
+      if ((data['key'] != null && data['key'] != key) || !seen.add(key)) {
+        throw _invalidResponse();
+      }
+      if (json['library'] != null) {
+        final source = _object(json['library']);
+        final id = _integer(source['id']);
+        if (source['type'] != library.type.name ||
+            id == null ||
+            id < 0 ||
+            (!library.isLocalUser && id != library.id)) {
+          throw _invalidResponse();
+        }
+      }
+      return ZoteroSavedSearch(
+        library: library,
+        key: key,
+        name: _string(data['name'], 'Untitled saved search'),
+        version: _integer(json['version']) ?? 0,
+      );
+    }).toList();
+    return _page(searches, response, uri, start, limit);
+  }
+
+  /// Executes an existing saved search in Zotero, with an optional additional
+  /// title/creator/year filter. Pagination and sorting happen in Zotero before
+  /// results are returned. Notes/attachments may be returned by the saved
+  /// search; callers should use [ZoteroItem.isCitable] for citation selection.
+  Future<ZoteroPage<ZoteroItem>> savedSearchItems(
+    ZoteroLibrary library,
+    String searchKey, {
+    String query = '',
+    int start = 0,
+    int limit = 50,
+  }) async {
+    _requireLocalSearches();
+    validateZoteroKey(searchKey);
+    try {
+      return await _items(
+        library,
+        '${_libraryPath(library)}/searches/$searchKey/items',
+        query: query,
+        start: start,
+        limit: limit,
+      );
+    } on ZoteroApiException catch (error) {
+      if (error.kind != ZoteroApiErrorKind.notFound) rethrow;
+      throw const ZoteroApiException(
+        kind: ZoteroApiErrorKind.notFound,
+        statusCode: 404,
+        message:
+            'This saved search is no longer available. Refresh saved searches and choose again.',
+      );
+    }
+  }
+
+  void _requireLocalSearches() {
+    if (!isLocal) {
+      throw StateError('Saved searches require a Zotero desktop connection.');
+    }
+  }
+
   /// Browses/searches top-level items. [ZoteroItem.isCitable] distinguishes
   /// bibliographic items from standalone notes and attachments.
   Future<ZoteroPage<ZoteroItem>> items(
@@ -236,13 +315,27 @@ class ZoteroClient {
     final path = collectionKey == null
         ? '${_libraryPath(library)}/items/top'
         : '${_libraryPath(library)}/collections/$collectionKey/items/top';
+    return _items(library, path, query: query, start: start, limit: limit);
+  }
+
+  Future<ZoteroPage<ZoteroItem>> _items(
+    ZoteroLibrary library,
+    String path, {
+    required String query,
+    required int start,
+    required int limit,
+  }) async {
+    if (query.length > 1024 || RegExp(r'[\x00-\x1f\x7f]').hasMatch(query)) {
+      throw ArgumentError('Use a Zotero search of at most 1024 characters.');
+    }
+    final text = query.trim();
     final parameters = {
       ..._pagination(start, limit),
       'include': 'data,csljson',
       'sort': 'dateModified',
       'direction': 'desc',
-      if (query.trim().isNotEmpty) 'q': query.trim(),
-      if (query.trim().isNotEmpty) 'qmode': 'titleCreatorYear',
+      if (text.isNotEmpty) 'q': text,
+      if (text.isNotEmpty) 'qmode': 'titleCreatorYear',
     };
     final uri = _uri(path, parameters);
     final response = await _request(uri);
@@ -714,7 +807,14 @@ class ZoteroClient {
       throw _invalidResponse();
     }
     final creators = data['creators'];
-    final cslJson = _singleCsl(json['csljson']);
+    // Saved searches can return child notes, attachments, or annotations.
+    // Zotero's CSL exporter can omit these records (an empty CSL array), and
+    // they are never citation candidates. Do not let their missing CSL block
+    // the bibliographic items on the same catalog page.
+    final cslJson =
+        const {'attachment', 'note', 'annotation'}.contains(itemType)
+        ? null
+        : _singleCsl(json['csljson']);
     final cslUri = _cslUri(cslJson?['id'], key);
     final canonicalUri = sourceLibrary.isLocalUser
         ? cslUri

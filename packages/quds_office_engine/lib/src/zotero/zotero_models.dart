@@ -57,7 +57,7 @@ class ZoteroLibrary {
 void validateZoteroKey(String key) {
   if (!RegExp(r'^[A-Z0-9]{8}$').hasMatch(key)) {
     throw ArgumentError(
-      'A Zotero item or collection key must have 8 uppercase letters or digits.',
+      'A Zotero item, collection, or saved search key must have 8 uppercase letters or digits.',
     );
   }
 }
@@ -108,6 +108,26 @@ class ZoteroCollection {
   final String key;
   final String name;
   final String? parentKey;
+  final int version;
+}
+
+/// A saved query owned and evaluated by a Zotero desktop library.
+///
+/// Conditions are deliberately not copied into the application: Zotero owns
+/// their interpretation, including nested conditions and attachment searches.
+class ZoteroSavedSearch {
+  ZoteroSavedSearch({
+    required this.library,
+    required this.key,
+    required this.name,
+    this.version = 0,
+  }) {
+    validateZoteroKey(key);
+  }
+
+  final ZoteroLibrary library;
+  final String key;
+  final String name;
   final int version;
 }
 

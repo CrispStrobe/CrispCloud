@@ -143,6 +143,7 @@ abstract final class PaintRunText {
         a.fontSize == b.fontSize &&
         a.bold == b.bold &&
         a.italic == b.italic &&
+        a.strike == b.strike &&
         a.underline == b.underline &&
         a.highlight == b.highlight &&
         a.fontFamily == b.fontFamily &&

@@ -181,6 +181,7 @@ LaidOutLine _noteLine(
         displayText: g.displayText,
         displayOffset: g.displayOffset,
         sourceEnd: g.sourceEnd,
+        actualText: g.actualText,
         x: g.x + dx,
         y: g.y + dy,
         color: g.color,

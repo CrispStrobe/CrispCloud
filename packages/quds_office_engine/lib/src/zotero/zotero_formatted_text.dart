@@ -14,6 +14,7 @@ final class ZoteroTextSpan {
     this.italic = false,
     this.underline = false,
     this.strike = false,
+    this.smallCaps = false,
     this.verticalAlign = WmlVertAlign.baseline,
   });
 
@@ -22,23 +23,29 @@ final class ZoteroTextSpan {
   final bool italic;
   final bool underline;
   final bool strike;
+  final bool smallCaps;
   final WmlVertAlign verticalAlign;
 }
 
 /// A bounded, inert rendering of Zotero's formatted XHTML.
 ///
-/// Supports bold, italic, underline, strike-through, subscript and superscript.
+/// Supports bold, italic, underline, strike-through, small caps, subscript and
+/// superscript.
 /// Links are retained as text; resources, scripts and stylesheets are never
-/// loaded or evaluated. Small caps, arbitrary CSS and paragraph layout are not
+/// loaded or evaluated. Arbitrary CSS and paragraph layout are not
 /// implemented. [unsupportedFormatting] reports fixed labels for those limits.
 ///
 /// The input must be a well-formed XHTML fragment, with common HTML entities
 /// and an unclosed HTML `<br>` also accepted. Malformed markup is rejected so
 /// callers can retain an existing field instead of silently losing its text.
 final class ZoteroFormattedText {
-  ZoteroFormattedText._(List<ZoteroTextSpan> spans, Set<String> unsupported)
-    : spans = List<ZoteroTextSpan>.unmodifiable(spans),
+  ZoteroFormattedText._(
+    List<ZoteroTextSpan> spans,
+    Set<String> unsupported,
+    List<int> paragraphBreakOffsets,
+  ) : spans = List<ZoteroTextSpan>.unmodifiable(spans),
       unsupportedFormatting = Set<String>.unmodifiable(unsupported),
+      paragraphBreakOffsets = List<int>.unmodifiable(paragraphBreakOffsets),
       plainText = spans.map((span) => span.text).join();
 
   factory ZoteroFormattedText.fromHtml(String html) => _parse(html);
@@ -46,6 +53,11 @@ final class ZoteroFormattedText {
   final List<ZoteroTextSpan> spans;
   final String plainText;
   final Set<String> unsupportedFormatting;
+
+  /// UTF-16 offsets of structural block delimiters in [plainText]. Each points
+  /// at one newline. Explicit `<br>` line breaks remain inside their paragraph.
+  /// Outer wrappers and trailing block boundaries do not create empty entries.
+  final List<int> paragraphBreakOffsets;
 
   /// A single atomic Word run can carry this result without losing emphasis.
   bool get hasUniformCharacterFormatting {
@@ -57,6 +69,7 @@ final class ZoteroFormattedText {
           span.italic == first.italic &&
           span.underline == first.underline &&
           span.strike == first.strike &&
+          span.smallCaps == first.smallCaps &&
           span.verticalAlign == first.verticalAlign,
     );
   }
@@ -72,9 +85,46 @@ final class ZoteroFormattedText {
           ..italic = span.italic
           ..underline = span.underline ? WmlUnderline.single : WmlUnderline.none
           ..strike = span.strike
+          ..smallCaps = span.smallCaps
           ..vertAlign = span.verticalAlign,
       ),
   ];
+
+  /// Independent paragraph runs split only at structural block boundaries.
+  /// The delimiter becomes a paragraph boundary; soft line breaks and all
+  /// character formatting, including small-capital resets, remain in runs.
+  List<List<WmlRun>> toParagraphRuns({WmlRunProps? baseProperties}) {
+    final result = <List<WmlRun>>[<WmlRun>[]];
+    var offset = 0;
+    var breakIndex = 0;
+    for (final run in toRuns(baseProperties: baseProperties)) {
+      var start = 0;
+      while (breakIndex < paragraphBreakOffsets.length &&
+          paragraphBreakOffsets[breakIndex] < offset + run.text.length) {
+        final end = paragraphBreakOffsets[breakIndex++] - offset;
+        if (end > start) {
+          result.last.add(
+            WmlRun(
+              text: run.text.substring(start, end),
+              properties: run.properties.copy(),
+            ),
+          );
+        }
+        result.add(<WmlRun>[]);
+        start = end + 1;
+      }
+      if (start < run.text.length) {
+        result.last.add(
+          WmlRun(
+            text: run.text.substring(start),
+            properties: run.properties.copy(),
+          ),
+        );
+      }
+      offset += run.text.length;
+    }
+    return result;
+  }
 
   static const _maxBytes = 8 * 1024 * 1024;
   static const _maxDepth = 64;
@@ -168,7 +218,11 @@ final class ZoteroFormattedText {
         }
       }
       if (stack.isNotEmpty) throw _malformed();
-      return ZoteroFormattedText._(out.finish(), unsupported);
+      return ZoteroFormattedText._(
+        out.finish(),
+        unsupported,
+        out.paragraphBreakOffsets,
+      );
     } on XmlParseException {
       throw _malformed();
     } on RangeError {
@@ -293,6 +347,7 @@ final class ZoteroFormattedText {
     var italic = parent.italic;
     var underline = parent.underline;
     var strike = parent.strike;
+    var smallCaps = parent.smallCaps;
     var verticalAlign = parent.verticalAlign;
     if (tag == 'b' || tag == 'strong') bold = true;
     if (tag == 'i' || tag == 'em') italic = true;
@@ -355,9 +410,9 @@ final class ZoteroFormattedText {
           }
         case 'font-variant':
         case 'font-variant-caps':
-          if (value.contains('small-caps')) {
-            unsupported.add('small caps');
-          } else if (value != 'normal') {
+          if (value == 'small-caps' || value == 'normal') {
+            smallCaps = value == 'small-caps';
+          } else {
             unsupported.add('unsupported inline style');
           }
         case 'line-height':
@@ -382,6 +437,7 @@ final class ZoteroFormattedText {
       italic: italic,
       underline: underline,
       strike: strike,
+      smallCaps: smallCaps,
       verticalAlign: verticalAlign,
     );
   }
@@ -472,12 +528,14 @@ final class _Style {
     this.italic = false,
     this.underline = false,
     this.strike = false,
+    this.smallCaps = false,
     this.verticalAlign = WmlVertAlign.baseline,
   });
   final bool bold;
   final bool italic;
   final bool underline;
   final bool strike;
+  final bool smallCaps;
   final WmlVertAlign verticalAlign;
 
   bool sameAs(_Style other) =>
@@ -485,6 +543,7 @@ final class _Style {
       italic == other.italic &&
       underline == other.underline &&
       strike == other.strike &&
+      smallCaps == other.smallCaps &&
       verticalAlign == other.verticalAlign;
   ZoteroTextSpan span(String text) => ZoteroTextSpan(
     text: text,
@@ -492,6 +551,7 @@ final class _Style {
     italic: italic,
     underline: underline,
     strike: strike,
+    smallCaps: smallCaps,
     verticalAlign: verticalAlign,
   );
 }
@@ -506,6 +566,9 @@ final class _TextBuilder {
   var _pendingSpace = false;
   var _pendingBreaks = 0;
   var _explicitBreak = false;
+  var _pendingBlockBreak = false;
+  var _length = 0;
+  final paragraphBreakOffsets = <int>[];
 
   void space() {
     if (_hasText && _pendingBreaks == 0) _pendingSpace = true;
@@ -513,6 +576,7 @@ final class _TextBuilder {
 
   void blockBreak() {
     if (_hasText && _pendingBreaks == 0) _pendingBreaks = 1;
+    if (_hasText) _pendingBlockBreak = true;
     _pendingSpace = false;
   }
 
@@ -532,12 +596,14 @@ final class _TextBuilder {
         continue;
       }
       if (_pendingBreaks > 0) {
+        if (_pendingBlockBreak) paragraphBreakOffsets.add(_length);
         _append('\n' * _pendingBreaks, style);
       } else if (_pendingSpace && !_endsWithBreak) {
         _append(' ', style);
       }
       _pendingBreaks = 0;
       _explicitBreak = false;
+      _pendingBlockBreak = false;
       _pendingSpace = false;
       _append(token, style);
     }
@@ -547,6 +613,7 @@ final class _TextBuilder {
     if (_style != null && !_style!.sameAs(style)) _flush();
     _style = style;
     _buffer.write(text);
+    _length += text.length;
     _hasText = true;
     _endsWithBreak = text.endsWith('\n');
   }
