@@ -1,0 +1,238 @@
+{
+  "started_utc": "2026-11-16T10:36:48.396539+00:00",
+  "reason": "Reduce reproducible tmpfs cache footprint after external dart2js SIGKILL; retain standard4096MB compilerheap/O4/minification and all app source/lock/graph inputs.",
+  "sdk_optional_files": [
+    {
+      "path": "bin/dartaotruntime_asan",
+      "bytes": 15131824,
+      "sha256": "ec10ae7f20683abdf3f2e8073352238aa9acbba0982760d10960a6b3baedba95",
+      "mode": "0o755"
+    },
+    {
+      "path": "bin/dartaotruntime_msan",
+      "bytes": 11827896,
+      "sha256": "9b5d1d0131973da81163479c60a0c4d9ff113bdaf2c91e9a7b428c4704539c73",
+      "mode": "0o755"
+    },
+    {
+      "path": "bin/dartaotruntime_tsan",
+      "bytes": 10764288,
+      "sha256": "80a8e5bb581bc4a10d8e2dddbc1382e488e03584a61db381901eb1e6ab575b3a",
+      "mode": "0o755"
+    },
+    {
+      "path": "bin/snapshots/analysis_server.dart.snapshot",
+      "bytes": 76803056,
+      "sha256": "1e4ed42c1bba2a2ef718b2a6d43c28cf544fdecc445cb8db7e4d112536bcfb93",
+      "mode": "0o644"
+    },
+    {
+      "path": "bin/snapshots/dartdevc.dart.snapshot",
+      "bytes": 62441968,
+      "sha256": "b1c8557a950fe84f50d8328e85aed88f9409862cb06a8e16669d6ddd475dd4b4",
+      "mode": "0o644"
+    }
+  ],
+  "unused_hosted_packages": [
+    {
+      "package": "webview_flutter_android-4.13.0",
+      "bytes": 928037,
+      "verified_archive_sha256": "a97db7a44f8e71af2f3971c45550a08cce1fb60059c1b8e534251e6cfb753490"
+    },
+    {
+      "package": "webview_flutter_wkwebview-3.26.0",
+      "bytes": 1094454,
+      "verified_archive_sha256": "c879dd64b87c452aa84381b244d5469da57ba7e8cca6884c7b1e0d406372c12d"
+    },
+    {
+      "package": "webview_flutter_platform_interface-2.15.1",
+      "bytes": 112787,
+      "verified_archive_sha256": "1221c1b12f5278791042f2ec2841743784cf25c5a644e23d6680e5d718824f04"
+    },
+    {
+      "package": "webview_flutter-4.14.1",
+      "bytes": 103118,
+      "verified_archive_sha256": "d53e1ccf5516f25017e3c9d44c39034db352d20fa34fe200674270242c2c5111"
+    },
+    {
+      "package": "video_player_android-2.10.0",
+      "bytes": 283751,
+      "verified_archive_sha256": "15bfd0598f8d8946bf0e2d50e2ca1a0db9491589a8bb7f6f9a388c0b48aef764"
+    },
+    {
+      "package": "video_player_platform_interface-6.9.0",
+      "bytes": 36649,
+      "verified_archive_sha256": "92c0fbabe20c788e71fd10d26cea998d0d253282e65d145aed0818731cf593ce"
+    },
+    {
+      "package": "vector_math-2.4.0",
+      "bytes": 862899,
+      "verified_archive_sha256": "1d774bbdf6b72a0b12122fc1560c9c2d2a67db5a4a4cc2bd8a5c990ab20e3188"
+    },
+    {
+      "package": "url_launcher_android-6.3.32",
+      "bytes": 77706,
+      "verified_archive_sha256": "b413d49b73867ac08dd2f9890efd3cc11f2a0e577618d50843440a1fb3776c32"
+    },
+    {
+      "package": "url_launcher-6.3.2",
+      "bytes": 54390,
+      "verified_archive_sha256": "f6a7e5c4835bb4e3026a04793a4199ca2d14c739ec378fdfe23fc8075d0439f8"
+    },
+    {
+      "package": "shrine_images-2.0.2",
+      "bytes": 5255141,
+      "verified_archive_sha256": "7417da1e83c22f483e222a9d947ffea04b66078c70090072eb0821b89872c26a"
+    },
+    {
+      "package": "scoped_model-2.0.0",
+      "bytes": 127776,
+      "verified_archive_sha256": "8dacc77cb5de78d5e159d54cab883847491a73dfaa3d28c52f4ec8b0be32645b"
+    },
+    {
+      "package": "retry-3.1.2",
+      "bytes": 20336,
+      "verified_archive_sha256": "822e118d5b3aafed083109c72d5f484c6dc66707885e07c0fbcb8b986bba7efc"
+    },
+    {
+      "package": "process_runner-4.2.4",
+      "bytes": 9928769,
+      "verified_archive_sha256": "edb4a3764852cce0cdcb4db7a5c3c4adbad36e3cffeec9766edef5aeb9986db6"
+    },
+    {
+      "package": "rally_assets-3.0.1",
+      "bytes": 28050,
+      "verified_archive_sha256": "cdd331819d51e58f9d8766c98af99bc0955d1c4b6b306eee4d332d30e9deaa81"
+    },
+    {
+      "package": "objective_c-9.4.1",
+      "bytes": 1730746,
+      "verified_archive_sha256": "6cb691c686fa2838c6deb34980d426145c2a5d537491cb83d463c33cdbc726ed"
+    },
+    {
+      "package": "native_toolchain_c-0.19.2",
+      "bytes": 132295,
+      "verified_archive_sha256": "f9c168717100ae6d9fee9ffb0be379bf1f8b26b0f6bcbd4fdddcd931993a6a72"
+    },
+    {
+      "package": "lints-6.1.0",
+      "bytes": 73481,
+      "verified_archive_sha256": "12f842a479589fea194fe5c5a3095abc7be0c1f2ddfa9a0e76aed1dbd26a87df"
+    },
+    {
+      "package": "metrics_center-1.0.15",
+      "bytes": 34420,
+      "verified_archive_sha256": "534f58479561db7cd54a09c135621ee4c1a2feadb62fb57370ee931fcc0d8675"
+    },
+    {
+      "package": "image-4.3.0",
+      "bytes": 13672959,
+      "verified_archive_sha256": "f31d52537dc417fdcde36088fdf11d191026fd5e4fae742491ebd40e5a8bea7d"
+    },
+    {
+      "package": "isolate-2.1.1",
+      "bytes": 79362,
+      "verified_archive_sha256": "3554ab10fdeec965d27e0074c913ccb2229887633da080d2b35a6322da14938b"
+    },
+    {
+      "package": "googleapis-14.0.0",
+      "bytes": 59215952,
+      "verified_archive_sha256": "5c9e0f25be1dec13d8d2158263141104c51b5ba83487537c17a2330581e505ee"
+    },
+    {
+      "package": "google_fonts-6.3.3",
+      "bytes": 6772237,
+      "verified_archive_sha256": "ba03d03bcaa2f6cb7bd920e3b5027181db75ab524f8891c8bc3aa603885b8055"
+    },
+    {
+      "package": "google_mobile_ads-8.0.0",
+      "bytes": 956622,
+      "verified_archive_sha256": "50549f6c945d7a445d53c04f34d025b1a1723fbd02719de9e67de432e2597f40"
+    },
+    {
+      "package": "google_identity_services_web-0.3.3+1",
+      "bytes": 69167,
+      "verified_archive_sha256": "5d187c46dc59e02646e10fe82665fc3884a9b71bc1c90c2b8b749316d33ee454"
+    },
+    {
+      "package": "google_cloud-0.4.1",
+      "bytes": 68462,
+      "verified_archive_sha256": "fbcde933b2d8600c3cdb2328f8f4c47628ec29a39e9cef85dee535c7868993c4"
+    },
+    {
+      "package": "gcloud-0.8.19",
+      "bytes": 210284,
+      "verified_archive_sha256": "caa415a0145ec8afac457322872c3e8b38379a88800d2944c53798ea8fbce386"
+    },
+    {
+      "package": "googleapis_auth-2.3.2",
+      "bytes": 137941,
+      "verified_archive_sha256": "1417d8846663df5e7b77ca56591c5edd442c66ffc9c01ab036e138a21a148e86"
+    },
+    {
+      "package": "flutter_gallery_assets-1.0.2",
+      "bytes": 92752254,
+      "verified_archive_sha256": "f8fecfeebcfbe80a2fabc00c0834046890abe681f59d3e2c5b1028faf887d94b"
+    },
+    {
+      "package": "flutter_localized_locales-2.0.5",
+      "bytes": 15903579,
+      "verified_archive_sha256": "478d10535edf07292e34cb4c757882edeeaf96d5e3dbb04b42733038bd41dd3f"
+    },
+    {
+      "package": "ffigen-20.1.1",
+      "bytes": 1670933,
+      "verified_archive_sha256": "b7803707faeec4ce3c1b0c2274906504b796e3b70ad573577e72333bd1c9b3ba"
+    },
+    {
+      "package": "flutter_staggered_grid_view-0.7.0",
+      "bytes": 146629,
+      "verified_archive_sha256": "19e7abb550c96fbfeb546b23f3ff356ee7c59a019a651f8f102a4ba9b7349395"
+    },
+    {
+      "package": "flutter_lints-6.0.0",
+      "bytes": 9826,
+      "verified_archive_sha256": "3105dc8492f6183fb076ccf1f351ac3d60564bff92e20bfc4af9cc1651f4e7e1"
+    },
+    {
+      "package": "cupertino_icons-1.0.9",
+      "bytes": 688762,
+      "verified_archive_sha256": "41e005c33bd814be4d3096aff55b1908d419fde52ca656c8c47719ec745873cd"
+    },
+    {
+      "package": "animations-2.2.0",
+      "bytes": 98444,
+      "verified_archive_sha256": "9cb469212ea51be27097f23b519d594c01171721347b55df9334fff653659e7f"
+    },
+    {
+      "package": "adaptive_breakpoints-0.1.7",
+      "bytes": 22787,
+      "verified_archive_sha256": "56dd5f1016f4d5732b80628d1b63a29d8c9cabe4d66a8a5fe63fdbec7b3af5cd"
+    },
+    {
+      "package": "_discoveryapis_commons-1.0.7",
+      "bytes": 40387,
+      "verified_archive_sha256": "113c4100b90a5b70a983541782431b82168b3cae166ab130649c36eb3559d498"
+    }
+  ],
+  "free_bytes_before": 2523688960,
+  "devtools_ui": {
+    "bytes": 94521087,
+    "files": 435
+  },
+  "discarded_git_object_cache_bytes": 270097222,
+  "filtered_git_object_store_bytes": 3456887,
+  "verified_commit_trees": [
+    "3fb3eed4e976ad2fcb4792703e81c92e880e56fd",
+    "3cd501798794dcb74de5dca912b498a4c0a7e39b",
+    "74fbdd5a9a17399237b54512877dc6700c0d76b2",
+    "5d3a020d4d3c5e1a89c0209378df0fce3f78efe3"
+  ],
+  "source_changes": [],
+  "free_bytes_after": 3283632128,
+  "meminfo_after": [
+    "MemAvailable:    4502172 kB",
+    "Shmem:           2001996 kB"
+  ],
+  "sdk_source_diff": []
+}
