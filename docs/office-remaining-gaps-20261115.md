@@ -28,13 +28,13 @@ identities, commands and the separately qualified terminal results.
 
 ## Earlier verified state
 
-- CrispCloud `main` snapshot: `5078be70`
-- Vendored Quds source checkpoint: `1808f38493d1cf2fddc1761d146432ceaaea70aa`
+- CrispCloud `main` snapshot: `7bfdc577`
+- Vendored Quds source checkpoint: `546368fe3aad7ccb65c72f897b6585513b0199f1`
   (`packages/QUDS_FORKS.md`, 2,413 managed files)
 - Quds sheet/ODS cohort: **505 tests**; the last clean full engine run was
   **2,205 tests** (two unrelated CLI bookmark/content-control tests currently
   fail on main)
-- CrispCloud vendored ODS reader+writer: **107 tests**
+- CrispCloud vendored ODS reader+writer: **110 tests**
 - CrispCloud combined F3/F4/ODF suite: **51 tests**
 - ODT parser/image suite: **37 tests**
 - Live corpus smoke tests: **20 ODF**, **9 XLS**, **1 ODS**
@@ -64,7 +64,8 @@ identities, commands and the separately qualified terminal results.
   including XLSX round-trips.
 - `OdsSheetWriter` exports a new ODS package from the shared model: values,
   formulas, styles, number formats, merges, geometry, hidden state, comments,
-  hyperlinks, names, print metadata and autofilter ranges.
+  hyperlinks, names, print metadata, autofilter ranges, pictures, conditional
+  formats and validations.
 - ODT named styles from `styles.xml`, inline pictures, text boxes, header/footer
   text, tables, lists and footnotes.
 - Exact host goldens for the reviewed Word pages.
@@ -151,8 +152,8 @@ leaking payloads into plain text/search.
 package: values, formulas, styles, number formats, merges, geometry, hidden
 state, comments, hyperlinks, names, print metadata and autofilter ranges. The
 host still saves ODS edits as a new `.xlsx`; no ODT or ODP writer exists.\
-**Remaining:** drawings/images, conditional formats, validations and page styles
-in the ODS writer; ODT/ODP serialization.\
+**Remaining:** page-style serialization in the ODS writer; ODT/ODP
+serialization.\
 **Next step:** extend the ODS writer feature-by-feature against LibreOffice, then
 decide whether ODT/ODP writers are a product requirement.\
 **Acceptance:** preserve unknown XML, styles, metadata and drawings through an

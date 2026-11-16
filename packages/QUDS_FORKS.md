@@ -90,7 +90,7 @@ validations, prompts and error styles are imported; tab colours, cell
 hyperlinks, named expressions, outline groups and comparison/empty filter predicates round-trip; conditional formats are painted and serialized with dxf styling. Hidden rows, columns and sheets
 survive an ODS→XLSX save. Absolute sheet references, clock components and
 elapsed time formats survive XLSX saves. The sheet/ODS development cohort is
-507 tests; the ODS reader+writer suite is 107 tests; the last clean full engine run was 2,205 tests, with two unrelated CLI
+507 tests; the ODS reader+writer suite is 110 tests; the last clean full engine run was 2,205 tests, with two unrelated CLI
 bookmark/content-control tests currently failing on main. The combined host qualification remains separately source-bound
 in the storage evidence.
 

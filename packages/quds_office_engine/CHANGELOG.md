@@ -4,12 +4,15 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- ODS writer now emits conditional formats (numeric, text, duplicate and
+  between rules) with cell styles, and writes/reads list and numeric validations
+  with prompts and error messages.
+
 - Add `OdsSheetWriter` for the shared spreadsheet model: multiple sheets, typed
   values, cached formulas/OpenFormula references, cell styles, number formats,
   merges, geometry, hidden state, tab colours, comments, hyperlinks, named
   ranges/expressions, print areas/titles and autofilter ranges. This is a new
-  export path; drawings, conditional formats, validations and page styles remain
-  follow-up work.
+  export path; page-style serialization remains follow-up work.
 
 - Import spreadsheet-level ODS list-validation definitions for all referring
   worksheets, including lists resolved from a later source sheet. Retain
