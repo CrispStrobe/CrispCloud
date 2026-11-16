@@ -304,6 +304,7 @@ flutter:
     - packages/quds_office_engine/third_party/hyphenation/LICENSE
     - packages/quds_office_engine/third_party/proofing/WORTLISTE_LICENSE
     - packages/quds_office_engine/third_party/proofing/QUDS_WORDS_LICENSE
+    - packages/quds_office_engine/third_party/fonttools/LICENSE
     - docs/USER_GUIDE.md
     - docs/help/USER_GUIDE.de.md
     - docs/help/USER_GUIDE.fr.md

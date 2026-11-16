@@ -11,13 +11,14 @@ void main() {
   tearDown(LicenseRegistry.reset);
 
   test(
-    'German data notices are bundled unchanged and exposed in licenses',
+    'Embedded Office notices are bundled unchanged and exposed in licenses',
     () async {
       const prefix = 'packages/quds_office_engine/third_party/';
       const notices = {
         'German hyphenation patterns': 'hyphenation/LICENSE',
         'Werners Wortliste (German spelling)': 'proofing/WORTLISTE_LICENSE',
         'Quds German word supplement': 'proofing/QUDS_WORDS_LICENSE',
+        'FontTools (Unicode range data)': 'fonttools/LICENSE',
       };
       registerOfficeProofingLicenses();
       final entries = await LicenseRegistry.licenses.toList();
@@ -41,6 +42,16 @@ void main() {
           .join('\n');
       expect(hyphenation, contains('Copyright (c) 2013-2024'));
       expect(hyphenation, contains('Keno Wehr'));
+      final fontTools = entries
+          .singleWhere(
+            (entry) =>
+                entry.packages.contains('FontTools (Unicode range data)'),
+          )
+          .paragraphs
+          .map((paragraph) => paragraph.text)
+          .join('\n');
+      expect(fontTools, contains('FontTools 4.61.1'));
+      expect(fontTools, contains('Copyright (c) 2017 Just van Rossum'));
     },
   );
 

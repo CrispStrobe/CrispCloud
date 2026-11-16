@@ -95,7 +95,7 @@ class SyncOfficeFidelityTest(unittest.TestCase):
         change = sync.plan(self.source, self.host, 'HEAD')
         self.assertEqual(change['writes'], {})
 
-    def test_german_data_sources_notices_and_manifest_follow_the_runtime_pin(self):
+    def test_embedded_data_sources_notices_and_manifest_follow_the_runtime_pin(self):
         supplied = {
             'packages/quds_office_engine/lib/src/bidi/german_hyphenation_data.dart': 'embedded patterns',
             'packages/quds_office_engine/third_party/hyphenation/hyph-de-1996.tex': 'original patterns and notice',
@@ -105,10 +105,13 @@ class SyncOfficeFidelityTest(unittest.TestCase):
             'packages/quds_office_engine/third_party/proofing/QUDS_WORDS_LICENSE': 'supplement notice',
             'packages/quds_office_engine/third_party/proofing/manifest.json': '{"source":"pinned"}',
             'packages/quds_office_engine/third_party/proofing/README.md': 'word-list provenance',
+            'packages/quds_office_engine/third_party/fonttools/LICENSE': 'font data provenance and notice',
         }
         excluded = [
             'packages/quds_office_engine/third_party/unrelated/LICENSE',
             'packages/quds_office_engine/third_party/proofing-other/LICENSE',
+            'packages/quds_office_engine/third_party/fonttools-other/LICENSE',
+            'packages/quds_office_editor/third_party/fonttools/LICENSE',
             'packages/quds_office_editor/third_party/proofing/LICENSE',
             'packages/quds_proofing_harper/pubspec.yaml',
             'packages/quds_proofing_harper/native/src/lib.rs',
@@ -129,13 +132,20 @@ class SyncOfficeFidelityTest(unittest.TestCase):
         self.assertEqual(sync.plan(self.source, self.host, 'HEAD')['writes'], {})
 
         # A local edit to a newly managed notice must stop every later write.
-        notice = 'packages/quds_office_engine/third_party/proofing/WORTLISTE_LICENSE'
-        (self.host/notice).write_text('host edit')
         self.write_source(self.name, 'new runtime source')
         self.commit()
-        with self.assertRaisesRegex(sync.SyncError, 'Vendor drift'):
-            sync.plan(self.source, self.host, 'HEAD')
-        self.assertEqual((self.host/self.name).read_text(), 'before')
+        for notice in (
+                'packages/quds_office_engine/third_party/proofing/WORTLISTE_LICENSE',
+                'packages/quds_office_engine/third_party/fonttools/LICENSE'):
+            with self.subTest(notice=notice):
+                original = (self.host/notice).read_text()
+                (self.host/notice).write_text('host edit')
+                try:
+                    with self.assertRaisesRegex(sync.SyncError, 'Vendor drift'):
+                        sync.plan(self.source, self.host, 'HEAD')
+                    self.assertEqual((self.host/self.name).read_text(), 'before')
+                finally:
+                    (self.host/notice).write_text(original)
 
     def test_deleted_tracked_file_is_removed_from_manifest(self):
         (self.source/self.name).unlink()

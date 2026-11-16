@@ -28,6 +28,7 @@ import 'file/text/pdf_std14.dart';
 import 'office_pdf_visuals.dart';
 import 'pdf_canvas.dart';
 import 'pdf_document.dart';
+import 'pdf_font.dart';
 import 'pdf_save_options.dart';
 
 /// Print layout for worksheet PDF (Office Print defaults to A4 portrait).
@@ -2001,16 +2002,28 @@ class _FontPack {
         return (embedded: embedded, face: choice);
       }
     }
-    final used = <int>{
-      cp,
-      for (final point in codePoints)
-        if (choice.font.glyphIdFor(point) != 0) point,
+    final alreadyEncoded = <int>{
+      for (final embedded in faces)
+        if (identical(embedded.source, choice.font))
+          ...embedded.subset.unicodeToNewGlyph.keys,
     };
+    final used = <int>{cp};
+    for (final point in codePoints) {
+      if (used.length == PdfCidEncoding.maxCharacters) break;
+      if (!alreadyEncoded.contains(point) &&
+          choice.font.glyphIdFor(point) != 0) {
+        used.add(point);
+      }
+    }
     // A late generated label gets a new immutable subset if its character was
-    // not collected initially. Never renumber glyphs already emitted to PDF.
+    // not collected initially. A resource also contains at most 65535 Unicode
+    // mappings; larger repertoires use another resource with distinct CIDs.
+    // Never renumber character codes already emitted to PDF.
+    final subset = FontSubsetter(choice.font).subset(used);
     final embedded = PdfEmbeddedFace(
-      subset: FontSubsetter(choice.font).subset(used),
+      subset: subset,
       source: choice.font,
+      encoding: PdfCidEncoding.fromSubset(subset),
       // F2 is reserved for the Standard 14 Helvetica fallback.
       resourceName: faces.isEmpty ? 'F1' : 'F${faces.length + 2}',
     );
@@ -2270,8 +2283,11 @@ class _PageSink {
     }
     if (selected != null) {
       final face = selected.embedded;
-      final gid = face.subset.unicodeToNewGlyph[drawable] ?? 0;
-      if (gid != 0) {
+      final cid =
+          face.encoding?.unicodeToCid[drawable] ??
+          face.subset.unicodeToNewGlyph[drawable] ??
+          0;
+      if (cid != 0) {
         if (pack.set.faces.isNotEmpty) {
           pack.set.diagnostics?.reportSubstitution(
             family,
@@ -2282,7 +2298,7 @@ class _PageSink {
           x: x,
           y: y,
           fontSize: size,
-          glyphId: gid,
+          glyphId: cid,
           color: color,
           // Real bold/italic cuts already carry their own outlines. Simulate
           // only an unavailable style, retaining legacy single-face behavior.

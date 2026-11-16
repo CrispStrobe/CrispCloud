@@ -75,7 +75,10 @@ class PdfCanvas {
     return int.tryParse(clean, radix: 16) ?? 0;
   }
 
-  /// showGlyph API.
+  /// Writes a two-byte PDF character code.
+  ///
+  /// [glyphId] is the subset glyph ID for the default identity encoding, or
+  /// a CID from the embedded face's explicit encoding when one is supplied.
   void showGlyph({
     required double x,
     required double y,
