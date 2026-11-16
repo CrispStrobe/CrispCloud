@@ -1216,6 +1216,12 @@ class WordDeserializer {
           }
           inlines.add(symbol);
         }
+      } else if (reader.localName == 'softHyphen' &&
+          reader.namespaceUri == OfficeNamespaces.w) {
+        run.text += '\u00ad';
+      } else if (reader.localName == 'noBreakHyphen' &&
+          reader.namespaceUri == OfficeNamespaces.w) {
+        run.text += '\u2011';
       } else if (reader.localName == 'tab') {
         run.text += '\t';
       } else if (reader.localName == 'br' || reader.localName == 'cr') {
@@ -1382,6 +1388,14 @@ class WordDeserializer {
           props.justification = _jc(
             reader.getAttribute('val', namespaceUri: OfficeNamespaces.w),
           );
+        case 'suppressAutoHyphens':
+          props.suppressAutoHyphens = _onOff(
+            reader.getAttribute('val', namespaceUri: OfficeNamespaces.w),
+          );
+        case 'rPr':
+          final marker = WmlRunProps();
+          _parseRPr(reader, marker);
+          props.proofingLanguage = marker.proofingLanguage;
         case 'bidi':
           props.rightToLeft = _onOff(
             reader.getAttribute('val', namespaceUri: OfficeNamespaces.w),
@@ -2119,6 +2133,15 @@ class WordDeserializer {
       }
       props.explicitProperties.add(reader.localName);
       switch (reader.localName) {
+        case 'lang':
+          props.proofingLanguage = reader.getAttribute(
+            'val',
+            namespaceUri: OfficeNamespaces.w,
+          );
+        case 'noProof':
+          props.noProof = _onOff(
+            reader.getAttribute('val', namespaceUri: OfficeNamespaces.w),
+          );
         case 'rStyle':
           props.styleId = reader.getAttribute(
             'val',
@@ -3286,7 +3309,12 @@ class WordDeserializer {
     return separatorsPresent;
   }
 
-  void _readStyles(WmlDocument document, OpcPackage package, String docUri) {
+  void _readStyles(
+    WmlDocument document,
+    OpcPackage package,
+    String docUri, {
+    bool readProofingLanguage = true,
+  }) {
     final RelationshipCollection rels = package.relationshipsFor(docUri);
     final PackageRelationship? rel = rels.firstByType(RelationshipTypes.styles);
     final PackagePart? part = rel == null
@@ -3294,6 +3322,14 @@ class WordDeserializer {
         : package.getPart(rels.resolve(rel));
     if (part == null) {
       return;
+    }
+    if (readProofingLanguage) {
+      document.proofingLanguage = XmlDocument.parse(part.readText()).root
+          ?.firstChild('docDefaults', namespaceUri: OfficeNamespaces.w)
+          ?.firstChild('rPrDefault', namespaceUri: OfficeNamespaces.w)
+          ?.firstChild('rPr', namespaceUri: OfficeNamespaces.w)
+          ?.firstChild('lang', namespaceUri: OfficeNamespaces.w)
+          ?.getAttribute('val', namespaceUri: OfficeNamespaces.w);
     }
     document.styles.clear();
     final XmlPullReader reader = WordMarkupCompatibilityReader(part.readText());
@@ -3478,7 +3514,7 @@ class WordDeserializer {
     final uri = rel == null
         ? '/word/document.xml'
         : package.packageRelationships.resolve(rel);
-    _readStyles(document, package, uri);
+    _readStyles(document, package, uri, readProofingLanguage: false);
     _applyDocumentStyles(document);
   }
 
@@ -3552,6 +3588,7 @@ class WordDeserializer {
     }
     final settings = WordSettingsIo.read(part.readText());
     document
+      ..autoHyphenation = settings.autoHyphenation
       ..trackRevisions = settings.tracking
       ..restrictEditing = settings.protection
       ..restrictMode = settings.restrictMode

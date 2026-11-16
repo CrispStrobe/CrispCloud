@@ -1152,6 +1152,8 @@ class WmlDocument {
     OfficeDocumentProperties? properties,
     this.package,
     this.trackRevisions = false,
+    this.proofingLanguage,
+    this.autoHyphenation = false,
     this.watermark = '',
     this.restrictEditing = false,
     this.restrictMode = WmlRestrictMode.readOnly,
@@ -1220,6 +1222,13 @@ class WmlDocument {
 
   /// trackRevisions API.
   bool trackRevisions;
+
+  /// Document default language, stored in styles.xml docDefaults/rPr/lang.
+  String? proofingLanguage;
+
+  /// Automatic linguistic hyphenation (`w:autoHyphenation`).
+  /// Explicit soft hyphens remain usable when this is disabled.
+  bool autoHyphenation;
 
   /// Diagonal / stamp watermark text painted by hosts.
   String watermark;

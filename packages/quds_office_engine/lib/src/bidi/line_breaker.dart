@@ -43,6 +43,8 @@ class ShapedGlyph {
     this.isSpace = false,
     this.paintDx = 0,
     this.paintDy = 0,
+    this.isDiscretionaryHyphen = false,
+    this.sourceLength,
   });
 
   /// codePoint API.
@@ -62,6 +64,13 @@ class ShapedGlyph {
 
   /// isSpace API.
   final bool isSpace;
+
+  /// A visible hyphen selected at a discretionary line break.
+  final bool isDiscretionaryHyphen;
+
+  /// Authored UTF-16 units owned by this glyph. Automatic hyphens own zero;
+  /// explicit U+00AD owns one. Null retains the normal source-character size.
+  final int? sourceLength;
 
   /// Added to the pen X before painting. Combining marks sit on their base.
   final double paintDx;
@@ -105,6 +114,7 @@ abstract final class LineBreaker {
     bool justify = true,
     MarkAttachFn? markAttachOf,
     List<ShapedGlyph> Function(List<ShapedGlyph> glyphs)? ligate,
+    Iterable<int> hyphenationOffsets = const [],
   }) {
     final bidi = Uax9Bidi.reorder(text, baseLevel: baseLevel);
     final logical = _logicalGlyphs(
@@ -113,13 +123,28 @@ abstract final class LineBreaker {
       widthAt ?? (cp, _) => widthOf(cp),
       glyphIdAt ?? (cp, _) => glyphIdOf(cp),
     );
+    final shaped = ligate == null ? logical : ligate(logical);
+    final hyphens = _hyphenGlyphs(
+      text,
+      shaped,
+      hyphenationOffsets,
+      widthAt ?? (cp, _) => widthOf(cp),
+      glyphIdAt ?? (cp, _) => glyphIdOf(cp),
+    );
     return PreparedLineBreaker._(
       text,
-      ligate == null ? logical : ligate(logical),
+      shaped,
       spaceStretch,
       spaceShrink,
       justify,
       markAttachOf,
+      hyphens,
+      hyphens.isEmpty
+          ? null
+          : {
+              for (final cluster in GraphemeClusters.segment(text))
+                cluster.start,
+            },
     );
   }
 
@@ -145,6 +170,7 @@ abstract final class LineBreaker {
     bool breakLongWords = false,
     MarkAttachFn? markAttachOf,
     List<ShapedGlyph> Function(List<ShapedGlyph> glyphs)? ligate,
+    Iterable<int> hyphenationOffsets = const [],
   }) {
     if (text.isEmpty) {
       return <BrokenLine>[
@@ -170,7 +196,14 @@ abstract final class LineBreaker {
     if (logical.isEmpty) {
       return <BrokenLine>[];
     }
-    final Set<int>? clusterStarts = breakLongWords
+    final hyphens = _hyphenGlyphs(
+      text,
+      logical,
+      hyphenationOffsets,
+      widthAt ?? (cp, _) => widthOf(cp),
+      glyphIdAt ?? (cp, _) => glyphIdOf(cp),
+    );
+    final Set<int>? clusterStarts = breakLongWords || hyphens.isNotEmpty
         ? {for (final cluster in GraphemeClusters.segment(text)) cluster.start}
         : null;
 
@@ -197,6 +230,8 @@ abstract final class LineBreaker {
             justify: justify,
             markAttachOf: markAttachOf,
             clusterStarts: clusterStarts,
+            hyphens: hyphens,
+            breakLongWords: breakLongWords,
           ),
         );
       } else if (hard || (atEnd && lines.isEmpty)) {
@@ -231,16 +266,19 @@ abstract final class LineBreaker {
     required bool justify,
     MarkAttachFn? markAttachOf,
     Set<int>? clusterStarts,
+    Map<int, ShapedGlyph> hyphens = const {},
+    bool breakLongWords = false,
   }) {
     final List<int> planned = _knuthPlass(
       logical,
       maxWidth,
       spaceStretch,
       spaceShrink,
+      hyphens,
     );
-    final breaks = clusterStarts == null
+    final breaks = !breakLongWords || clusterStarts == null
         ? planned
-        : _constrainBreaks(logical, planned, clusterStarts, maxWidth);
+        : _constrainBreaks(logical, planned, clusterStarts, maxWidth, hyphens);
     final List<BrokenLine> lines = <BrokenLine>[];
     for (int i = 0; i < breaks.length - 1; i++) {
       final int from = breaks[i];
@@ -249,7 +287,7 @@ abstract final class LineBreaker {
         to--;
       }
       final List<ShapedGlyph> slice = _reorderLine(
-        logical.sublist(from, to),
+        _paintSlice(logical, from, to, breaks[i + 1], hyphens),
         markAttachOf,
         clusterStarts,
       );
@@ -268,7 +306,7 @@ abstract final class LineBreaker {
       }
       int logStart = 0x7fffffff;
       int logEnd = 0;
-      for (final ShapedGlyph g in slice) {
+      for (final ShapedGlyph g in logical.sublist(from, to)) {
         if (g.logicalIndex < logStart) {
           logStart = g.logicalIndex;
         }
@@ -278,9 +316,11 @@ abstract final class LineBreaker {
           logEnd = g.logicalIndex + units;
         }
       }
-      if (slice.isEmpty) {
-        logStart = 0;
-        logEnd = 0;
+      if (to == from) {
+        logStart = from < logical.length
+            ? logical[from].logicalIndex
+            : sourceText.length;
+        logEnd = logStart;
       }
       lines.add(
         BrokenLine(
@@ -304,6 +344,7 @@ abstract final class LineBreaker {
     List<int> planned,
     Set<int> clusterStarts,
     double maxWidth,
+    Map<int, ShapedGlyph> hyphens,
   ) {
     final boundaries = <int>[
       0,
@@ -338,7 +379,10 @@ abstract final class LineBreaker {
         for (var next = start + 1; next <= end; next++) {
           final from = boundaries[start];
           final to = boundaries[next];
-          final width = widths[math.max(from, paintedEnd[to])] - widths[from];
+          final width =
+              widths[math.max(from, paintedEnd[to])] -
+              widths[from] +
+              (_hyphenForBreak(logical, to, hyphens)?.advance ?? 0);
           if (width > maxWidth + 0.000001) {
             // An indivisible glyph/cluster may itself be wider than the box.
             // Keep it whole and always make progress.
@@ -346,7 +390,7 @@ abstract final class LineBreaker {
             break;
           }
           fitting = next;
-          if (_canBreakAfter(logical, to - 1)) natural = next;
+          if (_canBreakAfter(logical, to - 1, hyphens)) natural = next;
         }
         final cut = fitting == end
             ? end
@@ -483,6 +527,18 @@ abstract final class LineBreaker {
     ) {
       final int cp = cps[logicalCpIndex];
       final int logicalIndex = offsets[logicalCpIndex];
+      if (cp == 0x00ad) {
+        logical.add(
+          ShapedGlyph(
+            codePoint: cp,
+            glyphId: 0,
+            advance: 0,
+            logicalIndex: logicalIndex,
+            level: bidi.levels[logicalCpIndex],
+          ),
+        );
+        continue;
+      }
       if (Uax9Bidi.isInvisibleFormat(cp)) {
         continue;
       }
@@ -515,6 +571,7 @@ abstract final class LineBreaker {
       for (final ShapedChar s in shaped) s.logicalIndex: s,
     };
     return logical.map((ShapedGlyph g) {
+      if (g.codePoint == 0x00ad) return g;
       final ShapedChar? s = byLogical[g.logicalIndex];
       if (s == null) {
         return _l4Mirror(g, widthOf, glyphIdOf);
@@ -587,8 +644,9 @@ abstract final class LineBreaker {
     List<ShapedGlyph> glyphs,
     double maxWidth,
     double stretch,
-    double shrink,
-  ) {
+    double shrink, [
+    Map<int, ShapedGlyph> hyphens = const {},
+  ]) {
     final int n = glyphs.length;
     final List<double> widths = List<double>.filled(n + 1, 0);
     for (int i = 0; i < n; i++) {
@@ -596,7 +654,7 @@ abstract final class LineBreaker {
     }
     final List<int> legal = <int>[0];
     for (int i = 0; i < n; i++) {
-      if (_canBreakAfter(glyphs, i)) {
+      if (_canBreakAfter(glyphs, i, hyphens)) {
         legal.add(i + 1);
       }
     }
@@ -621,6 +679,9 @@ abstract final class LineBreaker {
           w -= glyphs[t].advance;
           t--;
         }
+        final hyphen = _hyphenForBreak(glyphs, to, hyphens);
+        w += hyphen?.advance ?? 0;
+        if (hyphen != null && w > maxWidth) continue;
         if (w > maxWidth + shrink && j != legal.length - 1) {
           continue;
         }
@@ -644,16 +705,26 @@ abstract final class LineBreaker {
             badness += (slack / spaces) / stretch;
           }
         }
-        final double cost = demerits[i] + badness * badness * 100 + 10;
+        final double cost =
+            demerits[i] +
+            badness * badness * 100 +
+            10 +
+            (hyphen == null ? 0 : 50);
         if (cost < demerits[j]) {
           demerits[j] = cost;
           pred[j] = i;
         }
       }
-      if (demerits[j].isInfinite) {
-        // Forced overflow: take the previous legal break.
-        demerits[j] = demerits[j - 1] + 10000;
-        pred[j] = j - 1;
+      if (demerits[j].isInfinite &&
+          _hyphenForBreak(glyphs, legal[j], hyphens) == null) {
+        // An indivisible word may overflow; a discretionary hyphen that
+        // does not fit is not a usable break. Keep its candidate unreachable.
+        var previous = j - 1;
+        while (previous > 0 && demerits[previous].isInfinite) {
+          previous--;
+        }
+        demerits[j] = demerits[previous] + 10000;
+        pred[j] = previous;
       }
     }
     final List<int> points = <int>[];
@@ -666,7 +737,11 @@ abstract final class LineBreaker {
     return points.reversed.toList();
   }
 
-  static bool _canBreakAfter(List<ShapedGlyph> glyphs, int i) {
+  static bool _canBreakAfter(
+    List<ShapedGlyph> glyphs,
+    int i, [
+    Map<int, ShapedGlyph> hyphens = const {},
+  ]) {
     final int cp = glyphs[i].codePoint;
     if (cp == 0x000A || cp == 0x000D) {
       return true;
@@ -674,12 +749,13 @@ abstract final class LineBreaker {
     if (i == glyphs.length - 1) {
       return true;
     }
+    if (hyphens.containsKey(glyphs[i + 1].logicalIndex)) return true;
     final int next = glyphs[i + 1].codePoint;
     if (_isBreakSpace(cp)) {
       return true;
     }
     // UAX #14: BA, ZW, HY allow break after; GL/WJ forbid.
-    if (cp == 0x200B || cp == 0x00AD || cp == 0x2010 || cp == 0x002D) {
+    if (cp == 0x200B || cp == 0x2010 || cp == 0x002D) {
       return true;
     }
     if (cp == 0x00A0 || cp == 0x2060 || cp == 0x200D) {
@@ -691,6 +767,77 @@ abstract final class LineBreaker {
     }
     return false;
   }
+
+  static Map<int, ShapedGlyph> _hyphenGlyphs(
+    String text,
+    List<ShapedGlyph> logical,
+    Iterable<int> candidates,
+    GlyphWidthAtFn widthAt,
+    GlyphIdAtFn glyphIdAt,
+  ) {
+    if (candidates.isEmpty && !text.contains('\u00ad')) return const {};
+    final boundaries = {
+      for (final c in GraphemeClusters.segment(text)) c.start,
+    };
+    final offsets = candidates.toSet();
+    for (final g in logical) {
+      if (g.codePoint == 0x00ad) offsets.add(g.logicalIndex + 1);
+    }
+    final result = <int, ShapedGlyph>{};
+    final bySource = {for (final g in logical) g.logicalIndex: g};
+    for (final offset in offsets) {
+      if (offset <= 0 ||
+          offset >= text.length ||
+          !boundaries.contains(offset) ||
+          !bySource.containsKey(offset)) {
+        continue;
+      }
+      final explicit = text.codeUnitAt(offset - 1) == 0x00ad;
+      var owner = offset - 1;
+      if (owner > 0 &&
+          text.codeUnitAt(owner) >= 0xdc00 &&
+          text.codeUnitAt(owner) <= 0xdfff) {
+        owner--;
+      }
+      final prior = bySource[owner];
+      final next = bySource[offset]!;
+      if (prior == null ||
+          prior.isSpace ||
+          next.isSpace ||
+          next.codePoint == 0x0a ||
+          next.codePoint == 0x0d) {
+        continue;
+      }
+      result[offset] = ShapedGlyph(
+        codePoint: 0x2d,
+        glyphId: glyphIdAt(0x2d, owner),
+        advance: widthAt(0x2d, owner),
+        logicalIndex: explicit ? offset - 1 : offset,
+        level: prior.level,
+        isDiscretionaryHyphen: true,
+        sourceLength: explicit ? 1 : 0,
+      );
+    }
+    return result;
+  }
+
+  static ShapedGlyph? _hyphenForBreak(
+    List<ShapedGlyph> logical,
+    int to,
+    Map<int, ShapedGlyph> hyphens,
+  ) => to < logical.length ? hyphens[logical[to].logicalIndex] : null;
+
+  static List<ShapedGlyph> _paintSlice(
+    List<ShapedGlyph> logical,
+    int from,
+    int paintedTo,
+    int consumedTo,
+    Map<int, ShapedGlyph> hyphens,
+  ) => [
+    for (var at = from; at < paintedTo; at++)
+      if (logical[at].codePoint != 0x00ad) logical[at],
+    ?_hyphenForBreak(logical, consumedTo, hyphens),
+  ];
 
   static bool _isBreakSpace(int cp) =>
       cp == 0x0020 || cp == 0x0009 || cp == 0x2000 || cp == 0x3000;
@@ -714,6 +861,8 @@ class PreparedLineBreaker {
     this._shrink,
     this._justify,
     this._markAttach,
+    this._hyphens,
+    this._clusterStarts,
   );
 
   final String _text;
@@ -722,6 +871,8 @@ class PreparedLineBreaker {
   final double _shrink;
   final bool _justify;
   final MarkAttachFn? _markAttach;
+  final Map<int, ShapedGlyph> _hyphens;
+  final Set<int>? _clusterStarts;
   double? _plannedWidth;
   final Map<int, int> _plannedBreaks = {};
 
@@ -784,6 +935,7 @@ class PreparedLineBreaker {
         maxWidth,
         _stretch,
         _shrink,
+        _hyphens,
       );
       // The optimal suffix remains valid until the available width changes.
       // Reuse it instead of recomputing a whole paragraph for every line.
@@ -798,8 +950,9 @@ class PreparedLineBreaker {
       painted--;
     }
     final glyphs = LineBreaker._reorderLine(
-      chunk.sublist(0, painted),
+      LineBreaker._paintSlice(chunk, 0, painted, consumed, _hyphens),
       _markAttach,
+      _clusterStarts,
     );
     var width = 0.0;
     var spaces = 0;
@@ -808,6 +961,8 @@ class PreparedLineBreaker {
     for (final glyph in glyphs) {
       width += glyph.advance;
       if (glyph.isSpace) spaces++;
+    }
+    for (final glyph in chunk.take(painted)) {
       logicalStart = math.min(logicalStart, glyph.logicalIndex);
       final source = _text.codeUnitAt(glyph.logicalIndex);
       final units = source >= 0xD800 && source <= 0xDBFF ? 2 : 1;
@@ -822,7 +977,7 @@ class PreparedLineBreaker {
       line: BrokenLine(
         glyphs: glyphs,
         width: width,
-        logicalStart: glyphs.isEmpty ? start : logicalStart,
+        logicalStart: painted == 0 ? start : logicalStart,
         logicalEnd: logicalEnd,
         justificationRatio: ratio,
       ),

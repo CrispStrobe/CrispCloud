@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import '../../bidi/german_hyphenator.dart';
 import '../../bidi/line_breaker.dart';
 import '../../fonts/font_metrics.dart';
 import '../../fonts/gpos_mark_to_base.dart';
@@ -112,7 +113,9 @@ class LaidOutGlyph {
   final String? actualText;
 
   int get logicalEnd =>
-      sourceEnd ?? glyph.logicalIndex + (glyph.codePoint > 0xffff ? 2 : 1);
+      sourceEnd ??
+      glyph.logicalIndex +
+          (glyph.sourceLength ?? (glyph.codePoint > 0xffff ? 2 : 1));
 
   /// advance API.
   double advance;
@@ -145,6 +148,8 @@ class LaidOutLine {
     this.overlaySize = 11,
     this.overlayBold = false,
     this.sourceText,
+    this.sourceParagraph,
+    this.proofingOffsets,
     this.tocTargetParagraph,
     this.tocLeader = false,
     this.hyperlink,
@@ -152,6 +157,20 @@ class LaidOutLine {
     this.boxX = 0,
     this.boxWidth = 0,
   });
+
+  /// Exact model paragraph for this layout story, independent of body indexes.
+  final WmlParagraph? sourceParagraph;
+
+  /// Note labels can add display-only UTF-16 units before/between source runs.
+  /// A null entry denotes such a label; otherwise each entry is the original
+  /// source offset. Null list means the identity mapping.
+  final List<int?>? proofingOffsets;
+
+  int? proofingOffsetAt(int layoutOffset) => proofingOffsets == null
+      ? layoutOffset
+      : layoutOffset < 0 || layoutOffset >= proofingOffsets!.length
+      ? null
+      : proofingOffsets![layoutOffset];
 
   /// Inner left/right pad for table-cell text (`tblCellMar` 108 twips).
   static const double tableCellPad = 5.4;
@@ -1422,6 +1441,25 @@ class WordLayoutEngine {
       return GposMarkToBase.fnFor(baseFace, baseSize)(base, mark);
     }
 
+    final hyphenationOffsets =
+        _layoutDoc?.autoHyphenation == true &&
+            paragraph.properties.suppressAutoHyphens != true
+        ? GermanHyphenator.breakOffsets(
+            text,
+            language:
+                paragraph.properties.proofingLanguage ??
+                _layoutDoc?.proofingLanguage,
+            languageAt: (offset) =>
+                propsAt(offset).proofingLanguage ??
+                paragraph.properties.proofingLanguage ??
+                _layoutDoc?.proofingLanguage,
+          )
+        : const <int>[];
+    int sourceStyleOffset(ShapedGlyph glyph) =>
+        glyph.isDiscretionaryHyphen && glyph.sourceLength == 0
+        ? (glyph.logicalIndex - 1).clamp(0, text.length)
+        : glyph.logicalIndex;
+
     final bool wrapsFrames =
         allowBreak &&
         flow != null &&
@@ -1431,6 +1469,7 @@ class WordLayoutEngine {
     final PreparedLineBreaker? wrapBreaker = wrapsFrames
         ? LineBreaker.prepare(
             text: text,
+            hyphenationOffsets: hyphenationOffsets,
             widthOf: (cp) => widthAt(cp, 0),
             widthAt: widthAt,
             glyphIdAt: glyphIdAt,
@@ -1443,6 +1482,7 @@ class WordLayoutEngine {
         ? const []
         : LineBreaker.breakLines(
             text: text,
+            hyphenationOffsets: hyphenationOffsets,
             maxWidth: maxWidth,
             widthOf: (cp) => widthAt(cp, 0),
             widthAt: widthAt,
@@ -1465,7 +1505,7 @@ class WordLayoutEngine {
     double largestSizeOn(BrokenLine line) {
       var largest = fontSize;
       for (final ShapedGlyph g in line.glyphs) {
-        final double size = propsAt(g.logicalIndex).fontSizePoints;
+        final double size = propsAt(sourceStyleOffset(g)).fontSizePoints;
         if (size > largest) largest = size;
       }
       return largest;
@@ -1678,9 +1718,11 @@ class WordLayoutEngine {
       // offsets by source ownership rather than that transient identity.
       final displayOffsets = <int, int>{};
       for (final ShapedGlyph g in line.glyphs) {
-        final WmlRunProps props = propsAt(g.logicalIndex);
+        final WmlRunProps props = propsAt(sourceStyleOffset(g));
         final double baseSize = props.fontSizePoints;
-        final display = displayLabels[g.logicalIndex];
+        final display = g.isDiscretionaryHyphen
+            ? null
+            : displayLabels[g.logicalIndex];
         final double size =
             baseSize * props.vertAlign.fontScale * (display?.scale ?? 1);
         glyphs.add(
@@ -1688,8 +1730,12 @@ class WordLayoutEngine {
             glyph: g,
             displayText: display?.text,
             displayOffset: displayOffsets[g.logicalIndex] ?? 0,
-            sourceEnd: display?.end,
-            actualText: display != null && !display.note
+            sourceEnd: g.isDiscretionaryHyphen
+                ? g.logicalIndex + (g.sourceLength ?? 0)
+                : display?.end,
+            actualText: g.isDiscretionaryHyphen
+                ? (g.sourceLength == 0 ? '' : '\u00ad')
+                : display != null && !display.note
                 ? text.substring(g.logicalIndex, display.end)
                 : null,
             x: gx + g.paintDx,
@@ -1744,6 +1790,7 @@ class WordLayoutEngine {
         listMarkerX: markerX,
         isParagraphStart: lineNumber == 0,
         sourceText: sourceText,
+        sourceParagraph: paragraph,
         tocTargetParagraph: tocTargetParagraph,
         overlayText:
             (wrapBreaker == null
@@ -3078,6 +3125,7 @@ class WordLayoutEngine {
               height: size + 3,
               pageIndex: pageNumber - 1,
               paragraphIndex: i,
+              sourceParagraph: paragraph,
               justification: align,
               isFooter: isFooter,
               overlayText: part,
@@ -3115,6 +3163,7 @@ class WordLayoutEngine {
           height: size + 3,
           pageIndex: pageNumber - 1,
           paragraphIndex: i,
+          sourceParagraph: paragraph,
           justification: paragraph.properties.justification,
           isFooter: isFooter,
           overlayText: text,

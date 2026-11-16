@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "upstream": {
+    "name": "DANTE / Werners Wortliste (hyphenation mirror)",
+    "repository": "https://github.com/hyphenation/languages-german",
+    "canonical_repository": "https://repo.or.cz/wortliste.git",
+    "revision": "4330a0b1254e88615cb4c83e4b3dc2f0810c76d9",
+    "source_url": "https://raw.githubusercontent.com/hyphenation/languages-german/4330a0b1254e88615cb4c83e4b3dc2f0810c76d9/wortliste",
+    "source_sha256": "55b457fac8e322146853f45bbda59046a55496a3e3deb32d3a88feb908eca243",
+    "license": "MIT",
+    "license_url": "https://github.com/hyphenation/languages-german/blob/4330a0b1254e88615cb4c83e4b3dc2f0810c76d9/LICENSE",
+    "license_sha256": "3dc8ca573654facf18b8046dad2fae36b8d0acb254ccea888c283c60c7b62c99",
+    "format_reference": "https://github.com/hyphenation/languages-german/blob/4330a0b1254e88615cb4c83e4b3dc2f0810c76d9/skripte/python/edit_tools/wortliste.py",
+    "snapshot_date": "2016-05-01",
+    "modern_source_forms": 443925
+  },
+  "supplement": {
+    "path": "tool/proofing/german_common_words.txt",
+    "license": "MIT",
+    "authorship": "Independently authored Quds Office basic-word supplement, 2026",
+    "sha256": "0c9a0116ff47f9a071410be3d4edc1a1ecb63f798f35cef778f8dd6c1d2f36ed",
+    "forms": 1264,
+    "additional_forms": 198
+  },
+  "selection": {
+    "standard": "Shared field 2, otherwise reformed field 4; excludes absent -N- placeholders.",
+    "swiss": "Reformed no-sharp-s field 7 with shared field 5 fallback, plus standard forms with sharp-s replaced by ss; sharp-s forms rejected in de-CH.",
+    "scope": "Finite word forms; no unrestricted compound decomposition or complete morphology. DE and AT share this source vocabulary. The old source snapshot has no claim to contemporary completeness."
+  },
+  "data": {
+    "standard_count": 444123,
+    "swiss_additions_count": 9451,
+    "standard_sha256": "687559f48fa11f2cc8191488fe8aa86453385ed5b2f68c7142a164f402ec49da",
+    "swiss_additions_sha256": "47983d1ea48a7c3a0328b071b9d2beab1ffed7ac6f33b209dcc6f80afe4be760"
+  },
+  "encoding": {
+    "format": "base64 raw DEFLATE of newline-separated UTF-8, <=4096 words/chunk",
+    "zlib_version": "1.3.2"
+  },
+  "generated_files": {
+    "lib/src/proofing/data/german_common_00.dart": "8617711b9765cd8efcb9af4686aaf982eeeb7bab2d29db8e6f8ca7889f5362ab",
+    "lib/src/proofing/data/german_lexicon_data.dart": "beb4e809b577fc950e39ffb759b9435834d1f2763e7d00911816da21b8b5d3a1",
+    "lib/src/proofing/data/german_standard_00.dart": "dfc3548af79c27f6d306ae91fc8711e6f5013295d4deaab6442f9fda964f54a4",
+    "lib/src/proofing/data/german_standard_01.dart": "75216e458beeeade0c3b647fda64064f3a2468887f716d8ee00947b1e1a319f1",
+    "lib/src/proofing/data/german_standard_02.dart": "554eba69a5558a3e234eb1c07db1bca1125d17403a3cadcb2951c39270f856d3",
+    "lib/src/proofing/data/german_standard_03.dart": "9425e9817ded89627b93cc3f86661ad55986efac02efa012d13e75c5eb82471b",
+    "lib/src/proofing/data/german_standard_04.dart": "69ff9e7f58e113756efa35204ba4951d9737c8024117dacbe183fab0797882bf",
+    "lib/src/proofing/data/german_standard_05.dart": "5f8b2d1fc67396074c015f1441faf618f0de995b9f1d017770dd52b9e673019f",
+    "lib/src/proofing/data/german_standard_06.dart": "e07eb4f404778a644d069c9766abc95b2a0c5d8687d217cb0bcd7fbb859d8f2e",
+    "lib/src/proofing/data/german_standard_07.dart": "bd80b1c0429bc75631a9df417257d22648bb9897cf8a8a3fd1fcced8992973e7",
+    "lib/src/proofing/data/german_standard_08.dart": "8309c190e75c545129b33fc99d01e157bdca58a7174f02c723456c5924dbf332",
+    "lib/src/proofing/data/german_standard_09.dart": "53fe9be61e8f377a0cf5f0d7c867a3a80538c22b92c1ee9a2090f9dbdb9ef59f",
+    "lib/src/proofing/data/german_standard_10.dart": "e4da39622bdfd6a03d18d51913e7af1feb6f1ef03f411aae33ec32d1af271cbc",
+    "lib/src/proofing/data/german_standard_11.dart": "feb85cdb0915a3e5fb55fa689964f7231414d8b9a1935b0cfc64ae3ce3d491a1",
+    "lib/src/proofing/data/german_standard_12.dart": "12092f7a9c07be0fdd664a95cb9e0316be9f8a456c6382aef36965775add1642",
+    "lib/src/proofing/data/german_standard_13.dart": "6cff772cc350ac0e892be55837ec3b1d19543e410fe13ddf22047588eb6d4364",
+    "lib/src/proofing/data/german_swiss_00.dart": "5719e81653cd5aea685be2359f92b64cb94e9dbbe4f999556394fe43867243a6"
+  }
+}

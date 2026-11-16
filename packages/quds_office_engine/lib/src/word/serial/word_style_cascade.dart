@@ -338,6 +338,13 @@ class _StyleCascade {
         XmlDocument(root: rp).toXmlString(declaration: false),
       )..next();
       reader._parseRPr(inner, resolved);
+      // The document default remains live: changing it must affect runs that
+      // do not override it without stamping direct formatting onto every run.
+      resolved.proofingLanguage = merged('rPr', [
+        for (final t in tableLayers) t.firstChild('rPr'),
+        ...styleRuns,
+        direct,
+      ]).firstChild('lang')?.getAttribute('val');
       if (run.hyperlink != null) {
         if (rp.firstChild('color') == null) resolved.color = WordLink.color;
         if (rp.firstChild('u') == null) {

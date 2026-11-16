@@ -1802,6 +1802,12 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
 
   Widget _documentTab() {
     final fields = _controller.zoteroFields;
+    // The field list already parsed every citation for this build. Reuse it
+    // for action availability instead of rescanning the entire document for
+    // each button, including while the Library tab is visible.
+    final hasDocumentItems = fields.any(
+      (field) => field.citation?.items.isNotEmpty ?? false,
+    );
     return Padding(
       padding: const EdgeInsets.all(16),
       child: CustomScrollView(
@@ -1852,14 +1858,14 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
                       onPressed:
                           _busy ||
                               !_canEdit ||
-                              _documentItems.isEmpty ||
+                              !hasDocumentItems ||
                               _client == null
                           ? null
                           : () => _bibliography(online: true),
                       child: const Text('Zotero bibliography'),
                     ),
                     OutlinedButton(
-                      onPressed: _busy || !_canEdit || _documentItems.isEmpty
+                      onPressed: _busy || !_canEdit || !hasDocumentItems
                           ? null
                           : () => _bibliography(online: false),
                       child: const Text('Basic bibliography'),
@@ -1871,7 +1877,7 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
                       child: const Text('Refresh basic citations'),
                     ),
                     TextButton(
-                      onPressed: _busy || _documentItems.isEmpty
+                      onPressed: _busy || !hasDocumentItems
                           ? null
                           : () => _copySources(),
                       child: const Text('Copy embedded CSL JSON'),
