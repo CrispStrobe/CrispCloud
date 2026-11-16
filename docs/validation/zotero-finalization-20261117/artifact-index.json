@@ -1,0 +1,44 @@
+{
+  "files": {
+    "README.md": {
+      "bytes": 16966,
+      "sha256": "98002a6ebf0c1f1eed897beb0fcd76300560c759011df0eeabc25b95534dd018"
+    },
+    "canonical-receipt.json": {
+      "bytes": 35979,
+      "sha256": "95f9c6fcdb510e481c65d0fa856c5b4cf1fe51f57892e361f28a335a674bebc8"
+    },
+    "english-notice-final-check.json": {
+      "bytes": 889,
+      "sha256": "284a836c6c4073d488aad22b83ca834c06d1cb9c8e7d1a2c8a0404525e280440"
+    },
+    "harper-studio-receipt.json": {
+      "bytes": 7498,
+      "sha256": "112ca2ef4491a5c9adac369f1a62c8fe011cb70e2860eeb37d6e92d3b4b81ee4"
+    },
+    "host-evidence.tar.gz": {
+      "bytes": 999869,
+      "sha256": "99f023675487194577c54d4686f3b06ad6c8f519368fcb3876cbe7a45c0a4055"
+    },
+    "host-publication.json": {
+      "bytes": 587,
+      "sha256": "f3920fb08cdf79e3589bdb8f9999c955bf42c5814311c6304439a026f97e531e"
+    },
+    "host-receipt.json": {
+      "bytes": 19118,
+      "sha256": "c867aabfbf89440ad2c79ba882ef5767d8b6019c20ac3b477af5836b38258ce7"
+    },
+    "incoming-audit.json": {
+      "bytes": 67556,
+      "sha256": "8710f6c5f373aa3fb9d38349e9558c0979ef138a7d82f6af130a1b2dd1fc8f67"
+    },
+    "qualification-summary.json": {
+      "bytes": 3422,
+      "sha256": "3ee9833948cb80c30aa7b9ee5495a279799ff936b7afa4e66437616d1209f0d8"
+    },
+    "quds-independent-review.json": {
+      "bytes": 19047,
+      "sha256": "2a1beaf9e3c31eb6199214f9e91dca508528a53eb2058d1d9953694c773f0610"
+    }
+  }
+}
