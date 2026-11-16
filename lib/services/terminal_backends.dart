@@ -10,7 +10,9 @@ import 'local_file_service.dart';
 import 'sandbox_shell.dart';
 import 'sandbox_shell_connection.dart';
 import 'ssh_terminal_service.dart';
+import 'ssh_port_forwarding.dart';
 import 'terminal_connection.dart';
+import 'terminal_forwarding_connection.dart';
 import 'ios_terminal_connection.dart';
 
 typedef HostShellStarter = Future<local.ShellProcess?> Function(
@@ -196,7 +198,10 @@ class _LocalTerminalConnection implements TerminalConnection {
 }
 
 class SshTerminalConnection
-    implements TerminalConnection, TerminalConnectionMetadata {
+    implements
+        TerminalConnection,
+        TerminalConnectionMetadata,
+        TerminalForwardingConnection {
   SshTerminalConnection(this.service, this.sessionId, this.output);
   final SshTerminalService service;
   final String sessionId;
@@ -208,6 +213,18 @@ class SshTerminalConnection
 
   @override
   TerminalBackend get backend => TerminalBackend.ssh;
+
+  @override
+  SshPortForwarding? get portForwarding {
+    if (!_active || !SshPortForwarding.supported) return null;
+    try {
+      return service.forwarding(sessionId);
+    } on SshPortForwardException {
+      // SSH can already be closed before its completion callback updates the
+      // service's session snapshot. Capability lookup during a rebuild is inert.
+      return null;
+    }
+  }
 
   // The service can reap a shell after its channels drain but before the UI
   // consumes their buffered output. Late layout/input must not turn that

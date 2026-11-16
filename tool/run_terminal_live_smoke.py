@@ -92,6 +92,7 @@ LogLevel VERBOSE
             result = subprocess.run([
                 args.flutter, "test", "--no-pub", "--concurrency=1", "--reporter=expanded",
                 "test/ssh_terminal_live_test.dart",
+                "test/ssh_port_forwarding_live_test.dart",
             ], cwd=project, env=environment)
             if result.returncode:
                 for name, log in zip(("jump", "target"), logs):
