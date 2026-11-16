@@ -15,7 +15,8 @@ integration evidence are recorded in
 The completed native cohort passed **676 tests with two platform skips and zero
 failures across 60 files**. Analysis and formatting are clean across **99 Dart
 files**; the separate real OpenSSH run passed **six tests with one optional PTY
-skip**. The current web release compilation retry is pending.
+skip**. The full web release build passed with standard O4 optimization and a
+3,072 MB compiler VM heap limit.
 
 The preceding continuation started at `4cd8065a` in PR #140, now merged. It added **up to
 eight nested panes, OpenSSH destination import and custom terminal key bindings**,
@@ -233,7 +234,7 @@ links the complete logs, commands and exact source inventories.
 | Actual loopback OpenSSH | 6 passed; 1 optional interactive SSH PTY skip |
 | Managed Office source identity | All 2,391 managed-file hashes and tracked modes match |
 | Browser runtime | Zero tests completed; Chromium failed before startup because Unix socket creation was denied |
-| Full web release compilation | Initial compiler process killed with exit -9; isolated retry pending |
+| Full web release compilation | Passed with standard O4/minification and a 3,072 MB compiler VM heap cap |
 | GitHub Actions | No result queried, awaited or required |
 
 The native/analyzer source checkpoint is `ea9a5463`. All **5,388 watched
@@ -243,6 +244,15 @@ inputs. Intermediate focused counts overlap the final cohort and are not added
 to its total. The first full attempt exposed an optional forwarding-capability
 lookup bug in reconnect tests; the final cohort includes its repair. That failed
 attempt remains in the evidence directory.
+
+The web release build passed from `f089d000` with the same 5,388-file inventory
+unchanged. Version `1.3.4+28` and Git hash `f089d000` were verified in the bundle.
+The first attempt was externally killed with exit `-9`; the successful isolated
+retry changed only the compiler VM heap limit, preserving release optimization,
+application sources and dependencies. The original SDK binaries were restored
+and their hashes verified. The [web record](validation/terminal-forwarding-triggers/web.json)
+links the command, output hash and resource configuration. The optional
+WebAssembly compatibility probe was disabled; WebAssembly is not qualified.
 
 Four of the six actual OpenSSH cases exercise the new forwarding controls
 through independently verified jump and final hosts. Local, remote and SOCKS5
@@ -257,9 +267,9 @@ The two native skips are the macOS-only shell fixture and Windows ConPTY. The
 OpenSSH runner's optional interactive PTY case was not enabled; separate real
 Linux PTYs passed in the native cohort. Browser runtime, packaged or signed
 macOS, Windows, physical Android/iOS, external gateways and actual tmux/Screen
-deployments still require their own acceptance. The current web retry has no
-completed result yet; the successful web build recorded below belongs to the
-previous continuation.
+deployments still require their own acceptance. The historical web build
+recorded below belongs to the previous continuation; the current successful
+release compilation is recorded above.
 
 ## Previous continuation verification
 

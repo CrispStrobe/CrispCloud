@@ -23,7 +23,7 @@ dependency graph and native hooks, using pinned Flutter **3.47.8** / Dart
 | Production-widget visual inspection | Four PNGs, including 320×320 manager/editor/validation | [Receipt](visual/receipt.json), [capture test log](visual/tests.log.gz) |
 | Managed Office source identity | All 2,391 managed-file hashes and tracked modes match | [Verifier output](vendor-verification.txt) |
 | Browser runtime | Zero tests; Chromium failed before startup with a socket permission denial | [Receipt](browser/receipt.json), [stderr](browser/startup.stderr.txt) |
-| Full web release compilation | Initial compiler process killed with exit -9; isolated retry pending | [First attempt](web-attempt-1.json), [log](web-attempt-1.log.gz) |
+| Full web release compilation | Passed with standard O4/minification and a 3,072 MB compiler VM heap cap | [Final record](web.json), [log](web.log.gz), [resource configuration](web-resource-retry.json) |
 
 The test/analyzer source checkpoint is
 [`ea9a5463`](https://github.com/CrispStrobe/CrispCloud/commit/ea9a546397629ba002a6bf0452be9e2db7105b7e).
@@ -33,6 +33,15 @@ during those runs. Their exact SHA-256 inventory is
 [`4a6a03b9`](https://github.com/CrispStrobe/CrispCloud/commit/4a6a03b94550378e77ba7b863d4dcbbaf19fcfcd)
 added only two Zotero audit documents, preserving every tested input. Intermediate
 targeted test counts overlap the final cohort and are not added to its total.
+
+The full web build started from `f089d000` and passed in **286.31 seconds**, with
+the same complete source inventory unchanged. It embeds version `1.3.4+28` and
+Git hash `f089d000`; both were verified in the generated bundle. The release
+JavaScript is 29,244,894 bytes, with its SHA-256 recorded in [web.json](web.json).
+Later checkpoints contain documentation and evidence only. The
+[completion verification](completion-verification.json) rechecks the complete
+source inventory, all 188 snapshot references, unchanged dependency manifests
+and the successful build before the final evidence checkpoint.
 
 ## What the new tests establish
 
@@ -106,7 +115,28 @@ record the exact SDK/native tools and unchanged application manifests. Native
 hooks were built normally. A scratch launcher invoked the already-bootstrapped
 pinned Flutter tool snapshot directly to avoid a concurrent SDK bootstrap temp
 filename collision between isolated exec sessions. This did not alter SDK
-sources, the application graph, compiler settings or native hooks.
+sources, the application graph, release optimization or native hooks.
+
+The [first web attempt](web-attempt-1.json) was externally killed with exit
+`-9` during CFE compilation; [its full log](web-attempt-1.log.gz) is retained.
+Memory pressure was suspected, but no OOM event counter was available to prove
+the cause. An isolated retry limited only the compiler VM's old-generation heap
+to **3,072 MB**. It passed with the same pinned compiler snapshot, production
+package configuration, standard `-O4 --minify` options and version defines.
+Both compiler stages and their exact arguments were observed in the process
+samples. Peak visible process RSS was 3,355,196 KiB. Original Dart, AOT runtime
+and compiler snapshot hashes matched before and after; the temporary SDK
+launcher was removed and the original Dart executable restored exactly.
+
+[The resource receipt](web-resource-retry.json) links the complete observations.
+[The investigation](web-resource-investigation.json),
+[exact scratch launcher](web-resource-launcher.sh),
+[exact scratch run wrapper](web-resource-runner.py),
+[VM flag proof](web-resource-flags.log.gz) and
+[small O4 probe](web-resource-probe.log.gz) preserve how the resource setting was
+verified. These two script copies record their original scratch paths; they are
+environment-specific evidence. No application source, dependency manifest or
+SDK source was patched to obtain the build result.
 
 The two native skips are the macOS-only shell fixture and Windows ConPTY. The
 OpenSSH runner's optional interactive PTY case was not enabled. Separate real
