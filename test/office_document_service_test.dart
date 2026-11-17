@@ -762,6 +762,42 @@ void odtRichTests() {
     expect(doc.markdown, contains('  - Nested'));
     expect(doc.markdown, contains('1. Footnote text.'));
   });
+
+  test('ODT note previews hide covered table stories', () async {
+    const xml = '''
+<office:document-content
+ xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"
+ xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0"
+ xmlns:t="urn:oasis:names:tc:opendocument:xmlns:table:1.0"
+ xmlns:foreign="urn:example:foreign-table">
+ <office:body><office:text><text:p>Body<text:note text:note-class="footnote" text:id="fn1">
+  <text:note-citation>1</text:note-citation><text:note-body>
+   <t:table>
+    <t:table-row><t:table-cell t:number-rows-spanned="2"><text:p>Visible note anchor </text:p></t:table-cell></t:table-row>
+    <t:table-row><t:covered-table-cell>
+     <text:p>HIDDEN COVERED NOTE</text:p>
+     <t:table><t:table-row><t:table-cell><text:p>HIDDEN DEEP NOTE</text:p></t:table-cell></t:table-row></t:table>
+    </t:covered-table-cell></t:table-row>
+    <t:table-row><t:table-cell><text:p> Visible note tail</text:p></t:table-cell></t:table-row>
+   </t:table>
+   <foreign:covered-table-cell><text:p> Foreign visible note</text:p></foreign:covered-table-cell>
+  </text:note-body></text:note> tail</text:p></office:text></office:body>
+</office:document-content>
+''';
+    final doc = await parseOfficeDocument(
+      _zip({'content.xml': xml}),
+      'covered-note.odt',
+    );
+    expect(doc.fallback, isNull);
+    expect(doc.markdown, contains('Body[1] tail'));
+    expect(doc.markdown, isNot(contains('HIDDEN')));
+    expect(doc.plainText, isNot(contains('HIDDEN')));
+    expect(
+      doc.markdown,
+      contains('1. Visible note anchor Visible note tail Foreign visible note'),
+    );
+    expect(doc.rawXml, contains('HIDDEN COVERED NOTE'));
+  });
 }
 
 void odpTests() {

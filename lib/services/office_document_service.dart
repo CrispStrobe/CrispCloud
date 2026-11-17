@@ -1777,6 +1777,10 @@ Future<OfficeDocument> _parseOdt(ViewerArchive archive) async {
                 .trim(),
           );
           buffer.write('[$number]');
+        case 'covered-table-cell':
+          if (child.namespaceUri != _odfTableNamespace) {
+            buffer.write(inline(child));
+          }
         case 'frame':
           final name = child.getAttribute('draw:name');
           final href = child
