@@ -1,0 +1,1461 @@
+{
+  "reviewed_at_utc": "2026-11-16T23:43:23.277623+00:00",
+  "status": "passed",
+  "findings": [],
+  "final_canonical_commit": "732fc3d0bc7a1118f3eb86e6c762fe70182c4fd2",
+  "final_canonical_tree": "44b88a75c7f9a5d5fe12cd099299256d59c4d219",
+  "observed_local_head": "732fc3d0bc7a1118f3eb86e6c762fe70182c4fd2",
+  "qualified_canonical_commit": "5b05664357eead5ddc86922bab248224dbd4da6d",
+  "prior_recovery_commit": "b4647f1c3aa60300116b27c3bce741b80ee39328",
+  "frozen_late_main": "f57d8f5debd8c27fe7cb9b9322c84fb284ff2c49",
+  "ancestry": [
+    {
+      "commit": "5b05664357eead5ddc86922bab248224dbd4da6d",
+      "role": "previously qualified source",
+      "ancestor_of_final": true
+    },
+    {
+      "commit": "4115b399a367cb597d3153a2e9ac7df2e33aa9e1",
+      "role": "published recovery evidence",
+      "ancestor_of_final": true
+    },
+    {
+      "commit": "f57d8f5debd8c27fe7cb9b9322c84fb284ff2c49",
+      "role": "frozen late main",
+      "ancestor_of_final": true
+    },
+    {
+      "commit": "becfa07c1be62429a8bcf78910aa1ffb46248b1a",
+      "role": "original bounded incoming integration",
+      "ancestor_of_final": true
+    }
+  ],
+  "original_audit": {
+    "path": "incoming-audits/quds/incoming-audit.json",
+    "sha256": "65b9e27e02f2c92502a00003b4dc389a1c11ec0c1ceb65cda821bf24124ab7e9",
+    "observed_at_utc": "2026-11-16T23:16:01.476301+00:00",
+    "reference_count": 189,
+    "unique_heads": 128,
+    "all_ancestors_of_final": true,
+    "refs": [
+      {
+        "ref": "refs/remotes/origin/codex/proofing-20261116",
+        "frozen_sha": "c0403890fc00f38c0ee6e1d533f6fef549c6fc03",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/codex/proofing-20261116-resume",
+        "frozen_sha": "738f0b6a3f1f46f83585579291d0847613d780c5",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/codex/proofing-en-de-20261116",
+        "frozen_sha": "7dfcfe9fcbf7e6d0d0abc14de7ed1ed901fa99c2",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/codex/proofing-en-hyphenation-20261116",
+        "frozen_sha": "ffc672fec2df9919233b4ee5b0ba783ef1758f99",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/codex/proofing-german-quality-20261116",
+        "frozen_sha": "a916bbf09169f6906a89bd2ca3e3c42120ead466",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/codex/proofing-harper-source-20261116",
+        "frozen_sha": "65d5815e4866549fe7f03b145b626f2c4aaba8e0",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/codex/terminal-integration-ods-20261116",
+        "frozen_sha": "4fadcc68d52d51e72e8d782765a0dd5086b982c6",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/codex/terminal-recovery-office-20261116",
+        "frozen_sha": "be2c3a91b0dd5b4abb1b9a7baa8f5e10769bc87a",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/codex/terminal-sharing-office-20261116",
+        "frozen_sha": "4235e690602195cc504438a6b937972c71f1ad39",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/codex/text-rendering-20261116",
+        "frozen_sha": "becfa07c1be62429a8bcf78910aa1ffb46248b1a",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/codex/text-rendering-20261116-continuation",
+        "frozen_sha": "aff69c221f24d2bf9bcab7001f976ac085b4e841",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/codex/zotero-capabilities-20261116",
+        "frozen_sha": "2480f0988167068d9aeddf6573b9c2c6871a8481",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/codex/zotero-optimization-20261116",
+        "frozen_sha": "ca9e4f052d988d77f9ded3a6b13f840f76a26159",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/codex/zotero-recovery-20261116",
+        "frozen_sha": "b4647f1c3aa60300116b27c3bce741b80ee39328",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/codex/zotero-support-20261115",
+        "frozen_sha": "fc37658c907edf6687eccb9564d3046283b49a3a",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/codex/zotero-support-20261116",
+        "frozen_sha": "428679a33381f943a8ae63117d4207f01dd15462",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/docs/current-office-capabilities",
+        "frozen_sha": "1675bbbb7c03090a87b6df783e3741e2cbc1768f",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/docs/filter-operators",
+        "frozen_sha": "379fa8663c81f32b4328415f56c776746ccc23bc",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/docs/filters-closed",
+        "frozen_sha": "4a122b3b71ddc539f8ffda5541b7e6ab0f1dce8f",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/docs/metadata-closed",
+        "frozen_sha": "a5febc3362d2fccdb979f012a5296af72e465797",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/docs/metadata-complete",
+        "frozen_sha": "b23ee557ea121774833c7a188a49189e4f80ce70",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/docs/ods-filter-predicates",
+        "frozen_sha": "bb9866d25bf98e5aa42c10ce4679835dbc8617f1",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/docs/ods-header-footer",
+        "frozen_sha": "846c15f0de92a17bb2720e295b9a40412ebcb6fb",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/docs/ods-row-groups",
+        "frozen_sha": "06828a5e63365495c86a4a0e1c68ecd113f891e5",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/docs/ods-writer-images",
+        "frozen_sha": "108b4087c15f5640dbc906ad243f3030b7592f3f",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/docs/odt-image-registry",
+        "frozen_sha": "f27e9b0e7ee9b1db8f6b7393abd752dab67d1ca5",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/docs/page-setup-fix",
+        "frozen_sha": "4497c737623c1339d2422487d53941c20472bac9",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/docs/readme-remaining-gaps",
+        "frozen_sha": "e6fdd16849aaf7ccbaf50f2593d7a92b6a82e630",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/docs/remaining-gaps",
+        "frozen_sha": "0a26be7f136ad3e57dbe894b0bc4cdb0602addd0",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/docs/sheet-page-setup",
+        "frozen_sha": "eb95211e4d82933ba5b1db23ea7b79938b77909f",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/docs/validation-complete",
+        "frozen_sha": "f5b67cc296b7d27e4f3a480dc46160f472d78694",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/docs/validation-operators",
+        "frozen_sha": "01f62eb1812ca54827cc14e074e03abd82f963d7",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/feat/conditional-affix",
+        "frozen_sha": "20681b8658392212c128f51b4c91f0b638942448",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/feat/conditional-between",
+        "frozen_sha": "b69bad50fb235118a5334b325683cd1524b3e3d1",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/feat/conditional-dxf",
+        "frozen_sha": "b0efe6c661009ffa463f2bf6d7945216ce1dae4c",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/feat/conditional-operators",
+        "frozen_sha": "21de3c3963b0334068b87fb1c25c787660cb17cf",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/feat/conditional-text",
+        "frozen_sha": "752a94dfddf69522429f3025f9d25702499cb6da",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/feat/conditional-top-bottom",
+        "frozen_sha": "001367e89cb0034cf33467783d7258bb0800deb9",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/feat/ods-conditional",
+        "frozen_sha": "e59751246a200e7477657d0e4835bf77b153422c",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/feat/ods-custom-validation",
+        "frozen_sha": "2e3074c8e1860f9503b059a87870911afc3eee7d",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/feat/ods-default-geometry",
+        "frozen_sha": "912f26f21446ef9bdbf4f542535438dae0ded9a9",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/feat/ods-default-style",
+        "frozen_sha": "49b447324159595c59e64d8425b54a09f79ec736",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/feat/ods-filter-conditions",
+        "frozen_sha": "1deb61cf78add61f5d26bea36ff596d769d06a87",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/feat/ods-filter-operators",
+        "frozen_sha": "3bb505ce5fea00236238e37c450ace8b18e4e34e",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/feat/ods-filter-predicates",
+        "frozen_sha": "089e53fce443ca2169fc44f3700e1b23780d2c95",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/feat/ods-header-footer",
+        "frozen_sha": "331be9688e2de1feb52635490b534042dea10c27",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/feat/ods-hyperlinks",
+        "frozen_sha": "e5daa20587e10971e8cb97d82a5495584b5c1553",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/feat/ods-images",
+        "frozen_sha": "7fe296e29e2e1b173580f6854507fc060cb4f080",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/feat/ods-metadata",
+        "frozen_sha": "d6d6866c0f4ddbbaa196e1a5eb7ff9e31007fdea",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/feat/ods-named-expressions",
+        "frozen_sha": "864e674795eb422855df2b26ccc375d3255e61a2",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/feat/ods-outline",
+        "frozen_sha": "988f423b9b95037d8f5273ee368b58ceedab0667",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/feat/ods-row-groups",
+        "frozen_sha": "27137499f8cc1a946bfcdd7446f43945ea81d2be",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/feat/ods-tab-color",
+        "frozen_sha": "0dd9dd9763c2eb6bdc4f6b6e30fb7726035e7d4b",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/feat/ods-validation-messages",
+        "frozen_sha": "49ba086251ba61032f15b3e7b726fc921874fd12",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/feat/ods-validation-operators",
+        "frozen_sha": "8769019fb8be5483939edd4655dd88005e2515c4",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/feat/ods-validations",
+        "frozen_sha": "b85501b2810e537e21040d82528d8dbaa6fdcf15",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/feat/ods-writer",
+        "frozen_sha": "0ee0a8320875248adac9718cae2e67875b6b932c",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/feat/ods-writer-conditional",
+        "frozen_sha": "ec94795114d11c73bd8fc689fde364cc110b5cd3",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/feat/ods-writer-images",
+        "frozen_sha": "9ad9ba92133932b0a3824619168f07dd218c2b26",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/feat/ods-writer-metadata",
+        "frozen_sha": "82215309dc64ef8c473fec3c4892cf0c9884bc91",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/feat/sheet-hidden-sheets",
+        "frozen_sha": "4c8036bbf16ac224c3fc102b5c44d8913a512b18",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/feat/sheet-hidden-state",
+        "frozen_sha": "46850ae47e0241733750decb22417a0150e4b0e4",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/feat/sheet-page-setup",
+        "frozen_sha": "5aa16674e64cc01b89aec017c85afd3899cd96d5",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/fix/ods-global-validations-20261116",
+        "frozen_sha": "e5e1e9af6beb0972a010d8208c1690a642809113",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/fix/ods-writer-page-layout",
+        "frozen_sha": "8a0107cbca4b00766a2a76d43a1db244c006e976",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/fix/sdt-multi-section-control",
+        "frozen_sha": "866c14f0b3a876e11732bc544dc25a05d8f10524",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/fix/sdt-trailing-section-break",
+        "frozen_sha": "8fc3d06be36da5c2176feb107c14245f61650d75",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/fix/utf16-custom-xml",
+        "frozen_sha": "09a05d7d60d2a2e1d2547487ad4545c50472834b",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/fix/word-dialog-focus-rendering-20261116",
+        "frozen_sha": "094d6bacb9cb253e4d04443e9f3c4171e7433c8a",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/main",
+        "frozen_sha": "fb62dbfc3a0fff95325a9a95b62e32f85f1abb80",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/vendor/conditional-top-bottom",
+        "frozen_sha": "ea9d16edd489b3a4ccff7a25cc5277b686c4e263",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/vendor/ods-custom-validation",
+        "frozen_sha": "90acedb9835cb5bdef30606301e74482f5977448",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/vendor/ods-filter-conditions",
+        "frozen_sha": "928f85483ec1cb85e468ca9381585875137ba8d5",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/vendor/ods-filter-conditions-correct",
+        "frozen_sha": "817982d580e990a5ca21d74c35135db4817e54b5",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/vendor/ods-filter-operators",
+        "frozen_sha": "777bcb876a9c8cc170586d117fa41f8331ef84ad",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/vendor/ods-filter-predicates",
+        "frozen_sha": "a53a37b0b5c1b55aff20d581f80f1b2027bf3ddb",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/vendor/ods-header-footer",
+        "frozen_sha": "c6a7eff46bcfcb806ee7c43252636b06c088963c",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/vendor/ods-hyperlinks",
+        "frozen_sha": "95debbcce02c1e24d6e8159cd1f524bbf68afeba",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/vendor/ods-hyperlinks-current",
+        "frozen_sha": "be6aa3cf2fca1b775c2b1352881e2ca3f9134c13",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/vendor/ods-metadata",
+        "frozen_sha": "18dc693fbf4e39fc6c38e3d655d1e5b35eeef273",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/vendor/ods-metadata-zotero",
+        "frozen_sha": "4fbd1687d3c0ada22d460cf5cadb9586c4f62905",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/vendor/ods-named-expressions",
+        "frozen_sha": "388a1c76339507d493bab577424affd80732446c",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/vendor/ods-outline",
+        "frozen_sha": "33a0508a502f5809aa997928e8428bdec3e02503",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/vendor/ods-row-groups",
+        "frozen_sha": "891ccc21cf91fb9f49fa0af98143468fbbd3eac7",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/vendor/ods-tab-color",
+        "frozen_sha": "375390c3853ce26f43d6ac3f71c592acf3e094dc",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/vendor/ods-validation",
+        "frozen_sha": "c7bb6d6f51885e4082882252f502bbf2de81d552",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/vendor/ods-validation-current",
+        "frozen_sha": "4ffdf113803806ba5f8ade4a0846eee85dcfbe68",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/vendor/ods-validation-messages",
+        "frozen_sha": "14fde4b1bd2539f0c6168be4569ac1adcc5105cd",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/vendor/ods-writer",
+        "frozen_sha": "e14a55b50af4b6870ed1044284f74c36b5f194d9",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/vendor/ods-writer-conditional",
+        "frozen_sha": "abdbc8b576f5327786c8a0f19bf91bef1250de12",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/vendor/ods-writer-images",
+        "frozen_sha": "546368fe3aad7ccb65c72f897b6585513b0199f1",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/vendor/ods-writer-metadata",
+        "frozen_sha": "1808f38493d1cf2fddc1761d146432ceaaea70aa",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/vendor/ods-writer-page-layout",
+        "frozen_sha": "2aee95e6aa7021869a198cf19ebbb43a44d7910f",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/origin/vendor/sheet-page-setup",
+        "frozen_sha": "f938d7fc3cb9aa42ea8d30b1c2ab50ccca694699",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/1",
+        "frozen_sha": "54f0f8de01416640560519aa9d732f668f603709",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/10",
+        "frozen_sha": "1b1bac125f426b05f868d482e9fbd657d4ffb73a",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/11",
+        "frozen_sha": "5c1ab430c6911bb11f71d29efa35027ead5ac1d5",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/12",
+        "frozen_sha": "579f2105cf7fca61536f7e3f9b59004929bdb6c5",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/13",
+        "frozen_sha": "73b354efdf0f2e7fbe0e87bc67f332a9dfb4903e",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/14",
+        "frozen_sha": "d4e2a0fcf1fe18e0e5158ac7d86b1f71bf3b70da",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/15",
+        "frozen_sha": "448eff5aac55054a34eccd4f8a1e79e754909a05",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/16",
+        "frozen_sha": "78a7b6f4e613c7d18d4bcc6434cda12b50ed184e",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/17",
+        "frozen_sha": "89c7f06c592edde0c67774e9c7e087d96f52184b",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/18",
+        "frozen_sha": "f31cf308013ceb4527e3f4de677785894bb1bfc0",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/19",
+        "frozen_sha": "e8227569a3b90fb21db598483690bd13fe74ddef",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/2",
+        "frozen_sha": "08b09485588d2b6270f594a07c983689c087587d",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/20",
+        "frozen_sha": "5278aafd512640608fe06b8f7d357c4cffe8520a",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/21",
+        "frozen_sha": "1f30a823b30678e3684c98fee6a2cd5c4945c4f2",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/22",
+        "frozen_sha": "4637ddce4154f4b50105c7322fedc1c75fd02193",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/23",
+        "frozen_sha": "e002b9584bead9761fac8c7cf818431966d1b1c3",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/24",
+        "frozen_sha": "9cc8c6e91ff9acf0f52a68aea7c0da69934a2661",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/25",
+        "frozen_sha": "b6d27c84a72d622f670a7e646e36ba4bd920cfc8",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/26",
+        "frozen_sha": "5b9ac71db1934252c4b8ae48ac03d4cd976e15ae",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/27",
+        "frozen_sha": "cde05b85bcd00c26d519d43283fcc6b55a1884e7",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/28",
+        "frozen_sha": "a8cd28d8af8ca966e8c4259862587ecc9aade2f4",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/29",
+        "frozen_sha": "7fe296e29e2e1b173580f6854507fc060cb4f080",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/3",
+        "frozen_sha": "e550723b0f2a7cd849970f58820d260c36857502",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/30",
+        "frozen_sha": "49b447324159595c59e64d8425b54a09f79ec736",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/31",
+        "frozen_sha": "912f26f21446ef9bdbf4f542535438dae0ded9a9",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/32",
+        "frozen_sha": "46850ae47e0241733750decb22417a0150e4b0e4",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/33",
+        "frozen_sha": "4c8036bbf16ac224c3fc102b5c44d8913a512b18",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/34",
+        "frozen_sha": "09a05d7d60d2a2e1d2547487ad4545c50472834b",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/35",
+        "frozen_sha": "e59751246a200e7477657d0e4835bf77b153422c",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/36",
+        "frozen_sha": "21de3c3963b0334068b87fb1c25c787660cb17cf",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/37",
+        "frozen_sha": "b0efe6c661009ffa463f2bf6d7945216ce1dae4c",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/38",
+        "frozen_sha": "752a94dfddf69522429f3025f9d25702499cb6da",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/39",
+        "frozen_sha": "b85501b2810e537e21040d82528d8dbaa6fdcf15",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/4",
+        "frozen_sha": "09f5ec4b8eba290ff4d65678179854fb6ff6a468",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/40",
+        "frozen_sha": "8855b88a96b5c94349e3b5278c339228a1688c3e",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/41",
+        "frozen_sha": "b69bad50fb235118a5334b325683cd1524b3e3d1",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/42",
+        "frozen_sha": "8fc3d06be36da5c2176feb107c14245f61650d75",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/43",
+        "frozen_sha": "20681b8658392212c128f51b4c91f0b638942448",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/44",
+        "frozen_sha": "866c14f0b3a876e11732bc544dc25a05d8f10524",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/45",
+        "frozen_sha": "0a26be7f136ad3e57dbe894b0bc4cdb0602addd0",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/46",
+        "frozen_sha": "e6fdd16849aaf7ccbaf50f2593d7a92b6a82e630",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/47",
+        "frozen_sha": "fc37658c907edf6687eccb9564d3046283b49a3a",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/48",
+        "frozen_sha": "d6d6866c0f4ddbbaa196e1a5eb7ff9e31007fdea",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/49",
+        "frozen_sha": "a5febc3362d2fccdb979f012a5296af72e465797",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/5",
+        "frozen_sha": "da0979a5c6c4273ea68f360ce9a079bfa747384f",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/50",
+        "frozen_sha": "428679a33381f943a8ae63117d4207f01dd15462",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/51",
+        "frozen_sha": "8769019fb8be5483939edd4655dd88005e2515c4",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/52",
+        "frozen_sha": "01f62eb1812ca54827cc14e074e03abd82f963d7",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/53",
+        "frozen_sha": "2e3074c8e1860f9503b059a87870911afc3eee7d",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/54",
+        "frozen_sha": "49ba086251ba61032f15b3e7b726fc921874fd12",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/55",
+        "frozen_sha": "f5b67cc296b7d27e4f3a480dc46160f472d78694",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/56",
+        "frozen_sha": "ca9e4f052d988d77f9ded3a6b13f840f76a26159",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/57",
+        "frozen_sha": "0dd9dd9763c2eb6bdc4f6b6e30fb7726035e7d4b",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/58",
+        "frozen_sha": "864e674795eb422855df2b26ccc375d3255e61a2",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/59",
+        "frozen_sha": "e5daa20587e10971e8cb97d82a5495584b5c1553",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/6",
+        "frozen_sha": "78ed85f5fd19d44f672dee11420fed261c974f4a",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/60",
+        "frozen_sha": "988f423b9b95037d8f5273ee368b58ceedab0667",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/61",
+        "frozen_sha": "b23ee557ea121774833c7a188a49189e4f80ce70",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/62",
+        "frozen_sha": "089e53fce443ca2169fc44f3700e1b23780d2c95",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/63",
+        "frozen_sha": "2480f0988167068d9aeddf6573b9c2c6871a8481",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/64",
+        "frozen_sha": "4a122b3b71ddc539f8ffda5541b7e6ab0f1dce8f",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/65",
+        "frozen_sha": "3bb505ce5fea00236238e37c450ace8b18e4e34e",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/66",
+        "frozen_sha": "379fa8663c81f32b4328415f56c776746ccc23bc",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/67",
+        "frozen_sha": "0ee0a8320875248adac9718cae2e67875b6b932c",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/68",
+        "frozen_sha": "82215309dc64ef8c473fec3c4892cf0c9884bc91",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/69",
+        "frozen_sha": "ec94795114d11c73bd8fc689fde364cc110b5cd3",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/7",
+        "frozen_sha": "e82c997b6df8746fe86fb83b9f416a89bb3e3b80",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/70",
+        "frozen_sha": "9ad9ba92133932b0a3824619168f07dd218c2b26",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/71",
+        "frozen_sha": "108b4087c15f5640dbc906ad243f3030b7592f3f",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/72",
+        "frozen_sha": "becfa07c1be62429a8bcf78910aa1ffb46248b1a",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/73",
+        "frozen_sha": "8a0107cbca4b00766a2a76d43a1db244c006e976",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/74",
+        "frozen_sha": "1675bbbb7c03090a87b6df783e3741e2cbc1768f",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/75",
+        "frozen_sha": "f27e9b0e7ee9b1db8f6b7393abd752dab67d1ca5",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/76",
+        "frozen_sha": "1deb61cf78add61f5d26bea36ff596d769d06a87",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/77",
+        "frozen_sha": "bb9866d25bf98e5aa42c10ce4679835dbc8617f1",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/78",
+        "frozen_sha": "27137499f8cc1a946bfcdd7446f43945ea81d2be",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/79",
+        "frozen_sha": "06828a5e63365495c86a4a0e1c68ecd113f891e5",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/8",
+        "frozen_sha": "a86a360bf9bd45c729e00b31dd9a97492e23f2e7",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/80",
+        "frozen_sha": "5aa16674e64cc01b89aec017c85afd3899cd96d5",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/81",
+        "frozen_sha": "eb95211e4d82933ba5b1db23ea7b79938b77909f",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/82",
+        "frozen_sha": "4497c737623c1339d2422487d53941c20472bac9",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/83",
+        "frozen_sha": "331be9688e2de1feb52635490b534042dea10c27",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/84",
+        "frozen_sha": "846c15f0de92a17bb2720e295b9a40412ebcb6fb",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/85",
+        "frozen_sha": "b4647f1c3aa60300116b27c3bce741b80ee39328",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/86",
+        "frozen_sha": "001367e89cb0034cf33467783d7258bb0800deb9",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/87",
+        "frozen_sha": "7dfcfe9fcbf7e6d0d0abc14de7ed1ed901fa99c2",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/pull/9",
+        "frozen_sha": "58de54567d45e38c05dd77064b7607c577374b9d",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/upstream-pull/1",
+        "frozen_sha": "48c5156f459597ce3f8ec486b3c9a20fc5543807",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/upstream-pull/5",
+        "frozen_sha": "9930be8df44ffe117fb22778c514eea0ee73ce21",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/upstream-pull/6",
+        "frozen_sha": "aca2f66941832bd0b19b436baeab1656a1b7de98",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/upstream-pull/7",
+        "frozen_sha": "f45099688e7a3f67a1302efdb442830d052f2240",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/upstream/ci/flutter-workspace",
+        "frozen_sha": "aca2f66941832bd0b19b436baeab1656a1b7de98",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/upstream/cursor/class-certificates-2db8",
+        "frozen_sha": "f45099688e7a3f67a1302efdb442830d052f2240",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/upstream/cursor/cloud-agent-1790580069020-0rk1h",
+        "frozen_sha": "9930be8df44ffe117fb22778c514eea0ee73ce21",
+        "ancestor_of_final": true
+      },
+      {
+        "ref": "refs/remotes/upstream/main",
+        "frozen_sha": "15c5d29b63fb17a93c7fb3426a8fd4d95a32f1ba",
+        "ancestor_of_final": true
+      }
+    ]
+  },
+  "zotero_preservation": {
+    "original_audit_sha256": "84c821cd337412b66c4465343ba26a549e909fe0c7f1e9f2f7e548276a176094",
+    "path_count": 50,
+    "all_blobs_and_modes_unchanged": true,
+    "paths": [
+      {
+        "path": "packages/quds_office_editor/example/lib/studio_zotero.dart",
+        "recovery_blob": "7adb79ab19134f9d54f1c4c393a3e3d3362d6c9a",
+        "tested_blob": "7adb79ab19134f9d54f1c4c393a3e3d3362d6c9a",
+        "final_blob": "7adb79ab19134f9d54f1c4c393a3e3d3362d6c9a",
+        "blob_and_mode_unchanged": true,
+        "matches_original_audit": true
+      },
+      {
+        "path": "packages/quds_office_editor/example/lib/studio_zotero_local_io.dart",
+        "recovery_blob": "8a99108c6e82f68c1914793f37ef58b55061c58c",
+        "tested_blob": "8a99108c6e82f68c1914793f37ef58b55061c58c",
+        "final_blob": "8a99108c6e82f68c1914793f37ef58b55061c58c",
+        "blob_and_mode_unchanged": true,
+        "matches_original_audit": true
+      },
+      {
+        "path": "packages/quds_office_editor/example/lib/studio_zotero_local_stub.dart",
+        "recovery_blob": "e8e714667c894b1f3bf094b81f1808b7083345d3",
+        "tested_blob": "e8e714667c894b1f3bf094b81f1808b7083345d3",
+        "final_blob": "e8e714667c894b1f3bf094b81f1808b7083345d3",
+        "blob_and_mode_unchanged": true,
+        "matches_original_audit": true
+      },
+      {
+        "path": "packages/quds_office_editor/example/test/studio_zotero_citing_transport_test.dart",
+        "recovery_blob": "ae85923e2732770db63e45c80a7b3ca329cedf9a",
+        "tested_blob": "ae85923e2732770db63e45c80a7b3ca329cedf9a",
+        "final_blob": "ae85923e2732770db63e45c80a7b3ca329cedf9a",
+        "blob_and_mode_unchanged": true,
+        "matches_original_audit": true
+      },
+      {
+        "path": "packages/quds_office_editor/lib/src/embed/word_zotero_dialog.dart",
+        "recovery_blob": "b2a422b9955973948da2f34b77dd9bfe777cea48",
+        "tested_blob": "b2a422b9955973948da2f34b77dd9bfe777cea48",
+        "final_blob": "b2a422b9955973948da2f34b77dd9bfe777cea48",
+        "blob_and_mode_unchanged": true,
+        "matches_original_audit": true
+      },
+      {
+        "path": "packages/quds_office_editor/lib/src/embed/word_zotero_format.dart",
+        "recovery_blob": "cff6c2aba85d77bfa770b0a2a28ad4acb965a3cd",
+        "tested_blob": "cff6c2aba85d77bfa770b0a2a28ad4acb965a3cd",
+        "final_blob": "cff6c2aba85d77bfa770b0a2a28ad4acb965a3cd",
+        "blob_and_mode_unchanged": true,
+        "matches_original_audit": true
+      },
+      {
+        "path": "packages/quds_office_editor/test/word_zotero_backoff_session_test.dart",
+        "recovery_blob": "dd681f67fa1fb7acb548061d4da69fa1bab5a18a",
+        "tested_blob": "dd681f67fa1fb7acb548061d4da69fa1bab5a18a",
+        "final_blob": "dd681f67fa1fb7acb548061d4da69fa1bab5a18a",
+        "blob_and_mode_unchanged": true,
+        "matches_original_audit": true
+      },
+      {
+        "path": "packages/quds_office_editor/test/word_zotero_bibliography_controller_test.dart",
+        "recovery_blob": "2ba8fc2a65f8442337263e999ca839143c96c7bb",
+        "tested_blob": "2ba8fc2a65f8442337263e999ca839143c96c7bb",
+        "final_blob": "2ba8fc2a65f8442337263e999ca839143c96c7bb",
+        "blob_and_mode_unchanged": true,
+        "matches_original_audit": true
+      },
+      {
+        "path": "packages/quds_office_editor/test/word_zotero_catalog_citing_test.dart",
+        "recovery_blob": "21a88d43d0dc81cede3583e748e32c544c6303e4",
+        "tested_blob": "21a88d43d0dc81cede3583e748e32c544c6303e4",
+        "final_blob": "21a88d43d0dc81cede3583e748e32c544c6303e4",
+        "blob_and_mode_unchanged": true,
+        "matches_original_audit": true
+      },
+      {
+        "path": "packages/quds_office_editor/test/word_zotero_citing_controller_test.dart",
+        "recovery_blob": "03f8183864021b8b766fbf3debe3b680315f2a83",
+        "tested_blob": "03f8183864021b8b766fbf3debe3b680315f2a83",
+        "final_blob": "03f8183864021b8b766fbf3debe3b680315f2a83",
+        "blob_and_mode_unchanged": true,
+        "matches_original_audit": true
+      },
+      {
+        "path": "packages/quds_office_editor/test/word_zotero_citing_dialog_test.dart",
+        "recovery_blob": "1a25b5d1bf5ad54add68b1c678f751bf47b20b92",
+        "tested_blob": "1a25b5d1bf5ad54add68b1c678f751bf47b20b92",
+        "final_blob": "1a25b5d1bf5ad54add68b1c678f751bf47b20b92",
+        "blob_and_mode_unchanged": true,
+        "matches_original_audit": true
+      },
+      {
+        "path": "packages/quds_office_editor/test/word_zotero_collection_pagination_test.dart",
+        "recovery_blob": "2c7ac95c3379050017bdd5470be9b7192115e7ae",
+        "tested_blob": "2c7ac95c3379050017bdd5470be9b7192115e7ae",
+        "final_blob": "2c7ac95c3379050017bdd5470be9b7192115e7ae",
+        "blob_and_mode_unchanged": true,
+        "matches_original_audit": true
+      },
+      {
+        "path": "packages/quds_office_editor/test/word_zotero_controller_test.dart",
+        "recovery_blob": "4b7656d940dbed1e811ebc9ea601e75d1fe16dc9",
+        "tested_blob": "4b7656d940dbed1e811ebc9ea601e75d1fe16dc9",
+        "final_blob": "4b7656d940dbed1e811ebc9ea601e75d1fe16dc9",
+        "blob_and_mode_unchanged": true,
+        "matches_original_audit": true
+      },
+      {
+        "path": "packages/quds_office_editor/test/word_zotero_dialog_scaling_test.dart",
+        "recovery_blob": "521e8af163fff94e2ea03438ce808f5252e8274a",
+        "tested_blob": "521e8af163fff94e2ea03438ce808f5252e8274a",
+        "final_blob": "521e8af163fff94e2ea03438ce808f5252e8274a",
+        "blob_and_mode_unchanged": true,
+        "matches_original_audit": true
+      },
+      {
+        "path": "packages/quds_office_editor/test/word_zotero_dialog_test.dart",
+        "recovery_blob": "925dcc6878d5f81781908bb871a38c13dd853bda",
+        "tested_blob": "925dcc6878d5f81781908bb871a38c13dd853bda",
+        "final_blob": "925dcc6878d5f81781908bb871a38c13dd853bda",
+        "blob_and_mode_unchanged": true,
+        "matches_original_audit": true
+      },
+      {
+        "path": "packages/quds_office_editor/test/word_zotero_format_test.dart",
+        "recovery_blob": "980dd7eb8703cc0e120e664fd27b7cdaf0fbf97f",
+        "tested_blob": "980dd7eb8703cc0e120e664fd27b7cdaf0fbf97f",
+        "final_blob": "980dd7eb8703cc0e120e664fd27b7cdaf0fbf97f",
+        "blob_and_mode_unchanged": true,
+        "matches_original_audit": true
+      },
+      {
+        "path": "packages/quds_office_editor/test/word_zotero_rich_controller_test.dart",
+        "recovery_blob": "6a7cdef9235516b53a75b628a1350c3b33e8098c",
+        "tested_blob": "6a7cdef9235516b53a75b628a1350c3b33e8098c",
+        "final_blob": "6a7cdef9235516b53a75b628a1350c3b33e8098c",
+        "blob_and_mode_unchanged": true,
+        "matches_original_audit": true
+      },
+      {
+        "path": "packages/quds_office_editor/test/word_zotero_saved_search_test.dart",
+        "recovery_blob": "698c53581d0bc0f92052458d1704a142b33277bb",
+        "tested_blob": "698c53581d0bc0f92052458d1704a142b33277bb",
+        "final_blob": "698c53581d0bc0f92052458d1704a142b33277bb",
+        "blob_and_mode_unchanged": true,
+        "matches_original_audit": true
+      },
+      {
+        "path": "packages/quds_office_editor/test/word_zotero_source_identity_test.dart",
+        "recovery_blob": "345b34eabd7b79d4dfaeabf2d978e9d6b5a36808",
+        "tested_blob": "345b34eabd7b79d4dfaeabf2d978e9d6b5a36808",
+        "final_blob": "345b34eabd7b79d4dfaeabf2d978e9d6b5a36808",
+        "blob_and_mode_unchanged": true,
+        "matches_original_audit": true
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/word/model/word_zotero.dart",
+        "recovery_blob": "7716655a90429c9b76f73b3aedd3fb737915a3f6",
+        "tested_blob": "7716655a90429c9b76f73b3aedd3fb737915a3f6",
+        "final_blob": "7716655a90429c9b76f73b3aedd3fb737915a3f6",
+        "blob_and_mode_unchanged": true,
+        "matches_original_audit": true
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/word/model/word_zotero_citing.dart",
+        "recovery_blob": "6c1951e088391b620c8c1aacbc2b18b91c673e08",
+        "tested_blob": "6c1951e088391b620c8c1aacbc2b18b91c673e08",
+        "final_blob": "6c1951e088391b620c8c1aacbc2b18b91c673e08",
+        "blob_and_mode_unchanged": true,
+        "matches_original_audit": true
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/word/model/word_zotero_data.dart",
+        "recovery_blob": "7f30e37606603e5adae06caca9f71308123de465",
+        "tested_blob": "7f30e37606603e5adae06caca9f71308123de465",
+        "final_blob": "7f30e37606603e5adae06caca9f71308123de465",
+        "blob_and_mode_unchanged": true,
+        "matches_original_audit": true
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/zotero/zotero_citing.dart",
+        "recovery_blob": "e0265033bed528e8eeb1d1b96a9826f1b71eaa76",
+        "tested_blob": "e0265033bed528e8eeb1d1b96a9826f1b71eaa76",
+        "final_blob": "e0265033bed528e8eeb1d1b96a9826f1b71eaa76",
+        "blob_and_mode_unchanged": true,
+        "matches_original_audit": true
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/zotero/zotero_client.dart",
+        "recovery_blob": "b6ec73c4601961cd34c89bdd97ca3c6a95567318",
+        "tested_blob": "b6ec73c4601961cd34c89bdd97ca3c6a95567318",
+        "final_blob": "b6ec73c4601961cd34c89bdd97ca3c6a95567318",
+        "blob_and_mode_unchanged": true,
+        "matches_original_audit": true
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/zotero/zotero_formatted_text.dart",
+        "recovery_blob": "3416e1301ddb3ec8819aee07cec162b3c4164838",
+        "tested_blob": "3416e1301ddb3ec8819aee07cec162b3c4164838",
+        "final_blob": "3416e1301ddb3ec8819aee07cec162b3c4164838",
+        "blob_and_mode_unchanged": true,
+        "matches_original_audit": true
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/zotero/zotero_models.dart",
+        "recovery_blob": "ef85d53e8daa3e793a7bdb0b4003a5a74999db08",
+        "tested_blob": "ef85d53e8daa3e793a7bdb0b4003a5a74999db08",
+        "final_blob": "ef85d53e8daa3e793a7bdb0b4003a5a74999db08",
+        "blob_and_mode_unchanged": true,
+        "matches_original_audit": true
+      },
+      {
+        "path": "packages/quds_office_engine/test/fixtures/zotero/citing/README.md",
+        "recovery_blob": "cfc7fc762c379b298b16abf67fc34b4f07c967f7",
+        "tested_blob": "cfc7fc762c379b298b16abf67fc34b4f07c967f7",
+        "final_blob": "cfc7fc762c379b298b16abf67fc34b4f07c967f7",
+        "blob_and_mode_unchanged": true,
+        "matches_original_audit": true
+      },
+      {
+        "path": "packages/quds_office_engine/test/fixtures/zotero/citing/generate-fixtures.cjs",
+        "recovery_blob": "ccafdb1d7d5905505641b00c741d74e5f72ed643",
+        "tested_blob": "ccafdb1d7d5905505641b00c741d74e5f72ed643",
+        "final_blob": "ccafdb1d7d5905505641b00c741d74e5f72ed643",
+        "blob_and_mode_unchanged": true,
+        "matches_original_audit": true
+      },
+      {
+        "path": "packages/quds_office_engine/test/fixtures/zotero/citing/processor-output.json",
+        "recovery_blob": "935c6ac0d9a816fe578c30c3c4c7f3e27354d84d",
+        "tested_blob": "935c6ac0d9a816fe578c30c3c4c7f3e27354d84d",
+        "final_blob": "935c6ac0d9a816fe578c30c3c4c7f3e27354d84d",
+        "blob_and_mode_unchanged": true,
+        "matches_original_audit": true
+      },
+      {
+        "path": "packages/quds_office_engine/test/fixtures/zotero/citing/protocol-contract.json",
+        "recovery_blob": "6ecacf41c116775e85687df3bc43bf17e13b5e9b",
+        "tested_blob": "6ecacf41c116775e85687df3bc43bf17e13b5e9b",
+        "final_blob": "6ecacf41c116775e85687df3bc43bf17e13b5e9b",
+        "blob_and_mode_unchanged": true,
+        "matches_original_audit": true
+      },
+      {
+        "path": "packages/quds_office_engine/test/fixtures/zotero/word_document.xml",
+        "recovery_blob": "58ab654c095dca77ac89ed82c9933903dcc9a4da",
+        "tested_blob": "58ab654c095dca77ac89ed82c9933903dcc9a4da",
+        "final_blob": "58ab654c095dca77ac89ed82c9933903dcc9a4da",
+        "blob_and_mode_unchanged": true,
+        "matches_original_audit": true
+      },
+      {
+        "path": "packages/quds_office_engine/test/word_zotero_bibliography_layout_test.dart",
+        "recovery_blob": "8ac20b3d733b295fd1b9a47d57bf11ce4a29d6b2",
+        "tested_blob": "8ac20b3d733b295fd1b9a47d57bf11ce4a29d6b2",
+        "final_blob": "8ac20b3d733b295fd1b9a47d57bf11ce4a29d6b2",
+        "blob_and_mode_unchanged": true,
+        "matches_original_audit": true
+      },
+      {
+        "path": "packages/quds_office_engine/test/word_zotero_citing_test.dart",
+        "recovery_blob": "b1032ee4bab803997322170accb1cb94b15e432e",
+        "tested_blob": "b1032ee4bab803997322170accb1cb94b15e432e",
+        "final_blob": "b1032ee4bab803997322170accb1cb94b15e432e",
+        "blob_and_mode_unchanged": true,
+        "matches_original_audit": true
+      },
+      {
+        "path": "packages/quds_office_engine/test/word_zotero_document_data_test.dart",
+        "recovery_blob": "ba361688bb890e31edb80fc97a1e3201dfc104b9",
+        "tested_blob": "ba361688bb890e31edb80fc97a1e3201dfc104b9",
+        "final_blob": "ba361688bb890e31edb80fc97a1e3201dfc104b9",
+        "blob_and_mode_unchanged": true,
+        "matches_original_audit": true
+      },
+      {
+        "path": "packages/quds_office_engine/test/word_zotero_formatted_bibliography_test.dart",
+        "recovery_blob": "f6b3022292411a888bbfb6fe911e27ce077fe9e5",
+        "tested_blob": "f6b3022292411a888bbfb6fe911e27ce077fe9e5",
+        "final_blob": "f6b3022292411a888bbfb6fe911e27ce077fe9e5",
+        "blob_and_mode_unchanged": true,
+        "matches_original_audit": true
+      },
+      {
+        "path": "packages/quds_office_engine/test/word_zotero_preference_flow_test.dart",
+        "recovery_blob": "a08d47ab044b3612c3280d4aca110af00594d78c",
+        "tested_blob": "a08d47ab044b3612c3280d4aca110af00594d78c",
+        "final_blob": "a08d47ab044b3612c3280d4aca110af00594d78c",
+        "blob_and_mode_unchanged": true,
+        "matches_original_audit": true
+      },
+      {
+        "path": "packages/quds_office_engine/test/word_zotero_rich_edit_test.dart",
+        "recovery_blob": "c53592cc431f3f6605c6f41e7980a4c6c034e1b5",
+        "tested_blob": "c53592cc431f3f6605c6f41e7980a4c6c034e1b5",
+        "final_blob": "c53592cc431f3f6605c6f41e7980a4c6c034e1b5",
+        "blob_and_mode_unchanged": true,
+        "matches_original_audit": true
+      },
+      {
+        "path": "packages/quds_office_engine/test/word_zotero_scaling_test.dart",
+        "recovery_blob": "00002fbbf6518c2142978c4b0aed86235cefd7a9",
+        "tested_blob": "00002fbbf6518c2142978c4b0aed86235cefd7a9",
+        "final_blob": "00002fbbf6518c2142978c4b0aed86235cefd7a9",
+        "blob_and_mode_unchanged": true,
+        "matches_original_audit": true
+      },
+      {
+        "path": "packages/quds_office_engine/test/word_zotero_simple_field_test.dart",
+        "recovery_blob": "ca91db78f6fa4284d0708edddaa7873904f53ff0",
+        "tested_blob": "ca91db78f6fa4284d0708edddaa7873904f53ff0",
+        "final_blob": "ca91db78f6fa4284d0708edddaa7873904f53ff0",
+        "blob_and_mode_unchanged": true,
+        "matches_original_audit": true
+      },
+      {
+        "path": "packages/quds_office_engine/test/word_zotero_source_identity_test.dart",
+        "recovery_blob": "c62f5df2c981f4755e2ae0ac4f33e9cb1cb204ee",
+        "tested_blob": "c62f5df2c981f4755e2ae0ac4f33e9cb1cb204ee",
+        "final_blob": "c62f5df2c981f4755e2ae0ac4f33e9cb1cb204ee",
+        "blob_and_mode_unchanged": true,
+        "matches_original_audit": true
+      },
+      {
+        "path": "packages/quds_office_engine/test/word_zotero_style_preferences_review_test.dart",
+        "recovery_blob": "631232b4df6ec1e6f8226e01d8318f7163b58816",
+        "tested_blob": "631232b4df6ec1e6f8226e01d8318f7163b58816",
+        "final_blob": "631232b4df6ec1e6f8226e01d8318f7163b58816",
+        "blob_and_mode_unchanged": true,
+        "matches_original_audit": true
+      },
+      {
+        "path": "packages/quds_office_engine/test/word_zotero_test.dart",
+        "recovery_blob": "53f29938b5f31cff40648f356c444d06f96183ba",
+        "tested_blob": "53f29938b5f31cff40648f356c444d06f96183ba",
+        "final_blob": "53f29938b5f31cff40648f356c444d06f96183ba",
+        "blob_and_mode_unchanged": true,
+        "matches_original_audit": true
+      },
+      {
+        "path": "packages/quds_office_engine/test/zotero_backoff_state_test.dart",
+        "recovery_blob": "2f0663487f527d33e1855926c3f36803167f4423",
+        "tested_blob": "2f0663487f527d33e1855926c3f36803167f4423",
+        "final_blob": "2f0663487f527d33e1855926c3f36803167f4423",
+        "blob_and_mode_unchanged": true,
+        "matches_original_audit": true
+      },
+      {
+        "path": "packages/quds_office_engine/test/zotero_citing_test.dart",
+        "recovery_blob": "e420291eb421ccc4447416f29d3e356680236377",
+        "tested_blob": "e420291eb421ccc4447416f29d3e356680236377",
+        "final_blob": "e420291eb421ccc4447416f29d3e356680236377",
+        "blob_and_mode_unchanged": true,
+        "matches_original_audit": true
+      },
+      {
+        "path": "packages/quds_office_engine/test/zotero_client_test.dart",
+        "recovery_blob": "590e6b2b7953b08bc0a1434f866f67935e12c3fa",
+        "tested_blob": "590e6b2b7953b08bc0a1434f866f67935e12c3fa",
+        "final_blob": "590e6b2b7953b08bc0a1434f866f67935e12c3fa",
+        "blob_and_mode_unchanged": true,
+        "matches_original_audit": true
+      },
+      {
+        "path": "packages/quds_office_engine/test/zotero_formatted_text_test.dart",
+        "recovery_blob": "b91cfd389a5b805bb78822e63dcbca499f5d9464",
+        "tested_blob": "b91cfd389a5b805bb78822e63dcbca499f5d9464",
+        "final_blob": "b91cfd389a5b805bb78822e63dcbca499f5d9464",
+        "blob_and_mode_unchanged": true,
+        "matches_original_audit": true
+      },
+      {
+        "path": "packages/quds_office_engine/test/zotero_identity_client_test.dart",
+        "recovery_blob": "dd2cd6ab9b739eb87adbb5d2f8baa7f6d9762b65",
+        "tested_blob": "dd2cd6ab9b739eb87adbb5d2f8baa7f6d9762b65",
+        "final_blob": "dd2cd6ab9b739eb87adbb5d2f8baa7f6d9762b65",
+        "blob_and_mode_unchanged": true,
+        "matches_original_audit": true
+      },
+      {
+        "path": "packages/quds_office_engine/test/zotero_metadata_batch_test.dart",
+        "recovery_blob": "fbea53dd8badea6cf69b136945155f08305f82b1",
+        "tested_blob": "fbea53dd8badea6cf69b136945155f08305f82b1",
+        "final_blob": "fbea53dd8badea6cf69b136945155f08305f82b1",
+        "blob_and_mode_unchanged": true,
+        "matches_original_audit": true
+      },
+      {
+        "path": "packages/quds_office_engine/test/zotero_paragraph_runs_test.dart",
+        "recovery_blob": "95943fabfffdb187c44ae5ff6be9503ffcac3734",
+        "tested_blob": "95943fabfffdb187c44ae5ff6be9503ffcac3734",
+        "final_blob": "95943fabfffdb187c44ae5ff6be9503ffcac3734",
+        "blob_and_mode_unchanged": true,
+        "matches_original_audit": true
+      },
+      {
+        "path": "packages/quds_office_engine/test/zotero_saved_search_test.dart",
+        "recovery_blob": "483cf44306607d82e572fbab49d34084a1728c65",
+        "tested_blob": "483cf44306607d82e572fbab49d34084a1728c65",
+        "final_blob": "483cf44306607d82e572fbab49d34084a1728c65",
+        "blob_and_mode_unchanged": true,
+        "matches_original_audit": true
+      }
+    ]
+  },
+  "changed_paths_since_qualified_source": [
+    "README.md",
+    "docs/office-remaining-gaps.md",
+    "docs/validation/zotero-finalization-20261117/README.md",
+    "docs/validation/zotero-finalization-20261117/REPRODUCE.md",
+    "docs/validation/zotero-finalization-20261117/artifact-index.json",
+    "docs/validation/zotero-finalization-20261117/canonical-evidence.tar.gz",
+    "docs/validation/zotero-finalization-20261117/canonical-receipt.json",
+    "docs/validation/zotero-finalization-20261117/checkpoints/local-qualification-progress.tar.gz",
+    "docs/validation/zotero-finalization-20261117/checkpoints/progress.json",
+    "docs/validation/zotero-finalization-20261117/english-notice-final-check.json",
+    "docs/validation/zotero-finalization-20261117/harper-studio-evidence.tar.gz",
+    "docs/validation/zotero-finalization-20261117/harper-studio-receipt.json",
+    "docs/validation/zotero-finalization-20261117/host-receipt.json",
+    "docs/validation/zotero-finalization-20261117/incoming-audit-evidence.tar.gz",
+    "docs/validation/zotero-finalization-20261117/qualification-summary.json",
+    "docs/validation/zotero-finalization-20261117/quds-independent-review.json",
+    "docs/validation/zotero-finalization-20261117/setup-evidence.tar.gz",
+    "docs/validation/zotero-finalization-20261117/tools/package-final-evidence.py",
+    "docs/zotero-validation.md",
+    "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+    "packages/quds_office_engine/lib/src/sheet/styles/sml_styles.dart",
+    "packages/quds_office_engine/test/sheet_save_cache_and_freeze_test.dart"
+  ],
+  "package_delta": [
+    {
+      "path": "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+      "tested_blob": "3dd54b354b8ebded3adda74060602d430d6fff0f",
+      "final_blob": "bb8c8c9b283be5cb978c08fb166dcfd1d6b7007b",
+      "frozen_main_blob": "bb8c8c9b283be5cb978c08fb166dcfd1d6b7007b",
+      "exactly_matches_frozen_main": true
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/sheet/styles/sml_styles.dart",
+      "tested_blob": "720eb01c00de41a528881a78b75bffb701e71aa3",
+      "final_blob": "3d5c16e4eec6da31bc370bff148aff92d5664c87",
+      "frozen_main_blob": "3d5c16e4eec6da31bc370bff148aff92d5664c87",
+      "exactly_matches_frozen_main": true
+    },
+    {
+      "path": "packages/quds_office_engine/test/sheet_save_cache_and_freeze_test.dart",
+      "tested_blob": "58a59e0f312ea720850bdd826861b7446ca863e4",
+      "final_blob": "7889fc71208811a8c04a98bae03d1f5e68ed6c93",
+      "frozen_main_blob": "7889fc71208811a8c04a98bae03d1f5e68ed6c93",
+      "exactly_matches_frozen_main": true
+    }
+  ],
+  "package_delta_is_exactly_expected_three_paths": true,
+  "production_dart_delta_count": 2,
+  "test_dart_delta_count": 1,
+  "later_rendering_snapshot": {
+    "commit": "ac295d4b3f247aee53b13b4b3f7e4fffc9d66600",
+    "ancestor_of_final": false,
+    "disposition": "Observed after the original frozen incoming audit; broader rendering/proofing changes remain separate from this bounded late-main amendment."
+  },
+  "qualification_attribution": {
+    "prior_combined_checks": 1128,
+    "prior_source_pair": {
+      "canonical": "5b05664357eead5ddc86922bab248224dbd4da6d",
+      "host": "342b744a3cb66e3ee9387733ebcf8613cdb23a33"
+    },
+    "new_tests_executed_by_this_review": 0,
+    "late_main_validation": "Reported separately by parent runner against final source pair; no results inferred from prior receipts."
+  },
+  "github_actions_or_status_queried": false,
+  "repository_mutated": false
+}

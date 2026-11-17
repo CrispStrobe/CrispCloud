@@ -1,0 +1,139 @@
+{
+  "frozen_at_utc": "2026-11-16T23:40:23.110948+00:00",
+  "canonical_main": "f57d8f5debd8c27fe7cb9b9322c84fb284ff2c49",
+  "observed_rendering_head": "ac295d4b3f247aee53b13b4b3f7e4fffc9d66600",
+  "host_main": "b852bc0010b227f4ade321a63d6cfc8ba769b98b",
+  "tested_canonical": "5b05664357eead5ddc86922bab248224dbd4da6d",
+  "published_canonical": "4115b399a367cb597d3153a2e9ac7df2e33aa9e1",
+  "main_merge_base": "fb62dbfc3a0fff95325a9a95b62e32f85f1abb80",
+  "main_changed_paths": [
+    {
+      "path": "README.md",
+      "old_main_blob": "5e1e928eb414cc2e82e4d9f711bc4b2e3c3be8ed",
+      "tested_blob": "5e1e928eb414cc2e82e4d9f711bc4b2e3c3be8ed",
+      "published_blob": "5e1e928eb414cc2e82e4d9f711bc4b2e3c3be8ed",
+      "latest_main_blob": "84583c3fba80515300878e0b9585188e3f170a59",
+      "no_local_overlap": true
+    },
+    {
+      "path": "docs/office-remaining-gaps.md",
+      "old_main_blob": "3c5e2d5b06de7f634437e0f2eadcb244f181f867",
+      "tested_blob": "3c5e2d5b06de7f634437e0f2eadcb244f181f867",
+      "published_blob": "3c5e2d5b06de7f634437e0f2eadcb244f181f867",
+      "latest_main_blob": "a21172720423f67f053d6c34ac57563c4ded44af",
+      "no_local_overlap": true
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+      "old_main_blob": "3dd54b354b8ebded3adda74060602d430d6fff0f",
+      "tested_blob": "3dd54b354b8ebded3adda74060602d430d6fff0f",
+      "published_blob": "3dd54b354b8ebded3adda74060602d430d6fff0f",
+      "latest_main_blob": "bb8c8c9b283be5cb978c08fb166dcfd1d6b7007b",
+      "no_local_overlap": true,
+      "latest_host_main_blob": "bb8c8c9b283be5cb978c08fb166dcfd1d6b7007b",
+      "canonical_host_exact_match": true
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/sheet/styles/sml_styles.dart",
+      "old_main_blob": "720eb01c00de41a528881a78b75bffb701e71aa3",
+      "tested_blob": "720eb01c00de41a528881a78b75bffb701e71aa3",
+      "published_blob": "720eb01c00de41a528881a78b75bffb701e71aa3",
+      "latest_main_blob": "3d5c16e4eec6da31bc370bff148aff92d5664c87",
+      "no_local_overlap": true,
+      "latest_host_main_blob": "3d5c16e4eec6da31bc370bff148aff92d5664c87",
+      "canonical_host_exact_match": true
+    },
+    {
+      "path": "packages/quds_office_engine/test/sheet_save_cache_and_freeze_test.dart",
+      "old_main_blob": "58a59e0f312ea720850bdd826861b7446ca863e4",
+      "tested_blob": "58a59e0f312ea720850bdd826861b7446ca863e4",
+      "published_blob": "58a59e0f312ea720850bdd826861b7446ca863e4",
+      "latest_main_blob": "7889fc71208811a8c04a98bae03d1f5e68ed6c93",
+      "no_local_overlap": true,
+      "latest_host_main_blob": "7889fc71208811a8c04a98bae03d1f5e68ed6c93",
+      "canonical_host_exact_match": true
+    }
+  ],
+  "all_main_changes_have_no_local_overlap": true,
+  "all_three_host_vendor_blobs_match_canonical_main": true,
+  "ancestry": [
+    {
+      "ancestor": "31a26383639dc7f751cfb0ea543ec7454a537ff6",
+      "target": "f57d8f5debd8c27fe7cb9b9322c84fb284ff2c49",
+      "included": false
+    },
+    {
+      "ancestor": "31a26383639dc7f751cfb0ea543ec7454a537ff6",
+      "target": "ac295d4b3f247aee53b13b4b3f7e4fffc9d66600",
+      "included": true
+    },
+    {
+      "ancestor": "281b5d4cd705c1f32d98a741233ebb836d1ef20a",
+      "target": "f57d8f5debd8c27fe7cb9b9322c84fb284ff2c49",
+      "included": true
+    },
+    {
+      "ancestor": "281b5d4cd705c1f32d98a741233ebb836d1ef20a",
+      "target": "ac295d4b3f247aee53b13b4b3f7e4fffc9d66600",
+      "included": true
+    },
+    {
+      "ancestor": "50b3694ecd3d23436325e42e11be08e9ccc5fef8",
+      "target": "f57d8f5debd8c27fe7cb9b9322c84fb284ff2c49",
+      "included": true
+    },
+    {
+      "ancestor": "50b3694ecd3d23436325e42e11be08e9ccc5fef8",
+      "target": "ac295d4b3f247aee53b13b4b3f7e4fffc9d66600",
+      "included": true
+    }
+  ],
+  "rendering_scope": {
+    "production_dart_paths": [
+      "packages/quds_office_engine/lib/quds_office_engine.dart",
+      "packages/quds_office_engine/lib/src/bidi/english_hyphenator.dart",
+      "packages/quds_office_engine/lib/src/bidi/german_hyphenator.dart",
+      "packages/quds_office_engine/lib/src/bidi/hyphenation_words.dart",
+      "packages/quds_office_engine/lib/src/fonts/sfnt_parser.dart",
+      "packages/quds_office_engine/lib/src/pdf/file/interp/pdf_interpreter.dart",
+      "packages/quds_office_engine/lib/src/pdf/office_pdf_export.dart",
+      "packages/quds_office_engine/lib/src/pdf/pdf_canvas.dart",
+      "packages/quds_office_engine/lib/src/proofing/german_spelling.dart",
+      "packages/quds_office_engine/lib/src/proofing/proofing_text_ranges.dart",
+      "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+      "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_writer.dart",
+      "packages/quds_office_engine/lib/src/sheet/model/sheet_rename.dart",
+      "packages/quds_office_engine/lib/src/sheet/model/sml_analysis.dart",
+      "packages/quds_office_engine/lib/src/sheet/model/sml_workbook.dart",
+      "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+      "packages/quds_office_engine/lib/src/sheet/styles/sml_styles.dart",
+      "packages/quds_proofing_harper/lib/src/harper_provider.dart"
+    ],
+    "test_dart_paths": [
+      "packages/quds_office_engine/test/english_hyphenation_test.dart",
+      "packages/quds_office_engine/test/german_hyphenation_context_test.dart",
+      "packages/quds_office_engine/test/pdf_actual_text_scope_test.dart",
+      "packages/quds_office_engine/test/pdf_logical_text_export_test.dart",
+      "packages/quds_office_engine/test/proofing/german_spelling_test.dart",
+      "packages/quds_office_engine/test/proofing/proofing_text_ranges_test.dart",
+      "packages/quds_office_engine/test/sfnt_cmap_validation_test.dart",
+      "packages/quds_office_engine/test/sheet_conditional_fidelity_test.dart",
+      "packages/quds_office_engine/test/sheet_save_cache_and_freeze_test.dart",
+      "packages/quds_proofing_harper/test/harper_native_test.dart",
+      "packages/quds_proofing_harper/test/harper_source_contract_test.dart"
+    ],
+    "production_path_count": 18,
+    "test_path_count": 11,
+    "merge_base_with_published": "5adf034da7fd2e86d795f9bd450f471b0a749a6c",
+    "merge_base_with_main": "50b3694ecd3d23436325e42e11be08e9ccc5fef8"
+  },
+  "recommendation": "Merge the frozen canonical main f57d8f5 into recovery, preserving all accepted evidence, then sync only guarded Office content to the host after integrating host main b852bc0. This incorporates exactly the corresponding dxf style revision. Keep newer active rendering/proofing implementation outside this bounded late-main reconciliation and record its observed head separately. Requalify the small incoming spreadsheet delta and changed host service/viewer paths on the new pins; retain prior qualification source attribution.",
+  "pr89_equivalence": {
+    "original_head": "31a26383639dc7f751cfb0ea543ec7454a537ff6",
+    "main_squash": "281b5d4cd705c1f32d98a741233ebb836d1ef20a",
+    "original_tree": "c8fb98b5cc4426c7de728693d89a76657424c4ed",
+    "main_squash_tree": "c8fb98b5cc4426c7de728693d89a76657424c4ed",
+    "exact_tree_equal": true,
+    "changed_paths": []
+  }
+}

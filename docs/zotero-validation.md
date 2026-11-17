@@ -1,26 +1,39 @@
 # Zotero validation — 17 November 2026
 
-## Current integrated-source qualification
+## Current delivery and qualified source
 
-The resumed implementation is qualified at canonical Quds
-`5b05664357eead5ddc86922bab248224dbd4da6d` and actual CrispCloud host
-`342b744a3cb66e3ee9387733ebcf8613cdb23a33`. **1,128 fresh, disjoint tests
-passed**: 576 canonical Zotero, 460 canonical integration, 23 Harper adapter,
-41 actual-host and 28 Python sync/verifier cases. All selected strict analysis,
-formatting, vendor guards and source/dependency/harness integrity checks passed.
+The delivered implementation is qualified at canonical Quds
+`732fc3d0bc7a1118f3eb86e6c762fe70182c4fd2` and actual CrispCloud host
+`084815b665df7779357155d86c5fff9bd31bfc43`. The final bounded run passed
+**126 test executions**: 18 spreadsheet, 41 existing host, 39 document-service,
+and 28 Python sync/verifier tests. All required analysis, format, vendor,
+source/dependency/harness integrity and restoration gates passed.
+
+The preceding broad run passed **1,128 disjoint tests** at canonical
+`5b05664357eead5ddc86922bab248224dbd4da6d` and host
+`342b744a3cb66e3ee9387733ebcf8613cdb23a33`: 576 Zotero, 460 integration,
+23 Harper adapter, 41 host and 28 Python cases. The two runs retain their
+exact source identities; overlapping follow-up counts are not added together.
 
 All 189 frozen Quds refs are ancestors of the delivered source; all 274 host
-refs are accounted for by ancestry or exact whole-tree equivalence. The host
-verifies 2,521 managed files while retaining the parser pin and existing host
-customizations. The original English hyphenation notices now reach its actual
-asset bundle and license registry.
+refs are accounted for by ancestry or exact whole-tree equivalence. All 50
+Zotero paths retain their recovered implementation. The host verifies 2,521
+managed files, preserves the parser and host customizations, and bundles six
+original Office notices. The late amendment adds conditional-format style
+preservation and independent, finite ODT picture geometry.
 
-See the [completed report, receipts, raw logs and reproduction inputs](validation/zotero-finalization-20261117/README.md).
-All 50 Zotero source/example/test/fixture paths preserve the completed recovery
-implementation. Earlier counts below remain historical results at their
-stated sources; none is added to the fresh total. No GitHub Actions or CI
-status endpoints were queried or awaited. New full application builds and
-live Zotero/Word/LibreOffice acceptance are outside this focused qualification.
+**Later concurrent work is separate:** Quds main subsequently reached
+`8a3f5a9d` with a new ODT writer, and host main reached `8fe921d0` with the
+Export as ODT action. Those production changes are outside this frozen
+qualification. CrispCloud PR #201 currently reports conflicts with that
+newer main; this delivery does not claim a qualified combined export tree.
+
+See the [complete report, receipts, logs, cutoff records and reproduction](validation/zotero-finalization-20261117/README.md).
+The failed first late attempt remains recorded; its viewer-format gate was
+fixed and the entire bounded run repeated successfully. Historical counts
+below retain their original attribution. No GitHub Actions or CI endpoints
+were queried or awaited. Full application builds, full viewer execution,
+and live Zotero/Word/LibreOffice acceptance remain outside this scope.
 
 ## Historical optimization: verified batching and native scaling
 

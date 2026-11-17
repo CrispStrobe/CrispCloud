@@ -1,0 +1,11 @@
+--- prepare-service-harness.reconstructed-initial.py
++++ prepare-service-harness.revised-static-reviewed.py
+@@ -68,7 +68,7 @@
+     for path in harness.rglob('pubspec.yaml'):
+         assert not path.is_symlink(),path
+         path.write_text(path.read_text().replace(str(base),str(harness)))
+-    lock=copy.deepcopy(original)
++    lock=yaml.safe_load((base/'pubspec.lock').read_text().replace(str(base),str(harness)))
+     for entry in graph['packages']:
+         name=entry['name'];record=original['packages'].get(name)
+         if not record or record['source']!='hosted':continue

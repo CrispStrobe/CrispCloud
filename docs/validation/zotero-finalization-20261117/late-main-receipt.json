@@ -1,0 +1,83 @@
+{
+  "status": "passed",
+  "quds_source_commit": "732fc3d0bc7a1118f3eb86e6c762fe70182c4fd2",
+  "host_source_commit": "084815b665df7779357155d86c5fff9bd31bfc43",
+  "prior_qualification": {
+    "canonical_source": "5b05664357eead5ddc86922bab248224dbd4da6d",
+    "host_source": "342b744a3cb66e3ee9387733ebcf8613cdb23a33",
+    "reported_tests": 1128,
+    "earlier_receipts_remain_bound_to_those_pins": true
+  },
+  "counts_are_overlapping_reruns_not_additive_unique_tests": true,
+  "github_actions_used": false,
+  "runner_sha256": "a3e761259922fc158e4c19e0d094715403e32bbd6854c6f739eff255a5c1b2ba",
+  "service_setup_sha256": "13049534da1c87deaa328712e36b5a6ac9077c11c97f6929c52c7cdfe17d4c38",
+  "cohorts": [
+    {
+      "name": "canonical",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "/workspace/scratch/76a795caf82b/runtime/late-main/run-late-canonical.py",
+        "--source",
+        "/workspace/scratch/76a795caf82b/quds",
+        "--source-commit",
+        "732fc3d0bc7a1118f3eb86e6c762fe70182c4fd2",
+        "--runtime",
+        "/workspace/scratch/76a795caf82b/runtime",
+        "--harness-root",
+        "/workspace/scratch/76a795caf82b/runtime/harness",
+        "--output",
+        "/workspace/scratch/76a795caf82b/runtime/late-main/qualification-2/canonical"
+      ],
+      "status": "passed",
+      "log": "canonical-launcher.log",
+      "runner_sha256": "14213cf4f6592c98a85d22043f5578e1370162f6761bbbfb64a6a85add665329",
+      "outer_timeout_seconds": 8400,
+      "pid": 6,
+      "exit_code": 0,
+      "receipt": "canonical/receipt.json",
+      "receipt_sha256": "d224b817ca8c9071769f9c72046a733bb71750cdbbe58105b988c2511cc1187f",
+      "elapsed_seconds": 10.672,
+      "log_sha256": "ae0155b6ad5e5b448d4bea7c6a0051785b7aec3993ee5339f0904e73dd094822"
+    },
+    {
+      "name": "host",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "/workspace/scratch/76a795caf82b/runtime/late-main/run-late-host.py",
+        "--repo",
+        "/workspace/scratch/76a795caf82b/crisp",
+        "--harness",
+        "/workspace/scratch/76a795caf82b/runtime/late-main/service-setup/service-harness",
+        "--quds-source",
+        "/workspace/scratch/76a795caf82b/quds",
+        "--quds-commit",
+        "732fc3d0bc7a1118f3eb86e6c762fe70182c4fd2",
+        "--source-commit",
+        "084815b665df7779357155d86c5fff9bd31bfc43",
+        "--setup-receipt",
+        "/workspace/scratch/76a795caf82b/runtime/late-main/service-setup/service-setup-receipt.json",
+        "--output",
+        "/workspace/scratch/76a795caf82b/runtime/late-main/qualification-2/host"
+      ],
+      "status": "passed",
+      "log": "host-launcher.log",
+      "runner_sha256": "763bddffc2e4d1893060cf9cf357b011ef7b7d0dcbe2d8b0a9a6a567420991e8",
+      "outer_timeout_seconds": 8400,
+      "pid": 86,
+      "elapsed_seconds": 75.699,
+      "log_bytes": 996,
+      "exit_code": 0,
+      "receipt": "host/receipt.json",
+      "receipt_sha256": "a4f2def9e348ab50a0ae35ae11786362f262564e619cfb42625ba0d248958b0e",
+      "log_sha256": "a3a54e174bb7db9b4ade542d0aa18430173bb5a0a48d5702fa1d42d3c755bcff"
+    }
+  ],
+  "error": null,
+  "observed_rerun_counts": {
+    "canonical_sheet": 18,
+    "host_existing": 41,
+    "host_document_service": 39,
+    "host_python": 28
+  }
+}

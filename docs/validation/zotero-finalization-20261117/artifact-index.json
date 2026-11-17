@@ -1,12 +1,24 @@
 {
   "files": {
+    "LATE-REPRODUCE.md": {
+      "bytes": 7603,
+      "sha256": "a70ba5e4fdd5ddca6c7b4f386c4f04d7a705ea56e733670a9efd6301be6d1112"
+    },
     "README.md": {
-      "bytes": 16966,
-      "sha256": "98002a6ebf0c1f1eed897beb0fcd76300560c759011df0eeabc25b95534dd018"
+      "bytes": 29339,
+      "sha256": "2d21bab357b693673693384ece532c9264f878c53591d95dbbb8089783bb6c34"
     },
     "canonical-receipt.json": {
       "bytes": 35979,
       "sha256": "95f9c6fcdb510e481c65d0fa856c5b4cf1fe51f57892e361f28a335a674bebc8"
+    },
+    "checkpoints/late-main-attempt-1.json": {
+      "bytes": 792,
+      "sha256": "994e849965db98acd3648bfe4fe422bc1a9a2c5f23bc59419af325a75835ccd3"
+    },
+    "checkpoints/late-main-attempt-1.tar.gz": {
+      "bytes": 1255645,
+      "sha256": "33160f5efc5a56fa14501e77bbbbdef2bc92b9d25c0ad004c1d976aa742ff948"
     },
     "english-notice-final-check.json": {
       "bytes": 889,
@@ -32,6 +44,46 @@
       "bytes": 67556,
       "sha256": "8710f6c5f373aa3fb9d38349e9558c0979ef138a7d82f6af130a1b2dd1fc8f67"
     },
+    "late-main-attempt-1-review.json": {
+      "bytes": 13736,
+      "sha256": "d9cae0e19c9d6b63e5c01213d2758cf16b4a8de034936c7bc0e9299dee5e33ee"
+    },
+    "late-main-canonical-final.json": {
+      "bytes": 56530,
+      "sha256": "a4bc5a09eaa2c932af7db438991c27dbc4ae4e83ac47bce0c34d11d55ebebf2c"
+    },
+    "late-main-canonical-receipt.json": {
+      "bytes": 7148,
+      "sha256": "d224b817ca8c9071769f9c72046a733bb71750cdbbe58105b988c2511cc1187f"
+    },
+    "late-main-canonical-review.json": {
+      "bytes": 7178,
+      "sha256": "c8b6f1508aeaae803bf269fb5770717999a7bc97ca1b36dce898e3174b592023"
+    },
+    "late-main-host-final.json": {
+      "bytes": 13875,
+      "sha256": "111f0e981f1d8b45858d75c355e453ebe455ef0e2023d61bf8713e7d6e5bb14e"
+    },
+    "late-main-host-receipt.json": {
+      "bytes": 22335,
+      "sha256": "a4f2def9e348ab50a0ae35ae11786362f262564e619cfb42625ba0d248958b0e"
+    },
+    "late-main-independent-review.json": {
+      "bytes": 14600,
+      "sha256": "15e3ab12138780d696d02b78a2a4bd02ae0f1c48e0732cdb69b9e721e761d215"
+    },
+    "late-main-receipt.json": {
+      "bytes": 3362,
+      "sha256": "86d8439d3b2064d9846511caed80d033769cda23f57dedd22b930d5eef29876a"
+    },
+    "late-main-summary.json": {
+      "bytes": 4639,
+      "sha256": "4206957a1e47775e6e56a865c61ed2e2b59687f75e312b7f701c8b6b6e07707f"
+    },
+    "post-qualification-main-movement.json": {
+      "bytes": 6581,
+      "sha256": "2ef1890bd5f05abe45fc4e32c535d052c738d444e61751f114f2646279ae4866"
+    },
     "qualification-summary.json": {
       "bytes": 3422,
       "sha256": "3ee9833948cb80c30aa7b9ee5495a279799ff936b7afa4e66437616d1209f0d8"
@@ -39,6 +91,38 @@
     "quds-independent-review.json": {
       "bytes": 19047,
       "sha256": "2a1beaf9e3c31eb6199214f9e91dca508528a53eb2058d1d9953694c773f0610"
+    },
+    "quds-later-main-observation.json": {
+      "bytes": 1433,
+      "sha256": "2dd0b29883fe2a5ba8acee59bc274e9f2c4a9aaf41a999ce09240fc9c6832935"
+    },
+    "setup-provenance/README-before-provenance-clarification.md": {
+      "bytes": 6218,
+      "sha256": "b90ab96be1351e57878e29dc2c31f8c960270985a81c199f0b38cfdac5bf3dba"
+    },
+    "setup-provenance/README-replacement.md": {
+      "bytes": 7603,
+      "sha256": "a70ba5e4fdd5ddca6c7b4f386c4f04d7a705ea56e733670a9efd6301be6d1112"
+    },
+    "setup-provenance/prepare-service-harness.reconstructed-initial.py": {
+      "bytes": 8470,
+      "sha256": "1cde9b56dec104dac164b597bc27076eec13e97db2c0b12fa28de3910e19252e"
+    },
+    "setup-provenance/prepare-service-harness.reconstruction-to-revised.patch": {
+      "bytes": 583,
+      "sha256": "d4c6b26a128a4c744a0654048502e5926e09505f26107f5fa1bf80973c640799"
+    },
+    "setup-provenance/prepare-service-harness.revised-static-reviewed.py": {
+      "bytes": 8528,
+      "sha256": "933d866af299a2279621fdbd3571cdc265e8fdf44442855de4ada509e4c75da6"
+    },
+    "setup-provenance/provenance.json": {
+      "bytes": 4534,
+      "sha256": "c658c9e3b02918fb7b26524f97843e0f0b8d7eec0c3e46999b0f4fab353aa1ac"
+    },
+    "setup-provenance/resume-service-setup.executed.py": {
+      "bytes": 3679,
+      "sha256": "517a731cc774ae53f163253991f5f16bf39f61330ac489d8b3dd089c5e53203f"
     }
   }
 }

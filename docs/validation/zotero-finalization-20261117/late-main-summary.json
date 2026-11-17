@@ -1,0 +1,87 @@
+{
+  "status": "passed",
+  "canonical_source": "732fc3d0bc7a1118f3eb86e6c762fe70182c4fd2",
+  "canonical_tree": "44b88a75c7f9a5d5fe12cd099299256d59c4d219",
+  "host_source": "084815b665df7779357155d86c5fff9bd31bfc43",
+  "host_tree": "e908d71fd81c86618ff57fcaa3e891fa5f235065",
+  "tests": {
+    "canonical_sheet": 18,
+    "host_existing": 41,
+    "host_document_service": 39,
+    "python_sync_verifier": 28
+  },
+  "bounded_test_executions": 126,
+  "initial_1128_tests_remain_bound_to_original_source_pair": true,
+  "counts_overlap_initial_qualification_and_are_not_added_to_unique_total": true,
+  "failed_attempt_1_is_preserved_and_excluded_from_passing_total": true,
+  "canonical_source_inputs": 1582,
+  "canonical_dependency_runtime_inputs": 1770,
+  "host_source_inputs": 3745,
+  "host_dependency_runtime_inputs": 5983,
+  "host_graph_packages": 107,
+  "canonical_analysis_and_format_targets": [
+    "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+    "packages/quds_office_engine/lib/src/sheet/styles/sml_styles.dart",
+    "packages/quds_office_engine/test/sheet_save_cache_and_freeze_test.dart",
+    "packages/quds_office_engine/test/sheet_style_namespace_fidelity_test.dart"
+  ],
+  "host_analysis_targets": [
+    "lib/services/office_document_service.dart",
+    "test/office_document_service_test.dart",
+    "lib/services/office_zotero.dart",
+    "lib/services/office_zotero_transport.dart",
+    "lib/services/office_proofing_licenses.dart",
+    "lib/l10n/office_zotero_strings.dart",
+    "test/office_zotero_test.dart",
+    "test/office_zotero_citing_transport_test.dart",
+    "test/office_zotero_ribbon_test.dart",
+    "test/office_proofing_licenses_test.dart"
+  ],
+  "vendor_analysis_targets": [
+    "packages/quds_office_engine/lib/src/sheet/styles/sml_styles.dart",
+    "packages/quds_office_engine/lib/quds_office_engine.dart",
+    "packages/quds_office_engine/lib/src/bidi/english_us_hyphenation_data.dart",
+    "packages/quds_office_engine/lib/src/bidi/english_gb_hyphenation_data.dart",
+    "packages/quds_office_engine/lib/src/bidi/english_hyphenator.dart",
+    "packages/quds_office_engine/lib/src/bidi/office_hyphenator.dart",
+    "packages/quds_office_engine/lib/src/proofing/german_spelling.dart",
+    "packages/quds_office_engine/lib/src/proofing/german_writing_rules.dart",
+    "packages/quds_office_engine/lib/src/sheet/model/sml_analysis.dart",
+    "packages/quds_office_engine/lib/src/word/layout/word_layout.dart",
+    "packages/quds_office_editor/lib/src/embed/word_proofing_dialog.dart",
+    "packages/quds_office_engine/lib/src/fonts/font_subsetter.dart",
+    "packages/quds_office_engine/lib/src/pdf/office_pdf_export.dart",
+    "packages/quds_office_engine/lib/src/pdf/pdf_canvas.dart",
+    "packages/quds_office_engine/lib/src/pdf/pdf_document.dart",
+    "packages/quds_office_engine/lib/src/pdf/pdf_font.dart",
+    "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+    "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_writer.dart",
+    "packages/quds_office_engine/lib/src/sheet/model/sml_workbook.dart",
+    "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+    "packages/quds_office_engine/lib/src/word/model/word_zotero.dart",
+    "packages/quds_office_engine/lib/src/zotero/zotero_client.dart",
+    "packages/quds_office_editor/lib/src/embed/word_zotero_dialog.dart",
+    "packages/quds_office_editor/lib/src/embed/word_zotero_format.dart",
+    "packages/quds_office_editor/lib/src/editor_word/caret_engine.dart",
+    "packages/quds_office_editor/lib/src/editor_word/paint_run_text.dart",
+    "packages/quds_office_editor/test/word_hyphenation_caret_test.dart"
+  ],
+  "viewer_scope": "Exact delivered source and formatting; no full viewer analysis, compilation or widget execution",
+  "github_actions_used": false,
+  "later_concurrent_production_work_excluded": {
+    "canonical_main": "8a3f5a9de14c556fd01ffacb3897629c51f4fa7e",
+    "host_main": "8fe921d030d7623046e28127abec5949c4d8b991",
+    "feature": "New bounded ODT writer and host Export as ODT action",
+    "reason": "Arrived after the qualified source freeze and changes production inputs"
+  },
+  "archive": {
+    "file": "late-main-evidence.tar.gz",
+    "bytes": 1360268,
+    "sha256": "703028e98299ce4acc1e694d47c4e5558b76341b532f61dc25201b0564dbf42d",
+    "entries": 92
+  },
+  "failed_attempt_archive": {
+    "url": "https://github.com/CrispStrobe/CrispCloud/blob/codex/zotero-recovery-20261116/docs/validation/zotero-finalization-20261117/checkpoints/late-main-attempt-1.tar.gz",
+    "sha256": "33160f5efc5a56fa14501e77bbbbdef2bc92b9d25c0ad004c1d976aa742ff948"
+  }
+}

@@ -1,0 +1,176 @@
+{
+  "schema_version": 1,
+  "recorded_at_utc": "2026-11-16 23:57:38 UTC",
+  "kind": "Read-only observation of concurrent host main movement after the frozen source checkpoint",
+  "repository": "CrispStrobe/CrispCloud",
+  "prior_integrated_main": "b852bc0010b227f4ade321a63d6cfc8ba769b98b",
+  "observed_later_main": "8fe921d030d7623046e28127abec5949c4d8b991",
+  "compare_url": "https://github.com/CrispStrobe/CrispCloud/compare/b852bc0010b227f4ade321a63d6cfc8ba769b98b...8fe921d030d7623046e28127abec5949c4d8b991",
+  "api_compare_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/compare/b852bc0010b227f4ade321a63d6cfc8ba769b98b...8fe921d030d7623046e28127abec5949c4d8b991",
+  "comparison": {
+    "status": "ahead",
+    "ahead_by": 2,
+    "behind_by": 0,
+    "merge_base": "b852bc0010b227f4ade321a63d6cfc8ba769b98b"
+  },
+  "frozen_qualification": {
+    "host_source": "084815b665df7779357155d86c5fff9bd31bfc43",
+    "host_source_tree": "e908d71fd81c86618ff57fcaa3e891fa5f235065",
+    "canonical_source": "732fc3d0bc7a1118f3eb86e6c762fe70182c4fd2",
+    "managed_files": 2521,
+    "independent_host_audit": "late-main-host-final.json"
+  },
+  "commits": [
+    {
+      "sha": "5535e52e381a0c1f7afc80515557c08148c40d35",
+      "subject": "feat(office): export Word documents as new ODT files (#208)",
+      "parent": "b852bc0010b227f4ade321a63d6cfc8ba769b98b",
+      "pull_request": 208,
+      "pull_request_url": "https://github.com/CrispStrobe/CrispCloud/pull/208"
+    },
+    {
+      "sha": "8fe921d030d7623046e28127abec5949c4d8b991",
+      "subject": "docs: record the bounded ODT writer and export action (#209)",
+      "parent": "5535e52e381a0c1f7afc80515557c08148c40d35",
+      "pull_request": 209,
+      "pull_request_url": "https://github.com/CrispStrobe/CrispCloud/pull/209"
+    }
+  ],
+  "classification": "Production feature and associated tests, documentation, and source-manifest changes; not docs-only",
+  "changed_path_count": 15,
+  "changed_path_categories": {
+    "host_production": 5,
+    "engine_production": 2,
+    "tests": 2,
+    "documentation": 5,
+    "source_manifest": 1
+  },
+  "changed_paths": [
+    {
+      "path": "README.md",
+      "category": "documentation",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1
+    },
+    {
+      "path": "docs/file-format-viewers.md",
+      "category": "documentation",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1
+    },
+    {
+      "path": "docs/office-remaining-gaps-20261115.md",
+      "category": "documentation",
+      "status": "modified",
+      "additions": 3,
+      "deletions": 3
+    },
+    {
+      "path": "lib/l10n/office_recovery_strings.dart",
+      "category": "host_production",
+      "status": "modified",
+      "additions": 22,
+      "deletions": 7
+    },
+    {
+      "path": "lib/screens/file_browser_screen.dart",
+      "category": "host_production",
+      "status": "modified",
+      "additions": 7,
+      "deletions": 0
+    },
+    {
+      "path": "lib/services/office_editor_menu.dart",
+      "category": "host_production",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 0
+    },
+    {
+      "path": "lib/widgets/office_editor_dialog.dart",
+      "category": "host_production",
+      "status": "modified",
+      "additions": 56,
+      "deletions": 0
+    },
+    {
+      "path": "lib/widgets/office_editor_ribbon.dart",
+      "category": "host_production",
+      "status": "modified",
+      "additions": 4,
+      "deletions": 0
+    },
+    {
+      "path": "packages/QUDS_FORKS.md",
+      "category": "documentation",
+      "status": "modified",
+      "additions": 5,
+      "deletions": 3
+    },
+    {
+      "path": "packages/quds_office_engine/README.md",
+      "category": "documentation",
+      "status": "modified",
+      "additions": 4,
+      "deletions": 4
+    },
+    {
+      "path": "packages/quds_office_engine/lib/quds_office_engine.dart",
+      "category": "engine_production",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 0
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/word/serial/odt_document_writer.dart",
+      "category": "engine_production",
+      "status": "added",
+      "additions": 584,
+      "deletions": 0
+    },
+    {
+      "path": "packages/quds_office_engine/test/odt_document_writer_test.dart",
+      "category": "tests",
+      "status": "added",
+      "additions": 85,
+      "deletions": 0
+    },
+    {
+      "path": "test/widget/office_editor_dialog_test.dart",
+      "category": "tests",
+      "status": "modified",
+      "additions": 61,
+      "deletions": 0
+    },
+    {
+      "path": "tool/office_fidelity_manifest.json",
+      "category": "source_manifest",
+      "status": "modified",
+      "additions": 5,
+      "deletions": 3
+    }
+  ],
+  "feature_summary": "Adds OdtDocumentWriter and its public engine export, then exposes Export as ODT through the host Word document menu, ribbon, editor dialog, and localization. Adds writer and dialog-export regression tests.",
+  "later_main_manifest": {
+    "source_commit": "5f019253d247073b715b7a7ae4a82763ceafd02f",
+    "source_branch": "vendor/odt-document-writer",
+    "documented_managed_files": 2505
+  },
+  "overlap_and_scope": [
+    "The engine public library and host menu/ribbon/editor/localization inputs change; integrating this feature would change the source tree bound by the completed qualification.",
+    "The fidelity manifest and packages/QUDS_FORKS.md point to a different canonical source and inventory. They cannot replace the frozen recovery manifest without a new guarded integration and qualification.",
+    "docs/office-remaining-gaps-20261115.md, packages/QUDS_FORKS.md, and tool/office_fidelity_manifest.json also overlap paths updated by the completed bounded main reconciliation.",
+    "The new ODT export writer is separate from the ODT import per-frame image-geometry corrections included in the frozen host source."
+  ],
+  "delivery_decision": {
+    "import_later_production_delta": false,
+    "preserve_frozen_qualified_inputs": true,
+    "reason": "This concurrent production work appeared during qualification. A docs-only reconcile cannot include it while preserving the tested source identity. Keep it outside this completed frozen scope and identify it explicitly in the report and PR body.",
+    "explicit_feature_exclusion": "The qualified recovery branch does not contain the later Export as ODT feature from PR #208 or its documentation update in PR #209."
+  },
+  "no_repository_mutations": true,
+  "no_application_tests_run": true,
+  "no_ci_or_actions_queries": true
+}
