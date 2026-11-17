@@ -342,9 +342,18 @@ abstract final class WordBookmarks {
   /// cross-story pairs remain unresolved. Body tables share their body story.
   static Map<WmlBookmarkBoundary, WmlBookmarkBoundary> pairedEnds(
     WmlDocument document,
+  ) => pairedEndsForStories(_stories(document));
+
+  /// Resolves endpoints in the exact stories admitted by an exporter.
+  ///
+  /// Some formats retain otherwise hidden merged-cell content as an isolated
+  /// story, or omit a source-only TOC cache. Pair only the supplied paragraphs
+  /// without changing their endpoint identities or borrowing another story.
+  static Map<WmlBookmarkBoundary, WmlBookmarkBoundary> pairedEndsForStories(
+    Iterable<Iterable<WmlParagraph>> stories,
   ) {
     final result = Map<WmlBookmarkBoundary, WmlBookmarkBoundary>.identity();
-    for (final story in _stories(document)) {
+    for (final story in stories) {
       final starts = <String, ({WmlBookmarkBoundary marker, int index})?>{};
       final ends = <String, ({WmlBookmarkBoundary marker, int index})?>{};
       final names = <String, int>{};
@@ -352,6 +361,13 @@ abstract final class WordBookmarks {
       for (final paragraph in story) {
         for (final marker
             in paragraph.inlines.whereType<WmlBookmarkBoundary>()) {
+          // Export still preserves a named start with an invalid source ID.
+          // Reserve its name before ID parsing so an unrelated valid range
+          // cannot infer an end against that competing emitted start.
+          final name = marker.name;
+          if (marker.isStart && name != null) {
+            names[name] = (names[name] ?? 0) + 1;
+          }
           final String id;
           try {
             id = canonicalId(marker.id);
@@ -363,10 +379,6 @@ abstract final class WordBookmarks {
               ? null
               : (marker: marker, index: index);
           index++;
-          final name = marker.name;
-          if (marker.isStart && name != null) {
-            names[name] = (names[name] ?? 0) + 1;
-          }
         }
       }
       for (final entry in ends.entries) {

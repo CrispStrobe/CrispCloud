@@ -7,6 +7,7 @@ part of 'german_writing_rules.dart';
 const Set<String> _germanPhraseRuleIds = <String>{
   'de.grammar.preposition-pronoun',
   'de.grammar.preposition-case',
+  'de.grammar.verb-object-case',
   'de.grammar.dative-plural',
   'de.grammar.noun-case',
   'de.grammar.adjective-ending',
@@ -683,6 +684,27 @@ Iterable<_GermanGrammarIssue> _germanGrammarIssues(
   for (int i = 0; i < words.length; i++) {
     if (!governedDeterminers.contains(i) &&
         _grammarDeterminerForms.containsKey(words[i].lower)) {
+      if (_grammarPotentialVerbObject(text, words, i)) {
+        // An incomplete or ambiguous verb frame must not fall through to a
+        // case guess based only on the malformed article. In particular,
+        // "ein kleinen Hund" must not become "ein kleiner Hund" here.
+        if (_grammarCompleteVerbObject(text, words, i, protected, boundaries)) {
+          yield* _grammarNounPhrase(
+            text,
+            words,
+            i,
+            _GermanCase.accusative,
+            words.first.start,
+            protected,
+            boundaries,
+            swiss,
+            articleRuleId: 'de.grammar.verb-object-case',
+            articleMessage:
+                'Das direkte Objekt dieses Verbs steht hier normalerweise im Akkusativ.',
+          );
+        }
+        continue;
+      }
       yield* _grammarNounPhrase(
         text,
         words,
@@ -692,9 +714,11 @@ Iterable<_GermanGrammarIssue> _germanGrammarIssues(
         protected,
         boundaries,
         swiss,
-        articleRule: verbContext?.articleIndex == i
+        articleRuleId: verbContext?.articleIndex == i
             ? 'de.grammar.verb-case'
             : 'de.grammar.preposition-case',
+        articleMessage:
+            'Artikel und Nomen verlangen in diesem eindeutigen Kasus normalerweise diese Form.',
       );
     }
   }
@@ -703,6 +727,207 @@ Iterable<_GermanGrammarIssue> _germanGrammarIssues(
   yield* _grammarInvertedAgreement(text, words, protected, boundaries);
   yield* _grammarSimpleNounAgreement(text, words, protected, boundaries, swiss);
   yield* _grammarContextIssues(text, words, protected, boundaries, verbContext);
+}
+
+// Reviewed lexical uses with a direct accusative object. The present forms are
+// shared with the existing authored agreement table. Copulas, modals, dative
+// governors and unreviewed verbs deliberately do not establish object case.
+// "haben" qualifies only as a complete lexical frame; any later participle,
+// infinitive, extra phrase or clause prevents the positive inference below.
+const _grammarAccusativeVerbs = <String>{
+  'haben',
+  'brauchen',
+  'finden',
+  'nehmen',
+  'sehen',
+  'lesen',
+  'essen',
+  'kennen',
+  'verstehen',
+  'kaufen',
+  'hören',
+  'suchen',
+  'tragen',
+  'treffen',
+  'vergessen',
+  'trinken',
+};
+const _grammarObjectSubjects = <String>{
+  'ich',
+  'du',
+  'er',
+  'es',
+  'man',
+  'wir',
+  'ihr',
+  'sie',
+};
+final _grammarObjectEnd = RegExp(r'^[.!?][ \t\r\n\u00a0\u202f]*$');
+
+_GermanPresentParadigm? _grammarObjectParadigm(_GermanGrammarWord verb) {
+  final paradigm = GermanWritingRulesProvider
+      ._presentByForm[normalizeGermanWord(verb.lower)];
+  return paradigm != null &&
+          _grammarAccusativeVerbs.contains(paradigm.infinitive)
+      ? paradigm
+      : null;
+}
+
+bool _grammarPotentialVerbObject(
+  String text,
+  List<_GermanGrammarWord> words,
+  int index,
+) {
+  // A potential governor is enough for abstention, including one separated by
+  // protected markup. Only the stricter complete-frame gate may emit findings.
+  if (index > 0 &&
+      _grammarObjectParadigm(words[index - 1]) != null &&
+      !_grammarClauseEnd.hasMatch(
+        text.substring(words[index - 1].end, words[index].start),
+      )) {
+    return true;
+  }
+  // Inversion: "Heute sehe ich ein ...". This narrow implementation does not
+  // infer case for post-verbal subjects or fronted objects.
+  if (index > 1 &&
+      _grammarObjectSubjects.contains(words[index - 1].lower) &&
+      _grammarObjectParadigm(words[index - 2]) != null &&
+      _grammarAdjacent(text, words[index - 2], words[index - 1]) &&
+      _grammarAdjacent(text, words[index - 1], words[index])) {
+    return true;
+  }
+  final nounIndex = _grammarNounIndex(text, words, index);
+  if (nounIndex == null || nounIndex + 1 >= words.length) return false;
+  final verb = words[nounIndex + 1];
+  if (_grammarObjectParadigm(verb) == null ||
+      !_grammarAdjacent(text, words[nounIndex], verb)) {
+    return false;
+  }
+  // Subordinate or fronted phrase: "wenn ich ein ... sehe" / "ein ... sehe
+  // ich". These are also unsafe places for the old nominative-only fallback.
+  return index > 0 &&
+          _grammarObjectSubjects.contains(words[index - 1].lower) &&
+          _grammarAdjacent(text, words[index - 1], words[index]) ||
+      nounIndex + 2 < words.length &&
+          _grammarObjectSubjects.contains(words[nounIndex + 2].lower) &&
+          _grammarAdjacent(text, verb, words[nounIndex + 2]);
+}
+
+bool _grammarCompleteVerbObject(
+  String text,
+  List<_GermanGrammarWord> words,
+  int index,
+  bool Function(int, int) protected,
+  Set<int> boundaries,
+) {
+  // Accept only an entire short clause: pronoun + matching finite verb + one
+  // modeled noun phrase + actual final punctuation. Never truncate lookahead
+  // to satisfy the gate. The bounds cover two modeled adjectives and a noun.
+  if (index != 2 || words.length > 6 || text.length > 512) return false;
+  final subject = words[0];
+  final verb = words[1];
+  final paradigm = _grammarObjectParadigm(verb);
+  if (paradigm == null ||
+      verb.capitalized ||
+      text.substring(0, subject.start).trim().isNotEmpty ||
+      !_grammarAdjacent(text, subject, verb) ||
+      !_grammarAdjacent(text, verb, words[index]) ||
+      !_grammarContextSafe(subject.start, text.length, protected, boundaries)) {
+    return false;
+  }
+  final expected = switch (subject.lower) {
+    'ich' => [paradigm.ich],
+    'du' => [paradigm.du],
+    'er' || 'es' || 'man' => [paradigm.thirdPerson],
+    'wir' => [paradigm.wir],
+    'ihr' => [paradigm.ihr],
+    'sie' => [paradigm.thirdPerson, paradigm.wir],
+    _ => const <String>[],
+  };
+  if (!expected.any((form) => _germanFormsEquivalent(form, verb.lower))) {
+    return false;
+  }
+  final nounIndex = _grammarNounIndex(text, words, index);
+  if (nounIndex == null ||
+      nounIndex != words.length - 1 ||
+      !_grammarObjectEnd.hasMatch(text.substring(words[nounIndex].end))) {
+    return false;
+  }
+  // A bare comparative can also be an inflected positive adjective, e.g.
+  // "kleiner" has modeled stems "klein" and "kleiner". Do not repair an
+  // article while silently choosing or leaving unresolved its modifier's
+  // degree. Every adjective in this new complete-frame inference must have a
+  // single modeled stem; the existing phrase rules retain their own policy.
+  for (var i = index + 1; i < nounIndex; i++) {
+    if (_grammarAdjectiveForms[words[i].lower]!.length != 1) return false;
+  }
+  // "Sie sieht der alte Mann" is valid with a fronted object. "es" shares
+  // nominative/accusative spelling; "ihr" can instead be a dative object.
+  // Retain every valid noun-number reading before preferring pronoun-subject
+  // order. No correction may depend on discarding this grammatical reading.
+  if (const {'sie', 'es', 'ihr'}.contains(subject.lower) &&
+      _grammarPossiblePostverbalSubject(
+        words,
+        index,
+        nounIndex,
+        paradigm,
+        verb,
+      )) {
+    return false;
+  }
+  return true;
+}
+
+bool _grammarPossiblePostverbalSubject(
+  List<_GermanGrammarWord> words,
+  int index,
+  int nounIndex,
+  _GermanPresentParadigm paradigm,
+  _GermanGrammarWord verb,
+) {
+  final article = words[index];
+  final determiner = _grammarDeterminerForms[article.lower]!;
+  final noun = words[nounIndex];
+  if (_grammarCouldBeNominalizedAdjective(
+    article,
+    determiner,
+    noun,
+    _GermanCase.nominative,
+  )) {
+    return true;
+  }
+  for (final reading in _lookupGrammarNoun(noun.lower)) {
+    if (reading.gender == _GermanGender.plural && !determiner.permitsPlural ||
+        determiner.form(_GermanCase.nominative, reading.gender) !=
+            article.lower ||
+        !reading.accepts(noun.lower, _GermanCase.nominative) ||
+        !_germanFormsEquivalent(
+          reading.gender == _GermanGender.plural
+              ? paradigm.wir
+              : paradigm.thirdPerson,
+          verb.lower,
+        )) {
+      continue;
+    }
+    var valid = true;
+    for (var i = index + 1; i < nounIndex; i++) {
+      final adjective = words[i];
+      if (i + 1 < nounIndex && _grammarAdverbModifier(adjective)) continue;
+      final ending = _grammarAdjectiveEnding(
+        determiner,
+        _GermanCase.nominative,
+        reading.gender,
+      );
+      if (!_grammarAdjectiveForms[adjective.lower]!.any(
+        (stem) => _germanFormsEquivalent('$stem$ending', adjective.lower),
+      )) {
+        valid = false;
+        break;
+      }
+    }
+    if (valid) return true;
+  }
+  return false;
 }
 
 // A deliberately small complete-clause gate. A fronted object can look like a
@@ -944,7 +1169,9 @@ Iterable<_GermanGrammarIssue> _grammarNounPhrase(
   bool Function(int, int) protected,
   Set<int> boundaries,
   bool swiss, {
-  String articleRule = 'de.grammar.preposition-case',
+  String articleRuleId = 'de.grammar.preposition-case',
+  String articleMessage =
+      'Artikel, Nomen und Präposition verlangen hier normalerweise diese Form.',
 }) sync* {
   final _GermanGrammarWord article = words[index];
   final _GermanDeterminer determiner = _grammarDeterminerForms[article.lower]!;
@@ -1114,11 +1341,11 @@ Iterable<_GermanGrammarIssue> _grammarNounPhrase(
       articleForms.length == 1 &&
       !articleForms.contains(article.lower)) {
     yield _GermanGrammarIssue(
-      articleRule,
+      articleRuleId,
       article.start,
       article.end,
       _matchCase(article.text, articleForms.single),
-      'Artikel und Nomen verlangen in diesem eindeutigen Kasus normalerweise diese Form.',
+      articleMessage,
     );
   }
   // Any valid analysis vetoes a noun correction. Optional alternatives,
@@ -1168,12 +1395,7 @@ Iterable<_GermanGrammarIssue> _grammarNounPhrase(
     // A bare modifier can be an adverb attached to the following adjective:
     // "die automatisch geänderte Datei", "ein leicht beschädigtes Buch".
     // Inflecting it would change the phrase's structure and meaning.
-    if (adjective != adjectives.last &&
-        (_grammarAdjectiveStems.any(
-              (String stem) => _germanFormsEquivalent(stem, adjective.lower),
-            ) ||
-            const <String>{'leise', 'müde'}.contains(adjective.lower) ||
-            adjective.lower.endsWith('er'))) {
+    if (adjective != adjectives.last && _grammarAdverbModifier(adjective)) {
       continue;
     }
     final Set<String> replacements = <String>{
@@ -1197,6 +1419,13 @@ Iterable<_GermanGrammarIssue> _grammarNounPhrase(
     );
   }
 }
+
+bool _grammarAdverbModifier(_GermanGrammarWord adjective) =>
+    _grammarAdjectiveStems.any(
+      (String stem) => _germanFormsEquivalent(stem, adjective.lower),
+    ) ||
+    const <String>{'leise', 'müde'}.contains(adjective.lower) ||
+    adjective.lower.endsWith('er');
 
 const Set<String> _grammarMatrixVerbs = <String>{
   'denke',
