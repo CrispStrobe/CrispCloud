@@ -254,6 +254,10 @@ enum SmlConditionalKind {
   aboveAverage,
   belowAverage,
 
+  /// A calendar-relative date rule. [SmlConditionalRule.formula] holds the
+  /// OOXML token such as `today`, `lastWeek` or `nextMonth`.
+  timePeriod,
+
   /// A native formula predicate, evaluated within the supported bounded
   /// conditional-formula subset and retained in full for interchange.
   expression,

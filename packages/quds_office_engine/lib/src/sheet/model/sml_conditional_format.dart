@@ -28,10 +28,14 @@ class SmlConditionalStyle {
 /// resolver after any workbook edit; its value and aggregate caches are local
 /// to that operation. Evaluation never creates cells or changes formula caches.
 class SmlConditionalResolver {
-  SmlConditionalResolver({required this.sheet, SmlWorkbook? workbook})
-    : _formulas = _ConditionalFormulas(
-        workbook ?? SmlWorkbook(sheets: [sheet]),
-      ) {
+  SmlConditionalResolver({
+    required this.sheet,
+    SmlWorkbook? workbook,
+    DateTime Function()? now,
+  }) : _now = now ?? DateTime.now,
+       _formulas = _ConditionalFormulas(
+         workbook ?? SmlWorkbook(sheets: [sheet]),
+       ) {
     final priorities = effectivePriorities(sheet.conditionalFormats);
     final order = List<int>.generate(priorities.length, (index) => index)
       ..sort((left, right) => priorities[left].compareTo(priorities[right]));
@@ -39,6 +43,7 @@ class SmlConditionalResolver {
   }
 
   final SmlWorksheet sheet;
+  final DateTime Function() _now;
   final _ConditionalFormulas _formulas;
   late final List<SmlConditionalRule> _rules;
   final _styles = <(int, int), SmlConditionalStyle>{};
@@ -163,6 +168,49 @@ class SmlConditionalResolver {
     return index;
   }
 
+  bool _matchesTimePeriod(SmlConditionalRule rule, double serial) {
+    final cellDate = DateTime.utc(
+      1899,
+      12,
+      30,
+    ).add(Duration(days: serial.floor()));
+    final now = _now();
+    final today = DateTime(now.year, now.month, now.day);
+    bool sameDay(DateTime date, DateTime other) =>
+        date.year == other.year &&
+        date.month == other.month &&
+        date.day == other.day;
+    DateTime monthOffset(int months) =>
+        DateTime(today.year, today.month + months, 1);
+    final weekStart = today.subtract(Duration(days: today.weekday % 7));
+    return switch (rule.formula) {
+      'today' => sameDay(cellDate, today),
+      'yesterday' => sameDay(cellDate, today.subtract(const Duration(days: 1))),
+      'tomorrow' => sameDay(cellDate, today.add(const Duration(days: 1))),
+      'last7Days' =>
+        !cellDate.isBefore(today.subtract(const Duration(days: 6))) &&
+            !cellDate.isAfter(today),
+      'thisWeek' =>
+        !cellDate.isBefore(weekStart) &&
+            cellDate.isBefore(weekStart.add(const Duration(days: 7))),
+      'lastWeek' =>
+        !cellDate.isBefore(weekStart.subtract(const Duration(days: 7))) &&
+            cellDate.isBefore(weekStart),
+      'nextWeek' =>
+        !cellDate.isBefore(weekStart.add(const Duration(days: 7))) &&
+            cellDate.isBefore(weekStart.add(const Duration(days: 14))),
+      'thisMonth' =>
+        cellDate.year == today.year && cellDate.month == today.month,
+      'lastMonth' =>
+        cellDate.year == monthOffset(-1).year &&
+            cellDate.month == monthOffset(-1).month,
+      'nextMonth' =>
+        cellDate.year == monthOffset(1).year &&
+            cellDate.month == monthOffset(1).month,
+      _ => false,
+    };
+  }
+
   bool matches(SmlConditionalRule rule, SmlCell cell) {
     Object? formula(String source) => _formulas.evaluate(
       source,
@@ -235,6 +283,8 @@ class SmlConditionalResolver {
         return text.toLowerCase().endsWith(rule.formula.toLowerCase());
       case SmlConditionalKind.duplicate:
         return text.isNotEmpty && (_aggregate(rule).counts[text] ?? 0) > 1;
+      case SmlConditionalKind.timePeriod:
+        return number == null ? false : _matchesTimePeriod(rule, number);
       case SmlConditionalKind.top:
       case SmlConditionalKind.bottom:
       case SmlConditionalKind.topPercent:

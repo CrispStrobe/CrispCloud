@@ -124,6 +124,34 @@ void main() {
     expect(reopened.draft, isTrue);
   });
 
+  test('calendar-relative conditional rules round-trip', () async {
+    final book = SmlWorkbook(
+      sheets: [SmlWorksheet(name: 'Sheet1', sheetId: 1)],
+    );
+    book.firstSheet.cellA1('A1').value = 1;
+    book.firstSheet.conditionalFormats.add(
+      SmlConditionalRule(
+        range: SmlRange.parse('A1'),
+        kind: SmlConditionalKind.timePeriod,
+        formula: 'last7Days',
+        fillRgb: 'FF0000',
+      ),
+    );
+    final saved = await OfficeIsolateSave.workbook(book);
+    final xml = OpcPackage.openBytes(
+      saved,
+    ).getPart('/xl/worksheets/sheet1.xml')!.readText();
+    expect(xml, contains('type="timePeriod"'));
+    expect(xml, contains('timePeriod="last7Days"'));
+    final rule = SheetDeserializer()
+        .readBytes(saved)
+        .firstSheet
+        .conditionalFormats
+        .single;
+    expect(rule.kind, SmlConditionalKind.timePeriod);
+    expect(rule.formula, 'last7Days');
+  });
+
   test('icon-set conditional rules round-trip', () async {
     final book = SmlWorkbook(
       sheets: [SmlWorksheet(name: 'Sheet1', sheetId: 1)],
