@@ -6,6 +6,9 @@ import '../xml/xml_writer.dart';
 /// Namespace for ODF paragraph text and explicit whitespace elements.
 const odfTextNamespace = 'urn:oasis:names:tc:opendocument:xmlns:text:1.0';
 
+/// Namespace for ODF office structure and annotation stories.
+const odfOfficeNamespace = 'urn:oasis:names:tc:opendocument:xmlns:office:1.0';
+
 /// Namespace for ODF table structure and covered cells.
 const odfTableNamespace = 'urn:oasis:names:tc:opendocument:xmlns:table:1.0';
 
@@ -106,9 +109,14 @@ bool isOdfCoveredCell(XmlElement element) =>
     element.namespaceUri == odfTableNamespace &&
     element.localName == 'covered-table-cell';
 
+/// Annotations have their own story and are not part of visible body text.
+bool isOdfAnnotation(XmlElement element) =>
+    element.namespaceUri == odfOfficeNamespace &&
+    element.localName == 'annotation';
+
 /// Enumerates paragraph blocks without treating inline spans as word breaks.
 Iterable<XmlElement> odfParagraphs(XmlElement element) sync* {
-  if (isOdfCoveredCell(element)) return;
+  if (isOdfCoveredCell(element) || isOdfAnnotation(element)) return;
   if (isOdfParagraph(element)) {
     yield element;
     return;

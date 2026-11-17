@@ -4,6 +4,17 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Broaden offline German article, case and adjective checking with 67,492
+  noun lemmas from pinned Unicode-3.0 Inflection data. Load lexical buckets
+  lazily on Dart VM and web, preserve ambiguous and alternative readings, and
+  require modern spelling corroboration for proposed noun replacements.
+- Add the independently ignorable `de.grammar.noun-case` rule for required
+  noun endings, and supplement basic German noun spellings across de-DE,
+  de-AT and de-CH. Keep the existing English provider and English/German
+  hyphenation behavior.
+- Keep note references inside exported ODT comments as labels, so annotations
+  cannot consume or duplicate the note body belonging to a document reference.
+
 - Unify English/German protected-text ranges, including Unicode email/URI
   handling, bounded backtick pairing and German identifier/contraction guards.
   Preserve equivalent German language aliases across styled runs.

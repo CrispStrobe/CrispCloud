@@ -199,7 +199,7 @@ String _allText(XmlElement node) => _descendants(node)
 
 String _odfText(XmlElement node, int maxBytes) {
   // Preserve the existing fallback for nonstandard namespace-less text files.
-  // Even when every ODF paragraph is covered, the fallback must not reveal it.
+  // Retained covered-cell and annotation stories must stay out of fallback text.
   if (odfParagraphs(node).isEmpty) return _odfFallbackText(node);
   return readOdfText(node, OdfTextBudget(maxBytes));
 }
@@ -211,7 +211,9 @@ String _odfFallbackText(XmlElement node) {
       pieces.add(current.text);
     } else if (current is XmlCdata) {
       pieces.add(current.text);
-    } else if (current is XmlElement && !isOdfCoveredCell(current)) {
+    } else if (current is XmlElement &&
+        !isOdfCoveredCell(current) &&
+        !isOdfAnnotation(current)) {
       for (final child in current.children) {
         visit(child);
       }

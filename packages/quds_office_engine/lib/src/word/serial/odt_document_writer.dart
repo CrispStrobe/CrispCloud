@@ -368,7 +368,14 @@ abstract final class OdtDocumentWriter {
             w.writeText(comment.dateIso);
             w.writeEndElement();
           }
-          _writeBlocks(w, comment.paragraphs, layout);
+          // Comment stories must not consume a visible body's note definition.
+          final notesAllowed = layout.noteBodiesAllowed;
+          layout.noteBodiesAllowed = false;
+          try {
+            _writeBlocks(w, comment.paragraphs, layout);
+          } finally {
+            layout.noteBodiesAllowed = notesAllowed;
+          }
           w.writeEndElement();
         }
         if (inline.inlineVisual case final visual?) {

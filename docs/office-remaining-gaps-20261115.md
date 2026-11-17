@@ -1,12 +1,26 @@
 # Office viewer/editor remaining gaps — 15 November 2026
 
-Last updated: 16 November 2026.
+Last updated: 17 November 2026.
 
 This is the current backlog for the Office/ODF work. It records what is
 verified, what is intentionally read-only, and what remains before the viewer
 and editor can claim full format coverage.
 
 ## Current continuation
+
+The 17 November continuation reconciles the latest captured canonical Office,
+German morphology and proofing-tool histories, including the ODT comment export
+that landed after the Zotero integration. The exact vendor pin and file inventory
+are in `tool/office_fidelity_manifest.json`; the branch inventories, merge
+decisions and source checks are in `validation/office-continuation-20261117/`.
+
+Annotation bodies remain in raw ODF XML and the comment model while body
+extraction, search and host previews exclude them. Comment references also leave
+note definitions available for visible document references. The new regression
+cases are committed and source-reviewed. Runtime qualification of this combined
+source remains pending because the workspace launcher cannot start a process;
+no GitHub Actions or CI-status endpoint was queried or awaited. Historical test
+counts below retain their original source attribution.
 
 The 16 November integration reconciles CrispCloud's terminal forwarding/trigger
 and Zotero continuation branches with canonical Quds, preserving the standalone
@@ -33,8 +47,9 @@ exact source identities, commands and the separately qualified terminal results.
 ## Earlier verified state
 
 - CrispCloud `main` snapshot: `4eea7d16`
-- Vendored Quds source checkpoint: `04505306af39c47bd0fe96423d1515ee6ca5027e`
-  (`packages/QUDS_FORKS.md`, 2,559 managed files)
+- The historical test results below retain the source identities in their
+  original receipts. Current vendor identities and counts are recorded in
+  `tool/office_fidelity_manifest.json` and `packages/QUDS_FORKS.md`.
 - Quds sheet/ODS cohort: **514 tests**; the last clean full engine run was
   **2,205 tests** (two unrelated CLI bookmark/content-control tests currently
   fail on main)
@@ -154,17 +169,20 @@ leaking payloads into plain text/search.
 
 ### OG-07 — ODF writers
 
-**Status:** Partial\
-**Current:** `OdsSheetWriter` exports the modeled workbook subset as a new ODS
-package: values, formulas, styles, number formats, merges, geometry, hidden
-state, comments, hyperlinks, names, print metadata, autofilter ranges and
-predicates, pictures, conditional formats, validations, row outline groups,
-authored page setup and header/footer sections. F4 exposes this as **Export as ODS**; ordinary Save still
-writes a new `.xlsx`. No ODT or ODP writer exists.\
-**Remaining:** ODT/ODP serialization.\
-**Next step:** decide whether an ODP writer is a product requirement.\
-**Acceptance:** preserve unknown XML, styles, metadata and drawings through an
-edited round trip, or clearly emit a new-document subset.
+**Status:** Partial / modeled new-document exports\
+**Current:** `OdsSheetWriter` exports the supported workbook model as a new
+ODS package, and F4 exposes **Export as ODS** while ordinary Save writes a new
+XLSX copy. `OdtDocumentWriter` and `OdpPresentationWriter` also exist.
+The ODT subset includes formatted paragraphs, lists, tables, pictures,
+headers/footers, footnotes/endnotes and comments. The ODP subset includes
+positioned text, pictures, tables, notes and supported slide transitions.\
+**Remaining:** preservation of arbitrary imported ODF XML, unmodeled styles,
+metadata, drawings and other format features through an edited native round trip.\
+**Next step:** extend the documented writer subsets and qualify writer-to-reader
+and application workflows, including separation of comments from visible text.\
+**Acceptance:** each supported feature exports with its stated behavior and
+reopens in the intended consumer; the documented new-document boundary remains
+explicit for unmodeled imported content.
 
 ### OG-08 — ODP slide fidelity
 
@@ -217,7 +235,7 @@ host-reference mismatch.
 3. OG-06 ODT image registry.
 4. OG-08 ODP fidelity.
 5. OG-01 `.xlsb` only if editing is required.
-6. OG-07 finish the ODS writer, then decide on ODT/ODP writers.
+6. OG-07 extend and qualify the modeled ODS/ODT/ODP writer subsets.
 
 ## Verification commands
 

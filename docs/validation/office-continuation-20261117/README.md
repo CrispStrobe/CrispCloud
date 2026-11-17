@@ -1,22 +1,99 @@
-# Office continuation — fixed host inventory
+# Office continuation — 17 November 2026
 
-This checkpoint starts from CrispCloud main `fad903782ee45031e26c57cc8a65ccf476b1724d` and records the source inventory before implementation work. The supplied previous landing was `705638543e2d181b925c8acad562b743b974b5d4`.
+## Current result
 
-## Reconciliation
+The continuation reconciles recent canonical Office/proofing work and repairs
+ODF annotation previews. The host pins canonical **`7f116669d2512cf660c86d3c83feb64ab6b707fb`** and manages
+**2,586 files: 729 canonical files and the unchanged 1,857-file standalone
+parser**. Source and tests are saved incrementally on
+`codex/office-continuation-20261117`.
 
-- **99 branch heads and all 212 pull requests** were captured, for **311 refs**. Pagination reached empty terminal pages. There were no open pull requests.
-- **214 refs** are covered by inherited or freshly verified ancestry, **94** by inherited or fresh complete-tree aliases, **1** is the captured main itself, and **2** (one branch and its PR) preserve all original leaf blobs/modes with additional validation evidence. No captured ref is unaccounted for.
-- The additive case is `fix/odp-transitions-vendor` / #216: its merged ancestor adds 31 files under `docs/validation/integrated-testflight-20261117/`. It is explicitly **not** counted as complete-tree equality. No original source leaf was removed or changed by that merge.
-- The incoming main advances the supplied baseline by two commits: #221 vendors ODT comment export and #222 records it. Both are already included in this branch. The manifest now points to canonical Quds `04505306af39c47bd0fe96423d1515ee6ca5027e`.
+**Runtime qualification is pending.** Local execution fails before a command
+starts. No Dart/Flutter tests, analyzer, formatter or executable vendor guard
+ran in this turn. Git-object comparisons, byte/hash checks and independent source
+review have completed. Historical test evidence retains its original source.
 
-The prior 298-ref review is retained unchanged and used only where the captured ref SHA still matches. Additional comparisons bind its ancestry to current main and account for the newer heads. Counts describe this fixed inventory, not future concurrent remote changes.
+## Incoming work
 
-[Branch inventory](branches.json) · [Pull request inventory](pull-requests.json) · [Reconciliation proof](reconciliation.json)
+[Branch inventory](branches.json), [all PRs](pull-requests.json) and
+[reconciliation](reconciliation.json) cover **99 host branches and 212 PRs /
+311 refs**. Captured main `fad903782ee45031e26c57cc8a65ccf476b1724d` includes
+#221 and #222 after the supplied landing. There were no open host PRs at that
+observation.
 
-## Next work and limits
+The accounting is 214 ancestry-covered refs, 94 complete-tree aliases, captured
+main, and two branch/PR observations with additive evidence preservation.
+The latter case retains every original leaf blob and mode plus 31 TestFlight
+evidence files; it is explicitly not classified as whole-tree equality.
 
-Review of the newly landed comment writer shows that the host's generic inline traversal can flatten `office:annotation` metadata and comment text into body previews. This is a source-inferred integration defect to reproduce and correct; this checkpoint does not claim a runtime failing control or a tested fix.
+The [bounded arrival refresh](arrival-observation.json) found no additional host
+source, and both main refs remained unchanged. Three canonical branches moved
+during this turn. Their exact tips and preserved variants are recorded in the
+[canonical continuation](https://github.com/CrispStrobe/quds_office_suite/tree/7f116669d2512cf660c86d3c83feb64ab6b707fb/docs/validation/office-continuation-20261117).
+The final source retains all original captured histories and those arrivals.
 
-Local command execution currently fails before the shell starts with `bwrap: Can't create file /workspace/scratch/f6cd2da02657/.git: No space left on device`. **No new Dart/Flutter tests have run.** Source inventory and Git-object comparisons are the only checks represented here. Earlier test evidence keeps its original source identities.
+## What changed
 
-No GitHub Actions, workflow, check-run or CI-status endpoint was queried or awaited.
+The vendor sync brings in German morphology, updated proofing qualification
+material, newer ODT note handling and ODP transition amendments while preserving
+the landed Zotero recovery and ODT comment export.
+
+ODF annotations retain their metadata/body in raw XML and models. The host now
+excludes them from document body, list, table, note, header/footer and CSV preview
+text. Table handling filters both hidden descendant paragraphs and annotation
+text nested within an otherwise visible paragraph. Namespace-aware checks retain
+foreign lookalikes, CDATA and surrounding text. The canonical extractors and
+search fallback carry the same annotation-story boundary.
+
+The canonical writer also reserves note definitions for visible body references:
+references inside comments retain their marks without consuming the definition.
+Both footnote/endnote regressions and the independently arriving same-paragraph
+case are retained.
+
+German morphology now ships its full Unicode attribution and license through
+the app's seventh registered Office notice. The six original notices and the
+host package LICENSE remain unchanged. The asset declaration, registry entry and
+license regression agree.
+
+## Source and preservation evidence
+
+- [Initial vendor plan and hashes](vendor-sync-initial.json) records the first
+  40 source writes and license integration.
+- [Final vendor plan](vendor-sync-final.json) records the final eight source
+  writes, source pin and hashes.
+- [Final source verification](final-source-verification.json) binds the remote
+  tree, every managed file and the unchanged parser/customizations to their
+  observed blobs and modes.
+- [Independent host review](independent-host-review.json) covers the host
+  annotation APIs/expectations and the seventh notice.
+- [Independent note review](independent-note-review.json) covers the canonical
+  comment/note correction, with exact source/test inverse checks.
+- [Annotation review](../odf-annotation-visibility-20261117/README.md) contains
+  the 11 canonical and eight host authored cases and their read-back identities.
+
+Unchanged SHA-256 values are carried from the prior manifest only where the
+immutable source/host blobs are identical. Each changed or added source blob was
+freshly checked for Git blob identity, byte size and SHA-256 before upload, and
+the upload returned that exact blob ID. The 12 inherited managed executable-mode
+differences are preserved; no new managed mode difference is introduced.
+
+Independent preservation review confirms all 50 canonical Zotero paths and the
+46 mirrored host paths remain unchanged; four canonical editor-example paths
+are intentionally outside the host mirror. All 20 previously audited host
+customizations, the original six notice blobs and the standalone parser remain
+preserved.
+
+## Validation status and next step
+
+The new regression definitions are **not passed tests**. No executed failing
+control or newly accepted runtime result is claimed. The final workspace probe
+still failed before process creation with an unavailable exec-server.
+
+Run [the retained local qualification](PENDING_VALIDATION.md) on this host
+snapshot and its exact canonical pin before promoting the draft. Full
+application/export-dialog and live Zotero/Word/LibreOffice acceptance remain
+separate scopes.
+
+Checkpoint messages use `[skip ci]`, updates are non-force with expected heads,
+and remote refs were read back. No GitHub Actions, workflow-run, check-run or
+CI-status endpoint was queried or awaited.
