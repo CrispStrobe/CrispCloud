@@ -26,14 +26,14 @@ content.
 The app mirrors the canonical Quds source and the standalone legacy parser.
 Exact revisions, source boundaries and the complete managed-file inventory are
 recorded in [the fidelity manifest](../tool/office_fidelity_manifest.json).
-The current canonical checkpoint is `3b451f9284c9b31db8d7f1819cb9af8c68586dbb`;
+The current canonical checkpoint is `f87533cdbf9f98e5cfc11d21d8903f8501212ab8`;
 the managed inventory contains 2,620 files: 763 canonical files and the unchanged
 1,857-file standalone parser. The 17 November continuation reconciles the
 captured Office, morphology and proofing-tool branches and their bounded late
 arrivals. It preserves the original six bundled notices and adds the complete
 Unicode Inflection notice for German morphology to the app's license registry.
 
-The latest reconciliation merges captured host main `1cd2a18f7bc2455eabc5ec8e22767c849a833305` and synchronizes the canonical union through the guard. It retains the bounded German noun-agreement work, custom ODT tab stops, table row minimum-height semantics and decoration normalization. The optional native German proofing AOT package remains outside the existing host managed-package boundary. New tests exercise the actual ODT/ODP export menus, annotation privacy, semantic output and destination outcomes; their local execution evidence is recorded separately from prior qualifications in `docs/validation/office-reconcile-20261117/`.
+The latest reconciliation merges captured host main `1cd2a18f7bc2455eabc5ec8e22767c849a833305` and synchronizes the canonical union through the guard. It retains the bounded German noun-agreement work, custom ODT tab stops, table row minimum-height semantics and decoration normalization. The AOT/RML package was merged only to reconcile its history; it was then removed. No AOT/RML code, dependency, Studio menu or licensing artifact remains in the application. New tests exercise the actual ODT/ODP export menus, annotation privacy, semantic output and destination outcomes; their local execution evidence is recorded separately from prior qualifications in `docs/validation/office-reconcile-20261117/`.
 
 ODF annotations retain their raw XML and comment-model content while body
 extraction, search and host previews exclude them. Note references inside
@@ -431,8 +431,8 @@ this supported profile. Exact source identities and scope are recorded in
 
 ODT export also writes modeled list groups, retaining the combined whitespace and visible Zotero-result behavior.
 
-The German context continuation keeps AOT.ru/RML, its analyzer, dictionaries and
-Studio registration on their feature branches. The default offline checker
+The German context continuation remains pure Dart. AOT.ru/RML, its analyzer,
+dictionaries and Studio registration were removed after reconciliation. The default offline checker
 uses the independent Dart rules and existing licensed lexical data. Four new
 review categories cover verb case, copula number, word order and participles;
 context suggestions precede distance-only spelling guesses. No model, daemon
