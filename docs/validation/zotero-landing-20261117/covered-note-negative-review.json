@@ -1,0 +1,36 @@
+{
+  "status": "passed",
+  "reviewed_utc": "2026-11-17T09:33:38.522156+00:00",
+  "review_kind": "Evidence-integrity review of an expected failing negative control",
+  "source_commit": "c66a84fcf5ce9016d8cc5b31b6d44f775d5a1149",
+  "source_tree": "a10b5e183294e19324026abcb30df4e4299f8bbd",
+  "canonical_commit": "b2dc226e2ed82cda8f1bada18fb0a1e17347b5fc",
+  "canonical_tree": "642436fb32d73cb73706a4dd1c1fce32d0f2fb8b",
+  "negative_receipt_sha256": "1df95c93f53443b5d247a3f8b9c9ec635b6375c23a23e448d2308461834b32e4",
+  "log_sha256": "0eaa8e5179990843c8a4fac4cc384721a43ab1dbf25e05f5061ec7377ca68293",
+  "exit_code": 1,
+  "expected_matcher_failure_reproduced": true,
+  "not_a_compilation_loading_or_disk_failure": true,
+  "recorded_source_inputs_bound_to_immutable_git": 3784,
+  "dependency_entries_verified": 6002,
+  "historical_source_dependency_entries": 1663,
+  "verification_used_historical_git_and_maps_after_checkout_advanced": true,
+  "input_maps": {
+    "source": {
+      "before_sha256": "55770c0c0a68838ea9a775676ade0a803abb65867742ecbe0eba18e819b3d2a0",
+      "after_sha256": "55770c0c0a68838ea9a775676ade0a803abb65867742ecbe0eba18e819b3d2a0",
+      "semantically_equal": true
+    },
+    "dependencies": {
+      "before_sha256": "616f2eae31a4792f7da02692aba684f14b6faa784d0d8b6077501280c4f91cfc",
+      "after_sha256": "616f2eae31a4792f7da02692aba684f14b6faa784d0d8b6077501280c4f91cfc",
+      "semantically_equal": true
+    }
+  },
+  "runtime_identical_to_accepted_a8cc_host": true,
+  "source_baseline_review_sha256": "32c0d0fdbc8a9abbe2e40c49106976a704392ab3b985b8e5482926eae1fc5735",
+  "contribution_to_accepted_test_counts": 0,
+  "review_script_sha256": "b837f9cdefbda8e30967844f227c6f9852d0cedf779b329d212ce2a90dc2b28a",
+  "review_helper_sha256": "2bbef41da1d762e7aa288ee14808ecfbddd4d4ca653ceea997b17618e918fd8f",
+  "blocking_discrepancies": []
+}

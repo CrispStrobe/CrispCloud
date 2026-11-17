@@ -173,10 +173,10 @@ abstract final class OdpPresentationWriter {
       w.writeEmptyElement(
         'image',
         prefix: 'draw',
-        attributes: {'xlink:href': path},
+        attributes: {'xlink:href': path, 'xlink:type': 'simple'},
       );
     } else if (shape.table case final table?) {
-      _writeTable(w, table, layout);
+      _writeTable(w, table, transform, layout);
     } else {
       w.writeStartElement('text-box', prefix: 'draw');
       _writeParagraphs(w, shape.text, layout, shape);
@@ -185,24 +185,85 @@ abstract final class OdpPresentationWriter {
     w.writeEndElement();
   }
 
-  static void _writeTable(XmlWriter w, PmlTable table, _OdpLayout layout) {
+  static void _writeTable(
+    XmlWriter w,
+    PmlTable table,
+    PmlTransform transform,
+    _OdpLayout layout,
+  ) {
+    // The slide model uses an equally sized, rectangular grid. Pad missing
+    // positions in the output without calling the mutating cellAt accessor.
+    final columns = table.colCount < 1 ? 1 : table.colCount;
+    final rows = table.rowCount < 1 ? 1 : table.rowCount;
     w.writeStartElement('table', prefix: 'table');
     w.writeAttribute('table:name', 'Table${layout.tableCount++}');
-    for (final row in table.rows) {
+    w.writeAttribute(
+      'table:style-name',
+      layout.tableStyle(transform.widthPoints),
+    );
+    // Impress omits rows wrapped in table-header-rows. Keep presentation rows
+    // direct and retain the first-row styling flag without a pagination wrapper.
+    w.writeAttribute(
+      'table:use-first-row-styles',
+      '${table.headerRow && table.rowCount > 0}',
+    );
+    w.writeEmptyElement(
+      'table-column',
+      prefix: 'table',
+      attributes: {
+        'table:style-name': layout.columnStyle(transform.widthPoints / columns),
+        if (columns > 1) 'table:number-columns-repeated': '$columns',
+      },
+    );
+    final rowStyle = layout.rowStyle(transform.heightPoints / rows);
+    for (var index = 0; index < rows; index++) {
+      final row = index < table.rowCount
+          ? table.rows[index]
+          : const <PmlTableCell>[];
       w.writeStartElement('table-row', prefix: 'table');
-      for (final cell in row) {
+      w.writeAttribute('table:style-name', rowStyle);
+      final missing = columns - row.length;
+      // Presentation readers do not consistently implement table writing-mode.
+      // Serialize physical left-to-right positions while keeping each cell's
+      // paragraph direction. The source model remains in logical column order.
+      if (table.rightToLeft) {
+        _writeEmptyTableCells(w, missing, layout, rightToLeft: true);
+      }
+      for (final cell in table.rightToLeft ? row.reversed : row) {
         w.writeStartElement('table-cell', prefix: 'table');
-        if (cell.fillColor.isNotEmpty) {
-          w.writeAttribute(
-            'table:style-name',
-            layout.cellStyle(cell.fillColor),
-          );
-        }
-        _writeParagraphs(w, cell.text, layout, null);
+        w.writeAttribute(
+          'table:style-name',
+          layout.cellStyle(cell.fillColor.isEmpty ? 'FFFFFF' : cell.fillColor),
+        );
+        _writeParagraphs(
+          w,
+          cell.text,
+          layout,
+          null,
+          textColor: cell.textColor.isEmpty ? '1A1A1A' : cell.textColor,
+          rightToLeft: table.rightToLeft,
+        );
         w.writeEndElement();
+      }
+      if (!table.rightToLeft) {
+        _writeEmptyTableCells(w, missing, layout, rightToLeft: false);
       }
       w.writeEndElement();
     }
+    w.writeEndElement();
+  }
+
+  static void _writeEmptyTableCells(
+    XmlWriter w,
+    int count,
+    _OdpLayout layout, {
+    required bool rightToLeft,
+  }) {
+    if (count <= 0) return;
+    w.writeStartElement('table-cell', prefix: 'table');
+    if (count > 1) w.writeAttribute('table:number-columns-repeated', '$count');
+    w.writeAttribute('table:style-name', layout.cellStyle('FFFFFF'));
+    _writeParagraphs(w, '', layout, null, rightToLeft: rightToLeft);
     w.writeEndElement();
   }
 
@@ -210,8 +271,10 @@ abstract final class OdpPresentationWriter {
     XmlWriter w,
     String text,
     _OdpLayout layout,
-    PmlShape? shape,
-  ) {
+    PmlShape? shape, {
+    String? textColor,
+    bool? rightToLeft,
+  }) {
     final lines = text
         .replaceAll('\r\n', '\n')
         .replaceAll('\r', '\n')
@@ -220,8 +283,11 @@ abstract final class OdpPresentationWriter {
       w.writeEmptyElement('p', prefix: 'text');
       return;
     }
-    final paragraphStyle = layout.paragraphStyle(shape);
-    final textStyle = layout.textStyle(shape);
+    final paragraphStyle = layout.paragraphStyle(
+      shape,
+      rightToLeft: rightToLeft,
+    );
+    final textStyle = layout.textStyle(shape, textColor: textColor);
     for (final line in lines) {
       w.writeStartElement('p', prefix: 'text');
       w.writeAttribute('text:style-name', paragraphStyle);
@@ -374,6 +440,9 @@ class _OdpLayout {
   final Map<String, String> _paragraphs = <String, String>{};
   final Map<String, String> _texts = <String, String>{};
   final Map<String, String> _cells = <String, String>{};
+  final Map<String, String> _tables = <String, String>{};
+  final Map<String, String> _columns = <String, String>{};
+  final Map<String, String> _rows = <String, String>{};
   final List<String> _buffers = <String>[];
   int tableCount = 0;
 
@@ -429,49 +498,107 @@ class _OdpLayout {
     });
   }
 
-  String paragraphStyle(PmlShape? shape) {
+  String paragraphStyle(PmlShape? shape, {bool? rightToLeft}) {
     final align = switch (shape?.textAlign ?? PmlTextAlign.left) {
       PmlTextAlign.center => 'center',
       PmlTextAlign.right => 'end',
       PmlTextAlign.justify => 'justify',
       PmlTextAlign.left => 'start',
     };
-    final key = '$align|${shape?.rightToLeft ?? false}';
+    final rtl = rightToLeft ?? shape?.rightToLeft ?? false;
+    final key = '$align|$rtl|${rightToLeft != null}';
     return _paragraphs.putIfAbsent(key, () {
       final name = 'P${_paragraphs.length + 1}';
       _buffers.add(
         '<style:style style:name="$name" style:family="paragraph">'
         '<style:paragraph-properties fo:text-align="$align"'
-        '${shape?.rightToLeft == true ? ' style:writing-mode="rl-tb"' : ''}/>'
+        '${rtl
+            ? ' style:writing-mode="rl-tb"'
+            : rightToLeft != null
+            ? ' style:writing-mode="lr-tb"'
+            : ''}'
+        '${rightToLeft != null ? ' style:writing-mode-automatic="false"' : ''}/>'
         '</style:style>',
       );
       return name;
     });
   }
 
-  String textStyle(PmlShape? shape) {
+  String textStyle(PmlShape? shape, {String? textColor}) {
+    final color = (textColor ?? shape?.textColor ?? '').toLowerCase();
     final key =
-        '${shape?.textColor ?? ''}|${shape?.fontSizePt ?? 0}|${shape?.rightToLeft ?? false}';
+        '$color|${shape?.fontSizePt ?? 0}|${shape?.rightToLeft ?? false}';
     return _texts.putIfAbsent(key, () {
       final name = 'T${_texts.length + 1}';
-      final buffer = StringBuffer(
-        '<style:style style:name="$name" style:family="text">'
-        '<style:text-properties',
-      );
+      final w = XmlWriter();
+      w.writeStartElement('style', prefix: 'style');
+      w.writeAttribute('style:name', name);
+      w.writeAttribute('style:family', 'text');
+      w.writeStartElement('text-properties', prefix: 'style');
+      if (color.isNotEmpty) w.writeAttribute('fo:color', '#$color');
       if (shape != null) {
-        if (shape.textColor.isNotEmpty) {
-          buffer.write(' fo:color="#${shape.textColor.toLowerCase()}"');
-        }
         if (shape.fontSizePt > 0) {
-          buffer.write(
-            ' fo:font-size="${shape.fontSizePt.toStringAsFixed(1)}pt"',
+          w.writeAttribute(
+            'fo:font-size',
+            '${shape.fontSizePt.toStringAsFixed(1)}pt',
           );
         }
       }
-      buffer.write('/></style:style>');
-      _buffers.add(buffer.toString());
+      w.writeEndElement();
+      w.writeEndElement();
+      _buffers.add(w.toXml());
       return name;
     });
+  }
+
+  String tableStyle(double width) {
+    final length = _positiveLength(width);
+    return _tables.putIfAbsent(length ?? '', () {
+      final name = 'Ta${_tables.length + 1}';
+      _buffers.add(
+        '<style:style style:name="$name" style:family="table">'
+        '<style:table-properties style:writing-mode="lr-tb"'
+        '${length == null ? '' : ' style:width="$length"'}/>'
+        '</style:style>',
+      );
+      return name;
+    });
+  }
+
+  String columnStyle(double width) {
+    final length = _positiveLength(width);
+    return _columns.putIfAbsent(length ?? '', () {
+      final name = 'Co${_columns.length + 1}';
+      _buffers.add(
+        '<style:style style:name="$name" style:family="table-column">'
+        '<style:table-column-properties'
+        '${length == null ? '' : ' style:column-width="$length" style:use-optimal-column-width="false"'}/>'
+        '</style:style>',
+      );
+      return name;
+    });
+  }
+
+  String rowStyle(double height) {
+    final length = _positiveLength(height);
+    return _rows.putIfAbsent(length ?? '', () {
+      final name = 'Ro${_rows.length + 1}';
+      _buffers.add(
+        '<style:style style:name="$name" style:family="table-row">'
+        '<style:table-row-properties'
+        '${length == null ? '' : ' style:row-height="$length" style:use-optimal-row-height="false"'}/>'
+        '</style:style>',
+      );
+      return name;
+    });
+  }
+
+  // Match frame precision and leave unrepresentable/invalid dimensions to the
+  // consumer rather than emitting a zero or nonfinite positiveLength value.
+  static String? _positiveLength(double points) {
+    if (!points.isFinite || points <= 0) return null;
+    final value = points.toStringAsFixed(2);
+    return double.parse(value) > 0 ? '${value}pt' : null;
   }
 
   String cellStyle(String fill) {

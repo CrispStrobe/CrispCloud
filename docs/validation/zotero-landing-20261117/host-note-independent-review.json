@@ -1,0 +1,178 @@
+{
+  "status": "passed",
+  "reviewed_utc": "2026-11-17T09:36:05.265865+00:00",
+  "source_commit": "58a7e60b7a8b44d7809b6cf7c27541f41a3168dc",
+  "source_tree": "a6fd4865300febb0bc44cb294c84aa61bdd86750",
+  "canonical_commit": "b2dc226e2ed82cda8f1bada18fb0a1e17347b5fc",
+  "canonical_tree": "642436fb32d73cb73706a4dd1c1fce32d0f2fb8b",
+  "accepted_base_host": "a8cc440260369214fce5cbae8b0230f425a46829",
+  "negative_control_source": "c66a84fcf5ce9016d8cc5b31b6d44f775d5a1149",
+  "receipt_sha256": "ff8ded8b0f760e4ed4de92e68f31e75b86d55c37ef778e1f0a5d2c53500d6bed",
+  "required_command_count": 9,
+  "commands": [
+    {
+      "name": "vendor-source",
+      "exit_code": 0,
+      "log_sha256": "a32816413ab4ce7a322ed817f36ef2e4f2d8a9c63dad0dc4272b9f0011b3f574"
+    },
+    {
+      "name": "vendor-tracked",
+      "exit_code": 0,
+      "log_sha256": "a32816413ab4ce7a322ed817f36ef2e4f2d8a9c63dad0dc4272b9f0011b3f574"
+    },
+    {
+      "name": "odt-service-tests",
+      "exit_code": 0,
+      "log_sha256": "45ffe629b62782e53a803c96f67979fb408da9c212bf12b00fca7896c65f5e87",
+      "passed_tests": 12,
+      "skipped_tests": 0,
+      "exact_test_names": [
+        "ODF nested covered stories stay hidden in table previews",
+        "ODT content.xml produces headings and paragraphs",
+        "ODT headers and footers keep text and skip page fields",
+        "ODT named styles and list styles come from styles.xml",
+        "ODT note previews hide covered table stories",
+        "ODT picture geometry rejects invalid and non-finite dimensions",
+        "ODT renders inline styles, links, notes and ordered lists",
+        "ODT renders lists and ODF table cells",
+        "ODT repeated picture frames keep independent geometry and shared bytes",
+        "ODT stores pictures in a bounded image registry",
+        "ODT tables retain covered cells and interior blank rows",
+        "ODT text boxes keep their visible labels"
+      ],
+      "terminal_success": true
+    },
+    {
+      "name": "note-host-probes",
+      "exit_code": 0,
+      "log_sha256": "90d6ce0a31f5fd5173611247eff267107f8d4ffed1b17b460a086e01102ab0f6",
+      "passed_tests": 2,
+      "skipped_tests": 0,
+      "exact_test_names": [
+        "actual host reads footnote and endnote caches without hidden instructions",
+        "note table covered stories stay hidden in the actual host"
+      ],
+      "terminal_success": true
+    },
+    {
+      "name": "reader-analysis",
+      "exit_code": 0,
+      "log_sha256": "125783d09c70cbac6088f046df61183a3eece8e52a160e8c53d70d832ddfeebc"
+    },
+    {
+      "name": "reader-format",
+      "exit_code": 0,
+      "log_sha256": "b123c4590dcf70e556a838971421b0fa296321a87b2fd8b3b89e25d422d2c23d"
+    },
+    {
+      "name": "source-preservation",
+      "exit_code": 0,
+      "log_sha256": "4f5a4df8057240fcac1fb36ea7de709b795b5ca47c3c562ac6f8b75f35550046"
+    },
+    {
+      "name": "whitespace",
+      "exit_code": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "vendor-tracked-final",
+      "exit_code": 0,
+      "log_sha256": "a32816413ab4ce7a322ed817f36ef2e4f2d8a9c63dad0dc4272b9f0011b3f574"
+    }
+  ],
+  "test_cohorts": {
+    "odt-service-tests": 12,
+    "note-host-probes": 2
+  },
+  "accepted_stage_test_passes": 14,
+  "historical_counts_and_negative_failure_not_added": true,
+  "input_maps": {
+    "source": {
+      "before_sha256": "a49810cd57a05828f560a7ec1725754105bfd47a38720475195d97018d9fffb4",
+      "after_sha256": "a49810cd57a05828f560a7ec1725754105bfd47a38720475195d97018d9fffb4",
+      "semantically_equal": true
+    },
+    "dependencies": {
+      "before_sha256": "9981a8a9c7c5052eaa7febf9c122d86814084e0e4ce352a27b50fe40a25bff2d",
+      "after_sha256": "9981a8a9c7c5052eaa7febf9c122d86814084e0e4ce352a27b50fe40a25bff2d",
+      "semantically_equal": true
+    }
+  },
+  "source_binding": {
+    "verified_input_count": 3792,
+    "all_recorded_bytes_and_modes_match_immutable_commit": true,
+    "untracked_execution_inputs": []
+  },
+  "dependency_entries_verified": 6002,
+  "package_graph_count": 107,
+  "hosted_packages_matching_production": 97,
+  "runtime_equal_to_both_prior_accepted_host_stages": true,
+  "analyzer_config_restored": true,
+  "paths_changed_outside_docs_since_accepted_base": [
+    "README.md",
+    "lib/services/office_document_service.dart",
+    "packages/QUDS_FORKS.md",
+    "packages/quds_office_engine/README.md",
+    "packages/quds_office_engine/lib/src/word/serial/odt_document_writer.dart",
+    "packages/quds_office_engine/test/odt_document_writer_test.dart",
+    "test/office_document_service_test.dart",
+    "tool/office_fidelity_manifest.json"
+  ],
+  "fix_delta_since_negative_control": {
+    "production_additions": 4,
+    "regression_additions": 36,
+    "paths": [
+      "lib/services/office_document_service.dart",
+      "test/office_document_service_test.dart"
+    ]
+  },
+  "all_eleven_prior_focused_service_tests_retained": true,
+  "new_service_regression": "ODT note previews hide covered table stories",
+  "namespace_lookalike_remains_visible_and_raw_covered_xml_retained": true,
+  "managed_count": 2559,
+  "canonical_managed_count": 702,
+  "parser_managed_count": 1857,
+  "host_customizations_preserved": 20,
+  "notices_preserved": 6,
+  "parser_subtree_preserved": true,
+  "inherited_mode_difference_paths": [
+    "packages/quds_office_editor/lib/src/core/input_bridge.dart",
+    "packages/quds_office_editor/lib/src/editor_pdf/pdf_font_faces.dart",
+    "packages/quds_office_editor/lib/src/editor_pdf/pdf_page_thumb.dart",
+    "packages/quds_office_editor/lib/src/editor_pdf/render_pdf_canvas.dart",
+    "packages/quds_office_editor/lib/src/embed/office_direction_keys.dart",
+    "packages/quds_office_engine/lib/src/extract/office_text_extractor.dart",
+    "packages/quds_office_engine/lib/src/fonts/font_subsetter.dart",
+    "packages/quds_office_engine/lib/src/fonts/sfnt_parser.dart",
+    "packages/quds_office_engine/lib/src/pdf/file/cos/pdf_cos.dart",
+    "packages/quds_office_engine/lib/src/pdf/file/interp/pdf_interpreter.dart",
+    "packages/quds_office_engine/lib/src/pdf/pdf_document.dart",
+    "packages/quds_office_engine/lib/src/pdf/pdf_font.dart"
+  ],
+  "destination_main": "d4524de90dd403c9ce350a1d271ac70ce511256b",
+  "all_destination_main_docs_outside_this_work_evidence_preserved": true,
+  "destination_main_testflight_evidence_files_preserved": 31,
+  "release_metadata_exactly_preserved": [
+    ".github/workflows/macos-release.yml",
+    "docs/apple-export-policy.json",
+    "docs/crypto-inventory.json",
+    "docs/release-testflight-20261117.md"
+  ],
+  "release_or_workflow_execution_claimed": false,
+  "prior_298_captured_refs_remain_included_by_accepted_base_ancestry": true,
+  "prior_ref_review_sha256": "c7f6917e05e6cf221deaff10b2b6287cb76027d2afd1fe2456beaea813dfd461",
+  "negative_control_independent_review_sha256": "25d07208294d889d927d5345d1672b8c00feca1dd9cfdeb75a65b0156bce83de",
+  "canonical_landing_independent_review_sha256": "4b37d160ae23dc0d2617fbf8bc000cf92875ce0de445a54523a28f45de3b231b",
+  "baseline_source_independent_review_sha256": "32c0d0fdbc8a9abbe2e40c49106976a704392ab3b985b8e5482926eae1fc5735",
+  "review_script_sha256": "b6648f51fedf439c8ad9dd221e2188104daf0a051fc5394926a79297b5fbaccc",
+  "review_helper_sha256": "2bbef41da1d762e7aa288ee14808ecfbddd4d4ca653ceea997b17618e918fd8f",
+  "limitations": [
+    "No complete viewer/export-dialog or application-build acceptance",
+    "No live Zotero, Word or LibreOffice acceptance",
+    "Note preview intentionally normalizes each note to one line; authored raw note whitespace is checked separately",
+    "Note labels follow the incoming writer encounter-order behavior; full native numbering/restart/custom-mark fidelity is not claimed",
+    "macOS workflow/release metadata is preserved and fingerprinted; no workflow, signing or release execution claimed",
+    "No GitHub Actions or CI/status endpoints queried or awaited"
+  ],
+  "blocking_discrepancies": []
+}

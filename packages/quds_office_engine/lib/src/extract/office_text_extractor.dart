@@ -319,7 +319,13 @@ abstract final class OfficeTextExtractor {
       if (reader.eventType != XmlEventType.startElement) {
         continue;
       }
-      if (reader.localName == 'table') {
+      if (reader.namespaceUri == odfTableNamespace &&
+          reader.localName == 'covered-table-cell') {
+        // Skip the complete retained story without materializing it. Otherwise
+        // its paragraphs (or nested tables) appear as visible document content.
+        final depth = reader.depth;
+        while (reader.next() && reader.depth >= depth) {}
+      } else if (reader.localName == 'table') {
         table = <List<String>>[];
         tables.add(table);
       } else if (reader.localName == 'table-row' && table != null) {

@@ -413,6 +413,43 @@ void odfTests() {
     ]);
   });
 
+  test('ODF nested covered stories stay hidden in table previews', () async {
+    const table = '''
+<table:table xmlns:foreign="urn:example:foreign-table">
+ <table:table-row><table:table-cell>
+  <text:p>Outer before</text:p>
+  <table:table>
+   <table:table-row>
+    <table:table-cell table:number-rows-spanned="2"><text:p>Visible anchor</text:p></table:table-cell>
+   </table:table-row>
+   <table:table-row>
+    <table:covered-table-cell>
+     <text:p>HIDDEN COVERED STORY</text:p>
+     <table:table><table:table-row><table:table-cell><text:p>HIDDEN DEEP STORY</text:p></table:table-cell></table:table-row></table:table>
+    </table:covered-table-cell>
+   </table:table-row>
+   <table:table-row><table:table-cell><text:p>Visible nested end</text:p></table:table-cell></table:table-row>
+  </table:table>
+  <foreign:covered-table-cell><text:p>Foreign visible story</text:p></foreign:covered-table-cell>
+  <text:p>Outer after</text:p>
+ </table:table-cell></table:table-row>
+</table:table>
+''';
+    for (final ext in ['odt', 'ods']) {
+      final doc = await parseTables(table, ext: ext);
+      expect(doc.fallback, isNull);
+      expect(doc.markdown, isNot(contains('HIDDEN')));
+      expect(doc.plainText, isNot(contains('HIDDEN')));
+      expect(
+        doc.markdown,
+        contains(
+          'Outer before Visible anchor Visible nested end Foreign visible story Outer after',
+        ),
+      );
+      expect(doc.rawXml, contains('HIDDEN COVERED STORY'));
+    }
+  });
+
   final excessiveTables = <String, String>{
     'data after an oversized row gap': '''
       <table:table-row table:number-rows-repeated="100001"/>
@@ -724,6 +761,42 @@ void odtRichTests() {
     expect(doc.markdown, contains('- Bullet'));
     expect(doc.markdown, contains('  - Nested'));
     expect(doc.markdown, contains('1. Footnote text.'));
+  });
+
+  test('ODT note previews hide covered table stories', () async {
+    const xml = '''
+<office:document-content
+ xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"
+ xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0"
+ xmlns:t="urn:oasis:names:tc:opendocument:xmlns:table:1.0"
+ xmlns:foreign="urn:example:foreign-table">
+ <office:body><office:text><text:p>Body<text:note text:note-class="footnote" text:id="fn1">
+  <text:note-citation>1</text:note-citation><text:note-body>
+   <t:table>
+    <t:table-row><t:table-cell t:number-rows-spanned="2"><text:p>Visible note anchor </text:p></t:table-cell></t:table-row>
+    <t:table-row><t:covered-table-cell>
+     <text:p>HIDDEN COVERED NOTE</text:p>
+     <t:table><t:table-row><t:table-cell><text:p>HIDDEN DEEP NOTE</text:p></t:table-cell></t:table-row></t:table>
+    </t:covered-table-cell></t:table-row>
+    <t:table-row><t:table-cell><text:p> Visible note tail</text:p></t:table-cell></t:table-row>
+   </t:table>
+   <foreign:covered-table-cell><text:p> Foreign visible note</text:p></foreign:covered-table-cell>
+  </text:note-body></text:note> tail</text:p></office:text></office:body>
+</office:document-content>
+''';
+    final doc = await parseOfficeDocument(
+      _zip({'content.xml': xml}),
+      'covered-note.odt',
+    );
+    expect(doc.fallback, isNull);
+    expect(doc.markdown, contains('Body[1] tail'));
+    expect(doc.markdown, isNot(contains('HIDDEN')));
+    expect(doc.plainText, isNot(contains('HIDDEN')));
+    expect(
+      doc.markdown,
+      contains('1. Visible note anchor Visible note tail Foreign visible note'),
+    );
+    expect(doc.rawXml, contains('HIDDEN COVERED NOTE'));
   });
 }
 
