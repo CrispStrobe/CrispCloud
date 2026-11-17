@@ -1,0 +1,68 @@
+{
+  "status": "passed",
+  "reviewed_utc": "2026-11-17T09:31:14.797865+00:00",
+  "review_kind": "Static source audit of the notes baseline; not a final accepted host qualification",
+  "source_commit": "c66a84fcf5ce9016d8cc5b31b6d44f775d5a1149",
+  "source_tree": "a10b5e183294e19324026abcb30df4e4299f8bbd",
+  "canonical_pin": "b2dc226e2ed82cda8f1bada18fb0a1e17347b5fc",
+  "parents": [
+    "a9a2e20755d714c36c996c0d449cf3b8cca13cda",
+    "d4524de90dd403c9ce350a1d271ac70ce511256b"
+  ],
+  "accepted_base_host": "a8cc440260369214fce5cbae8b0230f425a46829",
+  "accepted_base_review_sha256": "c7f6917e05e6cf221deaff10b2b6287cb76027d2afd1fe2456beaea813dfd461",
+  "destination_main_preserved_as_parent": "d4524de90dd403c9ce350a1d271ac70ce511256b",
+  "evidence_parent_changes_docs_directory_only": true,
+  "paths_changed_outside_docs_directory": [
+    "README.md",
+    "packages/QUDS_FORKS.md",
+    "packages/quds_office_engine/README.md",
+    "packages/quds_office_engine/lib/src/word/serial/odt_document_writer.dart",
+    "packages/quds_office_engine/test/odt_document_writer_test.dart",
+    "tool/office_fidelity_manifest.json"
+  ],
+  "changed_managed_paths": [
+    "packages/quds_office_engine/lib/src/word/serial/odt_document_writer.dart",
+    "packages/quds_office_engine/test/odt_document_writer_test.dart"
+  ],
+  "managed_count": 2559,
+  "managed_membership_unchanged": true,
+  "unchanged_managed_entries": 2557,
+  "changed_managed_git_blobs_modes_and_sha256_match_canonical": true,
+  "canonical_managed_count": 702,
+  "parser_managed_count": 1857,
+  "host_application_source_and_tests_unchanged_from_accepted_base": true,
+  "host_customizations_preserved": 20,
+  "notices_preserved": 6,
+  "parser_subtree_preserved": true,
+  "inherited_mode_differences_unchanged": [
+    "packages/quds_office_editor/lib/src/core/input_bridge.dart",
+    "packages/quds_office_editor/lib/src/editor_pdf/pdf_font_faces.dart",
+    "packages/quds_office_editor/lib/src/editor_pdf/pdf_page_thumb.dart",
+    "packages/quds_office_editor/lib/src/editor_pdf/render_pdf_canvas.dart",
+    "packages/quds_office_editor/lib/src/embed/office_direction_keys.dart",
+    "packages/quds_office_engine/lib/src/extract/office_text_extractor.dart",
+    "packages/quds_office_engine/lib/src/fonts/font_subsetter.dart",
+    "packages/quds_office_engine/lib/src/fonts/sfnt_parser.dart",
+    "packages/quds_office_engine/lib/src/pdf/file/cos/pdf_cos.dart",
+    "packages/quds_office_engine/lib/src/pdf/file/interp/pdf_interpreter.dart",
+    "packages/quds_office_engine/lib/src/pdf/pdf_document.dart",
+    "packages/quds_office_engine/lib/src/pdf/pdf_font.dart"
+  ],
+  "all_50_canonical_zotero_entries_unchanged": true,
+  "all_46_host_mirrored_zotero_entries_unchanged": true,
+  "canonical_only_example_paths_remain_outside_host_mirror": [
+    "packages/quds_office_editor/example/lib/studio_zotero.dart",
+    "packages/quds_office_editor/example/lib/studio_zotero_local_io.dart",
+    "packages/quds_office_editor/example/lib/studio_zotero_local_stub.dart",
+    "packages/quds_office_editor/example/test/studio_zotero_citing_transport_test.dart"
+  ],
+  "reconciliation_record_sha256": "25f7019adf0bdfc3f45791a5bf6864f4909ee30d5c5b97ce53c221257ed6f40c",
+  "guarded_sync_record_sha256": "081211d722e06942d8dcb90ee524c0a06dfd005ce800abff0688d1e79513026a",
+  "guard_refusal_retained_and_final_bytes_verified": true,
+  "application_test_passes_claimed": 0,
+  "bounded_host_qualification_pending": true,
+  "review_script_sha256": "935aa889a3be63ae76de5eb6b93e50c9cebca6ba8d1472ed35a282c77ea74139",
+  "review_helper_sha256": "2bbef41da1d762e7aa288ee14808ecfbddd4d4ca653ceea997b17618e918fd8f",
+  "blocking_discrepancies": []
+}
