@@ -1,0 +1,39 @@
+{
+  "observed_at_utc": "2026-11-16T23:56:50.947541+00:00",
+  "repository": "CrispStrobe/quds_office_suite",
+  "frozen_integrated_main": "f57d8f5debd8c27fe7cb9b9322c84fb284ff2c49",
+  "later_observed_main": "8a3f5a9de14c556fd01ffacb3897629c51f4fa7e",
+  "qualified_canonical_source": "732fc3d0bc7a1118f3eb86e6c762fe70182c4fd2",
+  "base_is_ancestor": true,
+  "later_main_is_ancestor_of_qualified_source": false,
+  "commit_count": 1,
+  "subjects": [
+    "8a3f5a9de14c556fd01ffacb3897629c51f4fa7e feat(word): add a bounded ODT document writer (#92)"
+  ],
+  "paths": [
+    {
+      "path": "packages/quds_office_engine/lib/quds_office_engine.dart",
+      "additions": 1,
+      "deletions": 0,
+      "classification": "production"
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/word/serial/odt_document_writer.dart",
+      "additions": 584,
+      "deletions": 0,
+      "classification": "production"
+    },
+    {
+      "path": "packages/quds_office_engine/test/odt_document_writer_test.dart",
+      "additions": 85,
+      "deletions": 0,
+      "classification": "test"
+    }
+  ],
+  "documentation_only": false,
+  "documentation_paths": [],
+  "classification": "Continuing production change: new ODT writer and public export plus one test file. Outside frozen qualified source; no documentation-only reconciliation is available.",
+  "new_tests_executed": false,
+  "github_actions_used": false,
+  "repository_mutated": false
+}

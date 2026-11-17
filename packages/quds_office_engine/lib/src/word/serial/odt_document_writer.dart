@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import '../../odf/odf_text.dart';
 import '../../opc/zip/zip_writer.dart';
 import '../../visual/office_visual.dart';
 import '../../xml/xml_writer.dart';
@@ -12,6 +13,8 @@ import '../properties/wml_properties.dart';
 /// This is an export path. It emits the modeled text, paragraph/run formatting,
 /// tables, pictures, frames, page geometry and basic headers/footers. It does
 /// not claim to preserve arbitrary imported ODF XML or every Word feature.
+/// Word and Zotero fields export their visible cached results; their native
+/// instructions and editable field metadata are not part of this export.
 abstract final class OdtDocumentWriter {
   /// Serializes [document] as a new ODT package.
   static Uint8List writeBytes(WmlDocument document) {
@@ -238,11 +241,11 @@ abstract final class OdtDocumentWriter {
         if (inline.text.isNotEmpty) {
           w.writeStartElement('span', prefix: 'text');
           w.writeAttribute('text:style-name', style);
-          w.writeText(inline.text);
+          writeOdfText(w, inline.text);
           w.writeEndElement();
         }
         if (inline.inlineVisual case final visual?) {
-          _writeVisual(w, visual.visual, layout);
+          _writeVisual(w, visual.visual, layout, inline: true);
         }
         if (href != null && href.isNotEmpty) w.writeEndElement();
       case WmlBreak():
@@ -253,7 +256,10 @@ abstract final class OdtDocumentWriter {
           prefix: 'text',
         );
       case WmlFieldBoundary():
-        if (inline.text.isNotEmpty) w.writeText(inline.text);
+        // Instructions are hidden field metadata, not document text. The
+        // surrounding result runs remain in the inline sequence, including
+        // citations and bibliographies that span several paragraphs.
+        break;
       case WmlContentControlBoundary() ||
           WmlNoteMarker() ||
           WmlBookmarkBoundary():
@@ -319,8 +325,9 @@ abstract final class OdtDocumentWriter {
   static void _writeVisual(
     XmlWriter w,
     OfficeVisual visual,
-    _OdtLayout layout,
-  ) {
+    _OdtLayout layout, {
+    bool inline = false,
+  }) {
     final bytes = visual.imageBytes;
     if (bytes != null && bytes.isNotEmpty) {
       final path = layout.addMedia(bytes);
@@ -335,6 +342,8 @@ abstract final class OdtDocumentWriter {
         attributes: {'xlink:href': path},
       );
       w.writeEndElement();
+    } else if (inline) {
+      writeOdfText(w, visual.title);
     } else {
       _writePlainParagraph(w, visual.title);
     }
@@ -342,7 +351,7 @@ abstract final class OdtDocumentWriter {
 
   static void _writePlainParagraph(XmlWriter w, String text) {
     w.writeStartElement('p', prefix: 'text');
-    if (text.isNotEmpty) w.writeText(text);
+    if (text.isNotEmpty) writeOdfText(w, text);
     w.writeEndElement();
   }
 
@@ -506,15 +515,11 @@ class _OdtLayout {
           ' fo:margin-right="${props.indent.right.toStringAsFixed(2)}pt"',
         );
       }
-      if (props.indent.firstLine != 0) {
-        buffer.write(
-          ' fo:text-indent="${props.indent.firstLine.toStringAsFixed(2)}pt"',
-        );
-      }
-      if (props.indent.hanging != 0) {
-        buffer.write(
-          ' fo:text-indent="-${props.indent.hanging.toStringAsFixed(2)}pt"',
-        );
+      final firstLine = props.indent.hanging != 0
+          ? -props.indent.hanging
+          : props.indent.firstLine;
+      if (firstLine != 0) {
+        buffer.write(' fo:text-indent="${firstLine.toStringAsFixed(2)}pt"');
       }
       buffer.write('/></style:style>');
       _styleBuffers.add(buffer.toString());

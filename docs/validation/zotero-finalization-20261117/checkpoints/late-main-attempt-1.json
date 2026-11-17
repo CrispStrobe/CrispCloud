@@ -1,0 +1,18 @@
+{
+  "status": "failed",
+  "reason": "viewer-format exited 1; remaining vendor-format, Python tests, whitespace and final vendor guard were not reached",
+  "source_quds": "732fc3d0bc7a1118f3eb86e6c762fe70182c4fd2",
+  "source_host": "4ed1baac3c4ead54d1ba033287c86ef809126e86",
+  "completed_passed_tests": {
+    "canonical": 18,
+    "host_existing": 41,
+    "host_service": 39
+  },
+  "all_required_gates_completed": false,
+  "recovery": "Apply genuine formatter proposal to the incoming viewer, save a new source checkpoint, run all bounded checks in a fresh attempt",
+  "archive": "late-main-attempt-1.tar.gz",
+  "archive_bytes": 1255645,
+  "archive_sha256": "33160f5efc5a56fa14501e77bbbbdef2bc92b9d25c0ad004c1d976aa742ff948",
+  "entries": 29,
+  "counts_not_additive_with_later_reruns": true
+}

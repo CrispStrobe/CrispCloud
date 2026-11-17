@@ -1,0 +1,23 @@
+{
+  "mode": "check",
+  "inputs": [
+    {
+      "language": "en-US",
+      "patterns": 4938,
+      "exceptions": 14,
+      "source_sha256": "f4ffcd96c5cbc886bdad23f95dcae8edc3cd3620eae62f7946eceda97c4e68f8",
+      "generated_sha256": "809673b992606bbe3a249f99126ae14419e1969905954311e04125c34e231fea",
+      "notice": "third_party/hyphenation/ENGLISH_US_LICENSE",
+      "notice_sha256": "1011c22144f360184ed86200fa2d2ca9df9ac19dd2ab4a31c0b4c94d998bb6f1"
+    },
+    {
+      "language": "en-GB",
+      "patterns": 8527,
+      "exceptions": 8,
+      "source_sha256": "e95bb4ab350f620c41c231c4785d7bdb4f91949d3e631b30e08b3ead3c340a52",
+      "generated_sha256": "12ec89a0bec6172d782821f75dd9f78a6ac62ec980cc6cab6a4928fb69041d9d",
+      "notice": "third_party/hyphenation/ENGLISH_GB_LICENSE",
+      "notice_sha256": "8a9d78cb8e3aa30383acc91fb05962035eed59877016263bd97be63c63341977"
+    }
+  ]
+}

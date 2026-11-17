@@ -1,0 +1,37 @@
+{
+  "status": "prepared only; await root signal after complete full canonical qualification passes",
+  "source_commit": "b87f9d6c3a2532c9695024adf48ca9fbd3c0927a",
+  "expected_source_tree": "acb1d1060879dc4a8168df8abf3105dc828af360",
+  "wrapper_sha256": "dafe7c286bd4fa5c7bfb28904cd780f5d2245f17698405aa3f95f6e65c03d428",
+  "original_verifier_sha256": "dc089ba747fdbd8acd04d07fbe18986763020f2b3df419a0fef65ee9ce381b3f",
+  "command": [
+    "python3",
+    "/workspace/scratch/79aea0ff70bc/recovery-audit/quds/run-current-pdf-verification.py",
+    "--source-dir",
+    "/workspace/scratch/79aea0ff70bc/quds-validation",
+    "--verifier",
+    "/workspace/scratch/79aea0ff70bc/quds/docs/validation/text-rendering-continuation-20261116/verify_pdf_rendering.py",
+    "--input",
+    "/workspace/scratch/79aea0ff70bc/zotero-toolchain/retry-canonical-complete/render",
+    "--output",
+    "/workspace/scratch/79aea0ff70bc/zotero-toolchain/retry-canonical-complete/poppler",
+    "--producer-receipt",
+    "/workspace/scratch/79aea0ff70bc/zotero-toolchain/retry-canonical-complete/receipt.json",
+    "--invocation",
+    "/workspace/scratch/79aea0ff70bc/recovery-audit/quds/complete-invocation.json"
+  ],
+  "shell_command": "python3 /workspace/scratch/79aea0ff70bc/recovery-audit/quds/run-current-pdf-verification.py --source-dir /workspace/scratch/79aea0ff70bc/quds-validation --verifier /workspace/scratch/79aea0ff70bc/quds/docs/validation/text-rendering-continuation-20261116/verify_pdf_rendering.py --input /workspace/scratch/79aea0ff70bc/zotero-toolchain/retry-canonical-complete/render --output /workspace/scratch/79aea0ff70bc/zotero-toolchain/retry-canonical-complete/poppler --producer-receipt /workspace/scratch/79aea0ff70bc/zotero-toolchain/retry-canonical-complete/receipt.json --invocation /workspace/scratch/79aea0ff70bc/recovery-audit/quds/complete-invocation.json",
+  "producer_receipt_schema_adaptation": "None; original verifier copies and hashes arbitrary receipt JSON",
+  "only_override": "Original verifier REPO points to isolated quds-validation instead of primary checkout",
+  "rendering_checks_unchanged": true,
+  "test_counts_added": 0,
+  "preflight_notes": {
+    "matching_tracked_declared_source_inputs": 11,
+    "absent_optional_declared_path": "pubspec.lock",
+    "absence_checked_against": "Published Git tree and producer input map; original verifier also skips absent declared paths",
+    "runtime_tools_located": true,
+    "pillow": "13.0.0",
+    "no_verification_executed": true
+  },
+  "expected_producer_runner_sha256": "198271764369f36955d7fe8455e1b74db8a9f32bc0147f14019387c5c3dbf2d9"
+}

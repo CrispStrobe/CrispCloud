@@ -1,0 +1,29 @@
+{
+  "status": "Failed before test execution",
+  "tests_executed": 0,
+  "reason": "Two tracked app manifests were omitted by sparse checkout; exact published bytes materialized for complete unchanged source fingerprint.",
+  "source_commit": "b87f9d6c3a2532c9695024adf48ca9fbd3c0927a",
+  "runner_unchanged": true,
+  "files": {
+    "materialization-receipt.json": {
+      "bytes": 874,
+      "sha256": "74f93af53088212fbd608a1f1718e836c14c53d61ac289163907b7b1fca2f206"
+    },
+    "engine-analysis-package-config.json": {
+      "bytes": 12188,
+      "sha256": "0d63dc937758050ed548634e466de46e0641b056be9d6cbbb528ed7e3efe81fb"
+    },
+    "editor-analysis-package-config.json": {
+      "bytes": 17758,
+      "sha256": "7a248bfce5a41a48c97ba5403097106a280387f2b40c5ada4df520488d643396"
+    },
+    "invocation.json": {
+      "bytes": 8685,
+      "sha256": "278c13946e4e22e00690785c100a1d10267fd68f5e87b2920ea247108d151c0c"
+    },
+    "execution.log": {
+      "bytes": 1393,
+      "sha256": "743b8cc0cd170fdc6eb386aa07499586cf8220b2ffc27a203f8d1b7a71d907a5"
+    }
+  }
+}

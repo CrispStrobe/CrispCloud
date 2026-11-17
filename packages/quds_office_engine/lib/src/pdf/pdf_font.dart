@@ -4,6 +4,82 @@ import 'dart:typed_data';
 import '../fonts/font_subsetter.dart';
 import '../fonts/sfnt_parser.dart';
 
+/// Separates a PDF character code from the glyph that paints it.
+///
+/// A font can map several Unicode scalars to one glyph. Using that glyph ID
+/// as the PDF character code loses all but one of those scalars in ToUnicode.
+/// This encoding gives each scalar its own CID and maps those CIDs back to the
+/// shared subset glyph through a CIDToGIDMap stream. CID zero remains .notdef.
+/// Content streams using this encoding must emit [unicodeToCid] values, not
+/// subset glyph IDs. Existing identity-encoded writer APIs remain available.
+class PdfCidEncoding {
+  PdfCidEncoding._(this.unicodeToCid, this.glyphIds, this.cidToUnicode);
+
+  /// The maximum number of mapped characters in one Identity-H resource.
+  static const int maxCharacters = 0xffff;
+
+  /// Builds a deterministic encoding for valid, non-missing subset mappings.
+  ///
+  /// A larger character set must be split across multiple PDF font resources.
+  /// The mapping owns its collections; subsequent subset-map edits cannot
+  /// change the interpretation of character codes already emitted to PDF.
+  factory PdfCidEncoding.fromSubset(FontSubset subset) {
+    final entries =
+        subset.unicodeToNewGlyph.entries
+            .where(
+              (entry) =>
+                  entry.key >= 0 &&
+                  entry.key <= 0x10ffff &&
+                  !(entry.key >= 0xd800 && entry.key <= 0xdfff) &&
+                  entry.value > 0 &&
+                  entry.value < subset.numGlyphs &&
+                  entry.value <= 0xffff,
+            )
+            .toList()
+          ..sort((a, b) => a.key.compareTo(b.key));
+    if (entries.length > maxCharacters) {
+      throw ArgumentError.value(
+        entries.length,
+        'subset',
+        'Split more than $maxCharacters Unicode mappings into multiple fonts',
+      );
+    }
+    final unicodeToCid = <int, int>{};
+    final glyphIds = <int>[0];
+    final cidToUnicode = <int, int>{};
+    for (final entry in entries) {
+      final cid = glyphIds.length;
+      unicodeToCid[entry.key] = cid;
+      glyphIds.add(entry.value);
+      cidToUnicode[cid] = entry.key;
+    }
+    return PdfCidEncoding._(
+      Map<int, int>.unmodifiable(unicodeToCid),
+      List<int>.unmodifiable(glyphIds),
+      Map<int, int>.unmodifiable(cidToUnicode),
+    );
+  }
+
+  /// PDF character code for each mapped Unicode scalar.
+  final Map<int, int> unicodeToCid;
+
+  /// Subset glyph ID indexed by CID, including .notdef at CID zero.
+  final List<int> glyphIds;
+
+  /// Original Unicode scalar indexed by CID, for extraction and search.
+  final Map<int, int> cidToUnicode;
+
+  /// Big-endian 16-bit glyph indices required by ISO 32000-1 §9.7.4.2.
+  Uint8List get cidToGidMap {
+    final bytes = Uint8List(glyphIds.length * 2);
+    final data = ByteData.sublistView(bytes);
+    for (var cid = 0; cid < glyphIds.length; cid++) {
+      data.setUint16(cid * 2, glyphIds[cid]);
+    }
+    return bytes;
+  }
+}
+
 /// Type 0 / CIDFontType2 + Identity-H + ToUnicode CMap for a subset TTF.
 class PdfCidFont {
   /// PdfCidFont API.
@@ -20,6 +96,7 @@ class PdfCidFont {
     required this.stemV,
     required this.widths,
     required this.dw,
+    this.cidToGidMap,
   });
 
   /// fontFile API.
@@ -58,16 +135,39 @@ class PdfCidFont {
   /// dw API.
   final int dw;
 
+  /// Null for the legacy identity mapping; otherwise one glyph index per CID.
+  final Uint8List? cidToGidMap;
+
   /// build API.
-  factory PdfCidFont.build(FontSubset subset, SfntFont source) {
+  factory PdfCidFont.build(
+    FontSubset subset,
+    SfntFont source, {
+    PdfCidEncoding? encoding,
+  }) {
     final SfntFont parsed = SfntFont.parse(subset.bytes);
+    if (encoding != null) {
+      for (final entry in encoding.cidToUnicode.entries) {
+        final gid = encoding.glyphIds[entry.key];
+        if (gid >= parsed.numGlyphs || parsed.glyphIdFor(entry.value) != gid) {
+          throw ArgumentError.value(
+            encoding,
+            'encoding',
+            'CID ${entry.key} does not match the embedded subset cmap',
+          );
+        }
+      }
+    }
+    final glyphIds =
+        encoding?.glyphIds ?? Iterable<int>.generate(parsed.numGlyphs);
     final List<int> widths = <int>[
-      for (int i = 0; i < parsed.numGlyphs; i++)
-        _toPdfWidth(parsed.advanceWidth(i), parsed.unitsPerEm),
+      for (final gid in glyphIds)
+        _toPdfWidth(parsed.advanceWidth(gid), parsed.unitsPerEm),
     ];
     return PdfCidFont(
       fontFile: subset.bytes,
-      toUnicodeCmap: _toUnicode(subset.unicodeToNewGlyph),
+      toUnicodeCmap: encoding == null
+          ? _toUnicode(subset.unicodeToNewGlyph)
+          : _cidToUnicode(encoding.cidToUnicode),
       baseName: _sanitize(
         parsed.familyName.isEmpty ? 'QudsSubset' : parsed.familyName,
       ),
@@ -85,6 +185,7 @@ class PdfCidFont {
       stemV: 80,
       widths: widths,
       dw: 500,
+      cidToGidMap: encoding?.cidToGidMap,
     );
   }
 
@@ -94,11 +195,15 @@ class PdfCidFont {
       '/DescendantFonts [$cidId 0 R]/ToUnicode $toUnicodeId 0 R>>';
 
   /// cidFontDict API.
-  String cidFontDict(int descId) {
+  String cidFontDict(int descId, {int? cidToGidMapId}) {
+    if (cidToGidMap != null && cidToGidMapId == null) {
+      throw ArgumentError('A non-identity encoding needs a CIDToGIDMap stream');
+    }
     final String w = _widthsArray();
+    final mapping = cidToGidMapId == null ? '/Identity' : '$cidToGidMapId 0 R';
     return '<</Type /Font/Subtype /CIDFontType2/BaseFont /$baseName'
         '/CIDSystemInfo <</Registry (Adobe)/Ordering (Identity)/Supplement 0>>'
-        '/FontDescriptor $descId 0 R/DW $dw/W $w/CIDToGIDMap /Identity>>';
+        '/FontDescriptor $descId 0 R/DW $dw/W $w/CIDToGIDMap $mapping>>';
   }
 
   /// descriptorDict API.
@@ -155,7 +260,11 @@ class PdfCidFont {
         gidToUnicode[entry.value] = entry.key;
       }
     }
-    final List<MapEntry<int, int>> entries = gidToUnicode.entries.toList()
+    return _cidToUnicode(gidToUnicode);
+  }
+
+  static String _cidToUnicode(Map<int, int> cidToUnicode) {
+    final List<MapEntry<int, int>> entries = cidToUnicode.entries.toList()
       ..sort((MapEntry<int, int> a, MapEntry<int, int> b) => a.key - b.key);
     final StringBuffer bf = StringBuffer();
     const int chunk = 100;

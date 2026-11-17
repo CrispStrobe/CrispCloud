@@ -1,0 +1,654 @@
+{
+  "checks": {
+    "all_managed_manifest_sha256_values_match_host_blobs": true,
+    "all_tracked_parser_paths_blobs_and_modes_unchanged": true,
+    "four_historical_zotero_production_blobs_and_modes_identical": true,
+    "managed_non_parser_git_blobs_and_modes_identical": false,
+    "managed_parser_git_blobs_and_modes_unchanged": true,
+    "managed_parser_has_expected_1857_entries": true,
+    "managed_parser_inventory_and_manifest_hashes_unchanged": true,
+    "manifest_names_canonical_repository": true,
+    "manifest_pins_requested_canonical_commit": true,
+    "parser_source_pins_metadata_and_dependency_unchanged": true,
+    "same_git_object_format": true
+  },
+  "complete_lib_test_comparison": {
+    "canonical_entries": 788,
+    "canonical_inventory_aggregate_sha256": "37ee22c9a3aaf6cf18ff85deae1d8d3e9eb677b8cfd59fa4b109cda574298b86",
+    "categories": {
+      "host_only_unmanaged": 6,
+      "managed_different_or_missing": 8,
+      "managed_equal": 524,
+      "unmanaged_different": 211,
+      "unmanaged_equal": 45
+    },
+    "difference_count": 225,
+    "difference_preview": [
+      {
+        "canonical": {
+          "mode": "100644",
+          "oid": "3d57bcd9b9ed8eef9a1e6d84f146f81072b7bb24",
+          "type": "blob"
+        },
+        "category": "unmanaged_different",
+        "host": {
+          "mode": "100755",
+          "oid": "3d57bcd9b9ed8eef9a1e6d84f146f81072b7bb24",
+          "type": "blob"
+        },
+        "path": "packages/quds_office_editor/lib/quds_reports.dart"
+      },
+      {
+        "canonical": {
+          "mode": "100644",
+          "oid": "ca0a9e4d20ddf6412e4df3778e8a301299d88286",
+          "type": "blob"
+        },
+        "category": "managed_different_or_missing",
+        "host": {
+          "mode": "100755",
+          "oid": "ca0a9e4d20ddf6412e4df3778e8a301299d88286",
+          "type": "blob"
+        },
+        "path": "packages/quds_office_editor/lib/src/core/input_bridge.dart"
+      },
+      {
+        "canonical": {
+          "mode": "100644",
+          "oid": "6f0f1533aec5c0a66c75dbd47bc8785dec1cfbe6",
+          "type": "blob"
+        },
+        "category": "unmanaged_different",
+        "host": {
+          "mode": "100755",
+          "oid": "6f0f1533aec5c0a66c75dbd47bc8785dec1cfbe6",
+          "type": "blob"
+        },
+        "path": "packages/quds_office_editor/lib/src/core/virtual_viewport.dart"
+      },
+      {
+        "canonical": {
+          "mode": "100644",
+          "oid": "063122a94b828bda5a1bf0eea3e50975f3979622",
+          "type": "blob"
+        },
+        "category": "unmanaged_different",
+        "host": {
+          "mode": "100755",
+          "oid": "063122a94b828bda5a1bf0eea3e50975f3979622",
+          "type": "blob"
+        },
+        "path": "packages/quds_office_editor/lib/src/editor_pdf/paint_pdf_display_list.dart"
+      },
+      {
+        "canonical": {
+          "mode": "100644",
+          "oid": "7e3a2ab3bd00cf06d3b272409e2634c2bc4d6adc",
+          "type": "blob"
+        },
+        "category": "unmanaged_different",
+        "host": {
+          "mode": "100755",
+          "oid": "7e3a2ab3bd00cf06d3b272409e2634c2bc4d6adc",
+          "type": "blob"
+        },
+        "path": "packages/quds_office_editor/lib/src/editor_pdf/pdf_find.dart"
+      },
+      {
+        "canonical": {
+          "mode": "100644",
+          "oid": "af274059768b2ad5c0d39d3280e05d808b265e94",
+          "type": "blob"
+        },
+        "category": "managed_different_or_missing",
+        "host": {
+          "mode": "100755",
+          "oid": "af274059768b2ad5c0d39d3280e05d808b265e94",
+          "type": "blob"
+        },
+        "path": "packages/quds_office_editor/lib/src/editor_pdf/pdf_font_faces.dart"
+      },
+      {
+        "canonical": {
+          "mode": "100644",
+          "oid": "2113ebe1e96a6c8857e5002d5476f0de32ba3163",
+          "type": "blob"
+        },
+        "category": "unmanaged_different",
+        "host": {
+          "mode": "100755",
+          "oid": "2113ebe1e96a6c8857e5002d5476f0de32ba3163",
+          "type": "blob"
+        },
+        "path": "packages/quds_office_editor/lib/src/editor_pdf/pdf_page_layout.dart"
+      },
+      {
+        "canonical": {
+          "mode": "100644",
+          "oid": "1aa26c94e393e0f153dbad79b13a88fde84d471c",
+          "type": "blob"
+        },
+        "category": "unmanaged_different",
+        "host": {
+          "mode": "100755",
+          "oid": "1aa26c94e393e0f153dbad79b13a88fde84d471c",
+          "type": "blob"
+        },
+        "path": "packages/quds_office_editor/lib/src/editor_pdf/pdf_page_rotation.dart"
+      },
+      {
+        "canonical": {
+          "mode": "100644",
+          "oid": "d0957104accff68497e955d42559a51cfb770fa9",
+          "type": "blob"
+        },
+        "category": "managed_different_or_missing",
+        "host": {
+          "mode": "100755",
+          "oid": "d0957104accff68497e955d42559a51cfb770fa9",
+          "type": "blob"
+        },
+        "path": "packages/quds_office_editor/lib/src/editor_pdf/pdf_page_thumb.dart"
+      },
+      {
+        "canonical": {
+          "mode": "100644",
+          "oid": "c4f228b308711710150ab7e73a7551e823f5d6f0",
+          "type": "blob"
+        },
+        "category": "unmanaged_different",
+        "host": {
+          "mode": "100755",
+          "oid": "c4f228b308711710150ab7e73a7551e823f5d6f0",
+          "type": "blob"
+        },
+        "path": "packages/quds_office_editor/lib/src/editor_pdf/pdf_raster.dart"
+      },
+      {
+        "canonical": {
+          "mode": "100644",
+          "oid": "9d8ead6dc70effba0c789df6f8894f9b9fb56865",
+          "type": "blob"
+        },
+        "category": "unmanaged_different",
+        "host": {
+          "mode": "100755",
+          "oid": "9d8ead6dc70effba0c789df6f8894f9b9fb56865",
+          "type": "blob"
+        },
+        "path": "packages/quds_office_editor/lib/src/editor_pdf/pdf_text_selection.dart"
+      },
+      {
+        "canonical": {
+          "mode": "100644",
+          "oid": "47f3cbb0e34900aafb1138ed975eaeefa87b19fb",
+          "type": "blob"
+        },
+        "category": "managed_different_or_missing",
+        "host": {
+          "mode": "100755",
+          "oid": "47f3cbb0e34900aafb1138ed975eaeefa87b19fb",
+          "type": "blob"
+        },
+        "path": "packages/quds_office_editor/lib/src/editor_pdf/render_pdf_canvas.dart"
+      },
+      {
+        "canonical": {
+          "mode": "100644",
+          "oid": "3d059d20e32858406b00892a007f7b42ed405068",
+          "type": "blob"
+        },
+        "category": "unmanaged_different",
+        "host": {
+          "mode": "100755",
+          "oid": "6bd5d3474f6443f388e35b583bc2144c3bbf0fee",
+          "type": "blob"
+        },
+        "path": "packages/quds_office_editor/lib/src/editor_reports/quds_report_designer.dart"
+      },
+      {
+        "canonical": {
+          "mode": "100644",
+          "oid": "de2cc97454a843b72696c7110fb97fa7a80d9b3b",
+          "type": "blob"
+        },
+        "category": "unmanaged_different",
+        "host": {
+          "mode": "100755",
+          "oid": "b44bcc6f9593c4581fdfa0dd1655291531436699",
+          "type": "blob"
+        },
+        "path": "packages/quds_office_editor/lib/src/editor_reports/render_report_data_explorer.dart"
+      },
+      {
+        "canonical": {
+          "mode": "100644",
+          "oid": "9fa5045a99d96c468228339ed684a54b69bdc4ed",
+          "type": "blob"
+        },
+        "category": "unmanaged_different",
+        "host": {
+          "mode": "100755",
+          "oid": "744904e0fb748b28845ab1e5b84b806393f806bc",
+          "type": "blob"
+        },
+        "path": "packages/quds_office_editor/lib/src/editor_reports/render_report_designer.dart"
+      },
+      {
+        "canonical": {
+          "mode": "100644",
+          "oid": "12e9b218812f9f371cd2fa68ff045e70a0ae532c",
+          "type": "blob"
+        },
+        "category": "unmanaged_different",
+        "host": {
+          "mode": "100755",
+          "oid": "829723f4c3ad898139dfc24b0c9e3d7dc1cbec17",
+          "type": "blob"
+        },
+        "path": "packages/quds_office_editor/lib/src/editor_reports/render_report_inspector.dart"
+      },
+      {
+        "canonical": {
+          "mode": "100644",
+          "oid": "42154bc19ed0469db882d59fa9bf2ede4c739e89",
+          "type": "blob"
+        },
+        "category": "unmanaged_different",
+        "host": {
+          "mode": "100755",
+          "oid": "c01c4ac99410a562c72d901a04fd021160f32dd3",
+          "type": "blob"
+        },
+        "path": "packages/quds_office_editor/lib/src/editor_reports/render_report_preview.dart"
+      },
+      {
+        "canonical": {
+          "mode": "100644",
+          "oid": "15cace19fa36b89b0be137e596b0631d9689f3ea",
+          "type": "blob"
+        },
+        "category": "unmanaged_different",
+        "host": {
+          "mode": "100755",
+          "oid": "15cace19fa36b89b0be137e596b0631d9689f3ea",
+          "type": "blob"
+        },
+        "path": "packages/quds_office_editor/lib/src/editor_reports/render_report_problems.dart"
+      },
+      {
+        "canonical": {
+          "mode": "100644",
+          "oid": "1dc94aeb0562b0149c0a4f36ba8592d9f7d39487",
+          "type": "blob"
+        },
+        "category": "unmanaged_different",
+        "host": {
+          "mode": "100755",
+          "oid": "1dc94aeb0562b0149c0a4f36ba8592d9f7d39487",
+          "type": "blob"
+        },
+        "path": "packages/quds_office_editor/lib/src/editor_reports/render_report_toolbar.dart"
+      },
+      {
+        "canonical": {
+          "mode": "100644",
+          "oid": "9f9a8ca6a29f8e86de4d7c0ed3372ee3156d3618",
+          "type": "blob"
+        },
+        "category": "unmanaged_different",
+        "host": {
+          "mode": "100755",
+          "oid": "9f9a8ca6a29f8e86de4d7c0ed3372ee3156d3618",
+          "type": "blob"
+        },
+        "path": "packages/quds_office_editor/lib/src/editor_reports/render_report_toolbox.dart"
+      }
+    ],
+    "difference_preview_truncated": true,
+    "host_entries": 794,
+    "host_inventory_aggregate_sha256": "871a7f6a2c2bb057c38db63f15a07b7e500efe91e874f2f1dc8075a09e999b82",
+    "interpretation": "This covers every tracked canonical and host engine/editor/reports lib/test path. Unmanaged differences are observations outside the declared vendor inventory, not automatically errors. They do not affect the managed-copy verification result.",
+    "records_aggregate_sha256": "54f284732d12ead1d4889c80a90e8f0fa54bb5035f40bafcb45abe848f2b4121",
+    "scope_prefixes": [
+      "packages/quds_office_engine/lib/",
+      "packages/quds_office_engine/test/",
+      "packages/quds_office_editor/lib/",
+      "packages/quds_office_editor/test/",
+      "packages/quds_reports/lib/",
+      "packages/quds_reports/test/"
+    ],
+    "union_entries": 794
+  },
+  "details_archive": {
+    "bytes": 305308,
+    "filename": "delivery-verification.details.json.gz",
+    "format": "UTF-8 JSON, gzip with mtime=0; contains all per-path records losslessly.",
+    "sha256": "d2dab368e12279c23341a112a4fd8d8473789247ce48662e102115a57947a53e",
+    "uncompressed_bytes": 2019735,
+    "uncompressed_sha256": "58c453659670fa33ea9cd30dbe491109bfb99009fccaa8da4d472958b778e0e6"
+  },
+  "github_actions_queried_awaited_or_rerun": false,
+  "managed_copy": {
+    "host_unique_blob_bytes_hashed": 110448248,
+    "host_unique_blobs_hashed": 2298,
+    "manifest_map_aggregate_sha256": "28d370c88e14e6fceccad12e606f36c4a0d1c502066c076cc987a0a0cba3f9de",
+    "manifest_sha256_mismatch_count": 0,
+    "mismatch_preview": [
+      {
+        "actual_host_blob_sha256": "e053ab3aab15e880abd17cb512f4f80e4c81d21f8818f720382140b38cdbfd5b",
+        "git_blob_type_and_mode_equal": false,
+        "host_git_entry": {
+          "mode": "100755",
+          "oid": "ca0a9e4d20ddf6412e4df3778e8a301299d88286",
+          "type": "blob"
+        },
+        "manifest_sha256": "e053ab3aab15e880abd17cb512f4f80e4c81d21f8818f720382140b38cdbfd5b",
+        "path": "packages/quds_office_editor/lib/src/core/input_bridge.dart",
+        "reference_git_entry": {
+          "mode": "100644",
+          "oid": "ca0a9e4d20ddf6412e4df3778e8a301299d88286",
+          "type": "blob"
+        }
+      },
+      {
+        "actual_host_blob_sha256": "34092eab580521bbca9cdf553191fbd4b620fca62c59ee0b327e840e5dccbc0d",
+        "git_blob_type_and_mode_equal": false,
+        "host_git_entry": {
+          "mode": "100755",
+          "oid": "af274059768b2ad5c0d39d3280e05d808b265e94",
+          "type": "blob"
+        },
+        "manifest_sha256": "34092eab580521bbca9cdf553191fbd4b620fca62c59ee0b327e840e5dccbc0d",
+        "path": "packages/quds_office_editor/lib/src/editor_pdf/pdf_font_faces.dart",
+        "reference_git_entry": {
+          "mode": "100644",
+          "oid": "af274059768b2ad5c0d39d3280e05d808b265e94",
+          "type": "blob"
+        }
+      },
+      {
+        "actual_host_blob_sha256": "968b1b336639050a4c52025db239a58bbf2db383a656fc5aa25a28444ba62c7b",
+        "git_blob_type_and_mode_equal": false,
+        "host_git_entry": {
+          "mode": "100755",
+          "oid": "d0957104accff68497e955d42559a51cfb770fa9",
+          "type": "blob"
+        },
+        "manifest_sha256": "968b1b336639050a4c52025db239a58bbf2db383a656fc5aa25a28444ba62c7b",
+        "path": "packages/quds_office_editor/lib/src/editor_pdf/pdf_page_thumb.dart",
+        "reference_git_entry": {
+          "mode": "100644",
+          "oid": "d0957104accff68497e955d42559a51cfb770fa9",
+          "type": "blob"
+        }
+      },
+      {
+        "actual_host_blob_sha256": "64be265ac07ba8733826936ed4e732481da249688db6e166ec7bfc5ea20a44c5",
+        "git_blob_type_and_mode_equal": false,
+        "host_git_entry": {
+          "mode": "100755",
+          "oid": "47f3cbb0e34900aafb1138ed975eaeefa87b19fb",
+          "type": "blob"
+        },
+        "manifest_sha256": "64be265ac07ba8733826936ed4e732481da249688db6e166ec7bfc5ea20a44c5",
+        "path": "packages/quds_office_editor/lib/src/editor_pdf/render_pdf_canvas.dart",
+        "reference_git_entry": {
+          "mode": "100644",
+          "oid": "47f3cbb0e34900aafb1138ed975eaeefa87b19fb",
+          "type": "blob"
+        }
+      },
+      {
+        "actual_host_blob_sha256": "2e3e4a904629e2a09746916d3caf15b6a3558d73d226e38ea495e46a056a22c3",
+        "git_blob_type_and_mode_equal": false,
+        "host_git_entry": {
+          "mode": "100755",
+          "oid": "b1a1efd3db9c59dbebf6b742ba3c2acf6f92b812",
+          "type": "blob"
+        },
+        "manifest_sha256": "2e3e4a904629e2a09746916d3caf15b6a3558d73d226e38ea495e46a056a22c3",
+        "path": "packages/quds_office_editor/lib/src/embed/office_direction_keys.dart",
+        "reference_git_entry": {
+          "mode": "100644",
+          "oid": "b1a1efd3db9c59dbebf6b742ba3c2acf6f92b812",
+          "type": "blob"
+        }
+      },
+      {
+        "actual_host_blob_sha256": "57537f5ad63b488a7ffb8e3234e5387bc25543742a0404554f8ff586c2d08077",
+        "git_blob_type_and_mode_equal": false,
+        "host_git_entry": {
+          "mode": "100755",
+          "oid": "7332885a95f34ea6d0d26c7b3160ff002bdd3c6d",
+          "type": "blob"
+        },
+        "manifest_sha256": "57537f5ad63b488a7ffb8e3234e5387bc25543742a0404554f8ff586c2d08077",
+        "path": "packages/quds_office_engine/lib/src/fonts/font_subsetter.dart",
+        "reference_git_entry": {
+          "mode": "100644",
+          "oid": "7332885a95f34ea6d0d26c7b3160ff002bdd3c6d",
+          "type": "blob"
+        }
+      },
+      {
+        "actual_host_blob_sha256": "a9114581caf59635c538a7eb0b337bf1907a6bdd4ff2b6419cd1551ff150ae81",
+        "git_blob_type_and_mode_equal": false,
+        "host_git_entry": {
+          "mode": "100755",
+          "oid": "b2404c1894c485511a276ca1628bee2cec40e010",
+          "type": "blob"
+        },
+        "manifest_sha256": "a9114581caf59635c538a7eb0b337bf1907a6bdd4ff2b6419cd1551ff150ae81",
+        "path": "packages/quds_office_engine/lib/src/pdf/pdf_document.dart",
+        "reference_git_entry": {
+          "mode": "100644",
+          "oid": "b2404c1894c485511a276ca1628bee2cec40e010",
+          "type": "blob"
+        }
+      },
+      {
+        "actual_host_blob_sha256": "d0c309b3091e9b6f245cafcc144d88d93e4b9f8b7e4887bd10f0c3c550351f67",
+        "git_blob_type_and_mode_equal": false,
+        "host_git_entry": {
+          "mode": "100755",
+          "oid": "d879fc69f81d1e331a1be9b93062fd227f96e5dc",
+          "type": "blob"
+        },
+        "manifest_sha256": "d0c309b3091e9b6f245cafcc144d88d93e4b9f8b7e4887bd10f0c3c550351f67",
+        "path": "packages/quds_office_engine/lib/src/pdf/pdf_font.dart",
+        "reference_git_entry": {
+          "mode": "100644",
+          "oid": "d879fc69f81d1e331a1be9b93062fd227f96e5dc",
+          "type": "blob"
+        }
+      }
+    ],
+    "non_parser_blob_mode_mismatch_count": 8,
+    "non_parser_entries": 652,
+    "non_parser_records_aggregate_sha256": "fbfe2748234ac320edebaec3c70ee507751de066e110a43ccdf633181f7d6077",
+    "parser_entries": 1857,
+    "total_manifest_entries": 2509
+  },
+  "parser_preservation": {
+    "all_tracked_blob_mode_mismatch_count": 0,
+    "all_tracked_entries_in_baseline_or_host": 1858,
+    "all_tracked_records_aggregate_sha256": "2ae18049e58eba836caa998323ed8b7ea38591bedbd158665fcd9a2d9852794d",
+    "baseline_pin": {
+      "dependency_git_commit": "4895712158127b2fc930d796e17035c3ca0dac62",
+      "local_override_present": true,
+      "standalone_sources": {
+        "packages/legacy_doc_parser": {
+          "commit": "4895712158127b2fc930d796e17035c3ca0dac62",
+          "repository": "CrispStrobe/legacy-doc-parser"
+        }
+      },
+      "upstream_metadata": {
+        "commit": "4895712158127b2fc930d796e17035c3ca0dac62",
+        "patches": [],
+        "repository": "CrispStrobe/legacy-doc-parser"
+      }
+    },
+    "host_pin": {
+      "dependency_git_commit": "4895712158127b2fc930d796e17035c3ca0dac62",
+      "local_override_present": true,
+      "standalone_sources": {
+        "packages/legacy_doc_parser": {
+          "commit": "4895712158127b2fc930d796e17035c3ca0dac62",
+          "repository": "CrispStrobe/legacy-doc-parser"
+        }
+      },
+      "upstream_metadata": {
+        "commit": "4895712158127b2fc930d796e17035c3ca0dac62",
+        "patches": [],
+        "repository": "CrispStrobe/legacy-doc-parser"
+      }
+    },
+    "managed_blob_mode_mismatch_count": 0,
+    "managed_entries": 1857,
+    "mismatch_preview": [],
+    "records_aggregate_sha256": "077a34b15e6e32b7459483a84616a61b2ed320570d412d2a53bf8944f6199ccd"
+  },
+  "recorded_utc": "2026-11-16T20:16:27.206555+00:00",
+  "reproduction": {
+    "argv": [
+      "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+      "/workspace/scratch/79aea0ff70bc/recovery-audit/verify-delivery.py",
+      "--quds",
+      "/workspace/scratch/79aea0ff70bc/quds",
+      "--host",
+      "/workspace/scratch/79aea0ff70bc/crispcloud",
+      "--quds-commit",
+      "b87f9d6c3a2532c9695024adf48ca9fbd3c0927a",
+      "--host-commit",
+      "07083d1983db87a9868c3e8ba0cda1efd283b445",
+      "--host-baseline",
+      "553f3be64da9ad3c35730f1b6a67d79f1ac54b72",
+      "--zotero-baseline",
+      "9de43669088c3719d541c9fe1c7dcb3ffbf86df3",
+      "--output",
+      "/workspace/scratch/79aea0ff70bc/recovery-audit/delivery-verification.json",
+      "--details",
+      "/workspace/scratch/79aea0ff70bc/recovery-audit/delivery-verification.details.json.gz"
+    ],
+    "dependencies": "Python 3 standard library and Git; all four immutable commits must be available in the indicated checkouts.",
+    "shell_command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 /workspace/scratch/79aea0ff70bc/recovery-audit/verify-delivery.py --quds /workspace/scratch/79aea0ff70bc/quds --host /workspace/scratch/79aea0ff70bc/crispcloud --quds-commit b87f9d6c3a2532c9695024adf48ca9fbd3c0927a --host-commit 07083d1983db87a9868c3e8ba0cda1efd283b445 --host-baseline 553f3be64da9ad3c35730f1b6a67d79f1ac54b72 --zotero-baseline 9de43669088c3719d541c9fe1c7dcb3ffbf86df3 --output /workspace/scratch/79aea0ff70bc/recovery-audit/delivery-verification.json --details /workspace/scratch/79aea0ff70bc/recovery-audit/delivery-verification.details.json.gz"
+  },
+  "schema_version": 1,
+  "source_runtime_and_harness_writes": false,
+  "sources": {
+    "canonical_commit": "b87f9d6c3a2532c9695024adf48ca9fbd3c0927a",
+    "canonical_repository": "CrispStrobe/quds_office_suite",
+    "canonical_tree": "acb1d1060879dc4a8168df8abf3105dc828af360",
+    "historical_zotero_canonical_commit": "9de43669088c3719d541c9fe1c7dcb3ffbf86df3",
+    "host_commit": "07083d1983db87a9868c3e8ba0cda1efd283b445",
+    "host_parser_baseline_commit": "553f3be64da9ad3c35730f1b6a67d79f1ac54b72",
+    "host_repository": "CrispStrobe/CrispCloud",
+    "host_tree": "55349829d109305288ee241d29bd358d3d966038",
+    "manifest_git_entry": {
+      "mode": "100644",
+      "oid": "cffbdd72e5bd720b7b340934827b0544f79e92e9",
+      "type": "blob"
+    },
+    "manifest_path": "tool/office_fidelity_manifest.json",
+    "manifest_source_branch": "codex/zotero-recovery-20261116"
+  },
+  "verified": false,
+  "verifier_sha256": "130bd1639ed78b7e400221a89c6faebd5bea4ae9866405720b612482ea531fa5",
+  "working_tree_observations": {
+    "canonical": {
+      "git_untracked_paths_in_lib_test_scope": [],
+      "observed_head": "b87f9d6c3a2532c9695024adf48ca9fbd3c0927a",
+      "scope": "Supplemental working-tree observations; immutable delivery verification uses the named commits.",
+      "tracked_paths_differing_from_observed_head_in_lib_test_scope": []
+    },
+    "host": {
+      "git_untracked_paths_in_lib_test_scope": [],
+      "observed_head": "07083d1983db87a9868c3e8ba0cda1efd283b445",
+      "scope": "Supplemental working-tree observations; immutable delivery verification uses the named commits.",
+      "tracked_paths_differing_from_observed_head_in_lib_test_scope": []
+    }
+  },
+  "zotero_production": {
+    "files": [
+      {
+        "canonical": {
+          "mode": "100644",
+          "oid": "7716655a90429c9b76f73b3aedd3fb737915a3f6",
+          "type": "blob"
+        },
+        "historical": {
+          "mode": "100644",
+          "oid": "7716655a90429c9b76f73b3aedd3fb737915a3f6",
+          "type": "blob"
+        },
+        "host": {
+          "mode": "100644",
+          "oid": "7716655a90429c9b76f73b3aedd3fb737915a3f6",
+          "type": "blob"
+        },
+        "managed": true,
+        "path": "packages/quds_office_engine/lib/src/word/model/word_zotero.dart"
+      },
+      {
+        "canonical": {
+          "mode": "100644",
+          "oid": "b6ec73c4601961cd34c89bdd97ca3c6a95567318",
+          "type": "blob"
+        },
+        "historical": {
+          "mode": "100644",
+          "oid": "b6ec73c4601961cd34c89bdd97ca3c6a95567318",
+          "type": "blob"
+        },
+        "host": {
+          "mode": "100644",
+          "oid": "b6ec73c4601961cd34c89bdd97ca3c6a95567318",
+          "type": "blob"
+        },
+        "managed": true,
+        "path": "packages/quds_office_engine/lib/src/zotero/zotero_client.dart"
+      },
+      {
+        "canonical": {
+          "mode": "100644",
+          "oid": "b2a422b9955973948da2f34b77dd9bfe777cea48",
+          "type": "blob"
+        },
+        "historical": {
+          "mode": "100644",
+          "oid": "b2a422b9955973948da2f34b77dd9bfe777cea48",
+          "type": "blob"
+        },
+        "host": {
+          "mode": "100644",
+          "oid": "b2a422b9955973948da2f34b77dd9bfe777cea48",
+          "type": "blob"
+        },
+        "managed": true,
+        "path": "packages/quds_office_editor/lib/src/embed/word_zotero_dialog.dart"
+      },
+      {
+        "canonical": {
+          "mode": "100644",
+          "oid": "cff6c2aba85d77bfa770b0a2a28ad4acb965a3cd",
+          "type": "blob"
+        },
+        "historical": {
+          "mode": "100644",
+          "oid": "cff6c2aba85d77bfa770b0a2a28ad4acb965a3cd",
+          "type": "blob"
+        },
+        "host": {
+          "mode": "100644",
+          "oid": "cff6c2aba85d77bfa770b0a2a28ad4acb965a3cd",
+          "type": "blob"
+        },
+        "managed": true,
+        "path": "packages/quds_office_editor/lib/src/embed/word_zotero_format.dart"
+      }
+    ],
+    "mismatch_count": 0,
+    "records_aggregate_sha256": "b585b8917152bfb7bbd65d5a812fcc65d679618dc4b887a6ff5478c42b646be6"
+  }
+}

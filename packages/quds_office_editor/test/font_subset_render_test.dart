@@ -49,6 +49,38 @@ void main() {
     expect(actual.width, _advance(source, text));
   });
 
+  test('shared-glyph Unicode aliases survive PDF loading and painting', () async {
+    const text = 'A\u{1f600}\u{20000}AZ';
+    const actualFamily = 'Quds shared glyph PDF aliases';
+    const directFamily = 'Quds shared glyph direct aliases';
+    final aliases = _withCmap(source, {
+      0x41: source.glyphIdFor(0x41),
+      0x1f600: source.glyphIdFor(0x41),
+      0x20000: source.glyphIdFor(0x41),
+      0x5a: source.glyphIdFor(0x5a),
+    });
+    final exported = _export(aliases, text);
+    await _loadFont(actualFamily, exported.fontBytes);
+    await _loadFont(
+      directFamily,
+      FontSubsetter(aliases).subset(text.runes).bytes,
+    );
+    final actual = await _raster(text, actualFamily);
+    final reference = await _raster(text, directFamily);
+    _expectSamePainting(actual, reference);
+    _expectSourceOutlines(source, 'AAAAZ', text, exported.fontBytes);
+    expect(actual.width, _advance(source, 'AAAAZ'));
+    if (_output.isNotEmpty) {
+      Directory(_output).createSync(recursive: true);
+      File('$_output/shared-glyph-aliases.pdf').writeAsBytesSync(exported.pdf);
+      File('$_output/shared-glyph-aliases.json').writeAsStringSync(
+        '${const JsonEncoder.withIndent('  ').convert(<String, Object>{'scope': 'Synthetic aliases of one bundled Latin outline; '
+            'PDF-reopened versus directly generated identical cmap. '
+            'No emoji/CJK coverage or original-font raster-parity claim.', 'source_code_points': _codePoints(text), 'extracted_code_points': _codePoints(exported.extractedText), 'width': actual.width, 'ink_pixels': actual.inkPixels, 'differing_pixels': _differentPixels(actual.rgba, reference.rgba)})}\n',
+      );
+    }
+  });
+
   test(
     'supplementary PDF mappings survive real Flutter font loading and painting',
     () async {

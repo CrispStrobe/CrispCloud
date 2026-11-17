@@ -1,0 +1,123 @@
+{
+  "active_source_runtime_harness_and_cache_writes": false,
+  "algorithm": "sha256",
+  "file_count_excluding_index": 27,
+  "files": {
+    "README.md": {
+      "bytes": 12759,
+      "sha256": "7dfc4f5b54782305a9de6c7824c3c3eedb015c67ff9118ede7e2751028a83a0f"
+    },
+    "harness-assets.json": {
+      "bytes": 2316,
+      "sha256": "3ec146569011975f87867ddde41da4962a306a9440033f9d58c436641ff493f4"
+    },
+    "harness-inputs.json.gz": {
+      "bytes": 65337,
+      "sha256": "56ec34f73e2da6e13b4d8b802e6b0fc2041fb04e49692631652839c343851958"
+    },
+    "harness-metadata-adjustment.json": {
+      "bytes": 850,
+      "sha256": "760c959de5396883b241fd0afe34367eced5aba92304edf3109ed8e5c1c84d5e"
+    },
+    "pdf-widget-example-links.json": {
+      "bytes": 4244,
+      "sha256": "d0307b29b487e8a5ec7a6f7a9fba526f915845439c430658e387f26e6f673485"
+    },
+    "reconstruction-inputs.json": {
+      "bytes": 2074,
+      "sha256": "7930aa3a7409756fbcb2b636428bf54ebc9de594cf2613c8db645ca309a5e27b"
+    },
+    "recorded-environment.sh": {
+      "bytes": 425,
+      "sha256": "c9a4f1db470792693307cf4865c2a07df21a04d0b2819d9160c365b4e397add6"
+    },
+    "recorded-host-dependency-inputs.json.gz": {
+      "bytes": 8177,
+      "sha256": "4a05e9f1d089128d5c6ed686e61e579bbb8223908d02946b42486543f9acdd40"
+    },
+    "recorded-quds-setup-receipt.json.gz": {
+      "bytes": 15992,
+      "sha256": "95d3f2ff91ecd9ea5f2238cb367ae4d0edf889af5cd01e6f6411e775a2ce62fe"
+    },
+    "reproduction-static-review.json": {
+      "bytes": 2183,
+      "sha256": "6b1df9952f64bb0a5203571bc4f5eba7cd8b68e940dcd03b9ec51be0a2d800a7"
+    },
+    "retry-harness-setup.json.gz": {
+      "bytes": 19639,
+      "sha256": "376ab1edb23c7f622325e0e5aec365651d89c23c6cea65428e8cfcad68d10c0a"
+    },
+    "runtime-download.json": {
+      "bytes": 1206,
+      "sha256": "8c229494688580a7fd3053fb08d6c557fb1e1493bc8050257cd10171781ca9c0"
+    },
+    "runtime-verification.json": {
+      "bytes": 1860,
+      "sha256": "b922fe1ed24af71b2dab83960fef7cd2e0075b72632ab6185a4a3026c57ac559"
+    },
+    "scripts/bootstrap-local-tests.sh": {
+      "bytes": 1829,
+      "sha256": "4ee96966d4998694983225a3e86fe12bb11d78c674327593e8cbdc1ab983b3d7"
+    },
+    "scripts/build-setup-publication.py": {
+      "bytes": 12702,
+      "sha256": "431d1a825f007eb037aff36e2742ca1b66f14ec25be5fd0bd159f9e1baf6cddc"
+    },
+    "scripts/check-reproduction-inputs.py": {
+      "bytes": 4133,
+      "sha256": "66fb3cc16581b92560f114ad219a125518cf1af4755a9e8e005fa3728b69dcdd"
+    },
+    "scripts/create-isolated-harnesses.py": {
+      "bytes": 12983,
+      "sha256": "580653b5a9de5928e7e65cad1705b539cbc38cb7b6dfa21bcdb352af8c718748"
+    },
+    "scripts/link-pdf-widget-examples.py": {
+      "bytes": 4642,
+      "sha256": "c4f8ec4d681c3fa984f027b238e92cb98bf4e1b064f603a9b272036a71a03ad9"
+    },
+    "scripts/prepare-harness-assets.py": {
+      "bytes": 3884,
+      "sha256": "8bd608fa7fa899325fbd4b076137e049748face8b8324108d4758525d9fd9eb8"
+    },
+    "scripts/reconstruct-harnesses.py": {
+      "bytes": 4291,
+      "sha256": "252fff2497658f0acb1cfde3a0c897a26a8fdae87320c44a6fd5bb0ec2bdee47"
+    },
+    "scripts/record-setup.py": {
+      "bytes": 3364,
+      "sha256": "e8a86adb40539820c59e4c3cb867ec433cd19432bd77ca077336cfb839206ad5"
+    },
+    "sdk-tool-inputs.json.gz": {
+      "bytes": 11348,
+      "sha256": "1c6a26ea50793c78b4b2e2798dd43252462321dbd38e9b6755a2207b3d5fd386"
+    },
+    "setup-logs.json.gz": {
+      "bytes": 10286,
+      "sha256": "dba6482671c1f96bd93aa21b302a4e35ce90f735243c1e7ee8e1a71bdbe233c6"
+    },
+    "setup-receipt-20261116.json.gz": {
+      "bytes": 15546,
+      "sha256": "15a18c5e22c5c28005e3c99db508d50742bc49c50ff279259ab786101b285ddf"
+    },
+    "source-maps.json.gz": {
+      "bytes": 236956,
+      "sha256": "7b6e1155f1fa0975fca84658b91c0fbccd9dbb670ae9e274618ff6a3cdca192a"
+    },
+    "source-references.json": {
+      "bytes": 5852,
+      "sha256": "4dbbf86d05799b60e9b8de5ed6ea0f503e85212ef577df96d402f0f6a5e2ac66"
+    },
+    "sparse-manifest-correction.json": {
+      "bytes": 874,
+      "sha256": "74f93af53088212fbd608a1f1718e836c14c53d61ac289163907b7b1fca2f206"
+    }
+  },
+  "gzip_json_roundtrip": true,
+  "python_scripts_parse": true,
+  "recorded_utc": "2026-11-16T21:03:40.030550+00:00",
+  "reproduction_static_review": "reproduction-static-review.json",
+  "schema_version": 1,
+  "self_excluded": "artifact-index.json",
+  "shell_scripts_syntax_check": true,
+  "total_bytes_excluding_index": 465752
+}

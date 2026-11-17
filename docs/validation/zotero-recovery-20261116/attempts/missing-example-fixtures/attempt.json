@@ -1,0 +1,106 @@
+{
+  "all_copied_bytes_match": true,
+  "all_counts_excluded_from_new_complete_run": true,
+  "archive_directory": "/workspace/scratch/79aea0ff70bc/zotero-toolchain/attempt-3-missing-example-fixtures",
+  "cause": "pdf_widgets_test.dart failed to load three source-relative example imports absent from the harness",
+  "completed_prior_cohort_tests": 920,
+  "copied_original_file_count": 22,
+  "copied_original_files": {
+    "dependencies-after.json": {
+      "bytes": 572647,
+      "sha256": "30e07a28cfc616b2bfe3095355ea149d09956965a51c46ea0e133bb99bcfb601"
+    },
+    "dependencies-before.json": {
+      "bytes": 572647,
+      "sha256": "30e07a28cfc616b2bfe3095355ea149d09956965a51c46ea0e133bb99bcfb601"
+    },
+    "editor-analysis-package-config.json": {
+      "bytes": 17802,
+      "sha256": "61c969e718a3e65ffdf9b1f3c7fd4b9569a3a3f2627abe33c507eb750c3eb76b"
+    },
+    "editor-hyphenation-integration-execution.log": {
+      "bytes": 6965,
+      "sha256": "0a0a3a17bc76b8b19939379f960919c1c6ded41b8af5c92533fa566f8637aa80"
+    },
+    "editor-proofing-integration-execution.log": {
+      "bytes": 20913,
+      "sha256": "f2035808c5d9e6ec945a4e9d93055f0105b564e78be9c712a1f1fc2017109d6b"
+    },
+    "editor-zotero-execution.log": {
+      "bytes": 36533,
+      "sha256": "6df3f2ef51aa7c7229b3feb77a6e67b3d03ec6f17f9aa37c016c334376ac95ef"
+    },
+    "engine-analysis-package-config.json": {
+      "bytes": 12328,
+      "sha256": "64726c9372b5828e5ba607a3bcf181fd3c516dea6ef674d06bfcabbcc8f28f0e"
+    },
+    "engine-ods-integration-execution.log": {
+      "bytes": 7304,
+      "sha256": "6218ceeccb066e9896fc5a73b7cf71de480bff22efe4a5c49d91e924833318bf"
+    },
+    "engine-proofing-integration-execution.log": {
+      "bytes": 9197,
+      "sha256": "7fae41de414b14a1b57c3052580f37d0e9804865a13bc3e25c638078b7384435"
+    },
+    "engine-recovery-integration-execution.log": {
+      "bytes": 19797,
+      "sha256": "84e30d95c25de2671874aff79665bed0d5924cbf2de930cd3ea48257ec4220cd"
+    },
+    "engine-word-layout-integration-execution.log": {
+      "bytes": 3486,
+      "sha256": "d0bc0bfb3a7ae50e83566e5a801746762e10162165eb221250981e5eb1fcede1"
+    },
+    "engine-zotero-execution.log": {
+      "bytes": 44301,
+      "sha256": "480e03f6bf0e3e10b0f15d68607051f84f2dd0f0f01c3f0c2a75443ab8ff48ba"
+    },
+    "qualification.lock": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "receipt.json": {
+      "bytes": 24796,
+      "sha256": "61c9ca1d72a604ee86c53abd5b28effc9d24f765328f1e89c9530988489a9d93"
+    },
+    "render/authored-text.txt": {
+      "bytes": 11,
+      "sha256": "e74a676e1bda53634984fdb18c5e78dbedde1a9740844ab5b9f554f062298326"
+    },
+    "render/encoded-aliases.pdf": {
+      "bytes": 6873,
+      "sha256": "96feb2bab8f025dc9755d2e697bd0b5588bed2e3000d784f51ff2a3060bd2f23"
+    },
+    "render/identity-glyph-reference.pdf": {
+      "bytes": 6736,
+      "sha256": "9d4d1486ece4577369c9a8c156a2041349ae2919afc1a1ee57fcacfc491d8f31"
+    },
+    "render/word-unicode-aliases.pdf": {
+      "bytes": 6899,
+      "sha256": "4290a1930abed91021c42a659294f7729a29ac4c1eaac20a0c767aa9fb6463d1"
+    },
+    "run-qualification.py": {
+      "bytes": 24059,
+      "sha256": "74596ef08a2c1ae14c93474c8347985e055f4da284c34540a664b29979be1ff5"
+    },
+    "runner-error.json": {
+      "bytes": 956,
+      "sha256": "def300f68488996cd0334c61c025c85b01b80b8c91115d7b6279fdac926bf361"
+    },
+    "source-after.json": {
+      "bytes": 232384,
+      "sha256": "1807731ab57a3875f1eca49da251e85a5598c1db938b31fda7f0a26274967064"
+    },
+    "source-before.json": {
+      "bytes": 232384,
+      "sha256": "1807731ab57a3875f1eca49da251e85a5598c1db938b31fda7f0a26274967064"
+    }
+  },
+  "failed_cohort": "engine-recovery-integration",
+  "failed_cohort_progress_counter_not_counted": 162,
+  "original_receipt_sha256": "61c9ca1d72a604ee86c53abd5b28effc9d24f765328f1e89c9530988489a9d93",
+  "original_runner_sha256": "74596ef08a2c1ae14c93474c8347985e055f4da284c34540a664b29979be1ff5",
+  "recorded_utc": "2026-11-16T20:52:36.289075+00:00",
+  "source_dependency_harness_integrity_and_analysis_restore_gates_passed": true,
+  "source_directory": "/workspace/scratch/79aea0ff70bc/zotero-toolchain/retry-canonical",
+  "status": "failed qualification; preserved in full"
+}

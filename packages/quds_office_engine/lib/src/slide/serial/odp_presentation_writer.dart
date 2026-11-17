@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import '../../odf/odf_text.dart';
 import '../../opc/zip/zip_writer.dart';
 import '../../xml/xml_writer.dart';
 import '../model/pml_presentation.dart';
@@ -151,7 +152,10 @@ abstract final class OdpPresentationWriter {
     _OdpLayout layout,
     PmlShape? shape,
   ) {
-    final lines = text.split('\n');
+    final lines = text
+        .replaceAll('\r\n', '\n')
+        .replaceAll('\r', '\n')
+        .split('\n');
     if (lines.isEmpty) {
       w.writeEmptyElement('p', prefix: 'text');
       return;
@@ -164,7 +168,7 @@ abstract final class OdpPresentationWriter {
       if (line.isNotEmpty) {
         w.writeStartElement('span', prefix: 'text');
         w.writeAttribute('text:style-name', textStyle);
-        w.writeText(line);
+        writeOdfText(w, line);
         w.writeEndElement();
       }
       w.writeEndElement();

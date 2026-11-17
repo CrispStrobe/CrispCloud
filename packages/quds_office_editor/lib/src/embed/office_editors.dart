@@ -1683,6 +1683,7 @@ class _QudsSheetEditorState extends State<QudsSheetEditor> {
                     readOnly: !config.allowsMutation,
                     child: SheetGrid(
                       sheet: _c.sheet,
+                      workbook: _c.workbook,
                       selection: _c.selection,
                       findHits: _c.findSession.hits,
                       activeFindIndex: _c.findSession.index,

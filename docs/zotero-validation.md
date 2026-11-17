@@ -1,6 +1,41 @@
-# Zotero validation — 16 November 2026
+# Zotero validation — 17 November 2026
 
-## Current optimization: verified batching and native scaling
+## Current delivery and qualified source
+
+The delivered implementation is qualified at canonical Quds
+`732fc3d0bc7a1118f3eb86e6c762fe70182c4fd2` and actual CrispCloud host
+`084815b665df7779357155d86c5fff9bd31bfc43`. The final bounded run passed
+**126 test executions**: 18 spreadsheet, 41 existing host, 39 document-service,
+and 28 Python sync/verifier tests. All required analysis, format, vendor,
+source/dependency/harness integrity and restoration gates passed.
+
+The preceding broad run passed **1,128 disjoint tests** at canonical
+`5b05664357eead5ddc86922bab248224dbd4da6d` and host
+`342b744a3cb66e3ee9387733ebcf8613cdb23a33`: 576 Zotero, 460 integration,
+23 Harper adapter, 41 host and 28 Python cases. The two runs retain their
+exact source identities; overlapping follow-up counts are not added together.
+
+All 189 frozen Quds refs are ancestors of the delivered source; all 274 host
+refs are accounted for by ancestry or exact whole-tree equivalence. All 50
+Zotero paths retain their recovered implementation. The host verifies 2,521
+managed files, preserves the parser and host customizations, and bundles six
+original Office notices. The late amendment adds conditional-format style
+preservation and independent, finite ODT picture geometry.
+
+**Later concurrent work is separate:** Quds main subsequently reached
+`8a3f5a9d` with a new ODT writer, and host main reached `8fe921d0` with the
+Export as ODT action. Those production changes are outside this frozen
+qualification. CrispCloud PR #201 currently reports conflicts with that
+newer main; this delivery does not claim a qualified combined export tree.
+
+See the [complete report, receipts, logs, cutoff records and reproduction](validation/zotero-finalization-20261117/README.md).
+The failed first late attempt remains recorded; its viewer-format gate was
+fixed and the entire bounded run repeated successfully. Historical counts
+below retain their original attribution. No GitHub Actions or CI endpoints
+were queried or awaited. Full application builds, full viewer execution,
+and live Zotero/Word/LibreOffice acceptance remain outside this scope.
+
+## Historical optimization: verified batching and native scaling
 
 Application source `1c5aa295cdc1cedf0e5496e4673731f35ad5d18c` pins canonical
 Quds `0dd09811b1c02514c32c33bd13744dadb202e7af`. The exact source passed

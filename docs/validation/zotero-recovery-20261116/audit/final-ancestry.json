@@ -1,0 +1,1609 @@
+{
+  "observed_utc": "2026-11-16T19:39:07Z",
+  "head": "b87f9d6c3a2532c9695024adf48ca9fbd3c0927a",
+  "source_inventory": "recovery-audit/quds/incoming-refs.json",
+  "groups": [
+    {
+      "sha": "01f62eb1812ca54827cc14e074e03abd82f963d7",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/docs/validation-operators",
+          "sha": "01f62eb1812ca54827cc14e074e03abd82f963d7"
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/52/head",
+          "sha": "01f62eb1812ca54827cc14e074e03abd82f963d7"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "06828a5e63365495c86a4a0e1c68ecd113f891e5",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/docs/ods-row-groups",
+          "sha": "06828a5e63365495c86a4a0e1c68ecd113f891e5"
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/79/head",
+          "sha": "06828a5e63365495c86a4a0e1c68ecd113f891e5"
+        }
+      ],
+      "disposition": "non_ancestor",
+      "merge_base": "a3417522a54a1d46beef535e10f609c1295d8cfd",
+      "left_right_count": "14\t1",
+      "unique_commits": [
+        "06828a5e63365495c86a4a0e1c68ecd113f891e5 docs: record ODS row groups"
+      ],
+      "tree_equal_to_head": false,
+      "changed_paths_from_merge_base": [
+        "docs/office-remaining-gaps.md"
+      ]
+    },
+    {
+      "sha": "089e53fce443ca2169fc44f3700e1b23780d2c95",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/feat/ods-filter-predicates",
+          "sha": "089e53fce443ca2169fc44f3700e1b23780d2c95"
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/62/head",
+          "sha": "089e53fce443ca2169fc44f3700e1b23780d2c95"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "08b09485588d2b6270f594a07c983689c087587d",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/2/head",
+          "sha": "08b09485588d2b6270f594a07c983689c087587d"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "094d6bacb9cb253e4d04443e9f3c4171e7433c8a",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/fix/word-dialog-focus-rendering-20261116",
+          "sha": "094d6bacb9cb253e4d04443e9f3c4171e7433c8a"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "09a05d7d60d2a2e1d2547487ad4545c50472834b",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/fix/utf16-custom-xml",
+          "sha": "09a05d7d60d2a2e1d2547487ad4545c50472834b"
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/34/head",
+          "sha": "09a05d7d60d2a2e1d2547487ad4545c50472834b"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "09f5ec4b8eba290ff4d65678179854fb6ff6a468",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/4/head",
+          "sha": "09f5ec4b8eba290ff4d65678179854fb6ff6a468"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "0a26be7f136ad3e57dbe894b0bc4cdb0602addd0",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/docs/remaining-gaps",
+          "sha": "0a26be7f136ad3e57dbe894b0bc4cdb0602addd0"
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/45/head",
+          "sha": "0a26be7f136ad3e57dbe894b0bc4cdb0602addd0"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "0dd9dd9763c2eb6bdc4f6b6e30fb7726035e7d4b",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/feat/ods-tab-color",
+          "sha": "0dd9dd9763c2eb6bdc4f6b6e30fb7726035e7d4b"
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/57/head",
+          "sha": "0dd9dd9763c2eb6bdc4f6b6e30fb7726035e7d4b"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "0ee0a8320875248adac9718cae2e67875b6b932c",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/feat/ods-writer",
+          "sha": "0ee0a8320875248adac9718cae2e67875b6b932c"
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/67/head",
+          "sha": "0ee0a8320875248adac9718cae2e67875b6b932c"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "108b4087c15f5640dbc906ad243f3030b7592f3f",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/docs/ods-writer-images",
+          "sha": "108b4087c15f5640dbc906ad243f3030b7592f3f"
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/71/head",
+          "sha": "108b4087c15f5640dbc906ad243f3030b7592f3f"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "14fde4b1bd2539f0c6168be4569ac1adcc5105cd",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/vendor/ods-validation-messages",
+          "sha": "14fde4b1bd2539f0c6168be4569ac1adcc5105cd"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "15c5d29b63fb17a93c7fb3426a8fd4d95a32f1ba",
+      "refs": [
+        {
+          "repository": "MohammedAsaadAsaad/quds_office_suite",
+          "ref": "refs/heads/main",
+          "sha": "15c5d29b63fb17a93c7fb3426a8fd4d95a32f1ba"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "1675bbbb7c03090a87b6df783e3741e2cbc1768f",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/docs/current-office-capabilities",
+          "sha": "1675bbbb7c03090a87b6df783e3741e2cbc1768f"
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/74/head",
+          "sha": "1675bbbb7c03090a87b6df783e3741e2cbc1768f"
+        }
+      ],
+      "disposition": "non_ancestor",
+      "merge_base": "aee79048dc74d2fe413ae0e57cca9189c7202a0f",
+      "left_right_count": "24\t1",
+      "unique_commits": [
+        "1675bbbb7c03090a87b6df783e3741e2cbc1768f docs: describe the current Office and ODF capabilities"
+      ],
+      "tree_equal_to_head": false,
+      "changed_paths_from_merge_base": [
+        "docs/office-remaining-gaps.md",
+        "packages/quds_office_engine/README.md"
+      ]
+    },
+    {
+      "sha": "1808f38493d1cf2fddc1761d146432ceaaea70aa",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/vendor/ods-writer-metadata",
+          "sha": "1808f38493d1cf2fddc1761d146432ceaaea70aa"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "18dc693fbf4e39fc6c38e3d655d1e5b35eeef273",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/vendor/ods-metadata",
+          "sha": "18dc693fbf4e39fc6c38e3d655d1e5b35eeef273"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "1b1bac125f426b05f868d482e9fbd657d4ffb73a",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/10/head",
+          "sha": "1b1bac125f426b05f868d482e9fbd657d4ffb73a"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "1deb61cf78add61f5d26bea36ff596d769d06a87",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/feat/ods-filter-conditions",
+          "sha": "1deb61cf78add61f5d26bea36ff596d769d06a87"
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/76/head",
+          "sha": "1deb61cf78add61f5d26bea36ff596d769d06a87"
+        }
+      ],
+      "disposition": "non_ancestor",
+      "merge_base": "ff873a4e304f247902cf4cd9a75d447baa8796d9",
+      "left_right_count": "17\t1",
+      "unique_commits": [
+        "1deb61cf78add61f5d26bea36ff596d769d06a87 feat(sheet): write ODS autofilter predicates"
+      ],
+      "tree_equal_to_head": false,
+      "changed_paths_from_merge_base": [
+        "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_writer.dart",
+        "packages/quds_office_engine/test/ods_sheet_writer_test.dart"
+      ]
+    },
+    {
+      "sha": "1f30a823b30678e3684c98fee6a2cd5c4945c4f2",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/21/head",
+          "sha": "1f30a823b30678e3684c98fee6a2cd5c4945c4f2"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "20681b8658392212c128f51b4c91f0b638942448",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/feat/conditional-affix",
+          "sha": "20681b8658392212c128f51b4c91f0b638942448"
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/43/head",
+          "sha": "20681b8658392212c128f51b4c91f0b638942448"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "21de3c3963b0334068b87fb1c25c787660cb17cf",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/feat/conditional-operators",
+          "sha": "21de3c3963b0334068b87fb1c25c787660cb17cf"
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/36/head",
+          "sha": "21de3c3963b0334068b87fb1c25c787660cb17cf"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "2480f0988167068d9aeddf6573b9c2c6871a8481",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/codex/zotero-capabilities-20261116",
+          "sha": "2480f0988167068d9aeddf6573b9c2c6871a8481"
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/63/head",
+          "sha": "2480f0988167068d9aeddf6573b9c2c6871a8481"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "27137499f8cc1a946bfcdd7446f43945ea81d2be",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/feat/ods-row-groups",
+          "sha": "27137499f8cc1a946bfcdd7446f43945ea81d2be"
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/78/head",
+          "sha": "27137499f8cc1a946bfcdd7446f43945ea81d2be"
+        }
+      ],
+      "disposition": "non_ancestor",
+      "merge_base": "44a56cd0bd4f7cfc4feb1ce41a1818b8ffe69b18",
+      "left_right_count": "15\t1",
+      "unique_commits": [
+        "27137499f8cc1a946bfcdd7446f43945ea81d2be feat(sheet): write ODS row outline groups and off-extent geometry"
+      ],
+      "tree_equal_to_head": false,
+      "changed_paths_from_merge_base": [
+        "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_writer.dart",
+        "packages/quds_office_engine/test/ods_sheet_writer_test.dart"
+      ]
+    },
+    {
+      "sha": "2aee95e6aa7021869a198cf19ebbb43a44d7910f",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/vendor/ods-writer-page-layout",
+          "sha": "2aee95e6aa7021869a198cf19ebbb43a44d7910f"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "2e3074c8e1860f9503b059a87870911afc3eee7d",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/feat/ods-custom-validation",
+          "sha": "2e3074c8e1860f9503b059a87870911afc3eee7d"
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/53/head",
+          "sha": "2e3074c8e1860f9503b059a87870911afc3eee7d"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "33a0508a502f5809aa997928e8428bdec3e02503",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/vendor/ods-outline",
+          "sha": "33a0508a502f5809aa997928e8428bdec3e02503"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "375390c3853ce26f43d6ac3f71c592acf3e094dc",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/vendor/ods-tab-color",
+          "sha": "375390c3853ce26f43d6ac3f71c592acf3e094dc"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "379fa8663c81f32b4328415f56c776746ccc23bc",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/docs/filter-operators",
+          "sha": "379fa8663c81f32b4328415f56c776746ccc23bc"
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/66/head",
+          "sha": "379fa8663c81f32b4328415f56c776746ccc23bc"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "388a1c76339507d493bab577424affd80732446c",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/vendor/ods-named-expressions",
+          "sha": "388a1c76339507d493bab577424affd80732446c"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "3bb505ce5fea00236238e37c450ace8b18e4e34e",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/feat/ods-filter-operators",
+          "sha": "3bb505ce5fea00236238e37c450ace8b18e4e34e"
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/65/head",
+          "sha": "3bb505ce5fea00236238e37c450ace8b18e4e34e"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "4235e690602195cc504438a6b937972c71f1ad39",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/codex/terminal-sharing-office-20261116",
+          "sha": "4235e690602195cc504438a6b937972c71f1ad39"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "428679a33381f943a8ae63117d4207f01dd15462",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/codex/zotero-support-20261116",
+          "sha": "428679a33381f943a8ae63117d4207f01dd15462"
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/50/head",
+          "sha": "428679a33381f943a8ae63117d4207f01dd15462"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "448eff5aac55054a34eccd4f8a1e79e754909a05",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/15/head",
+          "sha": "448eff5aac55054a34eccd4f8a1e79e754909a05"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "4637ddce4154f4b50105c7322fedc1c75fd02193",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/22/head",
+          "sha": "4637ddce4154f4b50105c7322fedc1c75fd02193"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "46850ae47e0241733750decb22417a0150e4b0e4",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/feat/sheet-hidden-state",
+          "sha": "46850ae47e0241733750decb22417a0150e4b0e4"
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/32/head",
+          "sha": "46850ae47e0241733750decb22417a0150e4b0e4"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "48c5156f459597ce3f8ec486b3c9a20fc5543807",
+      "refs": [
+        {
+          "repository": "MohammedAsaadAsaad/quds_office_suite",
+          "ref": "refs/pull/1/head",
+          "sha": "48c5156f459597ce3f8ec486b3c9a20fc5543807"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "49b447324159595c59e64d8425b54a09f79ec736",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/feat/ods-default-style",
+          "sha": "49b447324159595c59e64d8425b54a09f79ec736"
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/30/head",
+          "sha": "49b447324159595c59e64d8425b54a09f79ec736"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "49ba086251ba61032f15b3e7b726fc921874fd12",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/feat/ods-validation-messages",
+          "sha": "49ba086251ba61032f15b3e7b726fc921874fd12"
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/54/head",
+          "sha": "49ba086251ba61032f15b3e7b726fc921874fd12"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "4a122b3b71ddc539f8ffda5541b7e6ab0f1dce8f",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/docs/filters-closed",
+          "sha": "4a122b3b71ddc539f8ffda5541b7e6ab0f1dce8f"
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/64/head",
+          "sha": "4a122b3b71ddc539f8ffda5541b7e6ab0f1dce8f"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "4c8036bbf16ac224c3fc102b5c44d8913a512b18",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/feat/sheet-hidden-sheets",
+          "sha": "4c8036bbf16ac224c3fc102b5c44d8913a512b18"
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/33/head",
+          "sha": "4c8036bbf16ac224c3fc102b5c44d8913a512b18"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "4fadcc68d52d51e72e8d782765a0dd5086b982c6",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/codex/terminal-integration-ods-20261116",
+          "sha": "4fadcc68d52d51e72e8d782765a0dd5086b982c6"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "4fbd1687d3c0ada22d460cf5cadb9586c4f62905",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/vendor/ods-metadata-zotero",
+          "sha": "4fbd1687d3c0ada22d460cf5cadb9586c4f62905"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "4ffdf113803806ba5f8ade4a0846eee85dcfbe68",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/vendor/ods-validation-current",
+          "sha": "4ffdf113803806ba5f8ade4a0846eee85dcfbe68"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "5278aafd512640608fe06b8f7d357c4cffe8520a",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/20/head",
+          "sha": "5278aafd512640608fe06b8f7d357c4cffe8520a"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "546368fe3aad7ccb65c72f897b6585513b0199f1",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/vendor/ods-writer-images",
+          "sha": "546368fe3aad7ccb65c72f897b6585513b0199f1"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "54f0f8de01416640560519aa9d732f668f603709",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/1/head",
+          "sha": "54f0f8de01416640560519aa9d732f668f603709"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "579f2105cf7fca61536f7e3f9b59004929bdb6c5",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/12/head",
+          "sha": "579f2105cf7fca61536f7e3f9b59004929bdb6c5"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "58de54567d45e38c05dd77064b7607c577374b9d",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/9/head",
+          "sha": "58de54567d45e38c05dd77064b7607c577374b9d"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "5b9ac71db1934252c4b8ae48ac03d4cd976e15ae",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/26/head",
+          "sha": "5b9ac71db1934252c4b8ae48ac03d4cd976e15ae"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "5c1ab430c6911bb11f71d29efa35027ead5ac1d5",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/11/head",
+          "sha": "5c1ab430c6911bb11f71d29efa35027ead5ac1d5"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "6bf486ee0bbcd2025c3a42cae7d7003b8c9324a4",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/codex/text-rendering-20261116",
+          "sha": "6bf486ee0bbcd2025c3a42cae7d7003b8c9324a4"
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/72/head",
+          "sha": "6bf486ee0bbcd2025c3a42cae7d7003b8c9324a4"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "73b354efdf0f2e7fbe0e87bc67f332a9dfb4903e",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/13/head",
+          "sha": "73b354efdf0f2e7fbe0e87bc67f332a9dfb4903e"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "752a94dfddf69522429f3025f9d25702499cb6da",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/feat/conditional-text",
+          "sha": "752a94dfddf69522429f3025f9d25702499cb6da"
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/38/head",
+          "sha": "752a94dfddf69522429f3025f9d25702499cb6da"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "777bcb876a9c8cc170586d117fa41f8331ef84ad",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/vendor/ods-filter-operators",
+          "sha": "777bcb876a9c8cc170586d117fa41f8331ef84ad"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "78a7b6f4e613c7d18d4bcc6434cda12b50ed184e",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/16/head",
+          "sha": "78a7b6f4e613c7d18d4bcc6434cda12b50ed184e"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "78ed85f5fd19d44f672dee11420fed261c974f4a",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/6/head",
+          "sha": "78ed85f5fd19d44f672dee11420fed261c974f4a"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "7fe296e29e2e1b173580f6854507fc060cb4f080",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/feat/ods-images",
+          "sha": "7fe296e29e2e1b173580f6854507fc060cb4f080"
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/29/head",
+          "sha": "7fe296e29e2e1b173580f6854507fc060cb4f080"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "817982d580e990a5ca21d74c35135db4817e54b5",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/vendor/ods-filter-conditions-correct",
+          "sha": "817982d580e990a5ca21d74c35135db4817e54b5"
+        }
+      ],
+      "disposition": "non_ancestor",
+      "merge_base": "9de9b4fb1287e935328dc6e653f7457eef7defa1",
+      "left_right_count": "25\t1",
+      "unique_commits": [
+        "817982d580e990a5ca21d74c35135db4817e54b5 feat(sheet): write ODS autofilter predicates"
+      ],
+      "tree_equal_to_head": false,
+      "changed_paths_from_merge_base": [
+        "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_writer.dart",
+        "packages/quds_office_engine/test/ods_sheet_writer_test.dart"
+      ]
+    },
+    {
+      "sha": "82215309dc64ef8c473fec3c4892cf0c9884bc91",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/feat/ods-writer-metadata",
+          "sha": "82215309dc64ef8c473fec3c4892cf0c9884bc91"
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/68/head",
+          "sha": "82215309dc64ef8c473fec3c4892cf0c9884bc91"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "864e674795eb422855df2b26ccc375d3255e61a2",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/feat/ods-named-expressions",
+          "sha": "864e674795eb422855df2b26ccc375d3255e61a2"
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/58/head",
+          "sha": "864e674795eb422855df2b26ccc375d3255e61a2"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "866c14f0b3a876e11732bc544dc25a05d8f10524",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/fix/sdt-multi-section-control",
+          "sha": "866c14f0b3a876e11732bc544dc25a05d8f10524"
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/44/head",
+          "sha": "866c14f0b3a876e11732bc544dc25a05d8f10524"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "8769019fb8be5483939edd4655dd88005e2515c4",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/feat/ods-validation-operators",
+          "sha": "8769019fb8be5483939edd4655dd88005e2515c4"
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/51/head",
+          "sha": "8769019fb8be5483939edd4655dd88005e2515c4"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "8855b88a96b5c94349e3b5278c339228a1688c3e",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/40/head",
+          "sha": "8855b88a96b5c94349e3b5278c339228a1688c3e"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "891ccc21cf91fb9f49fa0af98143468fbbd3eac7",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/vendor/ods-row-groups",
+          "sha": "891ccc21cf91fb9f49fa0af98143468fbbd3eac7"
+        }
+      ],
+      "disposition": "non_ancestor",
+      "merge_base": "9de9b4fb1287e935328dc6e653f7457eef7defa1",
+      "left_right_count": "25\t2",
+      "unique_commits": [
+        "891ccc21cf91fb9f49fa0af98143468fbbd3eac7 feat(sheet): write ODS row outline groups and off-extent geometry",
+        "817982d580e990a5ca21d74c35135db4817e54b5 feat(sheet): write ODS autofilter predicates"
+      ],
+      "tree_equal_to_head": false,
+      "changed_paths_from_merge_base": [
+        "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_writer.dart",
+        "packages/quds_office_engine/test/ods_sheet_writer_test.dart"
+      ]
+    },
+    {
+      "sha": "89c7f06c592edde0c67774e9c7e087d96f52184b",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/17/head",
+          "sha": "89c7f06c592edde0c67774e9c7e087d96f52184b"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "8a0107cbca4b00766a2a76d43a1db244c006e976",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/fix/ods-writer-page-layout",
+          "sha": "8a0107cbca4b00766a2a76d43a1db244c006e976"
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/73/head",
+          "sha": "8a0107cbca4b00766a2a76d43a1db244c006e976"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "8fc3d06be36da5c2176feb107c14245f61650d75",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/fix/sdt-trailing-section-break",
+          "sha": "8fc3d06be36da5c2176feb107c14245f61650d75"
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/42/head",
+          "sha": "8fc3d06be36da5c2176feb107c14245f61650d75"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "90acedb9835cb5bdef30606301e74482f5977448",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/vendor/ods-custom-validation",
+          "sha": "90acedb9835cb5bdef30606301e74482f5977448"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "912f26f21446ef9bdbf4f542535438dae0ded9a9",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/feat/ods-default-geometry",
+          "sha": "912f26f21446ef9bdbf4f542535438dae0ded9a9"
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/31/head",
+          "sha": "912f26f21446ef9bdbf4f542535438dae0ded9a9"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "928f85483ec1cb85e468ca9381585875137ba8d5",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/vendor/ods-filter-conditions",
+          "sha": "928f85483ec1cb85e468ca9381585875137ba8d5"
+        }
+      ],
+      "disposition": "non_ancestor",
+      "merge_base": "2aee95e6aa7021869a198cf19ebbb43a44d7910f",
+      "left_right_count": "156\t1",
+      "unique_commits": [
+        "928f85483ec1cb85e468ca9381585875137ba8d5 feat(sheet): write ODS autofilter predicates"
+      ],
+      "tree_equal_to_head": false,
+      "changed_paths_from_merge_base": [
+        "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_writer.dart",
+        "packages/quds_office_engine/test/ods_sheet_writer_test.dart"
+      ]
+    },
+    {
+      "sha": "95185d2f803215d768d440cbbc2ee74789574005",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/codex/proofing-20261116-resume",
+          "sha": "95185d2f803215d768d440cbbc2ee74789574005"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "95debbcce02c1e24d6e8159cd1f524bbf68afeba",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/vendor/ods-hyperlinks",
+          "sha": "95debbcce02c1e24d6e8159cd1f524bbf68afeba"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "988f423b9b95037d8f5273ee368b58ceedab0667",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/feat/ods-outline",
+          "sha": "988f423b9b95037d8f5273ee368b58ceedab0667"
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/60/head",
+          "sha": "988f423b9b95037d8f5273ee368b58ceedab0667"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "9930be8df44ffe117fb22778c514eea0ee73ce21",
+      "refs": [
+        {
+          "repository": "MohammedAsaadAsaad/quds_office_suite",
+          "ref": "refs/heads/cursor/cloud-agent-1790580069020-0rk1h",
+          "sha": "9930be8df44ffe117fb22778c514eea0ee73ce21"
+        },
+        {
+          "repository": "MohammedAsaadAsaad/quds_office_suite",
+          "ref": "refs/pull/5/head",
+          "sha": "9930be8df44ffe117fb22778c514eea0ee73ce21"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "9ad9ba92133932b0a3824619168f07dd218c2b26",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/feat/ods-writer-images",
+          "sha": "9ad9ba92133932b0a3824619168f07dd218c2b26"
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/70/head",
+          "sha": "9ad9ba92133932b0a3824619168f07dd218c2b26"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "9cc8c6e91ff9acf0f52a68aea7c0da69934a2661",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/24/head",
+          "sha": "9cc8c6e91ff9acf0f52a68aea7c0da69934a2661"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "a53a37b0b5c1b55aff20d581f80f1b2027bf3ddb",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/vendor/ods-filter-predicates",
+          "sha": "a53a37b0b5c1b55aff20d581f80f1b2027bf3ddb"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "a5febc3362d2fccdb979f012a5296af72e465797",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/docs/metadata-closed",
+          "sha": "a5febc3362d2fccdb979f012a5296af72e465797"
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/49/head",
+          "sha": "a5febc3362d2fccdb979f012a5296af72e465797"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "a86a360bf9bd45c729e00b31dd9a97492e23f2e7",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/8/head",
+          "sha": "a86a360bf9bd45c729e00b31dd9a97492e23f2e7"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "a8cd28d8af8ca966e8c4259862587ecc9aade2f4",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/28/head",
+          "sha": "a8cd28d8af8ca966e8c4259862587ecc9aade2f4"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "abdbc8b576f5327786c8a0f19bf91bef1250de12",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/vendor/ods-writer-conditional",
+          "sha": "abdbc8b576f5327786c8a0f19bf91bef1250de12"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "aca2f66941832bd0b19b436baeab1656a1b7de98",
+      "refs": [
+        {
+          "repository": "MohammedAsaadAsaad/quds_office_suite",
+          "ref": "refs/heads/ci/flutter-workspace",
+          "sha": "aca2f66941832bd0b19b436baeab1656a1b7de98"
+        },
+        {
+          "repository": "MohammedAsaadAsaad/quds_office_suite",
+          "ref": "refs/pull/6/head",
+          "sha": "aca2f66941832bd0b19b436baeab1656a1b7de98"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "b0efe6c661009ffa463f2bf6d7945216ce1dae4c",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/feat/conditional-dxf",
+          "sha": "b0efe6c661009ffa463f2bf6d7945216ce1dae4c"
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/37/head",
+          "sha": "b0efe6c661009ffa463f2bf6d7945216ce1dae4c"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "b23ee557ea121774833c7a188a49189e4f80ce70",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/docs/metadata-complete",
+          "sha": "b23ee557ea121774833c7a188a49189e4f80ce70"
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/61/head",
+          "sha": "b23ee557ea121774833c7a188a49189e4f80ce70"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "b69bad50fb235118a5334b325683cd1524b3e3d1",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/feat/conditional-between",
+          "sha": "b69bad50fb235118a5334b325683cd1524b3e3d1"
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/41/head",
+          "sha": "b69bad50fb235118a5334b325683cd1524b3e3d1"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "b6d27c84a72d622f670a7e646e36ba4bd920cfc8",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/25/head",
+          "sha": "b6d27c84a72d622f670a7e646e36ba4bd920cfc8"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "b85501b2810e537e21040d82528d8dbaa6fdcf15",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/feat/ods-validations",
+          "sha": "b85501b2810e537e21040d82528d8dbaa6fdcf15"
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/39/head",
+          "sha": "b85501b2810e537e21040d82528d8dbaa6fdcf15"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "bb9866d25bf98e5aa42c10ce4679835dbc8617f1",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/docs/ods-filter-predicates",
+          "sha": "bb9866d25bf98e5aa42c10ce4679835dbc8617f1"
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/77/head",
+          "sha": "bb9866d25bf98e5aa42c10ce4679835dbc8617f1"
+        }
+      ],
+      "disposition": "non_ancestor",
+      "merge_base": "e81650bd7f17dc8e38f892e05dfc9025ad5705b1",
+      "left_right_count": "16\t1",
+      "unique_commits": [
+        "bb9866d25bf98e5aa42c10ce4679835dbc8617f1 docs: record ODS filter predicates"
+      ],
+      "tree_equal_to_head": false,
+      "changed_paths_from_merge_base": [
+        "docs/office-remaining-gaps.md"
+      ]
+    },
+    {
+      "sha": "be2c3a91b0dd5b4abb1b9a7baa8f5e10769bc87a",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/codex/terminal-recovery-office-20261116",
+          "sha": "be2c3a91b0dd5b4abb1b9a7baa8f5e10769bc87a"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "be6aa3cf2fca1b775c2b1352881e2ca3f9134c13",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/vendor/ods-hyperlinks-current",
+          "sha": "be6aa3cf2fca1b775c2b1352881e2ca3f9134c13"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "be9eeec9ea3455018de26fff5874c558dbc66798",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/main",
+          "sha": "be9eeec9ea3455018de26fff5874c558dbc66798"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "c0403890fc00f38c0ee6e1d533f6fef549c6fc03",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/codex/proofing-20261116",
+          "sha": "c0403890fc00f38c0ee6e1d533f6fef549c6fc03"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "c7bb6d6f51885e4082882252f502bbf2de81d552",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/vendor/ods-validation",
+          "sha": "c7bb6d6f51885e4082882252f502bbf2de81d552"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "ca9e4f052d988d77f9ded3a6b13f840f76a26159",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/codex/zotero-optimization-20261116",
+          "sha": "ca9e4f052d988d77f9ded3a6b13f840f76a26159"
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/56/head",
+          "sha": "ca9e4f052d988d77f9ded3a6b13f840f76a26159"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "cde05b85bcd00c26d519d43283fcc6b55a1884e7",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/27/head",
+          "sha": "cde05b85bcd00c26d519d43283fcc6b55a1884e7"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "d4e2a0fcf1fe18e0e5158ac7d86b1f71bf3b70da",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/14/head",
+          "sha": "d4e2a0fcf1fe18e0e5158ac7d86b1f71bf3b70da"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "d6d6866c0f4ddbbaa196e1a5eb7ff9e31007fdea",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/feat/ods-metadata",
+          "sha": "d6d6866c0f4ddbbaa196e1a5eb7ff9e31007fdea"
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/48/head",
+          "sha": "d6d6866c0f4ddbbaa196e1a5eb7ff9e31007fdea"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "da0979a5c6c4273ea68f360ce9a079bfa747384f",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/5/head",
+          "sha": "da0979a5c6c4273ea68f360ce9a079bfa747384f"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "e002b9584bead9761fac8c7cf818431966d1b1c3",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/23/head",
+          "sha": "e002b9584bead9761fac8c7cf818431966d1b1c3"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "e14a55b50af4b6870ed1044284f74c36b5f194d9",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/vendor/ods-writer",
+          "sha": "e14a55b50af4b6870ed1044284f74c36b5f194d9"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "e550723b0f2a7cd849970f58820d260c36857502",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/3/head",
+          "sha": "e550723b0f2a7cd849970f58820d260c36857502"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "e59751246a200e7477657d0e4835bf77b153422c",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/feat/ods-conditional",
+          "sha": "e59751246a200e7477657d0e4835bf77b153422c"
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/35/head",
+          "sha": "e59751246a200e7477657d0e4835bf77b153422c"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "e5daa20587e10971e8cb97d82a5495584b5c1553",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/feat/ods-hyperlinks",
+          "sha": "e5daa20587e10971e8cb97d82a5495584b5c1553"
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/59/head",
+          "sha": "e5daa20587e10971e8cb97d82a5495584b5c1553"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "e5e1e9af6beb0972a010d8208c1690a642809113",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/fix/ods-global-validations-20261116",
+          "sha": "e5e1e9af6beb0972a010d8208c1690a642809113"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "e6fdd16849aaf7ccbaf50f2593d7a92b6a82e630",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/docs/readme-remaining-gaps",
+          "sha": "e6fdd16849aaf7ccbaf50f2593d7a92b6a82e630"
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/46/head",
+          "sha": "e6fdd16849aaf7ccbaf50f2593d7a92b6a82e630"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "e8227569a3b90fb21db598483690bd13fe74ddef",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/19/head",
+          "sha": "e8227569a3b90fb21db598483690bd13fe74ddef"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "e82c997b6df8746fe86fb83b9f416a89bb3e3b80",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/7/head",
+          "sha": "e82c997b6df8746fe86fb83b9f416a89bb3e3b80"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "ec94795114d11c73bd8fc689fde364cc110b5cd3",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/feat/ods-writer-conditional",
+          "sha": "ec94795114d11c73bd8fc689fde364cc110b5cd3"
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/69/head",
+          "sha": "ec94795114d11c73bd8fc689fde364cc110b5cd3"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "f27e9b0e7ee9b1db8f6b7393abd752dab67d1ca5",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/docs/odt-image-registry",
+          "sha": "f27e9b0e7ee9b1db8f6b7393abd752dab67d1ca5"
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/75/head",
+          "sha": "f27e9b0e7ee9b1db8f6b7393abd752dab67d1ca5"
+        }
+      ],
+      "disposition": "non_ancestor",
+      "merge_base": "094d6bacb9cb253e4d04443e9f3c4171e7433c8a",
+      "left_right_count": "18\t1",
+      "unique_commits": [
+        "f27e9b0e7ee9b1db8f6b7393abd752dab67d1ca5 docs: record the host ODT picture registry"
+      ],
+      "tree_equal_to_head": false,
+      "changed_paths_from_merge_base": [
+        "docs/office-remaining-gaps.md"
+      ]
+    },
+    {
+      "sha": "f31cf308013ceb4527e3f4de677785894bb1bfc0",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/18/head",
+          "sha": "f31cf308013ceb4527e3f4de677785894bb1bfc0"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "f45099688e7a3f67a1302efdb442830d052f2240",
+      "refs": [
+        {
+          "repository": "MohammedAsaadAsaad/quds_office_suite",
+          "ref": "refs/heads/cursor/class-certificates-2db8",
+          "sha": "f45099688e7a3f67a1302efdb442830d052f2240"
+        },
+        {
+          "repository": "MohammedAsaadAsaad/quds_office_suite",
+          "ref": "refs/pull/7/head",
+          "sha": "f45099688e7a3f67a1302efdb442830d052f2240"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "f5b67cc296b7d27e4f3a480dc46160f472d78694",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/docs/validation-complete",
+          "sha": "f5b67cc296b7d27e4f3a480dc46160f472d78694"
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/55/head",
+          "sha": "f5b67cc296b7d27e4f3a480dc46160f472d78694"
+        }
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "sha": "fc37658c907edf6687eccb9564d3046283b49a3a",
+      "refs": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/heads/codex/zotero-support-20261115",
+          "sha": "fc37658c907edf6687eccb9564d3046283b49a3a"
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "ref": "refs/pull/47/head",
+          "sha": "fc37658c907edf6687eccb9564d3046283b49a3a"
+        }
+      ],
+      "disposition": "ancestor"
+    }
+  ],
+  "counts": {
+    "ancestor": 151,
+    "non_ancestor": 15
+  },
+  "ref_count": 166,
+  "unique_head_count": 113
+}

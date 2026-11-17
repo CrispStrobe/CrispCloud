@@ -1,0 +1,211 @@
+{
+  "schema": "quds-recovery-additional-qualification-v1",
+  "frozen_incoming_commit": "6bf486ee0bbcd2025c3a42cae7d7003b8c9324a4",
+  "status": "requested combined-source coverage; not yet executed",
+  "additional_test_cohorts": {
+    "engine-rendering-pdf-ods-writer": [
+      "packages/quds_office_engine/test/font_subset_structure_test.dart",
+      "packages/quds_office_engine/test/font_subset_unicode_test.dart",
+      "packages/quds_office_engine/test/pdf_cid_encoding_test.dart",
+      "packages/quds_office_engine/test/pdf_unicode_alias_export_test.dart",
+      "packages/quds_office_engine/test/fonts_test.dart",
+      "packages/quds_office_engine/test/office_named_fonts_test.dart",
+      "packages/quds_office_engine/test/arabic_pdf_export_test.dart",
+      "packages/quds_office_engine/test/office_pdf_export_test.dart",
+      "packages/quds_office_engine/test/pdf_file_test.dart",
+      "packages/quds_office_engine/test/pdf_toolbox_test.dart",
+      "packages/quds_office_engine/test/word_pdf_test.dart",
+      "packages/quds_office_engine/test/pdf_widgets_test.dart",
+      "packages/quds_office_engine/test/pdf_widgets_catalog_test.dart",
+      "packages/quds_office_engine/test/pdf_templates_test.dart",
+      "packages/quds_office_engine/test/pdf_to_office_test.dart",
+      "packages/quds_office_engine/test/bidi_test.dart",
+      "packages/quds_office_engine/test/ods_sheet_writer_test.dart"
+    ],
+    "editor-font-subset-rendering": [
+      "packages/quds_office_editor/test/font_subset_render_test.dart"
+    ]
+  },
+  "analysis_targets": {
+    "engine": [
+      "packages/quds_office_engine/lib/src/fonts/font_subsetter.dart",
+      "packages/quds_office_engine/lib/src/pdf/office_pdf_export.dart",
+      "packages/quds_office_engine/lib/src/pdf/pdf_canvas.dart",
+      "packages/quds_office_engine/lib/src/pdf/pdf_document.dart",
+      "packages/quds_office_engine/lib/src/pdf/pdf_font.dart",
+      "packages/quds_office_engine/test/font_subset_structure_test.dart",
+      "packages/quds_office_engine/test/pdf_cid_encoding_test.dart",
+      "packages/quds_office_engine/test/pdf_unicode_alias_export_test.dart",
+      "packages/quds_office_engine/test/support/pdf_alias_fixture.dart"
+    ],
+    "editor": [
+      "packages/quds_office_editor/test/font_subset_render_test.dart"
+    ]
+  },
+  "format_targets": [
+    "packages/quds_office_engine/lib/src/fonts/font_subsetter.dart",
+    "packages/quds_office_engine/lib/src/pdf/office_pdf_export.dart",
+    "packages/quds_office_engine/lib/src/pdf/pdf_canvas.dart",
+    "packages/quds_office_engine/lib/src/pdf/pdf_document.dart",
+    "packages/quds_office_engine/lib/src/pdf/pdf_font.dart",
+    "packages/quds_office_engine/test/font_subset_structure_test.dart",
+    "packages/quds_office_engine/test/pdf_cid_encoding_test.dart",
+    "packages/quds_office_engine/test/pdf_unicode_alias_export_test.dart",
+    "packages/quds_office_engine/test/support/pdf_alias_fixture.dart",
+    "packages/quds_office_editor/test/font_subset_render_test.dart"
+  ],
+  "dependency_manifest_changes": false,
+  "required_vendor_notice": "packages/quds_office_engine/third_party/fonttools/LICENSE",
+  "default_cohort_overlap_expected": [],
+  "default_cohort_notes": "Default canonical runner selects Zotero, engine proofing/hyphenation, ODS reader, Word layout/styles, editor proofing/platform spelling and hyphenation. Extra list excludes those source paths. Runner should still deduplicate all selected test files before executing.",
+  "inherited_result": {
+    "engine_tests": 169,
+    "receipt": "docs/validation/text-rendering-continuation-20261116/engine-attempt1/receipt.json",
+    "count_as_fresh_current_result": false,
+    "source_inputs_unchanged": true,
+    "strict_analysis_and_format_exit": 0
+  },
+  "frozen_target_presence": [
+    {
+      "path": "packages/quds_office_editor/test/font_subset_render_test.dart",
+      "mode": "100644",
+      "blob": "8a28e2eb68ff052ab1e9532ca567b34de3c88f6e"
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/fonts/font_subsetter.dart",
+      "mode": "100644",
+      "blob": "7332885a95f34ea6d0d26c7b3160ff002bdd3c6d"
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/pdf/office_pdf_export.dart",
+      "mode": "100644",
+      "blob": "8125d1993ea95c6eec10a6146e07759d4696460e"
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/pdf/pdf_canvas.dart",
+      "mode": "100644",
+      "blob": "117dc13b83f4c102e517ae3cd19d90760fe03176"
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/pdf/pdf_document.dart",
+      "mode": "100644",
+      "blob": "b2404c1894c485511a276ca1628bee2cec40e010"
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/pdf/pdf_font.dart",
+      "mode": "100644",
+      "blob": "d879fc69f81d1e331a1be9b93062fd227f96e5dc"
+    },
+    {
+      "path": "packages/quds_office_engine/test/arabic_pdf_export_test.dart",
+      "mode": "100644",
+      "blob": "499ec5de46580f44a125b0eea641fe4aae187e4f"
+    },
+    {
+      "path": "packages/quds_office_engine/test/bidi_test.dart",
+      "mode": "100644",
+      "blob": "04ef5d744b593244c53db0e6c34bd86454c84529"
+    },
+    {
+      "path": "packages/quds_office_engine/test/font_subset_structure_test.dart",
+      "mode": "100644",
+      "blob": "87ec569055aca6d8ad77b61f86d949f4726f9c17"
+    },
+    {
+      "path": "packages/quds_office_engine/test/font_subset_unicode_test.dart",
+      "mode": "100644",
+      "blob": "b68bc000e98ac8673b215ad0e1a13e0d377ce48c"
+    },
+    {
+      "path": "packages/quds_office_engine/test/fonts_test.dart",
+      "mode": "100644",
+      "blob": "58f1bf1e28ab5fe80f0a2630702df831f4b09750"
+    },
+    {
+      "path": "packages/quds_office_engine/test/ods_sheet_writer_test.dart",
+      "mode": "100644",
+      "blob": "bf06441b58f5d72cef9b28588ac917ba996374e9"
+    },
+    {
+      "path": "packages/quds_office_engine/test/office_named_fonts_test.dart",
+      "mode": "100644",
+      "blob": "250b27c38bc97e021eccb81ebca7fda241230f78"
+    },
+    {
+      "path": "packages/quds_office_engine/test/office_pdf_export_test.dart",
+      "mode": "100644",
+      "blob": "954fc77e55f389f40342c440abfecb3c976bc76c"
+    },
+    {
+      "path": "packages/quds_office_engine/test/pdf_cid_encoding_test.dart",
+      "mode": "100644",
+      "blob": "708a0d726137dad5ffa43965fa3ceabb6f8fdb39"
+    },
+    {
+      "path": "packages/quds_office_engine/test/pdf_file_test.dart",
+      "mode": "100644",
+      "blob": "1b6c1245268c975ae3f4f3ffb7435bf851875514"
+    },
+    {
+      "path": "packages/quds_office_engine/test/pdf_templates_test.dart",
+      "mode": "100644",
+      "blob": "f0a856e723a0ee8b889ede9a6f2e9d459bc8b6ef"
+    },
+    {
+      "path": "packages/quds_office_engine/test/pdf_to_office_test.dart",
+      "mode": "100644",
+      "blob": "2b58e97877e0511503caea996ed431b362766a87"
+    },
+    {
+      "path": "packages/quds_office_engine/test/pdf_toolbox_test.dart",
+      "mode": "100644",
+      "blob": "a631e9cbbbd54668b1514fb40c67eacb587c2759"
+    },
+    {
+      "path": "packages/quds_office_engine/test/pdf_unicode_alias_export_test.dart",
+      "mode": "100644",
+      "blob": "5fec90d12f834114fccab4f19ff4ba6703bb71c1"
+    },
+    {
+      "path": "packages/quds_office_engine/test/pdf_widgets_catalog_test.dart",
+      "mode": "100644",
+      "blob": "99f6a42f2d2e5d99ab68dd1042ce04f061f6b850"
+    },
+    {
+      "path": "packages/quds_office_engine/test/pdf_widgets_test.dart",
+      "mode": "100644",
+      "blob": "2863dc831f7dd8311092cce51558df6718039058"
+    },
+    {
+      "path": "packages/quds_office_engine/test/support/pdf_alias_fixture.dart",
+      "mode": "100644",
+      "blob": "1c7c50eab1c421b0eb913f9f7806f06bb8ac18f1"
+    },
+    {
+      "path": "packages/quds_office_engine/test/word_pdf_test.dart",
+      "mode": "100644",
+      "blob": "282983bdf0e364a3aaad0380a4ca809b6969bb7a"
+    },
+    {
+      "path": "packages/quds_office_engine/third_party/fonttools/LICENSE",
+      "mode": "100644",
+      "blob": "3fe0941a282a17c8687a60885e78855ae5fa7f68"
+    }
+  ],
+  "github_actions_access": "None",
+  "optional_pdf_artifact_capture": {
+    "engine_environment": {
+      "QUDS_ALIAS_RENDER_OUTPUT": "<new output directory>/render"
+    },
+    "independent_verifier": "docs/validation/text-rendering-continuation-20261116/verify_pdf_rendering.py",
+    "command_template": [
+      "python3",
+      "docs/validation/text-rendering-continuation-20261116/verify_pdf_rendering.py",
+      "--input",
+      "<new output directory>/render",
+      "--output",
+      "<new output directory>/poppler"
+    ],
+    "scope": "Separate current PDF raster/text check, not additional Dart test counts. Verifier uses Poppler/Pillow and requires empty output directory."
+  }
+}

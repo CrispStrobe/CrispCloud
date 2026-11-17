@@ -1,0 +1,432 @@
+{
+  "reviewed_at_utc": "2026-11-16T23:52:26.503061+00:00",
+  "status": "failed",
+  "retained_evidence_integrity": "passed",
+  "reviewed_output_directory": "runtime/late-main/qualification-1",
+  "outer_receipt_status": "failed",
+  "source_pair": {
+    "canonical": "732fc3d0bc7a1118f3eb86e6c762fe70182c4fd2",
+    "host": "4ed1baac3c4ead54d1ba033287c86ef809126e86"
+  },
+  "evidence_findings": [],
+  "qualification_findings": [
+    {
+      "cohort": "host",
+      "command": "viewer-format",
+      "status": "failed",
+      "exit_code": 1,
+      "log": "runtime/late-main/qualification-1/host/viewer-format.log",
+      "last_log_lines": [
+        "Changed lib/widgets/internal_viewer_dialog.dart",
+        "Formatted 1 file (1 changed) in 0.16 seconds."
+      ]
+    },
+    {
+      "cohort": "host",
+      "required_commands_not_executed": [
+        "vendor-format",
+        "python-sync-verifier-tests",
+        "whitespace",
+        "vendor-tracked-final"
+      ]
+    }
+  ],
+  "outer_bindings": [
+    {
+      "cohort": "canonical",
+      "receipt_hash_matches": true,
+      "independent_child_receipt_sha256": "4707870902c646547a41d475aaac03f5f02eb4dc6dec00d329b29d83e6d96e62",
+      "outer_receipt_hash_recorded": true,
+      "launcher_log_hash_matches": true,
+      "runner_hash_matches": true,
+      "status": "passed",
+      "exit_code": 0
+    },
+    {
+      "cohort": "host",
+      "receipt_hash_matches": null,
+      "independent_child_receipt_sha256": "3c7b007ef3a064ef13a3eb7c769dfd0168f81b3345082373056aa7d4699ff5fd",
+      "outer_receipt_hash_recorded": false,
+      "launcher_log_hash_matches": true,
+      "runner_hash_matches": true,
+      "status": "failed",
+      "exit_code": 1
+    }
+  ],
+  "canonical_commands": [
+    {
+      "name": "sheet-tests",
+      "status": "passed",
+      "exit_code": 0,
+      "log": "runtime/late-main/qualification-1/canonical/sheet-tests.log",
+      "log_sha256": "5d62919171e652dae53caf8e4b3504d67a35bfffbbd521cc7e5976825fd5c3e2",
+      "matches_retained_log_hash": true,
+      "timed_out": false,
+      "passed_tests": 18,
+      "skipped_tests": 0
+    },
+    {
+      "name": "sheet-strict-analysis",
+      "status": "passed",
+      "exit_code": 0,
+      "log": "runtime/late-main/qualification-1/canonical/sheet-strict-analysis.log",
+      "log_sha256": "83c09e6c4b17696d91eb1f8104dc7409651914c8dcbdfceef6597126557a0953",
+      "matches_retained_log_hash": true,
+      "timed_out": false
+    },
+    {
+      "name": "sheet-format",
+      "status": "passed",
+      "exit_code": 0,
+      "log": "runtime/late-main/qualification-1/canonical/sheet-format.log",
+      "log_sha256": "70d9a66c9edc9b037d0258771b8461e5d82172a8a41e4d3e888add746de5a936",
+      "matches_retained_log_hash": true,
+      "timed_out": false
+    }
+  ],
+  "host_commands": [
+    {
+      "name": "vendor-source",
+      "status": "passed",
+      "exit_code": 0,
+      "log": "runtime/late-main/qualification-1/host/vendor-source.log",
+      "log_sha256": "0f3e8d5fadde1f47593793562f3243d7db3c9b4b099279025fe861583cb20cb8",
+      "matches_retained_log_hash": true,
+      "timed_out": false
+    },
+    {
+      "name": "vendor-tracked",
+      "status": "passed",
+      "exit_code": 0,
+      "log": "runtime/late-main/qualification-1/host/vendor-tracked.log",
+      "log_sha256": "0f3e8d5fadde1f47593793562f3243d7db3c9b4b099279025fe861583cb20cb8",
+      "matches_retained_log_hash": true,
+      "timed_out": false
+    },
+    {
+      "name": "host-tests",
+      "status": "passed",
+      "exit_code": 0,
+      "log": "runtime/late-main/qualification-1/host/host-tests.log",
+      "log_sha256": "556f9a63d7af5ff16dcae0780ca5e57c6da8e8176113870709767ab2856c0d4c",
+      "matches_retained_log_hash": true,
+      "timed_out": false,
+      "passed_tests": 41,
+      "skipped_tests": 0
+    },
+    {
+      "name": "service-tests",
+      "status": "passed",
+      "exit_code": 0,
+      "log": "runtime/late-main/qualification-1/host/service-tests.log",
+      "log_sha256": "419cff5d1293f30c2f78c4f927cce2d55bcef68bbab24b589b07dd1ed7414063",
+      "matches_retained_log_hash": true,
+      "timed_out": false,
+      "passed_tests": 39,
+      "skipped_tests": 0
+    },
+    {
+      "name": "host-analysis",
+      "status": "passed",
+      "exit_code": 0,
+      "log": "runtime/late-main/qualification-1/host/host-analysis.log",
+      "log_sha256": "5a51c6efbbae7dcaee9f6bcdb73b75a49c89b70ddc4642c57d32b067420fd153",
+      "matches_retained_log_hash": true,
+      "timed_out": false
+    },
+    {
+      "name": "vendor-analysis",
+      "status": "passed",
+      "exit_code": 0,
+      "log": "runtime/late-main/qualification-1/host/vendor-analysis.log",
+      "log_sha256": "409c077856135b6ecb3a416b7029e49bdbbe0c7e5965ca953d86debe8f494414",
+      "matches_retained_log_hash": true,
+      "timed_out": false
+    },
+    {
+      "name": "host-format",
+      "status": "passed",
+      "exit_code": 0,
+      "log": "runtime/late-main/qualification-1/host/host-format.log",
+      "log_sha256": "16c783a6acfdfdbdd0c800672213643f821cc7daf572b869abec017b19727ab8",
+      "matches_retained_log_hash": true,
+      "timed_out": false
+    },
+    {
+      "name": "viewer-format",
+      "status": "failed",
+      "exit_code": 1,
+      "log": "runtime/late-main/qualification-1/host/viewer-format.log",
+      "log_sha256": "6f1443229201c9ae2bc6c7ff2e05ee9fa4a2a17bd11140010e15cddc677d9a18",
+      "matches_retained_log_hash": true,
+      "timed_out": false
+    }
+  ],
+  "source_proofs": [
+    {
+      "commit": "732fc3d0bc7a1118f3eb86e6c762fe70182c4fd2",
+      "source_paths": 1582,
+      "unique_git_blobs": 1433,
+      "all_source_sha256_match_pinned_git_blobs": true,
+      "missing_paths": [],
+      "mismatch_paths": [],
+      "proof_method": "SHA-256 recomputed directly from immutable Git blob contents; live working-tree changes after execution cannot replace the tested identity."
+    },
+    {
+      "commit": "4ed1baac3c4ead54d1ba033287c86ef809126e86",
+      "source_paths": 3745,
+      "unique_git_blobs": 3530,
+      "all_source_sha256_match_pinned_git_blobs": true,
+      "missing_paths": [],
+      "mismatch_paths": [],
+      "proof_method": "SHA-256 recomputed directly from immutable Git blob contents; live working-tree changes after execution cannot replace the tested identity."
+    }
+  ],
+  "input_maps_before_after_equal": true,
+  "recorded_integrity_gates": {
+    "canonical": {
+      "source_inputs_unchanged": true,
+      "dependencies_unchanged": true,
+      "harness_inputs_unchanged": true,
+      "fixtures_unchanged": true,
+      "analyzer_config_restored": true,
+      "published_source_still_matches": true
+    },
+    "host": {
+      "source_unchanged": true,
+      "dependencies_unchanged": true,
+      "analysis_config_restored": true,
+      "tracked_inputs_match_published_source": true
+    }
+  },
+  "canonical_dependencies": {
+    "files": 1770,
+    "all_hashes_match": true,
+    "mismatch_paths": []
+  },
+  "canonical_harness": {
+    "files": 10,
+    "all_hashes_match": true,
+    "mismatch_paths": []
+  },
+  "host_dependencies": {
+    "files": 4338,
+    "all_hashes_match": true,
+    "mismatch_paths": [],
+    "total_snapshot_files": 5983,
+    "local_library_inputs_verified_against_pinned_source": 1645,
+    "all_local_library_inputs_match_pinned_source": true
+  },
+  "additional_host_local_library_source_proof": {
+    "commit": "4ed1baac3c4ead54d1ba033287c86ef809126e86",
+    "source_paths": 215,
+    "unique_git_blobs": 215,
+    "all_source_sha256_match_pinned_git_blobs": true,
+    "missing_paths": [],
+    "mismatch_paths": [],
+    "proof_method": "SHA-256 recomputed directly from immutable Git blob contents; live working-tree changes after execution cannot replace the tested identity."
+  },
+  "post_run_live_source_differences": {
+    "paths": [
+      "lib/widgets/internal_viewer_dialog.dart"
+    ],
+    "handling": "Current checkout may advance after a terminal run. Source/library receipt maps are instead verified against their immutable Git pins; before/after execution maps must still match."
+  },
+  "host_runtime": {
+    "files": 6,
+    "all_hashes_match": true,
+    "mismatch_paths": []
+  },
+  "host_harness": {
+    "files": 6,
+    "all_hashes_match": true,
+    "mismatch_paths": []
+  },
+  "canonical_fixtures": {
+    "observed": 4,
+    "present": 4,
+    "before_after_equal": true
+  },
+  "restoration": {
+    "canonical_declared_restored": true,
+    "canonical_config_present_at_review": false,
+    "host_declared_restored": true,
+    "host_original_config_present": false,
+    "host_config_present_at_review": true
+  },
+  "viewer_scope": {
+    "reason": "The focused service graph intentionally excludes the much larger complete viewer dependency closure; the exact delivered viewer bytes are bound and formatting is checked. No viewer compile or runtime acceptance is claimed.",
+    "run": false
+  },
+  "service_setup": {
+    "status": "passed",
+    "package_count": 107,
+    "final_lock_sha256": "a4ebe563df02d74282d02ae9fd2cd7aa0a7883c0cb48e917a03bf8d83284eeb1",
+    "commands": [
+      {
+        "name": "download-koni_codecs",
+        "status": "passed",
+        "exit_code": 0,
+        "log_hash_matches": true
+      },
+      {
+        "name": "download-koni_archive",
+        "status": "passed",
+        "exit_code": 0,
+        "log_hash_matches": true
+      },
+      {
+        "name": "download-koni_zip",
+        "status": "passed",
+        "exit_code": 0,
+        "log_hash_matches": true
+      },
+      {
+        "name": "download-koni_archive_core",
+        "status": "passed",
+        "exit_code": 0,
+        "log_hash_matches": true
+      },
+      {
+        "name": "download-koni_tar",
+        "status": "passed",
+        "exit_code": 0,
+        "log_hash_matches": true
+      },
+      {
+        "name": "download-koni_sevenz",
+        "status": "passed",
+        "exit_code": 0,
+        "log_hash_matches": true
+      },
+      {
+        "name": "download-koni_rar",
+        "status": "passed",
+        "exit_code": 0,
+        "log_hash_matches": true
+      },
+      {
+        "name": "download-koni_gzip",
+        "status": "passed",
+        "exit_code": 0,
+        "log_hash_matches": true
+      },
+      {
+        "name": "download-glob",
+        "status": "passed",
+        "exit_code": 0,
+        "log_hash_matches": true
+      },
+      {
+        "name": "download-html",
+        "status": "passed",
+        "exit_code": 0,
+        "log_hash_matches": true
+      },
+      {
+        "name": "download-csslib",
+        "status": "passed",
+        "exit_code": 0,
+        "log_hash_matches": true
+      },
+      {
+        "name": "service-locked-resolution",
+        "status": "failed",
+        "exit_code": 65,
+        "log_hash_matches": true
+      },
+      {
+        "name": "service-rebased-locked-resolution-1",
+        "status": "passed",
+        "exit_code": 0,
+        "log_hash_matches": true
+      },
+      {
+        "name": "service-rebased-locked-resolution-2",
+        "status": "passed",
+        "exit_code": 0,
+        "log_hash_matches": true
+      }
+    ],
+    "recovered_failed_setup_commands": [
+      {
+        "name": "service-locked-resolution",
+        "status": "failed",
+        "exit_code": 65,
+        "log_hash_matches": true
+      }
+    ],
+    "recovery": {
+      "original_failure": "Two local engine/editor paths still named the old harness; enforced resolution correctly rejected them.",
+      "changes": [
+        {
+          "package": "quds_office_editor",
+          "before": {
+            "dependency": "direct main",
+            "description": {
+              "path": "/workspace/scratch/76a795caf82b/runtime/crisp-host-harness/packages/quds_office_editor",
+              "relative": false
+            },
+            "source": "path",
+            "version": "1.6.0"
+          },
+          "after": {
+            "dependency": "direct main",
+            "description": {
+              "path": "/workspace/scratch/76a795caf82b/runtime/late-main/service-setup/service-harness/packages/quds_office_editor",
+              "relative": false
+            },
+            "source": "path",
+            "version": "1.6.0"
+          }
+        },
+        {
+          "package": "quds_office_engine",
+          "before": {
+            "dependency": "direct main",
+            "description": {
+              "path": "/workspace/scratch/76a795caf82b/runtime/crisp-host-harness/packages/quds_office_engine",
+              "relative": false
+            },
+            "source": "path",
+            "version": "1.5.0"
+          },
+          "after": {
+            "dependency": "direct main",
+            "description": {
+              "path": "/workspace/scratch/76a795caf82b/runtime/late-main/service-setup/service-harness/packages/quds_office_engine",
+              "relative": false
+            },
+            "source": "path",
+            "version": "1.5.0"
+          }
+        }
+      ],
+      "hosted_versions_or_hashes_changed": false,
+      "failed_attempt_preserved": "setup-attempt-1.json"
+    },
+    "counts_excluded_from_application_tests": true
+  },
+  "completed_test_counts": {
+    "sheet-tests": 18,
+    "host-tests": 41,
+    "service-tests": 39
+  },
+  "completed_test_executions": 98,
+  "missing_host_commands": [
+    "vendor-format",
+    "python-sync-verifier-tests",
+    "whitespace",
+    "vendor-tracked-final"
+  ],
+  "initial_broad_run": {
+    "canonical_source": "5b05664357eead5ddc86922bab248224dbd4da6d",
+    "host_source": "342b744a3cb66e3ee9387733ebcf8613cdb23a33",
+    "reported_tests": 1128,
+    "earlier_receipts_remain_bound_to_those_pins": true
+  },
+  "counts_are_overlapping_reruns_not_additive_unique_tests": true,
+  "github_actions_used": false,
+  "application_tests_rerun_by_review": false,
+  "repository_mutated_by_review": false
+}

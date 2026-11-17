@@ -46,6 +46,9 @@ abstract final class FormulaFunctions {
       final unsupported = FormulaErrorValue.unsupportedIn(condition);
       if (unsupported != null) return unsupported;
       if (condition is FormulaErrorValue) return condition;
+      if (condition is List || condition is FormulaSpill) {
+        return ctx.error('#VALUE!');
+      }
       final selected = _truth(condition) ? 1 : 2;
       return args.length > selected ? args[selected].eval(ctx) : selected == 1;
     }
@@ -72,6 +75,10 @@ abstract final class FormulaFunctions {
     // remains text, including when returned by a named scalar constant.
     if (ctx.tracksErrorTypes &&
         <String>{
+          'AND',
+          'OR',
+          'XOR',
+          'NOT',
           'SUM',
           'AVERAGE',
           'MIN',
@@ -192,8 +199,9 @@ abstract final class FormulaFunctions {
         }
         return a - b * (a / b).floor();
       case 'PRODUCT':
-        return flattenNumbers(vals)
-            .fold<double>(1, (double p, double x) => p * x);
+        return flattenNumbers(
+          vals,
+        ).fold<double>(1, (double p, double x) => p * x);
       case 'POWER':
       case 'POW':
         return _powNum(_n(vals, 0) ?? 0, _n(vals, 1) ?? 0);
@@ -244,8 +252,9 @@ abstract final class FormulaFunctions {
       case 'SUMPRODUCT':
         return _sumproduct(vals);
       case 'SUMSQ':
-        return flattenNumbers(vals)
-            .fold<double>(0, (double s, double x) => s + x * x);
+        return flattenNumbers(
+          vals,
+        ).fold<double>(0, (double s, double x) => s + x * x);
       case 'MEDIAN':
         return _median(flattenNumbers(vals));
       case 'AVEDEV':
@@ -280,13 +289,38 @@ abstract final class FormulaFunctions {
       case 'SHEETS':
         return ctx.workbook.sheets.length.toDouble();
       case 'AND':
-        return vals.every(_truth);
       case 'OR':
-        return vals.any(_truth);
       case 'XOR':
-        return vals.where(_truth).length.isOdd;
+        final logical = <bool>[];
+        for (var i = 0; i < vals.length; i++) {
+          final value = vals[i];
+          final reference =
+              args[i] is CellNode ||
+              args[i] is RangeNode ||
+              args[i] is NamedRangeNode;
+          for (final item in flattenValues(value)) {
+            // Logical aggregators ignore empty/text cells in references.
+            if ((value is List || reference) &&
+                (item == null || item is String)) {
+              continue;
+            }
+            final boolean = _logicalScalar(item);
+            if (boolean == null) return ctx.error('#VALUE!');
+            logical.add(boolean);
+          }
+        }
+        if (logical.isEmpty) return ctx.error('#VALUE!');
+        return n == 'AND'
+            ? logical.every((value) => value)
+            : n == 'OR'
+            ? logical.any((value) => value)
+            : logical.where((value) => value).length.isOdd;
       case 'NOT':
-        return !_truth(vals.isEmpty ? null : vals[0]);
+        if (vals.length != 1 || vals[0] is List || vals[0] is FormulaSpill) {
+          return ctx.error('#VALUE!');
+        }
+        final boolean = _logicalScalar(vals[0]);
+        return boolean == null ? ctx.error('#VALUE!') : !boolean;
       case 'TRUE':
         return true;
       case 'FALSE':
@@ -305,15 +339,13 @@ abstract final class FormulaFunctions {
       case 'COUNT':
         return flattenNumbers(vals).length.toDouble();
       case 'COUNTA':
-        return flattenValues(vals)
-            .where((Object? v) => v != null && v != '')
-            .length
-            .toDouble();
+        return flattenValues(
+          vals,
+        ).where((Object? v) => v != null && v != '').length.toDouble();
       case 'COUNTBLANK':
-        return flattenValues(vals)
-            .where((Object? v) => v == null || v == '')
-            .length
-            .toDouble();
+        return flattenValues(
+          vals,
+        ).where((Object? v) => v == null || v == '').length.toDouble();
       case 'SUMIF':
         return _sumIf(ctx, args);
       case 'COUNTIF':
@@ -440,8 +472,9 @@ abstract final class FormulaFunctions {
         }
       case 'CELL':
         {
-          final String info = formulaString(vals.isEmpty ? null : vals[0])
-              .toLowerCase();
+          final String info = formulaString(
+            vals.isEmpty ? null : vals[0],
+          ).toLowerCase();
           SmlCellRef ref = ctx.origin;
           if (args.length > 1 && args[1] is CellNode) {
             ref = (args[1] as CellNode).ref;
@@ -470,8 +503,9 @@ abstract final class FormulaFunctions {
         }
       case 'INFO':
         {
-          final String type = formulaString(vals.isEmpty ? null : vals[0])
-              .toLowerCase();
+          final String type = formulaString(
+            vals.isEmpty ? null : vals[0],
+          ).toLowerCase();
           return switch (type) {
             'directory' => '',
             'numfile' => 1.0,
@@ -765,6 +799,17 @@ abstract final class FormulaFunctions {
 
   static double? _n(List<Object?> vals, int i) =>
       i < vals.length ? asFormulaNumber(vals[i]) : null;
+
+  static bool? _logicalScalar(Object? value) {
+    if (value == null) return false;
+    if (value is bool) return value;
+    if (value is num) return value.isFinite ? value != 0 : null;
+    if (value is String) {
+      if (value.toUpperCase() == 'TRUE') return true;
+      if (value.toUpperCase() == 'FALSE') return false;
+    }
+    return null;
+  }
 
   static bool _truth(Object? v) {
     if (v is bool) return v;
@@ -1247,9 +1292,9 @@ abstract final class FormulaFunctions {
       if (an != null && bn != null) {
         cmp = an.compareTo(bn);
       } else {
-        cmp = formulaString(a)
-            .toLowerCase()
-            .compareTo(formulaString(b).toLowerCase());
+        cmp = formulaString(
+          a,
+        ).toLowerCase().compareTo(formulaString(b).toLowerCase());
       }
       return ascending ? cmp : -cmp;
     });

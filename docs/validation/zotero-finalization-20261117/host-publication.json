@@ -1,0 +1,14 @@
+{
+  "created_utc": "2026-11-16T23:27:10.722344+00:00",
+  "status": "host qualification complete; canonical qualification continues separately",
+  "source_commit": "342b744a3cb66e3ee9387733ebcf8613cdb23a33",
+  "source_tree": "276d73be08e5e37ee467cce4ad196f5dde1eac04",
+  "canonical_pin": "5b05664357eead5ddc86922bab248224dbd4da6d",
+  "archive": "host-evidence.tar.gz",
+  "archive_sha256": "99f023675487194577c54d4686f3b06ad6c8f519368fcb3876cbe7a45c0a4055",
+  "archive_files": 48,
+  "passed_host_tests": 41,
+  "passed_python_tests": 28,
+  "managed_files": 2521,
+  "analysis_targets": 34
+}

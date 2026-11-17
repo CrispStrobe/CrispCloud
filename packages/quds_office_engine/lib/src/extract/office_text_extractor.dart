@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import '../builders/docx_builder.dart';
 import '../builders/xlsx_io.dart';
+import '../odf/odf_text.dart';
 import '../opc/opc_archive.dart';
 import '../opc/package_part.dart';
 import '../opc/relationships.dart';
@@ -10,6 +11,7 @@ import '../opc/zip/zip_reader.dart';
 import '../pdf/file/model/pdf_file.dart';
 import '../pdf/file/text/pdf_extract.dart';
 import '../xml/namespaces.dart';
+import '../xml/xml_node.dart';
 import '../xml/xml_reader.dart';
 
 /// Enum OfficeExtractKind.
@@ -310,6 +312,7 @@ abstract final class OfficeTextExtractor {
     final List<String> paragraphs = <String>[];
     final List<List<List<String>>> tables = <List<List<String>>>[];
     final XmlPullReader reader = XmlPullReader(xml);
+    final budget = OdfTextBudget();
     List<List<String>>? table;
     List<String>? row;
     while (reader.next()) {
@@ -323,12 +326,10 @@ abstract final class OfficeTextExtractor {
         row = <String>[];
         table.add(row);
       } else if (reader.localName == 'table-cell' && row != null) {
-        row.add(_odfPlain(reader));
-      } else if (reader.localName == 'p' || reader.localName == 'h') {
-        final String text = _odfPlain(reader);
-        if (text.trim().isNotEmpty) {
-          paragraphs.add(text);
-        }
+        row.add(readOdfText(XmlDocument.readElement(reader), budget));
+      } else if (reader.namespaceUri == odfTextNamespace &&
+          (reader.localName == 'p' || reader.localName == 'h')) {
+        paragraphs.add(readOdfText(XmlDocument.readElement(reader), budget));
       }
     }
     if (kind == OfficeExtractKind.opendocumentSheet) {
@@ -364,7 +365,7 @@ abstract final class OfficeTextExtractor {
     );
   }
 
-  static String _odfPlain(XmlPullReader reader) {
+  static String _drawingPlain(XmlPullReader reader) {
     if (reader.isEmptyElement) {
       return '';
     }
@@ -417,7 +418,7 @@ abstract final class OfficeTextExtractor {
         row = <String>[];
         table.add(row);
       } else if (reader.localName == 'tc' && row != null) {
-        row.add(_odfPlain(reader));
+        row.add(_drawingPlain(reader));
       }
     }
     return tables;

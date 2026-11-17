@@ -1,0 +1,67 @@
+{
+  "schema": "quds-recovery-bounded-late-main-v1",
+  "observed_utc": "2026-11-16T20:03:11Z",
+  "observation_trigger": "Parent observed later main while creating recovery PR #85 before qualification; exact immutable head inspected once.",
+  "original_inventory": "incoming-refs.json",
+  "original_inventory_ref_count": 166,
+  "frozen_main": "be9eeec9ea3455018de26fff5874c558dbc66798",
+  "prior_integration": "c6b9856ccd5264602d709b747decbd9631263574",
+  "late_main": "63194d8e482892f284eaccb95ce48a8a8132376d",
+  "merge_tree": "acb1d1060879dc4a8168df8abf3105dc828af360",
+  "merge_tree_exit_code": 0,
+  "integration_status": "Published and selected for fresh qualification",
+  "commits": [
+    {
+      "sha": "36db2a6cbc0f028dd15b558914045f995aeae949",
+      "summary": "Worksheet page setup model and round-trip (#80)"
+    },
+    {
+      "sha": "ff26ea5cc85afd36e0ed376b7f789563c5e2b7fa",
+      "summary": "Page setup documentation (#81)"
+    },
+    {
+      "sha": "647eab0fc7c0fbbf38567dc6ce07b5e78d4d0de3",
+      "summary": "ODS page setup note (#82)"
+    },
+    {
+      "sha": "6811f8a7194f8e7b12a34e3c1cf13fd2e3bf7195",
+      "summary": "ODS header/footer section round-trips (#83)"
+    },
+    {
+      "sha": "63194d8e482892f284eaccb95ce48a8a8132376d",
+      "summary": "Header/footer documentation (#84)"
+    }
+  ],
+  "production_paths": [
+    "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+    "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_writer.dart",
+    "packages/quds_office_engine/lib/src/sheet/model/sml_workbook.dart",
+    "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart"
+  ],
+  "changed_test_paths": [
+    "packages/quds_office_engine/test/ods_sheet_writer_test.dart",
+    "packages/quds_office_engine/test/sheet_save_cache_and_freeze_test.dart"
+  ],
+  "documentation_paths": [
+    "docs/office-remaining-gaps.md",
+    "packages/quds_office_engine/README.md"
+  ],
+  "additional_test": "engine:test/sheet_save_cache_and_freeze_test.dart",
+  "already_planned_tests": [
+    "engine:test/ods_sheet_reader_test.dart",
+    "engine:test/ods_sheet_writer_test.dart"
+  ],
+  "review": "Changes do not overlap frozen Zotero/font/PDF production or dependency manifests. Clean tree merge. Add the new serialization/cache regression and six changed Dart analysis/format targets to combined qualification.",
+  "scope": "A bounded later main observation; not a refreshed inventory of all branch/PR heads.",
+  "github_actions_access": "None",
+  "extra_analysis_targets": [
+    "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+    "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_writer.dart",
+    "packages/quds_office_engine/lib/src/sheet/model/sml_workbook.dart",
+    "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+    "packages/quds_office_engine/test/ods_sheet_writer_test.dart",
+    "packages/quds_office_engine/test/sheet_save_cache_and_freeze_test.dart"
+  ],
+  "integrated_commit": "b87f9d6c3a2532c9695024adf48ca9fbd3c0927a",
+  "integrated_tree": "acb1d1060879dc4a8168df8abf3105dc828af360"
+}

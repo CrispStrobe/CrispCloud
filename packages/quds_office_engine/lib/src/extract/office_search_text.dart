@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import '../odf/odf_text.dart';
 import '../opc/office_package_parts.dart';
 import '../opc/package_part.dart';
 import '../opc/zip/deflate_codec.dart';
@@ -82,11 +83,13 @@ Future<String> officeSearchText(
       '.pptx' || '.pptm' => await _presentation(parts),
       '.odt' || '.ods' || '.odp' => [
         if (await parts.xml('content.xml') case final XmlElement document)
-          parts.output(_allText(document)),
+          parts.output(_odfText(document, maxBytes)),
       ],
       _ => <String>[],
     };
     return blocks.where((text) => text.isNotEmpty).join('\n');
+  } on OdfTextLimitException {
+    throw const OfficeSearchLimitException();
   } on ZipLimitException {
     throw const OfficeSearchLimitException();
   } on ZipException catch (error) {
@@ -193,6 +196,12 @@ String _allText(XmlElement node) => _descendants(node)
     )
     .join(' ')
     .trim();
+
+String _odfText(XmlElement node, int maxBytes) {
+  // Preserve the existing fallback for nonstandard namespace-less text files.
+  if (odfParagraphs(node).isEmpty) return _allText(node);
+  return readOdfText(node, OdfTextBudget(maxBytes));
+}
 
 String _wordText(XmlElement node) {
   if (_wordElements(node, 't').isEmpty) return _allText(node);

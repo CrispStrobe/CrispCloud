@@ -1,0 +1,12 @@
+--- quds/packages/quds_office_engine/lib/quds_reports.dart
++++ crispcloud/packages/quds_office_engine/lib/quds_reports.dart
+@@ -19,8 +19,8 @@
+ export 'src/reports/report_layout.dart';
+ export 'src/reports/report_mock_data.dart';
+ export 'src/reports/report_package.dart';
++export 'src/reports/report_shape.dart';
+ export 'src/reports/report_pdf_writer.dart';
+-export 'src/reports/report_shape.dart';
+ export 'src/reports/report_template.dart';
+ export 'src/reports/report_template_art.dart';
+ export 'src/reports/report_template_manifest.dart';

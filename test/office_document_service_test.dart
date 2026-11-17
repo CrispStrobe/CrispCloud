@@ -204,8 +204,7 @@ void main() {
     'EPUB extraction follows relocated OPF spine and excludes navigation',
     () async {
       final bytes = _zip({
-        'META-INF/container.xml':
-            '<container><rootfiles><rootfile full-path="Book/package.opf"/></rootfiles></container>',
+        'META-INF/container.xml': '<container><rootfiles><rootfile full-path="Book/package.opf"/></rootfiles></container>',
         'Book/package.opf':
             '<package><manifest>'
             '<item id="first" href="Text/z.xhtml"/>'
@@ -939,4 +938,104 @@ void imageTests() {
     expect(doc.plainText, contains('[Image]'));
     expect(doc.plainText, isNot(contains('odt-image:')));
   });
+
+  Map<String, String> pictureKeys(OfficeDocument document) => {
+    for (final match in RegExp(
+      r'!\[([^\]]*)\]\((odt-image:[^)]*)\)',
+    ).allMatches(document.markdown))
+      match.group(1)!: match.group(2)!,
+  };
+
+  test(
+    'ODT repeated picture frames keep independent geometry and shared bytes',
+    () async {
+      const xml =
+          '''
+<office:document-content $namespaces>
+  <office:body><office:text><text:p>
+    <draw:frame draw:name="Natural first">
+      <draw:image xlink:href="Pictures/p.png"/>
+    </draw:frame>
+    <draw:frame draw:name="Landscape" svg:width="2in" svg:height="1in">
+      <draw:image xlink:href="Pictures/p.png"/>
+    </draw:frame>
+    <draw:frame draw:name="Portrait" svg:width="1in" svg:height="2in">
+      <draw:image xlink:href="Pictures/p.png"/>
+    </draw:frame>
+    <draw:frame draw:name="Natural last">
+      <draw:image xlink:href="Pictures/p.png"/>
+    </draw:frame>
+  </text:p></office:text></office:body>
+</office:document-content>
+''';
+      final doc = await parseOfficeDocument(
+        _zipBytes({'content.xml': utf8.encode(xml), 'Pictures/p.png': _png}),
+        'repeated-image.odt',
+      );
+      final keys = pictureKeys(doc);
+      expect(keys, hasLength(4));
+      expect(keys.values.toSet(), hasLength(4));
+      expect(keys['Natural first'], 'odt-image:1');
+      expect(doc.imageRegistry, hasLength(4));
+      for (final key in keys.values) {
+        expect(doc.imageRegistry[key], same(doc.imageRegistry['odt-image:1']));
+      }
+      expect(doc.imageInfo[keys['Natural first']], isNull);
+      expect(doc.imageInfo[keys['Natural last']], isNull);
+      expect(doc.imageInfo[keys['Landscape']]!.width, closeTo(192, 0.01));
+      expect(doc.imageInfo[keys['Landscape']]!.height, closeTo(96, 0.01));
+      expect(doc.imageInfo[keys['Portrait']]!.width, closeTo(96, 0.01));
+      expect(doc.imageInfo[keys['Portrait']]!.height, closeTo(192, 0.01));
+      expect(doc.plainText, isNot(contains('odt-image:')));
+      expect(doc.markdown, isNot(contains('data:image')));
+    },
+  );
+
+  test(
+    'ODT picture geometry rejects invalid and non-finite dimensions',
+    () async {
+      final invalid = [
+        '',
+        '0px',
+        '-1in',
+        'NaN',
+        'Infinity',
+        '12em',
+        'not-a-length',
+        '${'9' * 400}px',
+        '15${'0' * 307}pt',
+      ];
+      final frames = StringBuffer();
+      for (var index = 0; index < invalid.length; index++) {
+        frames.write('''
+<draw:frame draw:name="Width $index" svg:width="${invalid[index]}" svg:height="1in">
+  <draw:image xlink:href="Pictures/p.png"/>
+</draw:frame>
+<draw:frame draw:name="Height $index" svg:width="2.54cm" svg:height="${invalid[index]}">
+  <draw:image xlink:href="Pictures/p.png"/>
+</draw:frame>
+''');
+      }
+      final xml =
+          '''
+<office:document-content $namespaces>
+  <office:body><office:text><text:p>$frames</text:p></office:text></office:body>
+</office:document-content>
+''';
+      final doc = await parseOfficeDocument(
+        _zipBytes({'content.xml': utf8.encode(xml), 'Pictures/p.png': _png}),
+        'invalid-image-dimensions.odt',
+      );
+      final keys = pictureKeys(doc);
+      expect(keys, hasLength(invalid.length * 2));
+      for (var index = 0; index < invalid.length; index++) {
+        final widthInfo = doc.imageInfo[keys['Width $index']]!;
+        expect(widthInfo.width, isNull, reason: invalid[index]);
+        expect(widthInfo.height, closeTo(96, 0.01));
+        final heightInfo = doc.imageInfo[keys['Height $index']]!;
+        expect(heightInfo.width, closeTo(96, 0.01));
+        expect(heightInfo.height, isNull, reason: invalid[index]);
+      }
+    },
+  );
 }

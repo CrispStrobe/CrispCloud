@@ -1,0 +1,6 @@
+{
+  "error": "RuntimeError: engine-recovery-integration failed, timed out, or had no successful test count",
+  "recorded_utc": "2026-11-16T20:49:05.646378+00:00",
+  "test_commands_and_success_gates_weakened": false,
+  "traceback": "Traceback (most recent call last):\n  File \"/workspace/scratch/79aea0ff70bc/zotero-toolchain/retry-canonical/run-qualification.py\", line 445, in <module>\n    main()\n  File \"/workspace/scratch/79aea0ff70bc/zotero-toolchain/retry-canonical/run-qualification.py\", line 396, in main\n    command(name, [*prefix, '--concurrency=2', '--reporter', 'expanded', *tests], HARNESSES / ('quds_office_' + package), test=True)\n  File \"/workspace/scratch/79aea0ff70bc/zotero-toolchain/retry-canonical/run-qualification.py\", line 388, in command\n    raise RuntimeError(name + ' failed, timed out, or had no successful test count')\nRuntimeError: engine-recovery-integration failed, timed out, or had no successful test count\n"
+}

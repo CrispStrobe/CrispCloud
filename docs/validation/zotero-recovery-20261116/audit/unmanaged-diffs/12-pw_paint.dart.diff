@@ -1,0 +1,26 @@
+--- quds/packages/quds_office_engine/lib/src/pdf/widgets/pw_paint.dart
++++ crispcloud/packages/quds_office_engine/lib/src/pdf/widgets/pw_paint.dart
+@@ -236,12 +236,12 @@
+       : line.width;
+   final double x = (pageW - width) / 2;
+   final double y = pageH / 2;
+-  final SfntFont face = stampFace;
++  final SfntFont? face = stampFace;
+   final ({FontSubset? subset, String fontName}) embed = context.embedFor(
+     bold: resolved.bold,
+   );
+   final List<int> glyphIds = <int>[];
+-  if (embed.subset != null) {
++  if (face != null && embed.subset != null) {
+     for (final ShapedGlyph glyph in line.glyphs) {
+       final int paintCp = _drawableCodePoint(face, glyph.codePoint);
+       glyphIds.add(
+@@ -262,7 +262,7 @@
+     fontSize: resolved.fontSize,
+     logical: text,
+     color: resolved.color,
+-    fontName: embed.fontName,
++    fontName: face == null ? 'F2' : embed.fontName,
+     glyphIds: glyphIds,
+   );
+   canvas.restore();

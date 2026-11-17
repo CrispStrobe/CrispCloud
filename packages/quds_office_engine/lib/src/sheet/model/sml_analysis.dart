@@ -1,3 +1,4 @@
+import 'sml_conditional_format.dart';
 import 'sml_workbook.dart';
 
 /// A defined name and its owner. [localSheetId] is a zero-based worksheet
@@ -244,6 +245,10 @@ enum SmlConditionalKind {
   bottomPercent,
   aboveAverage,
   belowAverage,
+
+  /// A native formula predicate, evaluated within the supported bounded
+  /// conditional-formula subset and retained in full for interchange.
+  expression,
 }
 
 /// One conditional-format rule.
@@ -257,6 +262,8 @@ class SmlConditionalRule {
     this.fillRgb = 'FFF2CC',
     this.fontRgb = '',
     this.rank = 10,
+    this.priority,
+    this.stopIfTrue = false,
     this.dxfId,
   });
 
@@ -281,101 +288,25 @@ class SmlConditionalRule {
   /// Rank for top/bottom rules, or the percentage for percent variants.
   int rank;
 
+  /// Native rule priority, with lower positive values evaluated first.
+  /// Missing or invalid priorities receive an unused positive Int32 value
+  /// during XLSX serialization without mutating this model field.
+  int? priority;
+
+  /// Whether a matching native rule stops lower-priority rules.
+  bool stopIfTrue;
+
   /// Generated differential-style id, assigned during serialization.
   int? dxfId;
 
-  /// matches API.
-  bool matches(SmlCell cell, SmlWorksheet sheet) {
-    final String text = cell.asString;
-    switch (kind) {
-      case SmlConditionalKind.greaterThan:
-        final double? n = cell.asNumber;
-        final double? bound = double.tryParse(formula);
-        return n != null && bound != null && n > bound;
-      case SmlConditionalKind.greaterOrEqual:
-        final double? n = cell.asNumber;
-        final double? bound = double.tryParse(formula);
-        return n != null && bound != null && n >= bound;
-      case SmlConditionalKind.lessThan:
-        final double? n = cell.asNumber;
-        final double? bound = double.tryParse(formula);
-        return n != null && bound != null && n < bound;
-      case SmlConditionalKind.lessOrEqual:
-        final double? n = cell.asNumber;
-        final double? bound = double.tryParse(formula);
-        return n != null && bound != null && n <= bound;
-      case SmlConditionalKind.equal:
-        return text == formula;
-      case SmlConditionalKind.notEqual:
-        return text != formula;
-      case SmlConditionalKind.between:
-        final double? n = cell.asNumber;
-        final double? lower = double.tryParse(formula);
-        final double? upper = double.tryParse(formula2);
-        return n != null &&
-            lower != null &&
-            upper != null &&
-            n >= lower &&
-            n <= upper;
-      case SmlConditionalKind.notBetween:
-        final double? n = cell.asNumber;
-        final double? lower = double.tryParse(formula);
-        final double? upper = double.tryParse(formula2);
-        return n != null &&
-            lower != null &&
-            upper != null &&
-            (n < lower || n > upper);
-      case SmlConditionalKind.contains:
-        return text.toLowerCase().contains(formula.toLowerCase());
-      case SmlConditionalKind.beginsWith:
-        return text.toLowerCase().startsWith(formula.toLowerCase());
-      case SmlConditionalKind.endsWith:
-        return text.toLowerCase().endsWith(formula.toLowerCase());
-      case SmlConditionalKind.duplicate:
-        if (text.isEmpty) {
-          return false;
-        }
-        var seen = 0;
-        for (final SmlCellRef ref in range.cells) {
-          final SmlCell? other = sheet.cellOrNull(ref);
-          if (other != null && other.asString == text) {
-            seen++;
-          }
-        }
-        return seen > 1;
-      case SmlConditionalKind.top:
-      case SmlConditionalKind.bottom:
-      case SmlConditionalKind.topPercent:
-      case SmlConditionalKind.bottomPercent:
-      case SmlConditionalKind.aboveAverage:
-      case SmlConditionalKind.belowAverage:
-        final number = cell.asNumber;
-        if (number == null) return false;
-        final values = <double>[
-          for (final ref in range.cells) ?sheet.cellOrNull(ref)?.asNumber,
-        ];
-        if (values.isEmpty) return false;
-        if (kind == SmlConditionalKind.aboveAverage ||
-            kind == SmlConditionalKind.belowAverage) {
-          final average =
-              values.reduce((left, right) => left + right) / values.length;
-          return kind == SmlConditionalKind.aboveAverage
-              ? number > average
-              : number < average;
-        }
-        final percent =
-            kind == SmlConditionalKind.topPercent ||
-            kind == SmlConditionalKind.bottomPercent;
-        final limit = percent
-            ? ((values.length * rank) / 100).ceil().clamp(1, values.length)
-            : rank.clamp(1, values.length);
-        if (kind == SmlConditionalKind.top ||
-            kind == SmlConditionalKind.topPercent) {
-          return values.where((value) => value > number).length < limit;
-        }
-        return values.where((value) => value < number).length < limit;
-    }
-  }
+  /// Whether this rule matches [cell] without changing workbook cells/caches.
+  /// Supply [workbook] for cross-sheet references and defined names. Unsupported
+  /// formulas safely return false; rendering shares a resolver for one pass.
+  bool matches(SmlCell cell, SmlWorksheet sheet, {SmlWorkbook? workbook}) =>
+      SmlConditionalResolver(
+        sheet: sheet,
+        workbook: workbook,
+      ).matches(this, cell);
 }
 
 /// AutoFilter + sort on a worksheet range.

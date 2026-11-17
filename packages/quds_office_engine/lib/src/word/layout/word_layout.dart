@@ -1,8 +1,8 @@
 import 'dart:math' as math;
 
-import '../../bidi/german_hyphenator.dart';
 import '../../bidi/grapheme_clusters.dart';
 import '../../bidi/line_breaker.dart';
+import '../../bidi/office_hyphenator.dart';
 import '../../fonts/font_metrics.dart';
 import '../../fonts/gpos_mark_to_base.dart';
 import '../../fonts/office_font_set.dart';
@@ -1511,7 +1511,7 @@ class WordLayoutEngine {
     final hyphenationOffsets =
         _layoutDoc?.autoHyphenation == true &&
             paragraph.properties.suppressAutoHyphens != true
-        ? GermanHyphenator.breakOffsets(
+        ? OfficeHyphenator.breakOffsets(
             text,
             language:
                 paragraph.properties.proofingLanguage ??

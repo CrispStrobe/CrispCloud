@@ -1158,9 +1158,9 @@ Future<OfficeDocument> _parsePptx(ViewerArchive archive) async {
   final presentationXml = await _readPart(archive, 'ppt/presentation.xml');
   if (presentationXml != null) {
     try {
-      final size = XmlDocument.parse(
-        presentationXml,
-      ).findAllElements('p:sldSz').firstOrNull;
+      final size = XmlDocument.parse(presentationXml)
+          .findAllElements('p:sldSz')
+          .firstOrNull;
       final cx = int.tryParse(size?.getAttribute('cx') ?? '');
       final cy = int.tryParse(size?.getAttribute('cy') ?? '');
       if (cx != null && cy != null && cx > 0 && cy > 0) {
@@ -1565,10 +1565,11 @@ int _odfLengthToEmu(String? raw, {required int fallback}) {
   return emu <= 0 ? fallback : emu;
 }
 
-double? _odfOptionalLength(String? raw) {
+double? _odfOptionalPixels(String? raw) {
   if (raw == null || raw.trim().isEmpty) return null;
   final points = _odfLengthToPoints(raw, fallback: 0);
-  return points > 0 ? points : null;
+  final pixels = points / 72 * 96;
+  return pixels.isFinite && pixels > 0 ? pixels : null;
 }
 
 double _odfLengthToPoints(String? raw, {required double fallback}) {
@@ -1722,6 +1723,7 @@ Future<OfficeDocument> _parseOdt(ViewerArchive archive) async {
   }
 
   final notes = <String>[];
+  final pictureUses = <String, int>{};
   String inline(XmlNode node) {
     final buffer = StringBuffer();
     for (final child in node.children) {
@@ -1769,16 +1771,25 @@ Future<OfficeDocument> _parseOdt(ViewerArchive archive) async {
               ?.getAttribute('xlink:href');
           final data = href == null ? null : pictures.hrefs[href];
           if (data != null) {
-            final width = _odfOptionalLength(child.getAttribute('svg:width'));
-            final height = _odfOptionalLength(child.getAttribute('svg:height'));
+            final occurrence = (pictureUses[data] ?? 0) + 1;
+            pictureUses[data] = occurrence;
+            final displayKey = occurrence == 1
+                ? data
+                : '$data/frame/$occurrence';
+            if (displayKey != data) {
+              // Each frame owns its geometry; repeated pictures share bytes.
+              pictures.registry[displayKey] = pictures.registry[data]!;
+            }
+            final width = _odfOptionalPixels(child.getAttribute('svg:width'));
+            final height = _odfOptionalPixels(child.getAttribute('svg:height'));
             if (width != null || height != null) {
-              pictures.info[data] = OfficeImageInfo(
-                width: width == null ? null : width * 96 / 72,
-                height: height == null ? null : height * 96 / 72,
+              pictures.info[displayKey] = OfficeImageInfo(
+                width: width,
+                height: height,
               );
             }
             final alt = (name ?? 'Image').replaceAll(RegExp(r'[\[\]]'), '');
-            buffer.write('![$alt]($data)');
+            buffer.write('![$alt]($displayKey)');
           } else if (href != null && href.isNotEmpty) {
             // Oversized or unsupported media stays a bounded textual marker.
             buffer.write('*[Image: ${name ?? href.split('/').last}]*');

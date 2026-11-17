@@ -27,6 +27,7 @@ class SheetGrid extends LeafRenderObjectWidget {
   const SheetGrid({
     super.key,
     required this.sheet,
+    this.workbook,
     required this.selection,
     this.rowHeight = 20,
     this.colWidth = 64,
@@ -73,6 +74,9 @@ class SheetGrid extends LeafRenderObjectWidget {
 
   /// sheet API.
   final SmlWorksheet sheet;
+
+  /// Owner for cross-sheet conditional predicates and defined names.
+  final SmlWorkbook? workbook;
 
   /// selection API.
   final SelectionMatrix selection;
@@ -212,6 +216,7 @@ class SheetGrid extends LeafRenderObjectWidget {
   RenderSheetGrid createRenderObject(BuildContext context) {
     return RenderSheetGrid(
       sheet: sheet,
+      workbook: workbook,
       selection: selection,
       rowHeight: rowHeight,
       colWidth: colWidth,
@@ -262,6 +267,7 @@ class SheetGrid extends LeafRenderObjectWidget {
   void updateRenderObject(BuildContext context, RenderSheetGrid renderObject) {
     renderObject
       ..sheet = sheet
+      ..workbook = workbook
       ..selection = selection
       ..rowHeight = rowHeight
       ..colWidth = colWidth
@@ -315,6 +321,7 @@ class RenderSheetGrid extends RenderBox implements MouseTrackerAnnotation {
   /// RenderSheetGrid API.
   RenderSheetGrid({
     required this.sheet,
+    this.workbook,
     required this.selection,
     required this.rowHeight,
     required this.colWidth,
@@ -361,6 +368,9 @@ class RenderSheetGrid extends RenderBox implements MouseTrackerAnnotation {
 
   /// sheet API.
   SmlWorksheet sheet;
+
+  /// Owner for cross-sheet conditional predicates and defined names.
+  SmlWorkbook? workbook;
 
   /// selection API.
   SelectionMatrix selection;
@@ -728,15 +738,6 @@ class RenderSheetGrid extends RenderBox implements MouseTrackerAnnotation {
     return -1;
   }
 
-  SmlConditionalRule? _conditionalRule(SmlCell cell) {
-    for (final rule in sheet.conditionalFormats) {
-      if (rule.range.containsRef(cell.ref) && rule.matches(cell, sheet)) {
-        return rule;
-      }
-    }
-    return null;
-  }
-
   void _paintCellRange(
     Canvas canvas, {
     required int r0,
@@ -744,6 +745,7 @@ class RenderSheetGrid extends RenderBox implements MouseTrackerAnnotation {
     required int c0,
     required int c1,
     required List<(FormulaRefSpan, Color)> formulaRefs,
+    required SmlConditionalResolver conditionalFormats,
   }) {
     if (r1 <= r0 || c1 <= c0) {
       return;
@@ -763,8 +765,10 @@ class RenderSheetGrid extends RenderBox implements MouseTrackerAnnotation {
         final SmlCell? styled = sheet.cellOrNull(
           SmlCellRef(merge?.c0 ?? c, merge?.r0 ?? r),
         );
-        final conditional = styled == null ? null : _conditionalRule(styled);
-        final Color? fill = _rgbColor(conditional?.fillRgb ?? styled?.fillRgb);
+        final conditional = conditionalFormats.resolve(
+          SmlCellRef(merge?.c0 ?? c, merge?.r0 ?? r),
+        );
+        final Color? fill = _rgbColor(conditional.fillRgb ?? styled?.fillRgb);
         final Color? band = fill == null ? _tableBand(c, r) : null;
         if (fill != null) {
           canvas.drawRect(cell, ui.Paint()..color = fill);
@@ -836,12 +840,13 @@ class RenderSheetGrid extends RenderBox implements MouseTrackerAnnotation {
           continue;
         }
         final bool isEdit = editing && _isEditCell(c, r, merge);
-        final SmlCell data = sheet.cell(SmlCellRef(textCol, textRow));
-        final conditional = _conditionalRule(data);
+        final ref = SmlCellRef(textCol, textRow);
+        final SmlCell data = sheet.cellOrNull(ref) ?? SmlCell(ref: ref);
+        final conditional = conditionalFormats.resolve(ref);
         final String label = isEdit
             ? editText
             : (cellLabel?.call(data) ?? data.asString);
-        final Color? fill = _rgbColor(conditional?.fillRgb ?? data.fillRgb);
+        final Color? fill = _rgbColor(conditional.fillRgb ?? data.fillRgb);
         if (!isEdit && fill != null && _isFillMark(label)) {
           continue;
         }
@@ -852,7 +857,7 @@ class RenderSheetGrid extends RenderBox implements MouseTrackerAnnotation {
             label,
             isEdit: isEdit,
             align: data.horizontalAlign,
-            color: _rgbColor(conditional?.fontRgb ?? data.fontRgb),
+            color: _rgbColor(conditional.fontRgb ?? data.fontRgb),
             bold: data.fontBold,
             fontSize: data.fontSize,
           );
@@ -2352,6 +2357,10 @@ class RenderSheetGrid extends RenderBox implements MouseTrackerAnnotation {
   @override
   /// paint API.
   void paint(PaintingContext context, Offset offset) {
+    final conditionalFormats = SmlConditionalResolver(
+      sheet: sheet,
+      workbook: workbook,
+    );
     final Canvas canvas = context.canvas;
     canvas.save();
     canvas.translate(offset.dx, offset.dy);
@@ -2396,6 +2405,7 @@ class RenderSheetGrid extends RenderBox implements MouseTrackerAnnotation {
       c0: scrollCol0,
       c1: lastCol,
       formulaRefs: formulaRefs,
+      conditionalFormats: conditionalFormats,
     );
     canvas.restore();
     if (_fr > 0) {
@@ -2408,6 +2418,7 @@ class RenderSheetGrid extends RenderBox implements MouseTrackerAnnotation {
         c0: scrollCol0,
         c1: lastCol,
         formulaRefs: formulaRefs,
+        conditionalFormats: conditionalFormats,
       );
       canvas.restore();
     }
@@ -2421,6 +2432,7 @@ class RenderSheetGrid extends RenderBox implements MouseTrackerAnnotation {
         c0: 0,
         c1: _fc,
         formulaRefs: formulaRefs,
+        conditionalFormats: conditionalFormats,
       );
       canvas.restore();
     }
@@ -2434,6 +2446,7 @@ class RenderSheetGrid extends RenderBox implements MouseTrackerAnnotation {
         c0: 0,
         c1: _fc,
         formulaRefs: formulaRefs,
+        conditionalFormats: conditionalFormats,
       );
       canvas.restore();
     }

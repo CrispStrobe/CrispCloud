@@ -31,8 +31,13 @@ dictionary definitions or unverified package/example data. No GPL, LGPL,
 LanguageTool, nlprule, Hunspell dictionary, or LibreOffice language data is used.
 
 The checker recognizes finite listed word forms. Explicit hyphen compounds may
-use known components; it does not perform unrestricted closed-compound or
-morphology inference. Unknown proper names, new terms, and unlisted inflections
+use known components. When exactly one component is unknown, suggestions can
+repair that component while retaining the other components' case. The same
+per-token candidate budget bounds that search; it does not combine multiple
+unknown-component guesses. Suggestions preserve the original sequence of ASCII
+hyphens, U+2010 hyphens and U+2011 nonbreaking hyphens, including when normalized
+lookup results are reused for another occurrence. It does not perform
+unrestricted closed-compound or morphology inference. Unknown proper names, new terms, and unlisted inflections
 can produce findings. The message deliberately says a word is absent from the
 word list; hosts must offer personal vocabulary and ignore controls. Document
 text and dictionary data are never rewritten automatically.
@@ -40,8 +45,11 @@ text and dictionary data are never rewritten automatically.
 Common decomposed Latin accents and explicit soft hyphens are normalized only
 for lookup; findings keep original UTF-16 offsets and text. Case remains
 significant for German nouns. Sentence-initial capitalization and all-capitals
-are accepted when a corresponding listed form exists. URLs and email addresses
-are excluded. Suggestions use bounded candidate generation (distance-one
+are accepted when a corresponding listed form exists. URLs, email addresses
+and closed backtick-delimited code spans are excluded by both German providers.
+One or more opening backticks must have a closing run of exactly the same
+length; different-length backticks may occur inside, and closed multiline
+spans are supported. An unmatched delimiter does not hide the remaining prose. Suggestions use bounded candidate generation (distance-one
 transpositions, insertions, deletions, substitutions and German accent/sharp-s
 variants), not an unbounded dictionary scan. Data decode yields between chunks;
 checking yields between token batches, including in JavaScript.

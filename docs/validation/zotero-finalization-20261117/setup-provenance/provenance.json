@@ -1,0 +1,78 @@
+{
+  "status": "provenance-clarified",
+  "no_application_tests_run_for_this_addendum": true,
+  "no_helper_executed_for_this_addendum": true,
+  "source_runtime_harness_and_accepted_receipts_modified": false,
+  "revision_timing": "After the initial prepare helper failed enforced resolution; the revised prepare helper was not rerun. Accepted setup completed through resume-service-setup.py.",
+  "initial_prepare": {
+    "execution_observed": true,
+    "result": "failed at service-locked-resolution, exit 65",
+    "contemporaneous_script_snapshot_available": false,
+    "contemporaneous_script_checksum_available": false,
+    "original_exact_executed_bytes_independently_verified": false,
+    "preserved_form": "prepare-service-harness.reconstructed-initial.py",
+    "preserved_form_is_reconstruction": true,
+    "original_lock_assignment_reconstructed_as": "lock=copy.deepcopy(original)",
+    "behavioral_evidence": "Reconstructed lock building reproduces the exact retained pre-correction seed lock; this does not establish the initial script byte identity."
+  },
+  "revised_prepare": {
+    "path": "prepare-service-harness.revised-static-reviewed.py",
+    "runtime_copy": "runtime/late-main/prepare-service-harness.py",
+    "execution_observed": false,
+    "review": "AST parsed and one-line change reviewed only; no fresh setup or dependency resolver executed",
+    "change": "Read and parse the base lock after rebasing base-harness paths to the isolated service-harness path."
+  },
+  "executed_recovery": {
+    "path": "resume-service-setup.executed.py",
+    "runtime_copy": "runtime/late-main/resume-service-setup.py",
+    "execution_observed": true,
+    "result": "Two successful offline enforced-lockfile resolutions; 107-package graph",
+    "preserved_bytes_equal_current_executed_recovery_helper": true
+  },
+  "static_behavior_checks": {
+    "reconstructed_seed_matches_retained_seed_bytes": true,
+    "retained_seed_sha256": "82dc6cfc737508316e1f597e7cfda1880ea30003855371041c30dd88aed2291b",
+    "retained_seed_matches_failed_receipt_hash": true,
+    "corrected_seed_matches_accepted_lock_semantics": true,
+    "accepted_final_lock_sha256": "a4ebe563df02d74282d02ae9fd2cd7aa0a7883c0cb48e917a03bf8d83284eeb1",
+    "all_recorded_setup_logs_match_retained_hashes": true,
+    "static_python_parse_passed": true
+  },
+  "accepted_graph_provenance": "The original preparation plus executed recovery helper, with preserved failed seed, failed diagnostic and both successful resolution logs. Not the revised helper.",
+  "protected_artifacts_unchanged": {
+    "runtime/late-main/prepare-service-harness.py": "933d866af299a2279621fdbd3571cdc265e8fdf44442855de4ada509e4c75da6",
+    "runtime/late-main/resume-service-setup.py": "517a731cc774ae53f163253991f5f16bf39f61330ac489d8b3dd089c5e53203f",
+    "runtime/late-main/README.md": "b90ab96be1351e57878e29dc2c31f8c960270985a81c199f0b38cfdac5bf3dba",
+    "runtime/late-main/service-setup/service-setup-receipt.json": "13049534da1c87deaa328712e36b5a6ac9077c11c97f6929c52c7cdfe17d4c38",
+    "runtime/late-main/service-setup/setup-attempt-1.json": "aa93352b239183ec4758076daae3d321861ee726d77d487160464215fd3e6b30",
+    "runtime/late-main/qualification-2/receipt.json": "86d8439d3b2064d9846511caed80d033769cda23f57dedd22b930d5eef29876a",
+    "runtime/late-main/qualification-2/canonical/receipt.json": "d224b817ca8c9071769f9c72046a733bb71750cdbbe58105b988c2511cc1187f",
+    "runtime/late-main/qualification-2/host/receipt.json": "a4f2def9e348ab50a0ae35ae11786362f262564e619cfb42625ba0d248958b0e"
+  },
+  "files": {
+    "prepare-service-harness.revised-static-reviewed.py": {
+      "bytes": 8528,
+      "sha256": "933d866af299a2279621fdbd3571cdc265e8fdf44442855de4ada509e4c75da6"
+    },
+    "resume-service-setup.executed.py": {
+      "bytes": 3679,
+      "sha256": "517a731cc774ae53f163253991f5f16bf39f61330ac489d8b3dd089c5e53203f"
+    },
+    "prepare-service-harness.reconstruction-to-revised.patch": {
+      "bytes": 583,
+      "sha256": "d4c6b26a128a4c744a0654048502e5926e09505f26107f5fa1bf80973c640799"
+    },
+    "README-replacement.md": {
+      "bytes": 7603,
+      "sha256": "a70ba5e4fdd5ddca6c7b4f386c4f04d7a705ea56e733670a9efd6301be6d1112"
+    },
+    "README-before-provenance-clarification.md": {
+      "bytes": 6218,
+      "sha256": "b90ab96be1351e57878e29dc2c31f8c960270985a81c199f0b38cfdac5bf3dba"
+    },
+    "prepare-service-harness.reconstructed-initial.py": {
+      "bytes": 8470,
+      "sha256": "1cde9b56dec104dac164b597bc27076eec13e97db2c0b12fa28de3910e19252e"
+    }
+  }
+}

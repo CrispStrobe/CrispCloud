@@ -1,0 +1,56 @@
+{
+  "source_commit": "b87f9d6c3a2532c9695024adf48ca9fbd3c0927a",
+  "source_tree": "acb1d1060879dc4a8168df8abf3105dc828af360",
+  "direct_importer": "packages/quds_office_engine/test/pdf_widgets_test.dart",
+  "closure": {
+    "packages/quds_office_engine/example/pdf_widgets_invoice.dart": {
+      "git_blob": "f095ce73a123bb3c0ded75ad9be96604245e9740",
+      "sha256": "a285b8a52f27b71e4fdf07dcc7898acdafdd1fac01e03a32f057529b6e3faba9",
+      "bytes": 9316,
+      "imports_exports_parts": [
+        "dart:io",
+        "dart:typed_data",
+        "package:quds_office_engine/pdf_widgets.dart",
+        "package:quds_office_engine/quds_office_engine.dart"
+      ],
+      "relative_import_export_part_edges": [],
+      "package_imports_already_in_full_lib_scope": true
+    },
+    "packages/quds_office_engine/example/pdf_widgets_proposal.dart": {
+      "git_blob": "4910df2d25fc40da25475295c2a3b243fd52ff86",
+      "sha256": "c994237003b2d6f8f93d6e5f2bb10e9172bdc218bdb287d204f0c15079cf5479",
+      "bytes": 7001,
+      "imports_exports_parts": [
+        "dart:io",
+        "dart:typed_data",
+        "package:quds_office_engine/pdf_widgets.dart",
+        "package:quds_office_engine/quds_office_engine.dart"
+      ],
+      "relative_import_export_part_edges": [],
+      "package_imports_already_in_full_lib_scope": true
+    },
+    "packages/quds_office_engine/example/pdf_widgets_report.dart": {
+      "git_blob": "8e3910c7ceb1a6a79c67e09970c6414dc033da2b",
+      "sha256": "4e82baab98c29737ee06de806281fa2737648a284fe094ede70e6a6bba0c578d",
+      "bytes": 10704,
+      "imports_exports_parts": [
+        "dart:io",
+        "dart:typed_data",
+        "package:quds_office_engine/pdf_widgets.dart",
+        "package:quds_office_engine/quds_office_engine.dart"
+      ],
+      "relative_import_export_part_edges": [],
+      "package_imports_already_in_full_lib_scope": true
+    }
+  },
+  "exact_closure_file_count": 3,
+  "separate_optional_fixture_paths": [
+    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+    "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+    "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+    "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"
+  ],
+  "no_production_source_or_test_edits": true,
+  "tests_cohorts_and_existing_gates_unchanged": true,
+  "previous_failed_attempt_archive": "/workspace/scratch/79aea0ff70bc/zotero-toolchain/attempt-3-missing-example-fixtures"
+}

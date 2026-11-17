@@ -4,6 +4,16 @@ All notable changes to `quds_office_editor` are documented here.
 
 ## Unreleased
 
+- Expose a readable seit/seid rule name in ignored checks. Verify new German
+  agreement and soft-hyphen corrections through the real review dialog,
+  including exact source restoration on undo.
+
+- Expose the optional Harper provider's Canadian, Australian and Indian English
+  choices alongside US/UK English and German regions. Share the example host's
+  language-scoped personal vocabulary with its English provider.
+- Explain automatic hyphenation's German/US/UK language scope in the review
+  dialog. Authored discretionary hyphens remain available in every language.
+
 - Identify embedded PDF fonts by their full bytes instead of sampled positions,
   keeping owned immutable snapshots and bounded content-deduplication storage.
   Reuse font associations during painting without repeatedly hashing a face.

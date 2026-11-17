@@ -1,0 +1,124 @@
+{
+  "github_actions_queried_awaited_or_rerun": false,
+  "implementation_pins_are_explicit": true,
+  "original_checkout_documentation_heads_not_used_as_implementation_pins": true,
+  "sources": [
+    {
+      "artifact": "scripts/bootstrap-local-tests.sh",
+      "commit": "b87f9d6c3a2532c9695024adf48ca9fbd3c0927a",
+      "git_blob": "d38076a6ff797ab888383f0a2e0933763e39561c",
+      "repository": "CrispStrobe/quds_office_suite",
+      "source_path": "docs/validation/zotero-continuation-20261116/setup/bootstrap-local-tests.sh",
+      "uncompressed_bytes": 1829,
+      "uncompressed_sha256": "4ee96966d4998694983225a3e86fe12bb11d78c674327593e8cbdc1ab983b3d7"
+    },
+    {
+      "artifact": "scripts/reconstruct-harnesses.py",
+      "commit": "b87f9d6c3a2532c9695024adf48ca9fbd3c0927a",
+      "git_blob": "37f9c91a5395b08b7262186a05b55fdd6ae667e0",
+      "repository": "CrispStrobe/quds_office_suite",
+      "source_path": "docs/validation/zotero-continuation-20261116/setup/reconstruct-harnesses.py",
+      "uncompressed_bytes": 4291,
+      "uncompressed_sha256": "252fff2497658f0acb1cfde3a0c897a26a8fdae87320c44a6fd5bb0ec2bdee47"
+    },
+    {
+      "artifact": "scripts/record-setup.py",
+      "commit": "b87f9d6c3a2532c9695024adf48ca9fbd3c0927a",
+      "git_blob": "8e1ea0fd759276e71f37d4a988dc8b1943400b80",
+      "repository": "CrispStrobe/quds_office_suite",
+      "source_path": "docs/validation/zotero-continuation-20261116/setup/record-setup.py",
+      "uncompressed_bytes": 3364,
+      "uncompressed_sha256": "e8a86adb40539820c59e4c3cb867ec433cd19432bd77ca077336cfb839206ad5"
+    },
+    {
+      "artifact": "recorded-quds-setup-receipt.json.gz",
+      "commit": "b87f9d6c3a2532c9695024adf48ca9fbd3c0927a",
+      "git_blob": "42e764ada654567fd9b6976b4e30411112034c78",
+      "repository": "CrispStrobe/quds_office_suite",
+      "source_path": "docs/validation/zotero-citing-20261115/setup-receipt.json",
+      "uncompressed_bytes": 98379,
+      "uncompressed_sha256": "a613111babe20701e0630239607efad9a222dd0c1916e12b9d182ed28e6bcbd6"
+    },
+    {
+      "artifact": "recorded-host-dependency-inputs.json.gz",
+      "commit": "07083d1983db87a9868c3e8ba0cda1efd283b445",
+      "git_blob": "5f89c9a6e8dd0e4535113e6d7b2938b4543a7b27",
+      "repository": "CrispStrobe/CrispCloud",
+      "source_path": "docs/validation/zotero-citing-20261115/host-dependency-inputs.json",
+      "uncompressed_bytes": 35469,
+      "uncompressed_sha256": "ad771c805c578b877360fd82f57a74ba8a97525112ef8940b7bec2d10ad0f206"
+    },
+    {
+      "artifact": "scripts/create-isolated-harnesses.py",
+      "source_workspace_path": "recovery-audit/create-isolated-harnesses.py",
+      "uncompressed_bytes": 12983,
+      "uncompressed_sha256": "580653b5a9de5928e7e65cad1705b539cbc38cb7b6dfa21bcdb352af8c718748"
+    },
+    {
+      "artifact": "scripts/link-pdf-widget-examples.py",
+      "source_workspace_path": "recovery-audit/link-pdf-widget-examples.py",
+      "uncompressed_bytes": 4642,
+      "uncompressed_sha256": "c4f8ec4d681c3fa984f027b238e92cb98bf4e1b064f603a9b272036a71a03ad9"
+    },
+    {
+      "artifact": "scripts/build-setup-publication.py",
+      "source_workspace_path": "recovery-audit/build-setup-publication.py",
+      "uncompressed_bytes": 12702,
+      "uncompressed_sha256": "431d1a825f007eb037aff36e2742ca1b66f14ec25be5fd0bd159f9e1baf6cddc"
+    },
+    {
+      "artifact": "recorded-environment.sh",
+      "source_workspace_path": "zotero-toolchain/env.sh",
+      "uncompressed_bytes": 425,
+      "uncompressed_sha256": "c9a4f1db470792693307cf4865c2a07df21a04d0b2819d9160c365b4e397add6"
+    },
+    {
+      "artifact": "setup-receipt-20261116.json.gz",
+      "source_workspace_path": "zotero-toolchain/setup-receipt-20261116.json",
+      "uncompressed_bytes": 94990,
+      "uncompressed_sha256": "9890feb5ce9ebfec08872d3e304f56fe2a79d9748b6c44711a71bf2fa1a64afc"
+    },
+    {
+      "artifact": "reconstruction-inputs.json",
+      "source_workspace_path": "zotero-toolchain/reconstruction-inputs.json",
+      "uncompressed_bytes": 2074,
+      "uncompressed_sha256": "7930aa3a7409756fbcb2b636428bf54ebc9de594cf2613c8db645ca309a5e27b"
+    },
+    {
+      "artifact": "runtime-download.json",
+      "source_workspace_path": "zotero-toolchain/recovery-prestage/runtime-download.json",
+      "uncompressed_bytes": 1206,
+      "uncompressed_sha256": "8c229494688580a7fd3053fb08d6c557fb1e1493bc8050257cd10171781ca9c0"
+    },
+    {
+      "artifact": "harness-assets.json",
+      "source_workspace_path": "zotero-toolchain/recovery-prestage/harness-assets.json",
+      "uncompressed_bytes": 2316,
+      "uncompressed_sha256": "3ec146569011975f87867ddde41da4962a306a9440033f9d58c436641ff493f4"
+    },
+    {
+      "artifact": "retry-harness-setup.json.gz",
+      "source_workspace_path": "recovery-audit/retry-harness-setup.json",
+      "uncompressed_bytes": 370599,
+      "uncompressed_sha256": "7c0d1ea5fdbf82d91f70699400cc4237fc12aa728f81005d3bf81d8eae526ef2"
+    },
+    {
+      "artifact": "pdf-widget-example-links.json",
+      "source_workspace_path": "recovery-audit/pdf-widget-example-links.json",
+      "uncompressed_bytes": 4244,
+      "uncompressed_sha256": "d0307b29b487e8a5ec7a6f7a9fba526f915845439c430658e387f26e6f673485"
+    },
+    {
+      "artifact": "sparse-manifest-correction.json",
+      "source_workspace_path": "recovery-audit/quds/sparse-setup-missing.json",
+      "uncompressed_bytes": 874,
+      "uncompressed_sha256": "74f93af53088212fbd608a1f1718e836c14c53d61ac289163907b7b1fca2f206"
+    },
+    {
+      "artifact": "harness-metadata-adjustment.json",
+      "source_workspace_path": "zotero-toolchain/expanded-canonical-qualification/attempt-2-executor-interruption/harness-metadata-adjustment.json",
+      "uncompressed_bytes": 850,
+      "uncompressed_sha256": "760c959de5396883b241fd0afe34367eced5aba92304edf3109ed8e5c1c84d5e"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "source_commit": "b87f9d6c3a2532c9695024adf48ca9fbd3c0927a",
+  "missing": [
+    "apps/quds_report_studio/analysis_options.yaml",
+    "apps/quds_report_studio/pubspec.yaml"
+  ],
+  "reason": "Sparse checkout omits app dependency/analysis manifests selected by source fingerprint",
+  "resolved_utc": "2026-11-16T20:09:56.848396+00:00",
+  "materialized": [
+    {
+      "path": "apps/quds_report_studio/analysis_options.yaml",
+      "git_blob": "204267d16c883b9df1129be1967d0899bd30597f",
+      "sha256": "a843123b7cd6f13deca03b2beedf31a0f8b3cb9bdffe7352193b1cc81bc37e29",
+      "bytes": 315
+    },
+    {
+      "path": "apps/quds_report_studio/pubspec.yaml",
+      "git_blob": "ac479981a30f9917e0817de6c79f2392b6f4bf87",
+      "sha256": "4a6624ee8d31222409dca9cea01daa28231ae477ac81369a2226540837a8179a",
+      "bytes": 747
+    }
+  ],
+  "production_content_changes": false
+}

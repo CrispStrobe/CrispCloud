@@ -89,10 +89,10 @@ def shared(name):
     parts = path.parts
     if parts[:2] == ('tool', 'office-validation'):
         return True
-    # The generated German data and its reproduction tools depend on these
-    # exact sources, notices and manifests. Keep them under the same pin.
+    # Embedded German data and font metadata use these exact source notices.
+    # Keep their provenance and licenses under the same runtime pin.
     if (parts[:3] == ('packages', 'quds_office_engine', 'third_party')
-            and len(parts) >= 5 and parts[3] in ('hyphenation', 'proofing')):
+            and len(parts) >= 5 and parts[3] in ('hyphenation', 'proofing', 'fonttools')):
         return True
     if len(parts) < 3 or parts[0] != 'packages' or parts[1] not in ('quds_office_engine', 'quds_office_editor', 'legacy_doc_parser', 'quds_reports'):
         return False

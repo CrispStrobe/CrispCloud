@@ -78,6 +78,7 @@ def main() -> None:
         run('node-version', [args.node, '--version'])
         run('analyze', [args.dart, 'analyze', '--fatal-infos', 'lib/src/proofing', 'test/proofing', 'tool/proofing/german_js_smoke.dart'])
         run('tests', [args.dart, 'test', 'test/proofing', '--reporter', 'expanded'])
+        run('javascript-tests', [args.dart, 'test', '--platform', 'node', 'test/proofing', '--reporter', 'expanded'])
         generation = [sys.executable, 'tool/proofing/generate_german_lexicon.py', '--check']
         generation += ['--source', str(args.wordlist.resolve())] if args.wordlist else ['--download']
         run('dictionary-reproducibility', generation)

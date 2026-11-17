@@ -1,0 +1,2945 @@
+{
+  "schema_version": 1,
+  "repository": "CrispStrobe/CrispCloud",
+  "created_utc": "2026-11-16T19:49:04.573598+00:00",
+  "snapshot_file_mtime_utc": "2026-11-16T19:38:45.364268+00:00",
+  "snapshot_sha256": "8b7fd56269c358a839c7b4c86b8b11e7fa32b12ebffcb06d72a4f709b47475e0",
+  "integration_commit": "bf0255a168576b0d9993d8b668f2a7d0d943fd4f",
+  "count": 258,
+  "counts": {
+    "ancestor": 210,
+    "exact_squash_tree_equivalent": 48
+  },
+  "branch_heads": 73,
+  "pr_heads": 185,
+  "outgoing_excluded": [
+    "refs/heads/codex/zotero-recovery-20261116"
+  ],
+  "ci_queries": false,
+  "refs": [
+    {
+      "ref": "refs/heads/codex/ssh-terminal-tmux",
+      "sha": "378c036b392ee3ff9112d86aa21e7fdd8e722808",
+      "prs": [
+        136
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/heads/codex/terminal-screen-workspace",
+      "sha": "2eec6b4edc62693cfc6048581862a7aed87143c9",
+      "prs": [
+        160
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/heads/codex/terminal-session-optimization-20261116",
+      "sha": "852f009cadb153cfcb0799c527fdd78364a2df8d",
+      "prs": [
+        169
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/heads/codex/zotero-capabilities-20261116",
+      "sha": "f80c67f1e817bf14266d9f8b33a5129d54463b78",
+      "prs": [
+        176
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/heads/codex/zotero-optimization-20261116",
+      "sha": "5e54229821bf7101ee60fb486d0c924ab6e7d5db",
+      "prs": [
+        167
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/heads/codex/zotero-support-20261115",
+      "sha": "e678e17859f8d29e274d1abbf064b93d04a6fa42",
+      "prs": [
+        149
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/heads/codex/zotero-support-20261116",
+      "sha": "5efae7732727fc1ae43d6b664922214dd6acfedf",
+      "prs": [
+        161
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/heads/docs/conditional-affix",
+      "sha": "4919c87f0225599b9b2b963285d364d2c2bd1a1e",
+      "prs": [
+        154
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/heads/docs/conditional-between",
+      "sha": "073713474ea62525d9f5832da918407de333cd03",
+      "prs": [
+        151
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/heads/docs/conditional-complete",
+      "sha": "a49c3f14f96fed4c5551e45060ebbce3fa6883a1",
+      "prs": [
+        146
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/heads/docs/conditional-formats",
+      "sha": "2281ad58aed9f97bc1d387d3c98728245a5e4bcf",
+      "prs": [
+        142
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/heads/docs/current-office-capabilities",
+      "sha": "781ab2ac8e6434d2077f6cb30c500819dce8a294",
+      "prs": [
+        187
+      ],
+      "disposition": "exact_squash_tree_equivalent",
+      "local_head_object_available": false,
+      "proof_source": "GitHub Git commits API",
+      "equivalence": {
+        "head": "781ab2ac8e6434d2077f6cb30c500819dce8a294",
+        "merge": "10e0908fc46641a3fc19a39c34b5a12390496e80",
+        "pr": 187,
+        "merge_base": "3c98635249dc7ec671ea54bf7342ad0f067dfa82",
+        "head_tree": "63b657c1c7490ae177df37e6f66317592cd5512a",
+        "merge_tree": "63b657c1c7490ae177df37e6f66317592cd5512a",
+        "head_parents": [
+          "3c98635249dc7ec671ea54bf7342ad0f067dfa82"
+        ],
+        "merge_parents": [
+          "3c98635249dc7ec671ea54bf7342ad0f067dfa82"
+        ],
+        "tree_equal": true
+      },
+      "merged_counterpart_ancestor_of_integration": true
+    },
+    {
+      "ref": "refs/heads/docs/filter-operators",
+      "sha": "385eb47e7eabbbe27a4287d173d69544b2566724",
+      "prs": [
+        178
+      ],
+      "disposition": "exact_squash_tree_equivalent",
+      "local_head_object_available": false,
+      "proof_source": "GitHub Git commits API",
+      "equivalence": {
+        "head": "385eb47e7eabbbe27a4287d173d69544b2566724",
+        "merge": "3a775ad9eb2d2866392ecac22d0dd1b5cc1b77de",
+        "pr": 178,
+        "merge_base": "3760bf9ea4baa6e86d1a4686d168a560db79b949",
+        "head_tree": "f1d588b1b282ecfe5be607c0df0637440dcedf70",
+        "merge_tree": "f1d588b1b282ecfe5be607c0df0637440dcedf70",
+        "head_parents": [
+          "3760bf9ea4baa6e86d1a4686d168a560db79b949"
+        ],
+        "merge_parents": [
+          "3760bf9ea4baa6e86d1a4686d168a560db79b949"
+        ],
+        "tree_equal": true
+      },
+      "merged_counterpart_ancestor_of_integration": true
+    },
+    {
+      "ref": "refs/heads/docs/filters-closed",
+      "sha": "30f9cdefd70fea3c18a288a30b2f764c13044f95",
+      "prs": [
+        175
+      ],
+      "disposition": "exact_squash_tree_equivalent",
+      "local_head_object_available": false,
+      "proof_source": "GitHub Git commits API",
+      "equivalence": {
+        "head": "30f9cdefd70fea3c18a288a30b2f764c13044f95",
+        "merge": "8e8099e171c31eadb66e812147fc9be600057cab",
+        "pr": 175,
+        "merge_base": "4dc90cac5ebf53e5cea5f5b0260d04b59c8e7d09",
+        "head_tree": "22496bf367e02eb39fb7358ab033342c2465c9e4",
+        "merge_tree": "22496bf367e02eb39fb7358ab033342c2465c9e4",
+        "head_parents": [
+          "4dc90cac5ebf53e5cea5f5b0260d04b59c8e7d09"
+        ],
+        "merge_parents": [
+          "4dc90cac5ebf53e5cea5f5b0260d04b59c8e7d09"
+        ],
+        "tree_equal": true
+      },
+      "merged_counterpart_ancestor_of_integration": true
+    },
+    {
+      "ref": "refs/heads/docs/metadata-closed",
+      "sha": "343a930ebdbc1b0ee45f16328be868d0f78ba624",
+      "prs": [
+        159
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/heads/docs/metadata-complete",
+      "sha": "74378704f363cd095cefd23c0ac02e8ca0219ca1",
+      "prs": [
+        173
+      ],
+      "disposition": "exact_squash_tree_equivalent",
+      "local_head_object_available": false,
+      "proof_source": "GitHub Git commits API",
+      "equivalence": {
+        "head": "74378704f363cd095cefd23c0ac02e8ca0219ca1",
+        "merge": "30f0a5f1dd364fe32e41aa88dc51b24868af1091",
+        "pr": 173,
+        "merge_base": "514f74579591d58c843d9b4c45d612ba7b16e5b2",
+        "head_tree": "52601c15db8f9ca254eed383a53a2e85ee6a0576",
+        "merge_tree": "52601c15db8f9ca254eed383a53a2e85ee6a0576",
+        "head_parents": [
+          "514f74579591d58c843d9b4c45d612ba7b16e5b2"
+        ],
+        "merge_parents": [
+          "514f74579591d58c843d9b4c45d612ba7b16e5b2"
+        ],
+        "tree_equal": true
+      },
+      "merged_counterpart_ancestor_of_integration": true
+    },
+    {
+      "ref": "refs/heads/docs/ods-export-test-note",
+      "sha": "16cfd8196eda7b791c4e7efa47896f3f233ab10e",
+      "prs": [
+        188
+      ],
+      "disposition": "exact_squash_tree_equivalent",
+      "local_head_object_available": false,
+      "proof_source": "GitHub Git commits API",
+      "equivalence": {
+        "head": "16cfd8196eda7b791c4e7efa47896f3f233ab10e",
+        "merge": "529e15b4daff0469b0da277c1a9c7740b2a8d468",
+        "pr": 188,
+        "merge_base": "10e0908fc46641a3fc19a39c34b5a12390496e80",
+        "head_tree": "dedd2f5924a42ab5231c5dacb827994324d29942",
+        "merge_tree": "dedd2f5924a42ab5231c5dacb827994324d29942",
+        "head_parents": [
+          "10e0908fc46641a3fc19a39c34b5a12390496e80"
+        ],
+        "merge_parents": [
+          "10e0908fc46641a3fc19a39c34b5a12390496e80"
+        ],
+        "tree_equal": true
+      },
+      "merged_counterpart_ancestor_of_integration": true
+    },
+    {
+      "ref": "refs/heads/docs/ods-filter-predicates",
+      "sha": "4fd51df9a05f0380297ed512fea35d0deb09ef85",
+      "prs": [
+        193
+      ],
+      "disposition": "exact_squash_tree_equivalent",
+      "local_head_object_available": false,
+      "proof_source": "GitHub Git commits API",
+      "equivalence": {
+        "head": "4fd51df9a05f0380297ed512fea35d0deb09ef85",
+        "merge": "d36bd2412806e981ae12f7b2742a7fc0bde88234",
+        "pr": 193,
+        "merge_base": "91012624f1261c8065c0da601b1320d7a8f5670e",
+        "head_tree": "0cbc4700a73db47bd5585cee4aa91f281ad8efd0",
+        "merge_tree": "0cbc4700a73db47bd5585cee4aa91f281ad8efd0",
+        "head_parents": [
+          "91012624f1261c8065c0da601b1320d7a8f5670e"
+        ],
+        "merge_parents": [
+          "91012624f1261c8065c0da601b1320d7a8f5670e"
+        ],
+        "tree_equal": true
+      },
+      "merged_counterpart_ancestor_of_integration": true
+    },
+    {
+      "ref": "refs/heads/docs/ods-hidden-state",
+      "sha": "1cb0b4a6a01b4aabe58f95d9a9132171bbb11aa0",
+      "prs": [
+        138
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/heads/docs/ods-pictures",
+      "sha": "128f55295107e3ada605b52d160165e03f726cb4",
+      "prs": [
+        127
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/heads/docs/ods-row-groups",
+      "sha": "0e81360c0090244e73cf850e89166dbe557fd67b",
+      "prs": [
+        195
+      ],
+      "disposition": "exact_squash_tree_equivalent",
+      "local_head_object_available": false,
+      "proof_source": "GitHub Git commits API",
+      "equivalence": {
+        "head": "0e81360c0090244e73cf850e89166dbe557fd67b",
+        "merge": "bf0255a168576b0d9993d8b668f2a7d0d943fd4f",
+        "pr": 195,
+        "merge_base": "4eea7d1676ef4474c1def51781666eb59437b845",
+        "head_tree": "3532aeb05dce6a07e9ec0b25bcebc891cc30594e",
+        "merge_tree": "3532aeb05dce6a07e9ec0b25bcebc891cc30594e",
+        "head_parents": [
+          "4eea7d1676ef4474c1def51781666eb59437b845"
+        ],
+        "merge_parents": [
+          "4eea7d1676ef4474c1def51781666eb59437b845"
+        ],
+        "tree_equal": true
+      },
+      "merged_counterpart_ancestor_of_integration": true
+    },
+    {
+      "ref": "refs/heads/docs/ods-validations",
+      "sha": "b420b45b6666ca0658ae74f2a682a3cb6b88134d",
+      "prs": [
+        148
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/heads/docs/ods-writer",
+      "sha": "0b8e9ef6706709f2ebe4c7b1435691a13f485a62",
+      "prs": [
+        181
+      ],
+      "disposition": "exact_squash_tree_equivalent",
+      "local_head_object_available": false,
+      "proof_source": "GitHub Git commits API",
+      "equivalence": {
+        "head": "0b8e9ef6706709f2ebe4c7b1435691a13f485a62",
+        "merge": "6d645301ae5b28befbe29af9d26ae30dfa51459e",
+        "pr": 181,
+        "merge_base": "5078be7059801ce3f2712ad3f47d4e23b32df147",
+        "head_tree": "cf0ba04e2d292f8b26f0c48e138700b7400d173f",
+        "merge_tree": "cf0ba04e2d292f8b26f0c48e138700b7400d173f",
+        "head_parents": [
+          "5078be7059801ce3f2712ad3f47d4e23b32df147"
+        ],
+        "merge_parents": [
+          "5078be7059801ce3f2712ad3f47d4e23b32df147"
+        ],
+        "tree_equal": true
+      },
+      "merged_counterpart_ancestor_of_integration": true
+    },
+    {
+      "ref": "refs/heads/docs/ods-writer-images",
+      "sha": "6d6c10eecf949e0b02320074988234a8ef5bf11a",
+      "prs": [
+        184
+      ],
+      "disposition": "exact_squash_tree_equivalent",
+      "local_head_object_available": false,
+      "proof_source": "GitHub Git commits API",
+      "equivalence": {
+        "head": "6d6c10eecf949e0b02320074988234a8ef5bf11a",
+        "merge": "58a834f28c265c7fe375f77a6ba41e2fa634fa1d",
+        "pr": 184,
+        "merge_base": "7bfdc5774748da6636a03d0e9bd433a059861b0c",
+        "head_tree": "b5035ab6f6324a477382856bc4450ae8170499b3",
+        "merge_tree": "b5035ab6f6324a477382856bc4450ae8170499b3",
+        "head_parents": [
+          "7bfdc5774748da6636a03d0e9bd433a059861b0c"
+        ],
+        "merge_parents": [
+          "7bfdc5774748da6636a03d0e9bd433a059861b0c"
+        ],
+        "tree_equal": true
+      },
+      "merged_counterpart_ancestor_of_integration": true
+    },
+    {
+      "ref": "refs/heads/docs/odt-image-registry",
+      "sha": "f9138cc1e51f52b4b9cb99b4b09b9ce32e1450c8",
+      "prs": [
+        191
+      ],
+      "disposition": "exact_squash_tree_equivalent",
+      "local_head_object_available": false,
+      "proof_source": "GitHub Git commits API",
+      "equivalence": {
+        "head": "f9138cc1e51f52b4b9cb99b4b09b9ce32e1450c8",
+        "merge": "73e828175a76f9b7fe0014268ebbc59fd6ba4cfe",
+        "pr": 191,
+        "merge_base": "ea74845466837a3a2748068b0ce2fa6920e5e7df",
+        "head_tree": "fee9b371db728fdb3be8f2c773318a03b4d374ec",
+        "merge_tree": "fee9b371db728fdb3be8f2c773318a03b4d374ec",
+        "head_parents": [
+          "ea74845466837a3a2748068b0ce2fa6920e5e7df"
+        ],
+        "merge_parents": [
+          "ea74845466837a3a2748068b0ce2fa6920e5e7df"
+        ],
+        "tree_equal": true
+      },
+      "merged_counterpart_ancestor_of_integration": true
+    },
+    {
+      "ref": "refs/heads/docs/office-pin-20261115",
+      "sha": "5ed4f45cb758394dc2346041d826c10257c24dc1",
+      "prs": [
+        130
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/heads/docs/remaining-gaps",
+      "sha": "a0df68710bbacdcbddf57f7fb7b77238566b65c3",
+      "prs": [
+        155
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/heads/docs/remaining-gaps-link",
+      "sha": "854d2ff6a20206434c64173ddca1152b079c8277",
+      "prs": [
+        156
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/heads/docs/validation-complete",
+      "sha": "8197b59177827cfa7b426c55acd0cdca19f9b6eb",
+      "prs": [
+        166
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/heads/docs/validation-operators",
+      "sha": "11d4fbd9bc0a6e9fb3fa6cdc7604a45aaeae3210",
+      "prs": [
+        163
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/heads/feat/export-ods",
+      "sha": "ca8b789d4ceaa2b74cdb7e256cdd90746c702594",
+      "prs": [
+        186
+      ],
+      "disposition": "exact_squash_tree_equivalent",
+      "local_head_object_available": false,
+      "proof_source": "GitHub Git commits API",
+      "equivalence": {
+        "head": "ca8b789d4ceaa2b74cdb7e256cdd90746c702594",
+        "merge": "3c98635249dc7ec671ea54bf7342ad0f067dfa82",
+        "pr": 186,
+        "merge_base": "3cbc1cb105a066072f9a4d8d0a1c4b7be37ba240",
+        "head_tree": "16df07a7ba6c767fe450188241afb4da5a1ba648",
+        "merge_tree": "16df07a7ba6c767fe450188241afb4da5a1ba648",
+        "head_parents": [
+          "3cbc1cb105a066072f9a4d8d0a1c4b7be37ba240"
+        ],
+        "merge_parents": [
+          "3cbc1cb105a066072f9a4d8d0a1c4b7be37ba240"
+        ],
+        "tree_equal": true
+      },
+      "merged_counterpart_ancestor_of_integration": true
+    },
+    {
+      "ref": "refs/heads/feat/hidden-sheets-ui",
+      "sha": "dacf219a094e8f309e3f2ea1e27afbdccaa69f3d",
+      "prs": [
+        137
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/heads/feat/odt-headers",
+      "sha": "38a69f9a60bce92b6c2db60a71427ac47d98819d",
+      "prs": [
+        135
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/heads/feat/odt-image-registry",
+      "sha": "120127794ea061f2f2fd2385d516b74e2e4ebb48",
+      "prs": [
+        190
+      ],
+      "disposition": "exact_squash_tree_equivalent",
+      "local_head_object_available": false,
+      "proof_source": "GitHub Git commits API",
+      "equivalence": {
+        "head": "120127794ea061f2f2fd2385d516b74e2e4ebb48",
+        "merge": "ea74845466837a3a2748068b0ce2fa6920e5e7df",
+        "pr": 190,
+        "merge_base": "37af4410be09081420d2597f53572379eca25464",
+        "head_tree": "03e9862f5a4c75d55898335b4d107f102a58c0f7",
+        "merge_tree": "03e9862f5a4c75d55898335b4d107f102a58c0f7",
+        "head_parents": [
+          "37af4410be09081420d2597f53572379eca25464"
+        ],
+        "merge_parents": [
+          "37af4410be09081420d2597f53572379eca25464"
+        ],
+        "tree_equal": true
+      },
+      "merged_counterpart_ancestor_of_integration": true
+    },
+    {
+      "ref": "refs/heads/feat/odt-images",
+      "sha": "969c104a09dc2ad0732edb4a11a0300b52f20e2f",
+      "prs": [
+        128
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/heads/feat/odt-styles",
+      "sha": "048ad97b6d4b1be94821dd29f1ffb1494a329ecb",
+      "prs": [
+        131
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/heads/feat/odt-textboxes",
+      "sha": "b81105fe579d00b66c0a07b07d8ed36cee23ecfb",
+      "prs": [
+        129
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/heads/fix/conditional-affix-vendor",
+      "sha": "1dbfa2125cd83d6ec4e0028d1584e612fccfb77c",
+      "prs": [
+        153
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/heads/fix/conditional-between-vendor",
+      "sha": "a52efabd7d05a50b428eb337944d2b6aeee2400b",
+      "prs": [
+        150
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/heads/fix/conditional-dxf-vendor",
+      "sha": "b9b7932eca6213973803b5bb227464cccd3051d6",
+      "prs": [
+        144
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/heads/fix/conditional-operators-vendor",
+      "sha": "24ac26de023313dba726f8cdaabd16179c49da01",
+      "prs": [
+        141
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/heads/fix/conditional-text-vendor",
+      "sha": "20e5c5b7f63f0b8335665ca131418023f6bc2ca7",
+      "prs": [
+        145
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/heads/fix/export-ods-strings",
+      "sha": "c5927513b337fea005080ad5e5d3dd7440c6210c",
+      "prs": [
+        189
+      ],
+      "disposition": "exact_squash_tree_equivalent",
+      "local_head_object_available": false,
+      "proof_source": "GitHub Git commits API",
+      "equivalence": {
+        "head": "c5927513b337fea005080ad5e5d3dd7440c6210c",
+        "merge": "96dfe7c759b796e5101574949feb8f12844854d7",
+        "pr": 189,
+        "merge_base": "529e15b4daff0469b0da277c1a9c7740b2a8d468",
+        "head_tree": "34777a5b2649a3a8b35635111689174b05c1f043",
+        "merge_tree": "34777a5b2649a3a8b35635111689174b05c1f043",
+        "head_parents": [
+          "529e15b4daff0469b0da277c1a9c7740b2a8d468"
+        ],
+        "merge_parents": [
+          "529e15b4daff0469b0da277c1a9c7740b2a8d468"
+        ],
+        "tree_equal": true
+      },
+      "merged_counterpart_ancestor_of_integration": true
+    },
+    {
+      "ref": "refs/heads/fix/hidden-state-vendor",
+      "sha": "fd69bc3ee8db4ecec4683a7b8161a643b758db6b",
+      "prs": [
+        134
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/heads/fix/ods-conditional-vendor",
+      "sha": "4e3e45e619fa2983f1fa8394a9f28cf6c454a9f6",
+      "prs": [
+        139
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/heads/fix/ods-custom-validation-vendor",
+      "sha": "9898961e5cb64cdfc704f85c8f6f5ebedad3c39a",
+      "prs": [
+        164
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/heads/fix/ods-default-geometry-vendor",
+      "sha": "29a2bb5158a316dcde5da776172e09027e04f78d",
+      "prs": [
+        133
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/heads/fix/ods-default-style-vendor",
+      "sha": "0ba620fdc34ea7afd278468f3978997c3cc7ba8f",
+      "prs": [
+        132
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/heads/fix/ods-filter-conditions-vendor",
+      "sha": "391ccbda8553e5c9104226fdf42d2a1e2c028b33",
+      "prs": [
+        192
+      ],
+      "disposition": "exact_squash_tree_equivalent",
+      "local_head_object_available": false,
+      "proof_source": "GitHub Git commits API",
+      "equivalence": {
+        "head": "391ccbda8553e5c9104226fdf42d2a1e2c028b33",
+        "merge": "91012624f1261c8065c0da601b1320d7a8f5670e",
+        "pr": 192,
+        "merge_base": "73e828175a76f9b7fe0014268ebbc59fd6ba4cfe",
+        "head_tree": "a37697b131e4c991035f371013fc5d49d866667e",
+        "merge_tree": "a37697b131e4c991035f371013fc5d49d866667e",
+        "head_parents": [
+          "73e828175a76f9b7fe0014268ebbc59fd6ba4cfe"
+        ],
+        "merge_parents": [
+          "73e828175a76f9b7fe0014268ebbc59fd6ba4cfe"
+        ],
+        "tree_equal": true
+      },
+      "merged_counterpart_ancestor_of_integration": true
+    },
+    {
+      "ref": "refs/heads/fix/ods-filter-operators-vendor",
+      "sha": "c9c403608cf6fc83e53245bd73c0db57403a969d",
+      "prs": [
+        177
+      ],
+      "disposition": "exact_squash_tree_equivalent",
+      "local_head_object_available": false,
+      "proof_source": "GitHub Git commits API",
+      "equivalence": {
+        "head": "c9c403608cf6fc83e53245bd73c0db57403a969d",
+        "merge": "3760bf9ea4baa6e86d1a4686d168a560db79b949",
+        "pr": 177,
+        "merge_base": "8e8099e171c31eadb66e812147fc9be600057cab",
+        "head_tree": "0903947d4595274011dd53a1f48ad0365116b9a5",
+        "merge_tree": "0903947d4595274011dd53a1f48ad0365116b9a5",
+        "head_parents": [
+          "8e8099e171c31eadb66e812147fc9be600057cab"
+        ],
+        "merge_parents": [
+          "8e8099e171c31eadb66e812147fc9be600057cab"
+        ],
+        "tree_equal": true
+      },
+      "merged_counterpart_ancestor_of_integration": true
+    },
+    {
+      "ref": "refs/heads/fix/ods-filter-vendor",
+      "sha": "12ce7da82680331ff1c903b39183a0324c9508f5",
+      "prs": [
+        174
+      ],
+      "disposition": "exact_squash_tree_equivalent",
+      "local_head_object_available": false,
+      "proof_source": "GitHub Git commits API",
+      "equivalence": {
+        "head": "12ce7da82680331ff1c903b39183a0324c9508f5",
+        "merge": "4dc90cac5ebf53e5cea5f5b0260d04b59c8e7d09",
+        "pr": 174,
+        "merge_base": "30f0a5f1dd364fe32e41aa88dc51b24868af1091",
+        "head_tree": "7d37963e5c4fa6e604a7e1c159eddc1244ffaee3",
+        "merge_tree": "7d37963e5c4fa6e604a7e1c159eddc1244ffaee3",
+        "head_parents": [
+          "30f0a5f1dd364fe32e41aa88dc51b24868af1091"
+        ],
+        "merge_parents": [
+          "30f0a5f1dd364fe32e41aa88dc51b24868af1091"
+        ],
+        "tree_equal": true
+      },
+      "merged_counterpart_ancestor_of_integration": true
+    },
+    {
+      "ref": "refs/heads/fix/ods-hyperlinks-vendor",
+      "sha": "aa45a0927789b117cec54c858895d8343aad661b",
+      "prs": [
+        171
+      ],
+      "disposition": "exact_squash_tree_equivalent",
+      "local_head_object_available": false,
+      "proof_source": "GitHub Git commits API",
+      "equivalence": {
+        "head": "aa45a0927789b117cec54c858895d8343aad661b",
+        "merge": "315397c7d559e7cf45e2270c154de0d2893cb755",
+        "pr": 171,
+        "merge_base": "f7353bf5cdbdd1a3e1b5d02615b051eaa0dae644",
+        "head_tree": "5c32696f5e7b137430c5d6b0d284306a95cc3416",
+        "merge_tree": "5c32696f5e7b137430c5d6b0d284306a95cc3416",
+        "head_parents": [
+          "f7353bf5cdbdd1a3e1b5d02615b051eaa0dae644"
+        ],
+        "merge_parents": [
+          "f7353bf5cdbdd1a3e1b5d02615b051eaa0dae644"
+        ],
+        "tree_equal": true
+      },
+      "merged_counterpart_ancestor_of_integration": true
+    },
+    {
+      "ref": "refs/heads/fix/ods-images-vendor",
+      "sha": "d18dc14194bfa4d11e96552b77dc34cbe5a8b417",
+      "prs": [
+        126
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/heads/fix/ods-metadata-vendor",
+      "sha": "8a62e0864ad4bae96063ec6f8a542db039a306cf",
+      "prs": [
+        158
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/heads/fix/ods-named-expressions-vendor",
+      "sha": "c80ee46fccbbfc8c2da4b18d67fc220cad23f1fc",
+      "prs": [
+        170
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/heads/fix/ods-outline-vendor",
+      "sha": "10374ee7f24c29be0958edc94157cde96c28f67c",
+      "prs": [
+        172
+      ],
+      "disposition": "exact_squash_tree_equivalent",
+      "local_head_object_available": false,
+      "proof_source": "GitHub Git commits API",
+      "equivalence": {
+        "head": "10374ee7f24c29be0958edc94157cde96c28f67c",
+        "merge": "514f74579591d58c843d9b4c45d612ba7b16e5b2",
+        "pr": 172,
+        "merge_base": "315397c7d559e7cf45e2270c154de0d2893cb755",
+        "head_tree": "bc0aa0c696e1f32bde589730315c5a0eadeb7417",
+        "merge_tree": "bc0aa0c696e1f32bde589730315c5a0eadeb7417",
+        "head_parents": [
+          "315397c7d559e7cf45e2270c154de0d2893cb755"
+        ],
+        "merge_parents": [
+          "315397c7d559e7cf45e2270c154de0d2893cb755"
+        ],
+        "tree_equal": true
+      },
+      "merged_counterpart_ancestor_of_integration": true
+    },
+    {
+      "ref": "refs/heads/fix/ods-row-groups-vendor",
+      "sha": "116a309ef09d9bba04b7f2d3fd3c4956a478aca5",
+      "prs": [
+        194
+      ],
+      "disposition": "exact_squash_tree_equivalent",
+      "local_head_object_available": false,
+      "proof_source": "GitHub Git commits API",
+      "equivalence": {
+        "head": "116a309ef09d9bba04b7f2d3fd3c4956a478aca5",
+        "merge": "4eea7d1676ef4474c1def51781666eb59437b845",
+        "pr": 194,
+        "merge_base": "d36bd2412806e981ae12f7b2742a7fc0bde88234",
+        "head_tree": "4707720a11193a7ce336c6e03e2736e1a7350922",
+        "merge_tree": "4707720a11193a7ce336c6e03e2736e1a7350922",
+        "head_parents": [
+          "d36bd2412806e981ae12f7b2742a7fc0bde88234"
+        ],
+        "merge_parents": [
+          "d36bd2412806e981ae12f7b2742a7fc0bde88234"
+        ],
+        "tree_equal": true
+      },
+      "merged_counterpart_ancestor_of_integration": true
+    },
+    {
+      "ref": "refs/heads/fix/ods-tab-color-vendor",
+      "sha": "9c2047da22110db1518a6226ee7a35e421fb9d51",
+      "prs": [
+        168
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/heads/fix/ods-validation-messages-vendor",
+      "sha": "a617e188cf69f3d3c14dba614593f953dadf1436",
+      "prs": [
+        165
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/heads/fix/ods-validation-vendor2",
+      "sha": "2b6ac08219418cf2c2d91968d117437684370c4d",
+      "prs": [
+        162
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/heads/fix/ods-validations-vendor",
+      "sha": "ee74601e71441fcac2b6defebff33ca04f538d12",
+      "prs": [
+        147
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/heads/fix/ods-writer-conditional-vendor",
+      "sha": "5fb04fb0bcaab54c11e3585717d7e33895bb339e",
+      "prs": [
+        182
+      ],
+      "disposition": "exact_squash_tree_equivalent",
+      "local_head_object_available": false,
+      "proof_source": "GitHub Git commits API",
+      "equivalence": {
+        "head": "5fb04fb0bcaab54c11e3585717d7e33895bb339e",
+        "merge": "609dc63f2fdc19e73b6ed7148d0b7c4f1bb41e44",
+        "pr": 182,
+        "merge_base": "a5e2422ba7441cfba93376c3d52b88fe7589d760",
+        "head_tree": "9034233e2cbcd21d715e7f6151b98f8b4164eb41",
+        "merge_tree": "9034233e2cbcd21d715e7f6151b98f8b4164eb41",
+        "head_parents": [
+          "a5e2422ba7441cfba93376c3d52b88fe7589d760"
+        ],
+        "merge_parents": [
+          "a5e2422ba7441cfba93376c3d52b88fe7589d760"
+        ],
+        "tree_equal": true
+      },
+      "merged_counterpart_ancestor_of_integration": true
+    },
+    {
+      "ref": "refs/heads/fix/ods-writer-images-vendor",
+      "sha": "7e24454598a43e46821a75b3b43c14a9a89b572f",
+      "prs": [
+        183
+      ],
+      "disposition": "exact_squash_tree_equivalent",
+      "local_head_object_available": false,
+      "proof_source": "GitHub Git commits API",
+      "equivalence": {
+        "head": "7e24454598a43e46821a75b3b43c14a9a89b572f",
+        "merge": "7bfdc5774748da6636a03d0e9bd433a059861b0c",
+        "pr": 183,
+        "merge_base": "609dc63f2fdc19e73b6ed7148d0b7c4f1bb41e44",
+        "head_tree": "56425bb32e779dc833b24201a0d627d588ef4b01",
+        "merge_tree": "56425bb32e779dc833b24201a0d627d588ef4b01",
+        "head_parents": [
+          "609dc63f2fdc19e73b6ed7148d0b7c4f1bb41e44"
+        ],
+        "merge_parents": [
+          "609dc63f2fdc19e73b6ed7148d0b7c4f1bb41e44"
+        ],
+        "tree_equal": true
+      },
+      "merged_counterpart_ancestor_of_integration": true
+    },
+    {
+      "ref": "refs/heads/fix/ods-writer-metadata-vendor",
+      "sha": "f7010ad1841c0f7146aa8544177911af0e98cfe9",
+      "prs": [
+        180
+      ],
+      "disposition": "exact_squash_tree_equivalent",
+      "local_head_object_available": false,
+      "proof_source": "GitHub Git commits API",
+      "equivalence": {
+        "head": "f7010ad1841c0f7146aa8544177911af0e98cfe9",
+        "merge": "5078be7059801ce3f2712ad3f47d4e23b32df147",
+        "pr": 180,
+        "merge_base": "5c4bb3052a87afc5b5158c3180a95cddda47a179",
+        "head_tree": "bdad3a2e610180a183b8bb78315cabfa416aa855",
+        "merge_tree": "bdad3a2e610180a183b8bb78315cabfa416aa855",
+        "head_parents": [
+          "5c4bb3052a87afc5b5158c3180a95cddda47a179"
+        ],
+        "merge_parents": [
+          "5c4bb3052a87afc5b5158c3180a95cddda47a179"
+        ],
+        "tree_equal": true
+      },
+      "merged_counterpart_ancestor_of_integration": true
+    },
+    {
+      "ref": "refs/heads/fix/ods-writer-page-layout-vendor",
+      "sha": "d220aa43774fe36b01530400c3a10bd4228faa79",
+      "prs": [
+        185
+      ],
+      "disposition": "exact_squash_tree_equivalent",
+      "local_head_object_available": false,
+      "proof_source": "GitHub Git commits API",
+      "equivalence": {
+        "head": "d220aa43774fe36b01530400c3a10bd4228faa79",
+        "merge": "3cbc1cb105a066072f9a4d8d0a1c4b7be37ba240",
+        "pr": 185,
+        "merge_base": "904e08cc1a76f0d851b2ab67b84dc88b789394e8",
+        "head_tree": "c5c530c4d12e286149060990c6bb3b1d7adb3712",
+        "merge_tree": "c5c530c4d12e286149060990c6bb3b1d7adb3712",
+        "head_parents": [
+          "904e08cc1a76f0d851b2ab67b84dc88b789394e8"
+        ],
+        "merge_parents": [
+          "904e08cc1a76f0d851b2ab67b84dc88b789394e8"
+        ],
+        "tree_equal": true
+      },
+      "merged_counterpart_ancestor_of_integration": true
+    },
+    {
+      "ref": "refs/heads/fix/ods-writer-vendor",
+      "sha": "10d8a9b4750bf3d80d35f089ae1ac4fdf8dffc1f",
+      "prs": [
+        179
+      ],
+      "disposition": "exact_squash_tree_equivalent",
+      "local_head_object_available": false,
+      "proof_source": "GitHub Git commits API",
+      "equivalence": {
+        "head": "10d8a9b4750bf3d80d35f089ae1ac4fdf8dffc1f",
+        "merge": "5c4bb3052a87afc5b5158c3180a95cddda47a179",
+        "pr": 179,
+        "merge_base": "3a775ad9eb2d2866392ecac22d0dd1b5cc1b77de",
+        "head_tree": "ea8b54fa87d7d6a621795a80b1607e6823bd4ddb",
+        "merge_tree": "ea8b54fa87d7d6a621795a80b1607e6823bd4ddb",
+        "head_parents": [
+          "3a775ad9eb2d2866392ecac22d0dd1b5cc1b77de"
+        ],
+        "merge_parents": [
+          "3a775ad9eb2d2866392ecac22d0dd1b5cc1b77de"
+        ],
+        "tree_equal": true
+      },
+      "merged_counterpart_ancestor_of_integration": true
+    },
+    {
+      "ref": "refs/heads/integrate/current-repos-20261116",
+      "sha": "37af4410be09081420d2597f53572379eca25464",
+      "prs": [],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/heads/integrate/final-corpus-20261115",
+      "sha": "59b11b5647a8a07d36c0d2e0d579855f474ef4d2",
+      "prs": [
+        157
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/heads/integrate/sdt-section-break-20261115",
+      "sha": "012314d440c49bc73b6726796fd9930eee6f1830",
+      "prs": [
+        152
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/heads/integrate/utf16-custom-xml-20261115",
+      "sha": "abfcf08bd2bfbe87349fdacc3484b824b77fefa3",
+      "prs": [
+        143
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/heads/integration/storage-carving-20261115",
+      "sha": "5018aebb709b35f1c4d730c06e0f91187727751c",
+      "prs": [
+        111
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/heads/integration/storage-carving-local-20261115124645",
+      "sha": "10891b06a6da9f2502960cdbfe34b30eed271665",
+      "prs": [],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/heads/main",
+      "sha": "bf0255a168576b0d9993d8b668f2a7d0d943fd4f",
+      "prs": [],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/10/head",
+      "sha": "3ebb72f0e6f49fb2c462ac3d7c968200f7a5d438",
+      "prs": [
+        10
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/100/head",
+      "sha": "c582f2d7a413c54dcf954f6f25f8201e36ba81d2",
+      "prs": [
+        100
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/101/head",
+      "sha": "03f37893819ee999a9a660f029306f53ed7f2d0f",
+      "prs": [
+        101
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/102/head",
+      "sha": "ffdd6a86820b0d58cf8b93b4e626d0439beefab9",
+      "prs": [
+        102
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/103/head",
+      "sha": "d504409acc779b670de482247f3231a7247dcd92",
+      "prs": [
+        103
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/104/head",
+      "sha": "542c1c8b97643e5ad2e7c44f35b5417ef95c7d6a",
+      "prs": [
+        104
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/105/head",
+      "sha": "22bd67b887c81a11ea22664defc3474a07eef50a",
+      "prs": [
+        105
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/106/head",
+      "sha": "2e683c9de9e8bc801dd9e2f3dea4380b4b854ca6",
+      "prs": [
+        106
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/107/head",
+      "sha": "7187d6d0ad636f844f7e9622ed915a880d20d992",
+      "prs": [
+        107
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/108/head",
+      "sha": "a77364501d274e0fde2e9fffeefb121258ae9614",
+      "prs": [
+        108
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/109/head",
+      "sha": "1b7680583ac69649b17287ab68738288fec10f51",
+      "prs": [
+        109
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/11/head",
+      "sha": "7e32fef5ed563c73d617fc4933d07b88d8525a60",
+      "prs": [
+        11
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/110/head",
+      "sha": "d97705dabbdae5969a67bf4bf74b6c604d934419",
+      "prs": [
+        110
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/111/head",
+      "sha": "5018aebb709b35f1c4d730c06e0f91187727751c",
+      "prs": [
+        111
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/112/head",
+      "sha": "bb981ec37c40369ba15bacdd9c21c520807a200c",
+      "prs": [
+        112
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/113/head",
+      "sha": "eab538e7af002ddffa2746b5932fdbbbd3a97334",
+      "prs": [
+        113
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/114/head",
+      "sha": "eba6c9dcb24108d7277dea2f0042acbb19f8fb72",
+      "prs": [
+        114
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/115/head",
+      "sha": "74f97cba657d43f18f6e95553a465d23e21ceb20",
+      "prs": [
+        115
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/116/head",
+      "sha": "7dec00fb1ed4fd8552fcf5bf682de02849d3d93a",
+      "prs": [
+        116
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/117/head",
+      "sha": "a8e350d94e120c7422ade4e4caa4e92a2c4e461a",
+      "prs": [
+        117
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/118/head",
+      "sha": "5530aff56e575a2ecad42c774233e2c0946e24c7",
+      "prs": [
+        118
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/119/head",
+      "sha": "f74f1fceb9959b1197fc21218e047240f215ba75",
+      "prs": [
+        119
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/12/head",
+      "sha": "3564a5c8b30684f284063bdbbd10c7942e423fdc",
+      "prs": [
+        12
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/120/head",
+      "sha": "443db52220f25b6fa982dfa6afd18c17ed09179e",
+      "prs": [
+        120
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/121/head",
+      "sha": "2dbc312ff2aaff1495adb95c67afe8aa7d987e7e",
+      "prs": [
+        121
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/122/head",
+      "sha": "3ffe089765eecd5a867369392a8e3610d896c0cf",
+      "prs": [
+        122
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/123/head",
+      "sha": "e19731eb9a2b69b0047b9f9ee6165a1e53ae187e",
+      "prs": [
+        123
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/124/head",
+      "sha": "d7895df6d55ca588a70575dabf2216ed42055d75",
+      "prs": [
+        124
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/125/head",
+      "sha": "5c1714d5abb3f728b924a6a2a515eec02497ae9c",
+      "prs": [
+        125
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/126/head",
+      "sha": "d18dc14194bfa4d11e96552b77dc34cbe5a8b417",
+      "prs": [
+        126
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/127/head",
+      "sha": "128f55295107e3ada605b52d160165e03f726cb4",
+      "prs": [
+        127
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/128/head",
+      "sha": "969c104a09dc2ad0732edb4a11a0300b52f20e2f",
+      "prs": [
+        128
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/129/head",
+      "sha": "b81105fe579d00b66c0a07b07d8ed36cee23ecfb",
+      "prs": [
+        129
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/13/head",
+      "sha": "cb2db48e5e0f623139f260b63f88405b577791ec",
+      "prs": [
+        13
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/130/head",
+      "sha": "5ed4f45cb758394dc2346041d826c10257c24dc1",
+      "prs": [
+        130
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/131/head",
+      "sha": "048ad97b6d4b1be94821dd29f1ffb1494a329ecb",
+      "prs": [
+        131
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/132/head",
+      "sha": "0ba620fdc34ea7afd278468f3978997c3cc7ba8f",
+      "prs": [
+        132
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/133/head",
+      "sha": "29a2bb5158a316dcde5da776172e09027e04f78d",
+      "prs": [
+        133
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/134/head",
+      "sha": "fd69bc3ee8db4ecec4683a7b8161a643b758db6b",
+      "prs": [
+        134
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/135/head",
+      "sha": "38a69f9a60bce92b6c2db60a71427ac47d98819d",
+      "prs": [
+        135
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/136/head",
+      "sha": "378c036b392ee3ff9112d86aa21e7fdd8e722808",
+      "prs": [
+        136
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/137/head",
+      "sha": "dacf219a094e8f309e3f2ea1e27afbdccaa69f3d",
+      "prs": [
+        137
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/138/head",
+      "sha": "1cb0b4a6a01b4aabe58f95d9a9132171bbb11aa0",
+      "prs": [
+        138
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/139/head",
+      "sha": "4e3e45e619fa2983f1fa8394a9f28cf6c454a9f6",
+      "prs": [
+        139
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/14/head",
+      "sha": "eff79b3c8ed03020aeaeac4dcd86058fb1e2e181",
+      "prs": [
+        14
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/140/head",
+      "sha": "01b3f6090f682c9c8cd909d229aaad50b54ea3fd",
+      "prs": [
+        140
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/141/head",
+      "sha": "24ac26de023313dba726f8cdaabd16179c49da01",
+      "prs": [
+        141
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/142/head",
+      "sha": "2281ad58aed9f97bc1d387d3c98728245a5e4bcf",
+      "prs": [
+        142
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/143/head",
+      "sha": "abfcf08bd2bfbe87349fdacc3484b824b77fefa3",
+      "prs": [
+        143
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/144/head",
+      "sha": "b9b7932eca6213973803b5bb227464cccd3051d6",
+      "prs": [
+        144
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/145/head",
+      "sha": "20e5c5b7f63f0b8335665ca131418023f6bc2ca7",
+      "prs": [
+        145
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/146/head",
+      "sha": "a49c3f14f96fed4c5551e45060ebbce3fa6883a1",
+      "prs": [
+        146
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/147/head",
+      "sha": "ee74601e71441fcac2b6defebff33ca04f538d12",
+      "prs": [
+        147
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/148/head",
+      "sha": "b420b45b6666ca0658ae74f2a682a3cb6b88134d",
+      "prs": [
+        148
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/149/head",
+      "sha": "e678e17859f8d29e274d1abbf064b93d04a6fa42",
+      "prs": [
+        149
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/15/head",
+      "sha": "8755f0dff6ff87528a77aa6613242ce1ef5851f5",
+      "prs": [
+        15
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/150/head",
+      "sha": "a52efabd7d05a50b428eb337944d2b6aeee2400b",
+      "prs": [
+        150
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/151/head",
+      "sha": "073713474ea62525d9f5832da918407de333cd03",
+      "prs": [
+        151
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/152/head",
+      "sha": "012314d440c49bc73b6726796fd9930eee6f1830",
+      "prs": [
+        152
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/153/head",
+      "sha": "1dbfa2125cd83d6ec4e0028d1584e612fccfb77c",
+      "prs": [
+        153
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/154/head",
+      "sha": "4919c87f0225599b9b2b963285d364d2c2bd1a1e",
+      "prs": [
+        154
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/155/head",
+      "sha": "a0df68710bbacdcbddf57f7fb7b77238566b65c3",
+      "prs": [
+        155
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/156/head",
+      "sha": "854d2ff6a20206434c64173ddca1152b079c8277",
+      "prs": [
+        156
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/157/head",
+      "sha": "59b11b5647a8a07d36c0d2e0d579855f474ef4d2",
+      "prs": [
+        157
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/158/head",
+      "sha": "8a62e0864ad4bae96063ec6f8a542db039a306cf",
+      "prs": [
+        158
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/159/head",
+      "sha": "343a930ebdbc1b0ee45f16328be868d0f78ba624",
+      "prs": [
+        159
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/16/head",
+      "sha": "da52efc43c2043df9a4aa8cde69c25fbc616928d",
+      "prs": [
+        16
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/160/head",
+      "sha": "2eec6b4edc62693cfc6048581862a7aed87143c9",
+      "prs": [
+        160
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/161/head",
+      "sha": "5efae7732727fc1ae43d6b664922214dd6acfedf",
+      "prs": [
+        161
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/162/head",
+      "sha": "2b6ac08219418cf2c2d91968d117437684370c4d",
+      "prs": [
+        162
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/163/head",
+      "sha": "11d4fbd9bc0a6e9fb3fa6cdc7604a45aaeae3210",
+      "prs": [
+        163
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/164/head",
+      "sha": "9898961e5cb64cdfc704f85c8f6f5ebedad3c39a",
+      "prs": [
+        164
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/165/head",
+      "sha": "a617e188cf69f3d3c14dba614593f953dadf1436",
+      "prs": [
+        165
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/166/head",
+      "sha": "8197b59177827cfa7b426c55acd0cdca19f9b6eb",
+      "prs": [
+        166
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/167/head",
+      "sha": "5e54229821bf7101ee60fb486d0c924ab6e7d5db",
+      "prs": [
+        167
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/168/head",
+      "sha": "9c2047da22110db1518a6226ee7a35e421fb9d51",
+      "prs": [
+        168
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/169/head",
+      "sha": "852f009cadb153cfcb0799c527fdd78364a2df8d",
+      "prs": [
+        169
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/17/head",
+      "sha": "6bda9f2306d36fb4a7ce3f501346b597c2000beb",
+      "prs": [
+        17
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/170/head",
+      "sha": "c80ee46fccbbfc8c2da4b18d67fc220cad23f1fc",
+      "prs": [
+        170
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/171/head",
+      "sha": "aa45a0927789b117cec54c858895d8343aad661b",
+      "prs": [
+        171
+      ],
+      "disposition": "exact_squash_tree_equivalent",
+      "local_head_object_available": false,
+      "proof_source": "GitHub Git commits API",
+      "equivalence": {
+        "head": "aa45a0927789b117cec54c858895d8343aad661b",
+        "merge": "315397c7d559e7cf45e2270c154de0d2893cb755",
+        "pr": 171,
+        "merge_base": "f7353bf5cdbdd1a3e1b5d02615b051eaa0dae644",
+        "head_tree": "5c32696f5e7b137430c5d6b0d284306a95cc3416",
+        "merge_tree": "5c32696f5e7b137430c5d6b0d284306a95cc3416",
+        "head_parents": [
+          "f7353bf5cdbdd1a3e1b5d02615b051eaa0dae644"
+        ],
+        "merge_parents": [
+          "f7353bf5cdbdd1a3e1b5d02615b051eaa0dae644"
+        ],
+        "tree_equal": true
+      },
+      "merged_counterpart_ancestor_of_integration": true
+    },
+    {
+      "ref": "refs/pull/172/head",
+      "sha": "10374ee7f24c29be0958edc94157cde96c28f67c",
+      "prs": [
+        172
+      ],
+      "disposition": "exact_squash_tree_equivalent",
+      "local_head_object_available": false,
+      "proof_source": "GitHub Git commits API",
+      "equivalence": {
+        "head": "10374ee7f24c29be0958edc94157cde96c28f67c",
+        "merge": "514f74579591d58c843d9b4c45d612ba7b16e5b2",
+        "pr": 172,
+        "merge_base": "315397c7d559e7cf45e2270c154de0d2893cb755",
+        "head_tree": "bc0aa0c696e1f32bde589730315c5a0eadeb7417",
+        "merge_tree": "bc0aa0c696e1f32bde589730315c5a0eadeb7417",
+        "head_parents": [
+          "315397c7d559e7cf45e2270c154de0d2893cb755"
+        ],
+        "merge_parents": [
+          "315397c7d559e7cf45e2270c154de0d2893cb755"
+        ],
+        "tree_equal": true
+      },
+      "merged_counterpart_ancestor_of_integration": true
+    },
+    {
+      "ref": "refs/pull/173/head",
+      "sha": "74378704f363cd095cefd23c0ac02e8ca0219ca1",
+      "prs": [
+        173
+      ],
+      "disposition": "exact_squash_tree_equivalent",
+      "local_head_object_available": false,
+      "proof_source": "GitHub Git commits API",
+      "equivalence": {
+        "head": "74378704f363cd095cefd23c0ac02e8ca0219ca1",
+        "merge": "30f0a5f1dd364fe32e41aa88dc51b24868af1091",
+        "pr": 173,
+        "merge_base": "514f74579591d58c843d9b4c45d612ba7b16e5b2",
+        "head_tree": "52601c15db8f9ca254eed383a53a2e85ee6a0576",
+        "merge_tree": "52601c15db8f9ca254eed383a53a2e85ee6a0576",
+        "head_parents": [
+          "514f74579591d58c843d9b4c45d612ba7b16e5b2"
+        ],
+        "merge_parents": [
+          "514f74579591d58c843d9b4c45d612ba7b16e5b2"
+        ],
+        "tree_equal": true
+      },
+      "merged_counterpart_ancestor_of_integration": true
+    },
+    {
+      "ref": "refs/pull/174/head",
+      "sha": "12ce7da82680331ff1c903b39183a0324c9508f5",
+      "prs": [
+        174
+      ],
+      "disposition": "exact_squash_tree_equivalent",
+      "local_head_object_available": false,
+      "proof_source": "GitHub Git commits API",
+      "equivalence": {
+        "head": "12ce7da82680331ff1c903b39183a0324c9508f5",
+        "merge": "4dc90cac5ebf53e5cea5f5b0260d04b59c8e7d09",
+        "pr": 174,
+        "merge_base": "30f0a5f1dd364fe32e41aa88dc51b24868af1091",
+        "head_tree": "7d37963e5c4fa6e604a7e1c159eddc1244ffaee3",
+        "merge_tree": "7d37963e5c4fa6e604a7e1c159eddc1244ffaee3",
+        "head_parents": [
+          "30f0a5f1dd364fe32e41aa88dc51b24868af1091"
+        ],
+        "merge_parents": [
+          "30f0a5f1dd364fe32e41aa88dc51b24868af1091"
+        ],
+        "tree_equal": true
+      },
+      "merged_counterpart_ancestor_of_integration": true
+    },
+    {
+      "ref": "refs/pull/175/head",
+      "sha": "30f9cdefd70fea3c18a288a30b2f764c13044f95",
+      "prs": [
+        175
+      ],
+      "disposition": "exact_squash_tree_equivalent",
+      "local_head_object_available": false,
+      "proof_source": "GitHub Git commits API",
+      "equivalence": {
+        "head": "30f9cdefd70fea3c18a288a30b2f764c13044f95",
+        "merge": "8e8099e171c31eadb66e812147fc9be600057cab",
+        "pr": 175,
+        "merge_base": "4dc90cac5ebf53e5cea5f5b0260d04b59c8e7d09",
+        "head_tree": "22496bf367e02eb39fb7358ab033342c2465c9e4",
+        "merge_tree": "22496bf367e02eb39fb7358ab033342c2465c9e4",
+        "head_parents": [
+          "4dc90cac5ebf53e5cea5f5b0260d04b59c8e7d09"
+        ],
+        "merge_parents": [
+          "4dc90cac5ebf53e5cea5f5b0260d04b59c8e7d09"
+        ],
+        "tree_equal": true
+      },
+      "merged_counterpart_ancestor_of_integration": true
+    },
+    {
+      "ref": "refs/pull/176/head",
+      "sha": "f80c67f1e817bf14266d9f8b33a5129d54463b78",
+      "prs": [
+        176
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/177/head",
+      "sha": "c9c403608cf6fc83e53245bd73c0db57403a969d",
+      "prs": [
+        177
+      ],
+      "disposition": "exact_squash_tree_equivalent",
+      "local_head_object_available": false,
+      "proof_source": "GitHub Git commits API",
+      "equivalence": {
+        "head": "c9c403608cf6fc83e53245bd73c0db57403a969d",
+        "merge": "3760bf9ea4baa6e86d1a4686d168a560db79b949",
+        "pr": 177,
+        "merge_base": "8e8099e171c31eadb66e812147fc9be600057cab",
+        "head_tree": "0903947d4595274011dd53a1f48ad0365116b9a5",
+        "merge_tree": "0903947d4595274011dd53a1f48ad0365116b9a5",
+        "head_parents": [
+          "8e8099e171c31eadb66e812147fc9be600057cab"
+        ],
+        "merge_parents": [
+          "8e8099e171c31eadb66e812147fc9be600057cab"
+        ],
+        "tree_equal": true
+      },
+      "merged_counterpart_ancestor_of_integration": true
+    },
+    {
+      "ref": "refs/pull/178/head",
+      "sha": "385eb47e7eabbbe27a4287d173d69544b2566724",
+      "prs": [
+        178
+      ],
+      "disposition": "exact_squash_tree_equivalent",
+      "local_head_object_available": false,
+      "proof_source": "GitHub Git commits API",
+      "equivalence": {
+        "head": "385eb47e7eabbbe27a4287d173d69544b2566724",
+        "merge": "3a775ad9eb2d2866392ecac22d0dd1b5cc1b77de",
+        "pr": 178,
+        "merge_base": "3760bf9ea4baa6e86d1a4686d168a560db79b949",
+        "head_tree": "f1d588b1b282ecfe5be607c0df0637440dcedf70",
+        "merge_tree": "f1d588b1b282ecfe5be607c0df0637440dcedf70",
+        "head_parents": [
+          "3760bf9ea4baa6e86d1a4686d168a560db79b949"
+        ],
+        "merge_parents": [
+          "3760bf9ea4baa6e86d1a4686d168a560db79b949"
+        ],
+        "tree_equal": true
+      },
+      "merged_counterpart_ancestor_of_integration": true
+    },
+    {
+      "ref": "refs/pull/179/head",
+      "sha": "10d8a9b4750bf3d80d35f089ae1ac4fdf8dffc1f",
+      "prs": [
+        179
+      ],
+      "disposition": "exact_squash_tree_equivalent",
+      "local_head_object_available": false,
+      "proof_source": "GitHub Git commits API",
+      "equivalence": {
+        "head": "10d8a9b4750bf3d80d35f089ae1ac4fdf8dffc1f",
+        "merge": "5c4bb3052a87afc5b5158c3180a95cddda47a179",
+        "pr": 179,
+        "merge_base": "3a775ad9eb2d2866392ecac22d0dd1b5cc1b77de",
+        "head_tree": "ea8b54fa87d7d6a621795a80b1607e6823bd4ddb",
+        "merge_tree": "ea8b54fa87d7d6a621795a80b1607e6823bd4ddb",
+        "head_parents": [
+          "3a775ad9eb2d2866392ecac22d0dd1b5cc1b77de"
+        ],
+        "merge_parents": [
+          "3a775ad9eb2d2866392ecac22d0dd1b5cc1b77de"
+        ],
+        "tree_equal": true
+      },
+      "merged_counterpart_ancestor_of_integration": true
+    },
+    {
+      "ref": "refs/pull/18/head",
+      "sha": "d07804b9e0d3869bd4d20f020d7620ce7e352c43",
+      "prs": [
+        18
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/180/head",
+      "sha": "f7010ad1841c0f7146aa8544177911af0e98cfe9",
+      "prs": [
+        180
+      ],
+      "disposition": "exact_squash_tree_equivalent",
+      "local_head_object_available": false,
+      "proof_source": "GitHub Git commits API",
+      "equivalence": {
+        "head": "f7010ad1841c0f7146aa8544177911af0e98cfe9",
+        "merge": "5078be7059801ce3f2712ad3f47d4e23b32df147",
+        "pr": 180,
+        "merge_base": "5c4bb3052a87afc5b5158c3180a95cddda47a179",
+        "head_tree": "bdad3a2e610180a183b8bb78315cabfa416aa855",
+        "merge_tree": "bdad3a2e610180a183b8bb78315cabfa416aa855",
+        "head_parents": [
+          "5c4bb3052a87afc5b5158c3180a95cddda47a179"
+        ],
+        "merge_parents": [
+          "5c4bb3052a87afc5b5158c3180a95cddda47a179"
+        ],
+        "tree_equal": true
+      },
+      "merged_counterpart_ancestor_of_integration": true
+    },
+    {
+      "ref": "refs/pull/181/head",
+      "sha": "0b8e9ef6706709f2ebe4c7b1435691a13f485a62",
+      "prs": [
+        181
+      ],
+      "disposition": "exact_squash_tree_equivalent",
+      "local_head_object_available": false,
+      "proof_source": "GitHub Git commits API",
+      "equivalence": {
+        "head": "0b8e9ef6706709f2ebe4c7b1435691a13f485a62",
+        "merge": "6d645301ae5b28befbe29af9d26ae30dfa51459e",
+        "pr": 181,
+        "merge_base": "5078be7059801ce3f2712ad3f47d4e23b32df147",
+        "head_tree": "cf0ba04e2d292f8b26f0c48e138700b7400d173f",
+        "merge_tree": "cf0ba04e2d292f8b26f0c48e138700b7400d173f",
+        "head_parents": [
+          "5078be7059801ce3f2712ad3f47d4e23b32df147"
+        ],
+        "merge_parents": [
+          "5078be7059801ce3f2712ad3f47d4e23b32df147"
+        ],
+        "tree_equal": true
+      },
+      "merged_counterpart_ancestor_of_integration": true
+    },
+    {
+      "ref": "refs/pull/182/head",
+      "sha": "5fb04fb0bcaab54c11e3585717d7e33895bb339e",
+      "prs": [
+        182
+      ],
+      "disposition": "exact_squash_tree_equivalent",
+      "local_head_object_available": false,
+      "proof_source": "GitHub Git commits API",
+      "equivalence": {
+        "head": "5fb04fb0bcaab54c11e3585717d7e33895bb339e",
+        "merge": "609dc63f2fdc19e73b6ed7148d0b7c4f1bb41e44",
+        "pr": 182,
+        "merge_base": "a5e2422ba7441cfba93376c3d52b88fe7589d760",
+        "head_tree": "9034233e2cbcd21d715e7f6151b98f8b4164eb41",
+        "merge_tree": "9034233e2cbcd21d715e7f6151b98f8b4164eb41",
+        "head_parents": [
+          "a5e2422ba7441cfba93376c3d52b88fe7589d760"
+        ],
+        "merge_parents": [
+          "a5e2422ba7441cfba93376c3d52b88fe7589d760"
+        ],
+        "tree_equal": true
+      },
+      "merged_counterpart_ancestor_of_integration": true
+    },
+    {
+      "ref": "refs/pull/183/head",
+      "sha": "7e24454598a43e46821a75b3b43c14a9a89b572f",
+      "prs": [
+        183
+      ],
+      "disposition": "exact_squash_tree_equivalent",
+      "local_head_object_available": false,
+      "proof_source": "GitHub Git commits API",
+      "equivalence": {
+        "head": "7e24454598a43e46821a75b3b43c14a9a89b572f",
+        "merge": "7bfdc5774748da6636a03d0e9bd433a059861b0c",
+        "pr": 183,
+        "merge_base": "609dc63f2fdc19e73b6ed7148d0b7c4f1bb41e44",
+        "head_tree": "56425bb32e779dc833b24201a0d627d588ef4b01",
+        "merge_tree": "56425bb32e779dc833b24201a0d627d588ef4b01",
+        "head_parents": [
+          "609dc63f2fdc19e73b6ed7148d0b7c4f1bb41e44"
+        ],
+        "merge_parents": [
+          "609dc63f2fdc19e73b6ed7148d0b7c4f1bb41e44"
+        ],
+        "tree_equal": true
+      },
+      "merged_counterpart_ancestor_of_integration": true
+    },
+    {
+      "ref": "refs/pull/184/head",
+      "sha": "6d6c10eecf949e0b02320074988234a8ef5bf11a",
+      "prs": [
+        184
+      ],
+      "disposition": "exact_squash_tree_equivalent",
+      "local_head_object_available": false,
+      "proof_source": "GitHub Git commits API",
+      "equivalence": {
+        "head": "6d6c10eecf949e0b02320074988234a8ef5bf11a",
+        "merge": "58a834f28c265c7fe375f77a6ba41e2fa634fa1d",
+        "pr": 184,
+        "merge_base": "7bfdc5774748da6636a03d0e9bd433a059861b0c",
+        "head_tree": "b5035ab6f6324a477382856bc4450ae8170499b3",
+        "merge_tree": "b5035ab6f6324a477382856bc4450ae8170499b3",
+        "head_parents": [
+          "7bfdc5774748da6636a03d0e9bd433a059861b0c"
+        ],
+        "merge_parents": [
+          "7bfdc5774748da6636a03d0e9bd433a059861b0c"
+        ],
+        "tree_equal": true
+      },
+      "merged_counterpart_ancestor_of_integration": true
+    },
+    {
+      "ref": "refs/pull/185/head",
+      "sha": "d220aa43774fe36b01530400c3a10bd4228faa79",
+      "prs": [
+        185
+      ],
+      "disposition": "exact_squash_tree_equivalent",
+      "local_head_object_available": false,
+      "proof_source": "GitHub Git commits API",
+      "equivalence": {
+        "head": "d220aa43774fe36b01530400c3a10bd4228faa79",
+        "merge": "3cbc1cb105a066072f9a4d8d0a1c4b7be37ba240",
+        "pr": 185,
+        "merge_base": "904e08cc1a76f0d851b2ab67b84dc88b789394e8",
+        "head_tree": "c5c530c4d12e286149060990c6bb3b1d7adb3712",
+        "merge_tree": "c5c530c4d12e286149060990c6bb3b1d7adb3712",
+        "head_parents": [
+          "904e08cc1a76f0d851b2ab67b84dc88b789394e8"
+        ],
+        "merge_parents": [
+          "904e08cc1a76f0d851b2ab67b84dc88b789394e8"
+        ],
+        "tree_equal": true
+      },
+      "merged_counterpart_ancestor_of_integration": true
+    },
+    {
+      "ref": "refs/pull/186/head",
+      "sha": "ca8b789d4ceaa2b74cdb7e256cdd90746c702594",
+      "prs": [
+        186
+      ],
+      "disposition": "exact_squash_tree_equivalent",
+      "local_head_object_available": false,
+      "proof_source": "GitHub Git commits API",
+      "equivalence": {
+        "head": "ca8b789d4ceaa2b74cdb7e256cdd90746c702594",
+        "merge": "3c98635249dc7ec671ea54bf7342ad0f067dfa82",
+        "pr": 186,
+        "merge_base": "3cbc1cb105a066072f9a4d8d0a1c4b7be37ba240",
+        "head_tree": "16df07a7ba6c767fe450188241afb4da5a1ba648",
+        "merge_tree": "16df07a7ba6c767fe450188241afb4da5a1ba648",
+        "head_parents": [
+          "3cbc1cb105a066072f9a4d8d0a1c4b7be37ba240"
+        ],
+        "merge_parents": [
+          "3cbc1cb105a066072f9a4d8d0a1c4b7be37ba240"
+        ],
+        "tree_equal": true
+      },
+      "merged_counterpart_ancestor_of_integration": true
+    },
+    {
+      "ref": "refs/pull/187/head",
+      "sha": "781ab2ac8e6434d2077f6cb30c500819dce8a294",
+      "prs": [
+        187
+      ],
+      "disposition": "exact_squash_tree_equivalent",
+      "local_head_object_available": false,
+      "proof_source": "GitHub Git commits API",
+      "equivalence": {
+        "head": "781ab2ac8e6434d2077f6cb30c500819dce8a294",
+        "merge": "10e0908fc46641a3fc19a39c34b5a12390496e80",
+        "pr": 187,
+        "merge_base": "3c98635249dc7ec671ea54bf7342ad0f067dfa82",
+        "head_tree": "63b657c1c7490ae177df37e6f66317592cd5512a",
+        "merge_tree": "63b657c1c7490ae177df37e6f66317592cd5512a",
+        "head_parents": [
+          "3c98635249dc7ec671ea54bf7342ad0f067dfa82"
+        ],
+        "merge_parents": [
+          "3c98635249dc7ec671ea54bf7342ad0f067dfa82"
+        ],
+        "tree_equal": true
+      },
+      "merged_counterpart_ancestor_of_integration": true
+    },
+    {
+      "ref": "refs/pull/188/head",
+      "sha": "16cfd8196eda7b791c4e7efa47896f3f233ab10e",
+      "prs": [
+        188
+      ],
+      "disposition": "exact_squash_tree_equivalent",
+      "local_head_object_available": false,
+      "proof_source": "GitHub Git commits API",
+      "equivalence": {
+        "head": "16cfd8196eda7b791c4e7efa47896f3f233ab10e",
+        "merge": "529e15b4daff0469b0da277c1a9c7740b2a8d468",
+        "pr": 188,
+        "merge_base": "10e0908fc46641a3fc19a39c34b5a12390496e80",
+        "head_tree": "dedd2f5924a42ab5231c5dacb827994324d29942",
+        "merge_tree": "dedd2f5924a42ab5231c5dacb827994324d29942",
+        "head_parents": [
+          "10e0908fc46641a3fc19a39c34b5a12390496e80"
+        ],
+        "merge_parents": [
+          "10e0908fc46641a3fc19a39c34b5a12390496e80"
+        ],
+        "tree_equal": true
+      },
+      "merged_counterpart_ancestor_of_integration": true
+    },
+    {
+      "ref": "refs/pull/189/head",
+      "sha": "c5927513b337fea005080ad5e5d3dd7440c6210c",
+      "prs": [
+        189
+      ],
+      "disposition": "exact_squash_tree_equivalent",
+      "local_head_object_available": false,
+      "proof_source": "GitHub Git commits API",
+      "equivalence": {
+        "head": "c5927513b337fea005080ad5e5d3dd7440c6210c",
+        "merge": "96dfe7c759b796e5101574949feb8f12844854d7",
+        "pr": 189,
+        "merge_base": "529e15b4daff0469b0da277c1a9c7740b2a8d468",
+        "head_tree": "34777a5b2649a3a8b35635111689174b05c1f043",
+        "merge_tree": "34777a5b2649a3a8b35635111689174b05c1f043",
+        "head_parents": [
+          "529e15b4daff0469b0da277c1a9c7740b2a8d468"
+        ],
+        "merge_parents": [
+          "529e15b4daff0469b0da277c1a9c7740b2a8d468"
+        ],
+        "tree_equal": true
+      },
+      "merged_counterpart_ancestor_of_integration": true
+    },
+    {
+      "ref": "refs/pull/19/head",
+      "sha": "261ae0a091cf87639da8feb2bcdf38efec61f106",
+      "prs": [
+        19
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/190/head",
+      "sha": "120127794ea061f2f2fd2385d516b74e2e4ebb48",
+      "prs": [
+        190
+      ],
+      "disposition": "exact_squash_tree_equivalent",
+      "local_head_object_available": false,
+      "proof_source": "GitHub Git commits API",
+      "equivalence": {
+        "head": "120127794ea061f2f2fd2385d516b74e2e4ebb48",
+        "merge": "ea74845466837a3a2748068b0ce2fa6920e5e7df",
+        "pr": 190,
+        "merge_base": "37af4410be09081420d2597f53572379eca25464",
+        "head_tree": "03e9862f5a4c75d55898335b4d107f102a58c0f7",
+        "merge_tree": "03e9862f5a4c75d55898335b4d107f102a58c0f7",
+        "head_parents": [
+          "37af4410be09081420d2597f53572379eca25464"
+        ],
+        "merge_parents": [
+          "37af4410be09081420d2597f53572379eca25464"
+        ],
+        "tree_equal": true
+      },
+      "merged_counterpart_ancestor_of_integration": true
+    },
+    {
+      "ref": "refs/pull/191/head",
+      "sha": "f9138cc1e51f52b4b9cb99b4b09b9ce32e1450c8",
+      "prs": [
+        191
+      ],
+      "disposition": "exact_squash_tree_equivalent",
+      "local_head_object_available": false,
+      "proof_source": "GitHub Git commits API",
+      "equivalence": {
+        "head": "f9138cc1e51f52b4b9cb99b4b09b9ce32e1450c8",
+        "merge": "73e828175a76f9b7fe0014268ebbc59fd6ba4cfe",
+        "pr": 191,
+        "merge_base": "ea74845466837a3a2748068b0ce2fa6920e5e7df",
+        "head_tree": "fee9b371db728fdb3be8f2c773318a03b4d374ec",
+        "merge_tree": "fee9b371db728fdb3be8f2c773318a03b4d374ec",
+        "head_parents": [
+          "ea74845466837a3a2748068b0ce2fa6920e5e7df"
+        ],
+        "merge_parents": [
+          "ea74845466837a3a2748068b0ce2fa6920e5e7df"
+        ],
+        "tree_equal": true
+      },
+      "merged_counterpart_ancestor_of_integration": true
+    },
+    {
+      "ref": "refs/pull/192/head",
+      "sha": "391ccbda8553e5c9104226fdf42d2a1e2c028b33",
+      "prs": [
+        192
+      ],
+      "disposition": "exact_squash_tree_equivalent",
+      "local_head_object_available": false,
+      "proof_source": "GitHub Git commits API",
+      "equivalence": {
+        "head": "391ccbda8553e5c9104226fdf42d2a1e2c028b33",
+        "merge": "91012624f1261c8065c0da601b1320d7a8f5670e",
+        "pr": 192,
+        "merge_base": "73e828175a76f9b7fe0014268ebbc59fd6ba4cfe",
+        "head_tree": "a37697b131e4c991035f371013fc5d49d866667e",
+        "merge_tree": "a37697b131e4c991035f371013fc5d49d866667e",
+        "head_parents": [
+          "73e828175a76f9b7fe0014268ebbc59fd6ba4cfe"
+        ],
+        "merge_parents": [
+          "73e828175a76f9b7fe0014268ebbc59fd6ba4cfe"
+        ],
+        "tree_equal": true
+      },
+      "merged_counterpart_ancestor_of_integration": true
+    },
+    {
+      "ref": "refs/pull/193/head",
+      "sha": "4fd51df9a05f0380297ed512fea35d0deb09ef85",
+      "prs": [
+        193
+      ],
+      "disposition": "exact_squash_tree_equivalent",
+      "local_head_object_available": false,
+      "proof_source": "GitHub Git commits API",
+      "equivalence": {
+        "head": "4fd51df9a05f0380297ed512fea35d0deb09ef85",
+        "merge": "d36bd2412806e981ae12f7b2742a7fc0bde88234",
+        "pr": 193,
+        "merge_base": "91012624f1261c8065c0da601b1320d7a8f5670e",
+        "head_tree": "0cbc4700a73db47bd5585cee4aa91f281ad8efd0",
+        "merge_tree": "0cbc4700a73db47bd5585cee4aa91f281ad8efd0",
+        "head_parents": [
+          "91012624f1261c8065c0da601b1320d7a8f5670e"
+        ],
+        "merge_parents": [
+          "91012624f1261c8065c0da601b1320d7a8f5670e"
+        ],
+        "tree_equal": true
+      },
+      "merged_counterpart_ancestor_of_integration": true
+    },
+    {
+      "ref": "refs/pull/194/head",
+      "sha": "116a309ef09d9bba04b7f2d3fd3c4956a478aca5",
+      "prs": [
+        194
+      ],
+      "disposition": "exact_squash_tree_equivalent",
+      "local_head_object_available": false,
+      "proof_source": "GitHub Git commits API",
+      "equivalence": {
+        "head": "116a309ef09d9bba04b7f2d3fd3c4956a478aca5",
+        "merge": "4eea7d1676ef4474c1def51781666eb59437b845",
+        "pr": 194,
+        "merge_base": "d36bd2412806e981ae12f7b2742a7fc0bde88234",
+        "head_tree": "4707720a11193a7ce336c6e03e2736e1a7350922",
+        "merge_tree": "4707720a11193a7ce336c6e03e2736e1a7350922",
+        "head_parents": [
+          "d36bd2412806e981ae12f7b2742a7fc0bde88234"
+        ],
+        "merge_parents": [
+          "d36bd2412806e981ae12f7b2742a7fc0bde88234"
+        ],
+        "tree_equal": true
+      },
+      "merged_counterpart_ancestor_of_integration": true
+    },
+    {
+      "ref": "refs/pull/195/head",
+      "sha": "0e81360c0090244e73cf850e89166dbe557fd67b",
+      "prs": [
+        195
+      ],
+      "disposition": "exact_squash_tree_equivalent",
+      "local_head_object_available": false,
+      "proof_source": "GitHub Git commits API",
+      "equivalence": {
+        "head": "0e81360c0090244e73cf850e89166dbe557fd67b",
+        "merge": "bf0255a168576b0d9993d8b668f2a7d0d943fd4f",
+        "pr": 195,
+        "merge_base": "4eea7d1676ef4474c1def51781666eb59437b845",
+        "head_tree": "3532aeb05dce6a07e9ec0b25bcebc891cc30594e",
+        "merge_tree": "3532aeb05dce6a07e9ec0b25bcebc891cc30594e",
+        "head_parents": [
+          "4eea7d1676ef4474c1def51781666eb59437b845"
+        ],
+        "merge_parents": [
+          "4eea7d1676ef4474c1def51781666eb59437b845"
+        ],
+        "tree_equal": true
+      },
+      "merged_counterpart_ancestor_of_integration": true
+    },
+    {
+      "ref": "refs/pull/20/head",
+      "sha": "02c92b6cdd2936dd9bd10d35b1d9ad22479997e7",
+      "prs": [
+        20
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/21/head",
+      "sha": "4769da0812cb4c7eb19cfd88019f9c059d2b75b2",
+      "prs": [
+        21
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/22/head",
+      "sha": "b71da724fc4686e45ac8235c8cf604a184b02ec8",
+      "prs": [
+        22
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/23/head",
+      "sha": "8537a7e20d8fa6f36612ee29e725710a643d39f1",
+      "prs": [
+        23
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/24/head",
+      "sha": "da7c3e940d022dd585708beac2de2cd5c3d10be2",
+      "prs": [
+        24
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/25/head",
+      "sha": "ef149b2edd4659205cbfb6efff4cfd6789659bde",
+      "prs": [
+        25
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/26/head",
+      "sha": "46976afeaaa7e5cb03203884798c7663d27ebb2b",
+      "prs": [
+        26
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/27/head",
+      "sha": "da3ba2dd95ba25e37ea831dc19765d3bd15c6455",
+      "prs": [
+        27
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/28/head",
+      "sha": "e5858440cfc383aae7c000372f6f223a7041c85c",
+      "prs": [
+        28
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/29/head",
+      "sha": "b42e103344f5f4acb18fc4c1f60149481d9906d6",
+      "prs": [
+        29
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/30/head",
+      "sha": "b5d204c6d532caff008a42b4dcf000f3a06f4b66",
+      "prs": [
+        30
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/31/head",
+      "sha": "ab45ac55990233492208549c18f42dfe51e518e4",
+      "prs": [
+        31
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/32/head",
+      "sha": "b31b114ed7aa368861056f183b1a61edb436a97c",
+      "prs": [
+        32
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/33/head",
+      "sha": "f2eb2911cbf53833f5f385675edc4326b4787496",
+      "prs": [
+        33
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/34/head",
+      "sha": "eebffef31b7bd96d03dcc939b6b6cdb46aee2c0c",
+      "prs": [
+        34
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/35/head",
+      "sha": "dfe7a175148a95cc80738142c85a88e2bd8b9810",
+      "prs": [
+        35
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/36/head",
+      "sha": "3d40ffc1a04be27077531b9c0e90520f36b4dc2d",
+      "prs": [
+        36
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/37/head",
+      "sha": "429d9edf052dece0db48a6f41fc04b0d95b6c70b",
+      "prs": [
+        37
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/38/head",
+      "sha": "d95f46c4f12beb037cd64fb2c8910173500a7ca7",
+      "prs": [
+        38
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/39/head",
+      "sha": "cec4b8d11f59c0c9ddbe53706ef35fcea909aa8d",
+      "prs": [
+        39
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/40/head",
+      "sha": "08c9f8453589c2d1c43f7b2f3a6f79199ad953b3",
+      "prs": [
+        40
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/41/head",
+      "sha": "44aadba3b515fbbca0a7b2520be84204ee603007",
+      "prs": [
+        41
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/42/head",
+      "sha": "ea4446482d7ca513160669fbb48e641397c6514f",
+      "prs": [
+        42
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/43/head",
+      "sha": "1dbb98105d96fc3c9a42ce105d2f3d87f30f2eef",
+      "prs": [
+        43
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/45/head",
+      "sha": "f39bcd927f32729e63194f35db019c36802d1c67",
+      "prs": [
+        45
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/47/head",
+      "sha": "be318f380fc47f94975a35c0924c89190d46f990",
+      "prs": [
+        47
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/49/head",
+      "sha": "b76bbfafda1cb69d7a343b9777af42db8c1b717a",
+      "prs": [
+        49
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/5/head",
+      "sha": "af7ef4beb93f97c89697e3780d9fd0a882f3dbaf",
+      "prs": [
+        5
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/50/head",
+      "sha": "83049a2edf71b9d8b5dcf9aebd4ee187f4c6199f",
+      "prs": [
+        50
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/51/head",
+      "sha": "20aaf76d213ec0cde07c505287f8a2e48d683db2",
+      "prs": [
+        51
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/52/head",
+      "sha": "c9c0f58ae1c4c73f64417e807901549e33fd77a8",
+      "prs": [
+        52
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/53/head",
+      "sha": "bffdfbb49433859823081f2198f16e33be8369a6",
+      "prs": [
+        53
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/54/head",
+      "sha": "28b7b9ce388e08345aa995037256ab50ab0e17b9",
+      "prs": [
+        54
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/55/head",
+      "sha": "9a3e07808ed883938d2e6139593a406065a8a75c",
+      "prs": [
+        55
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/56/head",
+      "sha": "d3d69c1cfa8ab35a3aa54d562a2c63d298ca9476",
+      "prs": [
+        56
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/57/head",
+      "sha": "62e438e6836949207b4541b818c1c261bb7104fe",
+      "prs": [
+        57
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/58/head",
+      "sha": "9887b53272d5f747cae9f73b363748985937ad05",
+      "prs": [
+        58
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/59/head",
+      "sha": "132f70e746aa9815a51a046ab02e83393d084622",
+      "prs": [
+        59
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/6/head",
+      "sha": "a0ada3b3cd344bbdacf01313ac2d72749b72d4d0",
+      "prs": [
+        6
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/60/head",
+      "sha": "f798f27d823ee846b5e6238e167970e0345612ed",
+      "prs": [
+        60
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/61/head",
+      "sha": "a452b7ade6ccdd9cd39804155309a21797f2612a",
+      "prs": [
+        61
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/62/head",
+      "sha": "cdeedaf48f9892fe82191f090afccf15529db1a6",
+      "prs": [
+        62
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/63/head",
+      "sha": "baccf470e946fc86fde41c96443423006eac2be7",
+      "prs": [
+        63
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/64/head",
+      "sha": "c8f4561343ff0abca6aa3ffffeb45892c2fc7bd1",
+      "prs": [
+        64
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/65/head",
+      "sha": "55dd210a2eb6db7cc5c100507d63be411f30b679",
+      "prs": [
+        65
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/66/head",
+      "sha": "42ae79ce5dbaec184726b538c7100823a4b1edfe",
+      "prs": [
+        66
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/67/head",
+      "sha": "403e942dc99779883210125a01841ef209e19d2e",
+      "prs": [
+        67
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/68/head",
+      "sha": "9cd18e7c704937897d037b1051d38341d4928bf5",
+      "prs": [
+        68
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/69/head",
+      "sha": "cd1447740f2834ec68af97beb3a3dad47cffd68b",
+      "prs": [
+        69
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/7/head",
+      "sha": "1311b04a3e7a9d810b46173dbaa73ea6265fe886",
+      "prs": [
+        7
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/70/head",
+      "sha": "5b2f1fabf9ac642a906d2275e753e098c324ddeb",
+      "prs": [
+        70
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/71/head",
+      "sha": "50a9547a3a6aca251a46b5140f93fb87c789e848",
+      "prs": [
+        71
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/72/head",
+      "sha": "8f117e7f85aba2adffb63bdd6511ca2d112c31a8",
+      "prs": [
+        72
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/73/head",
+      "sha": "d76fe9bbb743e4194bfd54edc930abe9ad4f4854",
+      "prs": [
+        73
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/74/head",
+      "sha": "e473083f7439b5d8592f43c6ca2f013cdb50c5a1",
+      "prs": [
+        74
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/75/head",
+      "sha": "47b7c57012cfc23f8100bad8c5a7fb4c53171a12",
+      "prs": [
+        75
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/76/head",
+      "sha": "2297f8e3f7a261c8cbf80b48ffa70bf25df2998d",
+      "prs": [
+        76
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/77/head",
+      "sha": "77af99427e2d7d1b3719a22376a4ebf56508edbd",
+      "prs": [
+        77
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/78/head",
+      "sha": "005771bd53f2cd437cb70b23ebe83c224792bd00",
+      "prs": [
+        78
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/79/head",
+      "sha": "788e1f005e72371d0cf2182ae0cec81dd4e84adb",
+      "prs": [
+        79
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/8/head",
+      "sha": "29580c7ddf6fca7ba74440ff146535fe5da51800",
+      "prs": [
+        8
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/80/head",
+      "sha": "fdf8c35014367834570bb89a3902f50fd132e865",
+      "prs": [
+        80
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/81/head",
+      "sha": "3bb4874de0785edf0b0fa24d2d0ea05a74c58b71",
+      "prs": [
+        81
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/82/head",
+      "sha": "085495527e0ab02f52eeded928d54cb766b79910",
+      "prs": [
+        82
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/83/head",
+      "sha": "d46b35a23a3d0631bc509e115fa003b1e64ebd67",
+      "prs": [
+        83
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/84/head",
+      "sha": "464e4dd3f548302ee5b9f78994fa09caf95437bc",
+      "prs": [
+        84
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/85/head",
+      "sha": "d8643faed99c03a3d6fdba91bf047c690a50ea5b",
+      "prs": [
+        85
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/86/head",
+      "sha": "120f839ab9091bdbedf326621347ee737140e043",
+      "prs": [
+        86
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/87/head",
+      "sha": "8b0c01597c231814815bf5456ab0a616102e7307",
+      "prs": [
+        87
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/88/head",
+      "sha": "b100cd751688f13609a8829180b487b381588d14",
+      "prs": [
+        88
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/89/head",
+      "sha": "84c3a1172759abdbab0c320142ae190e532f7753",
+      "prs": [
+        89
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/9/head",
+      "sha": "07df87d7ae616b702de887f3327916aeb3f67ad5",
+      "prs": [
+        9
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/90/head",
+      "sha": "e103d8c6fd6dc8c8c3d73467a8a1eb15fb8471d4",
+      "prs": [
+        90
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/91/head",
+      "sha": "b3be1616199a049a6a239a0199a3b5ac890aea21",
+      "prs": [
+        91
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/92/head",
+      "sha": "7cb65d768f2b096230f8bd32afc6c954baae7416",
+      "prs": [
+        92
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/93/head",
+      "sha": "19bbb8606a87492f991261eb3fb79ed1d9f2c299",
+      "prs": [
+        93
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/94/head",
+      "sha": "ef88da683a8ad68e57bde5d6d794698add46d2b1",
+      "prs": [
+        94
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/95/head",
+      "sha": "02160e56ffb3ec2e11c47447fa2c3203e4268cc3",
+      "prs": [
+        95
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "ref": "refs/pull/97/head",
+      "sha": "cfae329b3dee73ececc6b689c9936339dd3e6a49",
+      "prs": [
+        97
+      ],
+      "disposition": "ancestor"
+    }
+  ],
+  "all_incoming_refs_have_recorded_disposition": true,
+  "proof_note": "Actual ancestry checked with local Git commit metadata. The 24 newer squash heads were read from the GitHub Git commits API, where each entire tree equals its merged counterpart; every counterpart is a local ancestor of the frozen main. Raw blob downloads are unnecessary for exact Git tree equality."
+}

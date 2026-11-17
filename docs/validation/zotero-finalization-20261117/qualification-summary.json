@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "status": "passed",
+  "packaged_utc": "2026-11-16T23:32:04.711564+00:00",
+  "canonical_source": "5b05664357eead5ddc86922bab248224dbd4da6d",
+  "canonical_tree": "2a4182733997948c243e322515c5401349cf295a",
+  "host_source": "342b744a3cb66e3ee9387733ebcf8613cdb23a33",
+  "host_tree": "276d73be08e5e37ee467cce4ad196f5dde1eac04",
+  "tests": {
+    "canonical_zotero": 576,
+    "canonical_integration": 460,
+    "harper_adapter": 23,
+    "actual_host": 41,
+    "python_sync": 28
+  },
+  "total_fresh_tests": 1128,
+  "canonical_cohorts": {
+    "editor-hyphenation-integration": 30,
+    "editor-proofing-integration": 107,
+    "editor-recovery-integration": 12,
+    "editor-zotero": 186,
+    "engine-ods-integration": 102,
+    "engine-proofing-integration": 84,
+    "engine-recovery-integration": 94,
+    "engine-word-layout-integration": 31,
+    "engine-zotero": 390
+  },
+  "test_file_counts": {
+    "canonical": 63,
+    "harper": 3,
+    "host": 4
+  },
+  "strict_analysis_and_format_targets": {
+    "canonical": 49,
+    "harper": 5,
+    "studio": 1,
+    "host_and_vendor": 34
+  },
+  "managed_files": {
+    "canonical": 664,
+    "standalone_parser": 1857,
+    "total": 2521
+  },
+  "frozen_refs": {
+    "quds": {
+      "refs": 189,
+      "ancestors": 189
+    },
+    "host": {
+      "refs": 274,
+      "ancestors": 214,
+      "exact_tree_aliases": 60
+    }
+  },
+  "all_source_dependency_harness_and_config_gates_passed": true,
+  "historical_and_intermediate_counts_added": false,
+  "github_actions_queried_awaited_or_rerun": false,
+  "scope_limits": [
+    "Focused test graphs, not a new full application build",
+    "No fresh live Zotero, Word/LibreOffice, native picker, platform launch or keychain acceptance",
+    "Harper adapter uses injected transports; no new native/Wasm acceptance",
+    "Eight inherited host executable-mode differences preserved"
+  ],
+  "archives": [
+    {
+      "file": "canonical-evidence.tar.gz",
+      "bytes": 554019,
+      "sha256": "3a88b2a059db9d8af23e107d7bb71b3c39afe584f4058b942293b5ad24eeb0a4",
+      "entries": 33
+    },
+    {
+      "file": "harper-studio-evidence.tar.gz",
+      "bytes": 723804,
+      "sha256": "0b2b6727be349d46415b1b6f3f2bb00224382e728ba1774ffc20425af06714c8",
+      "entries": 23
+    },
+    {
+      "file": "setup-evidence.tar.gz",
+      "bytes": 88719,
+      "sha256": "6460cef2b61683afb80c6df9264d11ef27a3ed0ca5f230049caed7a7ce4aa4f8",
+      "entries": 35
+    },
+    {
+      "file": "incoming-audit-evidence.tar.gz",
+      "bytes": 89595,
+      "sha256": "db8aac526fc281b070f5db4d42df93bf1a7453bd5d3e5ec16e26ed8d5b8c5459",
+      "entries": 32
+    }
+  ],
+  "host_archive": {
+    "url": "https://github.com/CrispStrobe/CrispCloud/blob/codex/zotero-recovery-20261116/docs/validation/zotero-finalization-20261117/host-evidence.tar.gz",
+    "created_utc": "2026-11-16T23:27:10.722344+00:00",
+    "status": "host qualification complete; canonical qualification continues separately",
+    "source_commit": "342b744a3cb66e3ee9387733ebcf8613cdb23a33",
+    "source_tree": "276d73be08e5e37ee467cce4ad196f5dde1eac04",
+    "canonical_pin": "5b05664357eead5ddc86922bab248224dbd4da6d",
+    "archive": "host-evidence.tar.gz",
+    "archive_sha256": "99f023675487194577c54d4686f3b06ad6c8f519368fcb3876cbe7a45c0a4055",
+    "archive_files": 48,
+    "passed_host_tests": 41,
+    "passed_python_tests": 28,
+    "managed_files": 2521,
+    "analysis_targets": 34
+  }
+}

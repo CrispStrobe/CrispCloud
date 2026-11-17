@@ -94,6 +94,16 @@ class SfntFont {
 
   /// parse API.
   factory SfntFont.parse(Uint8List bytes) {
+    try {
+      return _parse(bytes);
+    } on RangeError {
+      throw const SfntException(
+        'SFNT table data is truncated or out of bounds',
+      );
+    }
+  }
+
+  static SfntFont _parse(Uint8List bytes) {
     if (bytes.length < 12) {
       throw const SfntException('SFNT header is truncated');
     }
@@ -101,12 +111,21 @@ class SfntFont {
     header.u32be(); // sfntVersion
     final int numTables = header.u16be();
     header.skip(6);
+    if (numTables > header.remaining ~/ 16) {
+      throw const SfntException('SFNT table directory is truncated');
+    }
     final Map<String, SfntTableRecord> tables = <String, SfntTableRecord>{};
     for (int i = 0; i < numTables; i++) {
       final String tag = String.fromCharCodes(header.bytes(4));
       final int checksum = header.u32be();
       final int offset = header.u32be();
       final int length = header.u32be();
+      if (offset > bytes.length || length > bytes.length - offset) {
+        throw SfntException('SFNT table $tag is outside the font');
+      }
+      if (tables.containsKey(tag)) {
+        throw SfntException('Duplicate SFNT table $tag');
+      }
       tables[tag] = SfntTableRecord(
         tag: tag,
         checksum: checksum,
@@ -233,7 +252,7 @@ class SfntFont {
       advanceWidths: advances,
       leftSideBearings: lsbs,
       glyphOffsets: loca,
-      cmap: CmapTable.parse(table('cmap')),
+      cmap: CmapTable.parse(table('cmap'), numGlyphs: numGlyphs),
       familyName: family,
     );
   }
@@ -330,87 +349,153 @@ class SfntTableRecord {
   final int length;
 }
 
-/// Character-to-glyph map supporting cmap format 4 and 12.
+typedef _CmapGroup = ({int start, int end, int glyph});
+
+/// Character-to-glyph map supporting cmap formats 0, 4 and 12.
 class CmapTable {
   /// CmapTable API.
-  CmapTable(this._map);
+  CmapTable(this._map) : _groups = const <_CmapGroup>[];
+
+  CmapTable._format12(this._groups) : _map = const <int, int>{};
 
   final Map<int, int> _map;
+  final List<_CmapGroup> _groups;
 
-  /// parse API.
-  factory CmapTable.parse(ByteCursor cmap) {
-    cmap.u16be(); // version
-    final int numTables = cmap.u16be();
-    final List<({int score, int offset})> tables =
-        <({int score, int offset})>[];
+  /// Selects one supported encoding and validates every mapping it contains.
+  ///
+  /// [numGlyphs] is the font's `maxp.numGlyphs`. Without a font directory,
+  /// glyph IDs are still restricted to the unsigned 16-bit SFNT range.
+  /// Unicode encodings take precedence over legacy encoded character codes;
+  /// full Unicode coverage takes precedence over BMP coverage. Subtables are
+  /// exclusive, so their mappings are never combined or ranked by population.
+  factory CmapTable.parse(ByteCursor cmap, {int numGlyphs = 0x10000}) {
+    if (numGlyphs < 1 || numGlyphs > 0x10000) {
+      throw const SfntException('Invalid cmap glyph count');
+    }
+    if (cmap.offset < 0 || cmap.remaining < 4) {
+      throw const SfntException('cmap header is truncated');
+    }
+    final data = ByteData.sublistView(cmap.buffer, cmap.offset);
+    if (data.getUint16(0) != 0) {
+      throw const SfntException('Unsupported cmap table version');
+    }
+    final numTables = data.getUint16(2);
+    final directoryEnd = 4 + numTables * 8;
+    if (directoryEnd > data.lengthInBytes) {
+      throw const SfntException('cmap encoding directory is truncated');
+    }
+    final tables = <({int score, int offset, int format, bool unicode})>[];
     for (int i = 0; i < numTables; i++) {
-      final int platform = cmap.u16be();
-      final int encoding = cmap.u16be();
-      final int offset = cmap.u32be();
-      tables.add((score: _score(platform, encoding), offset: offset));
+      final record = 4 + i * 8;
+      final platform = data.getUint16(record);
+      final encoding = data.getUint16(record + 2);
+      final offset = data.getUint32(record + 4);
+      if (offset < directoryEnd || offset > data.lengthInBytes - 2) {
+        throw const SfntException('cmap subtable offset is outside its data');
+      }
+      final format = data.getUint16(offset);
+      if (format != 0 && format != 4 && format != 12) {
+        continue;
+      }
+      // Unicode variation sequences and last-resort coverage have different
+      // formats and cannot serve as the ordinary character-to-glyph map.
+      if (platform == 0 && encoding > 4) {
+        continue;
+      }
+      tables.add((
+        score: _score(platform, encoding, format),
+        offset: offset,
+        format: format,
+        unicode: _isUnicode(platform, encoding),
+      ));
     }
     tables.sort(
       (a, b) => b.score != a.score ? b.score - a.score : a.offset - b.offset,
     );
-    Map<int, int> best = <int, int>{0: 0};
-    var bestHits = -1;
-    for (final ({int score, int offset}) table in tables) {
-      cmap.seek(table.offset);
-      final Map<int, int> map = <int, int>{};
-      if (!_parseEncoding(cmap, map)) {
-        continue;
-      }
-      map.putIfAbsent(0, () => 0);
-      final int hits = map.values.where((int gid) => gid != 0).length;
-      if (hits > bestHits) {
-        best = map;
-        bestHits = hits;
-      }
+    if (tables.isEmpty) {
+      return CmapTable(<int, int>{0: 0});
     }
-    return CmapTable(best);
-  }
-
-  static bool _parseEncoding(ByteCursor cmap, Map<int, int> map) {
-    final int format = cmap.u16be();
-    if (format == 4) {
-      _parseFormat4(cmap, map);
-      return true;
+    final selected = tables.first;
+    final offset = selected.offset;
+    final format = selected.format;
+    final headerLength = format == 12 ? 16 : 6;
+    if (headerLength > data.lengthInBytes - offset) {
+      throw SfntException('cmap format $format header is truncated');
     }
+    final length = format == 12
+        ? data.getUint32(offset + 4)
+        : data.getUint16(offset + 2);
+    if (length < headerLength || length > data.lengthInBytes - offset) {
+      throw SfntException('Invalid cmap format $format length');
+    }
+    final subtable = ByteData.sublistView(
+      cmap.buffer,
+      cmap.offset + offset,
+      cmap.offset + offset + length,
+    );
     if (format == 12) {
-      cmap.skip(2);
-      cmap.u32be();
-      cmap.u32be();
-      _parseFormat12(cmap, map);
-      return true;
+      return _parseFormat12(subtable, numGlyphs);
     }
+    if (format == 4) {
+      return _parseFormat4(subtable, numGlyphs, unicode: selected.unicode);
+    }
+    final map = <int, int>{};
     if (format == 0) {
-      cmap.u16be();
-      cmap.u16be();
-      for (int i = 0; i < 256; i++) {
-        map[i] = cmap.u8();
+      if (length != 262) {
+        throw const SfntException('Invalid cmap format 0 glyph-array length');
       }
-      return true;
+      for (int i = 0; i < 256; i++) {
+        final glyph = subtable.getUint8(6 + i);
+        _checkGlyph(glyph, numGlyphs);
+        map[i] = glyph;
+      }
     }
-    return false;
+    return CmapTable(map);
   }
 
   /// glyphId API.
-  int glyphId(int codePoint) => _map[codePoint] ?? 0;
+  int glyphId(int codePoint) {
+    if (_groups.isEmpty) {
+      return _map[codePoint] ?? 0;
+    }
+    var lo = 0;
+    var hi = _groups.length - 1;
+    while (lo <= hi) {
+      final middle = lo + ((hi - lo) ~/ 2);
+      final group = _groups[middle];
+      if (codePoint < group.start) {
+        hi = middle - 1;
+      } else if (codePoint > group.end) {
+        lo = middle + 1;
+      } else {
+        return group.glyph + codePoint - group.start;
+      }
+    }
+    return 0;
+  }
 
   /// mappings API.
-  Iterable<MapEntry<int, int>> get mappings => _map.entries;
+  Iterable<MapEntry<int, int>> get mappings sync* {
+    if (_groups.isEmpty) {
+      yield* _map.entries;
+      return;
+    }
+    if (_groups.first.start != 0) {
+      yield const MapEntry(0, 0);
+    }
+    for (final group in _groups) {
+      for (var code = group.start; code <= group.end; code++) {
+        yield MapEntry(code, group.glyph + code - group.start);
+      }
+    }
+  }
 
-  static int _score(int platform, int encoding) {
-    if (platform == 3 && encoding == 10) {
-      return 40;
+  static int _score(int platform, int encoding, int format) {
+    if (_isUnicode(platform, encoding)) {
+      final coverage = format == 12 ? 200 : (format == 4 ? 100 : 0);
+      return 1000 + coverage + (platform == 3 ? 10 : 0) + encoding;
     }
-    if (platform == 0 && encoding == 4) {
-      return 35;
-    }
-    if (platform == 3 && encoding == 1) {
-      return 30;
-    }
-    if (platform == 0) {
+    if (platform == 3 && encoding == 0) {
       return 20;
     }
     if (platform == 1) {
@@ -419,65 +504,122 @@ class CmapTable {
     return 0;
   }
 
-  static void _parseFormat4(ByteCursor cmap, Map<int, int> map) {
-    final int length = cmap.u16be();
-    final int start = cmap.offset - 4;
-    cmap.u16be(); // language
-    final int segCountX2 = cmap.u16be();
-    final int segCount = segCountX2 ~/ 2;
-    cmap.skip(6);
-    final List<int> endCodes = <int>[
-      for (int i = 0; i < segCount; i++) cmap.u16be(),
-    ];
-    cmap.u16be(); // reserved
-    final List<int> startCodes = <int>[
-      for (int i = 0; i < segCount; i++) cmap.u16be(),
-    ];
-    final List<int> idDeltas = <int>[
-      for (int i = 0; i < segCount; i++) cmap.i16be(),
-    ];
-    final int rangeOffsetBase = cmap.offset;
-    final List<int> idRangeOffsets = <int>[
-      for (int i = 0; i < segCount; i++) cmap.u16be(),
-    ];
+  static bool _isUnicode(int platform, int encoding) =>
+      platform == 0 || (platform == 3 && (encoding == 1 || encoding == 10));
+
+  static CmapTable _parseFormat4(
+    ByteData data,
+    int numGlyphs, {
+    required bool unicode,
+  }) {
+    final length = data.lengthInBytes;
+    if (length < 24 || length.isOdd) {
+      throw const SfntException('Invalid cmap format 4 segment-array length');
+    }
+    final segCountX2 = data.getUint16(6);
+    if (segCountX2 == 0 || segCountX2.isOdd) {
+      throw const SfntException('Invalid cmap format 4 segment count');
+    }
+    final segCount = segCountX2 ~/ 2;
+    final glyphArrayStart = 16 + segCount * 8;
+    if (glyphArrayStart > length) {
+      throw const SfntException('cmap format 4 segment arrays are truncated');
+    }
+    if (data.getUint16(14 + segCount * 2) != 0) {
+      throw const SfntException('Invalid cmap format 4 reserved padding');
+    }
+    final startBase = 16 + segCount * 2;
+    final deltaBase = 16 + segCount * 4;
+    final rangeBase = 16 + segCount * 6;
+    final map = <int, int>{0: 0};
+    var previousEnd = -1;
     for (int i = 0; i < segCount; i++) {
-      final int startCode = startCodes[i];
-      final int endCode = endCodes[i];
-      final int delta = idDeltas[i];
-      final int rangeOffset = idRangeOffsets[i];
+      final startCode = data.getUint16(startBase + i * 2);
+      final endCode = data.getUint16(14 + i * 2);
+      final delta = data.getInt16(deltaBase + i * 2);
+      final rangeOffset = data.getUint16(rangeBase + i * 2);
+      if (startCode > endCode || startCode <= previousEnd) {
+        throw const SfntException(
+          'cmap format 4 segments overlap or are unsorted',
+        );
+      }
+      if (i == segCount - 1 && (startCode != 0xffff || endCode != 0xffff)) {
+        throw const SfntException('cmap format 4 terminal segment is missing');
+      }
+      previousEnd = endCode;
+      final glyphStart = rangeBase + i * 2 + rangeOffset;
+      if (rangeOffset != 0 &&
+          (rangeOffset.isOdd ||
+              glyphStart < glyphArrayStart ||
+              glyphStart + (endCode - startCode + 1) * 2 > length)) {
+        throw const SfntException(
+          'cmap format 4 glyph pointer is out of bounds',
+        );
+      }
       for (int c = startCode; c <= endCode; c++) {
         int glyph;
         if (rangeOffset == 0) {
           glyph = (c + delta) & 0xFFFF;
         } else {
-          final int offset =
-              rangeOffsetBase + i * 2 + rangeOffset + (c - startCode) * 2;
-          if (offset + 2 > start + length) {
-            glyph = 0;
-          } else {
-            final int saved = cmap.offset;
-            cmap.seek(offset);
-            final int glyphIndex = cmap.u16be();
-            cmap.seek(saved);
-            glyph = glyphIndex == 0 ? 0 : (glyphIndex + delta) & 0xFFFF;
+          final glyphIndex = data.getUint16(glyphStart + (c - startCode) * 2);
+          glyph = glyphIndex == 0 ? 0 : (glyphIndex + delta) & 0xFFFF;
+        }
+        _checkGlyph(glyph, numGlyphs);
+        if (unicode && c >= 0xd800 && c <= 0xdfff) {
+          if (glyph != 0) {
+            throw const SfntException('cmap format 4 maps a Unicode surrogate');
           }
+          continue;
         }
         if (c != 0xFFFF) {
           map[c] = glyph;
         }
       }
     }
+    return CmapTable(map);
   }
 
-  static void _parseFormat12(ByteCursor cmap, Map<int, int> map) {
-    final int nGroups = cmap.u32be();
+  static CmapTable _parseFormat12(ByteData data, int numGlyphs) {
+    if (data.getUint16(2) != 0) {
+      throw const SfntException('Invalid cmap format 12 reserved field');
+    }
+    final nGroups = data.getUint32(12);
+    if (nGroups != (data.lengthInBytes - 16) ~/ 12 ||
+        (data.lengthInBytes - 16) % 12 != 0) {
+      throw const SfntException(
+        'cmap format 12 group array has invalid length',
+      );
+    }
+    final groups = <_CmapGroup>[];
+    var previousEnd = -1;
     for (int i = 0; i < nGroups; i++) {
-      final int startChar = cmap.u32be();
-      final int endChar = cmap.u32be();
-      int glyph = cmap.u32be();
-      for (int c = startChar; c <= endChar; c++) {
-        map[c] = glyph++;
+      final offset = 16 + i * 12;
+      final start = data.getUint32(offset);
+      final end = data.getUint32(offset + 4);
+      final glyph = data.getUint32(offset + 8);
+      if (start > end || start <= previousEnd || end > 0x10ffff) {
+        throw const SfntException('Invalid or unordered cmap format 12 range');
       }
+      if (start <= 0xdfff && end >= 0xd800) {
+        throw const SfntException('cmap format 12 range includes surrogates');
+      }
+      _checkGlyph(glyph, numGlyphs);
+      if (end - start > numGlyphs - 1 - glyph) {
+        throw const SfntException('cmap format 12 glyph range is outside maxp');
+      }
+      groups.add((start: start, end: end, glyph: glyph));
+      previousEnd = end;
+    }
+    // Keep validated ranges compact. A small table must not allocate one map
+    // entry per encoded character, even when many scalars alias glyph ranges.
+    return groups.isEmpty
+        ? CmapTable(<int, int>{0: 0})
+        : CmapTable._format12(groups);
+  }
+
+  static void _checkGlyph(int glyph, int numGlyphs) {
+    if (glyph >= numGlyphs) {
+      throw const SfntException('cmap glyph ID is outside maxp');
     }
   }
 }

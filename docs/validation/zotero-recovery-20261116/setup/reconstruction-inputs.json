@@ -1,0 +1,23 @@
+{
+  "source_receipt": "/workspace/scratch/79aea0ff70bc/quds_office_suite/docs/validation/zotero-citing-20261115/setup-receipt.json",
+  "source_receipt_sha256": "a613111babe20701e0630239607efad9a222dd0c1916e12b9d182ed28e6bcbd6",
+  "workspace_rebase_from": "/workspace/scratch/d13d764c3646",
+  "workspace_rebase_to": "/workspace/scratch/79aea0ff70bc",
+  "source_manifests_modified": false,
+  "inputs_sha256": {
+    "harness/quds_office_engine/pubspec.yaml": "09ab3b5abb15bacd2d398bb543640b531f92ffdd9796763cfbca14df496462c2",
+    "harness/quds_office_engine/pubspec.lock": "3b55c7eb8535653c0733db7abc99934bf3f23fdf3835eb5fb673c1044a848379",
+    "harness/quds_office_editor/pubspec.yaml": "70f33c82ce2616264e63bb203db1c7cff18286c489ad55e38979c683cf5db2c8",
+    "harness/quds_office_editor/pubspec.lock": "110e7e8e57a36c6292502866e0656cdb89dfbf16576c3503f9571576d480796d",
+    "harness/quds_office_studio/pubspec.yaml": "6e749a1e3d04caae82d25dab38f3cfb498535e2b06ddb405253085cd63dd1761",
+    "harness/quds_office_studio/pubspec.lock": "52e39372b41c6a3892649f089e15516ddba66c3fc9679fa13a233a25ba61d12f",
+    "crisp-host-harness/pubspec.yaml": "bb20d4c7f63d8d6fcb2c079f79529c7afb35f5ab1a4506b0b5ef97684fe51ce0",
+    "crisp-host-harness/pubspec.lock": "5daf3f63e43107482405adcb566a3fd2f8bca18a3d49cbb4ad528a5a6925cf23",
+    "harness/quds_reports/pubspec.yaml": "8d60275e20f0fdc7c61b5e1d0a80637efb34d6d5993909e9a50878e338766e0b",
+    "harness/legacy_doc_parser/pubspec.yaml": "9c7e076de0d9c36c12a7fe6e1ba546355a20087e0e6483a0bc0fb9804d422cf3",
+    "crisp-host-harness/packages/legacy_doc_parser/pubspec.yaml": "e377855d3104e4c278672e3a6e5f6ff494e6303809bb8cf3a23a0736b60b8fe3",
+    "crisp-host-harness/packages/quds_office_editor/pubspec.yaml": "61ec8cf9aebcde1a11cf2c09bdd4e5e7d1e10a62ba41c8ff9064c0166a46d13e",
+    "crisp-host-harness/packages/quds_office_engine/pubspec.yaml": "0efaf1c9de086ba52503ea2dff6831820e72612a127ea29be6190f7c84252b37",
+    "crisp-host-harness/packages/quds_reports/pubspec.yaml": "8d60275e20f0fdc7c61b5e1d0a80637efb34d6d5993909e9a50878e338766e0b"
+  }
+}

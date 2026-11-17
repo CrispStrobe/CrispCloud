@@ -1,3 +1,5 @@
+> **Recovery update — 16 November 2026:** a complete fresh qualification of **1,173 tests** at Quds `b87f9d6c` and CrispCloud `07083d19`, with raw logs and reproduction evidence, is published in the [recovery report](../zotero-recovery-20261116/README.md). This file remains a historical record with its original source attribution. Missing historical post-PR raw archives have not been recovered.
+
 # Zotero capabilities in CrispCloud — 16 November 2026
 
 The combined CrispCloud implementation at

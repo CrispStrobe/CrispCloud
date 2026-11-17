@@ -663,9 +663,8 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
             ),
           ),
           IconButton(
-            tooltip: OfficeRibbonControlStrings(
-              context,
-            ).text(_collapsed ? 'Expand ribbon' : 'Collapse ribbon'),
+            tooltip: OfficeRibbonControlStrings(context)
+                .text(_collapsed ? 'Expand ribbon' : 'Collapse ribbon'),
             iconSize: 17,
             visualDensity: VisualDensity.compact,
             padding: EdgeInsets.zero,
@@ -2286,9 +2285,8 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
 
   Widget _vertAlignControl() {
     return PopupMenuButton<WmlVertAlign>(
-      tooltip: OfficeRibbonControlStrings(
-        context,
-      ).text('Superscript / subscript'),
+      tooltip: OfficeRibbonControlStrings(context)
+          .text('Superscript / subscript'),
       icon: const Icon(Icons.superscript, size: 17),
       iconSize: 17,
       padding: EdgeInsets.zero,

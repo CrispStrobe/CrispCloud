@@ -1,0 +1,27 @@
+{
+  "observed_utc": "2026-11-16T20:31:08.704071+00:00",
+  "executor_session_id": 86536,
+  "poll_result": "Unknown process id 86536",
+  "final_receipt_exists": false,
+  "last_completed_commands": [
+    "vendor-source",
+    "vendor-tracked",
+    "host-tests"
+  ],
+  "host_tests_observed_passed": 41,
+  "unfinished_command": "host-analysis",
+  "source_inputs_unchanged": true,
+  "dependencies_unchanged": true,
+  "source_count": 3732,
+  "dependency_count": 5837,
+  "source_changed_paths": [],
+  "temporary_analysis_config_exists": true,
+  "temporary_analysis_config_matches_recorded": true,
+  "source_aggregate_sha256": "32b8470c7d6bbb2570c788b48b1c4f6b44e9ab2dc4f39a140f109ed169bb0116",
+  "dependency_aggregate_sha256": "e4c17959b7291ff9116af6b3cc41c2ee64f5cff7f9881bd837ed44be35dd66de",
+  "limitations": "The managed executor handle disappeared. A new command exposes only its own process namespace, so this observation does not assert global absence of an orphan process. No replacement gate or configuration change has been started.",
+  "temporary_analysis_config_bytes_equal_archived": false,
+  "temporary_analysis_config_sha256": "9028d4a675d8d88d2817ad95a2325dbeff807145816d82fe66e66af4c796a653",
+  "archived_analysis_config_sha256": "ec9b047b311c381af47fb697d21b39756616c081027f57c409054c5dc04d4399",
+  "analysis_config_serialization_note": "The runner writes live package configuration with insertion-order keys and its archived JSON with sorted keys; semantic equality is the relevant comparison."
+}

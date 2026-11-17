@@ -1,0 +1,35 @@
+{
+  "canonical_inputs": 1568,
+  "cohort_and_target_cli_arguments_identical": true,
+  "existing_dependency_harness_and_published_source_guards_identical": true,
+  "fixture_paths_observed": 4,
+  "fixture_paths_present": 4,
+  "optional_fixture_inputs": {
+    "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf": {
+      "bytes": 708920,
+      "present": true,
+      "sha256": "a4c5bc453ca281d90ea079e596da7ae0dfeb5777497c29ec254e76d97ff6f890"
+    },
+    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf": {
+      "bytes": 759720,
+      "present": true,
+      "sha256": "57f73e11f51999432bf7ab22ce55b6f945d5eca1bf824404cfa9ec2e3718c84e"
+    },
+    "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf": {
+      "bytes": 414568,
+      "present": true,
+      "sha256": "1b5f2da6f4cadce4c05b9ecebe3a6fcd374eb95ae443605e799f4c3287978939"
+    },
+    "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf": {
+      "bytes": 410820,
+      "present": true,
+      "sha256": "bade59d822652f76e6941aa87b40a87c13d1cc70db98ededb5011127efafd1d3"
+    }
+  },
+  "published_blob_mismatches": [],
+  "ready_for_parent_launch": true,
+  "recorded_scope": "Read-only preflight; no Dart, Flutter, analyzer, formatter or PDF verification invoked",
+  "runner_sha256": "198271764369f36955d7fe8455e1b74db8a9f32bc0147f14019387c5c3dbf2d9",
+  "source_commit": "b87f9d6c3a2532c9695024adf48ca9fbd3c0927a",
+  "untracked_inputs": []
+}
