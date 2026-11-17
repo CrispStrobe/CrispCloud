@@ -29,6 +29,7 @@ XmlElement _odtBody(OpcPackage package) => XmlDocument.parse(
 ).root!.firstChild('body')!.firstChild('text')!;
 
 void main() {
+  pageFieldTests();
   linkTests();
   nestedListTests();
   sectionTests();
@@ -501,5 +502,30 @@ void linkTests() {
     expect(content, contains('text:name="Target"'));
     expect(content, contains('xlink:href="#Target"'));
     expect(content, contains('xlink:href="https://example.com"'));
+  });
+}
+
+void pageFieldTests() {
+  test('writes header page-number fields', () {
+    final document = WmlDocument(
+      sections: [
+        WmlSection(
+          header: [
+            WmlParagraph(
+              properties: WmlParagraphProps(pageNumberField: true),
+              inlines: [WmlRun(text: '1')],
+            ),
+          ],
+          blocks: [
+            WmlParagraph(inlines: [WmlRun(text: 'Body')]),
+          ],
+        ),
+      ],
+    );
+    final package = OpcPackage.openBytes(
+      OdtDocumentWriter.writeBytes(document),
+    );
+    final styles = package.getPart('/styles.xml')!.readText();
+    expect(styles, contains('<text:page-number/>'));
   });
 }
