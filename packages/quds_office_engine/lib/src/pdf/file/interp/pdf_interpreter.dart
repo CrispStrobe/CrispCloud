@@ -47,11 +47,7 @@ class PdfInterpreter {
     );
   }
 
-  void _paintAnnotAppearances(
-    PdfCosDict pageDict,
-    _Frame frame,
-    int depth,
-  ) {
+  void _paintAnnotAppearances(PdfCosDict pageDict, _Frame frame, int depth) {
     final PdfCosArray? arr = store.asArray(pageDict['Annots']);
     if (arr == null) {
       return;
@@ -98,7 +94,8 @@ class PdfInterpreter {
           pdfCosNumber(matrix.items[5]) ?? 0,
         );
       }
-      final PdfCosDict inner = store.asDict(form.dict['Resources']) ?? PdfCosDict();
+      final PdfCosDict inner =
+          store.asDict(form.dict['Resources']) ?? PdfCosDict();
       final Uint8List? bytes = store.streamBytes(form);
       if (bytes != null) {
         _run(bytes, inner, frame, depth + 1);
@@ -119,7 +116,8 @@ class PdfInterpreter {
     }
     if (n is PdfCosDict) {
       final String state = pdfCosName(dict['AS']) ?? 'Off';
-      final PdfCos? chosen = store.deref(n[state]) ??
+      final PdfCos? chosen =
+          store.deref(n[state]) ??
           (n.values.isEmpty ? null : store.deref(n.values.values.first));
       if (chosen is PdfCosStream) {
         return chosen;
@@ -1604,6 +1602,17 @@ class _Matrix {
       (a * x + c * y + e, b * x + d * y + f);
 }
 
+// All ordinary nested markers share this owner, so closing one cannot reset
+// consumption or shrink the selectable bounds of its enclosing replacement.
+class _ActualText {
+  _ActualText(this.text, {required this.paintLogicalLine});
+
+  final String text;
+  final bool paintLogicalLine;
+  int? runIndex;
+  var logicalLinePainted = false;
+}
+
 class _Frame {
   _Frame(this.page, this.interp);
 
@@ -1687,9 +1696,8 @@ class _Frame {
   double dashPhase = 0;
   PdfBlendMode blend = PdfBlendMode.normal;
   int textRender = 0;
-  String? actualText;
-  var actualTextEmitted = false;
-  final List<String?> _actualStack = <String?>[];
+  _ActualText? _actualText;
+  final List<_ActualText?> _actualStack = <_ActualText?>[];
   double fontSize = 12;
   double charSpace = 0;
   double wordSpace = 0;
@@ -1707,7 +1715,8 @@ class _Frame {
   void beginMarked(List<Object> stack, PdfCosDict resources) {
     var hide = false;
     String? marked;
-    if (stack.isNotEmpty && stack.last is _Name) {
+    var paintLogicalLine = false;
+    if (stack.length >= 2 && stack.last is _Name) {
       final String last = (stack.last as _Name).value;
       final PdfCosDict? props = interp.store.asDict(resources['Properties']);
       final PdfCos? raw = props?[last];
@@ -1719,16 +1728,21 @@ class _Frame {
           }
         }
       }
-      if (raw is PdfCosDict) {
-        marked = pdfCosText(raw['ActualText']);
+      final properties = interp.store.asDict(raw);
+      if (properties != null) {
+        marked = pdfCosText(properties['ActualText']);
+        paintLogicalLine = pdfCosInt(properties['QudsLogicalLine']) == 1;
       }
-    } else if (stack.isNotEmpty && stack.last is _Dict) {
-      marked = _asMarkedText(stack.last as _Dict);
+    } else if (stack.length >= 2 && stack.last is _Dict) {
+      final properties = stack.last as _Dict;
+      marked = _asMarkedText(properties);
+      paintLogicalLine = properties['QudsLogicalLine'] == 1;
     }
-    _actualStack.add(actualText);
-    if (marked != null) {
-      actualText = marked;
-      actualTextEmitted = false;
+    _actualStack.add(_actualText);
+    // ActualText replaces the complete marked sequence. Its outer owner also
+    // covers any nested replacement, including an explicitly empty string.
+    if (_actualText == null && marked != null) {
+      _actualText = _ActualText(marked, paintLogicalLine: paintLogicalLine);
     }
     _marks.add(hide);
     if (hide) {
@@ -1738,8 +1752,7 @@ class _Frame {
 
   void endMarked() {
     if (_actualStack.isNotEmpty) {
-      actualText = _actualStack.removeLast();
-      actualTextEmitted = false;
+      _actualText = _actualStack.removeLast();
     }
     if (_marks.isEmpty) {
       return;
@@ -1752,7 +1765,7 @@ class _Frame {
   static String? _asMarkedText(_Dict dict) {
     final Object? value = dict['ActualText'];
     if (value is _Lit) {
-      return String.fromCharCodes(value.bytes);
+      return _utf16FromBytes(value.bytes);
     }
     if (value is String) {
       return value;
@@ -1927,21 +1940,19 @@ class _Frame {
 
   /// ActualText with nothing decodable in the showing operator.
   void _emitActualTextOnly() {
-    final String? marked = actualText;
-    if (marked == null || marked.isEmpty || actualTextEmitted || hidden) {
+    final marked = _actualText;
+    if (marked == null || marked.text.isEmpty || hidden) {
       return;
     }
     final ({double x, double y, double size}) start = _textDraw();
-    runs.add(
-      PdfTextRun(
-        text: marked,
-        x: start.x,
-        y: start.y,
-        width: 0,
-        height: start.size <= 0 ? 12 : start.size,
-      ),
+    _recordText(
+      '',
+      x: start.x,
+      y: start.y,
+      width: 0,
+      height: start.size <= 0 ? 12 : start.size,
+      angle: _screenAngle(),
     );
-    actualTextEmitted = true;
   }
 
   void show(Object value) {
@@ -2010,12 +2021,14 @@ class _Frame {
         : totalW * (start.size / fontSize.abs());
     final double angle = _screenAngle();
     if (angle.abs() > 0.02) {
-      final String paint = actualText != null && actualText!.isNotEmpty
-          ? actualText!
+      final marked = _actualText;
+      // Generic ActualText is extraction metadata, never a drawing command.
+      // Only the explicit Quds marked-line writer requests the historical
+      // whole-word watermark reconstruction, once for that line.
+      final logicalLine = marked?.paintLogicalLine == true;
+      final String paint = logicalLine
+          ? (marked!.logicalLinePainted ? '' : marked.text)
           : text;
-      if (actualText != null) {
-        actualTextEmitted = true;
-      }
       if (paint.isNotEmpty && textRender != 3) {
         ops.add(
           PdfDrawText(
@@ -2031,19 +2044,17 @@ class _Frame {
             angle: angle,
           ),
         );
+        if (logicalLine) marked!.logicalLinePainted = true;
       }
       textMatrix.multiply(1, 0, 0, 1, totalW, 0);
-      if (paint.isNotEmpty) {
-        runs.add(
-          PdfTextRun(
-            text: paint,
-            x: start.x,
-            y: start.y,
-            width: renderedW,
-            height: start.size,
-          ),
-        );
-      }
+      _recordText(
+        text,
+        x: start.x,
+        y: start.y,
+        width: renderedW,
+        height: start.size,
+        angle: angle,
+      );
       return;
     }
     if (textRender != 3) {
@@ -2094,23 +2105,75 @@ class _Frame {
     } else {
       textMatrix.multiply(1, 0, 0, 1, totalW, 0);
     }
-    final String extract = actualText != null && !actualTextEmitted
-        ? actualText!
-        : (actualText != null ? '' : text);
-    if (actualText != null) {
-      actualTextEmitted = true;
+    _recordText(
+      text,
+      x: start.x,
+      y: start.y,
+      width: renderedW,
+      height: start.size,
+    );
+  }
+
+  void _recordText(
+    String text, {
+    required double x,
+    required double y,
+    required double width,
+    required double height,
+    double angle = 0,
+  }) {
+    final marked = _actualText;
+    final extract = marked?.text ?? text;
+    if (extract.isEmpty) return;
+    var left = math.min(x, x + width);
+    var top = y;
+    var right = math.max(x, x + width);
+    var bottom = y + height;
+    if (angle.abs() > 0.02) {
+      final cos = math.cos(angle);
+      final sin = math.sin(angle);
+      left = right = x;
+      top = bottom = y;
+      for (final point in <(double, double)>[
+        (width, 0),
+        (0, height),
+        (width, height),
+      ]) {
+        final px = x + point.$1 * cos - point.$2 * sin;
+        final py = y + point.$1 * sin + point.$2 * cos;
+        left = math.min(left, px);
+        top = math.min(top, py);
+        right = math.max(right, px);
+        bottom = math.max(bottom, py);
+      }
     }
-    if (extract.isNotEmpty) {
-      runs.add(
-        PdfTextRun(
-          text: extract,
-          x: start.x,
-          y: start.y,
-          width: renderedW,
-          height: start.size,
-        ),
+    final index = marked?.runIndex;
+    if (index != null) {
+      final previous = runs[index];
+      left = math.min(left, previous.x);
+      top = math.min(top, previous.y);
+      right = math.max(right, previous.x + previous.width);
+      bottom = math.max(bottom, previous.y + previous.height);
+      runs[index] = PdfTextRun(
+        text: extract,
+        x: left,
+        y: top,
+        width: right - left,
+        height: bottom - top,
+        breakBefore: previous.breakBefore,
       );
+      return;
     }
+    if (marked != null) marked.runIndex = runs.length;
+    runs.add(
+      PdfTextRun(
+        text: extract,
+        x: left,
+        y: top,
+        width: right - left,
+        height: bottom - top,
+      ),
+    );
   }
 
   /// Screen-space angle of the text baseline (y down, clockwise positive).
@@ -2394,8 +2457,9 @@ class _Lexer {
     }
     if (_isOpStart(b) && !_isNum(b)) {
       final int start = _i;
-      while (_i < bytes.length && !_delim(bytes[_i]) && !_isNum(bytes[_i]) ||
-          (_i > start && bytes[_i] == 0x2A)) {
+      while (_i < bytes.length &&
+          ((!_delim(bytes[_i]) && !_isNum(bytes[_i])) ||
+              (_i > start && bytes[_i] == 0x2A))) {
         if (_delim(bytes[_i]) && bytes[_i] != 0x2A) {
           break;
         }

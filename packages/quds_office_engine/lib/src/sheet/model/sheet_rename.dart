@@ -213,6 +213,12 @@ Map<String, _XmlSlot> _xmlSlots(
                           'mergeCells',
                           'headerFooter',
                           'drawing',
+                          // Page layout is serialized from its model and has
+                          // no reference slots. Ignore numeric normalization
+                          // and preserve newer page edits when undoing a rename.
+                          'printOptions',
+                          'pageMargins',
+                          'pageSetup',
                         }.contains(node.localName)) ||
                     (root.localName == 'workbook' &&
                         node.localName == 'sheets'))) ||
@@ -324,6 +330,7 @@ abstract final class SheetRename {
       }
       for (final rule in tab.conditionalFormats) {
         change(rule.formula, rewrite(rule.formula), (v) => rule.formula = v);
+        change(rule.formula2, rewrite(rule.formula2), (v) => rule.formula2 = v);
       }
       for (final pivot in tab.pivots) {
         if (matches(pivot.sourceSheetName)) {

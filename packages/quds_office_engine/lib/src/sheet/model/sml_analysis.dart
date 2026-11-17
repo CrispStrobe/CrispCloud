@@ -244,6 +244,10 @@ enum SmlConditionalKind {
   bottomPercent,
   aboveAverage,
   belowAverage,
+
+  /// A native formula predicate, retained for interchange and reference edits.
+  /// The compact conditional renderer does not evaluate these expressions.
+  expression,
 }
 
 /// One conditional-format rule.
@@ -257,6 +261,8 @@ class SmlConditionalRule {
     this.fillRgb = 'FFF2CC',
     this.fontRgb = '',
     this.rank = 10,
+    this.priority,
+    this.stopIfTrue = false,
     this.dxfId,
   });
 
@@ -281,13 +287,24 @@ class SmlConditionalRule {
   /// Rank for top/bottom rules, or the percentage for percent variants.
   int rank;
 
+  /// Native rule priority, with lower positive values evaluated first.
+  /// Missing or invalid priorities receive an unused positive Int32 value
+  /// during XLSX serialization without mutating this model field.
+  int? priority;
+
+  /// Whether a matching native rule stops lower-priority rules.
+  bool stopIfTrue;
+
   /// Generated differential-style id, assigned during serialization.
   int? dxfId;
 
-  /// matches API.
+  /// Whether this compact rule matches [cell]. Native [SmlConditionalKind.expression]
+  /// predicates are preserved but not evaluated here and return false.
   bool matches(SmlCell cell, SmlWorksheet sheet) {
     final String text = cell.asString;
     switch (kind) {
+      case SmlConditionalKind.expression:
+        return false;
       case SmlConditionalKind.greaterThan:
         final double? n = cell.asNumber;
         final double? bound = double.tryParse(formula);

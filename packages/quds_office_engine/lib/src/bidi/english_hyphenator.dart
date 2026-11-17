@@ -1,5 +1,7 @@
+import '../proofing/proofing_text_ranges.dart';
 import 'english_gb_hyphenation_data.dart';
 import 'english_us_hyphenation_data.dart';
+import 'hyphenation_words.dart';
 
 /// American and British English opportunities in original UTF-16 source units.
 ///
@@ -24,20 +26,6 @@ abstract final class EnglishHyphenator {
     englishGbHyphenationExceptions,
   );
   static final RegExp _letters = RegExp(r'^[a-zA-Z]+$');
-  // Keep contractions and possessives whole so their pieces cannot receive
-  // independent dictionary breaks. Quotation marks around a word stay outside.
-  static final RegExp _words = RegExp(
-    r"[\p{L}][\p{L}\p{M}\u00ad]*(?:['\u2019\u02bc][\p{L}\p{M}\u00ad]+)*",
-    unicode: true,
-  );
-
-  static final RegExp _protectedTokens = RegExp(
-    r'(?:https?://|www\.)[^\s<>\u0022\u0027\u0060]+|'
-    r'[\p{L}\p{N}._%+-]+@[\p{L}\p{N}.-]+\.[\p{L}]{2,}|'
-    r'(?<!`)(`+)(?!`)[\s\S]*?(?<!`)\1(?!`)',
-    unicode: true,
-    caseSensitive: false,
-  );
 
   /// Breaks for a plain Latin word, with at least two letters before and
   /// three after each break. Accented words, identifiers, contractions and
@@ -64,22 +52,16 @@ abstract final class EnglishHyphenator {
   }) {
     if (languageAt == null && !supports(language)) return const [];
     final result = <int>[];
-    final protected = _protectedTokens.allMatches(text).toList(growable: false);
-    var protectedIndex = 0;
-    for (final word in _words.allMatches(text)) {
-      while (protectedIndex < protected.length &&
-          protected[protectedIndex].end <= word.start) {
-        protectedIndex++;
-      }
-      if (protectedIndex < protected.length &&
-          protected[protectedIndex].start < word.end) {
-        continue;
-      }
+    final protected = OfficeProofingTextRanges(text);
+    for (final word in hyphenationWords.allMatches(text)) {
+      if (protected.overlaps(word.start, word.end)) continue;
       final wordLanguage = languageAt?.call(word.start) ?? language;
       if (!supports(wordLanguage)) continue;
       // Do not treat the letter portion of an identifier as ordinary prose.
-      if ((word.start > 0 && _identifierNeighbor(text, word.start - 1)) ||
-          (word.end < text.length && _identifierNeighbor(text, word.end))) {
+      if ((word.start > 0 &&
+              isHyphenationIdentifierNeighbor(text, word.start - 1)) ||
+          (word.end < text.length &&
+              isHyphenationIdentifierNeighbor(text, word.end))) {
         continue;
       }
       if (languageAt != null) {
@@ -101,24 +83,6 @@ abstract final class EnglishHyphenator {
       );
     }
     return result;
-  }
-
-  static final RegExp _identifierPart = RegExp(
-    r'[\p{N}_@\u200c\u200d\u2060\ufeff]',
-    unicode: true,
-  );
-  static bool _identifierNeighbor(String text, int offset) {
-    var start = offset;
-    var end = offset + 1;
-    final unit = text.codeUnitAt(offset);
-    if (unit >= 0xdc00 && unit <= 0xdfff && offset > 0) {
-      final before = text.codeUnitAt(offset - 1);
-      if (before >= 0xd800 && before <= 0xdbff) start--;
-    } else if (unit >= 0xd800 && unit <= 0xdbff && end < text.length) {
-      final after = text.codeUnitAt(end);
-      if (after >= 0xdc00 && after <= 0xdfff) end++;
-    }
-    return _identifierPart.hasMatch(text.substring(start, end));
   }
 }
 

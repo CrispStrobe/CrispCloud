@@ -545,6 +545,9 @@ abstract final class OdsSheetWriter {
   static String _condition(SmlConditionalRule rule) {
     String quote(String value) => '"${value.replaceAll('"', '""')}"';
     return switch (rule.kind) {
+      SmlConditionalKind.expression => _escapeAttr(
+        'formula-is(${_dropOf(_toOpenFormula(rule.formula))})',
+      ),
       SmlConditionalKind.greaterThan => _escapeAttr('>${rule.formula}'),
       SmlConditionalKind.greaterOrEqual => _escapeAttr('>=${rule.formula}'),
       SmlConditionalKind.lessThan => _escapeAttr('<${rule.formula}'),

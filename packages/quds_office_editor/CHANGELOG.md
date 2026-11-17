@@ -4,6 +4,10 @@ All notable changes to `quds_office_editor` are documented here.
 
 ## Unreleased
 
+- Expose a readable seit/seid rule name in ignored checks. Verify new German
+  agreement and soft-hyphen corrections through the real review dialog,
+  including exact source restoration on undo.
+
 - Expose the optional Harper provider's Canadian, Australian and Indian English
   choices alongside US/UK English and German regions. Share the example host's
   language-scoped personal vocabulary with its English provider.

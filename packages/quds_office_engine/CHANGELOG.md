@@ -4,6 +4,36 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Unify English/German protected-text ranges, including Unicode email/URI
+  handling, bounded backtick pairing and German identifier/contraction guards.
+  Preserve equivalent German language aliases across styled runs.
+- Improve bounded German orthographic suggestions, sentence-initial casing,
+  personal compound vocabulary and lossless language-alias restoration.
+- Expand finite German agreement to 25 families, add conservative seit/seid
+  guidance, and project writing findings across discretionary soft hyphens
+  while preserving original UTF-16/grapheme ranges and nominal-word guards.
+- Exercise new proofing and hyphenation regressions on Dart VM and compiled
+  JavaScript in the local verification gate, without GitHub Actions.
+
+- Preserve authored logical text in shaped Word, worksheet and presentation
+  PDF spans, including Arabic joining, lam-alef, bidi punctuation, source
+  hyphens, generated labels and trimmed wrap separators. Keep painted glyphs
+  and positions unchanged. This does not replace the shaping backend.
+- Scope PDF replacement text across nested marked content and accumulate
+  selection bounds across every covered text showing. Keep generic rotated
+  drawing independent from replacement text, retain explicit Quds watermark
+  reconstruction, and read indirect/UTF-16 properties and final EOF operators.
+- Validate SFNT directories and cmap subtable bounds, character/glyph ranges
+  and ordering before decoding. Keep format 12 groups compact, select an
+  authoritative Unicode encoding, and preserve supported legacy fallbacks.
+- Retain imported conditional-rule rank and both bounds through XLSX saves
+  and worksheet renames; accept XML boolean spellings and preserve native
+  expression predicates through XLSX/ODS interchange. Preserve valid native
+  priorities and stopping flags, and assign unique positive priorities to
+  regenerated rules that need them. Keep newer page settings when undoing a
+  saved rename. Expression predicates remain preserved but are not evaluated
+  by the compact conditional renderer.
+
 - Add separately licensed American and British English automatic hyphenation
   with pinned original notices, exceptions, two/three-letter fragment minima,
   per-run language dispatch and unchanged source ownership in Word/PDF layout.

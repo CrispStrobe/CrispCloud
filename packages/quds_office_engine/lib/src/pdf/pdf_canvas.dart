@@ -319,8 +319,10 @@ class PdfCanvas {
 
   /// One text showing under the current CTM, not one operator per letter.
   ///
-  /// [logical] is stored as ActualText (UTF-16BE) so a viewer can rotate the
-  /// whole word. [glyphIds] is the visual-order subset TJ for other readers.
+  /// [logical] is stored as ActualText (UTF-16BE) for extraction. The explicit
+  /// QudsLogicalLine hint retains Quds's whole-word watermark reconstruction;
+  /// ordinary ActualText spans never replace painted glyphs. [glyphIds] is
+  /// the visual-order subset TJ used by other readers.
   void showMarkedLine({
     required double x,
     required double y,
@@ -331,7 +333,10 @@ class PdfCanvas {
     List<int> glyphIds = const <int>[],
     String? visual,
   }) {
-    beginActualText(logical);
+    endText();
+    _buf.writeln(
+      '/Span << /ActualText ${_utf16Hex(logical)} /QudsLogicalLine 1 >> BDC',
+    );
     beginText();
     setFillColor(color);
     _setFont(fontName, fontSize);

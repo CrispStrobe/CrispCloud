@@ -21,6 +21,7 @@ files = [
     'lib/src/bidi/line_breaker.dart', 'lib/src/bidi/german_hyphenator.dart',
     'lib/src/bidi/german_hyphenation_data.dart',
     'lib/src/bidi/english_hyphenator.dart', 'lib/src/bidi/office_hyphenator.dart',
+    'lib/src/bidi/hyphenation_words.dart', 'lib/src/proofing/proofing_text_ranges.dart',
     'lib/src/bidi/english_us_hyphenation_data.dart',
     'lib/src/bidi/english_gb_hyphenation_data.dart', 'lib/quds_office_engine.dart',
     'lib/src/word/layout/word_layout.dart', 'lib/src/word/layout/word_note_layout.dart',
@@ -33,11 +34,13 @@ files = [
     'third_party/hyphenation/hyph-de-1996.tex', 'third_party/hyphenation/README.md',
     'third_party/hyphenation/hyph-en-us.tex', 'third_party/hyphenation/hyph-en-gb.tex',
     'third_party/hyphenation/ENGLISH.md', 'third_party/hyphenation/english-manifest.json',
+    'third_party/hyphenation/ENGLISH_US_LICENSE', 'third_party/hyphenation/ENGLISH_GB_LICENSE',
     'tool/proofing/generate_hyphenation.py', 'tool/proofing/generate_english_hyphenation.py',
     'tool/proofing/validate_hyphenation.py',
 ]
 tests = [
-    'proofing_hyphenation', 'english_hyphenation', 'variable_line_breaker', 'bidi', 'word_layout',
+    'proofing_hyphenation', 'english_hyphenation', 'german_hyphenation_context',
+    'variable_line_breaker', 'bidi', 'word_layout',
     'word_styles_layout', 'style_cascade', 'word_style_introduction',
     'styleless_import_fidelity', 'word_referenced_styles_and_breaks',
     'word_package_preservation', 'word_preserved_header', 'word_note_numbering',
@@ -65,6 +68,8 @@ commands = [
         *[name for name in files if name.endswith('.dart') and not name.endswith('_hyphenation_data.dart')]]),
     ('hyphenation-tests.log', [args.dart, 'test', '--concurrency=4', '--reporter=expanded',
         *[f'test/{name}_test.dart' for name in tests]]),
+    ('hyphenation-javascript-tests.log', [args.dart, 'test', '--platform=node', '--reporter=expanded',
+        'test/english_hyphenation_test.dart', 'test/german_hyphenation_context_test.dart']),
 ]
 failed = False
 for name, command in commands:

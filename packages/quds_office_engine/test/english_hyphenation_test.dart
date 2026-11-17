@@ -221,6 +221,7 @@ void main() {
           '123dictionary',
           'dictionary_name',
           'name_dictionary',
+          'dictionary\u203fhyphenation',
           'dictionary@grammar',
           '\u{1d7d8}dictionary',
           'dictionary\u{1d7d8}',

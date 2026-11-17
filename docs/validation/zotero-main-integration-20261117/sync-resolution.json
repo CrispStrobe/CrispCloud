@@ -1,0 +1,11 @@
+{
+  "canonical_target": "3abe089d7e31ecbf4ee224788c617b442cee81ac",
+  "manifest_resolution": "Retain the complete 2521-file recovery manifest as guarded sync baseline. Preserve incoming host ODT UI and documentation.",
+  "explicit_reconciliation": {
+    "path": "packages/quds_office_engine/test/odt_document_writer_test.dart",
+    "reason": "Incoming host main uses an invalid one-pixel PNG fixture; canonical main PR93 corrects that fixture. Use canonical target bytes before guarded sync, retaining complete source history.",
+    "before_sha256": "98fa0981e5255afba3cb4f72f448530de64eedf073666e7840dba4f52ccd993e",
+    "after_sha256": "bb2f0bd38355edf168fbf92744003957346fd9f0eff2a1921a61690856e2c8eb"
+  },
+  "initial_dry_run": "Rejected unsynced ODT test fixture difference before writes; no guard weakened."
+}

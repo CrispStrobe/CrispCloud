@@ -1183,7 +1183,14 @@ abstract final class OdsSheetReader {
         String formula;
         var formula2 = '';
         var rank = 10;
-        if (value.startsWith('<>') || value.startsWith('!=')) {
+        if (value.startsWith('formula-is(') && value.endsWith(')')) {
+          kind = SmlConditionalKind.expression;
+          formula =
+              _translateFormula(
+                'of:=${value.substring(11, value.length - 1)}',
+              ) ??
+              '';
+        } else if (value.startsWith('<>') || value.startsWith('!=')) {
           kind = SmlConditionalKind.notEqual;
           formula = value.substring(2).trim();
         } else if (value.startsWith('>=')) {

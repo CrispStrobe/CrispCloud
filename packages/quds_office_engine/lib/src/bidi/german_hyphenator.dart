@@ -1,30 +1,34 @@
+import '../proofing/proofing_text_ranges.dart';
 import 'german_hyphenation_data.dart';
 import 'grapheme_clusters.dart';
+import 'hyphenation_words.dart';
 
 /// German reformed-orthography break opportunities in original UTF-16 units.
 ///
 /// The bundled MIT patterns are independently licensed from the implementation;
 /// see third_party/hyphenation. This never edits or normalizes source text.
 abstract final class GermanHyphenator {
-  static bool supports(String? language) => const {
-    'de',
-    'de-de',
-    'de-at',
-    'de-ch',
-    'de-1996',
-  }.contains(language?.replaceAll('_', '-').toLowerCase());
+  static String? _language(String? language) {
+    final normalized = language?.trim().replaceAll('_', '-').toLowerCase();
+    return normalized == 'de' || normalized == 'de-1996' ? 'de-de' : normalized;
+  }
+
+  static bool supports(String? language) =>
+      const {'de-de', 'de-at', 'de-ch'}.contains(_language(language));
 
   static final _PatternNode _root = _readPatterns();
   static final Map<String, List<int>> _cache = {};
-  static final RegExp _words = RegExp(
-    r'[\p{L}][\p{L}\p{M}\u00ad]*',
-    unicode: true,
-  );
   static final RegExp _letter = RegExp(r'^\p{L}$', unicode: true);
 
   /// Candidate boundaries for one word; no candidates inside source graphemes.
   static List<int> wordOffsets(String word, {String? language = 'de-DE'}) {
-    if (!supports(language) || word.contains('\u00ad')) return const [];
+    if (!supports(language) ||
+        word.contains('\u00ad') ||
+        word.contains("'") ||
+        word.contains('’') ||
+        word.contains('ʼ')) {
+      return const [];
+    }
     final letters = <String>[];
     final sourceOffsets = <int>[0];
     for (final cluster in GraphemeClusters.segment(word)) {
@@ -56,13 +60,22 @@ abstract final class GermanHyphenator {
   }) {
     if (languageAt == null && !supports(language)) return const [];
     final result = <int>[];
-    for (final word in _words.allMatches(text)) {
+    final protected = OfficeProofingTextRanges(text);
+    for (final word in hyphenationWords.allMatches(text)) {
+      if (protected.overlaps(word.start, word.end)) continue;
       final wordLanguage = languageAt?.call(word.start) ?? language;
       if (!supports(wordLanguage)) continue;
+      if ((word.start > 0 &&
+              isHyphenationIdentifierNeighbor(text, word.start - 1)) ||
+          (word.end < text.length &&
+              isHyphenationIdentifierNeighbor(text, word.end))) {
+        continue;
+      }
       if (languageAt != null) {
         var homogeneous = true;
         for (var at = word.start; at < word.end; at++) {
-          if ((languageAt(at) ?? language) != wordLanguage) {
+          if (_language(languageAt(at) ?? language) !=
+              _language(wordLanguage)) {
             homogeneous = false;
             break;
           }

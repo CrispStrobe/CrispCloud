@@ -95,6 +95,65 @@ Future<void> _tap(WidgetTester tester, Finder finder) async {
 }
 
 void main() {
+  for (final scenario in <({String source, String replacement, String result})>[
+    (source: 'Ihr seit hier.', replacement: 'seid', result: 'Ihr seid hier.'),
+    (
+      source: '😀 ich ha\u00adst Zeit.',
+      replacement: 'habe',
+      result: '😀 ich habe Zeit.',
+    ),
+    (
+      source: 'Du gibt mir Zeit.',
+      replacement: 'gibst',
+      result: 'Du gibst mir Zeit.',
+    ),
+  ]) {
+    testWidgets(
+      'German grammar correction preserves source and undo: ${scenario.replacement}',
+      (tester) async {
+        final controller = await _open(
+          tester,
+          document: WmlDocument.empty(text: scenario.source),
+          provider: GermanWritingRulesProvider(),
+        );
+        final correction = find.widgetWithText(
+          OutlinedButton,
+          scenario.replacement,
+        );
+        expect(correction, findsOneWidget);
+        await _tap(tester, correction);
+        await tester.pumpAndSettle();
+        expect(controller.document.paragraphs.first.text, scenario.result);
+        expect(controller.proofing.summary.issues, isEmpty);
+        controller.undo();
+        expect(controller.document.paragraphs.first.text, scenario.source);
+      },
+    );
+  }
+
+  testWidgets('seit-seid ignore can be restored by its visible rule name', (
+    tester,
+  ) async {
+    final controller = await _open(
+      tester,
+      document: WmlDocument.empty(text: 'Ihr seit hier.'),
+      provider: GermanWritingRulesProvider(),
+    );
+    await _tap(tester, find.text('Ignore rule'));
+    await tester.pumpAndSettle();
+    expect(controller.proofing.summary.issues, isEmpty);
+    await _tap(tester, find.text('Ignored checks'));
+    await tester.pumpAndSettle();
+    await _tap(tester, find.byTooltip('Restore Seit and seid usage'));
+    await tester.pumpAndSettle();
+    expect(
+      controller.proofing.summary.issues.single.finding.ruleId,
+      'de.grammar.seit-seid',
+    );
+    expect(controller.document.paragraphs.first.text, 'Ihr seit hier.');
+    expect(controller.canUndo, isFalse);
+  });
+
   for (final scenario in <({String source, String label})>[
     (source: 'Hallo,Welt.', label: 'Insert space'),
     (source: 'Hallo  Welt.', label: 'Use space'),

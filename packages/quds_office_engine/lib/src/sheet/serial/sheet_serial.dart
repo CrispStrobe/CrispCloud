@@ -552,6 +552,8 @@ class SheetDeserializer {
             };
           case 'containsText':
             kind = SmlConditionalKind.contains;
+          case 'expression':
+            kind = SmlConditionalKind.expression;
           case 'beginsWith':
             kind = SmlConditionalKind.beginsWith;
           case 'endsWith':
@@ -559,8 +561,8 @@ class SheetDeserializer {
           case 'duplicateValues':
             kind = SmlConditionalKind.duplicate;
           case 'top10':
-            final bottom = reader.getAttribute('bottom') == '1';
-            final percent = reader.getAttribute('percent') == '1';
+            final bottom = _readBoolean(reader.getAttribute('bottom'));
+            final percent = _readBoolean(reader.getAttribute('percent'));
             kind = bottom
                 ? (percent
                       ? SmlConditionalKind.bottomPercent
@@ -569,9 +571,13 @@ class SheetDeserializer {
                       ? SmlConditionalKind.topPercent
                       : SmlConditionalKind.top);
           case 'aboveAverage':
-            kind = reader.getAttribute('aboveAverage') == '0'
-                ? SmlConditionalKind.belowAverage
-                : SmlConditionalKind.aboveAverage;
+            kind =
+                _readBoolean(
+                  reader.getAttribute('aboveAverage'),
+                  defaultValue: true,
+                )
+                ? SmlConditionalKind.aboveAverage
+                : SmlConditionalKind.belowAverage;
         }
         if (kind == null) continue;
         final dxfId = int.tryParse(reader.getAttribute('dxfId') ?? '');
@@ -594,6 +600,8 @@ class SheetDeserializer {
           kind: kind,
           formula: text,
           rank: int.tryParse(reader.getAttribute('rank') ?? '') ?? 10,
+          priority: int.tryParse(reader.getAttribute('priority') ?? ''),
+          stopIfTrue: _readBoolean(reader.getAttribute('stopIfTrue')),
           fillRgb: dxfFill.isEmpty ? 'FFF2CC' : dxfFill,
           fontRgb: dxfFont,
           dxfId: dxfId,
@@ -936,6 +944,15 @@ class SheetDeserializer {
     }
     _readPivots(sheet, package, sheetUri);
   }
+
+  // XML Schema booleans permit both numeric and word spellings. Each optional
+  // SpreadsheetML attribute keeps its specified default when absent.
+  static bool _readBoolean(String? value, {bool defaultValue = false}) =>
+      switch (value?.trim()) {
+        '1' || 'true' => true,
+        '0' || 'false' => false,
+        _ => defaultValue,
+      };
 
   /// Text of an inline string (`<is>`): plain `<t>` or rich-text runs,
   /// without phonetic (`<rPh>`) readings.
@@ -1459,6 +1476,38 @@ class SheetSerializer {
     );
   }
 
+  static List<int> _conditionalPriorities(List<SmlConditionalRule> rules) {
+    const maximum = 0x7fffffff;
+    bool valid(int? priority) =>
+        priority != null && priority > 0 && priority <= maximum;
+    // Reserve every authored priority before assigning any missing values, so
+    // a new rule preceding an imported rule cannot take its original priority.
+    final reserved = <int>{
+      for (final rule in rules)
+        if (valid(rule.priority)) rule.priority!,
+    };
+    var next = 1;
+    for (final priority in reserved) {
+      if (priority >= next) next = priority + 1;
+    }
+    final used = <int>{};
+    final result = <int>[];
+    for (final rule in rules) {
+      final priority = rule.priority;
+      if (priority != null && valid(priority) && used.add(priority)) {
+        result.add(priority);
+        continue;
+      }
+      if (next > maximum) next = 1;
+      while (reserved.contains(next) || used.contains(next)) {
+        next = next == maximum ? 1 : next + 1;
+      }
+      used.add(next);
+      result.add(next++);
+    }
+    return result;
+  }
+
   String _sheetXml(
     SmlWorksheet sheet,
     SharedStringTable sst,
@@ -1670,13 +1719,17 @@ class SheetSerializer {
       w.writeEndElement();
     }
     if (!preserveConditional && sheet.conditionalFormats.isNotEmpty) {
-      for (final SmlConditionalRule rule in sheet.conditionalFormats) {
+      final priorities = _conditionalPriorities(sheet.conditionalFormats);
+      for (var i = 0; i < sheet.conditionalFormats.length; i++) {
+        final rule = sheet.conditionalFormats[i];
         w.writeStartElement('conditionalFormatting');
         w.writeAttribute(
           'sqref',
           '${rule.range.start.a1}:${rule.range.end.a1}',
         );
         w.writeStartElement('cfRule');
+        w.writeAttribute('priority', '${priorities[i]}');
+        w.writeAttribute('stopIfTrue', rule.stopIfTrue ? '1' : '0');
         switch (rule.kind) {
           case SmlConditionalKind.contains:
           case SmlConditionalKind.beginsWith:
@@ -1698,6 +1751,8 @@ class SheetSerializer {
                   : 'endsWith',
             );
             w.writeAttribute('text', rule.formula);
+          case SmlConditionalKind.expression:
+            w.writeAttribute('type', 'expression');
           case SmlConditionalKind.duplicate:
             w.writeAttribute('type', 'duplicateValues');
           case SmlConditionalKind.top:
@@ -1734,6 +1789,7 @@ class SheetSerializer {
               SmlConditionalKind.contains ||
               SmlConditionalKind.beginsWith ||
               SmlConditionalKind.endsWith ||
+              SmlConditionalKind.expression ||
               SmlConditionalKind.duplicate ||
               SmlConditionalKind.top ||
               SmlConditionalKind.bottom ||

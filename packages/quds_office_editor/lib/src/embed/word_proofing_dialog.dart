@@ -49,6 +49,7 @@ class _WordProofingDialogState extends State<WordProofingDialog> {
     'de.spacing.after-punctuation': 'Spaces after punctuation',
     'de.repetition.conjunction': 'Repeated conjunctions',
     'de.grammar.pronoun-verb': 'Pronoun and verb agreement',
+    'de.grammar.seit-seid': 'Seit and seid usage',
     'de.delimiter.balance': 'Matching brackets',
     'de.quote.balance': 'Matching quotation marks',
   };

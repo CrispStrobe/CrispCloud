@@ -38,7 +38,7 @@ The Office stack is broader than the upstream Quds “OOXML only” summary:
 | OpenDocument sheet | `.ods` | Typed Quds grid with formulas, formats, pictures, hidden state, conditional formats, validations, page setup, header/footer sections and metadata; ordinary Save writes a new `.xlsx`, while **Export as ODS** writes a new modeled `.ods` package |
 | Slides OOXML | `.pptx` | Rich Quds slide editor |
 | Slides legacy/ODF | `.ppt`, `.pps`, `.pot`, `.odp` | Positioned read-only previews (legacy PowerPoint also has a text fallback); no binary PowerPoint or ODP writer |
-| OpenDocument text | `.odt` | Formatted read-only view: headings, lists, tables, footnotes, inline pictures, text boxes and headers/footers; no ODT writer |
+| OpenDocument text | `.odt` | Formatted read-only view: headings, lists, tables, footnotes, inline pictures, text boxes and headers/footers; **Export as ODT** writes a new modeled document, while ordinary Save keeps DOCX |
 
 Macros and ActiveX are never executed. Signed OOXML packages are refused by the
 existing guard; legacy inputs are read-only. ODS import and the writer export
