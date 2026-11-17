@@ -91,6 +91,13 @@ abstract final class OdpPresentationWriter {
 
   static void _writeShape(XmlWriter w, PmlShape shape, _OdpLayout layout) {
     final transform = shape.transform;
+    if (shape.visual == null &&
+        shape.table == null &&
+        (shape.preset == PmlShapePreset.ellipse ||
+            shape.preset == PmlShapePreset.roundRect)) {
+      _writePresetShape(w, shape, layout);
+      return;
+    }
     final image = shape.visual?.imageBytes;
     if ((image == null || image.isEmpty) &&
         shape.table != null &&
@@ -276,6 +283,34 @@ abstract final class OdpPresentationWriter {
         ),
       );
     }
+    w.writeEndElement();
+  }
+
+  static void _writePresetShape(
+    XmlWriter w,
+    PmlShape shape,
+    _OdpLayout layout,
+  ) {
+    final transform = shape.transform;
+    final tag = shape.preset == PmlShapePreset.ellipse ? 'ellipse' : 'rect';
+    w.writeStartElement(tag, prefix: 'draw');
+    w.writeAttribute('draw:name', shape.name);
+    w.writeAttribute('draw:layer', 'layout');
+    w.writeAttribute('draw:style-name', layout.graphicStyle(shape));
+    w.writeAttribute('svg:x', '${transform.xPoints.toStringAsFixed(2)}pt');
+    w.writeAttribute('svg:y', '${transform.yPoints.toStringAsFixed(2)}pt');
+    w.writeAttribute(
+      'svg:width',
+      '${transform.widthPoints.toStringAsFixed(2)}pt',
+    );
+    w.writeAttribute(
+      'svg:height',
+      '${transform.heightPoints.toStringAsFixed(2)}pt',
+    );
+    if (shape.preset == PmlShapePreset.roundRect) {
+      w.writeAttribute('draw:corner-radius', '0.1in');
+    }
+    _writeParagraphs(w, shape.text, layout, shape);
     w.writeEndElement();
   }
 
