@@ -1,0 +1,175 @@
+{
+  "kind": "Runtime recovery checkpoint, including first strict-analysis failure; no accepted final-source tests",
+  "observed_utc": "2026-11-17T14:57:01.964023+00:00",
+  "archive": "runtime-checkpoint-setup-001.tar.gz",
+  "bytes": 1020000,
+  "sha256": "264a395a361764233e70529739ce9d00a52ed8db2ac791629bd50933b4fad1c5",
+  "members": [
+    {
+      "path": "canonical-format-preflight.json",
+      "bytes": 2072,
+      "sha256": "a69eccfca16ff6b14ec94c52b68075e286f8bccda2e482a4ca13949172057455"
+    },
+    {
+      "path": "canonical-plan-preview/plan.json",
+      "bytes": 22592,
+      "sha256": "221f3ce35fb9bd88a11983381074e18d2dbef3ca943a8baecfbe5f83b03004fa"
+    },
+    {
+      "path": "canonical-run-001/analysis-package-config.json",
+      "bytes": 24376,
+      "sha256": "329a094b7cc3b978f5d878afdf6853540f441de36d06178263ee92d9e1da859c"
+    },
+    {
+      "path": "canonical-run-001/dependencies-after.json",
+      "bytes": 993961,
+      "sha256": "e56cbd632ed91e701f3c491986ad89329b1f56d60620b50065f6aa8dcb0f1fc0"
+    },
+    {
+      "path": "canonical-run-001/dependencies-before.json",
+      "bytes": 993961,
+      "sha256": "e56cbd632ed91e701f3c491986ad89329b1f56d60620b50065f6aa8dcb0f1fc0"
+    },
+    {
+      "path": "canonical-run-001/engine-strict-analysis/stderr.gz",
+      "bytes": 20,
+      "sha256": "f61f27bd17de546264aa58f40f3aafaac7021e0ef69c17f6b1b4cd7664a037ec"
+    },
+    {
+      "path": "canonical-run-001/engine-strict-analysis/stdout.gz",
+      "bytes": 634,
+      "sha256": "a8064901a41417fafa2bfe8ceeac81db40723676ad6d3ee811af146500c40d1e"
+    },
+    {
+      "path": "canonical-run-001/fixture-audit.json",
+      "bytes": 11921,
+      "sha256": "48481b12cc32c24f6a1d51fcd2d5730aa59d1b9d954223bd6178ad0e6a50ccdb"
+    },
+    {
+      "path": "canonical-run-001/harness-after.json",
+      "bytes": 1149,
+      "sha256": "1da39056c304af1b94ee55de30de277a62f79d5603752cd0dc1e99482dd7fcd2"
+    },
+    {
+      "path": "canonical-run-001/harness-before.json",
+      "bytes": 1149,
+      "sha256": "1da39056c304af1b94ee55de30de277a62f79d5603752cd0dc1e99482dd7fcd2"
+    },
+    {
+      "path": "canonical-run-001/plan.json",
+      "bytes": 22854,
+      "sha256": "94ebbec260201253e5750e5cce2354f8b7bbcda90ac11fdd854454b0c47e0f25"
+    },
+    {
+      "path": "canonical-run-001/receipt.json",
+      "bytes": 8731,
+      "sha256": "57f96211721d84f97dbc1bb693a8ea4a6abf4f6597b5992c6bb7c6f340597f10"
+    },
+    {
+      "path": "canonical-run-001/run-used.py",
+      "bytes": 31551,
+      "sha256": "a8410e771047750b2fd7cc6626ec1b493c12e8d21c4b1c82f16ab3483fb1a9ca"
+    },
+    {
+      "path": "canonical-run-001/run.lock",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "canonical-run-001/runner-error.json",
+      "bytes": 648,
+      "sha256": "1e93beec4d960a9d74a89ee0c9053cfbeb1069ff85f48ae81332d5e6e7e4b188"
+    },
+    {
+      "path": "canonical-run-001/runtime-after.json",
+      "bytes": 2183,
+      "sha256": "3f1287ec47003ac66301bf9bd61c8bcafac64caff6a81fd3eb469904a4ec9394"
+    },
+    {
+      "path": "canonical-run-001/runtime-before.json",
+      "bytes": 2183,
+      "sha256": "3f1287ec47003ac66301bf9bd61c8bcafac64caff6a81fd3eb469904a4ec9394"
+    },
+    {
+      "path": "canonical-run-001/source-after.json",
+      "bytes": 895418,
+      "sha256": "0931f2d4123ae6502b6c67d82e8374a5a8592bd052b0634ad3700a0267ee0e35"
+    },
+    {
+      "path": "canonical-run-001/source-before.json",
+      "bytes": 895418,
+      "sha256": "0931f2d4123ae6502b6c67d82e8374a5a8592bd052b0634ad3700a0267ee0e35"
+    },
+    {
+      "path": "canonical-run-001/system-after.json",
+      "bytes": 710,
+      "sha256": "52ca24bc963f9115f210afb8d6f742b39609375fe30ddecde8a6ec31dbb88de0"
+    },
+    {
+      "path": "canonical-run-001/system-before.json",
+      "bytes": 710,
+      "sha256": "52ca24bc963f9115f210afb8d6f742b39609375fe30ddecde8a6ec31dbb88de0"
+    },
+    {
+      "path": "canonical-run-001/workspace-after.json",
+      "bytes": 2153,
+      "sha256": "f0aeb1c9defeb3bd0540bd843cd60de505a330dfb36a6e6ac431262831872465"
+    },
+    {
+      "path": "canonical-run-001/workspace-before.json",
+      "bytes": 2153,
+      "sha256": "f0aeb1c9defeb3bd0540bd843cd60de505a330dfb36a6e6ac431262831872465"
+    },
+    {
+      "path": "canonical-setup.json",
+      "bytes": 18976,
+      "sha256": "a63550f7e9cfc79ff8969f3d6bc9e34400833382e63673578f399ab2a2d2c42b"
+    },
+    {
+      "path": "logs/canonical-pub-get-offline.log",
+      "bytes": 68,
+      "sha256": "d4cb7a3c68b4133b4f6e58c67ff5bfd13725d8021e930388cdc98da8a575919d"
+    },
+    {
+      "path": "logs/canonical-pub-get.log",
+      "bytes": 787,
+      "sha256": "49eb0dd45324f519fff780e2be09c401ce53822de820ac017fb55c0f88502a10"
+    },
+    {
+      "path": "logs/flutter-bootstrap-version.log",
+      "bytes": 5001,
+      "sha256": "e256a97ecc717bbd482ce193cbe0815a91df6eefcaff1394f1d4bbee3d434626"
+    },
+    {
+      "path": "logs/flutter-precache-linux.log",
+      "bytes": 871,
+      "sha256": "43cbc09774ddcdc5e54492316f6265cdd4fd9a7e377058ee0609a0299a6a2c96"
+    },
+    {
+      "path": "logs/host-section-sync-dry-run.json",
+      "bytes": 551,
+      "sha256": "9a55c36c528b246bdee847a36c47c8dc31f641b761531dd4bd8b0f0a72e51639"
+    },
+    {
+      "path": "prepare_canonical.py",
+      "bytes": 2952,
+      "sha256": "4fe89cb8464e74e09e572a06e049dd7910ba3f27fb3699339c4168bf030a2853"
+    },
+    {
+      "path": "prior_run_qualification.py",
+      "bytes": 30134,
+      "sha256": "c4e35225bc37fafbdf3fd24a00f485bea592d65fe5e7325e1f8dece7d057f761"
+    },
+    {
+      "path": "recovery-setup-receipt.json",
+      "bytes": 2427,
+      "sha256": "03147ff813666499676497396cc9a7d964d5da20c1c1d6d0c49370e605636ba3"
+    },
+    {
+      "path": "run_canonical_qualification.py",
+      "bytes": 31551,
+      "sha256": "a8410e771047750b2fd7cc6626ec1b493c12e8d21c4b1c82f16ab3483fb1a9ca"
+    }
+  ],
+  "full_archive_readback_verified": true
+}

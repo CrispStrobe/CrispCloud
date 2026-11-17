@@ -470,7 +470,9 @@ void main() {
       document.sections.single.blocks.insert(
         0,
         WmlParagraph(
-          inlines: [WmlRun(text: 'Annotated', commentIds: [1])],
+          inlines: [
+            WmlRun(text: 'Annotated', commentIds: [1]),
+          ],
         ),
       );
 

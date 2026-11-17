@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "kind": "Section/main integration vendor plan and byte identity",
+  "previous_canonical": "7f116669d2512cf660c86d3c83feb64ab6b707fb",
+  "canonical": "555eb728ce3ea872cb5ceb3e5fd2104b21f932aa",
+  "canonical_tree": "b5e4578ef4f8ff0f33930e6fc41e8bdb6eda2017",
+  "host_parent": "bc9d494b141507ef310232dfee560461800ce32b",
+  "additional_parent": "3b6b9b2a5159ca9fdffdfd021866d78c0cb90729",
+  "managed_files": 2587,
+  "canonical_files": 730,
+  "parser_files": 1857,
+  "writes": [
+    {
+      "path": "packages/quds_office_engine/lib/src/word/serial/odt_document_writer.dart",
+      "old_blob": "abae52f0d08b0cbe66c5c86c97f0f28e36de60aa",
+      "new_blob": "ecfd108bcb9c6907b2d88c949bf846c4ac3e9d93",
+      "source_mode": "100644",
+      "host_mode": "100644",
+      "bytes": 40683,
+      "sha256": "a36bec120974e5e457166371b258be94b94359768b911c5d19224e06ea0277cf"
+    },
+    {
+      "path": "packages/quds_office_engine/test/odf_annotation_extraction_test.dart",
+      "old_blob": "d16f39b66d8d7ad3d0b4ec8a860a75e27bd70af6",
+      "new_blob": "5cef911963aaf0b0361997ec3a422cb210230fcf",
+      "source_mode": "100644",
+      "host_mode": "100644",
+      "bytes": 9812,
+      "sha256": "21b83b42eb3779048dac8f657005ba436e2bda6aff2884e8e7bcfbafe7594f35"
+    },
+    {
+      "path": "packages/quds_office_engine/test/odt_document_writer_test.dart",
+      "old_blob": "0b1df3418859c529c9bf89b14044e004b2a048fa",
+      "new_blob": "33f849c561d4aa7b28edb681c2e3a70b3c40858a",
+      "source_mode": "100644",
+      "host_mode": "100644",
+      "bytes": 13866,
+      "sha256": "aa60ee45778b854ab36cc87f703eefc1e89cd64a0ddc4373d6a8370823c9dc23"
+    },
+    {
+      "path": "packages/quds_office_engine/test/odt_note_fidelity_test.dart",
+      "old_blob": "fab22f0897d49e528ead09cdaed1f5f2b701c547",
+      "new_blob": "bcd825253162c15d7f9582ad6bcc642ae6368ff7",
+      "source_mode": "100644",
+      "host_mode": "100644",
+      "bytes": 21366,
+      "sha256": "075bc0b0087c54abaa2d1cecca84e3d78859e82eb693e88f4cbbd46f9a4120a3"
+    },
+    {
+      "path": "packages/quds_office_engine/test/odt_section_fidelity_test.dart",
+      "old_blob": null,
+      "new_blob": "9a55a2d22e7fe902e119ff4661dc869fec4c8893",
+      "source_mode": "100644",
+      "host_mode": "100644",
+      "bytes": 16890,
+      "sha256": "1f57b83778d4777eef89f6cd658c3b03728d84c1d26134bb1884cf826408b107"
+    }
+  ],
+  "deletes": [],
+  "conflicts": [],
+  "guarded_sync_dry_run": {
+    "status": "passed",
+    "source": "e042841fa062e18af1a3d184b846a58f0875dccc",
+    "followup": "555eb728 adds only equivalent string interpolation in the annotation/section tests; same five managed paths, final hashes above.",
+    "log": "runtime-checkpoint-setup-001.tar.gz:logs/host-section-sync-dry-run.json"
+  },
+  "incoming_host_documentation": {
+    "readme_blob": "7da5299521103b75df977c712f9f30ca310dfcb1",
+    "gaps": "Preserve continuation correction; include arriving section page-layout wording and recovered runtime status."
+  },
+  "host_annotation_test_formatting": {
+    "original": "21b68d4cc6bbe54ce5a0b4333e00cc154e016049",
+    "formatted": "d0d51db2742c1de51ff0f6e799bcf66ec9ff6341",
+    "assertions_unchanged": true,
+    "evidence": "host-runtime-setup-checkpoint.tar.xz"
+  },
+  "runtime_status": "Qualification in progress; final accepted receipts not yet available.",
+  "ci_queried_or_awaited": false
+}

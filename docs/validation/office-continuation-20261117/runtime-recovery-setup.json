@@ -1,0 +1,57 @@
+{
+  "kind": "Recovered local runtime and locked canonical dependency setup; no product test result",
+  "observed_utc": "2026-11-17T14:49:39.984460+00:00",
+  "framework": {
+    "frameworkVersion": "3.47.8",
+    "channel": "[user-branch]",
+    "repositoryUrl": "https://github.com/flutter/flutter.git",
+    "frameworkRevision": "737ba8f885dc774b53b442759999a312c9461e4e",
+    "frameworkCommitDate": "2026-10-22 21:37:31 -0700",
+    "engineRevision": "cf636b1dfb818dd6a3ff16e390e93b1a036969c8",
+    "engineCommitDate": "2026-10-23 02:13:38.000Z",
+    "engineContentHash": "dfd2e6cb7d319db05e3bf1503f3e2ac60f6288a2",
+    "engineBuildDate": "2026-10-23 05:34:48.330",
+    "dartSdkVersion": "3.13.7",
+    "devToolsVersion": "2.60.0",
+    "flutterVersion": "3.47.8"
+  },
+  "sdk_git_commit": "737ba8f885dc774b53b442759999a312c9461e4e",
+  "sdk_tracked_clean": true,
+  "executables": {
+    "bin/cache/dart-sdk/bin/dart": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb",
+    "bin/cache/artifacts/engine/linux-x64/flutter_tester": "800f4ca182df7dd2fb46a42dea5d76277b9dbc5e8cd2915e02bcbc978681b45f",
+    "bin/cache/flutter_tools.snapshot": "182fd4f9d6812c705983b3504ec491aa22e7f1ab4c80afbc3e42f87fb9e6be9b"
+  },
+  "canonical_workspace_lock_sha256": "344190a0224b9e6dcc2161cbfb1be3b7a9569a3a03a809f42801d99f9052e130",
+  "canonical_package_count": 108,
+  "commands": [
+    {
+      "command": "flutter --version --machine",
+      "exit_code": 0,
+      "log": "logs/flutter-bootstrap-version.log",
+      "log_sha256": "e256a97ecc717bbd482ce193cbe0815a91df6eefcaff1394f1d4bbee3d434626"
+    },
+    {
+      "command": "flutter precache --linux",
+      "exit_code": 0,
+      "log": "logs/flutter-precache-linux.log",
+      "log_sha256": "43cbc09774ddcdc5e54492316f6265cdd4fd9a7e377058ee0609a0299a6a2c96"
+    },
+    {
+      "command": "flutter pub get --enforce-lockfile",
+      "cwd": "canonical-workspace",
+      "exit_code": 0,
+      "log": "logs/canonical-pub-get.log",
+      "log_sha256": "49eb0dd45324f519fff780e2be09c401ce53822de820ac017fb55c0f88502a10"
+    },
+    {
+      "command": "dart flutter_tools.snapshot pub get --offline --enforce-lockfile",
+      "cwd": "canonical-workspace",
+      "exit_code": 0,
+      "log": "logs/canonical-pub-get-offline.log",
+      "log_sha256": "d4cb7a3c68b4133b4f6e58c67ff5bfd13725d8021e930388cdc98da8a575919d"
+    }
+  ],
+  "github_ci_queried_or_awaited": false,
+  "tests_run": false
+}

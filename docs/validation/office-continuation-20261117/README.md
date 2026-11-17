@@ -3,15 +3,17 @@
 ## Current result
 
 The continuation reconciles recent canonical Office/proofing work and repairs
-ODF annotation previews. The host pins canonical **`7f116669d2512cf660c86d3c83feb64ab6b707fb`** and manages
-**2,586 files: 729 canonical files and the unchanged 1,857-file standalone
+ODF annotation previews. The host pins canonical **`555eb728ce3ea872cb5ceb3e5fd2104b21f932aa`** and manages
+**2,587 files: 730 canonical files and the unchanged 1,857-file standalone
 parser**. Source and tests are saved incrementally on
 `codex/office-continuation-20261117`.
 
-**Runtime qualification is pending.** Local execution fails before a command
-starts. No Dart/Flutter tests, analyzer, formatter or executable vendor guard
-ran in this turn. Git-object comparisons, byte/hash checks and independent source
-review have completed. Historical test evidence retains its original source.
+**Runtime qualification is in progress.** The initial command-launch failures
+are retained as earlier attempts. The local runtime has recovered; official
+Flutter 3.47.8 / Dart 3.13.7 and unchanged locked canonical/host dependency
+workspaces are ready. Current source review, remote Git identity checks and the
+guarded vendor dry run have completed. Final accepted runtime results will be
+recorded separately; historical test evidence keeps its original source.
 
 ## Incoming work
 
@@ -26,10 +28,12 @@ main, and two branch/PR observations with additive evidence preservation.
 The latter case retains every original leaf blob and mode plus 31 TestFlight
 evidence files; it is explicitly not classified as whole-tree equality.
 
-The [bounded arrival refresh](arrival-observation.json) found no additional host
-source, and both main refs remained unchanged. Three canonical branches moved
+The [bounded arrival refresh](arrival-observation.json) initially found no
+additional host source, with both main refs unchanged at that observation.
+A later [destination-main refresh](section-main-arrival.json) captured Quds #104
+and host #223/#224; those exact main commits are retained by this integration. Three canonical branches moved
 during this turn. Their exact tips and preserved variants are recorded in the
-[canonical continuation](https://github.com/CrispStrobe/quds_office_suite/tree/7f116669d2512cf660c86d3c83feb64ab6b707fb/docs/validation/office-continuation-20261117).
+[canonical continuation](https://github.com/CrispStrobe/quds_office_suite/tree/555eb728ce3ea872cb5ceb3e5fd2104b21f932aa/docs/validation/office-continuation-20261117).
 The final source retains all original captured histories and those arrivals.
 
 ## What changed
@@ -45,6 +49,13 @@ text nested within an otherwise visible paragraph. Namespace-aware checks retain
 foreign lookalikes, CDATA and surrounding text. The canonical extractors and
 search fallback carry the same annotation-story boundary.
 
+The section writer now binds first-list and nonparagraph section starts, keeps
+continuous sections from forcing a page break, uses valid common style parents,
+and retains a default master for an empty document. The independent section
+review records explicit limits for synthetic anchors, odd/even page parity and
+mid-page geometry/header changes. Twelve new cases cover the section boundaries
+and interactions with notes/comments.
+
 The canonical writer also reserves note definitions for visible body references:
 references inside comments retain their marks without consuming the definition.
 Both footnote/endnote regressions and the independently arriving same-paragraph
@@ -59,11 +70,13 @@ license regression agree.
 
 - [Initial vendor plan and hashes](vendor-sync-initial.json) records the first
   40 source writes and license integration.
-- [Final vendor plan](vendor-sync-final.json) records the final eight source
-  writes, source pin and hashes.
-- [Final source verification](final-source-verification.json) binds the remote
-  tree, every managed file and the unchanged parser/customizations to their
-  observed blobs and modes.
+- [Second vendor plan](vendor-sync-final.json) records the eight annotation/note
+  source writes at canonical 7f116669.
+- [Section vendor plan](vendor-sync-sections.json) records five subsequent source
+  writes and the final 555eb728 pin; the guarded dry run reports 2,587 files.
+- [Pre-section source verification](source-verification-1d1411c5.json) records
+  the preceding complete inventory; the final guarded qualification will bind
+  this section update to its exact source and host tree.
 - [Independent host review](independent-host-review.json) covers the host
   annotation APIs/expectations and the seventh notice.
 - [Independent note review](independent-note-review.json) covers the canonical
@@ -86,8 +99,9 @@ preserved.
 ## Validation status and next step
 
 The new regression definitions are **not passed tests**. No executed failing
-control or newly accepted runtime result is claimed. The final workspace probe
-still failed before process creation with an unavailable exec-server.
+control or newly accepted runtime result is claimed. Earlier workspace probes failed before process creation; their records are
+preserved. The command runner and pinned toolchain subsequently recovered.
+Final qualification is running on the immutable source snapshot.
 
 Run [the retained local qualification](PENDING_VALIDATION.md) on this host
 snapshot and its exact canonical pin before promoting the draft. Full
