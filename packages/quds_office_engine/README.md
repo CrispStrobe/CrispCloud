@@ -1,15 +1,14 @@
 # quds_office_engine
 
-> **CrispCloud fork status — 16 November 2026.** This vendored copy reads
-> OOXML, bounded legacy inputs and OpenDocument files. It edits
-> DOCX/XLSX/PPTX models, imports BIFF8 worksheets and ODS workbooks, and exports
-> a modeled ODS package. It is therefore not “OOXML only”, and ODF is not
-> text-extraction-only: ODT/ODP are formatted read-only views while ODS has
-> typed import and a new-document export writer. Legacy writers, ODT/ODP
-> writers, VBA/ActiveX execution and full unknown-XML-preserving ODF fidelity
-> remain a new-document subset; ODT and ODP exports do not preserve arbitrary
-> imported ODF XML. The upstream notes below describe the original library
-> contract unless this fork note says otherwise.
+> **CrispCloud fork status — 16 November 2026.** This fork reads OOXML, bounded
+> legacy inputs and OpenDocument files. It edits DOCX/XLSX/PPTX models, imports
+> BIFF8 worksheets and ODS workbooks, and exports a modeled ODS package. It is
+> therefore not “OOXML only”, and ODF is not text-extraction-only: ODT/ODP are
+> formatted read-only views while ODS has typed import and a new-document export
+> writer. Legacy writers, ODT/ODP writers, VBA/ActiveX execution and full
+> unknown-XML-preserving ODF fidelity remain out of scope. The upstream notes
+> below describe the original library contract unless this fork note says
+> otherwise.
 
 <p>
   <a href="https://pub.dev/packages/quds_office_engine"><img alt="pub package" src="https://img.shields.io/pub/v/quds_office_engine.svg"/></a>
@@ -22,7 +21,7 @@
 
 **A pure Dart Office, PDF, and report engine.** Open, build, and write
 `.docx`, `.xlsx`, and `.pptx`; import bounded legacy `.doc`/`.xls` and
-OpenDocument `.odt`/`.ods`/`.odp` inputs; export `.ods`, a new-document `.odt` subset and a new-document `.odp` subset. Open real PDF files. Design **band reports**
+OpenDocument `.odt`/`.ods`/`.odp` inputs; export `.ods`, and emit new-document `.odt`/`.odp` subsets. Open real PDF files. Design **band reports**
 (`.qrep`) with expressions, grouping, charts, and Arabic amount-in-words, then
 export them to PDF, XLSX, and DOCX. Compose pages with a Flutter-like widget
 layout, pick from **100+ direction-aware PDF templates**, export Office models
@@ -259,10 +258,56 @@ final theme = OfficeDocumentTheme.custom(
 );
 ```
 
-For PDF, embed a covering TrueType `glyf` face (or an `OfficeFontSet` with
-fallbacks). Without one, Latin may fall back to Helvetica and other scripts
-will not appear. A rotated watermark is one shaped string, not a letter split
-along the diagonal — Arabic cannot be cut glyph by glyph and still join.
+For PDF, supply covering TrueType `glyf` faces. Latin can fall back to
+Standard 14 Helvetica; unsupported Unicode receives a visible box. A rotated
+watermark is one shaped string, not a letter split along the diagonal — Arabic
+cannot be cut glyph by glyph and still join.
+
+### Named Office fonts and coverage
+
+Use `OfficeFontFace` for each real regular, bold, italic or bold-italic cut.
+The host owns the bytes, so an application can reuse its existing assets:
+
+```dart
+final diagnostics = OfficeFontDiagnostics();
+final fonts = OfficeFontSet(
+  defaultFamily: 'Carlito',
+  diagnostics: diagnostics,
+  faces: [
+    OfficeFontFace(font: carlitoRegular, family: 'Carlito', aliases: ['Calibri']),
+    OfficeFontFace(font: carlitoBold, family: 'Carlito', weight: 700,
+        aliases: ['Calibri']),
+    OfficeFontFace(font: liberationSerif, family: 'Liberation Serif',
+        aliases: ['Times New Roman']),
+    OfficeFontFace(font: notoNaskhArabic, family: 'Noto Naskh Arabic'),
+  ],
+);
+final pdf = OfficePdfExport.word(document, fonts: fonts);
+// Localize a notice from diagnostics.missingCodePoints / substitutions.
+```
+
+Here the face variables are `SfntFont.parse(...)` results from host-provided
+font bytes. Declare verified aliases on every cut of a family, and include
+italic and bold-italic cuts when available. Resolution first tries the requested
+family/style, then the declared default, the legacy coverage list, and remaining
+named families in order. A face must actually contain the glyph. CFF faces are
+not supported by this PDF embedder.
+
+Word resolves family, weight and slant per run before line breaking. PDF
+emission uses the same source face and does not apply synthetic bold/slant over
+a real bold/italic cut. Worksheet export reads the retained native font family
+and italic flag as well as the model's bold/size properties. Slide export uses
+the shared coverage resolver; the current slide shape model still does not
+expose every rich-run typeface as editable scalar properties.
+
+`OfficeFontSet(primary: ..., fallbacks: ...)` remains supported with its original
+coverage ordering. Font selection does not rewrite source font metadata.
+Only actually painted substitutions enter diagnostics, so measuring unused
+pages does not produce warnings. Diagnostics retain at most 256 missing code
+points and 128 family substitutions; `truncated` indicates additional entries.
+Missing glyphs preserve their layout advance and paint a box, including when
+no supplied font can paint a replacement character. Neither the resolver nor
+the editor downloads fonts automatically.
 
 ---
 
@@ -1406,9 +1451,9 @@ dart run example/rich_export_gallery.dart
 | `.xlsb` | — | — | Host preview only; no BIFF12 reader or writer |
 | `.pptx` | Yes | Yes | Shapes, notes, hidden slides, motion |
 | `.ppt` / `.pps` / `.pot` | Partial | — | Current-slide text in the engine; rich preview is a host integration |
-| `.odt` | Yes | Yes | New-document subset: headings, formatted runs, bullet/numbered nested list groups, footnotes/endnotes, comments, bookmarks/links, section layouts, tables, pictures, frames, page geometry and basic headers/footers; no in-place ODF preservation |
-| `.ods` | Yes | Yes | Typed modeled subset; `OdsSheetWriter` emits a new package, not an in-place ODF rewrite |
-| `.odp` | Yes | Yes | New-document deck subset: page size, positioned text, pictures, tables, fills/strokes, text links, transitions and notes; no in-place ODF preservation |
+| `.odt` | Yes | Yes | New-document subset: headings, formatted runs, list groups, tables, pictures, frames, page geometry and basic headers/footers; no in-place ODF preservation |
+| `.ods` | Yes | Yes | Typed modeled subset including pictures, conditional formats, validations, row groups, page setup and header/footer sections; `OdsSheetWriter` emits a new package, not an in-place ODF rewrite |
+| `.odp` | Yes | Yes | New-document deck subset: page size, positioned text, pictures, tables, fills/strokes, transitions and notes; no in-place ODF preservation |
 | `.pdf` | Yes | Yes | `PdfFile` open; native 1.7 write and toolbox graft |
 | `.qrep` | Yes | Yes | Band-report XML with line:column diagnostics; exports PDF, XLSX, DOCX |
 | Password-protected OOXML | Yes | Yes | When a password is supplied |
