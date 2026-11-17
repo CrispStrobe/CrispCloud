@@ -682,8 +682,8 @@ abstract final class OdtDocumentWriter {
       pageField: pageField,
       nativeFieldStarts: fieldPlan.fields.keys.toSet(),
       retainLeadingFragment:
-          sectionStart?.index == 0 &&
-          layout.sections.first.resolvedColumnCount > 1,
+          sectionStart != null &&
+          layout.sections[sectionStart.index].resolvedColumnCount > 1,
     );
     var partIndex = 0;
     var leadingColumnBreak = parts.leadingColumnBreak;
@@ -785,9 +785,10 @@ abstract final class OdtDocumentWriter {
 
     // ODF represents hard column breaks on paragraphs, not as inline soft
     // page markers. Split only at the authored boundary, inside the same list
-    // item/story. At the start of a multi-column body, retain the empty source
-    // fragment: Writer ignores a column break on the section's first paragraph.
-    // Other leading breaks can use that paragraph's break-before directly.
+    // item/story. At the start of a multi-column section, retain the empty
+    // source fragment: the section boundary owns that paragraph and must not
+    // consume the following column break.
+    // Other leading breaks can use the paragraph's break-before directly.
     // Do not trim whitespace or relocate zero-width bookmark/field endpoints.
     final count = columnBreaks + (leadingColumnBreak ? 0 : 1);
     final properties = <WmlParagraphProps>[];

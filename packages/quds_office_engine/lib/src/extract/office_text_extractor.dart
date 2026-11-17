@@ -333,7 +333,14 @@ abstract final class OfficeTextExtractor {
           row = <String>[];
           table.add(row);
         } else if (element.localName == 'table-cell' && row != null) {
-          row.add(readOdfText(element, budget));
+          row.add(
+            readOdfText(
+              element,
+              budget,
+              preserveLiteralWhitespace:
+                  kind == OfficeExtractKind.opendocumentSheet,
+            ),
+          );
           return;
         }
       }
@@ -381,7 +388,14 @@ abstract final class OfficeTextExtractor {
         row = <String>[];
         table.add(row);
       } else if (reader.localName == 'table-cell' && row != null) {
-        row.add(readOdfText(XmlDocument.readElement(reader), budget));
+        row.add(
+          readOdfText(
+            XmlDocument.readElement(reader),
+            budget,
+            preserveLiteralWhitespace:
+                kind == OfficeExtractKind.opendocumentSheet,
+          ),
+        );
       } else if (reader.namespaceUri == odfTextNamespace &&
           (reader.localName == 'p' || reader.localName == 'h')) {
         collectElement(XmlDocument.readElement(reader));

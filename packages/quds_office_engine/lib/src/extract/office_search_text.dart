@@ -83,7 +83,13 @@ Future<String> officeSearchText(
       '.pptx' || '.pptm' => await _presentation(parts),
       '.odt' || '.ods' || '.odp' => [
         if (await parts.xml('content.xml') case final XmlElement document)
-          parts.output(_odfText(document, maxBytes)),
+          parts.output(
+            _odfText(
+              document,
+              maxBytes,
+              preserveLiteralWhitespace: extension == '.ods',
+            ),
+          ),
       ],
       _ => <String>[],
     };
@@ -197,11 +203,19 @@ String _allText(XmlElement node) => _descendants(node)
     .join(' ')
     .trim();
 
-String _odfText(XmlElement node, int maxBytes) {
+String _odfText(
+  XmlElement node,
+  int maxBytes, {
+  bool preserveLiteralWhitespace = false,
+}) {
   // Preserve the existing fallback for nonstandard namespace-less text files.
   // Retained hidden stories and revision stores stay out of fallback text.
   if (odfParagraphs(node).isEmpty) return _odfFallbackText(node);
-  return readOdfText(node, OdfTextBudget(maxBytes));
+  return readOdfText(
+    node,
+    OdfTextBudget(maxBytes),
+    preserveLiteralWhitespace: preserveLiteralWhitespace,
+  );
 }
 
 String _odfFallbackText(XmlElement node) {

@@ -1274,6 +1274,24 @@ Iterable<_GermanGrammarIssue> _grammarNounPhrase(
                 (reading, grammaticalCase),
       ];
   if (analyses.isEmpty) return;
+  // In a governed dative phrase, this demonstrative ending explicitly marks
+  // singular. Preserve that number for an otherwise unambiguous neuter noun
+  // whose nominative singular and plural surfaces coincide (Gebäude, Fenster).
+  // Competing lexical genders, unknown readings and all other articles remain
+  // untouched; never force a number for "der/den Computer" or "die Leiter".
+  if (governedCase == _GermanCase.dative &&
+      const {'dies', 'jen'}.contains(determiner.stem) &&
+      article.lower == '${determiner.stem}es' &&
+      readings.any((reading) => reading.gender == _GermanGender.neuter) &&
+      readings.every(
+        (reading) =>
+            reading.gender == _GermanGender.neuter ||
+            reading.gender == _GermanGender.plural,
+      )) {
+    analyses = analyses
+        .where((analysis) => analysis.$1.gender == _GermanGender.neuter)
+        .toList(growable: false);
+  }
   // Honor an already valid determiner first. This disambiguates e.g.
   // "mit den Fehler" (plural) from "mit dem Fehler" (singular).
   final List<(_GermanNounReading, _GermanCase)> matchingArticles = analyses

@@ -1,0 +1,13 @@
+{
+  "status": "passed",
+  "old_reviewed_source_sha256": "df0b8ccb05d8fb6015ddbd06411b7874b2b7419b7ee8c78a42b9aea8447a1bb5",
+  "new_reviewed_source_sha256": "11dd7fcab60fec97bd5dd6c4839520c13c59b65217e14518bab4a83efac963f9",
+  "reviewed_changed_paths": [
+    "tool/office_fidelity_manifest.json",
+    "lib/widgets/office_editor_dialog.dart",
+    "packages/quds_office_engine/lib/src/sheet/model/sml_analysis.dart"
+  ],
+  "decisions_changed": false,
+  "distribution_or_submission_performed": false,
+  "review": "Canonical vendor pin and inventory; preserved existing dialog formatter output; null-aware collection syntax in color-scale stops, without a behavior change."
+}

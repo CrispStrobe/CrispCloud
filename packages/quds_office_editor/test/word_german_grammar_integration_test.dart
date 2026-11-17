@@ -51,7 +51,7 @@ void main() {
         (
           source: 'Sie hat ein roten Mantel.',
           corrected: 'Sie hat einen roten Mantel.',
-          rule: 'verb-case',
+          rule: 'verb-object-case',
           replacement: 'einen',
         ),
         (

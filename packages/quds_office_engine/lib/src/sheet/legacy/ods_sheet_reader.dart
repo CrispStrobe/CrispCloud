@@ -1939,7 +1939,11 @@ abstract final class OdsSheetReader {
       // cells for rejection and decode an annotation's own story separately.
       // Nested hidden stories remain excluded by the shared ODF decoder.
       for (final child in element.childElements) {
-        for (final paragraph in readOdfParagraphs(child, budget)) {
+        for (final paragraph in readOdfParagraphs(
+          child,
+          budget,
+          preserveLiteralWhitespace: true,
+        )) {
           final separator = first ? 0 : 1;
           if (buffer.length + separator + paragraph.length >
               maximumCharacters) {

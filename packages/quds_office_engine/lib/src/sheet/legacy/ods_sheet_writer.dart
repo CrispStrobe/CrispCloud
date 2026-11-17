@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import '../../odf/odf_text.dart';
 import '../../opc/zip/zip_writer.dart';
 import '../../xml/xml_writer.dart';
 import '../model/sml_analysis.dart';
@@ -505,12 +506,12 @@ abstract final class OdsSheetWriter {
       w.writeStartElement('p', prefix: 'text');
       w.writeStartElement('a', prefix: 'text');
       w.writeAttribute('xlink:href', link);
-      w.writeText(value?.toString() ?? '');
+      writeOdfText(w, value?.toString() ?? '');
       w.writeEndElement();
       w.writeEndElement();
     } else if (value is String && value.isNotEmpty) {
       w.writeStartElement('p', prefix: 'text');
-      w.writeText(value);
+      writeOdfText(w, value);
       w.writeEndElement();
     } else if (formula != null || value is num || value is bool) {
       w.writeStartElement('p', prefix: 'text');

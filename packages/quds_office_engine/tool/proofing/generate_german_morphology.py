@@ -220,6 +220,25 @@ def noun_readings(dictionary: bytes, patterns_xml: bytes, modern: set[str]):
         if extra_gender is not None:
             readings[(lemma, reference + '-reviewed-gender', extra_gender)] = [set(case) for case in forms]
             additions.append((lemma, 'alternative-gender', GENDERS[extra_gender]))
+    # The source's mixed Freund/Freundin stem pattern cannot be seeded from
+    # the feminine surface by the generic fixed-suffix importer. Record this
+    # finite reviewed paradigm without guessing a new stem for other words.
+    if {'Freundin', 'Freundinnen'} <= modern:
+        reference = 'first-party-reviewed-feminine'
+        readings[('Freundin', reference, 1)] = [{'Freundin'} for _ in CASES]
+        readings[('Freundin', reference, 3)] = [{'Freundinnen'} for _ in CASES]
+        selected.add('Freundin')
+        additions.append(('Freundin', 'reviewed-feminine-noun', 'Freundin|Freundinnen'))
+    # A finite first-party compound fact, absent from the pinned upstream.
+    # Its attested spelling forms are admitted separately by our word list;
+    # this does not infer arbitrary compounds or override competing readings.
+    lemma, oblique = 'Straßenpolizist', 'Straßenpolizisten'
+    if lemma in modern and oblique in modern:
+        reference = 'first-party-reviewed-weak-compound'
+        readings[(lemma, reference, 0)] = [{lemma}, {oblique}, {oblique}, {oblique}]
+        readings[(lemma, reference, 3)] = [{oblique} for _ in CASES]
+        selected.add(lemma)
+        additions.append((lemma, 'reviewed-weak-compound', oblique))
     return readings, selected, excluded, additions, unresolved
 
 

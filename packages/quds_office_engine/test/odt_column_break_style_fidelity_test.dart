@@ -270,14 +270,14 @@ void main() {
   }
 
   test(
-    'finite gaps retain signed lengths and canonical precision in styles',
+    'supported gaps retain precision while negative gaps stay unspecified',
     () {
       final sections = [
         _section(2, 18.001, 'Rounded first'),
         _section(2, 18.004, 'Rounded second'),
         _section(2, -0.0, 'Negative zero'),
         _section(2, 0, 'Zero'),
-        _section(2, -6.25, 'Signed length'),
+        _section(2, -6.25, 'Unsupported negative gap'),
       ];
       final root = _export(WmlDocument(sections: sections));
       final output = _body(
@@ -292,7 +292,24 @@ void main() {
               ).getAttribute('column-gap', namespaceUri: _fo),
             )
             .toList(),
-        ['18.00pt', '18.00pt', '0.00pt', '0.00pt', '-6.25pt'],
+        ['18.00pt', '18.00pt', '0.00pt', '0.00pt', null],
+      );
+      // Retain the current writer's conservative negative-gap contract:
+      // omit only the gap, preserving the source value, columns, and text.
+      expect(
+        output.map((section) => section.text),
+        sections.map(
+          (section) => section.blocks.whereType<WmlParagraph>().single.text,
+        ),
+      );
+      expect(
+        output.map(
+          (section) => _columns(
+            root,
+            section,
+          ).getAttribute('column-count', namespaceUri: _fo),
+        ),
+        everyElement('2'),
       );
       expect(
         output[0].getAttribute('style-name', namespaceUri: _text),

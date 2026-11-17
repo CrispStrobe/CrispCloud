@@ -106,6 +106,43 @@ SmlConditionalRule _rule({
 );
 
 void main() {
+  testWidgets('data bars visibly paint without changing cell values', (
+    tester,
+  ) async {
+    final sheet = _sheet(text: '');
+    sheet.cellA1('A1').value = 1;
+    sheet.cellA1('B1').value = 5;
+    sheet.cellA1('C1').value = 10;
+    final before = await _paint(tester, sheet);
+    sheet.conditionalFormats.add(
+      SmlConditionalRule(
+        range: SmlRange.parse('A1:C1'),
+        kind: SmlConditionalKind.dataBar,
+        dataBarColor: '008800',
+        colorScaleStops: const [
+          SmlColorScaleStop(type: 'min', colorRgb: '008800'),
+          SmlColorScaleStop(type: 'max', colorRgb: '008800'),
+        ],
+      ),
+    );
+    final state = sheet.conditionalFormatState();
+    final after = await _paint(tester, sheet);
+    var changedPixels = 0;
+    for (var i = 0; i < before.length; i += 4) {
+      if (before[i] != after[i] ||
+          before[i + 1] != after[i + 1] ||
+          before[i + 2] != after[i + 2] ||
+          before[i + 3] != after[i + 3]) {
+        changedPixels++;
+      }
+    }
+    expect(changedPixels, greaterThan(100));
+    expect(sheet.cellA1('A1').value, 1);
+    expect(sheet.cellA1('B1').value, 5);
+    expect(sheet.cellA1('C1').value, 10);
+    expect(sheet.conditionalFormatState(), state);
+  });
+
   testWidgets('grid paints priority and independent property cascade', (
     tester,
   ) async {

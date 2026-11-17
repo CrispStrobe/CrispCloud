@@ -22,3 +22,5 @@ bekam bekamst bekamen bekommen bekamst blieb bliebst blieben bleibe bleibst blei
 Frage Gerät trotzdem
 Wissen
 Wissens
+# Independently authored finite weak-compound forms.
+Straßenpolizist Straßenpolizisten

@@ -26,14 +26,14 @@ content.
 The app mirrors the canonical Quds source and the standalone legacy parser.
 Exact revisions, source boundaries and the complete managed-file inventory are
 recorded in [the fidelity manifest](../tool/office_fidelity_manifest.json).
-The current canonical checkpoint is `02a246eb230f0bf8f20da4b2c375d1c507099325`;
-the managed inventory contains 2,630 files: 773 canonical files and the unchanged
+The current canonical checkpoint is `e9889e07c983ac15ff002771cf78854d1bc0d572`;
+the managed inventory contains 2,633 files: 776 canonical files and the unchanged
 1,857-file standalone parser. The 17 November continuation reconciles the
 captured Office, morphology and proofing-tool branches and their bounded late
 arrivals. It preserves the original six bundled notices and adds the complete
 Unicode Inflection notice for German morphology to the app's license registry.
 
-An earlier reconciliation merged captured host main `1cd2a18f7bc2455eabc5ec8e22767c849a833305` and synchronized the canonical union through the guard. It retained the bounded German noun-agreement work, custom ODT tab stops, table row minimum-height semantics and decoration normalization. The AOT/RML package was merged only to reconcile its history; it was then removed. No AOT/RML code, dependency, Studio menu or licensing artifact remains in the application. New tests exercise the actual ODT/ODP export menus, annotation privacy, semantic output and destination outcomes; their local execution evidence is recorded separately from prior qualifications in `docs/validation/office-reconcile-20261117/`.
+The latest reconciliation merges captured host main `1cd2a18f7bc2455eabc5ec8e22767c849a833305` and synchronizes the canonical union through the guard. It retains the bounded German noun-agreement work, custom ODT tab stops, table row minimum-height semantics and decoration normalization. The AOT/RML package was merged only to reconcile its history; it was then removed. No AOT/RML code, dependency, Studio menu or licensing artifact remains in the application. New tests exercise the actual ODT/ODP export menus, annotation privacy, semantic output and destination outcomes; their local execution evidence is recorded separately from prior qualifications in `docs/validation/office-reconcile-20261117/`.
 
 ODF annotations retain their raw XML and comment-model content while body
 extraction, search and host previews exclude them. Note references inside
@@ -445,13 +445,3 @@ section activation for ODT tables of contents, restores bounded PAGE/NUMPAGES
 conversion with cache/style/link preservation, and suppresses ambiguous bookmark
 ends. Incoming chart-table export and production ODF cell/story workflows remain
 intact. The native spaCy backend is separate work.
-
-The reconciled continuation retains its earlier host capture `6beeeec4`, merges
-current host main `cc538a4a`, and uses canonical source
-`02a246eb230f0bf8f20da4b2c375d1c507099325`. It retains the deliberate AOT/RML
-removal and independent German context work, incorporates the captured bounded
-verb-case and participle refinements, and restores the original column-break
-and chart-table menu regressions. The actual field export case checks one
-cached PAGE/NUMPAGES display with authored styles and links, plus locked and
-unsupported fallback content and unchanged source bytes. Fresh local
-qualification and historical results remain separately attributed.

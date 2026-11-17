@@ -1,0 +1,23 @@
+{
+  "from": "96e65705ad69f969710d3ff6d2897bd4aa38fbf9",
+  "to": "e9889e07c983ac15ff002771cf78854d1bc0d572",
+  "write": [
+    "packages/quds_office_editor/test/word_german_grammar_integration_test.dart",
+    "packages/quds_office_engine/CHANGELOG.md",
+    "packages/quds_office_engine/lib/src/proofing/german_grammar.dart",
+    "packages/quds_office_engine/lib/src/proofing/german_spelling.dart",
+    "packages/quds_office_engine/lib/src/sheet/model/sml_analysis.dart",
+    "packages/quds_office_engine/lib/src/word/model/word_bookmarks.dart",
+    "packages/quds_office_engine/lib/src/word/serial/odt_document_writer.dart",
+    "packages/quds_office_engine/test/odt_bookmark_name_ambiguity_test.dart",
+    "packages/quds_office_engine/test/odt_column_break_style_fidelity_test.dart",
+    "packages/quds_office_engine/test/odt_complex_field_fidelity_test.dart",
+    "packages/quds_office_engine/test/odt_inline_column_break_fidelity_test.dart",
+    "packages/quds_office_engine/test/odt_page_marker_column_break_test.dart",
+    "packages/quds_office_engine/test/proofing/german_participle_suggestions_test.dart",
+    "packages/quds_office_engine/test/proofing/german_verb_object_case_test.dart"
+  ],
+  "delete": [],
+  "pinned_files": 2633,
+  "applied": true
+}
