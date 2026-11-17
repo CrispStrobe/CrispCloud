@@ -36,6 +36,7 @@ void main() {
               textColor: '000000',
               fontSizePt: 28,
               textAlign: PmlTextAlign.center,
+              hyperlinkUrl: 'https://example.com/deck',
             ),
             PmlShape(
               id: 3,
@@ -85,6 +86,7 @@ void main() {
     expect(content, contains('Pictures/image1.png'));
     expect(content, contains('xlink:type="simple"'));
     expect(content, contains('Speaker note'));
+    expect(content, contains('<text:a xlink:href="https://example.com/deck">'));
     expect(content, contains('presentation:transition-style="push-left"'));
     expect(content, contains('presentation:duration="PT5.00S"'));
     expect(styles, contains('fo:page-width'));
