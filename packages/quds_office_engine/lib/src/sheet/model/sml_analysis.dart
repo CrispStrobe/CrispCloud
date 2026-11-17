@@ -94,6 +94,8 @@ class SmlDataValidation {
     this.errorTitle = '',
     this.error = '',
     this.errorStyle = 'stop',
+    this.listSourceRange,
+    this.listSourceSheet,
   });
 
   /// range API.
@@ -128,6 +130,12 @@ class SmlDataValidation {
 
   /// Excel error style: stop, warning or information.
   String errorStyle;
+
+  /// Optional range-backed list source retained for native ODF links.
+  SmlRange? listSourceRange;
+
+  /// Optional worksheet name for [listSourceRange].
+  String? listSourceSheet;
 
   /// listItems API.
   List<String> get listItems {

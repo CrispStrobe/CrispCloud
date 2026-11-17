@@ -307,6 +307,15 @@ abstract final class OdsSheetWriter {
     for (final row in sheet.rowOutlineLevels.keys) {
       includeRow(row);
     }
+    for (final validation in sheet.validations) {
+      final count =
+          (validation.range.maxRow - validation.range.minRow + 1) *
+          (validation.range.maxCol - validation.range.minCol + 1);
+      if (count <= 100000) {
+        includeColumn(validation.range.maxCol);
+        includeRow(validation.range.maxRow);
+      }
+    }
     for (var col = 0; col <= maxCol; col++) {
       w.writeStartElement('table-column', prefix: 'table');
       w.writeAttribute('table:default-cell-style-name', 'Default');
@@ -632,9 +641,10 @@ abstract final class OdsSheetWriter {
       .replaceAll('"', '&quot;');
 
   static String _rangeAddress(String sheet, SmlRange range) =>
-      '\$${_escapeSheet(sheet)}.${range.start.a1}:.${range.end.a1}';
+      '\$${OdsSheetWriter._escapeSheet(sheet)}.${range.start.a1}:.${range.end.a1}';
 
-  static String _baseAddress(String sheet) => '\$${_escapeSheet(sheet)}.\$A\$1';
+  static String _baseAddress(String sheet) =>
+      '\$${OdsSheetWriter._escapeSheet(sheet)}.\$A\$1';
 
   static String _dropOf(String formula) =>
       formula.startsWith('of:=') ? formula.substring(4) : formula;
@@ -983,6 +993,13 @@ class _OdsLayout {
     }
 
     if (rule.kind == SmlValidationKind.list) {
+      if (rule.listSourceRange case final range?) {
+        final sheet = rule.listSourceSheet;
+        final address = sheet == null || sheet.isEmpty
+            ? '.${range.start.a1}:.${range.end.a1}'
+            : OdsSheetWriter._rangeAddress(sheet, range);
+        return 'of:cell-content-is-in-list([$address])';
+      }
       final items = rule.listItems
           .map((item) => '"${item.replaceAll('"', '""')}"')
           .join(';');
