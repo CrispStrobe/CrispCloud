@@ -242,6 +242,30 @@ void main() {
     expect(rule.errorStyle, 'warning');
   });
 
+  test('writes range-backed list validations', () {
+    final source = SmlWorksheet(name: 'Source', sheetId: 1);
+    source.cellA1('A1').value = 'Red';
+    source.cellA1('A2').value = 'Green';
+    final data = SmlWorksheet(name: 'Data', sheetId: 2)
+      ..validations.add(
+        SmlDataValidation(
+          range: SmlRange.parse('A1'),
+          kind: SmlValidationKind.list,
+          formula1: 'Red,Green',
+          listSourceRange: SmlRange.parse('A1'),
+          listSourceSheet: 'Source',
+        ),
+      );
+    final reopened = OdsSheetReader.readBytes(
+      OdsSheetWriter.writeBytes(SmlWorkbook(sheets: [source, data])),
+    );
+    final rule = reopened.sheets[1].validations.single;
+    expect(rule.kind, SmlValidationKind.list);
+    expect(rule.listSourceSheet, 'Source');
+    expect(rule.listSourceRange?.start.a1, 'A1');
+    expect(rule.listSourceRange?.end.a1, 'A1');
+  });
+
   test('writes color-scale conditional rules', () {
     final sheet = SmlWorksheet(name: 'Data', sheetId: 1);
     for (var row = 1; row <= 3; row++) {

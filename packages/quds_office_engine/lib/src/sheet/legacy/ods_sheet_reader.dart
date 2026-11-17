@@ -604,8 +604,8 @@ abstract final class OdsSheetReader {
         errorTitle: definition.errorTitle,
         error: definition.error,
         errorStyle: definition.errorStyle,
-        sourceRange: null,
-        sourceSheet: null,
+        sourceRange: sourceRange,
+        sourceSheet: sourceName,
       ), budget);
     }
     _readOdsNamedMetadata(spreadsheet, book);
@@ -783,6 +783,8 @@ abstract final class OdsSheetReader {
           errorTitle: definition.errorTitle,
           error: definition.error,
           errorStyle: definition.errorStyle,
+          listSourceRange: definition.sourceRange,
+          listSourceSheet: definition.sourceSheet,
         ),
       );
       index = end + 1;
@@ -831,7 +833,10 @@ abstract final class OdsSheetReader {
       }
       final listMatch = listCondition.firstMatch(condition);
       if (listMatch != null) {
-        final argument = listMatch.group(1)!.trim();
+        var argument = listMatch.group(1)!.trim();
+        if (argument.startsWith('[') && argument.endsWith(']')) {
+          argument = argument.substring(1, argument.length - 1).trim();
+        }
         final items = <String>[];
         SmlRange? sourceRange;
         String? sourceSheet;
