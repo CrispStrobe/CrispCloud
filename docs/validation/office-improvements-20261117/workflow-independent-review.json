@@ -1,0 +1,319 @@
+{
+  "canonical_binding": {
+    "documentation_only_canonical_HEAD_advance_allowed": true,
+    "managed_files": 2612,
+    "manifest_sha256": "c4fb0834ec8550c0947f7f85c35481f3518db46cbfa29c24e022f37005f59404",
+    "qualified_pin": "7fd2030fd39a2b0bbdb1b1e778840c332ae6bbc3"
+  },
+  "canonical_qualified_pin": "7fd2030fd39a2b0bbdb1b1e778840c332ae6bbc3",
+  "command_gates": {
+    "vendor-after": 0,
+    "vendor-before": 0,
+    "whitespace": 0,
+    "workflow-analysis": 0,
+    "workflow-format": 0,
+    "workflow-tests": 0
+  },
+  "evidence_hashes": {
+    "concurrent-integration/host-shared-78a4/sqlite-native-asset/receipt.json": "145a3c207f34405695636a97c26be2728dee0e6e79ab2050ae52fbb03c9c531f",
+    "concurrent-integration/host-shared-78a4/workflow-harness-ready.json": "49d7de4ea9defdd7df55d80dbdf0da22a3d4a920c7fc4001a307437d8164e7e2",
+    "final-qualified-review/workflow_review.py": "7f6e914ea48542b268e24ddaad4df10aa34a2af900998868f15ed7f6d0b7831f",
+    "qualified-workflow-f08035db/inputs-after.json": "6fd6c042f204a8c0fc782ad89e7c445212b1d1806d8c463fae6aba0c728b101e",
+    "qualified-workflow-f08035db/inputs-before.json": "6fd6c042f204a8c0fc782ad89e7c445212b1d1806d8c463fae6aba0c728b101e",
+    "qualified-workflow-f08035db/receipt.json": "48d297a50b9f24d5a6eaeb1f4d07d4129a3108897283fe39a2875c18999cdec3",
+    "qualified-workflow-f08035db/workflow-tests.stdout.log": "fcceaf37af30a92c2f9cb67da618af91a9b66e32a5eff0691df0781a9a09d036"
+  },
+  "findings": [],
+  "host_source": "f08035db691d5a1fe7299ad3608b626ab6202d27",
+  "input_maps": {
+    "before_after_equal": true,
+    "dependencies": 7188,
+    "package_routes": 180,
+    "runtime": 517,
+    "source": 7494,
+    "workspace": 28
+  },
+  "method": "Independent raw-event recount, exact Git/file/graph readback, production-pin verification and native hook/manifest authentication. No tests or builds executed.",
+  "native_asset": {
+    "actual_bundled_sha256": "e184f6ba2b7a3440e272df64c6d038de5c7b1a997b7c2f9341164602f9bdf024",
+    "actual_hook_sha256": "e184f6ba2b7a3440e272df64c6d038de5c7b1a997b7c2f9341164602f9bdf024",
+    "bytes": 1793240,
+    "expected_sha256": "e184f6ba2b7a3440e272df64c6d038de5c7b1a997b7c2f9341164602f9bdf024",
+    "hook_selected_path": "/workspace/scratch/7ce65890233c/host-workflow-harness/.dart_tool/hooks_runner/shared/sqlite3/build/download-5d0a3aa/libsqlite3.so",
+    "hooks": {
+      "crisp_storage": {
+        "inputs": {
+          "assets": {},
+          "config": {
+            "build_asset_types": [
+              "code_assets/code"
+            ],
+            "extensions": {
+              "code_assets": {
+                "link_mode_preference": "dynamic",
+                "target_architecture": "x64",
+                "target_os": "linux"
+              }
+            },
+            "linking_enabled": false
+          },
+          "out_dir_shared": "/workspace/scratch/7ce65890233c/host-workflow-harness/.dart_tool/hooks_runner/shared/crisp_storage/build/",
+          "out_file": "/workspace/scratch/7ce65890233c/host-workflow-harness/.dart_tool/hooks_runner/crisp_storage/6b4ebf10e7/output.json",
+          "package_name": "crisp_storage",
+          "package_root": "/workspace/scratch/7ce65890233c/host-workflow-harness/packages/crisp_storage/",
+          "user_defines": {}
+        },
+        "metadata": {
+          "dependencies.dependencies_hash_file.json": {
+            "bytes": 449,
+            "sha256": "b459fabd8015b2336218f124cc4f4908c291ffce3c44a38e492c20b8086e624a"
+          },
+          "hook.dependencies_hash_file.json": {
+            "bytes": 573,
+            "sha256": "d9e1b0473c7753cc02f8c225d4c40ee55ab62343a0cb9639e238074826de220d"
+          },
+          "hook.dill": {
+            "bytes": 11274736,
+            "sha256": "06704aea295cc2be228faa245b7ee00e3ae25af1a11cb8e79ec725ed7abb674f"
+          },
+          "hook.dill.d": {
+            "bytes": 19008,
+            "sha256": "6d232d51751ceb7e16f7ee471f26da7dbad9379f6ad16aeda90b42b915489c55"
+          },
+          "input.json": {
+            "bytes": 710,
+            "sha256": "40d236926cf0bbf90cd2819633b72c470d9ef7ffc87909cb8b878f0ceaffe4ba"
+          },
+          "output.json": {
+            "bytes": 95,
+            "sha256": "0f6aa6cd11d4ebd719c970638760907bda481f3b90d179ba437eef7e45245b84"
+          },
+          "stderr.txt": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stdout.txt": {
+            "bytes": 1335,
+            "sha256": "a45ce2be3bec0c44f469a4eac31b498480eb93b0700abcb9b62cccbb7e93ca57"
+          }
+        },
+        "outputs": {
+          "assets_for_linking": {},
+          "status": "success",
+          "timestamp": "2026-11-17 19:36:45.000"
+        }
+      },
+      "objective_c": {
+        "inputs": {
+          "assets": {},
+          "config": {
+            "build_asset_types": [
+              "code_assets/code"
+            ],
+            "extensions": {
+              "code_assets": {
+                "link_mode_preference": "dynamic",
+                "target_architecture": "x64",
+                "target_os": "linux"
+              }
+            },
+            "linking_enabled": false
+          },
+          "out_dir_shared": "/workspace/scratch/7ce65890233c/host-workflow-harness/.dart_tool/hooks_runner/shared/objective_c/build/",
+          "out_file": "/workspace/scratch/7ce65890233c/host-workflow-harness/.dart_tool/hooks_runner/objective_c/6b4ebf10e7/output.json",
+          "package_name": "objective_c",
+          "package_root": "/home/agent/.codex/skills/remote-skills/.quds-gector-work/runtime/pub-cache/hosted/pub.dev/objective_c-9.6.2/",
+          "user_defines": {}
+        },
+        "metadata": {
+          "dependencies.dependencies_hash_file.json": {
+            "bytes": 449,
+            "sha256": "b459fabd8015b2336218f124cc4f4908c291ffce3c44a38e492c20b8086e624a"
+          },
+          "hook.dependencies_hash_file.json": {
+            "bytes": 301,
+            "sha256": "35c89e17ceff87c7de90f9f9a55d3b20e38b3569b795101f6b595c1a4102ffb0"
+          },
+          "hook.dill": {
+            "bytes": 11256840,
+            "sha256": "f47fc276ed9f0e4857d44330a682fe212fdbd051cb1bc40b4c237cd3af2318d1"
+          },
+          "hook.dill.d": {
+            "bytes": 18935,
+            "sha256": "43c6023f5e51fefa6748dff5db2b08169d0235d54f67ad9d6737570f4a585b95"
+          },
+          "input.json": {
+            "bytes": 736,
+            "sha256": "b03b6af3904ce0ad46837573c614f41f7fe230744b51f58fe7d823439bcbff18"
+          },
+          "output.json": {
+            "bytes": 95,
+            "sha256": "33910f2602d2d907379e7e126f06fd3db90a208b61861c803cb06e091da7322f"
+          },
+          "stderr.txt": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stdout.txt": {
+            "bytes": 1363,
+            "sha256": "81b9e6c45c5a97eeb383436a76314458c9eecc6598238c3a75f3aa568881a603"
+          }
+        },
+        "outputs": {
+          "assets_for_linking": {},
+          "status": "success",
+          "timestamp": "2026-11-17 19:36:59.000"
+        }
+      },
+      "sqlite3": {
+        "inputs": {
+          "assets": {},
+          "config": {
+            "build_asset_types": [
+              "code_assets/code"
+            ],
+            "extensions": {
+              "code_assets": {
+                "link_mode_preference": "dynamic",
+                "target_architecture": "x64",
+                "target_os": "linux"
+              }
+            },
+            "linking_enabled": false
+          },
+          "out_dir_shared": "/workspace/scratch/7ce65890233c/host-workflow-harness/.dart_tool/hooks_runner/shared/sqlite3/build/",
+          "out_file": "/workspace/scratch/7ce65890233c/host-workflow-harness/.dart_tool/hooks_runner/sqlite3/6b4ebf10e7/output.json",
+          "package_name": "sqlite3",
+          "package_root": "/home/agent/.codex/skills/remote-skills/.quds-gector-work/runtime/pub-cache/hosted/pub.dev/sqlite3-3.3.3/",
+          "user_defines": {}
+        },
+        "metadata": {
+          "dependencies.dependencies_hash_file.json": {
+            "bytes": 616,
+            "sha256": "fc48b0255bb7253710768293dc62bbc0990b38c629de34b44a2e20370dd20f59"
+          },
+          "hook.dependencies_hash_file.json": {
+            "bytes": 301,
+            "sha256": "35c89e17ceff87c7de90f9f9a55d3b20e38b3569b795101f6b595c1a4102ffb0"
+          },
+          "hook.dill": {
+            "bytes": 12553512,
+            "sha256": "c8c37d897d0122fe59d546fed45eb7b542c7cd1fd4bff4dfd5426426a273d92f"
+          },
+          "hook.dill.d": {
+            "bytes": 38761,
+            "sha256": "5ce4417a4d7e4ab99c96442ccd860645fcf6a2ca0f86a228b733e09f17f74538"
+          },
+          "input.json": {
+            "bytes": 720,
+            "sha256": "a49db9e835ecbcd928b68d55bc2c9b3d7714151826f4e9498a0746f6981568da"
+          },
+          "output.json": {
+            "bytes": 472,
+            "sha256": "564dc050fe5ee964cf6e80f7ce78ac862dab6ca9fe80258036cfe04183a97356"
+          },
+          "stderr.txt": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stdout.txt": {
+            "bytes": 1351,
+            "sha256": "594622af74312e782a77c5297d75dfe562043448afddd9a0575e6c5fdf12b60a"
+          }
+        },
+        "outputs": {
+          "assets": [
+            {
+              "encoding": {
+                "file": "/workspace/scratch/7ce65890233c/host-workflow-harness/.dart_tool/hooks_runner/shared/sqlite3/build/download-5d0a3aa/libsqlite3.so",
+                "id": "package:sqlite3/src/ffi/libsqlite3.g.dart",
+                "link_mode": {
+                  "type": "dynamic_loading_bundle"
+                }
+              },
+              "type": "code_assets/code"
+            }
+          ],
+          "assets_for_linking": {},
+          "status": "success",
+          "timestamp": "2026-11-17 19:36:46.000"
+        }
+      }
+    },
+    "limitation": "Confirms exact hook output and runtime native-asset manifest selection. It does not instrument dlopen or prove that these widget scenarios invoked SQLite functions. Optional Rust storage and Apple native assets were not emitted.",
+    "manifest_selected_path": "/workspace/scratch/7ce65890233c/host-workflow-harness/build/native_assets/linux/libsqlite3.so",
+    "native_manifest_sha256": "b9fa5bea947d6cbc2fadcced5f5334817717eed7229c3cd96668ba2d52fc9a2f",
+    "status": "authenticated_hook_and_manifest_selection"
+  },
+  "package_graph": {
+    "analysis_config_restored": true,
+    "external_git_pin": "1d2b0a9e25e0890fc113dd6f533309275dc66830",
+    "four_materialized_fonts_bound": true,
+    "host_path_packages": 11,
+    "packages": 180,
+    "production_hosted_pins": 162
+  },
+  "reviewed_utc": "2026-11-17T18:58:07.290052+00:00",
+  "scope": "Ten real production menu/dialog/controller export widget cases with authored fixtures and cloud/copy-destination test doubles. Six gates. Separate from the 107-case core cohort; no historical totals added. No live OS chooser, cloud transport, Office interoperability, proofing-model or Wasm acceptance.",
+  "status": "passed",
+  "widget_tests": {
+    "cases": [
+      {
+        "id": 3,
+        "name": "ODT menu export retains authored content and annotation privacy",
+        "suite": "/workspace/scratch/7ce65890233c/CrispCloud/test/widget/office_odf_export_workflow_test.dart"
+      },
+      {
+        "id": 4,
+        "name": "ODP menu export commits pending title and preserves notes",
+        "suite": "/workspace/scratch/7ce65890233c/CrispCloud/test/widget/office_odf_export_workflow_test.dart"
+      },
+      {
+        "id": 5,
+        "name": "odt saved export preserves newer edits and save target",
+        "suite": "/workspace/scratch/7ce65890233c/CrispCloud/test/widget/office_odf_export_workflow_test.dart"
+      },
+      {
+        "id": 6,
+        "name": "odt downloaded export preserves newer edits and save target",
+        "suite": "/workspace/scratch/7ce65890233c/CrispCloud/test/widget/office_odf_export_workflow_test.dart"
+      },
+      {
+        "id": 7,
+        "name": "odt cancelled export preserves newer edits and save target",
+        "suite": "/workspace/scratch/7ce65890233c/CrispCloud/test/widget/office_odf_export_workflow_test.dart"
+      },
+      {
+        "id": 8,
+        "name": "odt failed export preserves newer edits and save target",
+        "suite": "/workspace/scratch/7ce65890233c/CrispCloud/test/widget/office_odf_export_workflow_test.dart"
+      },
+      {
+        "id": 9,
+        "name": "odp saved export preserves newer edits and save target",
+        "suite": "/workspace/scratch/7ce65890233c/CrispCloud/test/widget/office_odf_export_workflow_test.dart"
+      },
+      {
+        "id": 10,
+        "name": "odp downloaded export preserves newer edits and save target",
+        "suite": "/workspace/scratch/7ce65890233c/CrispCloud/test/widget/office_odf_export_workflow_test.dart"
+      },
+      {
+        "id": 11,
+        "name": "odp cancelled export preserves newer edits and save target",
+        "suite": "/workspace/scratch/7ce65890233c/CrispCloud/test/widget/office_odf_export_workflow_test.dart"
+      },
+      {
+        "id": 12,
+        "name": "odp failed export preserves newer edits and save target",
+        "suite": "/workspace/scratch/7ce65890233c/CrispCloud/test/widget/office_odf_export_workflow_test.dart"
+      }
+    ],
+    "failed": 0,
+    "native_build_progress_lines": [],
+    "passed": 10,
+    "skipped": 0,
+    "start_events": 11,
+    "terminal_events": 11
+  }
+}

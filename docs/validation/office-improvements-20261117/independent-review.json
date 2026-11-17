@@ -1,0 +1,664 @@
+{
+  "canonical_source": "7fd2030fd39a2b0bbdb1b1e778840c332ae6bbc3",
+  "command_gates": {
+    "changed-dart-format": 0,
+    "host-analysis": 0,
+    "host-format": 0,
+    "host-tests": 0,
+    "vendor-after": 0,
+    "vendor-analysis": 0,
+    "vendor-before": 0,
+    "vendor-python-controls": 0,
+    "whitespace": 0
+  },
+  "dart_flutter": {
+    "case_records": [
+      {
+        "id": 3,
+        "name": "exported ODT comments stay separate from body, list, table and notes",
+        "suite": "test/office_annotation_preview_test.dart"
+      },
+      {
+        "id": 4,
+        "name": "odt table cells exclude inline and sibling annotations",
+        "suite": "test/office_annotation_preview_test.dart"
+      },
+      {
+        "id": 5,
+        "name": "ods table cells exclude inline and sibling annotations",
+        "suite": "test/office_annotation_preview_test.dart"
+      },
+      {
+        "id": 6,
+        "name": "ODT aliased annotations stay out of paragraphs, blocks, lists and notes",
+        "suite": "test/office_annotation_preview_test.dart"
+      },
+      {
+        "id": 7,
+        "name": "ODT headers and footers exclude annotations by namespace",
+        "suite": "test/office_annotation_preview_test.dart"
+      },
+      {
+        "id": 8,
+        "name": "annotation-only ODT documents have no body text",
+        "suite": "test/office_annotation_preview_test.dart"
+      },
+      {
+        "id": 9,
+        "name": "empty annotations do not hide following paragraphs or table cells",
+        "suite": "test/office_annotation_preview_test.dart"
+      },
+      {
+        "id": 10,
+        "name": "ODS writer annotations stay in raw XML and out of CSV values",
+        "suite": "test/office_annotation_preview_test.dart"
+      },
+      {
+        "id": 14,
+        "name": "ODS keeps typed values, repeats and the real sheet name",
+        "suite": "test/office_document_service_test.dart"
+      },
+      {
+        "id": 15,
+        "name": "ODS merged and covered cells each retain one grid position",
+        "suite": "test/office_document_service_test.dart"
+      },
+      {
+        "id": 16,
+        "name": "ODS keeps leading and interior repeated gaps through row groups",
+        "suite": "test/office_document_service_test.dart"
+      },
+      {
+        "id": 17,
+        "name": "ODF row positions do not depend on namespace prefixes",
+        "suite": "test/office_document_service_test.dart"
+      },
+      {
+        "id": 18,
+        "name": "ODT tables retain covered cells and interior blank rows",
+        "suite": "test/office_document_service_test.dart"
+      },
+      {
+        "id": 19,
+        "name": "ODF nested covered stories stay hidden in table previews",
+        "suite": "test/office_document_service_test.dart"
+      },
+      {
+        "id": 20,
+        "name": "ODF preview refuses data after an oversized row gap without a partial table",
+        "suite": "test/office_document_service_test.dart"
+      },
+      {
+        "id": 21,
+        "name": "ODF preview refuses data after an oversized column gap without a partial table",
+        "suite": "test/office_document_service_test.dart"
+      },
+      {
+        "id": 22,
+        "name": "ODF preview refuses repeated data beyond the row limit without a partial table",
+        "suite": "test/office_document_service_test.dart"
+      },
+      {
+        "id": 23,
+        "name": "ODF preview refuses repeated data beyond the column limit without a partial table",
+        "suite": "test/office_document_service_test.dart"
+      },
+      {
+        "id": 24,
+        "name": "ODF preview refuses a small XML Cartesian expansion without a partial table",
+        "suite": "test/office_document_service_test.dart"
+      },
+      {
+        "id": 25,
+        "name": "ODF preview refuses padding earlier rows to a later wide row without a partial table",
+        "suite": "test/office_document_service_test.dart"
+      },
+      {
+        "id": 26,
+        "name": "ODF preview shares expansion limits across tables",
+        "suite": "test/office_document_service_test.dart"
+      },
+      {
+        "id": 27,
+        "name": "ODF preview bounds repeated text before rendering",
+        "suite": "test/office_document_service_test.dart"
+      },
+      {
+        "id": 28,
+        "name": "ODF preview rejects invalid repeat counts",
+        "suite": "test/office_document_service_test.dart"
+      },
+      {
+        "id": 29,
+        "name": "ODS with a merged cell keeps following columns aligned",
+        "suite": "test/office_document_service_test.dart"
+      },
+      {
+        "id": 30,
+        "name": "ODS preserves internal blank runs and trims trailing padding",
+        "suite": "test/office_document_service_test.dart"
+      },
+      {
+        "id": 31,
+        "name": "ODS CSV preserves leading blank rows and cell whitespace",
+        "suite": "test/office_document_service_test.dart"
+      },
+      {
+        "id": 32,
+        "name": "ODS counts explicit and repeated covered cells only once",
+        "suite": "test/office_document_service_test.dart"
+      },
+      {
+        "id": 33,
+        "name": "ODS refuses later data when empty padding exceeds the row limit",
+        "suite": "test/office_document_service_test.dart"
+      },
+      {
+        "id": 34,
+        "name": "ODT renders lists and ODF table cells",
+        "suite": "test/office_document_service_test.dart"
+      },
+      {
+        "id": 35,
+        "name": "ODT renders inline styles, links, notes and ordered lists",
+        "suite": "test/office_document_service_test.dart"
+      },
+      {
+        "id": 36,
+        "name": "ODT note previews hide covered table stories",
+        "suite": "test/office_document_service_test.dart"
+      },
+      {
+        "id": 37,
+        "name": "ODP exposes slide size, positioned text, fills and notes",
+        "suite": "test/office_document_service_test.dart"
+      },
+      {
+        "id": 38,
+        "name": "ODP loads framed images from the package",
+        "suite": "test/office_document_service_test.dart"
+      },
+      {
+        "id": 39,
+        "name": "ODT named styles and list styles come from styles.xml",
+        "suite": "test/office_document_service_test.dart"
+      },
+      {
+        "id": 40,
+        "name": "ODT headers and footers keep text and skip page fields",
+        "suite": "test/office_document_service_test.dart"
+      },
+      {
+        "id": 41,
+        "name": "ODT text boxes keep their visible labels",
+        "suite": "test/office_document_service_test.dart"
+      },
+      {
+        "id": 42,
+        "name": "ODT stores pictures in a bounded image registry",
+        "suite": "test/office_document_service_test.dart"
+      },
+      {
+        "id": 43,
+        "name": "ODT repeated picture frames keep independent geometry and shared bytes",
+        "suite": "test/office_document_service_test.dart"
+      },
+      {
+        "id": 44,
+        "name": "ODT picture geometry rejects invalid and non-finite dimensions",
+        "suite": "test/office_document_service_test.dart"
+      },
+      {
+        "id": 45,
+        "name": "DOCX produces Markdown with headings, bold runs and tables",
+        "suite": "test/office_document_service_test.dart"
+      },
+      {
+        "id": 46,
+        "name": "XLSX produces CSV from shared strings and cell references",
+        "suite": "test/office_document_service_test.dart"
+      },
+      {
+        "id": 47,
+        "name": "PPTX produces one section per slide",
+        "suite": "test/office_document_service_test.dart"
+      },
+      {
+        "id": 48,
+        "name": "PPTX exposes slide geometry, text and fills",
+        "suite": "test/office_document_service_test.dart"
+      },
+      {
+        "id": 49,
+        "name": "truncated legacy PPT has a structured extraction failure",
+        "suite": "test/office_document_service_test.dart"
+      },
+      {
+        "id": 50,
+        "name": "ODT content.xml produces headings and paragraphs",
+        "suite": "test/office_document_service_test.dart"
+      },
+      {
+        "id": 51,
+        "name": "EPUB chapters become Markdown",
+        "suite": "test/office_document_service_test.dart"
+      },
+      {
+        "id": 52,
+        "name": "EPUB extraction follows relocated OPF spine and excludes navigation",
+        "suite": "test/office_document_service_test.dart"
+      },
+      {
+        "id": 53,
+        "name": "malformed documents fail gracefully",
+        "suite": "test/office_document_service_test.dart"
+      },
+      {
+        "id": 54,
+        "name": "an RTF file named .doc is read as RTF",
+        "suite": "test/office_document_service_test.dart"
+      },
+      {
+        "id": 58,
+        "name": "Embedded Office notices are bundled unchanged and exposed in licenses",
+        "suite": "test/office_proofing_licenses_test.dart"
+      },
+      {
+        "id": 59,
+        "name": "hyphenation notices retain the complete upstream header text",
+        "suite": "test/office_proofing_licenses_test.dart"
+      },
+      {
+        "id": 63,
+        "name": "credential loading target rejects changed documents and selections",
+        "suite": "test/office_zotero_test.dart"
+      },
+      {
+        "id": 65,
+        "name": "Zotero transport boundary desktop reads use only the explicitly supplied direct client",
+        "suite": "test/office_zotero_test.dart"
+      },
+      {
+        "id": 66,
+        "name": "Zotero transport boundary cloud requests retain the selected proxy factory with local enabled",
+        "suite": "test/office_zotero_test.dart"
+      },
+      {
+        "id": 67,
+        "name": "Zotero transport boundary desktop access requires host opt-in before creating any client",
+        "suite": "test/office_zotero_test.dart"
+      },
+      {
+        "id": 68,
+        "name": "Zotero transport boundary desktop rejects secrets and unexpected headers before client creation",
+        "suite": "test/office_zotero_test.dart"
+      },
+      {
+        "id": 69,
+        "name": "Zotero transport boundary desktop rejects other hosts, ports, paths and URL credentials",
+        "suite": "test/office_zotero_test.dart"
+      },
+      {
+        "id": 70,
+        "name": "Zotero transport boundary desktop redirects are returned without another request",
+        "suite": "test/office_zotero_test.dart"
+      },
+      {
+        "id": 71,
+        "name": "Zotero transport boundary desktop responses retain size and total timeout limits",
+        "suite": "test/office_zotero_test.dart"
+      },
+      {
+        "id": 72,
+        "name": "Zotero transport boundary disposal closes desktop requests and rejects later desktop reads",
+        "suite": "test/office_zotero_test.dart"
+      },
+      {
+        "id": 73,
+        "name": "Zotero transport boundary sends API-key header only to Zotero and never follows redirects",
+        "suite": "test/office_zotero_test.dart"
+      },
+      {
+        "id": 74,
+        "name": "Zotero transport boundary rejects non-Zotero destinations before creating a client",
+        "suite": "test/office_zotero_test.dart"
+      },
+      {
+        "id": 75,
+        "name": "Zotero transport boundary passes redirect status for the API client to reject",
+        "suite": "test/office_zotero_test.dart"
+      },
+      {
+        "id": 76,
+        "name": "Zotero transport boundary bounds declared and streamed response sizes",
+        "suite": "test/office_zotero_test.dart"
+      },
+      {
+        "id": 77,
+        "name": "Zotero transport boundary total request timeout closes the owned client",
+        "suite": "test/office_zotero_test.dart"
+      },
+      {
+        "id": 78,
+        "name": "Zotero transport boundary HTTP exceptions cannot expose the API key",
+        "suite": "test/office_zotero_test.dart"
+      },
+      {
+        "id": 79,
+        "name": "Zotero transport boundary timeout cancels a stalled response body subscription",
+        "suite": "test/office_zotero_test.dart"
+      },
+      {
+        "id": 80,
+        "name": "Zotero transport boundary disposal closes active requests and rejects new requests",
+        "suite": "test/office_zotero_test.dart"
+      },
+      {
+        "id": 82,
+        "name": "Zotero credential persistence writes, reads back and forgets only the Zotero entry",
+        "suite": "test/office_zotero_test.dart"
+      },
+      {
+        "id": 83,
+        "name": "Zotero credential persistence session-only backend never offers persistent credentials",
+        "suite": "test/office_zotero_test.dart"
+      },
+      {
+        "id": 84,
+        "name": "Zotero credential persistence failed read-back never reports a successful remember operation",
+        "suite": "test/office_zotero_test.dart"
+      },
+      {
+        "id": 85,
+        "name": "Zotero credential persistence backend failures are sanitized and invalid keys are rejected",
+        "suite": "test/office_zotero_test.dart"
+      },
+      {
+        "id": 89,
+        "name": "saved-search reads stay on direct loopback with the pinned database",
+        "suite": "test/office_zotero_citing_transport_test.dart"
+      },
+      {
+        "id": 90,
+        "name": "saved-search writes and encoded route injection are refused before sending",
+        "suite": "test/office_zotero_citing_transport_test.dart"
+      },
+      {
+        "id": 91,
+        "name": "citing execCommand sends only local UTF-8 JSON without redirects",
+        "suite": "test/office_zotero_citing_transport_test.dart"
+      },
+      {
+        "id": 92,
+        "name": "citing respond sends only local UTF-8 JSON without redirects",
+        "suite": "test/office_zotero_citing_transport_test.dart"
+      },
+      {
+        "id": 93,
+        "name": "citing rejects other origins and protocol routes before sending",
+        "suite": "test/office_zotero_citing_transport_test.dart"
+      },
+      {
+        "id": 94,
+        "name": "citing requires POST and rejects cloud or catalog request bodies",
+        "suite": "test/office_zotero_citing_transport_test.dart"
+      },
+      {
+        "id": 95,
+        "name": "citing accepts case-insensitive names but no secrets or extra headers",
+        "suite": "test/office_zotero_citing_transport_test.dart"
+      },
+      {
+        "id": 96,
+        "name": "citing request bodies are valid JSON with a UTF-8 byte bound",
+        "suite": "test/office_zotero_citing_transport_test.dart"
+      },
+      {
+        "id": 97,
+        "name": "citing redirects return once without forwarding document data",
+        "suite": "test/office_zotero_citing_transport_test.dart"
+      },
+      {
+        "id": 98,
+        "name": "citing responses reject declared and streamed excess bytes",
+        "suite": "test/office_zotero_citing_transport_test.dart"
+      },
+      {
+        "id": 99,
+        "name": "native dialog uses its own longer timeout",
+        "suite": "test/office_zotero_citing_transport_test.dart"
+      },
+      {
+        "id": 100,
+        "name": "request timeout can shorten but cannot extend host limit",
+        "suite": "test/office_zotero_citing_transport_test.dart"
+      },
+      {
+        "id": 101,
+        "name": "dispose settles pending citing immediately and ignores late response",
+        "suite": "test/office_zotero_citing_transport_test.dart"
+      },
+      {
+        "id": 102,
+        "name": "dispose cancels a response body already being read",
+        "suite": "test/office_zotero_citing_transport_test.dart"
+      },
+      {
+        "id": 103,
+        "name": "citing network failures never expose document or credential data",
+        "suite": "test/office_zotero_citing_transport_test.dart"
+      },
+      {
+        "id": 104,
+        "name": "citing and catalog limits must be positive before client creation",
+        "suite": "test/office_zotero_citing_transport_test.dart"
+      },
+      {
+        "id": 108,
+        "name": "Zotero is reachable from Word Insert menu and ribbon",
+        "suite": "test/office_zotero_ribbon_test.dart"
+      },
+      {
+        "id": 109,
+        "name": "hosts without Zotero integration keep the entry point hidden",
+        "suite": "test/office_zotero_ribbon_test.dart"
+      },
+      {
+        "id": 113,
+        "name": "ODT preview uses namespace identity for body, styles, lists and notes",
+        "suite": "test/office_odf_visibility_test.dart"
+      },
+      {
+        "id": 114,
+        "name": "ODT preview excludes stored revisions (history only: false)",
+        "suite": "test/office_odf_visibility_test.dart"
+      },
+      {
+        "id": 115,
+        "name": "ODT preview excludes stored revisions (history only: true)",
+        "suite": "test/office_odf_visibility_test.dart"
+      },
+      {
+        "id": 119,
+        "name": "odt cell frame stories appear exactly once",
+        "suite": "test/office_odf_cell_story_test.dart"
+      },
+      {
+        "id": 120,
+        "name": "odt cell hidden stories cannot inject text or frames",
+        "suite": "test/office_odf_cell_story_test.dart"
+      },
+      {
+        "id": 121,
+        "name": "odt cells decode explicit whitespace and CDATA",
+        "suite": "test/office_odf_cell_story_test.dart"
+      },
+      {
+        "id": 122,
+        "name": "ods cell frame stories appear exactly once",
+        "suite": "test/office_odf_cell_story_test.dart"
+      },
+      {
+        "id": 123,
+        "name": "ods cell hidden stories cannot inject text or frames",
+        "suite": "test/office_odf_cell_story_test.dart"
+      },
+      {
+        "id": 124,
+        "name": "ods cells decode explicit whitespace and CDATA",
+        "suite": "test/office_odf_cell_story_test.dart"
+      },
+      {
+        "id": 128,
+        "name": "odt rejects nondecimal whitespace counts",
+        "suite": "test/office_odf_cell_limits_test.dart"
+      },
+      {
+        "id": 129,
+        "name": "odt rejects oversized explicit whitespace",
+        "suite": "test/office_odf_cell_limits_test.dart"
+      },
+      {
+        "id": 130,
+        "name": "odt rejects cumulative whitespace across empty cells",
+        "suite": "test/office_odf_cell_limits_test.dart"
+      },
+      {
+        "id": 131,
+        "name": "ods rejects nondecimal whitespace counts",
+        "suite": "test/office_odf_cell_limits_test.dart"
+      },
+      {
+        "id": 132,
+        "name": "ods rejects oversized explicit whitespace",
+        "suite": "test/office_odf_cell_limits_test.dart"
+      },
+      {
+        "id": 133,
+        "name": "ods rejects cumulative whitespace across empty cells",
+        "suite": "test/office_odf_cell_limits_test.dart"
+      },
+      {
+        "id": 137,
+        "name": "exported note paragraphs and projected cells keep word boundaries",
+        "suite": "test/office_odt_export_acceptance_test.dart"
+      },
+      {
+        "id": 138,
+        "name": "authored DOCX exports independent ODT stories and readable host preview",
+        "suite": "test/office_odt_export_acceptance_test.dart"
+      }
+    ],
+    "failed": 0,
+    "passed": 107,
+    "real_file_origin_bindings": {
+      "root_url": 2,
+      "url": 105
+    },
+    "skipped": 0,
+    "suite_counts": {
+      "office_annotation_preview_test.dart": 8,
+      "office_document_service_test.dart": 41,
+      "office_odf_cell_limits_test.dart": 6,
+      "office_odf_cell_story_test.dart": 6,
+      "office_odf_visibility_test.dart": 3,
+      "office_odt_export_acceptance_test.dart": 2,
+      "office_proofing_licenses_test.dart": 2,
+      "office_zotero_citing_transport_test.dart": 16,
+      "office_zotero_ribbon_test.dart": 2,
+      "office_zotero_test.dart": 21
+    },
+    "test_start_count": 117,
+    "test_terminal_count": 117
+  },
+  "evidence_hashes": {
+    "concurrent-integration/host-shared-78a4/canonical-retention-7fd2030f.json": "0a1b1a1b37b7062a389996d04a3e91b7fb80cfeaa6626e99aedb0072b520ab90",
+    "concurrent-integration/host-shared-78a4/host-preservation.json": "a1360d4331126d4dfed41e29b3b00cc074bb31e8e58ef1342449eb976455748f",
+    "concurrent-integration/host-shared-78a4/semantic-retention-7fd2030f.json": "dd9fb7dc589b3edf10ade11b0d61c3f09145c8d7d5f99eef368547c77f8bcd1f",
+    "final-qualified-review/host_review.py": "1996355d53d14f63b3334d6d06f2f6d640fdedd89f609931d11f26b4e7dd701f",
+    "qualified-host-f08035db/host-tests.stdout.log": "68869d60aecbefbf0c31a8ff214ec9c39a5db32a5768c7b25142a88f1fb65522",
+    "qualified-host-f08035db/inputs-after.json": "ba0d0eafb399d036bc378b5aff150619388d7d769bec4635c72c85cab69f148f",
+    "qualified-host-f08035db/inputs-before.json": "ba0d0eafb399d036bc378b5aff150619388d7d769bec4635c72c85cab69f148f",
+    "qualified-host-f08035db/receipt.json": "90451cdfba44c73b8840d42253ff9fb78cd7fca753c468db5acd59db4110972c",
+    "qualified-host-f08035db/vendor-python-controls.stderr.log": "d6af79b297bb5cda778eba1e4cc32dfa761892819543a42b6ce8560074ddcb45"
+  },
+  "findings": [],
+  "host_source": "f08035db691d5a1fe7299ad3608b626ab6202d27",
+  "incoming_retention": {
+    "all_final_blobs_match_retention_review": true,
+    "audited_managed_paths": 10,
+    "combined_files": 2,
+    "exact_incoming_files": 8
+  },
+  "input_maps": {
+    "before_after_equal": true,
+    "dependencies": 4511,
+    "dependency_inventory_complete": true,
+    "package_routes": 107,
+    "package_routes_reconstructed": true,
+    "runtime": 517,
+    "source": 7490,
+    "source_inventory_complete": true,
+    "workspace": 14,
+    "workspace_inventory_complete": true
+  },
+  "method": "Independent raw-event recount and read-only Git, file, graph and log verification; no product tests executed.",
+  "package_graph": {
+    "all_library_and_resource_routes_bound": true,
+    "analysis_graph_restored_to_absent": true,
+    "internal_libraries_bound": true,
+    "package_count": 107,
+    "production_hosted_pins_verified": 97
+  },
+  "preservation": {
+    "canonical": 755,
+    "canonical_zotero": 50,
+    "host_customizations": 20,
+    "host_zotero": 46,
+    "inherited_mode_differences": 12,
+    "managed": 2612,
+    "original_notices": 6,
+    "parser": 1857
+  },
+  "probe_review": {
+    "acceptance_test_unchanged_from_baseline": true,
+    "cell_limits_amendment": "Only equivalent concatenation-to-interpolation syntax; scenario inputs and assertions are unchanged.",
+    "markdown_correction": "Justified: literal line breaks split pipe-delimited Markdown rows. The final probe independently requires one physical data row and preserves exact decoded newlines in ODS CSV; fixtures, logical expected strings, hidden-payload checks and raw-XML assertions are unchanged."
+  },
+  "python": {
+    "case_ids": [
+      "test_sync_office_fidelity.SyncOfficeFidelityTest.test_apply_without_source_modes_keeps_existing_permission_behavior",
+      "test_sync_office_fidelity.SyncOfficeFidelityTest.test_deleted_tracked_file_is_removed_from_manifest",
+      "test_sync_office_fidelity.SyncOfficeFidelityTest.test_dry_run_is_read_only_and_apply_pins_exact_bytes",
+      "test_sync_office_fidelity.SyncOfficeFidelityTest.test_embedded_data_sources_notices_and_manifest_follow_the_runtime_pin",
+      "test_sync_office_fidelity.SyncOfficeFidelityTest.test_modified_pinned_file_refuses_every_write",
+      "test_sync_office_fidelity.SyncOfficeFidelityTest.test_new_path_collision_refuses_every_write",
+      "test_sync_office_fidelity.SyncOfficeFidelityTest.test_unknown_commit_does_not_write",
+      "test_sync_office_fidelity.SyncOfficeFidelityTest.test_unrelated_app_and_package_configuration_are_not_synced",
+      "test_sync_office_fidelity.SyncOfficeFidelityTest.test_unsafe_manifest_path_is_rejected",
+      "test_sync_legacy_doc_parser.StandaloneParserSyncTest.test_body_size_limit_is_checked_before_reading_the_blob",
+      "test_sync_legacy_doc_parser.StandaloneParserSyncTest.test_exact_update_is_dry_until_apply_and_retains_quds_identity",
+      "test_sync_legacy_doc_parser.StandaloneParserSyncTest.test_generated_package_outputs_are_not_treated_as_source_patches",
+      "test_sync_legacy_doc_parser.StandaloneParserSyncTest.test_git_index_check_rejects_ignored_upstream_evidence",
+      "test_sync_legacy_doc_parser.StandaloneParserSyncTest.test_git_index_check_rejects_stale_source_pins_and_modes",
+      "test_sync_legacy_doc_parser.StandaloneParserSyncTest.test_git_index_check_rejects_unstaged_upstream_deletions",
+      "test_sync_legacy_doc_parser.StandaloneParserSyncTest.test_git_pin_or_missing_override_cannot_misdescribe_runtime",
+      "test_sync_legacy_doc_parser.StandaloneParserSyncTest.test_later_quds_sync_preserves_independent_parser_even_if_suite_changes_it",
+      "test_sync_legacy_doc_parser.StandaloneParserSyncTest.test_mirror_executable_bit_drift_blocks_every_planned_write",
+      "test_sync_legacy_doc_parser.StandaloneParserSyncTest.test_mode_only_updates_are_applied_in_both_directions",
+      "test_sync_legacy_doc_parser.StandaloneParserSyncTest.test_modified_or_extra_mirror_source_refuses_every_write",
+      "test_sync_legacy_doc_parser.StandaloneParserSyncTest.test_new_executable_uses_committed_mode_and_bytes",
+      "test_sync_legacy_doc_parser.StandaloneParserSyncTest.test_oversized_mirror_drift_is_rejected_before_allocating_file_contents",
+      "test_sync_legacy_doc_parser.StandaloneParserSyncTest.test_source_symlinks_are_rejected_before_installation",
+      "test_sync_legacy_doc_parser.StandaloneParserSyncTest.test_standalone_boundary_cannot_exclude_quds_from_checks",
+      "test_sync_legacy_doc_parser.StandaloneParserSyncTest.test_unrelated_vendor_drift_blocks_parser_update",
+      "test_sync_legacy_doc_parser.StandaloneParserSyncTest.test_upstream_metadata_symlink_is_rejected_before_following_it",
+      "test_sync_legacy_doc_parser.StandaloneParserSyncTest.test_verifier_rejects_pin_inventory_and_upstream_byte_mismatches",
+      "test_sync_legacy_doc_parser.StandaloneParserSyncTest.test_verifier_reports_executable_bit_drift_against_pinned_source"
+    ],
+    "passed": 28
+  },
+  "reviewed_utc": "2026-11-17T18:33:21.012150+00:00",
+  "scope": "107 host Dart/Flutter cases plus 28 separate Python controls and nine command gates. These results are a focused local qualification, not full application/dialog, live interoperability, real-model or Wasm acceptance. Historical qualification totals are not added.",
+  "status": "passed"
+}

@@ -1,0 +1,308 @@
+{
+  "analysis_config_restored": true,
+  "analysis_config_unchanged_during_run": true,
+  "baseline": "83617b79f8a56600e9ca17e73f835d944c79dfa8",
+  "commands": [
+    {
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "tool/verify_office_fidelity.py",
+        "--source",
+        "/workspace/scratch/7ce65890233c/quds_office_suite",
+        "--require-tracked"
+      ],
+      "cwd": "/workspace/scratch/7ce65890233c/CrispCloud",
+      "exit_code": 0,
+      "finished_utc": "2026-11-17T18:29:12.934151+00:00",
+      "name": "vendor-before",
+      "passed": true,
+      "started_utc": "2026-11-17T18:29:12.017890+00:00",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "79867c043a058afe13bf6c29ba789900d3b8b2d737d6a759dc842e1dbb979225"
+    },
+    {
+      "command": [
+        "/home/agent/.codex/skills/remote-skills/.quds-gector-work/runtime/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "/home/agent/.codex/skills/remote-skills/.quds-gector-work/runtime/flutter-sdk/bin/cache/flutter_tools.snapshot",
+        "test",
+        "--no-pub",
+        "--concurrency=1",
+        "--reporter=json",
+        "test/office_annotation_preview_test.dart",
+        "test/office_document_service_test.dart",
+        "test/office_proofing_licenses_test.dart",
+        "test/office_zotero_test.dart",
+        "test/office_zotero_citing_transport_test.dart",
+        "test/office_zotero_ribbon_test.dart",
+        "test/office_odf_visibility_test.dart",
+        "test/office_odf_cell_story_test.dart",
+        "test/office_odf_cell_limits_test.dart",
+        "test/office_odt_export_acceptance_test.dart"
+      ],
+      "cwd": "/workspace/scratch/7ce65890233c/host-harness",
+      "exit_code": 0,
+      "finished_utc": "2026-11-17T18:29:40.831814+00:00",
+      "name": "host-tests",
+      "passed": true,
+      "selected_files": [
+        "test/office_annotation_preview_test.dart",
+        "test/office_document_service_test.dart",
+        "test/office_proofing_licenses_test.dart",
+        "test/office_zotero_test.dart",
+        "test/office_zotero_citing_transport_test.dart",
+        "test/office_zotero_ribbon_test.dart",
+        "test/office_odf_visibility_test.dart",
+        "test/office_odf_cell_story_test.dart",
+        "test/office_odf_cell_limits_test.dart",
+        "test/office_odt_export_acceptance_test.dart"
+      ],
+      "started_utc": "2026-11-17T18:29:12.934830+00:00",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "68869d60aecbefbf0c31a8ff214ec9c39a5db32a5768c7b25142a88f1fb65522",
+      "test_routing": [
+        {
+          "resolved": "/workspace/scratch/7ce65890233c/CrispCloud/test/office_annotation_preview_test.dart",
+          "selected": "test/office_annotation_preview_test.dart",
+          "sha256": "73846853fc14d25af6f4ca9c5c421ae89e282b2ad62f612a940082798d437996",
+          "source_path": "test/office_annotation_preview_test.dart"
+        },
+        {
+          "resolved": "/workspace/scratch/7ce65890233c/CrispCloud/test/office_document_service_test.dart",
+          "selected": "test/office_document_service_test.dart",
+          "sha256": "824945e3cfb23febc39eaede0a4a909a8aa6ae688e3f734c7fc7e92e7458790a",
+          "source_path": "test/office_document_service_test.dart"
+        },
+        {
+          "resolved": "/workspace/scratch/7ce65890233c/CrispCloud/test/office_proofing_licenses_test.dart",
+          "selected": "test/office_proofing_licenses_test.dart",
+          "sha256": "4de3e1fb0f4e8301ae6685643381c2903a7ef6a2cc2447496fd0f078e392e8b9",
+          "source_path": "test/office_proofing_licenses_test.dart"
+        },
+        {
+          "resolved": "/workspace/scratch/7ce65890233c/CrispCloud/test/office_zotero_test.dart",
+          "selected": "test/office_zotero_test.dart",
+          "sha256": "a8cbd1c2fb2380ec1b0a76196b3f8d1cabd0bdd5e7cd299f9d67160a7b871fab",
+          "source_path": "test/office_zotero_test.dart"
+        },
+        {
+          "resolved": "/workspace/scratch/7ce65890233c/CrispCloud/test/office_zotero_citing_transport_test.dart",
+          "selected": "test/office_zotero_citing_transport_test.dart",
+          "sha256": "d10ddc7a48741c4a40e5aa17db2c04011510d8919952f44f4332b244936c25be",
+          "source_path": "test/office_zotero_citing_transport_test.dart"
+        },
+        {
+          "resolved": "/workspace/scratch/7ce65890233c/CrispCloud/test/office_zotero_ribbon_test.dart",
+          "selected": "test/office_zotero_ribbon_test.dart",
+          "sha256": "651535c5bf87bf329017bd9a72197e1a2ec9e60dd3bff3c556ba4a5d4276a229",
+          "source_path": "test/office_zotero_ribbon_test.dart"
+        },
+        {
+          "resolved": "/workspace/scratch/7ce65890233c/CrispCloud/test/office_odf_visibility_test.dart",
+          "selected": "test/office_odf_visibility_test.dart",
+          "sha256": "33f79fbed630834aa064272c234f4fbb3f484aff732d3819fb4a4680e5914383",
+          "source_path": "test/office_odf_visibility_test.dart"
+        },
+        {
+          "resolved": "/workspace/scratch/7ce65890233c/CrispCloud/test/office_odf_cell_story_test.dart",
+          "selected": "test/office_odf_cell_story_test.dart",
+          "sha256": "54c206d4942297cf13d0a9a82174b6a3352c0db982414abd6ce3dd510531f0bc",
+          "source_path": "test/office_odf_cell_story_test.dart"
+        },
+        {
+          "resolved": "/workspace/scratch/7ce65890233c/CrispCloud/test/office_odf_cell_limits_test.dart",
+          "selected": "test/office_odf_cell_limits_test.dart",
+          "sha256": "3a811103fceade8d63258b7c7408848e7157912388d311ef35a9d25411779cf3",
+          "source_path": "test/office_odf_cell_limits_test.dart"
+        },
+        {
+          "resolved": "/workspace/scratch/7ce65890233c/CrispCloud/test/office_odt_export_acceptance_test.dart",
+          "selected": "test/office_odt_export_acceptance_test.dart",
+          "sha256": "b8ee949062f76f25010bafbfdef432a32f9b7c2160532b915de80bd6fa8011bb",
+          "source_path": "test/office_odt_export_acceptance_test.dart"
+        }
+      ],
+      "tests": {
+        "complete": true,
+        "failed": 0,
+        "passed": 107,
+        "skipped": 0
+      }
+    },
+    {
+      "command": [
+        "/home/agent/.codex/skills/remote-skills/.quds-gector-work/runtime/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "analyze",
+        "--fatal-infos",
+        "lib/services/office_document_service.dart",
+        "test/office_annotation_preview_test.dart",
+        "test/office_document_service_test.dart",
+        "test/office_proofing_licenses_test.dart",
+        "test/office_zotero_test.dart",
+        "test/office_zotero_citing_transport_test.dart",
+        "test/office_zotero_ribbon_test.dart",
+        "test/office_odf_visibility_test.dart",
+        "test/office_odf_cell_story_test.dart",
+        "test/office_odf_cell_limits_test.dart",
+        "test/office_odt_export_acceptance_test.dart"
+      ],
+      "cwd": "/workspace/scratch/7ce65890233c/CrispCloud",
+      "exit_code": 0,
+      "finished_utc": "2026-11-17T18:30:03.667560+00:00",
+      "name": "host-analysis",
+      "passed": true,
+      "started_utc": "2026-11-17T18:29:40.857756+00:00",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "2cdf342e603b6499e33e6f21222e72db3c9a3a9da6b603bb3af8892c542cd609"
+    },
+    {
+      "command": [
+        "/home/agent/.codex/skills/remote-skills/.quds-gector-work/runtime/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "format",
+        "--language-version=3.13",
+        "--output=none",
+        "--set-exit-if-changed",
+        "lib/services/office_document_service.dart",
+        "test/office_odf_visibility_test.dart",
+        "test/office_odf_cell_story_test.dart",
+        "test/office_odf_cell_limits_test.dart",
+        "test/office_odt_export_acceptance_test.dart"
+      ],
+      "cwd": "/workspace/scratch/7ce65890233c/CrispCloud",
+      "exit_code": 0,
+      "finished_utc": "2026-11-17T18:30:03.786276+00:00",
+      "name": "host-format",
+      "passed": true,
+      "started_utc": "2026-11-17T18:30:03.668200+00:00",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "0178c2499087531280d5ee59f84f211293ea596701d10bff1cf357cfe903eacc"
+    },
+    {
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-m",
+        "unittest",
+        "test_sync_office_fidelity",
+        "test_sync_legacy_doc_parser",
+        "-v"
+      ],
+      "cwd": "/workspace/scratch/7ce65890233c/CrispCloud/tool",
+      "exit_code": 0,
+      "finished_utc": "2026-11-17T18:30:06.831919+00:00",
+      "name": "vendor-python-controls",
+      "passed": true,
+      "started_utc": "2026-11-17T18:30:03.813087+00:00",
+      "stderr_sha256": "d6af79b297bb5cda778eba1e4cc32dfa761892819543a42b6ce8560074ddcb45",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "tool/verify_office_fidelity.py",
+        "--source",
+        "/workspace/scratch/7ce65890233c/quds_office_suite",
+        "--require-tracked"
+      ],
+      "cwd": "/workspace/scratch/7ce65890233c/CrispCloud",
+      "exit_code": 0,
+      "finished_utc": "2026-11-17T18:30:08.936108+00:00",
+      "name": "vendor-after",
+      "passed": true,
+      "started_utc": "2026-11-17T18:30:06.840148+00:00",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "79867c043a058afe13bf6c29ba789900d3b8b2d737d6a759dc842e1dbb979225"
+    },
+    {
+      "command": [
+        "/home/agent/.codex/skills/remote-skills/.quds-gector-work/runtime/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "analyze",
+        "--fatal-infos",
+        "packages/quds_office_editor/lib/src/embed/word_proofing_dialog.dart",
+        "packages/quds_office_engine/lib/src/extract/office_search_text.dart",
+        "packages/quds_office_engine/lib/src/extract/office_text_extractor.dart",
+        "packages/quds_office_engine/lib/src/odf/odf_text.dart",
+        "packages/quds_office_engine/lib/src/proofing/german_grammar.dart",
+        "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+        "packages/quds_office_engine/lib/src/slide/serial/odp_presentation_writer.dart",
+        "packages/quds_office_engine/lib/src/word/serial/odt_document_writer.dart"
+      ],
+      "cwd": "/workspace/scratch/7ce65890233c/CrispCloud",
+      "exit_code": 0,
+      "finished_utc": "2026-11-17T18:30:21.726287+00:00",
+      "name": "vendor-analysis",
+      "passed": true,
+      "started_utc": "2026-11-17T18:30:08.955880+00:00",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "84f384d70f78d089a1a70c94149102be03b0a5e18e0c507565189857f6420689"
+    },
+    {
+      "command": [
+        "/home/agent/.codex/skills/remote-skills/.quds-gector-work/runtime/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "format",
+        "--language-version=3.12",
+        "--output=none",
+        "--set-exit-if-changed",
+        "packages/quds_office_editor/lib/src/embed/word_proofing_dialog.dart",
+        "packages/quds_office_editor/test/word_german_grammar_integration_test.dart",
+        "packages/quds_office_engine/lib/src/extract/office_search_text.dart",
+        "packages/quds_office_engine/lib/src/extract/office_text_extractor.dart",
+        "packages/quds_office_engine/lib/src/odf/odf_text.dart",
+        "packages/quds_office_engine/lib/src/proofing/german_grammar.dart",
+        "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+        "packages/quds_office_engine/lib/src/slide/serial/odp_presentation_writer.dart",
+        "packages/quds_office_engine/lib/src/word/serial/odt_document_writer.dart",
+        "packages/quds_office_engine/test/odf_revision_extraction_test.dart",
+        "packages/quds_office_engine/test/odp_presentation_writer_test.dart",
+        "packages/quds_office_engine/test/ods_text_story_import_test.dart",
+        "packages/quds_office_engine/test/odt_bookmark_range_fidelity_test.dart",
+        "packages/quds_office_engine/test/odt_columns_schema_fidelity_test.dart",
+        "packages/quds_office_engine/test/odt_document_writer_test.dart",
+        "packages/quds_office_engine/test/odt_page_field_fidelity_test.dart",
+        "packages/quds_office_engine/test/odt_paragraph_decoration_test.dart",
+        "packages/quds_office_engine/test/odt_section_continuation_test.dart",
+        "packages/quds_office_engine/test/odt_story_visual_fidelity_test.dart",
+        "packages/quds_office_engine/test/odt_tab_style_fidelity_test.dart",
+        "packages/quds_office_engine/test/odt_table_tab_fidelity_test.dart",
+        "packages/quds_office_engine/test/proofing/german_noun_agreement_test.dart"
+      ],
+      "cwd": "/workspace/scratch/7ce65890233c/CrispCloud",
+      "exit_code": 0,
+      "finished_utc": "2026-11-17T18:30:22.093831+00:00",
+      "name": "changed-dart-format",
+      "passed": true,
+      "started_utc": "2026-11-17T18:30:21.727986+00:00",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "a86d97e522bb771db250c0f0cf97030382df4bc88c0aa2b3bf8a82a7a35f28c0"
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check",
+        "83617b79f8a56600e9ca17e73f835d944c79dfa8",
+        "HEAD"
+      ],
+      "cwd": "/workspace/scratch/7ce65890233c/CrispCloud",
+      "exit_code": 0,
+      "finished_utc": "2026-11-17T18:30:22.159601+00:00",
+      "name": "whitespace",
+      "passed": true,
+      "started_utc": "2026-11-17T18:30:22.094399+00:00",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "finished_utc": "2026-11-17T18:30:24.851175+00:00",
+  "inputs_unchanged": true,
+  "kind": "host",
+  "python_runtime": {
+    "path": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3.12",
+    "sha256": "fa67443527ed9647f760d807e2a38f26340757123e643c4639cf273ed15d5ea7",
+    "version": "Python 3.12.14"
+  },
+  "scope": "Local source-specific Office, proofing, AOT and Studio unit/widget qualification; no full application/export-dialog, live interoperability, native/model or Wasm acceptance.",
+  "source_commit": "f08035db691d5a1fe7299ad3608b626ab6202d27",
+  "source_head_unchanged": true,
+  "source_tree": "f9b1822ceaacad6547533660af11ead3e13e1f68",
+  "started_utc": "2026-11-17T18:29:11.973452+00:00",
+  "status": "passed"
+}

@@ -705,7 +705,12 @@ String _markdownTable(List<List<String>> rows) {
   for (var i = 0; i < rows.length; i++) {
     final cells = List<String>.from(rows[i])
       ..addAll(List<String>.filled(width - rows[i].length, ''));
-    buffer.writeln('| ${cells.join(' | ')} |');
+    // Literal newlines split a Markdown table row. CSV retains cell line breaks;
+    // the readable table projects each cell onto one physical Markdown line.
+    final readable = cells.map(
+      (cell) => cell.replaceAll(RegExp(r'\r\n?|\n'), ' '),
+    );
+    buffer.writeln('| ${readable.join(' | ')} |');
     if (i == 0) {
       buffer.writeln('| ${List<String>.filled(width, '---').join(' | ')} |');
     }
@@ -882,6 +887,15 @@ const String _odfTableNamespace =
     'urn:oasis:names:tc:opendocument:xmlns:table:1.0';
 const String _odfTextNamespace =
     'urn:oasis:names:tc:opendocument:xmlns:text:1.0';
+const String _odfStyleNamespace =
+    'urn:oasis:names:tc:opendocument:xmlns:style:1.0';
+const String _odfDrawingNamespace =
+    'urn:oasis:names:tc:opendocument:xmlns:drawing:1.0';
+const String _odfFoNamespace =
+    'urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0';
+const String _odfSvgNamespace =
+    'urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0';
+const String _odfLinkNamespace = 'http://www.w3.org/1999/xlink';
 
 /// Limits the expanded preview across every table, including Markdown padding.
 /// Small XML can otherwise describe hundreds of millions of repeated cells.
@@ -891,6 +905,19 @@ class _OdfTableBudget {
   int _tables = 0;
   int _cells = 0;
   int _text = 0;
+  int _decodedText = 0;
+
+  // Bound decoding across cells even when whitespace is later trimmed away.
+  // A per-cell cap alone permits a compact row to allocate many large strings
+  // before its expanded table size is checked.
+  void reserveDecodedText(int count) {
+    if (count < 0 || count > maxText - _decodedText) {
+      throw const FormatException(
+        'ODF preview exceeds the expanded-text limit',
+      );
+    }
+    _decodedText += count;
+  }
 
   void startTable() {
     if (++_tables > 128) {
@@ -959,7 +986,6 @@ List<List<String>> _odsRows(XmlElement table, _OdfTableBudget budget) {
     final cells = <String>[];
     var column = 0;
     var pendingCoveredColumns = 0;
-    var textLength = 0;
     for (final cell in row.childElements.where(
       (element) =>
           element.namespaceUri == _odfTableNamespace &&
@@ -984,7 +1010,7 @@ List<List<String>> _odsRows(XmlElement table, _OdfTableBudget budget) {
       // the next origin still begins after the previous merged footprint.
       pendingCoveredColumns = 0;
       final span = _odfRepeat(cell, 'number-columns-spanned');
-      final value = _odsCellValue(cell);
+      final value = _odsCellValue(cell, budget);
       if (value.isNotEmpty) {
         if (column >= _odsMaxCols || repeat > (_odsMaxCols - column) ~/ span) {
           throw const FormatException('ODF preview exceeds the column limit');
@@ -992,7 +1018,9 @@ List<List<String>> _odsRows(XmlElement table, _OdfTableBudget budget) {
         if (rowIndex >= _odsMaxRows || rowRepeat > _odsMaxRows - rowIndex) {
           throw const FormatException('ODF preview exceeds the row limit');
         }
-        textLength += value.length * repeat;
+        // Check each contribution before retaining cells or expanding repeats.
+        // The grid checks above also bound both factors in this multiplication.
+        budget.reserve(cells: 0, text: value.length * repeat * rowRepeat);
         cells.addAll(List<String>.filled(column - cells.length, ''));
         for (var r = 0; r < repeat; r++) {
           if (r > 0) cells.addAll(List<String>.filled(span - 1, ''));
@@ -1018,10 +1046,7 @@ List<List<String>> _odsRows(XmlElement table, _OdfTableBudget budget) {
       if (cells.length > width) width = cells.length;
       // _markdownTable pads every row to the widest row and adds a separator.
       final nextRenderedCells = (rowCount + 1) * width;
-      budget.reserve(
-        cells: nextRenderedCells - renderedCells,
-        text: textLength * rowRepeat,
-      );
+      budget.reserve(cells: nextRenderedCells - renderedCells, text: 0);
       renderedCells = nextRenderedCells;
       while (rows.length < rowIndex) {
         rows.add(const <String>[]);
@@ -1040,33 +1065,138 @@ List<List<String>> _odsRows(XmlElement table, _OdfTableBudget budget) {
   return rows;
 }
 
-// Annotation and covered-cell stories remain in raw XML, but are not
-// document body text. Match namespace identity so foreign elements keep text.
+// Annotation, covered-cell and stored-revision stories remain in raw XML, but
+// are not current document text. Change markers in the live body stay visible.
+// Match namespace identity so foreign elements keep their text.
 bool _isOdfHiddenStory(XmlElement element) =>
     (element.namespaceUri == _odfTableNamespace &&
         element.localName == 'covered-table-cell') ||
     (element.namespaceUri == _odfOfficeNamespace &&
-        element.localName == 'annotation');
+        element.localName == 'annotation') ||
+    (element.localName == 'tracked-changes' &&
+        (element.namespaceUri == _odfTextNamespace ||
+            element.namespaceUri == _odfTableNamespace));
 
-String _odfVisibleInnerText(XmlElement element) {
-  final buffer = StringBuffer();
-  void visit(XmlNode node) {
-    if (node is XmlText) {
-      buffer.write(node.value);
-    } else if (node is XmlCDATA) {
-      buffer.write(node.value);
-    } else if (node is XmlElement && !_isOdfHiddenStory(node)) {
-      for (final child in node.children) {
-        visit(child);
+/// A cell's paragraphs own their inline text; anchored text boxes are separate
+/// stories. Flattening all descendant paragraphs duplicates those nested boxes.
+String _odfCellText(XmlElement cell, _OdfTableBudget budget) {
+  bool hidden(XmlElement element) =>
+      _isOdfHiddenStory(element) ||
+      (element.namespaceUri == _odfTextNamespace &&
+          (element.localName == 'note' || element.localName == 'ruby-text'));
+
+  Iterable<XmlElement> textBoxes(XmlElement element) sync* {
+    if (hidden(element)) return;
+    if (element.namespaceUri == _odfDrawingNamespace) {
+      if (element.localName == 'frame') {
+        yield* element.findElements(
+          'text-box',
+          namespace: _odfDrawingNamespace,
+        );
+      } else if (element.localName == 'a') {
+        for (final frame in element.findElements(
+          'frame',
+          namespace: _odfDrawingNamespace,
+        )) {
+          yield* textBoxes(frame);
+        }
       }
+      return;
+    }
+    if (element.namespaceUri != _odfTextNamespace) return;
+    final children = element.localName == 'ruby'
+        ? element.findElements('ruby-base', namespace: _odfTextNamespace)
+        : element.childElements;
+    for (final child in children) {
+      yield* textBoxes(child);
     }
   }
 
-  visit(element);
-  return buffer.toString();
+  String ownText(XmlElement paragraph) {
+    final buffer = StringBuffer();
+    void append(String value) {
+      budget.reserveDecodedText(value.length);
+      buffer.write(value);
+    }
+
+    void visit(XmlNode node) {
+      if (node is XmlText) {
+        append(node.value);
+      } else if (node is XmlCDATA) {
+        append(node.value);
+      } else if (node is XmlElement && !hidden(node)) {
+        if (node.namespaceUri == _odfDrawingNamespace) return;
+        if (node.namespaceUri == _odfTextNamespace) {
+          switch (node.localName) {
+            case 's':
+              final raw = node.getAttribute('c', namespace: _odfTextNamespace);
+              final spelling = raw?.trim() ?? '1';
+              final count = RegExp(r'^[+-]?[0-9]+$').hasMatch(spelling)
+                  ? int.tryParse(spelling)
+                  : null;
+              if (count == null || count < 0) {
+                throw const FormatException('Invalid ODF text:s count');
+              }
+              budget.reserveDecodedText(count);
+              buffer.write(' ' * count);
+              return;
+            case 'tab':
+              append('\t');
+              return;
+            case 'line-break':
+              append('\n');
+              return;
+            case 'ruby':
+              for (final base in node.findElements(
+                'ruby-base',
+                namespace: _odfTextNamespace,
+              )) {
+                visit(base);
+              }
+              return;
+          }
+        }
+        for (final child in node.children) {
+          visit(child);
+        }
+      }
+    }
+
+    visit(paragraph);
+    return buffer.toString();
+  }
+
+  Iterable<String> paragraphs(XmlElement element) sync* {
+    if (hidden(element)) return;
+    if (element.namespaceUri == _odfTextNamespace &&
+        (element.localName == 'p' || element.localName == 'h')) {
+      final boxes = textBoxes(element).toList();
+      final text = ownText(element);
+      if (text.isNotEmpty || boxes.isEmpty) yield text;
+      for (final box in boxes) {
+        yield* paragraphs(box);
+      }
+      return;
+    }
+    for (final child in element.childElements) {
+      yield* paragraphs(child);
+    }
+  }
+
+  final result = StringBuffer();
+  var first = true;
+  for (final paragraph in paragraphs(cell)) {
+    if (!first) {
+      budget.reserveDecodedText(1);
+      result.write(' ');
+    }
+    result.write(paragraph);
+    first = false;
+  }
+  return result.toString().trim();
 }
 
-String _odsCellValue(XmlElement cell) {
+String _odsCellValue(XmlElement cell, _OdfTableBudget budget) {
   String? valueAttribute(String name) =>
       cell.getAttribute(name, namespace: _odfOfficeNamespace);
   final type = valueAttribute('value-type');
@@ -1091,23 +1221,7 @@ String _odsCellValue(XmlElement cell) {
       final value = valueAttribute('string-value');
       if (value != null) return value;
   }
-  bool isVisibleParagraph(XmlElement paragraph) {
-    XmlNode? ancestor = paragraph.parent;
-    while (ancestor != null && !identical(ancestor, cell)) {
-      if (ancestor is XmlElement && _isOdfHiddenStory(ancestor)) {
-        return false;
-      }
-      ancestor = ancestor.parent;
-    }
-    return true;
-  }
-
-  return cell
-      .findAllElements('p', namespace: _odfTextNamespace)
-      .where(isVisibleParagraph)
-      .map(_odfVisibleInnerText)
-      .join(' ')
-      .trim();
+  return _odfCellText(cell, budget);
 }
 
 Future<OfficeDocument> _parseOds(ViewerArchive archive) async {
@@ -1696,22 +1810,26 @@ Future<OfficeDocument> _parseOdt(ViewerArchive archive) async {
   final styles = <String, XmlElement>{};
   final listStyles = <String, XmlElement>{};
   void collectStyles(XmlDocument source, {required bool overwrite}) {
-    for (final collection in <String>[
-      'office:automatic-styles',
-      'office:styles',
-    ]) {
-      final root = source.findAllElements(collection).firstOrNull;
+    for (final collection in <String>['automatic-styles', 'styles']) {
+      final root = source
+          .findAllElements(collection, namespace: _odfOfficeNamespace)
+          .firstOrNull;
       if (root == null) continue;
       for (final style in root.childElements) {
-        final name = style.getAttribute('style:name');
+        final name = style.getAttribute('name', namespace: _odfStyleNamespace);
         if (name == null) continue;
-        if (style.localName == 'style') {
+        if (style.namespaceUri == _odfStyleNamespace &&
+            style.localName == 'style') {
           if (overwrite) {
             styles[name] = style;
           } else {
             styles.putIfAbsent(name, () => style);
           }
-        } else if (style.localName == 'list-style') {
+        } else if (style.localName == 'list-style' &&
+            (style.namespaceUri == _odfTextNamespace ||
+                // Retain the existing tolerance for producer documents that
+                // put list-style in the style namespace.
+                style.namespaceUri == _odfStyleNamespace)) {
           if (overwrite) {
             listStyles[name] = style;
           } else {
@@ -1739,13 +1857,13 @@ Future<OfficeDocument> _parseOdt(ViewerArchive archive) async {
   bool isBold(XmlElement? style) {
     final weight =
         style
-            ?.findAllElements('style:text-properties')
+            ?.findAllElements('text-properties', namespace: _odfStyleNamespace)
             .firstOrNull
-            ?.getAttribute('fo:font-weight') ??
+            ?.getAttribute('font-weight', namespace: _odfFoNamespace) ??
         style
-            ?.findAllElements('style:text-properties')
+            ?.findAllElements('text-properties', namespace: _odfStyleNamespace)
             .firstOrNull
-            ?.getAttribute('style:font-weight-asian');
+            ?.getAttribute('font-weight-asian', namespace: _odfStyleNamespace);
     if (weight == null) return false;
     if (weight.toLowerCase() == 'bold') return true;
     final numeric = int.tryParse(weight);
@@ -1754,9 +1872,9 @@ Future<OfficeDocument> _parseOdt(ViewerArchive archive) async {
 
   bool isItalic(XmlElement? style) {
     final value = style
-        ?.findAllElements('style:text-properties')
+        ?.findAllElements('text-properties', namespace: _odfStyleNamespace)
         .firstOrNull
-        ?.getAttribute('fo:font-style');
+        ?.getAttribute('font-style', namespace: _odfFoNamespace);
     return value == 'italic' || value == 'oblique';
   }
 
@@ -1769,44 +1887,68 @@ Future<OfficeDocument> _parseOdt(ViewerArchive archive) async {
         buffer.write(child.value);
         continue;
       }
+      if (child is XmlCDATA) {
+        buffer.write(child.value);
+        continue;
+      }
       if (child is! XmlElement || _isOdfHiddenStory(child)) continue;
-      switch (child.localName) {
-        case 's':
-          final count = int.tryParse(child.getAttribute('text:c') ?? '') ?? 1;
+      switch ((child.namespaceUri, child.localName)) {
+        case (_odfTextNamespace, 's'):
+          final count =
+              int.tryParse(
+                child.getAttribute('c', namespace: _odfTextNamespace) ?? '',
+              ) ??
+              1;
           buffer.write(' ' * count.clamp(1, 256));
-        case 'tab':
+        case (_odfTextNamespace, 'tab'):
           buffer.write('\t');
-        case 'line-break':
+        case (_odfTextNamespace, 'line-break'):
           buffer.write('\n');
-        case 'span':
-          final style = styles[child.getAttribute('text:style-name')];
+        case (_odfTextNamespace, 'p'):
+        case (_odfTextNamespace, 'h'):
+          // Note bodies and text boxes contain block paragraphs. Preserve a
+          // separator before the readable-note whitespace normalization.
+          buffer.write(inline(child));
+          buffer.write('\n');
+        case (_odfTextNamespace, 'span'):
+          final style =
+              styles[child.getAttribute(
+                'style-name',
+                namespace: _odfTextNamespace,
+              )];
           var text = inline(child);
           if (isBold(style)) text = '**$text**';
           if (isItalic(style)) text = '*$text*';
           buffer.write(text);
-        case 'a':
-          final href = child.getAttribute('xlink:href') ?? '';
+        case (_odfTextNamespace, 'a'):
+          final href =
+              child.getAttribute('href', namespace: _odfLinkNamespace) ?? '';
           final text = inline(child);
           buffer.write(
             href.isEmpty || href.toLowerCase().startsWith('javascript:')
                 ? text
                 : '[$text]($href)',
           );
-        case 'note':
+        case (_odfTextNamespace, 'note'):
           final number = notes.length + 1;
-          final body = child.findAllElements('text:note-body').firstOrNull;
+          final body = child
+              .findElements('note-body', namespace: _odfTextNamespace)
+              .firstOrNull;
           notes.add(
             (body == null ? '' : inline(body))
                 .replaceAll(RegExp(r'\s+'), ' ')
                 .trim(),
           );
           buffer.write('[$number]');
-        case 'frame':
-          final name = child.getAttribute('draw:name');
+        case (_odfDrawingNamespace, 'frame'):
+          final name = child.getAttribute(
+            'name',
+            namespace: _odfDrawingNamespace,
+          );
           final href = child
-              .findAllElements('draw:image')
+              .findElements('image', namespace: _odfDrawingNamespace)
               .firstOrNull
-              ?.getAttribute('xlink:href');
+              ?.getAttribute('href', namespace: _odfLinkNamespace);
           final data = href == null ? null : pictures.hrefs[href];
           if (data != null) {
             final occurrence = (pictureUses[data] ?? 0) + 1;
@@ -1818,8 +1960,12 @@ Future<OfficeDocument> _parseOdt(ViewerArchive archive) async {
               // Each frame owns its geometry; repeated pictures share bytes.
               pictures.registry[displayKey] = pictures.registry[data]!;
             }
-            final width = _odfOptionalPixels(child.getAttribute('svg:width'));
-            final height = _odfOptionalPixels(child.getAttribute('svg:height'));
+            final width = _odfOptionalPixels(
+              child.getAttribute('width', namespace: _odfSvgNamespace),
+            );
+            final height = _odfOptionalPixels(
+              child.getAttribute('height', namespace: _odfSvgNamespace),
+            );
             if (width != null || height != null) {
               pictures.info[displayKey] = OfficeImageInfo(
                 width: width,
@@ -1832,7 +1978,9 @@ Future<OfficeDocument> _parseOdt(ViewerArchive archive) async {
             // Oversized or unsupported media stays a bounded textual marker.
             buffer.write('*[Image: ${name ?? href.split('/').last}]*');
           }
-          final textBox = child.findAllElements('draw:text-box').firstOrNull;
+          final textBox = child
+              .findElements('text-box', namespace: _odfDrawingNamespace)
+              .firstOrNull;
           if (textBox != null) {
             final text = inline(textBox).trim();
             if (text.isNotEmpty) {
@@ -1840,9 +1988,9 @@ Future<OfficeDocument> _parseOdt(ViewerArchive archive) async {
               buffer.write(text);
             }
           }
-        case 'bookmark':
-        case 'bookmark-start':
-        case 'bookmark-end':
+        case (_odfTextNamespace, 'bookmark'):
+        case (_odfTextNamespace, 'bookmark-start'):
+        case (_odfTextNamespace, 'bookmark-end'):
           break;
         default:
           buffer.write(inline(child));
@@ -1853,18 +2001,30 @@ Future<OfficeDocument> _parseOdt(ViewerArchive archive) async {
 
   final blocks = <String>[];
   void visitList(XmlElement list, int depth) {
-    final style = listStyles[list.getAttribute('text:style-name')];
+    final style =
+        listStyles[list.getAttribute(
+          'style-name',
+          namespace: _odfTextNamespace,
+        )];
     final ordered =
-        style?.findAllElements('text:list-level-style-number').isNotEmpty ??
+        style
+            ?.findAllElements(
+              'list-level-style-number',
+              namespace: _odfTextNamespace,
+            )
+            .isNotEmpty ??
         false;
     var index = 0;
     for (final item in list.childElements.where(
-      (element) => element.localName == 'list-item',
+      (element) =>
+          element.namespaceUri == _odfTextNamespace &&
+          element.localName == 'list-item',
     )) {
       index++;
       final parts = <String>[];
       for (final child in item.childElements) {
-        if (child.localName == 'p' || child.localName == 'h') {
+        if (child.namespaceUri == _odfTextNamespace &&
+            (child.localName == 'p' || child.localName == 'h')) {
           final text = inline(child).trim();
           if (text.isNotEmpty) parts.add(text);
         }
@@ -1874,7 +2034,9 @@ Future<OfficeDocument> _parseOdt(ViewerArchive archive) async {
         blocks.add('${'  ' * depth}$marker ${parts.join(' ')}');
       }
       for (final nested in item.childElements.where(
-        (element) => element.localName == 'list',
+        (element) =>
+            element.namespaceUri == _odfTextNamespace &&
+            element.localName == 'list',
       )) {
         visitList(nested, depth + 1);
       }
@@ -1883,20 +2045,27 @@ Future<OfficeDocument> _parseOdt(ViewerArchive archive) async {
 
   void visit(XmlElement element) {
     if (_isOdfHiddenStory(element)) return;
-    switch (element.localName) {
-      case 'h':
+    switch ((element.namespaceUri, element.localName)) {
+      case (_odfTextNamespace, 'h'):
         final level =
-            int.tryParse(element.getAttribute('text:outline-level') ?? '') ?? 1;
+            int.tryParse(
+              element.getAttribute(
+                    'outline-level',
+                    namespace: _odfTextNamespace,
+                  ) ??
+                  '',
+            ) ??
+            1;
         final text = inline(element).trim();
         if (text.isNotEmpty) {
           blocks.add('${'#' * level.clamp(1, 6)} $text');
         }
-      case 'p':
+      case (_odfTextNamespace, 'p'):
         final text = inline(element).trim();
         if (text.isNotEmpty) blocks.add(text);
-      case 'list':
+      case (_odfTextNamespace, 'list'):
         visitList(element, 0);
-      case 'table':
+      case (_odfTableNamespace, 'table'):
         {
           final rows = _odsRows(
             element,
@@ -1905,12 +2074,12 @@ Future<OfficeDocument> _parseOdt(ViewerArchive archive) async {
           final table = _markdownTable(rows);
           if (table.isNotEmpty) blocks.add(table);
         }
-      case 'section':
-      case 'body':
+      case (_odfTextNamespace, 'section'):
+      case (_odfOfficeNamespace, 'body'):
         for (final child in element.childElements) {
           visit(child);
         }
-      case 'soft-page-break':
+      case (_odfTextNamespace, 'soft-page-break'):
         break;
       default:
         for (final child in element.childElements) {
@@ -1923,31 +2092,42 @@ Future<OfficeDocument> _parseOdt(ViewerArchive archive) async {
     final source = stylesDocument;
     if (source == null) return null;
     final values = <String>[];
-    for (final element in source.findAllElements('style:$elementName')) {
+    for (final element in source.findAllElements(
+      elementName,
+      namespace: _odfStyleNamespace,
+    )) {
       final buffer = StringBuffer();
       void walk(XmlNode node) {
         if (node is XmlText) {
           buffer.write(node.value);
           return;
         }
+        if (node is XmlCDATA) {
+          buffer.write(node.value);
+          return;
+        }
         if (node is! XmlElement || _isOdfHiddenStory(node)) return;
-        switch (node.localName) {
-          case 'page-number':
-          case 'page-count':
-          case 'date':
-          case 'time':
-          case 'title':
-          case 'subject':
-          case 'author':
-          case 'chapter':
-          case 'file-name':
+        switch ((node.namespaceUri, node.localName)) {
+          case (_odfTextNamespace, 'page-number'):
+          case (_odfTextNamespace, 'page-count'):
+          case (_odfTextNamespace, 'date'):
+          case (_odfTextNamespace, 'time'):
+          case (_odfTextNamespace, 'title'):
+          case (_odfTextNamespace, 'subject'):
+          case (_odfTextNamespace, 'author'):
+          case (_odfTextNamespace, 'chapter'):
+          case (_odfTextNamespace, 'file-name'):
             return;
-          case 's':
-            final count = int.tryParse(node.getAttribute('text:c') ?? '') ?? 1;
+          case (_odfTextNamespace, 's'):
+            final count =
+                int.tryParse(
+                  node.getAttribute('c', namespace: _odfTextNamespace) ?? '',
+                ) ??
+                1;
             buffer.write(' ' * count.clamp(1, 256));
-          case 'tab':
+          case (_odfTextNamespace, 'tab'):
             buffer.write('\t');
-          case 'line-break':
+          case (_odfTextNamespace, 'line-break'):
             buffer.write('\n');
           default:
             for (final child in node.children) {
@@ -1967,7 +2147,9 @@ Future<OfficeDocument> _parseOdt(ViewerArchive archive) async {
     return text.length > 1000 ? text.substring(0, 1000) : text;
   }
 
-  final body = document.findAllElements('office:body').firstOrNull;
+  final body = document
+      .findAllElements('body', namespace: _odfOfficeNamespace)
+      .firstOrNull;
   if (body != null) {
     for (final child in body.childElements) {
       visit(child);
