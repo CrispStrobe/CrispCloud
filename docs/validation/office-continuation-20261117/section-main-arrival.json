@@ -1,0 +1,237 @@
+{
+  "schema_version": 1,
+  "kind": "Bounded main-arrival observation and host documentation resolution",
+  "observed_utc": "2026-11-17T14:35:52Z",
+  "scope": "New main commits observed after the earlier fixed inventory. This receipt describes the exact captured main and PR objects, not an assertion that no later arrival exists.",
+  "host": {
+    "repository": "CrispStrobe/CrispCloud",
+    "earlier_captured_main": "fad903782ee45031e26c57cc8a65ccf476b1724d",
+    "saved_continuation_source": "1d1411c581237a9e30aa9ce0756a74cc351a87ef",
+    "incoming_main": "3b6b9b2a5159ca9fdffdfd021866d78c0cb90729",
+    "incoming_tree": "95348e2be965c5a15e25bfc6344f3b926fc5ee70"
+  },
+  "canonical": {
+    "repository": "CrispStrobe/quds_office_suite",
+    "earlier_captured_main": "3458c8977cef969a86a07b39734c761ba62e4b40",
+    "incoming_main": "6f9caa0736828dbbb2c4d00d2af89277243dbf2b",
+    "incoming_tree": "2909598a199b8a6a0bd839b0dcc5b5146d663553"
+  },
+  "pull_requests": [
+    {
+      "repository": "CrispStrobe/CrispCloud",
+      "number": 223,
+      "title": "Vendor ODT section layouts",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/223",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-11-17T14:20:51Z",
+      "updated_at": "2026-11-17T14:20:54Z",
+      "closed_at": "2026-11-17T14:20:54Z",
+      "merged_at": "2026-11-17T14:20:54Z",
+      "merge_commit_sha": "6cf27894c4d7bdecde88a81a2bde0adf04c4ca16",
+      "head": {
+        "repository": "CrispStrobe/CrispCloud",
+        "ref": "fix/odt-sections-vendor",
+        "sha": "8dd12dc576901d675ff92124bc21fc016ff1dc57"
+      },
+      "base": {
+        "repository": "CrispStrobe/CrispCloud",
+        "ref": "main",
+        "sha": "fad903782ee45031e26c57cc8a65ccf476b1724d"
+      }
+    },
+    {
+      "repository": "CrispStrobe/CrispCloud",
+      "number": 224,
+      "title": "Record ODT section export",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/224",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-11-17T14:21:37Z",
+      "updated_at": "2026-11-17T14:21:41Z",
+      "closed_at": "2026-11-17T14:21:41Z",
+      "merged_at": "2026-11-17T14:21:41Z",
+      "merge_commit_sha": "3b6b9b2a5159ca9fdffdfd021866d78c0cb90729",
+      "head": {
+        "repository": "CrispStrobe/CrispCloud",
+        "ref": "docs/odt-sections",
+        "sha": "7e8456967a3d874544a4a56e185e631ff90e2639"
+      },
+      "base": {
+        "repository": "CrispStrobe/CrispCloud",
+        "ref": "main",
+        "sha": "6cf27894c4d7bdecde88a81a2bde0adf04c4ca16"
+      }
+    },
+    {
+      "repository": "CrispStrobe/quds_office_suite",
+      "number": 104,
+      "title": "Write ODT section layouts and page breaks",
+      "url": "https://github.com/CrispStrobe/quds_office_suite/pull/104",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-11-17T14:17:59Z",
+      "updated_at": "2026-11-17T14:18:03Z",
+      "closed_at": "2026-11-17T14:18:03Z",
+      "merged_at": "2026-11-17T14:18:03Z",
+      "merge_commit_sha": "6f9caa0736828dbbb2c4d00d2af89277243dbf2b",
+      "head": {
+        "repository": "CrispStrobe/quds_office_suite",
+        "ref": "feat/odt-sections2",
+        "sha": "2a6f3a94ce1d4a5ba6cddc1687a075191448da3d"
+      },
+      "base": {
+        "repository": "CrispStrobe/quds_office_suite",
+        "ref": "main",
+        "sha": "3458c8977cef969a86a07b39734c761ba62e4b40"
+      }
+    }
+  ],
+  "host_commit_chain": [
+    {
+      "sha": "6cf27894c4d7bdecde88a81a2bde0adf04c4ca16",
+      "date": "2026-11-17T14:20:54Z",
+      "message": "Vendor ODT section layouts (#223)\n\nCo-authored-by: CrispStrobe <crispstrobe@users.noreply.github.com>",
+      "parents": [
+        "fad903782ee45031e26c57cc8a65ccf476b1724d"
+      ]
+    },
+    {
+      "sha": "3b6b9b2a5159ca9fdffdfd021866d78c0cb90729",
+      "date": "2026-11-17T14:21:41Z",
+      "message": "docs: record ODT section export (#224)\n\nCo-authored-by: CrispStrobe <crispstrobe@users.noreply.github.com>",
+      "parents": [
+        "6cf27894c4d7bdecde88a81a2bde0adf04c4ca16"
+      ]
+    }
+  ],
+  "host_delta": {
+    "base": "fad903782ee45031e26c57cc8a65ccf476b1724d",
+    "head": "3b6b9b2a5159ca9fdffdfd021866d78c0cb90729",
+    "status": "ahead",
+    "ahead_by": 2,
+    "behind_by": 0,
+    "total_commits": 2,
+    "files": [
+      {
+        "path": "docs/office-remaining-gaps-20261115.md",
+        "blob": "aadb7af4845a777bece4eb9b89f6dd31c8a17f78",
+        "status": "modified",
+        "additions": 1,
+        "deletions": 1
+      },
+      {
+        "path": "packages/quds_office_engine/README.md",
+        "blob": "7da5299521103b75df977c712f9f30ca310dfcb1",
+        "status": "modified",
+        "additions": 1,
+        "deletions": 1
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/word/serial/odt_document_writer.dart",
+        "blob": "d29350898f1efb07224e8b9b5823ee02f62ff5af",
+        "status": "modified",
+        "additions": 109,
+        "deletions": 46
+      },
+      {
+        "path": "packages/quds_office_engine/test/odt_document_writer_test.dart",
+        "blob": "41c04dd18ac5b1453297e98fd7614505e193f936",
+        "status": "modified",
+        "additions": 40,
+        "deletions": 0
+      },
+      {
+        "path": "tool/office_fidelity_manifest.json",
+        "blob": "eaffafebbfb610b0edca19c8fcdf9d2b85838669",
+        "status": "modified",
+        "additions": 4,
+        "deletions": 4
+      }
+    ],
+    "no_other_paths_changed": true
+  },
+  "incoming_manifest_delta": {
+    "changed": [
+      {
+        "path": "packages/quds_office_engine/lib/src/word/serial/odt_document_writer.dart",
+        "before": "d1902f9b0aaba39cab9da0691269cc3f38231dccf508ead32b07e9360bdcf221",
+        "after": "386de1da7ef3c8f220cfef05bf9fc2ebbac6bcb62d4f1e7e0b75636923564bed"
+      },
+      {
+        "path": "packages/quds_office_engine/test/odt_document_writer_test.dart",
+        "before": "dc4d3c283bddd59d3731bcce84f2888d3f057813e829cdeef7a981ee1f0aeb57",
+        "after": "d5732a33c470f827540a675243366a485119834f4874757c3a8216de84040667"
+      }
+    ],
+    "added": [],
+    "deleted": [],
+    "metadata": {
+      "source_branch": {
+        "before": "vendor/odt-comments",
+        "after": "vendor/odt-sections"
+      },
+      "source_commit": {
+        "before": "04505306af39c47bd0fe96423d1515ee6ca5027e",
+        "after": "a5cd1f30aa4764e990ed81b9ac8387efe3182f82"
+      }
+    },
+    "unchanged": 2557
+  },
+  "documentation_resolution": {
+    "gaps": {
+      "path": "docs/office-remaining-gaps-20261115.md",
+      "base_blob": "c3230b2434f3f4ad53f8b47cf5a059aa5aec4e2a",
+      "ours_blob": "e1b17f8d840b26dfa036745fae61ed1b9b5e9624",
+      "incoming_blob": "aadb7af4845a777bece4eb9b89f6dd31c8a17f78",
+      "incoming_change": {
+        "before": "- Vendored Quds source checkpoint: `04505306af39c47bd0fe96423d1515ee6ca5027e`",
+        "after": "- Vendored Quds source checkpoint: `a5cd1f30aa4764e990ed81b9ac8387efe3182f82`"
+      },
+      "decision": "Retain the saved continuation document, which replaces the stale historical vendor-pin line with references to the authoritative current manifest and source receipts. Preserve its corrected OG-07 and pending-runtime statements. Add the arriving section layout feature to its current modeled ODT subset; the final combined canonical pin belongs in the manifest.",
+      "exact_unique_replacement": {
+        "before": "headers/footers, footnotes/endnotes and comments.",
+        "after": "headers/footers, footnotes/endnotes, comments and section page layouts."
+      },
+      "proposed_complete_content": "# Office viewer/editor remaining gaps — 15 November 2026\n\nLast updated: 17 November 2026.\n\nThis is the current backlog for the Office/ODF work. It records what is\nverified, what is intentionally read-only, and what remains before the viewer\nand editor can claim full format coverage.\n\n## Current continuation\n\nThe 17 November continuation reconciles the latest captured canonical Office,\nGerman morphology and proofing-tool histories, including the ODT comment export\nthat landed after the Zotero integration. The exact vendor pin and file inventory\nare in `tool/office_fidelity_manifest.json`; the branch inventories, merge\ndecisions and source checks are in `validation/office-continuation-20261117/`.\n\nAnnotation bodies remain in raw ODF XML and the comment model while body\nextraction, search and host previews exclude them. Comment references also leave\nnote definitions available for visible document references. The new regression\ncases are committed and source-reviewed. Runtime qualification of this combined\nsource remains pending because the workspace launcher cannot start a process;\nno GitHub Actions or CI-status endpoint was queried or awaited. Historical test\ncounts below retain their original source attribution.\n\nThe 16 November integration reconciles CrispCloud's terminal forwarding/trigger\nand Zotero continuation branches with canonical Quds, preserving the standalone\nlegacy parser pin. See `validation/repo-integration-20261116/` for the exact\nsource cutoff, branch ancestry and fresh local validation. Earlier qualification\ncounts and live-corpus results below retain their original source identities.\n\nShared spreadsheet-level ODS definitions and validation rules on blank input\ncells are imported. List/range-source, whole-number, decimal, date, text-length\nand custom-formula rules now carry comparison/between operators, blank policy,\nprompts, error titles/messages/styles and XLSX round-trips. Dynamic source-range\nlinks and ODF condition grammar outside the shared model still decline instead\nof being approximated. The sheet editor also has an explicit **Export as ODS**\naction; ordinary Save still writes a new `.xlsx` copy.\nCurrent qualification is recorded in `validation/terminal-ods-refresh-20261116/`.\nThe final local follow-up passed 507 spreadsheet/ODS engine tests, 53 host\nviewer/editor workflow tests, and the local ODS import check (one workbook,\nno unsupported-profile refusal); a subsequent widget regression covers the new\n**Export as ODS** action. These results qualify the supported import\nprofile, XLSX-copy and new-ODS-export workflows; they do not establish complete\nODF fidelity. See `validation/terminal-ods-refresh-20261116/summary.json` for\nexact source identities, commands and the separately qualified terminal results.\n\n## Earlier verified state\n\n- CrispCloud `main` snapshot: `4eea7d16`\n- The historical test results below retain the source identities in their\n  original receipts. Current vendor identities and counts are recorded in\n  `tool/office_fidelity_manifest.json` and `packages/QUDS_FORKS.md`.\n- Quds sheet/ODS cohort: **514 tests**; the last clean full engine run was\n  **2,205 tests** (two unrelated CLI bookmark/content-control tests currently\n  fail on main)\n- CrispCloud vendored ODS reader+writer: **115 tests**\n- CrispCloud combined F3/F4/ODF suite: **51 tests**\n- ODT parser/image suite: **37 tests**\n- Live corpus smoke tests: **20 ODF**, **9 XLS**, **1 ODS**\n- Live ODS → XLSX fidelity against LibreOffice: **0.9981**\n  (2,098 compared fields; no data, formula, format, alignment or geometry\n  mismatches in the measured BOM workbook)\n- Golden checks: exact macOS and Linux references; the last completed\n  `office-fidelity` and `quds_office_editor` runs succeeded\n- No private workbook corpus is tracked. Local-only tests read `$HOME` at\n  runtime and skip when the directories are absent.\n\n## Closed in this cycle\n\n- ODS preview grid with typed values, formulas, formats, comments, pictures,\n  hidden rows/columns/sheets, and a Table fallback.\n- `.xlsm` and `.xltx` editing with VBA/template package preservation and signed\n  package refusal.\n- ODS pictures as worksheet drawings; ODS default Normal font, default column\n  width and row height.\n- ODS conditional formats: numeric comparisons, between/not-between,\n  contains-text, begins/ends-with, duplicate, with generated dxf fill/font.\n- ODS list/range-source, whole, decimal, date, text-length and custom-formula\n  validations; operators, date serials, prompts, error title/message/style and\n  XLSX attribute round-trips.\n- ODS print areas/titles, named ranges/expressions, database-range\n  autofilters, tab colours, cell hyperlinks and row/column outline groups,\n  including XLSX round-trips.\n- `OdsSheetWriter` exports a new ODS package from the shared model: values,\n  formulas, styles, number formats, merges, geometry, hidden state, comments,\n  hyperlinks, names, print metadata, autofilter ranges, pictures, conditional\n  formats, validations, row outline groups and authored page setup.\n- F4 sheet **Export as ODS** action; it writes a new package and leaves the\n  ordinary XLSX save target and original file unchanged.\n- ODT named styles from `styles.xml`, inline pictures, text boxes, header/footer\n  text, tables, lists and footnotes.\n- Exact host goldens for the reviewed Word pages.\n\n## Remaining backlog\n\n### OG-01 — `.xlsb` editing\n\n**Status:** Open / blocked on format work\\\n**Impact:** `.xlsb` remains available for preview and Source/Hex only.\\\n**Next step:** A BIFF12 reader/writer or an explicit, reviewed conversion path.\nDo not approximate BIFF12 with the BIFF8 reader.\\\n**Acceptance:** open a real `.xlsb`, edit values/formulas/styles, save, and reopen\nin Excel with the same sheet/cell content and no package-type change.\n\n### OG-02 — ODS conditional-format breadth\n\n**Status:** Partial\\\n**Covered:** `>`, `<`, `=`, `>=`, `<=`, `<>`, `between`, `not-between`,\n`contains-text`, `begins-with`, `ends-with`, `duplicate`.\\\n**Remaining:** arbitrary expression rules, top/bottom rules, color scales, data\nbars, icon sets, date/time conditions, and non-contains text conditions.\\\n**Next step:** extend `SmlConditionalRule` with the missing kinds or preserve\nnative ODS rule XML without a modeled projection.\\\n**Acceptance:** import and paint each supported rule family, save a valid XLSX\ncfRule + dxf, and reopen in Excel.\n\n### OG-03 — ODS data-validation breadth\n\n**Status:** Partial\\\n**Covered:** literal and range-source lists, whole-number, decimal, date,\ntext-length and custom-formula rules, comparison/between operators, blank policy,\nprompts, error titles/messages/styles and XLSX round-trips.\\\n**Remaining:** ODF condition grammar outside the shared model (for example time\nor arbitrary multi-condition expressions) and dynamic source-range links.\\\n**Next step:** extend condition coverage without approximating unsupported\nexpressions and qualify dynamic range behavior.\\\n**Acceptance:** list, numeric and date rules survive ODS → XLSX, with the same\nsource ranges, bounds, blank policy and messages.\n\n### OG-04 — ODS workbook metadata\n\n**Status:** Partial\\\n**Covered:** print areas/titles, global and sheet-local named ranges and modeled\nnamed expressions, sheet tab colours, cell hyperlinks, row/column outline groups,\nand database filter predicates with equality, comparison and empty checks.\\\n**Remaining:** unmodeled named-expression semantics, filter operators outside\nthe modeled equality/not-equality subset, and rare paper-size codes.\\\n**Next step:** add the corresponding model fields or preserve/rebase native\nODS metadata.\\\n**Acceptance:** an ODS with each feature opens, saves as XLSX, and reopens with\nthe feature intact and no unrelated data movement.\n\n### OG-05 — ODS package/theme parity\n\n**Status:** Cosmetic / comparator-visible\\\n**Current:** Quds writes `sheet1_drawing.xml`/`sheet1_image1.png` where\nLibreOffice writes `drawing1.xml`/`image1.png`, and ODS has no theme part to\ncopy.\\\n**Impact:** the visual/data result matches; only exact package-part names and\nthe theme part differ in the fidelity report.\\\n**Next step:** either normalize drawing/media names and synthesize a minimal\ntheme, or normalize package-part identity in the audit comparator. Do not hide\nreal semantic differences.\\\n**Acceptance:** package comparison distinguishes semantic content from\narbitrary part names.\n\n### OG-06 — ODT embedded pictures\n\n**Status:** Partial\\\n**Current:** supported raster pictures are held in a bounded image registry (8 MiB per\nimage, 24 MiB total) and referenced by synthetic `odt-image:` keys. The viewer\nrenders them with `Image.memory` and applies the ODF frame's width/height;\npayloads stay out of plain text, search and the rich-render budget. Larger/unsupported media remains a marker.\\\n**Remaining:** image positioning/cropping, captions, linked images and vector\nformats.\\\n**Next step:** model the remaining frame geometry and media relationships.\\\n**Acceptance:** a multi-image ODT renders every supported picture without\nleaking payloads into plain text/search.\n\n### OG-07 — ODF writers\n\n**Status:** Partial / modeled new-document exports\\\n**Current:** `OdsSheetWriter` exports the supported workbook model as a new\nODS package, and F4 exposes **Export as ODS** while ordinary Save writes a new\nXLSX copy. `OdtDocumentWriter` and `OdpPresentationWriter` also exist.\nThe ODT subset includes formatted paragraphs, lists, tables, pictures,\nheaders/footers, footnotes/endnotes, comments and section page layouts. The ODP subset includes\npositioned text, pictures, tables, notes and supported slide transitions.\\\n**Remaining:** preservation of arbitrary imported ODF XML, unmodeled styles,\nmetadata, drawings and other format features through an edited native round trip.\\\n**Next step:** extend the documented writer subsets and qualify writer-to-reader\nand application workflows, including separation of comments from visible text.\\\n**Acceptance:** each supported feature exports with its stated behavior and\nreopens in the intended consumer; the documented new-document boundary remains\nexplicit for unmodeled imported content.\n\n### OG-08 — ODP slide fidelity\n\n**Status:** Partial\\\n**Current:** page size, frames/custom shapes, text styles/colors, fills,\nimages, backgrounds and speaker notes.\\\n**Remaining:** animations, charts, embedded objects, master/placeholder\ninheritance and some grouped-shape geometry.\\\n**Next step:** add native shape/table/chart models or preserve untouched native\nslide XML around edited text.\\\n**Acceptance:** a real deck reopens with unchanged layout and media after a\ntext-only edit.\n\n### OG-09 — XLSX/XLSM F3 preview route\n\n**Status:** Deferred / product decision\\\n**Current:** File Viewer renders F3 for OOXML sheets; F4 editing uses Quds.\nXLS/ODS use the Quds grid with a fallback.\\\n**Next step:** decide whether the File Viewer grid or the Quds grid is the\ndefault for `.xlsx`. Do not add a third inconsistent route casually.\\\n**Acceptance:** one documented default and one explicit fallback for every\nspreadsheet family.\n\n### OG-10 — `.xls` BIFF residuals\n\n**Status:** Partial\\\n**Remaining:** NAME-token formula names, shared-formula edge cases beyond the\ncovered corpus, and character-width precision from native font metrics.\\\n**Next step:** resolve the BIFF NAME table and add targeted fixtures. Do not add\na BIFF writer.\\\n**Acceptance:** the residual `.xls` oracle cases match Excel’s own\n`.xls` → `.xlsx` conversion.\n\n### OG-11 — Qualification/CI operations\n\n**Status:** Operational\\\n**Current:** exact host goldens; Linux references are authoritative for CI. The\nfull editor suite has older macOS/Linux page-golden differences outside this\nwork, and GitHub Actions has periodically left runs queued.\\\n**Next step:** keep host references per platform; investigate runner capacity\nseparately from product failures. Do not relax exact comparisons to hide host\nrasterization.\\\n**Acceptance:** CI failures name an attributable regression or a known\nhost-reference mismatch.\n\n## Suggested order\n\n1. OG-03 and OG-04 for spreadsheet metadata completeness.\n2. OG-02 conditional-format breadth.\n3. OG-06 ODT image registry.\n4. OG-08 ODP fidelity.\n5. OG-01 `.xlsb` only if editing is required.\n6. OG-07 extend and qualify the modeled ODS/ODT/ODP writer subsets.\n\n## Verification commands\n\n```bash\n# Quds engine sheet/ODS cohort\ncd quds_office_suite/packages/quds_office_engine\ndart test test/sheet_*_test.dart test/legacy_sheet_reader_test.dart \\\n  test/ods_sheet_reader_test.dart test/sml_styles_date_test.dart \\\n  test/sheet_macro_preservation_test.dart\n\n# CrispCloud targeted host suite\ncd CrispCloud\nflutter test test/office_document_service_test.dart \\\n  test/widget/odt_image_viewer_test.dart \\\n  test/widget/ods_viewer_grid_test.dart \\\n  test/widget/office_editor_dialog_test.dart \\\n  test/widget/ods_editor_workflow_test.dart \\\n  test/local_odf_corpus_test.dart\n\n# Live corpus smoke tests (local only)\nflutter test test/local_odf_corpus_test.dart\ncd packages/quds_office_engine && dart test test/local_spreadsheet_corpus_test.dart\n```\n\nSee also:\n\n- [File-format routes](file-format-viewers.md)\n- [Office engine strategy](office-engine-strategy.md)\n- [Quds fork pin and fixes](../packages/QUDS_FORKS.md)\n- `excel-steering` private audit and live-fidelity harness (not part of this repository)\n"
+    },
+    "engine_readme": {
+      "path": "packages/quds_office_engine/README.md",
+      "base_blob": "e521e746a67111a27b73cfaa7b47b85a91885ad6",
+      "ours_blob": "e521e746a67111a27b73cfaa7b47b85a91885ad6",
+      "incoming_blob": "7da5299521103b75df977c712f9f30ca310dfcb1",
+      "ours_equal_base": true,
+      "decision": "Take the incoming README verbatim. Its only line change adds section layouts to the supported ODT new-document subset.",
+      "incoming_odt_row": "| `.odt` | Yes | Yes | New-document subset: headings, formatted runs, bullet/numbered list groups, footnotes/endnotes, comments, section layouts, tables, pictures, frames, page geometry and basic headers/footers; no in-place ODF preservation |"
+    }
+  },
+  "source_review": {
+    "writer": {
+      "incoming_blob": "d29350898f1efb07224e8b9b5823ee02f62ff5af",
+      "changes": [
+        "Creates a master page and page layout for each section, with that section's dimensions, margins, header and footer.",
+        "Creates a section paragraph style selecting the matching master page and, for non-continuous breaks, a page break.",
+        "Threads an optional paragraph style override through body block and paragraph serialization."
+      ]
+    },
+    "writer_test": {
+      "incoming_blob": "41c04dd18ac5b1453297e98fd7614505e193f936",
+      "new_authored_test_cases": 1,
+      "added_lines": 40,
+      "scope": "Two sections each beginning with an ordinary paragraph; asserts SB1, second section text, Letter width, second master-page layout reference and second header/footer.",
+      "runtime_executed": false
+    },
+    "integration_requirement": "Combine these writer changes and the new section test with the continuation's note/comment guards, independent note numbering and broader writer regressions through the canonical merge, then pin that combined source in the host.",
+    "observed_boundary": "The incoming implementation attaches the section override only when the first block is an ordinary paragraph. A first numbered paragraph goes through _writeList without the override; a leading table consumes the first-block flag. The new section test does not cover these cases. This is a static limitation observation, not a runtime result."
+  },
+  "prior_evidence": {
+    "host_preservation_review_blob": "d0673112901f4014893770cea1267caa125632b5",
+    "qualified_scope": "Saved source checkpoint 1d1411c581237a9e30aa9ce0756a74cc351a87ef only; recheck the later combined source separately."
+  },
+  "runtime": {
+    "executed": false,
+    "github_actions_or_status_queried": false,
+    "github_actions_awaited": false
+  },
+  "mutations": "This review creates only its receipt Git blob. No branch, tree, commit or ref write."
+}

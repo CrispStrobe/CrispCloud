@@ -152,6 +152,19 @@ String _readParagraph(XmlElement paragraph, OdfTextBudget budget) {
       text.literal(node.text);
       return;
     }
+    if (node is XmlElement &&
+        node.namespaceUri ==
+            'urn:oasis:names:tc:opendocument:xmlns:drawing:1.0') {
+      if (node.localName == 'text-box') {
+        // readOdfText accounts for the decoded bytes, including separators.
+        text.decoded(readOdfText(node, budget));
+      } else if (node.localName == 'frame') {
+        for (final child in node.childElements) {
+          visit(child);
+        }
+      }
+      return;
+    }
     if (node is! XmlElement || node.namespaceUri != odfTextNamespace) return;
     switch (node.localName) {
       case 's':
@@ -230,6 +243,12 @@ class _ParagraphText {
     _flushSpace();
     _append(value);
     _started = true;
+  }
+
+  void decoded(String value) {
+    _flushSpace();
+    _buffer.write(value);
+    if (value.isNotEmpty) _started = true;
   }
 
   void spaces(int count) {

@@ -1,0 +1,99 @@
+{
+  "kind": "host preparation and locked dependency setup; final source tests not yet run",
+  "archive": "setup-checkpoint.tar.xz",
+  "archive_sha256": "a23db90063d66f60eb304cfca3ea786061c04ea6529205e18a83bd1339d58174",
+  "bytes": 90212,
+  "members": [
+    {
+      "path": "host-evidence/preparation-001/harness-inputs-current.json.gz",
+      "sha256": "927102ffe4108da8b6702cf9cf4f381552e86d2c41c4af1f859e4fae828fe67f",
+      "bytes": 66825
+    },
+    {
+      "path": "host-evidence/preparation-001/original-prepare-host-harness.py",
+      "sha256": "f1d8bd960ee0680bb167b1cc509caff0efef1dca17486b4ef89512d75b327fd9",
+      "bytes": 4200
+    },
+    {
+      "path": "host-evidence/preparation-001/original-resolve-host-harness.py",
+      "sha256": "d1890a3be578eb6a550ce828d91d6dcfa2cb98aca5f075b843f9f81af4971618",
+      "bytes": 5744
+    },
+    {
+      "path": "host-evidence/preparation-001/receipt.json",
+      "sha256": "2716097ce786d1d151ca69404aa94fd523a7937e6ea96497743de8f81e9a4851",
+      "bytes": 10118
+    },
+    {
+      "path": "host-evidence/setup-001/logs/locked-offline-repeat.log",
+      "sha256": "207dd41f78b04d7b68a5266f37fc54881775046f1d988f4d20869a52e6d25898",
+      "bytes": 974
+    },
+    {
+      "path": "host-evidence/setup-001/logs/locked-resolution.log",
+      "sha256": "00dbd78371e4a1f7110df6f443073f0c0dff5dee37eaa0083f267666ff37b324",
+      "bytes": 1878
+    },
+    {
+      "path": "host-evidence/setup-001/receipt.json",
+      "sha256": "13bc258300134a3021f77ed805a2d9306e59f0155981e591d653099604cff1cb",
+      "bytes": 3656
+    },
+    {
+      "path": "host-evidence/format-preflight-001/formatter.log",
+      "sha256": "35b48bbc46f3af5d790666572f8546cf4c9a092014bb7932577d25ce72e2559e",
+      "bytes": 178
+    },
+    {
+      "path": "host-evidence/format-preflight-001/formatter.patch",
+      "sha256": "a57ad392ca0587dd55ad8a1e154a46b7d7f6ff5931192763332862136db27b0c",
+      "bytes": 17011
+    },
+    {
+      "path": "host-evidence/format-preflight-001/office_annotation_preview_test.dart",
+      "sha256": "ba32a9d6f244764aa3a666c62e3b5ebec1460ec38b54dbd24a8d726f519e899e",
+      "bytes": 11585
+    },
+    {
+      "path": "host-evidence/format-preflight-001/receipt.json",
+      "sha256": "fb227370d33273f850b2bad428c1777df0d0dbe60ba0b99d6a197310bd484e0d",
+      "bytes": 911
+    },
+    {
+      "path": "host-evidence/format-preflight-001/target-check.json",
+      "sha256": "11b4fcfed2e0728858ba27d2ed26bdeff9854a8703702a64394a491bc2a3ae5d",
+      "bytes": 1827
+    },
+    {
+      "path": "host-evidence/format-preflight-001/target-check.log",
+      "sha256": "308f64a1629e7ec64d66f277a4e110dc0242b150d5a2e8c116872d3142579317",
+      "bytes": 643
+    },
+    {
+      "path": "host-workspace/prepare-host-harness.py",
+      "sha256": "1750f564d71c3bef47844fb185982d922842efb8e996aec57a1b69d0d9582ee0",
+      "bytes": 7847
+    },
+    {
+      "path": "host-workspace/resolve-host-harness.py",
+      "sha256": "fad98f9cf65b802aa4fbabd385519fde9424b17bb077175fcc3d32eebf6e68b6",
+      "bytes": 6346
+    },
+    {
+      "path": "host-workspace/run-focused-host.py",
+      "sha256": "3dd9131ef3476b6345fd55af229350cb4479fbf6e4404a39c36526beabb1d1ae",
+      "bytes": 15039
+    },
+    {
+      "path": "host-workspace/run-annotation-negative.py",
+      "sha256": "531a673ac1b4793fd2c941b7a9df4835037a94b58a5e7261ee4d88a1f93dc856",
+      "bytes": 10569
+    },
+    {
+      "path": "host-workspace/prior_host_qualification.py",
+      "sha256": "4049d732d10f42d8f3254b90d2943f41c99618a4fc820b68050ce70d989b8fed",
+      "bytes": 28660
+    }
+  ],
+  "readback_verified": true
+}

@@ -18,8 +18,9 @@ Annotation bodies remain in raw ODF XML and the comment model while body
 extraction, search and host previews exclude them. Comment references also leave
 note definitions available for visible document references. The new regression
 cases are committed and source-reviewed. Runtime qualification of this combined
-source remains pending because the workspace launcher cannot start a process;
-no GitHub Actions or CI-status endpoint was queried or awaited. Historical test
+source is in progress after local runtime recovery. The pinned Flutter/Dart
+toolchain and locked dependency workspaces have been restored; no GitHub Actions
+or CI-status endpoint was queried or awaited. Historical test
 counts below retain their original source attribution.
 
 The 16 November integration reconciles CrispCloud's terminal forwarding/trigger
@@ -174,7 +175,7 @@ leaking payloads into plain text/search.
 ODS package, and F4 exposes **Export as ODS** while ordinary Save writes a new
 XLSX copy. `OdtDocumentWriter` and `OdpPresentationWriter` also exist.
 The ODT subset includes formatted paragraphs, lists, tables, pictures,
-headers/footers, footnotes/endnotes and comments. The ODP subset includes
+headers/footers, footnotes/endnotes, comments and section page layouts. The ODP subset includes
 positioned text, pictures, tables, notes and supported slide transitions.\
 **Remaining:** preservation of arbitrary imported ODF XML, unmodeled styles,
 metadata, drawings and other format features through an edited native round trip.\

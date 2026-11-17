@@ -608,7 +608,15 @@ abstract final class OdtDocumentWriter {
     switch (inline) {
       case WmlRun():
         final style = layout.runStyle(inline.properties);
-        final href = inline.hyperlink?.url;
+        final href = switch (inline.hyperlink) {
+          final link? =>
+            link.url ??
+                link.file ??
+                (link.anchor == null || link.anchor!.isEmpty
+                    ? null
+                    : '#${link.anchor}'),
+          null => null,
+        };
         final commentLink =
             layout.inCommentBody && href != null && href.isNotEmpty;
         if (href != null && href.isNotEmpty) {
@@ -667,9 +675,16 @@ abstract final class OdtDocumentWriter {
         // surrounding result runs remain in the inline sequence, including
         // citations and bibliographies that span several paragraphs.
         break;
-      case WmlContentControlBoundary() ||
-          WmlNoteMarker() ||
-          WmlBookmarkBoundary():
+      case WmlBookmarkBoundary():
+        final name = inline.name;
+        if (name != null && name.isNotEmpty) {
+          w.writeEmptyElement(
+            inline.isStart ? 'bookmark-start' : 'bookmark-end',
+            prefix: 'text',
+            attributes: {'text:name': name},
+          );
+        }
+      case WmlContentControlBoundary() || WmlNoteMarker():
         break;
       case WmlObject():
       case WmlOpaqueInline():
