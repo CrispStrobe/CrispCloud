@@ -29,6 +29,7 @@ XmlElement _odtBody(OpcPackage package) => XmlDocument.parse(
 ).root!.firstChild('body')!.firstChild('text')!;
 
 void main() {
+  nestedListTests();
   sectionTests();
   commentTests();
   footnoteTests();
@@ -328,5 +329,43 @@ void sectionTests() {
     expect(styles, contains('style:page-layout-name="pm1"'));
     expect(styles, contains('Second header'));
     expect(styles, contains('Second footer'));
+  });
+}
+
+void nestedListTests() {
+  test('writes nested ODT list levels', () {
+    final document = WmlDocument(
+      sections: [
+        WmlSection(
+          blocks: [
+            WmlParagraph(
+              properties: WmlParagraphProps(numId: 1, ilvl: 0),
+              inlines: [WmlRun(text: 'Parent')],
+            ),
+            WmlParagraph(
+              properties: WmlParagraphProps(numId: 1, ilvl: 1),
+              inlines: [WmlRun(text: 'Child one')],
+            ),
+            WmlParagraph(
+              properties: WmlParagraphProps(numId: 1, ilvl: 1),
+              inlines: [WmlRun(text: 'Child two')],
+            ),
+            WmlParagraph(
+              properties: WmlParagraphProps(numId: 1, ilvl: 0),
+              inlines: [WmlRun(text: 'Sibling')],
+            ),
+          ],
+        ),
+      ],
+    );
+    final package = OpcPackage.openBytes(
+      OdtDocumentWriter.writeBytes(document),
+    );
+    final content = package.getPart('/content.xml')!.readText();
+    expect(RegExp(r'<text:list ').allMatches(content).length, 2);
+    expect(content, contains('Parent'));
+    expect(content, contains('Child one'));
+    expect(content, contains('Child two'));
+    expect(content, contains('Sibling'));
   });
 }
