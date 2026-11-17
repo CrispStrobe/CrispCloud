@@ -775,6 +775,18 @@ class RenderSheetGrid extends RenderBox implements MouseTrackerAnnotation {
         } else if (band != null) {
           canvas.drawRect(cell, ui.Paint()..color = band);
         }
+        if (conditional.iconSetIndex case final iconIndex?) {
+          const palette = <Color>[
+            Color(0xFF63BE7B),
+            Color(0xFFFFEB84),
+            Color(0xFFF8696B),
+            Color(0xFF9E9E9E),
+            Color(0xFF5B9BD5),
+          ];
+          final color = palette[iconIndex.clamp(0, palette.length - 1)];
+          final center = ui.Offset(cell.left + 7, cell.top + cell.height / 2);
+          canvas.drawCircle(center, 4, ui.Paint()..color = color);
+        }
         if (conditional.dataBarFraction case final fraction?) {
           final barColor =
               _rgbColor(conditional.dataBarColor) ?? const Color(0xFF638EC6);

@@ -263,6 +263,9 @@ enum SmlConditionalKind {
 
   /// Proportional bar over the numeric cells in the range.
   dataBar,
+
+  /// Bucketed icon marker over the numeric cells in the range.
+  iconSet,
 }
 
 /// One threshold/color stop in an ODF/XLSX color scale.
@@ -297,6 +300,7 @@ class SmlConditionalRule {
     this.rank = 10,
     List<SmlColorScaleStop>? colorScaleStops,
     this.dataBarColor = '638EC6',
+    this.iconSetType = '3TrafficLights1',
     this.priority,
     this.stopIfTrue = false,
     this.dxfId,
@@ -328,6 +332,9 @@ class SmlConditionalRule {
 
   /// RGB color for a [SmlConditionalKind.dataBar] rule.
   String dataBarColor;
+
+  /// Excel/ODF icon-set identifier for [SmlConditionalKind.iconSet].
+  String iconSetType;
 
   /// Native rule priority, with lower positive values evaluated first.
   /// Missing or invalid priorities receive an unused positive Int32 value

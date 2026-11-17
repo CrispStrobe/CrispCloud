@@ -1210,6 +1210,32 @@ abstract final class OdsSheetReader {
           );
         }
       }
+      for (final icons in _descendants(format, 'icon-set', _calcext)) {
+        final type =
+            _attribute(icons, 'icon-set-type', _calcext) ?? '3TrafficLights1';
+        final stops = <SmlColorScaleStop>[];
+        for (final entry in _descendants(icons, 'formatting-entry', _calcext)) {
+          stops.add(
+            SmlColorScaleStop(
+              type: _attribute(entry, 'type', _calcext) ?? 'number',
+              value:
+                  double.tryParse(_attribute(entry, 'value', _calcext) ?? '') ??
+                  0,
+              colorRgb: '638EC6',
+            ),
+          );
+        }
+        if (stops.isNotEmpty) {
+          rules.add(
+            SmlConditionalRule(
+              range: range,
+              kind: SmlConditionalKind.iconSet,
+              iconSetType: type,
+              colorScaleStops: List<SmlColorScaleStop>.unmodifiable(stops),
+            ),
+          );
+        }
+      }
       for (final bar in _descendants(format, 'data-bar', _calcext)) {
         final stops = <SmlColorScaleStop>[];
         for (final entry in _descendants(bar, 'formatting-entry', _calcext)) {

@@ -559,6 +559,8 @@ class SheetDeserializer {
             kind = SmlConditionalKind.colorScale;
           case 'dataBar':
             kind = SmlConditionalKind.dataBar;
+          case 'iconSet':
+            kind = SmlConditionalKind.iconSet;
           case 'beginsWith':
             kind = SmlConditionalKind.beginsWith;
           case 'endsWith':
@@ -614,9 +616,16 @@ class SheetDeserializer {
         sheet.conditionalFormats.add(conditionalRule);
       }
       if (reader.eventType == XmlEventType.startElement &&
+          reader.localName == 'iconSet' &&
+          conditionalRule?.kind == SmlConditionalKind.iconSet) {
+        conditionalRule!.iconSetType =
+            reader.getAttribute('iconSet') ?? '3TrafficLights1';
+      }
+      if (reader.eventType == XmlEventType.startElement &&
           reader.localName == 'cfvo' &&
           (conditionalRule?.kind == SmlConditionalKind.colorScale ||
-              conditionalRule?.kind == SmlConditionalKind.dataBar)) {
+              conditionalRule?.kind == SmlConditionalKind.dataBar ||
+              conditionalRule?.kind == SmlConditionalKind.iconSet)) {
         final type = reader.getAttribute('type') ?? 'number';
         final value = double.tryParse(reader.getAttribute('val') ?? '') ?? 0;
         conditionalRule!.colorScaleStops.add(
@@ -2033,6 +2042,8 @@ class SheetSerializer {
             w.writeAttribute('type', 'colorScale');
           case SmlConditionalKind.dataBar:
             w.writeAttribute('type', 'dataBar');
+          case SmlConditionalKind.iconSet:
+            w.writeAttribute('type', 'iconSet');
           case SmlConditionalKind.duplicate:
             w.writeAttribute('type', 'duplicateValues');
           case SmlConditionalKind.top:
@@ -2078,14 +2089,23 @@ class SheetSerializer {
               SmlConditionalKind.aboveAverage ||
               SmlConditionalKind.belowAverage ||
               SmlConditionalKind.colorScale ||
-              SmlConditionalKind.dataBar => throw StateError('handled above'),
+              SmlConditionalKind.dataBar ||
+              SmlConditionalKind.iconSet => throw StateError('handled above'),
             });
         }
         if (rule.kind == SmlConditionalKind.colorScale ||
-            rule.kind == SmlConditionalKind.dataBar) {
+            rule.kind == SmlConditionalKind.dataBar ||
+            rule.kind == SmlConditionalKind.iconSet) {
           w.writeStartElement(
-            rule.kind == SmlConditionalKind.dataBar ? 'dataBar' : 'colorScale',
+            rule.kind == SmlConditionalKind.dataBar
+                ? 'dataBar'
+                : rule.kind == SmlConditionalKind.iconSet
+                ? 'iconSet'
+                : 'colorScale',
           );
+          if (rule.kind == SmlConditionalKind.iconSet) {
+            w.writeAttribute('iconSet', rule.iconSetType);
+          }
           for (final stop in rule.colorScaleStops) {
             w.writeEmptyElement(
               'cfvo',
@@ -2123,7 +2143,8 @@ class SheetSerializer {
             rule.kind != SmlConditionalKind.aboveAverage &&
             rule.kind != SmlConditionalKind.belowAverage &&
             rule.kind != SmlConditionalKind.colorScale &&
-            rule.kind != SmlConditionalKind.dataBar) {
+            rule.kind != SmlConditionalKind.dataBar &&
+            rule.kind != SmlConditionalKind.iconSet) {
           if (rule.formula.isNotEmpty) {
             w.writeStartElement('formula');
             w.writeText(rule.formula);

@@ -12,12 +12,16 @@ class SmlConditionalStyle {
     this.fontRgb,
     this.dataBarFraction,
     this.dataBarColor,
+    this.iconSetIndex,
+    this.iconSetType,
   });
 
   final String? fillRgb;
   final String? fontRgb;
   final double? dataBarFraction;
   final String? dataBarColor;
+  final int? iconSetIndex;
+  final String? iconSetType;
 }
 
 /// Resolves conditional colors for one paint/export operation. Create a new
@@ -79,6 +83,8 @@ class SmlConditionalResolver {
         String? font;
         double? dataBarFraction;
         String? dataBarColor;
+        int? iconSetIndex;
+        String? iconSetType;
         final cell = sheet.cellOrNull(ref) ?? SmlCell(ref: ref);
         for (final rule in _rules) {
           if (!rule.range.containsRef(ref)) continue;
@@ -87,6 +93,15 @@ class SmlConditionalResolver {
             if (fraction != null) {
               dataBarFraction = fraction;
               dataBarColor = rule.dataBarColor;
+            }
+            if (rule.stopIfTrue) break;
+            continue;
+          }
+          if (rule.kind == SmlConditionalKind.iconSet) {
+            final index = _iconSetIndex(rule, cell);
+            if (index != null) {
+              iconSetIndex = index;
+              iconSetType = rule.iconSetType;
             }
             if (rule.stopIfTrue) break;
             continue;
@@ -101,6 +116,8 @@ class SmlConditionalResolver {
           fontRgb: font,
           dataBarFraction: dataBarFraction,
           dataBarColor: dataBarColor,
+          iconSetIndex: iconSetIndex,
+          iconSetType: iconSetType,
         );
       });
 
@@ -134,6 +151,18 @@ class SmlConditionalResolver {
     return ((number - minimum) / (maximum - minimum)).clamp(0.0, 1.0);
   }
 
+  int? _iconSetIndex(SmlConditionalRule rule, SmlCell cell) {
+    final number = _number(_formulas.cellValue(sheet, cell));
+    if (number == null) return null;
+    final stops = rule.colorScaleStops;
+    if (stops.isEmpty) return null;
+    var index = 0;
+    for (var i = 0; i < stops.length; i++) {
+      if (number >= stops[i].value) index = i;
+    }
+    return index;
+  }
+
   bool matches(SmlConditionalRule rule, SmlCell cell) {
     Object? formula(String source) => _formulas.evaluate(
       source,
@@ -156,6 +185,7 @@ class SmlConditionalResolver {
       case SmlConditionalKind.expression:
       case SmlConditionalKind.colorScale:
       case SmlConditionalKind.dataBar:
+      case SmlConditionalKind.iconSet:
         return false;
       case SmlConditionalKind.greaterThan:
       case SmlConditionalKind.greaterOrEqual:
