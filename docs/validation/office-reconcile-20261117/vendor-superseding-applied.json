@@ -1,0 +1,17 @@
+{
+  "from": "48b6998bb47ffdf43e95025229dc5a5eab09ee9a",
+  "to": "6a32a919325d71c121c63e3879cfd1b28d64312e",
+  "write": [
+    "packages/quds_office_engine/lib/src/word/model/word_bookmarks.dart",
+    "packages/quds_office_engine/lib/src/word/serial/odt_document_writer.dart",
+    "packages/quds_office_engine/test/odt_bookmark_end_fidelity_test.dart",
+    "packages/quds_office_engine/test/odt_bookmark_name_ambiguity_test.dart",
+    "packages/quds_office_engine/test/odt_complex_field_fidelity_test.dart",
+    "packages/quds_office_engine/test/odt_document_writer_test.dart",
+    "packages/quds_office_engine/test/odt_inline_column_break_fidelity_test.dart",
+    "packages/quds_office_engine/test/odt_page_marker_column_break_test.dart"
+  ],
+  "delete": [],
+  "pinned_files": 2620,
+  "applied": true
+}

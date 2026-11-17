@@ -26,14 +26,27 @@ content.
 The app mirrors the canonical Quds source and the standalone legacy parser.
 Exact revisions, source boundaries and the complete managed-file inventory are
 recorded in [the fidelity manifest](../tool/office_fidelity_manifest.json).
-The current canonical checkpoint is `48b6998bb47ffdf43e95025229dc5a5eab09ee9a`;
-the managed inventory contains 2,615 files: 758 canonical files and the unchanged
+The current canonical checkpoint is `6a32a919325d71c121c63e3879cfd1b28d64312e`;
+the managed inventory contains 2,620 files: 763 canonical files and the unchanged
 1,857-file standalone parser. The 17 November continuation reconciles the
 captured Office, morphology and proofing-tool branches and their bounded late
 arrivals. It preserves the original six bundled notices and adds the complete
 Unicode Inflection notice for German morphology to the app's license registry.
 
-The reconciliation merges captured host main `1cd2a18f7bc2455eabc5ec8e22767c849a833305` and the second captured main `9eced5cec9b42ad7a3aa67f22f3d23c238f66dbf`, then synchronizes the canonical union through the guard. It retains the German morphology and spelling work, custom ODT tab stops, row minimum heights, normalized decorations, schema-valid section columns, distinct column-break/keep-together styles and ODP chart-data tables. The optional native German proofing AOT package remains outside the existing host managed-package boundary. New tests exercise the actual ODT/ODP export menus, annotation privacy, semantic output and destination outcomes; their local execution evidence is recorded separately from prior qualifications in `docs/validation/office-reconcile-20261117/`.
+The reconciliation merges captured host main `1cd2a18f7bc2455eabc5ec8e22767c849a833305`,
+the second captured main `9eced5cec9b42ad7a3aa67f22f3d23c238f66dbf`, and the
+superseding continuation merge `fd0cc5de6de1ef9328bf44084ef38ace52765916`, then
+synchronizes the canonical union through the guard. It retains German morphology
+and spelling work, custom ODT tab stops, row minimum heights, normalized
+decorations, schema-valid section columns, distinct column-break/keep-together
+styles and ODP chart-data tables. The current writer preserves imported inline
+column-break positions and bookmark boundaries. Safely recognized simple fields
+become native ODF placeholders; unsupported field shapes retain their visible
+cached content. The optional native German proofing AOT package remains outside
+the existing host managed-package boundary. New tests exercise the actual
+ODT/ODP export menus, annotation privacy, semantic output, native fields and
+destination outcomes. Their local execution evidence is recorded separately
+from prior qualifications in `docs/validation/office-reconcile-20261117/`.
 
 ODF annotations retain their raw XML and comment-model content while body
 extraction, search and host previews exclude them. Note references inside

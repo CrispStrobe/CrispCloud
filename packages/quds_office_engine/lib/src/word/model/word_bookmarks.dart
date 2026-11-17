@@ -334,6 +334,59 @@ abstract final class WordBookmarks {
   static WmlBookmarkRange? byName(WmlDocument document, String name) =>
       ranges(document).where((range) => range.name == name).firstOrNull;
 
+  /// Resolves complete, unambiguous endpoints without repairing the model.
+  ///
+  /// Native ends carry an ID, not a name. Exporters can use the paired start
+  /// when a target format requires that name. An unrelated malformed range
+  /// must not prevent a valid pair from resolving; ambiguous, reversed and
+  /// cross-story pairs remain unresolved. Body tables share their body story.
+  static Map<WmlBookmarkBoundary, WmlBookmarkBoundary> pairedEnds(
+    WmlDocument document,
+  ) {
+    final result = Map<WmlBookmarkBoundary, WmlBookmarkBoundary>.identity();
+    for (final story in _stories(document)) {
+      final starts = <String, ({WmlBookmarkBoundary marker, int index})?>{};
+      final ends = <String, ({WmlBookmarkBoundary marker, int index})?>{};
+      final names = <String, int>{};
+      var index = 0;
+      for (final paragraph in story) {
+        for (final marker
+            in paragraph.inlines.whereType<WmlBookmarkBoundary>()) {
+          final name = marker.name;
+          if (marker.isStart && name != null) {
+            names[name] = (names[name] ?? 0) + 1;
+          }
+          final String id;
+          try {
+            id = canonicalId(marker.id);
+          } on StateError {
+            continue;
+          }
+          final owners = marker.isStart ? starts : ends;
+          owners[id] = owners.containsKey(id)
+              ? null
+              : (marker: marker, index: index);
+          index++;
+        }
+      }
+      for (final entry in ends.entries) {
+        final end = entry.value;
+        final start = starts[entry.key];
+        if (start == null || end == null || start.index >= end.index) continue;
+        final name = start.marker.name;
+        final endName = end.marker.name;
+        if (name == null ||
+            name.isEmpty ||
+            names[name] != 1 ||
+            (endName != null && endName.isNotEmpty && endName != name)) {
+          continue;
+        }
+        result[end.marker] = start.marker;
+      }
+    }
+    return result;
+  }
+
   static Set<String> nativeNames(WmlDocument document) => {
     ...ranges(document).map((range) => range.name),
     for (final marker in _opaqueMarkers(document))

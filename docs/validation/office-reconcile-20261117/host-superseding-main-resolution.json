@@ -1,0 +1,129 @@
+{
+  "kind": "true merge of superseding main after prior continuation PR was merged",
+  "local_first_parent": "3193c171fba301e8220c27fd43da5e424c7d0494",
+  "captured_second_parent": "fd0cc5de6de1ef9328bf44084ef38ace52765916",
+  "prior_review_target": "PR238 superseded by merged PR249; later review target will be a separate continuation",
+  "conflict_index": [
+    "100644 460b4f832210538077c6dfb5995c157cb66256ed 1\tdocs/apple-export-policy.json",
+    "100644 c8332c417c316beed47c11c1aba065af2e01dc01 2\tdocs/apple-export-policy.json",
+    "100644 9634755effd99e63994ccfb75e8e710640b27c2a 3\tdocs/apple-export-policy.json",
+    "100644 c1d125eaa8e114e1e15472fe0cfd20171ccd0181 1\tpackages/QUDS_FORKS.md",
+    "100644 ead61f92990e47958aed32f3badc6fc6385dc804 2\tpackages/QUDS_FORKS.md",
+    "100644 3212e99bb73034f1eb76bbfb45fe1f017bdaba32 3\tpackages/QUDS_FORKS.md",
+    "100644 e4b6b5b845bd31892b4a0f8b9a33366561e8ad39 1\tpackages/quds_office_engine/CHANGELOG.md",
+    "100644 7d0b398a57cc4c32b6eea692b07f8127b5de126c 2\tpackages/quds_office_engine/CHANGELOG.md",
+    "100644 cad08ee0e8363a39e35a708ed9b768fa90d1652b 3\tpackages/quds_office_engine/CHANGELOG.md",
+    "100644 2596cf46f6c61869a505dcd7d528ac04cf176da4 1\tpackages/quds_office_engine/lib/src/proofing/data/german_common_00.dart",
+    "100644 58a47fa2f3eebbccc36128f1fc594a14d6465b8c 2\tpackages/quds_office_engine/lib/src/proofing/data/german_common_00.dart",
+    "100644 e7ae59260194924fa3bf7e48ddcfcbc834da9ea8 3\tpackages/quds_office_engine/lib/src/proofing/data/german_common_00.dart",
+    "100644 910256b9a48ae3cba3a079aeecee6059364bea04 1\tpackages/quds_office_engine/lib/src/proofing/german_spelling.dart",
+    "100644 65d88e4a406d3331a94bd8fd51e542221423a5e9 2\tpackages/quds_office_engine/lib/src/proofing/german_spelling.dart",
+    "100644 647bfce55d0e8e87151749c65621e5fc8180bc13 3\tpackages/quds_office_engine/lib/src/proofing/german_spelling.dart",
+    "100644 1f83087d52830143068dba9e7af0e315b0b64bd7 1\tpackages/quds_office_engine/lib/src/word/serial/odt_document_writer.dart",
+    "100644 385e2637987051edbeb33fc25c0698f8d839f323 2\tpackages/quds_office_engine/lib/src/word/serial/odt_document_writer.dart",
+    "100644 f83e1806fdfbd92b41aec58914c101c92055a1ee 3\tpackages/quds_office_engine/lib/src/word/serial/odt_document_writer.dart",
+    "100644 9eba6dcab488c1a13cf1c7aa2ef4936e81a28122 1\tpackages/quds_office_engine/third_party/proofing/manifest.json",
+    "100644 b4d7a8652d86aafb956abc4a35a4f70c7ce3d982 2\tpackages/quds_office_engine/third_party/proofing/manifest.json",
+    "100644 a65ef2541f85ddf6de678d942d4e961846a76c48 3\tpackages/quds_office_engine/third_party/proofing/manifest.json",
+    "100644 a7e977db059087763c729a2d64ca686c3acdcbbd 1\tpackages/quds_office_engine/tool/proofing/german_common_words.txt",
+    "100644 97e24d3ce6d8fec6f0baebb6dc84c1a94699541e 2\tpackages/quds_office_engine/tool/proofing/german_common_words.txt",
+    "100644 e11f32aa0bde7ff3ba4a114f858e350816d665f9 3\tpackages/quds_office_engine/tool/proofing/german_common_words.txt",
+    "100644 7692546127a3014ecffd8997c6c7f91c62f3b19b 2\ttest/widget/office_odf_export_workflow_test.dart",
+    "100644 157485ede24849196d6d9ceb76c4f35eeb387e01 3\ttest/widget/office_odf_export_workflow_test.dart",
+    "100644 3e30b7cfa5cf02c481363c3831528ade802ebb0e 1\ttool/office_fidelity_manifest.json",
+    "100644 3b14852daa345d67a0069a7fda60bd16c86bd9b6 2\ttool/office_fidelity_manifest.json",
+    "100644 fb6deee3c9d17141fc5dc3cb0e7eee0e7fb79794 3\ttool/office_fidelity_manifest.json"
+  ],
+  "resolutions": [
+    {
+      "path": "docs/apple-export-policy.json",
+      "retained_sha256": "b977b442df3d22bd82ea04f452e33b9268574ad00196b9d2247e9bcca3a3198c",
+      "incoming_sha256": "978e3a5bd08f8ab6f6ee538db269038699f26ec89729be6dc9080d3b15356403",
+      "resolution": "Retain unchanged encryption and distribution decisions; recompute only the technical reviewed-source binding after guarded canonical sync."
+    },
+    {
+      "path": "packages/QUDS_FORKS.md",
+      "retained_sha256": "f05e73342e39bfaa3ab4b51cebeae64c639ba5cdced268222a0295a527ae7e54",
+      "incoming_sha256": "510f1920fac29f4fad1e5afe3f279baa5cf75703290338684d56e11e7588b9f2",
+      "resolution": "Retain full current history and separately attributed qualifications; update only the current pin, inventory count and new continuation description after guarded sync."
+    },
+    {
+      "path": "packages/quds_office_engine/CHANGELOG.md",
+      "retained_sha256": "6352d2c3c79e209f6cfe0c5f17ded8f56082ac1f49c75dd680827cdb38fd09bb",
+      "incoming_sha256": "9807c8154e892236022271616a01c4c43bb90050c1a6d7e50476575f2b2aa942",
+      "resolution": "Retain exact current canonical bytes for the sync guard precondition; the guarded final canonical union will supply the reconciled managed source."
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/proofing/data/german_common_00.dart",
+      "retained_sha256": "ef9569388440e4d5aa24bb0990ad53441f076a3df1993fa0c0b52d4a6fa3faf4",
+      "incoming_sha256": "68b4d849635c1f6587f7e58e4c3bcb2fc03ad9c72c10265fa0bf122fec846bfa",
+      "resolution": "Retain exact current canonical bytes for the sync guard precondition; the guarded final canonical union will supply the reconciled managed source."
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/proofing/german_spelling.dart",
+      "retained_sha256": "1ec06293016d825e034f33fe7bfa07ae8dea88cec4c1f636ae1c7ac43e3be9aa",
+      "incoming_sha256": "57b79a6833cb3b0be5222c1f6c5811a9d0dcf2626874ba5fec2804884f599385",
+      "resolution": "Retain exact current canonical bytes for the sync guard precondition; the guarded final canonical union will supply the reconciled managed source."
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/word/serial/odt_document_writer.dart",
+      "retained_sha256": "fc2c5d699ab8c09a0fd631860f2d6fa63afff1f05022d3f865fa87ea9fc47c70",
+      "incoming_sha256": "a19fe6fcc7deed0fd4348987d5c45611e53e2a0221748f152c192bd1dd3ee310",
+      "resolution": "Retain exact current canonical bytes for the sync guard precondition; the guarded final canonical union will supply the reconciled managed source."
+    },
+    {
+      "path": "packages/quds_office_engine/third_party/proofing/manifest.json",
+      "retained_sha256": "fced930763cd98c579b11e0797cb53978cf1ff273e3499c97c3c36a2e78d30f9",
+      "incoming_sha256": "439e0c1e2892746d3986c1065d33a592edd371a2a1f9c85fd5bb8c3a0c2393cf",
+      "resolution": "Retain exact current canonical bytes for the sync guard precondition; the guarded final canonical union will supply the reconciled managed source."
+    },
+    {
+      "path": "packages/quds_office_engine/tool/proofing/german_common_words.txt",
+      "retained_sha256": "c8cd826a4d5a225e89fd09e1e0ed3020ef332b597c7fb37651917770aec701bf",
+      "incoming_sha256": "96c723a6ffe638423d47e2dbe36ab1c8b89728d7d518b44ea5a721d5be8856c1",
+      "resolution": "Retain exact current canonical bytes for the sync guard precondition; the guarded final canonical union will supply the reconciled managed source."
+    },
+    {
+      "path": "test/widget/office_odf_export_workflow_test.dart",
+      "retained_sha256": "164f54855d5fc6580fb8b66b78577bbd83327e75b23742cb32e9fa154b991b7a",
+      "incoming_sha256": "f08b02c6a4216561fac29b570c29cb3a1f225e58764f808981c8dafc679702f8",
+      "resolution": "Retain the exact 11-case file that exposed the imported column-break defect. Incoming main has the earlier 10-case version; no novel incoming test behavior is discarded."
+    },
+    {
+      "path": "tool/office_fidelity_manifest.json",
+      "retained_sha256": "00a25db3d862eaaf14abfc4e9b5c1746209938c24377d7e1ead67aab0688f88b",
+      "incoming_sha256": "f9863f2ba8f838f8589d37466ed6c0cd19ca02634c8faff5d798429b4bb9445f",
+      "resolution": "Retain the exact 48b6998b manifest for the sync guard precondition; replace through the guarded canonical sync with the final immutable repaired union."
+    }
+  ],
+  "guard_precondition_restorations": [
+    {
+      "path": "packages/quds_office_engine/test/odp_presentation_writer_test.dart",
+      "auto_merged_sha256": "fd96f5d3ee43863d97093152870a7d3e049370682f2a43973bc28e7eb5c0f12c",
+      "qualified_sha256": "e5948b7da3e5adc6585a98448b82bae9fad557ec4a1511eafd3c1b7ba1e533f5"
+    }
+  ],
+  "incoming_host_test_equals_source": "78a4ccbbcf320add0830f3c158e385a6b2eb061e",
+  "host_oracle_sha256": "164f54855d5fc6580fb8b66b78577bbd83327e75b23742cb32e9fa154b991b7a",
+  "host_oracle_unchanged_from_failed_attempt2": true,
+  "apple_policy_decisions_identical": true,
+  "prose_resolution": "Incoming fork notes differ only by older pin/count and narrower first-round summary; retain current full history and scope.",
+  "canonical_sync_pending": false,
+  "github_ci_queried_or_awaited": false,
+  "published_first_parent": "131c93a000690de256f24fcc7ab1e3cb2d105eba",
+  "additional_host_regression": {
+    "path": "test/widget/office_odt_field_export_test.dart",
+    "cases": 1,
+    "purpose": "Actual raw-DOCX import, ODT menu export and host preview check for recognized native fields and conservative unsafe-field fallback.",
+    "original_11_case_file_unchanged": true
+  },
+  "canonical_sync_target": "6a32a919325d71c121c63e3879cfd1b28d64312e",
+  "canonical_tree": "a2f4cb57a6a99a0506546419cc904bf873b32bca",
+  "guarded_sync_record": "vendor-superseding-applied.json",
+  "managed_files": 2620,
+  "canonical_files": 763,
+  "unchanged_parser_files": 1857,
+  "original_11_case_file_sha256": "164f54855d5fc6580fb8b66b78577bbd83327e75b23742cb32e9fa154b991b7a",
+  "new_field_test_sha256": "38d3563d44670d40860d5d50e7f591aa74b06b16fa457c8425e67046ecc68f0b",
+  "apple_technical_review": "apple-superseding-source-review.json"
+}
