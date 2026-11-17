@@ -249,6 +249,28 @@ enum SmlConditionalKind {
   /// A native formula predicate, evaluated within the supported bounded
   /// conditional-formula subset and retained in full for interchange.
   expression,
+
+  /// Continuous color scale over the numeric cells in the range.
+  colorScale,
+}
+
+/// One threshold/color stop in an ODF/XLSX color scale.
+class SmlColorScaleStop {
+  /// SmlColorScaleStop API.
+  const SmlColorScaleStop({
+    required this.type,
+    this.value = 0,
+    required this.colorRgb,
+  });
+
+  /// ODF/XLSX threshold kind.
+  final String type;
+
+  /// Threshold value for number/percent/percentile stops.
+  final double value;
+
+  /// Six-digit RGB color without alpha.
+  final String colorRgb;
 }
 
 /// One conditional-format rule.
@@ -262,10 +284,11 @@ class SmlConditionalRule {
     this.fillRgb = 'FFF2CC',
     this.fontRgb = '',
     this.rank = 10,
+    List<SmlColorScaleStop>? colorScaleStops,
     this.priority,
     this.stopIfTrue = false,
     this.dxfId,
-  });
+  }) : colorScaleStops = colorScaleStops ?? <SmlColorScaleStop>[];
 
   /// range API.
   SmlRange range;
@@ -287,6 +310,9 @@ class SmlConditionalRule {
 
   /// Rank for top/bottom rules, or the percentage for percent variants.
   int rank;
+
+  /// Threshold/color stops for [SmlConditionalKind.colorScale].
+  final List<SmlColorScaleStop> colorScaleStops;
 
   /// Native rule priority, with lower positive values evaluated first.
   /// Missing or invalid priorities receive an unused positive Int32 value
@@ -438,6 +464,10 @@ abstract final class SmlAnalysis {
   /// applyConditional API.
   static void applyConditional(SmlWorksheet sheet) {
     for (final SmlConditionalRule rule in sheet.conditionalFormats) {
+      if (rule.kind == SmlConditionalKind.colorScale) {
+        _applyColorScale(sheet, rule);
+        continue;
+      }
       for (final SmlCellRef ref in rule.range.cells) {
         final SmlCell cell = sheet.cell(ref);
         if (rule.matches(cell, sheet)) {
@@ -450,6 +480,64 @@ abstract final class SmlAnalysis {
         }
       }
     }
+  }
+
+  static void _applyColorScale(SmlWorksheet sheet, SmlConditionalRule rule) {
+    final stops = rule.colorScaleStops;
+    if (stops.length < 2) return;
+    final values = <double>[
+      for (final ref in rule.range.cells)
+        if (sheet.cellOrNull(ref)?.asNumber case final number?) number,
+    ];
+    if (values.isEmpty) return;
+    final sorted = [...values]..sort();
+    final minimum = sorted.first;
+    final maximum = sorted.last;
+    double threshold(SmlColorScaleStop stop) {
+      return switch (stop.type) {
+        'minimum' || 'min' => minimum,
+        'maximum' || 'max' => maximum,
+        'percent' => minimum + (maximum - minimum) * stop.value / 100,
+        'percentile' =>
+          sorted[((sorted.length - 1) * stop.value / 100).round()],
+        _ => stop.value,
+      };
+    }
+
+    final thresholds = [for (final stop in stops) threshold(stop)];
+    for (final ref in rule.range.cells) {
+      final cell = sheet.cellOrNull(ref);
+      final value = cell?.asNumber;
+      if (cell == null || value == null) continue;
+      var index = 0;
+      while (index + 1 < thresholds.length && value > thresholds[index + 1]) {
+        index++;
+      }
+      index = index.clamp(0, thresholds.length - 2);
+      final left = thresholds[index];
+      final right = thresholds[index + 1];
+      final t = right == left ? 0.0 : (value - left) / (right - left);
+      cell.fillRgb = _interpolateColor(
+        stops[index].colorRgb,
+        stops[index + 1].colorRgb,
+        t.clamp(0, 1),
+      );
+    }
+  }
+
+  static String _interpolateColor(String from, String to, double t) {
+    int channel(String value, int index) =>
+        int.parse(value.substring(index * 2, index * 2 + 2), radix: 16);
+    final a = [for (var i = 0; i < 3; i++) channel(from, i)];
+    final b = [for (var i = 0; i < 3; i++) channel(to, i)];
+    return [
+      for (var i = 0; i < 3; i++)
+        (a[i] + (b[i] - a[i]) * t)
+            .round()
+            .clamp(0, 255)
+            .toRadixString(16)
+            .padLeft(2, '0'),
+    ].join().toUpperCase();
   }
 
   /// removeDuplicates API.
