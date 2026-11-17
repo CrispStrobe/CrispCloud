@@ -1170,6 +1170,36 @@ abstract final class OdsSheetReader {
     }
   }
 
+  static String? _timePeriodToken(String condition, String cellRef) {
+    final ref = '[.$cellRef]';
+    final formulas = <String, String>{
+      'today': '$ref=TODAY()',
+      'yesterday': '$ref=TODAY()-1',
+      'tomorrow': '$ref=TODAY()+1',
+      'last7Days': 'AND($ref>=TODAY()-6;$ref<=TODAY())',
+      'thisWeek':
+          'AND($ref>=TODAY()-WEEKDAY(TODAY();1)+1;'
+          '$ref<=TODAY()-WEEKDAY(TODAY();1)+7)',
+      'lastWeek':
+          'AND($ref>=TODAY()-WEEKDAY(TODAY();1)-6;'
+          '$ref<=TODAY()-WEEKDAY(TODAY();1))',
+      'nextWeek':
+          'AND($ref>=TODAY()-WEEKDAY(TODAY();1)+8;'
+          '$ref<=TODAY()-WEEKDAY(TODAY();1)+14)',
+      'thisMonth': 'AND(MONTH($ref)=MONTH(TODAY());YEAR($ref)=YEAR(TODAY()))',
+      'lastMonth':
+          'AND(MONTH($ref)=MONTH(EDATE(TODAY();-1));'
+          'YEAR($ref)=YEAR(EDATE(TODAY();-1)))',
+      'nextMonth':
+          'AND(MONTH($ref)=MONTH(EDATE(TODAY();1));'
+          'YEAR($ref)=YEAR(EDATE(TODAY();1)))',
+    };
+    for (final entry in formulas.entries) {
+      if (condition == 'formula-is(${entry.value})') return entry.key;
+    }
+    return null;
+  }
+
   static List<SmlConditionalRule> _readConditionalFormats(
     XmlElement table,
     Map<String, XmlElement> styles,
@@ -1271,12 +1301,18 @@ abstract final class OdsSheetReader {
         var formula2 = '';
         var rank = 10;
         if (value.startsWith('formula-is(') && value.endsWith(')')) {
-          kind = SmlConditionalKind.expression;
-          formula =
-              _translateFormula(
-                'of:=${value.substring(11, value.length - 1)}',
-              ) ??
-              '';
+          final period = _timePeriodToken(value, range.start.a1);
+          if (period != null) {
+            kind = SmlConditionalKind.timePeriod;
+            formula = period;
+          } else {
+            kind = SmlConditionalKind.expression;
+            formula =
+                _translateFormula(
+                  'of:=${value.substring(11, value.length - 1)}',
+                ) ??
+                '';
+          }
         } else if (value.startsWith('<>') || value.startsWith('!=')) {
           kind = SmlConditionalKind.notEqual;
           formula = value.substring(2).trim();
