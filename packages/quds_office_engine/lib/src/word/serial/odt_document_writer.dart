@@ -56,7 +56,17 @@ abstract final class OdtDocumentWriter {
       final body = XmlWriter();
       final section = layout.sections[index];
       final start = layout.sectionStarts[index];
+      final columns = section.columnCount;
+      if (columns > 1) {
+        body.writeStartElement('section', prefix: 'text');
+        body.writeAttribute('text:name', 'Section$index');
+        body.writeAttribute(
+          'text:style-name',
+          layout.sectionColumnsStyle(columns, section.columnSpace),
+        );
+      }
       _writeBlocks(body, section.blocks, layout, sectionStart: start);
+      if (columns > 1) body.writeEndElement();
       // Empty and entirely unmodeled sections still own a page boundary. The
       // small empty anchor cannot consume a later section's first paragraph.
       if (!start.consumed) {
@@ -1762,6 +1772,21 @@ class _OdtLayout {
     }
     return _OdtListMarker.number(prefix, suffix, value);
   }
+
+  String sectionColumnsStyle(int columns, double gap) {
+    final key = '$columns|${gap.toStringAsFixed(2)}';
+    return _sectionColumnStyles.putIfAbsent(key, () {
+      final name = 'Sect${_sectionColumnStyles.length + 1}';
+      _styleBuffers.add(
+        '<style:style style:name="$name" style:family="section">'
+        '<style:section-properties fo:column-count="$columns" '
+        'fo:column-gap="${gap.toStringAsFixed(2)}pt"/></style:style>',
+      );
+      return name;
+    });
+  }
+
+  final Map<String, String> _sectionColumnStyles = <String, String>{};
 
   String listStyle(_OdtListMarker marker) {
     if (marker.bullet == '•') return 'L1';
