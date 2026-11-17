@@ -26,12 +26,14 @@ content.
 The app mirrors the canonical Quds source and the standalone legacy parser.
 Exact revisions, source boundaries and the complete managed-file inventory are
 recorded in [the fidelity manifest](../tool/office_fidelity_manifest.json).
-The current canonical checkpoint is `def52d84f3c3c5ce22c44d2620ecfa08d77780a7`;
-the managed inventory contains 2,603 files: 746 canonical files and the unchanged
+The current canonical checkpoint is `ec5ecbff742580c0e7d1136507b953e8cc877e4c`;
+the managed inventory contains 2,606 files: 749 canonical files and the unchanged
 1,857-file standalone parser. The 17 November continuation reconciles the
 captured Office, morphology and proofing-tool branches and their bounded late
 arrivals. It preserves the original six bundled notices and adds the complete
 Unicode Inflection notice for German morphology to the app's license registry.
+
+The latest reconciliation merges captured host main `1cd2a18f7bc2455eabc5ec8e22767c849a833305` and synchronizes the canonical union through the guard. It retains the bounded German noun-agreement work, custom ODT tab stops, table row minimum-height semantics and decoration normalization. The optional native German proofing AOT package remains outside the existing host managed-package boundary. New tests exercise the actual ODT/ODP export menus, annotation privacy, semantic output and destination outcomes; their local execution evidence is recorded separately from prior qualifications in `docs/validation/office-reconcile-20261117/`.
 
 ODF annotations retain their raw XML and comment-model content while body
 extraction, search and host previews exclude them. Note references inside

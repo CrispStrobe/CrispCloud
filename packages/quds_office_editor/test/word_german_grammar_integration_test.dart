@@ -25,6 +25,12 @@ void main() {
           replacement: 'mir',
         ),
         (
+          source: 'Die Kinder spielt im Garten.',
+          corrected: 'Die Kinder spielen im Garten.',
+          rule: 'noun-verb',
+          replacement: 'spielen',
+        ),
+        (
           source: 'Das ist für ihm.',
           corrected: 'Das ist für ihn.',
           rule: 'preposition-pronoun',
@@ -173,6 +179,7 @@ void main() {
   for (final entry in <String, String>{
     'preposition-pronoun': 'Pronoun case after prepositions',
     'preposition-case': 'Article case after prepositions',
+    'noun-verb': 'Noun and verb agreement',
     'dative-plural': 'Dative plural endings',
     'adjective-ending': 'Adjective agreement',
     'das-dass': 'Das and dass usage',

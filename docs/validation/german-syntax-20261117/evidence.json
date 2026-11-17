@@ -1,0 +1,13 @@
+{
+  "tested_host_commit": "4d2e45405f4a410eebf970d0c154905f4500876a",
+  "canonical_runtime_commit": "42b71376285b75786803c79864efd4e34cb8afc2",
+  "canonical_report_commit": "388bd745",
+  "host_passes": 94,
+  "host_log_sha256": "49e45c025481194f9750e3550e776a196790e3cb2a1a4b22086cc000b7e22958",
+  "host_log_gzip_sha256": "ad38b10022827388dfafc390125019553bd0023da0ece31d5b7fe6296b68e113",
+  "office_managed_files": 2598,
+  "new_python_app_dependencies": false,
+  "model_pin_changed": false,
+  "models_enabled_by_default": false,
+  "native_libraries_changed": false
+}

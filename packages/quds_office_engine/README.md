@@ -5,11 +5,11 @@
 > DOCX/XLSX/PPTX models, imports BIFF8 worksheets and ODS workbooks, and exports
 > a modeled ODS package. It is therefore not “OOXML only”, and ODF is not
 > text-extraction-only: ODT/ODP are formatted read-only views while ODS has
-> typed import and a new-document export writer. Legacy writers, ODT/ODP
-> writers, VBA/ActiveX execution and full unknown-XML-preserving ODF fidelity
-> remain a new-document subset; ODT and ODP exports do not preserve arbitrary
-> imported ODF XML. The upstream notes below describe the original library
-> contract unless this fork note says otherwise.
+> typed import and a new-document export writer. ODT and ODP exports write a
+> modeled new-document subset without preserving arbitrary imported ODF XML.
+> Legacy writers, VBA/ActiveX execution and full unknown-XML-preserving ODF
+> fidelity remain out of scope. The upstream notes below describe the original
+> library contract unless this fork note says otherwise.
 
 <p>
   <a href="https://pub.dev/packages/quds_office_engine"><img alt="pub package" src="https://img.shields.io/pub/v/quds_office_engine.svg"/></a>
@@ -1406,7 +1406,7 @@ dart run example/rich_export_gallery.dart
 | `.xlsb` | — | — | Host preview only; no BIFF12 reader or writer |
 | `.pptx` | Yes | Yes | Shapes, notes, hidden slides, motion |
 | `.ppt` / `.pps` / `.pot` | Partial | — | Current-slide text in the engine; rich preview is a host integration |
-| `.odt` | Yes | Yes | New-document subset: headings, formatted runs, bullet/numbered nested list groups, footnotes/endnotes, comments, bookmarks/links, document metadata, page-number fields, paragraph shading/borders, section layouts, tables, pictures, frames, page geometry and basic headers/footers; no in-place ODF preservation |
+| `.odt` | Yes | Yes | New-document subset: headings, formatted runs, bullet/numbered nested list groups, footnotes/endnotes, comments, bookmarks/links, document metadata, page-number fields, paragraph shading/borders, table borders/row heights, tab stops, section layouts, tables, pictures, frames, page geometry and basic headers/footers; no in-place ODF preservation |
 | `.ods` | Yes | Yes | Typed modeled subset; `OdsSheetWriter` emits a new package, not an in-place ODF rewrite |
 | `.odp` | Yes | Yes | New-document deck subset: page size, positioned text, pictures, tables, fills/strokes, text links, transitions and notes; no in-place ODF preservation |
 | `.pdf` | Yes | Yes | `PdfFile` open; native 1.7 write and toolbox graft |

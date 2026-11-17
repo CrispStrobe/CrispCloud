@@ -313,8 +313,8 @@ void main() {
       final document = WmlDocument(sections: []);
       final package = _package(document);
       final content = _part(package, 'content.xml');
-      // Default geometry is synthetic; an explicitly empty document has no
-      // authored section whose boundary needs a body anchor.
+      // The synthetic section supplies default master geometry only. An
+      // explicitly empty document must not gain an authored body paragraph.
       expect(_body(content).childElements, isEmpty);
       final styles = _part(package, 'styles.xml');
       final masters = styles.firstChild(

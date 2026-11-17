@@ -29,6 +29,7 @@ XmlElement _odtBody(OpcPackage package) => XmlDocument.parse(
 ).root!.firstChild('body')!.firstChild('text')!;
 
 void main() {
+  tabStopTests();
   paragraphShadingTests();
   pageFieldTests();
   linkTests();
@@ -143,7 +144,7 @@ void main() {
     expect(content, contains('text:style-name="L2"'));
     expect(content, contains('<table:table'));
     expect(content, contains('fo:border-top="0.5pt solid #000000"'));
-    expect(content, contains('style:row-height="24.00pt"'));
+    expect(content, contains('style:min-row-height="24.00pt"'));
     expect(content, contains('Pictures/image1.png'));
     expect(styles, contains('fo:page-width'));
     expect(styles, contains('style:num-format="1"'));
@@ -559,5 +560,40 @@ void paragraphShadingTests() {
     final content = package.getPart('/content.xml')!.readText();
     expect(content, contains('fo:background-color="#ffff00"'));
     expect(content, contains('fo:border="0.5pt solid #ff0000"'));
+  });
+}
+
+void tabStopTests() {
+  test('writes custom paragraph tab stops', () {
+    final document = WmlDocument(
+      sections: [
+        WmlSection(
+          blocks: [
+            WmlParagraph(
+              properties: WmlParagraphProps(
+                tabs: const [
+                  WmlTabStop(position: 72, alignment: WmlTabAlignment.center),
+                  WmlTabStop(
+                    position: 144,
+                    alignment: WmlTabAlignment.right,
+                    leader: WmlTabLeader.dot,
+                  ),
+                ],
+              ),
+              inlines: [WmlRun(text: 'One\tTwo\tThree')],
+            ),
+          ],
+        ),
+      ],
+    );
+    final package = OpcPackage.openBytes(
+      OdtDocumentWriter.writeBytes(document),
+    );
+    final content = package.getPart('/content.xml')!.readText();
+    expect(content, contains('<style:tab-stops>'));
+    expect(content, contains('style:position="72.00pt"'));
+    expect(content, contains('style:type="center"'));
+    expect(content, contains('style:type="right"'));
+    expect(content, contains('style:leader-style="dotted"'));
   });
 }
