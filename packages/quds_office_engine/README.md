@@ -6,8 +6,9 @@
 > a modeled ODS package. It is therefore not “OOXML only”, and ODF is not
 > text-extraction-only: ODT/ODP are formatted read-only views while ODS has
 > typed import and a new-document export writer. Legacy writers, ODT/ODP
-> writer, VBA/ActiveX execution and full unknown-XML-preserving ODF fidelity
-> remain out of scope; the ODT writer emits a new-document subset. The upstream notes below describe the original library
+> writers, VBA/ActiveX execution and full unknown-XML-preserving ODF fidelity
+> remain a new-document subset; ODT and ODP exports do not preserve arbitrary
+> imported ODF XML. The upstream notes below describe the original library
 > contract unless this fork note says otherwise.
 
 <p>
@@ -21,7 +22,7 @@
 
 **A pure Dart Office, PDF, and report engine.** Open, build, and write
 `.docx`, `.xlsx`, and `.pptx`; import bounded legacy `.doc`/`.xls` and
-OpenDocument `.odt`/`.ods`/`.odp` inputs; export `.ods` and a new-document `.odt` subset. Open real PDF files. Design **band reports**
+OpenDocument `.odt`/`.ods`/`.odp` inputs; export `.ods`, a new-document `.odt` subset and a new-document `.odp` subset. Open real PDF files. Design **band reports**
 (`.qrep`) with expressions, grouping, charts, and Arabic amount-in-words, then
 export them to PDF, XLSX, and DOCX. Compose pages with a Flutter-like widget
 layout, pick from **100+ direction-aware PDF templates**, export Office models
@@ -1407,7 +1408,7 @@ dart run example/rich_export_gallery.dart
 | `.ppt` / `.pps` / `.pot` | Partial | — | Current-slide text in the engine; rich preview is a host integration |
 | `.odt` | Yes | Yes | New-document subset: headings, formatted runs, tables, pictures, frames, page geometry and basic headers/footers; no in-place ODF preservation |
 | `.ods` | Yes | Yes | Typed modeled subset; `OdsSheetWriter` emits a new package, not an in-place ODF rewrite |
-| `.odp` | Yes | — | Positioned read-only deck: page size, shapes, text, fills, images, notes |
+| `.odp` | Yes | Yes | New-document deck subset: page size, positioned text, pictures, tables, fills/strokes and notes; no in-place ODF preservation |
 | `.pdf` | Yes | Yes | `PdfFile` open; native 1.7 write and toolbox graft |
 | `.qrep` | Yes | Yes | Band-report XML with line:column diagnostics; exports PDF, XLSX, DOCX |
 | Password-protected OOXML | Yes | Yes | When a password is supplied |
