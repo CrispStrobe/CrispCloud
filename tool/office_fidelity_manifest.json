@@ -1,7 +1,7 @@
 {
   "source_repository": "CrispStrobe/quds_office_suite",
   "source_branch": "codex/office-qualified-resume-20261117",
-  "source_commit": "4c49b0435bc6611221bc49b58b15e735059467ff",
+  "source_commit": "def52d84f3c3c5ce22c44d2620ecfa08d77780a7",
   "files": {
     "packages/legacy_doc_parser/.gitattributes": "e03c93473e616ad6fcd8697f797b4774076aa6fc468bf0f72860d2c6512eebbf",
     "packages/legacy_doc_parser/.github/workflows/ci.yml": "111910a34c0e41774a325c0bc5c6c3d7517298254a08c79df6dce7d7f70e3605",
@@ -2155,7 +2155,7 @@
     "packages/quds_office_engine/lib/src/word/model/word_zotero_citing.dart": "fd89825b3628fbaf897404b1e4f0405367a0f90fee312915bcc9509c1e8f42ef",
     "packages/quds_office_engine/lib/src/word/model/word_zotero_data.dart": "7237f53590374d841151c0ec5b623ed1779e19c0fe9707299e3fa6c748a9f2be",
     "packages/quds_office_engine/lib/src/word/properties/wml_properties.dart": "bc9581a4e0be7063a8b19e18ee8defb17e212b5efb055472eb72d36d108a03b5",
-    "packages/quds_office_engine/lib/src/word/serial/odt_document_writer.dart": "e4b91087325c4478c38e9791dffe60917d8288ec0c9405ca8630b2aa3680377f",
+    "packages/quds_office_engine/lib/src/word/serial/odt_document_writer.dart": "2754aef31a7b6be004e74a3862bb8452e21a2073fb28a97c110b2d963e923660",
     "packages/quds_office_engine/lib/src/word/serial/word_bibliography_io.dart": "0a48751bbbd2d251fcf4d61b087679c1d736b7add7bc1395339d0623a183bce3",
     "packages/quds_office_engine/lib/src/word/serial/word_bookmark_io.dart": "b1c4a0f896af2f8500b607895d3f23ef204729a17361e07553a93df9961a688c",
     "packages/quds_office_engine/lib/src/word/serial/word_comment_io.dart": "a605eda98d8f99561db02a21524db9c6a1a8d06db5bc46e33704580d856f6f59",

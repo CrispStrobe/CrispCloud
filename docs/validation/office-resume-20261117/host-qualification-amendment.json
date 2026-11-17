@@ -1,0 +1,27 @@
+{
+  "kind": "Minimal source amendment after retained failed host qualification",
+  "host_parent": "fe2a1d026c7e4725723b88ba1b6bbadb010d74e8",
+  "previous_canonical_source": "4c49b0435bc6611221bc49b58b15e735059467ff",
+  "canonical_source": "def52d84f3c3c5ce22c44d2620ecfa08d77780a7",
+  "canonical_tree": "2c85776b996e04c8e6e3350c956b01eb730aba24",
+  "managed_files": 2603,
+  "canonical_files": 746,
+  "standalone_parser_files": 1857,
+  "production_change": "Exactly one const token in odt_document_writer.dart, copied through guarded canonical sync; source manifest pin/hash updated.",
+  "guarded_plan": "vendor-plan-const.json",
+  "guarded_apply": "vendor-applied-const.json",
+  "failed_attempt_archive": "host-final-qualification-failed-001-20261117.tar.xz",
+  "probe_correction_archive": "host-probe-contract-correction-20261117.tar.xz",
+  "failed_attempt_preserved": true,
+  "fresh_host_qualification_status": "Not yet run; await immutable publication.",
+  "no_lint_suppression": true,
+  "generated_payload_changed": false,
+  "all_selected_generated_files_remain_in_strict_analysis": true,
+  "github_actions_or_status_queried": false,
+  "recorded_utc": "2026-11-17T16:37:20.925657+00:00",
+  "tracked_index_guard": {
+    "exit_code": 0,
+    "output": "Verified 2603 Office files; Quds source def52d84f3c3c5ce22c44d2620ecfa08d77780a7.\nStandalone source packages/legacy_doc_parser: CrispStrobe/legacy-doc-parser at 4895712158127b2fc930d796e17035c3ca0dac62.\n",
+    "output_sha256": "ec0f8e4035b8d8b5b07da653621c6b5a5bcc078fc8011112a920430b0079453b"
+  }
+}

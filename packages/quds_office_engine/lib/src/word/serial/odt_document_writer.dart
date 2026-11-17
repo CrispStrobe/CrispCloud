@@ -1712,7 +1712,7 @@ class _OdtLayout {
         suffix = match[3];
         initial = BigInt.tryParse(match[2]!);
       } else if (label.isEmpty) {
-        return _OdtListMarker.bullet('•');
+        return const _OdtListMarker.bullet('•');
       } else {
         return _OdtListMarker.literal(label);
       }
