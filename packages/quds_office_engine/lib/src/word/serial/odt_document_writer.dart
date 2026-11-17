@@ -591,6 +591,11 @@ abstract final class OdtDocumentWriter {
       styleOverride ??
           layout.paragraphStyle(paragraph.properties, heading: heading),
     );
+    if (paragraph.properties.pageNumberField) {
+      w.writeEmptyElement('page-number', prefix: 'text');
+      w.writeEndElement();
+      return;
+    }
     if (layout.noteReferenceSpacePending) {
       layout.noteReferenceSpacePending = false;
       final text = paragraph.text;
