@@ -1,0 +1,9 @@
+# Host candidate after the latest main merge
+
+This candidate combines the preserved host continuation `19d1dfec8ea17f1690ac39816ae8ed6c9c76a9ce` with captured current main `cc538a4ac0435781671bd02d2cac7c0bf922322a`. The merge retains the original export workflow and cached-field regression coverage and imports main's remaining-gaps documentation.
+
+The normal vendor guard pins canonical `02a246eb230f0bf8f20da4b2c375d1c507099325`, which reconciles incoming cached ODT field import/export and ODS color scales, dynamic list validation, and data bars with the preserved field/bookmark/column work. A host-only 14-line data-bar renderer delta was identified during comparison, preserved in the canonical source, and synchronized back through the guard; its final file is byte-identical to the incoming host main. A single null-aware collection style fix satisfies strict analysis without changing the spreadsheet behavior.
+
+The inventory is 2,630 files: 773 canonical and 1,857 standalone-parser files. Parser pin `4895712158127b2fc930d796e17035c3ca0dac62` and deliberate AOT/RML removal remain intact. Production `pubspec.yaml` and `pubspec.lock` are byte-identical to the captured main. All incoming changed paths are accounted for in `host-late-main-merge.json`.
+
+The full application graph has resolved 275 packages from the exact production lock, with all 238 hosted archives independently checked. Native-hook setup continues with the pinned Rust/Clang compilers. This source checkpoint does not claim completed qualification. The final run will use an immutable published host commit, all 18 selected suite files, six original supplementary probes and the twelve retained gates. Setup attempts and raw terminal logs are preserved separately from accepted final results. No GitHub CI/check/workflow/status endpoints were queried or awaited.

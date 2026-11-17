@@ -1,0 +1,18 @@
+{
+  "baseline": "19d1dfec8ea17f1690ac39816ae8ed6c9c76a9ce",
+  "canonical_source": "02a246eb230f0bf8f20da4b2c375d1c507099325",
+  "reviewed_paths": 954,
+  "changed_reviewed_paths": [
+    "tool/office_fidelity_manifest.json",
+    "packages/quds_office_editor/lib/src/editor_sheet/render_sheet_grid.dart",
+    "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+    "packages/quds_office_engine/lib/src/sheet/model/sml_analysis.dart",
+    "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+    "packages/quds_office_engine/lib/src/word/serial/word_deserializer.dart"
+  ],
+  "only_policy_field_changed": "reviewed_source_sha256",
+  "previous_fingerprint": "a250e019537c909119cd43b978c0c8d88dfbc75339c8815f30bdb808e409e004",
+  "current_fingerprint": "0e2d3d56e3838aeed21f1e82b5a869d034985867f5e511b3762b79c1ea6ef2a1",
+  "status": "passed",
+  "submission_performed": false
+}

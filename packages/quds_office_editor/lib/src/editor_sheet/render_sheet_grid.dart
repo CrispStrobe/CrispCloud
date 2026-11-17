@@ -775,6 +775,20 @@ class RenderSheetGrid extends RenderBox implements MouseTrackerAnnotation {
         } else if (band != null) {
           canvas.drawRect(cell, ui.Paint()..color = band);
         }
+        if (conditional.dataBarFraction case final fraction?) {
+          final barColor =
+              _rgbColor(conditional.dataBarColor) ?? const Color(0xFF638EC6);
+          final bar = ui.Rect.fromLTWH(
+            cell.left + 1,
+            cell.top + 1,
+            ((cell.width - 2) * fraction).clamp(0, cell.width - 2),
+            cell.height - 2,
+          );
+          canvas.drawRect(
+            bar,
+            ui.Paint()..color = barColor.withValues(alpha: 0.72),
+          );
+        }
         final bool focusCell = _isEditCell(c, r, merge);
         final bool isEdit = editing && focusCell;
         if (isEdit) {

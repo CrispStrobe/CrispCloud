@@ -1,0 +1,127 @@
+{
+  "source_parents": [
+    "19d1dfec8ea17f1690ac39816ae8ed6c9c76a9ce",
+    "cc538a4ac0435781671bd02d2cac7c0bf922322a"
+  ],
+  "canonical_source": "02a246eb230f0bf8f20da4b2c375d1c507099325",
+  "late_host_prs": [
+    257,
+    258,
+    259,
+    260,
+    261,
+    262,
+    263
+  ],
+  "managed_files": 2630,
+  "canonical_files": 773,
+  "standalone_parser_files": 1857,
+  "standalone_parser_pin": "4895712158127b2fc930d796e17035c3ca0dac62",
+  "merge_method": "Retain incoming nonvendor documentation and prior host tests; restore the private merge managed paths to the previously pinned source, then apply the normal guarded canonical union. Preserve the incoming managed renderer upstream before the final sync.",
+  "incoming_files": [
+    {
+      "path": "docs/office-remaining-gaps-20261115.md",
+      "incoming_sha256": "8e7d2731719e4d6bf3a964148bcb487c9d8c779b95ed6f7b810ded28b1b59577",
+      "candidate_sha256": "8e7d2731719e4d6bf3a964148bcb487c9d8c779b95ed6f7b810ded28b1b59577",
+      "identical_to_incoming_main": true
+    },
+    {
+      "path": "packages/QUDS_FORKS.md",
+      "incoming_sha256": "0b39178349b10807f770729ec4c4d3562e7dbe7aebc3989c972bf826e56ba898",
+      "candidate_sha256": "cc1734a395800591023c766689c68b6a92311e32b32a3a1a013401c4e4329017",
+      "identical_to_incoming_main": false
+    },
+    {
+      "path": "packages/quds_office_editor/lib/src/editor_sheet/render_sheet_grid.dart",
+      "incoming_sha256": "f92844b4c0c6c77522dc2cef9d52ed4ee8696f165f19f8c63968431782fbb8da",
+      "candidate_sha256": "f92844b4c0c6c77522dc2cef9d52ed4ee8696f165f19f8c63968431782fbb8da",
+      "identical_to_incoming_main": true
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+      "incoming_sha256": "838def89081a32e76851aba60647650319b5126e0573f3200864bb2a1ab664d6",
+      "candidate_sha256": "838def89081a32e76851aba60647650319b5126e0573f3200864bb2a1ab664d6",
+      "identical_to_incoming_main": true
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_writer.dart",
+      "incoming_sha256": "6433fc01fa6dc7b5a131246ae7ac7f54f540b359cb351bbba70ac69cc9e19d8b",
+      "candidate_sha256": "6433fc01fa6dc7b5a131246ae7ac7f54f540b359cb351bbba70ac69cc9e19d8b",
+      "identical_to_incoming_main": true
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/sheet/model/sml_analysis.dart",
+      "incoming_sha256": "b5ea96c0350ea15e3a46f65e7b796c43c6d90fbd33fa9e8e659c938580eea07b",
+      "candidate_sha256": "bf3d97ca8a6fc9f16992fa502c073feaca65937a0f1e8b32e3d31fd9e828f77c",
+      "identical_to_incoming_main": false
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/sheet/model/sml_conditional_format.dart",
+      "incoming_sha256": "55e78d568c531c987c81f0771b4eed478077358ef54c9d6dec7ec7ed2cae21bc",
+      "candidate_sha256": "55e78d568c531c987c81f0771b4eed478077358ef54c9d6dec7ec7ed2cae21bc",
+      "identical_to_incoming_main": true
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+      "incoming_sha256": "20d09bf98998400bab4209fa625a4cebc57034fdb78346c871160e6b0af06208",
+      "candidate_sha256": "20d09bf98998400bab4209fa625a4cebc57034fdb78346c871160e6b0af06208",
+      "identical_to_incoming_main": true
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/word/serial/odt_document_writer.dart",
+      "incoming_sha256": "157e641657998fc5be8f12a8bef362566261caa14b7898de93b182bd85841aea",
+      "candidate_sha256": "13393410e95f281e67cb9e427107bfd45b24e91822e23d4f8cb53feb6cd90b72",
+      "identical_to_incoming_main": false
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/word/serial/word_deserializer.dart",
+      "incoming_sha256": "5ecbcd9d94c4cceb8cd9540e5fef744626069f029cae7c52e9776d9ab83d8193",
+      "candidate_sha256": "5ecbcd9d94c4cceb8cd9540e5fef744626069f029cae7c52e9776d9ab83d8193",
+      "identical_to_incoming_main": true
+    },
+    {
+      "path": "packages/quds_office_engine/test/ods_sheet_writer_test.dart",
+      "incoming_sha256": "4c84442813a9d92f8a4ec94a8698abbf6a86a116c9f4f269a5128e98c4dc1bc4",
+      "candidate_sha256": "4c84442813a9d92f8a4ec94a8698abbf6a86a116c9f4f269a5128e98c4dc1bc4",
+      "identical_to_incoming_main": true
+    },
+    {
+      "path": "packages/quds_office_engine/test/odt_imported_field_fidelity_test.dart",
+      "incoming_sha256": "b45735984370488300d7e2bcb26ad3b31371a5c14d92bf7eb9ccc8eab63db8b3",
+      "candidate_sha256": "b45735984370488300d7e2bcb26ad3b31371a5c14d92bf7eb9ccc8eab63db8b3",
+      "identical_to_incoming_main": true
+    },
+    {
+      "path": "packages/quds_office_engine/test/odt_page_field_fidelity_test.dart",
+      "incoming_sha256": "9c3554acc4bff6fca34569161efbeee7ddb653b09d3817cf0704d06aa01e1877",
+      "candidate_sha256": "9c3554acc4bff6fca34569161efbeee7ddb653b09d3817cf0704d06aa01e1877",
+      "identical_to_incoming_main": true
+    },
+    {
+      "path": "packages/quds_office_engine/test/sheet_save_cache_and_freeze_test.dart",
+      "incoming_sha256": "509e21dd55676f3cb13bc29b8c806de46ed3ebdad36900fe93bb23ee3b0312ba",
+      "candidate_sha256": "509e21dd55676f3cb13bc29b8c806de46ed3ebdad36900fe93bb23ee3b0312ba",
+      "identical_to_incoming_main": true
+    },
+    {
+      "path": "tool/office_fidelity_manifest.json",
+      "incoming_sha256": "cb386d6a0c6dc2346a48312f714c392252e02ef7f9b8ac440ff533a5be24611f",
+      "candidate_sha256": "967abe431c2c78dd9fdb3a8aa8da38a16e0a995d785052be472c83b83b66b734",
+      "identical_to_incoming_main": false
+    }
+  ],
+  "intentional_incoming_differences": {
+    "packages/QUDS_FORKS.md": "Current union pin/count plus preserved recovery history.",
+    "tool/office_fidelity_manifest.json": "Exact canonical union02a246eb and standalone parser inventory.",
+    "packages/quds_office_engine/lib/src/word/serial/odt_document_writer.dart": "Preserved scoped field/bookmark/column fixes combined with incoming cached-field changes.",
+    "packages/quds_office_engine/lib/src/sheet/model/sml_analysis.dart": "One null-aware collection element style correction, preserving incoming behavior."
+  },
+  "production_pubspec_unchanged": true,
+  "production_lock_unchanged": true,
+  "qualification_status": "pending-fresh-exact-source-run",
+  "github_ci_queried_or_awaited": false,
+  "unpublished_intermediate_syncs": [
+    "28041bd0aeddfd152b3654890a8a580928f12610",
+    "947a6b572f3e95359b80d785e1a232e824fa723b"
+  ]
+}

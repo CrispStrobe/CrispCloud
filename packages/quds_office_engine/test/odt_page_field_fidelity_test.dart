@@ -365,11 +365,103 @@ void main() {
     );
   }
 
-  test(
-    'explicit PAGE instruction is recognized without the compatibility flag',
-    () {
+  for (final (instruction, cache) in [
+    (r' PAGE \* ROMAN ', 'IV'),
+    (r' PAGE \# "000" ', '007'),
+    (r' PAGE \* MERGEFORMAT extra ', '12'),
+    (' PAGE custom ', '12'),
+  ]) {
+    for (final compatibilityFlag in [false, true]) {
+      test('unsupported PAGE instruction preserves cache with flag '
+          '$compatibilityFlag: $instruction', () {
+        final run = WmlRun(text: cache);
+        final paragraph = WmlParagraph(
+          properties: WmlParagraphProps(
+            pageNumberField: compatibilityFlag,
+            fieldInstruction: instruction,
+          ),
+          inlines: [run],
+        );
+        final content = _export(
+          WmlDocument(
+            sections: [
+              WmlSection(blocks: [paragraph, _plain('Following text')]),
+            ],
+          ),
+        ).content;
+        expect(_elements(content, 'page-number'), isEmpty);
+        expect(_visible(_body(content)), '${cache}Following text');
+        expect(paragraph.inlines.single, same(run));
+        expect(run.text, cache);
+        expect(paragraph.properties.fieldInstruction, instruction);
+        expect(paragraph.properties.pageNumberField, compatibilityFlag);
+      });
+    }
+  }
+
+  for (final footer in [false, true]) {
+    test('unsupported PAGE switch retains styled linked '
+        '${footer ? 'footer' : 'header'} cache', () {
+      final first = WmlRun(text: 'I', properties: WmlRunProps(bold: true));
+      final suffix = WmlRun(
+        text: 'V  |  Report',
+        properties: WmlRunProps(italic: true),
+        hyperlink: WmlHyperlink(url: 'https://example.com/report'),
+      );
       final paragraph = WmlParagraph(
-        properties: WmlParagraphProps(fieldInstruction: ' PAGE '),
+        properties: WmlParagraphProps(
+          pageNumberField: true,
+          fieldInstruction: r' PAGE \* ROMAN ',
+        ),
+        inlines: [first, suffix],
+      );
+      final result = _export(
+        WmlDocument(
+          sections: [
+            WmlSection(
+              header: footer ? [] : [paragraph],
+              footer: footer ? [paragraph] : [],
+              blocks: [_plain('Body')],
+            ),
+          ],
+        ),
+      );
+      final story = _elements(
+        result.styles,
+        footer ? 'footer' : 'header',
+        _styleNs,
+      ).single;
+      expect(_elements(story, 'page-number'), isEmpty);
+      expect(_visible(story), 'IV  |  Report');
+      expect(_visible(_elements(story, 'a').single), 'V  |  Report');
+      final spans = _elements(story, 'span').toList();
+      final firstProperties = _style(
+        result.styles,
+        spans.first,
+      ).firstChild('text-properties', namespaceUri: _styleNs)!;
+      final suffixProperties = _style(
+        result.styles,
+        spans.last,
+      ).firstChild('text-properties', namespaceUri: _styleNs)!;
+      expect(
+        firstProperties.getAttribute('font-weight', namespaceUri: _foNs),
+        'bold',
+      );
+      expect(
+        suffixProperties.getAttribute('font-style', namespaceUri: _foNs),
+        'italic',
+      );
+      expect(_visible(_body(result.content)), 'Body');
+      expect(paragraph.inlines, [first, suffix]);
+      expect(paragraph.text, 'IV  |  Report');
+    });
+  }
+
+  for (final instruction in [' PAGE ', r' pAgE \* mErGeFoRmAt ', '\tPAGE\n']) {
+    test('explicit PAGE instruction works without the compatibility flag: '
+        '$instruction', () {
+      final paragraph = WmlParagraph(
+        properties: WmlParagraphProps(fieldInstruction: instruction),
         inlines: [WmlRun(text: '12')],
       );
       final content = _export(
@@ -382,8 +474,8 @@ void main() {
       expect(_elements(content, 'page-number'), hasLength(1));
       expect(_visible(_body(content)), '{PAGE}');
       expect(paragraph.properties.pageNumberField, isFalse);
-    },
-  );
+    });
+  }
 
   test('mixed native inline fields retain their cached content', () {
     final paragraph = WmlParagraph(

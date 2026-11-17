@@ -50,7 +50,7 @@ exact source identities, commands and the separately qualified terminal results.
 
 ## Earlier verified state
 
-- CrispCloud `main` snapshot: `4eea7d16`
+- CrispCloud `main` snapshot: `8387c88a`
 - The historical test results below retain the source identities in their
   original receipts. Current vendor identities and counts are recorded in
   `tool/office_fidelity_manifest.json` and `packages/QUDS_FORKS.md`.
@@ -125,7 +125,7 @@ cfRule + dxf, and reopen in Excel.
 text-length and custom-formula rules, comparison/between operators, blank policy,
 prompts, error titles/messages/styles and XLSX round-trips.\
 **Remaining:** ODF condition grammar outside the shared model (for example time
-or arbitrary multi-condition expressions) and dynamic source-range links.\
+or arbitrary multi-condition expressions).\
 **Next step:** extend condition coverage without approximating unsupported
 expressions and qualify dynamic range behavior.\
 **Acceptance:** list, numeric and date rules survive ODS → XLSX, with the same

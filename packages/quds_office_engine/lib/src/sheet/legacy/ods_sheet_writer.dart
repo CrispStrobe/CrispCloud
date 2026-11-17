@@ -307,6 +307,15 @@ abstract final class OdsSheetWriter {
     for (final row in sheet.rowOutlineLevels.keys) {
       includeRow(row);
     }
+    for (final validation in sheet.validations) {
+      final count =
+          (validation.range.maxRow - validation.range.minRow + 1) *
+          (validation.range.maxCol - validation.range.minCol + 1);
+      if (count <= 100000) {
+        includeColumn(validation.range.maxCol);
+        includeRow(validation.range.maxRow);
+      }
+    }
     for (var col = 0; col <= maxCol; col++) {
       w.writeStartElement('table-column', prefix: 'table');
       w.writeAttribute('table:default-cell-style-name', 'Default');
@@ -353,6 +362,49 @@ abstract final class OdsSheetWriter {
     }
     final conditional = StringBuffer();
     for (final rule in sheet.conditionalFormats) {
+      if (rule.kind == SmlConditionalKind.dataBar) {
+        final stops = rule.colorScaleStops;
+        if (stops.length < 2) continue;
+        final entries = StringBuffer();
+        for (final stop in stops) {
+          entries.write(
+            '<calcext:formatting-entry '
+            'calcext:value="${stop.value}" '
+            'calcext:type="${_escapeAttr(stop.type)}"/>',
+          );
+        }
+        conditional.write(
+          '<calcext:conditional-format calcext:target-range-address="'
+          '${_plainSheet(sheet.name)}.${rule.range.start.a1}:'
+          '${_plainSheet(sheet.name)}.${rule.range.end.a1}">'
+          '<calcext:data-bar calcext:positive-color="#'
+          '${rule.dataBarColor.toLowerCase()}" calcext:negative-color="#'
+          '${rule.dataBarColor.toLowerCase()}" calcext:axis-position="none">'
+          '$entries</calcext:data-bar></calcext:conditional-format>',
+        );
+        continue;
+      }
+      if (rule.kind == SmlConditionalKind.colorScale) {
+        final stops = rule.colorScaleStops;
+        if (stops.length < 2) continue;
+        final entries = StringBuffer();
+        for (final stop in stops) {
+          entries.write(
+            '<calcext:color-scale-entry '
+            'calcext:value="${stop.value}" '
+            'calcext:type="${_escapeAttr(stop.type)}" '
+            'calcext:color="#${stop.colorRgb.toLowerCase()}"/>',
+          );
+        }
+        conditional.write(
+          '<calcext:conditional-format calcext:target-range-address="'
+          '${_plainSheet(sheet.name)}.${rule.range.start.a1}:'
+          '${_plainSheet(sheet.name)}.${rule.range.end.a1}">'
+          '<calcext:color-scale>$entries</calcext:color-scale>'
+          '</calcext:conditional-format>',
+        );
+        continue;
+      }
       final style = layout.conditionalStyle(rule);
       conditional.write(
         '<calcext:conditional-format calcext:target-range-address="'
@@ -575,6 +627,8 @@ abstract final class OdsSheetWriter {
       SmlConditionalKind.bottomPercent => 'bottom-percent(${rule.rank})',
       SmlConditionalKind.aboveAverage => 'above-average',
       SmlConditionalKind.belowAverage => 'below-average',
+      SmlConditionalKind.colorScale => '',
+      SmlConditionalKind.dataBar => '',
     };
   }
 
@@ -610,9 +664,10 @@ abstract final class OdsSheetWriter {
       .replaceAll('"', '&quot;');
 
   static String _rangeAddress(String sheet, SmlRange range) =>
-      '\$${_escapeSheet(sheet)}.${range.start.a1}:.${range.end.a1}';
+      '\$${OdsSheetWriter._escapeSheet(sheet)}.${range.start.a1}:.${range.end.a1}';
 
-  static String _baseAddress(String sheet) => '\$${_escapeSheet(sheet)}.\$A\$1';
+  static String _baseAddress(String sheet) =>
+      '\$${OdsSheetWriter._escapeSheet(sheet)}.\$A\$1';
 
   static String _dropOf(String formula) =>
       formula.startsWith('of:=') ? formula.substring(4) : formula;
@@ -961,6 +1016,13 @@ class _OdsLayout {
     }
 
     if (rule.kind == SmlValidationKind.list) {
+      if (rule.listSourceRange case final range?) {
+        final sheet = rule.listSourceSheet;
+        final address = sheet == null || sheet.isEmpty
+            ? '.${range.start.a1}:.${range.end.a1}'
+            : OdsSheetWriter._rangeAddress(sheet, range);
+        return 'of:cell-content-is-in-list([$address])';
+      }
       final items = rule.listItems
           .map((item) => '"${item.replaceAll('"', '""')}"')
           .join(';');
