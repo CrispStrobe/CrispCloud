@@ -33,7 +33,7 @@ exact source identities, commands and the separately qualified terminal results.
 ## Earlier verified state
 
 - CrispCloud `main` snapshot: `4eea7d16`
-- Vendored Quds source checkpoint: `0eb60d0fc706a4da54df07ae86df029c1caac074`
+- Vendored Quds source checkpoint: `d061a578646493b71ad19f8fd8358f6cc509e8b8`
   (`packages/QUDS_FORKS.md`, 2,554 managed files)
 - Quds sheet/ODS cohort: **514 tests**; the last clean full engine run was
   **2,205 tests** (two unrelated CLI bookmark/content-control tests currently
@@ -171,8 +171,8 @@ edited round trip, or clearly emit a new-document subset.
 **Status:** Partial\
 **Current:** page size, frames/custom shapes, text styles/colors, fills,
 images, backgrounds and speaker notes.\
-**Remaining:** transitions/animations, charts, embedded objects, tables as
-tables, master/placeholder inheritance, and some grouped-shape geometry.\
+**Remaining:** animations, charts, embedded objects, master/placeholder
+inheritance and some grouped-shape geometry.\
 **Next step:** add native shape/table/chart models or preserve untouched native
 slide XML around edited text.\
 **Acceptance:** a real deck reopens with unchanged layout and media after a
