@@ -18,9 +18,9 @@
     "path": "tool/proofing/german_common_words.txt",
     "license": "MIT",
     "authorship": "Independently authored Quds Office basic-word supplement, 2026",
-    "sha256": "c294a7a543c0178284dbc14486461130ddc1362465bd1f41139edb3179b14a57",
-    "forms": 1295,
-    "additional_forms": 214
+    "sha256": "78cf92b6724ee952220833699aac9763f59af0847cbfde2fa981bed1132c2965",
+    "forms": 1297,
+    "additional_forms": 216
   },
   "selection": {
     "standard": "Shared field 2, otherwise reformed field 4; excludes absent -N- placeholders.",
@@ -28,17 +28,17 @@
     "scope": "Finite word forms; no unrestricted compound decomposition or complete morphology. DE and AT share this source vocabulary. The old source snapshot has no claim to contemporary completeness."
   },
   "data": {
-    "standard_count": 444139,
-    "swiss_additions_count": 9451,
-    "standard_sha256": "70a93e30b3d10b6403c74e8457c8092bbb96c6876e05dd94ed24934bccc681e3",
-    "swiss_additions_sha256": "47983d1ea48a7c3a0328b071b9d2beab1ffed7ac6f33b209dcc6f80afe4be760"
+    "standard_count": 444141,
+    "swiss_additions_count": 9453,
+    "standard_sha256": "00f5e0f2a40cee555697fa45e26f0a14b52dba16d1a2eb0aeb1a7cecd2c76b57",
+    "swiss_additions_sha256": "15d8e9d44b832ae05b8124f117e8e92e131617a23784586499192ca79aab0da6"
   },
   "encoding": {
     "format": "base64 raw DEFLATE of newline-separated UTF-8, <=4096 words/chunk",
     "zlib_version": "1.2.11"
   },
   "generated_files": {
-    "lib/src/proofing/data/german_common_00.dart": "3a41eb74e53bd167105211b275de2af73d91077fb2c4441e1bbbb1daa880ebcd",
+    "lib/src/proofing/data/german_common_00.dart": "a9297b80fb74caf783b6b9497c5155324d21e8706954c96c99db640c08da9fc4",
     "lib/src/proofing/data/german_lexicon_data.dart": "beb4e809b577fc950e39ffb759b9435834d1f2763e7d00911816da21b8b5d3a1",
     "lib/src/proofing/data/german_standard_00.dart": "dfc3548af79c27f6d306ae91fc8711e6f5013295d4deaab6442f9fda964f54a4",
     "lib/src/proofing/data/german_standard_01.dart": "75216e458beeeade0c3b647fda64064f3a2468887f716d8ee00947b1e1a319f1",
@@ -54,6 +54,6 @@
     "lib/src/proofing/data/german_standard_11.dart": "feb85cdb0915a3e5fb55fa689964f7231414d8b9a1935b0cfc64ae3ce3d491a1",
     "lib/src/proofing/data/german_standard_12.dart": "12092f7a9c07be0fdd664a95cb9e0316be9f8a456c6382aef36965775add1642",
     "lib/src/proofing/data/german_standard_13.dart": "6cff772cc350ac0e892be55837ec3b1d19543e410fe13ddf22047588eb6d4364",
-    "lib/src/proofing/data/german_swiss_00.dart": "5719e81653cd5aea685be2359f92b64cb94e9dbbe4f999556394fe43867243a6"
+    "lib/src/proofing/data/german_swiss_00.dart": "03628d2ecdcec9c94781cebf32d1288b7cd6c8eb4710ebe7946263867b108683"
   }
 }

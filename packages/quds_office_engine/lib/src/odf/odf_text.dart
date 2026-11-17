@@ -199,16 +199,25 @@ Iterable<XmlElement> odfTextBoxes(XmlElement element) sync* {
 /// Ordinary authored empty paragraphs and explicit whitespace remain distinct.
 Iterable<String> readOdfParagraphs(
   XmlElement element,
-  OdfTextBudget budget,
-) sync* {
+  OdfTextBudget budget, {
+  bool preserveLiteralWhitespace = false,
+}) sync* {
   for (final paragraph in odfParagraphs(element)) {
     final boxes = odfTextBoxes(paragraph).toList();
-    final ownText = readOdfParagraphText(paragraph, budget);
+    final ownText = readOdfParagraphText(
+      paragraph,
+      budget,
+      preserveLiteralWhitespace: preserveLiteralWhitespace,
+    );
     if (ownText.isNotEmpty || boxes.isEmpty) {
       yield ownText;
     }
     for (final box in boxes) {
-      yield* readOdfParagraphs(box, budget);
+      yield* readOdfParagraphs(
+        box,
+        budget,
+        preserveLiteralWhitespace: preserveLiteralWhitespace,
+      );
     }
   }
 }
@@ -220,10 +229,18 @@ Iterable<String> readOdfParagraphTexts(
 ) => readOdfParagraphs(element, budget);
 
 /// Reads paragraphs in [element], retaining empty blocks and their separators.
-String readOdfText(XmlElement element, OdfTextBudget budget) {
+String readOdfText(
+  XmlElement element,
+  OdfTextBudget budget, {
+  bool preserveLiteralWhitespace = false,
+}) {
   final result = StringBuffer();
   var first = true;
-  for (final paragraph in readOdfParagraphs(element, budget)) {
+  for (final paragraph in readOdfParagraphs(
+    element,
+    budget,
+    preserveLiteralWhitespace: preserveLiteralWhitespace,
+  )) {
     if (!first) {
       budget.consume(1);
       result.write('\n');
@@ -235,8 +252,15 @@ String readOdfText(XmlElement element, OdfTextBudget budget) {
 }
 
 /// Reads a paragraph's own inline text, excluding note and drawing stories.
-String readOdfParagraphText(XmlElement paragraph, OdfTextBudget budget) {
-  final text = _ParagraphText(budget);
+String readOdfParagraphText(
+  XmlElement paragraph,
+  OdfTextBudget budget, {
+  bool preserveLiteralWhitespace = false,
+}) {
+  final text = _ParagraphText(
+    budget,
+    preserveLiteralWhitespace: preserveLiteralWhitespace,
+  );
   void visit(XmlNode node) {
     if (node is XmlText) {
       text.literal(node.text);
@@ -296,7 +320,12 @@ bool _isWhitespace(int unit) =>
     unit == 0x20 || unit == 0x09 || unit == 0x0a || unit == 0x0d;
 
 class _ParagraphText {
-  _ParagraphText(this.budget);
+  _ParagraphText(this.budget, {this.preserveLiteralWhitespace = false});
+
+  // Calc serializes significant cell spaces as literal text. Word/slide ODF
+  // paragraphs retain their standard collapsing mode. Both use the same
+  // hidden-story filtering, explicit control decoding and text budget.
+  final bool preserveLiteralWhitespace;
 
   final OdfTextBudget budget;
   final _buffer = StringBuffer();
@@ -304,6 +333,10 @@ class _ParagraphText {
   bool _pendingSpace = false;
 
   void literal(String value) {
+    if (preserveLiteralWhitespace) {
+      explicit(value);
+      return;
+    }
     var index = 0;
     while (index < value.length) {
       if (_isWhitespace(value.codeUnitAt(index))) {
