@@ -27,13 +27,17 @@ Uint8List _archive(String xml) {
   return writer.close();
 }
 
-Future<void> _expectBody(String body, List<String> expected) async {
+Future<void> _expectBody(
+  String body,
+  List<String> expected, {
+  List<String>? expectedParagraphs,
+  List<List<List<String>>> expectedTables = const [],
+}) async {
   final xml = _document(body);
   final bytes = _archive(xml);
-  expect(
-    OfficeTextExtractor.extract(bytes, name: 'native.odt').paragraphs,
-    expected,
-  );
+  final extracted = OfficeTextExtractor.extract(bytes, name: 'native.odt');
+  expect(extracted.paragraphs, expectedParagraphs ?? expected);
+  expect(extracted.tables, expectedTables);
   expect(
     await officeSearchText(bytes, 'native.odt', 65536),
     expected.join('\n'),
@@ -199,6 +203,14 @@ void main() {
       '</table:covered-table-cell></table:table-row></table:table>')}'
       '</text:p>',
       ['AB', 'Visible'],
+      // Structured extraction retains the frame's table; text/search keep the
+      // same visible paragraph sequence as the original regression.
+      expectedParagraphs: ['AB'],
+      expectedTables: [
+        [
+          ['Visible'],
+        ],
+      ],
     );
   });
 

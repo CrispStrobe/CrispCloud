@@ -1,0 +1,33 @@
+{
+  "kind": "Documentation-only finalization proof against the exact accepted host source",
+  "qualified_host_source": "511361a4623e6ddf787b5cccfaed4ba14ae1899f",
+  "qualified_host_tree": "bc7916f9d5949c6611a96510f62bebb8b43668a7",
+  "canonical_manifest_pin": "def52d84f3c3c5ce22c44d2620ecfa08d77780a7",
+  "allowed_documentation_scope": [
+    "docs/",
+    "packages/QUDS_FORKS.md"
+  ],
+  "changed_documentation_paths": [
+    "docs/validation/office-resume-20261117/README.md",
+    "docs/validation/office-resume-20261117/host-final-qualification-20261117-index.json",
+    "docs/validation/office-resume-20261117/host-final-qualification-20261117.tar.xz",
+    "docs/validation/office-resume-20261117/host-final-qualification-independent-review.json",
+    "docs/validation/office-resume-20261117/host-final-qualification-report.md",
+    "docs/validation/office-resume-20261117/host-final-qualification-summary.json",
+    "docs/validation/office-resume-20261117/host-final-reviewer.py",
+    "docs/validation/office-resume-20261117/host-finalization-source-equality.json",
+    "docs/validation/office-resume-20261117/host-probe-contract-independent-review.json",
+    "packages/QUDS_FORKS.md"
+  ],
+  "protected_git_tree_entries": 8939,
+  "protected_before_aggregate_sha256": "b6d90ab2e24d2dcc43051a242d949d82725d36daba98ad1f00090573d3956d89",
+  "protected_after_aggregate_sha256": "b6d90ab2e24d2dcc43051a242d949d82725d36daba98ad1f00090573d3956d89",
+  "all_non_documentation_paths_objects_and_modes_identical": true,
+  "runtime_test_tool_dependency_manifest_blobs_and_modes_unchanged": true,
+  "source_manifest_blob": "ec35f60e4e5a71f87b1e0b3740bd14b5c29927b5",
+  "qualification_rerun_performed_for_documentation": false,
+  "qualification_artifact": "host-final-qualification-20261117.tar.xz",
+  "qualification_artifact_sha256": "ee7b093c57b186adbe4ec54ac77a2156a087d383966d7f257bd8ab93a740101b",
+  "independent_review": "host-final-qualification-independent-review.json",
+  "recorded_utc": "2026-11-17T16:45:23.763029+00:00"
+}

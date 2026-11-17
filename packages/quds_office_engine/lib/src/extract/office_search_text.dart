@@ -213,7 +213,8 @@ String _odfFallbackText(XmlElement node) {
       pieces.add(current.text);
     } else if (current is XmlElement &&
         !isOdfCoveredCell(current) &&
-        !isOdfAnnotation(current)) {
+        !isOdfAnnotation(current) &&
+        !isOdfNote(current)) {
       for (final child in current.children) {
         visit(child);
       }

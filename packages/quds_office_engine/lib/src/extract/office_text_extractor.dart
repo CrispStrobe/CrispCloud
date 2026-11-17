@@ -313,6 +313,47 @@ abstract final class OfficeTextExtractor {
     final List<List<List<String>>> tables = <List<List<String>>>[];
     final XmlPullReader reader = XmlPullReader(xml);
     final budget = OdfTextBudget();
+    void collectElement(
+      XmlElement element, {
+      List<List<String>>? table,
+      List<String>? row,
+    }) {
+      if (isOdfCoveredCell(element) ||
+          isOdfAnnotation(element) ||
+          isOdfNote(element)) {
+        return;
+      }
+      if (element.namespaceUri == odfTableNamespace) {
+        if (element.localName == 'table') {
+          table = <List<String>>[];
+          tables.add(table);
+          row = null;
+        } else if (element.localName == 'table-row' && table != null) {
+          row = <String>[];
+          table.add(row);
+        } else if (element.localName == 'table-cell' && row != null) {
+          row.add(readOdfText(element, budget));
+          return;
+        }
+      }
+      if (isOdfParagraph(element)) {
+        final boxes = odfTextBoxes(element).toList();
+        final ownText = readOdfParagraphText(element, budget);
+        if (ownText.isNotEmpty || boxes.isEmpty) {
+          paragraphs.add(ownText);
+        }
+        // Frames are separate stories. Keep their paragraphs distinct and
+        // their tables out of the enclosing paragraph's text.
+        for (final box in boxes) {
+          collectElement(box);
+        }
+        return;
+      }
+      for (final child in element.childElements) {
+        collectElement(child, table: table, row: row);
+      }
+    }
+
     List<List<String>>? table;
     List<String>? row;
     while (reader.next()) {
@@ -322,8 +363,10 @@ abstract final class OfficeTextExtractor {
       if ((reader.namespaceUri == odfTableNamespace &&
               reader.localName == 'covered-table-cell') ||
           (reader.namespaceUri == odfOfficeNamespace &&
-              reader.localName == 'annotation')) {
-        // Skip retained covered-cell and annotation stories without
+              reader.localName == 'annotation') ||
+          (reader.namespaceUri == odfTextNamespace &&
+              reader.localName == 'note')) {
+        // Skip retained covered-cell, annotation and note stories without
         // materializing them as visible document paragraphs or tables.
         final depth = reader.depth;
         while (reader.next() && reader.depth >= depth) {}
@@ -337,9 +380,7 @@ abstract final class OfficeTextExtractor {
         row.add(readOdfText(XmlDocument.readElement(reader), budget));
       } else if (reader.namespaceUri == odfTextNamespace &&
           (reader.localName == 'p' || reader.localName == 'h')) {
-        paragraphs.addAll(
-          readOdfParagraphs(XmlDocument.readElement(reader), budget),
-        );
+        collectElement(XmlDocument.readElement(reader));
       }
     }
     if (kind == OfficeExtractKind.opendocumentSheet) {

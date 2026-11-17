@@ -1,0 +1,75 @@
+{
+  "archive": "host-probe-contract-correction-20261117.tar.xz",
+  "kind": "Source-bound correction of obsolete supplemental probe contracts and generated formatter scope",
+  "candidate_executed": false,
+  "members": [
+    {
+      "path": "corrected-probes/odt_list_host_test.dart",
+      "bytes": 4617,
+      "sha256": "b26af6fb945a72c35c61180dd83f3fd1a1382dab93e0ea1089d88ea8ee6a8874"
+    },
+    {
+      "path": "corrected-probes/odt_note_host_test.dart",
+      "bytes": 11755,
+      "sha256": "daa3766ff4204c9998519f22d9cd81ecf02aa7e9a49494ad1d32fc5169c3ba79"
+    },
+    {
+      "path": "corrected-probes/odt_writer_host_test.dart",
+      "bytes": 2925,
+      "sha256": "ef5223be53fffe2358d6d4c9588a37b326d8c05791a6dafcf678f855285660f6"
+    },
+    {
+      "path": "corrected-scripts/run-focused-host-v2.py",
+      "bytes": 21438,
+      "sha256": "c9ddb2599fc3c25c2d8123b873cd87f441c27fe29163aae587c41bbfb98a97f8"
+    },
+    {
+      "path": "generated-format-policy-check.json",
+      "bytes": 7126,
+      "sha256": "23fd567a797d81a90e5de8295923fca4bdaa3eb03853a2aad2f71596aac2b766"
+    },
+    {
+      "path": "note-probe.patch",
+      "bytes": 8145,
+      "sha256": "b27e128c5a13d8fae532d564ec3d39d47a4b79f3e5c1d581f54ec92e7a9f8b15"
+    },
+    {
+      "path": "original-probes/odt_list_host_test.dart",
+      "bytes": 4617,
+      "sha256": "b26af6fb945a72c35c61180dd83f3fd1a1382dab93e0ea1089d88ea8ee6a8874"
+    },
+    {
+      "path": "original-probes/odt_note_host_test.dart",
+      "bytes": 6515,
+      "sha256": "d03e835a4dc8f22c210cc0cdf09274ee1c444465f4c58f6c52a9c67d956719a2"
+    },
+    {
+      "path": "original-probes/odt_writer_host_test.dart",
+      "bytes": 2925,
+      "sha256": "ef5223be53fffe2358d6d4c9588a37b326d8c05791a6dafcf678f855285660f6"
+    },
+    {
+      "path": "original-scripts/prior_host_qualification.py",
+      "bytes": 28660,
+      "sha256": "4049d732d10f42d8f3254b90d2943f41c99618a4fc820b68050ce70d989b8fed"
+    },
+    {
+      "path": "original-scripts/run-focused-host.py",
+      "bytes": 19105,
+      "sha256": "692738ef67824a7baa8ed55ba0926eea53511253e80b4949b1a0d15f8a216f45"
+    },
+    {
+      "path": "rationale.json",
+      "bytes": 3585,
+      "sha256": "4981588f69f2aadaea73e1eeb1fbb13b10f17ec2078b3810e26f4577346c2784"
+    },
+    {
+      "path": "runner.patch",
+      "bytes": 4206,
+      "sha256": "62be369424c29d4629dacb0b9036a712b2aa4b2659b48cf770b5ebf2b8932c90"
+    }
+  ],
+  "archive_bytes": 19260,
+  "archive_sha256": "7eae2b59647d13bd148dca7475a863e54b78dd76d693afd789e7247835a16c9c",
+  "all_members_read_back_and_verified": true
+}

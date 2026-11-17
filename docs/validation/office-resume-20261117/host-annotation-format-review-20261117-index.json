@@ -1,0 +1,79 @@
+{
+  "kind": "Incoming host annotation test semantic and genuine-graph formatter equivalence",
+  "archive": "host-annotation-format-review-20261117.tar.xz",
+  "bytes": 15768,
+  "sha256": "24e2b7c117e205db9d895236f67cc1c308e0e6139b955c737bc5b5efbd03c582",
+  "members": [
+    {
+      "path": "annotation-format-review/ast-comparison.json",
+      "bytes": 1180,
+      "sha256": "19fdd83dea7581a0e8a9f0c85654f8a016d0a92a29bd3048d4fdb7c0d97822db"
+    },
+    {
+      "path": "annotation-format-review/compare_ast.dart",
+      "bytes": 2764,
+      "sha256": "2f0bf2d515904e5195aa362372a11764052c8f5605278ad233a585e3c7fe78fa"
+    },
+    {
+      "path": "annotation-format-review/corrected.dart",
+      "bytes": 11710,
+      "sha256": "73846853fc14d25af6f4ca9c5c421ae89e282b2ad62f612a940082798d437996"
+    },
+    {
+      "path": "annotation-format-review/corrected.dart.ast.json",
+      "bytes": 65691,
+      "sha256": "2786ab093f6507500f2ac83b157f42c455b415fc56ab9b58d453c7540d48f1e1"
+    },
+    {
+      "path": "annotation-format-review/formatter-reproduction.json",
+      "bytes": 1184,
+      "sha256": "52bbfb0f2b2e0b721fbe21e6438d31b349213297e1236b0c929b78879af74086"
+    },
+    {
+      "path": "annotation-format-review/formatter.log",
+      "bytes": 76,
+      "sha256": "fbe33c5581b1aa345c9f8ba4cec9b30d421903a2be1152a85d3c1eb43fee0069"
+    },
+    {
+      "path": "annotation-format-review/host-format/.dart_tool/package_config.json",
+      "bytes": 24597,
+      "sha256": "39199548b546032830c160b2f1cf361bb71085b8b1367c449f1f399a8ad93362"
+    },
+    {
+      "path": "annotation-format-review/host-format/analysis_options.yaml",
+      "bytes": 2581,
+      "sha256": "05ce41d1c237b7a8c018c639f416a83226b1c6a7ee26b63e584ebb320791783b"
+    },
+    {
+      "path": "annotation-format-review/host-format/pubspec.yaml",
+      "bytes": 12489,
+      "sha256": "3ce710f98ac0f2021be7ad2a35224b87674f509b3e7b5e3a2c07d02cc9967cdb"
+    },
+    {
+      "path": "annotation-format-review/host-format/test/corrected.dart",
+      "bytes": 11710,
+      "sha256": "73846853fc14d25af6f4ca9c5c421ae89e282b2ad62f612a940082798d437996"
+    },
+    {
+      "path": "annotation-format-review/host-format/test/incoming.dart",
+      "bytes": 11710,
+      "sha256": "73846853fc14d25af6f4ca9c5c421ae89e282b2ad62f612a940082798d437996"
+    },
+    {
+      "path": "annotation-format-review/incoming.dart",
+      "bytes": 11307,
+      "sha256": "de73bb446981a2cf0c2b0cbac860762044456f97a4c7ebd0147a49aa70f7e781"
+    },
+    {
+      "path": "annotation-format-review/incoming.dart.ast.json",
+      "bytes": 65691,
+      "sha256": "2786ab093f6507500f2ac83b157f42c455b415fc56ab9b58d453c7540d48f1e1"
+    },
+    {
+      "path": "annotation-format-review/review-receipt.json",
+      "bytes": 2412,
+      "sha256": "63e68d4e7bf952eddf9fc41768f9a70ac3b8f70c803d30796a940707522644f4"
+    }
+  ],
+  "full_archive_readback_verified": true
+}

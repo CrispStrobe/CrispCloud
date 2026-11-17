@@ -1,0 +1,17 @@
+{
+  "observed_via": "draft PR creation metadata",
+  "canonical_main": "7cf48a2f7b73aafb8bd2019bda4e0ddc6698f9ad",
+  "host_main": "eebf6d094113755e8268111910385f9bf984654b",
+  "host_previous_main": "c7f797ad562722a6e990731a25f1676a4543e1a4",
+  "new_host_prs": [
+    233,
+    234,
+    235,
+    236
+  ],
+  "managed_resolution": "Sync final canonical amendment, including page-number fields, shading/borders and confirmed style-cache key fix.",
+  "host_production_services": "No difference from previous integrated host.",
+  "host_annotation_test": "Incoming main independently carries the same five raw-XML header corrections; formatter/AST identity review retained separately.",
+  "incoming_docs_and_policy": "Preserve all newly arrived documentation, German-options evidence and source fingerprint metadata at exact incoming blobs. No release or distribution action is performed.",
+  "scope": "One bounded destination-main amendment; original frozen inventory remains unchanged."
+}

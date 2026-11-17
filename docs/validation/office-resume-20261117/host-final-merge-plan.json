@@ -1,0 +1,106 @@
+{
+  "host_parent": "1149fc32ca12763e969679c627877cf269bfafb1",
+  "pending_main": "eebf6d094113755e8268111910385f9bf984654b",
+  "canonical_target": "4c49b0435bc6611221bc49b58b15e735059467ff",
+  "canonical_target_tree": "b098f1fb6ae8ab7b4a0614d6a2c25b1623bab1de",
+  "previous_canonical": "b32dee6f1fb6993c928a466b553226209cf27fb8",
+  "captured_utc": "2026-11-17T16:23:24.877844+00:00",
+  "reason": "Restore exact previous pinned bytes and modes only as the existing guarded sync precondition, then copy exact final canonical source. Incoming host documentation and host annotation reader/test remain preserved.",
+  "paths": [
+    {
+      "path": "packages/quds_office_engine/lib/src/word/serial/odt_document_writer.dart",
+      "before_sha256": "8edeb20006fad95e8d5cd54c9762d6e201d8d76c9075d6c4bf2316e7321eed6c",
+      "before_mode": "0o644",
+      "index_before": "100644 56be24a9fb66f083b7bdf3f128423475b1660b87 1\tpackages/quds_office_engine/lib/src/word/serial/odt_document_writer.dart\n100644 48f2bc3bb1b25361ce34543398603c4c662d5c5f 2\tpackages/quds_office_engine/lib/src/word/serial/odt_document_writer.dart\n100644 0ae9e139edda8ef737ce92a80a936dd823bc6d1f 3\tpackages/quds_office_engine/lib/src/word/serial/odt_document_writer.dart",
+      "head_entry": "100644 blob 48f2bc3bb1b25361ce34543398603c4c662d5c5f\tpackages/quds_office_engine/lib/src/word/serial/odt_document_writer.dart",
+      "restored_sha256": "adc25dfade5c9d51c7b5dcb2d2b70b6f7a81a4a1981309d34aa2781fde2b6f8c",
+      "restored_mode": "0o644"
+    },
+    {
+      "path": "packages/quds_office_engine/test/odp_presentation_writer_test.dart",
+      "before_sha256": "3dab85ea986b6e2ebecc64b177a243dfec795144a9efb2a23e58c5f4d273503e",
+      "before_mode": "0o644",
+      "index_before": "100644 eecedb63621a9333773ceb0e4a1873761ffd10a6 1\tpackages/quds_office_engine/test/odp_presentation_writer_test.dart\n100644 5356f55659e2da7e467b8b349911d5cc09e20460 2\tpackages/quds_office_engine/test/odp_presentation_writer_test.dart\n100644 7372967f3e2ce8b3496dec838d05cfc18d818eb3 3\tpackages/quds_office_engine/test/odp_presentation_writer_test.dart",
+      "head_entry": "100644 blob 5356f55659e2da7e467b8b349911d5cc09e20460\tpackages/quds_office_engine/test/odp_presentation_writer_test.dart",
+      "restored_sha256": "2a7c46d84505b213e0565e856cb9d9dab0b3cbb2099b134fbf9374fc6557013d",
+      "restored_mode": "0o644"
+    },
+    {
+      "path": "packages/quds_office_engine/test/odt_document_writer_test.dart",
+      "before_sha256": "51691539a658938806f8efe1279dbf89db9f8e5d3e6c15bf5a90a90c472f2708",
+      "before_mode": "0o644",
+      "index_before": "100644 1e15b0e0d9fb504094e22575ea1d60d49fcca37f 0\tpackages/quds_office_engine/test/odt_document_writer_test.dart",
+      "head_entry": "100644 blob b9e5483566926a3c33dd09cfacc45034afff5b70\tpackages/quds_office_engine/test/odt_document_writer_test.dart",
+      "restored_sha256": "7373be481a3153f557e41b2e7c1cf337928dcbfdb1b4557954cbd8002f8f09a8",
+      "restored_mode": "0o644"
+    },
+    {
+      "path": "packages/quds_office_engine/test/odt_section_fidelity_test.dart",
+      "before_sha256": "b1519fe9c4e8b914cf577375e8f18f951894262d67e510dae90ef588dc72ee64",
+      "before_mode": "0o644",
+      "index_before": "100644 9a55a2d22e7fe902e119ff4661dc869fec4c8893 1\tpackages/quds_office_engine/test/odt_section_fidelity_test.dart\n100644 9f4e54c2cc1eb2fe1496e806bc507f06ba6a04bb 2\tpackages/quds_office_engine/test/odt_section_fidelity_test.dart\n100644 d922a11264e483958de81c4d7b2444dfbb140f34 3\tpackages/quds_office_engine/test/odt_section_fidelity_test.dart",
+      "head_entry": "100644 blob 9f4e54c2cc1eb2fe1496e806bc507f06ba6a04bb\tpackages/quds_office_engine/test/odt_section_fidelity_test.dart",
+      "restored_sha256": "3e128eaa3b7306c47960b1194fa0b16bc1e3a7633e04a353d9867f6e348d14ab",
+      "restored_mode": "0o644"
+    },
+    {
+      "path": "tool/office_fidelity_manifest.json",
+      "before_sha256": "69b5594d6b55ce76f2f27fa0395bab984636ed1b325e6af5d56d8487e7bbaa54",
+      "before_mode": "0o644",
+      "index_before": "100644 84548a24e281fafc52461536ca02a89629cf358d 1\ttool/office_fidelity_manifest.json\n100644 90fb21f259d4bdc4501d12e170d6aab6caab31b2 2\ttool/office_fidelity_manifest.json\n100644 df85a828d987d4a652064918e114cfb1d0c50883 3\ttool/office_fidelity_manifest.json",
+      "head_entry": "100644 blob 90fb21f259d4bdc4501d12e170d6aab6caab31b2\ttool/office_fidelity_manifest.json",
+      "restored_sha256": "f91f25fd58e5da82ac098ad0351f0005ebf04ca1cf179ab39eb97886372f62e8",
+      "restored_mode": "0o644"
+    }
+  ],
+  "preserved_incoming_paths": [
+    {
+      "path": "docs/apple-export-policy.json",
+      "incoming_blob": "09abb63d8c17e8e46e7af7d2823484bbb51c672f",
+      "sha256": "15bd024403469f0c04483fb11085effd0f15f8e9abd00f186a3718e33a1102d7"
+    },
+    {
+      "path": "packages/quds_office_engine/README.md",
+      "incoming_blob": "08b84fb93cc4690744010338a10ef38e4fbd300f",
+      "sha256": "3121a462233d7849def851bc975fe413c557e3d37642ffb62e2f7b45d1b3cfe1"
+    },
+    {
+      "path": "docs/validation/german-options-20261117/README.md",
+      "incoming_blob": "437802f843968bb0829acab224bc1ebc0c4ebad3",
+      "sha256": "3b85fcb53c916754e9626feb4e5e415ea8620afa5af02bd5bb3311221c6fbddc"
+    },
+    {
+      "path": "docs/validation/german-options-20261117/evidence.json",
+      "incoming_blob": "505783dacda48ecc5497a83b55730c73892efa5f",
+      "sha256": "557067ce6fee22ef1ddb53469727e02414ff5b9dbeedf6e7bf8cb01adcad42c2"
+    }
+  ],
+  "annotation_test_blob": "ff488be11f054c1ba080a1af4dd12cce7a9e512a",
+  "restored_exact_head_bytes_modes_and_index": true,
+  "canonical_branch": "codex/office-qualified-resume-20261117",
+  "actual_managed_files": 2603,
+  "actual_canonical_files": 746,
+  "standalone_parser_files": 1857,
+  "standalone_parser_commit": "4895712158127b2fc930d796e17035c3ca0dac62",
+  "guarded_plan": "vendor-plan-final.json",
+  "guarded_applied_receipt": "vendor-applied-final.json",
+  "exact_write_count": 19,
+  "deletion_count": 0,
+  "final_host_qualification_not_yet_run": true,
+  "source_status": "Guarded sync and tracked-index vendor guard passed; local merge is ready for immutable remote publication and then final focused host qualification.",
+  "fixed_ref_preservation_audit": "fixed-ref-preservation-audit.json",
+  "annotation_formatter_proof": "host-annotation-format-review-20261117-index.json",
+  "annotation_negative_control": "host-annotation-negative-corrected-20261117-index.json",
+  "optional_gector_package_added_to_host": false,
+  "models_or_native_binaries_added": false,
+  "github_actions_or_status_queried": false,
+  "host_production_annotation_reader_and_license_registration_unchanged": true,
+  "tracked_index_guard": {
+    "receipt": "vendor-guard-final.json",
+    "sha256": "7685c908023291609aa51514303cb09fec0812669bd9522d4a26eeb907c1d887",
+    "exit_code": 0,
+    "verified_managed_files": 2603,
+    "canonical_pin": "4c49b0435bc6611221bc49b58b15e735059467ff",
+    "standalone_parser_pin": "4895712158127b2fc930d796e17035c3ca0dac62"
+  }
+}
