@@ -15,6 +15,12 @@ void main() {
         PmlSlide(
           id: 1,
           notes: 'Speaker note',
+          transition: const PmlSlideTransition(
+            kind: PmlTransitionKind.push,
+            direction: PmlTransitionDir.left,
+            durationMs: 800,
+            advanceAfterMs: 5000,
+          ),
           shapes: [
             PmlShape(
               id: 2,
@@ -78,6 +84,8 @@ void main() {
     expect(content, contains('<table:table'));
     expect(content, contains('Pictures/image1.png'));
     expect(content, contains('Speaker note'));
+    expect(content, contains('presentation:transition-style="push-left"'));
+    expect(content, contains('presentation:duration="PT5.00S"'));
     expect(styles, contains('fo:page-width'));
     expect(package.getPart('/Pictures/image1.png'), isNotNull);
   });
