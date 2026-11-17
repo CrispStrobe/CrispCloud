@@ -11,6 +11,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import '../../odf/odf_text.dart';
 import '../../opc/zip/zip_reader.dart';
 import '../../visual/office_visual.dart';
 import '../../xml/xml_node.dart';
@@ -1867,53 +1868,35 @@ abstract final class OdsSheetReader {
   }
 
   static String _text(XmlElement element) {
-    Iterable<XmlElement> bodyParagraphs(XmlElement parent) sync* {
-      for (final child in parent.childElements) {
-        // An annotation is a separate story, never part of its cell value.
-        // Its own text is read by calling _text on the annotation root.
-        if (child.localName == 'annotation') continue;
-        if (_is(child, 'p', _textNs)) yield child;
-        yield* bodyParagraphs(child);
-      }
-    }
-
-    final paragraphs = bodyParagraphs(element).toList();
+    const maximumCharacters = 1024 * 1024;
+    // UTF-8 uses at most three bytes per UTF-16 code unit. Preserve the existing
+    // character limit for non-ASCII cells while bounding decoder allocations.
+    final budget = OdfTextBudget(3 * maximumCharacters);
     final buffer = StringBuffer();
-    void write(String value) {
-      if (buffer.length + value.length > 1024 * 1024) {
-        throw const OdsSheetFormatException('ODS cell text limit');
-      }
-      buffer.write(value);
-    }
-
-    void inline(XmlNode node) {
-      if (node is XmlText) {
-        write(node.text);
-      } else if (node is XmlCdata) {
-        write(node.text);
-      } else if (node is XmlElement) {
-        if (node.localName == 'annotation') return;
-        if (_is(node, 's', _textNs)) {
-          final count = _repeat(node, 'c', namespace: _textNs);
-          if (count > 1024 * 1024) {
+    var first = true;
+    try {
+      // Read the root's contents deliberately: callers also inspect covered
+      // cells for rejection and decode an annotation's own story separately.
+      // Nested hidden stories remain excluded by the shared ODF decoder.
+      for (final child in element.childElements) {
+        for (final paragraph in readOdfParagraphs(child, budget)) {
+          final separator = first ? 0 : 1;
+          if (buffer.length + separator + paragraph.length >
+              maximumCharacters) {
             throw const OdsSheetFormatException('ODS cell text limit');
           }
-          write(' ' * count);
-        } else if (_is(node, 'tab', _textNs)) {
-          write('\t');
-        } else if (_is(node, 'line-break', _textNs)) {
-          write('\n');
-        } else {
-          for (final child in node.children) {
-            inline(child);
+          if (!first) {
+            budget.consume(1);
+            buffer.write('\n');
           }
+          buffer.write(paragraph);
+          first = false;
         }
       }
-    }
-
-    for (var i = 0; i < paragraphs.length; i++) {
-      if (i > 0) write('\n');
-      inline(paragraphs[i]);
+    } on OdfTextLimitException {
+      throw const OdsSheetFormatException('ODS cell text limit');
+    } on FormatException catch (error) {
+      throw OdsSheetFormatException('Invalid ODS cell text: ${error.message}');
     }
     return buffer.toString();
   }
