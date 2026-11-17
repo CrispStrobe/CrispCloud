@@ -1,18 +1,38 @@
-# Office continuation: current-source reconciliation
+# Office continuation: qualified 5d99ecb7 snapshot
 
-## Initial saved checkpoint
+Published host source [`5d99ecb79ab316058b2db2813932cf2a4849128a`](https://github.com/CrispStrobe/CrispCloud/commit/5d99ecb79ab316058b2db2813932cf2a4849128a), pinning canonical [`6a32a919325d71c121c63e3879cfd1b28d64312e`](https://github.com/CrispStrobe/quds_office_suite/commit/6a32a919325d71c121c63e3879cfd1b28d64312e), passed fresh local qualification: **125 substantive Dart/Flutter cases, 28 Python controls, all 12 gates, zero failures or skips**. Independent review recounted both raw streams, all Python results and every gate, then checked the source, dependency, runtime and native-tool input maps.
 
-Captured source at 2026-11-17T17:39:35.511839+00:00. This checkpoint records incoming refs before integration; it is not a qualification of the combined source.
+The [complete host report](host-final-qualification-report.md) records exact source identities, test scope, runtime setup, limitations and reproduction instructions. The [summary JSON](host-final-summary.json), [complete evidence archive](host-final-qualification-5d99ecb7.tar.xz) and [archive hash index](host-final-qualification-5d99ecb7-index.json) preserve the receipts and raw evidence. Every archived member was read back and checked against its length and SHA-256.
 
-- Repository: `CrispStrobe/CrispCloud`.
-- Starting qualified branch: `83617b79f8a56600e9ca17e73f835d944c79dfa8`.
-- Captured main: `1cd2a18f7bc2455eabc5ec8e22767c849a833305`.
-- Fetched all 120 branch heads and 232 PR heads, including full reachable history.
-- Exact refs, SHAs, commit dates and initial ancestry are preserved in `incoming-refs.json`.
-- GitHub Actions, workflow, check-run and CI-status endpoints are not queried or awaited.
+Acceptance is bound to the immutable source identities above. A subsequent host main update at `7667ea3c7dc0a5bbb2649d7dcf59bdd236dbf8af` was observed after qualification and will receive a separate source review. This completed run does not claim acceptance of that newer source.
 
-## Work in progress
+## Source integration and actual host coverage
 
-Reconcile current main and all relevant active Office/proofing source heads, retaining the qualified annotation, note ownership, decoration-cache and table-border changes. Historical equivalent or archived implementations remain accounted for rather than replacing current implementation.
+Captured host main `1cd2a18f`, the second captured main `9eced5ce`, and the superseding continuation merge `fd0cc5de` were integrated with true merges. The canonical union was synchronized through the vendor guard. The last sync records eight writes, five additions and zero deletions. [Merge resolution](host-superseding-main-resolution.json) · [Sync plan](vendor-superseding-plan.json) · [Applied sync](vendor-superseding-applied.json).
 
-Save each coherent source milestone remotely, then run source-bound local validation. Fresh qualification will exercise the native fixture and ONNX converter when available and retain the previous unavailable private-PDF exclusions. Historical evidence keeps its original attribution.
+Independent preservation checks cover **2,620 managed files: 763 canonical files and the unchanged 1,857-file standalone parser**. They retain all 20 audited host customizations, all six original notices and the engine license, all 50 canonical and 46 host Zotero paths, and the exact 12 inherited executable-mode differences. The Unicode notice and registration remain. Protected dependencies, lockfile and parser metadata are unchanged; optional AOT/GECToR/Harper packages stay outside the host managed-package boundary.
+
+The actual menu scope now includes twelve cases. Eleven exercise ODT/ODP export through the real editor dialog and registered menu callback, semantic previews, annotation privacy, independently authored chart data, and saved/downloaded/cancelled/failed destination outcomes with intervening edits. The untouched DOCX column-break case now passes after its canonical writer repair. The separate twelfth case checks native empty fields, schema-valid style placement and conservative styled/nested/malformed cache fallback through real DOCX import and ODT host preview.
+
+The complete fresh total comprises 119 repository cases plus six unchanged writer-to-host probes. It retains the prior annotation, document-service, Zotero and proofing-license cohorts and includes the existing dialog, ODS workflow and ODT viewer cases. Earlier qualification counts are not added to this result.
+
+The accepted run uses the full production locked graph of 275 packages including the root application, with genuine native hooks. Before/after maps are identical for 8,604 source files, 13,535 dependency files, six runtime inputs and 128 native/tool inputs. The original analyzer configuration is restored. Strict analysis covers 18 host and 62 vendor targets; formatting covers 18 host targets, the viewer, and 86 handwritten vendor targets. Generated byte exclusions remain individually authenticated and analyzed.
+
+Only the Apple policy's technical reviewed-source hash changes. Its decisions, inventory, dependency lock and checker remain unchanged. The [technical review](apple-superseding-source-review.json) records the exact comparison against the 954-path reviewed inventory.
+
+## Failed attempts and corrections
+
+Both earlier attempts are preserved with their exact source attribution and original runners.
+
+- [`78a4ccbb` attempt](host-attempt1-summary.json): runtime streams passed, but vendor analysis incorrectly included canonical development-only units in the host production graph, and the newly selected dialog needed two formatting wraps. [Archive](host-qualification-attempt1-78a4ccbb.tar.xz) · [Index](host-qualification-attempt1-78a4ccbb-index.json).
+- [`83cc5b7c` attempt](host-attempt2-summary.json): the actual DOCX-to-ODT menu case exposed a real imported inline-column-break defect. The original eleven-case file and assertion were retained byte-for-byte; the correction was made canonically and all final gates were rerun. [Archive](host-qualification-attempt2-83cc5b7c.tar.xz) · [Index](host-qualification-attempt2-83cc5b7c-index.json).
+
+The field case's two earlier drafts were corrected before any runtime execution to match the official schema and existing native-placeholder contract. Their static-check records and reasons remain in the final archive. [Preparation record](host-field-contract-review.json).
+
+## Initial captured inventory
+
+The incoming refs were captured at `2026-11-17T17:39:35.511839+00:00`, before integration. The starting qualified branch was `83617b79f8a56600e9ca17e73f835d944c79dfa8`, and captured main was `1cd2a18f7bc2455eabc5ec8e22767c849a833305`. All **120 branch heads and 232 PR heads**, including reachable history, were fetched. Exact refs, SHAs, dates and initial ancestry remain unchanged in [incoming-refs.json](incoming-refs.json).
+
+PR #238 was superseded by merged PR #249; it is not the review target for the later continuation. Source snapshots, failed attempts and completed qualifications retain their original identities as subsequent work proceeds.
+
+No GitHub Actions, workflow, check-run or CI-status endpoint was queried or awaited. This evidence covers the stated local engine-to-host, editor, dialog, menu callback, service, transport and viewer paths with controlled storage/destination boundaries. Platform release builds, native pickers, live service accounts and Microsoft Word field evaluation remain separate acceptance scopes. Canonical tests and real LibreOffice consumer results are reported separately.

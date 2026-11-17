@@ -1,0 +1,50 @@
+{
+  "status": "passed",
+  "source_commit": "5d99ecb79ab316058b2db2813932cf2a4849128a",
+  "source_tree": "343251381590c1c41f3bb546b485d4c0683f2ead",
+  "canonical_source_commit": "6a32a919325d71c121c63e3879cfd1b28d64312e",
+  "canonical_tree": "a2f4cb57a6a99a0506546419cc904bf873b32bca",
+  "qualified_from_utc": "2026-11-17T19:13:12.892611+00:00",
+  "qualified_to_utc": "2026-11-17T19:16:17.008661+00:00",
+  "dart_flutter_substantive": {
+    "repository_passed": 119,
+    "supplemental_passed": 6,
+    "total_passed": 125,
+    "failed": 0,
+    "skipped": 0
+  },
+  "python_passed": 28,
+  "all_12_gates_passed": true,
+  "source_inputs": 8604,
+  "dependency_inputs": 13535,
+  "runtime_inputs": 6,
+  "native_hook_and_tool_inputs": 128,
+  "source_and_dependency_maps_identical": true,
+  "analyzer_config_restored": true,
+  "host_static_targets": 18,
+  "vendor_analysis_targets": 62,
+  "vendor_format_targets": 86,
+  "generated_entries_authenticated": 34,
+  "selected_generated_format_exclusions": 18,
+  "managed_files": 2620,
+  "canonical_files": 763,
+  "standalone_parser_files": 1857,
+  "original_11_case_file_sha256": "164f54855d5fc6580fb8b66b78577bbd83327e75b23742cb32e9fa154b991b7a",
+  "new_field_case_sha256": "38d3563d44670d40860d5d50e7f591aa74b06b16fa457c8425e67046ecc68f0b",
+  "prior_failure_archives": [
+    "host-qualification-attempt1-78a4ccbb.tar.xz",
+    "host-qualification-attempt2-83cc5b7c.tar.xz"
+  ],
+  "historical_counts_added": false,
+  "github_actions_or_status_queried": false,
+  "github_actions_awaited": false,
+  "independent_source_and_runtime_audits_passed": true,
+  "independent_runtime_review_sha256": "f8fc6c9aed80f5b8484faab8acff88a847f6fcf91f55a8db428bf9c01dc2ef16",
+  "evidence_archive": {
+    "archive": "host-final-qualification-5d99ecb7.tar.xz",
+    "archive_size": 1066316,
+    "archive_sha256": "e3d822d299a46b28e849722eb444e6652bf5f59b8b5c907410bc7e2cfc3bbd4b",
+    "member_count": 93,
+    "all_members_read_back_verified": true
+  }
+}
