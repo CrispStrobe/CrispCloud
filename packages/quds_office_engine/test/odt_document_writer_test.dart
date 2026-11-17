@@ -29,6 +29,7 @@ XmlElement _odtBody(OpcPackage package) => XmlDocument.parse(
 ).root!.firstChild('body')!.firstChild('text')!;
 
 void main() {
+  commentTests();
   footnoteTests();
   test('writes modeled Word text, runs, tables and pictures as ODT', () {
     final document = WmlDocument(
@@ -252,5 +253,40 @@ void footnoteTests() {
     expect(content, contains('text:note-class="footnote"'));
     expect(content, contains('<text:note-citation>1</text:note-citation>'));
     expect(content, contains('Footnote text'));
+  });
+}
+
+void commentTests() {
+  test('writes ODT comments', () {
+    final document = WmlDocument(
+      comments: [
+        WmlComment(
+          id: 1,
+          author: 'Reviewer',
+          dateIso: '2026-11-17T00:00:00Z',
+          paragraphs: [
+            WmlParagraph(inlines: [WmlRun(text: 'Comment text')]),
+          ],
+        ),
+      ],
+      sections: [
+        WmlSection(
+          blocks: [
+            WmlParagraph(
+              inlines: [
+                WmlRun(text: 'Annotated', commentIds: [1]),
+              ],
+            ),
+          ],
+        ),
+      ],
+    );
+    final package = OpcPackage.openBytes(
+      OdtDocumentWriter.writeBytes(document),
+    );
+    final content = package.getPart('/content.xml')!.readText();
+    expect(content, contains('<office:annotation'));
+    expect(content, contains('<dc:creator>Reviewer</dc:creator>'));
+    expect(content, contains('Comment text'));
   });
 }
