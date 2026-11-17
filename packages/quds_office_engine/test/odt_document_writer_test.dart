@@ -48,6 +48,10 @@ void main() {
               inlines: [WmlRun(text: 'Second bullet')],
             ),
             WmlParagraph(
+              properties: WmlParagraphProps(numId: 2, listLabel: '1. '),
+              inlines: [WmlRun(text: 'First numbered')],
+            ),
+            WmlParagraph(
               properties: WmlParagraphProps(
                 justification: WmlJustification.center,
               ),
@@ -117,6 +121,8 @@ void main() {
     expect(content, contains('<text:list'));
     expect(content, contains('First bullet'));
     expect(content, contains('Second bullet'));
+    expect(content, contains('First numbered'));
+    expect(content, contains('text:style-name="L2"'));
     expect(content, contains('<table:table'));
     expect(content, contains('Pictures/image1.png'));
     expect(styles, contains('fo:page-width'));

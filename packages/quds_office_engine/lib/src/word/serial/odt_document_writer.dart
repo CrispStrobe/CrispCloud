@@ -99,30 +99,42 @@ abstract final class OdtDocumentWriter {
       w.writeEndElement();
       w.writeEndElement();
     }
-    w.writeStartElement('list-style', prefix: 'text');
-    w.writeAttribute('style:name', 'L1');
-    for (var level = 1; level <= 9; level++) {
-      w.writeStartElement('list-level-style-bullet', prefix: 'text');
-      w.writeAttribute('text:level', '$level');
-      w.writeAttribute('text:bullet-char', '•');
-      w.writeStartElement('list-level-properties', prefix: 'style');
-      w.writeAttribute(
-        'text:list-level-position-and-space-mode',
-        'label-alignment',
-      );
-      w.writeEmptyElement(
-        'list-level-label-alignment',
-        prefix: 'style',
-        attributes: {
-          'text:label-followed-by': 'listtab',
-          'fo:margin-left': '${level * 0.25}in',
-          'fo:text-indent': '-0.25in',
-        },
-      );
-      w.writeEndElement();
+    for (final ordered in <bool>[false, true]) {
+      w.writeStartElement('list-style', prefix: 'text');
+      w.writeAttribute('style:name', ordered ? 'L2' : 'L1');
+      for (var level = 1; level <= 9; level++) {
+        w.writeStartElement(
+          ordered ? 'list-level-style-number' : 'list-level-style-bullet',
+          prefix: 'text',
+        );
+        w.writeAttribute('text:level', '$level');
+        if (ordered) {
+          w.writeAttribute('loext:num-list-format', '%$level%.');
+          w.writeAttribute('style:num-format', '1');
+          w.writeAttribute('style:num-suffix', '.');
+        } else {
+          w.writeAttribute('text:bullet-char', '•');
+        }
+        w.writeStartElement('list-level-properties', prefix: 'style');
+        w.writeAttribute(
+          'text:list-level-position-and-space-mode',
+          'label-alignment',
+        );
+        w.writeEmptyElement(
+          'list-level-label-alignment',
+          prefix: 'style',
+          attributes: {
+            'text:label-followed-by': 'listtab',
+            'text:list-tab-stop-position': '${level * 0.25}in',
+            'fo:margin-left': '${level * 0.25}in',
+            'fo:text-indent': '-0.25in',
+          },
+        );
+        w.writeEndElement();
+        w.writeEndElement();
+      }
       w.writeEndElement();
     }
-    w.writeEndElement();
     w.writeEndElement();
     w.writeStartElement('automatic-styles', prefix: 'office');
     final section = document.sections.firstOrNull;
@@ -201,6 +213,10 @@ abstract final class OdtDocumentWriter {
     w.writeNamespace('xlink', 'http://www.w3.org/1999/xlink');
     w.writeNamespace('dc', 'http://purl.org/dc/elements/1.1/');
     w.writeNamespace('meta', 'urn:oasis:names:tc:opendocument:xmlns:meta:1.0');
+    w.writeNamespace(
+      'loext',
+      'urn:org:documentfoundation:names:experimental:office:xmlns:loext:1.0',
+    );
   }
 
   static void _writeBlocks(
@@ -236,8 +252,13 @@ abstract final class OdtDocumentWriter {
     List<WmlParagraph> paragraphs,
     _OdtLayout layout,
   ) {
+    final ordered = paragraphs.any((paragraph) {
+      final label = paragraph.properties.listLabel?.trim() ?? '';
+      return label.isNotEmpty &&
+          !const <String>{'•', '◦', '▪', 'o'}.contains(label);
+    });
     w.writeStartElement('list', prefix: 'text');
-    w.writeAttribute('text:style-name', layout.listStyle());
+    w.writeAttribute('text:style-name', layout.listStyle(ordered: ordered));
     for (final paragraph in paragraphs) {
       w.writeStartElement('list-item', prefix: 'text');
       _writeParagraph(w, paragraph, layout);
@@ -606,7 +627,7 @@ class _OdtLayout {
     });
   }
 
-  String listStyle() => 'L1';
+  String listStyle({required bool ordered}) => ordered ? 'L2' : 'L1';
 
   String cellStyle(String fill) {
     return _cellStyles.putIfAbsent(fill, () {
