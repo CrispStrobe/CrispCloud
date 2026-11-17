@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import '../../odf/odf_text.dart';
 import '../../opc/zip/zip_writer.dart';
 import '../../xml/xml_writer.dart';
+import '../anim/pml_motion.dart';
 import '../model/pml_presentation.dart';
 
 /// Bounded new-document ODP writer for the shared slide model.
@@ -65,6 +66,26 @@ abstract final class OdpPresentationWriter {
     w.writeAttribute('draw:name', 'page${index + 1}');
     w.writeAttribute('draw:style-name', pageStyle);
     w.writeAttribute('draw:master-page-name', 'mp1');
+    if (!slide.transition.isNone) {
+      w.writeAttribute(
+        'presentation:transition-style',
+        _transitionStyle(slide.transition),
+      );
+      w.writeAttribute(
+        'presentation:transition-speed',
+        slide.transition.durationMs <= 500
+            ? 'fast'
+            : slide.transition.durationMs >= 1000
+            ? 'slow'
+            : 'medium',
+      );
+      if (slide.transition.advanceAfterMs case final advance?) {
+        w.writeAttribute(
+          'presentation:duration',
+          'PT${(advance / 1000).toStringAsFixed(2)}S',
+        );
+      }
+    }
     for (final shape in slide.shapes) {
       _writeShape(w, shape, layout);
     }
@@ -83,6 +104,45 @@ abstract final class OdpPresentationWriter {
       w.writeEndElement();
     }
     w.writeEndElement();
+  }
+
+  static String _transitionStyle(PmlSlideTransition transition) {
+    String direction(PmlTransitionDir dir) => switch (dir) {
+      PmlTransitionDir.left => 'left',
+      PmlTransitionDir.right => 'right',
+      PmlTransitionDir.up => 'up',
+      PmlTransitionDir.down => 'down',
+      PmlTransitionDir.horizontal => 'horizontal',
+      PmlTransitionDir.vertical => 'vertical',
+      PmlTransitionDir.inward => 'in',
+      PmlTransitionDir.outward => 'out',
+    };
+    return switch (transition.kind) {
+      PmlTransitionKind.none => 'none',
+      PmlTransitionKind.fade => 'fade-over',
+      PmlTransitionKind.fadeThroughBlack => 'fade-through-black',
+      PmlTransitionKind.cut => 'cut',
+      PmlTransitionKind.push => 'push-${direction(transition.direction)}',
+      PmlTransitionKind.wipe => 'wipe-${direction(transition.direction)}',
+      PmlTransitionKind.split =>
+        'split-${transition.direction == PmlTransitionDir.horizontal ? 'horizontal' : 'vertical'}',
+      PmlTransitionKind.uncover => 'uncover-${direction(transition.direction)}',
+      PmlTransitionKind.cover => 'cover-${direction(transition.direction)}',
+      PmlTransitionKind.dissolve => 'dissolve',
+      PmlTransitionKind.checkerboard => 'checkerboard',
+      PmlTransitionKind.blinds => 'blinds-${direction(transition.direction)}',
+      PmlTransitionKind.clock => 'clock',
+      PmlTransitionKind.zoom => 'zoom-in',
+      PmlTransitionKind.flash => 'flash',
+      PmlTransitionKind.comb => 'comb-${direction(transition.direction)}',
+      PmlTransitionKind.strips => 'strips-${direction(transition.direction)}',
+      PmlTransitionKind.randomBars =>
+        'random-bars-${direction(transition.direction)}',
+      PmlTransitionKind.reveal => 'reveal-${direction(transition.direction)}',
+      PmlTransitionKind.gallery => 'gallery',
+      PmlTransitionKind.doors => 'doors-${direction(transition.direction)}',
+      _ => 'fade-over',
+    };
   }
 
   static void _writeShape(XmlWriter w, PmlShape shape, _OdpLayout layout) {
