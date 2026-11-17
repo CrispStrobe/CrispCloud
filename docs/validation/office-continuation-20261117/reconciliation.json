@@ -1,0 +1,700 @@
+{
+  "schema": 1,
+  "repository": "CrispStrobe/CrispCloud",
+  "recorded_at_utc": "2026-11-17T14:04:30.784Z",
+  "captured_main": "fad903782ee45031e26c57cc8a65ccf476b1724d",
+  "supplied_baseline": "705638543e2d181b925c8acad562b743b974b5d4",
+  "inventory": {
+    "branches": 99,
+    "pull_requests": 212,
+    "combined_refs": 311,
+    "open_pull_requests": 0,
+    "branch_page_sizes": [
+      99,
+      0,
+      0,
+      0
+    ],
+    "pr_page_sizes": [
+      100,
+      100,
+      12,
+      0
+    ],
+    "branch_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/branches?per_page=100&page={page}",
+    "pr_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/pulls?state=all&sort=updated&direction=desc&per_page=100&page={page}",
+    "snapshot_scope": "Existing remote heads before this continuation branch was created, and all pull requests. It is a fixed source snapshot, not a statement that concurrent remote changes cannot occur."
+  },
+  "coverage_counts": {
+    "inherited_ancestor": 211,
+    "fresh_ancestor": 3,
+    "inherited_exact_tree": 84,
+    "fresh_exact_tree": 10,
+    "fresh_all_leaf_entries_preserved_with_additions": 2,
+    "identical": 1
+  },
+  "unaccounted_refs": [],
+  "inherited_proofs": {
+    "first": {
+      "path": "docs/validation/zotero-landing-20261117/incoming-audit.json",
+      "blob": "82ec68a42f5d407b4dba3be32bc4ded46f13afc0",
+      "qualified_head": "96c514eb98f7ba596a385c8f60496bc6c5994307"
+    },
+    "extended": {
+      "path": "docs/validation/zotero-landing-20261117/host-odf-independent-review.json",
+      "blob": "9250a0090cf37c045b9bc89c05abab5d74b53e73",
+      "captured_refs": 298
+    },
+    "method": "For unchanged ref SHA, preserve its recorded ancestry or exact-tree witness. Freshly verify recorded first audit head is an ancestor of captured main, then verify additional ref heads separately. Historical test counts retain their source attribution."
+  },
+  "fresh_ancestry": {
+    "base": "96c514eb98f7ba596a385c8f60496bc6c5994307",
+    "head": "fad903782ee45031e26c57cc8a65ccf476b1724d",
+    "status": "ahead",
+    "ahead": 23,
+    "behind": 0,
+    "total_commits": 23,
+    "commits": [
+      {
+        "sha": "4a1485f856895c2b3c3511d2eac6687f10f7557a",
+        "tree": "dcd47e0ef149948460553ddbf6d26da34e9c58f0",
+        "parents": [
+          "71a2aafd1cf0383fa505d0e8c1307244433e7ffe",
+          "d6ee82193c423a843daaeb8c20cab12810f6019b"
+        ],
+        "date": "2026-11-17T06:33:57Z",
+        "message": "Integrate current host work with combined Quds proofing, rendering and Zotero sources [skip ci]"
+      },
+      {
+        "sha": "c455b6b2da298b3d2ebb483f6c2059a6c95d18e6",
+        "tree": "9a21a3358fa22d41b9f0ee44c5ff74b5ffe6b98b",
+        "parents": [
+          "4a1485f856895c2b3c3511d2eac6687f10f7557a"
+        ],
+        "date": "2026-11-17T06:37:19Z",
+        "message": "Prepare integrated 1.3.4 build 29 and refresh reviewed release inputs [skip ci]"
+      },
+      {
+        "sha": "5d8a60e2a70b5eb0146623dfd21f804a471b9142",
+        "tree": "b4e889a0921d4812731b78ee8d31f53aed081858",
+        "parents": [
+          "c455b6b2da298b3d2ebb483f6c2059a6c95d18e6",
+          "1a20a883be5f1486f14cbe4f08bbaba5e974a5c1"
+        ],
+        "date": "2026-11-17T08:18:55Z",
+        "message": "Freeze current CrispCloud and upstream Office integration for TestFlight 29 [skip ci]"
+      },
+      {
+        "sha": "111270541b6d8fce4ba2d6cd1ed7b07539f36c28",
+        "tree": "cf331fcd7d5796ebc56face5ad1da3836a10b44a",
+        "parents": [
+          "71a2aafd1cf0383fa505d0e8c1307244433e7ffe"
+        ],
+        "date": "2026-11-17T08:26:34Z",
+        "message": "Vendor ODT list groups (#212)\n\nCo-authored-by: CrispStrobe <crispstrobe@users.noreply.github.com>"
+      },
+      {
+        "sha": "2c0d51aee913cc6e6070ee81c95c0244d60da7df",
+        "tree": "cc00dd06ff7174c6861b9aa0a3b2228602e515c4",
+        "parents": [
+          "111270541b6d8fce4ba2d6cd1ed7b07539f36c28"
+        ],
+        "date": "2026-11-17T08:26:58Z",
+        "message": "docs: record ODT list groups (#213)\n\nCo-authored-by: CrispStrobe <crispstrobe@users.noreply.github.com>"
+      },
+      {
+        "sha": "d17ec34906c6749b26e77106474661b44efe6537",
+        "tree": "4b6be490b511c09006c8a2ba56079e7d2e3bf3a0",
+        "parents": [
+          "5d8a60e2a70b5eb0146623dfd21f804a471b9142",
+          "2c0d51aee913cc6e6070ee81c95c0244d60da7df"
+        ],
+        "date": "2026-11-17T08:30:03Z",
+        "message": "Include incoming ODT list export in the integrated TestFlight source [skip ci]"
+      },
+      {
+        "sha": "46d66de4f18d08ce70fadf90a67155124ddcb5f3",
+        "tree": "4b6be490b511c09006c8a2ba56079e7d2e3bf3a0",
+        "parents": [
+          "d17ec34906c6749b26e77106474661b44efe6537",
+          "96c514eb98f7ba596a385c8f60496bc6c5994307"
+        ],
+        "date": "2026-11-17T08:38:45Z",
+        "message": "Record already-synchronized final Office PR ancestry [skip ci]"
+      },
+      {
+        "sha": "2acdde3aa567e2ffb6f2ee18305e412c9390418b",
+        "tree": "13af7d1c8e957706efe2b3f85e7ce18a8cda4d24",
+        "parents": [
+          "46d66de4f18d08ce70fadf90a67155124ddcb5f3"
+        ],
+        "date": "2026-11-17T08:39:44Z",
+        "message": "Vendor ordered ODT list groups (#214)\n\nCo-authored-by: CrispStrobe <crispstrobe@users.noreply.github.com>"
+      },
+      {
+        "sha": "ecdc83b5ab1f3923f5102a7f78094e25beb65e9d",
+        "tree": "136f2ea7db2dac92d64287e36357a4f9d94ede72",
+        "parents": [
+          "2acdde3aa567e2ffb6f2ee18305e412c9390418b"
+        ],
+        "date": "2026-11-17T08:40:06Z",
+        "message": "docs: record ordered ODT lists and provenance (#215)\n\nCo-authored-by: CrispStrobe <crispstrobe@users.noreply.github.com>"
+      },
+      {
+        "sha": "f9844b5d505555559352b89731ceef69d92ce514",
+        "tree": "aa80d699dd6e812e60383094406b5ec1edab0b5b",
+        "parents": [
+          "96c514eb98f7ba596a385c8f60496bc6c5994307"
+        ],
+        "date": "2026-11-17T08:43:30Z",
+        "message": "Publish fresh host qualification, complete preservation proof and reproduction evidence [skip ci]"
+      },
+      {
+        "sha": "a38c97654c3c6ec2d88485ed1566fb42a46f6644",
+        "tree": "789a16168b044811389dd96db9dbf0a648465ed3",
+        "parents": [
+          "ecdc83b5ab1f3923f5102a7f78094e25beb65e9d"
+        ],
+        "date": "2026-11-17T08:52:15Z",
+        "message": "Record integrated macOS TestFlight build 29 delivery and qualification [skip ci]"
+      },
+      {
+        "sha": "5e0c798b85cba3e0b85dff9d1c29e3915e4ed253",
+        "tree": "f1ee2384a442570dc2f0d44abef33a202362034b",
+        "parents": [
+          "a38c97654c3c6ec2d88485ed1566fb42a46f6644"
+        ],
+        "date": "2026-11-17T08:52:59Z",
+        "message": "Vendor ODP slide transitions (#216)\n\nCo-authored-by: CrispStrobe <crispstrobe@users.noreply.github.com>"
+      },
+      {
+        "sha": "5deb70e0850bb738da02e4c850ca711fd3655bb5",
+        "tree": "26d262644dac61f680e0c8d4e97dc712bc2ca3e2",
+        "parents": [
+          "5e0c798b85cba3e0b85dff9d1c29e3915e4ed253"
+        ],
+        "date": "2026-11-17T08:53:30Z",
+        "message": "docs: record ODP transitions (#217)\n\nCo-authored-by: CrispStrobe <crispstrobe@users.noreply.github.com>"
+      },
+      {
+        "sha": "057027883b91917f44f623d28f6b637b394b85a7",
+        "tree": "3fc1750836ebd9941c9dfa44d39afcc5871adfc1",
+        "parents": [
+          "5deb70e0850bb738da02e4c850ca711fd3655bb5"
+        ],
+        "date": "2026-11-17T09:05:19Z",
+        "message": "Vendor ODT footnote export (#218)\n\nCo-authored-by: CrispStrobe <crispstrobe@users.noreply.github.com>"
+      },
+      {
+        "sha": "d4524de90dd403c9ce350a1d271ac70ce511256b",
+        "tree": "01015ce80ebd4d6fef3c062d5424598a1f2add87",
+        "parents": [
+          "057027883b91917f44f623d28f6b637b394b85a7"
+        ],
+        "date": "2026-11-17T09:05:47Z",
+        "message": "docs: record ODT footnote export (#219)\n\nCo-authored-by: CrispStrobe <crispstrobe@users.noreply.github.com>"
+      },
+      {
+        "sha": "a8cc440260369214fce5cbae8b0230f425a46829",
+        "tree": "51abd03067cec69735a9413e1bb9323f6eadd93b",
+        "parents": [
+          "ecdc83b5ab1f3923f5102a7f78094e25beb65e9d",
+          "f9844b5d505555559352b89731ceef69d92ce514"
+        ],
+        "date": "2026-11-17T09:14:37Z",
+        "message": "Integrate captured ODF source and prevent nested covered-cell preview leaks [skip ci]"
+      },
+      {
+        "sha": "a9a2e20755d714c36c996c0d449cf3b8cca13cda",
+        "tree": "fbda01796e9897ec9adb2c5e36039904ebe29b19",
+        "parents": [
+          "a8cc440260369214fce5cbae8b0230f425a46829"
+        ],
+        "date": "2026-11-17T09:24:51Z",
+        "message": "Save passed host covered-cell and ODF evidence before note landing [skip ci]"
+      },
+      {
+        "sha": "c66a84fcf5ce9016d8cc5b31b6d44f775d5a1149",
+        "tree": "a10b5e183294e19324026abcb30df4e4299f8bbd",
+        "parents": [
+          "a9a2e20755d714c36c996c0d449cf3b8cca13cda",
+          "d4524de90dd403c9ce350a1d271ac70ce511256b"
+        ],
+        "date": "2026-11-17T09:28:40Z",
+        "message": "Preserve destination main note export with guarded canonical sync [skip ci]"
+      },
+      {
+        "sha": "58a7e60b7a8b44d7809b6cf7c27541f41a3168dc",
+        "tree": "a6fd4865300febb0bc44cb294c84aa61bdd86750",
+        "parents": [
+          "c66a84fcf5ce9016d8cc5b31b6d44f775d5a1149"
+        ],
+        "date": "2026-11-17T09:32:11Z",
+        "message": "Keep covered table stories out of ODT note previews [skip ci]"
+      },
+      {
+        "sha": "e8331dd7e10a0e0d8fac03035eedb19492a8ca2d",
+        "tree": "eddc947bfa9f4b3c7c2746390e0b8ca792fea5dd",
+        "parents": [
+          "58a7e60b7a8b44d7809b6cf7c27541f41a3168dc"
+        ],
+        "date": "2026-11-17T09:39:26Z",
+        "message": "Publish final host note qualification and reviewed landing evidence [skip ci]"
+      },
+      {
+        "sha": "705638543e2d181b925c8acad562b743b974b5d4",
+        "tree": "eddc947bfa9f4b3c7c2746390e0b8ca792fea5dd",
+        "parents": [
+          "d4524de90dd403c9ce350a1d271ac70ce511256b",
+          "e8331dd7e10a0e0d8fac03035eedb19492a8ca2d"
+        ],
+        "date": "2026-11-17T09:40:20Z",
+        "message": "Land qualified Zotero host sync and covered-cell preview fixes [skip ci]\n\nPreserve destination main and pin Quds b2dc226e2ed82cda8f1bada18fb0a1e17347b5fc. Qualified host implementation 58a7e60b7a8b44d7809b6cf7c27541f41a3168dc; later changes contain reviewed evidence and documentation only. All qualification was local."
+      },
+      {
+        "sha": "03e81b38e7a727d89c5215152676eb1503a2f284",
+        "tree": "c120d3456e8cbc5c868f2be56d3f69fb9d1bce5b",
+        "parents": [
+          "705638543e2d181b925c8acad562b743b974b5d4"
+        ],
+        "date": "2026-11-17T13:48:51Z",
+        "message": "Vendor ODT comment export (#221)\n\nCo-authored-by: CrispStrobe <crispstrobe@users.noreply.github.com>"
+      },
+      {
+        "sha": "fad903782ee45031e26c57cc8a65ccf476b1724d",
+        "tree": "c7e7e047572e69415f58b549689524581fbfa451",
+        "parents": [
+          "03e81b38e7a727d89c5215152676eb1503a2f284"
+        ],
+        "date": "2026-11-17T13:49:15Z",
+        "message": "docs: record ODT comment export (#222)\n\nCo-authored-by: CrispStrobe <crispstrobe@users.noreply.github.com>"
+      }
+    ]
+  },
+  "changed_head_comparisons": [
+    {
+      "name": "codex/zotero-recovery-20261116",
+      "sha": "e8331dd7e10a0e0d8fac03035eedb19492a8ca2d",
+      "status": "ahead",
+      "ahead": 3,
+      "behind": 0,
+      "base_tree": "eddc947bfa9f4b3c7c2746390e0b8ca792fea5dd",
+      "merge_base": "e8331dd7e10a0e0d8fac03035eedb19492a8ca2d"
+    },
+    {
+      "name": "docs/odp-transitions",
+      "sha": "ce400a18517e69e29368b3728eb092a37d780bcc",
+      "status": "diverged",
+      "ahead": 12,
+      "behind": 1,
+      "base_tree": "26d262644dac61f680e0c8d4e97dc712bc2ca3e2",
+      "merge_base": "5e0c798b85cba3e0b85dff9d1c29e3915e4ed253"
+    },
+    {
+      "name": "docs/odt-comments",
+      "sha": "cb4147d325ca096977484a06582799606ebbd7e7",
+      "status": "diverged",
+      "ahead": 1,
+      "behind": 1,
+      "base_tree": "c7e7e047572e69415f58b549689524581fbfa451",
+      "merge_base": "03e81b38e7a727d89c5215152676eb1503a2f284"
+    },
+    {
+      "name": "docs/odt-footnotes",
+      "sha": "46f7ba2a72a4964c7dfecae2d8d2e9fb430ffd49",
+      "status": "diverged",
+      "ahead": 10,
+      "behind": 1,
+      "base_tree": "01015ce80ebd4d6fef3c062d5424598a1f2add87",
+      "merge_base": "057027883b91917f44f623d28f6b637b394b85a7"
+    },
+    {
+      "name": "docs/odt-lists",
+      "sha": "9b1f404f54e767d6f0464cf70a12c57da6a990bc",
+      "status": "diverged",
+      "ahead": 44,
+      "behind": 1,
+      "base_tree": "cc00dd06ff7174c6861b9aa0a3b2228602e515c4",
+      "merge_base": "111270541b6d8fce4ba2d6cd1ed7b07539f36c28"
+    },
+    {
+      "name": "docs/odt-ordered-lists",
+      "sha": "ec0f16b96f8040c185ecf147af045c7a2986027c",
+      "status": "diverged",
+      "ahead": 15,
+      "behind": 1,
+      "base_tree": "136f2ea7db2dac92d64287e36357a4f9d94ede72",
+      "merge_base": "2acdde3aa567e2ffb6f2ee18305e412c9390418b"
+    },
+    {
+      "name": "fix/odp-transitions-vendor",
+      "sha": "3c5a4114c3241d1aa2550b00ebd959527a16b4d9",
+      "status": "diverged",
+      "ahead": 14,
+      "behind": 1,
+      "base_tree": "8848350ba18914f76c59abcc573492af427be383",
+      "merge_base": "ecdc83b5ab1f3923f5102a7f78094e25beb65e9d"
+    },
+    {
+      "name": "fix/odt-comments-vendor",
+      "sha": "17b5f5495a05573a7b173018c5becdbaa7e190ea",
+      "status": "diverged",
+      "ahead": 2,
+      "behind": 1,
+      "base_tree": "c120d3456e8cbc5c868f2be56d3f69fb9d1bce5b",
+      "merge_base": "705638543e2d181b925c8acad562b743b974b5d4"
+    },
+    {
+      "name": "fix/odt-footnotes-vendor",
+      "sha": "7591ceb57fb55a2380a1ab2a3e0c52b85fc43e94",
+      "status": "diverged",
+      "ahead": 11,
+      "behind": 1,
+      "base_tree": "3fc1750836ebd9941c9dfa44d39afcc5871adfc1",
+      "merge_base": "5deb70e0850bb738da02e4c850ca711fd3655bb5"
+    },
+    {
+      "name": "fix/odt-lists-vendor",
+      "sha": "214ccbd1541f9d55c07aca0c1994b753d7cbf1ca",
+      "status": "diverged",
+      "ahead": 45,
+      "behind": 1,
+      "base_tree": "cf331fcd7d5796ebc56face5ad1da3836a10b44a",
+      "merge_base": "71a2aafd1cf0383fa505d0e8c1307244433e7ffe"
+    },
+    {
+      "name": "fix/odt-ordered-lists-vendor2",
+      "sha": "75504cbd905e7e887a90d5c707fedfa7469f7b9d",
+      "status": "diverged",
+      "ahead": 18,
+      "behind": 1,
+      "base_tree": "13af7d1c8e957706efe2b3f85e7ce18a8cda4d24",
+      "merge_base": "d17ec34906c6749b26e77106474661b44efe6537"
+    }
+  ],
+  "exact_tree_witnesses": [
+    {
+      "name": "docs/odp-transitions",
+      "head": "ce400a18517e69e29368b3728eb092a37d780bcc",
+      "head_tree": "26d262644dac61f680e0c8d4e97dc712bc2ca3e2",
+      "merge": "5deb70e0850bb738da02e4c850ca711fd3655bb5",
+      "merge_tree": "26d262644dac61f680e0c8d4e97dc712bc2ca3e2",
+      "pr": 217,
+      "equal": true
+    },
+    {
+      "name": "docs/odt-comments",
+      "head": "cb4147d325ca096977484a06582799606ebbd7e7",
+      "head_tree": "c7e7e047572e69415f58b549689524581fbfa451",
+      "merge": "fad903782ee45031e26c57cc8a65ccf476b1724d",
+      "merge_tree": "c7e7e047572e69415f58b549689524581fbfa451",
+      "pr": 222,
+      "equal": true
+    },
+    {
+      "name": "docs/odt-footnotes",
+      "head": "46f7ba2a72a4964c7dfecae2d8d2e9fb430ffd49",
+      "head_tree": "01015ce80ebd4d6fef3c062d5424598a1f2add87",
+      "merge": "d4524de90dd403c9ce350a1d271ac70ce511256b",
+      "merge_tree": "01015ce80ebd4d6fef3c062d5424598a1f2add87",
+      "pr": 219,
+      "equal": true
+    },
+    {
+      "name": "docs/odt-lists",
+      "head": "9b1f404f54e767d6f0464cf70a12c57da6a990bc",
+      "head_tree": "cc00dd06ff7174c6861b9aa0a3b2228602e515c4",
+      "merge": "2c0d51aee913cc6e6070ee81c95c0244d60da7df",
+      "merge_tree": "cc00dd06ff7174c6861b9aa0a3b2228602e515c4",
+      "pr": 213,
+      "equal": true
+    },
+    {
+      "name": "docs/odt-ordered-lists",
+      "head": "ec0f16b96f8040c185ecf147af045c7a2986027c",
+      "head_tree": "136f2ea7db2dac92d64287e36357a4f9d94ede72",
+      "merge": "ecdc83b5ab1f3923f5102a7f78094e25beb65e9d",
+      "merge_tree": "136f2ea7db2dac92d64287e36357a4f9d94ede72",
+      "pr": 215,
+      "equal": true
+    },
+    {
+      "name": "fix/odt-comments-vendor",
+      "head": "17b5f5495a05573a7b173018c5becdbaa7e190ea",
+      "head_tree": "c120d3456e8cbc5c868f2be56d3f69fb9d1bce5b",
+      "merge": "03e81b38e7a727d89c5215152676eb1503a2f284",
+      "merge_tree": "c120d3456e8cbc5c868f2be56d3f69fb9d1bce5b",
+      "pr": 221,
+      "equal": true
+    },
+    {
+      "name": "fix/odt-footnotes-vendor",
+      "head": "7591ceb57fb55a2380a1ab2a3e0c52b85fc43e94",
+      "head_tree": "3fc1750836ebd9941c9dfa44d39afcc5871adfc1",
+      "merge": "057027883b91917f44f623d28f6b637b394b85a7",
+      "merge_tree": "3fc1750836ebd9941c9dfa44d39afcc5871adfc1",
+      "pr": 218,
+      "equal": true
+    },
+    {
+      "name": "fix/odt-lists-vendor",
+      "head": "214ccbd1541f9d55c07aca0c1994b753d7cbf1ca",
+      "head_tree": "cf331fcd7d5796ebc56face5ad1da3836a10b44a",
+      "merge": "111270541b6d8fce4ba2d6cd1ed7b07539f36c28",
+      "merge_tree": "cf331fcd7d5796ebc56face5ad1da3836a10b44a",
+      "pr": 212,
+      "equal": true
+    },
+    {
+      "name": "fix/odt-ordered-lists-vendor2",
+      "head": "75504cbd905e7e887a90d5c707fedfa7469f7b9d",
+      "head_tree": "13af7d1c8e957706efe2b3f85e7ce18a8cda4d24",
+      "merge": "2acdde3aa567e2ffb6f2ee18305e412c9390418b",
+      "merge_tree": "13af7d1c8e957706efe2b3f85e7ce18a8cda4d24",
+      "pr": 214,
+      "equal": true
+    }
+  ],
+  "additive_tree_witness": {
+    "name": "fix/odp-transitions-vendor",
+    "head": "3c5a4114c3241d1aa2550b00ebd959527a16b4d9",
+    "head_tree": "8848350ba18914f76c59abcc573492af427be383",
+    "merge": "5e0c798b85cba3e0b85dff9d1c29e3915e4ed253",
+    "merge_tree": "f1ee2384a442570dc2f0d44abef33a202362034b",
+    "pr": 216,
+    "equal": false,
+    "root_only_different_directory": "docs",
+    "branch_docs_tree": "169e24e36f6e6b000f5f59a4f391e20b6e2895ea",
+    "merged_docs_tree": "2f6c99c90c33d537500fc813ba00704f53562f31",
+    "both_tree_responses_untruncated": true,
+    "branch_docs_leaf_count": 5353,
+    "all_existing_leaf_blobs_and_modes_equal": true,
+    "removed_leaves": 0,
+    "changed_leaves": 0,
+    "added_leaves": [
+      {
+        "path": "docs/validation/integrated-testflight-20261117/README.md",
+        "mode": "100644",
+        "sha": "de78dc1ad9572b01c45ae30b584a1f54b29ad583"
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/apple-controls.log.gz",
+        "mode": "100644",
+        "sha": "aa0802c7e627e155b2ca041497090847d9570a47"
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/apple-export-preflight-final.json",
+        "mode": "100644",
+        "sha": "b16485efafbce00344a32acbc929f4edad0e63d6"
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/apple-upload.json.gz",
+        "mode": "100644",
+        "sha": "dcfce8b2a877b8fe429e6dace3f6d09ba5bcc9e1"
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/apple-validation.json.gz",
+        "mode": "100644",
+        "sha": "68344315840a450bf9bfac7bcced42385abb53e6"
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/appstore-sign-package.log.gz",
+        "mode": "100644",
+        "sha": "66294a3822cafa83bff720ae19a7c99a3c9969b1"
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/captured-ref-coverage.json",
+        "mode": "100644",
+        "sha": "4d06fb34a18fc4782e7a0c17a2cab08a5b10d388"
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/development-sign-startup.log.gz",
+        "mode": "100644",
+        "sha": "674e5caba44415efc9c2ffa6df85889cd9a2090a"
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/distribution-controls.log.gz",
+        "mode": "100644",
+        "sha": "bbd3801cdd21c660991fb14a93cdbb3c6b7ba52c"
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/editor-final-tests-corrected.log.gz",
+        "mode": "100644",
+        "sha": "d06b2e8f0b566ff0dfbe5cd74c6570e416f12c28"
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/golden-comparison.json",
+        "mode": "100644",
+        "sha": "19474e7304aba69a15e5241b5da974fd9143a05b"
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/harper-tests.log.gz",
+        "mode": "100644",
+        "sha": "40f2d06d17a7fec84817d4ad14f9895cebde7195"
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/host-odt-lists-accepted.log.gz",
+        "mode": "100644",
+        "sha": "e7e052cde00fbcc1861d2b02bd134c8fcebed866"
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/host-office-accepted.log.gz",
+        "mode": "100644",
+        "sha": "b68b321eb8b4ab5877b9ff2de2b5a8571c330e51"
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/late-engine-tests-final.log.gz",
+        "mode": "100644",
+        "sha": "5d8489cb383d05ec1294f2d40b145f074fd8992a"
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/live-tmux-live-tmux.log.gz",
+        "mode": "100644",
+        "sha": "1d4cd36a52aa4807e96ed62110c08fe62e7a5bb2"
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/local-toolchain-note.json",
+        "mode": "100644",
+        "sha": "952cd2cd415f2a7a48e981d5750d49fec360203c"
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/odt-lists-final-tests.log.gz",
+        "mode": "100644",
+        "sha": "2cbf33bef9bbb0f3d46c552b7eedab7b2553e29e"
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/package.json",
+        "mode": "100644",
+        "sha": "4faec732b2942db91890dd96e12c5b50c2a1f44a"
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/pr201-ancestry-receipt.json",
+        "mode": "100644",
+        "sha": "2d0281765921452a1d564a43a11dfa51b618ea07"
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/pr201-source-comparison.json",
+        "mode": "100644",
+        "sha": "7fa557909f03cb95c8ec622590a09f391158f8e0"
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/receipt.json",
+        "mode": "100644",
+        "sha": "0f72e9f647159096af313b9e900e40100e06c62f"
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/ssh-live-accepted.log.gz",
+        "mode": "100644",
+        "sha": "93e83b2ff9b2ae344c638eabe630848e5fed2c6b"
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/sync-tests.log.gz",
+        "mode": "100644",
+        "sha": "5e1e200aacc56ab5a7a6f8f247f4840357b06b91"
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/terminal-unit-native.json.gz",
+        "mode": "100644",
+        "sha": "f677778e937c0b62e34d39bc4d398021c449765a"
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/terminal-unit-native.log.gz",
+        "mode": "100644",
+        "sha": "dd550f66fb8478bd3fde29662895766d0acea4bb"
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/testflight-controls.log.gz",
+        "mode": "100644",
+        "sha": "93a340df1fe5d6b9882a3271a42fde11b02b08fc"
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/testflight-distribution.log.gz",
+        "mode": "100644",
+        "sha": "b7bee326a400249aec241cd4f49305670c113ee2"
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/testflight-final-state.json",
+        "mode": "100644",
+        "sha": "159c2af3ebf877f82cfaf3fce76489565f3ad4dc"
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/tmux-live-accepted.log.gz",
+        "mode": "100644",
+        "sha": "db0569a8c3ede8c894c2017832a200936b260555"
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/vendor-final-accepted.log.gz",
+        "mode": "100644",
+        "sha": "67ff598a256c6f5c1912b1ddd554cb7ab16141b0"
+      }
+    ],
+    "qualification": "Not a complete-tree alias. Every original leaf is preserved; the merged ancestor adds 31 evidence files."
+  },
+  "newer_main_commits": [
+    {
+      "sha": "03e81b38e7a727d89c5215152676eb1503a2f284",
+      "date": "2026-11-17T13:48:51Z",
+      "message": "Vendor ODT comment export (#221)\n\nCo-authored-by: CrispStrobe <crispstrobe@users.noreply.github.com>"
+    },
+    {
+      "sha": "fad903782ee45031e26c57cc8a65ccf476b1724d",
+      "date": "2026-11-17T13:49:15Z",
+      "message": "docs: record ODT comment export (#222)\n\nCo-authored-by: CrispStrobe <crispstrobe@users.noreply.github.com>"
+    }
+  ],
+  "source_delta_since_supplied_baseline": [
+    {
+      "path": "docs/office-remaining-gaps-20261115.md",
+      "status": "modified",
+      "additions": 2,
+      "deletions": 2
+    },
+    {
+      "path": "packages/quds_office_engine/README.md",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/word/serial/odt_document_writer.dart",
+      "status": "modified",
+      "additions": 31,
+      "deletions": 0
+    },
+    {
+      "path": "packages/quds_office_engine/test/odt_document_writer_test.dart",
+      "status": "modified",
+      "additions": 36,
+      "deletions": 0
+    },
+    {
+      "path": "tool/office_fidelity_manifest.json",
+      "status": "modified",
+      "additions": 4,
+      "deletions": 4
+    }
+  ],
+  "source_conclusion": "No source from captured host heads or PR heads requires additional integration. Incoming main already includes the new ODT comment writer and metadata changes (#221, #222).",
+  "instructions": {
+    "root_AGENTS": "Absent (404)",
+    "read": [
+      "CLAUDE.md",
+      "HANDOVER.md"
+    ],
+    "AGENTS_scanned_and_absent": [
+      "lib",
+      "test",
+      "tool",
+      "packages/quds_office_engine",
+      "packages/quds_office_editor",
+      "packages/quds_reports"
+    ],
+    "scope": "Recursive untruncated Git tree responses for relevant source directories; no claim about every vendored third-party directory."
+  },
+  "validation": {
+    "runtime_tests_run": 0,
+    "reason": "Local command execution is blocked before shell startup by bwrap: Can't create file /workspace/scratch/f6cd2da02657/.git: No space left on device.",
+    "github_actions_or_ci_status_endpoints_queried": false,
+    "proof_scope": "Remote Git objects and source inventory only"
+  }
+}

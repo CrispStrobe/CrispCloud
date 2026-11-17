@@ -41,6 +41,18 @@ void main() {
     expect(finding.replacements, contains('Haus'));
     expect(finding.replacements.length, lessThanOrEqualTo(5));
   });
+  test('basic noun supplement preserves ordinary inflected forms', () async {
+    const String text =
+        'Band Junge Jungen Glaube Glauben Glaubens '
+        'Amt Amtes Amts Ämter Ämtern Vogel Vögel Vögeln';
+    for (final String language in <String>['de-DE', 'de-AT', 'de-CH']) {
+      final OfficeProofingResult result = await provider.check(
+        input(text, language: language),
+      );
+      expect(result.status, OfficeProofingStatus.success);
+      expect(result.findings, isEmpty, reason: language);
+    }
+  });
   test('offsets preserve emoji and decomposed source characters', () async {
     const String text = '🙂 Gru\u0308ße Huas';
     final OfficeProofingResult result = await provider.check(input(text));

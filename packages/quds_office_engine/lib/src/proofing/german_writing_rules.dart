@@ -1,5 +1,7 @@
 import 'package:characters/characters.dart';
 
+import 'german_morphology.dart';
+import 'german_spelling.dart' show normalizeGermanWord;
 import 'office_proofing.dart';
 import 'proofing_text_ranges.dart';
 
@@ -15,7 +17,8 @@ Set<int> _sourceGraphemeBoundaries(String text) {
   return boundaries;
 }
 
-/// Independently authored writing checks; not a general grammar parser.
+/// Independently authored writing checks with licensed noun morphology.
+/// This provider is not a general sentence parser.
 /// Findings are advisory and never rewrite text. Unbalanced quotes can be valid
 /// across paragraph boundaries and are explicitly described as review items.
 /// A pattern with an endpoint inside a source grapheme is omitted rather than
@@ -770,10 +773,21 @@ class GermanWritingRulesProvider extends OfficeProofingProvider {
     }
     final _GermanWritingText projection = _GermanWritingText(request.text);
     final String text = projection.text;
-    final List<OfficeProofingFinding> findings = <OfficeProofingFinding>[];
-    final Set<int> boundaries = projection.boundaries;
     final OfficeProofingTextRanges protected = OfficeProofingTextRanges(text);
     final bool Function(int, int) isProtected = protected.overlaps;
+    final Set<int> boundaries = projection.boundaries;
+    await GermanNounMorphology.shared.prepareWords(
+      _grammarMorphologyCandidates(text, isProtected, boundaries),
+    );
+    if (_disposed) {
+      return OfficeProofingResult(
+        request: request,
+        providerId: id,
+        status: OfficeProofingStatus.unavailable,
+        message: 'German writing provider is disposed.',
+      );
+    }
+    final List<OfficeProofingFinding> findings = <OfficeProofingFinding>[];
 
     void add(
       String ruleId,
@@ -945,6 +959,7 @@ class GermanWritingRulesProvider extends OfficeProofingProvider {
       text,
       isProtected,
       boundaries,
+      request.language == 'de-CH',
     )) {
       add(
         issue.ruleId,
@@ -1064,7 +1079,8 @@ String _matchCase(String source, String replacement) =>
 // Spelling still diagnoses ss/ß orthography where appropriate; grammar must
 // not reject a correctly inflected Swiss form or duplicate that finding.
 bool _germanFormsEquivalent(String a, String b) =>
-    a.replaceAll('ß', 'ss') == b.replaceAll('ß', 'ss');
+    normalizeGermanWord(a).replaceAll('ß', 'ss') ==
+    normalizeGermanWord(b).replaceAll('ß', 'ss');
 
 /// Discretionary hyphens belong to layout, not grammar. The projection removes
 /// them only from checker text and maps every result back to the untouched

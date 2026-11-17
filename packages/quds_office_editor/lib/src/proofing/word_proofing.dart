@@ -27,6 +27,7 @@ final class WordProofingSummary {
     List<WordProofingIssue> issues = const [],
     List<OfficeProofingReport> reports = const [],
     this.checking = false,
+    this.manualProvidersSkipped = false,
   }) : issues = List.unmodifiable(issues),
        reports = List.unmodifiable(reports);
 
@@ -35,12 +36,14 @@ final class WordProofingSummary {
   final int skippedContentCount;
   final bool hasResults;
   final bool checking;
+  final bool manualProvidersSkipped;
   final List<WordProofingIssue> issues;
   final List<OfficeProofingReport> reports;
 
   bool get complete =>
       hasResults &&
       !checking &&
+      !manualProvidersSkipped &&
       skippedContentCount == 0 &&
       reports.isNotEmpty &&
       reports.every((report) => report.complete);
@@ -66,6 +69,10 @@ final class WordProofingSummary {
         ? ''
         : '; $skippedContentCount excluded or unsupported content ranges';
     if (problems.isNotEmpty) return '$coverage$excluded. ${problems.join(' ')}';
+    if (manualProvidersSkipped) {
+      return '$coverage$excluded. ${issues.length} findings; '
+          'choose Check document to include the manual grammar check.';
+    }
     if (reports.isEmpty) return '$coverage$excluded. No checkable text.';
     if (!complete) {
       return '$coverage$excluded. ${issues.length} findings; coverage is incomplete.';
@@ -105,6 +112,7 @@ final class WordProofingSession extends ChangeNotifier {
   void Function(Map<String, Object?> snapshot)? onVocabularyChanged;
   final Duration debounce;
   late OfficeProofingService _service;
+  OfficeProofingService? _manualService;
   final Set<String> _ignoredRules = {};
   final Set<String> _ignoredOnce = {};
   final Expando<String> _ids = Expando<String>('proofing paragraph id');
@@ -125,6 +133,7 @@ final class WordProofingSession extends ChangeNotifier {
   WordProofingSummary get summary => _summary;
   bool get checking => _summary.checking;
   bool get enabled => _enabled;
+  bool get hasManualProviders => _manualService?.providers.isNotEmpty ?? false;
   String get language =>
       normalizeProofingLanguage(_document().proofingLanguage ?? 'de-DE');
   Set<String> get ignoredRuleIds => Set.unmodifiable(_ignoredRules);
@@ -139,18 +148,69 @@ final class WordProofingSession extends ChangeNotifier {
   }
 
   String get _configurationKey =>
-      '$_configuration|${_service.configurationKey}|${vocabulary.revision}|'
+      '$_configuration|${_service.configurationKey}|'
+      '${_manualService?.configurationKey ?? ''}|${vocabulary.revision}|'
       '$language|${_ignoredRules.join(',')}';
 
   /// Replacing a provider configuration invalidates pending checks immediately.
   void configure(OfficeProofingService service) {
+    if (_disposed) throw StateError('The proofing session is disposed.');
     if (identical(_service, service)) return;
+    _validateDistinctProviders(service, _manualService);
+    _validateReplacement(_service, service);
     final previous = _service;
     _service = service;
     _configuration++;
     _cache.clear();
     unawaited(previous.dispose());
     refresh();
+  }
+
+  /// Installs already-loaded providers for explicit checking, including F7.
+  /// They never run from the typing debounce timer. The session owns this
+  /// separate service and disposes it on replacement or session disposal.
+  /// Providers must not be shared with the ordinary service or repeat its IDs.
+  void configureManual(OfficeProofingService? service) {
+    if (_disposed) throw StateError('The proofing session is disposed.');
+    if (identical(_manualService, service)) return;
+    _validateDistinctProviders(_service, service);
+    _validateReplacement(_manualService, service);
+    final previous = _manualService;
+    _manualService = service;
+    _configuration++;
+    _cache.clear();
+    if (previous != null) unawaited(previous.dispose());
+    refresh();
+  }
+
+  static void _validateDistinctProviders(
+    OfficeProofingService ordinary,
+    OfficeProofingService? manual,
+  ) {
+    if (manual == null) return;
+    final ordinaryIds = ordinary.providers
+        .map((provider) => provider.id)
+        .toSet();
+    if (identical(ordinary, manual) ||
+        manual.providers.any((provider) => ordinaryIds.contains(provider.id))) {
+      throw ArgumentError(
+        'Manual and ordinary proofing providers must have distinct IDs and ownership.',
+      );
+    }
+  }
+
+  static void _validateReplacement(
+    OfficeProofingService? previous,
+    OfficeProofingService? replacement,
+  ) {
+    if (previous == null || replacement == null) return;
+    if (replacement.providers.any(
+      (next) => previous.providers.any((old) => identical(old, next)),
+    )) {
+      throw ArgumentError(
+        'A replacement service must own new provider instances.',
+      );
+    }
   }
 
   /// Called for controller-observed content changes. Selection and scroll
@@ -194,7 +254,12 @@ final class WordProofingSession extends ChangeNotifier {
     _timer?.cancel();
     _summary = WordProofingSummary();
     _findings = HashMap.identity();
-    if (_enabled) _timer = Timer(debounce, () => unawaited(checkNow()));
+    if (_enabled) {
+      _timer = Timer(
+        debounce,
+        () => unawaited(checkNow(includeManualProviders: false)),
+      );
+    }
   }
 
   void ignoreWord(WordProofingIssue issue) {
@@ -366,13 +431,21 @@ final class WordProofingSession extends ChangeNotifier {
     }
   }
 
-  Future<WordProofingSummary> checkNow() async {
+  /// Explicit checks include manually configured providers. Background callers
+  /// omit them and report that coverage separately; cached results never cross
+  /// these two scopes. F7 and the review dialog call the inclusive default.
+  Future<WordProofingSummary> checkNow({
+    bool includeManualProviders = true,
+  }) async {
     if (_disposed) return _summary;
     _timer?.cancel();
     final generation = ++_generation;
     final document = _document();
     final revision = _revision();
     final configuration = _configurationKey;
+    final manual = includeManualProviders ? _manualService : null;
+    final useManual = manual?.providers.isNotEmpty ?? false;
+    final manualSkipped = !includeManualProviders && hasManualProviders;
     if (!identical(document, _observedDocument)) {
       _cache.clear();
       _ignoredOnce.clear();
@@ -385,6 +458,7 @@ final class WordProofingSession extends ChangeNotifier {
     _summary = WordProofingSummary(
       paragraphCount: captured.paragraphs.length,
       checking: true,
+      manualProvidersSkipped: manualSkipped,
     );
     _findings = HashMap.identity();
     notifyListeners();
@@ -415,12 +489,19 @@ final class WordProofingSession extends ChangeNotifier {
           language: segment.language,
           ignoredRuleIds: _ignoredRules,
         );
-        final report =
-            cached?.key == snapshot.key &&
-                cached!.reports.length == snapshot.segments.length &&
-                cached.reports.every((report) => report.complete)
-            ? _retarget(cached.reports[index], request)
-            : await _service.check(request);
+        final OfficeProofingReport report;
+        if (cached?.key == snapshot.key &&
+            cached!.includesManual == useManual &&
+            cached.reports.length == snapshot.segments.length &&
+            cached.reports.every((report) => report.complete)) {
+          report = _retarget(cached.reports[index], request);
+        } else {
+          final ordinary = await _service.check(request);
+          if (!current()) return _summary;
+          report = useManual
+              ? _withManualResults(ordinary, await manual!.check(request))
+              : ordinary;
+        }
         if (!current()) return _summary;
         paragraphReports.add(report);
         for (final finding in report.findings) {
@@ -443,6 +524,7 @@ final class WordProofingSession extends ChangeNotifier {
       _cache[snapshot.paragraph] = _CachedParagraph(
         snapshot.key,
         paragraphReports,
+        useManual,
       );
     }
     if (!current()) return _summary;
@@ -471,9 +553,45 @@ final class WordProofingSession extends ChangeNotifier {
       hasResults: true,
       reports: reports,
       issues: issues,
+      manualProvidersSkipped: manualSkipped,
     );
     notifyListeners();
     return _summary;
+  }
+
+  /// Existing deterministic findings take precedence over overlapping model
+  /// proposals. Preserve every provider's operational result even when a
+  /// duplicate or competing suggestion is suppressed.
+  static OfficeProofingReport _withManualResults(
+    OfficeProofingReport ordinary,
+    OfficeProofingReport manual,
+  ) {
+    final accepted = <OfficeProofingFinding>[...ordinary.findings];
+    final results = <OfficeProofingResult>[...ordinary.results];
+    for (final result in manual.results) {
+      final findings = <OfficeProofingFinding>[];
+      for (final finding in result.findings) {
+        if (accepted.any((previous) => _conflicts(previous, finding))) continue;
+        findings.add(finding);
+        accepted.add(finding);
+      }
+      results.add(
+        OfficeProofingResult(
+          request: ordinary.request,
+          providerId: result.providerId,
+          status: result.status,
+          findings: findings,
+          message: result.message,
+        ),
+      );
+    }
+    return OfficeProofingReport(request: ordinary.request, results: results);
+  }
+
+  static bool _conflicts(OfficeProofingFinding a, OfficeProofingFinding b) {
+    if (a.start == a.end) return a.start >= b.start && a.start <= b.end;
+    if (b.start == b.end) return b.start >= a.start && b.start <= a.end;
+    return a.start < b.end && b.start < a.end;
   }
 
   _DocumentSnapshot _capture(WmlDocument document) {
@@ -813,6 +931,8 @@ final class WordProofingSession extends ChangeNotifier {
     _cache.clear();
     _findings.clear();
     unawaited(_service.dispose());
+    final manual = _manualService;
+    if (manual != null) unawaited(manual.dispose());
     super.dispose();
   }
 }
@@ -859,7 +979,8 @@ final class _DocumentSnapshot {
 }
 
 final class _CachedParagraph {
-  const _CachedParagraph(this.key, this.reports);
+  const _CachedParagraph(this.key, this.reports, this.includesManual);
   final String key;
   final List<OfficeProofingReport> reports;
+  final bool includesManual;
 }

@@ -319,10 +319,12 @@ abstract final class OfficeTextExtractor {
       if (reader.eventType != XmlEventType.startElement) {
         continue;
       }
-      if (reader.namespaceUri == odfTableNamespace &&
-          reader.localName == 'covered-table-cell') {
-        // Skip the complete retained story without materializing it. Otherwise
-        // its paragraphs (or nested tables) appear as visible document content.
+      if ((reader.namespaceUri == odfTableNamespace &&
+              reader.localName == 'covered-table-cell') ||
+          (reader.namespaceUri == odfOfficeNamespace &&
+              reader.localName == 'annotation')) {
+        // Skip retained covered-cell and annotation stories without
+        // materializing them as visible document paragraphs or tables.
         final depth = reader.depth;
         while (reader.next() && reader.depth >= depth) {}
       } else if (reader.localName == 'table') {

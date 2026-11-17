@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math' as math;
 import 'dart:typed_data';
 
 import '../../odf/odf_text.dart';
@@ -10,8 +11,10 @@ import '../model/pml_presentation.dart';
 /// Bounded new-document ODP writer for the shared slide model.
 ///
 /// Emits slides, positioned text shapes, pictures, tables, fills/strokes and
-/// speaker notes. Transitions, animations, master inheritance and arbitrary
-/// imported ODF XML are not reconstructed.
+/// speaker notes. Page transitions use bounded ODF/SMIL mappings and the three
+/// standard speed buckets; unsupported effects fall back to a crossfade.
+/// Shape animations, exact effect durations, per-slide click suppression,
+/// master inheritance and arbitrary imported ODF XML are not reconstructed.
 abstract final class OdpPresentationWriter {
   /// Serializes [presentation] as a new ODP package.
   static Uint8List writeBytes(PmlPresentation presentation) {
@@ -61,31 +64,11 @@ abstract final class OdpPresentationWriter {
     int index,
     _OdpLayout layout,
   ) {
-    final pageStyle = layout.pageStyle();
+    final pageStyle = layout.pageStyle(slide.transition);
     w.writeStartElement('page', prefix: 'draw');
     w.writeAttribute('draw:name', 'page${index + 1}');
     w.writeAttribute('draw:style-name', pageStyle);
     w.writeAttribute('draw:master-page-name', 'mp1');
-    if (!slide.transition.isNone) {
-      w.writeAttribute(
-        'presentation:transition-style',
-        _transitionStyle(slide.transition),
-      );
-      w.writeAttribute(
-        'presentation:transition-speed',
-        slide.transition.durationMs <= 500
-            ? 'fast'
-            : slide.transition.durationMs >= 1000
-            ? 'slow'
-            : 'medium',
-      );
-      if (slide.transition.advanceAfterMs case final advance?) {
-        w.writeAttribute(
-          'presentation:duration',
-          'PT${(advance / 1000).toStringAsFixed(2)}S',
-        );
-      }
-    }
     for (final shape in slide.shapes) {
       _writeShape(w, shape, layout);
     }
@@ -106,68 +89,20 @@ abstract final class OdpPresentationWriter {
     w.writeEndElement();
   }
 
-  static String _transitionStyle(PmlSlideTransition transition) {
-    String direction(PmlTransitionDir dir) => switch (dir) {
-      PmlTransitionDir.left => 'left',
-      PmlTransitionDir.right => 'right',
-      PmlTransitionDir.up => 'up',
-      PmlTransitionDir.down => 'down',
-      PmlTransitionDir.horizontal => 'horizontal',
-      PmlTransitionDir.vertical => 'vertical',
-      PmlTransitionDir.inward => 'in',
-      PmlTransitionDir.outward => 'out',
-    };
-    return switch (transition.kind) {
-      PmlTransitionKind.none => 'none',
-      PmlTransitionKind.fade => 'fade-over',
-      PmlTransitionKind.fadeThroughBlack => 'fade-through-black',
-      PmlTransitionKind.cut => 'cut',
-      PmlTransitionKind.push => 'push-${direction(transition.direction)}',
-      PmlTransitionKind.wipe => 'wipe-${direction(transition.direction)}',
-      PmlTransitionKind.split =>
-        'split-${transition.direction == PmlTransitionDir.horizontal ? 'horizontal' : 'vertical'}',
-      PmlTransitionKind.uncover => 'uncover-${direction(transition.direction)}',
-      PmlTransitionKind.cover => 'cover-${direction(transition.direction)}',
-      PmlTransitionKind.dissolve => 'dissolve',
-      PmlTransitionKind.checkerboard => 'checkerboard',
-      PmlTransitionKind.blinds => 'blinds-${direction(transition.direction)}',
-      PmlTransitionKind.clock => 'clock',
-      PmlTransitionKind.zoom => 'zoom-in',
-      PmlTransitionKind.flash => 'flash',
-      PmlTransitionKind.comb => 'comb-${direction(transition.direction)}',
-      PmlTransitionKind.strips => 'strips-${direction(transition.direction)}',
-      PmlTransitionKind.randomBars =>
-        'random-bars-${direction(transition.direction)}',
-      PmlTransitionKind.reveal => 'reveal-${direction(transition.direction)}',
-      PmlTransitionKind.gallery => 'gallery',
-      PmlTransitionKind.doors => 'doors-${direction(transition.direction)}',
-      _ => 'fade-over',
-    };
-  }
-
   static void _writeShape(XmlWriter w, PmlShape shape, _OdpLayout layout) {
     final transform = shape.transform;
+    final image = shape.visual?.imageBytes;
+    if ((image == null || image.isEmpty) &&
+        shape.table != null &&
+        transform.rot % (360 * 60000) != 0) {
+      _writeRotatedTable(w, shape, layout);
+      return;
+    }
     w.writeStartElement('frame', prefix: 'draw');
     w.writeAttribute('draw:name', shape.name);
     w.writeAttribute('draw:layer', 'layout');
     w.writeAttribute('draw:style-name', layout.graphicStyle(shape));
-    w.writeAttribute('svg:x', '${transform.xPoints.toStringAsFixed(2)}pt');
-    w.writeAttribute('svg:y', '${transform.yPoints.toStringAsFixed(2)}pt');
-    w.writeAttribute(
-      'svg:width',
-      '${transform.widthPoints.toStringAsFixed(2)}pt',
-    );
-    w.writeAttribute(
-      'svg:height',
-      '${transform.heightPoints.toStringAsFixed(2)}pt',
-    );
-    if (transform.rot != 0) {
-      w.writeAttribute(
-        'draw:transform',
-        'rotate (${transform.rotationDegrees.toStringAsFixed(2)})',
-      );
-    }
-    final image = shape.visual?.imageBytes;
+    _writeFrameGeometry(w, transform);
     if (image != null && image.isNotEmpty) {
       final path = layout.addMedia(image);
       w.writeEmptyElement(
@@ -181,6 +116,148 @@ abstract final class OdpPresentationWriter {
       w.writeStartElement('text-box', prefix: 'draw');
       _writeParagraphs(w, shape.text, layout, shape);
       w.writeEndElement();
+    }
+    w.writeEndElement();
+  }
+
+  static void _writeFrameGeometry(
+    XmlWriter w,
+    PmlTransform transform, {
+    double? left,
+    double? top,
+    double? width,
+    double? height,
+  }) {
+    // DrawingML and the shared slide renderer rotate clockwise about the
+    // frame center. ODF transforms act on the frame coordinates, including
+    // svg:x/y. Start rotated frames at the local origin and then translate
+    // their rotated corners back around the authored center.
+    final frameLeft = left ?? transform.xPoints;
+    final frameTop = top ?? transform.yPoints;
+    final frameWidth = width ?? transform.widthPoints;
+    final frameHeight = height ?? transform.heightPoints;
+    final rotation = transform.rot % (360 * 60000);
+    w.writeAttribute(
+      'svg:x',
+      rotation == 0 ? '${frameLeft.toStringAsFixed(2)}pt' : '0pt',
+    );
+    w.writeAttribute(
+      'svg:y',
+      rotation == 0 ? '${frameTop.toStringAsFixed(2)}pt' : '0pt',
+    );
+    w.writeAttribute(
+      'svg:width',
+      '${frameWidth.toStringAsFixed(rotation == 0 ? 2 : 6)}pt',
+    );
+    w.writeAttribute(
+      'svg:height',
+      '${frameHeight.toStringAsFixed(rotation == 0 ? 2 : 6)}pt',
+    );
+    if (rotation != 0) {
+      final radians = rotation * math.pi / (180 * 60000);
+      final cosine = math.cos(radians);
+      final sine = math.sin(radians);
+      final centerX = transform.xPoints + transform.widthPoints / 2;
+      final centerY = transform.yPoints + transform.heightPoints / 2;
+      final offsetX = frameLeft - centerX;
+      final offsetY = frameTop - centerY;
+      final x = centerX + cosine * offsetX - sine * offsetY;
+      final y = centerY + sine * offsetX + cosine * offsetY;
+      // Matrix coefficients avoid the angle-unit ambiguity of rotate() in
+      // older ODF specifications/readers. Translation carries explicit units.
+      String coefficient(double value) =>
+          (value.abs() < 1e-12 ? 0.0 : value).toStringAsFixed(12);
+      w.writeAttribute(
+        'draw:transform',
+        'matrix(${coefficient(cosine)} ${coefficient(sine)} '
+            '${coefficient(-sine)} ${coefficient(cosine)} 0 0) '
+            'translate(${x.toStringAsFixed(6)}pt ${y.toStringAsFixed(6)}pt)',
+      );
+    }
+  }
+
+  static void _writeRotatedTable(
+    XmlWriter w,
+    PmlShape shape,
+    _OdpLayout layout,
+  ) {
+    // Impress applies table translation while ignoring table rotation. Use
+    // ordinary text frames for this visual export, keeping native table
+    // structure for unrotated tables. The shared center rotates cell positions
+    // and their content together. One background covers ragged/empty positions
+    // without expanding a potentially large logical rectangle.
+    final table = shape.table!;
+    final transform = shape.transform;
+    final columns = table.colCount < 1 ? 1 : table.colCount;
+    final rows = table.rowCount < 1 ? 1 : table.rowCount;
+    final cellWidth = transform.widthPoints / columns;
+    final cellHeight = transform.heightPoints / rows;
+    w.writeStartElement('g', prefix: 'draw');
+    w.writeAttribute('draw:name', shape.name);
+    void emptyFrame(String suffix, String style) {
+      w.writeStartElement('frame', prefix: 'draw');
+      w.writeAttribute('draw:name', '${shape.name} $suffix');
+      w.writeAttribute('draw:layer', 'layout');
+      w.writeAttribute('draw:style-name', style);
+      _writeFrameGeometry(w, transform);
+      w.writeStartElement('text-box', prefix: 'draw');
+      w.writeEmptyElement('p', prefix: 'text');
+      w.writeEndElement();
+      w.writeEndElement();
+    }
+
+    emptyFrame('background', layout.cellFrameStyle('FFFFFF'));
+    for (var rowIndex = 0; rowIndex < table.rows.length; rowIndex++) {
+      final row = table.rows[rowIndex];
+      for (var column = 0; column < row.length; column++) {
+        final cell = row[column];
+        final physicalColumn = table.rightToLeft
+            ? columns - 1 - column
+            : column;
+        w.writeStartElement('frame', prefix: 'draw');
+        w.writeAttribute(
+          'draw:name',
+          '${shape.name} cell ${rowIndex + 1}:${column + 1}',
+        );
+        w.writeAttribute('draw:layer', 'layout');
+        w.writeAttribute(
+          'draw:style-name',
+          layout.cellFrameStyle(
+            cell.fillColor.isEmpty ? 'FFFFFF' : cell.fillColor,
+          ),
+        );
+        _writeFrameGeometry(
+          w,
+          transform,
+          left: transform.xPoints + physicalColumn * cellWidth,
+          top: transform.yPoints + rowIndex * cellHeight,
+          width: cellWidth,
+          height: cellHeight,
+        );
+        w.writeStartElement('text-box', prefix: 'draw');
+        _writeParagraphs(
+          w,
+          cell.text,
+          layout,
+          null,
+          textColor: cell.textColor.isEmpty ? '1A1A1A' : cell.textColor,
+          rightToLeft: table.rightToLeft,
+        );
+        w.writeEndElement();
+        w.writeEndElement();
+      }
+    }
+    // Draw an authored outer stroke last so cell fills cannot cover it. This
+    // does not invent gridlines or a table template absent from the source.
+    if (shape.strokeColor.isNotEmpty) {
+      emptyFrame(
+        'outline',
+        layout.cellFrameStyle(
+          '',
+          stroke: shape.strokeColor,
+          strokeWidth: shape.strokeWidth,
+        ),
+      );
     }
     w.writeEndElement();
   }
@@ -407,6 +484,10 @@ abstract final class OdpPresentationWriter {
       'urn:oasis:names:tc:opendocument:xmlns:presentation:1.0',
     );
     w.writeNamespace(
+      'smil',
+      'urn:oasis:names:tc:opendocument:xmlns:smil-compatible:1.0',
+    );
+    w.writeNamespace(
       'svg',
       'urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0',
     );
@@ -436,6 +517,7 @@ class _OdpLayout {
   final PmlPresentation presentation;
   final List<String> media = <String>[];
   final Map<String, Uint8List> mediaBytes = <String, Uint8List>{};
+  final Map<String, String> _pages = <String, String>{};
   final Map<String, String> _graphics = <String, String>{};
   final Map<String, String> _paragraphs = <String, String>{};
   final Map<String, String> _texts = <String, String>{};
@@ -454,17 +536,128 @@ class _OdpLayout {
     return path;
   }
 
-  String pageStyle() {
-    if (!_graphics.containsKey('__page')) {
-      const name = 'dp1';
-      _graphics['__page'] = name;
-      _buffers.add(
-        '<style:style style:name="$name" style:family="drawing-page">'
-        '<style:drawing-page-properties presentation:background-visible="true"/>'
-        '</style:style>',
-      );
+  String pageStyle(PmlSlideTransition transition) {
+    // ODF 1.3 section 17.25 places transition properties on the referenced
+    // drawing-page style, not on draw:page itself.
+    final properties = <String, String>{
+      'presentation:background-visible': 'true',
+    };
+    final advance = transition.advanceAfterMs;
+    if (advance != null && advance > 0) {
+      properties['presentation:transition-type'] = 'automatic';
+      properties['presentation:duration'] = _duration(advance);
     }
-    return _graphics['__page']!;
+    if (!transition.isNone &&
+        transition.kind != PmlTransitionKind.cut &&
+        transition.durationMs > 0) {
+      properties.addAll(_transitionEffect(transition));
+      properties['presentation:transition-speed'] = transition.durationMs <= 500
+          ? 'fast'
+          : transition.durationMs >= 1000
+          ? 'slow'
+          : 'medium';
+    }
+    final key = properties.entries.map((e) => '${e.key}=${e.value}').join('|');
+    return _pages.putIfAbsent(key, () {
+      final name = 'dp${_pages.length + 1}';
+      final w = XmlWriter();
+      w.writeStartElement('style', prefix: 'style');
+      w.writeAttribute('style:name', name);
+      w.writeAttribute('style:family', 'drawing-page');
+      w.writeEmptyElement(
+        'drawing-page-properties',
+        prefix: 'style',
+        attributes: properties,
+      );
+      w.writeEndElement();
+      _buffers.add(w.toXml());
+      return name;
+    });
+  }
+
+  static String _duration(int milliseconds) {
+    final seconds = milliseconds ~/ 1000;
+    final fraction = (milliseconds % 1000)
+        .toString()
+        .padLeft(3, '0')
+        .replaceFirst(RegExp(r'0+$'), '');
+    return 'PT$seconds${fraction.isEmpty ? '' : '.$fraction'}S';
+  }
+
+  static Map<String, String> _transitionEffect(PmlSlideTransition transition) {
+    final direction = transition.direction;
+    final vertical =
+        direction == PmlTransitionDir.vertical ||
+        direction == PmlTransitionDir.up ||
+        direction == PmlTransitionDir.down;
+    // Direction names describe motion: pushing left brings the new page in
+    // from the right. SMIL subtypes name that incoming edge instead.
+    final incoming = switch (direction) {
+      PmlTransitionDir.right => 'fromLeft',
+      PmlTransitionDir.up || PmlTransitionDir.vertical => 'fromBottom',
+      PmlTransitionDir.down => 'fromTop',
+      _ => 'fromRight',
+    };
+    return switch (transition.kind) {
+      PmlTransitionKind.push => {
+        'smil:type': 'pushWipe',
+        'smil:subtype': incoming,
+      },
+      PmlTransitionKind.cover || PmlTransitionKind.uncover => {
+        'smil:type': 'slideWipe',
+        'smil:subtype': incoming,
+        if (transition.kind == PmlTransitionKind.uncover)
+          'smil:direction': 'reverse',
+      },
+      PmlTransitionKind.wipe => {
+        'smil:type': 'barWipe',
+        'smil:subtype':
+            direction == PmlTransitionDir.up ||
+                direction == PmlTransitionDir.down
+            ? 'topToBottom'
+            : 'leftToRight',
+        if (direction == PmlTransitionDir.right ||
+            direction == PmlTransitionDir.down)
+          'smil:direction': 'reverse',
+      },
+      PmlTransitionKind.split || PmlTransitionKind.doors => {
+        'smil:type': 'barnDoorWipe',
+        // Match the shared renderer's strips closing inward from both edges.
+        'smil:subtype': vertical ? 'horizontal' : 'vertical',
+        'smil:direction': 'reverse',
+      },
+      PmlTransitionKind.clock => {
+        'smil:type': 'clockWipe',
+        'smil:subtype': 'clockwiseTwelve',
+      },
+      PmlTransitionKind.shapeCircle => {
+        'smil:type': 'ellipseWipe',
+        'smil:subtype': 'circle',
+      },
+      PmlTransitionKind.shapeDiamond => {
+        'smil:type': 'irisWipe',
+        'smil:subtype': 'diamond',
+      },
+      // These effects have standard legacy ODF tokens, but no corresponding
+      // simple family in SMIL 2.0's transition taxonomy.
+      PmlTransitionKind.dissolve => {
+        'presentation:transition-style': 'dissolve',
+      },
+      PmlTransitionKind.checkerboard => {
+        'presentation:transition-style': 'horizontal-checkerboard',
+      },
+      PmlTransitionKind.blinds => {
+        'presentation:transition-style': vertical
+            ? 'vertical-stripes'
+            : 'horizontal-stripes',
+      },
+      PmlTransitionKind.randomBars => {
+        'presentation:transition-style': vertical
+            ? 'vertical-lines'
+            : 'horizontal-lines',
+      },
+      _ => {'smil:type': 'fade', 'smil:subtype': 'crossfade'},
+    };
   }
 
   String graphicStyle(PmlShape shape) {
@@ -497,6 +690,39 @@ class _OdpLayout {
       return name;
     });
   }
+
+  String cellFrameStyle(
+    String fill, {
+    String stroke = '',
+    double strokeWidth = 1,
+  }) => _graphics.putIfAbsent(
+    'table-cell|${fill.toLowerCase()}|${stroke.toLowerCase()}|$strokeWidth',
+    () {
+      final name = 'gr${_graphics.length + 1}';
+      final w = XmlWriter();
+      w.writeStartElement('style', prefix: 'style');
+      w.writeAttribute('style:name', name);
+      w.writeAttribute('style:family', 'graphic');
+      w.writeEmptyElement(
+        'graphic-properties',
+        prefix: 'style',
+        attributes: {
+          'draw:fill': fill.isEmpty ? 'none' : 'solid',
+          if (fill.isNotEmpty) 'draw:fill-color': '#${fill.toLowerCase()}',
+          'draw:stroke': stroke.isEmpty ? 'none' : 'solid',
+          if (stroke.isNotEmpty) 'svg:stroke-color': '#${stroke.toLowerCase()}',
+          if (stroke.isNotEmpty)
+            'svg:stroke-width': '${strokeWidth.toStringAsFixed(2)}pt',
+          'draw:auto-grow-height': 'false',
+          'draw:auto-grow-width': 'false',
+          'fo:padding': '0pt',
+        },
+      );
+      w.writeEndElement();
+      _buffers.add(w.toXml());
+      return name;
+    },
+  );
 
   String paragraphStyle(PmlShape? shape, {bool? rightToLeft}) {
     final align = switch (shape?.textAlign ?? PmlTextAlign.left) {

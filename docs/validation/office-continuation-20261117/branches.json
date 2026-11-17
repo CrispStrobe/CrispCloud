@@ -1,0 +1,1194 @@
+{
+  "repository": "CrispStrobe/CrispCloud",
+  "main": "fad903782ee45031e26c57cc8a65ccf476b1724d",
+  "branches": [
+    {
+      "ref": "refs/heads/codex/ssh-terminal-tmux",
+      "name": "codex/ssh-terminal-tmux",
+      "sha": "378c036b392ee3ff9112d86aa21e7fdd8e722808",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_ancestor",
+        "integrated_commit": "378c036b392ee3ff9112d86aa21e7fdd8e722808",
+        "tree": "b2193c4ca42f9019769bd3d8ff0d50ad0892d45a",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/incoming-audit.json"
+      }
+    },
+    {
+      "ref": "refs/heads/codex/terminal-screen-workspace",
+      "name": "codex/terminal-screen-workspace",
+      "sha": "2eec6b4edc62693cfc6048581862a7aed87143c9",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_ancestor",
+        "integrated_commit": "2eec6b4edc62693cfc6048581862a7aed87143c9",
+        "tree": "1e696885c33c2ca39db4340598cd0a2343232d9a",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/incoming-audit.json"
+      }
+    },
+    {
+      "ref": "refs/heads/codex/terminal-session-optimization-20261116",
+      "name": "codex/terminal-session-optimization-20261116",
+      "sha": "852f009cadb153cfcb0799c527fdd78364a2df8d",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_ancestor",
+        "integrated_commit": "852f009cadb153cfcb0799c527fdd78364a2df8d",
+        "tree": "ef54b0d1d987bc0d6034056147186e32f9b987d9",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/incoming-audit.json"
+      }
+    },
+    {
+      "ref": "refs/heads/codex/zotero-capabilities-20261116",
+      "name": "codex/zotero-capabilities-20261116",
+      "sha": "f80c67f1e817bf14266d9f8b33a5129d54463b78",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_ancestor",
+        "integrated_commit": "f80c67f1e817bf14266d9f8b33a5129d54463b78",
+        "tree": "6d112973bfdb3f36d1de66b126303a6061df67f0",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/incoming-audit.json"
+      }
+    },
+    {
+      "ref": "refs/heads/codex/zotero-optimization-20261116",
+      "name": "codex/zotero-optimization-20261116",
+      "sha": "5e54229821bf7101ee60fb486d0c924ab6e7d5db",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_ancestor",
+        "integrated_commit": "5e54229821bf7101ee60fb486d0c924ab6e7d5db",
+        "tree": "8526f4c808bad3365b2a375e7209823ad1de9ef2",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/incoming-audit.json"
+      }
+    },
+    {
+      "ref": "refs/heads/codex/zotero-recovery-20261116",
+      "name": "codex/zotero-recovery-20261116",
+      "sha": "e8331dd7e10a0e0d8fac03035eedb19492a8ca2d",
+      "protected": false,
+      "coverage": {
+        "criterion": "fresh_ancestor",
+        "integrated_commit": "e8331dd7e10a0e0d8fac03035eedb19492a8ca2d"
+      }
+    },
+    {
+      "ref": "refs/heads/codex/zotero-support-20261115",
+      "name": "codex/zotero-support-20261115",
+      "sha": "e678e17859f8d29e274d1abbf064b93d04a6fa42",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_ancestor",
+        "integrated_commit": "e678e17859f8d29e274d1abbf064b93d04a6fa42",
+        "tree": "b60de67288e9661801bba3876068c49320a25872",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/incoming-audit.json"
+      }
+    },
+    {
+      "ref": "refs/heads/codex/zotero-support-20261116",
+      "name": "codex/zotero-support-20261116",
+      "sha": "5efae7732727fc1ae43d6b664922214dd6acfedf",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_ancestor",
+        "integrated_commit": "5efae7732727fc1ae43d6b664922214dd6acfedf",
+        "tree": "3f79aaee8fc21abf737706bf5e990fba2616aeae",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/incoming-audit.json"
+      }
+    },
+    {
+      "ref": "refs/heads/docs/conditional-affix",
+      "name": "docs/conditional-affix",
+      "sha": "4919c87f0225599b9b2b963285d364d2c2bd1a1e",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_ancestor",
+        "integrated_commit": "4919c87f0225599b9b2b963285d364d2c2bd1a1e",
+        "tree": "c98dbbd5dac0d6ad34cf27fc4c087d507285b8b6",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/incoming-audit.json"
+      }
+    },
+    {
+      "ref": "refs/heads/docs/conditional-between",
+      "name": "docs/conditional-between",
+      "sha": "073713474ea62525d9f5832da918407de333cd03",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_ancestor",
+        "integrated_commit": "073713474ea62525d9f5832da918407de333cd03",
+        "tree": "19aa47714e57658028ce19c336b80da2fa05e967",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/incoming-audit.json"
+      }
+    },
+    {
+      "ref": "refs/heads/docs/conditional-complete",
+      "name": "docs/conditional-complete",
+      "sha": "a49c3f14f96fed4c5551e45060ebbce3fa6883a1",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_ancestor",
+        "integrated_commit": "a49c3f14f96fed4c5551e45060ebbce3fa6883a1",
+        "tree": "da02e789e7eb64258af155086b4da2336e40cfe9",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/incoming-audit.json"
+      }
+    },
+    {
+      "ref": "refs/heads/docs/conditional-dxf-styles",
+      "name": "docs/conditional-dxf-styles",
+      "sha": "5ca134aaac74bb9d788dc3aa66d92827700f7da5",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_exact_tree",
+        "integrated_commit": "e4b5567078785c2ab11654385800c72d31d7d8e4",
+        "tree": "2033cf6433f8e7803b444fbf45ae1a556d646084",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/host-odf-independent-review.json"
+      }
+    },
+    {
+      "ref": "refs/heads/docs/conditional-formats",
+      "name": "docs/conditional-formats",
+      "sha": "2281ad58aed9f97bc1d387d3c98728245a5e4bcf",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_ancestor",
+        "integrated_commit": "2281ad58aed9f97bc1d387d3c98728245a5e4bcf",
+        "tree": "e114c389df13435d1faf7f73cc3a0d95ffdd61ae",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/incoming-audit.json"
+      }
+    },
+    {
+      "ref": "refs/heads/docs/conditional-top-bottom",
+      "name": "docs/conditional-top-bottom",
+      "sha": "a8edc699641da3e3b3f1452b5db59bec52a5717d",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_ancestor",
+        "integrated_commit": "a8edc699641da3e3b3f1452b5db59bec52a5717d",
+        "tree": "844434c3f6d54498cded1a89a3da2a7f648721d9",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/incoming-audit.json"
+      }
+    },
+    {
+      "ref": "refs/heads/docs/current-office-capabilities",
+      "name": "docs/current-office-capabilities",
+      "sha": "781ab2ac8e6434d2077f6cb30c500819dce8a294",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_exact_tree",
+        "integrated_commit": "10e0908fc46641a3fc19a39c34b5a12390496e80",
+        "tree": "63b657c1c7490ae177df37e6f66317592cd5512a",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/host-odf-independent-review.json"
+      }
+    },
+    {
+      "ref": "refs/heads/docs/filter-operators",
+      "name": "docs/filter-operators",
+      "sha": "385eb47e7eabbbe27a4287d173d69544b2566724",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_exact_tree",
+        "integrated_commit": "3a775ad9eb2d2866392ecac22d0dd1b5cc1b77de",
+        "tree": "f1d588b1b282ecfe5be607c0df0637440dcedf70",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/host-odf-independent-review.json"
+      }
+    },
+    {
+      "ref": "refs/heads/docs/filters-closed",
+      "name": "docs/filters-closed",
+      "sha": "30f9cdefd70fea3c18a288a30b2f764c13044f95",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_exact_tree",
+        "integrated_commit": "8e8099e171c31eadb66e812147fc9be600057cab",
+        "tree": "22496bf367e02eb39fb7358ab033342c2465c9e4",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/host-odf-independent-review.json"
+      }
+    },
+    {
+      "ref": "refs/heads/docs/metadata-closed",
+      "name": "docs/metadata-closed",
+      "sha": "343a930ebdbc1b0ee45f16328be868d0f78ba624",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_ancestor",
+        "integrated_commit": "343a930ebdbc1b0ee45f16328be868d0f78ba624",
+        "tree": "4c9dae3d588cb26013ac4f9bec442d719ba0cfd9",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/incoming-audit.json"
+      }
+    },
+    {
+      "ref": "refs/heads/docs/metadata-complete",
+      "name": "docs/metadata-complete",
+      "sha": "74378704f363cd095cefd23c0ac02e8ca0219ca1",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_exact_tree",
+        "integrated_commit": "30f0a5f1dd364fe32e41aa88dc51b24868af1091",
+        "tree": "52601c15db8f9ca254eed383a53a2e85ee6a0576",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/host-odf-independent-review.json"
+      }
+    },
+    {
+      "ref": "refs/heads/docs/odp-presentation-writer",
+      "name": "docs/odp-presentation-writer",
+      "sha": "def593ff5ae0a37aab453313adf10d4374142914",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_exact_tree",
+        "integrated_commit": "71a2aafd1cf0383fa505d0e8c1307244433e7ffe",
+        "tree": "87cce01023ed3b5d06295c32323852d0f6fa3cd7",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/host-odf-independent-review.json"
+      }
+    },
+    {
+      "ref": "refs/heads/docs/odp-transitions",
+      "name": "docs/odp-transitions",
+      "sha": "ce400a18517e69e29368b3728eb092a37d780bcc",
+      "protected": false,
+      "coverage": {
+        "criterion": "fresh_exact_tree",
+        "integrated_commit": "5deb70e0850bb738da02e4c850ca711fd3655bb5",
+        "tree": "26d262644dac61f680e0c8d4e97dc712bc2ca3e2",
+        "pr": 217
+      }
+    },
+    {
+      "ref": "refs/heads/docs/ods-export-test-note",
+      "name": "docs/ods-export-test-note",
+      "sha": "16cfd8196eda7b791c4e7efa47896f3f233ab10e",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_exact_tree",
+        "integrated_commit": "529e15b4daff0469b0da277c1a9c7740b2a8d468",
+        "tree": "dedd2f5924a42ab5231c5dacb827994324d29942",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/host-odf-independent-review.json"
+      }
+    },
+    {
+      "ref": "refs/heads/docs/ods-filter-predicates",
+      "name": "docs/ods-filter-predicates",
+      "sha": "4fd51df9a05f0380297ed512fea35d0deb09ef85",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_exact_tree",
+        "integrated_commit": "d36bd2412806e981ae12f7b2742a7fc0bde88234",
+        "tree": "0cbc4700a73db47bd5585cee4aa91f281ad8efd0",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/host-odf-independent-review.json"
+      }
+    },
+    {
+      "ref": "refs/heads/docs/ods-header-footer",
+      "name": "docs/ods-header-footer",
+      "sha": "5bfe1bba57989216cc228069e17785b4c849b5e4",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_exact_tree",
+        "integrated_commit": "553f3be64da9ad3c35730f1b6a67d79f1ac54b72",
+        "tree": "683a263541fcecf2243c115831d5f6befea4c667",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/host-odf-independent-review.json"
+      }
+    },
+    {
+      "ref": "refs/heads/docs/ods-hidden-state",
+      "name": "docs/ods-hidden-state",
+      "sha": "1cb0b4a6a01b4aabe58f95d9a9132171bbb11aa0",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_ancestor",
+        "integrated_commit": "1cb0b4a6a01b4aabe58f95d9a9132171bbb11aa0",
+        "tree": "73b04cb1047eea0fe619f382a16d7f2e10b30111",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/incoming-audit.json"
+      }
+    },
+    {
+      "ref": "refs/heads/docs/ods-pictures",
+      "name": "docs/ods-pictures",
+      "sha": "128f55295107e3ada605b52d160165e03f726cb4",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_ancestor",
+        "integrated_commit": "128f55295107e3ada605b52d160165e03f726cb4",
+        "tree": "11176f6a8c09c09844e2a61b76e2a669e7536300",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/incoming-audit.json"
+      }
+    },
+    {
+      "ref": "refs/heads/docs/ods-row-groups",
+      "name": "docs/ods-row-groups",
+      "sha": "0e81360c0090244e73cf850e89166dbe557fd67b",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_exact_tree",
+        "integrated_commit": "bf0255a168576b0d9993d8b668f2a7d0d943fd4f",
+        "tree": "3532aeb05dce6a07e9ec0b25bcebc891cc30594e",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/host-odf-independent-review.json"
+      }
+    },
+    {
+      "ref": "refs/heads/docs/ods-validations",
+      "name": "docs/ods-validations",
+      "sha": "b420b45b6666ca0658ae74f2a682a3cb6b88134d",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_ancestor",
+        "integrated_commit": "b420b45b6666ca0658ae74f2a682a3cb6b88134d",
+        "tree": "b46b96d6ede506583d37f0d885892f0bac260cff",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/incoming-audit.json"
+      }
+    },
+    {
+      "ref": "refs/heads/docs/ods-writer",
+      "name": "docs/ods-writer",
+      "sha": "0b8e9ef6706709f2ebe4c7b1435691a13f485a62",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_exact_tree",
+        "integrated_commit": "6d645301ae5b28befbe29af9d26ae30dfa51459e",
+        "tree": "cf0ba04e2d292f8b26f0c48e138700b7400d173f",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/host-odf-independent-review.json"
+      }
+    },
+    {
+      "ref": "refs/heads/docs/ods-writer-images",
+      "name": "docs/ods-writer-images",
+      "sha": "6d6c10eecf949e0b02320074988234a8ef5bf11a",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_exact_tree",
+        "integrated_commit": "58a834f28c265c7fe375f77a6ba41e2fa634fa1d",
+        "tree": "b5035ab6f6324a477382856bc4450ae8170499b3",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/host-odf-independent-review.json"
+      }
+    },
+    {
+      "ref": "refs/heads/docs/odt-comments",
+      "name": "docs/odt-comments",
+      "sha": "cb4147d325ca096977484a06582799606ebbd7e7",
+      "protected": false,
+      "coverage": {
+        "criterion": "fresh_exact_tree",
+        "integrated_commit": "fad903782ee45031e26c57cc8a65ccf476b1724d",
+        "tree": "c7e7e047572e69415f58b549689524581fbfa451",
+        "pr": 222
+      }
+    },
+    {
+      "ref": "refs/heads/docs/odt-document-writer",
+      "name": "docs/odt-document-writer",
+      "sha": "3080c7bed1a8452877601c3c1f13b4494a7e9cb4",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_exact_tree",
+        "integrated_commit": "8fe921d030d7623046e28127abec5949c4d8b991",
+        "tree": "4c57fae282a861b210913f2cd4f0136c0a606e69",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/host-odf-independent-review.json"
+      }
+    },
+    {
+      "ref": "refs/heads/docs/odt-footnotes",
+      "name": "docs/odt-footnotes",
+      "sha": "46f7ba2a72a4964c7dfecae2d8d2e9fb430ffd49",
+      "protected": false,
+      "coverage": {
+        "criterion": "fresh_exact_tree",
+        "integrated_commit": "d4524de90dd403c9ce350a1d271ac70ce511256b",
+        "tree": "01015ce80ebd4d6fef3c062d5424598a1f2add87",
+        "pr": 219
+      }
+    },
+    {
+      "ref": "refs/heads/docs/odt-frame-size",
+      "name": "docs/odt-frame-size",
+      "sha": "4660f0e021af5786b350879521e04000b072d7e3",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_exact_tree",
+        "integrated_commit": "b852bc0010b227f4ade321a63d6cfc8ba769b98b",
+        "tree": "19b8a241f7c5ee2fea6cad0acbed9775b0d784cd",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/host-odf-independent-review.json"
+      }
+    },
+    {
+      "ref": "refs/heads/docs/odt-image-registry",
+      "name": "docs/odt-image-registry",
+      "sha": "f9138cc1e51f52b4b9cb99b4b09b9ce32e1450c8",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_exact_tree",
+        "integrated_commit": "73e828175a76f9b7fe0014268ebbc59fd6ba4cfe",
+        "tree": "fee9b371db728fdb3be8f2c773318a03b4d374ec",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/host-odf-independent-review.json"
+      }
+    },
+    {
+      "ref": "refs/heads/docs/odt-lists",
+      "name": "docs/odt-lists",
+      "sha": "9b1f404f54e767d6f0464cf70a12c57da6a990bc",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_exact_tree",
+        "integrated_commit": "2c0d51aee913cc6e6070ee81c95c0244d60da7df",
+        "tree": "cc00dd06ff7174c6861b9aa0a3b2228602e515c4",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/host-odf-independent-review.json"
+      }
+    },
+    {
+      "ref": "refs/heads/docs/odt-ordered-lists",
+      "name": "docs/odt-ordered-lists",
+      "sha": "ec0f16b96f8040c185ecf147af045c7a2986027c",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_exact_tree",
+        "integrated_commit": "ecdc83b5ab1f3923f5102a7f78094e25beb65e9d",
+        "tree": "136f2ea7db2dac92d64287e36357a4f9d94ede72",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/host-odf-independent-review.json"
+      }
+    },
+    {
+      "ref": "refs/heads/docs/office-pin-20261115",
+      "name": "docs/office-pin-20261115",
+      "sha": "5ed4f45cb758394dc2346041d826c10257c24dc1",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_ancestor",
+        "integrated_commit": "5ed4f45cb758394dc2346041d826c10257c24dc1",
+        "tree": "0205cb98944f2929573842d45800ab5497e2005b",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/incoming-audit.json"
+      }
+    },
+    {
+      "ref": "refs/heads/docs/remaining-gaps",
+      "name": "docs/remaining-gaps",
+      "sha": "a0df68710bbacdcbddf57f7fb7b77238566b65c3",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_ancestor",
+        "integrated_commit": "a0df68710bbacdcbddf57f7fb7b77238566b65c3",
+        "tree": "51441da74a9f0b92f610373681e8f23d89f829f6",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/incoming-audit.json"
+      }
+    },
+    {
+      "ref": "refs/heads/docs/remaining-gaps-link",
+      "name": "docs/remaining-gaps-link",
+      "sha": "854d2ff6a20206434c64173ddca1152b079c8277",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_ancestor",
+        "integrated_commit": "854d2ff6a20206434c64173ddca1152b079c8277",
+        "tree": "c6f614db823791782eabf056bbb3178b0c8c82a2",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/incoming-audit.json"
+      }
+    },
+    {
+      "ref": "refs/heads/docs/restore-page-setup-and-pictures2",
+      "name": "docs/restore-page-setup-and-pictures2",
+      "sha": "70fb587eb5bf378b62cd998132fbf1e38a5b53e8",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_exact_tree",
+        "integrated_commit": "56aeb053d20a515299d1dba49d841e8429eb7576",
+        "tree": "c84def6f90a695a073d320ef52e5ef1a0ebe61c8",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/host-odf-independent-review.json"
+      }
+    },
+    {
+      "ref": "refs/heads/docs/sheet-page-setup",
+      "name": "docs/sheet-page-setup",
+      "sha": "0732c6ba7199609a46d73bb85430ecbd038d1671",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_exact_tree",
+        "integrated_commit": "57d027c124fe7416accd225f9b6d1d7814a25614",
+        "tree": "f917aa42ecebdf18b4c5c2aa2dc8166cdcdd04f0",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/host-odf-independent-review.json"
+      }
+    },
+    {
+      "ref": "refs/heads/docs/validation-complete",
+      "name": "docs/validation-complete",
+      "sha": "8197b59177827cfa7b426c55acd0cdca19f9b6eb",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_ancestor",
+        "integrated_commit": "8197b59177827cfa7b426c55acd0cdca19f9b6eb",
+        "tree": "331cebc95dc3fe54d756d194a39de2cc0c7457a1",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/incoming-audit.json"
+      }
+    },
+    {
+      "ref": "refs/heads/docs/validation-operators",
+      "name": "docs/validation-operators",
+      "sha": "11d4fbd9bc0a6e9fb3fa6cdc7604a45aaeae3210",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_ancestor",
+        "integrated_commit": "11d4fbd9bc0a6e9fb3fa6cdc7604a45aaeae3210",
+        "tree": "1cbdbd14d3ebac1c2f0f823567da9740624d04af",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/incoming-audit.json"
+      }
+    },
+    {
+      "ref": "refs/heads/feat/export-ods",
+      "name": "feat/export-ods",
+      "sha": "ca8b789d4ceaa2b74cdb7e256cdd90746c702594",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_exact_tree",
+        "integrated_commit": "3c98635249dc7ec671ea54bf7342ad0f067dfa82",
+        "tree": "16df07a7ba6c767fe450188241afb4da5a1ba648",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/host-odf-independent-review.json"
+      }
+    },
+    {
+      "ref": "refs/heads/feat/hidden-sheets-ui",
+      "name": "feat/hidden-sheets-ui",
+      "sha": "dacf219a094e8f309e3f2ea1e27afbdccaa69f3d",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_ancestor",
+        "integrated_commit": "dacf219a094e8f309e3f2ea1e27afbdccaa69f3d",
+        "tree": "53e5e9ffbb91a4d56bd72dead477ac703d6d4858",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/incoming-audit.json"
+      }
+    },
+    {
+      "ref": "refs/heads/feat/odt-frame-size",
+      "name": "feat/odt-frame-size",
+      "sha": "1e18a00dd9effae71c4574c3f51fd3fe24b1c7d5",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_exact_tree",
+        "integrated_commit": "bca9a255fb9751708886a7752e9639ee84ab6418",
+        "tree": "d218eaa389a376b89dc0d7261854827cbd0de3d2",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/host-odf-independent-review.json"
+      }
+    },
+    {
+      "ref": "refs/heads/feat/odt-headers",
+      "name": "feat/odt-headers",
+      "sha": "38a69f9a60bce92b6c2db60a71427ac47d98819d",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_ancestor",
+        "integrated_commit": "38a69f9a60bce92b6c2db60a71427ac47d98819d",
+        "tree": "7f25ed55378573544c39216e00a136bd68db5aa6",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/incoming-audit.json"
+      }
+    },
+    {
+      "ref": "refs/heads/feat/odt-image-registry",
+      "name": "feat/odt-image-registry",
+      "sha": "120127794ea061f2f2fd2385d516b74e2e4ebb48",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_exact_tree",
+        "integrated_commit": "ea74845466837a3a2748068b0ce2fa6920e5e7df",
+        "tree": "03e9862f5a4c75d55898335b4d107f102a58c0f7",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/host-odf-independent-review.json"
+      }
+    },
+    {
+      "ref": "refs/heads/feat/odt-images",
+      "name": "feat/odt-images",
+      "sha": "969c104a09dc2ad0732edb4a11a0300b52f20e2f",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_ancestor",
+        "integrated_commit": "969c104a09dc2ad0732edb4a11a0300b52f20e2f",
+        "tree": "f5d3283aeb54e726df1cb18c564ab91ce58bd6cf",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/incoming-audit.json"
+      }
+    },
+    {
+      "ref": "refs/heads/feat/odt-styles",
+      "name": "feat/odt-styles",
+      "sha": "048ad97b6d4b1be94821dd29f1ffb1494a329ecb",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_ancestor",
+        "integrated_commit": "048ad97b6d4b1be94821dd29f1ffb1494a329ecb",
+        "tree": "99354b9dbf826ac2b152d03bf63e79e6ad44f1da",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/incoming-audit.json"
+      }
+    },
+    {
+      "ref": "refs/heads/feat/odt-textboxes",
+      "name": "feat/odt-textboxes",
+      "sha": "b81105fe579d00b66c0a07b07d8ed36cee23ecfb",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_ancestor",
+        "integrated_commit": "b81105fe579d00b66c0a07b07d8ed36cee23ecfb",
+        "tree": "7a9b5860dc7dcf95384a4c4a41d376b51cbfed25",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/incoming-audit.json"
+      }
+    },
+    {
+      "ref": "refs/heads/fix/conditional-affix-vendor",
+      "name": "fix/conditional-affix-vendor",
+      "sha": "1dbfa2125cd83d6ec4e0028d1584e612fccfb77c",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_ancestor",
+        "integrated_commit": "1dbfa2125cd83d6ec4e0028d1584e612fccfb77c",
+        "tree": "7ed6df2eef27a893f464e3755f3749ada077e7b8",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/incoming-audit.json"
+      }
+    },
+    {
+      "ref": "refs/heads/fix/conditional-between-vendor",
+      "name": "fix/conditional-between-vendor",
+      "sha": "a52efabd7d05a50b428eb337944d2b6aeee2400b",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_ancestor",
+        "integrated_commit": "a52efabd7d05a50b428eb337944d2b6aeee2400b",
+        "tree": "149261a6dcddf061726466e1d98e47b8a11f2c30",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/incoming-audit.json"
+      }
+    },
+    {
+      "ref": "refs/heads/fix/conditional-dxf-styles-vendor",
+      "name": "fix/conditional-dxf-styles-vendor",
+      "sha": "79e725ef9c105845d38b25e745563c52234421da",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_exact_tree",
+        "integrated_commit": "6a6e526929b383040201a915fbb0b8b5a80acd22",
+        "tree": "a5c2fcb4e413a843fa940c2daf975ea9ec7e00b2",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/host-odf-independent-review.json"
+      }
+    },
+    {
+      "ref": "refs/heads/fix/conditional-dxf-vendor",
+      "name": "fix/conditional-dxf-vendor",
+      "sha": "b9b7932eca6213973803b5bb227464cccd3051d6",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_ancestor",
+        "integrated_commit": "b9b7932eca6213973803b5bb227464cccd3051d6",
+        "tree": "d28c0c16e1f4352f6a72d080d56ef8f62628ce7b",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/incoming-audit.json"
+      }
+    },
+    {
+      "ref": "refs/heads/fix/conditional-operators-vendor",
+      "name": "fix/conditional-operators-vendor",
+      "sha": "24ac26de023313dba726f8cdaabd16179c49da01",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_ancestor",
+        "integrated_commit": "24ac26de023313dba726f8cdaabd16179c49da01",
+        "tree": "b7a003651330b5e917a8fbf3bacb85aa287e3d39",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/incoming-audit.json"
+      }
+    },
+    {
+      "ref": "refs/heads/fix/conditional-text-vendor",
+      "name": "fix/conditional-text-vendor",
+      "sha": "20e5c5b7f63f0b8335665ca131418023f6bc2ca7",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_ancestor",
+        "integrated_commit": "20e5c5b7f63f0b8335665ca131418023f6bc2ca7",
+        "tree": "339e1bea0e68adf1d598bc7c602dbba2d06aaf55",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/incoming-audit.json"
+      }
+    },
+    {
+      "ref": "refs/heads/fix/conditional-top-bottom-vendor",
+      "name": "fix/conditional-top-bottom-vendor",
+      "sha": "168160bdeb121a8f83b439f8301fdde3a3a30523",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_exact_tree",
+        "integrated_commit": "e18e92c44e1b80d250469feed130615571d5845f",
+        "tree": "4274de0ce962d06fdbfaddf4bf3533b513cacfde",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/host-odf-independent-review.json"
+      }
+    },
+    {
+      "ref": "refs/heads/fix/export-ods-strings",
+      "name": "fix/export-ods-strings",
+      "sha": "c5927513b337fea005080ad5e5d3dd7440c6210c",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_exact_tree",
+        "integrated_commit": "96dfe7c759b796e5101574949feb8f12844854d7",
+        "tree": "34777a5b2649a3a8b35635111689174b05c1f043",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/host-odf-independent-review.json"
+      }
+    },
+    {
+      "ref": "refs/heads/fix/hidden-state-vendor",
+      "name": "fix/hidden-state-vendor",
+      "sha": "fd69bc3ee8db4ecec4683a7b8161a643b758db6b",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_ancestor",
+        "integrated_commit": "fd69bc3ee8db4ecec4683a7b8161a643b758db6b",
+        "tree": "53d9dd4e85dddbae9006180f3f3be26e1f831c2e",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/incoming-audit.json"
+      }
+    },
+    {
+      "ref": "refs/heads/fix/odp-presentation-writer-vendor",
+      "name": "fix/odp-presentation-writer-vendor",
+      "sha": "a0daffceecfa2379a7d28cf97c3f6cba489f1e22",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_exact_tree",
+        "integrated_commit": "e02d8912482fb1051d120ba147ebd21d4cb7c08b",
+        "tree": "6119c2aa5234dba265474d76620380a0d48b854d",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/host-odf-independent-review.json"
+      }
+    },
+    {
+      "ref": "refs/heads/fix/odp-transitions-vendor",
+      "name": "fix/odp-transitions-vendor",
+      "sha": "3c5a4114c3241d1aa2550b00ebd959527a16b4d9",
+      "protected": false,
+      "coverage": {
+        "criterion": "fresh_all_leaf_entries_preserved_with_additions",
+        "integrated_commit": "5e0c798b85cba3e0b85dff9d1c29e3915e4ed253",
+        "branch_tree": "8848350ba18914f76c59abcc573492af427be383",
+        "integrated_tree": "f1ee2384a442570dc2f0d44abef33a202362034b",
+        "pr": 216,
+        "added_leaf_count": 31,
+        "added_leaf_directory": "docs/validation/integrated-testflight-20261117",
+        "qualification": "All branch leaves match blobs and modes in merged tree; merged tree adds 31 validation evidence files. This is not complete tree equality."
+      }
+    },
+    {
+      "ref": "refs/heads/fix/ods-conditional-vendor",
+      "name": "fix/ods-conditional-vendor",
+      "sha": "4e3e45e619fa2983f1fa8394a9f28cf6c454a9f6",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_ancestor",
+        "integrated_commit": "4e3e45e619fa2983f1fa8394a9f28cf6c454a9f6",
+        "tree": "3b86bb4bc05d386957be7fe7b3208156a965e685",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/incoming-audit.json"
+      }
+    },
+    {
+      "ref": "refs/heads/fix/ods-custom-validation-vendor",
+      "name": "fix/ods-custom-validation-vendor",
+      "sha": "9898961e5cb64cdfc704f85c8f6f5ebedad3c39a",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_ancestor",
+        "integrated_commit": "9898961e5cb64cdfc704f85c8f6f5ebedad3c39a",
+        "tree": "adb75cedb80aec931e27b9b3bf41127d9e10849f",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/incoming-audit.json"
+      }
+    },
+    {
+      "ref": "refs/heads/fix/ods-default-geometry-vendor",
+      "name": "fix/ods-default-geometry-vendor",
+      "sha": "29a2bb5158a316dcde5da776172e09027e04f78d",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_ancestor",
+        "integrated_commit": "29a2bb5158a316dcde5da776172e09027e04f78d",
+        "tree": "402dfd4fc0bbec289d7f02c3db5e2594389f37e4",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/incoming-audit.json"
+      }
+    },
+    {
+      "ref": "refs/heads/fix/ods-default-style-vendor",
+      "name": "fix/ods-default-style-vendor",
+      "sha": "0ba620fdc34ea7afd278468f3978997c3cc7ba8f",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_ancestor",
+        "integrated_commit": "0ba620fdc34ea7afd278468f3978997c3cc7ba8f",
+        "tree": "57883151579a763448395a04c6e345aa136ca2aa",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/incoming-audit.json"
+      }
+    },
+    {
+      "ref": "refs/heads/fix/ods-filter-conditions-vendor",
+      "name": "fix/ods-filter-conditions-vendor",
+      "sha": "391ccbda8553e5c9104226fdf42d2a1e2c028b33",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_exact_tree",
+        "integrated_commit": "91012624f1261c8065c0da601b1320d7a8f5670e",
+        "tree": "a37697b131e4c991035f371013fc5d49d866667e",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/host-odf-independent-review.json"
+      }
+    },
+    {
+      "ref": "refs/heads/fix/ods-filter-operators-vendor",
+      "name": "fix/ods-filter-operators-vendor",
+      "sha": "c9c403608cf6fc83e53245bd73c0db57403a969d",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_exact_tree",
+        "integrated_commit": "3760bf9ea4baa6e86d1a4686d168a560db79b949",
+        "tree": "0903947d4595274011dd53a1f48ad0365116b9a5",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/host-odf-independent-review.json"
+      }
+    },
+    {
+      "ref": "refs/heads/fix/ods-filter-vendor",
+      "name": "fix/ods-filter-vendor",
+      "sha": "12ce7da82680331ff1c903b39183a0324c9508f5",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_exact_tree",
+        "integrated_commit": "4dc90cac5ebf53e5cea5f5b0260d04b59c8e7d09",
+        "tree": "7d37963e5c4fa6e604a7e1c159eddc1244ffaee3",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/host-odf-independent-review.json"
+      }
+    },
+    {
+      "ref": "refs/heads/fix/ods-header-footer-vendor",
+      "name": "fix/ods-header-footer-vendor",
+      "sha": "b0723248097fc5d0bf3b06b0a34717c192522d5f",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_exact_tree",
+        "integrated_commit": "9d9c8e073d28653b181e0db9a332fffd64b64e41",
+        "tree": "d2bbb0225b421787a15aa6710e95893f59178bd4",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/host-odf-independent-review.json"
+      }
+    },
+    {
+      "ref": "refs/heads/fix/ods-hyperlinks-vendor",
+      "name": "fix/ods-hyperlinks-vendor",
+      "sha": "aa45a0927789b117cec54c858895d8343aad661b",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_exact_tree",
+        "integrated_commit": "315397c7d559e7cf45e2270c154de0d2893cb755",
+        "tree": "5c32696f5e7b137430c5d6b0d284306a95cc3416",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/host-odf-independent-review.json"
+      }
+    },
+    {
+      "ref": "refs/heads/fix/ods-images-vendor",
+      "name": "fix/ods-images-vendor",
+      "sha": "d18dc14194bfa4d11e96552b77dc34cbe5a8b417",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_ancestor",
+        "integrated_commit": "d18dc14194bfa4d11e96552b77dc34cbe5a8b417",
+        "tree": "fe91cad2d7269fab28ba4895a93cd62b17423b3c",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/incoming-audit.json"
+      }
+    },
+    {
+      "ref": "refs/heads/fix/ods-metadata-vendor",
+      "name": "fix/ods-metadata-vendor",
+      "sha": "8a62e0864ad4bae96063ec6f8a542db039a306cf",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_ancestor",
+        "integrated_commit": "8a62e0864ad4bae96063ec6f8a542db039a306cf",
+        "tree": "9bec000ce1b1eec914719243b697f1076626af67",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/incoming-audit.json"
+      }
+    },
+    {
+      "ref": "refs/heads/fix/ods-named-expressions-vendor",
+      "name": "fix/ods-named-expressions-vendor",
+      "sha": "c80ee46fccbbfc8c2da4b18d67fc220cad23f1fc",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_ancestor",
+        "integrated_commit": "c80ee46fccbbfc8c2da4b18d67fc220cad23f1fc",
+        "tree": "ca8a44bbf7c9e18d871caf3a359cce9410f9fc9d",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/incoming-audit.json"
+      }
+    },
+    {
+      "ref": "refs/heads/fix/ods-outline-vendor",
+      "name": "fix/ods-outline-vendor",
+      "sha": "10374ee7f24c29be0958edc94157cde96c28f67c",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_exact_tree",
+        "integrated_commit": "514f74579591d58c843d9b4c45d612ba7b16e5b2",
+        "tree": "bc0aa0c696e1f32bde589730315c5a0eadeb7417",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/host-odf-independent-review.json"
+      }
+    },
+    {
+      "ref": "refs/heads/fix/ods-row-groups-vendor",
+      "name": "fix/ods-row-groups-vendor",
+      "sha": "116a309ef09d9bba04b7f2d3fd3c4956a478aca5",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_exact_tree",
+        "integrated_commit": "4eea7d1676ef4474c1def51781666eb59437b845",
+        "tree": "4707720a11193a7ce336c6e03e2736e1a7350922",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/host-odf-independent-review.json"
+      }
+    },
+    {
+      "ref": "refs/heads/fix/ods-tab-color-vendor",
+      "name": "fix/ods-tab-color-vendor",
+      "sha": "9c2047da22110db1518a6226ee7a35e421fb9d51",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_ancestor",
+        "integrated_commit": "9c2047da22110db1518a6226ee7a35e421fb9d51",
+        "tree": "0a4107d900c066cc9a0c204dc7d70c0d677ef25a",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/incoming-audit.json"
+      }
+    },
+    {
+      "ref": "refs/heads/fix/ods-validation-messages-vendor",
+      "name": "fix/ods-validation-messages-vendor",
+      "sha": "a617e188cf69f3d3c14dba614593f953dadf1436",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_ancestor",
+        "integrated_commit": "a617e188cf69f3d3c14dba614593f953dadf1436",
+        "tree": "b17e5e3c662ce95e09185aa44ab47e796a29ddbb",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/incoming-audit.json"
+      }
+    },
+    {
+      "ref": "refs/heads/fix/ods-validation-vendor2",
+      "name": "fix/ods-validation-vendor2",
+      "sha": "2b6ac08219418cf2c2d91968d117437684370c4d",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_ancestor",
+        "integrated_commit": "2b6ac08219418cf2c2d91968d117437684370c4d",
+        "tree": "eb271f6fdf1d8e644aca67757dd7eab678dd3a4c",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/incoming-audit.json"
+      }
+    },
+    {
+      "ref": "refs/heads/fix/ods-validations-vendor",
+      "name": "fix/ods-validations-vendor",
+      "sha": "ee74601e71441fcac2b6defebff33ca04f538d12",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_ancestor",
+        "integrated_commit": "ee74601e71441fcac2b6defebff33ca04f538d12",
+        "tree": "f4a69d35ef744a3013df9cb259f93f0782aaa0de",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/incoming-audit.json"
+      }
+    },
+    {
+      "ref": "refs/heads/fix/ods-writer-conditional-vendor",
+      "name": "fix/ods-writer-conditional-vendor",
+      "sha": "5fb04fb0bcaab54c11e3585717d7e33895bb339e",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_exact_tree",
+        "integrated_commit": "609dc63f2fdc19e73b6ed7148d0b7c4f1bb41e44",
+        "tree": "9034233e2cbcd21d715e7f6151b98f8b4164eb41",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/host-odf-independent-review.json"
+      }
+    },
+    {
+      "ref": "refs/heads/fix/ods-writer-images-vendor",
+      "name": "fix/ods-writer-images-vendor",
+      "sha": "7e24454598a43e46821a75b3b43c14a9a89b572f",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_exact_tree",
+        "integrated_commit": "7bfdc5774748da6636a03d0e9bd433a059861b0c",
+        "tree": "56425bb32e779dc833b24201a0d627d588ef4b01",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/host-odf-independent-review.json"
+      }
+    },
+    {
+      "ref": "refs/heads/fix/ods-writer-metadata-vendor",
+      "name": "fix/ods-writer-metadata-vendor",
+      "sha": "f7010ad1841c0f7146aa8544177911af0e98cfe9",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_exact_tree",
+        "integrated_commit": "5078be7059801ce3f2712ad3f47d4e23b32df147",
+        "tree": "bdad3a2e610180a183b8bb78315cabfa416aa855",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/host-odf-independent-review.json"
+      }
+    },
+    {
+      "ref": "refs/heads/fix/ods-writer-page-layout-vendor",
+      "name": "fix/ods-writer-page-layout-vendor",
+      "sha": "d220aa43774fe36b01530400c3a10bd4228faa79",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_exact_tree",
+        "integrated_commit": "3cbc1cb105a066072f9a4d8d0a1c4b7be37ba240",
+        "tree": "c5c530c4d12e286149060990c6bb3b1d7adb3712",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/host-odf-independent-review.json"
+      }
+    },
+    {
+      "ref": "refs/heads/fix/ods-writer-vendor",
+      "name": "fix/ods-writer-vendor",
+      "sha": "10d8a9b4750bf3d80d35f089ae1ac4fdf8dffc1f",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_exact_tree",
+        "integrated_commit": "5c4bb3052a87afc5b5158c3180a95cddda47a179",
+        "tree": "ea8b54fa87d7d6a621795a80b1607e6823bd4ddb",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/host-odf-independent-review.json"
+      }
+    },
+    {
+      "ref": "refs/heads/fix/odt-comments-vendor",
+      "name": "fix/odt-comments-vendor",
+      "sha": "17b5f5495a05573a7b173018c5becdbaa7e190ea",
+      "protected": false,
+      "coverage": {
+        "criterion": "fresh_exact_tree",
+        "integrated_commit": "03e81b38e7a727d89c5215152676eb1503a2f284",
+        "tree": "c120d3456e8cbc5c868f2be56d3f69fb9d1bce5b",
+        "pr": 221
+      }
+    },
+    {
+      "ref": "refs/heads/fix/odt-document-writer-vendor",
+      "name": "fix/odt-document-writer-vendor",
+      "sha": "3d26bdae3dac4120f253767157d45abbf68911b8",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_exact_tree",
+        "integrated_commit": "5535e52e381a0c1f7afc80515557c08148c40d35",
+        "tree": "a64b79ee96db8a2b726812933d5212253c166374",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/host-odf-independent-review.json"
+      }
+    },
+    {
+      "ref": "refs/heads/fix/odt-footnotes-vendor",
+      "name": "fix/odt-footnotes-vendor",
+      "sha": "7591ceb57fb55a2380a1ab2a3e0c52b85fc43e94",
+      "protected": false,
+      "coverage": {
+        "criterion": "fresh_exact_tree",
+        "integrated_commit": "057027883b91917f44f623d28f6b637b394b85a7",
+        "tree": "3fc1750836ebd9941c9dfa44d39afcc5871adfc1",
+        "pr": 218
+      }
+    },
+    {
+      "ref": "refs/heads/fix/odt-lists-vendor",
+      "name": "fix/odt-lists-vendor",
+      "sha": "214ccbd1541f9d55c07aca0c1994b753d7cbf1ca",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_exact_tree",
+        "integrated_commit": "111270541b6d8fce4ba2d6cd1ed7b07539f36c28",
+        "tree": "cf331fcd7d5796ebc56face5ad1da3836a10b44a",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/host-odf-independent-review.json"
+      }
+    },
+    {
+      "ref": "refs/heads/fix/odt-ordered-lists-vendor2",
+      "name": "fix/odt-ordered-lists-vendor2",
+      "sha": "75504cbd905e7e887a90d5c707fedfa7469f7b9d",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_exact_tree",
+        "integrated_commit": "2acdde3aa567e2ffb6f2ee18305e412c9390418b",
+        "tree": "13af7d1c8e957706efe2b3f85e7ce18a8cda4d24",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/host-odf-independent-review.json"
+      }
+    },
+    {
+      "ref": "refs/heads/fix/sheet-page-setup-vendor",
+      "name": "fix/sheet-page-setup-vendor",
+      "sha": "fff84bfb48224b78799967c1d42fc4af8abf05d8",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_exact_tree",
+        "integrated_commit": "d76959f3ae76399fdc1fc8f5dc6dbc39bf2b3ecb",
+        "tree": "add02b7c6131cb4515be0d6722ccd126ee3ee9e0",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/host-odf-independent-review.json"
+      }
+    },
+    {
+      "ref": "refs/heads/integrate/current-repos-20261116",
+      "name": "integrate/current-repos-20261116",
+      "sha": "37af4410be09081420d2597f53572379eca25464",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_ancestor",
+        "integrated_commit": "37af4410be09081420d2597f53572379eca25464",
+        "tree": "97e17eb32bfcaaa140fda62b6acdfafb2a9ee1f3",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/incoming-audit.json"
+      }
+    },
+    {
+      "ref": "refs/heads/integrate/final-corpus-20261115",
+      "name": "integrate/final-corpus-20261115",
+      "sha": "59b11b5647a8a07d36c0d2e0d579855f474ef4d2",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_ancestor",
+        "integrated_commit": "59b11b5647a8a07d36c0d2e0d579855f474ef4d2",
+        "tree": "54d5d12f6095dc1b162da65375c84872e782dbab",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/incoming-audit.json"
+      }
+    },
+    {
+      "ref": "refs/heads/integrate/sdt-section-break-20261115",
+      "name": "integrate/sdt-section-break-20261115",
+      "sha": "012314d440c49bc73b6726796fd9930eee6f1830",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_ancestor",
+        "integrated_commit": "012314d440c49bc73b6726796fd9930eee6f1830",
+        "tree": "e08c219029da847ab3322b9bf0ecf7b335968d9d",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/incoming-audit.json"
+      }
+    },
+    {
+      "ref": "refs/heads/integrate/utf16-custom-xml-20261115",
+      "name": "integrate/utf16-custom-xml-20261115",
+      "sha": "abfcf08bd2bfbe87349fdacc3484b824b77fefa3",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_ancestor",
+        "integrated_commit": "abfcf08bd2bfbe87349fdacc3484b824b77fefa3",
+        "tree": "4ec2a641f712fe1a7aab76672b4452a97fc8a2a8",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/incoming-audit.json"
+      }
+    },
+    {
+      "ref": "refs/heads/integration/storage-carving-20261115",
+      "name": "integration/storage-carving-20261115",
+      "sha": "5018aebb709b35f1c4d730c06e0f91187727751c",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_ancestor",
+        "integrated_commit": "5018aebb709b35f1c4d730c06e0f91187727751c",
+        "tree": "9290ad3691f435439adef7dd54502b6073bb438a",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/incoming-audit.json"
+      }
+    },
+    {
+      "ref": "refs/heads/integration/storage-carving-local-20261115124645",
+      "name": "integration/storage-carving-local-20261115124645",
+      "sha": "10891b06a6da9f2502960cdbfe34b30eed271665",
+      "protected": false,
+      "coverage": {
+        "criterion": "inherited_ancestor",
+        "integrated_commit": "10891b06a6da9f2502960cdbfe34b30eed271665",
+        "tree": "6ef7f0d65d32e6c6417797deef8da745fd9536a3",
+        "prior_review_source": "docs/validation/zotero-landing-20261117/incoming-audit.json"
+      }
+    },
+    {
+      "ref": "refs/heads/main",
+      "name": "main",
+      "sha": "fad903782ee45031e26c57cc8a65ccf476b1724d",
+      "protected": false,
+      "coverage": {
+        "criterion": "identical",
+        "integrated_commit": "fad903782ee45031e26c57cc8a65ccf476b1724d"
+      }
+    }
+  ]
+}

@@ -4,6 +4,12 @@ All notable changes to `quds_office_editor` are documented here.
 
 ## Unreleased
 
+- Show a readable name for the German noun-case rule in ignored checks, using
+  the existing review and undoable correction flow for broader noun morphology.
+- Add an optional manual proofing service for preloaded grammar providers. F7
+  and explicit checks include it; typing checks skip it with explicit coverage,
+  keep separate caches, and preserve deterministic findings on overlap.
+
 - Expose a readable seit/seid rule name in ignored checks. Verify new German
   agreement and soft-hyphen corrections through the real review dialog,
   including exact source restoration on undo.

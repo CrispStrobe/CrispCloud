@@ -1,5 +1,9 @@
 # German spelling data
 
+The separate [German noun morphology documentation](MORPHOLOGY.md) covers the
+pinned Unicode-3.0 grammar resource, generation safeguards, lazy-loading format
+and reproduction commands.
+
 `manifest.json` records the exact source revision, source and license hashes,
 selected orthography, generated data hashes, and independently authored
 supplement. The bundled MIT source is **Werners Wortliste / DANTE**, from the

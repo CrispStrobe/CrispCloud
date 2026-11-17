@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "reviewed_at_utc": "2026-11-17T14:13:27.561Z",
+  "kind": "Independent source review; authored regressions not executed",
+  "reviewed_annotation_commit": "3e3687856ffe9b96bd8dd70eacbc759daf425ab9",
+  "reviewed_license_and_vendor_commit": "e3696fc8a192a92aa0f89865057e0ed91a91b7b5",
+  "reviewed_vendor_tree": "0f585324c4ceff6d5ab3fb281f8dcaec676447ad",
+  "source_base": "fad903782ee45031e26c57cc8a65ccf476b1724d",
+  "annotation": {
+    "source_path": "lib/services/office_document_service.dart",
+    "source_blob": "6ca0e798d8dd1f791c403a8a704c55604ae9616f",
+    "test_path": "test/office_annotation_preview_test.dart",
+    "test_blob": "21b68d4cc6bbe54ce5a0b4333e00cc154e016049",
+    "authored_case_count": 8,
+    "runtime_pass_count": null,
+    "checks": [
+      "Namespace-exact ODF office:annotation and table:covered-table-cell predicate retains foreign same-local-name elements, including a rebound office prefix.",
+      "The cell-text helper preserves XmlText and XmlCDATA payloads while pruning hidden descendants, matching the relevant prior innerText behavior.",
+      "The descendant paragraph selection rejects hidden annotation and covered-cell ancestors below the cell, preventing duplicate hidden descendant paragraphs.",
+      "ODT inline, block, note, header and footer routes stop traversing hidden stories while retaining surrounding text.",
+      "Existing raw XML return path is unchanged, and assertions retain hidden annotation data in raw source.",
+      "Eight authored cases cover actual ODT and ODS writers, body/list/table/note/header/footer paths, nondefault namespace prefixes, foreign namespace lookalikes, nested stories, CDATA, empty annotations, and annotation-only documents.",
+      "Referenced engine API types, constructor arguments and public exports were read at the synchronized host source: WmlComment(text), WmlNote(paragraphs), SmlComment(ref,text,author), SmlCellRef.parse, OdtDocumentWriter, OdsSheetWriter.",
+      "The archive helper matches the preexisting host test helper. Source review found no concrete syntax/API/expected-output error."
+    ],
+    "qualification": "Static/source inference only; neither Dart parsing nor analyzer nor Flutter runtime was available."
+  },
+  "licenses": {
+    "assets_declaration": {
+      "path": "pubspec.yaml",
+      "blob": "e56f964811c763796e9a585d6420c5bae8cf5e31"
+    },
+    "registration": {
+      "path": "lib/services/office_proofing_licenses.dart",
+      "blob": "e145b65f590a9c741f340f49dbb75977fba995eb"
+    },
+    "regression": {
+      "path": "test/office_proofing_licenses_test.dart",
+      "blob": "fa89a7dd9e299c860c2330daa086291183a1bf9a"
+    },
+    "unicode_license_blob": "f6fe7b9e1bcceae1ec0a98676181384f3b1d3d91",
+    "unicode_notice_blob": "c153af4006e223a00071957bdde4ad6c36685581",
+    "both_unicode_files_equal_actual_canonical_source": true,
+    "canonical_source": "8b2ee333b883bfb64d51d44629c16151e1e0a2d7",
+    "original_six_asset_and_registry_entries_retained": true,
+    "original_six_notice_source_paths_unchanged": true,
+    "original_six_notice_paths": [
+      "packages/quds_office_engine/third_party/fonttools/LICENSE",
+      "packages/quds_office_engine/third_party/hyphenation/ENGLISH_GB_LICENSE",
+      "packages/quds_office_engine/third_party/hyphenation/ENGLISH_US_LICENSE",
+      "packages/quds_office_engine/third_party/hyphenation/LICENSE",
+      "packages/quds_office_engine/third_party/proofing/QUDS_WORDS_LICENSE",
+      "packages/quds_office_engine/third_party/proofing/WORTLISTE_LICENSE"
+    ],
+    "seventh_entry": "Unicode Inflection (German morphology, Unicode-3.0)",
+    "seventh_asset": "packages/quds_office_engine/third_party/proofing/UNICODE_INFLECTION_NOTICE",
+    "notice_ends_with_full_original_license": true,
+    "regression_checks": [
+      "Bundled notice equals tracked source",
+      "Original Apple and Unicode attribution",
+      "Unicode-specific disclaimer",
+      "SPDX Unicode-3.0 identifier",
+      "Notice ends with complete original license"
+    ],
+    "inherited_engine_LICENSE_unchanged": true
+  },
+  "preservation_from_complete_comparison": {
+    "compare_status": "ahead",
+    "compare_ahead_by": 2,
+    "compare_behind_by": 0,
+    "changed_path_count": 49,
+    "comparison_too_large": null,
+    "inherited_customization_paths_unchanged": true,
+    "inherited_customization_count": 20,
+    "unchanged_customization_paths": [
+      "packages/quds_office_editor/lib/src/editor_reports/quds_report_designer.dart",
+      "packages/quds_office_editor/lib/src/editor_reports/render_report_data_explorer.dart",
+      "packages/quds_office_editor/lib/src/editor_reports/render_report_designer.dart",
+      "packages/quds_office_editor/lib/src/editor_reports/render_report_inspector.dart",
+      "packages/quds_office_editor/lib/src/editor_reports/render_report_preview.dart",
+      "packages/quds_office_editor/lib/src/editor_reports/report_designer_controller.dart",
+      "packages/quds_office_editor/lib/src/editor_reports/report_designer_strings.dart",
+      "packages/quds_office_editor/lib/src/editor_reports/report_element_painter.dart",
+      "packages/quds_office_editor/lib/src/embed/office_uri_io.dart",
+      "packages/quds_office_engine/lib/quds_reports.dart",
+      "packages/quds_office_engine/lib/src/opc/crypto/office_crypto.dart",
+      "packages/quds_office_engine/lib/src/pdf/widgets/pw_paint.dart",
+      "packages/quds_office_engine/test/arabic_pdf_export_test.dart",
+      "packages/quds_office_engine/test/office_crypto_test.dart",
+      "packages/quds_office_editor/lib/src/editor_reports/report_asset_strings.dart",
+      "packages/quds_office_editor/lib/src/editor_reports/report_data_error_strings.dart",
+      "packages/quds_office_editor/lib/src/editor_reports/report_font_extra_strings.dart",
+      "packages/quds_office_editor/lib/src/editor_reports/report_notice_strings.dart",
+      "packages/quds_office_editor/lib/src/editor_reports/report_special_asset_strings.dart",
+      "packages/quds_office_editor/lib/src/editor_reports/report_template_strings.dart"
+    ],
+    "standalone_parser_paths_unchanged": true,
+    "zotero_paths_unchanged": true
+  },
+  "runtime_tests_executed": 0,
+  "github_actions_or_ci_status_endpoints_queried": false,
+  "blockers_found_in_reviewed_host_changes": [],
+  "pending_separate_review": "The combined canonical writer may emit a visible body note definition first from inside an annotation. The root agent is preparing a separate comment noteBodiesAllowed guard and regression. That later correction is not part of this review; the authored host cases here contain comments inside notes, not note references inside comments."
+}

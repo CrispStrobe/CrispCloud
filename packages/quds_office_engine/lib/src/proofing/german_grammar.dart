@@ -1,12 +1,14 @@
 part of 'german_writing_rules.dart';
 
 // Independently authored, bounded phrase analysis. These are ordinary language
-// facts and first-party examples, not imported rules, tagged corpora, or a
-// statistical parser. Unknown words and competing analyses cause abstention.
+// facts and first-party examples, not imported grammar rules or a statistical
+// parser. Noun analyses use the separately licensed Unicode morphology data.
+// Unknown words and competing analyses cause abstention.
 const Set<String> _germanPhraseRuleIds = <String>{
   'de.grammar.preposition-pronoun',
   'de.grammar.preposition-case',
   'de.grammar.dative-plural',
+  'de.grammar.noun-case',
   'de.grammar.adjective-ending',
   'de.grammar.das-dass',
   'de.grammar.subordinate-comma',
@@ -91,9 +93,9 @@ bool _grammarContextSafe(
     boundaries.contains(end) &&
     !protected(start, end);
 
-// Explicit singular/plural pairs, authored here. Inflection is restricted to
-// these regular strong nouns; weak nouns, proper names and gender homographs
-// such as Band, See, Leiter, Steuer and Kiefer are intentionally absent.
+// Reviewed first-party fallback for words absent from the external resource.
+// The licensed morphology lookup is preferred, including competing genders and
+// all recorded case alternatives; this small table never overrides them.
 final class _GermanNoun {
   const _GermanNoun(this.singular, this.gender, this.plural);
   final String singular;
@@ -168,16 +170,16 @@ const List<_GermanNoun> _grammarNouns = <_GermanNoun>[
 ];
 
 final class _GermanNounReading {
-  const _GermanNounReading(this.noun, this.gender, this.isDativePlural);
-  final _GermanNoun noun;
+  const _GermanNounReading(this.gender, this.forms);
   final _GermanGender gender;
-  final bool isDativePlural;
+  final List<Set<String>> forms;
 
-  String inCase(_GermanCase grammaticalCase) => gender != _GermanGender.plural
-      ? noun.singular
-      : grammaticalCase == _GermanCase.dative
-      ? noun.dativePlural
-      : noun.plural;
+  Set<String> inCase(_GermanCase grammaticalCase) =>
+      forms[grammaticalCase.index];
+
+  bool accepts(String lower, _GermanCase grammaticalCase) => inCase(
+    grammaticalCase,
+  ).any((String form) => _germanFormsEquivalent(form.toLowerCase(), lower));
 }
 
 final Map<String, List<_GermanNounReading>> _grammarNounForms =
@@ -186,32 +188,62 @@ final Map<String, List<_GermanNounReading>> _grammarNounForms =
 Map<String, List<_GermanNounReading>> _buildGrammarNounForms() {
   final Map<String, List<_GermanNounReading>> result =
       <String, List<_GermanNounReading>>{};
-  for (final _GermanNoun noun in _grammarNouns) {
-    result
-        .putIfAbsent(noun.singular.toLowerCase(), () => <_GermanNounReading>[])
-        .add(_GermanNounReading(noun, noun.gender, false));
-    result
-        .putIfAbsent(noun.plural.toLowerCase(), () => <_GermanNounReading>[])
-        .add(_GermanNounReading(noun, _GermanGender.plural, false));
-    if (noun.dativePlural != noun.plural) {
-      result
-          .putIfAbsent(
-            noun.dativePlural.toLowerCase(),
-            () => <_GermanNounReading>[],
-          )
-          .add(_GermanNounReading(noun, _GermanGender.plural, true));
+  void add(String form, _GermanNounReading reading) {
+    final String lower = form.toLowerCase();
+    result.putIfAbsent(lower, () => <_GermanNounReading>[]).add(reading);
+    final String swiss = lower.replaceAll('ß', 'ss');
+    if (swiss != lower) {
+      result.putIfAbsent(swiss, () => <_GermanNounReading>[]).add(reading);
     }
   }
-  for (final MapEntry<String, List<_GermanNounReading>> entry
-      in result.entries.toList(growable: false)) {
-    final String swiss = entry.key.replaceAll('ß', 'ss');
-    if (swiss != entry.key) {
-      result
-          .putIfAbsent(swiss, () => <_GermanNounReading>[])
-          .addAll(entry.value);
-    }
+
+  for (final _GermanNoun noun in _grammarNouns) {
+    final _GermanNounReading singular = _GermanNounReading(
+      noun.gender,
+      <Set<String>>[
+        <String>{noun.singular},
+        <String>{noun.singular},
+        <String>{noun.singular},
+        // The first-party fallback did not model genitive alternatives.
+        // Empty means unknown, never permission to invent a paradigm.
+        const <String>{},
+      ],
+    );
+    final _GermanNounReading plural = _GermanNounReading(
+      _GermanGender.plural,
+      <Set<String>>[
+        <String>{noun.plural},
+        <String>{noun.plural},
+        <String>{noun.dativePlural},
+        <String>{noun.plural},
+      ],
+    );
+    add(noun.singular, singular);
+    add(noun.plural, plural);
+    if (noun.dativePlural != noun.plural) add(noun.dativePlural, plural);
   }
   return result;
+}
+
+List<_GermanNounReading> _lookupGrammarNoun(String lower) {
+  final List<GermanNounReading> lexical = GermanNounMorphology.shared.lookup(
+    lower,
+  );
+  if (lexical.isEmpty) {
+    // An explicitly unresolved competing reading is not an unknown word.
+    // A small fallback must not restore the confidence the resource rejected.
+    if (GermanNounMorphology.shared.hasUnresolvedReading(lower)) {
+      return const <_GermanNounReading>[];
+    }
+    return _grammarNounForms[lower] ?? const <_GermanNounReading>[];
+  }
+  return <_GermanNounReading>[
+    for (final GermanNounReading reading in lexical)
+      _GermanNounReading(_GermanGender.values[reading.gender], <Set<String>>[
+        for (final _GermanCase grammaticalCase in _GermanCase.values)
+          reading.formsForCase(grammaticalCase.index),
+      ]),
+  ];
 }
 
 final class _GermanDeterminer {
@@ -366,6 +398,38 @@ const Set<String> _grammarAdjectiveStems = <String>{
   'dunkl',
   'leis',
   'müd',
+  // Common office/general modifiers, independently reviewed regular stems.
+  'hell',
+  'gültig',
+  'ungültig',
+  'neugierig',
+  'hochwertig',
+  'deutlich',
+  'weiß',
+  'rot',
+  'grün',
+  'blau',
+  'dunkelblau',
+  'zusätzlich',
+  'erforderlich',
+  'verfügbar',
+  'relevant',
+  'sicher',
+  'unsicher',
+  'lesbar',
+  'bearbeitet',
+  'gespeichert',
+  'erfahren',
+  'technisch',
+  'versiert',
+  'sorgfältig',
+  'praktisch',
+  'rechtlich',
+  'wirtschaftlich',
+  'wissenschaftlich',
+  'intern',
+  'extern',
+  'ander',
 };
 
 final Map<String, Set<String>> _grammarAdjectiveForms =
@@ -471,10 +535,64 @@ bool _grammarPrepositionAmbiguous(
   ).hasMatch(clause);
 }
 
+// Shared syntactic gate for prewarming and actual noun-phrase analysis. This
+// does not consult the lexicon, so sentence-start capitals and unrelated names
+// do not cause dictionary buckets to be decoded.
+int? _grammarNounIndex(
+  String text,
+  List<_GermanGrammarWord> words,
+  int articleIndex,
+) {
+  int nounIndex = articleIndex + 1;
+  int adjectiveCount = 0;
+  while (nounIndex < words.length &&
+      _grammarAdjacent(text, words[nounIndex - 1], words[nounIndex]) &&
+      adjectiveCount < 2 &&
+      !words[nounIndex].capitalized &&
+      _grammarAdjectiveForms.containsKey(words[nounIndex].lower)) {
+    adjectiveCount++;
+    nounIndex++;
+  }
+  if (nounIndex >= words.length ||
+      !words[nounIndex].capitalized ||
+      !_grammarAdjacent(text, words[nounIndex - 1], words[nounIndex])) {
+    return null;
+  }
+  return nounIndex;
+}
+
+Iterable<String> _grammarMorphologyCandidates(
+  String text,
+  bool Function(int, int) protected,
+  Set<int> boundaries,
+) sync* {
+  final List<_GermanGrammarWord> words = _grammarWordExpression
+      .allMatches(text)
+      .map(_GermanGrammarWord.new)
+      .toList(growable: false);
+  for (int i = 0; i < words.length; i++) {
+    if (!_grammarDeterminerForms.containsKey(words[i].lower)) continue;
+    final int? nounIndex = _grammarNounIndex(text, words, i);
+    if (nounIndex == null) continue;
+    int contextStart = words[i].start;
+    if (i > 0 &&
+        _governedCases.containsKey(words[i - 1].lower) &&
+        _grammarAdjacent(text, words[i - 1], words[i]) &&
+        !_grammarPrepositionAmbiguous(text, words, i - 1)) {
+      contextStart = words[i - 1].start;
+    }
+    final _GermanGrammarWord noun = words[nounIndex];
+    if (_grammarContextSafe(contextStart, noun.end, protected, boundaries)) {
+      yield noun.text;
+    }
+  }
+}
+
 Iterable<_GermanGrammarIssue> _germanGrammarIssues(
   String text,
   bool Function(int, int) protected,
   Set<int> boundaries,
+  bool swiss,
 ) sync* {
   final List<_GermanGrammarWord> words = _grammarWordExpression
       .allMatches(text)
@@ -539,6 +657,7 @@ Iterable<_GermanGrammarIssue> _germanGrammarIssues(
         preposition.start,
         protected,
         boundaries,
+        swiss,
       );
     }
   }
@@ -553,12 +672,46 @@ Iterable<_GermanGrammarIssue> _germanGrammarIssues(
         words[i].start,
         protected,
         boundaries,
+        swiss,
       );
     }
   }
   yield* _grammarClauseIssues(text, words, protected, boundaries);
   yield* _grammarComparisonIssues(text, words, protected, boundaries);
   yield* _grammarInvertedAgreement(text, words, protected, boundaries);
+}
+
+bool _grammarCouldBeNominalizedAdjective(
+  _GermanGrammarWord article,
+  _GermanDeterminer determiner,
+  _GermanGrammarWord noun,
+  _GermanCase? governedCase,
+) {
+  final Set<String>? stems =
+      _grammarAdjectiveForms[normalizeGermanWord(noun.lower)];
+  if (stems == null) return false;
+  for (final _GermanCase grammaticalCase
+      in governedCase == null
+          ? _GermanCase.values
+          : <_GermanCase>[governedCase]) {
+    for (final _GermanGender gender in _GermanGender.values) {
+      if (gender == _GermanGender.plural && !determiner.permitsPlural ||
+          determiner.form(grammaticalCase, gender) != article.lower) {
+        continue;
+      }
+      final String ending = _grammarAdjectiveEnding(
+        determiner,
+        grammaticalCase,
+        gender,
+      );
+      if (stems.any(
+        (String stem) => _germanFormsEquivalent('$stem$ending', noun.lower),
+      )) {
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 Iterable<_GermanGrammarIssue> _grammarNounPhrase(
@@ -569,43 +722,58 @@ Iterable<_GermanGrammarIssue> _grammarNounPhrase(
   int contextStart,
   bool Function(int, int) protected,
   Set<int> boundaries,
+  bool swiss,
 ) sync* {
   final _GermanGrammarWord article = words[index];
   final _GermanDeterminer determiner = _grammarDeterminerForms[article.lower]!;
-  final List<_GermanGrammarWord> adjectives = <_GermanGrammarWord>[];
-  int nounIndex = index + 1;
-  while (nounIndex < words.length &&
-      _grammarAdjacent(text, words[nounIndex - 1], words[nounIndex]) &&
-      adjectives.length < 2 &&
-      !words[nounIndex].capitalized &&
-      _grammarAdjectiveForms.containsKey(words[nounIndex].lower)) {
-    adjectives.add(words[nounIndex++]);
-  }
-  if (nounIndex >= words.length ||
-      !_grammarAdjacent(text, words[nounIndex - 1], words[nounIndex])) {
-    return;
-  }
+  final int? nounIndex = _grammarNounIndex(text, words, index);
+  if (nounIndex == null) return;
   final _GermanGrammarWord noun = words[nounIndex];
-  if (!noun.capitalized ||
-      !_grammarContextSafe(contextStart, noun.end, protected, boundaries)) {
+  if (!_grammarContextSafe(contextStart, noun.end, protected, boundaries)) {
     return;
   }
-  final List<_GermanNounReading>? readings = _grammarNounForms[noun.lower];
-  if (readings == null) return;
-  if (governedCase == _GermanCase.dative &&
-      (determiner.form(_GermanCase.dative, _GermanGender.masculine) ==
-              article.lower ||
-          determiner.form(_GermanCase.dative, _GermanGender.neuter) ==
-              article.lower) &&
-      _grammarNouns.any(
-        (_GermanNoun entry) =>
-            entry.gender != _GermanGender.feminine &&
-            '${entry.singular.toLowerCase()}e' == noun.lower,
-      )) {
-    // The optional literary dative -e can coincide with the plural:
-    // "von diesem Tage", "nach dem Jahre", "aus dem Texte". Without this
-    // reading, a plural-only lookup must not rewrite a valid singular phrase.
+  final List<_GermanGrammarWord> adjectives = words.sublist(
+    index + 1,
+    nounIndex,
+  );
+  if (_grammarCouldBeNominalizedAdjective(
+    article,
+    determiner,
+    noun,
+    governedCase,
+  )) {
+    // A valid capitalized adjective can share its surface with an ordinary
+    // noun: "für die Junge" / "mit der Jungen". Preserve that reading rather
+    // than changing its gender or case. This is only a validity veto; it does
+    // not infer or correct unmodeled nominalizations. "mit dem Junge" does
+    // not satisfy the dative adjective ending and remains eligible for repair.
     return;
+  }
+  final List<_GermanNounReading> readings = _lookupGrammarNoun(noun.lower);
+  if (readings.isEmpty) return;
+  if (governedCase == _GermanCase.dative &&
+      noun.lower.endsWith('e') &&
+      readings.any(
+        (_GermanNounReading reading) =>
+            reading.gender == _GermanGender.plural &&
+            reading.accepts(noun.lower, _GermanCase.nominative),
+      )) {
+    final String base = noun.lower.substring(0, noun.lower.length - 1);
+    if (_lookupGrammarNoun(base).any(
+      (_GermanNounReading reading) =>
+          (reading.gender == _GermanGender.masculine ||
+              reading.gender == _GermanGender.neuter) &&
+          determiner.form(_GermanCase.dative, reading.gender) ==
+              article.lower &&
+          reading.accepts(base, _GermanCase.nominative) &&
+          reading.accepts(base, _GermanCase.dative),
+    )) {
+      // Literary dative -e can coincide with a recorded plural: "mit dem
+      // Sterne", "von diesem Tage", "aus dem Worte". Lexical resources often
+      // omit this optional form. Treat this as a possible singular reading;
+      // this safeguard never invents or suggests a literary replacement.
+      return;
+    }
   }
   List<(_GermanNounReading, _GermanCase)> analyses =
       <(_GermanNounReading, _GermanCase)>[
@@ -619,10 +787,7 @@ Iterable<_GermanGrammarIssue> _grammarNounPhrase(
               if (governedCase != null ||
                   determiner.form(grammaticalCase, reading.gender) ==
                           article.lower &&
-                      _germanFormsEquivalent(
-                        reading.inCase(grammaticalCase).toLowerCase(),
-                        noun.lower,
-                      ))
+                      reading.accepts(noun.lower, grammaticalCase))
                 (reading, grammaticalCase),
       ];
   if (analyses.isEmpty) return;
@@ -635,6 +800,14 @@ Iterable<_GermanGrammarIssue> _grammarNounPhrase(
       )
       .toList(growable: false);
   if (matchingArticles.isNotEmpty) analyses = matchingArticles;
+  if (analyses.any(
+    ((_GermanNounReading, _GermanCase) analysis) =>
+        analysis.$1.inCase(analysis.$2).isEmpty,
+  )) {
+    // A missing paradigm slot is unknown. It cannot be discarded to make a
+    // competing reading look certain.
+    return;
+  }
 
   final Set<String> articleForms = <String>{
     for (final (_GermanNounReading, _GermanCase) analysis in analyses)
@@ -651,27 +824,47 @@ Iterable<_GermanGrammarIssue> _grammarNounPhrase(
       'Artikel, Nomen und Präposition verlangen hier normalerweise diese Form.',
     );
   }
+  // Any valid analysis vetoes a noun correction. Optional alternatives,
+  // including literary dative forms, must not become false positives merely
+  // because another analysis has a different preferred spelling.
+  final bool nounAlreadyValid = analyses.any(
+    ((_GermanNounReading, _GermanCase) analysis) =>
+        analysis.$1.accepts(noun.lower, analysis.$2),
+  );
   final Set<String> nounForms = <String>{
     for (final (_GermanNounReading, _GermanCase) analysis in analyses)
-      analysis.$1.inCase(analysis.$2),
+      ...analysis.$1.inCase(analysis.$2),
   };
-  if (governedCase == _GermanCase.dative &&
-      nounForms.length == 1 &&
-      !_germanFormsEquivalent(nounForms.single.toLowerCase(), noun.lower) &&
-      analyses.every(
-        ((_GermanNounReading, _GermanCase) analysis) =>
-            analysis.$1.gender == _GermanGender.plural,
-      )) {
-    yield _GermanGrammarIssue(
-      'de.grammar.dative-plural',
-      noun.start,
-      noun.end,
-      _matchCase(noun.text, nounForms.single),
-      'Dieses Nomen erhält im Dativ Plural normalerweise ein zusätzliches „n“.',
-    );
+  if (governedCase != null && !nounAlreadyValid && nounForms.length == 1) {
+    final String replacement = nounForms.single;
+    // Upstream morphology is useful for analysis but is not an independent
+    // spelling authority. Never suggest an inflected form missing from the
+    // existing modern dictionary (including its reviewed Swiss equivalent).
+    if (GermanNounMorphology.shared.acceptsSpelling(
+      replacement,
+      swiss: swiss,
+    )) {
+      final bool dativePlural =
+          governedCase == _GermanCase.dative &&
+          analyses.every(
+            ((_GermanNounReading, _GermanCase) analysis) =>
+                analysis.$1.gender == _GermanGender.plural,
+          );
+      yield _GermanGrammarIssue(
+        dativePlural ? 'de.grammar.dative-plural' : 'de.grammar.noun-case',
+        noun.start,
+        noun.end,
+        _matchCase(noun.text, replacement),
+        dativePlural
+            ? 'Dieses Nomen erhält im Dativ Plural normalerweise ein zusätzliches „n“.'
+            : 'Dieses Nomen verlangt hier normalerweise diese Kasusform.',
+      );
+    }
   }
-  // Do not repair adjective endings while the article itself is unresolved.
-  if (articleForms.length != 1 || articleForms.single != article.lower) return;
+  // A unique target article is enough to repair its adjective endings in the
+  // same pass. Findings are disjoint; applying the whole phrase therefore does
+  // not require accepting a second round of corrections.
+  if (articleForms.length != 1) return;
   for (final _GermanGrammarWord adjective in adjectives) {
     // A bare modifier can be an adverb attached to the following adjective:
     // "die automatisch geänderte Datei", "ein leicht beschädigtes Buch".

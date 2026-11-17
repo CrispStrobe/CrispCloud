@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "recorded_utc": "2026-11-17T14:11:47.803Z",
+  "status": "source checkpoint; runtime qualification pending",
+  "branch": "codex/odf-annotation-visibility-20261117",
+  "scope": "ODT/ODS annotation exclusion from document body extraction, search, previews and CSV; preserve raw XML and foreign namespace content",
+  "repositories": {
+    "CrispStrobe/quds_office_suite": {
+      "base": "3458c8977cef969a86a07b39734c761ba62e4b40",
+      "source_checkpoint": "dd2e56e8cdc5cc7e8edc21513d7a12d7e6042f8b",
+      "test_checkpoint": "cadb4ae30811739389f46d7b393c1136e0eb448c",
+      "tree": "9d86227b1700acb2fda96f089dbb59b7fe016d35",
+      "changed_files": [
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "commit": "cadb4ae30811739389f46d7b393c1136e0eb448c",
+          "path": "packages/quds_office_engine/lib/src/odf/odf_text.dart",
+          "blob": "20b3caf6e23f1d1554204563f8691626da6423cd",
+          "exact_content_equal": true
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "commit": "cadb4ae30811739389f46d7b393c1136e0eb448c",
+          "path": "packages/quds_office_engine/lib/src/extract/office_text_extractor.dart",
+          "blob": "eb2c3ada8c14ff970d5c3a8dd3be1ff5030dcc92",
+          "exact_content_equal": true
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "commit": "cadb4ae30811739389f46d7b393c1136e0eb448c",
+          "path": "packages/quds_office_engine/lib/src/extract/office_search_text.dart",
+          "blob": "3b379e46e35e92754e3954859d1e9f1d3e02394e",
+          "exact_content_equal": true
+        },
+        {
+          "repository": "CrispStrobe/quds_office_suite",
+          "commit": "cadb4ae30811739389f46d7b393c1136e0eb448c",
+          "path": "packages/quds_office_engine/test/odf_annotation_extraction_test.dart",
+          "blob": "d16f39b66d8d7ad3d0b4ec8a860a75e27bd70af6",
+          "exact_content_equal": true
+        }
+      ],
+      "existing_source_modes_preserved": "100644",
+      "new_test_mode": "100644",
+      "authored_test_cases": 11
+    },
+    "CrispStrobe/CrispCloud": {
+      "base": "fad903782ee45031e26c57cc8a65ccf476b1724d",
+      "source_checkpoint": "4dd520d93115be330dfb6cf47f1db983ec2dabea",
+      "test_checkpoint": "3e3687856ffe9b96bd8dd70eacbc759daf425ab9",
+      "tree": "54130bf2e45382c7f1589cd8098bb31dfd901629",
+      "changed_files": [
+        {
+          "repository": "CrispStrobe/CrispCloud",
+          "commit": "3e3687856ffe9b96bd8dd70eacbc759daf425ab9",
+          "path": "lib/services/office_document_service.dart",
+          "blob": "6ca0e798d8dd1f791c403a8a704c55604ae9616f",
+          "exact_content_equal": true
+        },
+        {
+          "repository": "CrispStrobe/CrispCloud",
+          "commit": "3e3687856ffe9b96bd8dd70eacbc759daf425ab9",
+          "path": "test/office_annotation_preview_test.dart",
+          "blob": "21b68d4cc6bbe54ce5a0b4333e00cc154e016049",
+          "exact_content_equal": true
+        }
+      ],
+      "existing_source_modes_preserved": "100644",
+      "new_test_mode": "100644",
+      "authored_test_cases": 8
+    }
+  },
+  "checks_performed": [
+    "Reviewed exact source paths and relevant model/writer/XML-reader APIs.",
+    "Compared base-to-checkpoint changes: 4 Quds paths and 2 CrispCloud paths only.",
+    "Read back all six changed files at exact test checkpoint SHAs and compared complete text with submitted content.",
+    "Read back both remote refs after each source and test checkpoint.",
+    "Checked baseline executable modes of modified files; all were and remain 100644."
+  ],
+  "checks_not_run": [
+    "Dart tests, including before-fix failure controls",
+    "Flutter tests",
+    "Dart formatter",
+    "Dart/Flutter analyzer",
+    "Vendor fidelity guard",
+    "External Word/LibreOffice interoperability or application UI acceptance"
+  ],
+  "runtime_probe": {
+    "command": "command -v dart flutter",
+    "error": "exec_command failed: CreateProcess { message: \"Rejected(\\\"Failed to create unified exec process: exec-server rejected request (-32603): No such file or directory (os error 2)\\\")\" }",
+    "status": "failed-before-runtime-discovery"
+  },
+  "github_actions_policy": {
+    "queried": false,
+    "awaited": false,
+    "commits_include_skip_ci": true
+  },
+  "source_reasoning": [
+    "ODT comment export places office:annotation after a run; the old host inline default recursively included annotation author, date and body in document text.",
+    "The old host table reader selected nested annotation paragraphs and also used outer paragraph innerText, so generated cell comments could be counted twice.",
+    "The canonical paragraph reader already excluded inline office:annotation, but container enumeration, streaming extraction and namespace-less fallback did not exclude independent annotation stories, including generated ODS comments.",
+    "Namespace URI plus local name identifies annotations; alias prefixes are excluded and foreign/shadowed namespaces retain their existing visible content.",
+    "XmlPullReader.next emits a synthetic reduced-depth endElement for a self-closing tag, so the retained subtree-skip loop does not consume following siblings."
+  ],
+  "limitation": "CrispCloud's dedicated host checkpoint does not update managed Quds sources or their manifest. The parent integration must vendor the reconciled canonical source before final qualification.",
+  "independent_reviews": [
+    {
+      "reviewer": "host_inventory",
+      "reviewed": {
+        "repository": "CrispStrobe/CrispCloud",
+        "commit": "3e3687856ffe9b96bd8dd70eacbc759daf425ab9"
+      },
+      "kind": "read-only source review",
+      "result": "No concrete API-usage or expected-output defect identified. Checked model/export constructors, archive helper, namespace controls and XmlText/XmlCDATA retention. No runtime execution."
+    },
+    {
+      "reviewer": "quds_inventory",
+      "reviewed": {
+        "repository": "CrispStrobe/quds_office_suite",
+        "commit": "cadb4ae30811739389f46d7b393c1136e0eb448c"
+      },
+      "kind": "read-only source review",
+      "result": "No blocker in annotation reader changes. Confirmed synthetic endElement behavior for empty tags. Identified a separate interaction in the newer reconciled note writer: annotation references could consume a visible note definition; correction belongs to the parent continuation branch."
+    }
+  ],
+  "integration_followup": {
+    "issue": "In the newer note writer, comment references must not claim the emitted note definition before a visible body reference.",
+    "owner": "parent continuation branch",
+    "status": "separate correction in progress at this source checkpoint",
+    "outside_these_dedicated_branch_source_changes": true
+  }
+}

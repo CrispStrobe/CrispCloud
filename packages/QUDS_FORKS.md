@@ -26,9 +26,19 @@ content.
 The app mirrors the canonical Quds source and the standalone legacy parser.
 Exact revisions, source boundaries and the complete managed-file inventory are
 recorded in [the fidelity manifest](../tool/office_fidelity_manifest.json).
-The current canonical checkpoint is `b2dc226e2ed82cda8f1bada18fb0a1e17347b5fc`;
-the managed inventory contains 2,559 files, including the unchanged 1,857-file
-standalone parser. This continuation retains the completed Zotero recovery,
+The current canonical checkpoint is `f28b13a5e77e31d7ba59a36d207fbec22b2d0d07`;
+the managed inventory contains 2,593 files: 736 canonical files and the unchanged
+1,857-file standalone parser. The 17 November continuation reconciles the
+captured Office, morphology and proofing-tool branches and their bounded late
+arrivals. It preserves the original six bundled notices and adds the complete
+Unicode Inflection notice for German morphology to the app's license registry.
+
+ODF annotations retain their raw XML and comment-model content while body
+extraction, search and host previews exclude them. Note references inside
+comments preserve their marks without claiming a visible body note definition.
+The [continuation record](../docs/validation/office-continuation-20261117/README.md)
+binds source preservation, independent review, regression cases and pending
+local qualification to exact commits. Fresh local validation is recorded in the German grammar options integration report; earlier qualification counts keep their original source attribution. This continuation retains the completed Zotero recovery,
 English hyphenation, proofing and ranked/average spreadsheet work, including
 conditional-format differential-style preservation, current proofing/rendering branches,
 and the ODT/ODP writers from canonical main. The host

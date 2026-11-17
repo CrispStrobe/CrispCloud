@@ -7,7 +7,16 @@ part of 'word_notes.dart';
 /// source text, selections or undo history. Footnotes and endnotes have separate
 /// sequences, including ordinary notes between Zotero citations.
 final class WordNoteNumbering {
-  WordNoteNumbering(WmlDocument document) {
+  /// Builds labels without modifying the document or cached reference text.
+  ///
+  /// Export adapters may treat empty authored references as automatic and
+  /// supply their visible body paragraphs. Defaults retain the native/editor
+  /// interpretation, including its existing body traversal.
+  WordNoteNumbering(
+    WmlDocument document, {
+    this.emptyReferencesAreAutomatic = false,
+    Iterable<WmlParagraph> Function(WmlSection section)? paragraphsForSection,
+  }) {
     final definitions = <(bool, int), List<WmlNote>>{};
     for (final note in [...document.footnotes, ...document.endnotes]) {
       definitions.putIfAbsent((note.endnote, note.id), () => []).add(note);
@@ -33,7 +42,9 @@ final class WordNoteNumbering {
           unknownCounters.remove(entry.key);
         }
       }
-      for (final paragraph in _bodyParagraphs(section.blocks)) {
+      for (final paragraph
+          in paragraphsForSection?.call(section) ??
+              _bodyParagraphs(section.blocks)) {
         for (final run in paragraph.inlines.whereType<WmlRun>()) {
           final id = run.noteRefId;
           if (id == null) continue;
@@ -51,7 +62,7 @@ final class WordNoteNumbering {
           }
           // Imported/custom visible text is not an automatically numbered
           // placeholder. Keep it exactly as authored and outside the sequence.
-          if (run.text != '$id') {
+          if (!_isAutomaticReference(run)) {
             _labels[note] = run.text;
             continue;
           }
@@ -98,6 +109,9 @@ final class WordNoteNumbering {
   }
 
   final _ordered = <WmlNote>[];
+
+  /// Whether empty reference runs participate in automatic numbering.
+  final bool emptyReferencesAreAutomatic;
   final _labels = <WmlNote, String>{};
   final _referenceLabels = <(bool, int), String>{};
   final _limited = <WmlNote>{};
@@ -116,10 +130,15 @@ final class WordNoteNumbering {
   /// with different length while retaining the original source-offset range.
   String? referenceLabel(WmlRun run) {
     if (run.noteRefCustomMark) return '';
-    return run.noteRefId == null || run.text != '${run.noteRefId}'
+    return !_isAutomaticReference(run)
         ? null
         : _referenceLabels[(run.noteRefEndnote, run.noteRefId!)];
   }
+
+  bool _isAutomaticReference(WmlRun run) =>
+      run.noteRefId != null &&
+      (run.text == '${run.noteRefId}' ||
+          (emptyReferencesAreAutomatic && run.text.isEmpty));
 
   static Iterable<WmlParagraph> _bodyParagraphs(
     Iterable<WmlBlock> blocks,
