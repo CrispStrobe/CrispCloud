@@ -29,6 +29,7 @@ XmlElement _odtBody(OpcPackage package) => XmlDocument.parse(
 ).root!.firstChild('body')!.firstChild('text')!;
 
 void main() {
+  columnTests();
   tabStopTests();
   paragraphShadingTests();
   pageFieldTests();
@@ -595,5 +596,28 @@ void tabStopTests() {
     expect(content, contains('style:type="center"'));
     expect(content, contains('style:type="right"'));
     expect(content, contains('style:leader-style="dotted"'));
+  });
+}
+
+void columnTests() {
+  test('writes multi-column ODT sections', () {
+    final document = WmlDocument(
+      sections: [
+        WmlSection(
+          columnCount: 2,
+          columnSpace: 18,
+          blocks: [
+            WmlParagraph(inlines: [WmlRun(text: 'Columns')]),
+          ],
+        ),
+      ],
+    );
+    final package = OpcPackage.openBytes(
+      OdtDocumentWriter.writeBytes(document),
+    );
+    final content = package.getPart('/content.xml')!.readText();
+    expect(content, contains('<text:section text:name="Section0"'));
+    expect(content, contains('fo:column-count="2"'));
+    expect(content, contains('fo:column-gap="18.00pt"'));
   });
 }
