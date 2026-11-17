@@ -33,7 +33,7 @@ exact source identities, commands and the separately qualified terminal results.
 ## Earlier verified state
 
 - CrispCloud `main` snapshot: `4eea7d16`
-- Vendored Quds source checkpoint: `04505306af39c47bd0fe96423d1515ee6ca5027e`
+- Vendored Quds source checkpoint: `a5cd1f30aa4764e990ed81b9ac8387efe3182f82`
   (`packages/QUDS_FORKS.md`, 2,559 managed files)
 - Quds sheet/ODS cohort: **514 tests**; the last clean full engine run was
   **2,205 tests** (two unrelated CLI bookmark/content-control tests currently
