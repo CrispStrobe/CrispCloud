@@ -1,0 +1,11 @@
+# Integrated TestFlight build 29
+
+CrispCloud 1.3.4+29 combines the current host main with Zotero recovery and the canonical Quds proofing, rendering and Office-format branches. Local qualification and Apple delivery receipts are recorded separately below.
+
+## Source review for the existing release route
+
+The committed lockfile differs from the last reviewed graph only by replacing hosted dartssh2 4.1.0 with its verified MIT source mirror. Its four patches bound SSH agent framing/channel admission, validate public-key authentication replies and await transport/channel completion. Existing ciphers, key exchange, host verification and SFTP algorithms remain unchanged; `tool/verify_dartssh2_vendor.py` verifies all 96 upstream files and four patches. The inventory now binds the mirror files as well as its upstream and patch receipts.
+
+The custom-keychain changes expose native sleep/inactivity lock settings for the selected keychain, with both options disabled for newly created keychains. They add no encryption algorithm and store no extra password. Other changes to reviewed host inputs concern terminal lifecycle, file opening, printing, Office rendering/format exports, proofing, Zotero, UI and source provenance. Existing encryption implementations and required Filen/Internxt providers remain present.
+
+The existing recorded outside-France release decision and both Apple encryption declarations are retained. This refresh binds that decision to current source/dependency bytes; it is not a new government classification or a change to country availability or tester membership. The live Apple and reviewed-group guards must pass before delivery.
