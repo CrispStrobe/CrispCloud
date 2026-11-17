@@ -30,7 +30,7 @@ Remaining format work is tracked in
 | `.docm`, `.dotm`, `.dotx` | Existing formatted Word view, text and page rendering | Rich Word editor with macro/template preservation checks before saving |
 | `.odt` | Headings, paragraphs, inline bold/italic, links, ordered/unordered and nested lists, numbered footnotes, repeat/span-aware tables, bounded registry-backed pictures, text boxes and text headers/footers | Read-only in place; **Export as ODT** writes a new modeled document, ordinary Save keeps DOCX |
 | `.ods` | Quds grid with typed values, formulas, dates/times, currencies, comments, pictures, conditional formats, validations, row outline groups, page setup (orientation, paper, margins, scale/fit, print grid/headings), header/footer sections, hidden rows/columns/sheets, repeated rows/columns and spans; a Table toggle keeps the typed extraction | Imported by Quds; ordinary Save writes a new `.xlsx` copy, **Export as ODS** writes a new modeled `.ods` package, and the original `.ods` is untouched |
-| `.odp` | Positioned slide deck: page size, frames/custom shapes, text styles/colours, fills, images, backgrounds and speaker notes | Source/Hex inspection; no ODP writer |
+| `.odp` | Positioned slide deck: page size, frames/custom shapes, text styles/colours, fills, images, backgrounds and speaker notes | Read-only in place; **Export as ODP** writes a new modeled deck, ordinary Save keeps PPTX |
 | `.kdbx` | Password/key-file unlock, groups, standard/custom fields, entry history and search | Group management, entry moves, protected custom fields, history restoration and encrypted saves preserving other database data |
 | `.kbdx` | XML tree and source for Autodesk keyboard-shortcut profiles | XML source in the text/code editor |
 

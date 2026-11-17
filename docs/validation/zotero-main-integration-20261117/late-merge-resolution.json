@@ -1,0 +1,9 @@
+{
+  "incoming_main": "71a2aafd1cf0383fa505d0e8c1307244433e7ffe",
+  "included_prs": [
+    210,
+    211
+  ],
+  "resolution": "Retain complete recovery manifest/pin; current recovery canonical source already includes ODP writer and corrected PNG. Preserve new host Export as ODP action, translations, widget regression, and incoming service/viewer PNG fixtures. Final guarded sync follows latest combined Quds freeze.",
+  "canonical_source_before": "bacce8e11c6ab5596d01532b074ebaf9a377db90"
+}

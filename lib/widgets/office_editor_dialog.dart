@@ -596,6 +596,59 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
     }
   }
 
+  String _odpOutputName() {
+    final name = widget.saveAsName ?? _file.name;
+    final dot = name.lastIndexOf('.');
+    final base = dot > 0 ? name.substring(0, dot) : name;
+    return officeCopyName('$base.odp');
+  }
+
+  Future<void> _exportOdp() async {
+    if (_saving || _exporting) return;
+    final controller = _controller;
+    if (controller is! SlideEditorController) return;
+    setState(() => _exporting = true);
+    try {
+      controller.commitPendingEdits();
+      final bytes = OdpPresentationWriter.writeBytes(controller.presentation);
+      if (bytes.length > kOfficeCopyOutputLimitBytes) {
+        throw FileTargetTooLarge(kOfficeCopyOutputLimitBytes);
+      }
+      if (!mounted) return;
+      final outcome = await widget.copyExporter(
+        Uint8List.fromList(bytes).asUnmodifiableView(),
+        _odpOutputName(),
+        context.tr('Export as ODP'),
+        initialDirectory: _copyInitialDirectory,
+      );
+      if (!mounted || outcome == null) return;
+      _showNotice(
+        TransientSnackBar(
+          content: Text(
+            context.tr(
+              outcome == OfficeCopyOutcome.savedCopy
+                  ? 'Copy saved. The original is unchanged.'
+                  : 'Copy download started. The original is unchanged.',
+            ),
+          ),
+        ),
+      );
+    } catch (e, st) {
+      _log.warn('ODP export failed', e, st);
+      if (!mounted) return;
+      _showNotice(
+        SnackBar(
+          content: Text(
+            '${context.tr('Could not save a copy')}: ${_localizedError(e)}',
+          ),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _exporting = false);
+    }
+  }
+
   String _odtOutputName() {
     final name = widget.saveAsName ?? _file.name;
     final dot = name.lastIndexOf('.');
@@ -1089,6 +1142,9 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
               : null,
           onExportOdt: _kind == OfficeEditorKind.word
               ? () => unawaited(_exportOdt())
+              : null,
+          onExportOdp: _kind == OfficeEditorKind.slides
+              ? () => unawaited(_exportOdp())
               : null,
           onSaveAs: kIsWeb ? null : () => unawaited(_saveAs()),
           onPrint: () => ref.read(documentPrintProvider)?.run(),

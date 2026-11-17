@@ -108,8 +108,9 @@ bookmark/content-control tests currently failing on main. The ODS writer emits
 the modeled workbook subset, including pictures, conditional formats,
 validations, ranked/average conditional rules, authored page setup and
 header/footer sections. The bounded ODT writer now covers headings, formatted
-runs, tables, pictures, frames, page geometry and basic headers/footers; an ODP
-writer remains open. A host widget test opens an XLSX fixture and reads the exported ODS
+runs, tables, pictures, frames, page geometry and basic headers/footers. The
+bounded ODP writer covers slides, positioned text, pictures, tables, fills,
+strokes, notes and page geometry. A host widget test opens an XLSX fixture and reads the exported ODS
 back. The combined host qualification remains separately source-bound
 in the storage evidence.
 
