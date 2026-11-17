@@ -328,8 +328,8 @@ void main() {
       expect(p.getAttribute('line-height', namespaceUri: _foNs), '18.00pt');
       expect(p.getAttribute('margin-top', namespaceUri: _foNs), '6.00pt');
       expect(p.getAttribute('margin-bottom', namespaceUri: _foNs), '0.00pt');
-      expect(p.getAttribute('margin-left', namespaceUri: _foNs), '12.00pt');
-      expect(p.getAttribute('margin-right', namespaceUri: _foNs), '3.00pt');
+      expect(p.getAttribute('margin-left', namespaceUri: _foNs), '3.00pt');
+      expect(p.getAttribute('margin-right', namespaceUri: _foNs), '12.00pt');
       expect(p.getAttribute('text-indent', namespaceUri: _foNs), '4.00pt');
       expect(p.getAttribute('text-align', namespaceUri: _foNs), 'right');
       expect(p.getAttribute('writing-mode', namespaceUri: _styleNs), 'rl-tb');

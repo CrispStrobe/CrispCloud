@@ -1494,13 +1494,21 @@ class _OdtLayout {
         if (sectionStart?.index case final index? when index > 0) {
           buffer.write(' style:page-number="auto"');
         }
-        if (props.indent.left != 0) {
-          if (_paragraphDecimal(props.indent.left) case final left?) {
+        // Model indents are physical. ODF paragraph margins follow the writing
+        // direction: margin-left is the right margin for an RTL paragraph.
+        final marginLeft = props.rightToLeft == true
+            ? props.indent.right
+            : props.indent.left;
+        final marginRight = props.rightToLeft == true
+            ? props.indent.left
+            : props.indent.right;
+        if (marginLeft != 0) {
+          if (_paragraphDecimal(marginLeft) case final left?) {
             buffer.write(' fo:margin-left="${left}pt"');
           }
         }
-        if (props.indent.right != 0) {
-          if (_paragraphDecimal(props.indent.right) case final right?) {
+        if (marginRight != 0) {
+          if (_paragraphDecimal(marginRight) case final right?) {
             buffer.write(' fo:margin-right="${right}pt"');
           }
         }

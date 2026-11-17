@@ -266,6 +266,65 @@ void main() {
     });
   }
 
+  for (final direction in <bool?>[true, false, null]) {
+    test('preserves physical paragraph indents for direction $direction', () {
+      final props = WmlParagraphProps(
+        rightToLeft: direction,
+        indent: const WmlIndent(left: 30, right: 24, firstLine: 6),
+      );
+      final original = WordSerializer().paragraphPropertiesXml(props);
+      final properties = _properties(_content(_document([props])), 0);
+      expect(
+        _fo(properties, 'margin-left'),
+        direction == true ? '24.00pt' : '30.00pt',
+      );
+      expect(
+        _fo(properties, 'margin-right'),
+        direction == true ? '30.00pt' : '24.00pt',
+      );
+      expect(_fo(properties, 'text-indent'), '6.00pt');
+      expect(props.indent.left, 30);
+      expect(props.indent.right, 24);
+      expect(WordSerializer().paragraphPropertiesXml(props), original);
+    });
+  }
+
+  test('RTL signed margins retain hanging-indent precedence', () {
+    final content = _content(
+      _document([
+        WmlParagraphProps(
+          rightToLeft: true,
+          indent: const WmlIndent(
+            left: -12,
+            right: 4,
+            firstLine: 10,
+            hanging: 6,
+          ),
+        ),
+      ]),
+    );
+    final properties = _properties(content, 0);
+    expect(_fo(properties, 'margin-left'), '4.00pt');
+    expect(_fo(properties, 'margin-right'), '-12.00pt');
+    expect(_fo(properties, 'text-indent'), '-6.00pt');
+  });
+
+  test('RTL margin mapping preserves zero and invalid-value omission', () {
+    for (final left in [0.0, double.nan, double.infinity, 1e308]) {
+      final content = _content(
+        _document([
+          WmlParagraphProps(
+            rightToLeft: true,
+            indent: WmlIndent(left: left, right: 7),
+          ),
+        ]),
+      );
+      final properties = _properties(content, 0);
+      expect(_fo(properties, 'margin-left'), '7.00pt');
+      expect(_fo(properties, 'margin-right'), isNull);
+    }
+  });
+
   test('retains signed finite indentation and hanging-indent precedence', () {
     final content = _content(
       _document([

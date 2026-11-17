@@ -12,6 +12,8 @@ const odfOfficeNamespace = 'urn:oasis:names:tc:opendocument:xmlns:office:1.0';
 /// Namespace for ODF table structure and covered cells.
 const odfTableNamespace = 'urn:oasis:names:tc:opendocument:xmlns:table:1.0';
 
+const _odfDrawNamespace = 'urn:oasis:names:tc:opendocument:xmlns:drawing:1.0';
+
 /// Writes authored text without ODF's literal XML whitespace collapse.
 ///
 /// Repeated and edge spaces are explicit, including run boundaries where the
@@ -126,23 +128,49 @@ Iterable<XmlElement> odfParagraphs(XmlElement element) sync* {
   }
 }
 
+/// Decodes visible paragraphs, including text boxes anchored inside them.
+///
+/// An anchor's own inline text stays together, followed by its text-box stories
+/// in source order. A paragraph containing only text boxes adds no synthetic
+/// blank block; authored empty paragraphs inside the boxes remain distinct.
+/// Each paragraph is decoded once, without merging a frame's text into both
+/// the enclosing paragraph and its own blocks.
+Iterable<String> readOdfParagraphs(
+  XmlElement element,
+  OdfTextBudget budget,
+) sync* {
+  for (final paragraph in odfParagraphs(element)) {
+    final decoded = _readParagraph(paragraph, budget);
+    if (decoded.text.isNotEmpty || decoded.textBoxes.isEmpty) {
+      yield decoded.text;
+    }
+    for (final box in decoded.textBoxes) {
+      yield* readOdfParagraphs(box, budget);
+    }
+  }
+}
+
 /// Reads paragraphs in [element], retaining empty blocks and their separators.
 String readOdfText(XmlElement element, OdfTextBudget budget) {
   final result = StringBuffer();
   var first = true;
-  for (final paragraph in odfParagraphs(element)) {
+  for (final paragraph in readOdfParagraphs(element, budget)) {
     if (!first) {
       budget.consume(1);
       result.write('\n');
     }
-    result.write(_readParagraph(paragraph, budget));
+    result.write(paragraph);
     first = false;
   }
   return result.toString();
 }
 
-String _readParagraph(XmlElement paragraph, OdfTextBudget budget) {
+({String text, List<XmlElement> textBoxes}) _readParagraph(
+  XmlElement paragraph,
+  OdfTextBudget budget,
+) {
   final text = _ParagraphText(budget);
+  final textBoxes = <XmlElement>[];
   void visit(XmlNode node) {
     if (node is XmlText) {
       text.literal(node.text);
@@ -152,20 +180,28 @@ String _readParagraph(XmlElement paragraph, OdfTextBudget budget) {
       text.literal(node.text);
       return;
     }
-    if (node is XmlElement &&
-        node.namespaceUri ==
-            'urn:oasis:names:tc:opendocument:xmlns:drawing:1.0') {
-      if (node.localName == 'text-box') {
-        // readOdfText accounts for the decoded bytes, including separators.
-        text.decoded(readOdfText(node, budget));
-      } else if (node.localName == 'frame') {
+    if (node is! XmlElement) return;
+    if (node.namespaceUri == _odfDrawNamespace) {
+      if (node.localName == 'frame') {
         for (final child in node.childElements) {
-          visit(child);
+          if (child.namespaceUri == _odfDrawNamespace &&
+              child.localName == 'text-box') {
+            textBoxes.add(child);
+          }
+        }
+      } else if (node.localName == 'a') {
+        // A linked drawing can wrap a frame, but image metadata and foreign
+        // drawing-like elements are not visible paragraph text.
+        for (final child in node.childElements) {
+          if (child.namespaceUri == _odfDrawNamespace &&
+              child.localName == 'frame') {
+            visit(child);
+          }
         }
       }
       return;
     }
-    if (node is! XmlElement || node.namespaceUri != odfTextNamespace) return;
+    if (node.namespaceUri != odfTextNamespace) return;
     switch (node.localName) {
       case 's':
         final raw = node.getAttribute('c', namespaceUri: odfTextNamespace);
@@ -207,7 +243,7 @@ String _readParagraph(XmlElement paragraph, OdfTextBudget budget) {
   }
 
   visit(paragraph);
-  return text.toString();
+  return (text: text.toString(), textBoxes: textBoxes);
 }
 
 bool _isWhitespace(int unit) =>
@@ -243,12 +279,6 @@ class _ParagraphText {
     _flushSpace();
     _append(value);
     _started = true;
-  }
-
-  void decoded(String value) {
-    _flushSpace();
-    _buffer.write(value);
-    if (value.isNotEmpty) _started = true;
   }
 
   void spaces(int count) {
