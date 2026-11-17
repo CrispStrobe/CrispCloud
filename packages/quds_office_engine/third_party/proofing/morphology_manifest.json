@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "upstream": {
+    "name": "Unicode Inflection",
+    "repository": "https://github.com/unicode-org/inflection",
+    "revision": "346cf8916249eddc3d5918cfbc27d2b24826ca37",
+    "license": "Unicode-3.0",
+    "sources": {
+      "dictionary_de.lst": {
+        "url": "https://media.githubusercontent.com/media/unicode-org/inflection/346cf8916249eddc3d5918cfbc27d2b24826ca37/resources/org/unicode/inflection/dictionary/dictionary_de.lst",
+        "sha256": "71570363fc58cab09da0cdf440e3e37083600115467954038ac9b1ff38b062d6",
+        "bytes": 55993784
+      },
+      "inflectional_de.xml": {
+        "url": "https://media.githubusercontent.com/media/unicode-org/inflection/346cf8916249eddc3d5918cfbc27d2b24826ca37/resources/org/unicode/inflection/dictionary/inflectional_de.xml",
+        "sha256": "0d3df7cbaaad6ef0f7036a961e00273892673df0070c43508fb29bf664fb442d",
+        "bytes": 1857558
+      },
+      "LICENSE": {
+        "url": "https://raw.githubusercontent.com/unicode-org/inflection/346cf8916249eddc3d5918cfbc27d2b24826ca37/LICENSE",
+        "sha256": "b2d3b5d59972767d52997d9f47e67cd30661bcfc3eeb6e3e1ada1ee06634be52",
+        "bytes": 2033
+      }
+    }
+  },
+  "selection": {
+    "lemma": "Modern spelling allowlist; single capitalized alphabetic singular nominative or plural-only nominative noun; exact pattern nominative and gender match. Proper names, abbreviations and nominalized adjectives excluded.",
+    "analyses": "Complete fixed noun paradigms only; all explicit genders, numbers and alternative case forms retained. Distinct source patterns remain distinct, including plural senses. Generated forms must be corroborated by matching source case/number/pattern tags. Lemmas with unknown gender or context-dependent declension are omitted.",
+    "corrections": "Separate standard/Swiss modern spelling intersection gates suggested noun forms. Upstream forms never enlarge spelling acceptance.",
+    "scope": "Finite lexical morphology, not dependency parsing or a full grammar checker."
+  },
+  "statistics": {
+    "lemmas": 67492,
+    "readings": 127987,
+    "patterns": 189,
+    "surface_forms": 186607,
+    "unresolved_surface_keys": 2885,
+    "suggestion_safe_standard": 118075,
+    "suggestion_safe_swiss": 118073,
+    "excluded": {
+      "context_dependent_patterns": 290,
+      "unattested_generated_form": 21783,
+      "suffix_mismatch": 5064,
+      "not_pattern_lemma": 23425,
+      "incomplete_readings": 3377,
+      "ambiguous_lemma": 2355
+    }
+  },
+  "validity_additions": [
+    {
+      "lemma": "Architekt",
+      "reason": "corrected-weak-declension",
+      "form": "Architekten"
+    },
+    {
+      "lemma": "Assistent",
+      "reason": "corrected-weak-declension",
+      "form": "Assistenten"
+    },
+    {
+      "lemma": "Bonbon",
+      "reason": "alternative-gender",
+      "form": "masculine"
+    },
+    {
+      "lemma": "Herz",
+      "reason": "optional-dative",
+      "form": "Herzen"
+    },
+    {
+      "lemma": "Nachbar",
+      "reason": "strong-and-weak-variants",
+      "form": "Nachbar|Nachbarn|Nachbars"
+    },
+    {
+      "lemma": "Stift",
+      "reason": "alternative-gender",
+      "form": "neuter"
+    },
+    {
+      "lemma": "Teil",
+      "reason": "alternative-gender",
+      "form": "neuter"
+    }
+  ],
+  "review_references": {
+    "Herz": "https://grammis.ids-mannheim.de/fragen/6979",
+    "Nachbar": "https://www.duden.de/deklination/substantive/Nachbar",
+    "Assistent": "https://www.duden.de/deklination/substantive/Assistent",
+    "Architekt": "https://www.duden.de/deklination/substantive/Architekt",
+    "Teil": "https://www.duden.de/rechtschreibung/Teil",
+    "Stift": "https://www.duden.de/rechtschreibung/Stift_Koerperschaft",
+    "Bonbon": "https://www.duden.de/rechtschreibung/Bonbon",
+    "literary_dative_limits": "https://grammis.ids-mannheim.de/fragen/25"
+  },
+  "spelling_inputs_sha256": {
+    "lib/src/proofing/data/german_common_00.dart": "43976662c5b2b1d42ea5a1a6a8e5538f1d52496de3dc768a883d638cdf5fdd5f",
+    "lib/src/proofing/data/german_lexicon_data.dart": "beb4e809b577fc950e39ffb759b9435834d1f2763e7d00911816da21b8b5d3a1",
+    "lib/src/proofing/data/german_standard_00.dart": "dfc3548af79c27f6d306ae91fc8711e6f5013295d4deaab6442f9fda964f54a4",
+    "lib/src/proofing/data/german_standard_01.dart": "75216e458beeeade0c3b647fda64064f3a2468887f716d8ee00947b1e1a319f1",
+    "lib/src/proofing/data/german_standard_02.dart": "554eba69a5558a3e234eb1c07db1bca1125d17403a3cadcb2951c39270f856d3",
+    "lib/src/proofing/data/german_standard_03.dart": "9425e9817ded89627b93cc3f86661ad55986efac02efa012d13e75c5eb82471b",
+    "lib/src/proofing/data/german_standard_04.dart": "69ff9e7f58e113756efa35204ba4951d9737c8024117dacbe183fab0797882bf",
+    "lib/src/proofing/data/german_standard_05.dart": "5f8b2d1fc67396074c015f1441faf618f0de995b9f1d017770dd52b9e673019f",
+    "lib/src/proofing/data/german_standard_06.dart": "e07eb4f404778a644d069c9766abc95b2a0c5d8687d217cb0bcd7fbb859d8f2e",
+    "lib/src/proofing/data/german_standard_07.dart": "bd80b1c0429bc75631a9df417257d22648bb9897cf8a8a3fd1fcced8992973e7",
+    "lib/src/proofing/data/german_standard_08.dart": "8309c190e75c545129b33fc99d01e157bdca58a7174f02c723456c5924dbf332",
+    "lib/src/proofing/data/german_standard_09.dart": "53fe9be61e8f377a0cf5f0d7c867a3a80538c22b92c1ee9a2090f9dbdb9ef59f",
+    "lib/src/proofing/data/german_standard_10.dart": "e4da39622bdfd6a03d18d51913e7af1feb6f1ef03f411aae33ec32d1af271cbc",
+    "lib/src/proofing/data/german_standard_11.dart": "feb85cdb0915a3e5fb55fa689964f7231414d8b9a1935b0cfc64ae3ce3d491a1",
+    "lib/src/proofing/data/german_standard_12.dart": "12092f7a9c07be0fdd664a95cb9e0316be9f8a456c6382aef36965775add1642",
+    "lib/src/proofing/data/german_standard_13.dart": "6cff772cc350ac0e892be55837ec3b1d19543e410fe13ddf22047588eb6d4364",
+    "lib/src/proofing/data/german_swiss_00.dart": "5719e81653cd5aea685be2359f92b64cb94e9dbbe4f999556394fe43867243a6"
+  },
+  "logical_sha256": "8387c57aade9ea5cf018b27b76a75d5b638f4326c4b108bcdc1f47eafe3e286d",
+  "encoding": {
+    "format": "base64 raw DEFLATE UTF-8 TSV; surface/read-id/lemma/stem/pattern/standard-mask/swiss-mask",
+    "unresolved_reading": "read-id -1, five empty remaining fields; known unmodeled analyses veto corrections and first-party fallbacks",
+    "buckets": 256,
+    "hash": "UTF-16 code units: h=(h*31+unit)&255, h0=0",
+    "mask_order": "Sorted distinct pattern suffixes; one bit per suffix, max 30 bits",
+    "zlib_version": "1.3.2",
+    "max_bucket_rows": 901,
+    "max_bucket_utf8_bytes": 47541
+  },
+  "generated_files": {
+    "lib/src/proofing/data/german_morphology_data.dart": "2def2223516731f632e5ab4a37f94377142d0644a5df5f50964fefaa92b2d193",
+    "lib/src/proofing/data/german_morphology_surfaces_00.dart": "cd79dee10538a3fa7ec47246e35dd45a3535720202c7e146e66f844523fd51bc",
+    "lib/src/proofing/data/german_morphology_surfaces_01.dart": "39c3bf9d907cdccdbfb0cc64c06ad76f2c0272790b4747626325d43f7497e7f4",
+    "lib/src/proofing/data/german_morphology_surfaces_02.dart": "5af756aff60cbc4a77425f1a1e5d48d712231b9892aa1d646af46b4e6c034a59",
+    "lib/src/proofing/data/german_morphology_surfaces_03.dart": "ec59197668f522895e525879f1acf1cd9d52c27740dda4d17293e95b28208bcf",
+    "lib/src/proofing/data/german_morphology_surfaces_04.dart": "6cace804210b0f52008da94ededb29692cc5a39041976aa4e999d17dfedfe2f4",
+    "lib/src/proofing/data/german_morphology_surfaces_05.dart": "cd70267d1d9580aa6b9a46e56b006ac961e614f0c6103d8850aa9b091b0b8627",
+    "lib/src/proofing/data/german_morphology_surfaces_06.dart": "afc12eeb4b6772d262451802f12758c955607ed6239adca1ef63c0e335f62e9f",
+    "lib/src/proofing/data/german_morphology_surfaces_07.dart": "773e74ed12d9891f1fc1b83c0cd4dcd33675c745edccee35e3fa42ea2004a839",
+    "lib/src/proofing/data/german_morphology_surfaces_08.dart": "bc34d24db3703a5f4bc7fdb73e5f91f269316db17ad0f375e656cf838d0713d2",
+    "lib/src/proofing/data/german_morphology_surfaces_09.dart": "4ee5929fca1b20454093614cf3fc9f733c6a246dbb24e7d2865f56aa7829762e",
+    "lib/src/proofing/data/german_morphology_surfaces_10.dart": "5800bdb1c6f699fb2d7080e4d3c5327734724ba0212465aba019c3c37eba9b50",
+    "lib/src/proofing/data/german_morphology_surfaces_11.dart": "06f35af0a008762feea1b0529867f5f60a4b11c4fa6365734b534a4672d6d829",
+    "lib/src/proofing/data/german_morphology_surfaces_12.dart": "104de822d57601b57eb0626ed49b33f5ad71c5923459121de94a447c17a7e991",
+    "lib/src/proofing/data/german_morphology_surfaces_13.dart": "8e6dc9e9e3c174af9719f3ec8f1814972dec97f9a6e41d481b54ff29650d0c72",
+    "lib/src/proofing/data/german_morphology_surfaces_14.dart": "fbfc005247f5dd9bcb50347e2f32707e6b46233e6465ceff85cb3962dd8d9cde",
+    "lib/src/proofing/data/german_morphology_surfaces_15.dart": "356f006c4a82ecfc09387ff2f1fe921fbd13abe55773eb640dfcb91a426374d9",
+    "third_party/proofing/UNICODE_INFLECTION_LICENSE": "b2d3b5d59972767d52997d9f47e67cd30661bcfc3eeb6e3e1ada1ee06634be52",
+    "third_party/proofing/UNICODE_INFLECTION_NOTICE": "6c3b259b688a278e42f70c8b1b99ac0729111bec980c487e4f3245cd08899e22"
+  }
+}

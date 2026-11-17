@@ -13,6 +13,8 @@ void registerOfficeProofingLicenses() {
           'hyphenation/ENGLISH_GB_LICENSE',
       'Werners Wortliste (German spelling)': 'proofing/WORTLISTE_LICENSE',
       'Quds German word supplement': 'proofing/QUDS_WORDS_LICENSE',
+      'Unicode Inflection (German morphology, Unicode-3.0)':
+          'proofing/UNICODE_INFLECTION_NOTICE',
       'FontTools (Unicode range data)': 'fonttools/LICENSE',
     }.entries) {
       yield LicenseEntryWithLineBreaks([

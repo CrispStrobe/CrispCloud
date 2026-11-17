@@ -55,6 +55,9 @@ void main() {
     ('Wir reden von den Fehler.', 'dative-plural', 'Fehler', 'Fehlern'),
     ('Sie kommt zu den Termine.', 'dative-plural', 'Termine', 'Terminen'),
     ('Er wartet seit diesen Tage.', 'dative-plural', 'Tage', 'Tagen'),
+    // These nouns deliberately abstained before the licensed morphology layer.
+    ('Sie redet mit einem Student.', 'noun-case', 'Student', 'Studenten'),
+    ('Er kommt mit den Bänder.', 'dative-plural', 'Bänder', 'Bändern'),
     ('Ein gute Buch liegt hier.', 'adjective-ending', 'gute', 'gutes'),
     ('Eine gutes Frau kommt.', 'adjective-ending', 'gutes', 'gute'),
     ('Das guten Kind kommt.', 'adjective-ending', 'guten', 'gute'),
@@ -167,8 +170,8 @@ void main() {
     'Aus dem Texte liest sie.',
     'Mit dem Tage kommt sie.',
     'Das ist für dem Qudsbrand.',
-    'Er kommt mit einem Mensch. Sie redet mit einem Student.',
-    'Er kommt mit den Bänder. Sie redet mit der Leiter.',
+    'Er kommt mit einem Mensch.', // Masculine/neuter lexical ambiguity.
+    'Sie redet mit der Leiter.',
     'Ein gutes Buch liegt neben einem guten Buch.',
     'Eine gute Frau kommt mit einer guten Frau.',
     'Ein guter Mann kommt mit einem guten Mann.',

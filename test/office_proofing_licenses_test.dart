@@ -22,6 +22,8 @@ void main() {
             'hyphenation/ENGLISH_GB_LICENSE',
         'Werners Wortliste (German spelling)': 'proofing/WORTLISTE_LICENSE',
         'Quds German word supplement': 'proofing/QUDS_WORDS_LICENSE',
+        'Unicode Inflection (German morphology, Unicode-3.0)':
+            'proofing/UNICODE_INFLECTION_NOTICE',
         'FontTools (Unicode range data)': 'fonttools/LICENSE',
       };
       registerOfficeProofingLicenses();
@@ -44,6 +46,16 @@ void main() {
           expect(text, contains('are permitted in any medium without royalty'));
           expect(text, contains('notice and this notice are preserved'));
           expect(text, isNot(contains('name: MIT')));
+        } else if (notice.value == 'proofing/UNICODE_INFLECTION_NOTICE') {
+          expect(text, contains('Copyright 2016-2024 Apple Inc.'));
+          expect(text, contains('Copyright 2024 Unicode, Inc.'));
+          expect(text, contains('Permission is hereby granted'));
+          expect(text, contains('THE DATA FILES AND SOFTWARE ARE PROVIDED'));
+          expect(text, contains('SPDX-License-Identifier: Unicode-3.0'));
+          final original = await File(
+            '${prefix}proofing/UNICODE_INFLECTION_LICENSE',
+          ).readAsString();
+          expect(bundled, endsWith(original));
         } else {
           expect(text, contains('Permission is hereby granted'));
           expect(text, contains('THE SOFTWARE IS PROVIDED'));

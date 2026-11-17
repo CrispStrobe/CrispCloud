@@ -1,0 +1,509 @@
+{
+  "status": "Source integration checkpoint; runtime validation unavailable",
+  "host_input": "e9c80444f573e0bd209eb90e6904e8e45394ddad",
+  "captured_host_main": "fad903782ee45031e26c57cc8a65ccf476b1724d",
+  "previous_canonical": "04505306af39c47bd0fe96423d1515ee6ca5027e",
+  "canonical": "8b2ee333b883bfb64d51d44629c16151e1e0a2d7",
+  "canonical_tree": "c7fb5aaff9a122d163707ea51002605e12084308",
+  "managed_files": 2585,
+  "canonical_managed_files": 728,
+  "standalone_parser_files": 1857,
+  "source_plan": {
+    "writes": [
+      {
+        "path": "packages/quds_office_editor/lib/src/embed/word_proofing_dialog.dart",
+        "source_blob": "f1cc417681516dcde8cb0b809fea6a1ddc6a0236",
+        "source_mode": "100644",
+        "host_mode": "100644",
+        "previous_blob": "4f65f3da257bd238beb21d1f9458d231dbc01e34",
+        "sha256": "36f33f984034cdcd689e6cc0b402f7b5b3bae124034d1eb83434c18f005e408b",
+        "bytes": 25931
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/proofing/data/german_common_00.dart",
+        "source_blob": "2596cf46f6c61869a505dcd7d528ac04cf176da4",
+        "source_mode": "100644",
+        "host_mode": "100644",
+        "previous_blob": "358d91dbd8c54fbf0f4a59a1439583f4d57539ef",
+        "sha256": "43976662c5b2b1d42ea5a1a6a8e5538f1d52496de3dc768a883d638cdf5fdd5f",
+        "bytes": 1047
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/proofing/data/german_morphology_data.dart",
+        "source_blob": "5287953366acf63968cdec7f66605cf8416d0e0a",
+        "source_mode": "100644",
+        "host_mode": "100644",
+        "previous_blob": null,
+        "sha256": "2def2223516731f632e5ab4a37f94377142d0644a5df5f50964fefaa92b2d193",
+        "bytes": 11140
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/proofing/data/german_morphology_surfaces_00.dart",
+        "source_blob": "43e1dbc0ac110707da8984608490661251296ff4",
+        "source_mode": "100644",
+        "host_mode": "100644",
+        "previous_blob": null,
+        "sha256": "cd79dee10538a3fa7ec47246e35dd45a3535720202c7e146e66f844523fd51bc",
+        "bytes": 307328
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/proofing/data/german_morphology_surfaces_01.dart",
+        "source_blob": "e3050865ca705f94b0553e5871bb39467386c7ae",
+        "source_mode": "100644",
+        "host_mode": "100644",
+        "previous_blob": null,
+        "sha256": "39c3bf9d907cdccdbfb0cc64c06ad76f2c0272790b4747626325d43f7497e7f4",
+        "bytes": 301522
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/proofing/data/german_morphology_surfaces_02.dart",
+        "source_blob": "0bf6559f479135c6a98a73babb78e2ba6fa0f769",
+        "source_mode": "100644",
+        "host_mode": "100644",
+        "previous_blob": null,
+        "sha256": "5af756aff60cbc4a77425f1a1e5d48d712231b9892aa1d646af46b4e6c034a59",
+        "bytes": 296308
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/proofing/data/german_morphology_surfaces_03.dart",
+        "source_blob": "9901985b01388b3faf9a367d1538c3abe226f5b6",
+        "source_mode": "100644",
+        "host_mode": "100644",
+        "previous_blob": null,
+        "sha256": "ec59197668f522895e525879f1acf1cd9d52c27740dda4d17293e95b28208bcf",
+        "bytes": 300464
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/proofing/data/german_morphology_surfaces_04.dart",
+        "source_blob": "5d010c01599665c5fcb440ae6c0f0de0eacd0a7a",
+        "source_mode": "100644",
+        "host_mode": "100644",
+        "previous_blob": null,
+        "sha256": "6cace804210b0f52008da94ededb29692cc5a39041976aa4e999d17dfedfe2f4",
+        "bytes": 309271
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/proofing/data/german_morphology_surfaces_05.dart",
+        "source_blob": "5d21a1853b52ad0bf55b5a65ac840d2efba560ac",
+        "source_mode": "100644",
+        "host_mode": "100644",
+        "previous_blob": null,
+        "sha256": "cd70267d1d9580aa6b9a46e56b006ac961e614f0c6103d8850aa9b091b0b8627",
+        "bytes": 303988
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/proofing/data/german_morphology_surfaces_06.dart",
+        "source_blob": "38a9c3bb0edfc9d61c139e80b8903c4adb600d05",
+        "source_mode": "100644",
+        "host_mode": "100644",
+        "previous_blob": null,
+        "sha256": "afc12eeb4b6772d262451802f12758c955607ed6239adca1ef63c0e335f62e9f",
+        "bytes": 305729
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/proofing/data/german_morphology_surfaces_07.dart",
+        "source_blob": "3c4761844c0ace6ace0bbfb7a62ab69c1f144b17",
+        "source_mode": "100644",
+        "host_mode": "100644",
+        "previous_blob": null,
+        "sha256": "773e74ed12d9891f1fc1b83c0cd4dcd33675c745edccee35e3fa42ea2004a839",
+        "bytes": 303942
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/proofing/data/german_morphology_surfaces_08.dart",
+        "source_blob": "5c1f7431ad9b473b3df0ae8cecc2121cce943604",
+        "source_mode": "100644",
+        "host_mode": "100644",
+        "previous_blob": null,
+        "sha256": "bc34d24db3703a5f4bc7fdb73e5f91f269316db17ad0f375e656cf838d0713d2",
+        "bytes": 300133
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/proofing/data/german_morphology_surfaces_09.dart",
+        "source_blob": "41c44d85c8e57778f391662914b676548efa657e",
+        "source_mode": "100644",
+        "host_mode": "100644",
+        "previous_blob": null,
+        "sha256": "4ee5929fca1b20454093614cf3fc9f733c6a246dbb24e7d2865f56aa7829762e",
+        "bytes": 302803
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/proofing/data/german_morphology_surfaces_10.dart",
+        "source_blob": "3ef5578de1ffdb2b73429d9356a8e50d9ca3b0f8",
+        "source_mode": "100644",
+        "host_mode": "100644",
+        "previous_blob": null,
+        "sha256": "5800bdb1c6f699fb2d7080e4d3c5327734724ba0212465aba019c3c37eba9b50",
+        "bytes": 299802
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/proofing/data/german_morphology_surfaces_11.dart",
+        "source_blob": "a62224edb71e62ddb00caed6ea6be3b22d7c62c5",
+        "source_mode": "100644",
+        "host_mode": "100644",
+        "previous_blob": null,
+        "sha256": "06f35af0a008762feea1b0529867f5f60a4b11c4fa6365734b534a4672d6d829",
+        "bytes": 301814
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/proofing/data/german_morphology_surfaces_12.dart",
+        "source_blob": "65d0f798c21561ea4c031ff521b332a6d7294d78",
+        "source_mode": "100644",
+        "host_mode": "100644",
+        "previous_blob": null,
+        "sha256": "104de822d57601b57eb0626ed49b33f5ad71c5923459121de94a447c17a7e991",
+        "bytes": 302834
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/proofing/data/german_morphology_surfaces_13.dart",
+        "source_blob": "72c3e2103ad6c801c0938a912bb6438d22a68624",
+        "source_mode": "100644",
+        "host_mode": "100644",
+        "previous_blob": null,
+        "sha256": "8e6dc9e9e3c174af9719f3ec8f1814972dec97f9a6e41d481b54ff29650d0c72",
+        "bytes": 305852
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/proofing/data/german_morphology_surfaces_14.dart",
+        "source_blob": "9d9aa1c0174393be82ba265341aad15efaa8b9ec",
+        "source_mode": "100644",
+        "host_mode": "100644",
+        "previous_blob": null,
+        "sha256": "fbfc005247f5dd9bcb50347e2f32707e6b46233e6465ceff85cb3962dd8d9cde",
+        "bytes": 303083
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/proofing/data/german_morphology_surfaces_15.dart",
+        "source_blob": "b8184cfc67639b140c8899ed161ab892159db029",
+        "source_mode": "100644",
+        "host_mode": "100644",
+        "previous_blob": null,
+        "sha256": "356f006c4a82ecfc09387ff2f1fe921fbd13abe55773eb640dfcb91a426374d9",
+        "bytes": 306127
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/proofing/german_grammar.dart",
+        "source_blob": "8f5ad3a0193d65f86f572b2a76fd64606abe38b1",
+        "source_mode": "100644",
+        "host_mode": "100644",
+        "previous_blob": "2c23495ac9138028c85fb9e62f8b9b671b6f9e78",
+        "sha256": "7101ec5f1288890b11eac8db586107c51c8c394c5476407e74ac3b3e14d81bb0",
+        "bytes": 39806
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/proofing/german_morphology.dart",
+        "source_blob": "7ce803bb3653956f14ea8258a83ce6975adf4259",
+        "source_mode": "100644",
+        "host_mode": "100644",
+        "previous_blob": null,
+        "sha256": "b87a9873de8ad8b7ee9f3881971739c2a112098fa3491f43560302b055224183",
+        "bytes": 11115
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/proofing/german_writing_rules.dart",
+        "source_blob": "12bf2f08d09c307a44420d3f9becdb122c8b4347",
+        "source_mode": "100644",
+        "host_mode": "100644",
+        "previous_blob": "e468dbde6a02f2b3af402cf512d1309f41b384f1",
+        "sha256": "f381f62d259a34930199be77829717042aed7c0b97185f41bff051b43e4b8307",
+        "bytes": 39152
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/slide/serial/odp_presentation_writer.dart",
+        "source_blob": "b0a1c2689ca2c37c0787c03a4fb1b8bffce72ec8",
+        "source_mode": "100644",
+        "host_mode": "100644",
+        "previous_blob": "3d83ec80becaf2e361c3165a183307c1e524baad",
+        "sha256": "e600cb3e4b7bde882ec30e397f729bb88c39b463a73827974a96431f8dceeb7e",
+        "bytes": 23979
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/word/model/word_note_numbering.dart",
+        "source_blob": "d776e10b7a445f0f1c919f36bdd9a6ec6f5d9b45",
+        "source_mode": "100644",
+        "host_mode": "100644",
+        "previous_blob": "f782d3e24e480a2f29ad28f7a0b8c2896bc40df8",
+        "sha256": "10af8219998715ad54bb7ee0ef38ad4638df42d8c72620db7819fb0365984832",
+        "bytes": 10103
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/word/serial/odt_document_writer.dart",
+        "source_blob": "80d121737b042b29231afc19d0e5004dfc210aee",
+        "source_mode": "100644",
+        "host_mode": "100644",
+        "previous_blob": "0aaa4623f6923d4be54366826f3488c057ae397c",
+        "sha256": "9a9428bccd67a4f5a851905e3cc03d5d3c924bed185d7621bd309f9fbec5d0bd",
+        "bytes": 37881
+      },
+      {
+        "path": "packages/quds_office_engine/test/odp_presentation_writer_test.dart",
+        "source_blob": "cb1cac925ef4e9f328953baa486b48a3d7935060",
+        "source_mode": "100644",
+        "host_mode": "100644",
+        "previous_blob": "c5abd2c1643608aab31b000271a6fbc60fdb9d14",
+        "sha256": "012d7d34c741cbf366ee6a69c2e2cddfaea212c71efc73520b126533eb26a26c",
+        "bytes": 16876
+      },
+      {
+        "path": "packages/quds_office_engine/test/odt_document_writer_test.dart",
+        "source_blob": "0b1df3418859c529c9bf89b14044e004b2a048fa",
+        "source_mode": "100644",
+        "host_mode": "100644",
+        "previous_blob": "d91e77891e82437494670ac165d791e6808aa379",
+        "sha256": "0a143ed17b34fbbc76a9593285d3dbb64a275c05bcecf9b2fb5a0ad11d84787d",
+        "bytes": 12552
+      },
+      {
+        "path": "packages/quds_office_engine/test/odt_note_fidelity_test.dart",
+        "source_blob": "03974e9752325a979e25bb4512b4d6c95d1284d9",
+        "source_mode": "100644",
+        "host_mode": "100644",
+        "previous_blob": null,
+        "sha256": "854ca67806da3cc0f05ece15569b12db9106dbb0a0f3c1940d4209e60e91bd8f",
+        "bytes": 17702
+      },
+      {
+        "path": "packages/quds_office_engine/test/proofing/german_grammar_test.dart",
+        "source_blob": "1b4fcc74f0cb722ee45fe8363edbf6778f3e4006",
+        "source_mode": "100644",
+        "host_mode": "100644",
+        "previous_blob": "ec38eda9568dfc2de93321d73a6fde894dce0daa",
+        "sha256": "882f6ada273a2afd72fa623b24412966756b82d65461a9a596fec21691d23be0",
+        "bytes": 16401
+      },
+      {
+        "path": "packages/quds_office_engine/test/proofing/german_morphology_grammar_test.dart",
+        "source_blob": "2cb50ace04184349e0a0af19d9f6c84ce53b8466",
+        "source_mode": "100644",
+        "host_mode": "100644",
+        "previous_blob": null,
+        "sha256": "dcfc751b158ec6365b70fe4b09f4d221ce39254a52eaca9af2afa7911c9a78b7",
+        "bytes": 9274
+      },
+      {
+        "path": "packages/quds_office_engine/test/proofing/german_morphology_loading_test.dart",
+        "source_blob": "74001eb5253ce42f58a31e2b0eb0fbe4777b4d05",
+        "source_mode": "100644",
+        "host_mode": "100644",
+        "previous_blob": null,
+        "sha256": "aefd8df2d50b50733ef7382535238a50e98cd4febe8ac7122ba940c96f74392d",
+        "bytes": 4122
+      },
+      {
+        "path": "packages/quds_office_engine/test/proofing/german_spelling_test.dart",
+        "source_blob": "f3f6038f6759637ef803f33176bea2e88f79ce66",
+        "source_mode": "100644",
+        "host_mode": "100644",
+        "previous_blob": "b5d0cf19c2baae3a96c233de46b9a12bf3d64eab",
+        "sha256": "061b1544a3e15961c3fcefbc1812968fd1da722271e9f7a8b4232e9f45e9f9e2",
+        "bytes": 26435
+      },
+      {
+        "path": "packages/quds_office_engine/third_party/proofing/MORPHOLOGY.md",
+        "source_blob": "2d5f4ea6e7a0425dd92b8ba9cd475ef8ef64a385",
+        "source_mode": "100644",
+        "host_mode": "100644",
+        "previous_blob": null,
+        "sha256": "095dfe1a68441ded37c973bd376e9c68a14e87f652b527fb0a939cba8c4cfbc8",
+        "bytes": 18635
+      },
+      {
+        "path": "packages/quds_office_engine/third_party/proofing/README.md",
+        "source_blob": "215a2179c1a88d49ee1173788824b6ff47ea01c6",
+        "source_mode": "100644",
+        "host_mode": "100644",
+        "previous_blob": "0f566fb4fb5e73b055f0820f8c3e8518ca5cca9c",
+        "sha256": "566daf231fb8f0ec83b1fb888c58930485038d07da4646cb9a93b274d6965e41",
+        "bytes": 5098
+      },
+      {
+        "path": "packages/quds_office_engine/third_party/proofing/UNICODE_INFLECTION_LICENSE",
+        "source_blob": "f6fe7b9e1bcceae1ec0a98676181384f3b1d3d91",
+        "source_mode": "100644",
+        "host_mode": "100644",
+        "previous_blob": null,
+        "sha256": "b2d3b5d59972767d52997d9f47e67cd30661bcfc3eeb6e3e1ada1ee06634be52",
+        "bytes": 2033
+      },
+      {
+        "path": "packages/quds_office_engine/third_party/proofing/UNICODE_INFLECTION_NOTICE",
+        "source_blob": "c153af4006e223a00071957bdde4ad6c36685581",
+        "source_mode": "100644",
+        "host_mode": "100644",
+        "previous_blob": null,
+        "sha256": "6c3b259b688a278e42f70c8b1b99ac0729111bec980c487e4f3245cd08899e22",
+        "bytes": 2198
+      },
+      {
+        "path": "packages/quds_office_engine/third_party/proofing/manifest.json",
+        "source_blob": "9eba6dcab488c1a13cf1c7aa2ef4936e81a28122",
+        "source_mode": "100644",
+        "host_mode": "100644",
+        "previous_blob": "245c19ce4c19485cdbaf56e837c3bff49aa1c4fd",
+        "sha256": "a80e60bbe0f02f14fb561aace7b8927e0016824653c4cd3b46cdca8d63945b6a",
+        "bytes": 4263
+      },
+      {
+        "path": "packages/quds_office_engine/third_party/proofing/morphology_manifest.json",
+        "source_blob": "e5b7a07d0ee5d47a71db450407467b37030034b0",
+        "source_mode": "100644",
+        "host_mode": "100644",
+        "previous_blob": null,
+        "sha256": "2957d1462cca375fa9ce58fb11e5933f0711ebf201b9eebd67e9ce1ab56e77b1",
+        "bytes": 9059
+      },
+      {
+        "path": "packages/quds_office_engine/tool/proofing/generate_german_morphology.py",
+        "source_blob": "11f80a861997eb2d9a74aeeaa7484a51efacba81",
+        "source_mode": "100644",
+        "host_mode": "100644",
+        "previous_blob": null,
+        "sha256": "923f6d18873dcd0427289571e34c15fd071dcfee0f44bf190eed47710970dc05",
+        "bytes": 20903
+      },
+      {
+        "path": "packages/quds_office_engine/tool/proofing/german_common_words.txt",
+        "source_blob": "a7e977db059087763c729a2d64ca686c3acdcbbd",
+        "source_mode": "100644",
+        "host_mode": "100644",
+        "previous_blob": "6bb0edb62b45b6476cf2dfade3f532d830df2124",
+        "sha256": "ed3b9a99c15b80a08a12f9aba7309ca9782665e59899f2d52e0ae9681d169b7d",
+        "bytes": 9192
+      }
+    ],
+    "deletes": [],
+    "conflicts": []
+  },
+  "verification": {
+    "all_existing_canonical_blobs_match_previous_pin": true,
+    "existing_canonical_files_checked": 702,
+    "all_written_content_git_blob_sha1_and_size_verified": true,
+    "new_sha256_digests": 40,
+    "unchanged_digests_inherited": 2545,
+    "hash_implementation_vectors": [
+      {
+        "input": "",
+        "sha1": true,
+        "sha256": true
+      },
+      {
+        "input": "abc",
+        "sha1": true,
+        "sha256": true
+      },
+      {
+        "input": "The quick brown fox jumps over the lazy dog",
+        "sha1": true,
+        "sha256": true
+      },
+      {
+        "file": "host_service",
+        "length": 69746,
+        "githubBlobMatches": true
+      },
+      {
+        "file": "host_tests",
+        "length": 41818,
+        "githubBlobMatches": true
+      },
+      {
+        "file": "quds_writer",
+        "length": 32106,
+        "githubBlobMatches": true
+      },
+      {
+        "file": "host_manifest",
+        "length": 400472,
+        "githubBlobMatches": true
+      }
+    ],
+    "standalone_parser_source_and_subtree_unchanged": true,
+    "inherited_mode_differences": [
+      {
+        "path": "packages/quds_office_editor/lib/src/core/input_bridge.dart",
+        "host": "100755",
+        "canonical": "100644"
+      },
+      {
+        "path": "packages/quds_office_editor/lib/src/editor_pdf/pdf_font_faces.dart",
+        "host": "100755",
+        "canonical": "100644"
+      },
+      {
+        "path": "packages/quds_office_editor/lib/src/editor_pdf/pdf_page_thumb.dart",
+        "host": "100755",
+        "canonical": "100644"
+      },
+      {
+        "path": "packages/quds_office_editor/lib/src/editor_pdf/render_pdf_canvas.dart",
+        "host": "100755",
+        "canonical": "100644"
+      },
+      {
+        "path": "packages/quds_office_editor/lib/src/embed/office_direction_keys.dart",
+        "host": "100755",
+        "canonical": "100644"
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/extract/office_text_extractor.dart",
+        "host": "100755",
+        "canonical": "100644"
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/fonts/font_subsetter.dart",
+        "host": "100755",
+        "canonical": "100644"
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/fonts/sfnt_parser.dart",
+        "host": "100755",
+        "canonical": "100644"
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/pdf/file/cos/pdf_cos.dart",
+        "host": "100755",
+        "canonical": "100644"
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/pdf/file/interp/pdf_interpreter.dart",
+        "host": "100755",
+        "canonical": "100644"
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/pdf/pdf_document.dart",
+        "host": "100755",
+        "canonical": "100644"
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/pdf/pdf_font.dart",
+        "host": "100755",
+        "canonical": "100644"
+      }
+    ],
+    "new_mode_differences": [],
+    "original_six_notice_blobs_unchanged": true,
+    "new_notice_complete_license_embedded": true
+  },
+  "host_license_integration": {
+    "registered_notice": "Unicode Inflection (German morphology, Unicode-3.0)",
+    "asset": "packages/quds_office_engine/third_party/proofing/UNICODE_INFLECTION_NOTICE",
+    "host_engine_license_unchanged": true,
+    "files": [
+      "lib/services/office_proofing_licenses.dart",
+      "test/office_proofing_licenses_test.dart",
+      "pubspec.yaml"
+    ]
+  },
+  "runtime": {
+    "executed": false,
+    "reason": "Workspace execution failed before shell startup (No space left on device; subsequently exec-server unavailable).",
+    "ci_queried": false,
+    "ci_awaited": false,
+    "validation_counts_are_new_runtime_passes": false
+  },
+  "next": [
+    "Merge independent annotation-visibility fix and regression cases.",
+    "Pin final canonical source and verify all resulting managed blob identities/modes.",
+    "Run retained Dart/Flutter/guard commands when local execution is restored."
+  ]
+}

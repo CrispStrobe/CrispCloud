@@ -10,8 +10,10 @@ import '../model/pml_presentation.dart';
 /// Bounded new-document ODP writer for the shared slide model.
 ///
 /// Emits slides, positioned text shapes, pictures, tables, fills/strokes and
-/// speaker notes. Transitions, animations, master inheritance and arbitrary
-/// imported ODF XML are not reconstructed.
+/// speaker notes. Page transitions use bounded ODF/SMIL mappings and the three
+/// standard speed buckets; unsupported effects fall back to a crossfade.
+/// Shape animations, exact effect durations, per-slide click suppression,
+/// master inheritance and arbitrary imported ODF XML are not reconstructed.
 abstract final class OdpPresentationWriter {
   /// Serializes [presentation] as a new ODP package.
   static Uint8List writeBytes(PmlPresentation presentation) {
@@ -61,31 +63,11 @@ abstract final class OdpPresentationWriter {
     int index,
     _OdpLayout layout,
   ) {
-    final pageStyle = layout.pageStyle();
+    final pageStyle = layout.pageStyle(slide.transition);
     w.writeStartElement('page', prefix: 'draw');
     w.writeAttribute('draw:name', 'page${index + 1}');
     w.writeAttribute('draw:style-name', pageStyle);
     w.writeAttribute('draw:master-page-name', 'mp1');
-    if (!slide.transition.isNone) {
-      w.writeAttribute(
-        'presentation:transition-style',
-        _transitionStyle(slide.transition),
-      );
-      w.writeAttribute(
-        'presentation:transition-speed',
-        slide.transition.durationMs <= 500
-            ? 'fast'
-            : slide.transition.durationMs >= 1000
-            ? 'slow'
-            : 'medium',
-      );
-      if (slide.transition.advanceAfterMs case final advance?) {
-        w.writeAttribute(
-          'presentation:duration',
-          'PT${(advance / 1000).toStringAsFixed(2)}S',
-        );
-      }
-    }
     for (final shape in slide.shapes) {
       _writeShape(w, shape, layout);
     }
@@ -104,45 +86,6 @@ abstract final class OdpPresentationWriter {
       w.writeEndElement();
     }
     w.writeEndElement();
-  }
-
-  static String _transitionStyle(PmlSlideTransition transition) {
-    String direction(PmlTransitionDir dir) => switch (dir) {
-      PmlTransitionDir.left => 'left',
-      PmlTransitionDir.right => 'right',
-      PmlTransitionDir.up => 'up',
-      PmlTransitionDir.down => 'down',
-      PmlTransitionDir.horizontal => 'horizontal',
-      PmlTransitionDir.vertical => 'vertical',
-      PmlTransitionDir.inward => 'in',
-      PmlTransitionDir.outward => 'out',
-    };
-    return switch (transition.kind) {
-      PmlTransitionKind.none => 'none',
-      PmlTransitionKind.fade => 'fade-over',
-      PmlTransitionKind.fadeThroughBlack => 'fade-through-black',
-      PmlTransitionKind.cut => 'cut',
-      PmlTransitionKind.push => 'push-${direction(transition.direction)}',
-      PmlTransitionKind.wipe => 'wipe-${direction(transition.direction)}',
-      PmlTransitionKind.split =>
-        'split-${transition.direction == PmlTransitionDir.horizontal ? 'horizontal' : 'vertical'}',
-      PmlTransitionKind.uncover => 'uncover-${direction(transition.direction)}',
-      PmlTransitionKind.cover => 'cover-${direction(transition.direction)}',
-      PmlTransitionKind.dissolve => 'dissolve',
-      PmlTransitionKind.checkerboard => 'checkerboard',
-      PmlTransitionKind.blinds => 'blinds-${direction(transition.direction)}',
-      PmlTransitionKind.clock => 'clock',
-      PmlTransitionKind.zoom => 'zoom-in',
-      PmlTransitionKind.flash => 'flash',
-      PmlTransitionKind.comb => 'comb-${direction(transition.direction)}',
-      PmlTransitionKind.strips => 'strips-${direction(transition.direction)}',
-      PmlTransitionKind.randomBars =>
-        'random-bars-${direction(transition.direction)}',
-      PmlTransitionKind.reveal => 'reveal-${direction(transition.direction)}',
-      PmlTransitionKind.gallery => 'gallery',
-      PmlTransitionKind.doors => 'doors-${direction(transition.direction)}',
-      _ => 'fade-over',
-    };
   }
 
   static void _writeShape(XmlWriter w, PmlShape shape, _OdpLayout layout) {
@@ -407,6 +350,10 @@ abstract final class OdpPresentationWriter {
       'urn:oasis:names:tc:opendocument:xmlns:presentation:1.0',
     );
     w.writeNamespace(
+      'smil',
+      'urn:oasis:names:tc:opendocument:xmlns:smil-compatible:1.0',
+    );
+    w.writeNamespace(
       'svg',
       'urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0',
     );
@@ -436,6 +383,7 @@ class _OdpLayout {
   final PmlPresentation presentation;
   final List<String> media = <String>[];
   final Map<String, Uint8List> mediaBytes = <String, Uint8List>{};
+  final Map<String, String> _pages = <String, String>{};
   final Map<String, String> _graphics = <String, String>{};
   final Map<String, String> _paragraphs = <String, String>{};
   final Map<String, String> _texts = <String, String>{};
@@ -454,17 +402,128 @@ class _OdpLayout {
     return path;
   }
 
-  String pageStyle() {
-    if (!_graphics.containsKey('__page')) {
-      const name = 'dp1';
-      _graphics['__page'] = name;
-      _buffers.add(
-        '<style:style style:name="$name" style:family="drawing-page">'
-        '<style:drawing-page-properties presentation:background-visible="true"/>'
-        '</style:style>',
-      );
+  String pageStyle(PmlSlideTransition transition) {
+    // ODF 1.3 section 17.25 places transition properties on the referenced
+    // drawing-page style, not on draw:page itself.
+    final properties = <String, String>{
+      'presentation:background-visible': 'true',
+    };
+    final advance = transition.advanceAfterMs;
+    if (advance != null && advance > 0) {
+      properties['presentation:transition-type'] = 'automatic';
+      properties['presentation:duration'] = _duration(advance);
     }
-    return _graphics['__page']!;
+    if (!transition.isNone &&
+        transition.kind != PmlTransitionKind.cut &&
+        transition.durationMs > 0) {
+      properties.addAll(_transitionEffect(transition));
+      properties['presentation:transition-speed'] = transition.durationMs <= 500
+          ? 'fast'
+          : transition.durationMs >= 1000
+          ? 'slow'
+          : 'medium';
+    }
+    final key = properties.entries.map((e) => '${e.key}=${e.value}').join('|');
+    return _pages.putIfAbsent(key, () {
+      final name = 'dp${_pages.length + 1}';
+      final w = XmlWriter();
+      w.writeStartElement('style', prefix: 'style');
+      w.writeAttribute('style:name', name);
+      w.writeAttribute('style:family', 'drawing-page');
+      w.writeEmptyElement(
+        'drawing-page-properties',
+        prefix: 'style',
+        attributes: properties,
+      );
+      w.writeEndElement();
+      _buffers.add(w.toXml());
+      return name;
+    });
+  }
+
+  static String _duration(int milliseconds) {
+    final seconds = milliseconds ~/ 1000;
+    final fraction = (milliseconds % 1000)
+        .toString()
+        .padLeft(3, '0')
+        .replaceFirst(RegExp(r'0+$'), '');
+    return 'PT$seconds${fraction.isEmpty ? '' : '.$fraction'}S';
+  }
+
+  static Map<String, String> _transitionEffect(PmlSlideTransition transition) {
+    final direction = transition.direction;
+    final vertical =
+        direction == PmlTransitionDir.vertical ||
+        direction == PmlTransitionDir.up ||
+        direction == PmlTransitionDir.down;
+    // Direction names describe motion: pushing left brings the new page in
+    // from the right. SMIL subtypes name that incoming edge instead.
+    final incoming = switch (direction) {
+      PmlTransitionDir.right => 'fromLeft',
+      PmlTransitionDir.up || PmlTransitionDir.vertical => 'fromBottom',
+      PmlTransitionDir.down => 'fromTop',
+      _ => 'fromRight',
+    };
+    return switch (transition.kind) {
+      PmlTransitionKind.push => {
+        'smil:type': 'pushWipe',
+        'smil:subtype': incoming,
+      },
+      PmlTransitionKind.cover || PmlTransitionKind.uncover => {
+        'smil:type': 'slideWipe',
+        'smil:subtype': incoming,
+        if (transition.kind == PmlTransitionKind.uncover)
+          'smil:direction': 'reverse',
+      },
+      PmlTransitionKind.wipe => {
+        'smil:type': 'barWipe',
+        'smil:subtype':
+            direction == PmlTransitionDir.up ||
+                direction == PmlTransitionDir.down
+            ? 'topToBottom'
+            : 'leftToRight',
+        if (direction == PmlTransitionDir.right ||
+            direction == PmlTransitionDir.down)
+          'smil:direction': 'reverse',
+      },
+      PmlTransitionKind.split || PmlTransitionKind.doors => {
+        'smil:type': 'barnDoorWipe',
+        // Match the shared renderer's strips closing inward from both edges.
+        'smil:subtype': vertical ? 'horizontal' : 'vertical',
+        'smil:direction': 'reverse',
+      },
+      PmlTransitionKind.clock => {
+        'smil:type': 'clockWipe',
+        'smil:subtype': 'clockwiseTwelve',
+      },
+      PmlTransitionKind.shapeCircle => {
+        'smil:type': 'ellipseWipe',
+        'smil:subtype': 'circle',
+      },
+      PmlTransitionKind.shapeDiamond => {
+        'smil:type': 'irisWipe',
+        'smil:subtype': 'diamond',
+      },
+      // These effects have standard legacy ODF tokens, but no corresponding
+      // simple family in SMIL 2.0's transition taxonomy.
+      PmlTransitionKind.dissolve => {
+        'presentation:transition-style': 'dissolve',
+      },
+      PmlTransitionKind.checkerboard => {
+        'presentation:transition-style': 'horizontal-checkerboard',
+      },
+      PmlTransitionKind.blinds => {
+        'presentation:transition-style': vertical
+            ? 'vertical-stripes'
+            : 'horizontal-stripes',
+      },
+      PmlTransitionKind.randomBars => {
+        'presentation:transition-style': vertical
+            ? 'vertical-lines'
+            : 'horizontal-lines',
+      },
+      _ => {'smil:type': 'fade', 'smil:subtype': 'crossfade'},
+    };
   }
 
   String graphicStyle(PmlShape shape) {

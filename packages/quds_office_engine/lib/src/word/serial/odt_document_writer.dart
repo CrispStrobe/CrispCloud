@@ -139,7 +139,6 @@ abstract final class OdtDocumentWriter {
         );
         w.writeAttribute('text:level', '$level');
         if (ordered) {
-          w.writeAttribute('loext:num-list-format', '%$level%.');
           w.writeAttribute('style:num-format', '1');
           w.writeAttribute('style:num-suffix', '.');
         } else {
@@ -222,10 +221,6 @@ abstract final class OdtDocumentWriter {
     w.writeNamespace('xlink', 'http://www.w3.org/1999/xlink');
     w.writeNamespace('dc', 'http://purl.org/dc/elements/1.1/');
     w.writeNamespace('meta', 'urn:oasis:names:tc:opendocument:xmlns:meta:1.0');
-    w.writeNamespace(
-      'loext',
-      'urn:org:documentfoundation:names:experimental:office:xmlns:loext:1.0',
-    );
   }
 
   static void _writeBlocks(
@@ -281,7 +276,11 @@ abstract final class OdtDocumentWriter {
       case WmlParagraph():
         _writeParagraph(w, block, layout);
       case WmlTable():
-        _writeTable(w, block, layout);
+        if (layout.inNoteBody) {
+          _writeNoteTableText(w, block, layout);
+        } else {
+          _writeTable(w, block, layout);
+        }
       case WmlVisual():
         _writeVisual(w, block.visual, layout);
       case WmlFrame():
@@ -310,6 +309,13 @@ abstract final class OdtDocumentWriter {
       'text:style-name',
       layout.paragraphStyle(paragraph.properties, heading: heading),
     );
+    if (layout.noteReferenceSpacePending) {
+      layout.noteReferenceSpacePending = false;
+      final text = paragraph.text;
+      if (text.isNotEmpty && !RegExp(r'^\s').hasMatch(text)) {
+        writeOdfText(w, ' ');
+      }
+    }
     for (final inline in paragraph.inlines) {
       _writeInline(w, inline, layout);
     }
@@ -324,36 +330,26 @@ abstract final class OdtDocumentWriter {
         if (href != null && href.isNotEmpty) {
           w.writeStartElement('a', prefix: 'text');
           w.writeAttribute('xlink:href', href);
+          w.writeAttribute('xlink:type', 'simple');
         }
-        if (inline.noteRefId case final noteId?) {
-          final note = layout.note(noteId, endnote: inline.noteRefEndnote);
+        if (inline.noteRefId != null) {
+          final note = layout.notes.resolve(inline);
           if (note != null) {
-            final noteNumber = layout.noteNumber(
-              noteId,
-              endnote: inline.noteRefEndnote,
-            );
-            w.writeStartElement('note', prefix: 'text');
-            w.writeAttribute(
-              'text:note-class',
-              inline.noteRefEndnote ? 'endnote' : 'footnote',
-            );
-            w.writeAttribute(
-              'text:id',
-              '${inline.noteRefEndnote ? 'end' : 'ftn'}$noteNumber',
-            );
-            w.writeStartElement('note-citation', prefix: 'text');
-            w.writeText('$noteNumber');
-            w.writeEndElement();
-            w.writeStartElement('note-body', prefix: 'text');
-            _writeBlocks(w, note.blocks, layout);
-            w.writeEndElement();
-            w.writeEndElement();
+            final label = layout.notes.labelFor(inline, note);
+            if (layout.noteBodiesAllowed) {
+              w.writeStartElement('span', prefix: 'text');
+              w.writeAttribute('text:style-name', style);
+              _writeNote(w, inline, note, label, layout);
+              w.writeEndElement();
+            } else {
+              _writeStyledText(w, label, style);
+            }
+          } else {
+            // Missing or ambiguous definitions must not erase cached text.
+            _writeStyledText(w, inline.text, style);
           }
-        } else if (inline.text.isNotEmpty) {
-          w.writeStartElement('span', prefix: 'text');
-          w.writeAttribute('text:style-name', style);
-          writeOdfText(w, inline.text);
-          w.writeEndElement();
+        } else {
+          _writeStyledText(w, inline.text, style);
         }
         for (final commentId in inline.commentIds) {
           final comment = layout.comment(commentId);
@@ -398,6 +394,111 @@ abstract final class OdtDocumentWriter {
       case WmlObject():
       case WmlOpaqueInline():
         break;
+    }
+  }
+
+  static void _writeStyledText(XmlWriter w, String text, String style) {
+    if (text.isEmpty) return;
+    w.writeStartElement('span', prefix: 'text');
+    w.writeAttribute('text:style-name', style);
+    writeOdfText(w, text);
+    w.writeEndElement();
+  }
+
+  static void _writeNote(
+    XmlWriter w,
+    WmlRun reference,
+    WmlNote note,
+    String label,
+    _OdtLayout layout,
+  ) {
+    final key = (reference.noteRefEndnote, reference.noteRefId!);
+    final noteClass = reference.noteRefEndnote ? 'endnote' : 'footnote';
+    final existing = layout.notes.emitted[key];
+    if (existing != null) {
+      // A differently authored cached mark cannot be represented by a field
+      // which a consumer would replace with the first citation's label.
+      if (existing.label != label) {
+        writeOdfText(w, label);
+        return;
+      }
+      w.writeStartElement('note-ref', prefix: 'text');
+      w.writeAttribute('text:ref-name', existing.id);
+      w.writeAttribute('text:note-class', noteClass);
+      w.writeAttribute('text:reference-format', 'text');
+      w.writeText(label);
+      w.writeEndElement();
+      return;
+    }
+    final record = _OdtNoteRecord(
+      '${reference.noteRefEndnote ? 'end' : 'ftn'}${layout.notes.emitted.length + 1}',
+      label,
+    );
+    layout.notes.emitted[key] = record;
+    w.writeStartElement('note', prefix: 'text');
+    w.writeAttribute('text:note-class', noteClass);
+    w.writeAttribute('text:id', record.id);
+    w.writeStartElement('note-citation', prefix: 'text');
+    // ODF consumers can renumber the character data when text:label is absent.
+    // Preserve the resolved Word label, including custom and Roman marks.
+    // LibreOffice treats an empty fixed label as automatic numbering. Keep
+    // empty character data, using only a nonprinting metadata label to suppress
+    // the extra numeral beside an independently authored custom mark.
+    w.writeAttribute('text:label', label.isEmpty ? '\u2060' : label);
+    w.writeText(label);
+    w.writeEndElement();
+    w.writeStartElement('note-body', prefix: 'text');
+    final previous = layout.noteBodiesAllowed;
+    final previousNoteBody = layout.inNoteBody;
+    final previousReferenceSpace = layout.noteReferenceSpacePending;
+    layout.noteBodiesAllowed = false;
+    layout.inNoteBody = true;
+    layout.noteReferenceSpacePending =
+        label.isNotEmpty &&
+        note.addReference &&
+        note.addReferenceSpace &&
+        !note.hasReferenceMarkers;
+    try {
+      if (note.blocks.isEmpty) {
+        _writePlainParagraph(w, '');
+      } else {
+        _writeBlocks(w, note.blocks, layout);
+      }
+    } finally {
+      layout.noteBodiesAllowed = previous;
+      layout.inNoteBody = previousNoteBody;
+      layout.noteReferenceSpacePending = previousReferenceSpace;
+    }
+    w.writeEndElement();
+    w.writeEndElement();
+  }
+
+  static void _writeNoteTableText(
+    XmlWriter w,
+    WmlTable table,
+    _OdtLayout layout,
+  ) {
+    // The tested Writer consumer silently omits tables inside note bodies.
+    // Preserve visible cell stories as paragraphs in physical source order;
+    // ordinary body/frame tables retain their structural export.
+    final cells = _OdtTableCells(table);
+    void blank() {
+      _writePlainParagraph(w, '');
+      layout.noteReferenceSpacePending = false;
+    }
+
+    if (table.rows.isEmpty) blank();
+    for (var row = 0; row < table.rows.length; row++) {
+      if (table.rows[row].cells.isEmpty) blank();
+      for (var column = 0; column < table.rows[row].cells.length; column++) {
+        if (cells.rows[row][column].covered) continue;
+        final blocks = table.rows[row].cells[column].blocks;
+        if (blocks.isEmpty) {
+          blank();
+        } else {
+          _writeBlocks(w, blocks, layout);
+        }
+      }
     }
   }
 
@@ -454,10 +555,16 @@ abstract final class OdtDocumentWriter {
         if (cell.fillColor case final fill?) {
           w.writeAttribute('table:style-name', layout.cellStyle(fill));
         }
-        if (cell.blocks.isEmpty) {
-          _writePlainParagraph(w, '');
-        } else {
-          _writeBlocks(w, cell.blocks, layout);
+        final notesAllowed = layout.noteBodiesAllowed;
+        if (placement.covered) layout.noteBodiesAllowed = false;
+        try {
+          if (cell.blocks.isEmpty) {
+            _writePlainParagraph(w, '');
+          } else {
+            _writeBlocks(w, cell.blocks, layout);
+          }
+        } finally {
+          layout.noteBodiesAllowed = notesAllowed;
         }
         w.writeEndElement();
         _writeCoveredCells(w, placement.columns - 1);
@@ -505,8 +612,14 @@ abstract final class OdtDocumentWriter {
       w.writeAttribute('draw:fill-color', '#${fill.toLowerCase()}');
     }
     w.writeStartElement('text-box', prefix: 'draw');
-    for (final block in frame.blocks) {
-      _writeBlock(w, block, layout);
+    final notesAllowed = layout.noteBodiesAllowed;
+    layout.noteBodiesAllowed = false;
+    try {
+      for (final block in frame.blocks) {
+        _writeBlock(w, block, layout);
+      }
+    } finally {
+      layout.noteBodiesAllowed = notesAllowed;
     }
     w.writeEndElement();
     w.writeEndElement();
@@ -659,19 +772,102 @@ class _OdtTableCell {
   bool covered = false;
 }
 
+class _OdtNoteRecord {
+  _OdtNoteRecord(this.id, this.label);
+
+  final String id;
+  final String label;
+}
+
+/// Note definitions and labels are independent of per-part style registries.
+class _OdtNotes {
+  _OdtNotes(this.document) {
+    for (final endnote in [false, true]) {
+      for (final note in endnote ? document.endnotes : document.footnotes) {
+        if (note.endnote != endnote) continue;
+        final key = (endnote, note.id);
+        definitions[key] = definitions.containsKey(key) ? null : note;
+      }
+    }
+  }
+
+  final WmlDocument document;
+  final definitions = <(bool, int), WmlNote?>{};
+  final emitted = <(bool, int), _OdtNoteRecord>{};
+  late final numbering = WordNoteNumbering(
+    document,
+    emptyReferencesAreAutomatic: true,
+    paragraphsForSection: (section) => _visibleParagraphs(section.blocks),
+  );
+
+  WmlNote? resolve(WmlRun reference) =>
+      definitions[(reference.noteRefEndnote, reference.noteRefId!)];
+
+  String labelFor(WmlRun reference, WmlNote note) =>
+      numbering.referenceLabel(reference) ??
+      (reference.noteRefCustomMark
+          ? ''
+          : reference.text.isNotEmpty
+          ? reference.text
+          : numbering.labelFor(note));
+
+  static Iterable<WmlParagraph> _visibleParagraphs(
+    Iterable<WmlBlock> blocks,
+  ) sync* {
+    for (final block in blocks) {
+      if (block is WmlParagraph) {
+        yield block;
+      } else if (block is WmlContentControlBlock) {
+        yield* _visibleParagraphs(block.blocks);
+      } else if (block is WmlTable) {
+        final cells = _OdtTableCells(block);
+        for (var row = 0; row < block.rows.length; row++) {
+          for (
+            var column = 0;
+            column < block.rows[row].cells.length;
+            column++
+          ) {
+            if (!cells.rows[row][column].covered) {
+              yield* _visibleParagraphs(block.rows[row].cells[column].blocks);
+            }
+          }
+        }
+      }
+      // Frames and master-page/note stories are outside the body sequence.
+    }
+  }
+}
+
 class _OdtLayout {
   _OdtLayout(this.document, {_OdtLayout? sharedMedia})
     : media = sharedMedia?.media ?? <String>[],
-      _mediaBytes = sharedMedia?._mediaBytes ?? <String, Uint8List>{};
+      _mediaBytes = sharedMedia?._mediaBytes ?? <String, Uint8List>{},
+      notes = sharedMedia?.notes ?? _OdtNotes(document),
+      noteBodiesAllowed = sharedMedia == null;
 
   final WmlDocument document;
   final List<String> media;
+  final _OdtNotes notes;
+  bool noteBodiesAllowed;
+  bool inNoteBody = false;
+  bool noteReferenceSpacePending = false;
   final Map<String, String> _runStyles = <String, String>{};
   final Map<String, String> _paragraphStyles = <String, String>{};
   final Map<String, String> _columnStyles = <String, String>{};
   final Map<String, String> _cellStyles = <String, String>{};
   final List<String> _styleBuffers = <String>[];
   int tableCount = 0;
+
+  final Set<int> _writtenComments = <int>{};
+
+  WmlComment? comment(int id) {
+    for (final comment in document.comments) {
+      if (comment.id == id) return comment;
+    }
+    return null;
+  }
+
+  bool markCommentWritten(int id) => _writtenComments.add(id);
 
   String addMedia(Uint8List bytes) {
     final ext = _extension(bytes);
@@ -825,32 +1021,6 @@ class _OdtLayout {
       );
       return name;
     });
-  }
-
-  final Set<int> _writtenComments = <int>{};
-
-  WmlComment? comment(int id) {
-    for (final comment in document.comments) {
-      if (comment.id == id) return comment;
-    }
-    return null;
-  }
-
-  bool markCommentWritten(int id) => _writtenComments.add(id);
-
-  final Map<String, int> _noteNumbers = <String, int>{};
-
-  WmlNote? note(int id, {required bool endnote}) {
-    final notes = endnote ? document.endnotes : document.footnotes;
-    for (final note in notes) {
-      if (note.id == id) return note;
-    }
-    return null;
-  }
-
-  int noteNumber(int id, {required bool endnote}) {
-    final key = '${endnote ? 'e' : 'f'}:$id';
-    return _noteNumbers.putIfAbsent(key, () => _noteNumbers.length + 1);
   }
 
   String listStyle({required bool ordered}) => ordered ? 'L2' : 'L1';
