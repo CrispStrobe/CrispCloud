@@ -26,7 +26,7 @@ content.
 The app mirrors the canonical Quds source and the standalone legacy parser.
 Exact revisions, source boundaries and the complete managed-file inventory are
 recorded in [the fidelity manifest](../tool/office_fidelity_manifest.json).
-The current canonical checkpoint is `baccb86292fb4776997889e4719f39939bddc766`;
+The current canonical checkpoint is `42b71376285b75786803c79864efd4e34cb8afc2`;
 the managed inventory contains 2,598 files: 741 canonical files and the unchanged
 1,857-file standalone parser. The 17 November continuation reconciles the
 captured Office, morphology and proofing-tool branches and their bounded late

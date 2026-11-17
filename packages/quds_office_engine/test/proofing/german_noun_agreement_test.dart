@@ -113,6 +113,15 @@ void main() {
     expect(finding.originalText, 'spielt');
     expect(finding.start, 'Die Kin\u00adder '.length);
     expect(finding.replacements, ['spielen']);
+    final softVerb = await provider.check(
+      request('Die Kinder spie\u00adlt hier.'),
+    );
+    expect(softVerb.findings.single.originalText, 'spie\u00adlt');
+    expect(softVerb.findings.single.replacements, ['spielen']);
+    final markedVerb = await provider.check(
+      request('Die Kinder spielt\u0301 hier.'),
+    );
+    expect(markedVerb.findings.where((f) => f.ruleId == rule), isEmpty);
   });
   test(
     'long rejected predicate stays bounded without partial findings',

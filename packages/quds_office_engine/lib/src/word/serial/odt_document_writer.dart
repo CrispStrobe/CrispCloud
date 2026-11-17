@@ -1546,7 +1546,39 @@ class _OdtLayout {
         if (props.borderColor case final border? when border.isNotEmpty) {
           buffer.write(' fo:border="0.5pt solid #${border.toLowerCase()}"');
         }
-        buffer.write('/>');
+        if (props.tabs.isEmpty) {
+          buffer.write('/>');
+        } else {
+          buffer.write('><style:tab-stops>');
+          for (final tab in props.tabs) {
+            if (_paragraphDecimal(tab.position) case final position?) {
+              final type = switch (tab.alignment) {
+                WmlTabAlignment.center => 'center',
+                WmlTabAlignment.right => 'right',
+                WmlTabAlignment.decimal => 'char',
+                WmlTabAlignment.left => 'left',
+              };
+              buffer.write(
+                '<style:tab-stop style:position="${position}pt" '
+                'style:type="$type"',
+              );
+              if (tab.alignment == WmlTabAlignment.decimal) {
+                buffer.write(' style:char="."');
+              }
+              final leader = switch (tab.leader) {
+                WmlTabLeader.dot => 'dotted',
+                WmlTabLeader.hyphen => 'solid',
+                WmlTabLeader.underscore => 'solid',
+                WmlTabLeader.none => null,
+              };
+              if (leader != null) {
+                buffer.write(' style:leader-style="$leader"');
+              }
+              buffer.write('/>');
+            }
+          }
+          buffer.write('</style:tab-stops></style:paragraph-properties>');
+        }
         if (emptyAnchor) {
           buffer.write('<style:text-properties fo:font-size="1pt"/>');
         }
