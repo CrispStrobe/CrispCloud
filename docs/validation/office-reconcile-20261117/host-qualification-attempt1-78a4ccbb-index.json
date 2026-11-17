@@ -1,0 +1,159 @@
+{
+  "archive": "host-qualification-attempt1-78a4ccbb.tar.xz",
+  "archive_size": 825280,
+  "archive_sha256": "bb4c9156ec25fa6a9e027bb43caaff66e091b5f663713bc67ce39ed251618507",
+  "all_members_read_back_verified": true,
+  "members": [
+    {
+      "name": "attempt-summary.json",
+      "size": 1423,
+      "sha256": "8554367b0d85fb190ed1b05970f80a4c694542d890c7fc5d470a5f76f6974b90"
+    },
+    {
+      "name": "format/office_editor_dialog.formatted.txt",
+      "size": 43630,
+      "sha256": "7cecda91405d0fa1a688e3dcfcbde5256a8e64533f7d1902aa93cd30175a5f12"
+    },
+    {
+      "name": "probes/odt_list_host_test.dart",
+      "size": 4617,
+      "sha256": "b26af6fb945a72c35c61180dd83f3fd1a1382dab93e0ea1089d88ea8ee6a8874"
+    },
+    {
+      "name": "probes/odt_note_host_test.dart",
+      "size": 11755,
+      "sha256": "daa3766ff4204c9998519f22d9cd81ecf02aa7e9a49494ad1d32fc5169c3ba79"
+    },
+    {
+      "name": "probes/odt_writer_host_test.dart",
+      "size": 2925,
+      "sha256": "ef5223be53fffe2358d6d4c9588a37b326d8c05791a6dafcf678f855285660f6"
+    },
+    {
+      "name": "qualification/analysis-package-config.json",
+      "size": 64118,
+      "sha256": "119b39c4e98713cb5f934672774fcb3dca19085af7d0f0d625c2b7c55973ff7e"
+    },
+    {
+      "name": "qualification/apple-policy-source.log",
+      "size": 93,
+      "sha256": "fe3cce028a45823345045eca09b68456c92ab7f799d0efee20af4344d5fb35ab"
+    },
+    {
+      "name": "qualification/dependencies-after.json",
+      "size": 1889496,
+      "sha256": "1232bed7f843b0ed784a698f383ed8d9bb8a68c25c9b26b8aff65311380caacf"
+    },
+    {
+      "name": "qualification/dependencies-before.json",
+      "size": 1889496,
+      "sha256": "1232bed7f843b0ed784a698f383ed8d9bb8a68c25c9b26b8aff65311380caacf"
+    },
+    {
+      "name": "qualification/host-analysis.log",
+      "size": 549,
+      "sha256": "4eeb3644476840488f22c8ae72c96eeef3a711c79521ff5012a997b5fbe477ae"
+    },
+    {
+      "name": "qualification/host-format.log",
+      "size": 94,
+      "sha256": "caa472c3993ec6517ce87be3e365f92b1f9cbcf32493465197e7d8485deff471"
+    },
+    {
+      "name": "qualification/host-tests.log",
+      "size": 64993,
+      "sha256": "474ae009be27cfa140f8025f1dbfed69277d21606fba2339554b2608f2032ef1"
+    },
+    {
+      "name": "qualification/probe-terminal-events.json",
+      "size": 3459,
+      "sha256": "9e14a510ee4406fa4e4fbda73fd278b1c5809e4b17355c3b0798e01bfb31e3f5"
+    },
+    {
+      "name": "qualification/python-vendor-tests.log",
+      "size": 4997,
+      "sha256": "4e0d861e8073b72bff275d3f5918d2412bd035753c666bda693db2ab2589e628"
+    },
+    {
+      "name": "qualification/receipt.json",
+      "size": 70726,
+      "sha256": "a1e24ccf8905e8f127265da2ba540306f506364e6910260b47948129118cf332"
+    },
+    {
+      "name": "qualification/source-after.json",
+      "size": 1173466,
+      "sha256": "7069df4defed49a7dc7abdc6b84b9602019b5a77ce30231bcea2a08ec17cb92f"
+    },
+    {
+      "name": "qualification/source-before.json",
+      "size": 1173466,
+      "sha256": "7069df4defed49a7dc7abdc6b84b9602019b5a77ce30231bcea2a08ec17cb92f"
+    },
+    {
+      "name": "qualification/test-terminal-events.json",
+      "size": 42483,
+      "sha256": "dc9b20c7beb991e69cf5bbc3492886e33c95a8ecce8419ce993bfae4e8ee10f6"
+    },
+    {
+      "name": "qualification/vendor-after.log",
+      "size": 203,
+      "sha256": "9b9cdefbb90bead4449bcfddaba2a8553e639a4bb03ef6134097280a4e2700d9"
+    },
+    {
+      "name": "qualification/vendor-analysis.log",
+      "size": 637664,
+      "sha256": "e4f723b27e678ca1dd1360a77e3a5d1ad93a84f27050ed84eadd55ce2de0074c"
+    },
+    {
+      "name": "qualification/vendor-before.log",
+      "size": 203,
+      "sha256": "9b9cdefbb90bead4449bcfddaba2a8553e639a4bb03ef6134097280a4e2700d9"
+    },
+    {
+      "name": "qualification/vendor-format.log",
+      "size": 48,
+      "sha256": "8507432ecdca7b202a18affdc596057f092a813d6f2af8e74dbf2fea758d71c0"
+    },
+    {
+      "name": "qualification/viewer-format.log",
+      "size": 46,
+      "sha256": "c74bed47a5fe0f9b0404d036172575ee4fbe0d6cdc643e84cf88a13cde7c2756"
+    },
+    {
+      "name": "qualification/whitespace.log",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "qualification/writer-host-probes.log",
+      "size": 4890,
+      "sha256": "64302b9351015d9122e58afd8a7d0eb378c1de7e39d83914dc73d8ad0fbd0814"
+    },
+    {
+      "name": "scripts/prior_host_qualification.py",
+      "size": 28660,
+      "sha256": "4049d732d10f42d8f3254b90d2943f41c99618a4fc820b68050ce70d989b8fed"
+    },
+    {
+      "name": "scripts/run-full-host-qualification.py",
+      "size": 24278,
+      "sha256": "96d6d60968399877c4d8e50d5dd9692f9f916e336da134eb4af72f331625da21"
+    },
+    {
+      "name": "scripts/run_host.py",
+      "size": 1498,
+      "sha256": "8279210e8261a84d858de2a08b170eb32f3635545f6463654f9d2d3c333d79b3"
+    },
+    {
+      "name": "setup/driver.log",
+      "size": 2440,
+      "sha256": "86880d5405d5f7522cba362352ffb7922e1c487eacb4564cfbc75036041fffe9"
+    },
+    {
+      "name": "setup/full-host-setup.json",
+      "size": 3516,
+      "sha256": "b95eb6015d88948e100adab2216e081648a4b979ed941f6170a153c12fe5bc96"
+    }
+  ],
+  "status": "failed source-bound attempt preserved without reusing counts"
+}
