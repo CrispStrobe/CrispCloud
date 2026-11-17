@@ -190,8 +190,8 @@ explicit for unmodeled imported content.
 **Status:** Partial\
 **Current:** page size, frames/custom shapes, text styles/colors, fills,
 images, backgrounds and speaker notes.\
-**Remaining:** animations, charts, embedded objects, master/placeholder
-inheritance and some grouped-shape geometry.\
+**Remaining:** animations, native chart objects, embedded objects,
+master/placeholder inheritance and some grouped-shape geometry.\
 **Next step:** add native shape/table/chart models or preserve untouched native
 slide XML around edited text.\
 **Acceptance:** a real deck reopens with unchanged layout and media after a
