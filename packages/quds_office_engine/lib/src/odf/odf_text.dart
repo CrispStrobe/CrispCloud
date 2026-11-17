@@ -121,11 +121,21 @@ bool isOdfAnnotation(XmlElement element) =>
 bool isOdfNote(XmlElement element) =>
     element.namespaceUri == odfTextNamespace && element.localName == 'note';
 
+/// Revision stores contain previous content and change comments, not body text.
+///
+/// Current inserted text is outside these containers, between change markers.
+/// Text and spreadsheet history use different namespaces (ODF 1.3, 5.5/9.9).
+bool isOdfTrackedChanges(XmlElement element) =>
+    element.localName == 'tracked-changes' &&
+    (element.namespaceUri == odfTextNamespace ||
+        element.namespaceUri == odfTableNamespace);
+
 /// Enumerates paragraph blocks without treating inline spans as word breaks.
 Iterable<XmlElement> odfParagraphs(XmlElement element) sync* {
   if (isOdfCoveredCell(element) ||
       isOdfAnnotation(element) ||
-      isOdfNote(element)) {
+      isOdfNote(element) ||
+      isOdfTrackedChanges(element)) {
     return;
   }
   if (isOdfParagraph(element)) {
@@ -164,6 +174,7 @@ Iterable<XmlElement> odfTextBoxes(XmlElement element) sync* {
   if (element.namespaceUri != odfTextNamespace) return;
   switch (element.localName) {
     case 'note':
+    case 'tracked-changes':
     case 'ruby-text':
     case 'soft-page-break':
       return;
@@ -262,6 +273,7 @@ String readOdfParagraphText(XmlElement paragraph, OdfTextBudget budget) {
         return;
       case 'ruby-text':
       case 'note':
+      case 'tracked-changes':
       case 'soft-page-break':
         return;
     }

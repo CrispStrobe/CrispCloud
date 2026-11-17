@@ -320,7 +320,8 @@ abstract final class OfficeTextExtractor {
     }) {
       if (isOdfCoveredCell(element) ||
           isOdfAnnotation(element) ||
-          isOdfNote(element)) {
+          isOdfNote(element) ||
+          isOdfTrackedChanges(element)) {
         return;
       }
       if (element.namespaceUri == odfTableNamespace) {
@@ -365,9 +366,12 @@ abstract final class OfficeTextExtractor {
           (reader.namespaceUri == odfOfficeNamespace &&
               reader.localName == 'annotation') ||
           (reader.namespaceUri == odfTextNamespace &&
-              reader.localName == 'note')) {
-        // Skip retained covered-cell, annotation and note stories without
-        // materializing them as visible document paragraphs or tables.
+              reader.localName == 'note') ||
+          (reader.localName == 'tracked-changes' &&
+              (reader.namespaceUri == odfTextNamespace ||
+                  reader.namespaceUri == odfTableNamespace))) {
+        // Retained hidden stories and revision history must not become current
+        // document paragraphs or tables, or consume decoded text capacity.
         final depth = reader.depth;
         while (reader.next() && reader.depth >= depth) {}
       } else if (reader.localName == 'table') {
