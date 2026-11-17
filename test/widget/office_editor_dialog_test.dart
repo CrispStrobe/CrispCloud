@@ -437,4 +437,65 @@ void main() {
     expect(content, contains('<office:document-content'));
     expect(content, contains('<office:text'));
   });
+
+  testWidgets('slides Export as ODP writes a readable package', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    Uint8List? exported;
+    String? exportedName;
+    final source = File(
+      'test/fixtures/office_native_workflows/native-slide-source.pptx',
+    ).readAsBytesSync();
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: OfficeEditorDialog(
+            file: FileItem(
+              name: 'deck.pptx',
+              isFolder: false,
+              size: source.length,
+            ),
+            side: PanelSide.local,
+            bytesOverride: source,
+            copyExporter: (bytes, name, title, {initialDirectory}) async {
+              exported = bytes;
+              exportedName = name;
+              return OfficeCopyOutcome.savedCopy;
+            },
+          ),
+        ),
+      ),
+    );
+    for (
+      var i = 0;
+      i < 100 && find.byType(QudsSlideEditor).evaluate().isEmpty;
+      i++
+    ) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 20)),
+      );
+      await tester.pump(const Duration(milliseconds: 1));
+    }
+    expect(find.byType(QudsSlideEditor), findsOneWidget);
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(OfficeEditorDialog)),
+    );
+    container
+        .read(officeEditorMenuProvider)!
+        .perform(OfficeEditorAction.exportOdp);
+    for (var i = 0; i < 100 && exported == null; i++) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 20)),
+      );
+      await tester.pump(const Duration(milliseconds: 1));
+    }
+    expect(exported, isNotNull);
+    expect(exportedName, endsWith('.odp'));
+    final package = OpcPackage.openBytes(exported!);
+    final content = package.getPart('/content.xml')!.readText();
+    expect(content, contains('<office:presentation'));
+    expect(content, contains('<draw:page'));
+  });
 }

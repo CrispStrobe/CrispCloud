@@ -88,6 +88,7 @@ export 'src/slide/anim/pml_motion.dart';
 export 'src/slide/anim/pml_motion_io.dart';
 export 'src/slide/model/pml_arrange.dart';
 export 'src/slide/model/pml_presentation.dart';
+export 'src/slide/serial/odp_presentation_writer.dart';
 export 'src/slide/serial/slide_serial.dart';
 export 'src/slide/shapes/drawingml.dart';
 export 'src/visual/drawing_line_style.dart';

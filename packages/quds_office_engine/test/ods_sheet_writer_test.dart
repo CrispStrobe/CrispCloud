@@ -187,7 +187,7 @@ void main() {
   test('writes worksheet pictures into the package', () {
     final png = Uint8List.fromList(
       base64Decode(
-        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl2nXQAAAAASUVORK5CYII=',
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4z8DwHwAFAAH/iZk9HQAAAABJRU5ErkJggg==',
       ),
     );
     final sheet = SmlWorksheet(name: 'Data', sheetId: 1);

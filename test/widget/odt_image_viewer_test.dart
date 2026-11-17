@@ -26,7 +26,7 @@ Uint8List _odtBytes() {
 </office:document-content>
 ''';
   final png = base64Decode(
-    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl2nXQAAAAASUVORK5CYII=',
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4z8DwHwAFAAH/iZk9HQAAAABJRU5ErkJggg==',
   );
   final archive = Archive()
     ..addFile(ArchiveFile.bytes('content.xml', utf8.encode(xml)))
