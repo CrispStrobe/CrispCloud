@@ -2112,7 +2112,7 @@
     "packages/quds_office_engine/lib/src/slide/anim/pml_motion_io.dart": "c651ee0235ed5c96b47398ac86fa5ba8f414aad1bc2ae8066752de01af42e88c",
     "packages/quds_office_engine/lib/src/slide/model/pml_arrange.dart": "55b511cf38d76de917fcbde0d80990a2e5eb99f7caf80d5c9c51da48a05948b7",
     "packages/quds_office_engine/lib/src/slide/model/pml_presentation.dart": "c18bfea9cc8db55de0e9c823d82539a1e9738a7b6c16e8a2eb26d361a05a5de0",
-    "packages/quds_office_engine/lib/src/slide/serial/odp_presentation_writer.dart": "375143d5292f80e0ab3262649fe356b17e9125a4b34b34a1aa28237793c2a1bd",
+    "packages/quds_office_engine/lib/src/slide/serial/odp_presentation_writer.dart": "f3aa45846e40e2e267805f001a7efa5da083121833295912ff588f13a6b282e7",
     "packages/quds_office_engine/lib/src/slide/serial/slide_section_io.dart": "c00aeed36b9a30c1d7a50b9b831d368c7cf07475c757e371b9bed10f424df7bd",
     "packages/quds_office_engine/lib/src/slide/serial/slide_serial.dart": "7de3bdd8c8fb7285080766b98c0fe89a6808744d792dd05b6fe9e517318f2165",
     "packages/quds_office_engine/lib/src/slide/shapes/drawingml.dart": "db979f21e10238a4c87731f35e29c267bda82891b0809c8c27ed206a83c8da37",
@@ -2303,7 +2303,7 @@
     "packages/quds_office_engine/test/odf_export_text_fidelity_test.dart": "54e0bc87498a71e4c8fadc88c0912e93658a016245ecedb18fe3fd88fa4ed20a",
     "packages/quds_office_engine/test/odf_frame_extraction_test.dart": "e6272ae9fb6caf0526b736bc8b55e8c78cde78d1e9b53b83502a0353990cf65f",
     "packages/quds_office_engine/test/odf_text_box_extraction_test.dart": "e9958812a57a0f02fbeff7aba148b71b2c7f4986430875ab714bab3c4802fd4f",
-    "packages/quds_office_engine/test/odp_presentation_writer_test.dart": "9609d5d5c402065c50b5372733cc8d426ec694ee8d66134c85980aa09ee4cab6",
+    "packages/quds_office_engine/test/odp_presentation_writer_test.dart": "980c92ab3a799d9d07d49de0bb54fb79dbec5edaed4dd8c9f405813689dc1f0c",
     "packages/quds_office_engine/test/odp_table_fidelity_test.dart": "536a409a787cbd8cf3f00b9fc17c4c68ea01d8133bbbbdba7a51a8280838ab44",
     "packages/quds_office_engine/test/odp_transform_fidelity_test.dart": "edb1380dab91e645e3b16049ccd32135938f32333f67c7510e88bd28be1feac9",
     "packages/quds_office_engine/test/ods_sheet_reader_test.dart": "b144caa8ed39fc8d3915aa665a98ca7c528443b95697535b6f15e1a035912d8d",
@@ -2607,8 +2607,8 @@
     "tool/office-validation/test_native_render_limitations.py": "ffc4e367871bf40079b2b2868af6b146de5bcfe13b50a17bdede2f2b3398308b",
     "tool/office-validation/test_render.py": "1ba68e18608d74387cbc1c779ceb72af76bf7741463c282684aec93bf3825472"
   },
-  "source_branch": "codex/office-qualified-resume-20261117",
-  "source_commit": "ec5ecbff742580c0e7d1136507b953e8cc877e4c",
+  "source_branch": "main",
+  "source_commit": "4c9d60cdc329d83fe0d5c7cb69daabb093973dff",
   "source_repository": "CrispStrobe/quds_office_suite",
   "standalone_sources": {
     "packages/legacy_doc_parser": {
