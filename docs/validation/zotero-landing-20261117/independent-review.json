@@ -1,0 +1,114 @@
+{
+  "receipt_sha256": "0c55c4622c02b324f80fd0ffc2db0d582d27bb74b2476820de3039aa361e1126",
+  "source_commit": "96c514eb98f7ba596a385c8f60496bc6c5994307",
+  "canonical_pin": "837d06edbde08a2465e99cbbb15927ee4c87d8ac",
+  "source_tree": "571031d5ac03bc32e00051d422020d7e26984e8e",
+  "commands": [
+    {
+      "name": "vendor-source",
+      "exit_code": 0,
+      "log_sha256": "8bfb3e9e71027ddb4174211687ae8472c16d1b01adda34a114abc12fcfc2c938"
+    },
+    {
+      "name": "vendor-tracked",
+      "exit_code": 0,
+      "log_sha256": "8bfb3e9e71027ddb4174211687ae8472c16d1b01adda34a114abc12fcfc2c938"
+    },
+    {
+      "name": "host-tests",
+      "exit_code": 0,
+      "log_sha256": "9a43d3b11106ad8644544c5a3edba7000ed5ebe64aa4eef9c10e4e34cfaeacb5",
+      "test_passes": 41,
+      "skips": 0,
+      "terminal_success": true
+    },
+    {
+      "name": "service-tests",
+      "exit_code": 0,
+      "log_sha256": "d39c877533e749e10e8e5f5a344bae57f47c39b40a3554fdd524ddf4a59e5ad7",
+      "test_passes": 39,
+      "skips": 0,
+      "terminal_success": true
+    },
+    {
+      "name": "host-analysis",
+      "exit_code": 0,
+      "log_sha256": "aa418623af9e5241be82ec3694ad2813c7c2b3cb8692ed6d8ab55077f5682175"
+    },
+    {
+      "name": "vendor-analysis",
+      "exit_code": 0,
+      "log_sha256": "be451ddcf7bc21d9d5ff317abe0f2a69fa39bc7f30613e7f31fb019cfaa11cad"
+    },
+    {
+      "name": "host-format",
+      "exit_code": 0,
+      "log_sha256": "b55bfaa59438fc935e4414e3fa1838393f2f9cc186e7ff308f8facc7fa1363c6"
+    },
+    {
+      "name": "viewer-format",
+      "exit_code": 0,
+      "log_sha256": "de6d58a08dc71e8a74d067b55f15582d2f3098f2e64c6bf6af8a4731bcf87134"
+    },
+    {
+      "name": "vendor-format",
+      "exit_code": 0,
+      "log_sha256": "c2204d33398d7ef6ccd631d7ba26bdd6c50ae2d2db9feb88027185ed8564140d"
+    },
+    {
+      "name": "python-sync-verifier-tests",
+      "exit_code": 0,
+      "log_sha256": "801ff6e82828434773bfc230d4f25c2a89ddc3eae7fecb41e3f1d0aceafcd946",
+      "test_passes": 28,
+      "skips": 0,
+      "terminal_success": true
+    },
+    {
+      "name": "whitespace",
+      "exit_code": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "vendor-tracked-final",
+      "exit_code": 0,
+      "log_sha256": "8bfb3e9e71027ddb4174211687ae8472c16d1b01adda34a114abc12fcfc2c938"
+    }
+  ],
+  "command_count": 12,
+  "test_cohorts": {
+    "host-tests": 41,
+    "service-tests": 39,
+    "python-sync-verifier-tests": 28
+  },
+  "test_passes": 108,
+  "counts_overlap_historical_runs_not_added_as_unique": true,
+  "input_maps": {
+    "source": {
+      "before_sha256": "cf8eb8eeee8b86697136cb6a607c9540177607f914a20df616916022916c1673",
+      "after_sha256": "cf8eb8eeee8b86697136cb6a607c9540177607f914a20df616916022916c1673",
+      "semantically_equal": true
+    },
+    "dependencies": {
+      "before_sha256": "ad4879ef1f81e9c950892ec06f7ba9b994dd1b2d4a5271ec8f6086dbca786cc7",
+      "after_sha256": "ad4879ef1f81e9c950892ec06f7ba9b994dd1b2d4a5271ec8f6086dbca786cc7",
+      "semantically_equal": true
+    }
+  },
+  "source_binding": {
+    "verified_input_count": 3779,
+    "all_recorded_bytes_and_modes_match_immutable_commit": true,
+    "untracked_execution_inputs": []
+  },
+  "dependency_inputs_verified": 6002,
+  "analyzer_config_restored": true,
+  "limitations": [
+    "Focused genuine locked dependency graph; no full application compile or full production dependency resolution.",
+    "Network, credentials and protocol interactions use test doubles; no live Zotero account, desktop picker, Word/LibreOffice or keychain acceptance.",
+    "Canonical tests are qualified separately; these counts are distinct host tests.",
+    "No GitHub Actions, status, workflow or job queries, waits or reruns."
+  ],
+  "viewer_analysis": {
+    "reason": "The focused service graph intentionally excludes the much larger complete viewer dependency closure; the exact delivered viewer bytes are bound and formatting is checked. No viewer compile or runtime acceptance is claimed.",
+    "run": false
+  }
+}
