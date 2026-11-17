@@ -159,7 +159,7 @@ void main() {
       if (extension == 'ods') {
         expect(document.csv!.trim(), visible);
       }
-      expect(document.rawXml, xml);
+      expect(document.rawXml, '<!-- content.xml -->\n$xml');
     });
   }
 
@@ -194,7 +194,7 @@ void main() {
     expect(document.markdown, contains('- List tail'));
     expect(document.markdown, contains('Reference[1] after'));
     expect(document.markdown, contains('1. Note tail foreign note'));
-    expect(document.rawXml, xml);
+    expect(document.rawXml, '<!-- content.xml -->\n$xml');
   });
 
   test('ODT headers and footers exclude annotations by namespace', () async {
@@ -225,7 +225,7 @@ void main() {
       document.markdown,
       contains('> **Footer:** Footer tail shadow footer'),
     );
-    expect(document.rawXml, xml);
+    expect(document.rawXml, '<!-- content.xml -->\n$xml');
   });
 
   test('annotation-only ODT documents have no body text', () async {
@@ -240,7 +240,7 @@ void main() {
     _expectNoAnnotationText(document);
     expect(document.markdown, isEmpty);
     expect(document.plainText, isEmpty);
-    expect(document.rawXml, xml);
+    expect(document.rawXml, '<!-- content.xml -->\n$xml');
   });
 
   test('empty annotations do not hide following paragraphs or table cells',
@@ -260,7 +260,7 @@ void main() {
     expect(document.markdown, contains('Before'));
     expect(document.markdown, contains('| Cell |'));
     expect(document.markdown, contains('After'));
-    expect(document.rawXml, xml);
+    expect(document.rawXml, '<!-- content.xml -->\n$xml');
   });
 
   test('ODS writer annotations stay in raw XML and out of CSV values', () async {
