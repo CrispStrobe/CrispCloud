@@ -50,7 +50,7 @@ exact source identities, commands and the separately qualified terminal results.
 
 ## Earlier verified state
 
-- CrispCloud `main` snapshot: `4d8133e6`
+- CrispCloud `main` snapshot: `6dec7e1d`
 - The historical test results below retain the source identities in their
   original receipts. Current vendor identities and counts are recorded in
   `tool/office_fidelity_manifest.json` and `packages/QUDS_FORKS.md`.
