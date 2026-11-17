@@ -1520,6 +1520,11 @@ class _OdtLayout {
         }
         if (props.pageBreakBefore || sectionStart?.breakBefore == true) {
           buffer.write(' fo:break-before="page"');
+        } else if (props.columnBreakBefore) {
+          buffer.write(' fo:break-before="column"');
+        }
+        if (props.keepTogether) {
+          buffer.write(' fo:keep-together="always"');
         }
         if (sectionStart?.index case final index? when index > 0) {
           buffer.write(' style:page-number="auto"');
