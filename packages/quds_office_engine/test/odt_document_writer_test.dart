@@ -29,6 +29,7 @@ XmlElement _odtBody(OpcPackage package) => XmlDocument.parse(
 ).root!.firstChild('body')!.firstChild('text')!;
 
 void main() {
+  tocTests();
   fieldTests();
   paragraphBreakTests();
   columnTests();
@@ -687,5 +688,46 @@ void fieldTests() {
     expect(RegExp(r'<text:page-number/>').allMatches(content).length, 1);
     expect(RegExp(r'<text:page-count/>').allMatches(content).length, 1);
     expect(content, isNot(contains('>99<')));
+  });
+}
+
+void tocTests() {
+  test('writes cached table-of-contents entries', () {
+    final document = WmlDocument(
+      sections: [
+        WmlSection(
+          blocks: [
+            WmlToc(
+              title: 'Contents',
+              minLevel: 1,
+              maxLevel: 3,
+              entries: [
+                WmlTocEntry(
+                  text: 'Introduction',
+                  level: 1,
+                  headingParagraphIndex: 0,
+                  pageNumber: 2,
+                ),
+                WmlTocEntry(
+                  text: 'Details',
+                  level: 2,
+                  headingParagraphIndex: 1,
+                  pageNumber: 4,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ],
+    );
+    final package = OpcPackage.openBytes(
+      OdtDocumentWriter.writeBytes(document),
+    );
+    final content = package.getPart('/content.xml')!.readText();
+    expect(content, contains('Contents'));
+    expect(content, contains('Introduction'));
+    expect(content, contains('Details'));
+    expect(content, contains('<text:tab/>2'));
+    expect(content, contains('<text:tab/>4'));
   });
 }

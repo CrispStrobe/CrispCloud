@@ -549,7 +549,9 @@ abstract final class OdtDocumentWriter {
         break;
       case WmlContentControlBlock():
         _writeBlocks(w, block.blocks, layout, sectionStart: sectionStart);
-      case WmlOpaqueBlock() || WmlToc():
+      case WmlToc():
+        _writeToc(w, block, layout);
+      case WmlOpaqueBlock():
         break;
     }
   }
@@ -585,6 +587,32 @@ abstract final class OdtDocumentWriter {
     );
     start.consumed = true;
     w.writeEndElement();
+  }
+
+  static void _writeToc(XmlWriter w, WmlToc toc, _OdtLayout layout) {
+    if (toc.title.isNotEmpty) {
+      _writeParagraph(w, toc.titleParagraph, layout);
+    }
+    if (toc.itemParagraphs.isNotEmpty) {
+      for (final paragraph in toc.itemParagraphs) {
+        _writeParagraph(w, paragraph, layout);
+      }
+      return;
+    }
+    for (final entry in toc.entries) {
+      final indent = (entry.level - toc.minLevel).clamp(0, 8) * 18.0;
+      final page = toc.showsPageNumberForLevel(entry.level)
+          ? '\t${entry.pageNumber}'
+          : '';
+      _writeParagraph(
+        w,
+        WmlParagraph(
+          properties: WmlParagraphProps(indent: WmlIndent(left: indent)),
+          inlines: [WmlRun(text: '${entry.text}$page')],
+        ),
+        layout,
+      );
+    }
   }
 
   static void _writeParagraph(
