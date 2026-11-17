@@ -7,10 +7,17 @@ import 'sml_workbook.dart';
 /// The supported differential properties, without ordinary cell formatting.
 /// Null means that no matching rule supplied that property.
 class SmlConditionalStyle {
-  const SmlConditionalStyle({this.fillRgb, this.fontRgb});
+  const SmlConditionalStyle({
+    this.fillRgb,
+    this.fontRgb,
+    this.dataBarFraction,
+    this.dataBarColor,
+  });
 
   final String? fillRgb;
   final String? fontRgb;
+  final double? dataBarFraction;
+  final String? dataBarColor;
 }
 
 /// Resolves conditional colors for one paint/export operation. Create a new
@@ -70,18 +77,63 @@ class SmlConditionalResolver {
       _styles.putIfAbsent((ref.col, ref.row), () {
         String? fill;
         String? font;
+        double? dataBarFraction;
+        String? dataBarColor;
         final cell = sheet.cellOrNull(ref) ?? SmlCell(ref: ref);
         for (final rule in _rules) {
-          if (!rule.range.containsRef(ref) || !matches(rule, cell)) continue;
+          if (!rule.range.containsRef(ref)) continue;
+          if (rule.kind == SmlConditionalKind.dataBar) {
+            final fraction = _dataBarFraction(rule, cell);
+            if (fraction != null) {
+              dataBarFraction = fraction;
+              dataBarColor = rule.dataBarColor;
+            }
+            if (rule.stopIfTrue) break;
+            continue;
+          }
+          if (!matches(rule, cell)) continue;
           if (rule.fillRgb.isNotEmpty) fill ??= rule.fillRgb;
           if (rule.fontRgb.isNotEmpty) font ??= rule.fontRgb;
           if (rule.stopIfTrue) break;
         }
-        return SmlConditionalStyle(fillRgb: fill, fontRgb: font);
+        return SmlConditionalStyle(
+          fillRgb: fill,
+          fontRgb: font,
+          dataBarFraction: dataBarFraction,
+          dataBarColor: dataBarColor,
+        );
       });
 
   /// Evaluates the modeled rule kinds. Unsupported formulas and actual errors
   /// do not match. Formula references are relative to the range's top-left cell.
+  double? _dataBarFraction(SmlConditionalRule rule, SmlCell cell) {
+    final number = _number(_formulas.cellValue(sheet, cell));
+    if (number == null) return null;
+    final values = _aggregate(rule).numbers;
+    if (values.isEmpty) return null;
+    final stops = rule.colorScaleStops;
+    var minimum = values.first;
+    var maximum = values.last;
+    if (stops.length >= 2) {
+      minimum = switch (stops.first.type) {
+        'percent' => minimum + (maximum - minimum) * stops.first.value / 100,
+        'percentile' when values.isNotEmpty =>
+          values[((values.length - 1) * stops.first.value / 100).round()],
+        'number' => stops.first.value,
+        _ => minimum,
+      };
+      maximum = switch (stops.last.type) {
+        'percent' => minimum + (values.last - minimum) * stops.last.value / 100,
+        'percentile' when values.isNotEmpty =>
+          values[((values.length - 1) * stops.last.value / 100).round()],
+        'number' => stops.last.value,
+        _ => values.last,
+      };
+    }
+    if (maximum <= minimum) return null;
+    return ((number - minimum) / (maximum - minimum)).clamp(0.0, 1.0);
+  }
+
   bool matches(SmlConditionalRule rule, SmlCell cell) {
     Object? formula(String source) => _formulas.evaluate(
       source,
@@ -103,6 +155,7 @@ class SmlConditionalResolver {
     switch (rule.kind) {
       case SmlConditionalKind.expression:
       case SmlConditionalKind.colorScale:
+      case SmlConditionalKind.dataBar:
         return false;
       case SmlConditionalKind.greaterThan:
       case SmlConditionalKind.greaterOrEqual:

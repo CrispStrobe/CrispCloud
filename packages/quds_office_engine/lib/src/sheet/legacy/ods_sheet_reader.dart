@@ -1210,6 +1210,32 @@ abstract final class OdsSheetReader {
           );
         }
       }
+      for (final bar in _descendants(format, 'data-bar', _calcext)) {
+        final stops = <SmlColorScaleStop>[];
+        for (final entry in _descendants(bar, 'formatting-entry', _calcext)) {
+          final value =
+              double.tryParse(_attribute(entry, 'value', _calcext) ?? '') ?? 0;
+          stops.add(
+            SmlColorScaleStop(
+              type: _attribute(entry, 'type', _calcext) ?? 'number',
+              value: value,
+              colorRgb: '638EC6',
+            ),
+          );
+        }
+        if (stops.length >= 2) {
+          final color =
+              _hex(_attribute(bar, 'positive-color', _calcext)) ?? '638EC6';
+          rules.add(
+            SmlConditionalRule(
+              range: range,
+              kind: SmlConditionalKind.dataBar,
+              colorScaleStops: List<SmlColorScaleStop>.unmodifiable(stops),
+              dataBarColor: color,
+            ),
+          );
+        }
+      }
       for (final condition in _descendants(format, 'condition', _calcext)) {
         final value = _attribute(condition, 'value', _calcext)?.trim();
         final styleName = _attribute(condition, 'apply-style-name', _calcext);

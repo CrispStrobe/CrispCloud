@@ -1938,11 +1938,22 @@ class WordDeserializer {
         !(boundaries.first.sourceXml ?? '').contains('ffData') &&
         (firstContent < 0 || begin < firstContent) &&
         (lastContent < 0 || end > lastContent) &&
-        (paragraph.properties.fieldInstruction ?? '').trim().isNotEmpty;
+        (paragraph.properties.fieldInstruction ?? '').trim().isNotEmpty &&
+        _plainParagraphFieldPacket(paragraph.inlines, begin, end);
     if (simple &&
         WordZotero.kindOfInstruction(paragraph.properties.fieldInstruction) ==
             null) {
       final page = _isPageField(paragraph.properties.fieldInstruction!);
+      if (page &&
+          !_plainParagraphPageInstruction.hasMatch(
+            paragraph.properties.fieldInstruction!,
+          )) {
+        // The paragraph PAGE model regenerates an ordinary number. Preserve
+        // unsupported format switches and their caches as native boundaries
+        // before the ordinary numeric-cache suppression below can erase them.
+        _clearParagraphField(paragraph);
+        return;
+      }
       paragraph.properties.pageNumberField = page;
       if (page) {
         if (_document?.revisions.any(
@@ -1967,6 +1978,76 @@ class WordDeserializer {
     // Inexact for the paragraph model: keep the spans and drop the
     // paragraph-level reading, which would otherwise wrap all text.
     _clearParagraphField(paragraph);
+  }
+
+  static final RegExp _plainParagraphPageInstruction = RegExp(
+    r'^\s*PAGE(?:\s+\\\*\s+MERGEFORMAT)?\s*$',
+    caseSensitive: false,
+  );
+
+  static bool _plainParagraphFieldPacket(
+    List<WmlInline> inlines,
+    int begin,
+    int end,
+  ) {
+    var instructed = false;
+    var separated = false;
+    for (var index = begin; index <= end; index++) {
+      final inline = inlines[index];
+      if (inline is! WmlFieldBoundary) {
+        if (!separated) return false;
+        continue;
+      }
+      if (!_plainParagraphFieldBoundary(inline)) return false;
+      if (inline.kind == WmlFieldBoundaryKind.instruction) {
+        if (separated) return false;
+        instructed = true;
+      } else if (inline.kind == WmlFieldBoundaryKind.separate) {
+        if (!instructed || separated) return false;
+        separated = true;
+      }
+    }
+    return separated;
+  }
+
+  static bool _plainParagraphFieldBoundary(WmlFieldBoundary boundary) {
+    // Paragraph properties cannot represent a locked field, formatted code
+    // run, form state or foreign boundary metadata. Keeping the packet also
+    // keeps its authored cache and permits native serialization to retain it.
+    if (boundary.runPropertiesXml?.trim().isNotEmpty == true) return false;
+    final source = boundary.sourceXml;
+    if (source == null) return true;
+    if (boundary.kind == WmlFieldBoundaryKind.instruction) return false;
+    final element = XmlDocument.parse(source).root;
+    if (element == null ||
+        element.localName != 'fldChar' ||
+        element.namespaceUri != OfficeNamespaces.w ||
+        element.children.isNotEmpty ||
+        element.getAttribute('fldCharType', namespaceUri: OfficeNamespaces.w) !=
+            boundary.kind.name) {
+      return false;
+    }
+    final seen = <String>{};
+    for (final attribute in element.attributes) {
+      if (attribute.prefix == 'xmlns' || attribute.qualifiedName == 'xmlns') {
+        continue;
+      }
+      final name = attribute.localName;
+      final value = attribute.value;
+      if (attribute.namespaceUri != OfficeNamespaces.w ||
+          !seen.add(name) ||
+          !{'fldCharType', 'fldLock', 'dirty'}.contains(name)) {
+        return false;
+      }
+      if (name == 'fldLock' && !{'0', 'false', 'off'}.contains(value)) {
+        return false;
+      }
+      if (name == 'dirty' &&
+          !{'0', 'false', 'off', '1', 'true', 'on'}.contains(value)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   void _clearParagraphField(WmlParagraph paragraph) => paragraph.properties

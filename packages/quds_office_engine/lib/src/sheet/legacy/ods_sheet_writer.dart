@@ -363,6 +363,28 @@ abstract final class OdsSheetWriter {
     }
     final conditional = StringBuffer();
     for (final rule in sheet.conditionalFormats) {
+      if (rule.kind == SmlConditionalKind.dataBar) {
+        final stops = rule.colorScaleStops;
+        if (stops.length < 2) continue;
+        final entries = StringBuffer();
+        for (final stop in stops) {
+          entries.write(
+            '<calcext:formatting-entry '
+            'calcext:value="${stop.value}" '
+            'calcext:type="${_escapeAttr(stop.type)}"/>',
+          );
+        }
+        conditional.write(
+          '<calcext:conditional-format calcext:target-range-address="'
+          '${_plainSheet(sheet.name)}.${rule.range.start.a1}:'
+          '${_plainSheet(sheet.name)}.${rule.range.end.a1}">'
+          '<calcext:data-bar calcext:positive-color="#'
+          '${rule.dataBarColor.toLowerCase()}" calcext:negative-color="#'
+          '${rule.dataBarColor.toLowerCase()}" calcext:axis-position="none">'
+          '$entries</calcext:data-bar></calcext:conditional-format>',
+        );
+        continue;
+      }
       if (rule.kind == SmlConditionalKind.colorScale) {
         final stops = rule.colorScaleStops;
         if (stops.length < 2) continue;
@@ -607,6 +629,7 @@ abstract final class OdsSheetWriter {
       SmlConditionalKind.aboveAverage => 'above-average',
       SmlConditionalKind.belowAverage => 'below-average',
       SmlConditionalKind.colorScale => '',
+      SmlConditionalKind.dataBar => '',
     };
   }
 

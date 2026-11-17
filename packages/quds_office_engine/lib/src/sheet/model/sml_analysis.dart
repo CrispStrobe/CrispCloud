@@ -260,6 +260,9 @@ enum SmlConditionalKind {
 
   /// Continuous color scale over the numeric cells in the range.
   colorScale,
+
+  /// Proportional bar over the numeric cells in the range.
+  dataBar,
 }
 
 /// One threshold/color stop in an ODF/XLSX color scale.
@@ -293,6 +296,7 @@ class SmlConditionalRule {
     this.fontRgb = '',
     this.rank = 10,
     List<SmlColorScaleStop>? colorScaleStops,
+    this.dataBarColor = '638EC6',
     this.priority,
     this.stopIfTrue = false,
     this.dxfId,
@@ -319,8 +323,11 @@ class SmlConditionalRule {
   /// Rank for top/bottom rules, or the percentage for percent variants.
   int rank;
 
-  /// Threshold/color stops for [SmlConditionalKind.colorScale].
+  /// Threshold/color stops for [SmlConditionalKind.colorScale] or data bars.
   final List<SmlColorScaleStop> colorScaleStops;
+
+  /// RGB color for a [SmlConditionalKind.dataBar] rule.
+  String dataBarColor;
 
   /// Native rule priority, with lower positive values evaluated first.
   /// Missing or invalid priorities receive an unused positive Int32 value

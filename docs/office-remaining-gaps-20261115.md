@@ -125,7 +125,7 @@ cfRule + dxf, and reopen in Excel.
 text-length and custom-formula rules, comparison/between operators, blank policy,
 prompts, error titles/messages/styles and XLSX round-trips.\
 **Remaining:** ODF condition grammar outside the shared model (for example time
-or arbitrary multi-condition expressions) and dynamic source-range links.\
+or arbitrary multi-condition expressions).\
 **Next step:** extend condition coverage without approximating unsupported
 expressions and qualify dynamic range behavior.\
 **Acceptance:** list, numeric and date rules survive ODS → XLSX, with the same

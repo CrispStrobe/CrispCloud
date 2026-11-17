@@ -557,6 +557,8 @@ class SheetDeserializer {
             kind = SmlConditionalKind.expression;
           case 'colorScale':
             kind = SmlConditionalKind.colorScale;
+          case 'dataBar':
+            kind = SmlConditionalKind.dataBar;
           case 'beginsWith':
             kind = SmlConditionalKind.beginsWith;
           case 'endsWith':
@@ -613,7 +615,8 @@ class SheetDeserializer {
       }
       if (reader.eventType == XmlEventType.startElement &&
           reader.localName == 'cfvo' &&
-          conditionalRule?.kind == SmlConditionalKind.colorScale) {
+          (conditionalRule?.kind == SmlConditionalKind.colorScale ||
+              conditionalRule?.kind == SmlConditionalKind.dataBar)) {
         final type = reader.getAttribute('type') ?? 'number';
         final value = double.tryParse(reader.getAttribute('val') ?? '') ?? 0;
         conditionalRule!.colorScaleStops.add(
@@ -622,7 +625,8 @@ class SheetDeserializer {
       }
       if (reader.eventType == XmlEventType.startElement &&
           reader.localName == 'color' &&
-          conditionalRule?.kind == SmlConditionalKind.colorScale &&
+          (conditionalRule?.kind == SmlConditionalKind.colorScale ||
+              conditionalRule?.kind == SmlConditionalKind.dataBar) &&
           conditionalRule!.colorScaleStops.isNotEmpty) {
         final rgb = reader.getAttribute('rgb') ?? '';
         final color = rgb.length == 8 ? rgb.substring(2) : rgb;
@@ -634,6 +638,9 @@ class SheetDeserializer {
             value: last.value,
             colorRgb: color.toUpperCase(),
           );
+          if (conditionalRule.kind == SmlConditionalKind.dataBar) {
+            conditionalRule.dataBarColor = color.toUpperCase();
+          }
         }
       }
       if (reader.eventType == XmlEventType.startElement &&
@@ -2024,6 +2031,8 @@ class SheetSerializer {
             w.writeAttribute('type', 'expression');
           case SmlConditionalKind.colorScale:
             w.writeAttribute('type', 'colorScale');
+          case SmlConditionalKind.dataBar:
+            w.writeAttribute('type', 'dataBar');
           case SmlConditionalKind.duplicate:
             w.writeAttribute('type', 'duplicateValues');
           case SmlConditionalKind.top:
@@ -2068,13 +2077,15 @@ class SheetSerializer {
               SmlConditionalKind.bottomPercent ||
               SmlConditionalKind.aboveAverage ||
               SmlConditionalKind.belowAverage ||
-              SmlConditionalKind.colorScale => throw StateError(
-                'handled above',
-              ),
+              SmlConditionalKind.colorScale ||
+              SmlConditionalKind.dataBar => throw StateError('handled above'),
             });
         }
-        if (rule.kind == SmlConditionalKind.colorScale) {
-          w.writeStartElement('colorScale');
+        if (rule.kind == SmlConditionalKind.colorScale ||
+            rule.kind == SmlConditionalKind.dataBar) {
+          w.writeStartElement(
+            rule.kind == SmlConditionalKind.dataBar ? 'dataBar' : 'colorScale',
+          );
           for (final stop in rule.colorScaleStops) {
             w.writeEmptyElement(
               'cfvo',
@@ -2091,7 +2102,10 @@ class SheetSerializer {
             );
             w.writeEmptyElement(
               'color',
-              attributes: {'rgb': 'FF${stop.colorRgb}'},
+              attributes: {
+                'rgb':
+                    'FF${rule.kind == SmlConditionalKind.dataBar ? rule.dataBarColor : stop.colorRgb}',
+              },
             );
           }
           w.writeEndElement();
@@ -2108,7 +2122,8 @@ class SheetSerializer {
             rule.kind != SmlConditionalKind.bottomPercent &&
             rule.kind != SmlConditionalKind.aboveAverage &&
             rule.kind != SmlConditionalKind.belowAverage &&
-            rule.kind != SmlConditionalKind.colorScale) {
+            rule.kind != SmlConditionalKind.colorScale &&
+            rule.kind != SmlConditionalKind.dataBar) {
           if (rule.formula.isNotEmpty) {
             w.writeStartElement('formula');
             w.writeText(rule.formula);

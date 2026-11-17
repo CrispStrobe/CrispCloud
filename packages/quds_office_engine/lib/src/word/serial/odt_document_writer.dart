@@ -861,17 +861,19 @@ abstract final class OdtDocumentWriter {
       }
     }
     if (!separated || cache == null) return null;
+    final element = _simplePageFieldElement(instruction.toString());
+    return element == null ? null : (element: element, cache: cache);
+  }
+
+  static String? _simplePageFieldElement(String instruction) {
     // Other switches may change the displayed value or number format. Retain
     // that authored cache instead of guessing at an equivalent ODF field.
     final match = RegExp(
       r'^\s*(PAGE|NUMPAGES)(?:\s+\\\*\s+MERGEFORMAT)?\s*$',
       caseSensitive: false,
-    ).firstMatch(instruction.toString());
+    ).firstMatch(instruction);
     if (match == null) return null;
-    return (
-      element: match[1]!.toUpperCase() == 'PAGE' ? 'page-number' : 'page-count',
-      cache: cache,
-    );
+    return match[1]!.toUpperCase() == 'PAGE' ? 'page-number' : 'page-count';
   }
 
   static bool _plainFieldBoundary(WmlFieldBoundary boundary) {
@@ -932,7 +934,7 @@ abstract final class OdtDocumentWriter {
     final instruction = paragraph.properties.fieldInstruction;
     final page = instruction == null || instruction.trim().isEmpty
         ? paragraph.properties.pageNumberField
-        : WordFields.kindOf(instruction) == WmlFieldKind.page;
+        : _simplePageFieldElement(instruction) == 'page-number';
     // Mixed native fields, note marks and pictures are not an exact
     // paragraph-wide cache. Keep their existing visible inline content rather
     // than replacing a locked field or moving a separately owned story.
