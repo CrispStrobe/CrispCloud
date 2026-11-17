@@ -1,0 +1,21 @@
+{
+  "source_before": "d93ca912fc99b9fe521f78734e31902a785e605e",
+  "reason": "The two incoming main host files failed strict formatting under the resolved production-locked graph.",
+  "command": [
+    "/workspace/scratch/5ce2ad01fc79/validation-runtime/runtime/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+    "format",
+    "lib/l10n/office_recovery_strings.dart",
+    "lib/widgets/office_editor_ribbon.dart"
+  ],
+  "exit_code": 0,
+  "before_sha256": {
+    "lib/l10n/office_recovery_strings.dart": "0f3e22da98d0836c5e64a81c25eb2b3e18ad070d2a67f3fcf7e61069e17be7aa",
+    "lib/widgets/office_editor_ribbon.dart": "94ceacca52ab38149e7b02a2f738526a0c95305d9012d3a2f59a8573fff048a8"
+  },
+  "after_sha256": {
+    "lib/l10n/office_recovery_strings.dart": "437e230422b1b474269ac8c7af4e8d818aecb234280de65acf91412950ee6295",
+    "lib/widgets/office_editor_ribbon.dart": "80815c5f2c9b2eb62f7f467441f85ed1587695ed9e654567b719ea9ea050d20c"
+  },
+  "config_restored": true,
+  "unresolved_preflight": "The earlier no-config diagnostic proposed changes to 14 files. Repeating with the real language graph reduced this to two. No vendored source was changed."
+}
