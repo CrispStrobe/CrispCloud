@@ -146,7 +146,7 @@ void main() {
     expect(content, contains('text:style-name="L2"'));
     expect(content, contains('<table:table'));
     expect(content, contains('fo:border-top="0.5pt solid #000000"'));
-    expect(content, contains('style:row-height="24.00pt"'));
+    expect(content, contains('style:min-row-height="24.00pt"'));
     expect(content, contains('Pictures/image1.png'));
     expect(styles, contains('fo:page-width'));
     expect(styles, contains('style:num-format="1"'));

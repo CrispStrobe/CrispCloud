@@ -1,0 +1,4046 @@
+{
+  "kind": "Read-only fixed host ref inclusion audit against current HEAD plus exact pending destination-main merge",
+  "repository": "CrispStrobe/CrispCloud",
+  "capture_path": "docs/validation/office-resume-20261117/incoming-refresh.json",
+  "capture_sha256": "3965a2bf82fd40fabeac106cbc14529aac75a362718543d1fd82c6fcb681de5a",
+  "capture_completed_utc": "2026-11-17T15:39:24.991611+00:00",
+  "captured_main": "c7f797ad562722a6e990731a25f1676a4543e1a4",
+  "intended_current_head": "1149fc32ca12763e969679c627877cf269bfafb1",
+  "intended_pending_main": "eebf6d094113755e8268111910385f9bf984654b",
+  "final_merge_not_assumed_completed": true,
+  "counts": {
+    "ancestor_of_current_head": 258,
+    "exact_tree_of_current_ancestor": 112,
+    "ancestor_via_pending_main_merge": 2,
+    "identical_source_leaves_plus_additive_evidence": 2,
+    "intentional_archival_alternate_not_integrated": 2
+  },
+  "total_refs": 376,
+  "branches": 111,
+  "pr_heads": 222,
+  "tag_refs": 43,
+  "unique_captured_objects": 269,
+  "unique_captured_commits": 252,
+  "reachable_current_commits": 2522,
+  "reachable_pending_commits": 2534,
+  "new_remote_inventory_performed": false,
+  "github_actions_or_status_queried": false,
+  "records": [
+    {
+      "sha": "2165ceddc5fc01c3e1b7aa4a9a5b6740d4c1f975",
+      "ref": "refs/heads/codex/odf-annotation-visibility-20261117",
+      "commit": "2165ceddc5fc01c3e1b7aa4a9a5b6740d4c1f975",
+      "tree": "51a74eb906c1217d9e7c146a5959c8a0921ef98a",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "2165ceddc5fc01c3e1b7aa4a9a5b6740d4c1f975"
+    },
+    {
+      "sha": "44101615d8a9d92e8d2225b87bcb5a25e70da624",
+      "ref": "refs/heads/codex/office-continuation-20261117",
+      "commit": "44101615d8a9d92e8d2225b87bcb5a25e70da624",
+      "tree": "bc3366e898a7bd1ae182dc1bad6c16ea656c7edd",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "44101615d8a9d92e8d2225b87bcb5a25e70da624"
+    },
+    {
+      "sha": "378c036b392ee3ff9112d86aa21e7fdd8e722808",
+      "ref": "refs/heads/codex/ssh-terminal-tmux",
+      "commit": "378c036b392ee3ff9112d86aa21e7fdd8e722808",
+      "tree": "b2193c4ca42f9019769bd3d8ff0d50ad0892d45a",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "378c036b392ee3ff9112d86aa21e7fdd8e722808"
+    },
+    {
+      "sha": "2eec6b4edc62693cfc6048581862a7aed87143c9",
+      "ref": "refs/heads/codex/terminal-screen-workspace",
+      "commit": "2eec6b4edc62693cfc6048581862a7aed87143c9",
+      "tree": "1e696885c33c2ca39db4340598cd0a2343232d9a",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "2eec6b4edc62693cfc6048581862a7aed87143c9"
+    },
+    {
+      "sha": "852f009cadb153cfcb0799c527fdd78364a2df8d",
+      "ref": "refs/heads/codex/terminal-session-optimization-20261116",
+      "commit": "852f009cadb153cfcb0799c527fdd78364a2df8d",
+      "tree": "ef54b0d1d987bc0d6034056147186e32f9b987d9",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "852f009cadb153cfcb0799c527fdd78364a2df8d"
+    },
+    {
+      "sha": "f80c67f1e817bf14266d9f8b33a5129d54463b78",
+      "ref": "refs/heads/codex/zotero-capabilities-20261116",
+      "commit": "f80c67f1e817bf14266d9f8b33a5129d54463b78",
+      "tree": "6d112973bfdb3f36d1de66b126303a6061df67f0",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "f80c67f1e817bf14266d9f8b33a5129d54463b78"
+    },
+    {
+      "sha": "5e54229821bf7101ee60fb486d0c924ab6e7d5db",
+      "ref": "refs/heads/codex/zotero-optimization-20261116",
+      "commit": "5e54229821bf7101ee60fb486d0c924ab6e7d5db",
+      "tree": "8526f4c808bad3365b2a375e7209823ad1de9ef2",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "5e54229821bf7101ee60fb486d0c924ab6e7d5db"
+    },
+    {
+      "sha": "e8331dd7e10a0e0d8fac03035eedb19492a8ca2d",
+      "ref": "refs/heads/codex/zotero-recovery-20261116",
+      "commit": "e8331dd7e10a0e0d8fac03035eedb19492a8ca2d",
+      "tree": "eddc947bfa9f4b3c7c2746390e0b8ca792fea5dd",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "e8331dd7e10a0e0d8fac03035eedb19492a8ca2d"
+    },
+    {
+      "sha": "e678e17859f8d29e274d1abbf064b93d04a6fa42",
+      "ref": "refs/heads/codex/zotero-support-20261115",
+      "commit": "e678e17859f8d29e274d1abbf064b93d04a6fa42",
+      "tree": "b60de67288e9661801bba3876068c49320a25872",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "e678e17859f8d29e274d1abbf064b93d04a6fa42"
+    },
+    {
+      "sha": "5efae7732727fc1ae43d6b664922214dd6acfedf",
+      "ref": "refs/heads/codex/zotero-support-20261116",
+      "commit": "5efae7732727fc1ae43d6b664922214dd6acfedf",
+      "tree": "3f79aaee8fc21abf737706bf5e990fba2616aeae",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "5efae7732727fc1ae43d6b664922214dd6acfedf"
+    },
+    {
+      "sha": "4919c87f0225599b9b2b963285d364d2c2bd1a1e",
+      "ref": "refs/heads/docs/conditional-affix",
+      "commit": "4919c87f0225599b9b2b963285d364d2c2bd1a1e",
+      "tree": "c98dbbd5dac0d6ad34cf27fc4c087d507285b8b6",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "4919c87f0225599b9b2b963285d364d2c2bd1a1e"
+    },
+    {
+      "sha": "073713474ea62525d9f5832da918407de333cd03",
+      "ref": "refs/heads/docs/conditional-between",
+      "commit": "073713474ea62525d9f5832da918407de333cd03",
+      "tree": "19aa47714e57658028ce19c336b80da2fa05e967",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "073713474ea62525d9f5832da918407de333cd03"
+    },
+    {
+      "sha": "a49c3f14f96fed4c5551e45060ebbce3fa6883a1",
+      "ref": "refs/heads/docs/conditional-complete",
+      "commit": "a49c3f14f96fed4c5551e45060ebbce3fa6883a1",
+      "tree": "da02e789e7eb64258af155086b4da2336e40cfe9",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "a49c3f14f96fed4c5551e45060ebbce3fa6883a1"
+    },
+    {
+      "sha": "5ca134aaac74bb9d788dc3aa66d92827700f7da5",
+      "ref": "refs/heads/docs/conditional-dxf-styles",
+      "commit": "5ca134aaac74bb9d788dc3aa66d92827700f7da5",
+      "tree": "2033cf6433f8e7803b444fbf45ae1a556d646084",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "e4b5567078785c2ab11654385800c72d31d7d8e4"
+    },
+    {
+      "sha": "2281ad58aed9f97bc1d387d3c98728245a5e4bcf",
+      "ref": "refs/heads/docs/conditional-formats",
+      "commit": "2281ad58aed9f97bc1d387d3c98728245a5e4bcf",
+      "tree": "e114c389df13435d1faf7f73cc3a0d95ffdd61ae",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "2281ad58aed9f97bc1d387d3c98728245a5e4bcf"
+    },
+    {
+      "sha": "a8edc699641da3e3b3f1452b5db59bec52a5717d",
+      "ref": "refs/heads/docs/conditional-top-bottom",
+      "commit": "a8edc699641da3e3b3f1452b5db59bec52a5717d",
+      "tree": "844434c3f6d54498cded1a89a3da2a7f648721d9",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "a8edc699641da3e3b3f1452b5db59bec52a5717d"
+    },
+    {
+      "sha": "781ab2ac8e6434d2077f6cb30c500819dce8a294",
+      "ref": "refs/heads/docs/current-office-capabilities",
+      "commit": "781ab2ac8e6434d2077f6cb30c500819dce8a294",
+      "tree": "63b657c1c7490ae177df37e6f66317592cd5512a",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "10e0908fc46641a3fc19a39c34b5a12390496e80"
+    },
+    {
+      "sha": "385eb47e7eabbbe27a4287d173d69544b2566724",
+      "ref": "refs/heads/docs/filter-operators",
+      "commit": "385eb47e7eabbbe27a4287d173d69544b2566724",
+      "tree": "f1d588b1b282ecfe5be607c0df0637440dcedf70",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "3a775ad9eb2d2866392ecac22d0dd1b5cc1b77de"
+    },
+    {
+      "sha": "30f9cdefd70fea3c18a288a30b2f764c13044f95",
+      "ref": "refs/heads/docs/filters-closed",
+      "commit": "30f9cdefd70fea3c18a288a30b2f764c13044f95",
+      "tree": "22496bf367e02eb39fb7358ab033342c2465c9e4",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "8e8099e171c31eadb66e812147fc9be600057cab"
+    },
+    {
+      "sha": "343a930ebdbc1b0ee45f16328be868d0f78ba624",
+      "ref": "refs/heads/docs/metadata-closed",
+      "commit": "343a930ebdbc1b0ee45f16328be868d0f78ba624",
+      "tree": "4c9dae3d588cb26013ac4f9bec442d719ba0cfd9",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "343a930ebdbc1b0ee45f16328be868d0f78ba624"
+    },
+    {
+      "sha": "74378704f363cd095cefd23c0ac02e8ca0219ca1",
+      "ref": "refs/heads/docs/metadata-complete",
+      "commit": "74378704f363cd095cefd23c0ac02e8ca0219ca1",
+      "tree": "52601c15db8f9ca254eed383a53a2e85ee6a0576",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "30f0a5f1dd364fe32e41aa88dc51b24868af1091"
+    },
+    {
+      "sha": "8581f8ac54a8f70092ee6d3c7ebba6de1477437c",
+      "ref": "refs/heads/docs/odf-metadata",
+      "commit": "8581f8ac54a8f70092ee6d3c7ebba6de1477437c",
+      "tree": "051d847bdc244cb49b2a0210801e358906da9d2e",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "c7f797ad562722a6e990731a25f1676a4543e1a4"
+    },
+    {
+      "sha": "def593ff5ae0a37aab453313adf10d4374142914",
+      "ref": "refs/heads/docs/odp-presentation-writer",
+      "commit": "def593ff5ae0a37aab453313adf10d4374142914",
+      "tree": "87cce01023ed3b5d06295c32323852d0f6fa3cd7",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "71a2aafd1cf0383fa505d0e8c1307244433e7ffe"
+    },
+    {
+      "sha": "91a29b9b5c121288ecc50a69d744164aa7290ad1",
+      "ref": "refs/heads/docs/odp-shape-links",
+      "commit": "91a29b9b5c121288ecc50a69d744164aa7290ad1",
+      "tree": "69421290cfcdf25165e705bdbfb16360bd642e01",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "c30aeaec5ad0446a3ccb43a4920066ffc6e37a66"
+    },
+    {
+      "sha": "ce400a18517e69e29368b3728eb092a37d780bcc",
+      "ref": "refs/heads/docs/odp-transitions",
+      "commit": "ce400a18517e69e29368b3728eb092a37d780bcc",
+      "tree": "26d262644dac61f680e0c8d4e97dc712bc2ca3e2",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "5deb70e0850bb738da02e4c850ca711fd3655bb5"
+    },
+    {
+      "sha": "16cfd8196eda7b791c4e7efa47896f3f233ab10e",
+      "ref": "refs/heads/docs/ods-export-test-note",
+      "commit": "16cfd8196eda7b791c4e7efa47896f3f233ab10e",
+      "tree": "dedd2f5924a42ab5231c5dacb827994324d29942",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "529e15b4daff0469b0da277c1a9c7740b2a8d468"
+    },
+    {
+      "sha": "4fd51df9a05f0380297ed512fea35d0deb09ef85",
+      "ref": "refs/heads/docs/ods-filter-predicates",
+      "commit": "4fd51df9a05f0380297ed512fea35d0deb09ef85",
+      "tree": "0cbc4700a73db47bd5585cee4aa91f281ad8efd0",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "d36bd2412806e981ae12f7b2742a7fc0bde88234"
+    },
+    {
+      "sha": "5bfe1bba57989216cc228069e17785b4c849b5e4",
+      "ref": "refs/heads/docs/ods-header-footer",
+      "commit": "5bfe1bba57989216cc228069e17785b4c849b5e4",
+      "tree": "683a263541fcecf2243c115831d5f6befea4c667",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "553f3be64da9ad3c35730f1b6a67d79f1ac54b72"
+    },
+    {
+      "sha": "1cb0b4a6a01b4aabe58f95d9a9132171bbb11aa0",
+      "ref": "refs/heads/docs/ods-hidden-state",
+      "commit": "1cb0b4a6a01b4aabe58f95d9a9132171bbb11aa0",
+      "tree": "73b04cb1047eea0fe619f382a16d7f2e10b30111",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "1cb0b4a6a01b4aabe58f95d9a9132171bbb11aa0"
+    },
+    {
+      "sha": "128f55295107e3ada605b52d160165e03f726cb4",
+      "ref": "refs/heads/docs/ods-pictures",
+      "commit": "128f55295107e3ada605b52d160165e03f726cb4",
+      "tree": "11176f6a8c09c09844e2a61b76e2a669e7536300",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "128f55295107e3ada605b52d160165e03f726cb4"
+    },
+    {
+      "sha": "0e81360c0090244e73cf850e89166dbe557fd67b",
+      "ref": "refs/heads/docs/ods-row-groups",
+      "commit": "0e81360c0090244e73cf850e89166dbe557fd67b",
+      "tree": "3532aeb05dce6a07e9ec0b25bcebc891cc30594e",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "bf0255a168576b0d9993d8b668f2a7d0d943fd4f"
+    },
+    {
+      "sha": "b420b45b6666ca0658ae74f2a682a3cb6b88134d",
+      "ref": "refs/heads/docs/ods-validations",
+      "commit": "b420b45b6666ca0658ae74f2a682a3cb6b88134d",
+      "tree": "b46b96d6ede506583d37f0d885892f0bac260cff",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "b420b45b6666ca0658ae74f2a682a3cb6b88134d"
+    },
+    {
+      "sha": "0b8e9ef6706709f2ebe4c7b1435691a13f485a62",
+      "ref": "refs/heads/docs/ods-writer",
+      "commit": "0b8e9ef6706709f2ebe4c7b1435691a13f485a62",
+      "tree": "cf0ba04e2d292f8b26f0c48e138700b7400d173f",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "6d645301ae5b28befbe29af9d26ae30dfa51459e"
+    },
+    {
+      "sha": "6d6c10eecf949e0b02320074988234a8ef5bf11a",
+      "ref": "refs/heads/docs/ods-writer-images",
+      "commit": "6d6c10eecf949e0b02320074988234a8ef5bf11a",
+      "tree": "b5035ab6f6324a477382856bc4450ae8170499b3",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "58a834f28c265c7fe375f77a6ba41e2fa634fa1d"
+    },
+    {
+      "sha": "cb4147d325ca096977484a06582799606ebbd7e7",
+      "ref": "refs/heads/docs/odt-comments",
+      "commit": "cb4147d325ca096977484a06582799606ebbd7e7",
+      "tree": "c7e7e047572e69415f58b549689524581fbfa451",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "fad903782ee45031e26c57cc8a65ccf476b1724d"
+    },
+    {
+      "sha": "3080c7bed1a8452877601c3c1f13b4494a7e9cb4",
+      "ref": "refs/heads/docs/odt-document-writer",
+      "commit": "3080c7bed1a8452877601c3c1f13b4494a7e9cb4",
+      "tree": "4c57fae282a861b210913f2cd4f0136c0a606e69",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "8fe921d030d7623046e28127abec5949c4d8b991"
+    },
+    {
+      "sha": "46f7ba2a72a4964c7dfecae2d8d2e9fb430ffd49",
+      "ref": "refs/heads/docs/odt-footnotes",
+      "commit": "46f7ba2a72a4964c7dfecae2d8d2e9fb430ffd49",
+      "tree": "01015ce80ebd4d6fef3c062d5424598a1f2add87",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "d4524de90dd403c9ce350a1d271ac70ce511256b"
+    },
+    {
+      "sha": "4660f0e021af5786b350879521e04000b072d7e3",
+      "ref": "refs/heads/docs/odt-frame-size",
+      "commit": "4660f0e021af5786b350879521e04000b072d7e3",
+      "tree": "19b8a241f7c5ee2fea6cad0acbed9775b0d784cd",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "b852bc0010b227f4ade321a63d6cfc8ba769b98b"
+    },
+    {
+      "sha": "f9138cc1e51f52b4b9cb99b4b09b9ce32e1450c8",
+      "ref": "refs/heads/docs/odt-image-registry",
+      "commit": "f9138cc1e51f52b4b9cb99b4b09b9ce32e1450c8",
+      "tree": "fee9b371db728fdb3be8f2c773318a03b4d374ec",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "73e828175a76f9b7fe0014268ebbc59fd6ba4cfe"
+    },
+    {
+      "sha": "c6713f22ef616a8b1525598f12fa2836ecba9f8c",
+      "ref": "refs/heads/docs/odt-links-bookmarks",
+      "commit": "c6713f22ef616a8b1525598f12fa2836ecba9f8c",
+      "tree": "62046cf554b2bb8089348e3f2228e3505c261e9b",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "19780dec36befd1c63d12dedfdb789062515de7b"
+    },
+    {
+      "sha": "9b1f404f54e767d6f0464cf70a12c57da6a990bc",
+      "ref": "refs/heads/docs/odt-lists",
+      "commit": "9b1f404f54e767d6f0464cf70a12c57da6a990bc",
+      "tree": "cc00dd06ff7174c6861b9aa0a3b2228602e515c4",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "2c0d51aee913cc6e6070ee81c95c0244d60da7df"
+    },
+    {
+      "sha": "4e9aea1c1763d7a7d6ed39224e4c00be32d6914f",
+      "ref": "refs/heads/docs/odt-nested-lists",
+      "commit": "4e9aea1c1763d7a7d6ed39224e4c00be32d6914f",
+      "tree": "a5ed63bc3159b7c3cc6a1d50d9418dd3be52a763",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "1da07dcbb6814ef935adc43bac12568eb041e4e2"
+    },
+    {
+      "sha": "ec0f16b96f8040c185ecf147af045c7a2986027c",
+      "ref": "refs/heads/docs/odt-ordered-lists",
+      "commit": "ec0f16b96f8040c185ecf147af045c7a2986027c",
+      "tree": "136f2ea7db2dac92d64287e36357a4f9d94ede72",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "ecdc83b5ab1f3923f5102a7f78094e25beb65e9d"
+    },
+    {
+      "sha": "7e8456967a3d874544a4a56e185e631ff90e2639",
+      "ref": "refs/heads/docs/odt-sections",
+      "commit": "7e8456967a3d874544a4a56e185e631ff90e2639",
+      "tree": "95348e2be965c5a15e25bfc6344f3b926fc5ee70",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "3b6b9b2a5159ca9fdffdfd021866d78c0cb90729"
+    },
+    {
+      "sha": "5ed4f45cb758394dc2346041d826c10257c24dc1",
+      "ref": "refs/heads/docs/office-pin-20261115",
+      "commit": "5ed4f45cb758394dc2346041d826c10257c24dc1",
+      "tree": "0205cb98944f2929573842d45800ab5497e2005b",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "5ed4f45cb758394dc2346041d826c10257c24dc1"
+    },
+    {
+      "sha": "a0df68710bbacdcbddf57f7fb7b77238566b65c3",
+      "ref": "refs/heads/docs/remaining-gaps",
+      "commit": "a0df68710bbacdcbddf57f7fb7b77238566b65c3",
+      "tree": "51441da74a9f0b92f610373681e8f23d89f829f6",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "a0df68710bbacdcbddf57f7fb7b77238566b65c3"
+    },
+    {
+      "sha": "854d2ff6a20206434c64173ddca1152b079c8277",
+      "ref": "refs/heads/docs/remaining-gaps-link",
+      "commit": "854d2ff6a20206434c64173ddca1152b079c8277",
+      "tree": "c6f614db823791782eabf056bbb3178b0c8c82a2",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "854d2ff6a20206434c64173ddca1152b079c8277"
+    },
+    {
+      "sha": "70fb587eb5bf378b62cd998132fbf1e38a5b53e8",
+      "ref": "refs/heads/docs/restore-page-setup-and-pictures2",
+      "commit": "70fb587eb5bf378b62cd998132fbf1e38a5b53e8",
+      "tree": "c84def6f90a695a073d320ef52e5ef1a0ebe61c8",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "56aeb053d20a515299d1dba49d841e8429eb7576"
+    },
+    {
+      "sha": "0732c6ba7199609a46d73bb85430ecbd038d1671",
+      "ref": "refs/heads/docs/sheet-page-setup",
+      "commit": "0732c6ba7199609a46d73bb85430ecbd038d1671",
+      "tree": "f917aa42ecebdf18b4c5c2aa2dc8166cdcdd04f0",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "57d027c124fe7416accd225f9b6d1d7814a25614"
+    },
+    {
+      "sha": "8197b59177827cfa7b426c55acd0cdca19f9b6eb",
+      "ref": "refs/heads/docs/validation-complete",
+      "commit": "8197b59177827cfa7b426c55acd0cdca19f9b6eb",
+      "tree": "331cebc95dc3fe54d756d194a39de2cc0c7457a1",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "8197b59177827cfa7b426c55acd0cdca19f9b6eb"
+    },
+    {
+      "sha": "11d4fbd9bc0a6e9fb3fa6cdc7604a45aaeae3210",
+      "ref": "refs/heads/docs/validation-operators",
+      "commit": "11d4fbd9bc0a6e9fb3fa6cdc7604a45aaeae3210",
+      "tree": "1cbdbd14d3ebac1c2f0f823567da9740624d04af",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "11d4fbd9bc0a6e9fb3fa6cdc7604a45aaeae3210"
+    },
+    {
+      "sha": "ca8b789d4ceaa2b74cdb7e256cdd90746c702594",
+      "ref": "refs/heads/feat/export-ods",
+      "commit": "ca8b789d4ceaa2b74cdb7e256cdd90746c702594",
+      "tree": "16df07a7ba6c767fe450188241afb4da5a1ba648",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "3c98635249dc7ec671ea54bf7342ad0f067dfa82"
+    },
+    {
+      "sha": "dacf219a094e8f309e3f2ea1e27afbdccaa69f3d",
+      "ref": "refs/heads/feat/hidden-sheets-ui",
+      "commit": "dacf219a094e8f309e3f2ea1e27afbdccaa69f3d",
+      "tree": "53e5e9ffbb91a4d56bd72dead477ac703d6d4858",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "dacf219a094e8f309e3f2ea1e27afbdccaa69f3d"
+    },
+    {
+      "sha": "1e18a00dd9effae71c4574c3f51fd3fe24b1c7d5",
+      "ref": "refs/heads/feat/odt-frame-size",
+      "commit": "1e18a00dd9effae71c4574c3f51fd3fe24b1c7d5",
+      "tree": "d218eaa389a376b89dc0d7261854827cbd0de3d2",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "bca9a255fb9751708886a7752e9639ee84ab6418"
+    },
+    {
+      "sha": "38a69f9a60bce92b6c2db60a71427ac47d98819d",
+      "ref": "refs/heads/feat/odt-headers",
+      "commit": "38a69f9a60bce92b6c2db60a71427ac47d98819d",
+      "tree": "7f25ed55378573544c39216e00a136bd68db5aa6",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "38a69f9a60bce92b6c2db60a71427ac47d98819d"
+    },
+    {
+      "sha": "120127794ea061f2f2fd2385d516b74e2e4ebb48",
+      "ref": "refs/heads/feat/odt-image-registry",
+      "commit": "120127794ea061f2f2fd2385d516b74e2e4ebb48",
+      "tree": "03e9862f5a4c75d55898335b4d107f102a58c0f7",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "ea74845466837a3a2748068b0ce2fa6920e5e7df"
+    },
+    {
+      "sha": "969c104a09dc2ad0732edb4a11a0300b52f20e2f",
+      "ref": "refs/heads/feat/odt-images",
+      "commit": "969c104a09dc2ad0732edb4a11a0300b52f20e2f",
+      "tree": "f5d3283aeb54e726df1cb18c564ab91ce58bd6cf",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "969c104a09dc2ad0732edb4a11a0300b52f20e2f"
+    },
+    {
+      "sha": "048ad97b6d4b1be94821dd29f1ffb1494a329ecb",
+      "ref": "refs/heads/feat/odt-styles",
+      "commit": "048ad97b6d4b1be94821dd29f1ffb1494a329ecb",
+      "tree": "99354b9dbf826ac2b152d03bf63e79e6ad44f1da",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "048ad97b6d4b1be94821dd29f1ffb1494a329ecb"
+    },
+    {
+      "sha": "b81105fe579d00b66c0a07b07d8ed36cee23ecfb",
+      "ref": "refs/heads/feat/odt-textboxes",
+      "commit": "b81105fe579d00b66c0a07b07d8ed36cee23ecfb",
+      "tree": "7a9b5860dc7dcf95384a4c4a41d376b51cbfed25",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "b81105fe579d00b66c0a07b07d8ed36cee23ecfb"
+    },
+    {
+      "sha": "1dbfa2125cd83d6ec4e0028d1584e612fccfb77c",
+      "ref": "refs/heads/fix/conditional-affix-vendor",
+      "commit": "1dbfa2125cd83d6ec4e0028d1584e612fccfb77c",
+      "tree": "7ed6df2eef27a893f464e3755f3749ada077e7b8",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "1dbfa2125cd83d6ec4e0028d1584e612fccfb77c"
+    },
+    {
+      "sha": "a52efabd7d05a50b428eb337944d2b6aeee2400b",
+      "ref": "refs/heads/fix/conditional-between-vendor",
+      "commit": "a52efabd7d05a50b428eb337944d2b6aeee2400b",
+      "tree": "149261a6dcddf061726466e1d98e47b8a11f2c30",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "a52efabd7d05a50b428eb337944d2b6aeee2400b"
+    },
+    {
+      "sha": "79e725ef9c105845d38b25e745563c52234421da",
+      "ref": "refs/heads/fix/conditional-dxf-styles-vendor",
+      "commit": "79e725ef9c105845d38b25e745563c52234421da",
+      "tree": "a5c2fcb4e413a843fa940c2daf975ea9ec7e00b2",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "6a6e526929b383040201a915fbb0b8b5a80acd22"
+    },
+    {
+      "sha": "b9b7932eca6213973803b5bb227464cccd3051d6",
+      "ref": "refs/heads/fix/conditional-dxf-vendor",
+      "commit": "b9b7932eca6213973803b5bb227464cccd3051d6",
+      "tree": "d28c0c16e1f4352f6a72d080d56ef8f62628ce7b",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "b9b7932eca6213973803b5bb227464cccd3051d6"
+    },
+    {
+      "sha": "24ac26de023313dba726f8cdaabd16179c49da01",
+      "ref": "refs/heads/fix/conditional-operators-vendor",
+      "commit": "24ac26de023313dba726f8cdaabd16179c49da01",
+      "tree": "b7a003651330b5e917a8fbf3bacb85aa287e3d39",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "24ac26de023313dba726f8cdaabd16179c49da01"
+    },
+    {
+      "sha": "20e5c5b7f63f0b8335665ca131418023f6bc2ca7",
+      "ref": "refs/heads/fix/conditional-text-vendor",
+      "commit": "20e5c5b7f63f0b8335665ca131418023f6bc2ca7",
+      "tree": "339e1bea0e68adf1d598bc7c602dbba2d06aaf55",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "20e5c5b7f63f0b8335665ca131418023f6bc2ca7"
+    },
+    {
+      "sha": "168160bdeb121a8f83b439f8301fdde3a3a30523",
+      "ref": "refs/heads/fix/conditional-top-bottom-vendor",
+      "commit": "168160bdeb121a8f83b439f8301fdde3a3a30523",
+      "tree": "4274de0ce962d06fdbfaddf4bf3533b513cacfde",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "e18e92c44e1b80d250469feed130615571d5845f"
+    },
+    {
+      "sha": "c5927513b337fea005080ad5e5d3dd7440c6210c",
+      "ref": "refs/heads/fix/export-ods-strings",
+      "commit": "c5927513b337fea005080ad5e5d3dd7440c6210c",
+      "tree": "34777a5b2649a3a8b35635111689174b05c1f043",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "96dfe7c759b796e5101574949feb8f12844854d7"
+    },
+    {
+      "sha": "fd69bc3ee8db4ecec4683a7b8161a643b758db6b",
+      "ref": "refs/heads/fix/hidden-state-vendor",
+      "commit": "fd69bc3ee8db4ecec4683a7b8161a643b758db6b",
+      "tree": "53d9dd4e85dddbae9006180f3f3be26e1f831c2e",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "fd69bc3ee8db4ecec4683a7b8161a643b758db6b"
+    },
+    {
+      "sha": "fca44384b104dddf72f597b99a45a51566350fb7",
+      "ref": "refs/heads/fix/odf-metadata-vendor",
+      "commit": "fca44384b104dddf72f597b99a45a51566350fb7",
+      "tree": "7d806108b676d2b7016e8eeffe093d9e0f382cd6",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_via_pending_main_merge",
+      "witness_commit": "fca44384b104dddf72f597b99a45a51566350fb7"
+    },
+    {
+      "sha": "a0daffceecfa2379a7d28cf97c3f6cba489f1e22",
+      "ref": "refs/heads/fix/odp-presentation-writer-vendor",
+      "commit": "a0daffceecfa2379a7d28cf97c3f6cba489f1e22",
+      "tree": "6119c2aa5234dba265474d76620380a0d48b854d",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "e02d8912482fb1051d120ba147ebd21d4cb7c08b"
+    },
+    {
+      "sha": "63a1de08afd75573267bcf85eed5d1fd793737a1",
+      "ref": "refs/heads/fix/odp-shape-links-vendor",
+      "commit": "63a1de08afd75573267bcf85eed5d1fd793737a1",
+      "tree": "2b6d806e9d4243c2a6e68826b8a0feae984c4e6f",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "1bf6154bc9679596022065bde35308642e25ac01"
+    },
+    {
+      "sha": "3c5a4114c3241d1aa2550b00ebd959527a16b4d9",
+      "ref": "refs/heads/fix/odp-transitions-vendor",
+      "commit": "3c5a4114c3241d1aa2550b00ebd959527a16b4d9",
+      "tree": "8848350ba18914f76c59abcc573492af427be383",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "identical_source_leaves_plus_additive_evidence",
+      "witness_commit": "5e0c798b85cba3e0b85dff9d1c29e3915e4ed253",
+      "proof": "odp_transitions_additive_evidence_proof"
+    },
+    {
+      "sha": "4e3e45e619fa2983f1fa8394a9f28cf6c454a9f6",
+      "ref": "refs/heads/fix/ods-conditional-vendor",
+      "commit": "4e3e45e619fa2983f1fa8394a9f28cf6c454a9f6",
+      "tree": "3b86bb4bc05d386957be7fe7b3208156a965e685",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "4e3e45e619fa2983f1fa8394a9f28cf6c454a9f6"
+    },
+    {
+      "sha": "9898961e5cb64cdfc704f85c8f6f5ebedad3c39a",
+      "ref": "refs/heads/fix/ods-custom-validation-vendor",
+      "commit": "9898961e5cb64cdfc704f85c8f6f5ebedad3c39a",
+      "tree": "adb75cedb80aec931e27b9b3bf41127d9e10849f",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "9898961e5cb64cdfc704f85c8f6f5ebedad3c39a"
+    },
+    {
+      "sha": "29a2bb5158a316dcde5da776172e09027e04f78d",
+      "ref": "refs/heads/fix/ods-default-geometry-vendor",
+      "commit": "29a2bb5158a316dcde5da776172e09027e04f78d",
+      "tree": "402dfd4fc0bbec289d7f02c3db5e2594389f37e4",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "29a2bb5158a316dcde5da776172e09027e04f78d"
+    },
+    {
+      "sha": "0ba620fdc34ea7afd278468f3978997c3cc7ba8f",
+      "ref": "refs/heads/fix/ods-default-style-vendor",
+      "commit": "0ba620fdc34ea7afd278468f3978997c3cc7ba8f",
+      "tree": "57883151579a763448395a04c6e345aa136ca2aa",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "0ba620fdc34ea7afd278468f3978997c3cc7ba8f"
+    },
+    {
+      "sha": "391ccbda8553e5c9104226fdf42d2a1e2c028b33",
+      "ref": "refs/heads/fix/ods-filter-conditions-vendor",
+      "commit": "391ccbda8553e5c9104226fdf42d2a1e2c028b33",
+      "tree": "a37697b131e4c991035f371013fc5d49d866667e",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "91012624f1261c8065c0da601b1320d7a8f5670e"
+    },
+    {
+      "sha": "c9c403608cf6fc83e53245bd73c0db57403a969d",
+      "ref": "refs/heads/fix/ods-filter-operators-vendor",
+      "commit": "c9c403608cf6fc83e53245bd73c0db57403a969d",
+      "tree": "0903947d4595274011dd53a1f48ad0365116b9a5",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "3760bf9ea4baa6e86d1a4686d168a560db79b949"
+    },
+    {
+      "sha": "12ce7da82680331ff1c903b39183a0324c9508f5",
+      "ref": "refs/heads/fix/ods-filter-vendor",
+      "commit": "12ce7da82680331ff1c903b39183a0324c9508f5",
+      "tree": "7d37963e5c4fa6e604a7e1c159eddc1244ffaee3",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "4dc90cac5ebf53e5cea5f5b0260d04b59c8e7d09"
+    },
+    {
+      "sha": "b0723248097fc5d0bf3b06b0a34717c192522d5f",
+      "ref": "refs/heads/fix/ods-header-footer-vendor",
+      "commit": "b0723248097fc5d0bf3b06b0a34717c192522d5f",
+      "tree": "d2bbb0225b421787a15aa6710e95893f59178bd4",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "9d9c8e073d28653b181e0db9a332fffd64b64e41"
+    },
+    {
+      "sha": "aa45a0927789b117cec54c858895d8343aad661b",
+      "ref": "refs/heads/fix/ods-hyperlinks-vendor",
+      "commit": "aa45a0927789b117cec54c858895d8343aad661b",
+      "tree": "5c32696f5e7b137430c5d6b0d284306a95cc3416",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "315397c7d559e7cf45e2270c154de0d2893cb755"
+    },
+    {
+      "sha": "d18dc14194bfa4d11e96552b77dc34cbe5a8b417",
+      "ref": "refs/heads/fix/ods-images-vendor",
+      "commit": "d18dc14194bfa4d11e96552b77dc34cbe5a8b417",
+      "tree": "fe91cad2d7269fab28ba4895a93cd62b17423b3c",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "d18dc14194bfa4d11e96552b77dc34cbe5a8b417"
+    },
+    {
+      "sha": "8a62e0864ad4bae96063ec6f8a542db039a306cf",
+      "ref": "refs/heads/fix/ods-metadata-vendor",
+      "commit": "8a62e0864ad4bae96063ec6f8a542db039a306cf",
+      "tree": "9bec000ce1b1eec914719243b697f1076626af67",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "8a62e0864ad4bae96063ec6f8a542db039a306cf"
+    },
+    {
+      "sha": "c80ee46fccbbfc8c2da4b18d67fc220cad23f1fc",
+      "ref": "refs/heads/fix/ods-named-expressions-vendor",
+      "commit": "c80ee46fccbbfc8c2da4b18d67fc220cad23f1fc",
+      "tree": "ca8a44bbf7c9e18d871caf3a359cce9410f9fc9d",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "c80ee46fccbbfc8c2da4b18d67fc220cad23f1fc"
+    },
+    {
+      "sha": "10374ee7f24c29be0958edc94157cde96c28f67c",
+      "ref": "refs/heads/fix/ods-outline-vendor",
+      "commit": "10374ee7f24c29be0958edc94157cde96c28f67c",
+      "tree": "bc0aa0c696e1f32bde589730315c5a0eadeb7417",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "514f74579591d58c843d9b4c45d612ba7b16e5b2"
+    },
+    {
+      "sha": "116a309ef09d9bba04b7f2d3fd3c4956a478aca5",
+      "ref": "refs/heads/fix/ods-row-groups-vendor",
+      "commit": "116a309ef09d9bba04b7f2d3fd3c4956a478aca5",
+      "tree": "4707720a11193a7ce336c6e03e2736e1a7350922",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "4eea7d1676ef4474c1def51781666eb59437b845"
+    },
+    {
+      "sha": "9c2047da22110db1518a6226ee7a35e421fb9d51",
+      "ref": "refs/heads/fix/ods-tab-color-vendor",
+      "commit": "9c2047da22110db1518a6226ee7a35e421fb9d51",
+      "tree": "0a4107d900c066cc9a0c204dc7d70c0d677ef25a",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "9c2047da22110db1518a6226ee7a35e421fb9d51"
+    },
+    {
+      "sha": "a617e188cf69f3d3c14dba614593f953dadf1436",
+      "ref": "refs/heads/fix/ods-validation-messages-vendor",
+      "commit": "a617e188cf69f3d3c14dba614593f953dadf1436",
+      "tree": "b17e5e3c662ce95e09185aa44ab47e796a29ddbb",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "a617e188cf69f3d3c14dba614593f953dadf1436"
+    },
+    {
+      "sha": "2b6ac08219418cf2c2d91968d117437684370c4d",
+      "ref": "refs/heads/fix/ods-validation-vendor2",
+      "commit": "2b6ac08219418cf2c2d91968d117437684370c4d",
+      "tree": "eb271f6fdf1d8e644aca67757dd7eab678dd3a4c",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "2b6ac08219418cf2c2d91968d117437684370c4d"
+    },
+    {
+      "sha": "ee74601e71441fcac2b6defebff33ca04f538d12",
+      "ref": "refs/heads/fix/ods-validations-vendor",
+      "commit": "ee74601e71441fcac2b6defebff33ca04f538d12",
+      "tree": "f4a69d35ef744a3013df9cb259f93f0782aaa0de",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "ee74601e71441fcac2b6defebff33ca04f538d12"
+    },
+    {
+      "sha": "5fb04fb0bcaab54c11e3585717d7e33895bb339e",
+      "ref": "refs/heads/fix/ods-writer-conditional-vendor",
+      "commit": "5fb04fb0bcaab54c11e3585717d7e33895bb339e",
+      "tree": "9034233e2cbcd21d715e7f6151b98f8b4164eb41",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "609dc63f2fdc19e73b6ed7148d0b7c4f1bb41e44"
+    },
+    {
+      "sha": "7e24454598a43e46821a75b3b43c14a9a89b572f",
+      "ref": "refs/heads/fix/ods-writer-images-vendor",
+      "commit": "7e24454598a43e46821a75b3b43c14a9a89b572f",
+      "tree": "56425bb32e779dc833b24201a0d627d588ef4b01",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "7bfdc5774748da6636a03d0e9bd433a059861b0c"
+    },
+    {
+      "sha": "f7010ad1841c0f7146aa8544177911af0e98cfe9",
+      "ref": "refs/heads/fix/ods-writer-metadata-vendor",
+      "commit": "f7010ad1841c0f7146aa8544177911af0e98cfe9",
+      "tree": "bdad3a2e610180a183b8bb78315cabfa416aa855",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "5078be7059801ce3f2712ad3f47d4e23b32df147"
+    },
+    {
+      "sha": "d220aa43774fe36b01530400c3a10bd4228faa79",
+      "ref": "refs/heads/fix/ods-writer-page-layout-vendor",
+      "commit": "d220aa43774fe36b01530400c3a10bd4228faa79",
+      "tree": "c5c530c4d12e286149060990c6bb3b1d7adb3712",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "3cbc1cb105a066072f9a4d8d0a1c4b7be37ba240"
+    },
+    {
+      "sha": "10d8a9b4750bf3d80d35f089ae1ac4fdf8dffc1f",
+      "ref": "refs/heads/fix/ods-writer-vendor",
+      "commit": "10d8a9b4750bf3d80d35f089ae1ac4fdf8dffc1f",
+      "tree": "ea8b54fa87d7d6a621795a80b1607e6823bd4ddb",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "5c4bb3052a87afc5b5158c3180a95cddda47a179"
+    },
+    {
+      "sha": "17b5f5495a05573a7b173018c5becdbaa7e190ea",
+      "ref": "refs/heads/fix/odt-comments-vendor",
+      "commit": "17b5f5495a05573a7b173018c5becdbaa7e190ea",
+      "tree": "c120d3456e8cbc5c868f2be56d3f69fb9d1bce5b",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "03e81b38e7a727d89c5215152676eb1503a2f284"
+    },
+    {
+      "sha": "3d26bdae3dac4120f253767157d45abbf68911b8",
+      "ref": "refs/heads/fix/odt-document-writer-vendor",
+      "commit": "3d26bdae3dac4120f253767157d45abbf68911b8",
+      "tree": "a64b79ee96db8a2b726812933d5212253c166374",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "5535e52e381a0c1f7afc80515557c08148c40d35"
+    },
+    {
+      "sha": "7591ceb57fb55a2380a1ab2a3e0c52b85fc43e94",
+      "ref": "refs/heads/fix/odt-footnotes-vendor",
+      "commit": "7591ceb57fb55a2380a1ab2a3e0c52b85fc43e94",
+      "tree": "3fc1750836ebd9941c9dfa44d39afcc5871adfc1",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "057027883b91917f44f623d28f6b637b394b85a7"
+    },
+    {
+      "sha": "2cea1775b6cc029cce859a7977cb6634126f3334",
+      "ref": "refs/heads/fix/odt-links-bookmarks-vendor",
+      "commit": "2cea1775b6cc029cce859a7977cb6634126f3334",
+      "tree": "1f304ecd7d39f505a0a0096a109de74bcce2542f",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "f8000313dbaeee63973d7ed769287a2dd89aca5d"
+    },
+    {
+      "sha": "214ccbd1541f9d55c07aca0c1994b753d7cbf1ca",
+      "ref": "refs/heads/fix/odt-lists-vendor",
+      "commit": "214ccbd1541f9d55c07aca0c1994b753d7cbf1ca",
+      "tree": "cf331fcd7d5796ebc56face5ad1da3836a10b44a",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "111270541b6d8fce4ba2d6cd1ed7b07539f36c28"
+    },
+    {
+      "sha": "bf3355db83ec02a5d4b494f7dd37ee2de9bdeb01",
+      "ref": "refs/heads/fix/odt-nested-lists-vendor",
+      "commit": "bf3355db83ec02a5d4b494f7dd37ee2de9bdeb01",
+      "tree": "f0d9e9f6de4740b8283155f4a6e31811163c40f6",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "36323cc7662dd3b998406f50f10a35c92e061199"
+    },
+    {
+      "sha": "75504cbd905e7e887a90d5c707fedfa7469f7b9d",
+      "ref": "refs/heads/fix/odt-ordered-lists-vendor2",
+      "commit": "75504cbd905e7e887a90d5c707fedfa7469f7b9d",
+      "tree": "13af7d1c8e957706efe2b3f85e7ce18a8cda4d24",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "2acdde3aa567e2ffb6f2ee18305e412c9390418b"
+    },
+    {
+      "sha": "8dd12dc576901d675ff92124bc21fc016ff1dc57",
+      "ref": "refs/heads/fix/odt-sections-vendor",
+      "commit": "8dd12dc576901d675ff92124bc21fc016ff1dc57",
+      "tree": "1eef17c0e3018c88a944b3808d46cc5e3a84a73e",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "6cf27894c4d7bdecde88a81a2bde0adf04c4ca16"
+    },
+    {
+      "sha": "fff84bfb48224b78799967c1d42fc4af8abf05d8",
+      "ref": "refs/heads/fix/sheet-page-setup-vendor",
+      "commit": "fff84bfb48224b78799967c1d42fc4af8abf05d8",
+      "tree": "add02b7c6131cb4515be0d6722ccd126ee3ee9e0",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "d76959f3ae76399fdc1fc8f5dc6dbc39bf2b3ecb"
+    },
+    {
+      "sha": "37af4410be09081420d2597f53572379eca25464",
+      "ref": "refs/heads/integrate/current-repos-20261116",
+      "commit": "37af4410be09081420d2597f53572379eca25464",
+      "tree": "97e17eb32bfcaaa140fda62b6acdfafb2a9ee1f3",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "37af4410be09081420d2597f53572379eca25464"
+    },
+    {
+      "sha": "59b11b5647a8a07d36c0d2e0d579855f474ef4d2",
+      "ref": "refs/heads/integrate/final-corpus-20261115",
+      "commit": "59b11b5647a8a07d36c0d2e0d579855f474ef4d2",
+      "tree": "54d5d12f6095dc1b162da65375c84872e782dbab",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "59b11b5647a8a07d36c0d2e0d579855f474ef4d2"
+    },
+    {
+      "sha": "012314d440c49bc73b6726796fd9930eee6f1830",
+      "ref": "refs/heads/integrate/sdt-section-break-20261115",
+      "commit": "012314d440c49bc73b6726796fd9930eee6f1830",
+      "tree": "e08c219029da847ab3322b9bf0ecf7b335968d9d",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "012314d440c49bc73b6726796fd9930eee6f1830"
+    },
+    {
+      "sha": "abfcf08bd2bfbe87349fdacc3484b824b77fefa3",
+      "ref": "refs/heads/integrate/utf16-custom-xml-20261115",
+      "commit": "abfcf08bd2bfbe87349fdacc3484b824b77fefa3",
+      "tree": "4ec2a641f712fe1a7aab76672b4452a97fc8a2a8",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "abfcf08bd2bfbe87349fdacc3484b824b77fefa3"
+    },
+    {
+      "sha": "5018aebb709b35f1c4d730c06e0f91187727751c",
+      "ref": "refs/heads/integration/storage-carving-20261115",
+      "commit": "5018aebb709b35f1c4d730c06e0f91187727751c",
+      "tree": "9290ad3691f435439adef7dd54502b6073bb438a",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "5018aebb709b35f1c4d730c06e0f91187727751c"
+    },
+    {
+      "sha": "10891b06a6da9f2502960cdbfe34b30eed271665",
+      "ref": "refs/heads/integration/storage-carving-local-20261115124645",
+      "commit": "10891b06a6da9f2502960cdbfe34b30eed271665",
+      "tree": "6ef7f0d65d32e6c6417797deef8da745fd9536a3",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "10891b06a6da9f2502960cdbfe34b30eed271665"
+    },
+    {
+      "sha": "c7f797ad562722a6e990731a25f1676a4543e1a4",
+      "ref": "refs/heads/main",
+      "commit": "c7f797ad562722a6e990731a25f1676a4543e1a4",
+      "tree": "051d847bdc244cb49b2a0210801e358906da9d2e",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "c7f797ad562722a6e990731a25f1676a4543e1a4"
+    },
+    {
+      "sha": "3ebb72f0e6f49fb2c462ac3d7c968200f7a5d438",
+      "ref": "refs/pull/10/head",
+      "commit": "3ebb72f0e6f49fb2c462ac3d7c968200f7a5d438",
+      "tree": "219c4975146322e808d9e1fd5785d98a817d19d8",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "3ebb72f0e6f49fb2c462ac3d7c968200f7a5d438"
+    },
+    {
+      "sha": "c582f2d7a413c54dcf954f6f25f8201e36ba81d2",
+      "ref": "refs/pull/100/head",
+      "commit": "c582f2d7a413c54dcf954f6f25f8201e36ba81d2",
+      "tree": "e04423ad35533e4624711fbb694f9a60750c8003",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "c582f2d7a413c54dcf954f6f25f8201e36ba81d2"
+    },
+    {
+      "sha": "03f37893819ee999a9a660f029306f53ed7f2d0f",
+      "ref": "refs/pull/101/head",
+      "commit": "03f37893819ee999a9a660f029306f53ed7f2d0f",
+      "tree": "f07ada918185119047a5082c1adaa1ecead1ee83",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "03f37893819ee999a9a660f029306f53ed7f2d0f"
+    },
+    {
+      "sha": "ffdd6a86820b0d58cf8b93b4e626d0439beefab9",
+      "ref": "refs/pull/102/head",
+      "commit": "ffdd6a86820b0d58cf8b93b4e626d0439beefab9",
+      "tree": "018c3d4fc91352ca9a0f142c01df47a8314405fc",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "ffdd6a86820b0d58cf8b93b4e626d0439beefab9"
+    },
+    {
+      "sha": "d504409acc779b670de482247f3231a7247dcd92",
+      "ref": "refs/pull/103/head",
+      "commit": "d504409acc779b670de482247f3231a7247dcd92",
+      "tree": "d2c7000abc058f46cfa87b8a280d18f6a5f0abf9",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "d504409acc779b670de482247f3231a7247dcd92"
+    },
+    {
+      "sha": "542c1c8b97643e5ad2e7c44f35b5417ef95c7d6a",
+      "ref": "refs/pull/104/head",
+      "commit": "542c1c8b97643e5ad2e7c44f35b5417ef95c7d6a",
+      "tree": "d392e42e9f3678f4c265c3e5c9db56f510f32f58",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "542c1c8b97643e5ad2e7c44f35b5417ef95c7d6a"
+    },
+    {
+      "sha": "22bd67b887c81a11ea22664defc3474a07eef50a",
+      "ref": "refs/pull/105/head",
+      "commit": "22bd67b887c81a11ea22664defc3474a07eef50a",
+      "tree": "13abd6211f8ad2de199718afaac320753a9fb8b6",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "22bd67b887c81a11ea22664defc3474a07eef50a"
+    },
+    {
+      "sha": "2e683c9de9e8bc801dd9e2f3dea4380b4b854ca6",
+      "ref": "refs/pull/106/head",
+      "commit": "2e683c9de9e8bc801dd9e2f3dea4380b4b854ca6",
+      "tree": "54a72743f65cedc25c9356526ac3760c2e40db66",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "2e683c9de9e8bc801dd9e2f3dea4380b4b854ca6"
+    },
+    {
+      "sha": "7187d6d0ad636f844f7e9622ed915a880d20d992",
+      "ref": "refs/pull/107/head",
+      "commit": "7187d6d0ad636f844f7e9622ed915a880d20d992",
+      "tree": "008f4f801f46f48100c6622c4f2def2baf07e197",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "7187d6d0ad636f844f7e9622ed915a880d20d992"
+    },
+    {
+      "sha": "a77364501d274e0fde2e9fffeefb121258ae9614",
+      "ref": "refs/pull/108/head",
+      "commit": "a77364501d274e0fde2e9fffeefb121258ae9614",
+      "tree": "ac72254736f95c3b16b06238a62618b31d63b636",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "a77364501d274e0fde2e9fffeefb121258ae9614"
+    },
+    {
+      "sha": "1b7680583ac69649b17287ab68738288fec10f51",
+      "ref": "refs/pull/109/head",
+      "commit": "1b7680583ac69649b17287ab68738288fec10f51",
+      "tree": "861fdf92c1a62d553cef772fbcb18379d29ff97d",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "1b7680583ac69649b17287ab68738288fec10f51"
+    },
+    {
+      "sha": "7e32fef5ed563c73d617fc4933d07b88d8525a60",
+      "ref": "refs/pull/11/head",
+      "commit": "7e32fef5ed563c73d617fc4933d07b88d8525a60",
+      "tree": "c02b26095a6f52adc5bcbd6e315adf17a7d06836",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "7e32fef5ed563c73d617fc4933d07b88d8525a60"
+    },
+    {
+      "sha": "d97705dabbdae5969a67bf4bf74b6c604d934419",
+      "ref": "refs/pull/110/head",
+      "commit": "d97705dabbdae5969a67bf4bf74b6c604d934419",
+      "tree": "6c1489c177cb316eec808177175019216360820d",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "d97705dabbdae5969a67bf4bf74b6c604d934419"
+    },
+    {
+      "sha": "5018aebb709b35f1c4d730c06e0f91187727751c",
+      "ref": "refs/pull/111/head",
+      "commit": "5018aebb709b35f1c4d730c06e0f91187727751c",
+      "tree": "9290ad3691f435439adef7dd54502b6073bb438a",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "5018aebb709b35f1c4d730c06e0f91187727751c"
+    },
+    {
+      "sha": "bb981ec37c40369ba15bacdd9c21c520807a200c",
+      "ref": "refs/pull/112/head",
+      "commit": "bb981ec37c40369ba15bacdd9c21c520807a200c",
+      "tree": "38e09757c58d2d94f8d0cfb742bb54f41d8f1380",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "bb981ec37c40369ba15bacdd9c21c520807a200c"
+    },
+    {
+      "sha": "eab538e7af002ddffa2746b5932fdbbbd3a97334",
+      "ref": "refs/pull/113/head",
+      "commit": "eab538e7af002ddffa2746b5932fdbbbd3a97334",
+      "tree": "8b27590ffc9af68ce6c54d8e1ccb25048b708d90",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "eab538e7af002ddffa2746b5932fdbbbd3a97334"
+    },
+    {
+      "sha": "eba6c9dcb24108d7277dea2f0042acbb19f8fb72",
+      "ref": "refs/pull/114/head",
+      "commit": "eba6c9dcb24108d7277dea2f0042acbb19f8fb72",
+      "tree": "ce6616789f9ec4c3a54b6ab1dbce08336e4f3141",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "eba6c9dcb24108d7277dea2f0042acbb19f8fb72"
+    },
+    {
+      "sha": "74f97cba657d43f18f6e95553a465d23e21ceb20",
+      "ref": "refs/pull/115/head",
+      "commit": "74f97cba657d43f18f6e95553a465d23e21ceb20",
+      "tree": "a2c3c89623521e6bb03aaffb651450b68a6ffcc9",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "74f97cba657d43f18f6e95553a465d23e21ceb20"
+    },
+    {
+      "sha": "7dec00fb1ed4fd8552fcf5bf682de02849d3d93a",
+      "ref": "refs/pull/116/head",
+      "commit": "7dec00fb1ed4fd8552fcf5bf682de02849d3d93a",
+      "tree": "f7be111df7dfed4e4b2cf1e344169a15facdd7fb",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "7dec00fb1ed4fd8552fcf5bf682de02849d3d93a"
+    },
+    {
+      "sha": "a8e350d94e120c7422ade4e4caa4e92a2c4e461a",
+      "ref": "refs/pull/117/head",
+      "commit": "a8e350d94e120c7422ade4e4caa4e92a2c4e461a",
+      "tree": "1316dceaa02f9e9e29db8dd6fa0293938b75cdf9",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "a8e350d94e120c7422ade4e4caa4e92a2c4e461a"
+    },
+    {
+      "sha": "5530aff56e575a2ecad42c774233e2c0946e24c7",
+      "ref": "refs/pull/118/head",
+      "commit": "5530aff56e575a2ecad42c774233e2c0946e24c7",
+      "tree": "998aeb6481c8ce12382e4388b5999f1e89b206aa",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "5530aff56e575a2ecad42c774233e2c0946e24c7"
+    },
+    {
+      "sha": "f74f1fceb9959b1197fc21218e047240f215ba75",
+      "ref": "refs/pull/119/head",
+      "commit": "f74f1fceb9959b1197fc21218e047240f215ba75",
+      "tree": "1b754d2fdbe3dfdd877dfbeaa9390bf7d506b758",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "f74f1fceb9959b1197fc21218e047240f215ba75"
+    },
+    {
+      "sha": "3564a5c8b30684f284063bdbbd10c7942e423fdc",
+      "ref": "refs/pull/12/head",
+      "commit": "3564a5c8b30684f284063bdbbd10c7942e423fdc",
+      "tree": "8ad9bc3c098f09e820076291cac461869bbec156",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "3564a5c8b30684f284063bdbbd10c7942e423fdc"
+    },
+    {
+      "sha": "443db52220f25b6fa982dfa6afd18c17ed09179e",
+      "ref": "refs/pull/120/head",
+      "commit": "443db52220f25b6fa982dfa6afd18c17ed09179e",
+      "tree": "69bf885f3bd456066836126f5ee775f3219cf186",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "443db52220f25b6fa982dfa6afd18c17ed09179e"
+    },
+    {
+      "sha": "2dbc312ff2aaff1495adb95c67afe8aa7d987e7e",
+      "ref": "refs/pull/121/head",
+      "commit": "2dbc312ff2aaff1495adb95c67afe8aa7d987e7e",
+      "tree": "547d9178b5b07624f4b7be6368e7a872b7d7673b",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "2dbc312ff2aaff1495adb95c67afe8aa7d987e7e"
+    },
+    {
+      "sha": "3ffe089765eecd5a867369392a8e3610d896c0cf",
+      "ref": "refs/pull/122/head",
+      "commit": "3ffe089765eecd5a867369392a8e3610d896c0cf",
+      "tree": "71dff8473867899ccd3e093804d0c953909dd4f9",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "3ffe089765eecd5a867369392a8e3610d896c0cf"
+    },
+    {
+      "sha": "e19731eb9a2b69b0047b9f9ee6165a1e53ae187e",
+      "ref": "refs/pull/123/head",
+      "commit": "e19731eb9a2b69b0047b9f9ee6165a1e53ae187e",
+      "tree": "283f2e4f1fcd3b37dc044c3b1fd3d95ca78091a7",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "e19731eb9a2b69b0047b9f9ee6165a1e53ae187e"
+    },
+    {
+      "sha": "d7895df6d55ca588a70575dabf2216ed42055d75",
+      "ref": "refs/pull/124/head",
+      "commit": "d7895df6d55ca588a70575dabf2216ed42055d75",
+      "tree": "09568aecd00b210ba92f4e8078922aae938b0cb1",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "d7895df6d55ca588a70575dabf2216ed42055d75"
+    },
+    {
+      "sha": "5c1714d5abb3f728b924a6a2a515eec02497ae9c",
+      "ref": "refs/pull/125/head",
+      "commit": "5c1714d5abb3f728b924a6a2a515eec02497ae9c",
+      "tree": "1f72b33b4ee0869ddc6074a0a6fcc945ae338d83",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "5c1714d5abb3f728b924a6a2a515eec02497ae9c"
+    },
+    {
+      "sha": "d18dc14194bfa4d11e96552b77dc34cbe5a8b417",
+      "ref": "refs/pull/126/head",
+      "commit": "d18dc14194bfa4d11e96552b77dc34cbe5a8b417",
+      "tree": "fe91cad2d7269fab28ba4895a93cd62b17423b3c",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "d18dc14194bfa4d11e96552b77dc34cbe5a8b417"
+    },
+    {
+      "sha": "128f55295107e3ada605b52d160165e03f726cb4",
+      "ref": "refs/pull/127/head",
+      "commit": "128f55295107e3ada605b52d160165e03f726cb4",
+      "tree": "11176f6a8c09c09844e2a61b76e2a669e7536300",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "128f55295107e3ada605b52d160165e03f726cb4"
+    },
+    {
+      "sha": "969c104a09dc2ad0732edb4a11a0300b52f20e2f",
+      "ref": "refs/pull/128/head",
+      "commit": "969c104a09dc2ad0732edb4a11a0300b52f20e2f",
+      "tree": "f5d3283aeb54e726df1cb18c564ab91ce58bd6cf",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "969c104a09dc2ad0732edb4a11a0300b52f20e2f"
+    },
+    {
+      "sha": "b81105fe579d00b66c0a07b07d8ed36cee23ecfb",
+      "ref": "refs/pull/129/head",
+      "commit": "b81105fe579d00b66c0a07b07d8ed36cee23ecfb",
+      "tree": "7a9b5860dc7dcf95384a4c4a41d376b51cbfed25",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "b81105fe579d00b66c0a07b07d8ed36cee23ecfb"
+    },
+    {
+      "sha": "cb2db48e5e0f623139f260b63f88405b577791ec",
+      "ref": "refs/pull/13/head",
+      "commit": "cb2db48e5e0f623139f260b63f88405b577791ec",
+      "tree": "a93faa6a288033d15ee7688001fe5f61ba55114b",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "cb2db48e5e0f623139f260b63f88405b577791ec"
+    },
+    {
+      "sha": "5ed4f45cb758394dc2346041d826c10257c24dc1",
+      "ref": "refs/pull/130/head",
+      "commit": "5ed4f45cb758394dc2346041d826c10257c24dc1",
+      "tree": "0205cb98944f2929573842d45800ab5497e2005b",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "5ed4f45cb758394dc2346041d826c10257c24dc1"
+    },
+    {
+      "sha": "048ad97b6d4b1be94821dd29f1ffb1494a329ecb",
+      "ref": "refs/pull/131/head",
+      "commit": "048ad97b6d4b1be94821dd29f1ffb1494a329ecb",
+      "tree": "99354b9dbf826ac2b152d03bf63e79e6ad44f1da",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "048ad97b6d4b1be94821dd29f1ffb1494a329ecb"
+    },
+    {
+      "sha": "0ba620fdc34ea7afd278468f3978997c3cc7ba8f",
+      "ref": "refs/pull/132/head",
+      "commit": "0ba620fdc34ea7afd278468f3978997c3cc7ba8f",
+      "tree": "57883151579a763448395a04c6e345aa136ca2aa",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "0ba620fdc34ea7afd278468f3978997c3cc7ba8f"
+    },
+    {
+      "sha": "29a2bb5158a316dcde5da776172e09027e04f78d",
+      "ref": "refs/pull/133/head",
+      "commit": "29a2bb5158a316dcde5da776172e09027e04f78d",
+      "tree": "402dfd4fc0bbec289d7f02c3db5e2594389f37e4",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "29a2bb5158a316dcde5da776172e09027e04f78d"
+    },
+    {
+      "sha": "fd69bc3ee8db4ecec4683a7b8161a643b758db6b",
+      "ref": "refs/pull/134/head",
+      "commit": "fd69bc3ee8db4ecec4683a7b8161a643b758db6b",
+      "tree": "53d9dd4e85dddbae9006180f3f3be26e1f831c2e",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "fd69bc3ee8db4ecec4683a7b8161a643b758db6b"
+    },
+    {
+      "sha": "38a69f9a60bce92b6c2db60a71427ac47d98819d",
+      "ref": "refs/pull/135/head",
+      "commit": "38a69f9a60bce92b6c2db60a71427ac47d98819d",
+      "tree": "7f25ed55378573544c39216e00a136bd68db5aa6",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "38a69f9a60bce92b6c2db60a71427ac47d98819d"
+    },
+    {
+      "sha": "378c036b392ee3ff9112d86aa21e7fdd8e722808",
+      "ref": "refs/pull/136/head",
+      "commit": "378c036b392ee3ff9112d86aa21e7fdd8e722808",
+      "tree": "b2193c4ca42f9019769bd3d8ff0d50ad0892d45a",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "378c036b392ee3ff9112d86aa21e7fdd8e722808"
+    },
+    {
+      "sha": "dacf219a094e8f309e3f2ea1e27afbdccaa69f3d",
+      "ref": "refs/pull/137/head",
+      "commit": "dacf219a094e8f309e3f2ea1e27afbdccaa69f3d",
+      "tree": "53e5e9ffbb91a4d56bd72dead477ac703d6d4858",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "dacf219a094e8f309e3f2ea1e27afbdccaa69f3d"
+    },
+    {
+      "sha": "1cb0b4a6a01b4aabe58f95d9a9132171bbb11aa0",
+      "ref": "refs/pull/138/head",
+      "commit": "1cb0b4a6a01b4aabe58f95d9a9132171bbb11aa0",
+      "tree": "73b04cb1047eea0fe619f382a16d7f2e10b30111",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "1cb0b4a6a01b4aabe58f95d9a9132171bbb11aa0"
+    },
+    {
+      "sha": "4e3e45e619fa2983f1fa8394a9f28cf6c454a9f6",
+      "ref": "refs/pull/139/head",
+      "commit": "4e3e45e619fa2983f1fa8394a9f28cf6c454a9f6",
+      "tree": "3b86bb4bc05d386957be7fe7b3208156a965e685",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "4e3e45e619fa2983f1fa8394a9f28cf6c454a9f6"
+    },
+    {
+      "sha": "eff79b3c8ed03020aeaeac4dcd86058fb1e2e181",
+      "ref": "refs/pull/14/head",
+      "commit": "eff79b3c8ed03020aeaeac4dcd86058fb1e2e181",
+      "tree": "74e3bb01e0fffe2999154bb9fe6215ecf86178cb",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "eff79b3c8ed03020aeaeac4dcd86058fb1e2e181"
+    },
+    {
+      "sha": "01b3f6090f682c9c8cd909d229aaad50b54ea3fd",
+      "ref": "refs/pull/140/head",
+      "commit": "01b3f6090f682c9c8cd909d229aaad50b54ea3fd",
+      "tree": "e1f264eaa31bbb626f1e9c305aa7573604f05a5c",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "01b3f6090f682c9c8cd909d229aaad50b54ea3fd"
+    },
+    {
+      "sha": "24ac26de023313dba726f8cdaabd16179c49da01",
+      "ref": "refs/pull/141/head",
+      "commit": "24ac26de023313dba726f8cdaabd16179c49da01",
+      "tree": "b7a003651330b5e917a8fbf3bacb85aa287e3d39",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "24ac26de023313dba726f8cdaabd16179c49da01"
+    },
+    {
+      "sha": "2281ad58aed9f97bc1d387d3c98728245a5e4bcf",
+      "ref": "refs/pull/142/head",
+      "commit": "2281ad58aed9f97bc1d387d3c98728245a5e4bcf",
+      "tree": "e114c389df13435d1faf7f73cc3a0d95ffdd61ae",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "2281ad58aed9f97bc1d387d3c98728245a5e4bcf"
+    },
+    {
+      "sha": "abfcf08bd2bfbe87349fdacc3484b824b77fefa3",
+      "ref": "refs/pull/143/head",
+      "commit": "abfcf08bd2bfbe87349fdacc3484b824b77fefa3",
+      "tree": "4ec2a641f712fe1a7aab76672b4452a97fc8a2a8",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "abfcf08bd2bfbe87349fdacc3484b824b77fefa3"
+    },
+    {
+      "sha": "b9b7932eca6213973803b5bb227464cccd3051d6",
+      "ref": "refs/pull/144/head",
+      "commit": "b9b7932eca6213973803b5bb227464cccd3051d6",
+      "tree": "d28c0c16e1f4352f6a72d080d56ef8f62628ce7b",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "b9b7932eca6213973803b5bb227464cccd3051d6"
+    },
+    {
+      "sha": "20e5c5b7f63f0b8335665ca131418023f6bc2ca7",
+      "ref": "refs/pull/145/head",
+      "commit": "20e5c5b7f63f0b8335665ca131418023f6bc2ca7",
+      "tree": "339e1bea0e68adf1d598bc7c602dbba2d06aaf55",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "20e5c5b7f63f0b8335665ca131418023f6bc2ca7"
+    },
+    {
+      "sha": "a49c3f14f96fed4c5551e45060ebbce3fa6883a1",
+      "ref": "refs/pull/146/head",
+      "commit": "a49c3f14f96fed4c5551e45060ebbce3fa6883a1",
+      "tree": "da02e789e7eb64258af155086b4da2336e40cfe9",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "a49c3f14f96fed4c5551e45060ebbce3fa6883a1"
+    },
+    {
+      "sha": "ee74601e71441fcac2b6defebff33ca04f538d12",
+      "ref": "refs/pull/147/head",
+      "commit": "ee74601e71441fcac2b6defebff33ca04f538d12",
+      "tree": "f4a69d35ef744a3013df9cb259f93f0782aaa0de",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "ee74601e71441fcac2b6defebff33ca04f538d12"
+    },
+    {
+      "sha": "b420b45b6666ca0658ae74f2a682a3cb6b88134d",
+      "ref": "refs/pull/148/head",
+      "commit": "b420b45b6666ca0658ae74f2a682a3cb6b88134d",
+      "tree": "b46b96d6ede506583d37f0d885892f0bac260cff",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "b420b45b6666ca0658ae74f2a682a3cb6b88134d"
+    },
+    {
+      "sha": "e678e17859f8d29e274d1abbf064b93d04a6fa42",
+      "ref": "refs/pull/149/head",
+      "commit": "e678e17859f8d29e274d1abbf064b93d04a6fa42",
+      "tree": "b60de67288e9661801bba3876068c49320a25872",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "e678e17859f8d29e274d1abbf064b93d04a6fa42"
+    },
+    {
+      "sha": "8755f0dff6ff87528a77aa6613242ce1ef5851f5",
+      "ref": "refs/pull/15/head",
+      "commit": "8755f0dff6ff87528a77aa6613242ce1ef5851f5",
+      "tree": "4af167c628abd0389a1630c55a386e0ac6c332c9",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "8755f0dff6ff87528a77aa6613242ce1ef5851f5"
+    },
+    {
+      "sha": "a52efabd7d05a50b428eb337944d2b6aeee2400b",
+      "ref": "refs/pull/150/head",
+      "commit": "a52efabd7d05a50b428eb337944d2b6aeee2400b",
+      "tree": "149261a6dcddf061726466e1d98e47b8a11f2c30",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "a52efabd7d05a50b428eb337944d2b6aeee2400b"
+    },
+    {
+      "sha": "073713474ea62525d9f5832da918407de333cd03",
+      "ref": "refs/pull/151/head",
+      "commit": "073713474ea62525d9f5832da918407de333cd03",
+      "tree": "19aa47714e57658028ce19c336b80da2fa05e967",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "073713474ea62525d9f5832da918407de333cd03"
+    },
+    {
+      "sha": "012314d440c49bc73b6726796fd9930eee6f1830",
+      "ref": "refs/pull/152/head",
+      "commit": "012314d440c49bc73b6726796fd9930eee6f1830",
+      "tree": "e08c219029da847ab3322b9bf0ecf7b335968d9d",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "012314d440c49bc73b6726796fd9930eee6f1830"
+    },
+    {
+      "sha": "1dbfa2125cd83d6ec4e0028d1584e612fccfb77c",
+      "ref": "refs/pull/153/head",
+      "commit": "1dbfa2125cd83d6ec4e0028d1584e612fccfb77c",
+      "tree": "7ed6df2eef27a893f464e3755f3749ada077e7b8",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "1dbfa2125cd83d6ec4e0028d1584e612fccfb77c"
+    },
+    {
+      "sha": "4919c87f0225599b9b2b963285d364d2c2bd1a1e",
+      "ref": "refs/pull/154/head",
+      "commit": "4919c87f0225599b9b2b963285d364d2c2bd1a1e",
+      "tree": "c98dbbd5dac0d6ad34cf27fc4c087d507285b8b6",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "4919c87f0225599b9b2b963285d364d2c2bd1a1e"
+    },
+    {
+      "sha": "a0df68710bbacdcbddf57f7fb7b77238566b65c3",
+      "ref": "refs/pull/155/head",
+      "commit": "a0df68710bbacdcbddf57f7fb7b77238566b65c3",
+      "tree": "51441da74a9f0b92f610373681e8f23d89f829f6",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "a0df68710bbacdcbddf57f7fb7b77238566b65c3"
+    },
+    {
+      "sha": "854d2ff6a20206434c64173ddca1152b079c8277",
+      "ref": "refs/pull/156/head",
+      "commit": "854d2ff6a20206434c64173ddca1152b079c8277",
+      "tree": "c6f614db823791782eabf056bbb3178b0c8c82a2",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "854d2ff6a20206434c64173ddca1152b079c8277"
+    },
+    {
+      "sha": "59b11b5647a8a07d36c0d2e0d579855f474ef4d2",
+      "ref": "refs/pull/157/head",
+      "commit": "59b11b5647a8a07d36c0d2e0d579855f474ef4d2",
+      "tree": "54d5d12f6095dc1b162da65375c84872e782dbab",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "59b11b5647a8a07d36c0d2e0d579855f474ef4d2"
+    },
+    {
+      "sha": "8a62e0864ad4bae96063ec6f8a542db039a306cf",
+      "ref": "refs/pull/158/head",
+      "commit": "8a62e0864ad4bae96063ec6f8a542db039a306cf",
+      "tree": "9bec000ce1b1eec914719243b697f1076626af67",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "8a62e0864ad4bae96063ec6f8a542db039a306cf"
+    },
+    {
+      "sha": "343a930ebdbc1b0ee45f16328be868d0f78ba624",
+      "ref": "refs/pull/159/head",
+      "commit": "343a930ebdbc1b0ee45f16328be868d0f78ba624",
+      "tree": "4c9dae3d588cb26013ac4f9bec442d719ba0cfd9",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "343a930ebdbc1b0ee45f16328be868d0f78ba624"
+    },
+    {
+      "sha": "da52efc43c2043df9a4aa8cde69c25fbc616928d",
+      "ref": "refs/pull/16/head",
+      "commit": "da52efc43c2043df9a4aa8cde69c25fbc616928d",
+      "tree": "26d28b68b3278e4e91063f7a3edce3e2564ac50a",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "da52efc43c2043df9a4aa8cde69c25fbc616928d"
+    },
+    {
+      "sha": "2eec6b4edc62693cfc6048581862a7aed87143c9",
+      "ref": "refs/pull/160/head",
+      "commit": "2eec6b4edc62693cfc6048581862a7aed87143c9",
+      "tree": "1e696885c33c2ca39db4340598cd0a2343232d9a",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "2eec6b4edc62693cfc6048581862a7aed87143c9"
+    },
+    {
+      "sha": "5efae7732727fc1ae43d6b664922214dd6acfedf",
+      "ref": "refs/pull/161/head",
+      "commit": "5efae7732727fc1ae43d6b664922214dd6acfedf",
+      "tree": "3f79aaee8fc21abf737706bf5e990fba2616aeae",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "5efae7732727fc1ae43d6b664922214dd6acfedf"
+    },
+    {
+      "sha": "2b6ac08219418cf2c2d91968d117437684370c4d",
+      "ref": "refs/pull/162/head",
+      "commit": "2b6ac08219418cf2c2d91968d117437684370c4d",
+      "tree": "eb271f6fdf1d8e644aca67757dd7eab678dd3a4c",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "2b6ac08219418cf2c2d91968d117437684370c4d"
+    },
+    {
+      "sha": "11d4fbd9bc0a6e9fb3fa6cdc7604a45aaeae3210",
+      "ref": "refs/pull/163/head",
+      "commit": "11d4fbd9bc0a6e9fb3fa6cdc7604a45aaeae3210",
+      "tree": "1cbdbd14d3ebac1c2f0f823567da9740624d04af",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "11d4fbd9bc0a6e9fb3fa6cdc7604a45aaeae3210"
+    },
+    {
+      "sha": "9898961e5cb64cdfc704f85c8f6f5ebedad3c39a",
+      "ref": "refs/pull/164/head",
+      "commit": "9898961e5cb64cdfc704f85c8f6f5ebedad3c39a",
+      "tree": "adb75cedb80aec931e27b9b3bf41127d9e10849f",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "9898961e5cb64cdfc704f85c8f6f5ebedad3c39a"
+    },
+    {
+      "sha": "a617e188cf69f3d3c14dba614593f953dadf1436",
+      "ref": "refs/pull/165/head",
+      "commit": "a617e188cf69f3d3c14dba614593f953dadf1436",
+      "tree": "b17e5e3c662ce95e09185aa44ab47e796a29ddbb",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "a617e188cf69f3d3c14dba614593f953dadf1436"
+    },
+    {
+      "sha": "8197b59177827cfa7b426c55acd0cdca19f9b6eb",
+      "ref": "refs/pull/166/head",
+      "commit": "8197b59177827cfa7b426c55acd0cdca19f9b6eb",
+      "tree": "331cebc95dc3fe54d756d194a39de2cc0c7457a1",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "8197b59177827cfa7b426c55acd0cdca19f9b6eb"
+    },
+    {
+      "sha": "5e54229821bf7101ee60fb486d0c924ab6e7d5db",
+      "ref": "refs/pull/167/head",
+      "commit": "5e54229821bf7101ee60fb486d0c924ab6e7d5db",
+      "tree": "8526f4c808bad3365b2a375e7209823ad1de9ef2",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "5e54229821bf7101ee60fb486d0c924ab6e7d5db"
+    },
+    {
+      "sha": "9c2047da22110db1518a6226ee7a35e421fb9d51",
+      "ref": "refs/pull/168/head",
+      "commit": "9c2047da22110db1518a6226ee7a35e421fb9d51",
+      "tree": "0a4107d900c066cc9a0c204dc7d70c0d677ef25a",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "9c2047da22110db1518a6226ee7a35e421fb9d51"
+    },
+    {
+      "sha": "852f009cadb153cfcb0799c527fdd78364a2df8d",
+      "ref": "refs/pull/169/head",
+      "commit": "852f009cadb153cfcb0799c527fdd78364a2df8d",
+      "tree": "ef54b0d1d987bc0d6034056147186e32f9b987d9",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "852f009cadb153cfcb0799c527fdd78364a2df8d"
+    },
+    {
+      "sha": "6bda9f2306d36fb4a7ce3f501346b597c2000beb",
+      "ref": "refs/pull/17/head",
+      "commit": "6bda9f2306d36fb4a7ce3f501346b597c2000beb",
+      "tree": "72f9299727f2024db4dd7c0925f5c839c0fd87e1",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "6bda9f2306d36fb4a7ce3f501346b597c2000beb"
+    },
+    {
+      "sha": "c80ee46fccbbfc8c2da4b18d67fc220cad23f1fc",
+      "ref": "refs/pull/170/head",
+      "commit": "c80ee46fccbbfc8c2da4b18d67fc220cad23f1fc",
+      "tree": "ca8a44bbf7c9e18d871caf3a359cce9410f9fc9d",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "c80ee46fccbbfc8c2da4b18d67fc220cad23f1fc"
+    },
+    {
+      "sha": "aa45a0927789b117cec54c858895d8343aad661b",
+      "ref": "refs/pull/171/head",
+      "commit": "aa45a0927789b117cec54c858895d8343aad661b",
+      "tree": "5c32696f5e7b137430c5d6b0d284306a95cc3416",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "315397c7d559e7cf45e2270c154de0d2893cb755"
+    },
+    {
+      "sha": "10374ee7f24c29be0958edc94157cde96c28f67c",
+      "ref": "refs/pull/172/head",
+      "commit": "10374ee7f24c29be0958edc94157cde96c28f67c",
+      "tree": "bc0aa0c696e1f32bde589730315c5a0eadeb7417",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "514f74579591d58c843d9b4c45d612ba7b16e5b2"
+    },
+    {
+      "sha": "74378704f363cd095cefd23c0ac02e8ca0219ca1",
+      "ref": "refs/pull/173/head",
+      "commit": "74378704f363cd095cefd23c0ac02e8ca0219ca1",
+      "tree": "52601c15db8f9ca254eed383a53a2e85ee6a0576",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "30f0a5f1dd364fe32e41aa88dc51b24868af1091"
+    },
+    {
+      "sha": "12ce7da82680331ff1c903b39183a0324c9508f5",
+      "ref": "refs/pull/174/head",
+      "commit": "12ce7da82680331ff1c903b39183a0324c9508f5",
+      "tree": "7d37963e5c4fa6e604a7e1c159eddc1244ffaee3",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "4dc90cac5ebf53e5cea5f5b0260d04b59c8e7d09"
+    },
+    {
+      "sha": "30f9cdefd70fea3c18a288a30b2f764c13044f95",
+      "ref": "refs/pull/175/head",
+      "commit": "30f9cdefd70fea3c18a288a30b2f764c13044f95",
+      "tree": "22496bf367e02eb39fb7358ab033342c2465c9e4",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "8e8099e171c31eadb66e812147fc9be600057cab"
+    },
+    {
+      "sha": "f80c67f1e817bf14266d9f8b33a5129d54463b78",
+      "ref": "refs/pull/176/head",
+      "commit": "f80c67f1e817bf14266d9f8b33a5129d54463b78",
+      "tree": "6d112973bfdb3f36d1de66b126303a6061df67f0",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "f80c67f1e817bf14266d9f8b33a5129d54463b78"
+    },
+    {
+      "sha": "c9c403608cf6fc83e53245bd73c0db57403a969d",
+      "ref": "refs/pull/177/head",
+      "commit": "c9c403608cf6fc83e53245bd73c0db57403a969d",
+      "tree": "0903947d4595274011dd53a1f48ad0365116b9a5",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "3760bf9ea4baa6e86d1a4686d168a560db79b949"
+    },
+    {
+      "sha": "385eb47e7eabbbe27a4287d173d69544b2566724",
+      "ref": "refs/pull/178/head",
+      "commit": "385eb47e7eabbbe27a4287d173d69544b2566724",
+      "tree": "f1d588b1b282ecfe5be607c0df0637440dcedf70",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "3a775ad9eb2d2866392ecac22d0dd1b5cc1b77de"
+    },
+    {
+      "sha": "10d8a9b4750bf3d80d35f089ae1ac4fdf8dffc1f",
+      "ref": "refs/pull/179/head",
+      "commit": "10d8a9b4750bf3d80d35f089ae1ac4fdf8dffc1f",
+      "tree": "ea8b54fa87d7d6a621795a80b1607e6823bd4ddb",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "5c4bb3052a87afc5b5158c3180a95cddda47a179"
+    },
+    {
+      "sha": "d07804b9e0d3869bd4d20f020d7620ce7e352c43",
+      "ref": "refs/pull/18/head",
+      "commit": "d07804b9e0d3869bd4d20f020d7620ce7e352c43",
+      "tree": "f59fa2a0d59567fb772d2e2e0facb149a94a8325",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "d07804b9e0d3869bd4d20f020d7620ce7e352c43"
+    },
+    {
+      "sha": "f7010ad1841c0f7146aa8544177911af0e98cfe9",
+      "ref": "refs/pull/180/head",
+      "commit": "f7010ad1841c0f7146aa8544177911af0e98cfe9",
+      "tree": "bdad3a2e610180a183b8bb78315cabfa416aa855",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "5078be7059801ce3f2712ad3f47d4e23b32df147"
+    },
+    {
+      "sha": "0b8e9ef6706709f2ebe4c7b1435691a13f485a62",
+      "ref": "refs/pull/181/head",
+      "commit": "0b8e9ef6706709f2ebe4c7b1435691a13f485a62",
+      "tree": "cf0ba04e2d292f8b26f0c48e138700b7400d173f",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "6d645301ae5b28befbe29af9d26ae30dfa51459e"
+    },
+    {
+      "sha": "5fb04fb0bcaab54c11e3585717d7e33895bb339e",
+      "ref": "refs/pull/182/head",
+      "commit": "5fb04fb0bcaab54c11e3585717d7e33895bb339e",
+      "tree": "9034233e2cbcd21d715e7f6151b98f8b4164eb41",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "609dc63f2fdc19e73b6ed7148d0b7c4f1bb41e44"
+    },
+    {
+      "sha": "7e24454598a43e46821a75b3b43c14a9a89b572f",
+      "ref": "refs/pull/183/head",
+      "commit": "7e24454598a43e46821a75b3b43c14a9a89b572f",
+      "tree": "56425bb32e779dc833b24201a0d627d588ef4b01",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "7bfdc5774748da6636a03d0e9bd433a059861b0c"
+    },
+    {
+      "sha": "6d6c10eecf949e0b02320074988234a8ef5bf11a",
+      "ref": "refs/pull/184/head",
+      "commit": "6d6c10eecf949e0b02320074988234a8ef5bf11a",
+      "tree": "b5035ab6f6324a477382856bc4450ae8170499b3",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "58a834f28c265c7fe375f77a6ba41e2fa634fa1d"
+    },
+    {
+      "sha": "d220aa43774fe36b01530400c3a10bd4228faa79",
+      "ref": "refs/pull/185/head",
+      "commit": "d220aa43774fe36b01530400c3a10bd4228faa79",
+      "tree": "c5c530c4d12e286149060990c6bb3b1d7adb3712",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "3cbc1cb105a066072f9a4d8d0a1c4b7be37ba240"
+    },
+    {
+      "sha": "ca8b789d4ceaa2b74cdb7e256cdd90746c702594",
+      "ref": "refs/pull/186/head",
+      "commit": "ca8b789d4ceaa2b74cdb7e256cdd90746c702594",
+      "tree": "16df07a7ba6c767fe450188241afb4da5a1ba648",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "3c98635249dc7ec671ea54bf7342ad0f067dfa82"
+    },
+    {
+      "sha": "781ab2ac8e6434d2077f6cb30c500819dce8a294",
+      "ref": "refs/pull/187/head",
+      "commit": "781ab2ac8e6434d2077f6cb30c500819dce8a294",
+      "tree": "63b657c1c7490ae177df37e6f66317592cd5512a",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "10e0908fc46641a3fc19a39c34b5a12390496e80"
+    },
+    {
+      "sha": "16cfd8196eda7b791c4e7efa47896f3f233ab10e",
+      "ref": "refs/pull/188/head",
+      "commit": "16cfd8196eda7b791c4e7efa47896f3f233ab10e",
+      "tree": "dedd2f5924a42ab5231c5dacb827994324d29942",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "529e15b4daff0469b0da277c1a9c7740b2a8d468"
+    },
+    {
+      "sha": "c5927513b337fea005080ad5e5d3dd7440c6210c",
+      "ref": "refs/pull/189/head",
+      "commit": "c5927513b337fea005080ad5e5d3dd7440c6210c",
+      "tree": "34777a5b2649a3a8b35635111689174b05c1f043",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "96dfe7c759b796e5101574949feb8f12844854d7"
+    },
+    {
+      "sha": "261ae0a091cf87639da8feb2bcdf38efec61f106",
+      "ref": "refs/pull/19/head",
+      "commit": "261ae0a091cf87639da8feb2bcdf38efec61f106",
+      "tree": "ea8c70ad1a9e476d88dda1d92eb4134f4e0cafd8",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "261ae0a091cf87639da8feb2bcdf38efec61f106"
+    },
+    {
+      "sha": "120127794ea061f2f2fd2385d516b74e2e4ebb48",
+      "ref": "refs/pull/190/head",
+      "commit": "120127794ea061f2f2fd2385d516b74e2e4ebb48",
+      "tree": "03e9862f5a4c75d55898335b4d107f102a58c0f7",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "ea74845466837a3a2748068b0ce2fa6920e5e7df"
+    },
+    {
+      "sha": "f9138cc1e51f52b4b9cb99b4b09b9ce32e1450c8",
+      "ref": "refs/pull/191/head",
+      "commit": "f9138cc1e51f52b4b9cb99b4b09b9ce32e1450c8",
+      "tree": "fee9b371db728fdb3be8f2c773318a03b4d374ec",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "73e828175a76f9b7fe0014268ebbc59fd6ba4cfe"
+    },
+    {
+      "sha": "391ccbda8553e5c9104226fdf42d2a1e2c028b33",
+      "ref": "refs/pull/192/head",
+      "commit": "391ccbda8553e5c9104226fdf42d2a1e2c028b33",
+      "tree": "a37697b131e4c991035f371013fc5d49d866667e",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "91012624f1261c8065c0da601b1320d7a8f5670e"
+    },
+    {
+      "sha": "4fd51df9a05f0380297ed512fea35d0deb09ef85",
+      "ref": "refs/pull/193/head",
+      "commit": "4fd51df9a05f0380297ed512fea35d0deb09ef85",
+      "tree": "0cbc4700a73db47bd5585cee4aa91f281ad8efd0",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "d36bd2412806e981ae12f7b2742a7fc0bde88234"
+    },
+    {
+      "sha": "116a309ef09d9bba04b7f2d3fd3c4956a478aca5",
+      "ref": "refs/pull/194/head",
+      "commit": "116a309ef09d9bba04b7f2d3fd3c4956a478aca5",
+      "tree": "4707720a11193a7ce336c6e03e2736e1a7350922",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "4eea7d1676ef4474c1def51781666eb59437b845"
+    },
+    {
+      "sha": "0e81360c0090244e73cf850e89166dbe557fd67b",
+      "ref": "refs/pull/195/head",
+      "commit": "0e81360c0090244e73cf850e89166dbe557fd67b",
+      "tree": "3532aeb05dce6a07e9ec0b25bcebc891cc30594e",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "bf0255a168576b0d9993d8b668f2a7d0d943fd4f"
+    },
+    {
+      "sha": "fff84bfb48224b78799967c1d42fc4af8abf05d8",
+      "ref": "refs/pull/196/head",
+      "commit": "fff84bfb48224b78799967c1d42fc4af8abf05d8",
+      "tree": "add02b7c6131cb4515be0d6722ccd126ee3ee9e0",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "d76959f3ae76399fdc1fc8f5dc6dbc39bf2b3ecb"
+    },
+    {
+      "sha": "0732c6ba7199609a46d73bb85430ecbd038d1671",
+      "ref": "refs/pull/197/head",
+      "commit": "0732c6ba7199609a46d73bb85430ecbd038d1671",
+      "tree": "f917aa42ecebdf18b4c5c2aa2dc8166cdcdd04f0",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "57d027c124fe7416accd225f9b6d1d7814a25614"
+    },
+    {
+      "sha": "70fb587eb5bf378b62cd998132fbf1e38a5b53e8",
+      "ref": "refs/pull/198/head",
+      "commit": "70fb587eb5bf378b62cd998132fbf1e38a5b53e8",
+      "tree": "c84def6f90a695a073d320ef52e5ef1a0ebe61c8",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "56aeb053d20a515299d1dba49d841e8429eb7576"
+    },
+    {
+      "sha": "b0723248097fc5d0bf3b06b0a34717c192522d5f",
+      "ref": "refs/pull/199/head",
+      "commit": "b0723248097fc5d0bf3b06b0a34717c192522d5f",
+      "tree": "d2bbb0225b421787a15aa6710e95893f59178bd4",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "9d9c8e073d28653b181e0db9a332fffd64b64e41"
+    },
+    {
+      "sha": "02c92b6cdd2936dd9bd10d35b1d9ad22479997e7",
+      "ref": "refs/pull/20/head",
+      "commit": "02c92b6cdd2936dd9bd10d35b1d9ad22479997e7",
+      "tree": "31417dfbe21e4b7a2dc83a8c913808a89c318d79",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "02c92b6cdd2936dd9bd10d35b1d9ad22479997e7"
+    },
+    {
+      "sha": "5bfe1bba57989216cc228069e17785b4c849b5e4",
+      "ref": "refs/pull/200/head",
+      "commit": "5bfe1bba57989216cc228069e17785b4c849b5e4",
+      "tree": "683a263541fcecf2243c115831d5f6befea4c667",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "553f3be64da9ad3c35730f1b6a67d79f1ac54b72"
+    },
+    {
+      "sha": "96c514eb98f7ba596a385c8f60496bc6c5994307",
+      "ref": "refs/pull/201/head",
+      "commit": "96c514eb98f7ba596a385c8f60496bc6c5994307",
+      "tree": "571031d5ac03bc32e00051d422020d7e26984e8e",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "96c514eb98f7ba596a385c8f60496bc6c5994307"
+    },
+    {
+      "sha": "168160bdeb121a8f83b439f8301fdde3a3a30523",
+      "ref": "refs/pull/202/head",
+      "commit": "168160bdeb121a8f83b439f8301fdde3a3a30523",
+      "tree": "4274de0ce962d06fdbfaddf4bf3533b513cacfde",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "e18e92c44e1b80d250469feed130615571d5845f"
+    },
+    {
+      "sha": "a8edc699641da3e3b3f1452b5db59bec52a5717d",
+      "ref": "refs/pull/203/head",
+      "commit": "a8edc699641da3e3b3f1452b5db59bec52a5717d",
+      "tree": "844434c3f6d54498cded1a89a3da2a7f648721d9",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "a8edc699641da3e3b3f1452b5db59bec52a5717d"
+    },
+    {
+      "sha": "79e725ef9c105845d38b25e745563c52234421da",
+      "ref": "refs/pull/204/head",
+      "commit": "79e725ef9c105845d38b25e745563c52234421da",
+      "tree": "a5c2fcb4e413a843fa940c2daf975ea9ec7e00b2",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "6a6e526929b383040201a915fbb0b8b5a80acd22"
+    },
+    {
+      "sha": "5ca134aaac74bb9d788dc3aa66d92827700f7da5",
+      "ref": "refs/pull/205/head",
+      "commit": "5ca134aaac74bb9d788dc3aa66d92827700f7da5",
+      "tree": "2033cf6433f8e7803b444fbf45ae1a556d646084",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "e4b5567078785c2ab11654385800c72d31d7d8e4"
+    },
+    {
+      "sha": "1e18a00dd9effae71c4574c3f51fd3fe24b1c7d5",
+      "ref": "refs/pull/206/head",
+      "commit": "1e18a00dd9effae71c4574c3f51fd3fe24b1c7d5",
+      "tree": "d218eaa389a376b89dc0d7261854827cbd0de3d2",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "bca9a255fb9751708886a7752e9639ee84ab6418"
+    },
+    {
+      "sha": "4660f0e021af5786b350879521e04000b072d7e3",
+      "ref": "refs/pull/207/head",
+      "commit": "4660f0e021af5786b350879521e04000b072d7e3",
+      "tree": "19b8a241f7c5ee2fea6cad0acbed9775b0d784cd",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "b852bc0010b227f4ade321a63d6cfc8ba769b98b"
+    },
+    {
+      "sha": "3d26bdae3dac4120f253767157d45abbf68911b8",
+      "ref": "refs/pull/208/head",
+      "commit": "3d26bdae3dac4120f253767157d45abbf68911b8",
+      "tree": "a64b79ee96db8a2b726812933d5212253c166374",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "5535e52e381a0c1f7afc80515557c08148c40d35"
+    },
+    {
+      "sha": "3080c7bed1a8452877601c3c1f13b4494a7e9cb4",
+      "ref": "refs/pull/209/head",
+      "commit": "3080c7bed1a8452877601c3c1f13b4494a7e9cb4",
+      "tree": "4c57fae282a861b210913f2cd4f0136c0a606e69",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "8fe921d030d7623046e28127abec5949c4d8b991"
+    },
+    {
+      "sha": "4769da0812cb4c7eb19cfd88019f9c059d2b75b2",
+      "ref": "refs/pull/21/head",
+      "commit": "4769da0812cb4c7eb19cfd88019f9c059d2b75b2",
+      "tree": "8524867cc17645bbbcb05f0f7a9a09b6734ab180",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "4769da0812cb4c7eb19cfd88019f9c059d2b75b2"
+    },
+    {
+      "sha": "a0daffceecfa2379a7d28cf97c3f6cba489f1e22",
+      "ref": "refs/pull/210/head",
+      "commit": "a0daffceecfa2379a7d28cf97c3f6cba489f1e22",
+      "tree": "6119c2aa5234dba265474d76620380a0d48b854d",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "e02d8912482fb1051d120ba147ebd21d4cb7c08b"
+    },
+    {
+      "sha": "def593ff5ae0a37aab453313adf10d4374142914",
+      "ref": "refs/pull/211/head",
+      "commit": "def593ff5ae0a37aab453313adf10d4374142914",
+      "tree": "87cce01023ed3b5d06295c32323852d0f6fa3cd7",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "71a2aafd1cf0383fa505d0e8c1307244433e7ffe"
+    },
+    {
+      "sha": "214ccbd1541f9d55c07aca0c1994b753d7cbf1ca",
+      "ref": "refs/pull/212/head",
+      "commit": "214ccbd1541f9d55c07aca0c1994b753d7cbf1ca",
+      "tree": "cf331fcd7d5796ebc56face5ad1da3836a10b44a",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "111270541b6d8fce4ba2d6cd1ed7b07539f36c28"
+    },
+    {
+      "sha": "9b1f404f54e767d6f0464cf70a12c57da6a990bc",
+      "ref": "refs/pull/213/head",
+      "commit": "9b1f404f54e767d6f0464cf70a12c57da6a990bc",
+      "tree": "cc00dd06ff7174c6861b9aa0a3b2228602e515c4",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "2c0d51aee913cc6e6070ee81c95c0244d60da7df"
+    },
+    {
+      "sha": "75504cbd905e7e887a90d5c707fedfa7469f7b9d",
+      "ref": "refs/pull/214/head",
+      "commit": "75504cbd905e7e887a90d5c707fedfa7469f7b9d",
+      "tree": "13af7d1c8e957706efe2b3f85e7ce18a8cda4d24",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "2acdde3aa567e2ffb6f2ee18305e412c9390418b"
+    },
+    {
+      "sha": "ec0f16b96f8040c185ecf147af045c7a2986027c",
+      "ref": "refs/pull/215/head",
+      "commit": "ec0f16b96f8040c185ecf147af045c7a2986027c",
+      "tree": "136f2ea7db2dac92d64287e36357a4f9d94ede72",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "ecdc83b5ab1f3923f5102a7f78094e25beb65e9d"
+    },
+    {
+      "sha": "3c5a4114c3241d1aa2550b00ebd959527a16b4d9",
+      "ref": "refs/pull/216/head",
+      "commit": "3c5a4114c3241d1aa2550b00ebd959527a16b4d9",
+      "tree": "8848350ba18914f76c59abcc573492af427be383",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "identical_source_leaves_plus_additive_evidence",
+      "witness_commit": "5e0c798b85cba3e0b85dff9d1c29e3915e4ed253",
+      "proof": "odp_transitions_additive_evidence_proof"
+    },
+    {
+      "sha": "ce400a18517e69e29368b3728eb092a37d780bcc",
+      "ref": "refs/pull/217/head",
+      "commit": "ce400a18517e69e29368b3728eb092a37d780bcc",
+      "tree": "26d262644dac61f680e0c8d4e97dc712bc2ca3e2",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "5deb70e0850bb738da02e4c850ca711fd3655bb5"
+    },
+    {
+      "sha": "7591ceb57fb55a2380a1ab2a3e0c52b85fc43e94",
+      "ref": "refs/pull/218/head",
+      "commit": "7591ceb57fb55a2380a1ab2a3e0c52b85fc43e94",
+      "tree": "3fc1750836ebd9941c9dfa44d39afcc5871adfc1",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "057027883b91917f44f623d28f6b637b394b85a7"
+    },
+    {
+      "sha": "46f7ba2a72a4964c7dfecae2d8d2e9fb430ffd49",
+      "ref": "refs/pull/219/head",
+      "commit": "46f7ba2a72a4964c7dfecae2d8d2e9fb430ffd49",
+      "tree": "01015ce80ebd4d6fef3c062d5424598a1f2add87",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "d4524de90dd403c9ce350a1d271ac70ce511256b"
+    },
+    {
+      "sha": "b71da724fc4686e45ac8235c8cf604a184b02ec8",
+      "ref": "refs/pull/22/head",
+      "commit": "b71da724fc4686e45ac8235c8cf604a184b02ec8",
+      "tree": "4045409a1d0c73d8601148946279904617cd1b7e",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "b71da724fc4686e45ac8235c8cf604a184b02ec8"
+    },
+    {
+      "sha": "e8331dd7e10a0e0d8fac03035eedb19492a8ca2d",
+      "ref": "refs/pull/220/head",
+      "commit": "e8331dd7e10a0e0d8fac03035eedb19492a8ca2d",
+      "tree": "eddc947bfa9f4b3c7c2746390e0b8ca792fea5dd",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "e8331dd7e10a0e0d8fac03035eedb19492a8ca2d"
+    },
+    {
+      "sha": "17b5f5495a05573a7b173018c5becdbaa7e190ea",
+      "ref": "refs/pull/221/head",
+      "commit": "17b5f5495a05573a7b173018c5becdbaa7e190ea",
+      "tree": "c120d3456e8cbc5c868f2be56d3f69fb9d1bce5b",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "03e81b38e7a727d89c5215152676eb1503a2f284"
+    },
+    {
+      "sha": "cb4147d325ca096977484a06582799606ebbd7e7",
+      "ref": "refs/pull/222/head",
+      "commit": "cb4147d325ca096977484a06582799606ebbd7e7",
+      "tree": "c7e7e047572e69415f58b549689524581fbfa451",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "fad903782ee45031e26c57cc8a65ccf476b1724d"
+    },
+    {
+      "sha": "8dd12dc576901d675ff92124bc21fc016ff1dc57",
+      "ref": "refs/pull/223/head",
+      "commit": "8dd12dc576901d675ff92124bc21fc016ff1dc57",
+      "tree": "1eef17c0e3018c88a944b3808d46cc5e3a84a73e",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "6cf27894c4d7bdecde88a81a2bde0adf04c4ca16"
+    },
+    {
+      "sha": "7e8456967a3d874544a4a56e185e631ff90e2639",
+      "ref": "refs/pull/224/head",
+      "commit": "7e8456967a3d874544a4a56e185e631ff90e2639",
+      "tree": "95348e2be965c5a15e25bfc6344f3b926fc5ee70",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "3b6b9b2a5159ca9fdffdfd021866d78c0cb90729"
+    },
+    {
+      "sha": "bf3355db83ec02a5d4b494f7dd37ee2de9bdeb01",
+      "ref": "refs/pull/225/head",
+      "commit": "bf3355db83ec02a5d4b494f7dd37ee2de9bdeb01",
+      "tree": "f0d9e9f6de4740b8283155f4a6e31811163c40f6",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "36323cc7662dd3b998406f50f10a35c92e061199"
+    },
+    {
+      "sha": "4e9aea1c1763d7a7d6ed39224e4c00be32d6914f",
+      "ref": "refs/pull/226/head",
+      "commit": "4e9aea1c1763d7a7d6ed39224e4c00be32d6914f",
+      "tree": "a5ed63bc3159b7c3cc6a1d50d9418dd3be52a763",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "1da07dcbb6814ef935adc43bac12568eb041e4e2"
+    },
+    {
+      "sha": "2cea1775b6cc029cce859a7977cb6634126f3334",
+      "ref": "refs/pull/227/head",
+      "commit": "2cea1775b6cc029cce859a7977cb6634126f3334",
+      "tree": "1f304ecd7d39f505a0a0096a109de74bcce2542f",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "f8000313dbaeee63973d7ed769287a2dd89aca5d"
+    },
+    {
+      "sha": "c6713f22ef616a8b1525598f12fa2836ecba9f8c",
+      "ref": "refs/pull/228/head",
+      "commit": "c6713f22ef616a8b1525598f12fa2836ecba9f8c",
+      "tree": "62046cf554b2bb8089348e3f2228e3505c261e9b",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "19780dec36befd1c63d12dedfdb789062515de7b"
+    },
+    {
+      "sha": "63a1de08afd75573267bcf85eed5d1fd793737a1",
+      "ref": "refs/pull/229/head",
+      "commit": "63a1de08afd75573267bcf85eed5d1fd793737a1",
+      "tree": "2b6d806e9d4243c2a6e68826b8a0feae984c4e6f",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "1bf6154bc9679596022065bde35308642e25ac01"
+    },
+    {
+      "sha": "8537a7e20d8fa6f36612ee29e725710a643d39f1",
+      "ref": "refs/pull/23/head",
+      "commit": "8537a7e20d8fa6f36612ee29e725710a643d39f1",
+      "tree": "3f248abd61d46c93c55a2df0d75b9aed551221ca",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "8537a7e20d8fa6f36612ee29e725710a643d39f1"
+    },
+    {
+      "sha": "91a29b9b5c121288ecc50a69d744164aa7290ad1",
+      "ref": "refs/pull/230/head",
+      "commit": "91a29b9b5c121288ecc50a69d744164aa7290ad1",
+      "tree": "69421290cfcdf25165e705bdbfb16360bd642e01",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "c30aeaec5ad0446a3ccb43a4920066ffc6e37a66"
+    },
+    {
+      "sha": "fca44384b104dddf72f597b99a45a51566350fb7",
+      "ref": "refs/pull/231/head",
+      "commit": "fca44384b104dddf72f597b99a45a51566350fb7",
+      "tree": "7d806108b676d2b7016e8eeffe093d9e0f382cd6",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_via_pending_main_merge",
+      "witness_commit": "fca44384b104dddf72f597b99a45a51566350fb7"
+    },
+    {
+      "sha": "8581f8ac54a8f70092ee6d3c7ebba6de1477437c",
+      "ref": "refs/pull/232/head",
+      "commit": "8581f8ac54a8f70092ee6d3c7ebba6de1477437c",
+      "tree": "051d847bdc244cb49b2a0210801e358906da9d2e",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "exact_tree_of_current_ancestor",
+      "witness_commit": "c7f797ad562722a6e990731a25f1676a4543e1a4"
+    },
+    {
+      "sha": "da7c3e940d022dd585708beac2de2cd5c3d10be2",
+      "ref": "refs/pull/24/head",
+      "commit": "da7c3e940d022dd585708beac2de2cd5c3d10be2",
+      "tree": "006e03a42781d148ce7b57c8e953f34d87569a44",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "da7c3e940d022dd585708beac2de2cd5c3d10be2"
+    },
+    {
+      "sha": "ef149b2edd4659205cbfb6efff4cfd6789659bde",
+      "ref": "refs/pull/25/head",
+      "commit": "ef149b2edd4659205cbfb6efff4cfd6789659bde",
+      "tree": "9c0f130a81442200419b787c7c54ba36ffb81dd5",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "ef149b2edd4659205cbfb6efff4cfd6789659bde"
+    },
+    {
+      "sha": "46976afeaaa7e5cb03203884798c7663d27ebb2b",
+      "ref": "refs/pull/26/head",
+      "commit": "46976afeaaa7e5cb03203884798c7663d27ebb2b",
+      "tree": "da82bd7fc130d6fae925888633b168f0eb4e8065",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "46976afeaaa7e5cb03203884798c7663d27ebb2b"
+    },
+    {
+      "sha": "da3ba2dd95ba25e37ea831dc19765d3bd15c6455",
+      "ref": "refs/pull/27/head",
+      "commit": "da3ba2dd95ba25e37ea831dc19765d3bd15c6455",
+      "tree": "aaa40d5f11365815c943767f38d33329b25c291d",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "da3ba2dd95ba25e37ea831dc19765d3bd15c6455"
+    },
+    {
+      "sha": "e5858440cfc383aae7c000372f6f223a7041c85c",
+      "ref": "refs/pull/28/head",
+      "commit": "e5858440cfc383aae7c000372f6f223a7041c85c",
+      "tree": "714ed68f12a6a077fa9e962c98f6eac260b0f4d1",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "e5858440cfc383aae7c000372f6f223a7041c85c"
+    },
+    {
+      "sha": "b42e103344f5f4acb18fc4c1f60149481d9906d6",
+      "ref": "refs/pull/29/head",
+      "commit": "b42e103344f5f4acb18fc4c1f60149481d9906d6",
+      "tree": "6a5212f09a1f1a76261196d72fd796d705828cc1",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "b42e103344f5f4acb18fc4c1f60149481d9906d6"
+    },
+    {
+      "sha": "b5d204c6d532caff008a42b4dcf000f3a06f4b66",
+      "ref": "refs/pull/30/head",
+      "commit": "b5d204c6d532caff008a42b4dcf000f3a06f4b66",
+      "tree": "995dbd58d834597730d56c20791326d86d47f4d6",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "b5d204c6d532caff008a42b4dcf000f3a06f4b66"
+    },
+    {
+      "sha": "ab45ac55990233492208549c18f42dfe51e518e4",
+      "ref": "refs/pull/31/head",
+      "commit": "ab45ac55990233492208549c18f42dfe51e518e4",
+      "tree": "df070ff6468773989d40c672aa16ded8f983f0c7",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "ab45ac55990233492208549c18f42dfe51e518e4"
+    },
+    {
+      "sha": "b31b114ed7aa368861056f183b1a61edb436a97c",
+      "ref": "refs/pull/32/head",
+      "commit": "b31b114ed7aa368861056f183b1a61edb436a97c",
+      "tree": "bf0895123c2d38c2f572cbaff5812ed6a7729625",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "b31b114ed7aa368861056f183b1a61edb436a97c"
+    },
+    {
+      "sha": "f2eb2911cbf53833f5f385675edc4326b4787496",
+      "ref": "refs/pull/33/head",
+      "commit": "f2eb2911cbf53833f5f385675edc4326b4787496",
+      "tree": "04b525ab66708de4119b0bee0a007de96bb61591",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "f2eb2911cbf53833f5f385675edc4326b4787496"
+    },
+    {
+      "sha": "eebffef31b7bd96d03dcc939b6b6cdb46aee2c0c",
+      "ref": "refs/pull/34/head",
+      "commit": "eebffef31b7bd96d03dcc939b6b6cdb46aee2c0c",
+      "tree": "b74325d101b8b4e032b09589762c22fb7b3200cd",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "eebffef31b7bd96d03dcc939b6b6cdb46aee2c0c"
+    },
+    {
+      "sha": "dfe7a175148a95cc80738142c85a88e2bd8b9810",
+      "ref": "refs/pull/35/head",
+      "commit": "dfe7a175148a95cc80738142c85a88e2bd8b9810",
+      "tree": "cc039da448cfda1ed63d6e5ebf4f9869081c2111",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "dfe7a175148a95cc80738142c85a88e2bd8b9810"
+    },
+    {
+      "sha": "3d40ffc1a04be27077531b9c0e90520f36b4dc2d",
+      "ref": "refs/pull/36/head",
+      "commit": "3d40ffc1a04be27077531b9c0e90520f36b4dc2d",
+      "tree": "9f786409e827329c8e7130f8609d14d19722c75d",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "3d40ffc1a04be27077531b9c0e90520f36b4dc2d"
+    },
+    {
+      "sha": "429d9edf052dece0db48a6f41fc04b0d95b6c70b",
+      "ref": "refs/pull/37/head",
+      "commit": "429d9edf052dece0db48a6f41fc04b0d95b6c70b",
+      "tree": "fc410df44072a977ec416b9ccc2ed6183fcedd1c",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "429d9edf052dece0db48a6f41fc04b0d95b6c70b"
+    },
+    {
+      "sha": "d95f46c4f12beb037cd64fb2c8910173500a7ca7",
+      "ref": "refs/pull/38/head",
+      "commit": "d95f46c4f12beb037cd64fb2c8910173500a7ca7",
+      "tree": "2ae591407cb64d267722c1d7db3c1a807d0a554e",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "d95f46c4f12beb037cd64fb2c8910173500a7ca7"
+    },
+    {
+      "sha": "cec4b8d11f59c0c9ddbe53706ef35fcea909aa8d",
+      "ref": "refs/pull/39/head",
+      "commit": "cec4b8d11f59c0c9ddbe53706ef35fcea909aa8d",
+      "tree": "9ed36c9fdf708e4112172616cc609a69f7575d88",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "cec4b8d11f59c0c9ddbe53706ef35fcea909aa8d"
+    },
+    {
+      "sha": "08c9f8453589c2d1c43f7b2f3a6f79199ad953b3",
+      "ref": "refs/pull/40/head",
+      "commit": "08c9f8453589c2d1c43f7b2f3a6f79199ad953b3",
+      "tree": "e2c9b88971fe173436d9ae8f223e45c94fcf6e0a",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "08c9f8453589c2d1c43f7b2f3a6f79199ad953b3"
+    },
+    {
+      "sha": "44aadba3b515fbbca0a7b2520be84204ee603007",
+      "ref": "refs/pull/41/head",
+      "commit": "44aadba3b515fbbca0a7b2520be84204ee603007",
+      "tree": "a4755b1ad055e772e6d9f723cf727e420c43db3e",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "44aadba3b515fbbca0a7b2520be84204ee603007"
+    },
+    {
+      "sha": "ea4446482d7ca513160669fbb48e641397c6514f",
+      "ref": "refs/pull/42/head",
+      "commit": "ea4446482d7ca513160669fbb48e641397c6514f",
+      "tree": "1c39e31d04f12ecc12ad1157799f1cf9bb4c56dd",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "ea4446482d7ca513160669fbb48e641397c6514f"
+    },
+    {
+      "sha": "1dbb98105d96fc3c9a42ce105d2f3d87f30f2eef",
+      "ref": "refs/pull/43/head",
+      "commit": "1dbb98105d96fc3c9a42ce105d2f3d87f30f2eef",
+      "tree": "c203f6fb6392e5964c283295aedcb0a036f5a1d3",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "1dbb98105d96fc3c9a42ce105d2f3d87f30f2eef"
+    },
+    {
+      "sha": "f39bcd927f32729e63194f35db019c36802d1c67",
+      "ref": "refs/pull/45/head",
+      "commit": "f39bcd927f32729e63194f35db019c36802d1c67",
+      "tree": "65f73acd1d44215d432807d251e6082d2a367408",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "f39bcd927f32729e63194f35db019c36802d1c67"
+    },
+    {
+      "sha": "be318f380fc47f94975a35c0924c89190d46f990",
+      "ref": "refs/pull/47/head",
+      "commit": "be318f380fc47f94975a35c0924c89190d46f990",
+      "tree": "fc22162c0abff3ebfc772f5f94c10dd11013952f",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "be318f380fc47f94975a35c0924c89190d46f990"
+    },
+    {
+      "sha": "b76bbfafda1cb69d7a343b9777af42db8c1b717a",
+      "ref": "refs/pull/49/head",
+      "commit": "b76bbfafda1cb69d7a343b9777af42db8c1b717a",
+      "tree": "adf726de735bb87f55d454e757054609a3b685c5",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "b76bbfafda1cb69d7a343b9777af42db8c1b717a"
+    },
+    {
+      "sha": "af7ef4beb93f97c89697e3780d9fd0a882f3dbaf",
+      "ref": "refs/pull/5/head",
+      "commit": "af7ef4beb93f97c89697e3780d9fd0a882f3dbaf",
+      "tree": "5fc597ce780c1709a018f68f721873547f60436f",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "af7ef4beb93f97c89697e3780d9fd0a882f3dbaf"
+    },
+    {
+      "sha": "83049a2edf71b9d8b5dcf9aebd4ee187f4c6199f",
+      "ref": "refs/pull/50/head",
+      "commit": "83049a2edf71b9d8b5dcf9aebd4ee187f4c6199f",
+      "tree": "83ddd8b3ff892d1d457d0b9cac5550860c0a215a",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "83049a2edf71b9d8b5dcf9aebd4ee187f4c6199f"
+    },
+    {
+      "sha": "20aaf76d213ec0cde07c505287f8a2e48d683db2",
+      "ref": "refs/pull/51/head",
+      "commit": "20aaf76d213ec0cde07c505287f8a2e48d683db2",
+      "tree": "787daf3527e16014a5bb2f1cd3851edcb3e9b910",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "20aaf76d213ec0cde07c505287f8a2e48d683db2"
+    },
+    {
+      "sha": "c9c0f58ae1c4c73f64417e807901549e33fd77a8",
+      "ref": "refs/pull/52/head",
+      "commit": "c9c0f58ae1c4c73f64417e807901549e33fd77a8",
+      "tree": "ae1b5c7559c490dc10fb0b5a031977fe59003907",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "c9c0f58ae1c4c73f64417e807901549e33fd77a8"
+    },
+    {
+      "sha": "bffdfbb49433859823081f2198f16e33be8369a6",
+      "ref": "refs/pull/53/head",
+      "commit": "bffdfbb49433859823081f2198f16e33be8369a6",
+      "tree": "1eb3491100ac533e951699126337620192efc3c9",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "bffdfbb49433859823081f2198f16e33be8369a6"
+    },
+    {
+      "sha": "28b7b9ce388e08345aa995037256ab50ab0e17b9",
+      "ref": "refs/pull/54/head",
+      "commit": "28b7b9ce388e08345aa995037256ab50ab0e17b9",
+      "tree": "17eb5cf0691b09cff712a9c87a8074c336ad61e0",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "28b7b9ce388e08345aa995037256ab50ab0e17b9"
+    },
+    {
+      "sha": "9a3e07808ed883938d2e6139593a406065a8a75c",
+      "ref": "refs/pull/55/head",
+      "commit": "9a3e07808ed883938d2e6139593a406065a8a75c",
+      "tree": "38b963aa7f88a0b31c37de6a92e48c02e9b18230",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "9a3e07808ed883938d2e6139593a406065a8a75c"
+    },
+    {
+      "sha": "d3d69c1cfa8ab35a3aa54d562a2c63d298ca9476",
+      "ref": "refs/pull/56/head",
+      "commit": "d3d69c1cfa8ab35a3aa54d562a2c63d298ca9476",
+      "tree": "6025cedfc222f6c5a1d62c2d2c550bf05470ecb8",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "d3d69c1cfa8ab35a3aa54d562a2c63d298ca9476"
+    },
+    {
+      "sha": "62e438e6836949207b4541b818c1c261bb7104fe",
+      "ref": "refs/pull/57/head",
+      "commit": "62e438e6836949207b4541b818c1c261bb7104fe",
+      "tree": "161133ee064cce1c2598db540c19a0b3792c2e2c",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "62e438e6836949207b4541b818c1c261bb7104fe"
+    },
+    {
+      "sha": "9887b53272d5f747cae9f73b363748985937ad05",
+      "ref": "refs/pull/58/head",
+      "commit": "9887b53272d5f747cae9f73b363748985937ad05",
+      "tree": "1b6cdfb9bbccd5d294d6c2806d7e7fcfbfb249c3",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "9887b53272d5f747cae9f73b363748985937ad05"
+    },
+    {
+      "sha": "132f70e746aa9815a51a046ab02e83393d084622",
+      "ref": "refs/pull/59/head",
+      "commit": "132f70e746aa9815a51a046ab02e83393d084622",
+      "tree": "02793e623dc528ba873a7b40ec595d7a6e706c40",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "132f70e746aa9815a51a046ab02e83393d084622"
+    },
+    {
+      "sha": "a0ada3b3cd344bbdacf01313ac2d72749b72d4d0",
+      "ref": "refs/pull/6/head",
+      "commit": "a0ada3b3cd344bbdacf01313ac2d72749b72d4d0",
+      "tree": "22b976396bb22268934cda018be25450f0f19dd3",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "a0ada3b3cd344bbdacf01313ac2d72749b72d4d0"
+    },
+    {
+      "sha": "f798f27d823ee846b5e6238e167970e0345612ed",
+      "ref": "refs/pull/60/head",
+      "commit": "f798f27d823ee846b5e6238e167970e0345612ed",
+      "tree": "e6853324286301aabe6b1ded770682997d3f63b1",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "f798f27d823ee846b5e6238e167970e0345612ed"
+    },
+    {
+      "sha": "a452b7ade6ccdd9cd39804155309a21797f2612a",
+      "ref": "refs/pull/61/head",
+      "commit": "a452b7ade6ccdd9cd39804155309a21797f2612a",
+      "tree": "551b7b667bd0e4eef7bde0724b38070db8d26e34",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "a452b7ade6ccdd9cd39804155309a21797f2612a"
+    },
+    {
+      "sha": "cdeedaf48f9892fe82191f090afccf15529db1a6",
+      "ref": "refs/pull/62/head",
+      "commit": "cdeedaf48f9892fe82191f090afccf15529db1a6",
+      "tree": "a8a0a8d5cbdf976deb3f0344b375f7fcffff6319",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "cdeedaf48f9892fe82191f090afccf15529db1a6"
+    },
+    {
+      "sha": "baccf470e946fc86fde41c96443423006eac2be7",
+      "ref": "refs/pull/63/head",
+      "commit": "baccf470e946fc86fde41c96443423006eac2be7",
+      "tree": "e4ca49193dc81d39ac49ee5838126fe9576a6330",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "baccf470e946fc86fde41c96443423006eac2be7"
+    },
+    {
+      "sha": "c8f4561343ff0abca6aa3ffffeb45892c2fc7bd1",
+      "ref": "refs/pull/64/head",
+      "commit": "c8f4561343ff0abca6aa3ffffeb45892c2fc7bd1",
+      "tree": "6f04e8911245ea6afa621cad9ceb0ab3b7d47d55",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "c8f4561343ff0abca6aa3ffffeb45892c2fc7bd1"
+    },
+    {
+      "sha": "55dd210a2eb6db7cc5c100507d63be411f30b679",
+      "ref": "refs/pull/65/head",
+      "commit": "55dd210a2eb6db7cc5c100507d63be411f30b679",
+      "tree": "2f10e7bdd9b35c7ddac3b4eb22151f0a282504b1",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "55dd210a2eb6db7cc5c100507d63be411f30b679"
+    },
+    {
+      "sha": "42ae79ce5dbaec184726b538c7100823a4b1edfe",
+      "ref": "refs/pull/66/head",
+      "commit": "42ae79ce5dbaec184726b538c7100823a4b1edfe",
+      "tree": "5838ae05773f8576d2c0697b1cc7c8d22372a139",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "42ae79ce5dbaec184726b538c7100823a4b1edfe"
+    },
+    {
+      "sha": "403e942dc99779883210125a01841ef209e19d2e",
+      "ref": "refs/pull/67/head",
+      "commit": "403e942dc99779883210125a01841ef209e19d2e",
+      "tree": "d28dfa4cc20b3fa67af4624bd8be755531fc3894",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "403e942dc99779883210125a01841ef209e19d2e"
+    },
+    {
+      "sha": "9cd18e7c704937897d037b1051d38341d4928bf5",
+      "ref": "refs/pull/68/head",
+      "commit": "9cd18e7c704937897d037b1051d38341d4928bf5",
+      "tree": "c420387cce8c12b8b22978ad9646e84814d55c3e",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "9cd18e7c704937897d037b1051d38341d4928bf5"
+    },
+    {
+      "sha": "cd1447740f2834ec68af97beb3a3dad47cffd68b",
+      "ref": "refs/pull/69/head",
+      "commit": "cd1447740f2834ec68af97beb3a3dad47cffd68b",
+      "tree": "42b178258d7f15f3287cdd58185a5fd6b87070a6",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "cd1447740f2834ec68af97beb3a3dad47cffd68b"
+    },
+    {
+      "sha": "1311b04a3e7a9d810b46173dbaa73ea6265fe886",
+      "ref": "refs/pull/7/head",
+      "commit": "1311b04a3e7a9d810b46173dbaa73ea6265fe886",
+      "tree": "9a06bb20bf2a38b444e3d6470dd7eaa44c19a04a",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "1311b04a3e7a9d810b46173dbaa73ea6265fe886"
+    },
+    {
+      "sha": "5b2f1fabf9ac642a906d2275e753e098c324ddeb",
+      "ref": "refs/pull/70/head",
+      "commit": "5b2f1fabf9ac642a906d2275e753e098c324ddeb",
+      "tree": "2673b5cfa14ef4c7938f1f1d1c2225280c247dd6",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "5b2f1fabf9ac642a906d2275e753e098c324ddeb"
+    },
+    {
+      "sha": "50a9547a3a6aca251a46b5140f93fb87c789e848",
+      "ref": "refs/pull/71/head",
+      "commit": "50a9547a3a6aca251a46b5140f93fb87c789e848",
+      "tree": "2399936aed4c833aa9eb3056ade74576c13535d0",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "50a9547a3a6aca251a46b5140f93fb87c789e848"
+    },
+    {
+      "sha": "8f117e7f85aba2adffb63bdd6511ca2d112c31a8",
+      "ref": "refs/pull/72/head",
+      "commit": "8f117e7f85aba2adffb63bdd6511ca2d112c31a8",
+      "tree": "17d2c840c9bd34725a36901726e831c70b6c8e11",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "8f117e7f85aba2adffb63bdd6511ca2d112c31a8"
+    },
+    {
+      "sha": "d76fe9bbb743e4194bfd54edc930abe9ad4f4854",
+      "ref": "refs/pull/73/head",
+      "commit": "d76fe9bbb743e4194bfd54edc930abe9ad4f4854",
+      "tree": "5716b9cfec932a22ba3d9afe3c45648f14593bdb",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "d76fe9bbb743e4194bfd54edc930abe9ad4f4854"
+    },
+    {
+      "sha": "e473083f7439b5d8592f43c6ca2f013cdb50c5a1",
+      "ref": "refs/pull/74/head",
+      "commit": "e473083f7439b5d8592f43c6ca2f013cdb50c5a1",
+      "tree": "c2038e83bf53e18edbfb97a08d9f8466c0a705e7",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "e473083f7439b5d8592f43c6ca2f013cdb50c5a1"
+    },
+    {
+      "sha": "47b7c57012cfc23f8100bad8c5a7fb4c53171a12",
+      "ref": "refs/pull/75/head",
+      "commit": "47b7c57012cfc23f8100bad8c5a7fb4c53171a12",
+      "tree": "2ea22aa24e9ec50ea04b78134bdf9e016b181f38",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "47b7c57012cfc23f8100bad8c5a7fb4c53171a12"
+    },
+    {
+      "sha": "2297f8e3f7a261c8cbf80b48ffa70bf25df2998d",
+      "ref": "refs/pull/76/head",
+      "commit": "2297f8e3f7a261c8cbf80b48ffa70bf25df2998d",
+      "tree": "6af498428c8fce05808dd1d613d44d804da039fc",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "2297f8e3f7a261c8cbf80b48ffa70bf25df2998d"
+    },
+    {
+      "sha": "77af99427e2d7d1b3719a22376a4ebf56508edbd",
+      "ref": "refs/pull/77/head",
+      "commit": "77af99427e2d7d1b3719a22376a4ebf56508edbd",
+      "tree": "99de1d97b0c6230fb1c9777170737705cb449481",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "77af99427e2d7d1b3719a22376a4ebf56508edbd"
+    },
+    {
+      "sha": "005771bd53f2cd437cb70b23ebe83c224792bd00",
+      "ref": "refs/pull/78/head",
+      "commit": "005771bd53f2cd437cb70b23ebe83c224792bd00",
+      "tree": "5cf6141b8803ddc68b7dc53f4d2cf2e681f9bf64",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "005771bd53f2cd437cb70b23ebe83c224792bd00"
+    },
+    {
+      "sha": "788e1f005e72371d0cf2182ae0cec81dd4e84adb",
+      "ref": "refs/pull/79/head",
+      "commit": "788e1f005e72371d0cf2182ae0cec81dd4e84adb",
+      "tree": "2d6c33c469f5cb66bcfb6c58d95d1db55e1aa3db",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "788e1f005e72371d0cf2182ae0cec81dd4e84adb"
+    },
+    {
+      "sha": "29580c7ddf6fca7ba74440ff146535fe5da51800",
+      "ref": "refs/pull/8/head",
+      "commit": "29580c7ddf6fca7ba74440ff146535fe5da51800",
+      "tree": "cf186db00592d5de5d9b0f41909ce21a302c4b73",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "29580c7ddf6fca7ba74440ff146535fe5da51800"
+    },
+    {
+      "sha": "fdf8c35014367834570bb89a3902f50fd132e865",
+      "ref": "refs/pull/80/head",
+      "commit": "fdf8c35014367834570bb89a3902f50fd132e865",
+      "tree": "aff000b40b8acecbae4982514e46c7a323f4ec59",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "fdf8c35014367834570bb89a3902f50fd132e865"
+    },
+    {
+      "sha": "3bb4874de0785edf0b0fa24d2d0ea05a74c58b71",
+      "ref": "refs/pull/81/head",
+      "commit": "3bb4874de0785edf0b0fa24d2d0ea05a74c58b71",
+      "tree": "c306ffc27aab7e48814ad3f70ca4862ec85682f6",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "3bb4874de0785edf0b0fa24d2d0ea05a74c58b71"
+    },
+    {
+      "sha": "085495527e0ab02f52eeded928d54cb766b79910",
+      "ref": "refs/pull/82/head",
+      "commit": "085495527e0ab02f52eeded928d54cb766b79910",
+      "tree": "c86c33985c42a0efdb7708d4fcab2856edc0037e",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "085495527e0ab02f52eeded928d54cb766b79910"
+    },
+    {
+      "sha": "d46b35a23a3d0631bc509e115fa003b1e64ebd67",
+      "ref": "refs/pull/83/head",
+      "commit": "d46b35a23a3d0631bc509e115fa003b1e64ebd67",
+      "tree": "7dd294f93315d4427fef8b0268aab596a1cdfb5d",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "d46b35a23a3d0631bc509e115fa003b1e64ebd67"
+    },
+    {
+      "sha": "464e4dd3f548302ee5b9f78994fa09caf95437bc",
+      "ref": "refs/pull/84/head",
+      "commit": "464e4dd3f548302ee5b9f78994fa09caf95437bc",
+      "tree": "cf9c742579ccda8fed20d1123516b23476def5c5",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "464e4dd3f548302ee5b9f78994fa09caf95437bc"
+    },
+    {
+      "sha": "d8643faed99c03a3d6fdba91bf047c690a50ea5b",
+      "ref": "refs/pull/85/head",
+      "commit": "d8643faed99c03a3d6fdba91bf047c690a50ea5b",
+      "tree": "cbe0d4c200705d1dd4ba74e9b8d86df57405dfe1",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "d8643faed99c03a3d6fdba91bf047c690a50ea5b"
+    },
+    {
+      "sha": "120f839ab9091bdbedf326621347ee737140e043",
+      "ref": "refs/pull/86/head",
+      "commit": "120f839ab9091bdbedf326621347ee737140e043",
+      "tree": "2e8824e7882b349a2179bd046d39862943e47e81",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "120f839ab9091bdbedf326621347ee737140e043"
+    },
+    {
+      "sha": "8b0c01597c231814815bf5456ab0a616102e7307",
+      "ref": "refs/pull/87/head",
+      "commit": "8b0c01597c231814815bf5456ab0a616102e7307",
+      "tree": "f041705809f59c708949f7e60ab0d97d06f68377",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "8b0c01597c231814815bf5456ab0a616102e7307"
+    },
+    {
+      "sha": "b100cd751688f13609a8829180b487b381588d14",
+      "ref": "refs/pull/88/head",
+      "commit": "b100cd751688f13609a8829180b487b381588d14",
+      "tree": "be341a4859e96a41b689a734676f48b707c32e65",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "b100cd751688f13609a8829180b487b381588d14"
+    },
+    {
+      "sha": "84c3a1172759abdbab0c320142ae190e532f7753",
+      "ref": "refs/pull/89/head",
+      "commit": "84c3a1172759abdbab0c320142ae190e532f7753",
+      "tree": "4a2fbdca732ab7ad9d99c34a7e52c0f73f9a29b0",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "84c3a1172759abdbab0c320142ae190e532f7753"
+    },
+    {
+      "sha": "07df87d7ae616b702de887f3327916aeb3f67ad5",
+      "ref": "refs/pull/9/head",
+      "commit": "07df87d7ae616b702de887f3327916aeb3f67ad5",
+      "tree": "8ec2b64088e6d7304466e2d5dce74fd3ce2dfdc1",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "07df87d7ae616b702de887f3327916aeb3f67ad5"
+    },
+    {
+      "sha": "e103d8c6fd6dc8c8c3d73467a8a1eb15fb8471d4",
+      "ref": "refs/pull/90/head",
+      "commit": "e103d8c6fd6dc8c8c3d73467a8a1eb15fb8471d4",
+      "tree": "6a98b9e8df3797fa98fac53f143a57536c4e2d0d",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "e103d8c6fd6dc8c8c3d73467a8a1eb15fb8471d4"
+    },
+    {
+      "sha": "b3be1616199a049a6a239a0199a3b5ac890aea21",
+      "ref": "refs/pull/91/head",
+      "commit": "b3be1616199a049a6a239a0199a3b5ac890aea21",
+      "tree": "603dd969ee3e01c4605f7a1dc198f88ec73fb6f1",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "b3be1616199a049a6a239a0199a3b5ac890aea21"
+    },
+    {
+      "sha": "7cb65d768f2b096230f8bd32afc6c954baae7416",
+      "ref": "refs/pull/92/head",
+      "commit": "7cb65d768f2b096230f8bd32afc6c954baae7416",
+      "tree": "5b47ef74e95284e96bb37a9d99163cc68141f3a5",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "7cb65d768f2b096230f8bd32afc6c954baae7416"
+    },
+    {
+      "sha": "19bbb8606a87492f991261eb3fb79ed1d9f2c299",
+      "ref": "refs/pull/93/head",
+      "commit": "19bbb8606a87492f991261eb3fb79ed1d9f2c299",
+      "tree": "a39ac48988800e6a5338c7c5a3cce2bced5695d6",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "19bbb8606a87492f991261eb3fb79ed1d9f2c299"
+    },
+    {
+      "sha": "ef88da683a8ad68e57bde5d6d794698add46d2b1",
+      "ref": "refs/pull/94/head",
+      "commit": "ef88da683a8ad68e57bde5d6d794698add46d2b1",
+      "tree": "780833b8b46e9ced7650cbfdf57a6e53724190db",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "ef88da683a8ad68e57bde5d6d794698add46d2b1"
+    },
+    {
+      "sha": "02160e56ffb3ec2e11c47447fa2c3203e4268cc3",
+      "ref": "refs/pull/95/head",
+      "commit": "02160e56ffb3ec2e11c47447fa2c3203e4268cc3",
+      "tree": "845873bc973a26962bd3cacdae6c253869a9b4cf",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "02160e56ffb3ec2e11c47447fa2c3203e4268cc3"
+    },
+    {
+      "sha": "cfae329b3dee73ececc6b689c9936339dd3e6a49",
+      "ref": "refs/pull/97/head",
+      "commit": "cfae329b3dee73ececc6b689c9936339dd3e6a49",
+      "tree": "2de6a532adb416dbfeeb41588b21509bafb23d9b",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "cfae329b3dee73ececc6b689c9936339dd3e6a49"
+    },
+    {
+      "sha": "a5103bb5bfd044540f68bfb786761222abccd98f",
+      "ref": "refs/tags/archive/feature/commander-review-20261105",
+      "commit": "eff79b3c8ed03020aeaeac4dcd86058fb1e2e181",
+      "tree": "74e3bb01e0fffe2999154bb9fe6215ecf86178cb",
+      "tag_or_ref_object_peeling_required": true,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "eff79b3c8ed03020aeaeac4dcd86058fb1e2e181"
+    },
+    {
+      "sha": "eff79b3c8ed03020aeaeac4dcd86058fb1e2e181",
+      "ref": "refs/tags/archive/feature/commander-review-20261105^{}",
+      "commit": "eff79b3c8ed03020aeaeac4dcd86058fb1e2e181",
+      "tree": "74e3bb01e0fffe2999154bb9fe6215ecf86178cb",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "eff79b3c8ed03020aeaeac4dcd86058fb1e2e181"
+    },
+    {
+      "sha": "bf6a2bc06f663d2733d4283cac7cd39261e25c48",
+      "ref": "refs/tags/archive/feature/madedit2-hex-editor-session-checkpoint",
+      "commit": "f2534d892fbffca9a7e1e95ccaf7faeb02769ea1",
+      "tree": "0ef6ff1ba54f7bd2101e6077fff6d79adc94749f",
+      "tag_or_ref_object_peeling_required": true,
+      "criterion": "intentional_archival_alternate_not_integrated",
+      "proof": "archival_checkpoint_disposition"
+    },
+    {
+      "sha": "f2534d892fbffca9a7e1e95ccaf7faeb02769ea1",
+      "ref": "refs/tags/archive/feature/madedit2-hex-editor-session-checkpoint^{}",
+      "commit": "f2534d892fbffca9a7e1e95ccaf7faeb02769ea1",
+      "tree": "0ef6ff1ba54f7bd2101e6077fff6d79adc94749f",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "intentional_archival_alternate_not_integrated",
+      "proof": "archival_checkpoint_disposition"
+    },
+    {
+      "sha": "e392d53f15c714c53c02ce08fc30df5093dec5ef",
+      "ref": "refs/tags/audit/archive-v129-f1a03e80",
+      "commit": "f1a03e807b1261361a17f66a37fa94858481e1e7",
+      "tree": "f0c6b2a5fe6dc43ce28903e68725574fd3167a11",
+      "tag_or_ref_object_peeling_required": true,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "f1a03e807b1261361a17f66a37fa94858481e1e7"
+    },
+    {
+      "sha": "f1a03e807b1261361a17f66a37fa94858481e1e7",
+      "ref": "refs/tags/audit/archive-v129-f1a03e80^{}",
+      "commit": "f1a03e807b1261361a17f66a37fa94858481e1e7",
+      "tree": "f0c6b2a5fe6dc43ce28903e68725574fd3167a11",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "f1a03e807b1261361a17f66a37fa94858481e1e7"
+    },
+    {
+      "sha": "e8b36e59c111facb1113b776c4e0ac866a82470a",
+      "ref": "refs/tags/ci-native-assets-20261109",
+      "commit": "e8b36e59c111facb1113b776c4e0ac866a82470a",
+      "tree": "fc410df44072a977ec416b9ccc2ed6183fcedd1c",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "e8b36e59c111facb1113b776c4e0ac866a82470a"
+    },
+    {
+      "sha": "2b1017e0fbdcaffab77bc25a7f29265408cc1a6e",
+      "ref": "refs/tags/dart-smb2-libsmb2-r9",
+      "commit": "2b1017e0fbdcaffab77bc25a7f29265408cc1a6e",
+      "tree": "9f786409e827329c8e7130f8609d14d19722c75d",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "2b1017e0fbdcaffab77bc25a7f29265408cc1a6e"
+    },
+    {
+      "sha": "d32191c3af8d74c9ec59be20d3183e323dea532f",
+      "ref": "refs/tags/nightly",
+      "commit": "d32191c3af8d74c9ec59be20d3183e323dea532f",
+      "tree": "1affea8225932cacadd894d0a7a8f9ff0efb42e2",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "d32191c3af8d74c9ec59be20d3183e323dea532f"
+    },
+    {
+      "sha": "ee50e55fd1ab9b3dd7d56cf692af2e1f24450479",
+      "ref": "refs/tags/testflight-v1.3.4-28",
+      "commit": "97bfaf86eddb220daafcdd694a757c0d0a835958",
+      "tree": "d20b01ccafbfa3b92825ee517f299c3d53235382",
+      "tag_or_ref_object_peeling_required": true,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "97bfaf86eddb220daafcdd694a757c0d0a835958"
+    },
+    {
+      "sha": "97bfaf86eddb220daafcdd694a757c0d0a835958",
+      "ref": "refs/tags/testflight-v1.3.4-28^{}",
+      "commit": "97bfaf86eddb220daafcdd694a757c0d0a835958",
+      "tree": "d20b01ccafbfa3b92825ee517f299c3d53235382",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "97bfaf86eddb220daafcdd694a757c0d0a835958"
+    },
+    {
+      "sha": "259085c2381271c48e6c6353afeb00777675479d",
+      "ref": "refs/tags/v0.1.0",
+      "commit": "259085c2381271c48e6c6353afeb00777675479d",
+      "tree": "f23a1ab73c3959c1b73e84826d6154f14783b05a",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "259085c2381271c48e6c6353afeb00777675479d"
+    },
+    {
+      "sha": "c3ef2129bcf1d5b0620434785e1973ae7a913888",
+      "ref": "refs/tags/v0.2.0",
+      "commit": "c3ef2129bcf1d5b0620434785e1973ae7a913888",
+      "tree": "a018411ee365372b81b67513fcbb603a9d3f2492",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "c3ef2129bcf1d5b0620434785e1973ae7a913888"
+    },
+    {
+      "sha": "5f9838426d3e07b61d5b3f005dbabbf0fee166f7",
+      "ref": "refs/tags/v0.2.1",
+      "commit": "5f9838426d3e07b61d5b3f005dbabbf0fee166f7",
+      "tree": "971ce2c37d75a702e0dce07ce584212c6980d08a",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "5f9838426d3e07b61d5b3f005dbabbf0fee166f7"
+    },
+    {
+      "sha": "faef68b08e053f709c130d465746deaadac44b80",
+      "ref": "refs/tags/v0.2.2",
+      "commit": "faef68b08e053f709c130d465746deaadac44b80",
+      "tree": "9ba7b51a20ac15cf3277d6e330da5bb3f0f408d4",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "faef68b08e053f709c130d465746deaadac44b80"
+    },
+    {
+      "sha": "f5f12886db8f9119f2e2976363ab8566ebb3777e",
+      "ref": "refs/tags/v1.0.0",
+      "commit": "f5f12886db8f9119f2e2976363ab8566ebb3777e",
+      "tree": "6b42119b6a5df1d64e7d7ea254860a5a0e24d5ee",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "f5f12886db8f9119f2e2976363ab8566ebb3777e"
+    },
+    {
+      "sha": "472064914ec00f5da289de94e166fa6c6d82b87a",
+      "ref": "refs/tags/v1.1.0",
+      "commit": "472064914ec00f5da289de94e166fa6c6d82b87a",
+      "tree": "551bcfa94ed2252a14e089855bbb5291f615b60b",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "472064914ec00f5da289de94e166fa6c6d82b87a"
+    },
+    {
+      "sha": "70d43862fdbd04317e001c8788cb1ca4d63da2ee",
+      "ref": "refs/tags/v1.2.0",
+      "commit": "9a81d68c7cb27f35e4707267206ef6ea8e3de33d",
+      "tree": "253157e827169066a4555062287e990c2a37a314",
+      "tag_or_ref_object_peeling_required": true,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "9a81d68c7cb27f35e4707267206ef6ea8e3de33d"
+    },
+    {
+      "sha": "9a81d68c7cb27f35e4707267206ef6ea8e3de33d",
+      "ref": "refs/tags/v1.2.0^{}",
+      "commit": "9a81d68c7cb27f35e4707267206ef6ea8e3de33d",
+      "tree": "253157e827169066a4555062287e990c2a37a314",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "9a81d68c7cb27f35e4707267206ef6ea8e3de33d"
+    },
+    {
+      "sha": "9701ceadf0ea0d519e9553bbd41ea4e0a2710712",
+      "ref": "refs/tags/v1.2.1",
+      "commit": "467c4a3deb31e18e33e558d3c08b19f2ddc7231c",
+      "tree": "82328d05b35e1af89bc25101c7864ee0968abe2e",
+      "tag_or_ref_object_peeling_required": true,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "467c4a3deb31e18e33e558d3c08b19f2ddc7231c"
+    },
+    {
+      "sha": "467c4a3deb31e18e33e558d3c08b19f2ddc7231c",
+      "ref": "refs/tags/v1.2.1^{}",
+      "commit": "467c4a3deb31e18e33e558d3c08b19f2ddc7231c",
+      "tree": "82328d05b35e1af89bc25101c7864ee0968abe2e",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "467c4a3deb31e18e33e558d3c08b19f2ddc7231c"
+    },
+    {
+      "sha": "b092db8126058f33879d526243d67aec8273fa09",
+      "ref": "refs/tags/v1.2.3",
+      "commit": "6274c9cb23bdf4999957d5bc5dc77c295d1f50eb",
+      "tree": "4e27e8195f89a33d0f43795747aa5ab1d97db2a3",
+      "tag_or_ref_object_peeling_required": true,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "6274c9cb23bdf4999957d5bc5dc77c295d1f50eb"
+    },
+    {
+      "sha": "6274c9cb23bdf4999957d5bc5dc77c295d1f50eb",
+      "ref": "refs/tags/v1.2.3^{}",
+      "commit": "6274c9cb23bdf4999957d5bc5dc77c295d1f50eb",
+      "tree": "4e27e8195f89a33d0f43795747aa5ab1d97db2a3",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "6274c9cb23bdf4999957d5bc5dc77c295d1f50eb"
+    },
+    {
+      "sha": "9dafecef85fd1263b9b9ff2d2cf5e04f950643e4",
+      "ref": "refs/tags/v1.2.4",
+      "commit": "be3f7bc4700d15645fdcdf5bad3bfaee9286e7e9",
+      "tree": "f6bd2714443f7c45a1f06638871b501c754085a0",
+      "tag_or_ref_object_peeling_required": true,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "be3f7bc4700d15645fdcdf5bad3bfaee9286e7e9"
+    },
+    {
+      "sha": "be3f7bc4700d15645fdcdf5bad3bfaee9286e7e9",
+      "ref": "refs/tags/v1.2.4^{}",
+      "commit": "be3f7bc4700d15645fdcdf5bad3bfaee9286e7e9",
+      "tree": "f6bd2714443f7c45a1f06638871b501c754085a0",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "be3f7bc4700d15645fdcdf5bad3bfaee9286e7e9"
+    },
+    {
+      "sha": "cbaf25847c106a115eb45469ba7c4edea02fada5",
+      "ref": "refs/tags/v1.2.5",
+      "commit": "48ad97b4010e25ffd186c33bd50b041f79e2e7db",
+      "tree": "c97472ad316e15432572f7fd3a85d9c3c1cc911d",
+      "tag_or_ref_object_peeling_required": true,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "48ad97b4010e25ffd186c33bd50b041f79e2e7db"
+    },
+    {
+      "sha": "48ad97b4010e25ffd186c33bd50b041f79e2e7db",
+      "ref": "refs/tags/v1.2.5^{}",
+      "commit": "48ad97b4010e25ffd186c33bd50b041f79e2e7db",
+      "tree": "c97472ad316e15432572f7fd3a85d9c3c1cc911d",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "48ad97b4010e25ffd186c33bd50b041f79e2e7db"
+    },
+    {
+      "sha": "355371e3332184dbb780eb3e78a90d90baeab6dc",
+      "ref": "refs/tags/v1.2.6",
+      "commit": "b6bc7b13e56fe6bbdeafc1c4f84d405e0a6226c5",
+      "tree": "a8518e70936290a5a9d7025c44cc92704de2e0f8",
+      "tag_or_ref_object_peeling_required": true,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "b6bc7b13e56fe6bbdeafc1c4f84d405e0a6226c5"
+    },
+    {
+      "sha": "b6bc7b13e56fe6bbdeafc1c4f84d405e0a6226c5",
+      "ref": "refs/tags/v1.2.6^{}",
+      "commit": "b6bc7b13e56fe6bbdeafc1c4f84d405e0a6226c5",
+      "tree": "a8518e70936290a5a9d7025c44cc92704de2e0f8",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "b6bc7b13e56fe6bbdeafc1c4f84d405e0a6226c5"
+    },
+    {
+      "sha": "ea85caeeb1414f586508d45acc6a48409513398c",
+      "ref": "refs/tags/v1.2.7",
+      "commit": "07a1ce776ffd08aa37c5dc789746276556bbd225",
+      "tree": "d2989c73ecc89682ac1245065c035bd2f47e535d",
+      "tag_or_ref_object_peeling_required": true,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "07a1ce776ffd08aa37c5dc789746276556bbd225"
+    },
+    {
+      "sha": "07a1ce776ffd08aa37c5dc789746276556bbd225",
+      "ref": "refs/tags/v1.2.7^{}",
+      "commit": "07a1ce776ffd08aa37c5dc789746276556bbd225",
+      "tree": "d2989c73ecc89682ac1245065c035bd2f47e535d",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "07a1ce776ffd08aa37c5dc789746276556bbd225"
+    },
+    {
+      "sha": "ec4fdf19aa9cfa667d6a6013c2ff9778d41ae862",
+      "ref": "refs/tags/v1.2.8",
+      "commit": "d56dfe9f7bc1d3e764af0f3ee383ccc235f039bc",
+      "tree": "28cfeeb55dd628e551865422a4688eb5a092e5e4",
+      "tag_or_ref_object_peeling_required": true,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "d56dfe9f7bc1d3e764af0f3ee383ccc235f039bc"
+    },
+    {
+      "sha": "d56dfe9f7bc1d3e764af0f3ee383ccc235f039bc",
+      "ref": "refs/tags/v1.2.8^{}",
+      "commit": "d56dfe9f7bc1d3e764af0f3ee383ccc235f039bc",
+      "tree": "28cfeeb55dd628e551865422a4688eb5a092e5e4",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "d56dfe9f7bc1d3e764af0f3ee383ccc235f039bc"
+    },
+    {
+      "sha": "efb77b43a3003215c4bcf32bee881968681f5ca6",
+      "ref": "refs/tags/v1.3.0",
+      "commit": "a34f7fcab53441da7d1d6c96e9d9e5ba25111907",
+      "tree": "25dcd232027e273859527142320c7f0a84155333",
+      "tag_or_ref_object_peeling_required": true,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "a34f7fcab53441da7d1d6c96e9d9e5ba25111907"
+    },
+    {
+      "sha": "a34f7fcab53441da7d1d6c96e9d9e5ba25111907",
+      "ref": "refs/tags/v1.3.0^{}",
+      "commit": "a34f7fcab53441da7d1d6c96e9d9e5ba25111907",
+      "tree": "25dcd232027e273859527142320c7f0a84155333",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "a34f7fcab53441da7d1d6c96e9d9e5ba25111907"
+    },
+    {
+      "sha": "231c435557c4d9b11f24cb9011b2311cd5ef3983",
+      "ref": "refs/tags/v1.3.1",
+      "commit": "70524c8141c7880c854ca7e58489f207ecf2085d",
+      "tree": "4730e063e631f6f50b13f20877e13a6567f1ee77",
+      "tag_or_ref_object_peeling_required": true,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "70524c8141c7880c854ca7e58489f207ecf2085d"
+    },
+    {
+      "sha": "70524c8141c7880c854ca7e58489f207ecf2085d",
+      "ref": "refs/tags/v1.3.1^{}",
+      "commit": "70524c8141c7880c854ca7e58489f207ecf2085d",
+      "tree": "4730e063e631f6f50b13f20877e13a6567f1ee77",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "70524c8141c7880c854ca7e58489f207ecf2085d"
+    },
+    {
+      "sha": "f01b2162b473ab965fc888244dc202278faf1ef1",
+      "ref": "refs/tags/v1.3.2",
+      "commit": "2c373371973b2506fc4fc03e599ef093d14a4be1",
+      "tree": "685ad533371595262e97b9041b5ecb4d25b70782",
+      "tag_or_ref_object_peeling_required": true,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "2c373371973b2506fc4fc03e599ef093d14a4be1"
+    },
+    {
+      "sha": "2c373371973b2506fc4fc03e599ef093d14a4be1",
+      "ref": "refs/tags/v1.3.2^{}",
+      "commit": "2c373371973b2506fc4fc03e599ef093d14a4be1",
+      "tree": "685ad533371595262e97b9041b5ecb4d25b70782",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "2c373371973b2506fc4fc03e599ef093d14a4be1"
+    },
+    {
+      "sha": "bde3399242c647ef13e27dfad1cfeee24061a3e1",
+      "ref": "refs/tags/v1.3.3",
+      "commit": "e58da70149182301efbbe85807edb6298ff37ff1",
+      "tree": "3975fccbf367234ccc637030a2d59fcd417c34af",
+      "tag_or_ref_object_peeling_required": true,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "e58da70149182301efbbe85807edb6298ff37ff1"
+    },
+    {
+      "sha": "e58da70149182301efbbe85807edb6298ff37ff1",
+      "ref": "refs/tags/v1.3.3^{}",
+      "commit": "e58da70149182301efbbe85807edb6298ff37ff1",
+      "tree": "3975fccbf367234ccc637030a2d59fcd417c34af",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "e58da70149182301efbbe85807edb6298ff37ff1"
+    },
+    {
+      "sha": "afd157257c53d33b305c8ee921042bf18006fc0a",
+      "ref": "refs/tags/v1.3.4",
+      "commit": "d71d28a1c9c5ccabccce9ae3656acf16f7778e6e",
+      "tree": "1ffed17d33313b77eb6dd8d5e8b6f751b61e4a26",
+      "tag_or_ref_object_peeling_required": true,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "d71d28a1c9c5ccabccce9ae3656acf16f7778e6e"
+    },
+    {
+      "sha": "d71d28a1c9c5ccabccce9ae3656acf16f7778e6e",
+      "ref": "refs/tags/v1.3.4^{}",
+      "commit": "d71d28a1c9c5ccabccce9ae3656acf16f7778e6e",
+      "tree": "1ffed17d33313b77eb6dd8d5e8b6f751b61e4a26",
+      "tag_or_ref_object_peeling_required": false,
+      "criterion": "ancestor_of_current_head",
+      "witness_commit": "d71d28a1c9c5ccabccce9ae3656acf16f7778e6e"
+    }
+  ],
+  "odp_transitions_additive_evidence_proof": {
+    "captured_commit": "3c5a4114c3241d1aa2550b00ebd959527a16b4d9",
+    "captured_tree": "8848350ba18914f76c59abcc573492af427be383",
+    "integrated_ancestor": "5e0c798b85cba3e0b85dff9d1c29e3915e4ed253",
+    "integrated_tree": "f1ee2384a442570dc2f0d44abef33a202362034b",
+    "integrated_ancestor_of_current_head": true,
+    "source_leaf_count": 14243,
+    "every_captured_leaf_identical_at_integrated_ancestor": true,
+    "removed_paths": [],
+    "modified_paths": [],
+    "added_evidence_paths": [
+      {
+        "path": "docs/validation/integrated-testflight-20261117/README.md",
+        "mode": "100644",
+        "type": "blob",
+        "object": "de78dc1ad9572b01c45ae30b584a1f54b29ad583",
+        "identical_at_current_head": true
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/apple-controls.log.gz",
+        "mode": "100644",
+        "type": "blob",
+        "object": "aa0802c7e627e155b2ca041497090847d9570a47",
+        "identical_at_current_head": true
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/apple-export-preflight-final.json",
+        "mode": "100644",
+        "type": "blob",
+        "object": "b16485efafbce00344a32acbc929f4edad0e63d6",
+        "identical_at_current_head": true
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/apple-upload.json.gz",
+        "mode": "100644",
+        "type": "blob",
+        "object": "dcfce8b2a877b8fe429e6dace3f6d09ba5bcc9e1",
+        "identical_at_current_head": true
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/apple-validation.json.gz",
+        "mode": "100644",
+        "type": "blob",
+        "object": "68344315840a450bf9bfac7bcced42385abb53e6",
+        "identical_at_current_head": true
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/appstore-sign-package.log.gz",
+        "mode": "100644",
+        "type": "blob",
+        "object": "66294a3822cafa83bff720ae19a7c99a3c9969b1",
+        "identical_at_current_head": true
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/captured-ref-coverage.json",
+        "mode": "100644",
+        "type": "blob",
+        "object": "4d06fb34a18fc4782e7a0c17a2cab08a5b10d388",
+        "identical_at_current_head": true
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/development-sign-startup.log.gz",
+        "mode": "100644",
+        "type": "blob",
+        "object": "674e5caba44415efc9c2ffa6df85889cd9a2090a",
+        "identical_at_current_head": true
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/distribution-controls.log.gz",
+        "mode": "100644",
+        "type": "blob",
+        "object": "bbd3801cdd21c660991fb14a93cdbb3c6b7ba52c",
+        "identical_at_current_head": true
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/editor-final-tests-corrected.log.gz",
+        "mode": "100644",
+        "type": "blob",
+        "object": "d06b2e8f0b566ff0dfbe5cd74c6570e416f12c28",
+        "identical_at_current_head": true
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/golden-comparison.json",
+        "mode": "100644",
+        "type": "blob",
+        "object": "19474e7304aba69a15e5241b5da974fd9143a05b",
+        "identical_at_current_head": true
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/harper-tests.log.gz",
+        "mode": "100644",
+        "type": "blob",
+        "object": "40f2d06d17a7fec84817d4ad14f9895cebde7195",
+        "identical_at_current_head": true
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/host-odt-lists-accepted.log.gz",
+        "mode": "100644",
+        "type": "blob",
+        "object": "e7e052cde00fbcc1861d2b02bd134c8fcebed866",
+        "identical_at_current_head": true
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/host-office-accepted.log.gz",
+        "mode": "100644",
+        "type": "blob",
+        "object": "b68b321eb8b4ab5877b9ff2de2b5a8571c330e51",
+        "identical_at_current_head": true
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/late-engine-tests-final.log.gz",
+        "mode": "100644",
+        "type": "blob",
+        "object": "5d8489cb383d05ec1294f2d40b145f074fd8992a",
+        "identical_at_current_head": true
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/live-tmux-live-tmux.log.gz",
+        "mode": "100644",
+        "type": "blob",
+        "object": "1d4cd36a52aa4807e96ed62110c08fe62e7a5bb2",
+        "identical_at_current_head": true
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/local-toolchain-note.json",
+        "mode": "100644",
+        "type": "blob",
+        "object": "952cd2cd415f2a7a48e981d5750d49fec360203c",
+        "identical_at_current_head": true
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/odt-lists-final-tests.log.gz",
+        "mode": "100644",
+        "type": "blob",
+        "object": "2cbf33bef9bbb0f3d46c552b7eedab7b2553e29e",
+        "identical_at_current_head": true
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/package.json",
+        "mode": "100644",
+        "type": "blob",
+        "object": "4faec732b2942db91890dd96e12c5b50c2a1f44a",
+        "identical_at_current_head": true
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/pr201-ancestry-receipt.json",
+        "mode": "100644",
+        "type": "blob",
+        "object": "2d0281765921452a1d564a43a11dfa51b618ea07",
+        "identical_at_current_head": true
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/pr201-source-comparison.json",
+        "mode": "100644",
+        "type": "blob",
+        "object": "7fa557909f03cb95c8ec622590a09f391158f8e0",
+        "identical_at_current_head": true
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/receipt.json",
+        "mode": "100644",
+        "type": "blob",
+        "object": "0f72e9f647159096af313b9e900e40100e06c62f",
+        "identical_at_current_head": true
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/ssh-live-accepted.log.gz",
+        "mode": "100644",
+        "type": "blob",
+        "object": "93e83b2ff9b2ae344c638eabe630848e5fed2c6b",
+        "identical_at_current_head": true
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/sync-tests.log.gz",
+        "mode": "100644",
+        "type": "blob",
+        "object": "5e1e200aacc56ab5a7a6f8f247f4840357b06b91",
+        "identical_at_current_head": true
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/terminal-unit-native.json.gz",
+        "mode": "100644",
+        "type": "blob",
+        "object": "f677778e937c0b62e34d39bc4d398021c449765a",
+        "identical_at_current_head": true
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/terminal-unit-native.log.gz",
+        "mode": "100644",
+        "type": "blob",
+        "object": "dd550f66fb8478bd3fde29662895766d0acea4bb",
+        "identical_at_current_head": true
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/testflight-controls.log.gz",
+        "mode": "100644",
+        "type": "blob",
+        "object": "93a340df1fe5d6b9882a3271a42fde11b02b08fc",
+        "identical_at_current_head": true
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/testflight-distribution.log.gz",
+        "mode": "100644",
+        "type": "blob",
+        "object": "b7bee326a400249aec241cd4f49305670c113ee2",
+        "identical_at_current_head": true
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/testflight-final-state.json",
+        "mode": "100644",
+        "type": "blob",
+        "object": "159c2af3ebf877f82cfaf3fce76489565f3ad4dc",
+        "identical_at_current_head": true
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/tmux-live-accepted.log.gz",
+        "mode": "100644",
+        "type": "blob",
+        "object": "db0569a8c3ede8c894c2017832a200936b260555",
+        "identical_at_current_head": true
+      },
+      {
+        "path": "docs/validation/integrated-testflight-20261117/vendor-final-accepted.log.gz",
+        "mode": "100644",
+        "type": "blob",
+        "object": "67ff598a256c6f5c1912b1ddd554cb7ab16141b0",
+        "identical_at_current_head": true
+      }
+    ],
+    "interpretation": "All captured source leaves are preserved exactly at the reachable integrated ancestor; its only delta is 31 additive evidence files, all already inherited with exact modes and object identities at the current head. Whole-tree equality is deliberately not claimed.",
+    "safe_action": "No source or evidence import is needed."
+  },
+  "archival_checkpoint_disposition": {
+    "ref": "refs/tags/archive/feature/madedit2-hex-editor-session-checkpoint",
+    "annotated_tag_object": "bf6a2bc06f663d2733d4283cac7cd39261e25c48",
+    "peeled_commit": "f2534d892fbffca9a7e1e95ccaf7faeb02769ea1",
+    "tree": "0ef6ff1ba54f7bd2101e6077fff6d79adc94749f",
+    "tag_object_text": "object f2534d892fbffca9a7e1e95ccaf7faeb02769ea1\ntype commit\ntag archive/feature/madedit2-hex-editor-session-checkpoint\ntagger CrispStrobe <cze+github@mailbox.org> 1794384239 +0100\n\nArchived obsolete branch feature/madedit2-hex-editor-session-checkpoint before deletion\n",
+    "common_ancestor_with_current_head": "793924d749487eabcec2f6bbf5e4488c5e905120",
+    "archived_only_commits": [
+      "f2534d892fbffca9a7e1e95ccaf7faeb02769ea1 feat(hex-editor): preserve native package and host integration checkpoint",
+      "3abbfbc1b441ac72c6aa52c386a25d310247e838 feat(hex-editor): add byte-accurate piece-tree engine and snapshot tests"
+    ],
+    "active_integration_merge_commit": "e0a6684e27dc0e4622351e66180c999b7bee7ca0",
+    "active_integration_ancestor_of_current_head": true,
+    "archived_scope": "Two alternate hex-editor implementation commits: a raw-byte AVL piece-tree model and snapshot/core tests, then a native package/editor/controller/viewport, captured storage session, localization, host routing and widget tests. It uses a different public package API from the active maintained integration.",
+    "original_preservation_instruction": {
+      "commit": "f2534d892fbffca9a7e1e95ccaf7faeb02769ea1",
+      "path": "docs/hex-editor-session-checkpoint.md",
+      "blob": "e8f8ed2f573b28dee7b8a7442efecc5d5eae416b",
+      "sha256": "400803a0353bb9346f3d09937ce85d935e33fc7447719c2577fc471203be2aa0",
+      "excerpt": "It is an alternate implementation, not the current app integration, and must not be merged wholesale over the shared branch."
+    },
+    "current_preservation_instruction": {
+      "commit": "1149fc32ca12763e969679c627877cf269bfafb1",
+      "path": "docs/hex-editor-validation.md",
+      "blob": "a8dadb0789086ad9d3bb762af0e685b14febaa69",
+      "sha256": "a9fc70c4c3b5bdd826de781120060103590f2345659943dafdf5b00500df7caf",
+      "excerpt": "Its different public API must not be merged wholesale over the active integration. It preserves the session's earlier source and tests so no edits are lost."
+    },
+    "archive_delta_from_common_base_path_count": 24,
+    "archive_delta_from_common_base": [
+      {
+        "path": ".gitignore",
+        "base": {
+          "mode": "100644",
+          "type": "blob",
+          "object": "c61ddfb63c4f4d4d4690258df74b685abb120ef9"
+        },
+        "archived": {
+          "mode": "100644",
+          "type": "blob",
+          "object": "a9a98cba2523a4d33277f066084b1e5a63f91450"
+        },
+        "current": {
+          "mode": "100644",
+          "type": "blob",
+          "object": "1b9fa73200c7e76183d0b9697e7312b7d78dc987"
+        },
+        "current_relation": "different_current_leaf"
+      },
+      {
+        "path": "docs/hex-editor-session-checkpoint.md",
+        "base": null,
+        "archived": {
+          "mode": "100644",
+          "type": "blob",
+          "object": "e8f8ed2f573b28dee7b8a7442efecc5d5eae416b"
+        },
+        "current": null,
+        "current_relation": "absent_from_current_head"
+      },
+      {
+        "path": "lib/l10n/hex_editor_strings.dart",
+        "base": null,
+        "archived": {
+          "mode": "100644",
+          "type": "blob",
+          "object": "a990253195b5952d35fb62588d573f855743761a"
+        },
+        "current": null,
+        "current_relation": "absent_from_current_head"
+      },
+      {
+        "path": "lib/screens/screen_dialogs.dart",
+        "base": {
+          "mode": "100644",
+          "type": "blob",
+          "object": "9fe7a181af433680e49e1ec76b8c391d6c9d5139"
+        },
+        "archived": {
+          "mode": "100644",
+          "type": "blob",
+          "object": "7c001fe06ec5e773b46eeaaeab3bcda581931a90"
+        },
+        "current": {
+          "mode": "100644",
+          "type": "blob",
+          "object": "c766aa8401790a07a18f54f6d4147378e77480ed"
+        },
+        "current_relation": "different_current_leaf"
+      },
+      {
+        "path": "lib/services/hex_edit_session.dart",
+        "base": null,
+        "archived": {
+          "mode": "100644",
+          "type": "blob",
+          "object": "7ec9110428d638d35d928c9675080e078c3e7581"
+        },
+        "current": null,
+        "current_relation": "absent_from_current_head"
+      },
+      {
+        "path": "lib/widgets/file_editor_dialog.dart",
+        "base": {
+          "mode": "100644",
+          "type": "blob",
+          "object": "6d8c2bade18985f949ccaf63b8d6591e21c1b840"
+        },
+        "archived": {
+          "mode": "100644",
+          "type": "blob",
+          "object": "1c37f7ab2c62f0e055b16b3e9c0bd1c684a977a1"
+        },
+        "current": {
+          "mode": "100644",
+          "type": "blob",
+          "object": "c5a2d8bec3a422a1008d8228381c043875d356e1"
+        },
+        "current_relation": "different_current_leaf"
+      },
+      {
+        "path": "lib/widgets/hex_editor_dialog.dart",
+        "base": null,
+        "archived": {
+          "mode": "100644",
+          "type": "blob",
+          "object": "8055854aca1c0996b55497fde2a1dfdbb394ec12"
+        },
+        "current": {
+          "mode": "100644",
+          "type": "blob",
+          "object": "ee41fa12dbda8884fd15546ca7ec7cdeabd8c4e5"
+        },
+        "current_relation": "different_current_leaf"
+      },
+      {
+        "path": "lib/widgets/internal_viewer_dialog.dart",
+        "base": {
+          "mode": "100644",
+          "type": "blob",
+          "object": "d9566bb8861ff728581ae40bb481c24a13bcae10"
+        },
+        "archived": {
+          "mode": "100644",
+          "type": "blob",
+          "object": "7fdc41588d57be270aabb7be123a5f59400524a6"
+        },
+        "current": {
+          "mode": "100644",
+          "type": "blob",
+          "object": "fb5f67b89d19526ed87d18829b3e5f5d1de96cd6"
+        },
+        "current_relation": "different_current_leaf"
+      },
+      {
+        "path": "packages/madedit2_hex/analysis_options.yaml",
+        "base": {
+          "mode": "100644",
+          "type": "blob",
+          "object": "f9b303465f19b5fbf5ec669cd083c9cc38ecda9a"
+        },
+        "archived": {
+          "mode": "100644",
+          "type": "blob",
+          "object": "801d885f946208fdbbbb17dc9014de006ddf9cc5"
+        },
+        "current": {
+          "mode": "100644",
+          "type": "blob",
+          "object": "801d885f946208fdbbbb17dc9014de006ddf9cc5"
+        },
+        "current_relation": "identical_archived_leaf"
+      },
+      {
+        "path": "packages/madedit2_hex/lib/madedit2_hex.dart",
+        "base": null,
+        "archived": {
+          "mode": "100644",
+          "type": "blob",
+          "object": "3de048562ed425994bb976aabfb874876e181fd2"
+        },
+        "current": {
+          "mode": "100644",
+          "type": "blob",
+          "object": "f17b17d7195385956e49b3b62518363b8b6edad2"
+        },
+        "current_relation": "different_current_leaf"
+      },
+      {
+        "path": "packages/madedit2_hex/lib/src/core/hex_byte_source.dart",
+        "base": null,
+        "archived": {
+          "mode": "100644",
+          "type": "blob",
+          "object": "356235eaefbe4e5ce3e0ce78fc89c5b23a77268b"
+        },
+        "current": null,
+        "current_relation": "absent_from_current_head"
+      },
+      {
+        "path": "packages/madedit2_hex/lib/src/core/hex_document.dart",
+        "base": null,
+        "archived": {
+          "mode": "100644",
+          "type": "blob",
+          "object": "d9ae42d9a1bdf0ab96fe92b3835c6cf6f7525b95"
+        },
+        "current": null,
+        "current_relation": "absent_from_current_head"
+      },
+      {
+        "path": "packages/madedit2_hex/lib/src/core/piece_tree.dart",
+        "base": null,
+        "archived": {
+          "mode": "100644",
+          "type": "blob",
+          "object": "239897ec43232b36764ec0113d8f3d51f75e824f"
+        },
+        "current": null,
+        "current_relation": "absent_from_current_head"
+      },
+      {
+        "path": "packages/madedit2_hex/lib/src/ui/hex_editor.dart",
+        "base": null,
+        "archived": {
+          "mode": "100644",
+          "type": "blob",
+          "object": "f908cb1dc60035adb34c80dfc6b85af7eea25a31"
+        },
+        "current": null,
+        "current_relation": "absent_from_current_head"
+      },
+      {
+        "path": "packages/madedit2_hex/lib/src/ui/hex_editor_controller.dart",
+        "base": null,
+        "archived": {
+          "mode": "100644",
+          "type": "blob",
+          "object": "81a27f5c6f637b66b452ffc62eba75377fd55c06"
+        },
+        "current": null,
+        "current_relation": "absent_from_current_head"
+      },
+      {
+        "path": "packages/madedit2_hex/lib/src/ui/hex_viewport.dart",
+        "base": null,
+        "archived": {
+          "mode": "100644",
+          "type": "blob",
+          "object": "0423ab0f404ad13c7839b640eb5e18360f7d09a6"
+        },
+        "current": null,
+        "current_relation": "absent_from_current_head"
+      },
+      {
+        "path": "packages/madedit2_hex/test/hex_document_test.dart",
+        "base": null,
+        "archived": {
+          "mode": "100644",
+          "type": "blob",
+          "object": "feb6a1e8a7d5e632056ce3299f8827c32b853809"
+        },
+        "current": {
+          "mode": "100644",
+          "type": "blob",
+          "object": "fdc7f9f0451f44764b505d2741300b299e563264"
+        },
+        "current_relation": "different_current_leaf"
+      },
+      {
+        "path": "packages/madedit2_hex/test/hex_editor_widget_test.dart",
+        "base": null,
+        "archived": {
+          "mode": "100644",
+          "type": "blob",
+          "object": "d09dd3e16a23d99c7bf144e03ec7884e63fb3b0e"
+        },
+        "current": null,
+        "current_relation": "absent_from_current_head"
+      },
+      {
+        "path": "pubspec.yaml",
+        "base": {
+          "mode": "100644",
+          "type": "blob",
+          "object": "002c722ac7d970bc9fccdda29b116bee03b081ca"
+        },
+        "archived": {
+          "mode": "100644",
+          "type": "blob",
+          "object": "8e13aad18e4c917487d6721789e39c6dad73dc6e"
+        },
+        "current": {
+          "mode": "100644",
+          "type": "blob",
+          "object": "e56f964811c763796e9a585d6420c5bae8cf5e31"
+        },
+        "current_relation": "different_current_leaf"
+      },
+      {
+        "path": "test/hex_edit_session_test.dart",
+        "base": null,
+        "archived": {
+          "mode": "100644",
+          "type": "blob",
+          "object": "06af1fdf5ee434552b8c873ccc9cf5cbf75d784f"
+        },
+        "current": null,
+        "current_relation": "absent_from_current_head"
+      },
+      {
+        "path": "test/hex_editor_strings_test.dart",
+        "base": null,
+        "archived": {
+          "mode": "100644",
+          "type": "blob",
+          "object": "3bbf1c8dd800015a7450757ff0826e5d79176640"
+        },
+        "current": null,
+        "current_relation": "absent_from_current_head"
+      },
+      {
+        "path": "test/support/hex_memory_backend.dart",
+        "base": null,
+        "archived": {
+          "mode": "100644",
+          "type": "blob",
+          "object": "cedb096f0de3f7a0f03ec1d694e3887f27bc3d30"
+        },
+        "current": null,
+        "current_relation": "absent_from_current_head"
+      },
+      {
+        "path": "test/widget/hex_editor_dialog_test.dart",
+        "base": null,
+        "archived": {
+          "mode": "100644",
+          "type": "blob",
+          "object": "ac6ecc5980165f83b188e50efdf7fb7ceb8e41f9"
+        },
+        "current": null,
+        "current_relation": "absent_from_current_head"
+      },
+      {
+        "path": "test/widget/viewer_edit_action_test.dart",
+        "base": {
+          "mode": "100644",
+          "type": "blob",
+          "object": "4ef0e8a7d0432afdf9ba12fabdeccb09dd511e57"
+        },
+        "archived": {
+          "mode": "100644",
+          "type": "blob",
+          "object": "f5d056e7e25735cfb32f576dc07cc9b27b3eb75b"
+        },
+        "current": {
+          "mode": "100644",
+          "type": "blob",
+          "object": "480f0b287bd8ae466c37e91e2e20ae8981604277"
+        },
+        "current_relation": "different_current_leaf"
+      }
+    ],
+    "disposition": "intentional_archival_alternate_not_integrated",
+    "ancestry_or_whole_tree_equivalence_claimed": false,
+    "patch_containment_claimed": false,
+    "safe_action": "Preserve the annotated tag and exact peeled commit identity. Do not merge or vendor the alternate API. The existing active integration and preservation documentation remain authoritative; individual feature review would be separate work.",
+    "additional_checkout_or_ref_mutation_needed": false
+  },
+  "counts_by_ref_kind": {
+    "branches": {
+      "ancestor_of_current_head": 53,
+      "exact_tree_of_current_ancestor": 56,
+      "ancestor_via_pending_main_merge": 1,
+      "identical_source_leaves_plus_additive_evidence": 1
+    },
+    "pr_heads": {
+      "ancestor_of_current_head": 164,
+      "exact_tree_of_current_ancestor": 56,
+      "identical_source_leaves_plus_additive_evidence": 1,
+      "ancestor_via_pending_main_merge": 1
+    },
+    "tag_refs": {
+      "ancestor_of_current_head": 41,
+      "intentional_archival_alternate_not_integrated": 2
+    }
+  },
+  "all_captured_ref_observations_accounted": true,
+  "all_active_branch_and_pr_observations_integrated_under_intended_graph": true,
+  "all_captured_ref_observations_integrated": false,
+  "intentionally_archived_ref_observations": 2,
+  "outstanding_meaningful_active_source_or_evidence_delta": [],
+  "qualification_claim": "Read-only historical preservation audit only. The pending main merge must still complete, final managed source must still be synced and source frozen, and final focused tests have not been run by this audit.",
+  "audit_limitations": [
+    "This audit uses only the fixed captured 376 ref observations and the exact stated pending main commit; it does not claim coverage of later unobserved refs.",
+    "Archived checkpoint alternatives are intentionally preserved by exact Git identity, not represented as merged or equivalent.",
+    "One exploratory --stat read could not load a missing historical blob with lazy fetching disabled; final path and mode/blob identity proof uses local Git trees and does not require that content."
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "from": "60a116d2df566793720bfb4f76d7f6523529bcb2",
+  "to": "ec5ecbff742580c0e7d1136507b953e8cc877e4c",
+  "write": [
+    "packages/quds_office_engine/test/odt_paragraph_decoration_test.dart"
+  ],
+  "delete": [],
+  "pinned_files": 2606,
+  "applied": true
+}

@@ -1,0 +1,18 @@
+{
+  "command": [
+    "python3",
+    "tool/verify_office_fidelity.py",
+    "--source",
+    "/workspace/scratch/18384bc07dad/quds",
+    "--legacy-source",
+    "/workspace/scratch/18384bc07dad/legacy-doc-parser",
+    "--require-tracked"
+  ],
+  "exit_code": 0,
+  "output": "Verified 2603 Office files; Quds source 4c49b0435bc6611221bc49b58b15e735059467ff.\nStandalone source packages/legacy_doc_parser: CrispStrobe/legacy-doc-parser at 4895712158127b2fc930d796e17035c3ca0dac62.\n",
+  "output_sha256": "e5abea57f328a35abd8167163ada0bbe4b1a1e50c3352d42521574f847e611e5",
+  "managed_files": 2603,
+  "manifest_sha256": "0b17a1242591a46a66b42f77244adefe645e3e35135e9eb1e0d139a0017e13e1",
+  "host_index_state": "final staged merge inputs before local commit",
+  "canonical_source_commit": "4c49b0435bc6611221bc49b58b15e735059467ff"
+}

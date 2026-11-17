@@ -1,0 +1,9 @@
+{
+  "path": "test/office_annotation_preview_test.dart",
+  "old_blob": "d0d51db2742c1de51ff0f6e799bcf66ec9ff6341",
+  "new_blob": "ff488be11f054c1ba080a1af4dd12cce7a9e512a",
+  "replacements": 5,
+  "reason": "The existing _capRaw contract prepends a content.xml label. Retain exact equality for the full labelled payload while preserving every annotation-visibility assertion.",
+  "production_changes": false,
+  "control_observation": "Original historical control: 7 annotation leak failures plus 1 unrelated rawXml expectation failure; corrected-test control is recorded separately."
+}

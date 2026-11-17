@@ -1,0 +1,597 @@
+{
+  "repository": "CrispStrobe/CrispCloud",
+  "observed_utc": "2026-11-17T15:35:31.505Z",
+  "candidate_branch": "codex/office-continuation-20261117",
+  "candidate_sha": "6bc4de43867db4ef2f85da0479ab62c894d604c9",
+  "main_sha": "c30aeaec5ad0446a3ccb43a4920066ffc6e37a66",
+  "canonical_pin": "555eb728ce3ea872cb5ceb3e5fd2104b21f932aa",
+  "open_prs": [],
+  "branch_count": 109,
+  "previous_branch_count": 99,
+  "unchanged_branches": 98,
+  "added": [
+    {
+      "ref": "refs/heads/codex/odf-annotation-visibility-20261117",
+      "sha": "2165ceddc5fc01c3e1b7aa4a9a5b6740d4c1f975"
+    },
+    {
+      "ref": "refs/heads/codex/office-continuation-20261117",
+      "sha": "6bc4de43867db4ef2f85da0479ab62c894d604c9"
+    },
+    {
+      "ref": "refs/heads/docs/odp-shape-links",
+      "sha": "91a29b9b5c121288ecc50a69d744164aa7290ad1"
+    },
+    {
+      "ref": "refs/heads/docs/odt-links-bookmarks",
+      "sha": "c6713f22ef616a8b1525598f12fa2836ecba9f8c"
+    },
+    {
+      "ref": "refs/heads/docs/odt-nested-lists",
+      "sha": "4e9aea1c1763d7a7d6ed39224e4c00be32d6914f"
+    },
+    {
+      "ref": "refs/heads/docs/odt-sections",
+      "sha": "7e8456967a3d874544a4a56e185e631ff90e2639"
+    },
+    {
+      "ref": "refs/heads/fix/odp-shape-links-vendor",
+      "sha": "63a1de08afd75573267bcf85eed5d1fd793737a1"
+    },
+    {
+      "ref": "refs/heads/fix/odt-links-bookmarks-vendor",
+      "sha": "2cea1775b6cc029cce859a7977cb6634126f3334"
+    },
+    {
+      "ref": "refs/heads/fix/odt-nested-lists-vendor",
+      "sha": "bf3355db83ec02a5d4b494f7dd37ee2de9bdeb01"
+    },
+    {
+      "ref": "refs/heads/fix/odt-sections-vendor",
+      "sha": "8dd12dc576901d675ff92124bc21fc016ff1dc57"
+    }
+  ],
+  "changed": [
+    {
+      "ref": "refs/heads/main",
+      "old_sha": "fad903782ee45031e26c57cc8a65ccf476b1724d",
+      "sha": "c30aeaec5ad0446a3ccb43a4920066ffc6e37a66"
+    }
+  ],
+  "removed": [],
+  "recent_prs": [
+    {
+      "number": 230,
+      "title": "Record ODP text links",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/230",
+      "state": "closed",
+      "merged": true,
+      "head": "docs/odp-shape-links",
+      "head_sha": "91a29b9b5c121288ecc50a69d744164aa7290ad1",
+      "base_sha": "1bf6154bc9679596022065bde35308642e25ac01",
+      "merged_at": "2026-11-17T15:24:16Z"
+    },
+    {
+      "number": 229,
+      "title": "Vendor ODP text-shape hyperlinks",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/229",
+      "state": "closed",
+      "merged": true,
+      "head": "fix/odp-shape-links-vendor",
+      "head_sha": "63a1de08afd75573267bcf85eed5d1fd793737a1",
+      "base_sha": "19780dec36befd1c63d12dedfdb789062515de7b",
+      "merged_at": "2026-11-17T15:23:55Z"
+    },
+    {
+      "number": 228,
+      "title": "Record ODT bookmarks and links",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/228",
+      "state": "closed",
+      "merged": true,
+      "head": "docs/odt-links-bookmarks",
+      "head_sha": "c6713f22ef616a8b1525598f12fa2836ecba9f8c",
+      "base_sha": "f8000313dbaeee63973d7ed769287a2dd89aca5d",
+      "merged_at": "2026-11-17T14:55:43Z"
+    },
+    {
+      "number": 227,
+      "title": "Vendor ODT bookmarks and linked ranges",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/227",
+      "state": "closed",
+      "merged": true,
+      "head": "fix/odt-links-bookmarks-vendor",
+      "head_sha": "2cea1775b6cc029cce859a7977cb6634126f3334",
+      "base_sha": "1da07dcbb6814ef935adc43bac12568eb041e4e2",
+      "merged_at": "2026-11-17T14:54:55Z"
+    },
+    {
+      "number": 226,
+      "title": "Record nested ODT lists",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/226",
+      "state": "closed",
+      "merged": true,
+      "head": "docs/odt-nested-lists",
+      "head_sha": "4e9aea1c1763d7a7d6ed39224e4c00be32d6914f",
+      "base_sha": "36323cc7662dd3b998406f50f10a35c92e061199",
+      "merged_at": "2026-11-17T14:42:42Z"
+    },
+    {
+      "number": 225,
+      "title": "Vendor nested ODT list levels",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/225",
+      "state": "closed",
+      "merged": true,
+      "head": "fix/odt-nested-lists-vendor",
+      "head_sha": "bf3355db83ec02a5d4b494f7dd37ee2de9bdeb01",
+      "base_sha": "3b6b9b2a5159ca9fdffdfd021866d78c0cb90729",
+      "merged_at": "2026-11-17T14:42:01Z"
+    },
+    {
+      "number": 224,
+      "title": "Record ODT section export",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/224",
+      "state": "closed",
+      "merged": true,
+      "head": "docs/odt-sections",
+      "head_sha": "7e8456967a3d874544a4a56e185e631ff90e2639",
+      "base_sha": "6cf27894c4d7bdecde88a81a2bde0adf04c4ca16",
+      "merged_at": "2026-11-17T14:21:41Z"
+    },
+    {
+      "number": 223,
+      "title": "Vendor ODT section layouts",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/223",
+      "state": "closed",
+      "merged": true,
+      "head": "fix/odt-sections-vendor",
+      "head_sha": "8dd12dc576901d675ff92124bc21fc016ff1dc57",
+      "base_sha": "fad903782ee45031e26c57cc8a65ccf476b1724d",
+      "merged_at": "2026-11-17T14:20:54Z"
+    }
+  ],
+  "refs": [
+    {
+      "ref": "refs/heads/codex/odf-annotation-visibility-20261117",
+      "sha": "2165ceddc5fc01c3e1b7aa4a9a5b6740d4c1f975"
+    },
+    {
+      "ref": "refs/heads/codex/office-continuation-20261117",
+      "sha": "6bc4de43867db4ef2f85da0479ab62c894d604c9"
+    },
+    {
+      "ref": "refs/heads/codex/ssh-terminal-tmux",
+      "sha": "378c036b392ee3ff9112d86aa21e7fdd8e722808"
+    },
+    {
+      "ref": "refs/heads/codex/terminal-screen-workspace",
+      "sha": "2eec6b4edc62693cfc6048581862a7aed87143c9"
+    },
+    {
+      "ref": "refs/heads/codex/terminal-session-optimization-20261116",
+      "sha": "852f009cadb153cfcb0799c527fdd78364a2df8d"
+    },
+    {
+      "ref": "refs/heads/codex/zotero-capabilities-20261116",
+      "sha": "f80c67f1e817bf14266d9f8b33a5129d54463b78"
+    },
+    {
+      "ref": "refs/heads/codex/zotero-optimization-20261116",
+      "sha": "5e54229821bf7101ee60fb486d0c924ab6e7d5db"
+    },
+    {
+      "ref": "refs/heads/codex/zotero-recovery-20261116",
+      "sha": "e8331dd7e10a0e0d8fac03035eedb19492a8ca2d"
+    },
+    {
+      "ref": "refs/heads/codex/zotero-support-20261115",
+      "sha": "e678e17859f8d29e274d1abbf064b93d04a6fa42"
+    },
+    {
+      "ref": "refs/heads/codex/zotero-support-20261116",
+      "sha": "5efae7732727fc1ae43d6b664922214dd6acfedf"
+    },
+    {
+      "ref": "refs/heads/docs/conditional-affix",
+      "sha": "4919c87f0225599b9b2b963285d364d2c2bd1a1e"
+    },
+    {
+      "ref": "refs/heads/docs/conditional-between",
+      "sha": "073713474ea62525d9f5832da918407de333cd03"
+    },
+    {
+      "ref": "refs/heads/docs/conditional-complete",
+      "sha": "a49c3f14f96fed4c5551e45060ebbce3fa6883a1"
+    },
+    {
+      "ref": "refs/heads/docs/conditional-dxf-styles",
+      "sha": "5ca134aaac74bb9d788dc3aa66d92827700f7da5"
+    },
+    {
+      "ref": "refs/heads/docs/conditional-formats",
+      "sha": "2281ad58aed9f97bc1d387d3c98728245a5e4bcf"
+    },
+    {
+      "ref": "refs/heads/docs/conditional-top-bottom",
+      "sha": "a8edc699641da3e3b3f1452b5db59bec52a5717d"
+    },
+    {
+      "ref": "refs/heads/docs/current-office-capabilities",
+      "sha": "781ab2ac8e6434d2077f6cb30c500819dce8a294"
+    },
+    {
+      "ref": "refs/heads/docs/filter-operators",
+      "sha": "385eb47e7eabbbe27a4287d173d69544b2566724"
+    },
+    {
+      "ref": "refs/heads/docs/filters-closed",
+      "sha": "30f9cdefd70fea3c18a288a30b2f764c13044f95"
+    },
+    {
+      "ref": "refs/heads/docs/metadata-closed",
+      "sha": "343a930ebdbc1b0ee45f16328be868d0f78ba624"
+    },
+    {
+      "ref": "refs/heads/docs/metadata-complete",
+      "sha": "74378704f363cd095cefd23c0ac02e8ca0219ca1"
+    },
+    {
+      "ref": "refs/heads/docs/odp-presentation-writer",
+      "sha": "def593ff5ae0a37aab453313adf10d4374142914"
+    },
+    {
+      "ref": "refs/heads/docs/odp-shape-links",
+      "sha": "91a29b9b5c121288ecc50a69d744164aa7290ad1"
+    },
+    {
+      "ref": "refs/heads/docs/odp-transitions",
+      "sha": "ce400a18517e69e29368b3728eb092a37d780bcc"
+    },
+    {
+      "ref": "refs/heads/docs/ods-export-test-note",
+      "sha": "16cfd8196eda7b791c4e7efa47896f3f233ab10e"
+    },
+    {
+      "ref": "refs/heads/docs/ods-filter-predicates",
+      "sha": "4fd51df9a05f0380297ed512fea35d0deb09ef85"
+    },
+    {
+      "ref": "refs/heads/docs/ods-header-footer",
+      "sha": "5bfe1bba57989216cc228069e17785b4c849b5e4"
+    },
+    {
+      "ref": "refs/heads/docs/ods-hidden-state",
+      "sha": "1cb0b4a6a01b4aabe58f95d9a9132171bbb11aa0"
+    },
+    {
+      "ref": "refs/heads/docs/ods-pictures",
+      "sha": "128f55295107e3ada605b52d160165e03f726cb4"
+    },
+    {
+      "ref": "refs/heads/docs/ods-row-groups",
+      "sha": "0e81360c0090244e73cf850e89166dbe557fd67b"
+    },
+    {
+      "ref": "refs/heads/docs/ods-validations",
+      "sha": "b420b45b6666ca0658ae74f2a682a3cb6b88134d"
+    },
+    {
+      "ref": "refs/heads/docs/ods-writer",
+      "sha": "0b8e9ef6706709f2ebe4c7b1435691a13f485a62"
+    },
+    {
+      "ref": "refs/heads/docs/ods-writer-images",
+      "sha": "6d6c10eecf949e0b02320074988234a8ef5bf11a"
+    },
+    {
+      "ref": "refs/heads/docs/odt-comments",
+      "sha": "cb4147d325ca096977484a06582799606ebbd7e7"
+    },
+    {
+      "ref": "refs/heads/docs/odt-document-writer",
+      "sha": "3080c7bed1a8452877601c3c1f13b4494a7e9cb4"
+    },
+    {
+      "ref": "refs/heads/docs/odt-footnotes",
+      "sha": "46f7ba2a72a4964c7dfecae2d8d2e9fb430ffd49"
+    },
+    {
+      "ref": "refs/heads/docs/odt-frame-size",
+      "sha": "4660f0e021af5786b350879521e04000b072d7e3"
+    },
+    {
+      "ref": "refs/heads/docs/odt-image-registry",
+      "sha": "f9138cc1e51f52b4b9cb99b4b09b9ce32e1450c8"
+    },
+    {
+      "ref": "refs/heads/docs/odt-links-bookmarks",
+      "sha": "c6713f22ef616a8b1525598f12fa2836ecba9f8c"
+    },
+    {
+      "ref": "refs/heads/docs/odt-lists",
+      "sha": "9b1f404f54e767d6f0464cf70a12c57da6a990bc"
+    },
+    {
+      "ref": "refs/heads/docs/odt-nested-lists",
+      "sha": "4e9aea1c1763d7a7d6ed39224e4c00be32d6914f"
+    },
+    {
+      "ref": "refs/heads/docs/odt-ordered-lists",
+      "sha": "ec0f16b96f8040c185ecf147af045c7a2986027c"
+    },
+    {
+      "ref": "refs/heads/docs/odt-sections",
+      "sha": "7e8456967a3d874544a4a56e185e631ff90e2639"
+    },
+    {
+      "ref": "refs/heads/docs/office-pin-20261115",
+      "sha": "5ed4f45cb758394dc2346041d826c10257c24dc1"
+    },
+    {
+      "ref": "refs/heads/docs/remaining-gaps",
+      "sha": "a0df68710bbacdcbddf57f7fb7b77238566b65c3"
+    },
+    {
+      "ref": "refs/heads/docs/remaining-gaps-link",
+      "sha": "854d2ff6a20206434c64173ddca1152b079c8277"
+    },
+    {
+      "ref": "refs/heads/docs/restore-page-setup-and-pictures2",
+      "sha": "70fb587eb5bf378b62cd998132fbf1e38a5b53e8"
+    },
+    {
+      "ref": "refs/heads/docs/sheet-page-setup",
+      "sha": "0732c6ba7199609a46d73bb85430ecbd038d1671"
+    },
+    {
+      "ref": "refs/heads/docs/validation-complete",
+      "sha": "8197b59177827cfa7b426c55acd0cdca19f9b6eb"
+    },
+    {
+      "ref": "refs/heads/docs/validation-operators",
+      "sha": "11d4fbd9bc0a6e9fb3fa6cdc7604a45aaeae3210"
+    },
+    {
+      "ref": "refs/heads/feat/export-ods",
+      "sha": "ca8b789d4ceaa2b74cdb7e256cdd90746c702594"
+    },
+    {
+      "ref": "refs/heads/feat/hidden-sheets-ui",
+      "sha": "dacf219a094e8f309e3f2ea1e27afbdccaa69f3d"
+    },
+    {
+      "ref": "refs/heads/feat/odt-frame-size",
+      "sha": "1e18a00dd9effae71c4574c3f51fd3fe24b1c7d5"
+    },
+    {
+      "ref": "refs/heads/feat/odt-headers",
+      "sha": "38a69f9a60bce92b6c2db60a71427ac47d98819d"
+    },
+    {
+      "ref": "refs/heads/feat/odt-image-registry",
+      "sha": "120127794ea061f2f2fd2385d516b74e2e4ebb48"
+    },
+    {
+      "ref": "refs/heads/feat/odt-images",
+      "sha": "969c104a09dc2ad0732edb4a11a0300b52f20e2f"
+    },
+    {
+      "ref": "refs/heads/feat/odt-styles",
+      "sha": "048ad97b6d4b1be94821dd29f1ffb1494a329ecb"
+    },
+    {
+      "ref": "refs/heads/feat/odt-textboxes",
+      "sha": "b81105fe579d00b66c0a07b07d8ed36cee23ecfb"
+    },
+    {
+      "ref": "refs/heads/fix/conditional-affix-vendor",
+      "sha": "1dbfa2125cd83d6ec4e0028d1584e612fccfb77c"
+    },
+    {
+      "ref": "refs/heads/fix/conditional-between-vendor",
+      "sha": "a52efabd7d05a50b428eb337944d2b6aeee2400b"
+    },
+    {
+      "ref": "refs/heads/fix/conditional-dxf-styles-vendor",
+      "sha": "79e725ef9c105845d38b25e745563c52234421da"
+    },
+    {
+      "ref": "refs/heads/fix/conditional-dxf-vendor",
+      "sha": "b9b7932eca6213973803b5bb227464cccd3051d6"
+    },
+    {
+      "ref": "refs/heads/fix/conditional-operators-vendor",
+      "sha": "24ac26de023313dba726f8cdaabd16179c49da01"
+    },
+    {
+      "ref": "refs/heads/fix/conditional-text-vendor",
+      "sha": "20e5c5b7f63f0b8335665ca131418023f6bc2ca7"
+    },
+    {
+      "ref": "refs/heads/fix/conditional-top-bottom-vendor",
+      "sha": "168160bdeb121a8f83b439f8301fdde3a3a30523"
+    },
+    {
+      "ref": "refs/heads/fix/export-ods-strings",
+      "sha": "c5927513b337fea005080ad5e5d3dd7440c6210c"
+    },
+    {
+      "ref": "refs/heads/fix/hidden-state-vendor",
+      "sha": "fd69bc3ee8db4ecec4683a7b8161a643b758db6b"
+    },
+    {
+      "ref": "refs/heads/fix/odp-presentation-writer-vendor",
+      "sha": "a0daffceecfa2379a7d28cf97c3f6cba489f1e22"
+    },
+    {
+      "ref": "refs/heads/fix/odp-shape-links-vendor",
+      "sha": "63a1de08afd75573267bcf85eed5d1fd793737a1"
+    },
+    {
+      "ref": "refs/heads/fix/odp-transitions-vendor",
+      "sha": "3c5a4114c3241d1aa2550b00ebd959527a16b4d9"
+    },
+    {
+      "ref": "refs/heads/fix/ods-conditional-vendor",
+      "sha": "4e3e45e619fa2983f1fa8394a9f28cf6c454a9f6"
+    },
+    {
+      "ref": "refs/heads/fix/ods-custom-validation-vendor",
+      "sha": "9898961e5cb64cdfc704f85c8f6f5ebedad3c39a"
+    },
+    {
+      "ref": "refs/heads/fix/ods-default-geometry-vendor",
+      "sha": "29a2bb5158a316dcde5da776172e09027e04f78d"
+    },
+    {
+      "ref": "refs/heads/fix/ods-default-style-vendor",
+      "sha": "0ba620fdc34ea7afd278468f3978997c3cc7ba8f"
+    },
+    {
+      "ref": "refs/heads/fix/ods-filter-conditions-vendor",
+      "sha": "391ccbda8553e5c9104226fdf42d2a1e2c028b33"
+    },
+    {
+      "ref": "refs/heads/fix/ods-filter-operators-vendor",
+      "sha": "c9c403608cf6fc83e53245bd73c0db57403a969d"
+    },
+    {
+      "ref": "refs/heads/fix/ods-filter-vendor",
+      "sha": "12ce7da82680331ff1c903b39183a0324c9508f5"
+    },
+    {
+      "ref": "refs/heads/fix/ods-header-footer-vendor",
+      "sha": "b0723248097fc5d0bf3b06b0a34717c192522d5f"
+    },
+    {
+      "ref": "refs/heads/fix/ods-hyperlinks-vendor",
+      "sha": "aa45a0927789b117cec54c858895d8343aad661b"
+    },
+    {
+      "ref": "refs/heads/fix/ods-images-vendor",
+      "sha": "d18dc14194bfa4d11e96552b77dc34cbe5a8b417"
+    },
+    {
+      "ref": "refs/heads/fix/ods-metadata-vendor",
+      "sha": "8a62e0864ad4bae96063ec6f8a542db039a306cf"
+    },
+    {
+      "ref": "refs/heads/fix/ods-named-expressions-vendor",
+      "sha": "c80ee46fccbbfc8c2da4b18d67fc220cad23f1fc"
+    },
+    {
+      "ref": "refs/heads/fix/ods-outline-vendor",
+      "sha": "10374ee7f24c29be0958edc94157cde96c28f67c"
+    },
+    {
+      "ref": "refs/heads/fix/ods-row-groups-vendor",
+      "sha": "116a309ef09d9bba04b7f2d3fd3c4956a478aca5"
+    },
+    {
+      "ref": "refs/heads/fix/ods-tab-color-vendor",
+      "sha": "9c2047da22110db1518a6226ee7a35e421fb9d51"
+    },
+    {
+      "ref": "refs/heads/fix/ods-validation-messages-vendor",
+      "sha": "a617e188cf69f3d3c14dba614593f953dadf1436"
+    },
+    {
+      "ref": "refs/heads/fix/ods-validation-vendor2",
+      "sha": "2b6ac08219418cf2c2d91968d117437684370c4d"
+    },
+    {
+      "ref": "refs/heads/fix/ods-validations-vendor",
+      "sha": "ee74601e71441fcac2b6defebff33ca04f538d12"
+    },
+    {
+      "ref": "refs/heads/fix/ods-writer-conditional-vendor",
+      "sha": "5fb04fb0bcaab54c11e3585717d7e33895bb339e"
+    },
+    {
+      "ref": "refs/heads/fix/ods-writer-images-vendor",
+      "sha": "7e24454598a43e46821a75b3b43c14a9a89b572f"
+    },
+    {
+      "ref": "refs/heads/fix/ods-writer-metadata-vendor",
+      "sha": "f7010ad1841c0f7146aa8544177911af0e98cfe9"
+    },
+    {
+      "ref": "refs/heads/fix/ods-writer-page-layout-vendor",
+      "sha": "d220aa43774fe36b01530400c3a10bd4228faa79"
+    },
+    {
+      "ref": "refs/heads/fix/ods-writer-vendor",
+      "sha": "10d8a9b4750bf3d80d35f089ae1ac4fdf8dffc1f"
+    },
+    {
+      "ref": "refs/heads/fix/odt-comments-vendor",
+      "sha": "17b5f5495a05573a7b173018c5becdbaa7e190ea"
+    },
+    {
+      "ref": "refs/heads/fix/odt-document-writer-vendor",
+      "sha": "3d26bdae3dac4120f253767157d45abbf68911b8"
+    },
+    {
+      "ref": "refs/heads/fix/odt-footnotes-vendor",
+      "sha": "7591ceb57fb55a2380a1ab2a3e0c52b85fc43e94"
+    },
+    {
+      "ref": "refs/heads/fix/odt-links-bookmarks-vendor",
+      "sha": "2cea1775b6cc029cce859a7977cb6634126f3334"
+    },
+    {
+      "ref": "refs/heads/fix/odt-lists-vendor",
+      "sha": "214ccbd1541f9d55c07aca0c1994b753d7cbf1ca"
+    },
+    {
+      "ref": "refs/heads/fix/odt-nested-lists-vendor",
+      "sha": "bf3355db83ec02a5d4b494f7dd37ee2de9bdeb01"
+    },
+    {
+      "ref": "refs/heads/fix/odt-ordered-lists-vendor2",
+      "sha": "75504cbd905e7e887a90d5c707fedfa7469f7b9d"
+    },
+    {
+      "ref": "refs/heads/fix/odt-sections-vendor",
+      "sha": "8dd12dc576901d675ff92124bc21fc016ff1dc57"
+    },
+    {
+      "ref": "refs/heads/fix/sheet-page-setup-vendor",
+      "sha": "fff84bfb48224b78799967c1d42fc4af8abf05d8"
+    },
+    {
+      "ref": "refs/heads/integrate/current-repos-20261116",
+      "sha": "37af4410be09081420d2597f53572379eca25464"
+    },
+    {
+      "ref": "refs/heads/integrate/final-corpus-20261115",
+      "sha": "59b11b5647a8a07d36c0d2e0d579855f474ef4d2"
+    },
+    {
+      "ref": "refs/heads/integrate/sdt-section-break-20261115",
+      "sha": "012314d440c49bc73b6726796fd9930eee6f1830"
+    },
+    {
+      "ref": "refs/heads/integrate/utf16-custom-xml-20261115",
+      "sha": "abfcf08bd2bfbe87349fdacc3484b824b77fefa3"
+    },
+    {
+      "ref": "refs/heads/integration/storage-carving-20261115",
+      "sha": "5018aebb709b35f1c4d730c06e0f91187727751c"
+    },
+    {
+      "ref": "refs/heads/integration/storage-carving-local-20261115124645",
+      "sha": "10891b06a6da9f2502960cdbfe34b30eed271665"
+    },
+    {
+      "ref": "refs/heads/main",
+      "sha": "c30aeaec5ad0446a3ccb43a4920066ffc6e37a66"
+    }
+  ],
+  "comparison": {
+    "status": "diverged",
+    "main_only_commits": 6,
+    "continuation_only_commits": 10,
+    "merge_base": "3b6b9b2a5159ca9fdffdfd021866d78c0cb90729"
+  },
+  "no_actions_or_ci_status_queried": true
+}

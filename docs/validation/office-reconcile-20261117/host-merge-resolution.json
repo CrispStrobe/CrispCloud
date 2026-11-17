@@ -1,0 +1,72 @@
+{
+  "kind": "host captured-main merge and guarded canonical reconciliation",
+  "local_first_parent": "e624f932fa58798dc377be1932abc502ba4450fc",
+  "captured_second_parent": "1cd2a18f7bc2455eabc5ec8e22767c849a833305",
+  "qualified_host": "83617b79f8a56600e9ca17e73f835d944c79dfa8",
+  "merge_conflicts": [
+    "packages/QUDS_FORKS.md",
+    "tool/office_fidelity_manifest.json"
+  ],
+  "resolutions": {
+    "packages/QUDS_FORKS.md": "Retain all historical qualification attributions; update only the current immutable source pin/count and add the new source integration scope.",
+    "tool/office_fidelity_manifest.json": "Preserve qualified 2603-file inventory as initial guarded-sync precondition; regenerate to canonical union with 2606 entries, zero deletions and standalone parser unchanged."
+  },
+  "incoming_source_preserved_in_merge": [
+    "packages/quds_office_editor/lib/src/embed/word_proofing_dialog.dart",
+    "packages/quds_office_editor/test/word_german_grammar_integration_test.dart",
+    "packages/quds_office_engine/lib/src/proofing/german_grammar.dart",
+    "packages/quds_office_engine/lib/src/word/serial/odt_document_writer.dart",
+    "packages/quds_office_engine/test/odt_document_writer_test.dart",
+    "packages/quds_office_engine/test/proofing/german_noun_agreement_test.dart"
+  ],
+  "canonical_sync_pending": false,
+  "github_ci_queried_or_awaited": false,
+  "remote_snapshot_parent": "0b0557a99c6e5fe6f0b4db1c50bfb12ac5320817",
+  "guard_precondition_restorations": [
+    {
+      "path": "packages/quds_office_editor/lib/src/embed/word_proofing_dialog.dart",
+      "merged_sha256": "27c2a31976c83a81b64fd878c2f36f8fb51674894a87833989a6403cd649f149",
+      "qualified_sha256": "36f33f984034cdcd689e6cc0b402f7b5b3bae124034d1eb83434c18f005e408b",
+      "canonical_target_sha256": "09b237aa2ba6d7030b8c16b8af585ba2e12e3ac2c1c1dabe9aff0844ea323d27",
+      "reason": "Restore exact qualified bytes solely as guarded-sync precondition; immutable canonical union supplies incoming and repaired source."
+    },
+    {
+      "path": "packages/quds_office_editor/test/word_german_grammar_integration_test.dart",
+      "merged_sha256": "c206c15c6af3aa2017b5f0c08a85f325188498ce2a5aba1a67ba212b9aa39310",
+      "qualified_sha256": "5078c38c993d6be5f69058f3d2c594b51969354b3b94f5f2848f3fbd9f696001",
+      "canonical_target_sha256": "c206c15c6af3aa2017b5f0c08a85f325188498ce2a5aba1a67ba212b9aa39310",
+      "reason": "Restore exact qualified bytes solely as guarded-sync precondition; immutable canonical union supplies incoming and repaired source."
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/proofing/german_grammar.dart",
+      "merged_sha256": "ab44aae00a5687bd3033a8adfbfd44eb6773c14089cab15bc656db3660360f91",
+      "qualified_sha256": "ba3df92b652889da16d2278d9b22eeb3021d11d1b4ba076f1852bffef396fa21",
+      "canonical_target_sha256": "ab44aae00a5687bd3033a8adfbfd44eb6773c14089cab15bc656db3660360f91",
+      "reason": "Restore exact qualified bytes solely as guarded-sync precondition; immutable canonical union supplies incoming and repaired source."
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/word/serial/odt_document_writer.dart",
+      "merged_sha256": "7d2f5bbb2792fabdc64d8f2975aca25127a9e848380de69ad048927bb57ad639",
+      "qualified_sha256": "2754aef31a7b6be004e74a3862bb8452e21a2073fb28a97c110b2d963e923660",
+      "canonical_target_sha256": "72bcc328dafff2ca1b8d0520cd5924f8efb3ab0ea86fc02a141062741b196ba3",
+      "reason": "Restore exact qualified bytes solely as guarded-sync precondition; immutable canonical union supplies incoming and repaired source."
+    },
+    {
+      "path": "packages/quds_office_engine/test/odt_document_writer_test.dart",
+      "merged_sha256": "db8e3a9044ee6d090dccdb152f3e244f0925b5f264378766ee7881536fbc49cd",
+      "qualified_sha256": "2e64f54aa30590930ace7958bc204f452e8590893aadc3f2d90f34766052481b",
+      "canonical_target_sha256": "45986ce2bd6cc6cf7caf67a883f4a2786be1e33fa5d1f1efb9658f7260ffed91",
+      "reason": "Restore exact qualified bytes solely as guarded-sync precondition; immutable canonical union supplies incoming and repaired source."
+    }
+  ],
+  "canonical_target": "ec5ecbff742580c0e7d1136507b953e8cc877e4c",
+  "managed_file_count": 2606,
+  "canonical_file_count": 749,
+  "standalone_parser_file_count": 1857,
+  "canonical_sync_receipts": [
+    "vendor-plan.json",
+    "vendor-applied.json",
+    "vendor-final-applied.json"
+  ],
+  "readme_correction": "Separate modeled new-document ODT/ODP writer support from unsupported legacy writers and VBA/ActiveX execution; retain host README customizations."
+}

@@ -1,0 +1,28 @@
+{
+  "purpose": "Technical reviewed-source binding after guarded Office source reconciliation; no policy decisions changed",
+  "reviewed_file_count": 954,
+  "compared_to_main": "1cd2a18f7bc2455eabc5ec8e22767c849a833305",
+  "changed_reviewed_files": [
+    {
+      "path": "tool/office_fidelity_manifest.json",
+      "incoming_main_sha256": "abd9bd53409bcb79289fb65af204b6550119da180d74233402945b8bf5ae81a4",
+      "current_sha256": "495f22dafe3c46bec0f5f15822cfae04916495c8993dd0a45161b8c13b5b8952"
+    }
+  ],
+  "old_reviewed_source_sha256": "e69399a82cf1c8dd74fbb713b9179e9c43466d7c99519fc5930805a60eff0347",
+  "new_reviewed_source_sha256": "a3bcaae141667279706ef6e4c932bf56552802df8ef57c6613e4179caa80fd3a",
+  "unchanged_policy_fields": [
+    "bundle_id",
+    "documentation",
+    "france",
+    "inventory_sha256",
+    "pubspec_lock_sha256",
+    "reviewed_on",
+    "schema_version",
+    "testflight",
+    "uses_non_exempt_encryption"
+  ],
+  "review": "Only the guarded vendor manifest changed among reviewed paths. The pin is updated to the canonical union, adding writer regression tests and bounded German grammar source already present in captured main; no encryption implementation or dependency lock changed.",
+  "offline_source_policy_validation": "pass",
+  "distribution_submission": false
+}

@@ -1,0 +1,24 @@
+{
+  "accepted_for_fresh_qualification": true,
+  "canonical_note_test_blob_preserved_since_555": "bcd825253162c15d7f9582ad6bcc642ae6368ff7",
+  "findings": [
+    "Both original note-probe failures contradict contracts already enforced by the unchanged canonical note fidelity suite: styled note spans, automatic reference spacing and visible-paragraph note-table fallback. They are stale probe assertions, not evidence of a newly introduced note regression.",
+    "The corrected selector is namespace-aware and constrained to the owning body paragraph. Assertions retain exact authored spaces, tabs, line breaks and cached field text plus exactly the modeled separator, stable distinct note ids and note classes. No trim-based acceptance is introduced.",
+    "The corrected exported note-table probe asserts exact visible paragraph sequence, absence of structural/covered table elements and hidden payload in exported XML, and preservation of original table/covered/nested objects, row/grid shape and hidden strings in the model.",
+    "The separate authored ODF fixture retains the import contract: aliased genuine table namespace is filtered, a foreign lookalike remains visible, hidden nested payload never appears in previews, and raw XML equals the authored content plus the existing part header exactly.",
+    "The two other writer probes remain byte-identical and all six substantive probe cases remain selected. No case is removed or skipped.",
+    "Generated formatter exclusions authenticate individual file SHA256 values and generated-source headers against both exact manifests. All 61 vendor targets remain in strict analysis; only 18 authenticated generated outputs leave the formatter scope. No directory blanket exemption or generated-byte rewrite is introduced.",
+    "The recorded analysis graph uses language3.12 for engine/editor and3.13 for host, so graph-derived format settings match their source declarations.",
+    "The separate canonical const keyword change resolves the actual host fatal-info style failure without suppressing any lint."
+  ],
+  "fresh_host_runtime_result_claimed": false,
+  "note_probe_patch_sha256": "b27e128c5a13d8fae532d564ec3d39d47a4b79f3e5c1d581f54ec92e7a9f8b15",
+  "original_failed_attempt_preserved": true,
+  "rationale_sha256": "4981588f69f2aadaea73e1eeb1fbb13b10f17ec2078b3810e26f4577346c2784",
+  "reviewed_at_utc": "2026-11-17T16:38:06.185738+00:00",
+  "reviewed_note_probe_sha256": "daa3766ff4204c9998519f22d9cd81ecf02aa7e9a49494ad1d32fc5169c3ba79",
+  "reviewed_runner_sha256": "c9ddb2599fc3c25c2d8123b873cd87f441c27fe29163aae587c41bbfb98a97f8",
+  "runner_patch_sha256": "62be369424c29d4629dacb0b9036a712b2aa4b2659b48cf770b5ebf2b8932c90",
+  "source_or_test_changes_by_reviewer": false,
+  "tests_run_by_reviewer": 0
+}

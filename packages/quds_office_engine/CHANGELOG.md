@@ -4,6 +4,18 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Keep ODT paragraph shading and border colors independent when paragraph
+  styles are cached, while reusing styles with equivalent serialized colors.
+- Preserve the first capital in explicit direct quotations after a colon and
+  opening quote. Keep subsequent-word casing and real misspelling checks.
+- Accept the missing finite `Hof` lemma and `Grüezi`/`grüezi` greeting through
+  the existing first-party word supplement; retain all pinned upstream shards.
+- Share the editor's deterministic-first manual proofing report merge with
+  local quality evaluation, preserving statuses, snapshot identity and offsets.
+- Retain structured tables inside paragraph-anchored ODF text boxes, including
+  linked drawing frames. Keep authored empty paragraphs and explicit whitespace,
+  omit synthetic text-box anchors, and exclude annotation, note, covered-cell and
+  ruby annotation stories under the shared text-expansion budget.
 - Keep physical paragraph indents when exporting RTL paragraphs and headings
   to ODT's direction-dependent margin properties.
 - Extract paragraph-anchored ODF text boxes in generic extraction and search,

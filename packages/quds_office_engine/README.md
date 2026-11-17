@@ -5,11 +5,11 @@
 > DOCX/XLSX/PPTX models, imports BIFF8 worksheets and ODS workbooks, and exports
 > a modeled ODS package. It is therefore not “OOXML only”, and ODF is not
 > text-extraction-only: ODT/ODP are formatted read-only views while ODS has
-> typed import and a new-document export writer. Legacy writers, ODT/ODP
-> writers, VBA/ActiveX execution and full unknown-XML-preserving ODF fidelity
-> remain a new-document subset; ODT and ODP exports do not preserve arbitrary
-> imported ODF XML. The upstream notes below describe the original library
-> contract unless this fork note says otherwise.
+> typed import and a new-document export writer. ODT and ODP exports write a
+> modeled new-document subset without preserving arbitrary imported ODF XML.
+> Legacy writers, VBA/ActiveX execution and full unknown-XML-preserving ODF
+> fidelity remain out of scope. The upstream notes below describe the original
+> library contract unless this fork note says otherwise.
 
 <p>
   <a href="https://pub.dev/packages/quds_office_engine"><img alt="pub package" src="https://img.shields.io/pub/v/quds_office_engine.svg"/></a>

@@ -1,0 +1,152 @@
+{
+  "from": "555eb728ce3ea872cb5ceb3e5fd2104b21f932aa",
+  "to": "b32dee6f1fb6993c928a466b553226209cf27fb8",
+  "writes": [
+    {
+      "path": "packages/quds_office_editor/CHANGELOG.md",
+      "sha256": "0c837630624ed1185c51931b0656875e83792437a57ca349a6c2925c5892d35e",
+      "bytes": 31395
+    },
+    {
+      "path": "packages/quds_office_editor/lib/src/proofing/word_proofing.dart",
+      "sha256": "c0be181cd8f51da27cacf4a122493c04cd7cf5dd1af2403d0b30796888a789be",
+      "bytes": 33479
+    },
+    {
+      "path": "packages/quds_office_editor/test/word_manual_proofing_test.dart",
+      "sha256": "a5f09c786724dfbfd53a970e4f24121bbf28935d2b5394e5e0e729b28c1a4d7a",
+      "bytes": 10322
+    },
+    {
+      "path": "packages/quds_office_engine/CHANGELOG.md",
+      "sha256": "8a041f87137c257f6477f3b3a366bda366da464716109d2a23625b9ebc8292a8",
+      "bytes": 55670
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/extract/office_text_extractor.dart",
+      "sha256": "c7a8e41d044085ba2d01fcea36ffee05edc4c0f28ae06bc09347d72040e770d7",
+      "bytes": 15424
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/odf/odf_text.dart",
+      "sha256": "85492f892da8d73419e60c02696fc40ded3c54717cc89bae2f4a2cbebae1335a",
+      "bytes": 9574
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/proofing/german_grammar.dart",
+      "sha256": "ba3df92b652889da16d2278d9b22eeb3021d11d1b4ba076f1852bffef396fa21",
+      "bytes": 40837
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/proofing/german_spelling.dart",
+      "sha256": "bd796b422d9dd6b95414bfb6a0695e3c1a83205b4235da803b9de86cf2157535",
+      "bytes": 32669
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/proofing/office_proofing.dart",
+      "sha256": "406ebbb33e00d547bf9dbeaaa603de56f8517fbd81109284e00358052fcf40ef",
+      "bytes": 17110
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/slide/serial/odp_presentation_writer.dart",
+      "sha256": "bac6989bf16fba9afd9f532556b0d89aa4c13b2dfaf4d45b073e9b7f9b42cc69",
+      "bytes": 30997
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/word/serial/odt_document_writer.dart",
+      "sha256": "adc25dfade5c9d51c7b5dcb2d2b70b6f7a81a4a1981309d34aa2781fde2b6f8c",
+      "bytes": 68654
+    },
+    {
+      "path": "packages/quds_office_engine/test/odf_annotation_extraction_test.dart",
+      "sha256": "001dfae2628fae3267a145c3f2de4f6cbe6a8fc9d7473c50aa08d5391a587ba4",
+      "bytes": 9853
+    },
+    {
+      "path": "packages/quds_office_engine/test/odf_text_box_extraction_test.dart",
+      "sha256": "2b88a1ef383d20268d9a800c104f795b568e2e4497e58aa52f457b7344bfcf4f",
+      "bytes": 10589
+    },
+    {
+      "path": "packages/quds_office_engine/test/odp_presentation_writer_test.dart",
+      "sha256": "2a7c46d84505b213e0565e856cb9d9dab0b3cbb2099b134fbf9374fc6557013d",
+      "bytes": 17214
+    },
+    {
+      "path": "packages/quds_office_engine/test/odp_transform_fidelity_test.dart",
+      "sha256": "edb1380dab91e645e3b16049ccd32135938f32333f67c7510e88bd28be1feac9",
+      "bytes": 14981
+    },
+    {
+      "path": "packages/quds_office_engine/test/odt_comment_fidelity_test.dart",
+      "sha256": "eac3262001e49a6c1dd3a24fc5afc410bfe1735a9cc7f46cf0cb8660d16237e5",
+      "bytes": 19497
+    },
+    {
+      "path": "packages/quds_office_engine/test/odt_document_writer_test.dart",
+      "sha256": "7373be481a3153f557e41b2e7c1cf337928dcbfdb1b4557954cbd8002f8f09a8",
+      "bytes": 16673
+    },
+    {
+      "path": "packages/quds_office_engine/test/odt_list_fidelity_test.dart",
+      "sha256": "792df747aab84c62c3a754beb155c7013c0456907c609c22264174460397292f",
+      "bytes": 27729
+    },
+    {
+      "path": "packages/quds_office_engine/test/odt_paragraph_properties_test.dart",
+      "sha256": "35b492937fc7d931111e184a0ab2d0e54463e99134af557816bb33d5e6458cce",
+      "bytes": 12313
+    },
+    {
+      "path": "packages/quds_office_engine/test/odt_section_continuation_test.dart",
+      "sha256": "c81f5b6c4a08e15674e3f537ac5ca11e12dbd18b56741b4de504dab547ea4520",
+      "bytes": 19978
+    },
+    {
+      "path": "packages/quds_office_engine/test/odt_section_fidelity_test.dart",
+      "sha256": "3e128eaa3b7306c47960b1194fa0b16bc1e3a7633e04a353d9867f6e348d14ab",
+      "bytes": 22127
+    },
+    {
+      "path": "packages/quds_office_engine/test/proofing/german_genitive_noun_test.dart",
+      "sha256": "8ab750a22463c6a65e3b85e031bc156aea916a15bb1a1f1ef85ddbfefe1a7ac6",
+      "bytes": 10101
+    },
+    {
+      "path": "packages/quds_office_engine/test/proofing/german_lexicon_query_test.dart",
+      "sha256": "9787110806f0a4d630f29011941f8df90a59b2b3cd7d32a9133baf3254b10df8",
+      "bytes": 1419
+    },
+    {
+      "path": "packages/quds_office_engine/test/proofing/proofing_report_merge_test.dart",
+      "sha256": "dcfe6b74b08a307bcce538b5f4fe3911d63a30aeaa15a0a5fa9bbc69b0158c05",
+      "bytes": 12575
+    },
+    {
+      "path": "packages/quds_office_engine/tool/fidelity/make_odp_rotation_fixtures.dart",
+      "sha256": "ef231917f264e4871c0dce0ed4db29397249fd8778c155221ddd7dece79bcd80",
+      "bytes": 3210
+    },
+    {
+      "path": "packages/quds_office_engine/tool/fidelity/verify_odp_rotation.py",
+      "sha256": "485ced0dee4db804186f73b6fd9b67e51e652a2fec0efb64cacc90fde4abfb12",
+      "bytes": 11472
+    }
+  ],
+  "deletes": [],
+  "new_file_modes": {
+    "packages/quds_office_editor/test/word_manual_proofing_test.dart": "0o644",
+    "packages/quds_office_engine/test/odf_text_box_extraction_test.dart": "0o644",
+    "packages/quds_office_engine/test/odp_transform_fidelity_test.dart": "0o644",
+    "packages/quds_office_engine/test/odt_comment_fidelity_test.dart": "0o644",
+    "packages/quds_office_engine/test/odt_list_fidelity_test.dart": "0o644",
+    "packages/quds_office_engine/test/odt_section_continuation_test.dart": "0o644",
+    "packages/quds_office_engine/test/proofing/german_genitive_noun_test.dart": "0o644",
+    "packages/quds_office_engine/test/proofing/german_lexicon_query_test.dart": "0o644",
+    "packages/quds_office_engine/test/proofing/proofing_report_merge_test.dart": "0o644",
+    "packages/quds_office_engine/tool/fidelity/make_odp_rotation_fixtures.dart": "0o644",
+    "packages/quds_office_engine/tool/fidelity/verify_odp_rotation.py": "0o644"
+  },
+  "managed_files": 2598,
+  "applied": true
+}

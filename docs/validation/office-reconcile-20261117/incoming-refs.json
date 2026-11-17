@@ -1,0 +1,2474 @@
+{
+  "repository": "CrispStrobe/CrispCloud",
+  "captured_at": "2026-11-17T17:39:35.511839+00:00",
+  "qualified_sha": "83617b79f8a56600e9ca17e73f835d944c79dfa8",
+  "main_sha": "1cd2a18f7bc2455eabc5ec8e22767c849a833305",
+  "source": "git fetch origin +refs/heads/*:refs/remotes/origin/* +refs/pull/*/head:refs/remotes/pull/*",
+  "ci_endpoints_used": false,
+  "refs": [
+    {
+      "ref": "refs/remotes/origin/codex/odf-annotation-visibility-20261117",
+      "sha": "2165ceddc5fc01c3e1b7aa4a9a5b6740d4c1f975",
+      "committed_at": "2026-11-17T15:14:16+01:00",
+      "subject": "docs: record annotation source review and pending runtime checks [skip ci]",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/codex/office-continuation-20261117",
+      "sha": "1149fc32ca12763e969679c627877cf269bfafb1",
+      "committed_at": "2026-11-17T16:54:01+01:00",
+      "subject": "Integrate captured Office source and retain locked host recovery [skip ci]",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/codex/office-qualified-resume-20261117",
+      "sha": "83617b79f8a56600e9ca17e73f835d944c79dfa8",
+      "committed_at": "2026-11-17T17:48:00+01:00",
+      "subject": "Record independently verified host qualification [skip ci]",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/codex/ssh-terminal-tmux",
+      "sha": "378c036b392ee3ff9112d86aa21e7fdd8e722808",
+      "committed_at": "2026-11-15T19:02:46+01:00",
+      "subject": "Preserve delayed SSH exit status and restore CI hook compatibility",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/codex/terminal-screen-workspace",
+      "sha": "2eec6b4edc62693cfc6048581862a7aed87143c9",
+      "committed_at": "2026-11-16T12:36:10+01:00",
+      "subject": "docs: verify delivered recovery source and qualified draft PR [skip ci]",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/codex/terminal-session-optimization-20261116",
+      "sha": "852f009cadb153cfcb0799c527fdd78364a2df8d",
+      "committed_at": "2026-11-16T12:40:01+01:00",
+      "subject": "Complete local terminal acceptance and preserve optimized release proof [skip ci]",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/codex/zotero-capabilities-20261116",
+      "sha": "f80c67f1e817bf14266d9f8b33a5129d54463b78",
+      "committed_at": "2026-11-16T15:16:00+01:00",
+      "subject": "Preserve final 923-test qualification summary during executor outage [skip ci]",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/codex/zotero-optimization-20261116",
+      "sha": "5e54229821bf7101ee60fb486d0c924ab6e7d5db",
+      "committed_at": "2026-11-16T11:52:13+01:00",
+      "subject": "Record verified Zotero vendoring and 109 host reconciliation tests [skip ci]",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/codex/zotero-recovery-20261116",
+      "sha": "e8331dd7e10a0e0d8fac03035eedb19492a8ca2d",
+      "committed_at": "2026-11-17T10:39:26+01:00",
+      "subject": "Publish final host note qualification and reviewed landing evidence [skip ci]",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/codex/zotero-support-20261115",
+      "sha": "e678e17859f8d29e274d1abbf064b93d04a6fa42",
+      "committed_at": "2026-11-15T23:44:37+01:00",
+      "subject": "docs(office): save native Zotero qualification and final canonical source pin [skip ci]",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/codex/zotero-support-20261116",
+      "sha": "5efae7732727fc1ae43d6b664922214dd6acfedf",
+      "committed_at": "2026-11-16T08:52:41+01:00",
+      "subject": "Save complete local qualification and final Quds 428679a3 pin [skip ci]",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/docs/conditional-affix",
+      "sha": "4919c87f0225599b9b2b963285d364d2c2bd1a1e",
+      "committed_at": "2026-11-15T23:08:28+01:00",
+      "subject": "Record conditional affix rules and current pin",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/docs/conditional-between",
+      "sha": "073713474ea62525d9f5832da918407de333cd03",
+      "committed_at": "2026-11-15T21:24:57+01:00",
+      "subject": "Record between conditions and current Quds pin",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/docs/conditional-complete",
+      "sha": "a49c3f14f96fed4c5551e45060ebbce3fa6883a1",
+      "committed_at": "2026-11-15T20:15:57+01:00",
+      "subject": "Document complete conditional format subset",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/docs/conditional-dxf-styles",
+      "sha": "5ca134aaac74bb9d788dc3aa66d92827700f7da5",
+      "committed_at": "2026-11-17T00:19:09+01:00",
+      "subject": "docs: record conditional dxf styles",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/docs/conditional-formats",
+      "sha": "2281ad58aed9f97bc1d387d3c98728245a5e4bcf",
+      "committed_at": "2026-11-15T20:05:27+01:00",
+      "subject": "Document numeric ODS conditional formats",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/docs/conditional-top-bottom",
+      "sha": "a8edc699641da3e3b3f1452b5db59bec52a5717d",
+      "committed_at": "2026-11-17T00:15:09+01:00",
+      "subject": "docs: record ranked and average conditional rules",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/docs/current-office-capabilities",
+      "sha": "781ab2ac8e6434d2077f6cb30c500819dce8a294",
+      "committed_at": "2026-11-16T19:52:16+01:00",
+      "subject": "docs: describe the current Office and ODF capabilities",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/docs/filter-operators",
+      "sha": "385eb47e7eabbbe27a4287d173d69544b2566724",
+      "committed_at": "2026-11-16T15:15:49+01:00",
+      "subject": "Record ODS filter operator progress",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/docs/filters-closed",
+      "sha": "30f9cdefd70fea3c18a288a30b2f764c13044f95",
+      "committed_at": "2026-11-16T14:52:12+01:00",
+      "subject": "Close ODS metadata and validation backlog",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/docs/metadata-closed",
+      "sha": "343a930ebdbc1b0ee45f16328be868d0f78ba624",
+      "committed_at": "2026-11-16T00:07:32+01:00",
+      "subject": "Record ODS metadata and validation progress",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/docs/metadata-complete",
+      "sha": "74378704f363cd095cefd23c0ac02e8ca0219ca1",
+      "committed_at": "2026-11-16T14:35:06+01:00",
+      "subject": "Record ODS metadata and hyperlink progress",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/docs/odf-metadata",
+      "sha": "8581f8ac54a8f70092ee6d3c7ebba6de1477437c",
+      "committed_at": "2026-11-17T16:38:42+01:00",
+      "subject": "docs: record ODF metadata export",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/docs/odp-presentation-writer",
+      "sha": "def593ff5ae0a37aab453313adf10d4374142914",
+      "committed_at": "2026-11-17T07:16:32+01:00",
+      "subject": "docs: record the bounded ODP writer and export action",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/docs/odp-shape-links",
+      "sha": "91a29b9b5c121288ecc50a69d744164aa7290ad1",
+      "committed_at": "2026-11-17T16:24:07+01:00",
+      "subject": "docs: record ODP text links",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/docs/odp-transitions",
+      "sha": "ce400a18517e69e29368b3728eb092a37d780bcc",
+      "committed_at": "2026-11-17T09:53:22+01:00",
+      "subject": "docs: record ODP transitions",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/docs/ods-export-test-note",
+      "sha": "16cfd8196eda7b791c4e7efa47896f3f233ab10e",
+      "committed_at": "2026-11-16T19:53:10+01:00",
+      "subject": "docs: record the ODS export regression",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/docs/ods-filter-predicates",
+      "sha": "4fd51df9a05f0380297ed512fea35d0deb09ef85",
+      "committed_at": "2026-11-16T20:20:35+01:00",
+      "subject": "docs: record ODS filter predicates and current provenance",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/docs/ods-header-footer",
+      "sha": "5bfe1bba57989216cc228069e17785b4c849b5e4",
+      "committed_at": "2026-11-16T20:59:32+01:00",
+      "subject": "docs: record ODS header and footer round-trips",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/docs/ods-hidden-state",
+      "sha": "1cb0b4a6a01b4aabe58f95d9a9132171bbb11aa0",
+      "committed_at": "2026-11-15T19:44:34+01:00",
+      "subject": "Record ODS hidden-state and current Quds pin",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/docs/ods-pictures",
+      "sha": "128f55295107e3ada605b52d160165e03f726cb4",
+      "committed_at": "2026-11-15T15:19:11+01:00",
+      "subject": "Document ODS pictures and exact host goldens",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/docs/ods-row-groups",
+      "sha": "0e81360c0090244e73cf850e89166dbe557fd67b",
+      "committed_at": "2026-11-16T20:25:04+01:00",
+      "subject": "docs: record ODS row groups and current provenance",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/docs/ods-validations",
+      "sha": "b420b45b6666ca0658ae74f2a682a3cb6b88134d",
+      "committed_at": "2026-11-15T20:19:58+01:00",
+      "subject": "Document ODS list validations and current pin",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/docs/ods-writer",
+      "sha": "0b8e9ef6706709f2ebe4c7b1435691a13f485a62",
+      "committed_at": "2026-11-16T16:19:46+01:00",
+      "subject": "Record the ODS writer capability",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/docs/ods-writer-images",
+      "sha": "6d6c10eecf949e0b02320074988234a8ef5bf11a",
+      "committed_at": "2026-11-16T16:57:19+01:00",
+      "subject": "Record ODS writer pictures and validations",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/docs/odt-comments",
+      "sha": "cb4147d325ca096977484a06582799606ebbd7e7",
+      "committed_at": "2026-11-17T14:49:07+01:00",
+      "subject": "docs: record ODT comment export",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/docs/odt-document-writer",
+      "sha": "3080c7bed1a8452877601c3c1f13b4494a7e9cb4",
+      "committed_at": "2026-11-17T00:43:50+01:00",
+      "subject": "docs: record the bounded ODT writer and export action",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/docs/odt-footnotes",
+      "sha": "46f7ba2a72a4964c7dfecae2d8d2e9fb430ffd49",
+      "committed_at": "2026-11-17T10:05:36+01:00",
+      "subject": "docs: record ODT footnote export",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/docs/odt-frame-size",
+      "sha": "4660f0e021af5786b350879521e04000b072d7e3",
+      "committed_at": "2026-11-17T00:28:24+01:00",
+      "subject": "docs: record ODT frame dimensions",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/docs/odt-image-registry",
+      "sha": "f9138cc1e51f52b4b9cb99b4b09b9ce32e1450c8",
+      "committed_at": "2026-11-16T20:14:40+01:00",
+      "subject": "docs: record the bounded ODT picture registry",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/docs/odt-links-bookmarks",
+      "sha": "c6713f22ef616a8b1525598f12fa2836ecba9f8c",
+      "committed_at": "2026-11-17T15:55:30+01:00",
+      "subject": "docs: record ODT bookmarks and links",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/docs/odt-lists",
+      "sha": "9b1f404f54e767d6f0464cf70a12c57da6a990bc",
+      "committed_at": "2026-11-17T09:26:51+01:00",
+      "subject": "docs: record ODT list groups",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/docs/odt-nested-lists",
+      "sha": "4e9aea1c1763d7a7d6ed39224e4c00be32d6914f",
+      "committed_at": "2026-11-17T15:42:33+01:00",
+      "subject": "docs: record nested ODT lists",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/docs/odt-ordered-lists",
+      "sha": "ec0f16b96f8040c185ecf147af045c7a2986027c",
+      "committed_at": "2026-11-17T09:39:59+01:00",
+      "subject": "docs: record ordered ODT lists and provenance",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/docs/odt-page-fields",
+      "sha": "9992184427d09975bf8360f2cdad21deee064656",
+      "committed_at": "2026-11-17T16:46:32+01:00",
+      "subject": "docs: record ODT page-number fields",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/docs/odt-paragraph-shading",
+      "sha": "52cb18879b112613ee716b350b5c7107b093e39e",
+      "committed_at": "2026-11-17T16:53:56+01:00",
+      "subject": "docs: record ODT paragraph shading and borders",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/docs/odt-sections",
+      "sha": "7e8456967a3d874544a4a56e185e631ff90e2639",
+      "committed_at": "2026-11-17T15:21:30+01:00",
+      "subject": "docs: record ODT section export",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/docs/odt-tab-stops",
+      "sha": "8251982deb99986c7a09b9e797d0092ffcb0acd2",
+      "committed_at": "2026-11-17T18:27:54+01:00",
+      "subject": "docs: record ODT tab stops",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/docs/odt-table-borders",
+      "sha": "583c19566be01d3058bd497c44e4b1305e5109e6",
+      "committed_at": "2026-11-17T18:23:46+01:00",
+      "subject": "docs: record ODT table borders and row heights",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/docs/office-pin-20261115",
+      "sha": "5ed4f45cb758394dc2346041d826c10257c24dc1",
+      "committed_at": "2026-11-15T16:32:08+01:00",
+      "subject": "Record the verified current Office source pin",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/docs/remaining-gaps",
+      "sha": "a0df68710bbacdcbddf57f7fb7b77238566b65c3",
+      "committed_at": "2026-11-15T23:21:08+01:00",
+      "subject": "Document the remaining Office format backlog",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/docs/remaining-gaps-link",
+      "sha": "854d2ff6a20206434c64173ddca1152b079c8277",
+      "committed_at": "2026-11-15T23:23:36+01:00",
+      "subject": "Refresh verified snapshot in remaining-gaps doc",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/docs/restore-page-setup-and-pictures2",
+      "sha": "70fb587eb5bf378b62cd998132fbf1e38a5b53e8",
+      "committed_at": "2026-11-16T20:50:47+01:00",
+      "subject": "docs: restore ODT registry and ODS page-setup status",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/docs/sheet-page-setup",
+      "sha": "0732c6ba7199609a46d73bb85430ecbd038d1671",
+      "committed_at": "2026-11-16T20:49:16+01:00",
+      "subject": "docs: record worksheet page setup",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/docs/validation-complete",
+      "sha": "8197b59177827cfa7b426c55acd0cdca19f9b6eb",
+      "committed_at": "2026-11-16T10:15:43+01:00",
+      "subject": "Close the modeled ODS validation backlog",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/docs/validation-operators",
+      "sha": "11d4fbd9bc0a6e9fb3fa6cdc7604a45aaeae3210",
+      "committed_at": "2026-11-16T09:40:18+01:00",
+      "subject": "Record numeric validation progress",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/feat/export-ods",
+      "sha": "ca8b789d4ceaa2b74cdb7e256cdd90746c702594",
+      "committed_at": "2026-11-16T19:49:35+01:00",
+      "subject": "feat(office): export sheet workbooks as new ODS files",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/feat/hidden-sheets-ui",
+      "sha": "dacf219a094e8f309e3f2ea1e27afbdccaa69f3d",
+      "committed_at": "2026-11-15T19:43:08+01:00",
+      "subject": "Hide hidden worksheets in the worksheet selector",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/feat/odt-frame-size",
+      "sha": "1e18a00dd9effae71c4574c3f51fd3fe24b1c7d5",
+      "committed_at": "2026-11-17T00:28:06+01:00",
+      "subject": "feat(office): honor ODT picture frame dimensions",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/feat/odt-headers",
+      "sha": "38a69f9a60bce92b6c2db60a71427ac47d98819d",
+      "committed_at": "2026-11-15T17:55:26+01:00",
+      "subject": "Show ODT header and footer text",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/feat/odt-image-registry",
+      "sha": "120127794ea061f2f2fd2385d516b74e2e4ebb48",
+      "committed_at": "2026-11-16T20:14:22+01:00",
+      "subject": "feat(office): keep ODT pictures in a bounded image registry",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/feat/odt-images",
+      "sha": "969c104a09dc2ad0732edb4a11a0300b52f20e2f",
+      "committed_at": "2026-11-15T15:28:52+01:00",
+      "subject": "Render bounded ODT pictures inline",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/feat/odt-styles",
+      "sha": "048ad97b6d4b1be94821dd29f1ffb1494a329ecb",
+      "committed_at": "2026-11-15T16:40:25+01:00",
+      "subject": "Read ODT named styles from styles.xml",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/feat/odt-textboxes",
+      "sha": "b81105fe579d00b66c0a07b07d8ed36cee23ecfb",
+      "committed_at": "2026-11-15T15:32:55+01:00",
+      "subject": "Keep text-box labels in ODT previews",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/fix/conditional-affix-vendor",
+      "sha": "1dbfa2125cd83d6ec4e0028d1584e612fccfb77c",
+      "committed_at": "2026-11-15T23:07:38+01:00",
+      "subject": "Vendor begins-with and ends-with conditions",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/fix/conditional-between-vendor",
+      "sha": "a52efabd7d05a50b428eb337944d2b6aeee2400b",
+      "committed_at": "2026-11-15T21:24:32+01:00",
+      "subject": "Vendor between conditional rules",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/fix/conditional-dxf-styles-vendor",
+      "sha": "79e725ef9c105845d38b25e745563c52234421da",
+      "committed_at": "2026-11-17T00:18:43+01:00",
+      "subject": "Vendor conditional-format dxf styles",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/fix/conditional-dxf-vendor",
+      "sha": "b9b7932eca6213973803b5bb227464cccd3051d6",
+      "committed_at": "2026-11-15T20:11:30+01:00",
+      "subject": "Vendor conditional dxf styles",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/fix/conditional-operators-vendor",
+      "sha": "24ac26de023313dba726f8cdaabd16179c49da01",
+      "committed_at": "2026-11-15T20:03:28+01:00",
+      "subject": "Vendor numeric conditional comparators",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/fix/conditional-text-vendor",
+      "sha": "20e5c5b7f63f0b8335665ca131418023f6bc2ca7",
+      "committed_at": "2026-11-15T20:14:51+01:00",
+      "subject": "Vendor contains-text and duplicate conditional rules",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/fix/conditional-top-bottom-vendor",
+      "sha": "168160bdeb121a8f83b439f8301fdde3a3a30523",
+      "committed_at": "2026-11-17T00:14:32+01:00",
+      "subject": "Vendor ranked and average conditional rules",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/fix/export-ods-strings",
+      "sha": "c5927513b337fea005080ad5e5d3dd7440c6210c",
+      "committed_at": "2026-11-16T19:53:43+01:00",
+      "subject": "fix(office): localize the ODS export action",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/fix/hidden-state-vendor",
+      "sha": "fd69bc3ee8db4ecec4683a7b8161a643b758db6b",
+      "committed_at": "2026-11-15T17:52:22+01:00",
+      "subject": "Vendor ODS hidden row and column state",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/fix/odf-metadata-vendor",
+      "sha": "fca44384b104dddf72f597b99a45a51566350fb7",
+      "committed_at": "2026-11-17T16:38:11+01:00",
+      "subject": "Vendor ODF document metadata",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/fix/odp-presentation-writer-vendor",
+      "sha": "a0daffceecfa2379a7d28cf97c3f6cba489f1e22",
+      "committed_at": "2026-11-17T07:15:55+01:00",
+      "subject": "feat(office): export slide decks as new ODP files",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/fix/odp-shape-links-vendor",
+      "sha": "63a1de08afd75573267bcf85eed5d1fd793737a1",
+      "committed_at": "2026-11-17T16:23:47+01:00",
+      "subject": "Vendor ODP text-shape hyperlinks",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/fix/odp-transitions-vendor",
+      "sha": "3c5a4114c3241d1aa2550b00ebd959527a16b4d9",
+      "committed_at": "2026-11-17T09:52:50+01:00",
+      "subject": "Vendor ODP slide transitions",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/fix/ods-conditional-vendor",
+      "sha": "4e3e45e619fa2983f1fa8394a9f28cf6c454a9f6",
+      "committed_at": "2026-11-15T19:59:29+01:00",
+      "subject": "Vendor ODS conditional formats",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/fix/ods-custom-validation-vendor",
+      "sha": "9898961e5cb64cdfc704f85c8f6f5ebedad3c39a",
+      "committed_at": "2026-11-16T10:07:37+01:00",
+      "subject": "Vendor ODS custom formula validations",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/fix/ods-default-geometry-vendor",
+      "sha": "29a2bb5158a316dcde5da776172e09027e04f78d",
+      "committed_at": "2026-11-15T17:46:43+01:00",
+      "subject": "Vendor ODS default style and geometry fixes",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/fix/ods-default-style-vendor",
+      "sha": "0ba620fdc34ea7afd278468f3978997c3cc7ba8f",
+      "committed_at": "2026-11-15T17:26:20+01:00",
+      "subject": "Vendor ODS default cell styles",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/fix/ods-filter-conditions-vendor",
+      "sha": "391ccbda8553e5c9104226fdf42d2a1e2c028b33",
+      "committed_at": "2026-11-16T20:20:10+01:00",
+      "subject": "Vendor ODS autofilter predicates",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/fix/ods-filter-operators-vendor",
+      "sha": "c9c403608cf6fc83e53245bd73c0db57403a969d",
+      "committed_at": "2026-11-16T15:14:40+01:00",
+      "subject": "Vendor ODS filter comparison operators",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/fix/ods-filter-vendor",
+      "sha": "12ce7da82680331ff1c903b39183a0324c9508f5",
+      "committed_at": "2026-11-16T14:38:42+01:00",
+      "subject": "Vendor ODS filter predicates",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/fix/ods-header-footer-vendor",
+      "sha": "b0723248097fc5d0bf3b06b0a34717c192522d5f",
+      "committed_at": "2026-11-16T20:59:01+01:00",
+      "subject": "Vendor ODS header and footer round-trips",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/fix/ods-hyperlinks-vendor",
+      "sha": "aa45a0927789b117cec54c858895d8343aad661b",
+      "committed_at": "2026-11-16T14:30:31+01:00",
+      "subject": "Vendor ODS cell hyperlinks",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/fix/ods-images-vendor",
+      "sha": "d18dc14194bfa4d11e96552b77dc34cbe5a8b417",
+      "committed_at": "2026-11-15T15:08:22+01:00",
+      "subject": "Vendor ODS picture import",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/fix/ods-metadata-vendor",
+      "sha": "8a62e0864ad4bae96063ec6f8a542db039a306cf",
+      "committed_at": "2026-11-16T00:06:37+01:00",
+      "subject": "Vendor ODS workbook metadata",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/fix/ods-named-expressions-vendor",
+      "sha": "c80ee46fccbbfc8c2da4b18d67fc220cad23f1fc",
+      "committed_at": "2026-11-16T13:35:54+01:00",
+      "subject": "Vendor ODS named expressions",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/fix/ods-outline-vendor",
+      "sha": "10374ee7f24c29be0958edc94157cde96c28f67c",
+      "committed_at": "2026-11-16T14:34:04+01:00",
+      "subject": "Vendor ODS outline groups",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/fix/ods-row-groups-vendor",
+      "sha": "116a309ef09d9bba04b7f2d3fd3c4956a478aca5",
+      "committed_at": "2026-11-16T20:24:42+01:00",
+      "subject": "Vendor ODS row groups and off-extent geometry",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/fix/ods-tab-color-vendor",
+      "sha": "9c2047da22110db1518a6226ee7a35e421fb9d51",
+      "committed_at": "2026-11-16T11:32:25+01:00",
+      "subject": "Vendor ODS worksheet tab colours",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/fix/ods-validation-messages-vendor",
+      "sha": "a617e188cf69f3d3c14dba614593f953dadf1436",
+      "committed_at": "2026-11-16T10:14:30+01:00",
+      "subject": "Vendor ODS validation prompts and error styles",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/fix/ods-validation-vendor2",
+      "sha": "2b6ac08219418cf2c2d91968d117437684370c4d",
+      "committed_at": "2026-11-16T09:39:06+01:00",
+      "subject": "Vendor ODS numeric and date validations",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/fix/ods-validations-vendor",
+      "sha": "ee74601e71441fcac2b6defebff33ca04f538d12",
+      "committed_at": "2026-11-15T20:19:37+01:00",
+      "subject": "Vendor ODS list validations",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/fix/ods-writer-conditional-vendor",
+      "sha": "5fb04fb0bcaab54c11e3585717d7e33895bb339e",
+      "committed_at": "2026-11-16T16:50:49+01:00",
+      "subject": "Vendor ODS writer conditional formats and validations",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/fix/ods-writer-images-vendor",
+      "sha": "7e24454598a43e46821a75b3b43c14a9a89b572f",
+      "committed_at": "2026-11-16T16:56:43+01:00",
+      "subject": "Vendor ODS writer pictures",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/fix/ods-writer-metadata-vendor",
+      "sha": "f7010ad1841c0f7146aa8544177911af0e98cfe9",
+      "committed_at": "2026-11-16T16:18:16+01:00",
+      "subject": "Vendor ODS writer metadata and number formats",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/fix/ods-writer-page-layout-vendor",
+      "sha": "d220aa43774fe36b01530400c3a10bd4228faa79",
+      "committed_at": "2026-11-16T19:32:09+01:00",
+      "subject": "Vendor ODS writer page layout",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/fix/ods-writer-vendor",
+      "sha": "10d8a9b4750bf3d80d35f089ae1ac4fdf8dffc1f",
+      "committed_at": "2026-11-16T16:13:16+01:00",
+      "subject": "Vendor the ODS workbook writer",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/fix/odt-comments-vendor",
+      "sha": "17b5f5495a05573a7b173018c5becdbaa7e190ea",
+      "committed_at": "2026-11-17T14:48:44+01:00",
+      "subject": "Vendor ODT comment export",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/fix/odt-document-writer-vendor",
+      "sha": "3d26bdae3dac4120f253767157d45abbf68911b8",
+      "committed_at": "2026-11-17T00:43:19+01:00",
+      "subject": "feat(office): export Word documents as new ODT files",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/fix/odt-footnotes-vendor",
+      "sha": "7591ceb57fb55a2380a1ab2a3e0c52b85fc43e94",
+      "committed_at": "2026-11-17T10:05:08+01:00",
+      "subject": "Vendor ODT footnote export",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/fix/odt-links-bookmarks-vendor",
+      "sha": "2cea1775b6cc029cce859a7977cb6634126f3334",
+      "committed_at": "2026-11-17T15:54:41+01:00",
+      "subject": "Vendor ODT bookmarks and linked ranges",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/fix/odt-lists-vendor",
+      "sha": "214ccbd1541f9d55c07aca0c1994b753d7cbf1ca",
+      "committed_at": "2026-11-17T09:26:25+01:00",
+      "subject": "Vendor ODT list groups",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/fix/odt-nested-lists-vendor",
+      "sha": "bf3355db83ec02a5d4b494f7dd37ee2de9bdeb01",
+      "committed_at": "2026-11-17T15:41:52+01:00",
+      "subject": "Vendor nested ODT list levels",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/fix/odt-ordered-lists-vendor2",
+      "sha": "75504cbd905e7e887a90d5c707fedfa7469f7b9d",
+      "committed_at": "2026-11-17T09:39:37+01:00",
+      "subject": "Vendor ordered ODT list groups",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/fix/odt-page-fields-vendor",
+      "sha": "3b77397322ab4c0a365dc4b6a5cb0a3602f575d3",
+      "committed_at": "2026-11-17T16:46:12+01:00",
+      "subject": "Vendor ODT page-number fields",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/fix/odt-paragraph-shading-vendor",
+      "sha": "843c2352dc354418d5978c4393cbfbf72565853f",
+      "committed_at": "2026-11-17T16:53:29+01:00",
+      "subject": "Vendor ODT paragraph shading and borders",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/fix/odt-sections-vendor",
+      "sha": "8dd12dc576901d675ff92124bc21fc016ff1dc57",
+      "committed_at": "2026-11-17T15:20:45+01:00",
+      "subject": "Vendor ODT section layouts",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/fix/odt-tab-stops-vendor",
+      "sha": "9a360306994596ec20fa5e94f68a0c2e55269004",
+      "committed_at": "2026-11-17T18:27:33+01:00",
+      "subject": "Vendor ODT paragraph tab stops",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/fix/odt-table-borders-vendor",
+      "sha": "fbe2249a907d9558f1a2fe33b2f0633153bb4a20",
+      "committed_at": "2026-11-17T17:13:18+01:00",
+      "subject": "Vendor ODT table borders and row heights",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/fix/sheet-page-setup-vendor",
+      "sha": "fff84bfb48224b78799967c1d42fc4af8abf05d8",
+      "committed_at": "2026-11-16T20:48:44+01:00",
+      "subject": "Vendor worksheet page setup round-trips",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/origin/integrate/current-repos-20261116",
+      "sha": "37af4410be09081420d2597f53572379eca25464",
+      "committed_at": "2026-11-16T20:10:17+01:00",
+      "subject": "Record signed ARM64 rebuild and successful credential-ready startup [skip ci]",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/integrate/final-corpus-20261115",
+      "sha": "59b11b5647a8a07d36c0d2e0d579855f474ef4d2",
+      "committed_at": "2026-11-15T23:50:33+01:00",
+      "subject": "Merge remote-tracking branch 'origin/main' into integrate/final-corpus-20261115",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/integrate/sdt-section-break-20261115",
+      "sha": "012314d440c49bc73b6726796fd9930eee6f1830",
+      "committed_at": "2026-11-15T21:35:18+01:00",
+      "subject": "Merge remote-tracking branch 'origin/main' into integrate/sdt-section-break-20261115",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/integrate/utf16-custom-xml-20261115",
+      "sha": "abfcf08bd2bfbe87349fdacc3484b824b77fefa3",
+      "committed_at": "2026-11-15T20:00:19+01:00",
+      "subject": "Vendor the UTF-16 custom XML bibliography fix",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/integration/storage-carving-20261115",
+      "sha": "5018aebb709b35f1c4d730c06e0f91187727751c",
+      "committed_at": "2026-11-15T15:06:24+01:00",
+      "subject": "docs: save qualified PR111 delivery and remote readback [skip ci]",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/integration/storage-carving-local-20261115124645",
+      "sha": "10891b06a6da9f2502960cdbfe34b30eed271665",
+      "committed_at": "2026-11-15T15:03:20+01:00",
+      "subject": "test: record final thirteen-gate acceptance and independent audit [skip ci]",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/origin/main",
+      "sha": "1cd2a18f7bc2455eabc5ec8e22767c849a833305",
+      "committed_at": "2026-11-17T18:37:19+01:00",
+      "subject": "Record passing noun agreement host integration and licensed model comparison [skip ci]",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/10",
+      "sha": "3ebb72f0e6f49fb2c462ac3d7c968200f7a5d438",
+      "committed_at": "2026-11-05T14:40:02+01:00",
+      "subject": "Apply verified Dart formatting to media integration tests",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/100",
+      "sha": "c582f2d7a413c54dcf954f6f25f8201e36ba81d2",
+      "committed_at": "2026-11-13T23:12:04+01:00",
+      "subject": "Record final merged app, parser and release qualification with complete ancestry",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/101",
+      "sha": "03f37893819ee999a9a660f029306f53ed7f2d0f",
+      "committed_at": "2026-11-14T11:27:09+01:00",
+      "subject": "docs(storage): publish FAT image qualification, production build and source receipts",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/102",
+      "sha": "ffdd6a86820b0d58cf8b93b4e626d0439beefab9",
+      "committed_at": "2026-11-14T13:34:24+01:00",
+      "subject": "Record final ext native, JavaScript and production-build qualification",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/103",
+      "sha": "d504409acc779b670de482247f3231a7247dcd92",
+      "committed_at": "2026-11-14T14:34:50+01:00",
+      "subject": "Preserve qualified NTFS native, portable and production build evidence",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/104",
+      "sha": "542c1c8b97643e5ad2e7c44f35b5417ef95c7d6a",
+      "committed_at": "2026-11-14T18:29:09+01:00",
+      "subject": "Preserve comparison account scope and close captured resources",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/105",
+      "sha": "22bd67b887c81a11ea22664defc3474a07eef50a",
+      "committed_at": "2026-11-14T18:53:21+01:00",
+      "subject": "Keep comparison follow-up compatible with latest Office integration",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/106",
+      "sha": "2e683c9de9e8bc801dd9e2f3dea4380b4b854ca6",
+      "committed_at": "2026-11-14T20:28:43+01:00",
+      "subject": "Preserve source-bound bandwidth acceptance and mark G29 partial",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/107",
+      "sha": "7187d6d0ad636f844f7e9622ed915a880d20d992",
+      "committed_at": "2026-11-14T23:01:11+01:00",
+      "subject": "docs(storage): qualify reviewed S3 block copies on reconciled source",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/108",
+      "sha": "a77364501d274e0fde2e9fffeefb121258ae9614",
+      "committed_at": "2026-11-15T07:15:59+01:00",
+      "subject": "Refresh vendored palette handling",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/109",
+      "sha": "1b7680583ac69649b17287ab68738288fec10f51",
+      "committed_at": "2026-11-15T05:41:43+01:00",
+      "subject": "Open damaged .doc files with parser recovery; read RTF files named .doc",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/11",
+      "sha": "7e32fef5ed563c73d617fc4933d07b88d8525a60",
+      "committed_at": "2026-11-05T22:05:25+01:00",
+      "subject": "Make gallery regression fixtures deterministic",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/110",
+      "sha": "d97705dabbdae5969a67bf4bf74b6c604d934419",
+      "committed_at": "2026-11-15T09:06:31+01:00",
+      "subject": "docs(office): checkpoint local analysis and disk-blocked preview run [skip ci]",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/111",
+      "sha": "5018aebb709b35f1c4d730c06e0f91187727751c",
+      "committed_at": "2026-11-15T15:06:24+01:00",
+      "subject": "docs: save qualified PR111 delivery and remote readback [skip ci]",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/112",
+      "sha": "bb981ec37c40369ba15bacdd9c21c520807a200c",
+      "committed_at": "2026-11-15T08:12:04+01:00",
+      "subject": "Vendor inline Word pictures and pin the current Quds source",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/113",
+      "sha": "eab538e7af002ddffa2746b5932fdbbbd3a97334",
+      "committed_at": "2026-11-15T09:14:52+01:00",
+      "subject": "Vendor spreadsheet wrap-text and reconcile the new document workspace",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/114",
+      "sha": "eba6c9dcb24108d7277dea2f0042acbb19f8fb72",
+      "committed_at": "2026-11-15T09:22:05+01:00",
+      "subject": "Preview legacy .xls through Quds and enrich ODF extraction",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/115",
+      "sha": "74f97cba657d43f18f6e95553a465d23e21ceb20",
+      "committed_at": "2026-11-15T09:42:55+01:00",
+      "subject": "Vendor host-specific selection golden references",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/116",
+      "sha": "7dec00fb1ed4fd8552fcf5bf682de02849d3d93a",
+      "committed_at": "2026-11-15T11:26:14+01:00",
+      "subject": "Document the ODS grid route",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/117",
+      "sha": "a8e350d94e120c7422ade4e4caa4e92a2c4e461a",
+      "committed_at": "2026-11-15T10:23:43+01:00",
+      "subject": "Add ODF preview, ODS editing and rich ODT/ODP rendering",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/118",
+      "sha": "5530aff56e575a2ecad42c774233e2c0946e24c7",
+      "committed_at": "2026-11-15T10:50:23+01:00",
+      "subject": "Preserve ODS covered-cell positions and add editor workflow coverage",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/119",
+      "sha": "f74f1fceb9959b1197fc21218e047240f215ba75",
+      "committed_at": "2026-11-15T10:55:24+01:00",
+      "subject": "Vendor ODS style/date fixes and add live ODF corpus coverage",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/12",
+      "sha": "3564a5c8b30684f284063bdbbd10c7942e423fdc",
+      "committed_at": "2026-11-06T01:23:10+01:00",
+      "subject": "test: verify multipart uploads await owned spool cleanup",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/120",
+      "sha": "443db52220f25b6fa982dfa6afd18c17ed09179e",
+      "committed_at": "2026-11-15T12:38:14+01:00",
+      "subject": "Sync the ODS test dependency",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/121",
+      "sha": "2dbc312ff2aaff1495adb95c67afe8aa7d987e7e",
+      "committed_at": "2026-11-15T14:24:20+01:00",
+      "subject": "Document VeraCrypt compatibility, licensing and completed local qualification [skip ci]",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/122",
+      "sha": "3ffe089765eecd5a867369392a8e3610d896c0cf",
+      "committed_at": "2026-11-15T14:37:14+01:00",
+      "subject": "Show ODS in the Quds grid with a typed table fallback",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/123",
+      "sha": "e19731eb9a2b69b0047b9f9ee6165a1e53ae187e",
+      "committed_at": "2026-11-15T14:37:17+01:00",
+      "subject": "Sync Quds 6d7c696 and cover the new underline styles",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/124",
+      "sha": "d7895df6d55ca588a70575dabf2216ed42055d75",
+      "committed_at": "2026-11-15T14:50:57+01:00",
+      "subject": "Edit macro-enabled and template spreadsheets",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/125",
+      "sha": "5c1714d5abb3f728b924a6a2a515eec02497ae9c",
+      "committed_at": "2026-11-15T14:40:11+01:00",
+      "subject": "Show ODS in the Quds grid with a typed table fallback",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/126",
+      "sha": "d18dc14194bfa4d11e96552b77dc34cbe5a8b417",
+      "committed_at": "2026-11-15T15:08:22+01:00",
+      "subject": "Vendor ODS picture import",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/127",
+      "sha": "128f55295107e3ada605b52d160165e03f726cb4",
+      "committed_at": "2026-11-15T15:19:11+01:00",
+      "subject": "Document ODS pictures and exact host goldens",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/128",
+      "sha": "969c104a09dc2ad0732edb4a11a0300b52f20e2f",
+      "committed_at": "2026-11-15T15:28:52+01:00",
+      "subject": "Render bounded ODT pictures inline",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/129",
+      "sha": "b81105fe579d00b66c0a07b07d8ed36cee23ecfb",
+      "committed_at": "2026-11-15T15:32:55+01:00",
+      "subject": "Keep text-box labels in ODT previews",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/13",
+      "sha": "cb2db48e5e0f623139f260b63f88405b577791ec",
+      "committed_at": "2026-11-06T01:18:02+01:00",
+      "subject": "Merge remote-tracking branch 'origin/feature/commander-file-operations' into feature/commander-workflow-polish",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/130",
+      "sha": "5ed4f45cb758394dc2346041d826c10257c24dc1",
+      "committed_at": "2026-11-15T16:32:08+01:00",
+      "subject": "Record the verified current Office source pin",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/131",
+      "sha": "048ad97b6d4b1be94821dd29f1ffb1494a329ecb",
+      "committed_at": "2026-11-15T16:40:25+01:00",
+      "subject": "Read ODT named styles from styles.xml",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/132",
+      "sha": "0ba620fdc34ea7afd278468f3978997c3cc7ba8f",
+      "committed_at": "2026-11-15T17:26:20+01:00",
+      "subject": "Vendor ODS default cell styles",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/133",
+      "sha": "29a2bb5158a316dcde5da776172e09027e04f78d",
+      "committed_at": "2026-11-15T17:46:43+01:00",
+      "subject": "Vendor ODS default style and geometry fixes",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/134",
+      "sha": "fd69bc3ee8db4ecec4683a7b8161a643b758db6b",
+      "committed_at": "2026-11-15T17:52:22+01:00",
+      "subject": "Vendor ODS hidden row and column state",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/135",
+      "sha": "38a69f9a60bce92b6c2db60a71427ac47d98819d",
+      "committed_at": "2026-11-15T17:55:26+01:00",
+      "subject": "Show ODT header and footer text",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/136",
+      "sha": "378c036b392ee3ff9112d86aa21e7fdd8e722808",
+      "committed_at": "2026-11-15T19:02:46+01:00",
+      "subject": "Preserve delayed SSH exit status and restore CI hook compatibility",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/137",
+      "sha": "dacf219a094e8f309e3f2ea1e27afbdccaa69f3d",
+      "committed_at": "2026-11-15T19:43:08+01:00",
+      "subject": "Hide hidden worksheets in the worksheet selector",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/138",
+      "sha": "1cb0b4a6a01b4aabe58f95d9a9132171bbb11aa0",
+      "committed_at": "2026-11-15T19:44:34+01:00",
+      "subject": "Record ODS hidden-state and current Quds pin",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/139",
+      "sha": "4e3e45e619fa2983f1fa8394a9f28cf6c454a9f6",
+      "committed_at": "2026-11-15T19:59:29+01:00",
+      "subject": "Vendor ODS conditional formats",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/14",
+      "sha": "eff79b3c8ed03020aeaeac4dcd86058fb1e2e181",
+      "committed_at": "2026-11-06T00:02:14+01:00",
+      "subject": "fix: honor refresh completion and newer source choices during startup",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/140",
+      "sha": "01b3f6090f682c9c8cd909d229aaad50b54ea3fd",
+      "committed_at": "2026-11-15T23:51:41+01:00",
+      "subject": "docs(terminal): record successful full release web build [skip ci]",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/141",
+      "sha": "24ac26de023313dba726f8cdaabd16179c49da01",
+      "committed_at": "2026-11-15T20:03:28+01:00",
+      "subject": "Vendor numeric conditional comparators",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/142",
+      "sha": "2281ad58aed9f97bc1d387d3c98728245a5e4bcf",
+      "committed_at": "2026-11-15T20:05:27+01:00",
+      "subject": "Document numeric ODS conditional formats",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/143",
+      "sha": "abfcf08bd2bfbe87349fdacc3484b824b77fefa3",
+      "committed_at": "2026-11-15T20:00:19+01:00",
+      "subject": "Vendor the UTF-16 custom XML bibliography fix",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/144",
+      "sha": "b9b7932eca6213973803b5bb227464cccd3051d6",
+      "committed_at": "2026-11-15T20:11:30+01:00",
+      "subject": "Vendor conditional dxf styles",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/145",
+      "sha": "20e5c5b7f63f0b8335665ca131418023f6bc2ca7",
+      "committed_at": "2026-11-15T20:14:51+01:00",
+      "subject": "Vendor contains-text and duplicate conditional rules",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/146",
+      "sha": "a49c3f14f96fed4c5551e45060ebbce3fa6883a1",
+      "committed_at": "2026-11-15T20:15:57+01:00",
+      "subject": "Document complete conditional format subset",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/147",
+      "sha": "ee74601e71441fcac2b6defebff33ca04f538d12",
+      "committed_at": "2026-11-15T20:19:37+01:00",
+      "subject": "Vendor ODS list validations",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/148",
+      "sha": "b420b45b6666ca0658ae74f2a682a3cb6b88134d",
+      "committed_at": "2026-11-15T20:19:58+01:00",
+      "subject": "Document ODS list validations and current pin",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/149",
+      "sha": "e678e17859f8d29e274d1abbf064b93d04a6fa42",
+      "committed_at": "2026-11-15T23:44:37+01:00",
+      "subject": "docs(office): save native Zotero qualification and final canonical source pin [skip ci]",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/15",
+      "sha": "8755f0dff6ff87528a77aa6613242ce1ef5851f5",
+      "committed_at": "2026-11-06T11:33:37+01:00",
+      "subject": "Bound FFmpeg setup and fall back to official Ubuntu archives",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/150",
+      "sha": "a52efabd7d05a50b428eb337944d2b6aeee2400b",
+      "committed_at": "2026-11-15T21:24:32+01:00",
+      "subject": "Vendor between conditional rules",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/151",
+      "sha": "073713474ea62525d9f5832da918407de333cd03",
+      "committed_at": "2026-11-15T21:24:57+01:00",
+      "subject": "Record between conditions and current Quds pin",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/152",
+      "sha": "012314d440c49bc73b6726796fd9930eee6f1830",
+      "committed_at": "2026-11-15T21:35:18+01:00",
+      "subject": "Merge remote-tracking branch 'origin/main' into integrate/sdt-section-break-20261115",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/153",
+      "sha": "1dbfa2125cd83d6ec4e0028d1584e612fccfb77c",
+      "committed_at": "2026-11-15T23:07:38+01:00",
+      "subject": "Vendor begins-with and ends-with conditions",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/154",
+      "sha": "4919c87f0225599b9b2b963285d364d2c2bd1a1e",
+      "committed_at": "2026-11-15T23:08:28+01:00",
+      "subject": "Record conditional affix rules and current pin",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/155",
+      "sha": "a0df68710bbacdcbddf57f7fb7b77238566b65c3",
+      "committed_at": "2026-11-15T23:21:08+01:00",
+      "subject": "Document the remaining Office format backlog",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/156",
+      "sha": "854d2ff6a20206434c64173ddca1152b079c8277",
+      "committed_at": "2026-11-15T23:23:36+01:00",
+      "subject": "Refresh verified snapshot in remaining-gaps doc",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/157",
+      "sha": "59b11b5647a8a07d36c0d2e0d579855f474ef4d2",
+      "committed_at": "2026-11-15T23:50:33+01:00",
+      "subject": "Merge remote-tracking branch 'origin/main' into integrate/final-corpus-20261115",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/158",
+      "sha": "8a62e0864ad4bae96063ec6f8a542db039a306cf",
+      "committed_at": "2026-11-16T00:06:37+01:00",
+      "subject": "Vendor ODS workbook metadata",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/159",
+      "sha": "343a930ebdbc1b0ee45f16328be868d0f78ba624",
+      "committed_at": "2026-11-16T00:07:32+01:00",
+      "subject": "Record ODS metadata and validation progress",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/16",
+      "sha": "da52efc43c2043df9a4aa8cde69c25fbc616928d",
+      "committed_at": "2026-11-06T12:36:30+01:00",
+      "subject": "test(hex): skip pending browser host suite, keep native coverage",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/160",
+      "sha": "2eec6b4edc62693cfc6048581862a7aed87143c9",
+      "committed_at": "2026-11-16T12:36:10+01:00",
+      "subject": "docs: verify delivered recovery source and qualified draft PR [skip ci]",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/161",
+      "sha": "5efae7732727fc1ae43d6b664922214dd6acfedf",
+      "committed_at": "2026-11-16T08:52:41+01:00",
+      "subject": "Save complete local qualification and final Quds 428679a3 pin [skip ci]",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/162",
+      "sha": "2b6ac08219418cf2c2d91968d117437684370c4d",
+      "committed_at": "2026-11-16T09:39:06+01:00",
+      "subject": "Vendor ODS numeric and date validations",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/163",
+      "sha": "11d4fbd9bc0a6e9fb3fa6cdc7604a45aaeae3210",
+      "committed_at": "2026-11-16T09:40:18+01:00",
+      "subject": "Record numeric validation progress",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/164",
+      "sha": "9898961e5cb64cdfc704f85c8f6f5ebedad3c39a",
+      "committed_at": "2026-11-16T10:07:37+01:00",
+      "subject": "Vendor ODS custom formula validations",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/165",
+      "sha": "a617e188cf69f3d3c14dba614593f953dadf1436",
+      "committed_at": "2026-11-16T10:14:30+01:00",
+      "subject": "Vendor ODS validation prompts and error styles",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/166",
+      "sha": "8197b59177827cfa7b426c55acd0cdca19f9b6eb",
+      "committed_at": "2026-11-16T10:15:43+01:00",
+      "subject": "Close the modeled ODS validation backlog",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/167",
+      "sha": "5e54229821bf7101ee60fb486d0c924ab6e7d5db",
+      "committed_at": "2026-11-16T11:52:13+01:00",
+      "subject": "Record verified Zotero vendoring and 109 host reconciliation tests [skip ci]",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/168",
+      "sha": "9c2047da22110db1518a6226ee7a35e421fb9d51",
+      "committed_at": "2026-11-16T11:32:25+01:00",
+      "subject": "Vendor ODS worksheet tab colours",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/169",
+      "sha": "852f009cadb153cfcb0799c527fdd78364a2df8d",
+      "committed_at": "2026-11-16T12:40:01+01:00",
+      "subject": "Complete local terminal acceptance and preserve optimized release proof [skip ci]",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/17",
+      "sha": "6bda9f2306d36fb4a7ce3f501346b597c2000beb",
+      "committed_at": "2026-11-06T12:49:48+01:00",
+      "subject": "Bind Windows shell standard handles to ConPTY",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/170",
+      "sha": "c80ee46fccbbfc8c2da4b18d67fc220cad23f1fc",
+      "committed_at": "2026-11-16T13:35:54+01:00",
+      "subject": "Vendor ODS named expressions",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/171",
+      "sha": "aa45a0927789b117cec54c858895d8343aad661b",
+      "committed_at": "2026-11-16T14:30:31+01:00",
+      "subject": "Vendor ODS cell hyperlinks",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/172",
+      "sha": "10374ee7f24c29be0958edc94157cde96c28f67c",
+      "committed_at": "2026-11-16T14:34:04+01:00",
+      "subject": "Vendor ODS outline groups",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/173",
+      "sha": "74378704f363cd095cefd23c0ac02e8ca0219ca1",
+      "committed_at": "2026-11-16T14:35:06+01:00",
+      "subject": "Record ODS metadata and hyperlink progress",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/174",
+      "sha": "12ce7da82680331ff1c903b39183a0324c9508f5",
+      "committed_at": "2026-11-16T14:38:42+01:00",
+      "subject": "Vendor ODS filter predicates",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/175",
+      "sha": "30f9cdefd70fea3c18a288a30b2f764c13044f95",
+      "committed_at": "2026-11-16T14:52:12+01:00",
+      "subject": "Close ODS metadata and validation backlog",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/176",
+      "sha": "f80c67f1e817bf14266d9f8b33a5129d54463b78",
+      "committed_at": "2026-11-16T15:16:00+01:00",
+      "subject": "Preserve final 923-test qualification summary during executor outage [skip ci]",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/177",
+      "sha": "c9c403608cf6fc83e53245bd73c0db57403a969d",
+      "committed_at": "2026-11-16T15:14:40+01:00",
+      "subject": "Vendor ODS filter comparison operators",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/178",
+      "sha": "385eb47e7eabbbe27a4287d173d69544b2566724",
+      "committed_at": "2026-11-16T15:15:49+01:00",
+      "subject": "Record ODS filter operator progress",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/179",
+      "sha": "10d8a9b4750bf3d80d35f089ae1ac4fdf8dffc1f",
+      "committed_at": "2026-11-16T16:13:16+01:00",
+      "subject": "Vendor the ODS workbook writer",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/18",
+      "sha": "d07804b9e0d3869bd4d20f020d7620ce7e352c43",
+      "committed_at": "2026-11-06T18:43:55+01:00",
+      "subject": "l10n: translate the editor chooser menu label",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/180",
+      "sha": "f7010ad1841c0f7146aa8544177911af0e98cfe9",
+      "committed_at": "2026-11-16T16:18:16+01:00",
+      "subject": "Vendor ODS writer metadata and number formats",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/181",
+      "sha": "0b8e9ef6706709f2ebe4c7b1435691a13f485a62",
+      "committed_at": "2026-11-16T16:19:46+01:00",
+      "subject": "Record the ODS writer capability",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/182",
+      "sha": "5fb04fb0bcaab54c11e3585717d7e33895bb339e",
+      "committed_at": "2026-11-16T16:50:49+01:00",
+      "subject": "Vendor ODS writer conditional formats and validations",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/183",
+      "sha": "7e24454598a43e46821a75b3b43c14a9a89b572f",
+      "committed_at": "2026-11-16T16:56:43+01:00",
+      "subject": "Vendor ODS writer pictures",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/184",
+      "sha": "6d6c10eecf949e0b02320074988234a8ef5bf11a",
+      "committed_at": "2026-11-16T16:57:19+01:00",
+      "subject": "Record ODS writer pictures and validations",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/185",
+      "sha": "d220aa43774fe36b01530400c3a10bd4228faa79",
+      "committed_at": "2026-11-16T19:32:09+01:00",
+      "subject": "Vendor ODS writer page layout",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/186",
+      "sha": "ca8b789d4ceaa2b74cdb7e256cdd90746c702594",
+      "committed_at": "2026-11-16T19:49:35+01:00",
+      "subject": "feat(office): export sheet workbooks as new ODS files",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/187",
+      "sha": "781ab2ac8e6434d2077f6cb30c500819dce8a294",
+      "committed_at": "2026-11-16T19:52:16+01:00",
+      "subject": "docs: describe the current Office and ODF capabilities",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/188",
+      "sha": "16cfd8196eda7b791c4e7efa47896f3f233ab10e",
+      "committed_at": "2026-11-16T19:53:10+01:00",
+      "subject": "docs: record the ODS export regression",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/189",
+      "sha": "c5927513b337fea005080ad5e5d3dd7440c6210c",
+      "committed_at": "2026-11-16T19:53:43+01:00",
+      "subject": "fix(office): localize the ODS export action",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/19",
+      "sha": "261ae0a091cf87639da8feb2bcdf38efec61f106",
+      "committed_at": "2026-11-06T19:13:07+01:00",
+      "subject": "Add scheduled copy/move jobs and batch queue management",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/190",
+      "sha": "120127794ea061f2f2fd2385d516b74e2e4ebb48",
+      "committed_at": "2026-11-16T20:14:22+01:00",
+      "subject": "feat(office): keep ODT pictures in a bounded image registry",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/191",
+      "sha": "f9138cc1e51f52b4b9cb99b4b09b9ce32e1450c8",
+      "committed_at": "2026-11-16T20:14:40+01:00",
+      "subject": "docs: record the bounded ODT picture registry",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/192",
+      "sha": "391ccbda8553e5c9104226fdf42d2a1e2c028b33",
+      "committed_at": "2026-11-16T20:20:10+01:00",
+      "subject": "Vendor ODS autofilter predicates",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/193",
+      "sha": "4fd51df9a05f0380297ed512fea35d0deb09ef85",
+      "committed_at": "2026-11-16T20:20:35+01:00",
+      "subject": "docs: record ODS filter predicates and current provenance",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/194",
+      "sha": "116a309ef09d9bba04b7f2d3fd3c4956a478aca5",
+      "committed_at": "2026-11-16T20:24:42+01:00",
+      "subject": "Vendor ODS row groups and off-extent geometry",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/195",
+      "sha": "0e81360c0090244e73cf850e89166dbe557fd67b",
+      "committed_at": "2026-11-16T20:25:04+01:00",
+      "subject": "docs: record ODS row groups and current provenance",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/196",
+      "sha": "fff84bfb48224b78799967c1d42fc4af8abf05d8",
+      "committed_at": "2026-11-16T20:48:44+01:00",
+      "subject": "Vendor worksheet page setup round-trips",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/197",
+      "sha": "0732c6ba7199609a46d73bb85430ecbd038d1671",
+      "committed_at": "2026-11-16T20:49:16+01:00",
+      "subject": "docs: record worksheet page setup",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/198",
+      "sha": "70fb587eb5bf378b62cd998132fbf1e38a5b53e8",
+      "committed_at": "2026-11-16T20:50:47+01:00",
+      "subject": "docs: restore ODT registry and ODS page-setup status",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/199",
+      "sha": "b0723248097fc5d0bf3b06b0a34717c192522d5f",
+      "committed_at": "2026-11-16T20:59:01+01:00",
+      "subject": "Vendor ODS header and footer round-trips",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/20",
+      "sha": "02c92b6cdd2936dd9bd10d35b1d9ad22479997e7",
+      "committed_at": "2026-11-06T19:43:19+01:00",
+      "subject": "docs(hex): record passing cross-platform integration checks",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/200",
+      "sha": "5bfe1bba57989216cc228069e17785b4c849b5e4",
+      "committed_at": "2026-11-16T20:59:32+01:00",
+      "subject": "docs: record ODS header and footer round-trips",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/201",
+      "sha": "96c514eb98f7ba596a385c8f60496bc6c5994307",
+      "committed_at": "2026-11-17T09:24:42+01:00",
+      "subject": "Sync final German agreement and spreadsheet amendment with guarded Office pin [skip ci]",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/202",
+      "sha": "168160bdeb121a8f83b439f8301fdde3a3a30523",
+      "committed_at": "2026-11-17T00:14:32+01:00",
+      "subject": "Vendor ranked and average conditional rules",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/203",
+      "sha": "a8edc699641da3e3b3f1452b5db59bec52a5717d",
+      "committed_at": "2026-11-17T00:15:09+01:00",
+      "subject": "docs: record ranked and average conditional rules",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/204",
+      "sha": "79e725ef9c105845d38b25e745563c52234421da",
+      "committed_at": "2026-11-17T00:18:43+01:00",
+      "subject": "Vendor conditional-format dxf styles",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/205",
+      "sha": "5ca134aaac74bb9d788dc3aa66d92827700f7da5",
+      "committed_at": "2026-11-17T00:19:09+01:00",
+      "subject": "docs: record conditional dxf styles",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/206",
+      "sha": "1e18a00dd9effae71c4574c3f51fd3fe24b1c7d5",
+      "committed_at": "2026-11-17T00:28:06+01:00",
+      "subject": "feat(office): honor ODT picture frame dimensions",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/207",
+      "sha": "4660f0e021af5786b350879521e04000b072d7e3",
+      "committed_at": "2026-11-17T00:28:24+01:00",
+      "subject": "docs: record ODT frame dimensions",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/208",
+      "sha": "3d26bdae3dac4120f253767157d45abbf68911b8",
+      "committed_at": "2026-11-17T00:43:19+01:00",
+      "subject": "feat(office): export Word documents as new ODT files",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/209",
+      "sha": "3080c7bed1a8452877601c3c1f13b4494a7e9cb4",
+      "committed_at": "2026-11-17T00:43:50+01:00",
+      "subject": "docs: record the bounded ODT writer and export action",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/21",
+      "sha": "4769da0812cb4c7eb19cfd88019f9c059d2b75b2",
+      "committed_at": "2026-11-06T21:55:12+01:00",
+      "subject": "Wait for browser tab restoration before editor handoff fixtures",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/210",
+      "sha": "a0daffceecfa2379a7d28cf97c3f6cba489f1e22",
+      "committed_at": "2026-11-17T07:15:55+01:00",
+      "subject": "feat(office): export slide decks as new ODP files",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/211",
+      "sha": "def593ff5ae0a37aab453313adf10d4374142914",
+      "committed_at": "2026-11-17T07:16:32+01:00",
+      "subject": "docs: record the bounded ODP writer and export action",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/212",
+      "sha": "214ccbd1541f9d55c07aca0c1994b753d7cbf1ca",
+      "committed_at": "2026-11-17T09:26:25+01:00",
+      "subject": "Vendor ODT list groups",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/213",
+      "sha": "9b1f404f54e767d6f0464cf70a12c57da6a990bc",
+      "committed_at": "2026-11-17T09:26:51+01:00",
+      "subject": "docs: record ODT list groups",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/214",
+      "sha": "75504cbd905e7e887a90d5c707fedfa7469f7b9d",
+      "committed_at": "2026-11-17T09:39:37+01:00",
+      "subject": "Vendor ordered ODT list groups",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/215",
+      "sha": "ec0f16b96f8040c185ecf147af045c7a2986027c",
+      "committed_at": "2026-11-17T09:39:59+01:00",
+      "subject": "docs: record ordered ODT lists and provenance",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/216",
+      "sha": "3c5a4114c3241d1aa2550b00ebd959527a16b4d9",
+      "committed_at": "2026-11-17T09:52:50+01:00",
+      "subject": "Vendor ODP slide transitions",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/217",
+      "sha": "ce400a18517e69e29368b3728eb092a37d780bcc",
+      "committed_at": "2026-11-17T09:53:22+01:00",
+      "subject": "docs: record ODP transitions",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/218",
+      "sha": "7591ceb57fb55a2380a1ab2a3e0c52b85fc43e94",
+      "committed_at": "2026-11-17T10:05:08+01:00",
+      "subject": "Vendor ODT footnote export",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/219",
+      "sha": "46f7ba2a72a4964c7dfecae2d8d2e9fb430ffd49",
+      "committed_at": "2026-11-17T10:05:36+01:00",
+      "subject": "docs: record ODT footnote export",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/22",
+      "sha": "b71da724fc4686e45ac8235c8cf604a184b02ec8",
+      "committed_at": "2026-11-07T00:21:27+01:00",
+      "subject": "feat(ui): add top-toolbar toggle and simplify multi-rename flow",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/220",
+      "sha": "e8331dd7e10a0e0d8fac03035eedb19492a8ca2d",
+      "committed_at": "2026-11-17T10:39:26+01:00",
+      "subject": "Publish final host note qualification and reviewed landing evidence [skip ci]",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/221",
+      "sha": "17b5f5495a05573a7b173018c5becdbaa7e190ea",
+      "committed_at": "2026-11-17T14:48:44+01:00",
+      "subject": "Vendor ODT comment export",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/222",
+      "sha": "cb4147d325ca096977484a06582799606ebbd7e7",
+      "committed_at": "2026-11-17T14:49:07+01:00",
+      "subject": "docs: record ODT comment export",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/223",
+      "sha": "8dd12dc576901d675ff92124bc21fc016ff1dc57",
+      "committed_at": "2026-11-17T15:20:45+01:00",
+      "subject": "Vendor ODT section layouts",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/224",
+      "sha": "7e8456967a3d874544a4a56e185e631ff90e2639",
+      "committed_at": "2026-11-17T15:21:30+01:00",
+      "subject": "docs: record ODT section export",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/225",
+      "sha": "bf3355db83ec02a5d4b494f7dd37ee2de9bdeb01",
+      "committed_at": "2026-11-17T15:41:52+01:00",
+      "subject": "Vendor nested ODT list levels",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/226",
+      "sha": "4e9aea1c1763d7a7d6ed39224e4c00be32d6914f",
+      "committed_at": "2026-11-17T15:42:33+01:00",
+      "subject": "docs: record nested ODT lists",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/227",
+      "sha": "2cea1775b6cc029cce859a7977cb6634126f3334",
+      "committed_at": "2026-11-17T15:54:41+01:00",
+      "subject": "Vendor ODT bookmarks and linked ranges",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/228",
+      "sha": "c6713f22ef616a8b1525598f12fa2836ecba9f8c",
+      "committed_at": "2026-11-17T15:55:30+01:00",
+      "subject": "docs: record ODT bookmarks and links",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/229",
+      "sha": "63a1de08afd75573267bcf85eed5d1fd793737a1",
+      "committed_at": "2026-11-17T16:23:47+01:00",
+      "subject": "Vendor ODP text-shape hyperlinks",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/23",
+      "sha": "8537a7e20d8fa6f36612ee29e725710a643d39f1",
+      "committed_at": "2026-11-07T04:39:47+01:00",
+      "subject": "Bound native command metadata for long script paths",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/230",
+      "sha": "91a29b9b5c121288ecc50a69d744164aa7290ad1",
+      "committed_at": "2026-11-17T16:24:07+01:00",
+      "subject": "docs: record ODP text links",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/231",
+      "sha": "fca44384b104dddf72f597b99a45a51566350fb7",
+      "committed_at": "2026-11-17T16:38:11+01:00",
+      "subject": "Vendor ODF document metadata",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/232",
+      "sha": "8581f8ac54a8f70092ee6d3c7ebba6de1477437c",
+      "committed_at": "2026-11-17T16:38:42+01:00",
+      "subject": "docs: record ODF metadata export",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/233",
+      "sha": "3b77397322ab4c0a365dc4b6a5cb0a3602f575d3",
+      "committed_at": "2026-11-17T16:46:12+01:00",
+      "subject": "Vendor ODT page-number fields",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/234",
+      "sha": "9992184427d09975bf8360f2cdad21deee064656",
+      "committed_at": "2026-11-17T16:46:32+01:00",
+      "subject": "docs: record ODT page-number fields",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/235",
+      "sha": "843c2352dc354418d5978c4393cbfbf72565853f",
+      "committed_at": "2026-11-17T16:53:29+01:00",
+      "subject": "Vendor ODT paragraph shading and borders",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/236",
+      "sha": "52cb18879b112613ee716b350b5c7107b093e39e",
+      "committed_at": "2026-11-17T16:53:56+01:00",
+      "subject": "docs: record ODT paragraph shading and borders",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/237",
+      "sha": "1149fc32ca12763e969679c627877cf269bfafb1",
+      "committed_at": "2026-11-17T16:54:01+01:00",
+      "subject": "Integrate captured Office source and retain locked host recovery [skip ci]",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/238",
+      "sha": "83617b79f8a56600e9ca17e73f835d944c79dfa8",
+      "committed_at": "2026-11-17T17:48:00+01:00",
+      "subject": "Record independently verified host qualification [skip ci]",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/239",
+      "sha": "fbe2249a907d9558f1a2fe33b2f0633153bb4a20",
+      "committed_at": "2026-11-17T17:13:18+01:00",
+      "subject": "Vendor ODT table borders and row heights",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/24",
+      "sha": "da7c3e940d022dd585708beac2de2cd5c3d10be2",
+      "committed_at": "2026-11-07T01:46:59+01:00",
+      "subject": "fix(filen): avoid dart:ffi import in web builds",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/240",
+      "sha": "583c19566be01d3058bd497c44e4b1305e5109e6",
+      "committed_at": "2026-11-17T18:23:46+01:00",
+      "subject": "docs: record ODT table borders and row heights",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/241",
+      "sha": "9a360306994596ec20fa5e94f68a0c2e55269004",
+      "committed_at": "2026-11-17T18:27:33+01:00",
+      "subject": "Vendor ODT paragraph tab stops",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/242",
+      "sha": "8251982deb99986c7a09b9e797d0092ffcb0acd2",
+      "committed_at": "2026-11-17T18:27:54+01:00",
+      "subject": "docs: record ODT tab stops",
+      "ancestor_of_qualified": false
+    },
+    {
+      "ref": "refs/remotes/pull/25",
+      "sha": "ef149b2edd4659205cbfb6efff4cfd6789659bde",
+      "committed_at": "2026-11-07T10:20:21+01:00",
+      "subject": "build(ios): track the CocoaPods resource-copy phase used by release builds",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/26",
+      "sha": "46976afeaaa7e5cb03203884798c7663d27ebb2b",
+      "committed_at": "2026-11-07T17:26:39+01:00",
+      "subject": "test: reset platform override in credential setup cases",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/27",
+      "sha": "da3ba2dd95ba25e37ea831dc19765d3bd15c6455",
+      "committed_at": "2026-11-07T18:14:10+01:00",
+      "subject": "fix(macos): scope complete custom-keychain reads and deletion",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/28",
+      "sha": "e5858440cfc383aae7c000372f6f223a7041c85c",
+      "committed_at": "2026-11-07T22:46:39+01:00",
+      "subject": "Merge remote-tracking branch 'origin/main' into integrate/storage-analyzer",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/29",
+      "sha": "b42e103344f5f4acb18fc4c1f60149481d9906d6",
+      "committed_at": "2026-11-07T20:51:56+01:00",
+      "subject": "fix(release): recognize the first-run setup screen in macOS smoke test",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/30",
+      "sha": "b5d204c6d532caff008a42b4dcf000f3a06f4b66",
+      "committed_at": "2026-11-07T22:40:48+01:00",
+      "subject": "docs: record the macOS TestFlight export-compliance blocker",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/31",
+      "sha": "ab45ac55990233492208549c18f42dfe51e518e4",
+      "committed_at": "2026-11-07T23:11:23+01:00",
+      "subject": "docs: record the no-French-declaration release route",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/32",
+      "sha": "b31b114ed7aa368861056f183b1a61edb436a97c",
+      "committed_at": "2026-11-07T23:53:29+01:00",
+      "subject": "fix(export): match Apple's no-documentation route for France-excluded builds",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/33",
+      "sha": "f2eb2911cbf53833f5f385675edc4326b4787496",
+      "committed_at": "2026-11-08T00:52:02+01:00",
+      "subject": "fix(release): validate the reviewed no-documentation Apple answer",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/34",
+      "sha": "eebffef31b7bd96d03dcc939b6b6cdb46aee2c0c",
+      "committed_at": "2026-11-08T14:55:29+01:00",
+      "subject": "docs: record live France exclusion and reviewed TestFlight audience",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/35",
+      "sha": "dfe7a175148a95cc80738142c85a88e2bd8b9810",
+      "committed_at": "2026-11-08T07:52:18+01:00",
+      "subject": "docs: record the France condition attached to build 10",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/36",
+      "sha": "3d40ffc1a04be27077531b9c0e90520f36b4dc2d",
+      "committed_at": "2026-11-08T16:56:27+01:00",
+      "subject": "docs: record build 11 upload and TestFlight review submission",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/37",
+      "sha": "429d9edf052dece0db48a6f41fc04b0d95b6c70b",
+      "committed_at": "2026-11-09T08:24:40+01:00",
+      "subject": "ci: prime dart_smb2 assets from the reviewed mirror",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/38",
+      "sha": "d95f46c4f12beb037cd64fb2c8910173500a7ca7",
+      "committed_at": "2026-11-09T09:01:58+01:00",
+      "subject": "ci: prime sqlite3 Apple assets from the verified mirror",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/39",
+      "sha": "cec4b8d11f59c0c9ddbe53706ef35fcea909aa8d",
+      "committed_at": "2026-11-09T09:13:06+01:00",
+      "subject": "ci: authenticate native asset cache downloads",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/40",
+      "sha": "08c9f8453589c2d1c43f7b2f3a6f79199ad953b3",
+      "committed_at": "2026-11-11T15:27:40+01:00",
+      "subject": "docs: record scan validation and refresh reviewed source binding",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/41",
+      "sha": "44aadba3b515fbbca0a7b2520be84204ee603007",
+      "committed_at": "2026-11-11T07:06:54+01:00",
+      "subject": "docs: refresh reviewed crypto source fingerprint for startup storage chooser",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/42",
+      "sha": "ea4446482d7ca513160669fbb48e641397c6514f",
+      "committed_at": "2026-11-11T08:38:09+01:00",
+      "subject": "fix: grant sandbox access when a listed keychain is chosen",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/43",
+      "sha": "1dbb98105d96fc3c9a42ce105d2f3d87f30f2eef",
+      "committed_at": "2026-11-11T09:00:19+01:00",
+      "subject": "tool: sign local macOS builds with the team development identity",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/45",
+      "sha": "f39bcd927f32729e63194f35db019c36802d1c67",
+      "committed_at": "2026-11-11T09:13:13+01:00",
+      "subject": "release: advance to build 1.1.0+12 for TestFlight",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/47",
+      "sha": "be318f380fc47f94975a35c0924c89190d46f990",
+      "committed_at": "2026-11-11T09:38:28+01:00",
+      "subject": "ci: capture Mac App Store screenshots from the real app",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/49",
+      "sha": "b76bbfafda1cb69d7a343b9777af42db8c1b717a",
+      "committed_at": "2026-11-11T19:33:20+01:00",
+      "subject": "ci: navigate store screenshots to seeded folders and capture 1:1",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/5",
+      "sha": "af7ef4beb93f97c89697e3780d9fd0a882f3dbaf",
+      "committed_at": "2026-11-04T22:26:53+01:00",
+      "subject": "Apply verified Dart formatting to PDF font notices",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/50",
+      "sha": "83049a2edf71b9d8b5dcf9aebd4ee187f4c6199f",
+      "committed_at": "2026-11-11T20:29:03+01:00",
+      "subject": "ci: show a photo gallery and a real preview in store screenshots",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/51",
+      "sha": "20aaf76d213ec0cde07c505287f8a2e48d683db2",
+      "committed_at": "2026-11-11T20:33:09+01:00",
+      "subject": "tool: find the signing identity outside the keychain search list",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/52",
+      "sha": "c9c0f58ae1c4c73f64417e807901549e33fd77a8",
+      "committed_at": "2026-11-12T00:16:10+01:00",
+      "subject": "fix(storage): find the Rust SMB bridge in dart build cli bundles (bin/../lib)",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/53",
+      "sha": "bffdfbb49433859823081f2198f16e33be8369a6",
+      "committed_at": "2026-11-12T16:15:11+01:00",
+      "subject": "Fix Linux async bridge and complete independent FictionBook roundtrip gates",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/54",
+      "sha": "28b7b9ce388e08345aa995037256ab50ab0e17b9",
+      "committed_at": "2026-11-12T10:15:56+01:00",
+      "subject": "docs: finalize capability audit validation and neutral workflow labels",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/55",
+      "sha": "9a3e07808ed883938d2e6139593a406065a8a75c",
+      "committed_at": "2026-11-12T14:18:07+01:00",
+      "subject": "Checkpoint MPL legacy_doc_parser extraction and portable package APIs",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/56",
+      "sha": "d3d69c1cfa8ab35a3aa54d562a2c63d298ca9476",
+      "committed_at": "2026-11-12T10:23:05+01:00",
+      "subject": "fix: remote adapters use POSIX path rules on every platform",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/57",
+      "sha": "62e438e6836949207b4541b818c1c261bb7104fe",
+      "committed_at": "2026-11-12T10:51:51+01:00",
+      "subject": "chore: refresh export review fingerprints after merging main",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/58",
+      "sha": "9887b53272d5f747cae9f73b363748985937ad05",
+      "committed_at": "2026-11-12T10:57:34+01:00",
+      "subject": "docs: scope all remaining file manager gaps across six delivery lanes",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/59",
+      "sha": "132f70e746aa9815a51a046ab02e83393d084622",
+      "committed_at": "2026-11-12T11:09:02+01:00",
+      "subject": "feat: add bounded source-bound conflict previews and safe metadata",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/6",
+      "sha": "a0ada3b3cd344bbdacf01313ac2d72749b72d4d0",
+      "committed_at": "2026-11-05T01:08:30+01:00",
+      "subject": "test(pdf): embed a real Unicode font for deterministic browser workflows",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/60",
+      "sha": "f798f27d823ee846b5e6238e167970e0345612ed",
+      "committed_at": "2026-11-12T11:27:48+01:00",
+      "subject": "fix: enforce terminal argument and serialized preference bounds",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/61",
+      "sha": "a452b7ade6ccdd9cd39804155309a21797f2612a",
+      "committed_at": "2026-11-12T11:29:18+01:00",
+      "subject": "feat: route incoming drops through captured copy review and scoped sources",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/62",
+      "sha": "cdeedaf48f9892fe82191f090afccf15529db1a6",
+      "committed_at": "2026-11-12T11:32:06+01:00",
+      "subject": "style: apply CI dart format to the POSIX path changes from #56",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/63",
+      "sha": "baccf470e946fc86fde41c96443423006eac2be7",
+      "committed_at": "2026-11-12T11:34:34+01:00",
+      "subject": "feat: add direct Quick Open actions with guarded original-source restoration",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/64",
+      "sha": "c8f4561343ff0abca6aa3ffffeb45892c2fc7bd1",
+      "committed_at": "2026-11-12T11:38:10+01:00",
+      "subject": "fix: close owned FTP transports through stalled TCP and TLS handshakes",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/65",
+      "sha": "55dd210a2eb6db7cc5c100507d63be411f30b679",
+      "committed_at": "2026-11-12T11:49:23+01:00",
+      "subject": "feat: add configurable browser menus with captured command reviews",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/66",
+      "sha": "42ae79ce5dbaec184726b538c7100823a4b1edfe",
+      "committed_at": "2026-11-12T11:57:03+01:00",
+      "subject": "docs: record passing SOCKS4 regression and refresh capability status",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/67",
+      "sha": "403e942dc99779883210125a01841ef209e19d2e",
+      "committed_at": "2026-11-12T12:05:00+01:00",
+      "subject": "docs: record eight gap increments and integrated build evidence",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/68",
+      "sha": "9cd18e7c704937897d037b1051d38341d4928bf5",
+      "committed_at": "2026-11-12T12:25:11+01:00",
+      "subject": "Record complete host integration and external Office acceptance",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/69",
+      "sha": "cd1447740f2834ec68af97beb3a3dad47cffd68b",
+      "committed_at": "2026-11-12T12:40:04+01:00",
+      "subject": "docs: scope the next gathering commands resume and help increments",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/7",
+      "sha": "1311b04a3e7a9d810b46173dbaa73ea6265fe886",
+      "committed_at": "2026-11-05T11:12:52+01:00",
+      "subject": "Merge main and preserve image editor routing",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/70",
+      "sha": "5b2f1fabf9ac642a906d2275e753e098c324ddeb",
+      "committed_at": "2026-11-12T13:20:29+01:00",
+      "subject": "Verify retained transfer cleanup and preserve recovery across empty retries",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/71",
+      "sha": "50a9547a3a6aca251a46b5140f93fb87c789e848",
+      "committed_at": "2026-11-12T13:30:32+01:00",
+      "subject": "Add reviewed local command entry and scoped argument insertion",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/72",
+      "sha": "8f117e7f85aba2adffb63bdd6511ca2d112c31a8",
+      "committed_at": "2026-11-12T13:32:25+01:00",
+      "subject": "Add persistent gathering stack with reviewed grouped transfers",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/73",
+      "sha": "d76fe9bbb743e4194bfd54edc930abe9ad4f4854",
+      "committed_at": "2026-11-12T13:45:17+01:00",
+      "subject": "Record continuation validation and transport bandwidth implementation boundaries",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/74",
+      "sha": "e473083f7439b5d8592f43c6ca2f013cdb50c5a1",
+      "committed_at": "2026-11-12T13:55:11+01:00",
+      "subject": "Scope external editing comparison and writable archive endpoint increments",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/75",
+      "sha": "47b7c57012cfc23f8100bad8c5a7fb4c53171a12",
+      "committed_at": "2026-11-12T14:14:11+01:00",
+      "subject": "Add retained private staging and exclusive cleanup for external tools",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/76",
+      "sha": "2297f8e3f7a261c8cbf80b48ffa70bf25df2998d",
+      "committed_at": "2026-11-12T14:23:30+01:00",
+      "subject": "Add strict revision publication for retained remote edits",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/77",
+      "sha": "77af99427e2d7d1b3719a22376a4ebf56508edbd",
+      "committed_at": "2026-11-12T14:28:14+01:00",
+      "subject": "Add reviewed external comparison tools and retained private copies",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/78",
+      "sha": "005771bd53f2cd437cb70b23ebe83c224792bd00",
+      "committed_at": "2026-11-12T14:29:31+01:00",
+      "subject": "Add verified archive publication and exclusive recovery journal",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/79",
+      "sha": "788e1f005e72371d0cf2182ae0cec81dd4e84adb",
+      "committed_at": "2026-11-12T15:05:05+01:00",
+      "subject": "Preserve independent resumed Office acceptance and refresh host support records",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/8",
+      "sha": "29580c7ddf6fca7ba74440ff146535fe5da51800",
+      "committed_at": "2026-11-06T10:36:59+01:00",
+      "subject": "Fix distinct visual view modes and column layout overflow",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/80",
+      "sha": "fdf8c35014367834570bb89a3902f50fd132e865",
+      "committed_at": "2026-11-12T14:53:53+01:00",
+      "subject": "Record external editing validation and remaining acceptance boundaries",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/81",
+      "sha": "3bb4874de0785edf0b0fa24d2d0ea05a74c58b71",
+      "committed_at": "2026-11-12T15:27:16+01:00",
+      "subject": "Record native archive workflow validation and remaining publication gaps",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/82",
+      "sha": "085495527e0ab02f52eeded928d54cb766b79910",
+      "committed_at": "2026-11-12T15:31:40+01:00",
+      "subject": "Record merged standalone Word integration and acceptance results",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/83",
+      "sha": "d46b35a23a3d0631bc509e115fa003b1e64ebd67",
+      "committed_at": "2026-11-12T15:41:47+01:00",
+      "subject": "Record archive and viewer validation with remaining implementation boundaries",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/84",
+      "sha": "464e4dd3f548302ee5b9f78994fa09caf95437bc",
+      "committed_at": "2026-11-12T17:04:10+01:00",
+      "subject": "Document ebook parity limits and exact cancelled acceptance results",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/85",
+      "sha": "d8643faed99c03a3d6fdba91bf047c690a50ea5b",
+      "committed_at": "2026-11-12T17:28:56+01:00",
+      "subject": "Preserve incomplete host run and unchanged-input cleanup",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/86",
+      "sha": "120f839ab9091bdbedf326621347ee737140e043",
+      "committed_at": "2026-11-12T17:25:04+01:00",
+      "subject": "Verify large disk-image viewing and harden encrypted archive retries",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/87",
+      "sha": "8b0c01597c231814815bf5456ab0a616102e7307",
+      "committed_at": "2026-11-12T19:12:29+01:00",
+      "subject": "Format existing PDF toolbar regression test for the CI gate",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/88",
+      "sha": "b100cd751688f13609a8829180b487b381588d14",
+      "committed_at": "2026-11-12T17:56:39+01:00",
+      "subject": "Record merged Office integration acceptance and refresh technical source fingerprints",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/89",
+      "sha": "84c3a1172759abdbab0c320142ae190e532f7753",
+      "committed_at": "2026-11-12T18:50:51+01:00",
+      "subject": "Preserve TAR profiles and finalize guarded archive writer workflows",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/9",
+      "sha": "07df87d7ae616b702de887f3327916aeb3f67ad5",
+      "committed_at": "2026-11-05T22:56:25+01:00",
+      "subject": "Merge remote-tracking branch 'origin/main' into feature/image-editor-completion",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/90",
+      "sha": "e103d8c6fd6dc8c8c3d73467a8a1eb15fb8471d4",
+      "committed_at": "2026-11-12T19:53:28+01:00",
+      "subject": "Record package-reader regression, reference and web-build verification",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/91",
+      "sha": "b3be1616199a049a6a239a0199a3b5ac890aea21",
+      "committed_at": "2026-11-12T21:08:41+01:00",
+      "subject": "Integrate tested note and header fidelity checkpoint into CrispCloud",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/92",
+      "sha": "7cb65d768f2b096230f8bd32afc6c954baae7416",
+      "committed_at": "2026-11-12T20:53:07+01:00",
+      "subject": "docs: record archive workflow capabilities and complete verification",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/93",
+      "sha": "19bbb8606a87492f991261eb3fb79ed1d9f2c299",
+      "committed_at": "2026-11-12T21:09:40+01:00",
+      "subject": "docs: scope archive rearrangement and CPIO profile continuation",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/94",
+      "sha": "ef88da683a8ad68e57bde5d6d794698add46d2b1",
+      "committed_at": "2026-11-12T21:42:53+01:00",
+      "subject": "Bind CrispCloud to completed DOC fidelity and integration receipts",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/95",
+      "sha": "02160e56ffb3ec2e11c47447fa2c3203e4268cc3",
+      "committed_at": "2026-11-13T12:53:16+01:00",
+      "subject": "Merge main document improvements while preserving shared fonts and preview policy",
+      "ancestor_of_qualified": true
+    },
+    {
+      "ref": "refs/remotes/pull/97",
+      "sha": "cfae329b3dee73ececc6b689c9936339dd3e6a49",
+      "committed_at": "2026-11-13T13:04:38+01:00",
+      "subject": "Record completed Commander archive qualification and remaining parity boundaries",
+      "ancestor_of_qualified": true
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "from": "4c49b0435bc6611221bc49b58b15e735059467ff",
+  "to": "def52d84f3c3c5ce22c44d2620ecfa08d77780a7",
+  "write": [
+    "packages/quds_office_engine/lib/src/word/serial/odt_document_writer.dart"
+  ],
+  "delete": [],
+  "pinned_files": 2603,
+  "applied": true
+}

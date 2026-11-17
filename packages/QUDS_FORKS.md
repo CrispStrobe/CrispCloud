@@ -26,19 +26,23 @@ content.
 The app mirrors the canonical Quds source and the standalone legacy parser.
 Exact revisions, source boundaries and the complete managed-file inventory are
 recorded in [the fidelity manifest](../tool/office_fidelity_manifest.json).
-The current canonical checkpoint is `42b71376285b75786803c79864efd4e34cb8afc2`;
-the managed inventory contains 2,598 files: 741 canonical files and the unchanged
+The current canonical checkpoint is `ec5ecbff742580c0e7d1136507b953e8cc877e4c`;
+the managed inventory contains 2,606 files: 749 canonical files and the unchanged
 1,857-file standalone parser. The 17 November continuation reconciles the
 captured Office, morphology and proofing-tool branches and their bounded late
 arrivals. It preserves the original six bundled notices and adds the complete
 Unicode Inflection notice for German morphology to the app's license registry.
 
+The latest reconciliation merges captured host main `1cd2a18f7bc2455eabc5ec8e22767c849a833305` and synchronizes the canonical union through the guard. It retains the bounded German noun-agreement work, custom ODT tab stops, table row minimum-height semantics and decoration normalization. The optional native German proofing AOT package remains outside the existing host managed-package boundary. New tests exercise the actual ODT/ODP export menus, annotation privacy, semantic output and destination outcomes; their local execution evidence is recorded separately from prior qualifications in `docs/validation/office-reconcile-20261117/`.
+
 ODF annotations retain their raw XML and comment-model content while body
 extraction, search and host previews exclude them. Note references inside
 comments preserve their marks without claiming a visible body note definition.
-The [continuation record](../docs/validation/office-continuation-20261117/README.md)
-binds source preservation, independent review, regression cases and pending
-local qualification to exact commits. Fresh local validation is recorded in the German grammar options integration report; earlier qualification counts keep their original source attribution. This continuation retains the completed Zotero recovery,
+The [resumed continuation record](../docs/validation/office-resume-20261117/README.md)
+binds the fixed incoming inventory, source preservation and local qualification
+to exact commits. The pinned runtime and unchanged locked dependency workspaces
+are restored. Fresh focused host qualification passed at `511361a4623e6ddf787b5cccfaed4ba14ae1899f`: 96 Dart/Flutter cases and 28 Python controls, with no host failures or skips; all 11 gates and independent review passed. Runtime/test/tool/manifest inputs remain identical in the final documentation checkpoint. Earlier qualification
+counts retain their original source attribution. The incoming [German grammar options report](../docs/validation/german-options-20261117/README.md) retains its separate source-bound evidence. This continuation retains the completed Zotero recovery,
 English hyphenation, proofing and ranked/average spreadsheet work, including
 conditional-format differential-style preservation, current proofing/rendering branches,
 and the ODT/ODP writers from canonical main. The host
