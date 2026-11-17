@@ -1,0 +1,32 @@
+{
+  "host-tests-late-toc.log": {
+    "sha256": "1295f3f37598160a5a247ef0718a2f2e014c8e7f8abb2854618a827e39da7825",
+    "bytes": 22647,
+    "gzip_sha256": "f133325955bb2a784a083276497a87524240b618676ac3a7d0c532695ac9095c"
+  },
+  "host-fidelity-late-toc.log": {
+    "sha256": "7e86f18f6c2a723e7206cfe51c27095bb6e2cf94a7b3e08af7c25fe1146596c2",
+    "bytes": 203,
+    "gzip_sha256": "231a6005f894365e9bf8288de82d3b11ba1c71179f0ab6236f5b765d315f43d1"
+  },
+  "host-crypto-late-toc.log": {
+    "sha256": "ff9d3a1199b6818eaa426e241d6c1a2ec2ec4ba6009f011e8201cfcbfac32177",
+    "bytes": 72,
+    "gzip_sha256": "1c8a433d4b5b200adf279058c73df6851872f888125ee906783b8c6975f2b812"
+  },
+  "host-sync-tests-final.log": {
+    "sha256": "b9c3b178f3f7fe15fc0bb1ccbdc0a0aa81de64ce38156cf4ea7cda3d94550ef0",
+    "bytes": 107,
+    "gzip_sha256": "0a12dcc4ef9823bfad99eaf6f52e89d32e2f9ee1415eaac2d769dd825913d0e8"
+  },
+  "host-sync-late-toc.log": {
+    "sha256": "8601a1e360b8374a7997792e0c9a46148da571c6c6c0344d558e9cd4f9a6ed9f",
+    "bytes": 335,
+    "gzip_sha256": "705df00071cbb9e5cff5ef01c67e6074a25d638a901c90af16bb8d6ca06ef6e5"
+  },
+  "host-sync-reconciliation.json": {
+    "sha256": "50d19a8339ebaf82cd1d1bf5151f3ae869fdbff0bfbbf5f754e98d532abda576",
+    "bytes": 4687,
+    "gzip_sha256": "0fe05d1ac438005836e31d7d91d7bbe700ae869e0804afc4bf4cea5186be6543"
+  }
+}
