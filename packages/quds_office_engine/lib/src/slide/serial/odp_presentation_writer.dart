@@ -369,10 +369,16 @@ abstract final class OdpPresentationWriter {
       w.writeStartElement('p', prefix: 'text');
       w.writeAttribute('text:style-name', paragraphStyle);
       if (line.isNotEmpty) {
+        final link = shape?.hyperlinkUrl ?? '';
+        if (link.isNotEmpty) {
+          w.writeStartElement('a', prefix: 'text');
+          w.writeAttribute('xlink:href', link);
+        }
         w.writeStartElement('span', prefix: 'text');
         w.writeAttribute('text:style-name', textStyle);
         writeOdfText(w, line);
         w.writeEndElement();
+        if (link.isNotEmpty) w.writeEndElement();
       }
       w.writeEndElement();
     }

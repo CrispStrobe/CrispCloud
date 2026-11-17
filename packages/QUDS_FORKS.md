@@ -26,8 +26,8 @@ content.
 The app mirrors the canonical Quds source and the standalone legacy parser.
 Exact revisions, source boundaries and the complete managed-file inventory are
 recorded in [the fidelity manifest](../tool/office_fidelity_manifest.json).
-The current canonical checkpoint is `f28b13a5e77e31d7ba59a36d207fbec22b2d0d07`;
-the managed inventory contains 2,593 files: 736 canonical files and the unchanged
+The current canonical checkpoint is `097079706cfdc071cb6f1d76070b941c533ffecd`;
+the managed inventory contains 2,596 files: 739 canonical files and the unchanged
 1,857-file standalone parser. The 17 November continuation reconciles the
 captured Office, morphology and proofing-tool branches and their bounded late
 arrivals. It preserves the original six bundled notices and adds the complete
@@ -120,7 +120,7 @@ validations, ranked/average conditional rules, authored page setup and
 header/footer sections. The bounded ODT writer now covers headings, formatted
 runs, tables, pictures, frames, page geometry and basic headers/footers. The
 bounded ODP writer covers slides, positioned text, pictures, tables, fills,
-strokes, notes, page geometry and transitions. A host widget test opens an XLSX fixture and reads the exported ODS
+strokes, text links, notes, page geometry and transitions. A host widget test opens an XLSX fixture and reads the exported ODS
 back. The combined host qualification remains separately source-bound
 in the storage evidence.
 

@@ -29,6 +29,7 @@ XmlElement _odtBody(OpcPackage package) => XmlDocument.parse(
 ).root!.firstChild('body')!.firstChild('text')!;
 
 void main() {
+  linkTests();
   nestedListTests();
   sectionTests();
   commentTests();
@@ -456,5 +457,41 @@ void nestedListTests() {
     expect(content, contains('Child one'));
     expect(content, contains('Child two'));
     expect(content, contains('Sibling'));
+  });
+}
+
+void linkTests() {
+  test('writes ODT bookmarks and hyperlinks', () {
+    final document = WmlDocument(
+      sections: [
+        WmlSection(
+          blocks: [
+            WmlParagraph(
+              inlines: [
+                WmlBookmarkBoundary(id: '1', isStart: true, name: 'Target'),
+                WmlRun(text: 'Jump'),
+                WmlBookmarkBoundary(id: '1', isStart: false, name: 'Target'),
+                WmlRun(
+                  text: 'internal',
+                  hyperlink: const WmlHyperlink(anchor: 'Target'),
+                ),
+                WmlRun(
+                  text: 'external',
+                  hyperlink: const WmlHyperlink(url: 'https://example.com'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ],
+    );
+    final package = OpcPackage.openBytes(
+      OdtDocumentWriter.writeBytes(document),
+    );
+    final content = package.getPart('/content.xml')!.readText();
+    expect(content, contains('<text:bookmark-start'));
+    expect(content, contains('text:name="Target"'));
+    expect(content, contains('xlink:href="#Target"'));
+    expect(content, contains('xlink:href="https://example.com"'));
   });
 }

@@ -239,6 +239,84 @@ class OfficeProofingReport {
   bool get isClean => complete && findings.isEmpty;
 }
 
+/// Combines service-validated reports for the same immutable request.
+///
+/// Every [primary] finding keeps precedence. Secondary findings are accepted
+/// in provider/result order only when they do not overlap a primary finding or
+/// an earlier accepted secondary finding. An insertion conflicts with a range
+/// at either endpoint, including another insertion at the same position.
+/// Existing overlaps within [primary] are retained for individual review.
+///
+/// Each provider's status and message remain visible even when all of its
+/// proposals are suppressed. This is the shared policy for the editor's manual
+/// grammar lane and combined-provider qualification; it never applies edits.
+/// The reports must share the identical request object and distinct provider
+/// IDs. Source ranges must already have been checked by [OfficeProofingService].
+OfficeProofingReport mergeOfficeProofingReports({
+  required OfficeProofingReport primary,
+  required OfficeProofingReport secondary,
+}) {
+  if (!identical(primary.request, secondary.request)) {
+    throw ArgumentError('Proofing reports belong to different requests.');
+  }
+  final Set<String> providerIds = <String>{};
+  for (final OfficeProofingResult result in <OfficeProofingResult>[
+    ...primary.results,
+    ...secondary.results,
+  ]) {
+    if (!identical(result.request, primary.request)) {
+      throw ArgumentError('A provider result belongs to a different request.');
+    }
+    if (!providerIds.add(result.providerId)) {
+      throw ArgumentError(
+        'Duplicate proofing provider id: ${result.providerId}',
+      );
+    }
+    if (result.status != OfficeProofingStatus.success &&
+        result.findings.isNotEmpty) {
+      throw ArgumentError('An incomplete provider result contains findings.');
+    }
+  }
+  final List<OfficeProofingFinding> accepted = <OfficeProofingFinding>[
+    ...primary.findings,
+  ];
+  final List<OfficeProofingResult> results = <OfficeProofingResult>[
+    ...primary.results,
+  ];
+  for (final OfficeProofingResult result in secondary.results) {
+    final List<OfficeProofingFinding> findings = <OfficeProofingFinding>[];
+    for (final OfficeProofingFinding finding in result.findings) {
+      if (accepted.any(
+        (OfficeProofingFinding previous) =>
+            _proofingFindingsConflict(previous, finding),
+      )) {
+        continue;
+      }
+      findings.add(finding);
+      accepted.add(finding);
+    }
+    results.add(
+      OfficeProofingResult(
+        request: primary.request,
+        providerId: result.providerId,
+        status: result.status,
+        findings: findings,
+        message: result.message,
+      ),
+    );
+  }
+  return OfficeProofingReport(request: primary.request, results: results);
+}
+
+bool _proofingFindingsConflict(
+  OfficeProofingFinding a,
+  OfficeProofingFinding b,
+) {
+  if (a.start == a.end) return a.start >= b.start && a.start <= b.end;
+  if (b.start == b.end) return b.start >= a.start && b.start <= a.end;
+  return a.start < b.end && b.start < a.end;
+}
+
 /// Runs configured providers with a deadline, validates their output against
 /// the original snapshot, and preserves each provider's operational status.
 class OfficeProofingService {

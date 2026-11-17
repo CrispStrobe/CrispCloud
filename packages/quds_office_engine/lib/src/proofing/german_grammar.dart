@@ -253,6 +253,17 @@ final class _GermanDeterminer {
 
   bool get permitsPlural => stem != 'ein';
 
+  bool isUnambiguousGenitive(String surface) {
+    final Set<_GermanCase> cases = <_GermanCase>{
+      for (final _GermanCase grammaticalCase in _GermanCase.values)
+        for (final _GermanGender gender in _GermanGender.values)
+          if ((gender != _GermanGender.plural || permitsPlural) &&
+              form(grammaticalCase, gender) == surface)
+            grammaticalCase,
+    };
+    return cases.length == 1 && cases.contains(_GermanCase.genitive);
+  }
+
   String form(_GermanCase grammaticalCase, _GermanGender gender) {
     final int index = grammaticalCase.index * 4 + gender.index;
     if (stem == 'd') {
@@ -399,6 +410,7 @@ const Set<String> _grammarAdjectiveStems = <String>{
   'leis',
   'müd',
   // Common office/general modifiers, independently reviewed regular stems.
+  'schlimm',
   'hell',
   'gültig',
   'ungültig',
@@ -751,6 +763,12 @@ Iterable<_GermanGrammarIssue> _grammarNounPhrase(
   }
   final List<_GermanNounReading> readings = _lookupGrammarNoun(noun.lower);
   if (readings.isEmpty) return;
+  // "des" and "eines" identify genitive without a clause parser or an
+  // assumed preposition governor. "dieses", "jenes" and "der" also have
+  // other cases, so their noun endings remain undecided. Use the full
+  // determiner table rather than discarding inconvenient noun readings.
+  final bool explicitGenitive =
+      governedCase == null && determiner.isUnambiguousGenitive(article.lower);
   if (governedCase == _GermanCase.dative &&
       noun.lower.endsWith('e') &&
       readings.any(
@@ -787,7 +805,9 @@ Iterable<_GermanGrammarIssue> _grammarNounPhrase(
               if (governedCase != null ||
                   determiner.form(grammaticalCase, reading.gender) ==
                           article.lower &&
-                      reading.accepts(noun.lower, grammaticalCase))
+                      (reading.accepts(noun.lower, grammaticalCase) ||
+                          explicitGenitive &&
+                              grammaticalCase == _GermanCase.genitive))
                 (reading, grammaticalCase),
       ];
   if (analyses.isEmpty) return;
@@ -835,7 +855,9 @@ Iterable<_GermanGrammarIssue> _grammarNounPhrase(
     for (final (_GermanNounReading, _GermanCase) analysis in analyses)
       ...analysis.$1.inCase(analysis.$2),
   };
-  if (governedCase != null && !nounAlreadyValid && nounForms.length == 1) {
+  if ((governedCase != null || explicitGenitive) &&
+      !nounAlreadyValid &&
+      nounForms.length == 1) {
     final String replacement = nounForms.single;
     // Upstream morphology is useful for analysis but is not an independent
     // spelling authority. Never suggest an inflected form missing from the

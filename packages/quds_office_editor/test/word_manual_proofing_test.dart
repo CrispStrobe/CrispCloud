@@ -8,18 +8,20 @@ final class _ManualProbe extends OfficeProofingProvider {
     this.id, {
     this.range,
     this.status = OfficeProofingStatus.success,
+    this.languages = const {'de-DE'},
   });
   @override
   final String id;
   final ({int start, int end})? range;
   final OfficeProofingStatus status;
+  final Set<String> languages;
   final started = Completer<void>();
   Completer<void>? gate;
   int calls = 0;
   int disposals = 0;
 
   @override
-  bool supportsLanguage(String language) => language == 'de-DE';
+  bool supportsLanguage(String language) => languages.contains(language);
 
   @override
   Future<OfficeProofingResult> check(OfficeProofingRequest request) async {
@@ -119,6 +121,73 @@ void main() {
     await session.checkNow();
     expect(manual.calls, 2);
   });
+
+  test(
+    'an unsupported manual locale does not reduce background coverage',
+    () async {
+      document = WmlDocument.empty(text: 'This text is correct.');
+      document.proofingLanguage = 'en-US';
+      final english = _ManualProbe('english', languages: const {'en-US'});
+      session.configure(OfficeProofingService(providers: [english]));
+      session.configureManual(OfficeProofingService(providers: [manual]));
+
+      final background = await session.checkNow(includeManualProviders: false);
+      expect(background.complete, isTrue);
+      expect(background.manualProvidersSkipped, isFalse);
+      expect(background.statusMessage, isNot(contains('manual grammar check')));
+      expect(english.calls, 1);
+      expect(manual.calls, 0);
+
+      final explicit = await session.checkNow();
+      expect(explicit.complete, isTrue);
+      expect(
+        explicit.reports.single.results.last.status,
+        OfficeProofingStatus.unsupported,
+      );
+      expect(manual.calls, 0);
+    },
+  );
+
+  test(
+    'a supported run still reports omitted manual coverage in a mixed document',
+    () async {
+      final paragraph = WmlParagraph(
+        inlines: [
+          WmlRun(text: 'This is English. '),
+          WmlRun(
+            text: 'Du ist hier.',
+            properties: WmlRunProps(proofingLanguage: 'de_DE'),
+          ),
+        ],
+      );
+      document = WmlDocument(
+        sections: [
+          WmlSection(blocks: [paragraph]),
+        ],
+      );
+      document.proofingLanguage = 'en-US';
+      final bilingual = _ManualProbe(
+        'bilingual',
+        languages: const {'en-US', 'de-DE'},
+      );
+      session.configure(OfficeProofingService(providers: [bilingual]));
+      session.configureManual(OfficeProofingService(providers: [manual]));
+
+      final background = await session.checkNow(includeManualProviders: false);
+      expect(background.checkedParagraphCount, 1);
+      expect(background.manualProvidersSkipped, isTrue);
+      expect(background.complete, isFalse);
+      expect(bilingual.calls, 2);
+      expect(manual.calls, 0);
+
+      final explicit = await session.checkNow();
+      expect(explicit.complete, isTrue);
+      expect(manual.calls, 1);
+      expect(explicit.issues.single.finding.start, 20);
+      expect(explicit.issues.single.finding.end, 23);
+      expect(explicit.issues.single.finding.originalText, 'ist');
+    },
+  );
 
   test(
     'manual failure stays visible alongside successful ordinary checking',

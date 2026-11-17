@@ -43,6 +43,7 @@ void main() {
               textColor: '000000',
               fontSizePt: 28,
               textAlign: PmlTextAlign.center,
+              hyperlinkUrl: 'https://example.com/deck',
             ),
             PmlShape(
               id: 3,
@@ -105,6 +106,7 @@ void main() {
       pageProperties.getAttribute('duration', namespaceUri: _presentationNs),
       'PT5S',
     );
+    expect(content, contains('<text:a xlink:href="https://example.com/deck">'));
     expect(styles, contains('fo:page-width'));
     expect(package.getPart('/Pictures/image1.png'), isNotNull);
   });
