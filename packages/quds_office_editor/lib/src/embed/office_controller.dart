@@ -7809,6 +7809,47 @@ class WordEditorController extends OfficeController {
   bool canApplyProofingIssue(WordProofingIssue issue) =>
       canApplyProofingSuggestions && proofing.canCorrect(issue);
 
+  // Complete phrase alternatives preserve their original word separators.
+  // Apply only changed words so article formatting cannot replace the styles
+  // of an unchanged noun or adjective. A malformed provider choice is refused.
+  static List<({int start, int end, String replacement})>? _proofingPhraseEdits(
+    String source,
+    String replacement,
+    int offset,
+  ) {
+    final words = RegExp(r'\S+');
+    final before = words.allMatches(source).toList();
+    final after = words.allMatches(replacement).toList();
+    if (before.length < 2 ||
+        before.length > 4 ||
+        before.length != after.length) {
+      return null;
+    }
+    final edits = <({int start, int end, String replacement})>[];
+    var oldEnd = 0, newEnd = 0;
+    for (var i = 0; i < before.length; i++) {
+      final oldWord = before[i], newWord = after[i];
+      if (source.substring(oldEnd, oldWord.start) !=
+          replacement.substring(newEnd, newWord.start)) {
+        return null;
+      }
+      if (oldWord.group(0) != newWord.group(0)) {
+        edits.add((
+          start: offset + oldWord.start,
+          end: offset + oldWord.end,
+          replacement: newWord.group(0)!,
+        ));
+      }
+      oldEnd = oldWord.end;
+      newEnd = newWord.end;
+    }
+    if (source.substring(oldEnd) != replacement.substring(newEnd) ||
+        edits.isEmpty) {
+      return null;
+    }
+    return edits;
+  }
+
   /// Replaces one current, editable source span through normal undo history.
   /// Tracked corrections retain deleted text and a separate inserted revision.
   bool applyProofingSuggestion(WordProofingIssue issue, String replacement) {
@@ -7826,6 +7867,14 @@ class WordEditorController extends OfficeController {
     final finding = issue.finding;
     final start = finding.start;
     final end = finding.end;
+    final edits = finding.ruleId == 'de.grammar.phrase-agreement'
+        ? _proofingPhraseEdits(finding.originalText, replacement, start)
+        : [(start: start, end: end, replacement: replacement)];
+    if (edits == null) return false;
+    final insertedLength = edits.fold<int>(
+      0,
+      (length, edit) => length + edit.replacement.length,
+    );
     final before = _cloneInlines(paragraph);
     final revisions = WordRevisions.capture(document);
     List<WmlInline>? after;
@@ -7863,7 +7912,9 @@ class WordEditorController extends OfficeController {
       }
       activeCaret
         ..paragraphIndex = beforeCaret.paragraph
-        ..logicalIndex = (tracked ? end : start) + replacement.length
+        ..logicalIndex = tracked
+            ? end + insertedLength
+            : start + replacement.length
         ..collapseSelection();
     }
 
@@ -7891,7 +7942,17 @@ class WordEditorController extends OfficeController {
 
     // Validate the exact operation on a clone before opening a transaction.
     final preview = WmlClone.paragraph(paragraph);
-    WmlRunEdit.replaceRange(preview, tracked ? end : start, end, replacement);
+    for (final edit in edits.reversed) {
+      WmlRunEdit.replaceRange(
+        preview,
+        tracked ? edit.end : edit.start,
+        edit.end,
+        edit.replacement,
+        styleSource: tracked && finding.ruleId == 'de.grammar.phrase-agreement'
+            ? edit.start
+            : null,
+      );
+    }
     commands.commit(
       _CallbackCommand(
         executeFn: () {
@@ -7905,52 +7966,65 @@ class WordEditorController extends OfficeController {
           }
           restoreBefore();
           try {
-            if (tracked) {
-              // Recording deletion first keeps replacement insertion at the
-              // original end outside the deleted span during range rebasing.
-              if (start != end) {
-                WordRevisions.record(
+            for (final edit in edits.reversed) {
+              final start = edit.start;
+              final end = edit.end;
+              final replacement = edit.replacement;
+              if (tracked) {
+                // Recording deletion first keeps replacement insertion at the
+                // original end outside the deleted span during range rebasing.
+                if (start != end) {
+                  WordRevisions.record(
+                    document,
+                    kind: WmlRevisionKind.delete,
+                    paragraph: paragraph,
+                    paragraphIndex: document.paragraphs.toList().indexOf(
+                      paragraph,
+                    ),
+                    start: start,
+                    end: end,
+                    text: previousText.substring(start, end),
+                  );
+                }
+                WordRevisions.rebaseEdit(
                   document,
-                  kind: WmlRevisionKind.delete,
-                  paragraph: paragraph,
-                  paragraphIndex: document.paragraphs.toList().indexOf(
-                    paragraph,
-                  ),
+                  paragraph,
+                  start: end,
+                  end: end,
+                  insertedLength: replacement.length,
+                );
+                WmlRunEdit.replaceRange(
+                  paragraph,
+                  end,
+                  end,
+                  replacement,
+                  styleSource: finding.ruleId == 'de.grammar.phrase-agreement'
+                      ? start
+                      : null,
+                );
+                if (replacement.isNotEmpty) {
+                  WordRevisions.record(
+                    document,
+                    kind: WmlRevisionKind.insert,
+                    paragraph: paragraph,
+                    paragraphIndex: document.paragraphs.toList().indexOf(
+                      paragraph,
+                    ),
+                    start: end,
+                    end: end + replacement.length,
+                    text: replacement,
+                  );
+                }
+              } else {
+                WordRevisions.rebaseEdit(
+                  document,
+                  paragraph,
                   start: start,
                   end: end,
-                  text: finding.originalText,
+                  insertedLength: replacement.length,
                 );
+                WmlRunEdit.replaceRange(paragraph, start, end, replacement);
               }
-              WordRevisions.rebaseEdit(
-                document,
-                paragraph,
-                start: end,
-                end: end,
-                insertedLength: replacement.length,
-              );
-              WmlRunEdit.replaceRange(paragraph, end, end, replacement);
-              if (replacement.isNotEmpty) {
-                WordRevisions.record(
-                  document,
-                  kind: WmlRevisionKind.insert,
-                  paragraph: paragraph,
-                  paragraphIndex: document.paragraphs.toList().indexOf(
-                    paragraph,
-                  ),
-                  start: end,
-                  end: end + replacement.length,
-                  text: replacement,
-                );
-              }
-            } else {
-              WordRevisions.rebaseEdit(
-                document,
-                paragraph,
-                start: start,
-                end: end,
-                insertedLength: replacement.length,
-              );
-              WmlRunEdit.replaceRange(paragraph, start, end, replacement);
             }
             after = _cloneInlines(paragraph);
             afterRevisions = WordRevisions.capture(document);

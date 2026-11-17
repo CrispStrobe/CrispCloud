@@ -425,6 +425,7 @@ class SheetDeserializer {
     SmlPageSetup ensurePageSetup() => pageSetup ??= SmlPageSetup();
     SmlRange? conditionalRange;
     SmlConditionalRule? conditionalRule;
+    var conditionalColorIndex = 0;
     while (reader.next()) {
       if (reader.eventType == XmlEventType.startElement &&
           reader.localName == 'sheetView') {
@@ -617,6 +618,7 @@ class SheetDeserializer {
           fontRgb: dxfFont,
           dxfId: dxfId,
         );
+        conditionalColorIndex = 0;
         sheet.conditionalFormats.add(conditionalRule);
       }
       if (reader.eventType == XmlEventType.startElement &&
@@ -643,12 +645,18 @@ class SheetDeserializer {
           conditionalRule!.colorScaleStops.isNotEmpty) {
         final rgb = reader.getAttribute('rgb') ?? '';
         final color = rgb.length == 8 ? rgb.substring(2) : rgb;
-        if (RegExp(r'^[0-9A-Fa-f]{6}$').hasMatch(color)) {
-          final stops = conditionalRule.colorScaleStops;
-          final last = stops.last;
-          stops[stops.length - 1] = SmlColorScaleStop(
-            type: last.type,
-            value: last.value,
+        final stops = conditionalRule.colorScaleStops;
+        // Native color scales list every threshold before their ordered colors.
+        // Keep the ordinal even when an unmodeled theme color is preserved.
+        final index = conditionalRule.kind == SmlConditionalKind.colorScale
+            ? conditionalColorIndex++
+            : stops.length - 1;
+        if (index < stops.length &&
+            RegExp(r'^[0-9A-Fa-f]{6}$').hasMatch(color)) {
+          final stop = stops[index];
+          stops[index] = SmlColorScaleStop(
+            type: stop.type,
+            value: stop.value,
             colorRgb: color.toUpperCase(),
           );
           if (conditionalRule.kind == SmlConditionalKind.dataBar) {
@@ -2130,13 +2138,18 @@ class SheetSerializer {
                 'val': '${stop.value}',
               },
             );
-            w.writeEmptyElement(
-              'color',
-              attributes: {
-                'rgb':
-                    'FF${rule.kind == SmlConditionalKind.dataBar ? rule.dataBarColor : stop.colorRgb}',
-              },
-            );
+          }
+          // SpreadsheetML groups thresholds before colors. Icon sets have no
+          // color children, data bars have one, and scales have one per stop.
+          final colors = switch (rule.kind) {
+            SmlConditionalKind.dataBar => [rule.dataBarColor],
+            SmlConditionalKind.colorScale => [
+              for (final stop in rule.colorScaleStops) stop.colorRgb,
+            ],
+            _ => <String>[],
+          };
+          for (final color in colors) {
+            w.writeEmptyElement('color', attributes: {'rgb': 'FF$color'});
           }
           w.writeEndElement();
         } else if (rule.dxfId case final dxfId?) {

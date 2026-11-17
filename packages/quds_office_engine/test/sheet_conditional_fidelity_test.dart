@@ -133,6 +133,215 @@ void main() {
     }
   });
 
+  group(
+    'graphic conditional rules use native threshold and color structure',
+    () {
+      for (final kind in [
+        SmlConditionalKind.colorScale,
+        SmlConditionalKind.dataBar,
+        SmlConditionalKind.iconSet,
+      ]) {
+        test('${kind.name} writes ordered schema children', () {
+          final sheet = SmlWorksheet(name: 'Rules', sheetId: 2);
+          final stops = [
+            const SmlColorScaleStop(type: 'min', colorRgb: 'FF0000'),
+            if (kind != SmlConditionalKind.dataBar)
+              const SmlColorScaleStop(
+                type: 'percentile',
+                value: 50,
+                colorRgb: 'FFFF00',
+              ),
+            const SmlColorScaleStop(type: 'max', colorRgb: '00FF00'),
+          ];
+          sheet.conditionalFormats.add(
+            SmlConditionalRule(
+              range: SmlRange.parse('A1:A3'),
+              kind: kind,
+              dataBarColor: '123456',
+              colorScaleStops: stops,
+            ),
+          );
+          final package = SheetSerializer().write(
+            SmlWorkbook(
+              sheets: [
+                SmlWorksheet(name: 'Data', sheetId: 1),
+                sheet,
+              ],
+            ),
+            recalculate: false,
+          );
+          final graphic = _nativeRule(package).firstChild(kind.name)!;
+          expect(graphic.childElements.map((child) => child.localName), [
+            for (final _ in stops) 'cfvo',
+            if (kind == SmlConditionalKind.dataBar) 'color',
+            if (kind == SmlConditionalKind.colorScale)
+              for (final _ in stops) 'color',
+          ]);
+          expect(
+            graphic.childrenNamed('color').map((c) => c.getAttribute('rgb')),
+            switch (kind) {
+              SmlConditionalKind.dataBar => ['FF123456'],
+              SmlConditionalKind.colorScale => [
+                'FFFF0000',
+                'FFFFFF00',
+                'FF00FF00',
+              ],
+              _ => <String>[],
+            },
+          );
+          final reopened = SheetDeserializer()
+              .read(package)
+              .sheets[1]
+              .conditionalFormats
+              .single;
+          if (kind == SmlConditionalKind.colorScale) {
+            expect(reopened.colorScaleStops.map((stop) => stop.colorRgb), [
+              'FF0000',
+              'FFFF00',
+              '00FF00',
+            ]);
+          } else if (kind == SmlConditionalKind.dataBar) {
+            expect(reopened.dataBarColor, '123456');
+          }
+        });
+      }
+
+      test('native color-scale colors map by ordinal after all thresholds', () {
+        final book = _native(
+          '<cfRule type="colorScale" priority="1">'
+          '<colorScale><cfvo type="min" val="0"/>'
+          '<cfvo type="percentile" val="50"/><cfvo type="max" val="0"/>'
+          '<color rgb="FF112233"/><color rgb="FF445566"/>'
+          '<color rgb="FF778899"/></colorScale></cfRule>',
+        );
+        expect(
+          book.sheets[1].conditionalFormats.single.colorScaleStops.map(
+            (stop) => (stop.type, stop.value, stop.colorRgb),
+          ),
+          [
+            ('min', 0.0, '112233'),
+            ('percentile', 50.0, '445566'),
+            ('max', 0.0, '778899'),
+          ],
+        );
+      });
+
+      for (final isolate in [false, true]) {
+        test(
+          'icon-set-only edits survive repeated saves (isolate=$isolate)',
+          () async {
+            var book = _native(_nativeIconRule);
+            for (final type in ['3Arrows', '3TrafficLights1']) {
+              final sheet = book.sheets[1];
+              sheet.conditionalFormats.single.iconSetType = type;
+              expect(
+                sheet.conditionalFormatState(),
+                isNot(sheet.sourceConditionalFormatState),
+              );
+              final bytes = isolate
+                  ? await OfficeIsolateSave.workbook(book, recalculate: false)
+                  : SheetSerializer().writeBytes(book, recalculate: false);
+              final package = OpcPackage.openBytes(bytes);
+              expect(
+                _nativeRule(
+                  package,
+                ).firstChild('iconSet')!.getAttribute('iconSet'),
+                type,
+              );
+              book = SheetDeserializer().read(package);
+              expect(
+                book.sheets[1].conditionalFormats.single.iconSetType,
+                type,
+              );
+            }
+          },
+        );
+      }
+
+      for (final typeOnly in [false, true]) {
+        test(
+          'icon threshold ${typeOnly ? 'type' : 'value'} edit is retained',
+          () async {
+            var book = _native(_nativeIconRule);
+            final sheet = book.sheets[1];
+            final stops = sheet.conditionalFormats.single.colorScaleStops;
+            final original = stops[1];
+            stops[1] = SmlColorScaleStop(
+              type: typeOnly ? 'percentile' : original.type,
+              value: typeOnly ? original.value : 45,
+              colorRgb: original.colorRgb,
+            );
+            expect(
+              sheet.conditionalFormatState(),
+              isNot(sheet.sourceConditionalFormatState),
+            );
+            for (var cycle = 0; cycle < 2; cycle++) {
+              book = SheetDeserializer().readBytes(
+                await OfficeIsolateSave.workbook(book, recalculate: false),
+              );
+              final threshold =
+                  book.sheets[1].conditionalFormats.single.colorScaleStops[1];
+              expect(threshold.type, typeOnly ? 'percentile' : 'percent');
+              expect(threshold.value, typeOnly ? 33 : 45);
+            }
+          },
+        );
+      }
+
+      test('graphic color-only edits invalidate preserved native XML', () {
+        for (final kind in ['colorScale', 'dataBar']) {
+          final book = _native(
+            '<cfRule type="$kind" priority="1">'
+            '<$kind><cfvo type="min" val="0"/><cfvo type="max" val="0"/>'
+            '<color rgb="FF112233"/>'
+            '${kind == 'colorScale' ? '<color rgb="FF445566"/>' : ''}'
+            '</$kind></cfRule>',
+          );
+          final sheet = book.sheets[1];
+          final rule = sheet.conditionalFormats.single;
+          if (kind == 'dataBar') {
+            rule.dataBarColor = 'ABCDEF';
+          } else {
+            final stop = rule.colorScaleStops.first;
+            rule.colorScaleStops[0] = SmlColorScaleStop(
+              type: stop.type,
+              value: stop.value,
+              colorRgb: 'ABCDEF',
+            );
+          }
+          expect(
+            sheet.conditionalFormatState(),
+            isNot(sheet.sourceConditionalFormatState),
+          );
+          final saved = SheetSerializer().write(book, recalculate: false);
+          expect(
+            _nativeRule(saved)
+                .firstChild(kind)!
+                .childrenNamed('color')
+                .first
+                .getAttribute('rgb'),
+            'FFABCDEF',
+          );
+        }
+      });
+
+      test('no-edit icon saves retain unmodeled native options', () {
+        var book = _native(
+          _nativeIconRule.replaceFirst(
+            'iconSet="3TrafficLights1"',
+            'iconSet="3TrafficLights1" reverse="1" showValue="0"',
+          ),
+        );
+        final original = _conditionalXml(book.package!);
+        for (var cycle = 0; cycle < 2; cycle++) {
+          final package = SheetSerializer().write(book, recalculate: false);
+          expect(_conditionalXml(package), original);
+          book = SheetDeserializer().read(package);
+        }
+      });
+    },
+  );
+
   group('conditional rule priorities and stopping semantics', () {
     test('every fresh rule receives a deterministic positive priority', () {
       final sheet = SmlWorksheet(name: 'Rules', sheetId: 2);
@@ -533,6 +742,12 @@ void main() {
     }
   });
 }
+
+const _nativeIconRule =
+    '<cfRule type="iconSet" priority="1">'
+    '<iconSet iconSet="3TrafficLights1"><cfvo type="percent" val="0"/>'
+    '<cfvo type="percent" val="33"/><cfvo type="percent" val="67"/>'
+    '</iconSet></cfRule>';
 
 SmlWorkbook _native(String ruleXml, {String sqref = 'A1:A3'}) {
   final book = SmlWorkbook(

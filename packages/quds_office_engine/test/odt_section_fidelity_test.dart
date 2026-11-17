@@ -390,6 +390,67 @@ void main() {
     },
   );
 
+  test('floating frame ranges use a common graphic parent in styles.xml', () {
+    WmlFrame frame(String id, String name) => WmlFrame(
+      x: 36,
+      y: 190,
+      width: 210,
+      height: 35,
+      blocks: [
+        WmlParagraph(
+          inlines: [
+            WmlBookmarkBoundary(id: id, isStart: true, name: name),
+            WmlRun(text: '${name}Text'),
+            WmlBookmarkBoundary(id: id, isStart: false),
+          ],
+        ),
+      ],
+    );
+    final document = WmlDocument(
+      sections: [
+        WmlSection(
+          blocks: [
+            frame('1', 'FirstMark'),
+            _p('Between'),
+            frame('2', 'LaterMark'),
+          ],
+        ),
+      ],
+    );
+    final result = _export(document);
+    final emitted = _elements(_body(result.content), 'frame').toList();
+    expect(emitted, hasLength(2));
+    final parentNames = <String>{};
+    for (var index = 0; index < emitted.length; index++) {
+      final parent = _style(
+        result.content,
+        emitted[index],
+      ).getAttribute('parent-style-name', namespaceUri: _styleNs);
+      // Without a common graphic parent, desktop DOCX conversion keeps the
+      // frame text but drops bookmark ranges from its text-box story.
+      expect(parent, isNotNull);
+      parentNames.add(parent!);
+      final common = result.styles
+          .firstChild('styles')!
+          .childrenNamed('style')
+          .singleWhere(
+            (style) =>
+                style.getAttribute('name', namespaceUri: _styleNs) == parent,
+          );
+      expect(common.getAttribute('family', namespaceUri: _styleNs), 'graphic');
+      final name = index == 0 ? 'FirstMark' : 'LaterMark';
+      expect(
+        _elements(emitted[index], 'bookmark-start').single.getAttribute('name'),
+        name,
+      );
+      expect(
+        _elements(emitted[index], 'bookmark-end').single.getAttribute('name'),
+        name,
+      );
+    }
+    expect(parentNames, hasLength(1));
+  });
+
   test('a later frame retains its page-relative paragraph anchor', () {
     final frame = WmlFrame(
       x: 36,

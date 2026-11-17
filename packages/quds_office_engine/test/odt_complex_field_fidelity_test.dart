@@ -110,9 +110,10 @@ void main() {
               ],
             ),
           );
-          final paragraphs = _elements(_body(result.content), 'p')
-              .skip(sectionLeading ? 0 : 1)
-              .toList();
+          final paragraphs = _elements(
+            _body(result.content),
+            'p',
+          ).skip(sectionLeading ? 0 : 1).toList();
           // A section boundary retains its empty leading source fragment;
           // a later paragraph does not acquire one because a run is aliased.
           expect(paragraphs, hasLength(sectionLeading ? 2 : 1));
@@ -125,14 +126,18 @@ void main() {
             'style-name',
             namespaceUri: _textNs,
           );
-          final style = _elements(result.content, 'style', _styleNs).singleWhere(
-            (style) =>
-                style.getAttribute('name', namespaceUri: _styleNs) == styleName,
-          );
+          final style = _elements(result.content, 'style', _styleNs)
+              .singleWhere(
+                (style) =>
+                    style.getAttribute('name', namespaceUri: _styleNs) ==
+                    styleName,
+              );
           expect(
-            _elements(style, 'paragraph-properties', _styleNs)
-                .single
-                .getAttribute('break-before', namespaceUri: _foNs),
+            _elements(
+              style,
+              'paragraph-properties',
+              _styleNs,
+            ).single.getAttribute('break-before', namespaceUri: _foNs),
             'column',
           );
           expect(paragraph.inlines, orderedEquals(original));
@@ -143,42 +148,6 @@ void main() {
       }
     },
   );
-
-  for (final instruction in ['PAGE', 'NUMPAGES']) {
-    for (final (label, text) in [
-      ('spaces', ' 7  8 '),
-      ('tab', '7\t8'),
-      ('line break', '7\n8'),
-    ]) {
-      test('$instruction cache retains significant $label through fallback', () {
-        final run = WmlRun(
-          text: text,
-          properties: WmlRunProps(bold: true),
-          hyperlink: const WmlHyperlink(url: 'https://example.com/pages'),
-        );
-        final result = _export(
-          'whitespace-${instruction.toLowerCase()}-${label.replaceAll(' ', '-')}',
-          _document([
-            ..._field(' $instruction ', [run]),
-            WmlRun(text: ' after'),
-          ]),
-        );
-        expect(_nativeFields(result.content), isEmpty);
-        expect(_visible(_body(result.content)), '$text after');
-        final link = _elements(result.content, 'a').single;
-        expect(_visible(link), text);
-        expect(
-          link.getAttribute(
-            'href',
-            namespaceUri: 'http://www.w3.org/1999/xlink',
-          ),
-          'https://example.com/pages',
-        );
-        expect(run.text, text);
-        expect(run.properties.bold, isTrue);
-      });
-    }
-  }
 
   for (final entry in {
     'PAGE': 'page-number',

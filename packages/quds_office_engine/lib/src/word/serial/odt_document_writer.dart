@@ -225,6 +225,18 @@ abstract final class OdtDocumentWriter {
       prefix: 'style',
       attributes: {'style:name': 'Standard', 'style:family': 'paragraph'},
     );
+    if (layout._pageFrameStyleWritten || stories._pageFrameStyleWritten) {
+      // Desktop consumers need a common graphic parent to retain text-box
+      // bookmark ranges when converting floating frames to DOCX.
+      w.writeEmptyElement(
+        'style',
+        prefix: 'style',
+        attributes: {
+          'style:name': _OdtLayout._pageFrameParentStyle,
+          'style:family': 'graphic',
+        },
+      );
+    }
     for (var level = 1; level <= 9; level++) {
       w.writeStartElement('style', prefix: 'style');
       w.writeAttribute('style:name', 'Heading_20_$level');
@@ -2188,6 +2200,7 @@ class _OdtLayout {
     return name;
   }
 
+  static const _pageFrameParentStyle = 'QudsTextFrame';
   bool _pageFrameStyleWritten = false;
 
   String pageFrameStyle() {
@@ -2195,7 +2208,8 @@ class _OdtLayout {
     if (!_pageFrameStyleWritten) {
       _pageFrameStyleWritten = true;
       _styleBuffers.add(
-        '<style:style style:name="$name" style:family="graphic">'
+        '<style:style style:name="$name" style:family="graphic" '
+        'style:parent-style-name="$_pageFrameParentStyle">'
         '<style:graphic-properties style:horizontal-pos="from-left" '
         'style:horizontal-rel="page" style:vertical-pos="from-top" '
         'style:vertical-rel="page" style:wrap="none"/></style:style>',

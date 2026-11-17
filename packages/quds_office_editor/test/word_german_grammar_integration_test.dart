@@ -46,6 +46,73 @@ void main() {
     },
   );
 
+  for (final tracked in [false, true]) {
+    test(
+      'complete phrase choice preserves individual styles and one undo step (tracking: $tracked)',
+      () async {
+        final document = WmlDocument.empty();
+        final paragraph = document.paragraphs.first;
+        paragraph.inlines
+          ..clear()
+          ..addAll([
+            WmlRun(text: 'Ich sehe '),
+            WmlRun(
+              text: 'der ',
+              properties: WmlRunProps(color: '224466'),
+            ),
+            WmlRun(text: 'neue ', properties: WmlRunProps(bold: true)),
+            WmlRun(text: 'Kunde', properties: WmlRunProps(italic: true)),
+            WmlRun(text: '.'),
+          ]);
+        document.trackRevisions = tracked;
+        final controller = _controller(document);
+        final summary = await controller.checkDocumentProofing();
+        final issue = summary.issues.singleWhere(
+          (i) => i.finding.ruleId == 'de.grammar.phrase-agreement',
+        );
+        expect(
+          controller.applyProofingSuggestion(issue, 'den neuen Kunden'),
+          isTrue,
+        );
+        final runs = paragraph.inlines.whereType<WmlRun>().toList();
+        expect(
+          runs.where((r) => r.text.contains('neuen')).single.properties.bold,
+          isTrue,
+        );
+        expect(
+          runs.where((r) => r.text.contains('Kunden')).single.properties.italic,
+          isTrue,
+        );
+        expect((await controller.checkDocumentProofing()).issues, isEmpty);
+        controller.undo();
+        expect(paragraph.text, 'Ich sehe der neue Kunde.');
+        expect(controller.canUndo, isFalse);
+        controller.redo();
+        expect((await controller.checkDocumentProofing()).issues, isEmpty);
+        final saved = WordDeserializer().readBytes(controller.saveBytes());
+        final savedRuns = saved.paragraphs.first.inlines
+            .whereType<WmlRun>()
+            .toList();
+        expect(
+          savedRuns
+              .where((r) => r.text.contains('neuen'))
+              .single
+              .properties
+              .bold,
+          isTrue,
+        );
+        expect(
+          savedRuns
+              .where((r) => r.text.contains('Kunden'))
+              .single
+              .properties
+              .italic,
+          isTrue,
+        );
+      },
+    );
+  }
+
   for (final scenario
       in <({String source, String corrected, String rule, String replacement})>[
         (

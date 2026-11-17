@@ -137,20 +137,11 @@ class SmlConditionalResolver {
     var minimum = values.first;
     var maximum = values.last;
     if (stops.length >= 2) {
-      minimum = switch (stops.first.type) {
-        'percent' => minimum + (maximum - minimum) * stops.first.value / 100,
-        'percentile' when values.isNotEmpty =>
-          values[((values.length - 1) * stops.first.value / 100).round()],
-        'number' => stops.first.value,
-        _ => minimum,
-      };
-      maximum = switch (stops.last.type) {
-        'percent' => minimum + (values.last - minimum) * stops.last.value / 100,
-        'percentile' when values.isNotEmpty =>
-          values[((values.length - 1) * stops.last.value / 100).round()],
-        'number' => stops.last.value,
-        _ => values.last,
-      };
+      final lower = stops.first.resolveThreshold(values);
+      final upper = stops.last.resolveThreshold(values);
+      if (lower == null || upper == null) return null;
+      minimum = lower;
+      maximum = upper;
     }
     if (maximum <= minimum) return null;
     return ((number - minimum) / (maximum - minimum)).clamp(0.0, 1.0);
@@ -161,9 +152,13 @@ class SmlConditionalResolver {
     if (number == null) return null;
     final stops = rule.colorScaleStops;
     if (stops.isEmpty) return null;
+    final values = _aggregate(rule).numbers;
     var index = 0;
-    for (var i = 0; i < stops.length; i++) {
-      if (number >= stops[i].value) index = i;
+    // The first entry identifies the lowest bucket; later entries delimit it.
+    for (var i = 1; i < stops.length; i++) {
+      final threshold = stops[i].resolveThreshold(values);
+      if (threshold == null) return null;
+      if (number >= threshold) index = i;
     }
     return index;
   }

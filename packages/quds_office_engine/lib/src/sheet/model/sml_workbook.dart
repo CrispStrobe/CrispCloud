@@ -583,6 +583,12 @@ class SmlWorksheet {
             rule.stopIfTrue,
             rule.fillRgb,
             rule.fontRgb,
+            rule.dataBarColor,
+            rule.iconSetType,
+            [
+              for (final stop in rule.colorScaleStops)
+                [stop.type, stop.value, stop.colorRgb],
+            ],
           ],
       ]);
 

@@ -4,6 +4,149 @@ import 'package:quds_office_engine/quds_office_engine.dart';
 import 'package:test/test.dart';
 
 void main() {
+  group('graphic thresholds use the numeric range distribution', () {
+    for (final type in ['percent', 'percentile']) {
+      test('icon sets resolve $type thresholds above the raw percentage', () {
+        final sheet = SmlWorksheet(name: 'Icons', sheetId: 1);
+        final values = [100, 105, 110, 200];
+        for (var row = 0; row < values.length; row++) {
+          sheet.cell(SmlCellRef(0, row)).value = values[row];
+        }
+        sheet.conditionalFormats.add(
+          SmlConditionalRule(
+            range: SmlRange.parse('A1:A4'),
+            kind: SmlConditionalKind.iconSet,
+            colorScaleStops: [
+              for (final value in [0.0, 33.0, 67.0])
+                SmlColorScaleStop(type: type, value: value, colorRgb: '000000'),
+            ],
+          ),
+        );
+        final resolver = SmlConditionalResolver(sheet: sheet);
+        expect([
+          for (var row = 0; row < values.length; row++)
+            resolver.resolve(SmlCellRef(0, row)).iconSetIndex,
+        ], type == 'percent' ? [0, 0, 0, 2] : [0, 1, 1, 2]);
+        expect(resolver.resolve(SmlCellRef.parse('A5')).iconSetIndex, isNull);
+      });
+    }
+
+    for (final type in ['number', 'num']) {
+      test('icon sets retain absolute $type thresholds', () {
+        final sheet = SmlWorksheet(name: 'Icons', sheetId: 1);
+        for (var row = 0; row < 3; row++) {
+          sheet.cell(SmlCellRef(0, row)).value = 100 + 50 * row;
+        }
+        sheet.conditionalFormats.add(
+          SmlConditionalRule(
+            range: SmlRange.parse('A1:A3'),
+            kind: SmlConditionalKind.iconSet,
+            colorScaleStops: [
+              for (final value in [0.0, 125.0, 175.0])
+                SmlColorScaleStop(type: type, value: value, colorRgb: '000000'),
+            ],
+          ),
+        );
+        final resolver = SmlConditionalResolver(sheet: sheet);
+        expect(
+          [
+            for (var row = 0; row < 3; row++)
+              resolver.resolve(SmlCellRef(0, row)).iconSetIndex,
+          ],
+          [0, 1, 2],
+        );
+      });
+    }
+
+    test('invalid icon percentile bounds do not match or throw', () {
+      final sheet = SmlWorksheet(name: 'Icons', sheetId: 1)
+        ..cellA1('A1').value = 100;
+      for (final value in [-1.0, 101.0, double.nan, double.infinity]) {
+        sheet.conditionalFormats
+          ..clear()
+          ..add(
+            SmlConditionalRule(
+              range: SmlRange.parse('A1'),
+              kind: SmlConditionalKind.iconSet,
+              colorScaleStops: [
+                const SmlColorScaleStop(type: 'min', colorRgb: '000000'),
+                SmlColorScaleStop(
+                  type: 'percentile',
+                  value: value,
+                  colorRgb: '000000',
+                ),
+                const SmlColorScaleStop(type: 'max', colorRgb: '000000'),
+              ],
+            ),
+          );
+        expect(
+          SmlConditionalResolver(sheet: sheet).resolve(_a1).iconSetIndex,
+          isNull,
+        );
+      }
+    });
+
+    test(
+      'data-bar percent bounds use the same unmodified min/max interval',
+      () {
+        final sheet = SmlWorksheet(name: 'Bars', sheetId: 1);
+        for (var row = 0; row < 3; row++) {
+          sheet.cell(SmlCellRef(0, row)).value = 100 + 50 * row;
+        }
+        sheet.conditionalFormats.add(
+          SmlConditionalRule(
+            range: SmlRange.parse('A1:A3'),
+            kind: SmlConditionalKind.dataBar,
+            colorScaleStops: const [
+              SmlColorScaleStop(type: 'percent', value: 25, colorRgb: '000000'),
+              SmlColorScaleStop(type: 'percent', value: 75, colorRgb: '000000'),
+            ],
+          ),
+        );
+        final resolver = SmlConditionalResolver(sheet: sheet);
+        expect(
+          [
+            for (var row = 0; row < 3; row++)
+              resolver.resolve(SmlCellRef(0, row)).dataBarFraction,
+          ],
+          [0, 0.5, 1],
+        );
+      },
+    );
+
+    test(
+      'color-scale percentiles interpolate between numeric observations',
+      () {
+        final sheet = SmlWorksheet(name: 'Scale', sheetId: 1)
+          ..cellA1('A1').value = 100
+          ..cellA1('A2').value = 150
+          ..cellA1('A3').value = 200;
+        sheet.conditionalFormats.add(
+          SmlConditionalRule(
+            range: SmlRange.parse('A1:A3'),
+            kind: SmlConditionalKind.colorScale,
+            colorScaleStops: const [
+              SmlColorScaleStop(
+                type: 'percentile',
+                value: 25,
+                colorRgb: '000000',
+              ),
+              SmlColorScaleStop(
+                type: 'percentile',
+                value: 75,
+                colorRgb: 'FFFFFF',
+              ),
+            ],
+          ),
+        );
+        SmlAnalysis.applyConditional(sheet);
+        expect(sheet.cellA1('A1').fillRgb, '000000');
+        expect(sheet.cellA1('A2').fillRgb, '808080');
+        expect(sheet.cellA1('A3').fillRgb, 'FFFFFF');
+      },
+    );
+  });
+
   group('numeric evaluation stays finite and bounded', () {
     for (final function in ['ROUND', 'ROUNDUP', 'ROUNDDOWN']) {
       for (final digits in ['1000000000', '-1000000000', '1e308']) {

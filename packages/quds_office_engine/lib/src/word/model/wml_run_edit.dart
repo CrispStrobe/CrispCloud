@@ -189,8 +189,9 @@ abstract final class WmlRunEdit {
     WmlParagraph paragraph,
     int start,
     int end,
-    String insert,
-  ) {
+    String insert, {
+    int? styleSource,
+  }) {
     final range = normalizeRange(paragraph, start, end);
     start = range.start;
     end = range.end;
@@ -204,14 +205,17 @@ abstract final class WmlRunEdit {
                 paragraph.inlines[i],
     };
     final int length = paragraph.text.length;
-    final WmlRunProps props = propsAt(
-      paragraph,
-      start == length ? start - 1 : start,
-    );
-    final List<int> commentIds = _commentIdsAt(
-      paragraph,
-      start == length ? start - 1 : start,
-    );
+    if (styleSource != null) {
+      RangeError.checkValueInInterval(
+        styleSource,
+        0,
+        length - 1,
+        'styleSource',
+      );
+    }
+    final styleIndex = styleSource ?? (start == length ? start - 1 : start);
+    final WmlRunProps props = propsAt(paragraph, styleIndex);
+    final List<int> commentIds = _commentIdsAt(paragraph, styleIndex);
     if (start == end &&
         (WordContentControls.hasInlineControls(paragraph) ||
             WordFieldSpans.zoteroCitations(paragraph).isNotEmpty)) {

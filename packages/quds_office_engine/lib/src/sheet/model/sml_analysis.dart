@@ -289,6 +289,45 @@ class SmlColorScaleStop {
 
   /// Six-digit RGB color without alpha.
   final String colorRgb;
+
+  /// Resolves this threshold against ascending numeric values in the rule's
+  /// range. Percent uses the whole min/max interval; percentile interpolates
+  /// between adjacent observations. Unsupported or invalid bounds do not match.
+  double? resolveThreshold(List<double> sortedValues) {
+    if (sortedValues.isEmpty) return null;
+    final minimum = sortedValues.first;
+    final maximum = sortedValues.last;
+    if (!minimum.isFinite || !maximum.isFinite) return null;
+    switch (type) {
+      case 'minimum':
+      case 'min':
+        return minimum;
+      case 'maximum':
+      case 'max':
+        return maximum;
+      case 'number':
+      case 'num':
+        return value.isFinite ? value : null;
+      case 'percent':
+      case 'percentile':
+        if (!value.isFinite || value < 0 || value > 100) return null;
+        final fraction = value / 100;
+        final double result;
+        if (type == 'percent') {
+          result = minimum * (1 - fraction) + maximum * fraction;
+        } else {
+          final position = (sortedValues.length - 1) * fraction;
+          final lower = position.floor();
+          final upper = position.ceil();
+          final weight = position - lower;
+          result =
+              sortedValues[lower] * (1 - weight) + sortedValues[upper] * weight;
+        }
+        return result.isFinite ? result : null;
+      default:
+        return null;
+    }
+  }
 }
 
 /// One conditional-format rule.
@@ -331,7 +370,7 @@ class SmlConditionalRule {
   /// Rank for top/bottom rules, or the percentage for percent variants.
   int rank;
 
-  /// Threshold/color stops for [SmlConditionalKind.colorScale] or data bars.
+  /// Threshold/color stops for color scales, data bars, or icon sets.
   final List<SmlColorScaleStop> colorScaleStops;
 
   /// RGB color for a [SmlConditionalKind.dataBar] rule.
@@ -516,20 +555,9 @@ abstract final class SmlAnalysis {
     ];
     if (values.isEmpty) return;
     final sorted = [...values]..sort();
-    final minimum = sorted.first;
-    final maximum = sorted.last;
-    double threshold(SmlColorScaleStop stop) {
-      return switch (stop.type) {
-        'minimum' || 'min' => minimum,
-        'maximum' || 'max' => maximum,
-        'percent' => minimum + (maximum - minimum) * stop.value / 100,
-        'percentile' =>
-          sorted[((sorted.length - 1) * stop.value / 100).round()],
-        _ => stop.value,
-      };
-    }
-
-    final thresholds = [for (final stop in stops) threshold(stop)];
+    final resolved = [for (final stop in stops) stop.resolveThreshold(sorted)];
+    if (resolved.any((value) => value == null)) return;
+    final thresholds = [for (final value in resolved) value!];
     for (final ref in rule.range.cells) {
       final cell = sheet.cellOrNull(ref);
       final value = cell?.asNumber;
