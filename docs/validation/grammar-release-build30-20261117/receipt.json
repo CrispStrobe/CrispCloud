@@ -1,0 +1,137 @@
+{
+  "recorded_utc": "2026-11-17T20:52:17.755096+00:00",
+  "version": "1.3.4+30",
+  "platform": "MAC_OS",
+  "architecture": "arm64",
+  "built_source_commit": "28979cea08a46c9b3beb016ab20b69ee02bea2b0",
+  "quds_source": "96e65705ad69f969710d3ff6d2897bd4aa38fbf9",
+  "managed_office_files": 2627,
+  "package_sha256": "64f88aa1e6a0f2e5cc07b282e94b30e19f7b806fff96b526728ea25d5f156450",
+  "local_build": "passed",
+  "distribution_signatures_and_profiles": "passed",
+  "signed_startup": "passed; credential policy ready and healthy for 15 seconds",
+  "gui_workflows": "pending: macOS session screen locked",
+  "apple_validation": "not accepted: Apple API HTTP 500; altool logs errors despite returning process status 0",
+  "upload": "not attempted: required live Apple preflight failed HTTP 500",
+  "testflight_build_id": null,
+  "country_policy": "existing outside-France decision retained; live re-verification blocked by Apple API failure",
+  "github_actions_queried_or_awaited": false,
+  "grammar": {
+    "original": {
+      "vm_node_equal": true,
+      "summary": {
+        "sentences": 30,
+        "requests_recorded": 30,
+        "errors": 18,
+        "exact_errors": 18,
+        "expanded_errors": 0,
+        "exact_expanded_errors": 0,
+        "challenge_errors": 0,
+        "exact_challenge_errors": 0,
+        "valid_controls": 12,
+        "flagged_controls": 0,
+        "operational_failures": 0,
+        "protection_failures": 0,
+        "ignore_failures": 0,
+        "recheck_failures": 0
+      }
+    },
+    "context": {
+      "vm_node_equal": true,
+      "summary": {
+        "sentences": 83,
+        "requests_recorded": 83,
+        "errors": 23,
+        "exact_errors": 21,
+        "expanded_errors": 0,
+        "exact_expanded_errors": 0,
+        "challenge_errors": 0,
+        "exact_challenge_errors": 0,
+        "valid_controls": 60,
+        "flagged_controls": 0,
+        "operational_failures": 0,
+        "protection_failures": 0,
+        "ignore_failures": 0,
+        "recheck_failures": 0
+      }
+    },
+    "holdout": {
+      "vm_node_equal": true,
+      "summary": {
+        "sentences": 104,
+        "requests_recorded": 104,
+        "errors": 46,
+        "exact_errors": 46,
+        "expanded_errors": 0,
+        "exact_expanded_errors": 0,
+        "challenge_errors": 0,
+        "exact_challenge_errors": 0,
+        "valid_controls": 58,
+        "flagged_controls": 0,
+        "operational_failures": 0,
+        "protection_failures": 0,
+        "ignore_failures": 0,
+        "recheck_failures": 0
+      }
+    },
+    "release": {
+      "vm_node_equal": true,
+      "summary": {
+        "sentences": 38,
+        "requests_recorded": 38,
+        "errors": 9,
+        "exact_errors": 9,
+        "expanded_errors": 0,
+        "exact_expanded_errors": 0,
+        "challenge_errors": 0,
+        "exact_challenge_errors": 0,
+        "valid_controls": 29,
+        "flagged_controls": 0,
+        "operational_failures": 0,
+        "protection_failures": 0,
+        "ignore_failures": 0,
+        "recheck_failures": 0
+      }
+    },
+    "morphology": {
+      "vm_node_equal": true,
+      "summary": {
+        "sentences": 256,
+        "requests_recorded": 1280,
+        "errors": 81,
+        "exact_errors": 73,
+        "expanded_errors": 73,
+        "exact_expanded_errors": 70,
+        "challenge_errors": 8,
+        "exact_challenge_errors": 3,
+        "valid_controls": 175,
+        "flagged_controls": 0,
+        "operational_failures": 0,
+        "protection_failures": 0,
+        "ignore_failures": 0,
+        "recheck_failures": 0
+      }
+    }
+  },
+  "cohorts": {
+    "engine": "1644 passed at 5cce94a1; no engine changes through canonical 96e65705",
+    "editor_renderer": "8 passed on final canonical source",
+    "host_broad": "272 passed at 2d717866; final affected Office rerun 81 passed at built source",
+    "terminal_unit": "1077 passed, 2 platform skips; implementation, tests and dependencies unchanged through built source",
+    "live_ssh": "25 passed, no skips; real OpenSSH, PTY and Unix agent",
+    "live_tmux": "1 passed on tmux 3.8",
+    "shell_helpers": "Bash and Zsh passed",
+    "native_keychain": "disposable Security.framework keychain tests passed",
+    "apple_controls": "38 passed",
+    "testflight_controls": "27 runs, 146 assertions passed",
+    "libreoffice": "actual ODS and Word round trips passed; source cc716c46 and synthetic artifacts retained"
+  },
+  "boundaries": [
+    "Cohorts overlap; their counts must not be added as distinct tests.",
+    "Engine analysis reports one incoming informational lint in sml_analysis.dart:505; no analysis errors or warnings.",
+    "Earlier disk-exhausted test attempts and preliminary builds are superseded, not acceptance evidence.",
+    "No native spaCy inference or full natural-language grammar coverage is claimed.",
+    "No live signed UI clicks/typing are claimed while the Mac screen is locked.",
+    "No TestFlight upload, Apple validation success, or external availability is claimed."
+  ]
+}
