@@ -1406,7 +1406,7 @@ dart run example/rich_export_gallery.dart
 | `.xlsb` | — | — | Host preview only; no BIFF12 reader or writer |
 | `.pptx` | Yes | Yes | Shapes, notes, hidden slides, motion |
 | `.ppt` / `.pps` / `.pot` | Partial | — | Current-slide text in the engine; rich preview is a host integration |
-| `.odt` | Yes | Yes | New-document subset: headings, formatted runs, list groups, tables, pictures, frames, page geometry and basic headers/footers; no in-place ODF preservation |
+| `.odt` | Yes | Yes | New-document subset: headings, formatted runs, bullet/numbered list groups, tables, pictures, frames, page geometry and basic headers/footers; no in-place ODF preservation |
 | `.ods` | Yes | Yes | Typed modeled subset; `OdsSheetWriter` emits a new package, not an in-place ODF rewrite |
 | `.odp` | Yes | Yes | New-document deck subset: page size, positioned text, pictures, tables, fills/strokes and notes; no in-place ODF preservation |
 | `.pdf` | Yes | Yes | `PdfFile` open; native 1.7 write and toolbox graft |
