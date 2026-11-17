@@ -14,6 +14,7 @@ enum OfficeEditorAction {
   saveAs,
   exportOds,
   exportOdt,
+  exportOdp,
   close,
   undo,
   redo,

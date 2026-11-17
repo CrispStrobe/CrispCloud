@@ -20,6 +20,7 @@ class OfficeRecoveryStrings {
     'de': {
       'Export as ODS': 'Als ODS exportieren',
       'Export as ODT': 'Als ODT exportieren',
+      'Export as ODP': 'Als ODP exportieren',
       'Save As': 'Speichern unter',
       signedPackageMessage:
           'Dieses Office-Paket ist digital signiert. Speichern Sie vor dem Bearbeiten hier eine unsignierte Kopie in Office. Das Original wurde nicht verändert.',
@@ -34,6 +35,7 @@ class OfficeRecoveryStrings {
     'fr': {
       'Export as ODS': 'Exporter en ODS',
       'Export as ODT': 'Exporter en ODT',
+      'Export as ODP': 'Exporter en ODP',
       'Save As': 'Enregistrer sous',
       signedPackageMessage:
           'Ce fichier Office porte une signature numérique. Enregistrez une copie non signée dans Office avant de le modifier ici. L’original n’a pas été modifié.',
@@ -48,6 +50,7 @@ class OfficeRecoveryStrings {
     'es': {
       'Export as ODS': 'Exportar como ODS',
       'Export as ODT': 'Exportar como ODT',
+      'Export as ODP': 'Exportar como ODP',
       'Save As': 'Guardar como',
       signedPackageMessage:
           'Este archivo de Office tiene una firma digital. Guarde una copia sin firmar en Office antes de editarlo aquí. El original no se ha modificado.',
@@ -62,6 +65,7 @@ class OfficeRecoveryStrings {
     'pt': {
       'Export as ODS': 'Exportar como ODS',
       'Export as ODT': 'Exportar como ODT',
+      'Export as ODP': 'Exportar como ODP',
       'Save As': 'Salvar como',
       signedPackageMessage:
           'Este arquivo do Office tem uma assinatura digital. Salve uma cópia sem assinatura no Office antes de editá-lo aqui. O original não foi alterado.',
@@ -76,6 +80,7 @@ class OfficeRecoveryStrings {
     'ja': {
       'Export as ODS': 'ODS としてエクスポート',
       'Export as ODT': 'ODT としてエクスポート',
+      'Export as ODP': 'ODP としてエクスポート',
       'Save As': '名前を付けて保存',
       signedPackageMessage:
           'このOfficeファイルにはデジタル署名があります。ここで編集する前に、Officeで署名のないコピーを保存してください。元のファイルは変更されていません。',
@@ -89,6 +94,7 @@ class OfficeRecoveryStrings {
     'ko': {
       'Export as ODS': 'ODS로 내보내기',
       'Export as ODT': 'ODT로 내보내기',
+      'Export as ODP': 'ODP로 내보내기',
       'Save As': '다른 이름으로 저장',
       signedPackageMessage:
           '이 Office 파일에는 디지털 서명이 있습니다. 여기서 편집하기 전에 Office에서 서명되지 않은 사본을 저장하세요. 원본은 변경되지 않았습니다.',
@@ -102,6 +108,7 @@ class OfficeRecoveryStrings {
     'zh': {
       'Export as ODS': '导出为 ODS',
       'Export as ODT': '导出为 ODT',
+      'Export as ODP': '导出为 ODP',
       'Save As': '另存为',
       signedPackageMessage:
           '此 Office 文件具有数字签名。在此编辑前，请先在 Office 中保存未签名的副本。原始文件未更改。',
@@ -114,6 +121,7 @@ class OfficeRecoveryStrings {
     'ar': {
       'Export as ODS': 'تصدير بصيغة ODS',
       'Export as ODT': 'تصدير بصيغة ODT',
+      'Export as ODP': 'تصدير بصيغة ODP',
       'Save As': 'حفظ باسم',
       signedPackageMessage:
           'تحتوي حزمة Office هذه على توقيع رقمي. احفظ نسخة غير موقعة في Office قبل تحريرها هنا. لم يتم تغيير الملف الأصلي.',
