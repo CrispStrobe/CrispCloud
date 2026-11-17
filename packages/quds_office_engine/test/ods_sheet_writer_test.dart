@@ -266,6 +266,41 @@ void main() {
     expect(rule.listSourceRange?.end.a1, 'A1');
   });
 
+  test('writes calendar-relative conditional rules', () {
+    final sheet = SmlWorksheet(name: 'Data', sheetId: 1);
+    final today = DateTime.utc(2026, 11, 17);
+    final epoch = DateTime.utc(1899, 12, 30);
+    sheet.cellA1('A1').value = today.difference(epoch).inDays;
+    sheet.cellA1('A2').value = today
+        .subtract(const Duration(days: 1))
+        .difference(epoch)
+        .inDays;
+    sheet.cellA1('A3').value = today
+        .subtract(const Duration(days: 2))
+        .difference(epoch)
+        .inDays;
+    sheet.conditionalFormats.add(
+      SmlConditionalRule(
+        range: SmlRange.parse('A1:A3'),
+        kind: SmlConditionalKind.timePeriod,
+        formula: 'today',
+        fillRgb: 'FF0000',
+      ),
+    );
+    final bytes = OdsSheetWriter.writeBytes(SmlWorkbook(sheets: [sheet]));
+    final reopened = OdsSheetReader.readBytes(bytes);
+    final rule = reopened.sheets.first.conditionalFormats.single;
+    expect(rule.kind, SmlConditionalKind.timePeriod);
+    expect(rule.formula, 'today');
+    final resolver = SmlConditionalResolver(
+      sheet: reopened.sheets.first,
+      now: () => DateTime(2026, 11, 17, 12),
+    );
+    expect(resolver.resolve(SmlCellRef.parse('A1')).fillRgb, 'FF0000');
+    expect(resolver.resolve(SmlCellRef.parse('A2')).fillRgb, isNull);
+    expect(OdsSheetWriter.writeBytes(SmlWorkbook(sheets: [sheet])), isNotEmpty);
+  });
+
   test('writes icon-set conditional rules', () {
     final sheet = SmlWorksheet(name: 'Data', sheetId: 1);
     for (var row = 1; row <= 3; row++) {

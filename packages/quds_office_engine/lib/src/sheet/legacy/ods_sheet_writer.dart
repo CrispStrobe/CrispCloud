@@ -649,9 +649,39 @@ abstract final class OdsSheetWriter {
       SmlConditionalKind.bottomPercent => 'bottom-percent(${rule.rank})',
       SmlConditionalKind.aboveAverage => 'above-average',
       SmlConditionalKind.belowAverage => 'below-average',
+      SmlConditionalKind.timePeriod => _escapeAttr(
+        'formula-is(${_timePeriodFormula(rule)})',
+      ),
       SmlConditionalKind.colorScale => '',
       SmlConditionalKind.dataBar => '',
       SmlConditionalKind.iconSet => '',
+    };
+  }
+
+  static String _timePeriodFormula(SmlConditionalRule rule) {
+    final ref = '[.${rule.range.start.a1}]';
+    return switch (rule.formula) {
+      'today' => '$ref=TODAY()',
+      'yesterday' => '$ref=TODAY()-1',
+      'tomorrow' => '$ref=TODAY()+1',
+      'last7Days' => 'AND($ref>=TODAY()-6;$ref<=TODAY())',
+      'thisWeek' =>
+        'AND($ref>=TODAY()-WEEKDAY(TODAY();1)+1;'
+            '$ref<=TODAY()-WEEKDAY(TODAY();1)+7)',
+      'lastWeek' =>
+        'AND($ref>=TODAY()-WEEKDAY(TODAY();1)-6;'
+            '$ref<=TODAY()-WEEKDAY(TODAY();1))',
+      'nextWeek' =>
+        'AND($ref>=TODAY()-WEEKDAY(TODAY();1)+8;'
+            '$ref<=TODAY()-WEEKDAY(TODAY();1)+14)',
+      'thisMonth' => 'AND(MONTH($ref)=MONTH(TODAY());YEAR($ref)=YEAR(TODAY()))',
+      'lastMonth' =>
+        'AND(MONTH($ref)=MONTH(EDATE(TODAY();-1));'
+            'YEAR($ref)=YEAR(EDATE(TODAY();-1)))',
+      'nextMonth' =>
+        'AND(MONTH($ref)=MONTH(EDATE(TODAY();1));'
+            'YEAR($ref)=YEAR(EDATE(TODAY();1)))',
+      _ => '$ref=TODAY()',
     };
   }
 

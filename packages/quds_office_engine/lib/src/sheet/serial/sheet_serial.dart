@@ -561,6 +561,8 @@ class SheetDeserializer {
             kind = SmlConditionalKind.dataBar;
           case 'iconSet':
             kind = SmlConditionalKind.iconSet;
+          case 'timePeriod':
+            kind = SmlConditionalKind.timePeriod;
           case 'beginsWith':
             kind = SmlConditionalKind.beginsWith;
           case 'endsWith':
@@ -605,7 +607,9 @@ class SheetDeserializer {
         conditionalRule = SmlConditionalRule(
           range: conditionalRange,
           kind: kind,
-          formula: text,
+          formula: type == 'timePeriod'
+              ? (reader.getAttribute('timePeriod') ?? '')
+              : text,
           rank: int.tryParse(reader.getAttribute('rank') ?? '') ?? 10,
           priority: int.tryParse(reader.getAttribute('priority') ?? ''),
           stopIfTrue: _readBoolean(reader.getAttribute('stopIfTrue')),
@@ -2044,6 +2048,9 @@ class SheetSerializer {
             w.writeAttribute('type', 'dataBar');
           case SmlConditionalKind.iconSet:
             w.writeAttribute('type', 'iconSet');
+          case SmlConditionalKind.timePeriod:
+            w.writeAttribute('type', 'timePeriod');
+            w.writeAttribute('timePeriod', rule.formula);
           case SmlConditionalKind.duplicate:
             w.writeAttribute('type', 'duplicateValues');
           case SmlConditionalKind.top:
@@ -2090,7 +2097,10 @@ class SheetSerializer {
               SmlConditionalKind.belowAverage ||
               SmlConditionalKind.colorScale ||
               SmlConditionalKind.dataBar ||
-              SmlConditionalKind.iconSet => throw StateError('handled above'),
+              SmlConditionalKind.iconSet ||
+              SmlConditionalKind.timePeriod => throw StateError(
+                'handled above',
+              ),
             });
         }
         if (rule.kind == SmlConditionalKind.colorScale ||
@@ -2144,7 +2154,8 @@ class SheetSerializer {
             rule.kind != SmlConditionalKind.belowAverage &&
             rule.kind != SmlConditionalKind.colorScale &&
             rule.kind != SmlConditionalKind.dataBar &&
-            rule.kind != SmlConditionalKind.iconSet) {
+            rule.kind != SmlConditionalKind.iconSet &&
+            rule.kind != SmlConditionalKind.timePeriod) {
           if (rule.formula.isNotEmpty) {
             w.writeStartElement('formula');
             w.writeText(rule.formula);
