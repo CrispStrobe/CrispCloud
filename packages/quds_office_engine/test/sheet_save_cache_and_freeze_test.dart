@@ -124,6 +124,38 @@ void main() {
     expect(reopened.draft, isTrue);
   });
 
+  test('icon-set conditional rules round-trip', () async {
+    final book = SmlWorkbook(
+      sheets: [SmlWorksheet(name: 'Sheet1', sheetId: 1)],
+    );
+    final sheet = book.firstSheet;
+    for (var row = 0; row < 3; row++) {
+      sheet.cellA1('A${row + 1}').value = row + 1;
+    }
+    sheet.conditionalFormats.add(
+      SmlConditionalRule(
+        range: SmlRange.parse('A1:A3'),
+        kind: SmlConditionalKind.iconSet,
+        iconSetType: '3TrafficLights1',
+        colorScaleStops: const [
+          SmlColorScaleStop(type: 'number', value: 1, colorRgb: '638EC6'),
+          SmlColorScaleStop(type: 'number', value: 2, colorRgb: '638EC6'),
+          SmlColorScaleStop(type: 'number', value: 3, colorRgb: '638EC6'),
+        ],
+      ),
+    );
+    final saved = await OfficeIsolateSave.workbook(book);
+    final xml = OpcPackage.openBytes(
+      saved,
+    ).getPart('/xl/worksheets/sheet1.xml')!.readText();
+    expect(xml, contains('type="iconSet"'));
+    final reopened = SheetDeserializer().readBytes(saved).firstSheet;
+    final rule = reopened.conditionalFormats.single;
+    expect(rule.kind, SmlConditionalKind.iconSet);
+    expect(rule.iconSetType, '3TrafficLights1');
+    expect(rule.colorScaleStops.length, 3);
+  });
+
   test('data-bar conditional rules round-trip', () async {
     final book = SmlWorkbook(
       sheets: [SmlWorksheet(name: 'Sheet1', sheetId: 1)],

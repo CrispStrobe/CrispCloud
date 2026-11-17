@@ -266,6 +266,38 @@ void main() {
     expect(rule.listSourceRange?.end.a1, 'A1');
   });
 
+  test('writes icon-set conditional rules', () {
+    final sheet = SmlWorksheet(name: 'Data', sheetId: 1);
+    for (var row = 1; row <= 3; row++) {
+      sheet.cellA1('A$row').value = row;
+    }
+    sheet.conditionalFormats.add(
+      SmlConditionalRule(
+        range: SmlRange.parse('A1:A3'),
+        kind: SmlConditionalKind.iconSet,
+        iconSetType: '3TrafficLights1',
+        colorScaleStops: const [
+          SmlColorScaleStop(type: 'number', value: 1, colorRgb: '638EC6'),
+          SmlColorScaleStop(type: 'number', value: 2, colorRgb: '638EC6'),
+          SmlColorScaleStop(type: 'number', value: 3, colorRgb: '638EC6'),
+        ],
+      ),
+    );
+    final reopened = OdsSheetReader.readBytes(
+      OdsSheetWriter.writeBytes(SmlWorkbook(sheets: [sheet])),
+    );
+    final rule = reopened.sheets.first.conditionalFormats.single;
+    expect(rule.kind, SmlConditionalKind.iconSet);
+    expect(rule.iconSetType, '3TrafficLights1');
+    expect(rule.colorScaleStops.length, 3);
+    expect(
+      SmlConditionalResolver(
+        sheet: reopened.sheets.first,
+      ).resolve(SmlCellRef.parse('A3')).iconSetIndex,
+      2,
+    );
+  });
+
   test('writes data-bar conditional rules', () {
     final sheet = SmlWorksheet(name: 'Data', sheetId: 1);
     for (var row = 1; row <= 3; row++) {
