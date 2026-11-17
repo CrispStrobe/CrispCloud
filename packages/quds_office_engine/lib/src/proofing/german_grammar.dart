@@ -13,6 +13,7 @@ const Set<String> _germanPhraseRuleIds = <String>{
   'de.grammar.das-dass',
   'de.grammar.subordinate-comma',
   'de.grammar.comparison',
+  'de.grammar.noun-verb',
 };
 
 final class _GermanGrammarIssue {
@@ -691,6 +692,107 @@ Iterable<_GermanGrammarIssue> _germanGrammarIssues(
   yield* _grammarClauseIssues(text, words, protected, boundaries);
   yield* _grammarComparisonIssues(text, words, protected, boundaries);
   yield* _grammarInvertedAgreement(text, words, protected, boundaries);
+  yield* _grammarSimpleNounAgreement(text, words, protected, boundaries, swiss);
+}
+
+// A deliberately small complete-clause gate. A fronted object can look like a
+// subject until its actual subject appears: "Die Kinder sieht meine Frau".
+// Only permit finite predicates with no following subject/object noun phrase,
+// coordination, relative clause, auxiliary, quotation or reported-speech cue.
+// A full syntax backend is still needed for the excluded constructions.
+final RegExp _grammarSimplePredicate = RegExp(
+  r'^[ \t\u00a0\u202f]*'
+  r'(?:(?:heute|morgen|jetzt|hier|dort|draußen|drinnen|bald|gerne|oft|immer|selten|'
+  r'zusammen|wieder|allein|auch|nicht|wirklich|sehr|müde|bereit|fertig|sauber|'
+  r'pünktlich|leise|laut|schnell|langsam|lange|gut|schlecht)[ \t\u00a0\u202f]+)*'
+  r'(?:heute|morgen|jetzt|hier|dort|draußen|drinnen|bald|gerne|oft|immer|selten|'
+  r'zusammen|wieder|allein|auch|nicht|wirklich|sehr|müde|bereit|fertig|sauber|'
+  r'pünktlich|leise|laut|schnell|langsam|lange|gut|schlecht)?'
+  r'(?:[ \t\u00a0\u202f]*(?:im|am|zum|beim|vom|ins|ans|zur|nach|zu|bei|mit|ohne)'
+  r'[ \t\u00a0\u202f]+(?:Hause|[\p{Lu}][\p{L}\p{M}]*))?'
+  r'[ \t\u00a0\u202f]*\.?[ \t\r\n\u00a0\u202f]*$',
+  unicode: true,
+);
+
+Iterable<_GermanGrammarIssue> _grammarSimpleNounAgreement(
+  String text,
+  List<_GermanGrammarWord> words,
+  bool Function(int, int) protected,
+  Set<int> boundaries,
+  bool swiss,
+) sync* {
+  if (words.length < 3 ||
+      text.substring(0, words.first.start).trim().isNotEmpty) {
+    return;
+  }
+  final article = words.first;
+  final determiner = _grammarDeterminerForms[article.lower];
+  if (determiner == null) return;
+  final nounIndex = _grammarNounIndex(text, words, 0);
+  if (nounIndex == null || nounIndex + 1 >= words.length) return;
+  final noun = words[nounIndex];
+  final verb = words[nounIndex + 1];
+  if (!_grammarAdjacent(text, noun, verb) ||
+      verb.capitalized ||
+      !_grammarSimplePredicate.hasMatch(text.substring(verb.end)) ||
+      !_grammarContextSafe(article.start, text.length, protected, boundaries) ||
+      _grammarCouldBeNominalizedAdjective(article, determiner, noun, null)) {
+    return;
+  }
+  final paradigm = GermanWritingRulesProvider._presentByForm[verb.lower];
+  if (paradigm == null ||
+      !_germanFormsEquivalent(verb.lower, paradigm.thirdPerson) &&
+          !_germanFormsEquivalent(verb.lower, paradigm.wir)) {
+    return;
+  }
+  final morphology = GermanNounMorphology.shared;
+  if (!morphology.acceptsSpelling(noun.text, swiss: swiss)) return;
+  final numbers = <bool>{
+    for (final reading in _lookupGrammarNoun(noun.lower))
+      if ((reading.gender != _GermanGender.plural ||
+              determiner.permitsPlural) &&
+          determiner.form(_GermanCase.nominative, reading.gender) ==
+              article.lower &&
+          reading.accepts(noun.lower, _GermanCase.nominative))
+        reading.gender == _GermanGender.plural,
+  };
+  // Retain ALL readings: "die Leiter" can be a singular ladder or plural
+  // leaders. A parser's guessed number must not erase that ambiguity.
+  if (numbers.length != 1) return;
+  final plural = numbers.single;
+  // Every modeled adjective must agree with the selected nominative reading;
+  // otherwise leave the phrase to the existing adjective/case checks.
+  for (var index = 1; index < nounIndex; index++) {
+    final adjective = words[index];
+    final stems = _grammarAdjectiveForms[adjective.lower]!;
+    final genders = _lookupGrammarNoun(noun.lower).where(
+      (reading) =>
+          (reading.gender == _GermanGender.plural) == plural &&
+          determiner.form(_GermanCase.nominative, reading.gender) ==
+              article.lower &&
+          reading.accepts(noun.lower, _GermanCase.nominative),
+    );
+    if (genders.any(
+      (reading) => !stems.any(
+        (stem) => _germanFormsEquivalent(
+          '$stem${_grammarAdjectiveEnding(determiner, _GermanCase.nominative, reading.gender)}',
+          adjective.lower,
+        ),
+      ),
+    )) {
+      return;
+    }
+  }
+  var replacement = plural ? paradigm.wir : paradigm.thirdPerson;
+  if (swiss) replacement = replacement.replaceAll('ß', 'ss');
+  if (_germanFormsEquivalent(verb.lower, replacement)) return;
+  yield _GermanGrammarIssue(
+    'de.grammar.noun-verb',
+    verb.start,
+    verb.end,
+    replacement,
+    'Diese Verbform passt normalerweise nicht zum eindeutigen Singular oder Plural des vorangehenden Subjekts.',
+  );
 }
 
 bool _grammarCouldBeNominalizedAdjective(

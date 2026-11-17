@@ -54,12 +54,16 @@ class _WordProofingDialogState extends State<WordProofingDialog> {
     'de.grammar.preposition-case': 'Article case after prepositions',
     'de.grammar.dative-plural': 'Dative plural endings',
     'de.grammar.noun-case': 'Noun case endings',
+    'de.grammar.noun-verb': 'Noun and verb agreement',
     'de.grammar.adjective-ending': 'Adjective agreement',
     'de.grammar.das-dass': 'Das and dass usage',
     'de.grammar.subordinate-comma': 'Commas before subordinate clauses',
     'de.grammar.comparison': 'Als and wie in comparisons',
     'de.delimiter.balance': 'Matching brackets',
     'de.quote.balance': 'Matching quotation marks',
+    'aot.de.subject-verb-agreement': 'AOT subject and verb agreement',
+    'aot.de.preposition-case': 'AOT case after prepositions',
+    'aot.de.adjective-agreement': 'AOT adjective agreement',
   };
 
   String? _notice;
