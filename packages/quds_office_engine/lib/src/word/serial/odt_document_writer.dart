@@ -1525,6 +1525,12 @@ class _OdtLayout {
             buffer.write(' fo:text-indent="${points}pt"');
           }
         }
+        if (props.shadingFill case final fill? when fill.isNotEmpty) {
+          buffer.write(' fo:background-color="#${fill.toLowerCase()}"');
+        }
+        if (props.borderColor case final border? when border.isNotEmpty) {
+          buffer.write(' fo:border="0.5pt solid #${border.toLowerCase()}"');
+        }
         buffer.write('/>');
         if (emptyAnchor) {
           buffer.write('<style:text-properties fo:font-size="1pt"/>');
