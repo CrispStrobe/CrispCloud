@@ -12,6 +12,8 @@ import '../properties/wml_properties.dart';
 /// This is an export path. It emits the modeled text, paragraph/run formatting,
 /// tables, pictures, frames, page geometry and basic headers/footers. It does
 /// not claim to preserve arbitrary imported ODF XML or every Word feature.
+/// Word and Zotero fields export their visible cached results; their native
+/// instructions and editable field metadata are not part of this export.
 abstract final class OdtDocumentWriter {
   /// Serializes [document] as a new ODT package.
   static Uint8List writeBytes(WmlDocument document) {
@@ -238,7 +240,7 @@ abstract final class OdtDocumentWriter {
         if (inline.text.isNotEmpty) {
           w.writeStartElement('span', prefix: 'text');
           w.writeAttribute('text:style-name', style);
-          w.writeText(inline.text);
+          _writeText(w, inline.text);
           w.writeEndElement();
         }
         if (inline.inlineVisual case final visual?) {
@@ -253,7 +255,10 @@ abstract final class OdtDocumentWriter {
           prefix: 'text',
         );
       case WmlFieldBoundary():
-        if (inline.text.isNotEmpty) w.writeText(inline.text);
+        // Instructions are hidden field metadata, not document text. The
+        // surrounding result runs remain in the inline sequence, including
+        // citations and bibliographies that span several paragraphs.
+        break;
       case WmlContentControlBoundary() ||
           WmlNoteMarker() ||
           WmlBookmarkBoundary():
@@ -342,8 +347,35 @@ abstract final class OdtDocumentWriter {
 
   static void _writePlainParagraph(XmlWriter w, String text) {
     w.writeStartElement('p', prefix: 'text');
-    if (text.isNotEmpty) w.writeText(text);
+    _writeText(w, text);
     w.writeEndElement();
+  }
+
+  static final _whitespace = RegExp(r' +|\r\n|[\t\r\n]');
+
+  static void _writeText(XmlWriter w, String text) {
+    var offset = 0;
+    for (final match in _whitespace.allMatches(text)) {
+      if (match.start > offset)
+        w.writeText(text.substring(offset, match.start));
+      final value = match[0]!;
+      if (value.startsWith(' ')) {
+        // ODF collapses literal whitespace, including at span boundaries.
+        // Explicit spaces preserve leading, trailing and repeated spacing.
+        w.writeEmptyElement(
+          's',
+          prefix: 'text',
+          attributes: {if (value.length > 1) 'text:c': '${value.length}'},
+        );
+      } else {
+        w.writeEmptyElement(
+          value == '\t' ? 'tab' : 'line-break',
+          prefix: 'text',
+        );
+      }
+      offset = match.end;
+    }
+    if (offset < text.length) w.writeText(text.substring(offset));
   }
 
   static String _manifestXml(List<String> media) {
