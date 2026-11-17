@@ -99,10 +99,13 @@ abstract final class OdpPresentationWriter {
       return;
     }
     final image = shape.visual?.imageBytes;
-    if ((image == null || image.isEmpty) &&
-        shape.table != null &&
-        transform.rot % (360 * 60000) != 0) {
-      _writeRotatedTable(w, shape, layout);
+    // Resolve fallback data before selecting the rotation-preserving table
+    // path. Images and explicitly modeled tables retain their precedence.
+    final table = image == null || image.isEmpty
+        ? shape.table ?? _chartFallbackTable(shape)
+        : null;
+    if (table != null && transform.rot % (360 * 60000) != 0) {
+      _writeRotatedTable(w, shape, table, layout);
       return;
     }
     w.writeStartElement('frame', prefix: 'draw');
@@ -117,31 +120,29 @@ abstract final class OdpPresentationWriter {
         prefix: 'draw',
         attributes: {'xlink:href': path, 'xlink:type': 'simple'},
       );
-    } else if (shape.table case final table?) {
+    } else if (table != null) {
       _writeTable(w, table, transform, layout);
-    } else if (shape.visual case final visual?
-        when visual.isChart && visual.points.isNotEmpty) {
-      _writeTable(
-        w,
-        PmlTable(
-          rows: [
-            [PmlTableCell(text: 'Label'), PmlTableCell(text: 'Value')],
-            for (final point in visual.points)
-              [
-                PmlTableCell(text: point.label),
-                PmlTableCell(text: '${point.value}'),
-              ],
-          ],
-        ),
-        transform,
-        layout,
-      );
     } else {
       w.writeStartElement('text-box', prefix: 'draw');
       _writeParagraphs(w, shape.text, layout, shape);
       w.writeEndElement();
     }
     w.writeEndElement();
+  }
+
+  static PmlTable? _chartFallbackTable(PmlShape shape) {
+    final visual = shape.visual;
+    if (visual == null || !visual.isChart || visual.points.isEmpty) return null;
+    return PmlTable(
+      rows: [
+        [PmlTableCell(text: 'Label'), PmlTableCell(text: 'Value')],
+        for (final point in visual.points)
+          [
+            PmlTableCell(text: point.label),
+            PmlTableCell(text: '${point.value}'),
+          ],
+      ],
+    );
   }
 
   static void _writeFrameGeometry(
@@ -203,6 +204,7 @@ abstract final class OdpPresentationWriter {
   static void _writeRotatedTable(
     XmlWriter w,
     PmlShape shape,
+    PmlTable table,
     _OdpLayout layout,
   ) {
     // Impress applies table translation while ignoring table rotation. Use
@@ -210,7 +212,6 @@ abstract final class OdpPresentationWriter {
     // structure for unrotated tables. The shared center rotates cell positions
     // and their content together. One background covers ragged/empty positions
     // without expanding a potentially large logical rectangle.
-    final table = shape.table!;
     final transform = shape.transform;
     final columns = table.colCount < 1 ? 1 : table.colCount;
     final rows = table.rowCount < 1 ? 1 : table.rowCount;
