@@ -1,0 +1,39 @@
+{
+  "purpose": "Technical reviewed-source binding after second fixed incoming-source reconciliation",
+  "compared_to_main": "9eced5cec9b42ad7a3aa67f22f3d23c238f66dbf",
+  "reviewed_file_count": 954,
+  "changed_reviewed_files": [
+    {
+      "path": "tool/office_fidelity_manifest.json",
+      "incoming_main_sha256": "03453c1d63d4324513074e8e4447d5b4cfa26fd3db29481295968a30cf0a0d37",
+      "current_sha256": "00a25db3d862eaaf14abfc4e9b5c1746209938c24377d7e1ead67aab0688f88b"
+    },
+    {
+      "path": "lib/widgets/office_editor_dialog.dart",
+      "incoming_main_sha256": "0681757dd0db960dd7ca20752d7c7c3e77234b9e32966e99db111351b8c8045d",
+      "current_sha256": "7096548582e35f238157a4bfec9e4db6b83d014ccc6db04654ae07eec58007bd"
+    }
+  ],
+  "old_reviewed_source_sha256": "a3bcaae141667279706ef6e4c932bf56552802df8ef57c6613e4179caa80fd3a",
+  "new_reviewed_source_sha256": "6d7d889888cdcef1e501a2b3adabe2fb99dc8449a52b5285a34829bad44f4590",
+  "unchanged_policy_fields": [
+    "bundle_id",
+    "documentation",
+    "france",
+    "inventory_sha256",
+    "pubspec_lock_sha256",
+    "reviewed_on",
+    "schema_version",
+    "testflight",
+    "uses_non_exempt_encryption"
+  ],
+  "review": "Only guarded vendor manifest and two formatter-only chained-call wraps in the host dialog differ among reviewed paths. No encryption or distribution decision, dependency declaration or lock changed.",
+  "offline_source_policy_validation": "pass",
+  "distribution_submission": false,
+  "canonical_target": "48b6998bb47ffdf43e95025229dc5a5eab09ee9a",
+  "intermediate_source_binding": {
+    "canonical_target": "4a4101c11d471adf525849b38dea0a52b9c0b394",
+    "reviewed_source_sha256": "5fac9ad169a15352ea5fd7ebd5e47cf5cb93f785ac401817e1a8ec4850625de4",
+    "published": false
+  }
+}

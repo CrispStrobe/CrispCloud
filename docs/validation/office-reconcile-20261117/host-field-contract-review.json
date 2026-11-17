@@ -1,0 +1,43 @@
+{
+  "status": "new test prepared; runtime execution awaits immutable canonical and host source checkpoints",
+  "file": "test/widget/office_odt_field_export_test.dart",
+  "sha256": "38d3563d44670d40860d5d50e7f591aa74b06b16fa457c8425e67046ecc68f0b",
+  "cases": 1,
+  "prior_11_case_file_sha256": "164f54855d5fc6580fb8b66b78577bbd83327e75b23742cb32e9fa154b991b7a",
+  "prior_11_case_file_unchanged": true,
+  "raw_source": "Independently authored DOCX XML packaged directly with archive; no Office writer or model constructor generates the input.",
+  "contract": "Empty native fields under the existing PR124 export contract. Plain NUMPAGES directly in text:p; styled NUMPAGES keeps its cached styled fallback. Four other native kinds retain outside style spans. Unsafe fallback caches and ordinary text survive.",
+  "assertions": [
+    "One empty native element of each PAGE/NUMPAGES/DATE/TIME/TITLE kind.",
+    "Schema-valid native placement: direct paragraph page-count and outside bold/color spans for the other four kinds.",
+    "Styled NUMPAGES keeps its authored cached text and style through fallback.",
+    "Nested and unterminated field sequences retain exact cached text, authored double spaces and following ordinary text in host preview.",
+    "Ordinary outside labels and separators survive while replaced native cache values and field instructions do not appear in preview.",
+    "Export uses the actual Office editor menu; original source bytes, clean controller state and cloud target remain unchanged."
+  ],
+  "draft_history": [
+    {
+      "archived_directory": "setup/field-test-draft-before-schema-review",
+      "status": "superseded test draft before first runtime execution",
+      "reason": "Independent ODF 1.3 schema validation found text:page-count cannot be placed inside text:span; draft required all five native field caches to be styled. Corrected test will use direct plain native page-count and an additional styled count cache fallback assertion.",
+      "runtime_test_executed": false,
+      "draft_sha256": "2f4ef5f400d712edbdf0ce0c7720936d1655923389b344cc26e12c8f8aa8acc7",
+      "original_11_case_file_unchanged": true
+    },
+    {
+      "archived_directory": "setup/field-test-draft-before-native-contract-review",
+      "status": "superseded test draft before first runtime execution",
+      "reason": "Root reviewed incoming PR124 and retained its existing empty-native-field contract. Revised test must expect empty PAGE/NUMPAGES/DATE/TIME/TITLE native elements, while requiring source caches/style/ordinary text for unsafe fallback. Earlier instruction to preserve every native cache was superseded; original incoming test remains unchanged.",
+      "runtime_test_executed": false,
+      "draft_sha256": "fbacda0c84b913625b142f28c28ec7642f287e0fa288dae072bf6ba51aaa2358",
+      "original_11_case_file_unchanged": true
+    }
+  ],
+  "static_preparation": {
+    "strict_analysis": "passed",
+    "format": "passed",
+    "production_package_graph_sha256": "119b39c4e98713cb5f934672774fcb3dca19085af7d0f0d625c2b7c55973ff7e",
+    "analysis_config_restored": true
+  },
+  "accepted_runtime_counts_claimed": false
+}

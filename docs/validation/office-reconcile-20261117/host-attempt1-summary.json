@@ -1,0 +1,21 @@
+{
+  "source_commit": "78a4ccbbcf320add0830f3c158e385a6b2eb061e",
+  "source_tree": "9db67ffbcc9e1c4f4fb822956f88abd987179549",
+  "canonical_source": "ec5ecbff742580c0e7d1136507b953e8cc877e4c",
+  "overall_status": "failed",
+  "dart_flutter_substantive": {
+    "passed": 123,
+    "failed": 0,
+    "skipped": 0
+  },
+  "python_passed": 28,
+  "static_failures": {
+    "vendor-analysis": "The attempted extension from required 61 host-vendor targets to 89 included canonical package:test dev suites, absent by design from the exact production root graph. Restore the required production scope; canonical dev tests remain independently analyzed in their own qualified canonical graph.",
+    "host-format": "Newly included actual OfficeEditorDialog target needs two chain-call line wraps under the production Dart 3.13 language version. No semantics changed."
+  },
+  "all_source_and_dependency_inputs_restored_and_unchanged": true,
+  "new_captured_main": "9eced5cec9b42ad7a3aa67f22f3d23c238f66dbf",
+  "next_action": "Merge the second captured source wave, guarded canonical union sync, apply exact host formatting and reviewed-source hash binding, then rerun full qualification.",
+  "counts_reused_in_final_qualification": false,
+  "whitespace_note": "Full historical whitespace gate passed in 166 seconds; next run can use --no-renames with identical diff endpoints/content coverage (separate observed equivalent check passed)."
+}

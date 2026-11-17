@@ -1,0 +1,27 @@
+{
+  "source_commit": "83cc5b7c1de603ba1a788c7f5135cb9d4fb829a5",
+  "source_tree": "278262f9a1591ab42c577ceb048e4af6ea0fb8b1",
+  "canonical_source": "48b6998bb47ffdf43e95025229dc5a5eab09ee9a",
+  "overall_status": "failed",
+  "dart_flutter_substantive": {
+    "passed": 123,
+    "failed": 1,
+    "skipped": 0
+  },
+  "python_passed": 28,
+  "failure": {
+    "suite": "test/widget/office_odf_export_workflow_test.dart",
+    "name": "ODT menu export retains authored content and annotation privacy",
+    "expected": "fo:break-before=\"column\" on the paragraph imported from an authored leading run-level w:br type=column",
+    "actual": "No break-before property; imported inline column break exported only as an advisory soft-page-break",
+    "finding": "Valid DOCX run-level breaks become WmlBreak inlines without setting paragraph.columnBreakBefore. The layout handles both representations; the ODT writer only used the property for a real break. This requires a canonical import/export correction, not a relaxed host assertion."
+  },
+  "all_other_11_gates_passed": true,
+  "source_inputs": 8598,
+  "dependency_inputs": 13535,
+  "all_source_and_dependency_inputs_restored_and_unchanged": true,
+  "host_test_sha256": "164f54855d5fc6580fb8b66b78577bbd83327e75b23742cb32e9fa154b991b7a",
+  "host_test_to_remain_unchanged": true,
+  "counts_reused_in_final_qualification": false,
+  "github_ci_queried_or_awaited": false
+}

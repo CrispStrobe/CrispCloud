@@ -1,0 +1,30 @@
+{
+  "from": "ec5ecbff742580c0e7d1136507b953e8cc877e4c",
+  "to": "4a4101c11d471adf525849b38dea0a52b9c0b394",
+  "write": [
+    "packages/quds_office_engine/CHANGELOG.md",
+    "packages/quds_office_engine/lib/src/odf/odf_text.dart",
+    "packages/quds_office_engine/lib/src/proofing/data/german_common_00.dart",
+    "packages/quds_office_engine/lib/src/proofing/german_grammar.dart",
+    "packages/quds_office_engine/lib/src/proofing/german_spelling.dart",
+    "packages/quds_office_engine/lib/src/slide/serial/odp_presentation_writer.dart",
+    "packages/quds_office_engine/lib/src/word/serial/odt_document_writer.dart",
+    "packages/quds_office_engine/test/odp_presentation_writer_test.dart",
+    "packages/quds_office_engine/test/odt_columns_breaks_fidelity_test.dart",
+    "packages/quds_office_engine/test/odt_document_writer_test.dart",
+    "packages/quds_office_engine/test/odt_paragraph_decoration_fidelity_test.dart",
+    "packages/quds_office_engine/test/odt_section_columns_test.dart",
+    "packages/quds_office_engine/test/odt_tab_stop_fidelity_test.dart",
+    "packages/quds_office_engine/test/odt_tab_style_cache_test.dart",
+    "packages/quds_office_engine/test/odt_table_tab_consolidation_test.dart",
+    "packages/quds_office_engine/test/odt_table_tab_qualification_test.dart",
+    "packages/quds_office_engine/test/proofing/german_nominal_word_forms_test.dart",
+    "packages/quds_office_engine/test/proofing/german_noun_agreement_test.dart",
+    "packages/quds_office_engine/test/proofing/german_participle_suggestions_test.dart",
+    "packages/quds_office_engine/third_party/proofing/manifest.json",
+    "packages/quds_office_engine/tool/proofing/german_common_words.txt"
+  ],
+  "delete": [],
+  "pinned_files": 2615,
+  "applied": false
+}

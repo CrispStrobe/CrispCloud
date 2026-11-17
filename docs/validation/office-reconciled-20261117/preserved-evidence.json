@@ -1,0 +1,106 @@
+{
+  "preserved_from": "a463df5185a6dcb7de801e6fd0efc50a624e1286",
+  "files": [
+    {
+      "path": "docs/validation/office-reconcile-20261117/apple-second-source-review.json",
+      "git_blob": "80ca35aa4708bc2a9e92b74e2fc444f5fd3fa213",
+      "bytes": 1766
+    },
+    {
+      "path": "docs/validation/office-reconcile-20261117/apple-superseding-source-review.json",
+      "git_blob": "2fcf2152c8986e4479cb9c0bf04004c2366f2960",
+      "bytes": 1604
+    },
+    {
+      "path": "docs/validation/office-reconcile-20261117/host-attempt1-summary.json",
+      "git_blob": "63996f24eacefef5f6e21f807229d6cdb995dbac",
+      "bytes": 1423
+    },
+    {
+      "path": "docs/validation/office-reconcile-20261117/host-attempt2-summary.json",
+      "git_blob": "da9b87da8a73fbc46a2af1fc79ff744aeeca91fa",
+      "bytes": 1414
+    },
+    {
+      "path": "docs/validation/office-reconcile-20261117/host-field-contract-review.json",
+      "git_blob": "7406961bd061e9db42007daaa1e0837bf196be3b",
+      "bytes": 3144
+    },
+    {
+      "path": "docs/validation/office-reconcile-20261117/host-final-qualification-5d99ecb7-index.json",
+      "git_blob": "4d6a8894188261df90324e82c9e9f1761b78cbb6",
+      "bytes": 17203
+    },
+    {
+      "path": "docs/validation/office-reconcile-20261117/host-final-qualification-5d99ecb7.tar.xz",
+      "git_blob": "0411ad9879053435a355c967545ede8eec52add7",
+      "bytes": 1066316
+    },
+    {
+      "path": "docs/validation/office-reconcile-20261117/host-final-qualification-report.md",
+      "git_blob": "60df3cf0e89ecc02696f37f77cb00522b3348c7e",
+      "bytes": 14857
+    },
+    {
+      "path": "docs/validation/office-reconcile-20261117/host-final-summary.json",
+      "git_blob": "940ef92cbfa06e139680707a0dc36e82cce9671e",
+      "bytes": 1966
+    },
+    {
+      "path": "docs/validation/office-reconcile-20261117/host-qualification-attempt1-78a4ccbb-index.json",
+      "git_blob": "63b6f2455e03ea77b1f976828405d760d5da0b3b",
+      "bytes": 5296
+    },
+    {
+      "path": "docs/validation/office-reconcile-20261117/host-qualification-attempt1-78a4ccbb.tar.xz",
+      "git_blob": "a31fbcc599dc59b4cff38321c345524d3cdb09d1",
+      "bytes": 825280
+    },
+    {
+      "path": "docs/validation/office-reconcile-20261117/host-qualification-attempt2-83cc5b7c-index.json",
+      "git_blob": "1e98e5998ef7ce7b70a00cdc276ec10cf2c3b503",
+      "bytes": 5568
+    },
+    {
+      "path": "docs/validation/office-reconcile-20261117/host-qualification-attempt2-83cc5b7c.tar.xz",
+      "git_blob": "fc394cdf7ec54edf3813124bee7a57d0b2330eef",
+      "bytes": 810736
+    },
+    {
+      "path": "docs/validation/office-reconcile-20261117/host-second-merge-resolution.json",
+      "git_blob": "1283d8055182557dd6d89fe2f44f28c56190990b",
+      "bytes": 4641
+    },
+    {
+      "path": "docs/validation/office-reconcile-20261117/host-superseding-main-resolution.json",
+      "git_blob": "efd8fdba268e12ff4112e81c4b1a5d00d774e74a",
+      "bytes": 9738
+    },
+    {
+      "path": "docs/validation/office-reconcile-20261117/vendor-second-applied.json",
+      "git_blob": "5d6f301261f34f18f90beedb19a6b5d5e0587f7c",
+      "bytes": 1755
+    },
+    {
+      "path": "docs/validation/office-reconcile-20261117/vendor-second-format-applied.json",
+      "git_blob": "78edfd6a1b682759f98aa09d181736c695052807",
+      "bytes": 246
+    },
+    {
+      "path": "docs/validation/office-reconcile-20261117/vendor-second-plan.json",
+      "git_blob": "1cf7c967363b7abde8f012d0e47987ef3b2af0c6",
+      "bytes": 1756
+    },
+    {
+      "path": "docs/validation/office-reconcile-20261117/vendor-superseding-applied.json",
+      "git_blob": "efcdd4a71059a469b5d56cd1b3045c8bac506e9a",
+      "bytes": 802
+    },
+    {
+      "path": "docs/validation/office-reconcile-20261117/vendor-superseding-plan.json",
+      "git_blob": "c5d670de36704c94e365e5eea5f9e45757a3d0a3",
+      "bytes": 803
+    }
+  ],
+  "interpretation": "Historical evidence retains its original source binding and contract. It is not a fresh qualification of this continuation. Superseded empty-placeholder field expectations and libxml2 schema conclusions are not adopted as the current contract."
+}
