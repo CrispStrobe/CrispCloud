@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "reviewer": "odt_comment_review",
+  "reviewed_commit": "b1ec96abd6a075b7ef899703454e01b2fe9713eb",
+  "reviewed_base": "c21a1549a612bb04fcd071a50d12c28f31343d11",
+  "reviewed_tree": "0f017b8c9e32a709932f90672371fe8eee249064",
+  "status": "source review: no concrete blocker found; runtime qualification still pending",
+  "files": [
+    {
+      "path": "packages/quds_office_engine/lib/src/word/serial/odt_document_writer.dart",
+      "blob": "abae52f0d08b0cbe66c5c86c97f0f28e36de60aa"
+    },
+    {
+      "path": "packages/quds_office_engine/test/odt_note_fidelity_test.dart",
+      "blob": "e79f52c766229b19ce30a065e15c591632dc075a"
+    },
+    {
+      "path": "docs/validation/office-continuation-20261117/comment-note-interaction.json",
+      "blob": "fb3316ff1796e0f4e9443894581e3d9f096a551c"
+    }
+  ],
+  "verified_by_source_inspection": [
+    "The scoped false value prevents _writeNote during comment serialization, so comments cannot populate _OdtNotes.emitted.",
+    "Comment text and resolved automatic/custom reference labels still pass through _writeStyledText.",
+    "The prior noteBodiesAllowed value is restored in finally, including already-suppressed note/frame/header/covered-cell stories.",
+    "The first visible body reference creates one note definition; repeated visible references reuse its ID.",
+    "WordNoteNumbering derives labels from visible body references, so footnote/endnote expectations 1/i follow current APIs.",
+    "The fixtures retain source comment text and note IDs/text while inspecting namespace-aware annotation/definition/reference contents.",
+    "The source receipt explicitly marks runtime tests, formatter and analyzer not run."
+  ],
+  "structural_checks": {
+    "source_guard_removal_equals_exact_base": true,
+    "test_additions_removal_equals_exact_base": true,
+    "expected_changed_paths": [
+      "docs/validation/office-continuation-20261117/comment-note-interaction.json",
+      "packages/quds_office_engine/lib/src/word/serial/odt_document_writer.dart",
+      "packages/quds_office_engine/test/odt_note_fidelity_test.dart"
+    ],
+    "new_authored_cases": 2
+  },
+  "runtime": {
+    "dart_tests": "not run",
+    "flutter_tests": "not run",
+    "analyzer": "not run",
+    "formatter": "not run",
+    "github_actions_or_ci_status": "not queried or awaited"
+  },
+  "followup": "Run both regressions and the annotation suites on final reconciled canonical/host source. No executed failure control or passing result is claimed."
+}
