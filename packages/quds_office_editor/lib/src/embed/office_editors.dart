@@ -1533,88 +1533,69 @@ class _QudsSheetEditorState extends State<QudsSheetEditor> {
               focusNode: _focus,
               onKeyEvent: _onKey,
               child: Shortcuts(
-                shortcuts: <ShortcutActivator, Intent>{
-                  const SingleActivator(LogicalKeyboardKey.keyF, control: true):
-                      const OfficeFindIntent(),
-                  const SingleActivator(LogicalKeyboardKey.keyH, control: true):
-                      const OfficeReplaceIntent(),
-                  const SingleActivator(LogicalKeyboardKey.keyP, control: true):
-                      const OfficePrintIntent(),
-                  const SingleActivator(LogicalKeyboardKey.f7):
-                      const OfficeSpellCheckIntent(),
-                  const SingleActivator(LogicalKeyboardKey.f3):
-                      const OfficeFindNextIntent(),
-                  const SingleActivator(LogicalKeyboardKey.f3, shift: true):
-                      const OfficeFindNextIntent(forward: false),
-                  const SingleActivator(LogicalKeyboardKey.keyZ, control: true):
-                      const OfficeUndoIntent(),
-                  const SingleActivator(LogicalKeyboardKey.keyY, control: true):
-                      const OfficeRedoIntent(),
-                  const SingleActivator(LogicalKeyboardKey.keyY, meta: true):
-                      const OfficeRedoIntent(),
-                  const SingleActivator(LogicalKeyboardKey.keyA, control: true):
-                      const OfficeSelectAllIntent(),
-                  const SingleActivator(LogicalKeyboardKey.keyA, meta: true):
-                      const OfficeSelectAllIntent(),
-                  const SingleActivator(LogicalKeyboardKey.arrowLeft):
-                      const _SheetMoveIntent(-1, 0),
-                  const SingleActivator(LogicalKeyboardKey.arrowRight):
-                      const _SheetMoveIntent(1, 0),
-                  const SingleActivator(LogicalKeyboardKey.arrowUp):
-                      const _SheetMoveIntent(0, -1),
-                  const SingleActivator(LogicalKeyboardKey.arrowDown):
-                      const _SheetMoveIntent(0, 1),
-                  const SingleActivator(
-                    LogicalKeyboardKey.arrowLeft,
-                    shift: true,
-                  ): const _SheetMoveIntent(
-                    -1,
-                    0,
-                    extend: true,
-                  ),
-                  const SingleActivator(
-                    LogicalKeyboardKey.arrowRight,
-                    shift: true,
-                  ): const _SheetMoveIntent(
-                    1,
-                    0,
-                    extend: true,
-                  ),
-                  const SingleActivator(
-                    LogicalKeyboardKey.arrowUp,
-                    shift: true,
-                  ): const _SheetMoveIntent(
+                shortcuts: const <ShortcutActivator, Intent>{
+                  SingleActivator(LogicalKeyboardKey.keyF, control: true):
+                      OfficeFindIntent(),
+                  SingleActivator(LogicalKeyboardKey.keyH, control: true):
+                      OfficeReplaceIntent(),
+                  SingleActivator(LogicalKeyboardKey.keyP, control: true):
+                      OfficePrintIntent(),
+                  SingleActivator(LogicalKeyboardKey.f7):
+                      OfficeSpellCheckIntent(),
+                  SingleActivator(LogicalKeyboardKey.f3):
+                      OfficeFindNextIntent(),
+                  SingleActivator(LogicalKeyboardKey.f3, shift: true):
+                      OfficeFindNextIntent(forward: false),
+                  SingleActivator(LogicalKeyboardKey.keyZ, control: true):
+                      OfficeUndoIntent(),
+                  SingleActivator(LogicalKeyboardKey.keyY, control: true):
+                      OfficeRedoIntent(),
+                  SingleActivator(LogicalKeyboardKey.keyY, meta: true):
+                      OfficeRedoIntent(),
+                  SingleActivator(LogicalKeyboardKey.keyA, control: true):
+                      OfficeSelectAllIntent(),
+                  SingleActivator(LogicalKeyboardKey.keyA, meta: true):
+                      OfficeSelectAllIntent(),
+                  SingleActivator(LogicalKeyboardKey.arrowLeft):
+                      _SheetMoveIntent(-1, 0),
+                  SingleActivator(LogicalKeyboardKey.arrowRight):
+                      _SheetMoveIntent(1, 0),
+                  SingleActivator(LogicalKeyboardKey.arrowUp): _SheetMoveIntent(
                     0,
                     -1,
-                    extend: true,
                   ),
-                  const SingleActivator(
-                    LogicalKeyboardKey.arrowDown,
-                    shift: true,
-                  ): const _SheetMoveIntent(
-                    0,
+                  SingleActivator(LogicalKeyboardKey.arrowDown):
+                      _SheetMoveIntent(0, 1),
+                  SingleActivator(LogicalKeyboardKey.arrowLeft, shift: true):
+                      _SheetMoveIntent(-1, 0, extend: true),
+                  SingleActivator(LogicalKeyboardKey.arrowRight, shift: true):
+                      _SheetMoveIntent(1, 0, extend: true),
+                  SingleActivator(LogicalKeyboardKey.arrowUp, shift: true):
+                      _SheetMoveIntent(0, -1, extend: true),
+                  SingleActivator(LogicalKeyboardKey.arrowDown, shift: true):
+                      _SheetMoveIntent(0, 1, extend: true),
+                  SingleActivator(LogicalKeyboardKey.tab): _SheetMoveIntent(
                     1,
-                    extend: true,
+                    0,
+                    leaveEdit: true,
                   ),
-                  const SingleActivator(LogicalKeyboardKey.tab):
-                      const _SheetMoveIntent(1, 0, leaveEdit: true),
-                  const SingleActivator(LogicalKeyboardKey.tab, shift: true):
-                      const _SheetMoveIntent(-1, 0, leaveEdit: true),
-                  const SingleActivator(LogicalKeyboardKey.backspace):
-                      const _SheetClearIntent(),
-                  const SingleActivator(LogicalKeyboardKey.delete):
-                      const _SheetClearIntent(),
-                  const SingleActivator(LogicalKeyboardKey.keyC, control: true):
-                      const OfficeCopyIntent(),
-                  const SingleActivator(LogicalKeyboardKey.keyX, control: true):
-                      const OfficeCutIntent(),
-                  const SingleActivator(LogicalKeyboardKey.keyV, control: true):
-                      const OfficePasteIntent(),
-                  const SingleActivator(
+                  SingleActivator(LogicalKeyboardKey.tab, shift: true):
+                      _SheetMoveIntent(-1, 0, leaveEdit: true),
+                  SingleActivator(LogicalKeyboardKey.backspace):
+                      _SheetClearIntent(),
+                  SingleActivator(LogicalKeyboardKey.delete):
+                      _SheetClearIntent(),
+                  SingleActivator(LogicalKeyboardKey.keyC, control: true):
+                      OfficeCopyIntent(),
+                  SingleActivator(LogicalKeyboardKey.keyX, control: true):
+                      OfficeCutIntent(),
+                  SingleActivator(LogicalKeyboardKey.keyV, control: true):
+                      OfficePasteIntent(),
+                  SingleActivator(
                     LogicalKeyboardKey.keyV,
                     control: true,
                     shift: true,
-                  ): const OfficePasteIntent(
+                  ): OfficePasteIntent(
                     OfficePasteMode.keepTextOnly,
                   ),
                 },
@@ -1683,6 +1664,7 @@ class _QudsSheetEditorState extends State<QudsSheetEditor> {
                     readOnly: !config.allowsMutation,
                     child: SheetGrid(
                       sheet: _c.sheet,
+                      workbook: _c.workbook,
                       selection: _c.selection,
                       findHits: _c.findSession.hits,
                       activeFindIndex: _c.findSession.index,
@@ -2244,102 +2226,76 @@ class _QudsSlideEditorState extends State<QudsSlideEditor>
                       return KeyEventResult.ignored;
                     },
                     child: Shortcuts(
-                      shortcuts: <ShortcutActivator, Intent>{
-                        const SingleActivator(
-                          LogicalKeyboardKey.keyF,
-                          control: true,
-                        ): const OfficeFindIntent(),
-                        const SingleActivator(
-                          LogicalKeyboardKey.keyH,
-                          control: true,
-                        ): const OfficeReplaceIntent(),
-                        const SingleActivator(
-                          LogicalKeyboardKey.keyP,
-                          control: true,
-                        ): const OfficePrintIntent(),
-                        const SingleActivator(LogicalKeyboardKey.f7):
-                            const OfficeSpellCheckIntent(),
-                        const SingleActivator(LogicalKeyboardKey.f3):
-                            const OfficeFindNextIntent(),
-                        const SingleActivator(
-                          LogicalKeyboardKey.f3,
-                          shift: true,
-                        ): const OfficeFindNextIntent(
-                          forward: false,
-                        ),
-                        const SingleActivator(
-                          LogicalKeyboardKey.keyZ,
-                          control: true,
-                        ): const OfficeUndoIntent(),
-                        const SingleActivator(
-                          LogicalKeyboardKey.keyY,
-                          control: true,
-                        ): const OfficeRedoIntent(),
-                        const SingleActivator(
-                          LogicalKeyboardKey.keyY,
-                          meta: true,
-                        ): const OfficeRedoIntent(),
-                        const SingleActivator(
-                          LogicalKeyboardKey.keyA,
-                          control: true,
-                        ): const OfficeSelectAllIntent(),
-                        const SingleActivator(
-                          LogicalKeyboardKey.keyA,
-                          meta: true,
-                        ): const OfficeSelectAllIntent(),
-                        const SingleActivator(LogicalKeyboardKey.arrowLeft):
-                            const _NudgeIntent(-127000, 0),
-                        const SingleActivator(LogicalKeyboardKey.arrowRight):
-                            const _NudgeIntent(127000, 0),
-                        const SingleActivator(LogicalKeyboardKey.arrowUp):
-                            const _NudgeIntent(0, -127000),
-                        const SingleActivator(LogicalKeyboardKey.arrowDown):
-                            const _NudgeIntent(0, 127000),
-                        const SingleActivator(
+                      shortcuts: const <ShortcutActivator, Intent>{
+                        SingleActivator(LogicalKeyboardKey.keyF, control: true):
+                            OfficeFindIntent(),
+                        SingleActivator(LogicalKeyboardKey.keyH, control: true):
+                            OfficeReplaceIntent(),
+                        SingleActivator(LogicalKeyboardKey.keyP, control: true):
+                            OfficePrintIntent(),
+                        SingleActivator(LogicalKeyboardKey.f7):
+                            OfficeSpellCheckIntent(),
+                        SingleActivator(LogicalKeyboardKey.f3):
+                            OfficeFindNextIntent(),
+                        SingleActivator(LogicalKeyboardKey.f3, shift: true):
+                            OfficeFindNextIntent(forward: false),
+                        SingleActivator(LogicalKeyboardKey.keyZ, control: true):
+                            OfficeUndoIntent(),
+                        SingleActivator(LogicalKeyboardKey.keyY, control: true):
+                            OfficeRedoIntent(),
+                        SingleActivator(LogicalKeyboardKey.keyY, meta: true):
+                            OfficeRedoIntent(),
+                        SingleActivator(LogicalKeyboardKey.keyA, control: true):
+                            OfficeSelectAllIntent(),
+                        SingleActivator(LogicalKeyboardKey.keyA, meta: true):
+                            OfficeSelectAllIntent(),
+                        SingleActivator(LogicalKeyboardKey.arrowLeft):
+                            _NudgeIntent(-127000, 0),
+                        SingleActivator(LogicalKeyboardKey.arrowRight):
+                            _NudgeIntent(127000, 0),
+                        SingleActivator(LogicalKeyboardKey.arrowUp):
+                            _NudgeIntent(0, -127000),
+                        SingleActivator(LogicalKeyboardKey.arrowDown):
+                            _NudgeIntent(0, 127000),
+                        SingleActivator(
                           LogicalKeyboardKey.arrowLeft,
                           shift: true,
-                        ): const _NudgeIntent(
+                        ): _NudgeIntent(
                           -12700,
                           0,
                         ),
-                        const SingleActivator(
+                        SingleActivator(
                           LogicalKeyboardKey.arrowRight,
                           shift: true,
-                        ): const _NudgeIntent(
+                        ): _NudgeIntent(
                           12700,
                           0,
                         ),
-                        const SingleActivator(
+                        SingleActivator(
                           LogicalKeyboardKey.arrowUp,
                           shift: true,
-                        ): const _NudgeIntent(
+                        ): _NudgeIntent(
                           0,
                           -12700,
                         ),
-                        const SingleActivator(
+                        SingleActivator(
                           LogicalKeyboardKey.arrowDown,
                           shift: true,
-                        ): const _NudgeIntent(
+                        ): _NudgeIntent(
                           0,
                           12700,
                         ),
-                        const SingleActivator(
-                          LogicalKeyboardKey.keyC,
-                          control: true,
-                        ): const OfficeCopyIntent(),
-                        const SingleActivator(
-                          LogicalKeyboardKey.keyX,
-                          control: true,
-                        ): const OfficeCutIntent(),
-                        const SingleActivator(
-                          LogicalKeyboardKey.keyV,
-                          control: true,
-                        ): const OfficePasteIntent(),
-                        const SingleActivator(
+                        SingleActivator(LogicalKeyboardKey.keyC, control: true):
+                            OfficeCopyIntent(),
+                        SingleActivator(LogicalKeyboardKey.keyX, control: true):
+                            OfficeCutIntent(),
+                        SingleActivator(LogicalKeyboardKey.keyV, control: true):
+                            OfficePasteIntent(),
+                        SingleActivator(
                           LogicalKeyboardKey.keyV,
                           control: true,
                           shift: true,
-                        ): const OfficePasteIntent(
+                        ): OfficePasteIntent(
                           OfficePasteMode.keepTextOnly,
                         ),
                       },

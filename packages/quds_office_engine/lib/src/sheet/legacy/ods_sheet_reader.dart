@@ -1292,7 +1292,7 @@ abstract final class OdsSheetReader {
             formula: formula,
             formula2: formula2,
             rank: rank,
-            fillRgb: fill ?? 'FFF2CC',
+            fillRgb: fill ?? '',
             fontRgb: font ?? '',
           ),
         );

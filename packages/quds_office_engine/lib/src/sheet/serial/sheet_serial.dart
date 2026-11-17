@@ -15,6 +15,7 @@ import '../formula/dep_graph.dart';
 import '../formula/formula_eval.dart';
 import '../formula/formula_refs.dart';
 import '../model/sml_analysis.dart';
+import '../model/sml_conditional_format.dart';
 import '../model/sml_sparkline.dart';
 import '../model/sml_workbook.dart';
 import '../shared_strings.dart';
@@ -602,7 +603,7 @@ class SheetDeserializer {
           rank: int.tryParse(reader.getAttribute('rank') ?? '') ?? 10,
           priority: int.tryParse(reader.getAttribute('priority') ?? ''),
           stopIfTrue: _readBoolean(reader.getAttribute('stopIfTrue')),
-          fillRgb: dxfFill.isEmpty ? 'FFF2CC' : dxfFill,
+          fillRgb: dxfFill,
           fontRgb: dxfFont,
           dxfId: dxfId,
         );
@@ -1476,37 +1477,8 @@ class SheetSerializer {
     );
   }
 
-  static List<int> _conditionalPriorities(List<SmlConditionalRule> rules) {
-    const maximum = 0x7fffffff;
-    bool valid(int? priority) =>
-        priority != null && priority > 0 && priority <= maximum;
-    // Reserve every authored priority before assigning any missing values, so
-    // a new rule preceding an imported rule cannot take its original priority.
-    final reserved = <int>{
-      for (final rule in rules)
-        if (valid(rule.priority)) rule.priority!,
-    };
-    var next = 1;
-    for (final priority in reserved) {
-      if (priority >= next) next = priority + 1;
-    }
-    final used = <int>{};
-    final result = <int>[];
-    for (final rule in rules) {
-      final priority = rule.priority;
-      if (priority != null && valid(priority) && used.add(priority)) {
-        result.add(priority);
-        continue;
-      }
-      if (next > maximum) next = 1;
-      while (reserved.contains(next) || used.contains(next)) {
-        next = next == maximum ? 1 : next + 1;
-      }
-      used.add(next);
-      result.add(next++);
-    }
-    return result;
-  }
+  static List<int> _conditionalPriorities(List<SmlConditionalRule> rules) =>
+      SmlConditionalResolver.effectivePriorities(rules);
 
   String _sheetXml(
     SmlWorksheet sheet,

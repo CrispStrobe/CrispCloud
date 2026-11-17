@@ -1,3 +1,4 @@
+import '../proofing/office_proofing.dart';
 import '../proofing/proofing_text_ranges.dart';
 import 'english_gb_hyphenation_data.dart';
 import 'english_us_hyphenation_data.dart';
@@ -10,12 +11,11 @@ import 'hyphenation_words.dart';
 /// receive automatic breaks. Authored soft hyphens always take precedence.
 abstract final class EnglishHyphenator {
   static String? _language(String? language) {
-    final normalized = language?.trim().replaceAll('_', '-').toLowerCase();
-    return normalized == 'en' ? 'en-us' : normalized;
+    return language == null ? null : normalizeProofingLanguage(language);
   }
 
   static bool supports(String? language) =>
-      const {'en-us', 'en-gb'}.contains(_language(language));
+      const {'en-US', 'en-GB'}.contains(_language(language));
 
   static final _EnglishPatternSet _american = _EnglishPatternSet(
     englishUsHyphenationPatterns,
@@ -40,7 +40,7 @@ abstract final class EnglishHyphenator {
         !_letters.hasMatch(word)) {
       return const [];
     }
-    final patterns = _language(language) == 'en-gb' ? _british : _american;
+    final patterns = _language(language) == 'en-GB' ? _british : _american;
     return patterns.offsets(word.toLowerCase());
   }
 

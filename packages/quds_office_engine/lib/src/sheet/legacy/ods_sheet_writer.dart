@@ -354,7 +354,6 @@ abstract final class OdsSheetWriter {
     final conditional = StringBuffer();
     for (final rule in sheet.conditionalFormats) {
       final style = layout.conditionalStyle(rule);
-      if (style == null) continue;
       conditional.write(
         '<calcext:conditional-format calcext:target-range-address="'
         '${_plainSheet(sheet.name)}.${rule.range.start.a1}:'
@@ -989,10 +988,9 @@ class _OdsLayout {
         '${value(rule.formula1)}';
   }
 
-  String? conditionalStyle(SmlConditionalRule rule) {
+  String conditionalStyle(SmlConditionalRule rule) {
     final fill = rule.fillRgb;
     final font = rule.fontRgb;
-    if (fill.isEmpty && font.isEmpty) return null;
     final key = '$fill|$font';
     return conditionalStyles.putIfAbsent(key, () {
       final name = 'cf${conditionalStyles.length + 1}';

@@ -96,6 +96,13 @@ void main() {
     expect(content, contains('<text:h'));
     expect(_odfText(_odtBody(package)), contains('Quarterly review'));
     expect(_odfText(_odtBody(package)), contains('Plain bold tail'));
+    expect(
+      OfficeTextExtractor.extract(
+        OdtDocumentWriter.writeBytes(document),
+        name: 'smoke.odt',
+      ).paragraphs,
+      contains('Plain bold tail'),
+    );
     expect(content, contains('bold'));
     expect(content, contains('fo:font-weight="bold"'));
     expect(content, contains('<table:table'));

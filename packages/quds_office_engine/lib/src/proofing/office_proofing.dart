@@ -8,22 +8,78 @@ enum OfficeProofingStatus { success, unavailable, unsupported, failed }
 /// A spelling error, a narrowly scoped grammar error, or an advisory style rule.
 enum OfficeProofingCategory { spelling, grammar, style }
 
+final RegExp _proofingRegion = RegExp(r'^[A-Z]{2}$');
+final RegExp _unicodeLocalePart = RegExp(
+  r'^[a-z0-9]{3,8}$',
+  caseSensitive: false,
+);
+final RegExp _unicodeLocaleKey = RegExp(
+  r'^[a-z0-9][a-z]$',
+  caseSensitive: false,
+);
+
+bool _hasUnicodeLocalePreferences(List<String> parts, int at) {
+  if (at >= parts.length || parts[at] != 'u' || at + 1 >= parts.length) {
+    return false;
+  }
+  final Set<String> attributes = <String>{};
+  final Set<String> keys = <String>{};
+  for (final String part in parts.skip(at + 1)) {
+    if (_unicodeLocaleKey.hasMatch(part)) {
+      if (!keys.add(part)) return false;
+    } else if (_unicodeLocalePart.hasMatch(part)) {
+      if (keys.isEmpty && !attributes.add(part)) return false;
+    } else {
+      return false;
+    }
+  }
+  return true;
+}
+
 /// Canonical supported language tags; unknown tags remain visible to providers.
 String normalizeProofingLanguage(String language) {
+  // Layout asks for a language at every source position. Canonical host tags
+  // take this allocation-free path; parsing is only needed for an alias.
+  if (const <String>{
+    'de-DE',
+    'de-AT',
+    'de-CH',
+    'en-US',
+    'en-GB',
+    'en-CA',
+    'en-AU',
+    'en-IN',
+  }.contains(language)) {
+    return language;
+  }
   final List<String> parts = language.trim().replaceAll('_', '-').split('-');
   final String base = parts.first.toLowerCase();
-  if (parts.length == 1) {
-    return switch (base) {
-      'de' => 'de-DE',
-      'en' => 'en-US',
-      _ => base,
-    };
-  }
-  return <String>[
+  final List<String> canonical = <String>[
     base,
     for (final String part in parts.skip(1))
-      part.length == 2 ? part.toUpperCase() : part,
-  ].join('-');
+      part.length == 2 ? part.toUpperCase() : part.toLowerCase(),
+  ];
+  if (base == 'de' || base == 'en') {
+    // A Latin-script tag, the reformed German variant and Unicode locale
+    // preferences do not select a different spelling dictionary. Recognize
+    // only these aliases: historical orthography, other scripts and unknown
+    // variants must remain unsupported, rather than silently becoming modern
+    // German or American English.
+    int at = 1;
+    if (at < canonical.length && canonical[at] == 'latn') at++;
+    String region = base == 'de' ? 'DE' : 'US';
+    if (at < canonical.length && _proofingRegion.hasMatch(canonical[at])) {
+      region = canonical[at++];
+    }
+    if (base == 'de' && at < canonical.length && canonical[at] == '1996') {
+      at++;
+    }
+    if (_hasUnicodeLocalePreferences(canonical, at)) {
+      at = canonical.length;
+    }
+    if (at == canonical.length) return '$base-$region';
+  }
+  return canonical.join('-');
 }
 
 /// Converts a backend's Unicode-scalar offset to Dart's UTF-16 coordinate.

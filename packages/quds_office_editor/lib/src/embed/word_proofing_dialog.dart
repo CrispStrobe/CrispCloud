@@ -50,6 +50,13 @@ class _WordProofingDialogState extends State<WordProofingDialog> {
     'de.repetition.conjunction': 'Repeated conjunctions',
     'de.grammar.pronoun-verb': 'Pronoun and verb agreement',
     'de.grammar.seit-seid': 'Seit and seid usage',
+    'de.grammar.preposition-pronoun': 'Pronoun case after prepositions',
+    'de.grammar.preposition-case': 'Article case after prepositions',
+    'de.grammar.dative-plural': 'Dative plural endings',
+    'de.grammar.adjective-ending': 'Adjective agreement',
+    'de.grammar.das-dass': 'Das and dass usage',
+    'de.grammar.subordinate-comma': 'Commas before subordinate clauses',
+    'de.grammar.comparison': 'Als and wie in comparisons',
     'de.delimiter.balance': 'Matching brackets',
     'de.quote.balance': 'Matching quotation marks',
   };
@@ -430,12 +437,7 @@ class _WordProofingDialogState extends State<WordProofingDialog> {
               }} · ${issue.story} · ${issue.language}',
             ),
             const SizedBox(height: 4),
-            Text(
-              issue.sourceText,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
+            _contextExcerpt(issue),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -475,6 +477,60 @@ class _WordProofingDialogState extends State<WordProofingDialog> {
           ],
         ),
       ),
+    );
+  }
+
+  /// Keep the finding visible even near the end of a long paragraph. Truncate
+  /// context at grapheme boundaries, independently of the editable source.
+  /// Avoid a line limit here: it can hide the highlighted error at narrow
+  /// viewport widths or larger accessibility text scales.
+  Widget _contextExcerpt(WordProofingIssue issue) {
+    final String source = issue.sourceText;
+    final OfficeProofingFinding finding = issue.finding;
+    final List<GraphemeCluster> clusters = GraphemeClusters.segment(source);
+    final List<int> boundaries = <int>[
+      0,
+      for (final GraphemeCluster cluster in clusters) cluster.end,
+    ];
+    final int first = boundaries.indexOf(finding.start);
+    final int last = boundaries.indexOf(finding.end);
+    // Findings are validated before publication. Keep review robust if a host
+    // presents an older or otherwise inconsistent issue to this dialog.
+    if (first < 0 || last < first) return const SizedBox.shrink();
+    final int excerptFirst = math.max(0, first - 60);
+    final int excerptLast = math.min(clusters.length, last + 80);
+    String inline(String value) => value.replaceAll(RegExp(r'[\r\n\t]'), ' ');
+    final String before = inline(
+      source.substring(boundaries[excerptFirst], finding.start),
+    );
+    final String after = inline(
+      source.substring(finding.end, boundaries[excerptLast]),
+    );
+    final String highlighted = first == last
+        ? '│'
+        : last - first > 120
+        ? '${inline(source.substring(finding.start, boundaries[first + 100]))}…'
+        : inline(source.substring(finding.start, finding.end));
+    final ThemeData theme = Theme.of(context);
+    return Text.rich(
+      TextSpan(
+        children: <InlineSpan>[
+          TextSpan(text: '${excerptFirst == 0 ? '' : '…'}$before'),
+          TextSpan(
+            text: highlighted,
+            semanticsLabel: first == last ? 'insertion point' : null,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              decoration: TextDecoration.underline,
+              color: theme.colorScheme.onPrimaryContainer,
+              backgroundColor: theme.colorScheme.primaryContainer,
+            ),
+          ),
+          TextSpan(text: '$after${excerptLast == clusters.length ? '' : '…'}'),
+        ],
+      ),
+      key: const ValueKey<String>('proofing-context'),
+      style: theme.textTheme.bodySmall,
     );
   }
 

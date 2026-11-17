@@ -9,6 +9,7 @@ import '../model/pdf_extra.dart';
 import '../model/pdf_page_info.dart';
 import '../text/pdf_cff_host.dart';
 import '../text/pdf_std14.dart';
+import '../text/pdf_text_string.dart';
 import '../text/pdf_tounicode.dart';
 import 'pdf_display_list.dart';
 
@@ -1765,26 +1766,15 @@ class _Frame {
   static String? _asMarkedText(_Dict dict) {
     final Object? value = dict['ActualText'];
     if (value is _Lit) {
-      return _utf16FromBytes(value.bytes);
+      return pdfDecodeTextString(value.bytes);
     }
     if (value is String) {
       return value;
     }
     if (value is _Hex) {
-      return _utf16FromBytes(value.bytes);
+      return pdfDecodeTextString(value.bytes);
     }
     return null;
-  }
-
-  static String _utf16FromBytes(Uint8List bytes) {
-    if (bytes.length >= 2 && bytes[0] == 0xFE && bytes[1] == 0xFF) {
-      final StringBuffer buf = StringBuffer();
-      for (int i = 2; i + 1 < bytes.length; i += 2) {
-        buf.writeCharCode((bytes[i] << 8) | bytes[i + 1]);
-      }
-      return buf.toString();
-    }
-    return String.fromCharCodes(bytes);
   }
 
   void save() {

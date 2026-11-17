@@ -195,6 +195,8 @@ class OfficeProofingVocabulary {
 /// Pinned finite German word forms; this is not a morphological/compound parser.
 /// Initialization and checking yield to the event loop in bounded batches,
 /// including when compiled for JavaScript (where Dart isolates are unavailable).
+/// Suggestions use a shared candidate budget for direct edits, personal terms
+/// and an indexed distance-two fallback; no typo scans the complete dictionary.
 /// Token fragments that would cut a grapheme are skipped. In particular, a
 /// letter joined to an adjacent control must not offer a partial replacement.
 class GermanSpellingProvider extends OfficeProofingProvider {
@@ -329,16 +331,35 @@ class GermanSpellingProvider extends OfficeProofingProvider {
           )) {
         continue;
       }
-      final List<String> replacements = suggestions.putIfAbsent(
-        (word, sentenceInitial),
-        () => _suggest(
+      final (String, bool) suggestionKey = (word, sentenceInitial);
+      List<String>? replacements = suggestions[suggestionKey];
+      if (replacements == null) {
+        replacements = _suggest(
           word,
           lexicon,
           swiss,
           personal: personal,
           sentenceInitial: sentenceInitial,
-        ),
-      );
+        );
+        suggestions[suggestionKey] = replacements;
+        // A new indexed search can consume the full candidate budget. Do not
+        // accumulate sixteen such searches in one UI event-loop turn. Known
+        // words and repeated misspellings keep the ordinary cheap batch path.
+        await Future<void>.delayed(Duration.zero);
+        if (_disposed) {
+          return result(
+            OfficeProofingStatus.unavailable,
+            message: 'German spelling provider is disposed.',
+          );
+        }
+        if (vocabulary.revision != vocabularyRevision) {
+          return result(
+            OfficeProofingStatus.failed,
+            message:
+                'Personal vocabulary changed during this check; check again.',
+          );
+        }
+      }
       findings.add(
         OfficeProofingFinding.forRequest(
           request,
@@ -464,7 +485,9 @@ class GermanSpellingProvider extends OfficeProofingProvider {
         return;
       }
       examined++;
-      if (lexicon.exact(value, swiss: swiss)) found.add(value);
+      if (personal.contains(value) || lexicon.exact(value, swiss: swiss)) {
+        found.add(value);
+      }
     }
 
     final String lower = word.toLowerCase();
@@ -554,8 +577,74 @@ class GermanSpellingProvider extends OfficeProofingProvider {
         candidateCase(lower.replaceRange(i, i, letter));
       }
     }
+    // User-declared names can contain mixed capitals that cannot be rebuilt by
+    // lower/title-case edits (for example QudsCloud). Only declared words are
+    // candidates; ignored misspellings never become correction vocabulary.
+    // Reserve most of the budget for dictionary candidates even with a large
+    // personal vocabulary. Suggestions retain the exact declared spelling.
+    final List<(String, int)> personalMatches = <(String, int)>[];
+    int personalChecks = 0;
+    for (final String value in personal) {
+      if (!canSearch() || personalChecks >= 256) break;
+      if (value == word || !checked.add(value)) continue;
+      examined++;
+      personalChecks++;
+      if ((value.length - lower.length).abs() > 2 ||
+          _tokens.stringMatch(value) != value) {
+        continue;
+      }
+      final int distance = _boundedEditDistance(
+        lower,
+        value.toLowerCase(),
+        limit: lower.length >= 5 ? 2 : 1,
+      );
+      if (distance <= (lower.length >= 5 ? 2 : 1)) {
+        personalMatches.add((value, distance));
+      }
+    }
+    personalMatches.sort((a, b) {
+      final int byDistance = a.$2.compareTo(b.$2);
+      return byDistance != 0 ? byDistance : a.$1.compareTo(b.$1);
+    });
+    for (final (String value, int _) in personalMatches) {
+      if (found.length >= maximumSuggestions) break;
+      found.add(value);
+    }
+
+    // Two independent mistakes are common in longer words. Prefix, middle and
+    // suffix buckets allow first-letter mistakes and transposition-plus-typo
+    // cases without generating the quadratic neighborhood of every edit.
+    // Every visited entry consumes the same maximumCandidateChecks budget.
+    // Adjacent transpositions count as one edit; terms beyond two edits are
+    // never offered by this fallback. This is a bounded shortlist, not an
+    // exhaustive edit-distance search or a word-acceptance heuristic.
+    if (lower.length >= 5 && canSearch()) {
+      final List<(String, int)> matches = <(String, int)>[];
+      for (final String value in lexicon.suggestionCandidates(lower)) {
+        if (examined >= maximumCandidateChecks) break;
+        if (value == word || !checked.add(value)) continue;
+        examined++;
+        final int distance = _boundedEditDistance(lower, value.toLowerCase());
+        if (distance <= 2 && lexicon.exact(value, swiss: swiss)) {
+          matches.add((value, distance));
+        }
+      }
+      matches.sort((a, b) {
+        final int byDistance = a.$2.compareTo(b.$2);
+        if (byDistance != 0) return byDistance;
+        final int byLength = (a.$1.length - word.length).abs().compareTo(
+          (b.$1.length - word.length).abs(),
+        );
+        return byLength != 0 ? byLength : a.$1.compareTo(b.$1);
+      });
+      for (final (String value, int _) in matches) {
+        if (found.length >= maximumSuggestions) break;
+        found.add(value);
+      }
+    }
     return List<String>.unmodifiable(
       found.map((String value) {
+        if (personal.contains(value)) return value;
         if (upper) return _upper(value);
         return sentenceInitial && title ? _title(value) : value;
       }).toSet(),
@@ -597,8 +686,53 @@ String _upper(String word) => word.replaceAll('ß', 'ss').toUpperCase();
 String _title(String word) =>
     word.isEmpty ? word : '${word[0].toUpperCase()}${word.substring(1)}';
 
+/// Banded optimal-string-alignment distance. Values above [limit] are reported
+/// as limit + 1; at most five cells per source character need evaluation for
+/// the ordinary two-edit search. This implementation has no external corpus.
+int _boundedEditDistance(String source, String target, {int limit = 2}) {
+  if ((source.length - target.length).abs() > limit) return limit + 1;
+  if (source == target) return 0;
+  final int beyond = limit + 1;
+  List<int> previousPrevious = List<int>.filled(target.length + 1, beyond);
+  List<int> previous = <int>[
+    for (int j = 0; j <= target.length; j++) j <= limit ? j : beyond,
+  ];
+  List<int> current = List<int>.filled(target.length + 1, beyond);
+  for (int i = 1; i <= source.length; i++) {
+    current.fillRange(0, current.length, beyond);
+    if (i <= limit) current[0] = i;
+    final int start = i > limit ? i - limit : 1;
+    final int end = i + limit < target.length ? i + limit : target.length;
+    int best = beyond;
+    for (int j = start; j <= end; j++) {
+      final int substitution =
+          previous[j - 1] +
+          (source.codeUnitAt(i - 1) == target.codeUnitAt(j - 1) ? 0 : 1);
+      final int insertion = current[j - 1] + 1;
+      final int deletion = previous[j] + 1;
+      int cost = substitution < insertion ? substitution : insertion;
+      if (deletion < cost) cost = deletion;
+      if (i > 1 &&
+          j > 1 &&
+          source.codeUnitAt(i - 1) == target.codeUnitAt(j - 2) &&
+          source.codeUnitAt(i - 2) == target.codeUnitAt(j - 1)) {
+        final int transposition = previousPrevious[j - 2] + 1;
+        if (transposition < cost) cost = transposition;
+      }
+      current[j] = cost;
+      if (cost < best) best = cost;
+    }
+    if (best > limit) return beyond;
+    final List<int> reusable = previousPrevious;
+    previousPrevious = previous;
+    previous = current;
+    current = reusable;
+  }
+  return previous[target.length];
+}
+
 class _GermanLexicon {
-  _GermanLexicon(this.standard, this.swissAdditions)
+  _GermanLexicon(this.standard, this.swissAdditions, this._suggestionIndex)
     : sharpSCapitals = standard
           .where((String word) => word.contains('ß'))
           .map(_upper)
@@ -606,6 +740,7 @@ class _GermanLexicon {
   final Set<String> standard;
   final Set<String> swissAdditions;
   final Set<String> sharpSCapitals;
+  final Map<(int, int, String), List<String>> _suggestionIndex;
 
   static Future<_GermanLexicon> load() async {
     Future<Set<String>> decode(List<String> chunks) async {
@@ -622,10 +757,63 @@ class _GermanLexicon {
       return words;
     }
 
-    return _GermanLexicon(
-      await decode(germanLexiconChunks),
-      await decode(germanSwissLexiconChunks),
-    );
+    final Set<String> standard = await decode(germanLexiconChunks);
+    final Set<String> swiss = await decode(germanSwissLexiconChunks);
+    final Map<(int, int, String), List<String>> index =
+        <(int, int, String), List<String>>{};
+    int indexed = 0;
+    for (final String word in standard.followedBy(swiss)) {
+      if (indexed++ % 4096 == 0) await Future<void>.delayed(Duration.zero);
+      final String lower = word.toLowerCase();
+      if (lower.length < 3 || lower.length > 66) continue;
+      final int width = lower.length >= 9 ? 3 : 2;
+      final int middle = (lower.length - width) ~/ 2;
+      final List<String> anchors = <String>[
+        lower.substring(0, width),
+        lower.substring(middle, middle + width),
+        lower.substring(lower.length - width),
+      ];
+      for (int kind = 0; kind < anchors.length; kind++) {
+        index
+            .putIfAbsent((kind, lower.length, anchors[kind]), () => <String>[])
+            .add(word);
+      }
+    }
+    return _GermanLexicon(standard, swiss, index);
+  }
+
+  Iterable<String> suggestionCandidates(String lower) sync* {
+    final List<List<String>> groups = <List<String>>[];
+    final Set<(int, int, String)> keys = <(int, int, String)>{};
+    for (final int delta in const <int>[0, -1, 1, -2, 2]) {
+      final int length = lower.length + delta;
+      final int width = length >= 9 ? 3 : 2;
+      final int middle = (lower.length - width) ~/ 2;
+      final List<(int, String)> anchors = <(int, String)>[
+        (0, lower.substring(0, width)),
+        (2, lower.substring(lower.length - width)),
+        for (final int shift in const <int>[0, -1, 1, -2, 2])
+          if (middle + shift >= 0 && middle + shift + width <= lower.length)
+            (1, lower.substring(middle + shift, middle + shift + width)),
+      ];
+      for (final (int kind, String anchor) in anchors) {
+        final (int, int, String) key = (kind, length, anchor);
+        if (!keys.add(key)) continue;
+        final List<String>? group = _suggestionIndex[key];
+        if (group != null && group.isNotEmpty) groups.add(group);
+      }
+    }
+    // Interleave buckets so a dense common prefix cannot starve suffix/middle
+    // candidates before the caller's budget expires.
+    bool remaining = true;
+    for (int row = 0; remaining; row++) {
+      remaining = false;
+      for (final List<String> group in groups) {
+        if (row >= group.length) continue;
+        remaining = true;
+        yield group[row];
+      }
+    }
   }
 
   bool exact(String word, {required bool swiss}) {

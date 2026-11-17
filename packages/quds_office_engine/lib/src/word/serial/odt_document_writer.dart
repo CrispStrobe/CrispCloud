@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import '../../odf/odf_text.dart';
 import '../../opc/zip/zip_writer.dart';
 import '../../visual/office_visual.dart';
 import '../../xml/xml_writer.dart';
@@ -240,11 +241,11 @@ abstract final class OdtDocumentWriter {
         if (inline.text.isNotEmpty) {
           w.writeStartElement('span', prefix: 'text');
           w.writeAttribute('text:style-name', style);
-          _writeText(w, inline.text);
+          writeOdfText(w, inline.text);
           w.writeEndElement();
         }
         if (inline.inlineVisual case final visual?) {
-          _writeVisual(w, visual.visual, layout);
+          _writeVisual(w, visual.visual, layout, inline: true);
         }
         if (href != null && href.isNotEmpty) w.writeEndElement();
       case WmlBreak():
@@ -324,8 +325,9 @@ abstract final class OdtDocumentWriter {
   static void _writeVisual(
     XmlWriter w,
     OfficeVisual visual,
-    _OdtLayout layout,
-  ) {
+    _OdtLayout layout, {
+    bool inline = false,
+  }) {
     final bytes = visual.imageBytes;
     if (bytes != null && bytes.isNotEmpty) {
       final path = layout.addMedia(bytes);
@@ -340,6 +342,8 @@ abstract final class OdtDocumentWriter {
         attributes: {'xlink:href': path},
       );
       w.writeEndElement();
+    } else if (inline) {
+      writeOdfText(w, visual.title);
     } else {
       _writePlainParagraph(w, visual.title);
     }
@@ -347,35 +351,8 @@ abstract final class OdtDocumentWriter {
 
   static void _writePlainParagraph(XmlWriter w, String text) {
     w.writeStartElement('p', prefix: 'text');
-    _writeText(w, text);
+    if (text.isNotEmpty) writeOdfText(w, text);
     w.writeEndElement();
-  }
-
-  static final _whitespace = RegExp(r' +|\r\n|[\t\r\n]');
-
-  static void _writeText(XmlWriter w, String text) {
-    var offset = 0;
-    for (final match in _whitespace.allMatches(text)) {
-      if (match.start > offset)
-        w.writeText(text.substring(offset, match.start));
-      final value = match[0]!;
-      if (value.startsWith(' ')) {
-        // ODF collapses literal whitespace, including at span boundaries.
-        // Explicit spaces preserve leading, trailing and repeated spacing.
-        w.writeEmptyElement(
-          's',
-          prefix: 'text',
-          attributes: {if (value.length > 1) 'text:c': '${value.length}'},
-        );
-      } else {
-        w.writeEmptyElement(
-          value == '\t' ? 'tab' : 'line-break',
-          prefix: 'text',
-        );
-      }
-      offset = match.end;
-    }
-    if (offset < text.length) w.writeText(text.substring(offset));
   }
 
   static String _manifestXml(List<String> media) {
@@ -538,15 +515,11 @@ class _OdtLayout {
           ' fo:margin-right="${props.indent.right.toStringAsFixed(2)}pt"',
         );
       }
-      if (props.indent.firstLine != 0) {
-        buffer.write(
-          ' fo:text-indent="${props.indent.firstLine.toStringAsFixed(2)}pt"',
-        );
-      }
-      if (props.indent.hanging != 0) {
-        buffer.write(
-          ' fo:text-indent="-${props.indent.hanging.toStringAsFixed(2)}pt"',
-        );
+      final firstLine = props.indent.hanging != 0
+          ? -props.indent.hanging
+          : props.indent.firstLine;
+      if (firstLine != 0) {
+        buffer.write(' fo:text-indent="${firstLine.toStringAsFixed(2)}pt"');
       }
       buffer.write('/></style:style>');
       _styleBuffers.add(buffer.toString());

@@ -1,3 +1,4 @@
+import '../proofing/office_proofing.dart';
 import '../proofing/proofing_text_ranges.dart';
 import 'german_hyphenation_data.dart';
 import 'grapheme_clusters.dart';
@@ -9,12 +10,11 @@ import 'hyphenation_words.dart';
 /// see third_party/hyphenation. This never edits or normalizes source text.
 abstract final class GermanHyphenator {
   static String? _language(String? language) {
-    final normalized = language?.trim().replaceAll('_', '-').toLowerCase();
-    return normalized == 'de' || normalized == 'de-1996' ? 'de-de' : normalized;
+    return language == null ? null : normalizeProofingLanguage(language);
   }
 
   static bool supports(String? language) =>
-      const {'de-de', 'de-at', 'de-ch'}.contains(_language(language));
+      const {'de-DE', 'de-AT', 'de-CH'}.contains(_language(language));
 
   static final _PatternNode _root = _readPatterns();
   static final Map<String, List<int>> _cache = {};

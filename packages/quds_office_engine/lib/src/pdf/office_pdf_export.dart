@@ -12,6 +12,7 @@ import '../fonts/sfnt_parser.dart';
 import '../opc/opc_archive.dart';
 import '../opc/repair/office_repair.dart';
 import '../sheet/formula/formula_eval.dart';
+import '../sheet/model/sml_conditional_format.dart';
 import '../sheet/model/sml_workbook.dart';
 import '../sheet/serial/sheet_serial.dart';
 import '../sheet/styles/sml_styles.dart';
@@ -1086,6 +1087,10 @@ abstract final class OfficePdfExport {
     PdfSheetPrintOptions options,
     _PdfImageBank images,
   ) {
+    final conditionalFormats = SmlConditionalResolver(
+      sheet: sheet,
+      workbook: book,
+    );
     final double pageW = options.pageWidth;
     final double pageH = options.pageHeight;
     final double margin = options.margin;
@@ -1313,9 +1318,11 @@ abstract final class OfficePdfExport {
           double spanW,
           double spanH,
           SmlCell? stored,
+          SmlConditionalStyle conditional,
         ) {
-          if (stored != null && stored.fillRgb.isNotEmpty) {
-            sink.canvas.fillRect(x, y, spanW, spanH, stored.fillRgb);
+          final fill = conditional.fillRgb ?? stored?.fillRgb ?? '';
+          if (fill.isNotEmpty) {
+            sink.canvas.fillRect(x, y, spanW, spanH, fill);
           }
           if (stored != null && stored.borderRgb.isNotEmpty) {
             sink.canvas.setLineWidth(
@@ -1374,7 +1381,8 @@ abstract final class OfficePdfExport {
               }
               final double x = colX(c);
               final SmlCell? stored = sheet.rows[r]?.cells[c];
-              paintCellFrame(x, y, spanW, spanH, stored);
+              final conditional = conditionalFormats.resolve(SmlCellRef(c, r));
+              paintCellFrame(x, y, spanW, spanH, stored, conditional);
               if (stored == null) {
                 continue;
               }
@@ -1398,7 +1406,7 @@ abstract final class OfficePdfExport {
                 x + 3,
                 y + spanH - math.max(2, size * 0.28),
                 size,
-                shown.color,
+                conditional.fontRgb ?? shown.color,
                 maxWidth: spanW - 6,
                 align: align,
                 bold: stored.fontBold,
@@ -1573,9 +1581,9 @@ abstract final class OfficePdfExport {
       return (text: '', color: '222222', numeric: false);
     }
     final bool numeric = value is num;
+    final String ink = cell.fontRgb.isNotEmpty ? cell.fontRgb : '222222';
     if (book.styles != null) {
       final String formatted = book.styles!.format(value, cell.styleIndex);
-      final String ink = cell.fontRgb.isNotEmpty ? cell.fontRgb : '222222';
       if (formatted.startsWith('RED:')) {
         return (
           text: formatted.substring(4),
@@ -1587,11 +1595,11 @@ abstract final class OfficePdfExport {
     }
     if (value is num) {
       if (value == value.roundToDouble()) {
-        return (text: '${value.round()}', color: '222222', numeric: true);
+        return (text: '${value.round()}', color: ink, numeric: true);
       }
-      return (text: value.toStringAsFixed(2), color: '222222', numeric: true);
+      return (text: value.toStringAsFixed(2), color: ink, numeric: true);
     }
-    return (text: value.toString(), color: '222222', numeric: false);
+    return (text: value.toString(), color: ink, numeric: false);
   }
 
   static void _paintShape(

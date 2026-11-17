@@ -400,9 +400,9 @@ void main() {
       final sheet = book.sheets[1];
       final rule = sheet.conditionalFormats.single;
       expect(rule.kind, SmlConditionalKind.expression);
-      // Expression evaluation is not part of the compact renderer. It must
-      // not substitute the old greater-than predicate for this native rule.
-      expect(rule.matches(sheet.cellA1('A1'), sheet), isFalse);
+      // A numeric true predicate is evaluated without substituting the old
+      // greater-than rule or changing the preserved native expression.
+      expect(rule.matches(sheet.cellA1('A1'), sheet), isTrue);
       rule.formula = 'A1>1';
       final saved = OpcPackage.openBytes(
         SheetSerializer().writeBytes(book, recalculate: false),

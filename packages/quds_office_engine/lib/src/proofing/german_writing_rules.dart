@@ -3,6 +3,8 @@ import 'package:characters/characters.dart';
 import 'office_proofing.dart';
 import 'proofing_text_ranges.dart';
 
+part 'german_grammar.dart';
+
 Set<int> _sourceGraphemeBoundaries(String text) {
   final Set<int> boundaries = <int>{0};
   int end = 0;
@@ -35,6 +37,7 @@ class GermanWritingRulesProvider extends OfficeProofingProvider {
     'de.repetition.conjunction',
     'de.grammar.pronoun-verb',
     'de.grammar.seit-seid',
+    ..._germanPhraseRuleIds,
     'de.delimiter.balance',
     'de.quote.balance',
   };
@@ -194,7 +197,7 @@ class GermanWritingRulesProvider extends OfficeProofingProvider {
     unicode: true,
   );
   static final RegExp _comparisonPrefix = RegExp(
-    r'(?<![\p{L}\p{M}\p{N}_])(?:wie|als)[ \t\u00a0\u202f]+$',
+    r'(?<![\p{L}\p{M}\p{N}_])(?:wie|als|außer)[ \t\u00a0\u202f]+$',
     caseSensitive: false,
     unicode: true,
   );
@@ -541,6 +544,20 @@ class GermanWritingRulesProvider extends OfficeProofingProvider {
         'Für den Beginn oder die Dauer ist hier normalerweise „seit“ gemeint.',
         category: OfficeProofingCategory.grammar,
         replacements: <String>[_matchCase(original, 'seit')],
+      );
+    }
+    for (final _GermanGrammarIssue issue in _germanGrammarIssues(
+      text,
+      isProtected,
+      boundaries,
+    )) {
+      add(
+        issue.ruleId,
+        issue.start,
+        issue.end,
+        issue.message,
+        category: OfficeProofingCategory.grammar,
+        replacements: <String>[issue.replacement],
       );
     }
     final List<(String, int)> delimiters = <(String, int)>[];

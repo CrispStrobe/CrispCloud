@@ -319,9 +319,16 @@ class FormulaParser {
       case FormulaTokenKind.string:
         return LiteralNode(tok.lexeme);
       case FormulaTokenKind.boolTrue:
-        return LiteralNode(true);
       case FormulaTokenKind.boolFalse:
-        return LiteralNode(false);
+        // Boolean constants also have zero-argument function spellings.
+        if (_cur.kind == FormulaTokenKind.lparen) {
+          _eat();
+          if (_cur.kind != FormulaTokenKind.rparen) {
+            throw const FormatException('Boolean constants take no arguments');
+          }
+          _eat();
+        }
+        return LiteralNode(tok.kind == FormulaTokenKind.boolTrue);
       case FormulaTokenKind.cell:
         return _cell(tok.lexeme);
       case FormulaTokenKind.range:

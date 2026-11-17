@@ -1,5 +1,6 @@
-import 'dart:convert';
 import 'dart:typed_data';
+
+import '../text/pdf_text_string.dart';
 
 /// Closed COS value union (ISO 32000-1 §7.3).
 sealed class PdfCos {
@@ -63,24 +64,11 @@ final class PdfCosString extends PdfCos {
   /// hex API.
   final bool hex;
 
-  /// Decodes PDFDocEncoding / UTF-16BE (`FE FF`) to Dart text.
-  String get asText {
-    if (bytes.length >= 2 && bytes[0] == 0xFE && bytes[1] == 0xFF) {
-      return utf8.decode(
-        utf8.encode(String.fromCharCodes(_utf16be(bytes.sublist(2)))),
-        allowMalformed: true,
-      );
-    }
-    return String.fromCharCodes(bytes);
-  }
-
-  static List<int> _utf16be(Uint8List data) {
-    final List<int> out = <int>[];
-    for (int i = 0; i + 1 < data.length; i += 2) {
-      out.add((data[i] << 8) | data[i + 1]);
-    }
-    return out;
-  }
+  /// Decodes PDFDocEncoding, BOM-prefixed UTF-16BE or PDF 2.0 UTF-8 text.
+  ///
+  /// [bytes] remains available for strings whose encoding is set by a font or
+  /// another byte-string context. See [pdfDecodeTextString] for recovery rules.
+  String get asText => pdfDecodeTextString(bytes);
 }
 
 /// Class PdfCosArray.

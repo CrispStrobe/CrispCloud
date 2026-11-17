@@ -534,7 +534,7 @@ abstract final class SheetRename {
           closed = true;
           break;
         }
-        if (!closed) throw FormatException('Unterminated formula string');
+        if (!closed) throw const FormatException('Unterminated formula string');
         out.write(formula.substring(start, index));
         continue;
       }
@@ -579,7 +579,9 @@ abstract final class SheetRename {
           continue;
         }
         if (first.quoted) {
-          throw FormatException('Quoted sheet name has no reference qualifier');
+          throw const FormatException(
+            'Quoted sheet name has no reference qualifier',
+          );
         }
       }
       if (formula[index] == '[') {
@@ -596,7 +598,7 @@ abstract final class SheetRename {
           if (char == ']') depth--;
         } while (index < formula.length && depth > 0);
         if (depth != 0) {
-          throw FormatException('Unterminated structured reference');
+          throw const FormatException('Unterminated structured reference');
         }
         out.write(formula.substring(start, index));
       } else if (first != null) {
@@ -628,7 +630,7 @@ abstract final class SheetRename {
         }
         return (value: value.toString(), end: end, quoted: true);
       }
-      throw FormatException('Unterminated quoted sheet name');
+      throw const FormatException('Unterminated quoted sheet name');
     }
     if (text[start] == '[') {
       final close = text.indexOf(']', start + 1);

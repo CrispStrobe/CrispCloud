@@ -78,6 +78,7 @@ export 'src/sheet/legacy/ods_sheet_reader.dart';
 export 'src/sheet/legacy/ods_sheet_writer.dart';
 export 'src/sheet/model/sheet_rename.dart';
 export 'src/sheet/model/sml_analysis.dart';
+export 'src/sheet/model/sml_conditional_format.dart';
 export 'src/sheet/model/sml_power_query.dart';
 export 'src/sheet/model/sml_solver.dart';
 export 'src/sheet/model/sml_sparkline.dart';

@@ -22,6 +22,7 @@ files = [
     'lib/src/bidi/german_hyphenation_data.dart',
     'lib/src/bidi/english_hyphenator.dart', 'lib/src/bidi/office_hyphenator.dart',
     'lib/src/bidi/hyphenation_words.dart', 'lib/src/proofing/proofing_text_ranges.dart',
+    'lib/src/proofing/office_proofing.dart',
     'lib/src/bidi/english_us_hyphenation_data.dart',
     'lib/src/bidi/english_gb_hyphenation_data.dart', 'lib/quds_office_engine.dart',
     'lib/src/word/layout/word_layout.dart', 'lib/src/word/layout/word_note_layout.dart',
