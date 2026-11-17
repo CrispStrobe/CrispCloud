@@ -1,0 +1,189 @@
+{
+  "kind": "Recovered production-locked host harness and prepared acceptance runners; no product test result",
+  "archive": "host-runtime-recovery-checkpoint-20261117.tar.xz",
+  "bytes": 106008,
+  "sha256": "22208706f667c0d89afe0bfcd3333ccfaf6ee44ce4dd4e480fe77d04fbef1a91",
+  "members": [
+    {
+      "path": "gector-sync-review.json",
+      "bytes": 2081,
+      "sha256": "aa45c6319fdb97f261bebf89adf16576a41a61b94287e67b8bf9d49bcfc723ff"
+    },
+    {
+      "path": "missing-locked-packages.json",
+      "bytes": 7192,
+      "sha256": "dcb5286d59e2711c1d835c7b34c4a64f03d92cc6b8c28623907b595380caf647"
+    },
+    {
+      "path": "preparation-001/harness-inputs-current.json.gz",
+      "bytes": 66825,
+      "sha256": "927102ffe4108da8b6702cf9cf4f381552e86d2c41c4af1f859e4fae828fe67f"
+    },
+    {
+      "path": "preparation-001/original-prepare-host-harness.py",
+      "bytes": 4200,
+      "sha256": "f1d8bd960ee0680bb167b1cc509caff0efef1dca17486b4ef89512d75b327fd9"
+    },
+    {
+      "path": "preparation-001/original-resolve-host-harness.py",
+      "bytes": 5744,
+      "sha256": "d1890a3be578eb6a550ce828d91d6dcfa2cb98aca5f075b843f9f81af4971618"
+    },
+    {
+      "path": "preparation-001/receipt.json",
+      "bytes": 10102,
+      "sha256": "2e7929b1e9fd5e0750f7d7619f53fb882df19a78656b3a9f0b31bde076bdd575"
+    },
+    {
+      "path": "probes/odt_list_host_test.dart",
+      "bytes": 4617,
+      "sha256": "b26af6fb945a72c35c61180dd83f3fd1a1382dab93e0ea1089d88ea8ee6a8874"
+    },
+    {
+      "path": "probes/odt_note_host_test.dart",
+      "bytes": 6515,
+      "sha256": "d03e835a4dc8f22c210cc0cdf09274ee1c444465f4c58f6c52a9c67d956719a2"
+    },
+    {
+      "path": "probes/odt_writer_host_test.dart",
+      "bytes": 2925,
+      "sha256": "ef5223be53fffe2358d6d4c9588a37b326d8c05791a6dafcf678f855285660f6"
+    },
+    {
+      "path": "recovered/extraction-verification.json",
+      "bytes": 3518,
+      "sha256": "080019cb4037c383ab2234d743fa9fc8647499b0f4aebb93b5304b808b29b46c"
+    },
+    {
+      "path": "recovered-prior/extraction-verification.json",
+      "bytes": 2117,
+      "sha256": "f1f342bbf459b37e7abcbc5a44a78c9417d861a3373d8472cfb4bdebb6202283"
+    },
+    {
+      "path": "recovery-summary.json",
+      "bytes": 1258,
+      "sha256": "1fd01eedab2d9b82dae667c69cea2853cab5ff97b0ce485c4a9a9dc03c9987d2"
+    },
+    {
+      "path": "scripts/prefetch_pub.py",
+      "bytes": 3700,
+      "sha256": "5caa335ef5b2d84c70a50a45acec130eeeab07e4b67b64e6f9079a584b4ab09e"
+    },
+    {
+      "path": "scripts/prior_host_qualification.py",
+      "bytes": 28660,
+      "sha256": "4049d732d10f42d8f3254b90d2943f41c99618a4fc820b68050ce70d989b8fed"
+    },
+    {
+      "path": "scripts/resolve-host-harness-offline.py",
+      "bytes": 6367,
+      "sha256": "c22faeba05675c616c8184de5e7bc251c08d603ce67a7796c0c70d7bf020c61f"
+    },
+    {
+      "path": "scripts/run-annotation-negative.py",
+      "bytes": 10569,
+      "sha256": "531a673ac1b4793fd2c941b7a9df4835037a94b58a5e7261ee4d88a1f93dc856"
+    },
+    {
+      "path": "scripts/run-focused-host.py",
+      "bytes": 19105,
+      "sha256": "692738ef67824a7baa8ed55ba0926eea53511253e80b4949b1a0d15f8a216f45"
+    },
+    {
+      "path": "service-harness/.dart_tool/package_config.json",
+      "bytes": 24366,
+      "sha256": "7345d4d52077e3a4b021c0c5412551013a32555ed5693067243434b0d4484b06"
+    },
+    {
+      "path": "service-harness/.dart_tool/package_graph.json",
+      "bytes": 18260,
+      "sha256": "7317daf7e6192d46df5664e1dc01320b3a6629134ec21bc775596a5921873d19"
+    },
+    {
+      "path": "service-harness/packages/legacy_doc_parser/pubspec.yaml",
+      "bytes": 425,
+      "sha256": "e377855d3104e4c278672e3a6e5f6ff494e6303809bb8cf3a23a0736b60b8fe3"
+    },
+    {
+      "path": "service-harness/packages/quds_office_editor/pubspec.yaml",
+      "bytes": 2355,
+      "sha256": "61ec8cf9aebcde1a11cf2c09bdd4e5e7d1e10a62ba41c8ff9064c0166a46d13e"
+    },
+    {
+      "path": "service-harness/packages/quds_office_engine/pubspec.yaml",
+      "bytes": 2456,
+      "sha256": "0efaf1c9de086ba52503ea2dff6831820e72612a127ea29be6190f7c84252b37"
+    },
+    {
+      "path": "service-harness/packages/quds_reports/pubspec.yaml",
+      "bytes": 2233,
+      "sha256": "8d60275e20f0fdc7c61b5e1d0a80637efb34d6d5993909e9a50878e338766e0b"
+    },
+    {
+      "path": "service-harness/pubspec.lock",
+      "bytes": 23917,
+      "sha256": "412c142a4033a40974ed150124157210a11038459f8077361cb8e6d2e3f9dfdc"
+    },
+    {
+      "path": "service-harness/pubspec.yaml",
+      "bytes": 1263,
+      "sha256": "099aba75e3685ea041f980a25ca004a36874e8df4676017c0747635c63d88bf2"
+    },
+    {
+      "path": "setup/cache-bootstrap.json",
+      "bytes": 19636,
+      "sha256": "d926429dfcb3afdb5e21e0c8782adcd8157a54d4043b56183962a1e7d28218ae"
+    },
+    {
+      "path": "setup/prefetch-97.json",
+      "bytes": 27673,
+      "sha256": "29bab217428b580cd2361be0c299fdb5894d01e614c7b503c56aeb9f639a1a46"
+    },
+    {
+      "path": "setup/prefetch-97.log",
+      "bytes": 23341,
+      "sha256": "da5ef742b474befbbe031ffc013018a0c14007cdcc0baf311ecaa9883afbda9f"
+    },
+    {
+      "path": "setup-001/interrupted-attempt.json",
+      "bytes": 848,
+      "sha256": "ea2c0591c1982700ac44dbe985f7e261ff8338b3325116bf2ce61083e4bf8a59"
+    },
+    {
+      "path": "setup-001/logs/locked-resolution.log",
+      "bytes": 50,
+      "sha256": "17fd955502fcba362854ade8d49b86219b741bc83b9fb8fa341752ae812c1731"
+    },
+    {
+      "path": "setup-001/receipt.json",
+      "bytes": 1817,
+      "sha256": "bba161d0558080a43784233bfb72fa4c857671d4303e0d37377dcf2f0d142ce6"
+    },
+    {
+      "path": "setup-002/logs/locked-offline-resolution.log",
+      "bytes": 162,
+      "sha256": "fc1c74670c6be3f744f1c476c9bc77fd337b3adfc14c717a44421e2e6f2364bc"
+    },
+    {
+      "path": "setup-002/receipt.json",
+      "bytes": 2148,
+      "sha256": "0befa6aef445834913dab77f0ffc21d79129b8768fcb5a23526468db5e6b460e"
+    },
+    {
+      "path": "setup-003/logs/locked-offline-repeat.log",
+      "bytes": 68,
+      "sha256": "d4cb7a3c68b4133b4f6e58c67ff5bfd13725d8021e930388cdc98da8a575919d"
+    },
+    {
+      "path": "setup-003/logs/locked-offline-resolution.log",
+      "bytes": 68,
+      "sha256": "d4cb7a3c68b4133b4f6e58c67ff5bfd13725d8021e930388cdc98da8a575919d"
+    },
+    {
+      "path": "setup-003/receipt.json",
+      "bytes": 3749,
+      "sha256": "9da86365653b3d348b6b4dd606aad8e6d9f793ebfe71d356b0ed63f2819861a1"
+    }
+  ],
+  "full_archive_readback_verified": true
+}

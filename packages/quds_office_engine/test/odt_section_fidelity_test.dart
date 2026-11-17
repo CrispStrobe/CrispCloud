@@ -1,484 +1,700 @@
+import 'dart:convert';
+
 import 'package:quds_office_engine/quds_office_engine.dart';
 import 'package:test/test.dart';
 
-const _officeNs = 'urn:oasis:names:tc:opendocument:xmlns:office:1.0';
-const _textNs = 'urn:oasis:names:tc:opendocument:xmlns:text:1.0';
 const _styleNs = 'urn:oasis:names:tc:opendocument:xmlns:style:1.0';
+const _textNs = 'urn:oasis:names:tc:opendocument:xmlns:text:1.0';
 const _tableNs = 'urn:oasis:names:tc:opendocument:xmlns:table:1.0';
 const _drawNs = 'urn:oasis:names:tc:opendocument:xmlns:drawing:1.0';
 const _foNs = 'urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0';
 
-WmlParagraph _paragraph(String text, {WmlParagraphProps? properties}) =>
-    WmlParagraph(
-      properties: properties,
-      inlines: [WmlRun(text: text)],
-    );
-
-OpcPackage _package(WmlDocument document) =>
-    OpcPackage.openBytes(OdtDocumentWriter.writeBytes(document));
-
-XmlElement _part(OpcPackage package, String path) =>
-    XmlDocument.parse(package.getPart('/$path')!.readText()).root!;
-
-String _visibleText(XmlNode node) {
-  if (node is XmlText) return node.text;
-  if (node is! XmlElement) return '';
-  if (node.namespaceUri == _textNs) {
-    if (node.localName == 's') {
-      return ' ' *
-          int.parse(node.getAttribute('c', namespaceUri: _textNs) ?? '1');
-    }
-    if (node.localName == 'tab') return '\t';
-    if (node.localName == 'line-break') return '\n';
-  }
-  return node.children.map(_visibleText).join();
-}
-
-XmlElement _body(XmlElement content) => content
-    .firstChild('body', namespaceUri: _officeNs)!
-    .firstChild('text', namespaceUri: _officeNs)!;
-
-String? _attribute(XmlElement element, String name, String namespace) =>
-    element.getAttribute(name, namespaceUri: namespace);
-
-XmlElement _named(XmlElement parent, String localName, String name) => parent
-    .childrenNamed(localName, namespaceUri: _styleNs)
-    .singleWhere((element) => _attribute(element, 'name', _styleNs) == name);
-
-XmlElement _style(XmlElement content, String name) => _named(
-  content.firstChild('automatic-styles', namespaceUri: _officeNs)!,
-  'style',
-  name,
+WmlParagraph _p(String text, {WmlParagraphProps? properties}) => WmlParagraph(
+  properties: properties,
+  inlines: [WmlRun(text: text)],
 );
 
-Iterable<XmlElement> _elements(
-  XmlElement root,
-  String name,
-  String namespace,
-) sync* {
-  if (root.localName == name && root.namespaceUri == namespace) yield root;
-  for (final child in root.childElements) {
-    yield* _elements(child, name, namespace);
-  }
-}
+WmlContentControlBlock _control(List<WmlBlock> blocks) =>
+    WmlContentControlBlock(
+      control: WmlContentControlData(
+        xml: '<w:sdt xmlns:w="${OfficeNamespaces.w}"><w:sdtContent/></w:sdt>',
+        sourcePartUri: '/word/document.xml',
+        relationships: const [],
+      ),
+      blocks: blocks,
+    );
 
-WmlTable _table() => WmlTable(
+WmlTable _table(String text) => WmlTable(
+  grid: [120],
   rows: [
     WmlTableRow(
       cells: [
-        WmlTableCell(blocks: [_paragraph('Cell story')]),
+        WmlTableCell(blocks: [_p(text)]),
       ],
     ),
   ],
 );
 
-WmlBlock _leadingBlock(String kind) => switch (kind) {
-  'table' => _table(),
-  'frame' => WmlFrame(blocks: [_paragraph('Frame story')]),
-  'control' => WmlContentControlBlock(
-    control: WmlContentControlData(
-      xml:
-          '<w:sdt xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"/>',
-      sourcePartUri: '/word/document.xml',
-      relationships: const <WmlOpaqueRelationship>[],
-    ),
-    blocks: [_paragraph('Control story')],
-  ),
-  _ => throw ArgumentError.value(kind),
-};
-
-WmlDocument _twoSections(
-  List<WmlBlock> blocks, {
-  WmlSectionBreakKind breakKind = WmlSectionBreakKind.nextPage,
+WmlDocument _two(
+  List<WmlBlock> second, {
+  WmlSectionBreakKind kind = WmlSectionBreakKind.nextPage,
 }) => WmlDocument(
   sections: [
-    WmlSection(blocks: [_paragraph('First section')]),
-    WmlSection(blocks: blocks, breakKind: breakKind),
+    WmlSection(blocks: [_p('First')]),
+    WmlSection(blocks: second, breakKind: kind),
   ],
 );
 
-WmlRun _reference({required bool endnote}) =>
-    WmlRun(text: '7', noteRefId: 7, noteRefEndnote: endnote);
+({XmlElement content, XmlElement styles}) _export(WmlDocument document) {
+  final package = OpcPackage.openBytes(OdtDocumentWriter.writeBytes(document));
+  XmlElement part(String name) =>
+      XmlDocument.parse(package.getPart('/$name.xml')!.readText()).root!;
+  return (content: part('content'), styles: part('styles'));
+}
 
-Map<String, String> _resolvedProperties(XmlElement style) => {
-  for (final attribute
-      in style
-          .firstChild('paragraph-properties', namespaceUri: _styleNs)!
-          .attributes)
-    if (!(attribute.namespaceUri == _foNs &&
-            attribute.localName == 'break-before') &&
-        !(attribute.namespaceUri == _styleNs &&
-            attribute.localName == 'page-number'))
-      '${attribute.namespaceUri}|${attribute.localName}': attribute.value,
+XmlElement _body(XmlElement content) =>
+    content.firstChild('body')!.firstChild('text')!;
+
+Iterable<XmlElement> _elements(XmlElement root, String name) sync* {
+  if (root.localName == name) yield root;
+  for (final child in root.childElements) {
+    yield* _elements(child, name);
+  }
+}
+
+XmlElement _style(XmlElement content, XmlElement owner) {
+  final name = owner.getAttribute(
+    'style-name',
+    namespaceUri: owner.namespaceUri == _tableNs
+        ? _tableNs
+        : owner.namespaceUri == _drawNs
+        ? _drawNs
+        : _textNs,
+  );
+  return content
+      .firstChild('automatic-styles')!
+      .childrenNamed('style')
+      .singleWhere(
+        (style) => style.getAttribute('name', namespaceUri: _styleNs) == name,
+      );
+}
+
+String? _master(XmlElement content, XmlElement owner) => _style(
+  content,
+  owner,
+).getAttribute('master-page-name', namespaceUri: _styleNs);
+
+XmlElement _paragraph(XmlElement content, String text) => [
+  ..._elements(_body(content), 'p'),
+  ..._elements(_body(content), 'h'),
+].singleWhere((element) => _text(element) == text);
+
+String _text(XmlNode node) => switch (node) {
+  XmlText() => node.text,
+  XmlElement() => node.children.map(_text).join(),
+  _ => '',
 };
 
 void main() {
-  for (final ordered in [false, true]) {
-    test(
-      'section style applies only to the first list item: ordered=$ordered',
-      () {
-        final paragraphs = [
-          for (final text in ['First item', 'Second item'])
-            _paragraph(
-              text,
-              properties: WmlParagraphProps(
-                numId: 1,
-                listLabel: ordered ? '1.' : '•',
-                rightToLeft: true,
-                justification: WmlJustification.right,
-              ),
-            ),
-        ];
-        final document = _twoSections(paragraphs);
-        final package = _package(document);
-        final content = _part(package, 'content.xml');
-        final body = _body(content);
-        final children = body.childElements.toList();
-        expect(children, hasLength(2));
-        final list = children.last;
-        expect(list.namespaceUri, _textNs);
-        expect(list.localName, 'list');
-        expect(_attribute(list, 'style-name', _textNs), ordered ? 'L2' : 'L1');
-        final items = list
-            .childrenNamed('list-item', namespaceUri: _textNs)
-            .toList();
-        expect(items, hasLength(2));
-        final first = items.first.firstChild('p', namespaceUri: _textNs)!;
-        final second = items.last.firstChild('p', namespaceUri: _textNs)!;
-        expect(_attribute(first, 'style-name', _textNs), 'SB1');
-        expect(_attribute(second, 'style-name', _textNs), isNot('SB1'));
-        final sectionStyle = _style(content, 'SB1');
-        expect(
-          _attribute(sectionStyle, 'parent-style-name', _styleNs),
-          'Standard',
-        );
-        expect(_attribute(sectionStyle, 'master-page-name', _styleNs), 'mp1');
-        final properties = sectionStyle.firstChild('paragraph-properties')!;
-        expect(_attribute(properties, 'writing-mode', _styleNs), 'rl-tb');
-        expect(_attribute(properties, 'text-align', _foNs), 'right');
-        expect(paragraphs.map((paragraph) => paragraph.text), [
-          'First item',
-          'Second item',
-        ]);
-        expect(document.sections.last.blocks.length, 2);
-      },
-    );
-  }
-
-  for (final kind in ['table', 'frame', 'control']) {
-    test(
-      'section anchor precedes a leading $kind without styling its story',
-      () {
-        final leading = _leadingBlock(kind);
-        final document = _twoSections([leading, _paragraph('After story')]);
-        final content = _part(_package(document), 'content.xml');
-        final children = _body(content).childElements.toList();
-        expect(children, hasLength(4));
-        final anchor = children[1];
-        expect(anchor.namespaceUri, _textNs);
-        expect(anchor.localName, 'p');
-        expect(anchor.text, isEmpty);
-        expect(_attribute(anchor, 'style-name', _textNs), 'SB1');
-        expect(children[2].localName, switch (kind) {
-          'table' => 'table',
-          'frame' => 'frame',
-          _ => 'p',
-        });
-        if (kind == 'table') {
-          expect(children[2].namespaceUri, _tableNs);
-        }
-        if (kind == 'frame') {
-          expect(children[2].namespaceUri, _drawNs);
-        }
-        final expectedText = switch (kind) {
-          'table' => 'Cell story',
-          'frame' => 'Frame story',
-          _ => 'Control story',
-        };
-        expect(children[2].text, expectedText);
-        expect(children.last.text, 'After story');
-        final styledParagraphs = _elements(content, 'p', _textNs).where(
-          (paragraph) => _attribute(paragraph, 'style-name', _textNs) == 'SB1',
-        );
-        expect(styledParagraphs, hasLength(1));
-        expect(document.sections.last.blocks, hasLength(2));
-        expect(identical(document.sections.last.blocks.first, leading), isTrue);
-      },
-    );
-  }
-
-  test('an empty noncontinuous section retains an explicit boundary', () {
-    final document = _twoSections([]);
-    final content = _part(_package(document), 'content.xml');
-    final paragraphs = _body(
-      content,
-    ).childrenNamed('p', namespaceUri: _textNs).toList();
-    expect(paragraphs, hasLength(2));
-    expect(paragraphs.last.text, isEmpty);
-    expect(_attribute(paragraphs.last, 'style-name', _textNs), 'SB1');
-    expect(document.sections, hasLength(2));
-    expect(document.sections.last.blocks, isEmpty);
+  test('a first list item selects the section while its siblings do not', () {
+    final content = _export(
+      _two([
+        _p(
+          'List first',
+          properties: WmlParagraphProps(numId: 1, listLabel: '1.'),
+        ),
+        _p(
+          'List second',
+          properties: WmlParagraphProps(numId: 1, listLabel: '2.'),
+        ),
+      ]),
+    ).content;
+    expect(_master(content, _paragraph(content, 'List first')), 'mp1');
+    expect(_master(content, _paragraph(content, 'List second')), isNull);
+    expect(_elements(_body(content), 'list-item'), hasLength(2));
   });
 
   test(
-    'an explicitly empty document has default master geometry without mutation',
+    'table-only sections activate the table without inserting a paragraph',
+    () {
+      final content = _export(_two([_table('Cell')])).content;
+      final children = _body(content).childElements.toList();
+      expect(children.map((child) => child.localName), ['p', 'table']);
+      expect(_master(content, children.last), 'mp1');
+      expect(_master(content, _paragraph(content, 'Cell')), isNull);
+      final props = _style(
+        content,
+        children.last,
+      ).firstChild('table-properties')!;
+      expect(props.getAttribute('break-before', namespaceUri: _foNs), 'page');
+    },
+  );
+
+  test(
+    'nested controls and empty wrappers preserve a leading list activation',
+    () {
+      final content = _export(
+        _two([
+          _control([]),
+          _control([
+            _control([]),
+            _control([
+              _p('Nested list', properties: WmlParagraphProps(numId: 7)),
+            ]),
+          ]),
+          _p('Tail'),
+        ]),
+      ).content;
+      expect(_master(content, _paragraph(content, 'Nested list')), 'mp1');
+      expect(_master(content, _paragraph(content, 'Tail')), isNull);
+    },
+  );
+
+  test('nested controls pass section activation to a leading table', () {
+    final content = _export(
+      _two([
+        _control([
+          _control([_table('Nested cell')]),
+        ]),
+      ]),
+    ).content;
+    expect(_master(content, _elements(_body(content), 'table').single), 'mp1');
+    expect(_master(content, _paragraph(content, 'Nested cell')), isNull);
+  });
+
+  test('ignored blocks do not consume the next visible section anchor', () {
+    final content = _export(
+      _two([
+        WmlOpaqueBlock(
+          xml: '<unknown/>',
+          sourcePartUri: '/word/document.xml',
+          relationships: const [],
+        ),
+        _control([]),
+        _p('Visible'),
+      ]),
+    ).content;
+    expect(_master(content, _paragraph(content, 'Visible')), 'mp1');
+    expect(_body(content).childElements, hasLength(2));
+  });
+
+  test('a first picture is anchored inside the section paragraph', () {
+    final content = _export(
+      _two([
+        WmlVisual(
+          visual: OfficeVisual(
+            kind: OfficeVisualKind.picture,
+            title: 'Pixel',
+            width: 20,
+            height: 10,
+            imageBytes: base64Decode(
+              'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4z8DwHwAFAAH/iZk9HQAAAABJRU5ErkJggg==',
+            ),
+          ),
+        ),
+        _p('After picture'),
+      ]),
+    ).content;
+    final pictureParagraph = _body(content).childElements.elementAt(1);
+    expect(pictureParagraph.localName, 'p');
+    expect(_master(content, pictureParagraph), 'mp1');
+    expect(_elements(pictureParagraph, 'image'), hasLength(1));
+    expect(
+      _elements(
+        pictureParagraph,
+        'frame',
+      ).single.getAttribute('anchor-type', namespaceUri: _textNs),
+      'as-char',
+    );
+    expect(_master(content, _paragraph(content, 'After picture')), isNull);
+  });
+
+  test('a visual fallback stays in one paragraph carrying its section', () {
+    final content = _export(
+      _two([
+        WmlVisual(
+          visual: OfficeVisual(
+            kind: OfficeVisualKind.picture,
+            title: 'Missing image',
+            width: 20,
+            height: 10,
+          ),
+        ),
+      ]),
+    ).content;
+    final paragraph = _paragraph(content, 'Missing image');
+    expect(_master(content, paragraph), 'mp1');
+    expect(_elements(paragraph, 'p'), hasLength(1));
+  });
+
+  test(
+    'a first frame anchors on the current page with physical page coordinates',
+    () {
+      final content = _export(
+        _two([
+          WmlFrame(
+            x: 60,
+            y: 100,
+            width: 180,
+            height: 40,
+            blocks: [_p('Frame')],
+          ),
+          _p('After frame'),
+        ]),
+      ).content;
+      final anchor = _body(content).childElements.elementAt(1);
+      expect(anchor.localName, 'p');
+      expect(_master(content, anchor), 'mp1');
+      final frame = _elements(anchor, 'frame').single;
+      expect(
+        frame.getAttribute('anchor-type', namespaceUri: _textNs),
+        'paragraph',
+      );
+      final graphic = _style(content, frame).firstChild('graphic-properties')!;
+      expect(
+        graphic.getAttribute('horizontal-rel', namespaceUri: _styleNs),
+        'page',
+      );
+      expect(
+        graphic.getAttribute('vertical-rel', namespaceUri: _styleNs),
+        'page',
+      );
+      expect(_master(content, _paragraph(content, 'After frame')), isNull);
+    },
+  );
+
+  test(
+    'empty sections keep their own boundary and do not steal the next one',
+    () {
+      final document = WmlDocument(
+        sections: [
+          WmlSection(blocks: [_p('Before')]),
+          WmlSection(),
+          WmlSection(blocks: [_p('After')]),
+        ],
+      );
+      final content = _export(document).content;
+      final children = _body(content).childElements.toList();
+      expect(children, hasLength(3));
+      expect(_text(children[1]), isEmpty);
+      expect(_master(content, children[1]), 'mp1');
+      expect(_master(content, children[2]), 'mp2');
+      expect(document.sections[1].blocks, isEmpty);
+    },
+  );
+
+  test(
+    'an empty document has a usable default master without changing the model',
     () {
       final document = WmlDocument(sections: []);
-      final package = _package(document);
-      expect(_body(_part(package, 'content.xml')).childElements, isEmpty);
-      final styles = _part(package, 'styles.xml');
-      final masters = styles.firstChild(
-        'master-styles',
-        namespaceUri: _officeNs,
-      )!;
-      expect(masters.childElements, hasLength(1));
-      final master = _named(masters, 'master-page', 'Standard');
-      expect(_attribute(master, 'page-layout-name', _styleNs), 'pm0');
-      final layout = _named(
-        styles.firstChild('automatic-styles', namespaceUri: _officeNs)!,
-        'page-layout',
-        'pm0',
-      );
-      final properties = layout.firstChild(
-        'page-layout-properties',
-        namespaceUri: _styleNs,
-      )!;
-      const page = WmlPageSize();
+      final result = _export(document);
       expect(
-        _attribute(properties, 'page-width', _foNs),
-        '${page.width.toStringAsFixed(2)}pt',
+        _elements(
+          result.styles,
+          'master-page',
+        ).single.getAttribute('name', namespaceUri: _styleNs),
+        'Standard',
       );
-      expect(
-        _attribute(properties, 'page-height', _foNs),
-        '${page.height.toStringAsFixed(2)}pt',
-      );
+      expect(_elements(result.styles, 'page-layout'), hasLength(1));
+      expect(_body(result.content).childElements, hasLength(1));
       expect(document.sections, isEmpty);
     },
   );
 
-  for (final tableFirst in [false, true]) {
+  test(
+    'section headings retain resolved spacing, direction and indents directly',
+    () {
+      final properties = WmlParagraphProps(
+        headingLevel: 2,
+        justification: WmlJustification.right,
+        rightToLeft: true,
+        lineSpacing: 18,
+        lineSpacingRule: WmlLineSpacingRule.exact,
+        spacingBefore: 6,
+        spacingAfter: 0,
+        indent: const WmlIndent(left: 12, right: 3, firstLine: 4),
+      );
+      final content = _export(_two([_p('Heading', properties: properties)]))
+          .content;
+      final heading = _paragraph(content, 'Heading');
+      expect(heading.localName, 'h');
+      final style = _style(content, heading);
+      expect(
+        style.getAttribute('parent-style-name', namespaceUri: _styleNs),
+        'Heading_20_2',
+      );
+      final p = style.firstChild('paragraph-properties')!;
+      expect(p.getAttribute('line-height', namespaceUri: _foNs), '18.00pt');
+      expect(p.getAttribute('margin-top', namespaceUri: _foNs), '6.00pt');
+      expect(p.getAttribute('margin-bottom', namespaceUri: _foNs), '0.00pt');
+      expect(p.getAttribute('margin-left', namespaceUri: _foNs), '3.00pt');
+      expect(p.getAttribute('margin-right', namespaceUri: _foNs), '12.00pt');
+      expect(p.getAttribute('text-indent', namespaceUri: _foNs), '4.00pt');
+      expect(p.getAttribute('text-align', namespaceUri: _foNs), 'right');
+      expect(p.getAttribute('writing-mode', namespaceUri: _styleNs), 'rl-tb');
+      expect(properties.pageBreakBefore, isFalse);
+    },
+  );
+
+  test(
+    'continuous equal page styles do not select a new master or add a break',
+    () {
+      final content = _export(
+        _two([_p('Continuous')], kind: WmlSectionBreakKind.continuous),
+      ).content;
+      final paragraph = _paragraph(content, 'Continuous');
+      expect(_master(content, paragraph), isNull);
+      expect(
+        _style(content, paragraph)
+            .firstChild('paragraph-properties')!
+            .getAttribute('break-before', namespaceUri: _foNs),
+        isNull,
+      );
+    },
+  );
+
+  test(
+    'continuous equal normal header and footer content can reuse a master',
+    () {
+      WmlSection section(String body, WmlSectionBreakKind kind) => WmlSection(
+        blocks: [_p(body)],
+        breakKind: kind,
+        header: [_p('Same header')],
+        footer: [_p('Same footer')],
+      );
+      final content = _export(
+        WmlDocument(
+          sections: [
+            section('First', WmlSectionBreakKind.nextPage),
+            section('Continuous', WmlSectionBreakKind.continuous),
+          ],
+        ),
+      ).content;
+      expect(_master(content, _paragraph(content, 'Continuous')), isNull);
+    },
+  );
+
+  test('continuous changed geometry still selects the authored page style', () {
+    final document = _two([
+      _p('Different geometry'),
+    ], kind: WmlSectionBreakKind.continuous);
+    document.sections.last.pageSize = const WmlPageSize(
+      width: 600,
+      height: 400,
+    );
+    final result = _export(document);
+    expect(
+      _master(result.content, _paragraph(result.content, 'Different geometry')),
+      'mp1',
+    );
+    final page = _elements(
+      result.styles,
+      'page-layout',
+    ).last.firstChild('page-layout-properties')!;
+    expect(page.getAttribute('page-width', namespaceUri: _foNs), '600.00pt');
+    expect(page.getAttribute('page-height', namespaceUri: _foNs), '400.00pt');
+  });
+
+  test('continuous changed header keeps a distinct section master', () {
+    final document = _two([
+      _p('Different header'),
+    ], kind: WmlSectionBreakKind.continuous);
+    document.sections.last.header = [_p('New header')];
+    final result = _export(document);
+    expect(
+      _master(result.content, _paragraph(result.content, 'Different header')),
+      'mp1',
+    );
+  });
+
+  test('authored paragraph page breaks survive a continuous section', () {
+    final content = _export(
+      _two([
+        _p(
+          'Explicit break',
+          properties: WmlParagraphProps(pageBreakBefore: true),
+        ),
+      ], kind: WmlSectionBreakKind.continuous),
+    ).content;
+    final paragraph = _paragraph(content, 'Explicit break');
+    expect(_master(content, paragraph), isNull);
+    expect(
+      _style(content, paragraph)
+          .firstChild('paragraph-properties')!
+          .getAttribute('break-before', namespaceUri: _foNs),
+      'page',
+    );
+  });
+
+  for (final (kind, parity) in [
+    (WmlSectionBreakKind.oddPage, 'right'),
+    (WmlSectionBreakKind.evenPage, 'left'),
+  ]) {
     test(
-      'continuous section does not assign a page-breaking master: table=$tableFirst',
+      '$kind selects a parity entry master that returns to normal pages',
       () {
-        final document = _twoSections([
-          tableFirst ? _table() : _paragraph('Continuous content'),
-        ], breakKind: WmlSectionBreakKind.continuous);
-        final content = _part(_package(document), 'content.xml');
-        expect(_body(content).childElements, hasLength(2));
-        final styles = content.firstChild(
-          'automatic-styles',
-          namespaceUri: _officeNs,
-        )!;
+        final result = _export(_two([_p('Parity')], kind: kind));
         expect(
-          styles
-              .childrenNamed('style', namespaceUri: _styleNs)
-              .where(
-                (style) =>
-                    _attribute(style, 'master-page-name', _styleNs) != null,
-              ),
-          isEmpty,
+          _master(result.content, _paragraph(result.content, 'Parity')),
+          'mp1Start',
+        );
+        final masters = _elements(result.styles, 'master-page').toList();
+        final start = masters.singleWhere(
+          (master) =>
+              master.getAttribute('name', namespaceUri: _styleNs) == 'mp1Start',
         );
         expect(
-          styles
-              .childrenNamed('style', namespaceUri: _styleNs)
-              .where((style) => _attribute(style, 'name', _styleNs) == 'SB1'),
-          isEmpty,
+          start.getAttribute('next-style-name', namespaceUri: _styleNs),
+          'mp1',
+        );
+        final normal = masters.singleWhere(
+          (master) =>
+              master.getAttribute('name', namespaceUri: _styleNs) == 'mp1',
+        );
+        final normalLayoutName = normal.getAttribute(
+          'page-layout-name',
+          namespaceUri: _styleNs,
+        );
+        final layouts = _elements(result.styles, 'page-layout').toList();
+        final firstLayout = layouts.singleWhere(
+          (layout) =>
+              layout.getAttribute('name', namespaceUri: _styleNs) == 'pm1Start',
+        );
+        expect(
+          firstLayout.getAttribute('page-usage', namespaceUri: _styleNs),
+          parity,
+        );
+        final normalLayout = layouts.singleWhere(
+          (layout) =>
+              layout.getAttribute('name', namespaceUri: _styleNs) ==
+              normalLayoutName,
+        );
+        expect(
+          normalLayout.getAttribute('page-usage', namespaceUri: _styleNs),
+          isNull,
         );
       },
     );
   }
 
   test(
-    'section paragraph keeps direct formatting and a defined common parent',
+    'a first section does not inject a page break from its boundary kind',
     () {
-      final properties = WmlParagraphProps(
-        headingLevel: 2,
-        rightToLeft: true,
-        justification: WmlJustification.right,
-        spacingBefore: 6,
-        spacingAfter: 0,
-        lineSpacingRule: WmlLineSpacingRule.exact,
-        lineSpacing: 18,
+      final result = _export(
+        WmlDocument(
+          sections: [
+            WmlSection(
+              blocks: [_p('Only page')],
+              breakKind: WmlSectionBreakKind.evenPage,
+            ),
+          ],
+        ),
       );
-      final document = WmlDocument(
-        sections: [
-          WmlSection(
-            blocks: [_paragraph('First heading', properties: properties)],
-          ),
-          WmlSection(
-            blocks: [_paragraph('Second heading', properties: properties)],
-          ),
-        ],
-      );
-      final package = _package(document);
-      final content = _part(package, 'content.xml');
-      final headings = _body(
-        content,
-      ).childrenNamed('h', namespaceUri: _textNs).toList();
-      expect(headings, hasLength(2));
-      final firstStyle = _style(
-        content,
-        _attribute(headings.first, 'style-name', _textNs)!,
-      );
-      final sectionStyle = _style(content, 'SB1');
-      expect(
-        _attribute(sectionStyle, 'parent-style-name', _styleNs),
-        'Heading_20_2',
-      );
-      expect(
-        _resolvedProperties(sectionStyle),
-        _resolvedProperties(firstStyle),
-      );
-      final common = _part(
-        package,
-        'styles.xml',
-      ).firstChild('styles', namespaceUri: _officeNs)!;
-      expect(_named(common, 'style', 'Heading_20_2'), isNotNull);
-      final sectionProperties = sectionStyle.firstChild(
-        'paragraph-properties',
-        namespaceUri: _styleNs,
-      )!;
-      expect(_attribute(sectionProperties, 'break-before', _foNs), 'page');
-      expect(_attribute(sectionStyle, 'master-page-name', _styleNs), 'mp1');
+      final paragraph = _paragraph(result.content, 'Only page');
+      expect(_master(result.content, paragraph), isNull);
+      expect(_elements(result.styles, 'master-page'), hasLength(1));
     },
   );
 
-  for (final endnote in [false, true]) {
-    test(
-      'section masters and comment stories preserve visible notes: endnote=$endnote',
-      () {
-        final note = WmlNote(
-          id: 7,
-          endnote: endnote,
-          paragraphs: [_paragraph('Note body')],
-        );
-        final document = WmlDocument(
-          footnotes: endnote ? null : [note],
-          endnotes: endnote ? [note] : null,
-          comments: [
-            for (final id in [1, 2])
-              WmlComment(
-                id: id,
-                author: 'Reviewer',
-                paragraphs: [
-                  WmlParagraph(
-                    inlines: [
-                      WmlRun(text: 'Comment story '),
-                      _reference(endnote: endnote),
-                    ],
-                  ),
-                ],
-              ),
+  test('explicit numbering removal remains an ordinary section paragraph', () {
+    final content = _export(
+      _two([
+        _p(
+          'Unnumbered',
+          properties: WmlParagraphProps(numId: 0, listLabel: '3.'),
+        ),
+      ]),
+    ).content;
+    expect(_elements(_body(content), 'list'), isEmpty);
+    expect(_master(content, _paragraph(content, 'Unnumbered')), 'mp1');
+  });
+
+  test(
+    'parity masters repeat visible headers but emit each comment only once',
+    () {
+      final document = _two([
+        _p('Odd section'),
+      ], kind: WmlSectionBreakKind.oddPage);
+      document.sections.last.header = [
+        WmlParagraph(
+          inlines: [
+            WmlRun(text: 'Reviewed header', commentIds: [1]),
           ],
+        ),
+      ];
+      document.comments.add(WmlComment(id: 1, text: 'Review on first page'));
+      final result = _export(document);
+      final masters = _elements(result.styles, 'master-page').toList();
+      final first = masters.singleWhere(
+        (master) =>
+            master.getAttribute('name', namespaceUri: _styleNs) == 'mp1Start',
+      );
+      final normal = masters.singleWhere(
+        (master) =>
+            master.getAttribute('name', namespaceUri: _styleNs) == 'mp1',
+      );
+      expect(_elements(result.styles, 'annotation'), hasLength(1));
+      expect(_elements(first, 'annotation'), hasLength(1));
+      expect(_elements(normal, 'annotation'), isEmpty);
+      expect(_text(normal.firstChild('header')!), 'Reviewed header');
+      expect(_text(first.firstChild('header')!), contains('Reviewed header'));
+    },
+  );
+
+  test(
+    'empty unchanged continuous sections add no paragraph or vertical gap',
+    () {
+      final result = _export(
+        WmlDocument(
           sections: [
+            WmlSection(blocks: [_p('Before')]),
+            WmlSection(breakKind: WmlSectionBreakKind.continuous),
             WmlSection(
-              header: [_paragraph('First header')],
-              blocks: [
-                WmlParagraph(
-                  inlines: [
-                    WmlRun(text: 'First body', commentIds: [1]),
-                  ],
-                ),
-              ],
-            ),
-            WmlSection(
-              pageSize: WmlPageSize.letter(),
-              margins: WmlPageMargins.narrow,
-              header: [
-                WmlParagraph(
-                  inlines: [
-                    WmlRun(text: 'Second header ', commentIds: [2]),
-                    _reference(endnote: endnote),
-                  ],
-                ),
-              ],
-              footer: [
-                WmlParagraph(
-                  inlines: [
-                    WmlRun(text: 'Second footer '),
-                    _reference(endnote: endnote),
-                  ],
-                ),
-              ],
-              blocks: [
-                WmlParagraph(
-                  inlines: [
-                    WmlRun(text: 'Second body '),
-                    _reference(endnote: endnote),
-                    _reference(endnote: endnote),
-                  ],
-                ),
-              ],
+              blocks: [_p('After')],
+              breakKind: WmlSectionBreakKind.continuous,
             ),
           ],
-        );
-        final package = _package(document);
-        final content = _part(package, 'content.xml');
-        final styles = _part(package, 'styles.xml');
-        final notes = _elements(content, 'note', _textNs).toList();
-        expect(notes, hasLength(1));
-        expect(_elements(content, 'note-ref', _textNs), hasLength(1));
-        expect(
-          _elements(content, 'note-body', _textNs).single.text,
-          contains('Note body'),
-        );
-        final label = endnote ? 'i' : '1';
-        expect(_elements(content, 'note-citation', _textNs).single.text, label);
-        final bodyComment = _elements(content, 'annotation', _officeNs).single;
-        expect(_elements(bodyComment, 'note', _textNs), isEmpty);
-        expect(_elements(bodyComment, 'note-ref', _textNs), isEmpty);
-        expect(_visibleText(bodyComment), contains('Comment story $label'));
-        expect(_elements(styles, 'note', _textNs), isEmpty);
-        expect(_elements(styles, 'note-ref', _textNs), isEmpty);
-        final masters = styles.firstChild(
-          'master-styles',
-          namespaceUri: _officeNs,
-        )!;
-        expect(
-          masters.childrenNamed('master-page', namespaceUri: _styleNs),
-          hasLength(2),
-        );
-        final masterName = _attribute(
-          _style(content, 'SB1'),
-          'master-page-name',
-          _styleNs,
-        )!;
-        final master = _named(masters, 'master-page', masterName);
-        final layoutName = _attribute(master, 'page-layout-name', _styleNs)!;
-        final pageLayout = _named(
-          styles.firstChild('automatic-styles', namespaceUri: _officeNs)!,
-          'page-layout',
-          layoutName,
-        );
-        expect(layoutName, 'pm1');
-        expect(
-          _attribute(
-            pageLayout.firstChild('page-layout-properties')!,
-            'page-width',
-            _foNs,
+        ),
+      );
+      expect(_body(result.content).childElements.map(_text), [
+        'Before',
+        'After',
+      ]);
+      expect(
+        _master(result.content, _paragraph(result.content, 'After')),
+        isNull,
+      );
+    },
+  );
+
+  test(
+    'equal header image bytes do not turn a continuous section into a new page',
+    () {
+      WmlParagraph picture() => WmlParagraph(
+        inlines: [
+          WmlRun(
+            inlineVisual: WmlVisual(
+              visual: OfficeVisual(
+                kind: OfficeVisualKind.picture,
+                title: 'Logo',
+                width: 20,
+                height: 10,
+                imageBytes: base64Decode(
+                  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4z8DwHwAFAAH/iZk9HQAAAABJRU5ErkJggg==',
+                ),
+              ),
+            ),
           ),
-          '612.00pt',
-        );
-        expect(
-          master.firstChild('header', namespaceUri: _styleNs)!.text,
-          contains('Second header'),
-        );
-        expect(
-          _visibleText(master.firstChild('footer', namespaceUri: _styleNs)!),
-          'Second footer $label',
-        );
-        expect(
-          _visibleText(_elements(master, 'annotation', _officeNs).single),
-          contains('Comment story $label'),
-        );
-        expect(note.id, 7);
-        expect(note.text, 'Note body');
-        expect(
-          document.comments.map((comment) => comment.paragraphs.single.text),
-          ['Comment story 7', 'Comment story 7'],
-        );
-        expect(document.sections.last.blocks, hasLength(1));
-      },
+        ],
+      );
+      final document = _two([
+        _p('Continuous'),
+      ], kind: WmlSectionBreakKind.continuous);
+      document.sections[0].header = [picture()];
+      document.sections[1].header = [picture()];
+      final result = _export(document);
+      expect(
+        _master(result.content, _paragraph(result.content, 'Continuous')),
+        isNull,
+      );
+      expect(_elements(result.styles, 'image'), hasLength(2));
+    },
+  );
+
+  test('repeated header comments do not force a continuous section break', () {
+    final document = _two([
+      _p('Continuous'),
+    ], kind: WmlSectionBreakKind.continuous);
+    for (final section in document.sections) {
+      section.header = [
+        WmlParagraph(
+          inlines: [
+            WmlRun(text: 'Header', commentIds: [1]),
+          ],
+        ),
+      ];
+    }
+    document.comments.add(WmlComment(id: 1, text: 'Review'));
+    final result = _export(document);
+    expect(
+      _master(result.content, _paragraph(result.content, 'Continuous')),
+      isNull,
     );
-  }
+    expect(_elements(result.styles, 'annotation'), hasLength(1));
+    expect(
+      document.sections.last.header.single.inlines
+          .whereType<WmlRun>()
+          .single
+          .commentIds,
+      [1],
+    );
+  });
+
+  test(
+    'different authored header comment references retain distinct masters',
+    () {
+      final document = _two([
+        _p('Continuous'),
+      ], kind: WmlSectionBreakKind.continuous);
+      for (var index = 0; index < document.sections.length; index++) {
+        document.sections[index].header = [
+          WmlParagraph(
+            inlines: [
+              WmlRun(text: 'Header', commentIds: [index + 1]),
+            ],
+          ),
+        ];
+      }
+      document.comments.addAll([
+        WmlComment(id: 1, text: 'First review'),
+        WmlComment(id: 2, text: 'Second review'),
+      ]);
+      final result = _export(document);
+      expect(
+        _master(result.content, _paragraph(result.content, 'Continuous')),
+        'mp1',
+      );
+      expect(_elements(result.styles, 'annotation'), hasLength(2));
+    },
+  );
+
+  test(
+    'header and footer list stories restart independently and compare equally',
+    () {
+      WmlParagraph item(String text) =>
+          _p(text, properties: WmlParagraphProps(numId: 4, listLabel: '1.'));
+      final document = WmlDocument(
+        sections: [
+          WmlSection(
+            blocks: [item('Body first')],
+            header: [item('Header')],
+            footer: [item('Footer')],
+          ),
+          WmlSection(
+            blocks: [item('Body second')],
+            header: [item('Header')],
+            footer: [item('Footer')],
+            breakKind: WmlSectionBreakKind.continuous,
+          ),
+        ],
+      );
+      final result = _export(document);
+      expect(
+        _elements(result.content, 'list-item').map(
+          (item) => item.getAttribute('start-value', namespaceUri: _textNs),
+        ),
+        ['1', '2'],
+      );
+      expect(
+        _elements(result.styles, 'list-item').map(
+          (item) => item.getAttribute('start-value', namespaceUri: _textNs),
+        ),
+        ['1', '1', '1', '1'],
+      );
+      expect(
+        _master(result.content, _paragraph(result.content, 'Body second')),
+        isNull,
+      );
+    },
+  );
 }

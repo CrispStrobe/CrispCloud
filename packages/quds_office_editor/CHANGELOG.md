@@ -4,8 +4,13 @@ All notable changes to `quds_office_editor` are documented here.
 
 ## Unreleased
 
+- Add an optional manual proofing service for preloaded grammar providers. F7
+  and explicit checks include it; typing checks skip it with explicit coverage,
+  keep separate caches, and preserve deterministic findings on overlap.
 - Show a readable name for the German noun-case rule in ignored checks, using
   the existing review and undoable correction flow for broader noun morphology.
+- Report omitted manual-model coverage only for applicable document languages,
+  so a de-DE-only manual provider does not mark an English check incomplete.
 
 - Expose a readable seit/seid rule name in ignored checks. Verify new German
   agreement and soft-hyphen corrections through the real review dialog,

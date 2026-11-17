@@ -26,8 +26,8 @@ content.
 The app mirrors the canonical Quds source and the standalone legacy parser.
 Exact revisions, source boundaries and the complete managed-file inventory are
 recorded in [the fidelity manifest](../tool/office_fidelity_manifest.json).
-The current canonical checkpoint is `555eb728ce3ea872cb5ceb3e5fd2104b21f932aa`;
-the managed inventory contains 2,587 files: 730 canonical files and the unchanged
+The current canonical checkpoint is `b32dee6f1fb6993c928a466b553226209cf27fb8`;
+the managed inventory contains 2,598 files: 741 canonical files and the unchanged
 1,857-file standalone parser. The 17 November continuation reconciles the
 captured Office, morphology and proofing-tool branches and their bounded late
 arrivals. It preserves the original six bundled notices and adds the complete
@@ -36,11 +36,11 @@ Unicode Inflection notice for German morphology to the app's license registry.
 ODF annotations retain their raw XML and comment-model content while body
 extraction, search and host previews exclude them. Note references inside
 comments preserve their marks without claiming a visible body note definition.
-The [continuation record](../docs/validation/office-continuation-20261117/README.md)
-binds source preservation, independent review, regression cases and pending
-local qualification to exact commits. New tests, analyzer and formatter have
-not run because workspace execution is unavailable; earlier qualification
-counts keep their original source attribution. This continuation retains the completed Zotero recovery,
+The [resumed continuation record](../docs/validation/office-resume-20261117/README.md)
+binds the fixed incoming inventory, source preservation and local qualification
+to exact commits. The pinned runtime and unchanged locked dependency workspaces
+are restored; fresh qualification is in progress. Earlier qualification
+counts retain their original source attribution. This continuation retains the completed Zotero recovery,
 English hyphenation, proofing and ranked/average spreadsheet work, including
 conditional-format differential-style preservation, current proofing/rendering branches,
 and the ODT/ODP writers from canonical main. The host
@@ -122,7 +122,7 @@ validations, ranked/average conditional rules, authored page setup and
 header/footer sections. The bounded ODT writer now covers headings, formatted
 runs, tables, pictures, frames, page geometry and basic headers/footers. The
 bounded ODP writer covers slides, positioned text, pictures, tables, fills,
-strokes, notes, page geometry and transitions. A host widget test opens an XLSX fixture and reads the exported ODS
+strokes, text links, notes, page geometry and transitions. A host widget test opens an XLSX fixture and reads the exported ODS
 back. The combined host qualification remains separately source-bound
 in the storage evidence.
 

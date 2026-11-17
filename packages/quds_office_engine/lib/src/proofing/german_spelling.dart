@@ -256,6 +256,36 @@ class GermanSpellingProvider extends OfficeProofingProvider {
     await (_sharedLexicon ??= _GermanLexicon.load());
   }
 
+  /// Read-only word knowledge for optional grammar guards. This checks one
+  /// complete lexical token against the existing dictionary and owner words;
+  /// it does not generate suggestions or infer grammatical correctness.
+  /// Call [warmUp] before starting a provider request deadline.
+  Future<bool> isKnownWord(
+    String word, {
+    String language = 'de-DE',
+    bool sentenceInitial = false,
+  }) async {
+    if (_disposed) {
+      throw StateError('The German spelling provider is disposed.');
+    }
+    if (!supportsLanguage(language)) return false;
+    final normalized = normalizeGermanWord(word);
+    final token = _tokens.firstMatch(normalized);
+    if (token == null || token.start != 0 || token.end != normalized.length) {
+      return false;
+    }
+    final lexicon = await (_sharedLexicon ??= _GermanLexicon.load());
+    if (_disposed) {
+      throw StateError('The German spelling provider is disposed.');
+    }
+    return lexicon.contains(
+      normalized,
+      swiss: normalizeProofingLanguage(language) == 'de-CH',
+      sentenceInitial: sentenceInitial,
+      personal: vocabulary.wordsFor(language),
+    );
+  }
+
   @override
   Future<OfficeProofingResult> check(OfficeProofingRequest request) async {
     OfficeProofingResult result(

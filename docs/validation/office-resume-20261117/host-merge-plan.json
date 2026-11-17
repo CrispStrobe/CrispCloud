@@ -1,0 +1,15 @@
+{
+  "base_host": "44101615d8a9d92e8d2225b87bcb5a25e70da624",
+  "incoming_main": "c7f797ad562722a6e990731a25f1676a4543e1a4",
+  "previous_canonical": "555eb728ce3ea872cb5ceb3e5fd2104b21f932aa",
+  "resolution": "Retain incoming host documentation. Resolve every managed source conflict by a guarded exact-commit canonical sync after restoring the prior pinned bytes as the precondition; the final canonical includes the incoming ODT/ODP features.",
+  "restored_sync_preconditions": [
+    "packages/quds_office_engine/lib/src/slide/serial/odp_presentation_writer.dart",
+    "packages/quds_office_engine/lib/src/word/serial/odt_document_writer.dart",
+    "packages/quds_office_engine/test/odp_presentation_writer_test.dart",
+    "packages/quds_office_engine/test/odt_document_writer_test.dart",
+    "tool/office_fidelity_manifest.json"
+  ],
+  "canonical_target": "b32dee6f1fb6993c928a466b553226209cf27fb8",
+  "preserved_host_annotation_and_license_changes": true
+}

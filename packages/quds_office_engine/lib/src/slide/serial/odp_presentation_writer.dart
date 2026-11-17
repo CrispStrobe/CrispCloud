@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math' as math;
 import 'dart:typed_data';
 
 import '../../odf/odf_text.dart';
@@ -90,27 +91,18 @@ abstract final class OdpPresentationWriter {
 
   static void _writeShape(XmlWriter w, PmlShape shape, _OdpLayout layout) {
     final transform = shape.transform;
+    final image = shape.visual?.imageBytes;
+    if ((image == null || image.isEmpty) &&
+        shape.table != null &&
+        transform.rot % (360 * 60000) != 0) {
+      _writeRotatedTable(w, shape, layout);
+      return;
+    }
     w.writeStartElement('frame', prefix: 'draw');
     w.writeAttribute('draw:name', shape.name);
     w.writeAttribute('draw:layer', 'layout');
     w.writeAttribute('draw:style-name', layout.graphicStyle(shape));
-    w.writeAttribute('svg:x', '${transform.xPoints.toStringAsFixed(2)}pt');
-    w.writeAttribute('svg:y', '${transform.yPoints.toStringAsFixed(2)}pt');
-    w.writeAttribute(
-      'svg:width',
-      '${transform.widthPoints.toStringAsFixed(2)}pt',
-    );
-    w.writeAttribute(
-      'svg:height',
-      '${transform.heightPoints.toStringAsFixed(2)}pt',
-    );
-    if (transform.rot != 0) {
-      w.writeAttribute(
-        'draw:transform',
-        'rotate (${transform.rotationDegrees.toStringAsFixed(2)})',
-      );
-    }
-    final image = shape.visual?.imageBytes;
+    _writeFrameGeometry(w, transform);
     if (image != null && image.isNotEmpty) {
       final path = layout.addMedia(image);
       w.writeEmptyElement(
@@ -124,6 +116,148 @@ abstract final class OdpPresentationWriter {
       w.writeStartElement('text-box', prefix: 'draw');
       _writeParagraphs(w, shape.text, layout, shape);
       w.writeEndElement();
+    }
+    w.writeEndElement();
+  }
+
+  static void _writeFrameGeometry(
+    XmlWriter w,
+    PmlTransform transform, {
+    double? left,
+    double? top,
+    double? width,
+    double? height,
+  }) {
+    // DrawingML and the shared slide renderer rotate clockwise about the
+    // frame center. ODF transforms act on the frame coordinates, including
+    // svg:x/y. Start rotated frames at the local origin and then translate
+    // their rotated corners back around the authored center.
+    final frameLeft = left ?? transform.xPoints;
+    final frameTop = top ?? transform.yPoints;
+    final frameWidth = width ?? transform.widthPoints;
+    final frameHeight = height ?? transform.heightPoints;
+    final rotation = transform.rot % (360 * 60000);
+    w.writeAttribute(
+      'svg:x',
+      rotation == 0 ? '${frameLeft.toStringAsFixed(2)}pt' : '0pt',
+    );
+    w.writeAttribute(
+      'svg:y',
+      rotation == 0 ? '${frameTop.toStringAsFixed(2)}pt' : '0pt',
+    );
+    w.writeAttribute(
+      'svg:width',
+      '${frameWidth.toStringAsFixed(rotation == 0 ? 2 : 6)}pt',
+    );
+    w.writeAttribute(
+      'svg:height',
+      '${frameHeight.toStringAsFixed(rotation == 0 ? 2 : 6)}pt',
+    );
+    if (rotation != 0) {
+      final radians = rotation * math.pi / (180 * 60000);
+      final cosine = math.cos(radians);
+      final sine = math.sin(radians);
+      final centerX = transform.xPoints + transform.widthPoints / 2;
+      final centerY = transform.yPoints + transform.heightPoints / 2;
+      final offsetX = frameLeft - centerX;
+      final offsetY = frameTop - centerY;
+      final x = centerX + cosine * offsetX - sine * offsetY;
+      final y = centerY + sine * offsetX + cosine * offsetY;
+      // Matrix coefficients avoid the angle-unit ambiguity of rotate() in
+      // older ODF specifications/readers. Translation carries explicit units.
+      String coefficient(double value) =>
+          (value.abs() < 1e-12 ? 0.0 : value).toStringAsFixed(12);
+      w.writeAttribute(
+        'draw:transform',
+        'matrix(${coefficient(cosine)} ${coefficient(sine)} '
+            '${coefficient(-sine)} ${coefficient(cosine)} 0 0) '
+            'translate(${x.toStringAsFixed(6)}pt ${y.toStringAsFixed(6)}pt)',
+      );
+    }
+  }
+
+  static void _writeRotatedTable(
+    XmlWriter w,
+    PmlShape shape,
+    _OdpLayout layout,
+  ) {
+    // Impress applies table translation while ignoring table rotation. Use
+    // ordinary text frames for this visual export, keeping native table
+    // structure for unrotated tables. The shared center rotates cell positions
+    // and their content together. One background covers ragged/empty positions
+    // without expanding a potentially large logical rectangle.
+    final table = shape.table!;
+    final transform = shape.transform;
+    final columns = table.colCount < 1 ? 1 : table.colCount;
+    final rows = table.rowCount < 1 ? 1 : table.rowCount;
+    final cellWidth = transform.widthPoints / columns;
+    final cellHeight = transform.heightPoints / rows;
+    w.writeStartElement('g', prefix: 'draw');
+    w.writeAttribute('draw:name', shape.name);
+    void emptyFrame(String suffix, String style) {
+      w.writeStartElement('frame', prefix: 'draw');
+      w.writeAttribute('draw:name', '${shape.name} $suffix');
+      w.writeAttribute('draw:layer', 'layout');
+      w.writeAttribute('draw:style-name', style);
+      _writeFrameGeometry(w, transform);
+      w.writeStartElement('text-box', prefix: 'draw');
+      w.writeEmptyElement('p', prefix: 'text');
+      w.writeEndElement();
+      w.writeEndElement();
+    }
+
+    emptyFrame('background', layout.cellFrameStyle('FFFFFF'));
+    for (var rowIndex = 0; rowIndex < table.rows.length; rowIndex++) {
+      final row = table.rows[rowIndex];
+      for (var column = 0; column < row.length; column++) {
+        final cell = row[column];
+        final physicalColumn = table.rightToLeft
+            ? columns - 1 - column
+            : column;
+        w.writeStartElement('frame', prefix: 'draw');
+        w.writeAttribute(
+          'draw:name',
+          '${shape.name} cell ${rowIndex + 1}:${column + 1}',
+        );
+        w.writeAttribute('draw:layer', 'layout');
+        w.writeAttribute(
+          'draw:style-name',
+          layout.cellFrameStyle(
+            cell.fillColor.isEmpty ? 'FFFFFF' : cell.fillColor,
+          ),
+        );
+        _writeFrameGeometry(
+          w,
+          transform,
+          left: transform.xPoints + physicalColumn * cellWidth,
+          top: transform.yPoints + rowIndex * cellHeight,
+          width: cellWidth,
+          height: cellHeight,
+        );
+        w.writeStartElement('text-box', prefix: 'draw');
+        _writeParagraphs(
+          w,
+          cell.text,
+          layout,
+          null,
+          textColor: cell.textColor.isEmpty ? '1A1A1A' : cell.textColor,
+          rightToLeft: table.rightToLeft,
+        );
+        w.writeEndElement();
+        w.writeEndElement();
+      }
+    }
+    // Draw an authored outer stroke last so cell fills cannot cover it. This
+    // does not invent gridlines or a table template absent from the source.
+    if (shape.strokeColor.isNotEmpty) {
+      emptyFrame(
+        'outline',
+        layout.cellFrameStyle(
+          '',
+          stroke: shape.strokeColor,
+          strokeWidth: shape.strokeWidth,
+        ),
+      );
     }
     w.writeEndElement();
   }
@@ -235,10 +369,16 @@ abstract final class OdpPresentationWriter {
       w.writeStartElement('p', prefix: 'text');
       w.writeAttribute('text:style-name', paragraphStyle);
       if (line.isNotEmpty) {
+        final link = shape?.hyperlinkUrl ?? '';
+        if (link.isNotEmpty) {
+          w.writeStartElement('a', prefix: 'text');
+          w.writeAttribute('xlink:href', link);
+        }
         w.writeStartElement('span', prefix: 'text');
         w.writeAttribute('text:style-name', textStyle);
         writeOdfText(w, line);
         w.writeEndElement();
+        if (link.isNotEmpty) w.writeEndElement();
       }
       w.writeEndElement();
     }
@@ -321,11 +461,22 @@ abstract final class OdpPresentationWriter {
     _namespaces(w);
     w.writeAttribute('office:version', '1.3');
     w.writeStartElement('meta', prefix: 'office');
-    if (presentation.properties.title.isNotEmpty) {
-      w.writeStartElement('title', prefix: 'dc');
-      w.writeText(presentation.properties.title);
+    void value(String tag, String prefix, String text) {
+      if (text.isEmpty) return;
+      w.writeStartElement(tag, prefix: prefix);
+      w.writeText(text);
       w.writeEndElement();
     }
+
+    value('title', 'dc', presentation.properties.title);
+    value('subject', 'dc', presentation.properties.subject);
+    value('creator', 'dc', presentation.properties.creator);
+    value('description', 'dc', presentation.properties.description);
+    value('keyword', 'meta', presentation.properties.keywords);
+    value('initial-creator', 'meta', presentation.properties.creator);
+    value('creation-date', 'meta', presentation.properties.createdIso);
+    value('date', 'dc', presentation.properties.modifiedIso);
+    value('generator', 'meta', 'Quds Office');
     w.writeEndElement();
     w.writeEndElement();
     return w.toXml();
@@ -556,6 +707,39 @@ class _OdpLayout {
       return name;
     });
   }
+
+  String cellFrameStyle(
+    String fill, {
+    String stroke = '',
+    double strokeWidth = 1,
+  }) => _graphics.putIfAbsent(
+    'table-cell|${fill.toLowerCase()}|${stroke.toLowerCase()}|$strokeWidth',
+    () {
+      final name = 'gr${_graphics.length + 1}';
+      final w = XmlWriter();
+      w.writeStartElement('style', prefix: 'style');
+      w.writeAttribute('style:name', name);
+      w.writeAttribute('style:family', 'graphic');
+      w.writeEmptyElement(
+        'graphic-properties',
+        prefix: 'style',
+        attributes: {
+          'draw:fill': fill.isEmpty ? 'none' : 'solid',
+          if (fill.isNotEmpty) 'draw:fill-color': '#${fill.toLowerCase()}',
+          'draw:stroke': stroke.isEmpty ? 'none' : 'solid',
+          if (stroke.isNotEmpty) 'svg:stroke-color': '#${stroke.toLowerCase()}',
+          if (stroke.isNotEmpty)
+            'svg:stroke-width': '${strokeWidth.toStringAsFixed(2)}pt',
+          'draw:auto-grow-height': 'false',
+          'draw:auto-grow-width': 'false',
+          'fo:padding': '0pt',
+        },
+      );
+      w.writeEndElement();
+      _buffers.add(w.toXml());
+      return name;
+    },
+  );
 
   String paragraphStyle(PmlShape? shape, {bool? rightToLeft}) {
     final align = switch (shape?.textAlign ?? PmlTextAlign.left) {

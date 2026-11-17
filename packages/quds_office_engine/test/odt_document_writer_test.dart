@@ -24,17 +24,24 @@ String _odfText(XmlNode node) {
   return node.children.map(_odfText).join();
 }
 
-XmlElement _odtBody(OpcPackage package) => XmlDocument.parse(
-  package.getPart('/content.xml')!.readText(),
-).root!.firstChild('body')!.firstChild('text')!;
+XmlElement _odtBody(OpcPackage package) =>
+    XmlDocument.parse(package.getPart('/content.xml')!.readText()).root!
+        .firstChild('body')!
+        .firstChild('text')!;
 
 void main() {
+  linkTests();
+  nestedListTests();
   sectionTests();
   commentTests();
   footnoteTests();
   test('writes modeled Word text, runs, tables and pictures as ODT', () {
     final document = WmlDocument(
-      properties: OfficeDocumentProperties(title: 'Writer smoke'),
+      properties: OfficeDocumentProperties(
+        title: 'Writer smoke',
+        subject: 'Metadata',
+        creator: 'Author',
+      ),
       sections: [
         WmlSection(
           blocks: [
@@ -108,6 +115,10 @@ void main() {
     );
     final content = package.getPart('/content.xml')!.readText();
     final styles = package.getPart('/styles.xml')!.readText();
+    final meta = package.getPart('/meta.xml')!.readText();
+    expect(meta, contains('<dc:title>Writer smoke</dc:title>'));
+    expect(meta, contains('<dc:subject>Metadata</dc:subject>'));
+    expect(meta, contains('<dc:creator>Author</dc:creator>'));
     expect(content, contains('<text:h'));
     expect(content, contains('Quarterly review'));
     expect(
@@ -259,9 +270,9 @@ void main() {
     expect(content, contains('fo:font-weight="bold"'));
     expect(content, contains('fo:font-style="italic"'));
     expect(
-      WordZotero.fields(
-        document,
-      ).map((field) => (field.instruction, field.cachedText)).toList(),
+      WordZotero.fields(document)
+          .map((field) => (field.instruction, field.cachedText))
+          .toList(),
       before,
     );
   });
@@ -299,9 +310,10 @@ void main() {
     expect(content, contains('A'));
     expect(content, contains('&amp;'));
     expect(content, contains('&lt;B&gt;'));
-    final master = XmlDocument.parse(
-      package.getPart('/styles.xml')!.readText(),
-    ).root!.firstChild('master-styles')!.firstChild('master-page')!;
+    final master = XmlDocument.parse(package.getPart('/styles.xml')!.readText())
+        .root!
+        .firstChild('master-styles')!
+        .firstChild('master-page')!;
     expect(_odfText(master.firstChild('header')!), ' Head\tA  B ');
     expect(_odfText(master.firstChild('footer')!), 'Foot\nLine 2 ');
   });
@@ -417,5 +429,79 @@ void sectionTests() {
     expect(styles, contains('style:page-layout-name="pm1"'));
     expect(styles, contains('Second header'));
     expect(styles, contains('Second footer'));
+  });
+}
+
+void nestedListTests() {
+  test('writes nested ODT list levels', () {
+    final document = WmlDocument(
+      sections: [
+        WmlSection(
+          blocks: [
+            WmlParagraph(
+              properties: WmlParagraphProps(numId: 1, ilvl: 0),
+              inlines: [WmlRun(text: 'Parent')],
+            ),
+            WmlParagraph(
+              properties: WmlParagraphProps(numId: 1, ilvl: 1),
+              inlines: [WmlRun(text: 'Child one')],
+            ),
+            WmlParagraph(
+              properties: WmlParagraphProps(numId: 1, ilvl: 1),
+              inlines: [WmlRun(text: 'Child two')],
+            ),
+            WmlParagraph(
+              properties: WmlParagraphProps(numId: 1, ilvl: 0),
+              inlines: [WmlRun(text: 'Sibling')],
+            ),
+          ],
+        ),
+      ],
+    );
+    final package = OpcPackage.openBytes(
+      OdtDocumentWriter.writeBytes(document),
+    );
+    final content = package.getPart('/content.xml')!.readText();
+    expect(RegExp(r'<text:list ').allMatches(content).length, 2);
+    expect(content, contains('Parent'));
+    expect(content, contains('Child one'));
+    expect(content, contains('Child two'));
+    expect(content, contains('Sibling'));
+  });
+}
+
+void linkTests() {
+  test('writes ODT bookmarks and hyperlinks', () {
+    final document = WmlDocument(
+      sections: [
+        WmlSection(
+          blocks: [
+            WmlParagraph(
+              inlines: [
+                WmlBookmarkBoundary(id: '1', isStart: true, name: 'Target'),
+                WmlRun(text: 'Jump'),
+                WmlBookmarkBoundary(id: '1', isStart: false, name: 'Target'),
+                WmlRun(
+                  text: 'internal',
+                  hyperlink: const WmlHyperlink(anchor: 'Target'),
+                ),
+                WmlRun(
+                  text: 'external',
+                  hyperlink: const WmlHyperlink(url: 'https://example.com'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ],
+    );
+    final package = OpcPackage.openBytes(
+      OdtDocumentWriter.writeBytes(document),
+    );
+    final content = package.getPart('/content.xml')!.readText();
+    expect(content, contains('<text:bookmark-start'));
+    expect(content, contains('text:name="Target"'));
+    expect(content, contains('xlink:href="#Target"'));
+    expect(content, contains('xlink:href="https://example.com"'));
   });
 }

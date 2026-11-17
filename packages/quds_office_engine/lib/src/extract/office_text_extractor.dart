@@ -337,7 +337,9 @@ abstract final class OfficeTextExtractor {
         row.add(readOdfText(XmlDocument.readElement(reader), budget));
       } else if (reader.namespaceUri == odfTextNamespace &&
           (reader.localName == 'p' || reader.localName == 'h')) {
-        paragraphs.add(readOdfText(XmlDocument.readElement(reader), budget));
+        paragraphs.addAll(
+          readOdfParagraphs(XmlDocument.readElement(reader), budget),
+        );
       }
     }
     if (kind == OfficeExtractKind.opendocumentSheet) {

@@ -12,7 +12,10 @@ The 17 November continuation reconciles the latest captured canonical Office,
 German morphology and proofing-tool histories, including the ODT comment export
 that landed after the Zotero integration. The exact vendor pin and file inventory
 are in `tool/office_fidelity_manifest.json`; the branch inventories, merge
-decisions and source checks are in `validation/office-continuation-20261117/`.
+decisions and source checks are in `validation/office-resume-20261117/`.
+The fixed refresh includes nested lists, bookmark/link and metadata export,
+section activation and parity, text-box extraction, and the newer deterministic
+German proofing/manual-provider interfaces.
 
 Annotation bodies remain in raw ODF XML and the comment model while body
 extraction, search and host previews exclude them. Comment references also leave

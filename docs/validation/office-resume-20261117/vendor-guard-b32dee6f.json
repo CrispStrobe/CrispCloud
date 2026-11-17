@@ -1,0 +1,15 @@
+{
+  "command": [
+    "python3",
+    "tool/verify_office_fidelity.py",
+    "--source",
+    "../quds",
+    "--legacy-source",
+    "../legacy-doc-parser",
+    "--require-tracked"
+  ],
+  "exit_code": 0,
+  "output": "vendor-guard-b32dee6f.log",
+  "canonical_source": "b32dee6f1fb6993c928a466b553226209cf27fb8",
+  "scope": "2598 managed blobs and exact parser pin, including staged bytes and modes; fresh Dart/Flutter results pending."
+}

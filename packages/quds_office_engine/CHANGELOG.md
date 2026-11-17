@@ -4,6 +4,28 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Keep physical paragraph indents when exporting RTL paragraphs and headings
+  to ODT's direction-dependent margin properties.
+- Extract paragraph-anchored ODF text boxes in generic extraction and search,
+  preserving their whitespace and paragraph boundaries without duplicating
+  surrounding inline text or exposing hidden annotation and covered-cell text.
+- Preserve ODT section page styles when the first content is a list, nested
+  control, table, picture, frame, or empty section. Keep resolved first-paragraph
+  formatting, honor odd/even starts, and avoid extra page breaks or empty
+  anchors in equivalent continuous sections.
+- Preserve nested-list sibling structure, mixed marker kinds, supported decimal
+  starts/restarts and continuation, exact large counters, and literal cached
+  markers for unsupported numbering. Keep auxiliary and covered-cell list
+  counters independent from visible document numbering.
+
+- Expose a read-only, language-scoped German dictionary query for optional
+  grammar guards, using the existing dictionary and owner vocabulary without
+  generating suggestions or accepting partial tokens.
+- Repair required noun endings after unambiguous genitive determiners, such as
+  `des Student` and `des schlimmen Fehler`, using the existing noun-case rule.
+  Retain ambiguous articles, valid alternatives, nominalized adjectives,
+  source/grapheme guards and modern-spelling corroboration.
+
 - Broaden offline German article, case and adjective checking with 67,492
   noun lemmas from pinned Unicode-3.0 Inflection data. Load lexical buckets
   lazily on Dart VM and web, preserve ambiguous and alternative readings, and
@@ -14,7 +36,6 @@ All notable changes to `quds_office_engine` are documented here.
   hyphenation behavior.
 - Keep note references inside exported ODT comments as labels, so annotations
   cannot consume or duplicate the note body belonging to a document reference.
-
 - Unify English/German protected-text ranges, including Unicode email/URI
   handling, bounded backtick pairing and German identifier/contraction guards.
   Preserve equivalent German language aliases across styled runs.
