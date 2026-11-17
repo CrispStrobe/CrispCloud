@@ -1065,8 +1065,22 @@ String _odsCellValue(XmlElement cell) {
       final value = valueAttribute('string-value');
       if (value != null) return value;
   }
+  bool isVisibleParagraph(XmlElement paragraph) {
+    XmlNode? ancestor = paragraph.parent;
+    while (ancestor != null && !identical(ancestor, cell)) {
+      if (ancestor is XmlElement &&
+          ancestor.namespaceUri == _odfTableNamespace &&
+          ancestor.localName == 'covered-table-cell') {
+        return false;
+      }
+      ancestor = ancestor.parent;
+    }
+    return true;
+  }
+
   return cell
       .findAllElements('p', namespace: _odfTextNamespace)
+      .where(isVisibleParagraph)
       .map((paragraph) => paragraph.innerText)
       .join(' ')
       .trim();
