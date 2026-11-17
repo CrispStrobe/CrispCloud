@@ -1,0 +1,227 @@
+{
+  "analysis_config_restored": true,
+  "analysis_config_unchanged_during_run": true,
+  "baseline": "83617b79f8a56600e9ca17e73f835d944c79dfa8",
+  "commands": [
+    {
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "tool/verify_office_fidelity.py",
+        "--source",
+        "/workspace/scratch/7ce65890233c/quds_office_suite",
+        "--require-tracked"
+      ],
+      "cwd": "/workspace/scratch/7ce65890233c/CrispCloud",
+      "exit_code": 0,
+      "finished_utc": "2026-11-17T18:36:43.788292+00:00",
+      "name": "vendor-before",
+      "passed": true,
+      "started_utc": "2026-11-17T18:36:42.546597+00:00",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "79867c043a058afe13bf6c29ba789900d3b8b2d737d6a759dc842e1dbb979225"
+    },
+    {
+      "command": [
+        "/home/agent/.codex/skills/remote-skills/.quds-gector-work/runtime/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "/home/agent/.codex/skills/remote-skills/.quds-gector-work/runtime/flutter-sdk/bin/cache/flutter_tools.snapshot",
+        "test",
+        "--no-pub",
+        "--concurrency=1",
+        "--reporter=json",
+        "test/widget/office_odf_export_workflow_test.dart"
+      ],
+      "cwd": "/workspace/scratch/7ce65890233c/host-workflow-harness",
+      "exit_code": 0,
+      "expected_substantive_count": 10,
+      "finished_utc": "2026-11-17T18:37:48.404272+00:00",
+      "name": "workflow-tests",
+      "passed": true,
+      "selected_files": [
+        "test/widget/office_odf_export_workflow_test.dart"
+      ],
+      "started_utc": "2026-11-17T18:36:43.795459+00:00",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "fcceaf37af30a92c2f9cb67da618af91a9b66e32a5eff0691df0781a9a09d036",
+      "test_routing": [
+        {
+          "resolved": "/workspace/scratch/7ce65890233c/CrispCloud/test/widget/office_odf_export_workflow_test.dart",
+          "selected": "test/widget/office_odf_export_workflow_test.dart",
+          "sha256": "f08b02c6a4216561fac29b570c29cb3a1f225e58764f808981c8dafc679702f8",
+          "source_path": "test/widget/office_odf_export_workflow_test.dart"
+        }
+      ],
+      "tests": {
+        "complete": true,
+        "failed": 0,
+        "passed": 10,
+        "skipped": 0
+      }
+    },
+    {
+      "command": [
+        "/home/agent/.codex/skills/remote-skills/.quds-gector-work/runtime/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "analyze",
+        "--fatal-infos",
+        "test/widget/office_odf_export_workflow_test.dart",
+        "test/support/office_test_harness.dart",
+        "test/support/workflow_fake_client.dart",
+        "test/support/workspace_fixture.dart",
+        "lib/widgets/office_editor_dialog.dart",
+        "lib/widgets/office_editor_ribbon.dart",
+        "lib/services/office_editor_menu.dart",
+        "lib/services/office_device_export.dart",
+        "lib/services/office_device_export_native.dart",
+        "lib/services/office_device_export_types.dart",
+        "lib/services/office_document_service.dart"
+      ],
+      "cwd": "/workspace/scratch/7ce65890233c/CrispCloud",
+      "exit_code": 0,
+      "finished_utc": "2026-11-17T18:38:25.812423+00:00",
+      "name": "workflow-analysis",
+      "passed": true,
+      "started_utc": "2026-11-17T18:37:48.405527+00:00",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "c0d8e145f16268de503bc687396c2aee56e0de68cb31674e53d5bef33b8cd6dd"
+    },
+    {
+      "command": [
+        "/home/agent/.codex/skills/remote-skills/.quds-gector-work/runtime/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "format",
+        "--language-version=3.13",
+        "--output=none",
+        "--set-exit-if-changed",
+        "test/widget/office_odf_export_workflow_test.dart"
+      ],
+      "cwd": "/workspace/scratch/7ce65890233c/CrispCloud",
+      "exit_code": 0,
+      "finished_utc": "2026-11-17T18:38:25.878869+00:00",
+      "name": "workflow-format",
+      "passed": true,
+      "started_utc": "2026-11-17T18:38:25.813536+00:00",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "ebf8691cd9669b02dd9d748aaf543551b337b2beb44f2d128dc7ffbfa0318f03"
+    },
+    {
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "tool/verify_office_fidelity.py",
+        "--source",
+        "/workspace/scratch/7ce65890233c/quds_office_suite",
+        "--require-tracked"
+      ],
+      "cwd": "/workspace/scratch/7ce65890233c/CrispCloud",
+      "exit_code": 0,
+      "finished_utc": "2026-11-17T18:38:27.571560+00:00",
+      "name": "vendor-after",
+      "passed": true,
+      "started_utc": "2026-11-17T18:38:25.879616+00:00",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "79867c043a058afe13bf6c29ba789900d3b8b2d737d6a759dc842e1dbb979225"
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check",
+        "83617b79f8a56600e9ca17e73f835d944c79dfa8",
+        "HEAD"
+      ],
+      "cwd": "/workspace/scratch/7ce65890233c/CrispCloud",
+      "exit_code": 0,
+      "finished_utc": "2026-11-17T18:38:27.609818+00:00",
+      "name": "whitespace",
+      "passed": true,
+      "started_utc": "2026-11-17T18:38:27.576813+00:00",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "finished_utc": "2026-11-17T18:38:29.735001+00:00",
+  "inputs_unchanged": true,
+  "kind": "workflow",
+  "python_runtime": {
+    "path": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3.12",
+    "sha256": "fa67443527ed9647f760d807e2a38f26340757123e643c4639cf273ed15d5ea7",
+    "version": "Python 3.12.14"
+  },
+  "scope": "Local production Office menu/export widget qualification using authored fixtures and deterministic cloud/copy-destination test doubles; no live operating-system export dialog, cloud transport, Word/LibreOffice/Zotero interoperability, native/model or Wasm acceptance.",
+  "source_commit": "f08035db691d5a1fe7299ad3608b626ab6202d27",
+  "source_head_unchanged": true,
+  "source_tree": "f9b1822ceaacad6547533660af11ead3e13e1f68",
+  "started_utc": "2026-11-17T18:36:42.491883+00:00",
+  "status": "passed",
+  "workflow_input_routing": [
+    {
+      "resolved": "/workspace/scratch/7ce65890233c/CrispCloud/test/widget/office_odf_export_workflow_test.dart",
+      "selected": "test/widget/office_odf_export_workflow_test.dart",
+      "sha256": "f08b02c6a4216561fac29b570c29cb3a1f225e58764f808981c8dafc679702f8",
+      "source_path": "test/widget/office_odf_export_workflow_test.dart"
+    },
+    {
+      "resolved": "/workspace/scratch/7ce65890233c/CrispCloud/test/support/office_test_harness.dart",
+      "selected": "test/support/office_test_harness.dart",
+      "sha256": "5adc3cbd4c33c0eed94caf7374ef65e85e72ff39bcb76bfadbfe2593d2a9a2f9",
+      "source_path": "test/support/office_test_harness.dart"
+    },
+    {
+      "resolved": "/workspace/scratch/7ce65890233c/CrispCloud/test/support/workflow_fake_client.dart",
+      "selected": "test/support/workflow_fake_client.dart",
+      "sha256": "71607608f4d0dcbe5a913a76a45859018018fe5bd78759f013ad1cd024d1b394",
+      "source_path": "test/support/workflow_fake_client.dart"
+    },
+    {
+      "resolved": "/workspace/scratch/7ce65890233c/CrispCloud/test/support/workspace_fixture.dart",
+      "selected": "test/support/workspace_fixture.dart",
+      "sha256": "fdc55c1dc858ceea46d85fb2b406ca0efb8ccfbc1dffc30887867a620585c229",
+      "source_path": "test/support/workspace_fixture.dart"
+    },
+    {
+      "resolved": "/workspace/scratch/7ce65890233c/CrispCloud/lib/widgets/office_editor_dialog.dart",
+      "selected": "lib/widgets/office_editor_dialog.dart",
+      "sha256": "0681757dd0db960dd7ca20752d7c7c3e77234b9e32966e99db111351b8c8045d",
+      "source_path": "lib/widgets/office_editor_dialog.dart"
+    },
+    {
+      "resolved": "/workspace/scratch/7ce65890233c/CrispCloud/lib/widgets/office_editor_ribbon.dart",
+      "selected": "lib/widgets/office_editor_ribbon.dart",
+      "sha256": "6994390682044e8a7f9df077aea8be9d4f9b9664020767e325f23e1a9c1d65e4",
+      "source_path": "lib/widgets/office_editor_ribbon.dart"
+    },
+    {
+      "resolved": "/workspace/scratch/7ce65890233c/CrispCloud/lib/services/office_editor_menu.dart",
+      "selected": "lib/services/office_editor_menu.dart",
+      "sha256": "8d541f31a4341927e9d1f7bd44b55bf4df69a8e7198a76af25ce03024a58f8a7",
+      "source_path": "lib/services/office_editor_menu.dart"
+    },
+    {
+      "resolved": "/workspace/scratch/7ce65890233c/CrispCloud/lib/services/office_device_export.dart",
+      "selected": "lib/services/office_device_export.dart",
+      "sha256": "3beda1add5454a29fb762726809a856289ff21ee104a3c957ac07e6191ad5cf6",
+      "source_path": "lib/services/office_device_export.dart"
+    },
+    {
+      "resolved": "/workspace/scratch/7ce65890233c/CrispCloud/lib/services/office_device_export_native.dart",
+      "selected": "lib/services/office_device_export_native.dart",
+      "sha256": "88b462d545762b3486f4830a30e1ec605e9ea3f315d2a95a291e70efc3d5f5f6",
+      "source_path": "lib/services/office_device_export_native.dart"
+    },
+    {
+      "resolved": "/workspace/scratch/7ce65890233c/CrispCloud/lib/services/office_device_export_types.dart",
+      "selected": "lib/services/office_device_export_types.dart",
+      "sha256": "d761939e772fb03c533a897d5ad690ba1976426bfbdfad937dc833795f7cad87",
+      "source_path": "lib/services/office_device_export_types.dart"
+    },
+    {
+      "resolved": "/workspace/scratch/7ce65890233c/CrispCloud/lib/services/office_document_service.dart",
+      "selected": "lib/services/office_document_service.dart",
+      "sha256": "56c9f91077defeb4cde1a602444930d2f3b5000aa781091631b5c5a8a2686d3b",
+      "source_path": "lib/services/office_document_service.dart"
+    },
+    {
+      "resolved": "/workspace/scratch/7ce65890233c/CrispCloud/test/fixtures/office_native_workflows/native-slide-source.pptx",
+      "selected": "test/fixtures/office_native_workflows/native-slide-source.pptx",
+      "sha256": "048c0939a1b5c53f08503092fa8b4176df532be75bf4d87f5e4e8242a4ac04c2",
+      "source_path": "test/fixtures/office_native_workflows/native-slide-source.pptx"
+    }
+  ]
+}
