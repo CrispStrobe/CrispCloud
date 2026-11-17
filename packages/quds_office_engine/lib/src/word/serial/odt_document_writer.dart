@@ -293,19 +293,40 @@ abstract final class OdtDocumentWriter {
     List<WmlParagraph> paragraphs,
     _OdtLayout layout,
   ) {
+    final roots = <_OdtListItem>[];
+    final stack = <_OdtListItem>[];
+    for (final paragraph in paragraphs) {
+      var level = paragraph.properties.ilvl.clamp(0, 8);
+      if (level > stack.length) level = stack.length;
+      while (stack.length > level) {
+        stack.removeLast();
+      }
+      final item = _OdtListItem(paragraph);
+      if (stack.isEmpty) {
+        roots.add(item);
+      } else {
+        stack.last.children.add(item);
+      }
+      stack.add(item);
+    }
     final ordered = paragraphs.any((paragraph) {
       final label = paragraph.properties.listLabel?.trim() ?? '';
       return label.isNotEmpty &&
           !const <String>{'•', '◦', '▪', 'o'}.contains(label);
     });
-    w.writeStartElement('list', prefix: 'text');
-    w.writeAttribute('text:style-name', layout.listStyle(ordered: ordered));
-    for (final paragraph in paragraphs) {
-      w.writeStartElement('list-item', prefix: 'text');
-      _writeParagraph(w, paragraph, layout);
+    void writeItems(List<_OdtListItem> items) {
+      w.writeStartElement('list', prefix: 'text');
+      w.writeAttribute('text:style-name', layout.listStyle(ordered: ordered));
+      for (final item in items) {
+        w.writeStartElement('list-item', prefix: 'text');
+        _writeParagraph(w, item.paragraph, layout);
+        if (item.children.isNotEmpty) writeItems(item.children);
+        w.writeEndElement();
+      }
       w.writeEndElement();
     }
-    w.writeEndElement();
+
+    writeItems(roots);
   }
 
   static void _writeBlock(
@@ -955,4 +976,11 @@ class _OdtLayout {
       .replaceAll('<', '&lt;')
       .replaceAll('>', '&gt;')
       .replaceAll('"', '&quot;');
+}
+
+class _OdtListItem {
+  _OdtListItem(this.paragraph);
+
+  final WmlParagraph paragraph;
+  final List<_OdtListItem> children = <_OdtListItem>[];
 }
