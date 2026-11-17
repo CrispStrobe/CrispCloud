@@ -673,7 +673,18 @@ abstract final class OdtDocumentWriter {
     final tag = heading == null || layout.inCommentBody ? 'p' : 'h';
     final pageField =
         layout.fieldDepth == 0 && _isPageNumberParagraph(paragraph);
-    final parts = _columnParagraphParts(paragraph, pageField: pageField);
+    final fieldPlan = _paragraphFieldPlan(
+      paragraph.inlines,
+      initialDepth: layout.fieldDepth,
+    );
+    final parts = _columnParagraphParts(
+      paragraph,
+      pageField: pageField,
+      nativeFieldStarts: fieldPlan.fields.keys.toSet(),
+      retainLeadingFragment:
+          sectionStart != null &&
+          layout.sections[sectionStart.index].resolvedColumnCount > 1,
+    );
     var partIndex = 0;
     var leadingColumnBreak = parts.leadingColumnBreak;
     void startParagraph() {
@@ -727,19 +738,28 @@ abstract final class OdtDocumentWriter {
     if (pageField) {
       _writePageNumberInlines(w, paragraph, writeInline);
     } else {
-      _writeParagraphInlines(paragraph.inlines, layout, writeInline);
+      // Use the same admitted packets for layout and emission. Even an empty
+      // cache produces a live field before a subsequent authored column break.
+      layout.fieldDepth = fieldPlan.depth;
+      _writeParagraphInlines(paragraph.inlines, fieldPlan.fields, writeInline);
     }
     w.writeEndElement();
   }
 
   static ({List<WmlParagraphProps> properties, bool leadingColumnBreak})
-  _columnParagraphParts(WmlParagraph paragraph, {required bool pageField}) {
+  _columnParagraphParts(
+    WmlParagraph paragraph, {
+    required bool pageField,
+    required Set<int> nativeFieldStarts,
+    required bool retainLeadingFragment,
+  }) {
+    final hasRun = paragraph.inlines.any((inline) => inline is WmlRun);
     var atStart = true;
     var leadingColumnBreak = false;
     var columnBreaks = 0;
-    for (final inline in paragraph.inlines) {
+    for (final (index, inline) in paragraph.inlines.indexed) {
       if (inline is WmlBreak && inline.type == WmlBreakType.column) {
-        if (atStart) leadingColumnBreak = true;
+        if (atStart && !retainLeadingFragment) leadingColumnBreak = true;
         columnBreaks++;
         atStart = false;
       } else {
@@ -749,10 +769,11 @@ abstract final class OdtDocumentWriter {
                 inline.isAtomic ||
                 inline.commentIds.isNotEmpty ||
                 pageField,
-          WmlBookmarkBoundary() ||
-          WmlFieldBoundary() ||
-          WmlContentControlBoundary() ||
-          WmlNoteMarker() => false,
+          // A runless PAGE paragraph emits its field before the first end
+          // bookmark. That generated content owns its side of the break too.
+          WmlBookmarkBoundary() => pageField && !hasRun && !inline.isStart,
+          WmlFieldBoundary() => nativeFieldStarts.contains(index),
+          WmlContentControlBoundary() || WmlNoteMarker() => false,
           _ => true,
         };
         if (hasContent) atStart = false;
@@ -764,8 +785,11 @@ abstract final class OdtDocumentWriter {
 
     // ODF represents hard column breaks on paragraphs, not as inline soft
     // page markers. Split only at the authored boundary, inside the same list
-    // item/story; a leading break needs no invented empty paragraph. Do not
-    // trim whitespace or relocate zero-width bookmark/field endpoints.
+    // item/story. At the start of a multi-column section, retain the empty
+    // source fragment: the section boundary owns that paragraph and must not
+    // consume the following column break.
+    // Other leading breaks can use the paragraph's break-before directly.
+    // Do not trim whitespace or relocate zero-width bookmark/field endpoints.
     final count = columnBreaks + (leadingColumnBreak ? 0 : 1);
     final properties = <WmlParagraphProps>[];
     for (var index = 0; index < count; index++) {
@@ -785,13 +809,12 @@ abstract final class OdtDocumentWriter {
     return (properties: properties, leadingColumnBreak: leadingColumnBreak);
   }
 
-  static void _writeParagraphInlines(
-    List<WmlInline> inlines,
-    _OdtLayout layout,
-    void Function(WmlInline, {String? nativeField}) writeInline,
-  ) {
-    final fields = <int, ({int end, String element, WmlRun cache})>{};
-    var depth = layout.fieldDepth;
+  static ({Map<int, _OdtNativeField> fields, int depth}) _paragraphFieldPlan(
+    List<WmlInline> inlines, {
+    required int initialDepth,
+  }) {
+    final fields = <int, _OdtNativeField>{};
+    var depth = initialDepth;
     var start = -1;
     var nested = false;
     for (var index = 0; index < inlines.length; index++) {
@@ -821,8 +844,15 @@ abstract final class OdtDocumentWriter {
       }
     }
     // A field spanning paragraphs prevents conversion of nested packets, but
-    // never suppresses any cached text. Independent stories reset this guard.
-    layout.fieldDepth = depth;
+    // never suppresses cached text. Planning changes no model or story state.
+    return (fields: fields, depth: depth);
+  }
+
+  static void _writeParagraphInlines(
+    List<WmlInline> inlines,
+    Map<int, _OdtNativeField> fields,
+    void Function(WmlInline, {String? nativeField}) writeInline,
+  ) {
     for (var index = 0; index < inlines.length; index++) {
       final field = fields[index];
       if (field == null) {
@@ -1090,7 +1120,7 @@ abstract final class OdtDocumentWriter {
         // Other boundaries are hidden metadata; every cached run stays visible.
         break;
       case WmlBookmarkBoundary():
-        final name = layout.bookmarkName(inline);
+        final name = layout.bookmarks.nameFor(inline);
         if (name != null && name.isNotEmpty) {
           w.writeEmptyElement(
             inline.isStart ? 'bookmark-start' : 'bookmark-end',
@@ -1594,12 +1624,76 @@ class _OdtNoteRecord {
   final String label;
 }
 
+typedef _OdtNativeField = ({int end, String element, WmlRun cache});
+
 class _OdtBookmarks {
   _OdtBookmarks(WmlDocument document)
-    : _endStarts = WordBookmarks.pairedEnds(document);
+    : _endStarts = WordBookmarks.pairedEndsForStories(_stories(document));
 
   final Map<WmlBookmarkBoundary, WmlBookmarkBoundary> _endStarts;
   final _emittedStarts = Set<WmlBookmarkBoundary>.identity();
+
+  static Iterable<List<WmlParagraph>> _stories(WmlDocument document) sync* {
+    yield* _blockStories(document.sections.expand((section) => section.blocks));
+    for (final section in document.sections) {
+      yield section.header;
+      yield section.footer;
+      yield section.firstHeader;
+      yield section.firstFooter;
+      yield section.evenHeader;
+      yield section.evenFooter;
+    }
+    for (final note in [...document.footnotes, ...document.endnotes]) {
+      yield* _blockStories(note.blocks);
+    }
+    for (final comment in document.comments) {
+      yield comment.paragraphs;
+    }
+  }
+
+  static Iterable<List<WmlParagraph>> _blockStories(
+    Iterable<WmlBlock> blocks,
+  ) sync* {
+    final paragraphs = <WmlParagraph>[];
+    final independent = <List<WmlBlock>>[];
+    void visit(Iterable<WmlBlock> items) {
+      for (final block in items) {
+        switch (block) {
+          case WmlParagraph():
+            paragraphs.add(block);
+          case WmlFrame():
+            independent.add(block.blocks);
+          case WmlTable():
+            final grid = _OdtTableCells(block);
+            for (var row = 0; row < block.rows.length; row++) {
+              for (var col = 0; col < block.rows[row].cells.length; col++) {
+                final cell = block.rows[row].cells[col];
+                if (grid.rows[row][col].covered) {
+                  // Hidden merged-cell payload uses withStory during export;
+                  // it must neither consume nor invalidate body endpoints.
+                  independent.add(cell.blocks);
+                } else {
+                  visit(cell.blocks);
+                }
+              }
+            }
+          case WmlContentControlBlock():
+            visit(block.blocks);
+          case WmlToc():
+            if (block.title.isNotEmpty) paragraphs.add(block.titleParagraph);
+            paragraphs.addAll(block.itemParagraphs);
+          default:
+            break;
+        }
+      }
+    }
+
+    visit(blocks);
+    yield paragraphs;
+    for (final story in independent) {
+      yield* _blockStories(story);
+    }
+  }
 
   String? nameFor(WmlBookmarkBoundary marker) {
     final name = marker.name;
@@ -1814,7 +1908,6 @@ class _OdtLayout {
   final Map<(String?, String, String, String), String> _listStyles = {};
   late final _listDefinitions = _OdtListDefinitions(document);
   var _listCounters = <int, List<BigInt?>>{};
-  var _bookmarkNames = <String, String?>{};
   final List<String> _styleBuffers = <String>[];
   final List<String Function()> _deferredStyleBuffers = [];
   int tableCount = 0;
@@ -2133,40 +2226,18 @@ class _OdtLayout {
     });
   }
 
-  /// Independent stories own their list counters and bookmark range endpoints.
+  /// Independent stories own their list counters and field nesting state.
   void withStory(void Function() write) {
     final previousCounters = _listCounters;
-    final previousBookmarks = _bookmarkNames;
     final previousFieldDepth = fieldDepth;
     _listCounters = <int, List<BigInt?>>{};
-    _bookmarkNames = <String, String?>{};
     fieldDepth = 0;
     try {
       write();
     } finally {
       _listCounters = previousCounters;
-      _bookmarkNames = previousBookmarks;
       fieldDepth = previousFieldDepth;
     }
-  }
-
-  String? bookmarkName(WmlBookmarkBoundary boundary) {
-    final String id;
-    try {
-      id = WordBookmarks.canonicalId(boundary.id);
-    } on StateError {
-      return null;
-    }
-    if (!boundary.isStart) {
-      // Do not assign an end to either of two competing active starts.
-      if (_bookmarkNames.containsKey(id)) return _bookmarkNames.remove(id);
-      return boundary.name;
-    }
-    final name = boundary.name;
-    if (name != null && name.isNotEmpty) {
-      _bookmarkNames[id] = _bookmarkNames.containsKey(id) ? null : name;
-    }
-    return name;
   }
 
   _OdtListMarker listMarker(WmlParagraph paragraph) {

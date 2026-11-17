@@ -501,29 +501,45 @@ class GermanSpellingProvider extends OfficeProofingProvider {
   // not become spelling errors because one reading fits another construction.
   // Every preference still requires an exact shipped dictionary match inside
   // the ordinary candidate budget. No unchecked replacement is published.
-  static const Map<String, String> _participlePreferences = <String, String>{
-    'gelest': 'gelesen',
-    'geschreibt': 'geschrieben',
-    'gefindet': 'gefunden',
-    'genehmt': 'genommen',
-    'gegebt': 'gegeben',
-    'geesst': 'gegessen',
-    'getrinkt': 'getrunken',
-    'geseht': 'gesehen',
-    'gehelft': 'geholfen',
-    'gesprecht': 'gesprochen',
-    'getrefft': 'getroffen',
-    'geruft': 'gerufen',
-    'geschlaft': 'geschlafen',
-    'gezieht': 'gezogen',
-    'gefangt': 'gefangen',
-    'gehaltet': 'gehalten',
-    'geladet': 'geladen',
-    'gelasst': 'gelassen',
-    'gewascht': 'gewaschen',
-    'gewerft': 'geworfen',
-  };
-  static const Map<String, Set<String>> _participleAuxiliaries =
+  static const Map<String, String> _habenParticiplePreferences =
+      <String, String>{
+        'gelest': 'gelesen',
+        'geschreibt': 'geschrieben',
+        'gefindet': 'gefunden',
+        'genehmt': 'genommen',
+        'gegebt': 'gegeben',
+        'geesst': 'gegessen',
+        'getrinkt': 'getrunken',
+        'geseht': 'gesehen',
+        'gehelft': 'geholfen',
+        'gesprecht': 'gesprochen',
+        'getrefft': 'getroffen',
+        'geruft': 'gerufen',
+        'geschlaft': 'geschlafen',
+        'gezieht': 'gezogen',
+        'gefangt': 'gefangen',
+        'gehaltet': 'gehalten',
+        'geladet': 'geladen',
+        'gelasst': 'gelassen',
+        'gewascht': 'gewaschen',
+        'gewerft': 'geworfen',
+      };
+  // Reviewed movement/change-of-state uses with sein. This table does not
+  // infer an auxiliary for arbitrary verbs or override a known finite form
+  // such as "gefallt". Other lexical uses keep ordinary spelling ranking.
+  static const Map<String, String> _seinParticiplePreferences =
+      <String, String>{
+        'gegangt': 'gegangen',
+        'gekommt': 'gekommen',
+        'gebleibt': 'geblieben',
+        'gefahrt': 'gefahren',
+        'gefliegt': 'geflogen',
+        'gelauft': 'gelaufen',
+        'gesteigt': 'gestiegen',
+        'gespringt': 'gesprungen',
+        'gestirbt': 'gestorben',
+      };
+  static const Map<String, Set<String>> _habenParticipleAuxiliaries =
       <String, Set<String>>{
         'ich': <String>{'habe', 'hatte'},
         'du': <String>{'hast', 'hattest'},
@@ -532,6 +548,16 @@ class GermanSpellingProvider extends OfficeProofingProvider {
         'es': <String>{'hat', 'hatte'},
         'wir': <String>{'haben', 'hatten'},
         'ihr': <String>{'habt', 'hattet'},
+      };
+  static const Map<String, Set<String>> _seinParticipleAuxiliaries =
+      <String, Set<String>>{
+        'ich': <String>{'bin', 'war'},
+        'du': <String>{'bist', 'warst'},
+        'er': <String>{'ist', 'war'},
+        'sie': <String>{'ist', 'sind', 'war', 'waren'},
+        'es': <String>{'ist', 'war'},
+        'wir': <String>{'sind', 'waren'},
+        'ihr': <String>{'seid', 'wart'},
       };
   static const Set<String> _participleContextBreakers = <String>{
     'und',
@@ -617,11 +643,13 @@ class GermanSpellingProvider extends OfficeProofingProvider {
     Set<int> boundaries,
   ) {
     final String lower = word.toLowerCase();
-    final String? preferred = _participlePreferences[lower];
-    if (preferred == null || word != lower && word != _upper(word)) {
+    final String? habenPreferred = _habenParticiplePreferences[lower];
+    final String? seinPreferred = _seinParticiplePreferences[lower];
+    if (habenPreferred == null && seinPreferred == null ||
+        word != lower && word != _upper(word)) {
       return null;
     }
-    // A bounded main-clause frame: pronoun + agreeing finite haben, at most
+    // A bounded main-clause frame: pronoun + agreeing licensed auxiliary, at most
     // eight intervening words, and a participle at the clause's right edge.
     // Inversion, noun subjects, subordinate/coordinated clauses, additional
     // auxiliaries and titlecase names keep ordinary spelling ranking. This
@@ -668,9 +696,13 @@ class GermanSpellingProvider extends OfficeProofingProvider {
     final String auxiliary = normalizeGermanWord(
       words[1].group(0)!,
     ).toLowerCase();
-    if (!(_participleAuxiliaries[subject]?.contains(auxiliary) ?? false)) {
-      return null;
-    }
+    final String? preferred =
+        (_habenParticipleAuxiliaries[subject]?.contains(auxiliary) ?? false)
+        ? habenPreferred
+        : (_seinParticipleAuxiliaries[subject]?.contains(auxiliary) ?? false)
+        ? seinPreferred
+        : null;
+    if (preferred == null) return null;
     for (int i = 0; i < words.length; i++) {
       final RegExpMatch current = words[i];
       if (!boundaries.contains(start + current.start) ||
