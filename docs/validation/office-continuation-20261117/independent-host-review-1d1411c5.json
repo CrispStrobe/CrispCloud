@@ -1,0 +1,496 @@
+{
+  "schema_version": 1,
+  "kind": "Independent final host source and preservation review",
+  "observed_utc": "2026-11-17T14:31:41Z",
+  "status": "PASS: remote Git source identity, manifest consistency, and preservation checks; no runtime qualification",
+  "reviewer": "host_inventory independent agent",
+  "host": {
+    "repository": "CrispStrobe/CrispCloud",
+    "commit": "1d1411c581237a9e30aa9ce0756a74cc351a87ef",
+    "tree": "4c469218663423d6423a119a9b547feff2c5654a",
+    "captured_main": "fad903782ee45031e26c57cc8a65ccf476b1724d",
+    "manifest_path": "tool/office_fidelity_manifest.json",
+    "manifest_blob": "b71fc3ae45de2d6068f6e90bf584d7c2e7b52712"
+  },
+  "canonical": {
+    "repository": "CrispStrobe/quds_office_suite",
+    "commit": "7f116669d2512cf660c86d3c83feb64ab6b707fb",
+    "tree": "eaa5b4ec202891972351f15cd1ff7c76c160c12e",
+    "manifest_pin_matches": true
+  },
+  "methods": [
+    "Read immutable Git commits to establish actual root tree identities; read untruncated package, library, test and tool subtrees. Compared entries directly by path, Git blob SHA, type and mode.",
+    "Compared every final manifest path to the pinned canonical Git tree or pinned standalone parser Git tree; no missing or unequal blobs.",
+    "Checked both saved sync plans against their respective immutable canonical source entries, final host entries, recorded sizes and the exact manifest SHA-256 values.",
+    "Checked unchanged manifest SHA-256 values against the captured host main manifest. The independent reviewer did not recompute every file's SHA-256; the 40 initial and 8 final fresh computations remain attributed to the source-sync receipts.",
+    "Compared the 20 host customizations, six original notices and inherited mode differences both with retained preservation evidence and captured-main package Git trees.",
+    "Compared final host annotation and license integration blobs with the exact sources previously independently reviewed."
+  ],
+  "manifest": {
+    "entries": 2586,
+    "canonical_entries": 729,
+    "standalone_parser_entries": 1857,
+    "all_manifest_entries_present": true,
+    "all_blobs_match_pinned_sources": true,
+    "canonical_mode_differences": [
+      {
+        "path": "packages/quds_office_editor/lib/src/core/input_bridge.dart",
+        "host": "100755",
+        "canonical": "100644"
+      },
+      {
+        "path": "packages/quds_office_editor/lib/src/editor_pdf/pdf_font_faces.dart",
+        "host": "100755",
+        "canonical": "100644"
+      },
+      {
+        "path": "packages/quds_office_editor/lib/src/editor_pdf/pdf_page_thumb.dart",
+        "host": "100755",
+        "canonical": "100644"
+      },
+      {
+        "path": "packages/quds_office_editor/lib/src/editor_pdf/render_pdf_canvas.dart",
+        "host": "100755",
+        "canonical": "100644"
+      },
+      {
+        "path": "packages/quds_office_editor/lib/src/embed/office_direction_keys.dart",
+        "host": "100755",
+        "canonical": "100644"
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/extract/office_text_extractor.dart",
+        "host": "100755",
+        "canonical": "100644"
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/fonts/font_subsetter.dart",
+        "host": "100755",
+        "canonical": "100644"
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/fonts/sfnt_parser.dart",
+        "host": "100755",
+        "canonical": "100644"
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/pdf/file/cos/pdf_cos.dart",
+        "host": "100755",
+        "canonical": "100644"
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/pdf/file/interp/pdf_interpreter.dart",
+        "host": "100755",
+        "canonical": "100644"
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/pdf/pdf_document.dart",
+        "host": "100755",
+        "canonical": "100644"
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/pdf/pdf_font.dart",
+        "host": "100755",
+        "canonical": "100644"
+      }
+    ],
+    "inherited_modes_confirmed_against_captured_main": true,
+    "new_mode_differences": 0,
+    "canonical_package_tree": "4799a9be7de8aa735ff88bb51b976785c1dc93ff",
+    "canonical_tool_tree": "a3d02a1de63b803d6d6e02e3e0deda8a5eb872f6",
+    "host_package_tree": "b0e8b2f00589b9ebd2e9e770ed15f136b9ce8729",
+    "all_read_trees_untruncated": true
+  },
+  "standalone_parser": {
+    "repository": "CrispStrobe/legacy-doc-parser",
+    "commit": "4895712158127b2fc930d796e17035c3ca0dac62",
+    "source_tree": "e1e5297d7d263515765358573e493179c89261cc",
+    "host_subtree": "0ec28cf619259fd0185ed60c45cd7632cae879be",
+    "host_subtree_unchanged_from_preservation_receipt": true,
+    "entries_compared": 1857,
+    "blob_mismatches": 0,
+    "mode_differences": 0,
+    "manifest_metadata_unchanged": true
+  },
+  "digest_chain": {
+    "initial_receipt": "docs/validation/office-continuation-20261117/vendor-sync-initial.json",
+    "final_receipt": "docs/validation/office-continuation-20261117/vendor-sync-final.json",
+    "initial_source": "8b2ee333b883bfb64d51d44629c16151e1e0a2d7",
+    "final_source": "7f116669d2512cf660c86d3c83feb64ab6b707fb",
+    "initial_stage": {
+      "input_entries": 2559,
+      "output_entries": 2585,
+      "writes": 40,
+      "new_paths": 26,
+      "unchanged_digests": 2545,
+      "deleted_paths": 0,
+      "errors": []
+    },
+    "final_stage": {
+      "input_entries": 2585,
+      "output_entries": 2586,
+      "writes": 8,
+      "new_paths": 1,
+      "unchanged_digests": 2578,
+      "deleted_paths": 0,
+      "errors": []
+    },
+    "distinct_written_paths": 46,
+    "overlapping_paths": [
+      "packages/quds_office_engine/lib/src/word/serial/odt_document_writer.dart",
+      "packages/quds_office_engine/test/odt_note_fidelity_test.dart"
+    ],
+    "final_unchanged_digests_equal_captured_main": 2540,
+    "all_40_initial_plan_blob_mode_and_size_values_match_initial_source": true,
+    "all_46_latest_plan_blob_mode_size_and_sha256_values_match_final_host_source_and_manifest": true,
+    "inherited_standalone_digests_unchanged": true,
+    "sync_selector_source": {
+      "blob": "1cf66725aef45d254021137afaab945e528b20da",
+      "mode": "100644",
+      "bytes": 9187
+    },
+    "scope_note": "The manifest is the established managed inventory. The sync selector also allows existing unmanaged package paths; 260 such canonical paths are unchanged between the intermediate 8b2ee333 source and final 7f116669 source."
+  },
+  "host_preservation": {
+    "customizations": [
+      {
+        "path": "packages/quds_office_editor/lib/src/editor_reports/quds_report_designer.dart",
+        "blob": "6bd5d3474f6443f388e35b583bc2144c3bbf0fee",
+        "mode": "100755",
+        "bytes": 72480,
+        "unchanged": true
+      },
+      {
+        "path": "packages/quds_office_editor/lib/src/editor_reports/render_report_data_explorer.dart",
+        "blob": "b44bcc6f9593c4581fdfa0dd1655291531436699",
+        "mode": "100755",
+        "bytes": 52378,
+        "unchanged": true
+      },
+      {
+        "path": "packages/quds_office_editor/lib/src/editor_reports/render_report_designer.dart",
+        "blob": "744904e0fb748b28845ab1e5b84b806393f806bc",
+        "mode": "100755",
+        "bytes": 43599,
+        "unchanged": true
+      },
+      {
+        "path": "packages/quds_office_editor/lib/src/editor_reports/render_report_inspector.dart",
+        "blob": "829723f4c3ad898139dfc24b0c9e3d7dc1cbec17",
+        "mode": "100755",
+        "bytes": 117634,
+        "unchanged": true
+      },
+      {
+        "path": "packages/quds_office_editor/lib/src/editor_reports/render_report_preview.dart",
+        "blob": "c01c4ac99410a562c72d901a04fd021160f32dd3",
+        "mode": "100755",
+        "bytes": 13032,
+        "unchanged": true
+      },
+      {
+        "path": "packages/quds_office_editor/lib/src/editor_reports/report_designer_controller.dart",
+        "blob": "cd903063d54ebaebddf1dfd4cd98d479d1136982",
+        "mode": "100755",
+        "bytes": 273939,
+        "unchanged": true
+      },
+      {
+        "path": "packages/quds_office_editor/lib/src/editor_reports/report_designer_strings.dart",
+        "blob": "581c13a988a00687d22f189bbcddc4272b096afb",
+        "mode": "100755",
+        "bytes": 284793,
+        "unchanged": true
+      },
+      {
+        "path": "packages/quds_office_editor/lib/src/editor_reports/report_element_painter.dart",
+        "blob": "ccdc6529122a7c0e8821de3d38f8a1ad29f9ae7c",
+        "mode": "100755",
+        "bytes": 36678,
+        "unchanged": true
+      },
+      {
+        "path": "packages/quds_office_editor/lib/src/embed/office_uri_io.dart",
+        "blob": "5633b0613a598666b20f9bf029f21937de85d82d",
+        "mode": "100755",
+        "bytes": 302,
+        "unchanged": true
+      },
+      {
+        "path": "packages/quds_office_engine/lib/quds_reports.dart",
+        "blob": "335f56b67e15ce988e9f3d368aa2af510ae18180",
+        "mode": "100755",
+        "bytes": 1322,
+        "unchanged": true
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/opc/crypto/office_crypto.dart",
+        "blob": "16e87675eee9cc101d37521720b52fd9037ef47d",
+        "mode": "100755",
+        "bytes": 23405,
+        "unchanged": true
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/pdf/widgets/pw_paint.dart",
+        "blob": "16fae6742f2001291b56beae4c572c173ea1bf0e",
+        "mode": "100755",
+        "bytes": 17616,
+        "unchanged": true
+      },
+      {
+        "path": "packages/quds_office_engine/test/arabic_pdf_export_test.dart",
+        "blob": "e33a670ad327302ab8dac341047726fdeaa13df9",
+        "mode": "100644",
+        "bytes": 8332,
+        "unchanged": true
+      },
+      {
+        "path": "packages/quds_office_engine/test/office_crypto_test.dart",
+        "blob": "9be94363faae1b56c06c6d39f28bbf3f2f3e3535",
+        "mode": "100644",
+        "bytes": 8515,
+        "unchanged": true
+      },
+      {
+        "path": "packages/quds_office_editor/lib/src/editor_reports/report_asset_strings.dart",
+        "blob": "f3e491abcac6b20c347c35ef6ef3698b273eda36",
+        "mode": "100644",
+        "bytes": 16484,
+        "unchanged": true
+      },
+      {
+        "path": "packages/quds_office_editor/lib/src/editor_reports/report_data_error_strings.dart",
+        "blob": "9242b05b52480d8f3d2d713734cd65d037b5f059",
+        "mode": "100644",
+        "bytes": 2607,
+        "unchanged": true
+      },
+      {
+        "path": "packages/quds_office_editor/lib/src/editor_reports/report_font_extra_strings.dart",
+        "blob": "634865e2a5e97bc8cf2d253a94bf5c514bf0207c",
+        "mode": "100644",
+        "bytes": 2525,
+        "unchanged": true
+      },
+      {
+        "path": "packages/quds_office_editor/lib/src/editor_reports/report_notice_strings.dart",
+        "blob": "e4efe068ff46dbba741bedb2603e758c0a707bf7",
+        "mode": "100644",
+        "bytes": 13365,
+        "unchanged": true
+      },
+      {
+        "path": "packages/quds_office_editor/lib/src/editor_reports/report_special_asset_strings.dart",
+        "blob": "fba08c56187f17c66538cd8e8a4d673a1cabb7a4",
+        "mode": "100644",
+        "bytes": 12738,
+        "unchanged": true
+      },
+      {
+        "path": "packages/quds_office_editor/lib/src/editor_reports/report_template_strings.dart",
+        "blob": "dfde7d0526cf4eec301bc86c7a071c10a7148454",
+        "mode": "100644",
+        "bytes": 7610,
+        "unchanged": true
+      }
+    ],
+    "original_six_notices": [
+      {
+        "path": "packages/quds_office_engine/third_party/fonttools/LICENSE",
+        "blob": "3fe0941a282a17c8687a60885e78855ae5fa7f68",
+        "mode": "100644",
+        "bytes": 1796,
+        "unchanged": true
+      },
+      {
+        "path": "packages/quds_office_engine/third_party/hyphenation/ENGLISH_GB_LICENSE",
+        "blob": "63bc9b2a9952e8d3ced7cda81f6f287a4bca91f3",
+        "mode": "100644",
+        "bytes": 3475,
+        "unchanged": true
+      },
+      {
+        "path": "packages/quds_office_engine/third_party/hyphenation/ENGLISH_US_LICENSE",
+        "blob": "3adb22869fa55fe570be51277686528a24ce3eee",
+        "mode": "100644",
+        "bytes": 2234,
+        "unchanged": true
+      },
+      {
+        "path": "packages/quds_office_engine/third_party/hyphenation/LICENSE",
+        "blob": "08a83386136303c78a76029837514310eb986fa8",
+        "mode": "100644",
+        "bytes": 1765,
+        "unchanged": true
+      },
+      {
+        "path": "packages/quds_office_engine/third_party/proofing/QUDS_WORDS_LICENSE",
+        "blob": "9ee31c3e226a95df5c6e5ca40523517bb7f29e4a",
+        "mode": "100644",
+        "bytes": 1081,
+        "unchanged": true
+      },
+      {
+        "path": "packages/quds_office_engine/third_party/proofing/WORTLISTE_LICENSE",
+        "blob": "42f6b7e7baac0b9d5d0fbc2ddecf8fe82f338e13",
+        "mode": "100644",
+        "bytes": 2606,
+        "unchanged": true
+      }
+    ],
+    "engine_license": {
+      "path": "packages/quds_office_engine/LICENSE",
+      "blob": "8f9d2644c2f2627200ec78494296773f193576b0",
+      "mode": "100755",
+      "bytes": 1077,
+      "unchanged_from_captured_main": true
+    }
+  },
+  "final_key_sources": [
+    {
+      "path": "packages/quds_office_engine/lib/src/word/serial/odt_document_writer.dart",
+      "blob": "abae52f0d08b0cbe66c5c86c97f0f28e36de60aa",
+      "mode": "100644",
+      "bytes": 38167
+    },
+    {
+      "path": "packages/quds_office_engine/test/odt_note_fidelity_test.dart",
+      "blob": "fab22f0897d49e528ead09cdaed1f5f2b701c547",
+      "mode": "100644",
+      "bytes": 21341
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/extract/office_search_text.dart",
+      "blob": "3b379e46e35e92754e3954859d1e9f1d3e02394e",
+      "mode": "100644",
+      "bytes": 14739
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/extract/office_text_extractor.dart",
+      "blob": "eb2c3ada8c14ff970d5c3a8dd3be1ff5030dcc92",
+      "mode": "100755",
+      "bytes": 15394
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/odf/odf_text.dart",
+      "blob": "20b3caf6e23f1d1554204563f8691626da6423cd",
+      "mode": "100644",
+      "bytes": 7836
+    },
+    {
+      "path": "packages/quds_office_engine/test/odf_annotation_extraction_test.dart",
+      "blob": "d16f39b66d8d7ad3d0b4ec8a860a75e27bd70af6",
+      "mode": "100644",
+      "bytes": 9384
+    },
+    {
+      "path": "lib/services/office_document_service.dart",
+      "blob": "6ca0e798d8dd1f791c403a8a704c55604ae9616f",
+      "mode": "100644",
+      "bytes": 70436
+    },
+    {
+      "path": "test/office_annotation_preview_test.dart",
+      "blob": "21b68d4cc6bbe54ce5a0b4333e00cc154e016049",
+      "mode": "100644",
+      "bytes": 11182
+    },
+    {
+      "path": "lib/services/office_proofing_licenses.dart",
+      "blob": "e145b65f590a9c741f340f49dbb75977fba995eb",
+      "mode": "100644",
+      "bytes": 1083
+    },
+    {
+      "path": "test/office_proofing_licenses_test.dart",
+      "blob": "fa89a7dd9e299c860c2330daa086291183a1bf9a",
+      "mode": "100644",
+      "bytes": 4987
+    },
+    {
+      "path": "pubspec.yaml",
+      "blob": "e56f964811c763796e9a585d6420c5bae8cf5e31",
+      "mode": "100644",
+      "bytes": 12489
+    },
+    {
+      "path": "packages/quds_office_engine/LICENSE",
+      "blob": "8f9d2644c2f2627200ec78494296773f193576b0",
+      "mode": "100755",
+      "bytes": 1077
+    },
+    {
+      "path": "packages/quds_office_engine/third_party/proofing/UNICODE_INFLECTION_LICENSE",
+      "blob": "f6fe7b9e1bcceae1ec0a98676181384f3b1d3d91",
+      "mode": "100644",
+      "bytes": 2033
+    },
+    {
+      "path": "packages/quds_office_engine/third_party/proofing/UNICODE_INFLECTION_NOTICE",
+      "blob": "c153af4006e223a00071957bdde4ad6c36685581",
+      "mode": "100644",
+      "bytes": 2198
+    }
+  ],
+  "annotation_and_license_review_continuity": {
+    "previous_review": "docs/validation/office-continuation-20261117/independent-host-review.json",
+    "prior_review_commit": "3bd5922c398013b8095229e805d5d91ce668b6cb",
+    "exact_reviewed_sources_preserved": [
+      {
+        "path": "lib/services/office_document_service.dart",
+        "priorSha": "6ca0e798d8dd1f791c403a8a704c55604ae9616f",
+        "currentSha": "6ca0e798d8dd1f791c403a8a704c55604ae9616f",
+        "equal": true
+      },
+      {
+        "path": "test/office_annotation_preview_test.dart",
+        "priorSha": "21b68d4cc6bbe54ce5a0b4333e00cc154e016049",
+        "currentSha": "21b68d4cc6bbe54ce5a0b4333e00cc154e016049",
+        "equal": true
+      },
+      {
+        "path": "lib/services/office_proofing_licenses.dart",
+        "priorSha": "e145b65f590a9c741f340f49dbb75977fba995eb",
+        "currentSha": "e145b65f590a9c741f340f49dbb75977fba995eb",
+        "equal": true
+      },
+      {
+        "path": "test/office_proofing_licenses_test.dart",
+        "priorSha": "fa89a7dd9e299c860c2330daa086291183a1bf9a",
+        "currentSha": "fa89a7dd9e299c860c2330daa086291183a1bf9a",
+        "equal": true
+      },
+      {
+        "path": "pubspec.yaml",
+        "priorSha": "e56f964811c763796e9a585d6420c5bae8cf5e31",
+        "currentSha": "e56f964811c763796e9a585d6420c5bae8cf5e31",
+        "equal": true
+      }
+    ],
+    "seventh_notice": "Unicode Inflection (German morphology, Unicode-3.0)",
+    "full_unicode_license_and_notice_equal_canonical": true,
+    "asset_registry_and_regression_equal_prior_review": true,
+    "canonical_note_guard_and_combined_test_preserved_as_pinned_blobs": true
+  },
+  "zotero_preservation": {
+    "canonical_paths_compared": 50,
+    "all_canonical_blobs_and_modes_equal_1549a9c7_landing": true,
+    "host_paths_compared": 46,
+    "all_46_host_blobs_and_modes_equal_landing": true,
+    "four_canonical_example_only_paths": [
+      "packages/quds_office_editor/example/lib/studio_zotero.dart",
+      "packages/quds_office_editor/example/lib/studio_zotero_local_io.dart",
+      "packages/quds_office_editor/example/lib/studio_zotero_local_stub.dart",
+      "packages/quds_office_editor/example/test/studio_zotero_citing_transport_test.dart"
+    ]
+  },
+  "runtime": {
+    "executed": false,
+    "reason": "No usable local execution environment; this is a Git/source review only.",
+    "new_test_pass_counts_claimed": false,
+    "github_actions_or_status_queried": false,
+    "github_actions_awaited": false
+  },
+  "failures": [],
+  "next": "Run the retained pending local validation commands when execution is restored; bind execution receipts to the exact source commits."
+}

@@ -25,13 +25,15 @@ dart format --output=none --set-exit-if-changed \
   lib/src/word/serial/odt_document_writer.dart \
   test/odf_annotation_extraction_test.dart \
   test/odt_note_fidelity_test.dart
-dart analyze \
+for target in \
   lib/src/odf/odf_text.dart \
   lib/src/extract/office_search_text.dart \
   lib/src/extract/office_text_extractor.dart \
   lib/src/word/serial/odt_document_writer.dart \
   test/odf_annotation_extraction_test.dart \
-  test/odt_note_fidelity_test.dart
+  test/odt_note_fidelity_test.dart; do
+  dart analyze "$target" || exit "$?"
+done
 dart test \
   test/odf_annotation_extraction_test.dart \
   test/odf_covered_cell_extraction_test.dart \
@@ -64,11 +66,13 @@ dart format --output=none --set-exit-if-changed \
   lib/services/office_proofing_licenses.dart \
   test/office_annotation_preview_test.dart \
   test/office_proofing_licenses_test.dart
-flutter analyze \
+for target in \
   lib/services/office_document_service.dart \
   lib/services/office_proofing_licenses.dart \
   test/office_annotation_preview_test.dart \
-  test/office_proofing_licenses_test.dart
+  test/office_proofing_licenses_test.dart; do
+  flutter analyze "$target" || exit "$?"
+done
 flutter test \
   test/office_annotation_preview_test.dart \
   test/office_document_service_test.dart \
