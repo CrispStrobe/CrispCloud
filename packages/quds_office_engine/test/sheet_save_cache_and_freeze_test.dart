@@ -124,6 +124,36 @@ void main() {
     expect(reopened.draft, isTrue);
   });
 
+  test('data-bar conditional rules round-trip', () async {
+    final book = SmlWorkbook(
+      sheets: [SmlWorksheet(name: 'Sheet1', sheetId: 1)],
+    );
+    final sheet = book.firstSheet;
+    for (var row = 0; row < 3; row++) {
+      sheet.cellA1('A${row + 1}').value = row + 1;
+    }
+    sheet.conditionalFormats.add(
+      SmlConditionalRule(
+        range: SmlRange.parse('A1:A3'),
+        kind: SmlConditionalKind.dataBar,
+        dataBarColor: 'FF0000',
+        colorScaleStops: const [
+          SmlColorScaleStop(type: 'min', colorRgb: 'FF0000'),
+          SmlColorScaleStop(type: 'max', colorRgb: 'FF0000'),
+        ],
+      ),
+    );
+    final saved = await OfficeIsolateSave.workbook(book);
+    final xml = OpcPackage.openBytes(
+      saved,
+    ).getPart('/xl/worksheets/sheet1.xml')!.readText();
+    expect(xml, contains('type="dataBar"'));
+    final reopened = SheetDeserializer().readBytes(saved).firstSheet;
+    final rule = reopened.conditionalFormats.single;
+    expect(rule.kind, SmlConditionalKind.dataBar);
+    expect(rule.dataBarColor, 'FF0000');
+  });
+
   test('color-scale conditional rules round-trip', () async {
     final book = SmlWorkbook(
       sheets: [SmlWorksheet(name: 'Sheet1', sheetId: 1)],

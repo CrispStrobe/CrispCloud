@@ -266,6 +266,39 @@ void main() {
     expect(rule.listSourceRange?.end.a1, 'A1');
   });
 
+  test('writes data-bar conditional rules', () {
+    final sheet = SmlWorksheet(name: 'Data', sheetId: 1);
+    for (var row = 1; row <= 3; row++) {
+      sheet.cellA1('A$row').value = row;
+    }
+    sheet.conditionalFormats.add(
+      SmlConditionalRule(
+        range: SmlRange.parse('A1:A3'),
+        kind: SmlConditionalKind.dataBar,
+        dataBarColor: 'FF0000',
+        colorScaleStops: const [
+          SmlColorScaleStop(type: 'minimum', colorRgb: 'FF0000'),
+          SmlColorScaleStop(type: 'maximum', colorRgb: 'FF0000'),
+        ],
+      ),
+    );
+    final reopened = OdsSheetReader.readBytes(
+      OdsSheetWriter.writeBytes(SmlWorkbook(sheets: [sheet])),
+    );
+    final rule = reopened.sheets.first.conditionalFormats.single;
+    expect(rule.kind, SmlConditionalKind.dataBar);
+    expect(rule.dataBarColor, 'FF0000');
+    expect(rule.colorScaleStops.length, 2);
+    final style = SmlConditionalResolver(
+      sheet: reopened.sheets.first,
+    ).resolve(SmlCellRef.parse('A1'));
+    expect(style.dataBarFraction, 0);
+    final last = SmlConditionalResolver(
+      sheet: reopened.sheets.first,
+    ).resolve(SmlCellRef.parse('A3'));
+    expect(last.dataBarFraction, 1);
+  });
+
   test('writes color-scale conditional rules', () {
     final sheet = SmlWorksheet(name: 'Data', sheetId: 1);
     for (var row = 1; row <= 3; row++) {
