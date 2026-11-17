@@ -11,6 +11,7 @@ import '../../xml/xml_node.dart';
 import '../../xml/xml_reader.dart';
 import '../../xml/xml_writer.dart';
 import '../model/wml_document.dart';
+import '../model/word_bookmarks.dart';
 import '../model/word_fields.dart';
 import '../model/word_notes.dart';
 import '../properties/wml_properties.dart';
@@ -20,9 +21,9 @@ import '../properties/wml_properties.dart';
 /// This is an export path. It emits the modeled text, paragraph/run formatting,
 /// tables, pictures, frames, page geometry and basic headers/footers. It does
 /// not claim to preserve arbitrary imported ODF XML or every Word feature.
-/// Simple paragraph PAGE fields use a native ODF page number. Other Word and
-/// Zotero fields export their visible cached results; their native instructions
-/// and editable field metadata are not part of this export.
+/// Simple paragraph PAGE fields and bounded inline PAGE/NUMPAGES fields use
+/// native ODF fields. Other Word and Zotero fields export their visible cached
+/// results; their native instructions and editable metadata are not exported.
 abstract final class OdtDocumentWriter {
   /// Serializes [document] as a new ODT package.
   static Uint8List writeBytes(WmlDocument document) {
@@ -435,8 +436,7 @@ abstract final class OdtDocumentWriter {
           list.add(next);
           index++;
         }
-        final style = _sectionParagraphStyle(layout, start, block.properties);
-        _writeList(w, list, layout, firstParagraphStyle: style);
+        _writeList(w, list, layout, sectionStart: start);
       } else {
         _writeBlock(w, block, layout, sectionStart: start);
       }
@@ -447,7 +447,7 @@ abstract final class OdtDocumentWriter {
     XmlWriter w,
     List<WmlParagraph> paragraphs,
     _OdtLayout layout, {
-    String? firstParagraphStyle,
+    _OdtSectionStart? sectionStart,
   }) {
     final roots = <_OdtListItem>[];
     final stack = <_OdtListItem>[];
@@ -481,9 +481,9 @@ abstract final class OdtDocumentWriter {
         if (item.marker.start case final start?) {
           w.writeAttribute('text:start-value', '$start');
         }
-        final override = first ? firstParagraphStyle : null;
+        final start = first ? sectionStart : null;
         first = false;
-        _writeParagraph(w, item.paragraph, layout, styleOverride: override);
+        _writeParagraph(w, item.paragraph, layout, sectionStart: start);
         if (item.children.isNotEmpty) writeItems(item.children);
         w.writeEndElement();
       }
@@ -501,16 +501,7 @@ abstract final class OdtDocumentWriter {
   }) {
     switch (block) {
       case WmlParagraph():
-        _writeParagraph(
-          w,
-          block,
-          layout,
-          styleOverride: _sectionParagraphStyle(
-            layout,
-            sectionStart,
-            block.properties,
-          ),
-        );
+        _writeParagraph(w, block, layout, sectionStart: sectionStart);
       case WmlTable():
         if (layout.inNoteBody) {
           _writeNoteTableText(w, block, layout);
@@ -619,22 +610,55 @@ abstract final class OdtDocumentWriter {
     XmlWriter w,
     WmlParagraph paragraph,
     _OdtLayout layout, {
-    String? styleOverride,
+    _OdtSectionStart? sectionStart,
   }) {
     final heading = paragraph.properties.headingLevel;
     // An annotation accepts paragraphs and lists, not heading elements. Keep
     // its resolved heading style without emitting an illegal child element.
     final tag = heading == null || layout.inCommentBody ? 'p' : 'h';
-    w.writeStartElement(tag, prefix: 'text');
-    if (heading != null && !layout.inCommentBody) {
-      w.writeAttribute('text:outline-level', '${heading.clamp(1, 9)}');
-    }
-    w.writeAttribute(
-      'text:style-name',
-      styleOverride ??
-          layout.paragraphStyle(paragraph.properties, heading: heading),
-    );
     final pageField = _isPageNumberParagraph(paragraph);
+    final parts = _columnParagraphParts(paragraph, pageField: pageField);
+    var partIndex = 0;
+    var leadingColumnBreak = parts.leadingColumnBreak;
+    void startParagraph() {
+      final properties = parts.properties[partIndex];
+      w.writeStartElement(tag, prefix: 'text');
+      if (heading != null && !layout.inCommentBody) {
+        w.writeAttribute('text:outline-level', '${heading.clamp(1, 9)}');
+      }
+      final start = partIndex == 0 ? sectionStart : null;
+      w.writeAttribute(
+        'text:style-name',
+        _sectionParagraphStyle(layout, start, properties) ??
+            layout.paragraphStyle(properties, heading: heading),
+      );
+    }
+
+    void writeInline(
+      WmlInline inline, {
+      bool pageNumber = false,
+      String? textOverride,
+    }) {
+      if (inline is WmlBreak && inline.type == WmlBreakType.column) {
+        if (leadingColumnBreak) {
+          leadingColumnBreak = false;
+        } else {
+          w.writeEndElement();
+          partIndex++;
+          startParagraph();
+        }
+      } else {
+        _writeInline(
+          w,
+          inline,
+          layout,
+          pageNumber: pageNumber,
+          textOverride: textOverride,
+        );
+      }
+    }
+
+    startParagraph();
     if (layout.noteReferenceSpacePending) {
       layout.noteReferenceSpacePending = false;
       final text = paragraph.text;
@@ -643,13 +667,66 @@ abstract final class OdtDocumentWriter {
       }
     }
     if (pageField) {
-      _writePageNumberInlines(w, paragraph, layout);
+      _writePageNumberInlines(w, paragraph, writeInline);
     } else {
       for (final inline in paragraph.inlines) {
-        _writeInline(w, inline, layout);
+        writeInline(inline);
       }
     }
     w.writeEndElement();
+  }
+
+  static ({List<WmlParagraphProps> properties, bool leadingColumnBreak})
+  _columnParagraphParts(WmlParagraph paragraph, {required bool pageField}) {
+    var atStart = true;
+    var leadingColumnBreak = false;
+    var columnBreaks = 0;
+    for (final inline in paragraph.inlines) {
+      if (inline is WmlBreak && inline.type == WmlBreakType.column) {
+        if (atStart) leadingColumnBreak = true;
+        columnBreaks++;
+        atStart = false;
+      } else {
+        final hasContent = switch (inline) {
+          WmlRun() =>
+            inline.text.isNotEmpty ||
+                inline.isAtomic ||
+                inline.commentIds.isNotEmpty ||
+                pageField,
+          WmlBookmarkBoundary() ||
+          WmlFieldBoundary() ||
+          WmlContentControlBoundary() ||
+          WmlNoteMarker() => false,
+          _ => true,
+        };
+        if (hasContent) atStart = false;
+      }
+    }
+    if (columnBreaks == 0) {
+      return (properties: [paragraph.properties], leadingColumnBreak: false);
+    }
+
+    // ODF represents hard column breaks on paragraphs, not as inline soft
+    // page markers. Split only at the authored boundary, inside the same list
+    // item/story; a leading break needs no invented empty paragraph. Do not
+    // trim whitespace or relocate zero-width bookmark/field endpoints.
+    final count = columnBreaks + (leadingColumnBreak ? 0 : 1);
+    final properties = <WmlParagraphProps>[];
+    for (var index = 0; index < count; index++) {
+      final part = paragraph.properties.copy();
+      if (index == 0) {
+        if (leadingColumnBreak) part.columnBreakBefore = true;
+      } else {
+        part
+          ..pageBreakBefore = false
+          ..columnBreakBefore = true
+          ..spacingBefore = 0
+          ..indent = part.indent.copyWith(firstLine: 0, hanging: 0);
+      }
+      if (index + 1 < count) part.spacingAfter = 0;
+      properties.add(part);
+    }
+    return (properties: properties, leadingColumnBreak: leadingColumnBreak);
   }
 
   static bool _isPageNumberParagraph(WmlParagraph paragraph) {
@@ -671,7 +748,8 @@ abstract final class OdtDocumentWriter {
   static void _writePageNumberInlines(
     XmlWriter w,
     WmlParagraph paragraph,
-    _OdtLayout layout,
+    void Function(WmlInline, {bool pageNumber, String? textOverride})
+    writeInline,
   ) {
     final text = paragraph.text;
     // Share the model's supported " | title" suffix, including when the
@@ -687,10 +765,8 @@ abstract final class OdtDocumentWriter {
       if (inline is WmlRun) {
         final start = (suffixStart - offset).clamp(0, inline.text.length);
         final end = (suffixEnd - offset).clamp(start, inline.text.length);
-        _writeInline(
-          w,
+        writeInline(
           inline,
-          layout,
           pageNumber: !emitted,
           textOverride: inline.text.substring(start, end),
         );
@@ -705,7 +781,7 @@ abstract final class OdtDocumentWriter {
           w.writeEmptyElement('page-number', prefix: 'text');
           emitted = true;
         }
-        _writeInline(w, inline, layout);
+        writeInline(inline);
       }
     }
     if (!emitted) w.writeEmptyElement('page-number', prefix: 'text');
@@ -717,11 +793,22 @@ abstract final class OdtDocumentWriter {
     _OdtLayout layout, {
     bool pageNumber = false,
     String? textOverride,
+    String? nativeField,
   }) {
     switch (inline) {
       case WmlRun():
         if (layout.fieldResultSuppressed) break;
         final style = layout.runStyle(inline.properties);
+        if (layout.pendingFieldElement case final element?) {
+          w.writeStartElement('span', prefix: 'text');
+          w.writeAttribute('text:style-name', style);
+          w.writeStartElement(element, prefix: 'text');
+          writeOdfText(w, inline.text);
+          w.writeEndElement();
+          w.writeEndElement();
+          layout.consumeFieldResult();
+          break;
+        }
         final href = switch (inline.hyperlink) {
           final link? =>
             link.url ??
@@ -750,6 +837,15 @@ abstract final class OdtDocumentWriter {
           if (textOverride != null && textOverride.isNotEmpty) {
             writeOdfText(w, textOverride);
           }
+          if (!commentLink) w.writeEndElement();
+        } else if (nativeField != null) {
+          if (!commentLink) {
+            w.writeStartElement('span', prefix: 'text');
+            w.writeAttribute('text:style-name', style);
+          }
+          w.writeStartElement(nativeField, prefix: 'text');
+          w.writeText(inline.text);
+          w.writeEndElement();
           if (!commentLink) w.writeEndElement();
         } else if (inline.noteRefId != null) {
           final note = layout.notes.resolve(inline);
@@ -816,16 +912,20 @@ abstract final class OdtDocumentWriter {
             'TITLE' => 'title',
             _ => null,
           };
+<<<<<<< HEAD
           if (element != null) {
             w.writeEmptyElement(element, prefix: 'text');
             layout.suppressFieldResult();
           }
+=======
+          if (element != null) layout.pendingFieldElement = element;
+>>>>>>> f22a0312 (Sync latest ODT writer with AOT-free Quds main)
         } else if (inline.kind == WmlFieldBoundaryKind.end) {
           layout.endField();
         }
         break;
       case WmlBookmarkBoundary():
-        final name = inline.name;
+        final name = layout.bookmarks.nameFor(inline);
         if (name != null && name.isNotEmpty) {
           w.writeEmptyElement(
             inline.isStart ? 'bookmark-start' : 'bookmark-end',
@@ -1329,6 +1429,27 @@ class _OdtNoteRecord {
   final String label;
 }
 
+class _OdtBookmarks {
+  _OdtBookmarks(WmlDocument document)
+    : _endStarts = WordBookmarks.pairedEnds(document);
+
+  final Map<WmlBookmarkBoundary, WmlBookmarkBoundary> _endStarts;
+  final _emittedStarts = Set<WmlBookmarkBoundary>.identity();
+
+  String? nameFor(WmlBookmarkBoundary marker) {
+    final name = marker.name;
+    if (marker.isStart) {
+      if (name != null && name.isNotEmpty) _emittedStarts.add(marker);
+      return name;
+    }
+    if (name != null && name.isNotEmpty) return name;
+    final start = _endStarts[marker];
+    // A structurally valid pair may start in content this bounded writer
+    // omits, such as an unmodeled TOC cache. Never invent a visible orphan end.
+    return start != null && _emittedStarts.contains(start) ? start.name : null;
+  }
+}
+
 /// Note definitions and labels are independent of per-part style registries.
 class _OdtNotes {
   _OdtNotes(this.document) {
@@ -1501,6 +1622,7 @@ class _OdtLayout {
       _mediaBytes = sharedMedia?._mediaBytes ?? <String, Uint8List>{},
       notes = sharedMedia?.notes ?? _OdtNotes(document),
       comments = sharedMedia?.comments ?? _OdtComments(document),
+      bookmarks = sharedMedia?.bookmarks ?? _OdtBookmarks(document),
       noteBodiesAllowed = sharedMedia == null;
 
   final WmlDocument document;
@@ -1512,11 +1634,13 @@ class _OdtLayout {
   final List<String> media;
   final _OdtNotes notes;
   final _OdtComments comments;
+  final _OdtBookmarks bookmarks;
   bool noteBodiesAllowed;
   bool commentsAllowed = true;
   bool inCommentBody = false;
   bool inNoteBody = false;
   bool noteReferenceSpacePending = false;
+<<<<<<< HEAD
   int _fieldDepth = 0;
   int? _suppressFieldDepth;
 
@@ -1530,6 +1654,26 @@ class _OdtLayout {
   void endField() {
     if (_suppressFieldDepth == _fieldDepth) _suppressFieldDepth = null;
     if (_fieldDepth > 0) _fieldDepth--;
+=======
+  int fieldDepth = 0;
+  String? pendingFieldElement;
+  int? _fieldResultDepth;
+
+  void beginField() => fieldDepth++;
+
+  bool get fieldResultSuppressed =>
+      _fieldResultDepth != null && fieldDepth >= _fieldResultDepth!;
+
+  void consumeFieldResult() {
+    pendingFieldElement = null;
+    _fieldResultDepth = fieldDepth;
+  }
+
+  void endField() {
+    if (_fieldResultDepth == fieldDepth) _fieldResultDepth = null;
+    pendingFieldElement = null;
+    if (fieldDepth > 0) fieldDepth--;
+>>>>>>> f22a0312 (Sync latest ODT writer with AOT-free Quds main)
   }
 
   final Map<String, String> _runStyles = <String, String>{};
@@ -1853,14 +1997,17 @@ class _OdtLayout {
     });
   }
 
-  /// Auxiliary stories and hidden cell stories must not consume body numbers.
+  /// Auxiliary stories do not share body list numbers or complex field scope.
   void withListStory(void Function() write) {
     final previous = _listCounters;
+    final previousFieldDepth = fieldDepth;
     _listCounters = <int, List<BigInt?>>{};
+    fieldDepth = 0;
     try {
       write();
     } finally {
       _listCounters = previous;
+      fieldDepth = previousFieldDepth;
     }
   }
 
