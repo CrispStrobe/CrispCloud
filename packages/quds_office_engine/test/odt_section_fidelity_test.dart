@@ -96,6 +96,133 @@ String _text(XmlNode node) => switch (node) {
 };
 
 void main() {
+  WmlToc generatedToc({String title = 'Contents'}) => WmlToc(
+    title: title,
+    entries: [
+      WmlTocEntry(
+        text: 'Introduction',
+        level: 1,
+        headingParagraphIndex: 0,
+        pageNumber: 2,
+      ),
+      WmlTocEntry(
+        text: 'Details',
+        level: 2,
+        headingParagraphIndex: 1,
+        pageNumber: 4,
+      ),
+    ],
+  );
+
+  for (final titled in [true, false]) {
+    for (final cached in [true, false]) {
+      test(
+        'leading TOC inherits section once: titled=$titled cached=$cached',
+        () {
+          final toc = generatedToc(title: titled ? 'Contents' : '');
+          if (cached) {
+            toc.itemParagraphs = [
+              _p('Cached introduction'),
+              _p('Cached details'),
+            ];
+          }
+          final beforeTitle = toc.titleParagraph.properties;
+          final document = _two([toc, _p('After contents')]);
+          document.sections.last.pageSize = const WmlPageSize(
+            width: 600,
+            height: 400,
+          );
+          final result = _export(document);
+          final paragraphs = _body(result.content).childElements.toList();
+          expect(paragraphs, hasLength(titled ? 5 : 4));
+          expect(_master(result.content, paragraphs[1]), 'mp1');
+          for (final paragraph in paragraphs.skip(2)) {
+            expect(_master(result.content, paragraph), isNull);
+          }
+          expect(
+            _text(paragraphs[1]),
+            titled
+                ? 'Contents'
+                : cached
+                ? 'Cached introduction'
+                : 'Introduction2',
+          );
+          expect(
+            _master(
+              result.content,
+              _paragraph(result.content, 'After contents'),
+            ),
+            isNull,
+          );
+          expect(identical(toc.titleParagraph.properties, beforeTitle), isTrue);
+          expect(beforeTitle.pageBreakBefore, isFalse);
+          expect(toc.entries.map((entry) => entry.pageNumber), [2, 4]);
+        },
+      );
+    }
+  }
+
+  test('TOC-only section has no trailing synthetic page anchor', () {
+    final content = _export(_two([generatedToc()])).content;
+    expect(_body(content).childElements, hasLength(4));
+    expect(_master(content, _paragraph(content, 'Contents')), 'mp1');
+    expect(
+      _body(content).childElements.where((element) => _text(element).isEmpty),
+      isEmpty,
+    );
+  });
+
+  test('title-only TOC carries its section activation', () {
+    final content = _export(_two([WmlToc(title: 'Empty contents')])).content;
+    expect(_body(content).childElements, hasLength(2));
+    expect(_master(content, _paragraph(content, 'Empty contents')), 'mp1');
+  });
+
+  test('empty titleless TOC leaves the next visible section anchor intact', () {
+    final content = _export(
+      _two([WmlToc(title: ''), _p('After empty contents')]),
+    ).content;
+    expect(_body(content).childElements, hasLength(2));
+    expect(
+      _master(content, _paragraph(content, 'After empty contents')),
+      'mp1',
+    );
+  });
+
+  test('TOC inside a content control receives the pending section', () {
+    final content = _export(
+      _two([
+        _control([generatedToc()]),
+        _p('Tail'),
+      ]),
+    ).content;
+    expect(_master(content, _paragraph(content, 'Contents')), 'mp1');
+    expect(_master(content, _paragraph(content, 'Tail')), isNull);
+    expect(_body(content).childElements, hasLength(5));
+  });
+
+  for (final kind in [
+    WmlSectionBreakKind.oddPage,
+    WmlSectionBreakKind.evenPage,
+  ]) {
+    test('leading TOC selects the correct parity master for $kind', () {
+      final content = _export(_two([generatedToc()], kind: kind)).content;
+      expect(_master(content, _paragraph(content, 'Contents')), 'mp1Start');
+      expect(_body(content).childElements, hasLength(4));
+    });
+  }
+
+  test(
+    'continuous TOC does not append a blank paragraph or force a master',
+    () {
+      final content = _export(
+        _two([generatedToc()], kind: WmlSectionBreakKind.continuous),
+      ).content;
+      expect(_body(content).childElements, hasLength(4));
+      expect(_master(content, _paragraph(content, 'Contents')), isNull);
+    },
+  );
+
   test('a first list item selects the section while its siblings do not', () {
     final content = _export(
       _two([

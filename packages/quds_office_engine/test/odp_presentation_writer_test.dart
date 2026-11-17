@@ -131,12 +131,12 @@ void main() {
     expect(content, contains('Pictures/image1.png'));
     expect(content, contains('xlink:type="simple"'));
     expect(content, contains('Speaker note'));
-    expect(content, contains('Q1'));
-    expect(content, contains('Q2'));
-    expect(content, contains('<draw:ellipse'));
     expect(content, contains('<text:a xlink:href="https://example.com/deck">'));
     expect(content, contains('Q1'));
     expect(content, contains('Q2'));
+    expect(content, contains('Label'));
+    expect(content, contains('Value'));
+    expect(content, contains('<draw:ellipse'));
     final pageProperties = _pageProperties(XmlDocument.parse(content), 0);
     expect(
       pageProperties.getAttribute('type', namespaceUri: _smilNs),

@@ -158,9 +158,28 @@ void main() {
             WmlTabStop(position: 72.004, leader: WmlTabLeader.hyphen),
           ],
         ),
+        WmlParagraphProps(
+          tabs: const [
+            WmlTabStop(position: 72.004, leader: WmlTabLeader.underscore),
+          ],
+        ),
       ];
       final styles = _styles(properties);
       expect(styles[0].name, styles[1].name);
+      // Both solid leaders retain their authored character in the integrated
+      // writer, so only matching characters can share their serialized style.
+      expect(styles[1].name, isNot(styles[2].name));
+      expect(
+        [
+          for (final style in styles)
+            style.properties
+                .firstChild('tab-stops', namespaceUri: _styleNs)!
+                .childrenNamed('tab-stop', namespaceUri: _styleNs)
+                .single
+                .getAttribute('leader-text', namespaceUri: _styleNs),
+        ],
+        ['-', '-', '_'],
+      );
       for (final style in styles) {
         expect(_tabs(style), [
           {
@@ -174,10 +193,12 @@ void main() {
       expect(properties.map((props) => props.tabs.single.position), [
         72.001,
         72.004,
+        72.004,
       ]);
       expect(properties.map((props) => props.tabs.single.leader), [
         WmlTabLeader.hyphen,
         WmlTabLeader.hyphen,
+        WmlTabLeader.underscore,
       ]);
     },
   );
