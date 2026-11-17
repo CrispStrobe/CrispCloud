@@ -1,0 +1,9 @@
+{
+  "version": "1.3.4+29",
+  "platform": "MAC_OS",
+  "architecture": "arm64",
+  "package": "/tmp/crisp-integrate-20261117-evidence/CrispCloud-1.3.4-29.pkg",
+  "sha256": "58f232fe86cd1f8596c0539f1eb8e51a292ffd26d880f0c105a7515f8e298fd9",
+  "built_git_commit": "d17ec34906c6749b26e77106474661b44efe6537",
+  "ancestry_head": "46d66de4f18d08ce70fadf90a67155124ddcb5f3"
+}

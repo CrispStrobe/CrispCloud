@@ -29,6 +29,7 @@ XmlElement _odtBody(OpcPackage package) => XmlDocument.parse(
 ).root!.firstChild('body')!.firstChild('text')!;
 
 void main() {
+  footnoteTests();
   test('writes modeled Word text, runs, tables and pictures as ODT', () {
     final document = WmlDocument(
       properties: OfficeDocumentProperties(title: 'Writer smoke'),
@@ -215,5 +216,41 @@ void main() {
     ).root!.firstChild('master-styles')!.firstChild('master-page')!;
     expect(_odfText(master.firstChild('header')!), ' Head\tA  B ');
     expect(_odfText(master.firstChild('footer')!), 'Foot\nLine 2 ');
+  });
+}
+
+void footnoteTests() {
+  test('writes footnote references and bodies', () {
+    final document = WmlDocument(
+      footnotes: [
+        WmlNote(
+          id: 1,
+          endnote: false,
+          paragraphs: [
+            WmlParagraph(inlines: [WmlRun(text: 'Footnote text')]),
+          ],
+        ),
+      ],
+      sections: [
+        WmlSection(
+          blocks: [
+            WmlParagraph(
+              inlines: [
+                WmlRun(text: 'Body'),
+                WmlRun(noteRefId: 1),
+              ],
+            ),
+          ],
+        ),
+      ],
+    );
+    final package = OpcPackage.openBytes(
+      OdtDocumentWriter.writeBytes(document),
+    );
+    final content = package.getPart('/content.xml')!.readText();
+    expect(content, contains('<text:note'));
+    expect(content, contains('text:note-class="footnote"'));
+    expect(content, contains('<text:note-citation>1</text:note-citation>'));
+    expect(content, contains('Footnote text'));
   });
 }

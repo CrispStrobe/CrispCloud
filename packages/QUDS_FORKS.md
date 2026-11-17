@@ -26,7 +26,7 @@ content.
 The app mirrors the canonical Quds source and the standalone legacy parser.
 Exact revisions, source boundaries and the complete managed-file inventory are
 recorded in [the fidelity manifest](../tool/office_fidelity_manifest.json).
-The current canonical checkpoint is `f510060e35d580cbc361985a123927705c92ddc4`;
+The current canonical checkpoint is `b2dc226e2ed82cda8f1bada18fb0a1e17347b5fc`;
 the managed inventory contains 2,559 files, including the unchanged 1,857-file
 standalone parser. This continuation retains the completed Zotero recovery,
 English hyphenation, proofing and ranked/average spreadsheet work, including
@@ -110,7 +110,7 @@ validations, ranked/average conditional rules, authored page setup and
 header/footer sections. The bounded ODT writer now covers headings, formatted
 runs, tables, pictures, frames, page geometry and basic headers/footers. The
 bounded ODP writer covers slides, positioned text, pictures, tables, fills,
-strokes, notes and page geometry. A host widget test opens an XLSX fixture and reads the exported ODS
+strokes, notes, page geometry and transitions. A host widget test opens an XLSX fixture and reads the exported ODS
 back. The combined host qualification remains separately source-bound
 in the storage evidence.
 

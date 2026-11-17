@@ -6,6 +6,7 @@ import '../../opc/zip/zip_writer.dart';
 import '../../visual/office_visual.dart';
 import '../../xml/xml_writer.dart';
 import '../model/wml_document.dart';
+import '../model/word_notes.dart';
 import '../properties/wml_properties.dart';
 
 /// Bounded new-document ODT writer for the shared Word model.
@@ -324,7 +325,31 @@ abstract final class OdtDocumentWriter {
           w.writeStartElement('a', prefix: 'text');
           w.writeAttribute('xlink:href', href);
         }
-        if (inline.text.isNotEmpty) {
+        if (inline.noteRefId case final noteId?) {
+          final note = layout.note(noteId, endnote: inline.noteRefEndnote);
+          if (note != null) {
+            final noteNumber = layout.noteNumber(
+              noteId,
+              endnote: inline.noteRefEndnote,
+            );
+            w.writeStartElement('note', prefix: 'text');
+            w.writeAttribute(
+              'text:note-class',
+              inline.noteRefEndnote ? 'endnote' : 'footnote',
+            );
+            w.writeAttribute(
+              'text:id',
+              '${inline.noteRefEndnote ? 'end' : 'ftn'}$noteNumber',
+            );
+            w.writeStartElement('note-citation', prefix: 'text');
+            w.writeText('$noteNumber');
+            w.writeEndElement();
+            w.writeStartElement('note-body', prefix: 'text');
+            _writeBlocks(w, note.blocks, layout);
+            w.writeEndElement();
+            w.writeEndElement();
+          }
+        } else if (inline.text.isNotEmpty) {
           w.writeStartElement('span', prefix: 'text');
           w.writeAttribute('text:style-name', style);
           writeOdfText(w, inline.text);
@@ -780,6 +805,21 @@ class _OdtLayout {
       );
       return name;
     });
+  }
+
+  final Map<String, int> _noteNumbers = <String, int>{};
+
+  WmlNote? note(int id, {required bool endnote}) {
+    final notes = endnote ? document.endnotes : document.footnotes;
+    for (final note in notes) {
+      if (note.id == id) return note;
+    }
+    return null;
+  }
+
+  int noteNumber(int id, {required bool endnote}) {
+    final key = '${endnote ? 'e' : 'f'}:$id';
+    return _noteNumbers.putIfAbsent(key, () => _noteNumbers.length + 1);
   }
 
   String listStyle({required bool ordered}) => ordered ? 'L2' : 'L1';

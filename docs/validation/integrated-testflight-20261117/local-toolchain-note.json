@@ -1,0 +1,5 @@
+{
+  "stall": "Dart hook compilation wrote its output but waited on telemetry network I/O",
+  "resolution": "Rerun with DASH__SUPPRESS_ANALYTICS=true and FLUTTER_SUPPRESS_ANALYTICS=true; previous analytics preference restored",
+  "source_changes_for_workaround": false
+}
