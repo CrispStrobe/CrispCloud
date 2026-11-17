@@ -36,7 +36,11 @@ void main() {
   footnoteTests();
   test('writes modeled Word text, runs, tables and pictures as ODT', () {
     final document = WmlDocument(
-      properties: OfficeDocumentProperties(title: 'Writer smoke'),
+      properties: OfficeDocumentProperties(
+        title: 'Writer smoke',
+        subject: 'Metadata',
+        creator: 'Author',
+      ),
       sections: [
         WmlSection(
           blocks: [
@@ -110,6 +114,10 @@ void main() {
     );
     final content = package.getPart('/content.xml')!.readText();
     final styles = package.getPart('/styles.xml')!.readText();
+    final meta = package.getPart('/meta.xml')!.readText();
+    expect(meta, contains('<dc:title>Writer smoke</dc:title>'));
+    expect(meta, contains('<dc:subject>Metadata</dc:subject>'));
+    expect(meta, contains('<dc:creator>Author</dc:creator>'));
     expect(content, contains('<text:h'));
     expect(content, contains('Quarterly review'));
     expect(

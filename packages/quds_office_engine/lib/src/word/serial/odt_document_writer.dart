@@ -1076,11 +1076,22 @@ abstract final class OdtDocumentWriter {
     _namespaces(w);
     w.writeAttribute('office:version', '1.3');
     w.writeStartElement('meta', prefix: 'office');
-    if (document.properties.title.isNotEmpty) {
-      w.writeStartElement('title', prefix: 'dc');
-      w.writeText(document.properties.title);
+    void value(String tag, String prefix, String text) {
+      if (text.isEmpty) return;
+      w.writeStartElement(tag, prefix: prefix);
+      w.writeText(text);
       w.writeEndElement();
     }
+
+    value('title', 'dc', document.properties.title);
+    value('subject', 'dc', document.properties.subject);
+    value('creator', 'dc', document.properties.creator);
+    value('description', 'dc', document.properties.description);
+    value('keyword', 'meta', document.properties.keywords);
+    value('initial-creator', 'meta', document.properties.creator);
+    value('creation-date', 'meta', document.properties.createdIso);
+    value('date', 'dc', document.properties.modifiedIso);
+    value('generator', 'meta', 'Quds Office');
     w.writeEndElement();
     w.writeEndElement();
     return w.toXml();
