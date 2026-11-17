@@ -39,7 +39,7 @@ comments preserve their marks without claiming a visible body note definition.
 The [resumed continuation record](../docs/validation/office-resume-20261117/README.md)
 binds the fixed incoming inventory, source preservation and local qualification
 to exact commits. The pinned runtime and unchanged locked dependency workspaces
-are restored; the final integrated source awaits fresh host qualification. Earlier qualification
+are restored. Fresh focused host qualification passed at `511361a4623e6ddf787b5cccfaed4ba14ae1899f`: 96 Dart/Flutter cases and 28 Python controls, with no host failures or skips; all 11 gates and independent review passed. Runtime/test/tool/manifest inputs remain identical in the final documentation checkpoint. Earlier qualification
 counts retain their original source attribution. The incoming [German grammar options report](../docs/validation/german-options-20261117/README.md) retains its separate source-bound evidence. This continuation retains the completed Zotero recovery,
 English hyphenation, proofing and ranked/average spreadsheet work, including
 conditional-format differential-style preservation, current proofing/rendering branches,
