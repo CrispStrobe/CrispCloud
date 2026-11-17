@@ -29,6 +29,7 @@ XmlElement _odtBody(OpcPackage package) => XmlDocument.parse(
 ).root!.firstChild('body')!.firstChild('text')!;
 
 void main() {
+  sectionTests();
   commentTests();
   footnoteTests();
   test('writes modeled Word text, runs, tables and pictures as ODT', () {
@@ -288,5 +289,44 @@ void commentTests() {
     expect(content, contains('<office:annotation'));
     expect(content, contains('<dc:creator>Reviewer</dc:creator>'));
     expect(content, contains('Comment text'));
+  });
+}
+
+void sectionTests() {
+  test('writes section page layouts and breaks', () {
+    final document = WmlDocument(
+      sections: [
+        WmlSection(
+          blocks: [
+            WmlParagraph(inlines: [WmlRun(text: 'First section')]),
+          ],
+        ),
+        WmlSection(
+          pageSize: WmlPageSize.letter(),
+          margins: WmlPageMargins.narrow,
+          header: [
+            WmlParagraph(inlines: [WmlRun(text: 'Second header')]),
+          ],
+          footer: [
+            WmlParagraph(inlines: [WmlRun(text: 'Second footer')]),
+          ],
+          blocks: [
+            WmlParagraph(inlines: [WmlRun(text: 'Second section')]),
+          ],
+        ),
+      ],
+    );
+    final package = OpcPackage.openBytes(
+      OdtDocumentWriter.writeBytes(document),
+    );
+    final content = package.getPart('/content.xml')!.readText();
+    final styles = package.getPart('/styles.xml')!.readText();
+    expect(content, contains('text:style-name="SB1"'));
+    expect(content, contains('Second section'));
+    expect(styles, contains('style:name="pm1"'));
+    expect(styles, contains('fo:page-width="612.00pt"'));
+    expect(styles, contains('style:page-layout-name="pm1"'));
+    expect(styles, contains('Second header'));
+    expect(styles, contains('Second footer'));
   });
 }
