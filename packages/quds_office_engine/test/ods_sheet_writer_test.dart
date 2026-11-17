@@ -242,6 +242,58 @@ void main() {
     expect(rule.errorStyle, 'warning');
   });
 
+  test('writes range-backed list validations', () {
+    final source = SmlWorksheet(name: 'Source', sheetId: 1);
+    source.cellA1('A1').value = 'Red';
+    source.cellA1('A2').value = 'Green';
+    final data = SmlWorksheet(name: 'Data', sheetId: 2)
+      ..validations.add(
+        SmlDataValidation(
+          range: SmlRange.parse('A1'),
+          kind: SmlValidationKind.list,
+          formula1: 'Red,Green',
+          listSourceRange: SmlRange.parse('A1'),
+          listSourceSheet: 'Source',
+        ),
+      );
+    final reopened = OdsSheetReader.readBytes(
+      OdsSheetWriter.writeBytes(SmlWorkbook(sheets: [source, data])),
+    );
+    final rule = reopened.sheets[1].validations.single;
+    expect(rule.kind, SmlValidationKind.list);
+    expect(rule.listSourceSheet, 'Source');
+    expect(rule.listSourceRange?.start.a1, 'A1');
+    expect(rule.listSourceRange?.end.a1, 'A1');
+  });
+
+  test('writes color-scale conditional rules', () {
+    final sheet = SmlWorksheet(name: 'Data', sheetId: 1);
+    for (var row = 1; row <= 3; row++) {
+      sheet.cellA1('A$row').value = row;
+    }
+    sheet.conditionalFormats.add(
+      SmlConditionalRule(
+        range: SmlRange.parse('A1:A3'),
+        kind: SmlConditionalKind.colorScale,
+        colorScaleStops: const [
+          SmlColorScaleStop(type: 'minimum', colorRgb: 'FF0000'),
+          SmlColorScaleStop(type: 'maximum', colorRgb: '00FF00'),
+        ],
+      ),
+    );
+    final reopened = OdsSheetReader.readBytes(
+      OdsSheetWriter.writeBytes(SmlWorkbook(sheets: [sheet])),
+    );
+    final rule = reopened.sheets.first.conditionalFormats.single;
+    expect(rule.kind, SmlConditionalKind.colorScale);
+    expect(rule.colorScaleStops.length, 2);
+    expect(rule.colorScaleStops.first.colorRgb, 'FF0000');
+    expect(rule.colorScaleStops.last.colorRgb, '00FF00');
+    SmlAnalysis.applyConditional(reopened.sheets.first);
+    expect(reopened.sheets.first.cellA1('A1').fillRgb, 'FF0000');
+    expect(reopened.sheets.first.cellA1('A3').fillRgb, '00FF00');
+  });
+
   test('writes top and bottom conditional rules', () {
     final sheet = SmlWorksheet(name: 'Data', sheetId: 1);
     for (var row = 1; row <= 5; row++) {

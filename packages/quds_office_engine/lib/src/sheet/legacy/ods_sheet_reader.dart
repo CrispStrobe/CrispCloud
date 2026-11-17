@@ -604,8 +604,8 @@ abstract final class OdsSheetReader {
         errorTitle: definition.errorTitle,
         error: definition.error,
         errorStyle: definition.errorStyle,
-        sourceRange: null,
-        sourceSheet: null,
+        sourceRange: sourceRange,
+        sourceSheet: sourceName,
       ), budget);
     }
     _readOdsNamedMetadata(spreadsheet, book);
@@ -783,6 +783,8 @@ abstract final class OdsSheetReader {
           errorTitle: definition.errorTitle,
           error: definition.error,
           errorStyle: definition.errorStyle,
+          listSourceRange: definition.sourceRange,
+          listSourceSheet: definition.sourceSheet,
         ),
       );
       index = end + 1;
@@ -831,7 +833,10 @@ abstract final class OdsSheetReader {
       }
       final listMatch = listCondition.firstMatch(condition);
       if (listMatch != null) {
-        final argument = listMatch.group(1)!.trim();
+        var argument = listMatch.group(1)!.trim();
+        if (argument.startsWith('[') && argument.endsWith(']')) {
+          argument = argument.substring(1, argument.length - 1).trim();
+        }
         final items = <String>[];
         SmlRange? sourceRange;
         String? sourceSheet;
@@ -1176,6 +1181,35 @@ abstract final class OdsSheetReader {
         _attribute(format, 'target-range-address', _calcext),
       );
       if (range == null) continue;
+      for (final scale in _descendants(format, 'color-scale', _calcext)) {
+        final stops = <SmlColorScaleStop>[];
+        for (final entry in _descendants(
+          scale,
+          'color-scale-entry',
+          _calcext,
+        )) {
+          final color = _hex(_attribute(entry, 'color', _calcext));
+          if (color == null) continue;
+          final value =
+              double.tryParse(_attribute(entry, 'value', _calcext) ?? '') ?? 0;
+          stops.add(
+            SmlColorScaleStop(
+              type: _attribute(entry, 'type', _calcext) ?? 'number',
+              value: value,
+              colorRgb: color,
+            ),
+          );
+        }
+        if (stops.length >= 2) {
+          rules.add(
+            SmlConditionalRule(
+              range: range,
+              kind: SmlConditionalKind.colorScale,
+              colorScaleStops: List<SmlColorScaleStop>.unmodifiable(stops),
+            ),
+          );
+        }
+      }
       for (final condition in _descendants(format, 'condition', _calcext)) {
         final value = _attribute(condition, 'value', _calcext)?.trim();
         final styleName = _attribute(condition, 'apply-style-name', _calcext);
