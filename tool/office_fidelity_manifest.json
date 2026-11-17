@@ -1864,7 +1864,7 @@
     "packages/quds_office_editor/lib/src/editor_pdf/pdf_font_faces.dart": "34092eab580521bbca9cdf553191fbd4b620fca62c59ee0b327e840e5dccbc0d",
     "packages/quds_office_editor/lib/src/editor_pdf/pdf_page_thumb.dart": "968b1b336639050a4c52025db239a58bbf2db383a656fc5aa25a28444ba62c7b",
     "packages/quds_office_editor/lib/src/editor_pdf/render_pdf_canvas.dart": "64be265ac07ba8733826936ed4e732481da249688db6e166ec7bfc5ea20a44c5",
-    "packages/quds_office_editor/lib/src/editor_sheet/render_sheet_grid.dart": "3c9bd2d1721d391a1bae88063b5cea4055524e7273e4dffaed398220b5222bee",
+    "packages/quds_office_editor/lib/src/editor_sheet/render_sheet_grid.dart": "f92844b4c0c6c77522dc2cef9d52ed4ee8696f165f19f8c63968431782fbb8da",
     "packages/quds_office_editor/lib/src/editor_sheet/sheet_font_metrics.dart": "433dc0ae1ba3bba52fd1ea25bd3c9640960aa4d289ecd38987c78a9467476eaa",
     "packages/quds_office_editor/lib/src/editor_slide/render_slide_stage.dart": "b179045c740e241ac24b81b5a9637d1425855603682b83c479fec0c05d4963b9",
     "packages/quds_office_editor/lib/src/editor_word/caret_engine.dart": "085b7ef4d4f6c327b53bfa184a3f6d4e5cc225aeb448b60be03284e6d8fe2801",
@@ -1951,7 +1951,7 @@
     "packages/quds_office_editor/test/pending_edit_save_test.dart": "15b601d2e1c08b974e2ecf8b4ea95a6802f831e40e8ccbe28617b28711fb0de3",
     "packages/quds_office_editor/test/platform_spelling_provider_test.dart": "60c7e423c22adfe1401058288f933ced336c502efd9d1d8a564730d282a15f85",
     "packages/quds_office_editor/test/sheet_cell_state_history_test.dart": "11874da0d12cbc6964bcf3a21953151c2f296c930b2c3319385c227e6741546d",
-    "packages/quds_office_editor/test/sheet_conditional_rendering_test.dart": "6f13b8b80d9845b71788012bfd67586f726adcc2da1af968efaad7910ec72e1b",
+    "packages/quds_office_editor/test/sheet_conditional_rendering_test.dart": "771a1ff0883eb389b63073f774a3933346fc596588361e29a5c9868a16a9627e",
     "packages/quds_office_editor/test/sheet_explicit_style_history_test.dart": "85daba158d05b4ac1f6cbdcc84b348dc534e5d569a833a30488cf22e241c07e1",
     "packages/quds_office_editor/test/sheet_fill_intent_history_test.dart": "4c8ceda7de9eb76acec24ca752db3599fa87300cf2bc62f92df30878451d5f62",
     "packages/quds_office_editor/test/sheet_font_color_intent_test.dart": "a2bb842c2331136867b6610cfeac03eb3788df50c2a42b14c6fc002131934398",
@@ -2629,7 +2629,7 @@
     "tool/office-validation/test_render.py": "1ba68e18608d74387cbc1c779ceb72af76bf7741463c282684aec93bf3825472"
   },
   "source_branch": "main",
-  "source_commit": "5cce94a10844926e9ddb0d2e3f6df1f1cd7e0717",
+  "source_commit": "96e65705ad69f969710d3ff6d2897bd4aa38fbf9",
   "source_repository": "CrispStrobe/quds_office_suite",
   "standalone_sources": {
     "packages/legacy_doc_parser": {
