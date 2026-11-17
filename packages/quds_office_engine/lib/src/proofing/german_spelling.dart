@@ -434,6 +434,7 @@ class GermanSpellingProvider extends OfficeProofingProvider {
   }
 
   static bool _isSentenceInitial(String text, int offset) {
+    if (_startsDirectQuotation(text, offset)) return true;
     // Inspect only the local prefix, never copy/rescan the whole paragraph for
     // every token. Leading emoji, quotes and punctuation are harmless here.
     for (int i = offset - 1; i >= 0; i--) {
@@ -444,6 +445,37 @@ class GermanSpellingProvider extends OfficeProofingProvider {
       if (_letterOrNumber.hasMatch(char)) return false;
     }
     return true;
+  }
+
+  static final RegExp _quotationSpace = RegExp(r'[\t\p{Zs}]', unicode: true);
+  static const Set<String> _openingQuotationMarks = <String>{
+    '„',
+    '‚',
+    '»',
+    '›',
+    '«',
+    '‹',
+    '“',
+    '‘',
+    '"',
+    "'",
+  };
+
+  static bool _startsDirectQuotation(String text, int offset) {
+    // A colon followed by one opening quotation starts the quoted sentence:
+    // Er sagte: „Das stimmt.“. Limit this additional allowance to the first
+    // token after that opener; inline fragments, bare colons, empty quotes and
+    // intervening punctuation must not erase ordinary lexical case checks.
+    int at = offset - 1;
+    while (at >= 0 && _quotationSpace.hasMatch(text[at])) {
+      at--;
+    }
+    if (at < 0 || !_openingQuotationMarks.contains(text[at])) return false;
+    at--;
+    while (at >= 0 && _quotationSpace.hasMatch(text[at])) {
+      at--;
+    }
+    return at >= 0 && text[at] == ':';
   }
 
   List<String> _suggest(

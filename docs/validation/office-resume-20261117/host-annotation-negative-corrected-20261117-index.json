@@ -1,0 +1,104 @@
+{
+  "kind": "Corrected-test historical-snapshot host annotation failure control",
+  "archive": "host-annotation-negative-corrected-20261117.tar.xz",
+  "bytes": 387756,
+  "sha256": "faa9014ecbeb87deb2910a0b5285939de5ba51cbc0ae2f0dc4e36fd183e096e2",
+  "source_commit": "6bc4de43867db4ef2f85da0479ab62c894d604c9",
+  "test_blob": "ff488be11f054c1ba080a1af4dd12cce7a9e512a",
+  "genuine_annotation_leak_failures": 7,
+  "clean_control_passes": 1,
+  "accepted_final_source_passes": 0,
+  "members": [
+    {
+      "path": "annotation-corrected-test-binding.json",
+      "bytes": 568,
+      "sha256": "b35ce6746d569d293ae74c27843079c92cbc21bb601dfe51d79a8c034735a46d"
+    },
+    {
+      "path": "annotation-corrected-test-ff488be1.dart",
+      "bytes": 11710,
+      "sha256": "73846853fc14d25af6f4ca9c5c421ae89e282b2ad62f612a940082798d437996"
+    },
+    {
+      "path": "annotation-negative-002/annotation-negative.log",
+      "bytes": 9026,
+      "sha256": "479b21a00510524228f9c24babbe804699190f5d085399ab9fb019d6a7c3007c"
+    },
+    {
+      "path": "annotation-negative-002/annotation-tests.dart",
+      "bytes": 11710,
+      "sha256": "73846853fc14d25af6f4ca9c5c421ae89e282b2ad62f612a940082798d437996"
+    },
+    {
+      "path": "annotation-negative-002/assertion-failures.json",
+      "bytes": 4843,
+      "sha256": "3bc66da98995480db6d11bea46dbe7dd15767d1b75b3a9567ea42799a812911a"
+    },
+    {
+      "path": "annotation-negative-002/dependencies-after.json",
+      "bytes": 795767,
+      "sha256": "7d021b8cc034e03cd4def4e864c3ab5ae786a7540743f868d2a409e4161bf885"
+    },
+    {
+      "path": "annotation-negative-002/dependencies-before.json",
+      "bytes": 795767,
+      "sha256": "7d021b8cc034e03cd4def4e864c3ab5ae786a7540743f868d2a409e4161bf885"
+    },
+    {
+      "path": "annotation-negative-002/negative-library-after.json",
+      "bytes": 129930,
+      "sha256": "92467d420e81f7df64fad8ae4aede9d3e888803c7a4775760cf09fe5cb69b36a"
+    },
+    {
+      "path": "annotation-negative-002/negative-library-before.json",
+      "bytes": 129930,
+      "sha256": "92467d420e81f7df64fad8ae4aede9d3e888803c7a4775760cf09fe5cb69b36a"
+    },
+    {
+      "path": "annotation-negative-002/outcome-review.json",
+      "bytes": 795,
+      "sha256": "4f1b785f826d8c7206b2f9c20ef3879e51749254403a725d48cef7e9d9296c67"
+    },
+    {
+      "path": "annotation-negative-002/reader-before.dart",
+      "bytes": 69746,
+      "sha256": "c608c13506aa23bb16d6de0a9d97c36236594a7a1c620d4683d915d11fb1e46d"
+    },
+    {
+      "path": "annotation-negative-002/receipt.json",
+      "bytes": 4894,
+      "sha256": "a71d1571a3d1bdd52eb4e039e5eee632bfe17d8bf007991e9cce69ce0b6d08a5"
+    },
+    {
+      "path": "annotation-negative-002/source-after.json",
+      "bytes": 536483,
+      "sha256": "80fe21e0d315d9edf651b6dc6509ccea2c75ec15ff1f5fac5ec97be407d3232e"
+    },
+    {
+      "path": "annotation-negative-002/source-before.json",
+      "bytes": 536483,
+      "sha256": "80fe21e0d315d9edf651b6dc6509ccea2c75ec15ff1f5fac5ec97be407d3232e"
+    },
+    {
+      "path": "annotation-negative-002/test-terminal-events.json",
+      "bytes": 3648,
+      "sha256": "e51170f8d41e113cfc22e29947f112a05007b716b2b3b7658acafa215690b41a"
+    },
+    {
+      "path": "scripts/prior_host_qualification.py",
+      "bytes": 28660,
+      "sha256": "4049d732d10f42d8f3254b90d2943f41c99618a4fc820b68050ce70d989b8fed"
+    },
+    {
+      "path": "scripts/run-focused-host.py",
+      "bytes": 19105,
+      "sha256": "692738ef67824a7baa8ed55ba0926eea53511253e80b4949b1a0d15f8a216f45"
+    },
+    {
+      "path": "scripts/run-historical-annotation-negative.py",
+      "bytes": 13601,
+      "sha256": "f3d46329301275fb6c2a597d7d6f0b53fcab85b91d9a2eca9bdbad6ba2f1fa61"
+    }
+  ],
+  "full_archive_readback_verified": true
+}

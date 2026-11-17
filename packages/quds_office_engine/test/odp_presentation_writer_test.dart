@@ -408,41 +408,47 @@ void main() {
     },
   );
 
-  test('effect speed buckets and instantaneous durations stay separate from advance', () {
-    const speeds = {
-      -1: null,
-      0: null,
-      1: 'fast',
-      500: 'fast',
-      501: 'medium',
-      999: 'medium',
-      1000: 'slow',
-      2500: 'slow',
-    };
-    final document = _transitionDocument([
-      for (final duration in speeds.keys)
-        PmlSlideTransition(kind: PmlTransitionKind.fade, durationMs: duration),
-    ]);
-    var index = 0;
-    for (final expected in speeds.values) {
-      final properties = _pageProperties(document, index++);
-      expect(
-        properties.getAttribute(
-          'transition-speed',
-          namespaceUri: _presentationNs,
-        ),
-        expected,
-      );
-      expect(
-        properties.getAttribute('type', namespaceUri: _smilNs),
-        expected == null ? isNull : 'fade',
-      );
-      expect(
-        properties.getAttribute('duration', namespaceUri: _presentationNs),
-        isNull,
-      );
-    }
-  });
+  test(
+    'effect speed buckets and instantaneous durations stay separate from advance',
+    () {
+      const speeds = {
+        -1: null,
+        0: null,
+        1: 'fast',
+        500: 'fast',
+        501: 'medium',
+        999: 'medium',
+        1000: 'slow',
+        2500: 'slow',
+      };
+      final document = _transitionDocument([
+        for (final duration in speeds.keys)
+          PmlSlideTransition(
+            kind: PmlTransitionKind.fade,
+            durationMs: duration,
+          ),
+      ]);
+      var index = 0;
+      for (final expected in speeds.values) {
+        final properties = _pageProperties(document, index++);
+        expect(
+          properties.getAttribute(
+            'transition-speed',
+            namespaceUri: _presentationNs,
+          ),
+          expected,
+        );
+        expect(
+          properties.getAttribute('type', namespaceUri: _smilNs),
+          expected == null ? isNull : 'fade',
+        );
+        expect(
+          properties.getAttribute('duration', namespaceUri: _presentationNs),
+          isNull,
+        );
+      }
+    },
+  );
 
   test(
     'cut and none keep automatic timing without inventing an effect name',

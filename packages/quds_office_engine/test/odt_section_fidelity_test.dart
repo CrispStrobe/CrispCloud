@@ -296,7 +296,9 @@ void main() {
         'Standard',
       );
       expect(_elements(result.styles, 'page-layout'), hasLength(1));
-      expect(_body(result.content).childElements, hasLength(1));
+      // A synthetic section supplies default styles, but must not add an
+      // authored body paragraph to an explicitly empty document.
+      expect(_body(result.content).childElements, isEmpty);
       expect(document.sections, isEmpty);
     },
   );
@@ -314,8 +316,9 @@ void main() {
         spacingAfter: 0,
         indent: const WmlIndent(left: 12, right: 3, firstLine: 4),
       );
-      final content = _export(_two([_p('Heading', properties: properties)]))
-          .content;
+      final content = _export(
+        _two([_p('Heading', properties: properties)]),
+      ).content;
       final heading = _paragraph(content, 'Heading');
       expect(heading.localName, 'h');
       final style = _style(content, heading);

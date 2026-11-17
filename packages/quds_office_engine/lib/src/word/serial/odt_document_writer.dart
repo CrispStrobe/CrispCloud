@@ -51,6 +51,9 @@ abstract final class OdtDocumentWriter {
   static List<({String xml, _OdtSectionStart start})> _bodyXml(
     _OdtLayout layout,
   ) {
+    // The synthetic section supplies required default master/page styles only;
+    // an explicitly empty document must not gain an authored body paragraph.
+    if (layout.document.sections.isEmpty) return const [];
     final parts = <({String xml, _OdtSectionStart start})>[];
     for (var index = 0; index < layout.sections.length; index++) {
       final body = XmlWriter();
@@ -591,6 +594,11 @@ abstract final class OdtDocumentWriter {
       styleOverride ??
           layout.paragraphStyle(paragraph.properties, heading: heading),
     );
+    if (paragraph.properties.pageNumberField) {
+      w.writeEmptyElement('page-number', prefix: 'text');
+      w.writeEndElement();
+      return;
+    }
     if (layout.noteReferenceSpacePending) {
       layout.noteReferenceSpacePending = false;
       final text = paragraph.text;
@@ -898,6 +906,9 @@ abstract final class OdtDocumentWriter {
     for (var rowIndex = 0; rowIndex < table.rows.length; rowIndex++) {
       final row = table.rows[rowIndex];
       w.writeStartElement('table-row', prefix: 'table');
+      if (row.height case final height?) {
+        w.writeAttribute('table:style-name', layout.rowStyle(height));
+      }
       _writeOmittedCells(
         w,
         BigInt.from(row.gridBefore > 0 ? row.gridBefore : 0),
@@ -920,8 +931,19 @@ abstract final class OdtDocumentWriter {
             w.writeAttribute('table:number-rows-spanned', '${placement.rows}');
           }
         }
-        if (cell.fillColor case final fill?) {
-          w.writeAttribute('table:style-name', layout.cellStyle(fill));
+        if (cell.fillColor case final fill? when fill.isNotEmpty) {
+          w.writeAttribute(
+            'table:style-name',
+            layout.cellStyle(fill, cell: cell),
+          );
+        } else if (cell.borderTop == true ||
+            cell.borderBottom == true ||
+            cell.borderLeft == true ||
+            cell.borderRight == true) {
+          w.writeAttribute(
+            'table:style-name',
+            layout.cellStyle('', cell: cell),
+          );
         }
         final notesAllowed = layout.noteBodiesAllowed;
         final commentsAllowed = layout.commentsAllowed;
@@ -1365,6 +1387,7 @@ class _OdtLayout {
   final Map<String, String> _paragraphStyles = <String, String>{};
   final Map<String, String> _columnStyles = <String, String>{};
   final Map<String, String> _cellStyles = <String, String>{};
+  final Map<String, String> _rowStyles = <String, String>{};
   final Map<(String?, String, String, String), String> _listStyles = {};
   late final _listDefinitions = _OdtListDefinitions(document);
   var _listCounters = <int, List<BigInt?>>{};
@@ -1429,8 +1452,11 @@ class _OdtLayout {
     _OdtSectionStart? sectionStart,
     bool emptyAnchor = false,
   }) {
+    final fill = props.shadingFill?.toLowerCase() ?? '';
+    final border = props.borderColor?.toLowerCase() ?? '';
+    final decorations = jsonEncode([fill, border]);
     final key =
-        '${heading == null ? 'body' : heading.clamp(1, 9)}|${props.justification.index}|${props.rightToLeft}|${props.lineSpacingRule.index}|${props.lineSpacing}|${props.spacingBefore}|${props.spacingAfter}|${props.indent.left}|${props.indent.right}|${props.indent.firstLine}|${props.indent.hanging}|${props.pageBreakBefore}|${sectionStart?.index}|$emptyAnchor';
+        '${heading == null ? 'body' : heading.clamp(1, 9)}|${props.justification.index}|${props.rightToLeft}|${props.lineSpacingRule.index}|${props.lineSpacing}|${props.spacingBefore}|${props.spacingAfter}|${props.indent.left}|${props.indent.right}|${props.indent.firstLine}|${props.indent.hanging}|${props.pageBreakBefore}|${sectionStart?.index}|$emptyAnchor|$decorations';
     return _paragraphStyles.putIfAbsent(key, () {
       final name = sectionStart == null
           ? 'P${_paragraphStyles.length + 1}'
@@ -1519,6 +1545,12 @@ class _OdtLayout {
           if (_paragraphDecimal(firstLine) case final points?) {
             buffer.write(' fo:text-indent="${points}pt"');
           }
+        }
+        if (fill.isNotEmpty) {
+          buffer.write(' fo:background-color="#$fill"');
+        }
+        if (border.isNotEmpty) {
+          buffer.write(' fo:border="0.5pt solid #$border"');
         }
         buffer.write('/>');
         if (emptyAnchor) {
@@ -1757,12 +1789,43 @@ class _OdtLayout {
     );
   }
 
-  String cellStyle(String fill) {
-    return _cellStyles.putIfAbsent(fill, () {
+  String cellStyle(String fill, {WmlTableCell? cell}) {
+    final key =
+        '$fill|${cell?.borderTop}|${cell?.borderBottom}|${cell?.borderLeft}|${cell?.borderRight}';
+    return _cellStyles.putIfAbsent(key, () {
       final name = 'Ce${_cellStyles.length + 1}';
-      _styleBuffers.add(
+      final buffer = StringBuffer(
         '<style:style style:name="$name" style:family="table-cell">'
-        '<style:table-cell-properties fo:background-color="#${fill.toLowerCase()}"/>'
+        '<style:table-cell-properties',
+      );
+      if (fill.isNotEmpty) {
+        buffer.write(' fo:background-color="#${fill.toLowerCase()}"');
+      }
+      if (cell?.borderTop == true) {
+        buffer.write(' fo:border-top="0.5pt solid #000000"');
+      }
+      if (cell?.borderBottom == true) {
+        buffer.write(' fo:border-bottom="0.5pt solid #000000"');
+      }
+      if (cell?.borderLeft == true) {
+        buffer.write(' fo:border-left="0.5pt solid #000000"');
+      }
+      if (cell?.borderRight == true) {
+        buffer.write(' fo:border-right="0.5pt solid #000000"');
+      }
+      buffer.write('/></style:style>');
+      _styleBuffers.add(buffer.toString());
+      return name;
+    });
+  }
+
+  String rowStyle(double height) {
+    final key = height.toStringAsFixed(2);
+    return _rowStyles.putIfAbsent(key, () {
+      final name = 'Ro${_rowStyles.length + 1}';
+      _styleBuffers.add(
+        '<style:style style:name="$name" style:family="table-row">'
+        '<style:table-row-properties style:row-height="${key}pt"/>'
         '</style:style>',
       );
       return name;

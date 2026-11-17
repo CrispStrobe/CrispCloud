@@ -24,12 +24,13 @@ String _odfText(XmlNode node) {
   return node.children.map(_odfText).join();
 }
 
-XmlElement _odtBody(OpcPackage package) =>
-    XmlDocument.parse(package.getPart('/content.xml')!.readText()).root!
-        .firstChild('body')!
-        .firstChild('text')!;
+XmlElement _odtBody(OpcPackage package) => XmlDocument.parse(
+  package.getPart('/content.xml')!.readText(),
+).root!.firstChild('body')!.firstChild('text')!;
 
 void main() {
+  paragraphShadingTests();
+  pageFieldTests();
   linkTests();
   nestedListTests();
   sectionTests();
@@ -82,8 +83,11 @@ void main() {
               grid: [120, 180],
               rows: [
                 WmlTableRow(
+                  height: 24,
                   cells: [
                     WmlTableCell(
+                      borderTop: true,
+                      borderLeft: true,
                       blocks: [
                         WmlParagraph(inlines: [WmlRun(text: 'A')]),
                       ],
@@ -138,6 +142,8 @@ void main() {
     expect(content, contains('First numbered'));
     expect(content, contains('text:style-name="L2"'));
     expect(content, contains('<table:table'));
+    expect(content, contains('fo:border-top="0.5pt solid #000000"'));
+    expect(content, contains('style:row-height="24.00pt"'));
     expect(content, contains('Pictures/image1.png'));
     expect(styles, contains('fo:page-width'));
     expect(styles, contains('style:num-format="1"'));
@@ -270,9 +276,9 @@ void main() {
     expect(content, contains('fo:font-weight="bold"'));
     expect(content, contains('fo:font-style="italic"'));
     expect(
-      WordZotero.fields(document)
-          .map((field) => (field.instruction, field.cachedText))
-          .toList(),
+      WordZotero.fields(
+        document,
+      ).map((field) => (field.instruction, field.cachedText)).toList(),
       before,
     );
   });
@@ -310,10 +316,9 @@ void main() {
     expect(content, contains('A'));
     expect(content, contains('&amp;'));
     expect(content, contains('&lt;B&gt;'));
-    final master = XmlDocument.parse(package.getPart('/styles.xml')!.readText())
-        .root!
-        .firstChild('master-styles')!
-        .firstChild('master-page')!;
+    final master = XmlDocument.parse(
+      package.getPart('/styles.xml')!.readText(),
+    ).root!.firstChild('master-styles')!.firstChild('master-page')!;
     expect(_odfText(master.firstChild('header')!), ' Head\tA  B ');
     expect(_odfText(master.firstChild('footer')!), 'Foot\nLine 2 ');
   });
@@ -503,5 +508,56 @@ void linkTests() {
     expect(content, contains('text:name="Target"'));
     expect(content, contains('xlink:href="#Target"'));
     expect(content, contains('xlink:href="https://example.com"'));
+  });
+}
+
+void pageFieldTests() {
+  test('writes header page-number fields', () {
+    final document = WmlDocument(
+      sections: [
+        WmlSection(
+          header: [
+            WmlParagraph(
+              properties: WmlParagraphProps(pageNumberField: true),
+              inlines: [WmlRun(text: '1')],
+            ),
+          ],
+          blocks: [
+            WmlParagraph(inlines: [WmlRun(text: 'Body')]),
+          ],
+        ),
+      ],
+    );
+    final package = OpcPackage.openBytes(
+      OdtDocumentWriter.writeBytes(document),
+    );
+    final styles = package.getPart('/styles.xml')!.readText();
+    expect(styles, contains('<text:page-number/>'));
+  });
+}
+
+void paragraphShadingTests() {
+  test('writes paragraph shading and borders', () {
+    final document = WmlDocument(
+      sections: [
+        WmlSection(
+          blocks: [
+            WmlParagraph(
+              properties: WmlParagraphProps(
+                shadingFill: 'FFFF00',
+                borderColor: 'FF0000',
+              ),
+              inlines: [WmlRun(text: 'Shaded')],
+            ),
+          ],
+        ),
+      ],
+    );
+    final package = OpcPackage.openBytes(
+      OdtDocumentWriter.writeBytes(document),
+    );
+    final content = package.getPart('/content.xml')!.readText();
+    expect(content, contains('fo:background-color="#ffff00"'));
+    expect(content, contains('fo:border="0.5pt solid #ff0000"'));
   });
 }

@@ -1,0 +1,28 @@
+{
+  "from": "b32dee6f1fb6993c928a466b553226209cf27fb8",
+  "to": "4c49b0435bc6611221bc49b58b15e735059467ff",
+  "write": [
+    "packages/quds_office_engine/CHANGELOG.md",
+    "packages/quds_office_engine/lib/src/extract/office_search_text.dart",
+    "packages/quds_office_engine/lib/src/extract/office_text_extractor.dart",
+    "packages/quds_office_engine/lib/src/odf/odf_text.dart",
+    "packages/quds_office_engine/lib/src/proofing/data/german_common_00.dart",
+    "packages/quds_office_engine/lib/src/proofing/german_spelling.dart",
+    "packages/quds_office_engine/lib/src/word/serial/odt_document_writer.dart",
+    "packages/quds_office_engine/test/odf_frame_extraction_test.dart",
+    "packages/quds_office_engine/test/odf_text_box_extraction_test.dart",
+    "packages/quds_office_engine/test/odp_presentation_writer_test.dart",
+    "packages/quds_office_engine/test/odt_document_writer_test.dart",
+    "packages/quds_office_engine/test/odt_paragraph_decoration_test.dart",
+    "packages/quds_office_engine/test/odt_section_continuation_test.dart",
+    "packages/quds_office_engine/test/odt_section_fidelity_test.dart",
+    "packages/quds_office_engine/test/odt_section_integration_test.dart",
+    "packages/quds_office_engine/test/proofing/german_lexical_gap_test.dart",
+    "packages/quds_office_engine/test/proofing/german_spelling_quotes_test.dart",
+    "packages/quds_office_engine/third_party/proofing/manifest.json",
+    "packages/quds_office_engine/tool/proofing/german_common_words.txt"
+  ],
+  "delete": [],
+  "pinned_files": 2603,
+  "applied": false
+}

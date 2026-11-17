@@ -1,0 +1,11 @@
+{
+  "tested_host_commit": "6539b63a5bb6a1d932b33de60175d8ea77b1243b",
+  "canonical_runtime_commit": "6572e6588e2212cdd026ce8e2f90464cab483d04",
+  "host_test_passes": 81,
+  "selected_host_test_log_sha256": "d69da0a71b00b706d4da9a2d08a6f3f5656940b104a06040afcacd79aeaecd22",
+  "source_fidelity": "2597 managed files verified",
+  "sync_guard_tests": 9,
+  "crypto_release_inputs": "passed",
+  "affected_host_analysis": "clean",
+  "open_host_prs_at_capture": []
+}
