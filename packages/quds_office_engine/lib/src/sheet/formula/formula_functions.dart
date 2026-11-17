@@ -10,9 +10,8 @@ abstract final class FormulaFunctions {
   /// call API.
   static Object? call(String name, List<FormulaNode> args, FormulaContext ctx) {
     final typed = ctx.tracksErrorTypes;
-    final result = typed
-        ? _call(name, args, ctx)
-        : ctx.withErrorTypes(() => _call(name, args, ctx));
+    Object? evaluate() => ctx.finiteScalar(_call(name, args, ctx));
+    final result = typed ? evaluate() : ctx.withErrorTypes(evaluate);
     return typed ? result : FormulaErrorValue.unwrap(result);
   }
 
@@ -186,16 +185,19 @@ abstract final class FormulaFunctions {
       case 'ABS':
         return _n1(vals)?.abs();
       case 'ROUND':
-        return _round(_n1(vals) ?? 0, _n(vals, 1)?.toInt() ?? 0);
+        return _rounded(_n1(vals) ?? 0, _n(vals, 1) ?? 0, 0);
       case 'ROUNDUP':
-        return _roundToward(_n1(vals) ?? 0, _n(vals, 1)?.toInt() ?? 0, true);
+        return _rounded(_n1(vals) ?? 0, _n(vals, 1) ?? 0, 1);
       case 'ROUNDDOWN':
-        return _roundToward(_n1(vals) ?? 0, _n(vals, 1)?.toInt() ?? 0, false);
+        return _rounded(_n1(vals) ?? 0, _n(vals, 1) ?? 0, -1);
       case 'MOD':
         final double? a = _n(vals, 0);
         final double? b = _n(vals, 1);
         if (a == null || b == null || b == 0) {
           return const FormulaErrorValue('#DIV/0!');
+        }
+        if (!a.isFinite || !b.isFinite || !(a / b).isFinite) {
+          return const FormulaErrorValue('#NUM!');
         }
         return a - b * (a / b).floor();
       case 'PRODUCT':
@@ -844,27 +846,36 @@ abstract final class FormulaFunctions {
   static String _cap(String w) =>
       w.isEmpty ? w : '${w[0].toUpperCase()}${w.substring(1).toLowerCase()}';
 
-  static double _round(double x, int digits) {
-    var f = 1.0;
-    for (int i = 0; i < digits; i++) {
-      f *= 10;
+  // Decimal precision is deliberately bounded to the finite double scale.
+  // Validate before integer conversion or scaling; a formula may supply the
+  // digit count through a referenced cell, not just a literal argument.
+  static Object _rounded(double x, double requestedDigits, int direction) {
+    if (!x.isFinite ||
+        !requestedDigits.isFinite ||
+        requestedDigits.abs() >= 309) {
+      return const FormulaErrorValue('#NUM!');
     }
-    for (int i = 0; i < -digits; i++) {
-      f /= 10;
+    final digits = requestedDigits.truncate();
+    final factor = math.pow(10.0, digits).toDouble();
+    final scaled = x * factor;
+    if (!scaled.isFinite) {
+      // At this magnitude, finer decimal rounding cannot change the double.
+      return x;
     }
-    return (x * f).round() / f;
-  }
-
-  static double _roundToward(double x, int digits, bool up) {
-    var f = 1.0;
-    for (int i = 0; i < digits.abs(); i++) {
-      f *= 10;
+    final double rounded;
+    if (direction > 0) {
+      rounded = scaled == 0 && x != 0
+          ? (x > 0 ? 1.0 : -1.0)
+          : scaled >= 0
+          ? scaled.ceilToDouble()
+          : scaled.floorToDouble();
+    } else if (direction < 0) {
+      rounded = scaled.truncateToDouble();
+    } else {
+      rounded = scaled.roundToDouble();
     }
-    if (digits < 0) {
-      f = 1 / f;
-    }
-    final double s = x * f;
-    return (up ? s.ceil() : s.truncate()) / f;
+    final result = rounded / factor;
+    return result.isFinite ? result : const FormulaErrorValue('#NUM!');
   }
 
   static double _evenOdd(double x, bool even) {
@@ -1156,53 +1167,12 @@ abstract final class FormulaFunctions {
     return g;
   }
 
-  static double _ln(double x) {
-    if (x <= 0) return double.nan;
-    var y = x;
-    var k = 0;
-    while (y > 1.5) {
-      y /= 2.718281828459045;
-      k++;
-    }
-    while (y < 0.7) {
-      y *= 2.718281828459045;
-      k--;
-    }
-    final double z = (y - 1) / (y + 1);
-    var term = z;
-    var sum = 0.0;
-    final double z2 = z * z;
-    for (int n = 0; n < 14; n++) {
-      sum += term / (2 * n + 1);
-      term *= z2;
-    }
-    return 2 * sum + k;
-  }
+  static double _ln(double x) => x.isFinite && x > 0 ? math.log(x) : double.nan;
 
-  static double _exp(double x) {
-    var sum = 1.0;
-    var term = 1.0;
-    for (int n = 1; n < 24; n++) {
-      term *= x / n;
-      sum += term;
-    }
-    return sum;
-  }
+  static double _exp(double x) => x.isFinite ? math.exp(x) : double.nan;
 
-  static double _powNum(double a, double b) {
-    if (b == 0) return 1;
-    if (b == 1) return a;
-    final int exp = b.round();
-    if (exp.toDouble() == b && exp >= 0 && exp < 40) {
-      var r = 1.0;
-      for (int i = 0; i < exp; i++) {
-        r *= a;
-      }
-      return r;
-    }
-    if (a <= 0) return double.nan;
-    return _exp(b * _ln(a));
-  }
+  static double _powNum(double a, double b) =>
+      a.isFinite && b.isFinite ? math.pow(a, b).toDouble() : double.nan;
 
   static Object? _let(List<FormulaNode> args, FormulaContext ctx) {
     if (args.length < 3 || args.length.isEven) {

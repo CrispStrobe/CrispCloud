@@ -202,6 +202,15 @@ Map<String, List<_GermanNounReading>> _buildGrammarNounForms() {
           .add(_GermanNounReading(noun, _GermanGender.plural, true));
     }
   }
+  for (final MapEntry<String, List<_GermanNounReading>> entry
+      in result.entries.toList(growable: false)) {
+    final String swiss = entry.key.replaceAll('ß', 'ss');
+    if (swiss != entry.key) {
+      result
+          .putIfAbsent(swiss, () => <_GermanNounReading>[])
+          .addAll(entry.value);
+    }
+  }
   return result;
 }
 
@@ -359,22 +368,29 @@ const Set<String> _grammarAdjectiveStems = <String>{
   'müd',
 };
 
-final Map<String, Set<String>> _grammarAdjectiveForms = <String, Set<String>>{
-  for (final String stem in _grammarAdjectiveStems)
-    for (final String ending in const <String>['', 'e', 'en', 'em', 'er', 'es'])
-      '$stem$ending': <String>{
-        for (final String candidate in _grammarAdjectiveStems)
-          if (const <String>[
-            '',
-            'e',
-            'en',
-            'em',
-            'er',
-            'es',
-          ].any((String suffix) => '$candidate$suffix' == '$stem$ending'))
-            candidate,
-      },
-};
+final Map<String, Set<String>> _grammarAdjectiveForms =
+    _buildGrammarAdjectives();
+
+Map<String, Set<String>> _buildGrammarAdjectives() {
+  final Map<String, Set<String>> result = <String, Set<String>>{};
+  for (final String stem in _grammarAdjectiveStems) {
+    for (final String ending in const <String>[
+      '',
+      'e',
+      'en',
+      'em',
+      'er',
+      'es',
+    ]) {
+      final String form = '$stem$ending';
+      result.putIfAbsent(form, () => <String>{}).add(stem);
+      result
+          .putIfAbsent(form.replaceAll('ß', 'ss'), () => <String>{})
+          .add(stem);
+    }
+  }
+  return result;
+}
 
 String _grammarAdjectiveEnding(
   _GermanDeterminer determiner,
@@ -542,6 +558,7 @@ Iterable<_GermanGrammarIssue> _germanGrammarIssues(
   }
   yield* _grammarClauseIssues(text, words, protected, boundaries);
   yield* _grammarComparisonIssues(text, words, protected, boundaries);
+  yield* _grammarInvertedAgreement(text, words, protected, boundaries);
 }
 
 Iterable<_GermanGrammarIssue> _grammarNounPhrase(
@@ -590,20 +607,24 @@ Iterable<_GermanGrammarIssue> _grammarNounPhrase(
     // reading, a plural-only lookup must not rewrite a valid singular phrase.
     return;
   }
-  List<(_GermanNounReading, _GermanCase)>
-  analyses = <(_GermanNounReading, _GermanCase)>[
-    for (final _GermanNounReading reading in readings)
-      if (reading.gender != _GermanGender.plural || determiner.permitsPlural)
-        for (final _GermanCase grammaticalCase
-            in governedCase == null
-                ? _GermanCase.values
-                : <_GermanCase>[governedCase])
-          if (governedCase != null ||
-              determiner.form(grammaticalCase, reading.gender) ==
-                      article.lower &&
-                  reading.inCase(grammaticalCase).toLowerCase() == noun.lower)
-            (reading, grammaticalCase),
-  ];
+  List<(_GermanNounReading, _GermanCase)> analyses =
+      <(_GermanNounReading, _GermanCase)>[
+        for (final _GermanNounReading reading in readings)
+          if (reading.gender != _GermanGender.plural ||
+              determiner.permitsPlural)
+            for (final _GermanCase grammaticalCase
+                in governedCase == null
+                    ? _GermanCase.values
+                    : <_GermanCase>[governedCase])
+              if (governedCase != null ||
+                  determiner.form(grammaticalCase, reading.gender) ==
+                          article.lower &&
+                      _germanFormsEquivalent(
+                        reading.inCase(grammaticalCase).toLowerCase(),
+                        noun.lower,
+                      ))
+                (reading, grammaticalCase),
+      ];
   if (analyses.isEmpty) return;
   // Honor an already valid determiner first. This disambiguates e.g.
   // "mit den Fehler" (plural) from "mit dem Fehler" (singular).
@@ -636,7 +657,7 @@ Iterable<_GermanGrammarIssue> _grammarNounPhrase(
   };
   if (governedCase == _GermanCase.dative &&
       nounForms.length == 1 &&
-      nounForms.single.toLowerCase() != noun.lower &&
+      !_germanFormsEquivalent(nounForms.single.toLowerCase(), noun.lower) &&
       analyses.every(
         ((_GermanNounReading, _GermanCase) analysis) =>
             analysis.$1.gender == _GermanGender.plural,
@@ -656,7 +677,11 @@ Iterable<_GermanGrammarIssue> _grammarNounPhrase(
     // "die automatisch geänderte Datei", "ein leicht beschädigtes Buch".
     // Inflecting it would change the phrase's structure and meaning.
     if (adjective != adjectives.last &&
-        _grammarAdjectiveStems.contains(adjective.lower)) {
+        (_grammarAdjectiveStems.any(
+              (String stem) => _germanFormsEquivalent(stem, adjective.lower),
+            ) ||
+            const <String>{'leise', 'müde'}.contains(adjective.lower) ||
+            adjective.lower.endsWith('er'))) {
       continue;
     }
     final Set<String> replacements = <String>{
@@ -664,7 +689,11 @@ Iterable<_GermanGrammarIssue> _grammarNounPhrase(
         for (final (_GermanNounReading, _GermanCase) analysis in analyses)
           '$stem${_grammarAdjectiveEnding(determiner, analysis.$2, analysis.$1.gender)}',
     };
-    if (replacements.length != 1 || replacements.contains(adjective.lower)) {
+    if (replacements.length != 1 ||
+        replacements.any(
+          (String replacement) =>
+              _germanFormsEquivalent(replacement, adjective.lower),
+        )) {
       continue;
     }
     yield _GermanGrammarIssue(
@@ -692,6 +721,8 @@ const Set<String> _grammarMatrixVerbs = <String>{
   'hoffen',
   'weiß',
   'weißt',
+  'weiss',
+  'weisst',
   'wissen',
   'wisst',
   'vermute',
@@ -800,6 +831,7 @@ const Set<String> _grammarComparatives = <String>{
   'besser',
   'schlechter',
   'größer',
+  'grösser',
   'kleiner',
   'älter',
   'jünger',
@@ -813,11 +845,13 @@ const Set<String> _grammarComparatives = <String>{
   'schwerer',
   'teurer',
   'billiger',
+  'wichtiger',
 };
 const Set<String> _grammarPositiveComparisons = <String>{
   'gut',
   'schlecht',
   'groß',
+  'gross',
   'klein',
   'alt',
   'jung',
@@ -831,7 +865,89 @@ const Set<String> _grammarPositiveComparisons = <String>{
   'schwer',
   'teuer',
   'billig',
+  'wichtig',
 };
+
+Iterable<_GermanGrammarIssue> _grammarInvertedAgreement(
+  String text,
+  List<_GermanGrammarWord> words,
+  bool Function(int, int) protected,
+  Set<int> boundaries,
+) sync* {
+  for (int i = 0; i + 1 < words.length; i++) {
+    final _GermanGrammarWord verb = words[i];
+    final _GermanGrammarWord subject = words[i + 1];
+    if (!const <String>{
+          'ich',
+          'du',
+          'er',
+          'man',
+          'wir',
+        }.contains(subject.lower) ||
+        !_grammarAdjacent(text, verb, subject) ||
+        !_grammarContextSafe(verb.start, subject.end, protected, boundaries)) {
+      continue;
+    }
+    final _GermanPresentParadigm? paradigm =
+        GermanWritingRulesProvider._presentByForm[verb.lower];
+    if (paradigm == null) continue;
+    final String replacement = paradigm.forSubject(subject.lower);
+    if (_germanFormsEquivalent(replacement, verb.lower) ||
+        const <String>{'er', 'man'}.contains(subject.lower) &&
+            paradigm.isThirdPersonSubjunctive(verb.lower) ||
+        subject.lower == 'du' &&
+            paradigm.isThirdPersonSubjunctive(verb.lower)) {
+      // "Habe er gesagt" is reported speech; "Habe du Geduld" is an
+      // imperative with an optional hearer pronoun. Neither is an error.
+      continue;
+    }
+    if (subject.capitalized &&
+        (subject.text != subject.text.toUpperCase() ||
+            verb.text != verb.text.toUpperCase())) {
+      continue;
+    }
+    // The verb may already belong to a preceding subject, followed by a
+    // metalinguistic pronoun: "Wir haben du gesagt". Do not reinterpret it.
+    if (i > 0 &&
+        _grammarAdjacent(text, words[i - 1], verb) &&
+        (_grammarSubjects.contains(words[i - 1].lower) ||
+            _grammarDeterminerForms.containsKey(words[i - 1].lower))) {
+      continue;
+    }
+    if (i + 2 < words.length) {
+      final _GermanGrammarWord next = words[i + 2];
+      final String gap = text.substring(subject.end, next.start);
+      if (gap.trimLeft().startsWith(',') ||
+          _grammarAdjacent(text, subject, next) &&
+              const <String>{
+                'und',
+                'oder',
+                'sowie',
+                'noch',
+              }.contains(next.lower)) {
+        // "Haben du und ich Zeit?" has a coordinated plural subject.
+        continue;
+      }
+    }
+    if (i > 0 && verb.capitalized && verb.text != verb.text.toUpperCase()) {
+      final String prefix = text
+          .substring(verb.start > 96 ? verb.start - 96 : 0, verb.start)
+          .trimRight();
+      if (prefix.isNotEmpty &&
+          !RegExp(r'''[.!?;:,\n„“«»(]$''').hasMatch(prefix)) {
+        // A title-case word mid-clause may be a noun, e.g. "die Macht".
+        continue;
+      }
+    }
+    yield _GermanGrammarIssue(
+      'de.grammar.pronoun-verb',
+      verb.start,
+      verb.end,
+      _matchCase(verb.text, replacement),
+      'Diese Verbform passt normalerweise nicht zum unmittelbar folgenden Subjektpronomen.',
+    );
+  }
+}
 
 Iterable<_GermanGrammarIssue> _grammarComparisonIssues(
   String text,
@@ -888,25 +1004,28 @@ Iterable<_GermanGrammarIssue> _grammarComparisonIssues(
           _grammarAdjacent(text, words[last], words[last + 1])) {
         last++;
       }
-      if (last - i > 3 ||
-          words
-              .sublist(i + 1, last + 1)
-              .any(
-                (_GermanGrammarWord word) =>
-                    GermanWritingRulesProvider._presentByForm.containsKey(
-                      word.lower,
-                    ) ||
-                    const <String>{
-                      'war',
-                      'waren',
-                      'wurde',
-                      'wurden',
-                      'kam',
-                      'kamen',
-                      'hatte',
-                      'hatten',
-                    }.contains(word.lower),
-              )) {
+      final int count = last - i;
+      final _GermanGrammarWord next = words[i + 1];
+      final bool simplePronoun =
+          count == 1 &&
+          (_grammarSubjects.contains(next.lower) ||
+              const <String>{
+                'früher',
+                'zuvor',
+                'bisher',
+                'gestern',
+                'heute',
+              }.contains(next.lower));
+      final bool simpleNounPhrase =
+          _grammarDeterminerForms.containsKey(next.lower) &&
+          (count == 2 && words[last].capitalized ||
+              count == 3 &&
+                  _grammarAdjectiveForms.containsKey(words[i + 2].lower) &&
+                  words[last].capitalized);
+      if (!simplePronoun && !simpleNounPhrase) {
+        // Bare roles ("so gut als Lehrer") and pronoun-led clauses
+        // ("so klein als er hier ankam") do not establish an equality
+        // comparison. Do not guess their meaning or enumerate past verbs.
         continue;
       }
       replacement = 'wie';

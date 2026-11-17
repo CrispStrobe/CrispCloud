@@ -1115,6 +1115,11 @@ class SheetSerializer {
       package
           .getPart(uri)!
           .writeText(_sheetXml(book.sheets[i], sst, package, uri));
+      // The native rule XML now represents this state, not the state originally
+      // imported. Reverting a later color/formula edit must regenerate it
+      // instead of preserving a previous save's stale rule or dxfId.
+      book.sheets[i].sourceConditionalFormatState = book.sheets[i]
+          .conditionalFormatState();
       _writeSheetExtras(
         book.sheets[i],
         package,
@@ -1323,18 +1328,6 @@ class SheetSerializer {
       return;
     }
     final SmlStyleSheet styles = book.styles ?? SmlStyleSheet();
-    final generatedDxfs = <({String fillRgb, String fontRgb})>[];
-    final generateDxfs = book.sheets.every(
-      (sheet) => sheet.sourceConditionalFormatState == null,
-    );
-    if (generateDxfs) {
-      for (final sheet in book.sheets) {
-        for (final rule in sheet.conditionalFormats) {
-          rule.dxfId = generatedDxfs.length;
-          generatedDxfs.add((fillRgb: rule.fillRgb, fontRgb: rule.fontRgb));
-        }
-      }
-    }
     for (final SmlWorksheet sheet in book.sheets) {
       for (final SmlCell cell in sheet.allCells) {
         // Defaults can be an intentional edit away from an imported style.
@@ -1355,20 +1348,21 @@ class SheetSerializer {
       }
     }
     book.styles = styles;
-    if (package.getPart('/xl/styles.xml') == null) {
+    final existing = package.getPart('/xl/styles.xml');
+    final xml = _syncConditionalStyles(
+      book,
+      styles,
+      styles.toXml(),
+      existing?.readText(),
+    );
+    if (existing == null) {
       package.createPart(
         '/xl/styles.xml',
         OfficeContentTypes.sheetStyles,
-        utf8.encode(
-          styles.toXml(dxfs: generateDxfs ? generatedDxfs : const []),
-        ),
+        utf8.encode(xml),
       );
     } else {
-      package
-          .getPart('/xl/styles.xml')!
-          .writeText(
-            styles.toXml(dxfs: generateDxfs ? generatedDxfs : const []),
-          );
+      existing.writeText(xml);
     }
     final RelationshipCollection rels = package.relationshipsFor(
       '/xl/workbook.xml',
@@ -1376,6 +1370,282 @@ class SheetSerializer {
     if (rels.firstByType(RelationshipTypes.styles) == null) {
       rels.add(type: RelationshipTypes.styles, target: 'styles.xml');
     }
+  }
+
+  // A native dxf can be shared by multiple rules and contain properties that
+  // the compact model does not expose. Keep every original entry and allocate
+  // a modified copy only when a modeled color changes. The current package is
+  // authoritative for previously appended entries on repeated in-memory saves.
+  static String _syncConditionalStyles(
+    SmlWorkbook book,
+    SmlStyleSheet styles,
+    String xml,
+    String? sourceXml,
+  ) {
+    final document = XmlDocument.parse(xml);
+    final root = document.root!;
+    final namespace = root.namespaceUri;
+    final source = sourceXml == null ? null : XmlDocument.parse(sourceXml);
+    final nativeDxfs = source?.root?.firstChild(
+      'dxfs',
+      namespaceUri: namespace,
+    );
+    var dxfs = root.firstChild('dxfs', namespaceUri: namespace);
+    if (nativeDxfs != null) {
+      final copy = nativeDxfs.copy();
+      if (dxfs == null) {
+        _insertOrderedStyleChild(root, copy, const [
+          'numFmts',
+          'fonts',
+          'fills',
+          'borders',
+          'cellStyleXfs',
+          'cellXfs',
+          'cellStyles',
+          'dxfs',
+          'tableStyles',
+          'colors',
+          'extLst',
+        ]);
+      } else {
+        final index = root.children.indexOf(dxfs);
+        root.children[index] = copy..parent = root;
+      }
+      dxfs = copy;
+    }
+    final entries = <XmlElement>[
+      ...?dxfs?.childrenNamed('dxf', namespaceUri: namespace),
+    ];
+    String color(XmlElement? node) => SmlStyleSheet.resolveColor(
+      rgb: node?.getAttribute('rgb', namespaceUri: ''),
+      theme: node?.getAttribute('theme', namespaceUri: ''),
+      indexed: node?.getAttribute('indexed', namespaceUri: ''),
+      tint: node?.getAttribute('tint', namespaceUri: ''),
+      themeColors: styles.themeColors,
+    );
+    String fill(XmlElement node) {
+      final pattern = node
+          .firstChild('fill', namespaceUri: namespace)
+          ?.firstChild('patternFill', namespaceUri: namespace);
+      final foreground = color(
+        pattern?.firstChild('fgColor', namespaceUri: namespace),
+      );
+      return foreground.isNotEmpty
+          ? foreground
+          : color(pattern?.firstChild('bgColor', namespaceUri: namespace));
+    }
+
+    String font(XmlElement node) => color(
+      node
+          .firstChild('font', namespaceUri: namespace)
+          ?.firstChild('color', namespaceUri: namespace),
+    );
+    final fills = [for (final entry in entries) fill(entry)];
+    final fonts = [for (final entry in entries) font(entry)];
+    String signature(XmlElement node) =>
+        XmlDocument(root: node).toXmlString(declaration: false);
+    final existingIds = <String, int>{};
+    for (var index = 0; index < entries.length; index++) {
+      existingIds.putIfAbsent(signature(entries[index]), () => index);
+    }
+    for (final sheet in book.sheets) {
+      for (final rule in sheet.conditionalFormats) {
+        final wantedFill = rule.fillRgb.toUpperCase();
+        final wantedFont = rule.fontRgb.toUpperCase();
+        final sourceId = rule.dxfId;
+        final valid =
+            sourceId != null && sourceId >= 0 && sourceId < entries.length;
+        if (valid &&
+            fills[sourceId] == wantedFill &&
+            fonts[sourceId] == wantedFont) {
+          continue;
+        }
+        if (!valid && wantedFill.isEmpty && wantedFont.isEmpty) {
+          rule.dxfId = null;
+          continue;
+        }
+        final candidate = valid
+            ? entries[sourceId].copy()
+            : _nativeStyleElement('dxf', dxfs ?? root);
+        if (!valid || fills[sourceId] != wantedFill) {
+          _editDxfFill(candidate, wantedFill);
+        }
+        if (!valid || fonts[sourceId] != wantedFont) {
+          _editDxfFont(candidate, wantedFont);
+        }
+        final key = signature(candidate);
+        var id = existingIds[key];
+        if (id == null) {
+          id = entries.length;
+          if (dxfs == null) {
+            dxfs = _nativeStyleElement('dxfs', root);
+            _insertOrderedStyleChild(root, dxfs, const [
+              'numFmts',
+              'fonts',
+              'fills',
+              'borders',
+              'cellStyleXfs',
+              'cellXfs',
+              'cellStyles',
+              'dxfs',
+              'tableStyles',
+              'colors',
+              'extLst',
+            ]);
+          }
+          dxfs.addChild(candidate);
+          entries.add(candidate);
+          fills.add(wantedFill);
+          fonts.add(wantedFont);
+          existingIds[key] = id;
+          _setPlainStyleAttribute(dxfs, 'count', '${entries.length}');
+        }
+        rule.dxfId = id;
+      }
+    }
+    styles.dxfFills
+      ..clear()
+      ..addAll(fills);
+    styles.dxfFonts
+      ..clear()
+      ..addAll(fonts);
+    final result = document.toXmlString();
+    // Metadata-only edits must not normalize an otherwise untouched native
+    // stylesheet's lexical details, such as whitespace around its root.
+    return sourceXml != null && result == source!.toXmlString()
+        ? sourceXml
+        : result;
+  }
+
+  static XmlElement _nativeStyleElement(String name, XmlElement parent) =>
+      XmlElement(
+        localName: name,
+        prefix: parent.prefix,
+        namespaceUri: parent.namespaceUri,
+      );
+
+  static void _setPlainStyleAttribute(
+    XmlElement node,
+    String name,
+    String value,
+  ) {
+    for (final attribute in node.attributes) {
+      if (attribute.localName == name &&
+          attribute.prefix.isEmpty &&
+          attribute.namespaceUri.isEmpty) {
+        attribute.value = value;
+        return;
+      }
+    }
+    node.attributes.add(XmlAttribute(localName: name, value: value));
+  }
+
+  static void _insertOrderedStyleChild(
+    XmlElement parent,
+    XmlElement child,
+    List<String> order,
+  ) {
+    final position = order.indexOf(child.localName);
+    final next = parent.children.indexWhere(
+      (node) =>
+          node is XmlElement &&
+          node.namespaceUri == parent.namespaceUri &&
+          order.indexOf(node.localName) > position,
+    );
+    child.parent = parent;
+    parent.children.insert(next < 0 ? parent.children.length : next, child);
+  }
+
+  static void _setDxfColor(XmlElement color, String rgb) {
+    color.attributes.removeWhere(
+      (attribute) =>
+          attribute.prefix.isEmpty &&
+          attribute.namespaceUri.isEmpty &&
+          const {
+            'rgb',
+            'theme',
+            'indexed',
+            'tint',
+            'auto',
+          }.contains(attribute.localName),
+    );
+    color.attributes.add(XmlAttribute(localName: 'rgb', value: 'FF$rgb'));
+  }
+
+  static void _editDxfFill(XmlElement dxf, String rgb) {
+    final namespace = dxf.namespaceUri;
+    var fill = dxf.firstChild('fill', namespaceUri: namespace);
+    if (rgb.isEmpty) {
+      // An absent fill contributes no override. Leaving a solid pattern with
+      // missing colors would allow consumers to invent a black/default fill.
+      if (fill != null) dxf.children.remove(fill);
+      return;
+    }
+    if (fill == null) {
+      fill = _nativeStyleElement('fill', dxf);
+      _insertOrderedStyleChild(dxf, fill, const [
+        'font',
+        'numFmt',
+        'fill',
+        'alignment',
+        'border',
+        'protection',
+        'extLst',
+      ]);
+    }
+    fill.children.removeWhere(
+      (node) =>
+          node is XmlElement &&
+          node.namespaceUri == namespace &&
+          node.localName == 'gradientFill',
+    );
+    var pattern = fill.firstChild('patternFill', namespaceUri: namespace);
+    if (pattern == null) {
+      pattern = _nativeStyleElement('patternFill', fill);
+      fill.addChild(pattern);
+    }
+    _setPlainStyleAttribute(pattern, 'patternType', 'solid');
+    var foreground = pattern.firstChild('fgColor', namespaceUri: namespace);
+    if (foreground == null) {
+      foreground = _nativeStyleElement('fgColor', pattern);
+      _insertOrderedStyleChild(pattern, foreground, const [
+        'fgColor',
+        'bgColor',
+      ]);
+    }
+    _setDxfColor(foreground, rgb);
+  }
+
+  static void _editDxfFont(XmlElement dxf, String rgb) {
+    final namespace = dxf.namespaceUri;
+    var font = dxf.firstChild('font', namespaceUri: namespace);
+    if (rgb.isEmpty) {
+      font?.children.removeWhere(
+        (node) =>
+            node is XmlElement &&
+            node.namespaceUri == namespace &&
+            node.localName == 'color',
+      );
+      return;
+    }
+    if (font == null) {
+      font = _nativeStyleElement('font', dxf);
+      _insertOrderedStyleChild(dxf, font, const [
+        'font',
+        'numFmt',
+        'fill',
+        'alignment',
+        'border',
+        'protection',
+        'extLst',
+      ]);
+    }
+    var color = font.firstChild('color', namespaceUri: namespace);
+    if (color == null) {
+      color = _nativeStyleElement('color', font);
+      font.addChild(color);
+    }
+    _setDxfColor(color, rgb);
   }
 
   String _workbookXml(

@@ -66,8 +66,10 @@ class SheetRenameEdit {
     return true;
   }
 
-  // Cached values and generated OPC owner paths are intentionally excluded:
-  // recalculation and saving do not change the reference edit's assumptions.
+  // Cached values, generated OPC owner paths and the conditional serialization
+  // checkpoint are intentionally excluded: recalculation and saving do not
+  // change the reference edit's assumptions. Authored conditional properties
+  // remain checked below, and native reference owners are verified separately.
   static List<Object?> _modelState(SmlWorkbook book) => [
     book.sourceDefinedNameState,
     book.definedNameState(),
@@ -79,7 +81,6 @@ class SheetRenameEdit {
       sheet.sheetId,
       sheet.sourceValidationState,
       sheet.validationState(),
-      sheet.sourceConditionalFormatState,
       sheet.conditionalFormatState(),
       for (final rule in sheet.validations) rule,
       for (final rule in sheet.conditionalFormats) rule,

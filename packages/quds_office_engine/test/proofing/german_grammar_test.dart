@@ -81,6 +81,13 @@ void main() {
     ('Sie ist jünger wie er.', 'comparison', 'wie', 'als'),
     ('Er ist so groß als ich.', 'comparison', 'als', 'wie'),
     ('Sie ist genauso gut als er.', 'comparison', 'als', 'wie'),
+    (
+      'Die Datei ist ebenso wichtig als der Bericht.',
+      'comparison',
+      'als',
+      'wie',
+    ),
+    ('Die Datei ist wichtiger wie der Bericht.', 'comparison', 'wie', 'als'),
   ];
 
   group('first-party phrase and clause corrections', () {
@@ -179,6 +186,10 @@ void main() {
     'Eine leicht beschädigte Tür ist hier.',
     'Ein vollständig geänderter Text ist hier.',
     'Ein einfach schönes Haus ist hier.',
+    'Ein leise geschlossenes Fenster hilft dem Kind.',
+    'Mit dem leise geschlossenen Fenster ist es ruhig.',
+    'Ein müde geprüfter Bericht liegt vor.',
+    'Eine leiser geschlossene Tür hilft dem Kind.',
     'Ein besonders gutes Buch liegt hier.',
     'Die Kinder spielen schön. Der Mann ist freundlich.',
     'Ich denke, dass du kommst.',
@@ -204,6 +215,13 @@ void main() {
     'Er ist so groß als wenn er gewachsen wäre.',
     'Er war so klein als er geboren wurde.',
     'Er war so klein als er kam.',
+    'Die Datei ist ebenso wichtig wie der Bericht.',
+    'Die Datei ist wichtiger als der Bericht.',
+    'Der Bericht war so wichtig als er hier ankam.',
+    'Der Bericht war so wichtig als ob er alles bewiesen hätte.',
+    'Er ist so gut als Lehrer.',
+    'Er ist so gut als Arzt.',
+    'Sie ist so wichtig als Ärztin.',
     'Der Besser ist ein Name. Besser wie früher ist ein Titel.',
   ];
   group('valid and unresolved structures remain untouched', () {

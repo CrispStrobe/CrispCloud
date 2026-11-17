@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import '../model/sml_analysis.dart';
 import '../model/sml_workbook.dart';
 import 'formula_eval.dart';
@@ -149,6 +151,11 @@ class FormulaContext {
   Object error(String code, {bool unsupported = false}) =>
       _typedErrors ? FormulaErrorValue(code, isUnsupported: unsupported) : code;
 
+  /// Nonfinite scalar results are calculation errors, not truthy values that
+  /// comparisons, IF or a downstream function may silently consume.
+  Object? finiteScalar(Object? value) =>
+      value is num && !value.isFinite ? error('#NUM!') : value;
+
   /// LET bindings (uppercase name → value).
   final Map<String, Object?> lets = <String, Object?>{};
 
@@ -157,7 +164,7 @@ class FormulaContext {
     final SmlWorksheet target = onSheet ?? sheet;
     final resolver = resolveCell;
     if (resolver != null) {
-      final value = resolver(target, ref);
+      final value = finiteScalar(resolver(target, ref));
       return tracksErrorTypes ? value : FormulaErrorValue.unwrap(value);
     }
     final String key = '${target.name}!${ref.a1}';
@@ -177,7 +184,7 @@ class FormulaContext {
             ? evaluateFormulaForCache(cell.formula!, child)
             : evaluateFormula(cell.formula!, child);
       }
-      final value = cell.value;
+      final value = finiteScalar(cell.value);
       return tracksErrorTypes &&
               cell.type == SmlCellType.error &&
               value is String
@@ -203,10 +210,10 @@ class LiteralNode extends FormulaNode {
     if (value is String) {
       final String key = (value as String).toUpperCase();
       if (ctx.lets.containsKey(key)) {
-        return ctx.lets[key];
+        return ctx.finiteScalar(ctx.lets[key]);
       }
     }
-    return value;
+    return ctx.finiteScalar(value);
   }
 }
 
@@ -282,8 +289,9 @@ class NamedRangeNode extends FormulaNode {
     final raw = formula.trim();
     if (raw.toUpperCase() == 'TRUE') return true;
     if (raw.toUpperCase() == 'FALSE') return false;
-    if (RegExp(r'^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$')
-        .hasMatch(raw)) {
+    if (RegExp(
+      r'^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$',
+    ).hasMatch(raw)) {
       final number = double.tryParse(raw);
       if (number != null && number.isFinite) return number;
     }
@@ -392,12 +400,13 @@ class BinaryNode extends FormulaNode {
       }
       return ctx.error('#VALUE!');
     }
-    return switch (op) {
+    if (!na.isFinite || !nb.isFinite) return ctx.error('#NUM!');
+    return ctx.finiteScalar(switch (op) {
       '+' => na + nb,
       '-' => na - nb,
       '*' => na * nb,
       '/' => nb == 0 ? ctx.error('#DIV/0!') : na / nb,
-      '^' => _pow(na, nb),
+      '^' => math.pow(na, nb).toDouble(),
       '=' => na == nb,
       '<>' => na != nb,
       '<' => na < nb,
@@ -405,7 +414,7 @@ class BinaryNode extends FormulaNode {
       '>' => na > nb,
       '>=' => na >= nb,
       _ => ctx.error('#VALUE!'),
-    };
+    });
   }
 }
 
@@ -431,7 +440,7 @@ class UnaryNode extends FormulaNode {
     if (n == null) {
       return ctx.error('#VALUE!');
     }
-    return op == '-' ? -n : n;
+    return ctx.finiteScalar(op == '-' ? -n : n);
   }
 }
 
@@ -521,75 +530,6 @@ double? _num(Object? v) {
 }
 
 String _str(Object? v) => v == null ? '' : v.toString();
-
-double _pow(double a, double b) {
-  /// r API.
-  var r = 1.0;
-
-  /// exp API.
-  final int exp = b.round();
-  if (exp.toDouble() == b && exp >= 0 && exp < 40) {
-    for (int i = 0; i < exp; i++) {
-      r *= a;
-    }
-    return r;
-  }
-  // exp via exp(b*ln(a)) for positive a
-  if (a <= 0) {
-    return double.nan;
-  }
-  return _exp(b * _ln(a));
-}
-
-double _ln(double x) {
-  if (x <= 0) {
-    return double.nan;
-  }
-
-  /// y API.
-  var y = x;
-
-  /// k API.
-  var k = 0;
-  while (y > 1.5) {
-    y /= 2.718281828459045;
-    k++;
-  }
-  while (y < 0.7) {
-    y *= 2.718281828459045;
-    k--;
-  }
-
-  /// z API.
-  final double z = (y - 1) / (y + 1);
-
-  /// z2 API.
-  final double z2 = z * z;
-
-  /// term API.
-  var term = z;
-
-  /// sum API.
-  var sum = 0.0;
-  for (int n = 0; n < 12; n++) {
-    sum += term / (2 * n + 1);
-    term *= z2;
-  }
-  return 2 * sum + k;
-}
-
-double _exp(double x) {
-  /// sum API.
-  var sum = 1.0;
-
-  /// term API.
-  var term = 1.0;
-  for (int n = 1; n < 20; n++) {
-    term *= x / n;
-    sum += term;
-  }
-  return sum;
-}
 
 /// formulaString helper.
 String formulaString(Object? v) => _str(v);

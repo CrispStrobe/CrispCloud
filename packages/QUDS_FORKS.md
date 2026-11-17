@@ -26,12 +26,14 @@ content.
 The app mirrors the canonical Quds source and the standalone legacy parser.
 Exact revisions, source boundaries and the complete managed-file inventory are
 recorded in [the fidelity manifest](../tool/office_fidelity_manifest.json).
-The current canonical checkpoint is `554eddc179856b648a83fa2b49f395071e8a7e71`;
-the managed inventory contains 2,552 files, including the unchanged 1,857-file
+The current canonical checkpoint is `837d06edbde08a2465e99cbbb15927ee4c87d8ac`;
+the managed inventory contains 2,554 files, including the unchanged 1,857-file
 standalone parser. This continuation retains the completed Zotero recovery,
 English hyphenation, proofing and ranked/average spreadsheet work, including
 conditional-format differential-style preservation, current proofing/rendering branches,
-and the ODT/ODP writers from canonical main. The host
+and the ODT/ODP writers from canonical main. The final amendment adds German
+agreement/context coverage, bounded numeric formula evaluation, conditional
+style serialization, and rename undo that remains valid after saving. The host
 bundles all six original Office notices, including the American English
 `LicenseRef-Kuiken-permissive` grant and the British English MIT notice.
 The [previous completed qualification](../docs/validation/zotero-recovery-20261116/README.md)
