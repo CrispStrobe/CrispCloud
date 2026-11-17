@@ -1,0 +1,13 @@
+{
+  "baseline": "ddf1e32219593941495dbe993ef2b51fb4588a41",
+  "canonical_source": "1d8325d41526a55e3d6cd6031371458d2ee396e5",
+  "reviewed_paths": 954,
+  "changed_reviewed_paths": [
+    "tool/office_fidelity_manifest.json"
+  ],
+  "only_policy_field_changed": "reviewed_source_sha256",
+  "previous_fingerprint": "f04ab1e9258a9a56da46d9c2bcb5e8e91f0cf9cfd67b08e22b3ff2e969ac3791",
+  "current_fingerprint": "a250e019537c909119cd43b978c0c8d88dfbc75339c8815f30bdb808e409e004",
+  "status": "passed",
+  "submission_performed": false
+}

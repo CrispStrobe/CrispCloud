@@ -1,0 +1,115 @@
+{
+  "status": "setup-in-progress",
+  "source_baseline": "ddf1e32219593941495dbe993ef2b51fb4588a41",
+  "canonical_source": "1d8325d41526a55e3d6cd6031371458d2ee396e5",
+  "archive": "host-runtime-recovery-source-candidate.tar.xz",
+  "archive_sha256": "b60872d345c98c9abe9b1d45b7b0f3b1e377173962fd3448cd481161c99e75b5",
+  "archive_bytes": 23484,
+  "files": [
+    {
+      "path": "scripts/run_host.py",
+      "bytes": 1712,
+      "sha256": "c69dfd2d4cd1270923d5328699e3e1b309c43f04265e8b0940c2a16e5457293a"
+    },
+    {
+      "path": "scripts/run-full-host-qualification.py",
+      "bytes": 26126,
+      "sha256": "9c552830e5f7cd0f3177213acc1976a8f38a7661ca407dbc23a1da509da21029"
+    },
+    {
+      "path": "scripts/prior_host_qualification.py",
+      "bytes": 28660,
+      "sha256": "4049d732d10f42d8f3254b90d2943f41c99618a4fc820b68050ce70d989b8fed"
+    },
+    {
+      "path": "scripts/prepare_full_harness.py",
+      "bytes": 1777,
+      "sha256": "f0c284863f4fa6ecdcefd6e2a732d0dacd5fd5bd31a26829eb17c7ee500c8e30"
+    },
+    {
+      "path": "scripts/prefetch_pub.py",
+      "bytes": 3700,
+      "sha256": "5caa335ef5b2d84c70a50a45acec130eeeab07e4b67b64e6f9079a584b4ab09e"
+    },
+    {
+      "path": "scripts/restore_native_tools.py",
+      "bytes": 3047,
+      "sha256": "ac1299d0d5bf70c6a9b3d6b5246e6c7522eb2884a5e01a6291809001a88519a9"
+    },
+    {
+      "path": "prior-evidence/probes/odt_writer_host_test.dart",
+      "bytes": 2925,
+      "sha256": "ef5223be53fffe2358d6d4c9588a37b326d8c05791a6dafcf678f855285660f6"
+    },
+    {
+      "path": "prior-evidence/probes/odt_list_host_test.dart",
+      "bytes": 4617,
+      "sha256": "b26af6fb945a72c35c61180dd83f3fd1a1382dab93e0ea1089d88ea8ee6a8874"
+    },
+    {
+      "path": "prior-evidence/probes/odt_note_host_test.dart",
+      "bytes": 11755,
+      "sha256": "daa3766ff4204c9998519f22d9cd81ecf02aa7e9a49494ad1d32fc5169c3ba79"
+    },
+    {
+      "path": "setup/recovered-native-tools.json",
+      "bytes": 6021,
+      "sha256": "ce6c887f690e4708cdc31a8cf6ea10dde1dbf06951ef68490aed37b5d3c7c7b1"
+    },
+    {
+      "path": "setup/restore-native-tools.log",
+      "bytes": 3697,
+      "sha256": "5d425596a14d55608451d06f70d33029ab003a64d86cd72b65042e11773ab306"
+    },
+    {
+      "path": "setup/recovered-host-format-001.log",
+      "bytes": 674,
+      "sha256": "0861a0f67a630a761b4b8f3a93a5e0a1353358fe5d12b90f3853fdacd9738d43"
+    },
+    {
+      "path": "setup/vendor-recovered-4595e308.json",
+      "bytes": 1020,
+      "sha256": "0e35e49f78e1e217c1df4f02243a24e93b45e82868afe4e27ea1fe6b7dece396"
+    },
+    {
+      "path": "setup/vendor-final-1d8325d4.json",
+      "bytes": 344,
+      "sha256": "e9eab10017261969f24dafdf60f38ba2d628664fee40252a005bead0aa2f7e38"
+    },
+    {
+      "path": "setup/recovered-harness-preparation.json",
+      "bytes": 627,
+      "sha256": "c5b7a62d0e517b1d8fbeb903f73deb22c7eb90e4d7200fe00fb4c1443681fc07"
+    },
+    {
+      "path": "setup/prefetch-recovered-hosted.log",
+      "bytes": 8852,
+      "sha256": "94fbdb60b2834527245c88f624598c9123981c120dc4301a0faafeab704530bb"
+    },
+    {
+      "path": "historical-qualification/setup/native-reproduction.json",
+      "bytes": 3351,
+      "sha256": "e51ec5066e2547498e4029ebe30d76a989319b5355d8df4b22f7121008d75ebc"
+    },
+    {
+      "path": "setup/vendor-final-source-equality.log",
+      "bytes": 203,
+      "sha256": "0f1b85ec7e283473ef7ab20019a660fdb5a9fc3ac5d208a75d171651c4feaf65"
+    },
+    {
+      "path": "setup/vendor-final-precommit-index-note.json",
+      "bytes": 673,
+      "sha256": "6e0109942815f1c09cc04a13c4c3c0c4375b7dd8cfe0a2e8b19b8fb91b09a9f4"
+    }
+  ],
+  "qualification_counts_claimed": false,
+  "interrupted_attempts": [
+    {
+      "path": "setup/prefetch-recovered-hosted.log",
+      "status": "interrupted-runtime-session-lost",
+      "completed_hosted_records": 28,
+      "complete_graph": false
+    }
+  ],
+  "github_ci_queried_or_awaited": false
+}
