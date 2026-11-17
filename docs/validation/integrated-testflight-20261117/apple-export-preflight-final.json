@@ -1,0 +1,39 @@
+{
+  "app_store_connect": {
+    "app_id": "6789570314",
+    "approved_declaration": null,
+    "availability_id": "6789570314",
+    "bundle_id": "com.CrispStrobe.cloud",
+    "france": {
+      "available": false,
+      "contentStatuses": [
+        "CANNOT_SELL"
+      ],
+      "preOrderEnabled": false,
+      "preOrderPublishDate": null,
+      "releaseDate": null
+    },
+    "territories_read": 175
+  },
+  "artifact": {
+    "build": "29",
+    "bundle_id": "com.CrispStrobe.cloud",
+    "bytes": 68692564,
+    "compliance_code": null,
+    "info_plist_member": "com.CrispStrobe.cloud.pkg/Payload/CrispCloud.app/Contents/Info.plist",
+    "info_plist_sha256": "0b04b901ab37eb33434369cb9a0e6c363f2998c0599b57bf253276a3c0c5090a",
+    "name": "CrispCloud-1.3.4-29.pkg",
+    "platform": "macos",
+    "sha256": "58f232fe86cd1f8596c0539f1eb8e51a292ffd26d880f0c105a7515f8e298fd9",
+    "uses_non_exempt_encryption": false,
+    "version": "1.3.4"
+  },
+  "checked_at": "2026-11-17T08:40:51.537251+00:00",
+  "inventory_sha256": "a5f048ea9f3ccdb5402bc234af0c36241eecf64aff81bfd363c5eff2745b353f",
+  "live_store_checked": true,
+  "policy_sha256": "e6f02116b7ace38de3174d87711e470cd6a3d26bea77faa2d2d81dbf2525045a",
+  "pubspec_lock_sha256": "e72cedd4bc93593d05c8c7a711c90295b17fbce40cb6f8c726b9446a2f0e665b",
+  "purpose": "Engineering release preflight; not a legal classification or filing",
+  "reviewed_source_sha256": "0d2bb3352d91fde35178bed91ae9ecfd8a59e213627d8e295902366567bb0091",
+  "schema_version": 1
+}

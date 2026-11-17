@@ -1,0 +1,263 @@
+{
+  "recorded_utc": "2026-11-17T08:51:38.798068+00:00",
+  "version": "1.3.4+29",
+  "platform": "MAC_OS",
+  "architecture": "arm64",
+  "built_source_commit": "d17ec34906c6749b26e77106474661b44efe6537",
+  "identical_tree_ancestry_merge": "46d66de4f18d08ce70fadf90a67155124ddcb5f3",
+  "quds_source": "ee72594686c17e508740e1b446c87593da9ffbda",
+  "managed_office_files": 2554,
+  "package_sha256": "58f232fe86cd1f8596c0539f1eb8e51a292ffd26d880f0c105a7515f8e298fd9",
+  "apple_delivery_uuid": "ec9a28d8-b390-4f1a-bacc-4150e114d46c",
+  "apple_validation": "succeeded with no errors",
+  "upload": "succeeded with no errors",
+  "testflight": {
+    "build_id": "ec9a28d8-b390-4f1a-bacc-4150e114d46c",
+    "version": "1.3.4+29",
+    "platform": "MAC_OS",
+    "processing_state": "VALID",
+    "expiration_date": "2027-02-15T00:47:18-08:00",
+    "uses_non_exempt_encryption": false,
+    "beta_details": {
+      "autoNotifyEnabled": true,
+      "internalBuildState": "IN_BETA_TESTING",
+      "externalBuildState": "WAITING_FOR_BETA_REVIEW"
+    },
+    "group_assignments": {
+      "66ef90c0-2fa6-4621-a976-c61f6573e1ca": {
+        "assigned": true
+      },
+      "b044f8c9-394b-47dd-a470-796fd052580a": {
+        "assigned": true
+      }
+    },
+    "review_submissions": [
+      {
+        "id": "ec9a28d8-b390-4f1a-bacc-4150e114d46c",
+        "attributes": {
+          "betaReviewState": "WAITING_FOR_REVIEW",
+          "submittedDate": "2026-11-17T00:49:27-08:00"
+        }
+      }
+    ]
+  },
+  "qualified_commands": [
+    {
+      "phase": "host-office-accepted",
+      "source_commit": "5d8a60e2a70b5eb0146623dfd21f804a471b9142",
+      "command": [
+        "/tmp/crispcloud-flutter-20261116",
+        "test",
+        "--no-pub",
+        "--concurrency=2",
+        "--reporter=expanded",
+        "test/office_document_service_test.dart",
+        "test/office_editor_fixes_test.dart",
+        "test/office_proofing_licenses_test.dart",
+        "test/office_zotero_test.dart",
+        "test/office_zotero_citing_transport_test.dart",
+        "test/office_zotero_ribbon_test.dart",
+        "test/widget/ods_editor_workflow_test.dart",
+        "test/widget/ods_viewer_workflow_test.dart",
+        "test/widget/office_editor_dialog_test.dart",
+        "test/widget/office_save_fidelity_test.dart",
+        "test/widget/office_editor_lifecycle_test.dart",
+        "test/widget/viewer_escape_test.dart",
+        "test/credential_storage_settings_test.dart",
+        "test/credential_storage_bootstrap_test.dart",
+        "test/secure_storage_macos_keychain_test.dart"
+      ],
+      "seconds": 97.235,
+      "exit_code": 0,
+      "log_sha256": "e9e665172991ba1ae13a0071adfb8d32df9a2a5ebf7a5278c66aec1cc0af73f2",
+      "final_test_line": "01:19 +196: All tests passed!"
+    },
+    {
+      "phase": "terminal-unit-accepted",
+      "source_commit": "5d8a60e2a70b5eb0146623dfd21f804a471b9142",
+      "command": [
+        "python3",
+        "tool/run_terminal_validation.py",
+        "native",
+        "--flutter",
+        "/tmp/crispcloud-flutter-20261116",
+        "--dart",
+        "/Users/christianstrobele/flutter-3.47.8/bin/cache/dart-sdk/bin/dart",
+        "--concurrency",
+        "2",
+        "--evidence",
+        "/tmp/crisp-integrate-20261117-evidence/terminal-unit"
+      ],
+      "seconds": 338.209,
+      "exit_code": 0,
+      "log_sha256": "c658ec2f120a739b905a185a0b96a082f08ef9209e6406e2b53d788e5d6c60d0",
+      "final_test_line": "  \"final_test_line\": \"05:21 +1077 ~2: All tests passed!\""
+    },
+    {
+      "phase": "ssh-live-accepted",
+      "source_commit": "5d8a60e2a70b5eb0146623dfd21f804a471b9142",
+      "command": [
+        "python3",
+        "tool/run_terminal_live_smoke.py",
+        "--flutter",
+        "/tmp/crispcloud-flutter-20261116",
+        "--with-unix-agent"
+      ],
+      "seconds": 130.192,
+      "exit_code": 0,
+      "log_sha256": "889e4b934747b663b25ad23e2a908f73a779caca6a6d3d3467721e1ab82a40c2",
+      "final_test_line": "01:58 +23 ~2: All tests passed!"
+    },
+    {
+      "phase": "tmux-live-accepted",
+      "source_commit": "5d8a60e2a70b5eb0146623dfd21f804a471b9142",
+      "command": [
+        "python3",
+        "tool/run_tmux_control_live_smoke.py",
+        "--flutter",
+        "/tmp/crispcloud-flutter-20261116",
+        "--tmux",
+        "/opt/homebrew/bin/tmux",
+        "--evidence",
+        "/tmp/crisp-integrate-20261117-evidence/live-tmux"
+      ],
+      "seconds": 11.065,
+      "exit_code": 0,
+      "log_sha256": "6711e5d519facee8180fe6e22105282ed1dcd39a2fbd10d21af0a327df2cbaf9",
+      "final_test_line": ""
+    },
+    {
+      "phase": "host-odt-lists-accepted",
+      "source_commit": "d17ec34906c6749b26e77106474661b44efe6537",
+      "command": [
+        "/tmp/crispcloud-flutter-20261116",
+        "test",
+        "--no-pub",
+        "--reporter=expanded",
+        "test/office_document_service_test.dart"
+      ],
+      "seconds": 11.262,
+      "exit_code": 0,
+      "log_sha256": "26c0fa57ab4d323bfa56278ab96a031918626fbf75b89693891634abb4af87b1",
+      "final_test_line": "00:00 +39: All tests passed!"
+    },
+    {
+      "phase": "macos-build-delivery",
+      "source_commit": "d17ec34906c6749b26e77106474661b44efe6537",
+      "command": [
+        "python3",
+        "tool/macos_distribution.py",
+        "build",
+        "--flutter",
+        "/tmp/crispcloud-flutter-20261116",
+        "--profile",
+        "appstore",
+        "--",
+        "--no-pub",
+        "--build-name=1.3.4",
+        "--build-number=29",
+        "--dart-define=APP_VERSION=1.3.4+29",
+        "--dart-define=GIT_HASH=d17ec349"
+      ],
+      "seconds": 454.889,
+      "exit_code": 0,
+      "log_sha256": "9ce3537adb04c3994672829acd9382a9ba70d65c58b025831a481174be5b5644",
+      "final_test_line": ""
+    }
+  ],
+  "evidence": {
+    "host-office-accepted.log": {
+      "file": "host-office-accepted.log.gz",
+      "sha256": "e9e665172991ba1ae13a0071adfb8d32df9a2a5ebf7a5278c66aec1cc0af73f2"
+    },
+    "host-odt-lists-accepted.log": {
+      "file": "host-odt-lists-accepted.log.gz",
+      "sha256": "26c0fa57ab4d323bfa56278ab96a031918626fbf75b89693891634abb4af87b1"
+    },
+    "ssh-live-accepted.log": {
+      "file": "ssh-live-accepted.log.gz",
+      "sha256": "889e4b934747b663b25ad23e2a908f73a779caca6a6d3d3467721e1ab82a40c2"
+    },
+    "tmux-live-accepted.log": {
+      "file": "tmux-live-accepted.log.gz",
+      "sha256": "6711e5d519facee8180fe6e22105282ed1dcd39a2fbd10d21af0a327df2cbaf9"
+    },
+    "apple-validation.json": {
+      "file": "apple-validation.json.gz",
+      "sha256": "f4ef78000334ec1d47fb0dcf91a2dd27bf9d66f8fdfa33342843075046e3d44b"
+    },
+    "apple-upload.json": {
+      "file": "apple-upload.json.gz",
+      "sha256": "cc81d08f377e63661e8956b3e443fd6195ffce4745c2c86ca6e0da573fc4569c"
+    },
+    "development-sign-startup.log": {
+      "file": "development-sign-startup.log.gz",
+      "sha256": "2a51e0989358469a3e18c6d1b68dc30291282721c3ec0c57c264b38ac0c5c81f"
+    },
+    "appstore-sign-package.log": {
+      "file": "appstore-sign-package.log.gz",
+      "sha256": "a83462622bde588a46c3d14b8cddd9ca4fb1c77e605920be6d4898cdf2900671"
+    },
+    "odt-lists-final-tests.log": {
+      "file": "odt-lists-final-tests.log.gz",
+      "sha256": "a72edc80524a88663f8caafe3cff5c98d9ea0c409639692688e6235e34f0e9e2"
+    },
+    "late-engine-tests-final.log": {
+      "file": "late-engine-tests-final.log.gz",
+      "sha256": "25873f5c9bdfa45bbeda275c11c5c034157447d7a06293219c6f3477d94c3cd2"
+    },
+    "editor-final-tests-corrected.log": {
+      "file": "editor-final-tests-corrected.log.gz",
+      "sha256": "9cdf75be4a89e42223e7a9879d38dc3cda08b2a3efa80b42cbd910570e073504"
+    },
+    "harper-tests.log": {
+      "file": "harper-tests.log.gz",
+      "sha256": "5192f413baddbf27097edda8157b41015b88db1b4b9416c75bb15279e7e7bc43"
+    },
+    "apple-controls.log": {
+      "file": "apple-controls.log.gz",
+      "sha256": "ce69697d8e8ccd4f8632c0d80b7ec3ac67648773d4852eab73cecb4ae2750b0b"
+    },
+    "testflight-controls.log": {
+      "file": "testflight-controls.log.gz",
+      "sha256": "0f5836703cbc365c4698851160e05e388bbb3166161033cc828799d8769bde48"
+    },
+    "distribution-controls.log": {
+      "file": "distribution-controls.log.gz",
+      "sha256": "f95c2be293c3c88284778a95817f7aedcc03e3af9e3c1877af931e923aea463e"
+    },
+    "sync-tests.log": {
+      "file": "sync-tests.log.gz",
+      "sha256": "d73b6f072357e94a24da19cfb0b2945ceb5e608fb5b14c2b26a2dacd054a69f2"
+    },
+    "vendor-final-accepted.log": {
+      "file": "vendor-final-accepted.log.gz",
+      "sha256": "802ee8b4bef8252d50e73637194b76a5a73cf844e16baf3d4488c71e86591bb5"
+    },
+    "terminal-unit/native.log": {
+      "file": "terminal-unit-native.log.gz",
+      "sha256": "e36d1911ff1e738eab436477df906e47cf46774489e9054a4c94c0648503ed49"
+    },
+    "terminal-unit/native.json": {
+      "file": "terminal-unit-native.json.gz",
+      "sha256": "7d06f46b676ae7f7b066bf1cf045605576b3430663b61e9b97881ebc15a19bce"
+    },
+    "live-tmux/live-tmux.log": {
+      "file": "live-tmux-live-tmux.log.gz",
+      "sha256": "946fb8b0aae8539ad0be3f067ba8fd1a2dfa4e44b3ea9c5a9d96c8f6419fc6c4"
+    }
+  },
+  "validation_boundaries": {
+    "engine_broad": "3081 passed, 1 skipped before final affected-source refresh",
+    "engine_final_affected": "601 passed; final ODT list/structure/text cohort 26 passed",
+    "editor_broad": "1078 passed, 1 skipped, 16 golden failures",
+    "editor_final_affected": "67 passed",
+    "harper_adapter": "32 passed, 1 skipped; native Harper acceptance on macOS is not claimed",
+    "host_office": "196 passed, plus final ODT document-service cohort 39 passed; overlapping cohorts",
+    "terminal_unit": "1077 passed, 2 platform skips",
+    "live_ssh": "23 passed, 2 interactive PTY/login-record permission skips",
+    "live_tmux": "1 passed",
+    "startup": "actual signed app rendered credential-ready UI and survived 15 seconds",
+    "goldens": "The same 16 tests and all 25 distinct pixel-difference measurements also fail on unchanged pre-integration main on this Mac. They were not updated or reported as passes."
+  }
+}
