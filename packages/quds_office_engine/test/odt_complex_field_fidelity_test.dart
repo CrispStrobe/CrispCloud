@@ -80,6 +80,106 @@ Iterable<XmlElement> _nativeFields(XmlElement content) => [
 ];
 
 void main() {
+  test(
+    'reused empty runs keep native field content local to its occurrence',
+    () {
+      for (final sectionLeading in [false, true]) {
+        for (final aliased in [false, true]) {
+          final empty = WmlRun();
+          final cache = aliased ? empty : WmlRun();
+          final paragraph = WmlParagraph(
+            inlines: [
+              empty,
+              WmlBreak(WmlBreakType.column),
+              ..._field(' PAGE ', [cache]),
+            ],
+          );
+          final original = List<WmlInline>.of(paragraph.inlines);
+          final result = _export(
+            'aliased-empty-cache-$aliased-section-leading-$sectionLeading',
+            WmlDocument(
+              sections: [
+                WmlSection(
+                  columnCount: 2,
+                  blocks: [
+                    if (!sectionLeading)
+                      WmlParagraph(inlines: [WmlRun(text: 'Prelude')]),
+                    paragraph,
+                  ],
+                ),
+              ],
+            ),
+          );
+          final paragraphs = _elements(_body(result.content), 'p')
+              .skip(sectionLeading ? 0 : 1)
+              .toList();
+          // A section boundary retains its empty leading source fragment;
+          // a later paragraph does not acquire one because a run is aliased.
+          expect(paragraphs, hasLength(sectionLeading ? 2 : 1));
+          if (sectionLeading) {
+            expect(_nativeFields(paragraphs.first), isEmpty);
+          }
+          final fieldParagraph = paragraphs.last;
+          expect(_elements(fieldParagraph, 'page-number'), hasLength(1));
+          final styleName = fieldParagraph.getAttribute(
+            'style-name',
+            namespaceUri: _textNs,
+          );
+          final style = _elements(result.content, 'style', _styleNs).singleWhere(
+            (style) =>
+                style.getAttribute('name', namespaceUri: _styleNs) == styleName,
+          );
+          expect(
+            _elements(style, 'paragraph-properties', _styleNs)
+                .single
+                .getAttribute('break-before', namespaceUri: _foNs),
+            'column',
+          );
+          expect(paragraph.inlines, orderedEquals(original));
+          expect(identical(paragraph.inlines.first, empty), isTrue);
+          expect(identical(paragraph.inlines[5], cache), isTrue);
+          expect(identical(empty, cache), aliased);
+        }
+      }
+    },
+  );
+
+  for (final instruction in ['PAGE', 'NUMPAGES']) {
+    for (final (label, text) in [
+      ('spaces', ' 7  8 '),
+      ('tab', '7\t8'),
+      ('line break', '7\n8'),
+    ]) {
+      test('$instruction cache retains significant $label through fallback', () {
+        final run = WmlRun(
+          text: text,
+          properties: WmlRunProps(bold: true),
+          hyperlink: const WmlHyperlink(url: 'https://example.com/pages'),
+        );
+        final result = _export(
+          'whitespace-${instruction.toLowerCase()}-${label.replaceAll(' ', '-')}',
+          _document([
+            ..._field(' $instruction ', [run]),
+            WmlRun(text: ' after'),
+          ]),
+        );
+        expect(_nativeFields(result.content), isEmpty);
+        expect(_visible(_body(result.content)), '$text after');
+        final link = _elements(result.content, 'a').single;
+        expect(_visible(link), text);
+        expect(
+          link.getAttribute(
+            'href',
+            namespaceUri: 'http://www.w3.org/1999/xlink',
+          ),
+          'https://example.com/pages',
+        );
+        expect(run.text, text);
+        expect(run.properties.bold, isTrue);
+      });
+    }
+  }
+
   for (final entry in {
     'PAGE': 'page-number',
     'NUMPAGES': 'page-count',

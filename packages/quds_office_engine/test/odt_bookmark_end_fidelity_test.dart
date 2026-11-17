@@ -270,4 +270,45 @@ void main() {
       expect(_ends(content), isEmpty);
     },
   );
+  test(
+    'exported TOC title retains its bookmark extent into following text',
+    () {
+      final start = _start('9', 'VisibleToc');
+      final end = _end('9');
+      final document = WmlDocument(
+        sections: [
+          WmlSection(
+            blocks: [
+              WmlToc(
+                title: 'TOC title',
+                titleParagraph: WmlParagraph(
+                  inlines: [
+                    start,
+                    WmlRun(text: 'TOC title'),
+                  ],
+                ),
+              ),
+              WmlParagraph(
+                inlines: [
+                  WmlRun(text: 'After TOC'),
+                  end,
+                ],
+              ),
+            ],
+          ),
+        ],
+      );
+      final result = _export(document);
+      expect(_ends(result.content), ['VisibleToc']);
+      expect(
+        _elements(
+          result.content,
+          'bookmark-start',
+        ).single.getAttribute('name', namespaceUri: _textNs),
+        'VisibleToc',
+      );
+      expect(result.content.text, contains('TOC titleAfter TOC'));
+      expect(end.name, isNull);
+    },
+  );
 }
