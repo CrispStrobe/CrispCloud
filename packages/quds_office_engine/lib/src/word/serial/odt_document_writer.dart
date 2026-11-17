@@ -99,6 +99,30 @@ abstract final class OdtDocumentWriter {
       w.writeEndElement();
       w.writeEndElement();
     }
+    w.writeStartElement('list-style', prefix: 'text');
+    w.writeAttribute('style:name', 'L1');
+    for (var level = 1; level <= 9; level++) {
+      w.writeStartElement('list-level-style-bullet', prefix: 'text');
+      w.writeAttribute('text:level', '$level');
+      w.writeAttribute('text:bullet-char', '•');
+      w.writeStartElement('list-level-properties', prefix: 'style');
+      w.writeAttribute(
+        'text:list-level-position-and-space-mode',
+        'label-alignment',
+      );
+      w.writeEmptyElement(
+        'list-level-label-alignment',
+        prefix: 'style',
+        attributes: {
+          'text:label-followed-by': 'listtab',
+          'fo:margin-left': '${level * 0.25}in',
+          'fo:text-indent': '-0.25in',
+        },
+      );
+      w.writeEndElement();
+      w.writeEndElement();
+    }
+    w.writeEndElement();
     w.writeEndElement();
     w.writeStartElement('automatic-styles', prefix: 'office');
     final section = document.sections.firstOrNull;
@@ -184,9 +208,42 @@ abstract final class OdtDocumentWriter {
     List<WmlBlock> blocks,
     _OdtLayout layout,
   ) {
-    for (final block in blocks) {
-      _writeBlock(w, block, layout);
+    for (var index = 0; index < blocks.length; index++) {
+      final block = blocks[index];
+      if (block is WmlParagraph &&
+          block.properties.numId != null &&
+          !block.properties.numberingSuppressed) {
+        final list = <WmlParagraph>[block];
+        while (index + 1 < blocks.length) {
+          final next = blocks[index + 1];
+          if (next is! WmlParagraph ||
+              next.properties.numId != block.properties.numId ||
+              next.properties.numberingSuppressed) {
+            break;
+          }
+          list.add(next);
+          index++;
+        }
+        _writeList(w, list, layout);
+      } else {
+        _writeBlock(w, block, layout);
+      }
     }
+  }
+
+  static void _writeList(
+    XmlWriter w,
+    List<WmlParagraph> paragraphs,
+    _OdtLayout layout,
+  ) {
+    w.writeStartElement('list', prefix: 'text');
+    w.writeAttribute('text:style-name', layout.listStyle());
+    for (final paragraph in paragraphs) {
+      w.writeStartElement('list-item', prefix: 'text');
+      _writeParagraph(w, paragraph, layout);
+      w.writeEndElement();
+    }
+    w.writeEndElement();
   }
 
   static void _writeBlock(XmlWriter w, WmlBlock block, _OdtLayout layout) {
@@ -548,6 +605,8 @@ class _OdtLayout {
       return name;
     });
   }
+
+  String listStyle() => 'L1';
 
   String cellStyle(String fill) {
     return _cellStyles.putIfAbsent(fill, () {

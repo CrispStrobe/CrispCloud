@@ -26,7 +26,7 @@ content.
 The app mirrors the canonical Quds source and the standalone legacy parser.
 Exact revisions, source boundaries and the complete managed-file inventory are
 recorded in [the fidelity manifest](../tool/office_fidelity_manifest.json).
-The current canonical checkpoint is `8a778f1884b15065ef74f4c20f828d34b2374e06`;
+The current canonical checkpoint is `ee72594686c17e508740e1b446c87593da9ffbda`;
 the managed inventory contains 2,554 files, including the unchanged 1,857-file
 standalone parser. This continuation retains the completed Zotero recovery,
 English hyphenation, proofing and ranked/average spreadsheet work, including
@@ -414,3 +414,5 @@ an unsupported-profile refusal. Dynamic list links, custom/formula-driven rules,
 full native prompt/error metadata and native ODS serialization remain outside
 this supported profile. Exact source identities and scope are recorded in
 `docs/validation/terminal-ods-refresh-20261116/summary.json`.
+
+ODT export also writes modeled list groups, retaining the combined whitespace and visible Zotero-result behavior.
