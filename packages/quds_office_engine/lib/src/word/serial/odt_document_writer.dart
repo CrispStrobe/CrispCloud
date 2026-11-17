@@ -903,6 +903,9 @@ abstract final class OdtDocumentWriter {
     for (var rowIndex = 0; rowIndex < table.rows.length; rowIndex++) {
       final row = table.rows[rowIndex];
       w.writeStartElement('table-row', prefix: 'table');
+      if (row.height case final height?) {
+        w.writeAttribute('table:style-name', layout.rowStyle(height));
+      }
       _writeOmittedCells(
         w,
         BigInt.from(row.gridBefore > 0 ? row.gridBefore : 0),
@@ -925,8 +928,19 @@ abstract final class OdtDocumentWriter {
             w.writeAttribute('table:number-rows-spanned', '${placement.rows}');
           }
         }
-        if (cell.fillColor case final fill?) {
-          w.writeAttribute('table:style-name', layout.cellStyle(fill));
+        if (cell.fillColor case final fill? when fill.isNotEmpty) {
+          w.writeAttribute(
+            'table:style-name',
+            layout.cellStyle(fill, cell: cell),
+          );
+        } else if (cell.borderTop == true ||
+            cell.borderBottom == true ||
+            cell.borderLeft == true ||
+            cell.borderRight == true) {
+          w.writeAttribute(
+            'table:style-name',
+            layout.cellStyle('', cell: cell),
+          );
         }
         final notesAllowed = layout.noteBodiesAllowed;
         final commentsAllowed = layout.commentsAllowed;
@@ -1370,6 +1384,7 @@ class _OdtLayout {
   final Map<String, String> _paragraphStyles = <String, String>{};
   final Map<String, String> _columnStyles = <String, String>{};
   final Map<String, String> _cellStyles = <String, String>{};
+  final Map<String, String> _rowStyles = <String, String>{};
   final Map<(String?, String, String, String), String> _listStyles = {};
   late final _listDefinitions = _OdtListDefinitions(document);
   var _listCounters = <int, List<BigInt?>>{};
@@ -1768,12 +1783,43 @@ class _OdtLayout {
     );
   }
 
-  String cellStyle(String fill) {
-    return _cellStyles.putIfAbsent(fill, () {
+  String cellStyle(String fill, {WmlTableCell? cell}) {
+    final key =
+        '$fill|${cell?.borderTop}|${cell?.borderBottom}|${cell?.borderLeft}|${cell?.borderRight}';
+    return _cellStyles.putIfAbsent(key, () {
       final name = 'Ce${_cellStyles.length + 1}';
-      _styleBuffers.add(
+      final buffer = StringBuffer(
         '<style:style style:name="$name" style:family="table-cell">'
-        '<style:table-cell-properties fo:background-color="#${fill.toLowerCase()}"/>'
+        '<style:table-cell-properties',
+      );
+      if (fill.isNotEmpty) {
+        buffer.write(' fo:background-color="#${fill.toLowerCase()}"');
+      }
+      if (cell?.borderTop == true) {
+        buffer.write(' fo:border-top="0.5pt solid #000000"');
+      }
+      if (cell?.borderBottom == true) {
+        buffer.write(' fo:border-bottom="0.5pt solid #000000"');
+      }
+      if (cell?.borderLeft == true) {
+        buffer.write(' fo:border-left="0.5pt solid #000000"');
+      }
+      if (cell?.borderRight == true) {
+        buffer.write(' fo:border-right="0.5pt solid #000000"');
+      }
+      buffer.write('/></style:style>');
+      _styleBuffers.add(buffer.toString());
+      return name;
+    });
+  }
+
+  String rowStyle(double height) {
+    final key = height.toStringAsFixed(2);
+    return _rowStyles.putIfAbsent(key, () {
+      final name = 'Ro${_rowStyles.length + 1}';
+      _styleBuffers.add(
+        '<style:style style:name="$name" style:family="table-row">'
+        '<style:table-row-properties style:row-height="${key}pt"/>'
         '</style:style>',
       );
       return name;
