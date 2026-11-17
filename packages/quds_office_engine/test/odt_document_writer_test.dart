@@ -680,11 +680,7 @@ void paragraphBreakTests() {
 }
 
 void fieldTests() {
-<<<<<<< HEAD
-  test('writes PAGE and NUMPAGES fields without cached results', () {
-=======
   test('writes PAGE and NUMPAGES with one cached display per native field', () {
->>>>>>> f22a0312 (Sync latest ODT writer with AOT-free Quds main)
     final document = WmlDocument(
       sections: [
         WmlSection(
@@ -716,12 +712,6 @@ void fieldTests() {
     final package = OpcPackage.openBytes(
       OdtDocumentWriter.writeBytes(document),
     );
-<<<<<<< HEAD
-    final content = package.getPart('/content.xml')!.readText();
-    expect(RegExp(r'<text:page-number/>').allMatches(content).length, 1);
-    expect(RegExp(r'<text:page-count/>').allMatches(content).length, 1);
-    expect(content, isNot(contains('>99<')));
-=======
     final paragraph = _odtBody(package).firstChild('p')!;
     final fields = paragraph.childElements
         .expand((span) => span.childElements)
@@ -732,7 +722,6 @@ void fieldTests() {
     ]);
     expect(fields.map((field) => field.text), ['99', '99']);
     expect(paragraph.text, '9999');
->>>>>>> f22a0312 (Sync latest ODT writer with AOT-free Quds main)
   });
 }
 

@@ -912,14 +912,7 @@ abstract final class OdtDocumentWriter {
             'TITLE' => 'title',
             _ => null,
           };
-<<<<<<< HEAD
-          if (element != null) {
-            w.writeEmptyElement(element, prefix: 'text');
-            layout.suppressFieldResult();
-          }
-=======
           if (element != null) layout.pendingFieldElement = element;
->>>>>>> f22a0312 (Sync latest ODT writer with AOT-free Quds main)
         } else if (inline.kind == WmlFieldBoundaryKind.end) {
           layout.endField();
         }
@@ -1640,21 +1633,6 @@ class _OdtLayout {
   bool inCommentBody = false;
   bool inNoteBody = false;
   bool noteReferenceSpacePending = false;
-<<<<<<< HEAD
-  int _fieldDepth = 0;
-  int? _suppressFieldDepth;
-
-  void beginField() => _fieldDepth++;
-
-  void suppressFieldResult() => _suppressFieldDepth = _fieldDepth;
-
-  bool get fieldResultSuppressed =>
-      _suppressFieldDepth != null && _fieldDepth >= _suppressFieldDepth!;
-
-  void endField() {
-    if (_suppressFieldDepth == _fieldDepth) _suppressFieldDepth = null;
-    if (_fieldDepth > 0) _fieldDepth--;
-=======
   int fieldDepth = 0;
   String? pendingFieldElement;
   int? _fieldResultDepth;
@@ -1673,7 +1651,6 @@ class _OdtLayout {
     if (_fieldResultDepth == fieldDepth) _fieldResultDepth = null;
     pendingFieldElement = null;
     if (fieldDepth > 0) fieldDepth--;
->>>>>>> f22a0312 (Sync latest ODT writer with AOT-free Quds main)
   }
 
   final Map<String, String> _runStyles = <String, String>{};
