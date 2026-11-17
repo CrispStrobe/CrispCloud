@@ -1040,6 +1040,32 @@ List<List<String>> _odsRows(XmlElement table, _OdfTableBudget budget) {
   return rows;
 }
 
+// Annotation and covered-cell stories remain in raw XML, but are not
+// document body text. Match namespace identity so foreign elements keep text.
+bool _isOdfHiddenStory(XmlElement element) =>
+    (element.namespaceUri == _odfTableNamespace &&
+        element.localName == 'covered-table-cell') ||
+    (element.namespaceUri == _odfOfficeNamespace &&
+        element.localName == 'annotation');
+
+String _odfVisibleInnerText(XmlElement element) {
+  final buffer = StringBuffer();
+  void visit(XmlNode node) {
+    if (node is XmlText) {
+      buffer.write(node.value);
+    } else if (node is XmlCDATA) {
+      buffer.write(node.value);
+    } else if (node is XmlElement && !_isOdfHiddenStory(node)) {
+      for (final child in node.children) {
+        visit(child);
+      }
+    }
+  }
+
+  visit(element);
+  return buffer.toString();
+}
+
 String _odsCellValue(XmlElement cell) {
   String? valueAttribute(String name) =>
       cell.getAttribute(name, namespace: _odfOfficeNamespace);
@@ -1068,9 +1094,7 @@ String _odsCellValue(XmlElement cell) {
   bool isVisibleParagraph(XmlElement paragraph) {
     XmlNode? ancestor = paragraph.parent;
     while (ancestor != null && !identical(ancestor, cell)) {
-      if (ancestor is XmlElement &&
-          ancestor.namespaceUri == _odfTableNamespace &&
-          ancestor.localName == 'covered-table-cell') {
+      if (ancestor is XmlElement && _isOdfHiddenStory(ancestor)) {
         return false;
       }
       ancestor = ancestor.parent;
@@ -1081,7 +1105,7 @@ String _odsCellValue(XmlElement cell) {
   return cell
       .findAllElements('p', namespace: _odfTextNamespace)
       .where(isVisibleParagraph)
-      .map((paragraph) => paragraph.innerText)
+      .map(_odfVisibleInnerText)
       .join(' ')
       .trim();
 }
@@ -1745,7 +1769,7 @@ Future<OfficeDocument> _parseOdt(ViewerArchive archive) async {
         buffer.write(child.value);
         continue;
       }
-      if (child is! XmlElement) continue;
+      if (child is! XmlElement || _isOdfHiddenStory(child)) continue;
       switch (child.localName) {
         case 's':
           final count = int.tryParse(child.getAttribute('text:c') ?? '') ?? 1;
@@ -1777,10 +1801,6 @@ Future<OfficeDocument> _parseOdt(ViewerArchive archive) async {
                 .trim(),
           );
           buffer.write('[$number]');
-        case 'covered-table-cell':
-          if (child.namespaceUri != _odfTableNamespace) {
-            buffer.write(inline(child));
-          }
         case 'frame':
           final name = child.getAttribute('draw:name');
           final href = child
@@ -1862,6 +1882,7 @@ Future<OfficeDocument> _parseOdt(ViewerArchive archive) async {
   }
 
   void visit(XmlElement element) {
+    if (_isOdfHiddenStory(element)) return;
     switch (element.localName) {
       case 'h':
         final level =
@@ -1909,7 +1930,7 @@ Future<OfficeDocument> _parseOdt(ViewerArchive archive) async {
           buffer.write(node.value);
           return;
         }
-        if (node is! XmlElement) return;
+        if (node is! XmlElement || _isOdfHiddenStory(node)) return;
         switch (node.localName) {
           case 'page-number':
           case 'page-count':
