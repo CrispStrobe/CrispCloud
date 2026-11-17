@@ -4,6 +4,21 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Write ODT section columns with the required nested column properties, keep
+  empty-section page anchors inside their column section, and omit invalid
+  column gaps without changing the document model.
+- Accept the missing finite noun forms `Schuppen` and `Lernen` without
+  lowercasing correct text; keep pinned upstream and Swiss dictionaries intact.
+
+- Prefer verified irregular participles for unknown overregularized spellings
+  in bounded pronoun-and-haben contexts, keeping ordinary ranking elsewhere.
+
+- Preserve each paragraph's tab stops when caching ODT styles, while sharing
+  styles with identical normalized tab positions, alignments and leaders.
+
+- Extract text from paragraph-anchored ODT frames without losing whitespace,
+  paragraph boundaries or table structure. Keep annotation, note and covered-cell
+  stories out of body/search text and apply the shared text-expansion budget.
 - Keep ODT paragraph shading and border colors independent when paragraph
   styles are cached, while reusing styles with equivalent serialized colors.
 - Preserve the first capital in explicit direct quotations after a colon and

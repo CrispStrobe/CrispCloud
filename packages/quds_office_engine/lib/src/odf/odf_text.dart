@@ -202,6 +202,12 @@ Iterable<String> readOdfParagraphs(
   }
 }
 
+/// Compatibility spelling retained for callers using the frame-aware decoder.
+Iterable<String> readOdfParagraphTexts(
+  XmlElement element,
+  OdfTextBudget budget,
+) => readOdfParagraphs(element, budget);
+
 /// Reads paragraphs in [element], retaining empty blocks and their separators.
 String readOdfText(XmlElement element, OdfTextBudget budget) {
   final result = StringBuffer();

@@ -700,19 +700,110 @@ Iterable<_GermanGrammarIssue> _germanGrammarIssues(
 // Only permit finite predicates with no following subject/object noun phrase,
 // coordination, relative clause, auxiliary, quotation or reported-speech cue.
 // A full syntax backend is still needed for the excluded constructions.
-final RegExp _grammarSimplePredicate = RegExp(
-  r'^[ \t\u00a0\u202f]*'
-  r'(?:(?:heute|morgen|jetzt|hier|dort|draußen|drinnen|bald|gerne|oft|immer|selten|'
-  r'zusammen|wieder|allein|auch|nicht|wirklich|sehr|müde|bereit|fertig|sauber|'
-  r'pünktlich|leise|laut|schnell|langsam|lange|gut|schlecht)[ \t\u00a0\u202f]+)*'
-  r'(?:heute|morgen|jetzt|hier|dort|draußen|drinnen|bald|gerne|oft|immer|selten|'
-  r'zusammen|wieder|allein|auch|nicht|wirklich|sehr|müde|bereit|fertig|sauber|'
-  r'pünktlich|leise|laut|schnell|langsam|lange|gut|schlecht)?'
-  r'(?:[ \t\u00a0\u202f]*(?:im|am|zum|beim|vom|ins|ans|zur|nach|zu|bei|mit|ohne)'
-  r'[ \t\u00a0\u202f]+(?:Hause|[\p{Lu}][\p{L}\p{M}]*))?'
-  r'[ \t\u00a0\u202f]*\.?[ \t\r\n\u00a0\u202f]*$',
-  unicode: true,
-);
+const _grammarPredicateAdverbs = <String>{
+  'heute',
+  'morgen',
+  'jetzt',
+  'hier',
+  'dort',
+  'draußen',
+  'drinnen',
+  'bald',
+  'gerne',
+  'oft',
+  'immer',
+  'selten',
+  'zusammen',
+  'wieder',
+  'allein',
+  'auch',
+  'nicht',
+  'wirklich',
+  'sehr',
+  'müde',
+  'bereit',
+  'fertig',
+  'sauber',
+  'pünktlich',
+  'leise',
+  'laut',
+  'schnell',
+  'langsam',
+  'lange',
+  'gut',
+  'schlecht',
+};
+const _grammarPredicatePrepositions = <String>{
+  'im',
+  'am',
+  'zum',
+  'beim',
+  'vom',
+  'ins',
+  'ans',
+  'zur',
+  'nach',
+  'zu',
+  'bei',
+  'mit',
+  'ohne',
+};
+final _grammarPredicateNoun = RegExp(r'^\p{Lu}[\p{L}\p{M}]*$', unicode: true);
+
+bool _grammarPredicateHorizontal(int unit) =>
+    unit == 0x20 || unit == 0x09 || unit == 0xa0 || unit == 0x202f;
+
+bool _grammarSimplePredicate(String text, int start) {
+  // Scan whitespace once instead of backtracking over overlapping repetitions.
+  // Newlines are allowed only after the optional final period or final word.
+  var end = text.length;
+  while (end > start) {
+    final unit = text.codeUnitAt(end - 1);
+    if (!_grammarPredicateHorizontal(unit) && unit != 0x0a && unit != 0x0d) {
+      break;
+    }
+    end--;
+  }
+  if (end > start && text.codeUnitAt(end - 1) == 0x2e) end--;
+  while (end > start && _grammarPredicateHorizontal(text.codeUnitAt(end - 1))) {
+    end--;
+  }
+  var cursor = start;
+  while (cursor < end) {
+    while (cursor < end &&
+        _grammarPredicateHorizontal(text.codeUnitAt(cursor))) {
+      cursor++;
+    }
+    if (cursor == end) return true;
+    final tokenStart = cursor;
+    while (cursor < end &&
+        !_grammarPredicateHorizontal(text.codeUnitAt(cursor))) {
+      cursor++;
+    }
+    final token = text.substring(tokenStart, cursor);
+    if (_grammarPredicateAdverbs.contains(token)) continue;
+    // Preserve the old gate's optional space before the final preposition,
+    // including an adjacent adverb/preposition. This checks a fixed-size set.
+    final preposition = _grammarPredicatePrepositions.any(
+      (word) =>
+          token == word ||
+          token.endsWith(word) &&
+              _grammarPredicateAdverbs.contains(
+                token.substring(0, token.length - word.length),
+              ),
+    );
+    if (!preposition) return false;
+    while (cursor < end &&
+        _grammarPredicateHorizontal(text.codeUnitAt(cursor))) {
+      cursor++;
+    }
+    // Exactly one capitalized noun must finish this optional phrase. The
+    // anchored character-class match is linear and cannot split whitespace.
+    return cursor < end &&
+        _grammarPredicateNoun.hasMatch(text.substring(cursor, end));
+  }
+  return true;
+}
 
 Iterable<_GermanGrammarIssue> _grammarSimpleNounAgreement(
   String text,
@@ -734,7 +825,7 @@ Iterable<_GermanGrammarIssue> _grammarSimpleNounAgreement(
   final verb = words[nounIndex + 1];
   if (!_grammarAdjacent(text, noun, verb) ||
       verb.capitalized ||
-      !_grammarSimplePredicate.hasMatch(text.substring(verb.end)) ||
+      !_grammarSimplePredicate(text, verb.end) ||
       !_grammarContextSafe(article.start, text.length, protected, boundaries) ||
       _grammarCouldBeNominalizedAdjective(article, determiner, noun, null)) {
     return;

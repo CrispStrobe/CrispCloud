@@ -138,4 +138,107 @@ void main() {
       );
     },
   );
+  const admittedTails = <String>[
+    '',
+    '.',
+    ' \t\u00a0\u202f',
+    ' heute',
+    ' heute morgen jetzt hier dort draußen drinnen bald gerne oft immer '
+        'selten zusammen wieder allein auch nicht wirklich sehr müde bereit '
+        'fertig sauber pünktlich leise laut schnell langsam lange gut schlecht.',
+    ' heute\t\u00a0im\u202fGarten \t.\r\n',
+    ' im A\u0308ther.',
+    ' heuteim Garten.', // Keep the existing optional preposition-space gate.
+  ];
+  for (var index = 0; index < admittedTails.length; index++) {
+    test('preserve admitted predicate tail $index and source ranges', () async {
+      final provider = GermanWritingRulesProvider();
+      addTearDown(provider.dispose);
+      final tail = admittedTails[index];
+      final source = 'Die Kinder spielt$tail';
+      final input = request(source, offset: 43);
+      final result = await provider.check(input);
+      expect(result.status, OfficeProofingStatus.success);
+      expect(identical(result.request, input), isTrue);
+      final finding = result.findings
+          .where((finding) => finding.ruleId == rule)
+          .single;
+      expect(finding.ruleId, rule);
+      expect(finding.originalText, 'spielt');
+      expect(finding.start, 43 + 'Die Kinder '.length);
+      expect(finding.replacements, ['spielen']);
+      expect(input.text, source);
+      final corrected = source.replaceRange(
+        finding.start - 43,
+        finding.end - 43,
+        finding.replacements.single,
+      );
+      expect(corrected, 'Die Kinder spielen$tail');
+      expect(
+        (await provider.check(
+          request(corrected),
+        )).findings.where((finding) => finding.ruleId == rule),
+        isEmpty,
+      );
+    });
+  }
+  const rejectedTails = <String>[
+    ' \nheute.',
+    ' heute\nim Garten.',
+    ' heute Abend.',
+    ' im kleinen Garten.',
+    ' im Garten mit Freunden.',
+    ' heute..',
+    ' heute\u000b.',
+    ' im Garten\n.',
+  ];
+  for (var index = 0; index < rejectedTails.length; index++) {
+    test('retain rejected predicate tail $index', () async {
+      final provider = GermanWritingRulesProvider();
+      addTearDown(provider.dispose);
+      final input = request('Die Kinder spielt${rejectedTails[index]}');
+      final result = await provider.check(input);
+      expect(result.status, OfficeProofingStatus.success);
+      expect(
+        result.findings.where((finding) => finding.ruleId == rule),
+        isEmpty,
+      );
+    });
+  }
+  for (final (label, unit) in <(String, String)>[
+    ('spaces', ' '),
+    ('tabs', '\t'),
+    ('mixed horizontal whitespace', ' \t\u00a0\u202f'),
+  ]) {
+    test('long $label completes for accepted and rejected tails', () async {
+      final provider = GermanWritingRulesProvider();
+      addTearDown(provider.dispose);
+      final gap = unit * 4096;
+      for (final tail in ['$gap?', ' im Garten$gap?']) {
+        final result = await provider.check(request('Die Kinder spielt$tail'));
+        expect(result.status, OfficeProofingStatus.success);
+        expect(
+          result.findings.where((finding) => finding.ruleId == rule),
+          isEmpty,
+        );
+      }
+      final input = request('Die Kinder spielt$gap.');
+      final result = await provider.check(input);
+      expect(result.status, OfficeProofingStatus.success);
+      final finding = result.findings
+          .where((finding) => finding.ruleId == rule)
+          .single;
+      expect(finding.ruleId, rule);
+      expect(finding.originalText, 'spielt');
+      expect(
+        input.text.replaceRange(
+          finding.start,
+          finding.end,
+          finding.replacements.single,
+        ),
+        'Die Kinder spielen$gap.',
+      );
+      expect(input.text, 'Die Kinder spielt$gap.');
+    });
+  }
 }

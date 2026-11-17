@@ -26,14 +26,14 @@ content.
 The app mirrors the canonical Quds source and the standalone legacy parser.
 Exact revisions, source boundaries and the complete managed-file inventory are
 recorded in [the fidelity manifest](../tool/office_fidelity_manifest.json).
-The current canonical checkpoint is `ec5ecbff742580c0e7d1136507b953e8cc877e4c`;
-the managed inventory contains 2,606 files: 749 canonical files and the unchanged
+The current canonical checkpoint is `48b6998bb47ffdf43e95025229dc5a5eab09ee9a`;
+the managed inventory contains 2,615 files: 758 canonical files and the unchanged
 1,857-file standalone parser. The 17 November continuation reconciles the
 captured Office, morphology and proofing-tool branches and their bounded late
 arrivals. It preserves the original six bundled notices and adds the complete
 Unicode Inflection notice for German morphology to the app's license registry.
 
-The latest reconciliation merges captured host main `1cd2a18f7bc2455eabc5ec8e22767c849a833305` and synchronizes the canonical union through the guard. It retains the bounded German noun-agreement work, custom ODT tab stops, table row minimum-height semantics and decoration normalization. The optional native German proofing AOT package remains outside the existing host managed-package boundary. New tests exercise the actual ODT/ODP export menus, annotation privacy, semantic output and destination outcomes; their local execution evidence is recorded separately from prior qualifications in `docs/validation/office-reconcile-20261117/`.
+The reconciliation merges captured host main `1cd2a18f7bc2455eabc5ec8e22767c849a833305` and the second captured main `9eced5cec9b42ad7a3aa67f22f3d23c238f66dbf`, then synchronizes the canonical union through the guard. It retains the German morphology and spelling work, custom ODT tab stops, row minimum heights, normalized decorations, schema-valid section columns, distinct column-break/keep-together styles and ODP chart-data tables. The optional native German proofing AOT package remains outside the existing host managed-package boundary. New tests exercise the actual ODT/ODP export menus, annotation privacy, semantic output and destination outcomes; their local execution evidence is recorded separately from prior qualifications in `docs/validation/office-reconcile-20261117/`.
 
 ODF annotations retain their raw XML and comment-model content while body
 extraction, search and host previews exclude them. Note references inside
@@ -124,7 +124,7 @@ validations, ranked/average conditional rules, authored page setup and
 header/footer sections. The bounded ODT writer now covers headings, formatted
 runs, tables, pictures, frames, page geometry and basic headers/footers. The
 bounded ODP writer covers slides, positioned text, pictures, tables, fills,
-strokes, text links, notes, page geometry and transitions. A host widget test opens an XLSX fixture and reads the exported ODS
+strokes, text links, chart-data tables, notes, page geometry and transitions. A host widget test opens an XLSX fixture and reads the exported ODS
 back. The combined host qualification remains separately source-bound
 in the storage evidence.
 

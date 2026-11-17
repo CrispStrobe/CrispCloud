@@ -112,6 +112,23 @@ abstract final class OdpPresentationWriter {
       );
     } else if (shape.table case final table?) {
       _writeTable(w, table, transform, layout);
+    } else if (shape.visual case final visual?
+        when visual.isChart && visual.points.isNotEmpty) {
+      _writeTable(
+        w,
+        PmlTable(
+          rows: [
+            [PmlTableCell(text: 'Label'), PmlTableCell(text: 'Value')],
+            for (final point in visual.points)
+              [
+                PmlTableCell(text: point.label),
+                PmlTableCell(text: '${point.value}'),
+              ],
+          ],
+        ),
+        transform,
+        layout,
+      );
     } else {
       w.writeStartElement('text-box', prefix: 'draw');
       _writeParagraphs(w, shape.text, layout, shape);

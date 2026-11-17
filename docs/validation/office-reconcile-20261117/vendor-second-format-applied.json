@@ -1,0 +1,10 @@
+{
+  "from": "4a4101c11d471adf525849b38dea0a52b9c0b394",
+  "to": "48b6998bb47ffdf43e95025229dc5a5eab09ee9a",
+  "write": [
+    "packages/quds_office_engine/lib/src/odf/odf_text.dart"
+  ],
+  "delete": [],
+  "pinned_files": 2615,
+  "applied": true
+}

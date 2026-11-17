@@ -67,6 +67,24 @@ void main() {
             ),
             PmlShape(
               id: 4,
+              name: 'Chart',
+              transform: const PmlTransform(
+                x: 457200,
+                y: 3200400,
+                cx: 4572000,
+                cy: 1600200,
+              ),
+              visual: OfficeVisual(
+                kind: OfficeVisualKind.chartColumn,
+                title: 'Sales',
+                points: [
+                  ChartPoint(label: 'Q1', value: 10),
+                  ChartPoint(label: 'Q2', value: 20),
+                ],
+              ),
+            ),
+            PmlShape(
+              id: 5,
               name: 'Logo',
               transform: const PmlTransform(
                 x: 6400800,
@@ -102,6 +120,8 @@ void main() {
     expect(content, contains('xlink:type="simple"'));
     expect(content, contains('Speaker note'));
     expect(content, contains('<text:a xlink:href="https://example.com/deck">'));
+    expect(content, contains('Q1'));
+    expect(content, contains('Q2'));
     final pageProperties = _pageProperties(XmlDocument.parse(content), 0);
     expect(
       pageProperties.getAttribute('type', namespaceUri: _smilNs),

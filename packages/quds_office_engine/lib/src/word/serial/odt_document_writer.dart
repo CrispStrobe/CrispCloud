@@ -61,6 +61,15 @@ abstract final class OdtDocumentWriter {
       final body = XmlWriter();
       final section = layout.sections[index];
       final start = layout.sectionStarts[index];
+      final columns = section.resolvedColumnCount;
+      if (columns > 1) {
+        body.writeStartElement('section', prefix: 'text');
+        body.writeAttribute('text:name', 'Section$index');
+        body.writeAttribute(
+          'text:style-name',
+          layout.sectionColumnsStyle(columns, section.columnSpace),
+        );
+      }
       _writeBlocks(body, section.blocks, layout, sectionStart: start);
       // Empty and entirely unmodeled sections still own a page boundary. The
       // small empty anchor cannot consume a later section's first paragraph.
@@ -68,6 +77,7 @@ abstract final class OdtDocumentWriter {
         start.empty = true;
         _writeSectionAnchor(body, layout, start);
       }
+      if (columns > 1) body.writeEndElement();
       parts.add((xml: body.toXml(), start: start));
     }
     return parts;
@@ -1541,7 +1551,7 @@ class _OdtLayout {
         [tab.position, tab.stop.alignment.index, tab.stop.leader.index],
     ]);
     final key =
-        '${heading == null ? 'body' : heading.clamp(1, 9)}|${props.justification.index}|${props.rightToLeft}|${props.lineSpacingRule.index}|${props.lineSpacing}|${props.spacingBefore}|${props.spacingAfter}|${props.indent.left}|${props.indent.right}|${props.indent.firstLine}|${props.indent.hanging}|${props.pageBreakBefore}|${sectionStart?.index}|$emptyAnchor|$shading|$border|$tabKey';
+        '${heading == null ? 'body' : heading.clamp(1, 9)}|${props.justification.index}|${props.rightToLeft}|${props.lineSpacingRule.index}|${props.lineSpacing}|${props.spacingBefore}|${props.spacingAfter}|${props.indent.left}|${props.indent.right}|${props.indent.firstLine}|${props.indent.hanging}|${props.pageBreakBefore}|${props.columnBreakBefore}|${props.keepTogether}|${sectionStart?.index}|$emptyAnchor|$shading|$border|$tabKey';
     return _paragraphStyles.putIfAbsent(key, () {
       final name = sectionStart == null
           ? 'P${_paragraphStyles.length + 1}'
@@ -1601,6 +1611,11 @@ class _OdtLayout {
         }
         if (props.pageBreakBefore || sectionStart?.breakBefore == true) {
           buffer.write(' fo:break-before="page"');
+        } else if (props.columnBreakBefore) {
+          buffer.write(' fo:break-before="column"');
+        }
+        if (props.keepTogether) {
+          buffer.write(' fo:keep-together="always"');
         }
         if (sectionStart?.index case final index? when index > 0) {
           buffer.write(' style:page-number="auto"');
@@ -1667,6 +1682,7 @@ class _OdtLayout {
               WmlTabLeader.none => null,
             };
             if (leader != null) {
+              buffer.write(' style:leader-type="single"');
               buffer.write(' style:leader-style="$leader"');
               buffer.write(' style:leader-text="$leaderText"');
             }
@@ -1871,6 +1887,34 @@ class _OdtLayout {
     }
     return _OdtListMarker.number(prefix, suffix, value);
   }
+
+  String sectionColumnsStyle(int columns, double gap) {
+    // Keep invalid imported lengths out of ODF without changing the model.
+    // Omission leaves the gap unspecified; zero, including negative zero,
+    // remains an explicit zero-length gap. Cache the emitted representation.
+    final normalizedGap = gap < 0
+        ? null
+        : _paragraphDecimal(gap == 0 ? 0 : gap);
+    final key = '$columns|$normalizedGap';
+    return _sectionColumnStyles.putIfAbsent(key, () {
+      final name = 'Sect${_sectionColumnStyles.length + 1}';
+      // ODF 1.3 sections 17.11 and 17.12 put column attributes on a
+      // style:columns child, not on style:section-properties itself.
+      final buffer = StringBuffer(
+        '<style:style style:name="$name" style:family="section">'
+        '<style:section-properties>'
+        '<style:columns fo:column-count="$columns"',
+      );
+      if (normalizedGap != null) {
+        buffer.write(' fo:column-gap="${normalizedGap}pt"');
+      }
+      buffer.write('/></style:section-properties></style:style>');
+      _styleBuffers.add(buffer.toString());
+      return name;
+    });
+  }
+
+  final Map<String, String> _sectionColumnStyles = <String, String>{};
 
   String listStyle(_OdtListMarker marker) {
     if (marker.bullet == '•') return 'L1';
