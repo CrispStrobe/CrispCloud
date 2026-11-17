@@ -887,11 +887,10 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
     if (next.lengthUnit != _config.lengthUnit) {
       _unitRevision++;
       unawaited(
-        OfficeMeasurementPreferences.write(next.lengthUnit).catchError((
-          Object error,
-        ) {
-          _log.warn('Could not save measurement units', error);
-        }),
+        OfficeMeasurementPreferences.write(next.lengthUnit)
+            .catchError((Object error) {
+              _log.warn('Could not save measurement units', error);
+            }),
       );
     }
     setState(() => _config = next);
@@ -1190,9 +1189,8 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
           // Keep a key entered during this document session even if the
           // initial credential-store read was unavailable.
           _zoteroCredentialsLoaded = true;
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(context.tr(error.message))));
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(context.tr(error.message))));
         }
       }
       if (!mounted ||

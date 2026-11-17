@@ -1,0 +1,13 @@
+{
+  "baseline": "bbc0121b270552022fe05b8a59cefe104db1c4fe",
+  "reviewed_paths": 954,
+  "changed_reviewed_paths": [
+    "tool/office_fidelity_manifest.json",
+    "lib/widgets/office_editor_dialog.dart"
+  ],
+  "only_policy_field_changed": "reviewed_source_sha256",
+  "previous_fingerprint": "e355a24a701e1d6ad192f63241ad3867ece0c8adb4945ea8ec9248c72ab02cac",
+  "current_fingerprint": "f04ab1e9258a9a56da46d9c2bcb5e8e91f0cf9cfd67b08e22b3ff2e969ac3791",
+  "status": "passed",
+  "submission_performed": false
+}

@@ -26,8 +26,8 @@ content.
 The app mirrors the canonical Quds source and the standalone legacy parser.
 Exact revisions, source boundaries and the complete managed-file inventory are
 recorded in [the fidelity manifest](../tool/office_fidelity_manifest.json).
-The current canonical checkpoint is `2de01b5774b75ddad858fc61bda3b356570cbf38`;
-the managed inventory contains 2,624 files: 767 canonical files and the unchanged
+The current canonical checkpoint is `4595e30813a7864889953baa8c964809043efb88`;
+the managed inventory contains 2,629 files: 772 canonical files and the unchanged
 1,857-file standalone parser. The 17 November continuation reconciles the
 captured Office, morphology and proofing-tool branches and their bounded late
 arrivals. It preserves the original six bundled notices and adds the complete
@@ -445,3 +445,12 @@ section activation for ODT tables of contents, restores bounded PAGE/NUMPAGES
 conversion with cache/style/link preservation, and suppresses ambiguous bookmark
 ends. Incoming chart-table export and production ODF cell/story workflows remain
 intact. The native spaCy backend is separate work.
+
+The reconciled continuation captures host main `6beeeec4` and canonical source
+`4595e30813a7864889953baa8c964809043efb88`. It retains the deliberate AOT/RML
+removal and independent German context work, incorporates the captured bounded
+verb-case and participle refinements, and restores the original column-break
+and chart-table menu regressions. The actual field export case checks one
+cached PAGE/NUMPAGES display with authored styles and links, plus locked and
+unsupported fallback content and unchanged source bytes. Fresh local
+qualification and historical results remain separately attributed.
