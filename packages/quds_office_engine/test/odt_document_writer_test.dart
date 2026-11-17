@@ -29,6 +29,7 @@ XmlElement _odtBody(OpcPackage package) => XmlDocument.parse(
 ).root!.firstChild('body')!.firstChild('text')!;
 
 void main() {
+  tabStopTests();
   paragraphShadingTests();
   pageFieldTests();
   linkTests();
@@ -559,5 +560,40 @@ void paragraphShadingTests() {
     final content = package.getPart('/content.xml')!.readText();
     expect(content, contains('fo:background-color="#ffff00"'));
     expect(content, contains('fo:border="0.5pt solid #ff0000"'));
+  });
+}
+
+void tabStopTests() {
+  test('writes custom paragraph tab stops', () {
+    final document = WmlDocument(
+      sections: [
+        WmlSection(
+          blocks: [
+            WmlParagraph(
+              properties: WmlParagraphProps(
+                tabs: const [
+                  WmlTabStop(position: 72, alignment: WmlTabAlignment.center),
+                  WmlTabStop(
+                    position: 144,
+                    alignment: WmlTabAlignment.right,
+                    leader: WmlTabLeader.dot,
+                  ),
+                ],
+              ),
+              inlines: [WmlRun(text: 'One\tTwo\tThree')],
+            ),
+          ],
+        ),
+      ],
+    );
+    final package = OpcPackage.openBytes(
+      OdtDocumentWriter.writeBytes(document),
+    );
+    final content = package.getPart('/content.xml')!.readText();
+    expect(content, contains('<style:tab-stops>'));
+    expect(content, contains('style:position="72.00pt"'));
+    expect(content, contains('style:type="center"'));
+    expect(content, contains('style:type="right"'));
+    expect(content, contains('style:leader-style="dotted"'));
   });
 }
