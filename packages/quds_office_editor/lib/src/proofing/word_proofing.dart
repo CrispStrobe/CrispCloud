@@ -98,8 +98,8 @@ final class WordProofingSession extends ChangeNotifier {
         service ??
         OfficeProofingService(
           providers: [
-            GermanSpellingProvider(vocabulary: this.vocabulary),
             GermanWritingRulesProvider(),
+            GermanSpellingProvider(vocabulary: this.vocabulary),
           ],
         );
   }

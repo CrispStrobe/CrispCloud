@@ -70,6 +70,37 @@ List<XmlElement> _rows(XmlElement content) => _body(content)
     .toList();
 
 void main() {
+  test('neighboring paragraph column and keep properties stay independent', () {
+    final content = _export([
+      WmlParagraph(inlines: [WmlRun(text: 'Ordinary')]),
+      WmlParagraph(
+        properties: WmlParagraphProps(columnBreakBefore: true),
+        inlines: [WmlRun(text: 'Column')],
+      ),
+      WmlParagraph(
+        properties: WmlParagraphProps(keepTogether: true),
+        inlines: [WmlRun(text: 'Together')],
+      ),
+      WmlParagraph(inlines: [WmlRun(text: 'Ordinary again')]),
+    ]);
+    final paragraphs = _paragraphs(content);
+    final properties = [
+      for (final p in paragraphs)
+        _properties(content, p, _textNs, 'paragraph-properties')!,
+    ];
+    expect(
+      properties.map(
+        (p) => p.getAttribute('break-before', namespaceUri: _foNs),
+      ),
+      [null, 'column', null, null],
+    );
+    expect(
+      properties.map(
+        (p) => p.getAttribute('keep-together', namespaceUri: _foNs),
+      ),
+      [null, null, 'always', null],
+    );
+  });
   test('keeps custom tab positions independent across paragraphs', () {
     final content = _export([
       for (final position in [72.0, 144.0, 72.0])

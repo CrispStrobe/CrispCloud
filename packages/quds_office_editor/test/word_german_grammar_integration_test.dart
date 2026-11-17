@@ -16,8 +16,74 @@ WordEditorController _controller(WmlDocument document) {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  test(
+    'default review prefers contextual participle over spelling distance',
+    () async {
+      final controller = WordEditorController(
+        document: WmlDocument.empty(text: 'Er hat das Buch gelest.'),
+      );
+      addTearDown(controller.dispose);
+      final summary = await controller.checkDocumentProofing();
+      expect(summary.complete, isTrue);
+      final sameWord = summary.issues
+          .where((issue) => issue.finding.originalText == 'gelest')
+          .toList();
+      expect(sameWord.first.finding.ruleId, 'de.grammar.participle');
+      expect(sameWord.first.finding.replacements, ['gelesen']);
+      expect(
+        controller.applyProofingSuggestion(sameWord.first, 'gelesen'),
+        isTrue,
+      );
+      expect(
+        controller.document.paragraphs.first.text,
+        'Er hat das Buch gelesen.',
+      );
+      controller.undo();
+      expect(
+        controller.document.paragraphs.first.text,
+        'Er hat das Buch gelest.',
+      );
+    },
+  );
+
   for (final scenario
       in <({String source, String corrected, String rule, String replacement})>[
+        (
+          source: 'Sie hat ein roten Mantel.',
+          corrected: 'Sie hat einen roten Mantel.',
+          rule: 'verb-case',
+          replacement: 'einen',
+        ),
+        (
+          source: 'Er hilft den Kind.',
+          corrected: 'Er hilft dem Kind.',
+          rule: 'verb-case',
+          replacement: 'dem',
+        ),
+        (
+          source: 'Das sind ein Problem.',
+          corrected: 'Das ist ein Problem.',
+          rule: 'copula-agreement',
+          replacement: 'ist',
+        ),
+        (
+          source: 'Gestern ich habe gekocht.',
+          corrected: 'Gestern habe ich gekocht.',
+          rule: 'word-order',
+          replacement: 'habe ich',
+        ),
+        (
+          source: 'Er hat das Buch gelest.',
+          corrected: 'Er hat das Buch gelesen.',
+          rule: 'participle',
+          replacement: 'gelesen',
+        ),
+        (
+          source: 'Das ist der beste Lösung.',
+          corrected: 'Das ist die beste Lösung.',
+          rule: 'verb-case',
+          replacement: 'die',
+        ),
         (
           source: 'Ich spreche mit mich.',
           corrected: 'Ich spreche mit mir.',
@@ -180,6 +246,10 @@ void main() {
     'preposition-pronoun': 'Pronoun case after prepositions',
     'preposition-case': 'Article case after prepositions',
     'noun-verb': 'Noun and verb agreement',
+    'verb-case': 'Noun case after verbs',
+    'copula-agreement': 'Agreement with sein',
+    'word-order': 'Main clause word order',
+    'participle': 'Irregular past participles',
     'dative-plural': 'Dative plural endings',
     'adjective-ending': 'Adjective agreement',
     'das-dass': 'Das and dass usage',

@@ -18,9 +18,9 @@
     "path": "tool/proofing/german_common_words.txt",
     "license": "MIT",
     "authorship": "Independently authored Quds Office basic-word supplement, 2026",
-    "sha256": "96c723a6ffe638423d47e2dbe36ab1c8b89728d7d518b44ea5a721d5be8856c1",
-    "forms": 1286,
-    "additional_forms": 208
+    "sha256": "c294a7a543c0178284dbc14486461130ddc1362465bd1f41139edb3179b14a57",
+    "forms": 1295,
+    "additional_forms": 214
   },
   "selection": {
     "standard": "Shared field 2, otherwise reformed field 4; excludes absent -N- placeholders.",
@@ -28,17 +28,17 @@
     "scope": "Finite word forms; no unrestricted compound decomposition or complete morphology. DE and AT share this source vocabulary. The old source snapshot has no claim to contemporary completeness."
   },
   "data": {
-    "standard_count": 444133,
+    "standard_count": 444139,
     "swiss_additions_count": 9451,
-    "standard_sha256": "315344c6e9ffcf43ec5369111142b17d532806667f859ddb2ddb73246c4a2c41",
+    "standard_sha256": "70a93e30b3d10b6403c74e8457c8092bbb96c6876e05dd94ed24934bccc681e3",
     "swiss_additions_sha256": "47983d1ea48a7c3a0328b071b9d2beab1ffed7ac6f33b209dcc6f80afe4be760"
   },
   "encoding": {
     "format": "base64 raw DEFLATE of newline-separated UTF-8, <=4096 words/chunk",
-    "zlib_version": "1.3.2"
+    "zlib_version": "1.2.11"
   },
   "generated_files": {
-    "lib/src/proofing/data/german_common_00.dart": "68b4d849635c1f6587f7e58e4c3bcb2fc03ad9c72c10265fa0bf122fec846bfa",
+    "lib/src/proofing/data/german_common_00.dart": "3a41eb74e53bd167105211b275de2af73d91077fb2c4441e1bbbb1daa880ebcd",
     "lib/src/proofing/data/german_lexicon_data.dart": "beb4e809b577fc950e39ffb759b9435834d1f2763e7d00911816da21b8b5d3a1",
     "lib/src/proofing/data/german_standard_00.dart": "dfc3548af79c27f6d306ae91fc8711e6f5013295d4deaab6442f9fda964f54a4",
     "lib/src/proofing/data/german_standard_01.dart": "75216e458beeeade0c3b647fda64064f3a2468887f716d8ee00947b1e1a319f1",

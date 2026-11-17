@@ -11,5 +11,14 @@ Band Junge Jungen Glaube Glauben Glaubens Amt Amtes Amts Ämter Ämtern Vogel V�
 # The monosyllabic courtyard lemma is absent while its inflections are upstream.
 # The Swiss greeting is a valid regional German word, including nominal use.
 Hof Hofe Hofes Hofs Höfe Höfen grüezi Grüezi
+# Reviewed finite nouns and nominalized infinitives, including genitives.
+# These entries preserve their noun casing alongside existing lowercase verbs;
+# they do not infer arbitrary nominalizations or accept generated inflections.
+Schuppen Schuppens Lernen Lernens
 # Basic verb forms; these do not assert a productive morphology engine.
 bekam bekamst bekamen bekommen bekamst blieb bliebst blieben bleibe bleibst bleibt bleiben brachte brachtest brachten bringe bringst bringt bringen denke denkst denkt denken dachte dachtest dachten esse isst esst essen aß aßen aßt fahre fährst fährt fahren fahrt fuhr fuhrst fuhren finde findest findet finden fand fandest fanden frage fragst fragt fragen fragte fragten gebe gibst gibt geben gebt gab gabst gaben gehe gehst geht gehen ging gingst gingen gehe gerade gerne halte hältst hält halten haltet hielt hieltst hielten heiße heißt heißen hieß hießen helfe hilfst hilft helfen helft half halfst halfen kenne kennst kennt kennen kannte kanntest kannten komme kommst kommt kommen kam kamst kamen lasse lässt lasst lassen ließ ließt ließen laufe läufst läuft laufen lauft lief liefst liefen lebe lebst lebt leben lebte lebten lege legst legt legen legte legten lese liest lest lesen las lasest lasen liege liegst liegt liegen lag lagst lagen mache machst macht machen machte machten nehme nimmst nimmt nehmen nehmt nahm nahmst nahmen rufe rufst ruft rufen rief riefst riefen sage sagst sagt sagen sagte sagten scheine scheinst scheint scheinen schien schienst schienen schreibe schreibst schreibt schreiben schrieb schriebst schrieben sehe siehst sieht sehen seht sah sahst sahen setze setzt setzen setzte setzten sitze sitzt sitzen saß saßen spreche sprichst spricht sprechen sprecht sprach sprachst sprachen stehe stehst steht stehen stand standest standen stelle stellst stellt stellen stellte stellten suche suchst sucht suchen suchte suchten trage trägst trägt tragen tragt trug trugst trugen treffe triffst trifft treffen trefft traf trafst trafen trinke trinkst trinkt trinken trank trankst tranken tue tust tut tun tat tatest taten tue verstehe verstehst versteht verstehen verstand verstandest verstanden versuche versuchst versucht versuchen versuchte versuchten warte wartest wartet warten wartete warteten weiß weißt wissen wisst wusste wusstest wussten wohne wohnst wohnt wohnen wohnte wohnten zeige zeigst zeigt zeigen zeigte zeigten ziehe ziehst zieht ziehen zog zogst zogen
+
+# Ordinary noun and conjunction gaps found in the frozen contextual controls.
+Frage Gerät trotzdem
+Wissen
+Wissens

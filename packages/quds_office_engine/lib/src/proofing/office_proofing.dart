@@ -217,7 +217,17 @@ class OfficeProofingReport {
                ...result.findings,
          ]..sort((OfficeProofingFinding a, OfficeProofingFinding b) {
            final int byStart = a.start.compareTo(b.start);
-           return byStart == 0 ? a.end.compareTo(b.end) : byStart;
+           if (byStart != 0) return byStart;
+           final int byEnd = a.end.compareTo(b.end);
+           if (byEnd != 0) return byEnd;
+           int priority(OfficeProofingCategory category) => switch (category) {
+             OfficeProofingCategory.grammar => 0,
+             OfficeProofingCategory.spelling => 1,
+             OfficeProofingCategory.style => 2,
+           };
+           // Keep both review items; put contextual grammar before an edit-
+           // distance spelling guess for the identical source word/range.
+           return priority(a.category).compareTo(priority(b.category));
          }),
        );
 

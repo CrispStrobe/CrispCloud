@@ -26,8 +26,8 @@ content.
 The app mirrors the canonical Quds source and the standalone legacy parser.
 Exact revisions, source boundaries and the complete managed-file inventory are
 recorded in [the fidelity manifest](../tool/office_fidelity_manifest.json).
-The current canonical checkpoint is `ec5ecbff742580c0e7d1136507b953e8cc877e4c`;
-the managed inventory contains 2,606 files: 749 canonical files and the unchanged
+The current canonical checkpoint is `8ce23da119d4cbffcc5f92cc720a5efb262c2bec`;
+the managed inventory contains 2,620 files: 763 canonical files and the unchanged
 1,857-file standalone parser. The 17 November continuation reconciles the
 captured Office, morphology and proofing-tool branches and their bounded late
 arrivals. It preserves the original six bundled notices and adds the complete
@@ -430,3 +430,11 @@ this supported profile. Exact source identities and scope are recorded in
 `docs/validation/terminal-ods-refresh-20261116/summary.json`.
 
 ODT export also writes modeled list groups, retaining the combined whitespace and visible Zotero-result behavior.
+
+The German context continuation keeps AOT.ru/RML, its analyzer, dictionaries and
+Studio registration on their feature branches. The default offline checker
+uses the independent Dart rules and existing licensed lexical data. Four new
+review categories cover verb case, copula number, word order and participles;
+context suggestions precede distance-only spelling guesses. No model, daemon
+or pipe is enabled by this sync. See the canonical German context report and
+the host validation receipt for bounded accuracy and live test results.

@@ -273,5 +273,5 @@ const List<String> germanMorphologyPatterns = <String>[
   '3\t\tn\tn\t',
 ];
 
-const int germanMorphologyLemmaCount = 67492;
-const int germanMorphologyReadingCount = 127987;
+const int germanMorphologyLemmaCount = 67498;
+const int germanMorphologyReadingCount = 127998;

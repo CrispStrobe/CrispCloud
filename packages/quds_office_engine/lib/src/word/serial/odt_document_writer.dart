@@ -61,7 +61,7 @@ abstract final class OdtDocumentWriter {
       final body = XmlWriter();
       final section = layout.sections[index];
       final start = layout.sectionStarts[index];
-      final columns = section.columnCount;
+      final columns = section.resolvedColumnCount;
       if (columns > 1) {
         body.writeStartElement('section', prefix: 'text');
         body.writeAttribute('text:name', 'Section$index');
@@ -71,13 +71,13 @@ abstract final class OdtDocumentWriter {
         );
       }
       _writeBlocks(body, section.blocks, layout, sectionStart: start);
-      if (columns > 1) body.writeEndElement();
       // Empty and entirely unmodeled sections still own a page boundary. The
       // small empty anchor cannot consume a later section's first paragraph.
       if (!start.consumed) {
         start.empty = true;
         _writeSectionAnchor(body, layout, start);
       }
+      if (columns > 1) body.writeEndElement();
       parts.add((xml: body.toXml(), start: start));
     }
     return parts;
@@ -692,6 +692,7 @@ abstract final class OdtDocumentWriter {
   }) {
     switch (inline) {
       case WmlRun():
+        if (layout.fieldResultSuppressed) break;
         final style = layout.runStyle(inline.properties);
         final href = switch (inline.hyperlink) {
           final link? =>
@@ -771,9 +772,29 @@ abstract final class OdtDocumentWriter {
           prefix: 'text',
         );
       case WmlFieldBoundary():
-        // Instructions are hidden field metadata, not document text. The
-        // surrounding result runs remain in the inline sequence, including
-        // citations and bibliographies that span several paragraphs.
+        if (inline.kind == WmlFieldBoundaryKind.begin) {
+          layout.beginField();
+        } else if (inline.kind == WmlFieldBoundaryKind.instruction) {
+          final name = inline.text
+              .trim()
+              .split(RegExp(r'\s+'))
+              .first
+              .toUpperCase();
+          final element = switch (name) {
+            'PAGE' => 'page-number',
+            'NUMPAGES' => 'page-count',
+            'DATE' => 'date',
+            'TIME' => 'time',
+            'TITLE' => 'title',
+            _ => null,
+          };
+          if (element != null) {
+            w.writeEmptyElement(element, prefix: 'text');
+            layout.suppressFieldResult();
+          }
+        } else if (inline.kind == WmlFieldBoundaryKind.end) {
+          layout.endField();
+        }
         break;
       case WmlBookmarkBoundary():
         final name = inline.name;
@@ -1468,6 +1489,21 @@ class _OdtLayout {
   bool inCommentBody = false;
   bool inNoteBody = false;
   bool noteReferenceSpacePending = false;
+  int _fieldDepth = 0;
+  int? _suppressFieldDepth;
+
+  void beginField() => _fieldDepth++;
+
+  void suppressFieldResult() => _suppressFieldDepth = _fieldDepth;
+
+  bool get fieldResultSuppressed =>
+      _suppressFieldDepth != null && _fieldDepth >= _suppressFieldDepth!;
+
+  void endField() {
+    if (_suppressFieldDepth == _fieldDepth) _suppressFieldDepth = null;
+    if (_fieldDepth > 0) _fieldDepth--;
+  }
+
   final Map<String, String> _runStyles = <String, String>{};
   final Map<String, String> _paragraphStyles = <String, String>{};
   final Map<String, String> _columnStyles = <String, String>{};
@@ -1551,7 +1587,7 @@ class _OdtLayout {
         [tab.position, tab.stop.alignment.index, tab.stop.leader.index],
     ]);
     final key =
-        '${heading == null ? 'body' : heading.clamp(1, 9)}|${props.justification.index}|${props.rightToLeft}|${props.lineSpacingRule.index}|${props.lineSpacing}|${props.spacingBefore}|${props.spacingAfter}|${props.indent.left}|${props.indent.right}|${props.indent.firstLine}|${props.indent.hanging}|${props.pageBreakBefore}|${sectionStart?.index}|$emptyAnchor|$shading|$border|$tabKey';
+        '${heading == null ? 'body' : heading.clamp(1, 9)}|${props.justification.index}|${props.rightToLeft}|${props.lineSpacingRule.index}|${props.lineSpacing}|${props.spacingBefore}|${props.spacingAfter}|${props.indent.left}|${props.indent.right}|${props.indent.firstLine}|${props.indent.hanging}|${props.pageBreakBefore}|${props.columnBreakBefore}|${props.keepTogether}|${sectionStart?.index}|$emptyAnchor|$shading|$border|$tabKey';
     return _paragraphStyles.putIfAbsent(key, () {
       final name = sectionStart == null
           ? 'P${_paragraphStyles.length + 1}'
@@ -1682,6 +1718,7 @@ class _OdtLayout {
               WmlTabLeader.none => null,
             };
             if (leader != null) {
+              buffer.write(' style:leader-type="single"');
               buffer.write(' style:leader-style="$leader"');
               buffer.write(' style:leader-text="$leaderText"');
             }
@@ -1888,14 +1925,27 @@ class _OdtLayout {
   }
 
   String sectionColumnsStyle(int columns, double gap) {
-    final key = '$columns|${gap.toStringAsFixed(2)}';
+    // Keep invalid imported lengths out of ODF without changing the model.
+    // Omission leaves the gap unspecified; zero, including negative zero,
+    // remains an explicit zero-length gap. Cache the emitted representation.
+    final normalizedGap = gap < 0
+        ? null
+        : _paragraphDecimal(gap == 0 ? 0 : gap);
+    final key = '$columns|$normalizedGap';
     return _sectionColumnStyles.putIfAbsent(key, () {
       final name = 'Sect${_sectionColumnStyles.length + 1}';
-      _styleBuffers.add(
+      // ODF 1.3 sections 17.11 and 17.12 put column attributes on a
+      // style:columns child, not on style:section-properties itself.
+      final buffer = StringBuffer(
         '<style:style style:name="$name" style:family="section">'
-        '<style:section-properties fo:column-count="$columns" '
-        'fo:column-gap="${gap.toStringAsFixed(2)}pt"/></style:style>',
+        '<style:section-properties>'
+        '<style:columns fo:column-count="$columns"',
       );
+      if (normalizedGap != null) {
+        buffer.write(' fo:column-gap="${normalizedGap}pt"');
+      }
+      buffer.write('/></style:section-properties></style:style>');
+      _styleBuffers.add(buffer.toString());
       return name;
     });
   }

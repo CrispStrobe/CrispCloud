@@ -1,11 +1,13 @@
 import 'package:characters/characters.dart';
 
+import 'german_literal_ranges.dart';
 import 'german_morphology.dart';
 import 'german_spelling.dart' show normalizeGermanWord;
 import 'office_proofing.dart';
 import 'proofing_text_ranges.dart';
 
 part 'german_grammar.dart';
+part 'german_context_grammar.dart';
 
 Set<int> _sourceGraphemeBoundaries(String text) {
   final Set<int> boundaries = <int>{0};
@@ -774,7 +776,9 @@ class GermanWritingRulesProvider extends OfficeProofingProvider {
     final _GermanWritingText projection = _GermanWritingText(request.text);
     final String text = projection.text;
     final OfficeProofingTextRanges protected = OfficeProofingTextRanges(text);
-    final bool Function(int, int) isProtected = protected.overlaps;
+    final literals = GermanLiteralTextRanges(text);
+    bool isProtected(int start, int end) =>
+        protected.overlaps(start, end) || literals.overlaps(start, end);
     final Set<int> boundaries = projection.boundaries;
     await GermanNounMorphology.shared.prepareWords(
       _grammarMorphologyCandidates(text, isProtected, boundaries),

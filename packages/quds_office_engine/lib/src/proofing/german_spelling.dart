@@ -5,6 +5,7 @@ import 'package:characters/characters.dart';
 
 import '../opc/zip/deflate_codec.dart';
 import 'data/german_lexicon_data.dart';
+import 'german_literal_ranges.dart';
 import 'office_proofing.dart';
 import 'proofing_text_ranges.dart';
 
@@ -322,8 +323,9 @@ class GermanSpellingProvider extends OfficeProofingProvider {
     final OfficeProofingTextRanges protectedRanges = OfficeProofingTextRanges(
       request.text,
     );
-    final Map<(String, bool), List<String>> suggestions =
-        <(String, bool), List<String>>{};
+    final literals = GermanLiteralTextRanges(request.text);
+    final Map<(String, bool, String?), List<String>> suggestions =
+        <(String, bool, String?), List<String>>{};
     int examined = 0;
     for (final RegExpMatch token in _tokens.allMatches(request.text)) {
       if (examined++ % 16 == 0) {
@@ -343,6 +345,7 @@ class GermanSpellingProvider extends OfficeProofingProvider {
         continue;
       }
       if (protectedRanges.overlaps(token.start, token.end) ||
+          literals.overlaps(token.start, token.end) ||
           _isIdentifierFragment(request.text, token.start, token.end)) {
         continue;
       }
@@ -361,7 +364,18 @@ class GermanSpellingProvider extends OfficeProofingProvider {
           )) {
         continue;
       }
-      final (String, bool) suggestionKey = (word, sentenceInitial);
+      final String? preferredParticiple = _preferredParticiple(
+        request.text,
+        token,
+        word,
+        protectedRanges,
+        boundaries,
+      );
+      final (String, bool, String?) suggestionKey = (
+        word,
+        sentenceInitial,
+        preferredParticiple,
+      );
       List<String>? replacements = suggestions[suggestionKey];
       if (replacements == null) {
         replacements = _suggest(
@@ -370,6 +384,7 @@ class GermanSpellingProvider extends OfficeProofingProvider {
           swiss,
           personal: personal,
           sentenceInitial: sentenceInitial,
+          preferredParticiple: preferredParticiple,
         );
         suggestions[suggestionKey] = replacements;
         // A new indexed search can consume the full candidate budget. Do not
@@ -478,12 +493,212 @@ class GermanSpellingProvider extends OfficeProofingProvider {
     return at >= 0 && text[at] == ':';
   }
 
+  // Independently authored finite pairs: ordinary irregular participles and
+  // their overregularized ge-...-t/-et learner spellings. These language facts
+  // are not imported rules, a productive conjugator, or additions to the word
+  // list. Already accepted words are never reconsidered here. In particular,
+  // valid alternatives such as gewendet/gewandt and gewachst/gewachsen must
+  // not become spelling errors because one reading fits another construction.
+  // Every preference still requires an exact shipped dictionary match inside
+  // the ordinary candidate budget. No unchecked replacement is published.
+  static const Map<String, String> _participlePreferences = <String, String>{
+    'gelest': 'gelesen',
+    'geschreibt': 'geschrieben',
+    'gefindet': 'gefunden',
+    'genehmt': 'genommen',
+    'gegebt': 'gegeben',
+    'geesst': 'gegessen',
+    'getrinkt': 'getrunken',
+    'geseht': 'gesehen',
+    'gehelft': 'geholfen',
+    'gesprecht': 'gesprochen',
+    'getrefft': 'getroffen',
+    'geruft': 'gerufen',
+    'geschlaft': 'geschlafen',
+    'gezieht': 'gezogen',
+    'gefangt': 'gefangen',
+    'gehaltet': 'gehalten',
+    'geladet': 'geladen',
+    'gelasst': 'gelassen',
+    'gewascht': 'gewaschen',
+    'gewerft': 'geworfen',
+  };
+  static const Map<String, Set<String>> _participleAuxiliaries =
+      <String, Set<String>>{
+        'ich': <String>{'habe', 'hatte'},
+        'du': <String>{'hast', 'hattest'},
+        'er': <String>{'hat', 'hatte'},
+        'sie': <String>{'hat', 'haben', 'hatte', 'hatten'},
+        'es': <String>{'hat', 'hatte'},
+        'wir': <String>{'haben', 'hatten'},
+        'ihr': <String>{'habt', 'hattet'},
+      };
+  static const Set<String> _participleContextBreakers = <String>{
+    'und',
+    'oder',
+    'aber',
+    'sondern',
+    'denn',
+    'doch',
+    'jedoch',
+    'weil',
+    'dass',
+    'ob',
+    'wenn',
+    'als',
+    'obwohl',
+    'während',
+    'bevor',
+    'nachdem',
+    'seitdem',
+    'bis',
+    'damit',
+    'sodass',
+    'habe',
+    'hast',
+    'hat',
+    'haben',
+    'habt',
+    'hatte',
+    'hattest',
+    'hatten',
+    'hattet',
+    'bin',
+    'bist',
+    'ist',
+    'sind',
+    'seid',
+    'war',
+    'warst',
+    'waren',
+    'wart',
+    'werde',
+    'wirst',
+    'wird',
+    'werden',
+    'werdet',
+    'wurde',
+    'wurdest',
+    'wurden',
+    'wurdet',
+    'kann',
+    'kannst',
+    'können',
+    'könnt',
+    'muss',
+    'musst',
+    'müssen',
+    'müsst',
+    'soll',
+    'sollst',
+    'sollen',
+    'sollt',
+    'will',
+    'willst',
+    'wollen',
+    'wollt',
+    'darf',
+    'darfst',
+    'dürfen',
+    'dürft',
+  };
+  static final RegExp _participleSpace = RegExp(
+    r'^[\t\p{Zs}]+$',
+    unicode: true,
+  );
+  static const String _participleClauseEnds = '.!?;:,\r\n';
+  static const String _participleClosingQuotes = '“”‘’«»‹›"\'';
+
+  static String? _preferredParticiple(
+    String text,
+    RegExpMatch token,
+    String word,
+    OfficeProofingTextRanges protectedRanges,
+    Set<int> boundaries,
+  ) {
+    final String lower = word.toLowerCase();
+    final String? preferred = _participlePreferences[lower];
+    if (preferred == null || word != lower && word != _upper(word)) {
+      return null;
+    }
+    // A bounded main-clause frame: pronoun + agreeing finite haben, at most
+    // eight intervening words, and a participle at the clause's right edge.
+    // Inversion, noun subjects, subordinate/coordinated clauses, additional
+    // auxiliaries and titlecase names keep ordinary spelling ranking. This
+    // recognizes useful contexts without claiming a general sentence parse.
+    int start = token.start;
+    while (start > 0 &&
+        token.start - start <= 192 &&
+        !_participleClauseEnds.contains(text[start - 1])) {
+      start--;
+    }
+    if (token.start - start > 192) return null;
+    int following = token.end;
+    while (following < text.length &&
+        following - token.end <= 64 &&
+        _quotationSpace.hasMatch(text[following])) {
+      following++;
+    }
+    if (following - token.end > 64 ||
+        following < text.length &&
+            !_participleClauseEnds.contains(text[following]) &&
+            !_participleClosingQuotes.contains(text[following])) {
+      return null;
+    }
+    final String prefix = text.substring(start, token.start);
+    final List<RegExpMatch> words = _tokens.allMatches(prefix).toList();
+    if (words.length < 2 || words.length > 10) return null;
+    int lead = 0;
+    while (lead < prefix.length && _quotationSpace.hasMatch(prefix[lead])) {
+      lead++;
+    }
+    if (lead < prefix.length && _openingQuotationMarks.contains(prefix[lead])) {
+      lead++;
+      while (lead < prefix.length && _quotationSpace.hasMatch(prefix[lead])) {
+        lead++;
+      }
+    }
+    if (lead != words.first.start ||
+        !_participleSpace.hasMatch(prefix.substring(words.last.end))) {
+      return null;
+    }
+    final String subject = normalizeGermanWord(
+      words[0].group(0)!,
+    ).toLowerCase();
+    final String auxiliary = normalizeGermanWord(
+      words[1].group(0)!,
+    ).toLowerCase();
+    if (!(_participleAuxiliaries[subject]?.contains(auxiliary) ?? false)) {
+      return null;
+    }
+    for (int i = 0; i < words.length; i++) {
+      final RegExpMatch current = words[i];
+      if (!boundaries.contains(start + current.start) ||
+          !boundaries.contains(start + current.end) ||
+          i > 0 &&
+              !_participleSpace.hasMatch(
+                prefix.substring(words[i - 1].end, current.start),
+              ) ||
+          i >= 2 &&
+              _participleContextBreakers.contains(
+                normalizeGermanWord(current.group(0)!).toLowerCase(),
+              )) {
+        return null;
+      }
+    }
+    if (protectedRanges.overlaps(start + words.first.start, token.end)) {
+      return null;
+    }
+    return preferred;
+  }
+
   List<String> _suggest(
     String word,
     _GermanLexicon lexicon,
     bool swiss, {
     required Set<String> personal,
     required bool sentenceInitial,
+    String? preferredParticiple,
   }) {
     if (maximumSuggestions == 0 || word.isEmpty || word.length > 64) {
       return const <String>[];
@@ -539,7 +754,7 @@ class GermanSpellingProvider extends OfficeProofingProvider {
     final Set<String> found = <String>{};
     final Set<String> checked = <String>{};
     int examined = 0;
-    void candidate(String value) {
+    void candidate(String value, {bool dictionaryOnly = false}) {
       if (examined >= maximumCandidateChecks ||
           found.length >= maximumSuggestions ||
           value == word ||
@@ -547,7 +762,8 @@ class GermanSpellingProvider extends OfficeProofingProvider {
         return;
       }
       examined++;
-      if (personal.contains(value) || lexicon.exact(value, swiss: swiss)) {
+      if (!dictionaryOnly && personal.contains(value) ||
+          lexicon.exact(value, swiss: swiss)) {
         found.add(value);
       }
     }
@@ -560,6 +776,9 @@ class GermanSpellingProvider extends OfficeProofingProvider {
       candidate(value);
     }
 
+    if (preferredParticiple != null) {
+      candidate(preferredParticiple, dictionaryOnly: true);
+    }
     candidate(lower);
     candidate(_title(lower));
     candidate(word.replaceAll('ß', 'ss').replaceAll('ẞ', 'SS'));
