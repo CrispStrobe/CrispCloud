@@ -95,7 +95,8 @@ void main() {
     () {
       const tabs = <List<WmlTabStop>>[
         [WmlTabStop(position: 72, leader: WmlTabLeader.hyphen)],
-        [WmlTabStop(position: 72.004, leader: WmlTabLeader.underscore)],
+        [WmlTabStop(position: 72.004, leader: WmlTabLeader.hyphen)],
+        [WmlTabStop(position: 72, leader: WmlTabLeader.underscore)],
         [
           WmlTabStop(
             position: 144,
@@ -126,6 +127,7 @@ void main() {
       );
       final content = _xml(package, 'content');
       final body = _paragraphs(content);
+      expect(body, hasLength(tabs.length));
       expect(
         _style(
           content,
@@ -140,11 +142,19 @@ void main() {
         ).getAttribute('master-page-name', namespaceUri: _styleNs),
         'mp2',
       );
+      expect(
+        _style(
+          content,
+          body[3],
+        ).getAttribute('master-page-name', namespaceUri: _styleNs),
+        'mp3',
+      );
       final styles = _xml(package, 'styles');
       final masters = styles
           .firstChild('master-styles', namespaceUri: _officeNs)!
           .childrenNamed('master-page', namespaceUri: _styleNs)
           .toList();
+      expect(masters, hasLength(tabs.length));
       final names = <String?>[];
       for (var index = 0; index < masters.length; index++) {
         final header = masters[index]
@@ -158,15 +168,20 @@ void main() {
             .single;
         expect(
           stop.getAttribute('position', namespaceUri: _styleNs),
-          index == 2 ? '144.00pt' : '72.00pt',
+          index == 3 ? '144.00pt' : '72.00pt',
         );
         expect(
           stop.getAttribute('leader-style', namespaceUri: _styleNs),
-          index == 2 ? 'dotted' : 'solid',
+          index == 3 ? 'dotted' : 'solid',
+        );
+        expect(
+          stop.getAttribute('leader-text', namespaceUri: _styleNs),
+          ['-', '-', '_', '.'][index],
         );
       }
       expect(names[0], names[1]);
       expect(names[2], isNot(names[1]));
+      expect(names[3], isNot(names[2]));
     },
   );
 }

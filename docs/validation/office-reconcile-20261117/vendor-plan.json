@@ -1,0 +1,18 @@
+{
+  "from": "def52d84f3c3c5ce22c44d2620ecfa08d77780a7",
+  "to": "60a116d2df566793720bfb4f76d7f6523529bcb2",
+  "write": [
+    "packages/quds_office_editor/lib/src/embed/word_proofing_dialog.dart",
+    "packages/quds_office_editor/test/word_german_grammar_integration_test.dart",
+    "packages/quds_office_engine/lib/src/proofing/german_grammar.dart",
+    "packages/quds_office_engine/lib/src/word/serial/odt_document_writer.dart",
+    "packages/quds_office_engine/test/odt_document_writer_test.dart",
+    "packages/quds_office_engine/test/odt_page_field_fidelity_test.dart",
+    "packages/quds_office_engine/test/odt_paragraph_decoration_test.dart",
+    "packages/quds_office_engine/test/odt_section_continuation_test.dart",
+    "packages/quds_office_engine/test/odt_table_tab_fidelity_test.dart"
+  ],
+  "delete": [],
+  "pinned_files": 2606,
+  "applied": false
+}
