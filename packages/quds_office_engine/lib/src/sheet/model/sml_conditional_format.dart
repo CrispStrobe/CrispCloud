@@ -102,6 +102,7 @@ class SmlConditionalResolver {
     final number = _number(value);
     switch (rule.kind) {
       case SmlConditionalKind.expression:
+      case SmlConditionalKind.colorScale:
         return false;
       case SmlConditionalKind.greaterThan:
       case SmlConditionalKind.greaterOrEqual:

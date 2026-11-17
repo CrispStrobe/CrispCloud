@@ -1176,6 +1176,35 @@ abstract final class OdsSheetReader {
         _attribute(format, 'target-range-address', _calcext),
       );
       if (range == null) continue;
+      for (final scale in _descendants(format, 'color-scale', _calcext)) {
+        final stops = <SmlColorScaleStop>[];
+        for (final entry in _descendants(
+          scale,
+          'color-scale-entry',
+          _calcext,
+        )) {
+          final color = _hex(_attribute(entry, 'color', _calcext));
+          if (color == null) continue;
+          final value =
+              double.tryParse(_attribute(entry, 'value', _calcext) ?? '') ?? 0;
+          stops.add(
+            SmlColorScaleStop(
+              type: _attribute(entry, 'type', _calcext) ?? 'number',
+              value: value,
+              colorRgb: color,
+            ),
+          );
+        }
+        if (stops.length >= 2) {
+          rules.add(
+            SmlConditionalRule(
+              range: range,
+              kind: SmlConditionalKind.colorScale,
+              colorScaleStops: List<SmlColorScaleStop>.unmodifiable(stops),
+            ),
+          );
+        }
+      }
       for (final condition in _descendants(format, 'condition', _calcext)) {
         final value = _attribute(condition, 'value', _calcext)?.trim();
         final styleName = _attribute(condition, 'apply-style-name', _calcext);

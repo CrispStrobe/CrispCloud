@@ -555,6 +555,8 @@ class SheetDeserializer {
             kind = SmlConditionalKind.contains;
           case 'expression':
             kind = SmlConditionalKind.expression;
+          case 'colorScale':
+            kind = SmlConditionalKind.colorScale;
           case 'beginsWith':
             kind = SmlConditionalKind.beginsWith;
           case 'endsWith':
@@ -608,6 +610,31 @@ class SheetDeserializer {
           dxfId: dxfId,
         );
         sheet.conditionalFormats.add(conditionalRule);
+      }
+      if (reader.eventType == XmlEventType.startElement &&
+          reader.localName == 'cfvo' &&
+          conditionalRule?.kind == SmlConditionalKind.colorScale) {
+        final type = reader.getAttribute('type') ?? 'number';
+        final value = double.tryParse(reader.getAttribute('val') ?? '') ?? 0;
+        conditionalRule!.colorScaleStops.add(
+          SmlColorScaleStop(type: type, value: value, colorRgb: 'FFFFFF'),
+        );
+      }
+      if (reader.eventType == XmlEventType.startElement &&
+          reader.localName == 'color' &&
+          conditionalRule?.kind == SmlConditionalKind.colorScale &&
+          conditionalRule!.colorScaleStops.isNotEmpty) {
+        final rgb = reader.getAttribute('rgb') ?? '';
+        final color = rgb.length == 8 ? rgb.substring(2) : rgb;
+        if (RegExp(r'^[0-9A-Fa-f]{6}$').hasMatch(color)) {
+          final stops = conditionalRule.colorScaleStops;
+          final last = stops.last;
+          stops[stops.length - 1] = SmlColorScaleStop(
+            type: last.type,
+            value: last.value,
+            colorRgb: color.toUpperCase(),
+          );
+        }
       }
       if (reader.eventType == XmlEventType.startElement &&
           reader.localName == 'pane') {
@@ -1995,6 +2022,8 @@ class SheetSerializer {
             w.writeAttribute('text', rule.formula);
           case SmlConditionalKind.expression:
             w.writeAttribute('type', 'expression');
+          case SmlConditionalKind.colorScale:
+            w.writeAttribute('type', 'colorScale');
           case SmlConditionalKind.duplicate:
             w.writeAttribute('type', 'duplicateValues');
           case SmlConditionalKind.top:
@@ -2038,12 +2067,35 @@ class SheetSerializer {
               SmlConditionalKind.topPercent ||
               SmlConditionalKind.bottomPercent ||
               SmlConditionalKind.aboveAverage ||
-              SmlConditionalKind.belowAverage => throw StateError(
+              SmlConditionalKind.belowAverage ||
+              SmlConditionalKind.colorScale => throw StateError(
                 'handled above',
               ),
             });
         }
-        if (rule.dxfId case final dxfId?) {
+        if (rule.kind == SmlConditionalKind.colorScale) {
+          w.writeStartElement('colorScale');
+          for (final stop in rule.colorScaleStops) {
+            w.writeEmptyElement(
+              'cfvo',
+              attributes: {
+                'type': switch (stop.type) {
+                  'minimum' || 'min' => 'min',
+                  'maximum' || 'max' => 'max',
+                  'percent' => 'percent',
+                  'percentile' => 'percentile',
+                  _ => 'num',
+                },
+                'val': '${stop.value}',
+              },
+            );
+            w.writeEmptyElement(
+              'color',
+              attributes: {'rgb': 'FF${stop.colorRgb}'},
+            );
+          }
+          w.writeEndElement();
+        } else if (rule.dxfId case final dxfId?) {
           w.writeAttribute('dxfId', '$dxfId');
         }
         if (rule.kind != SmlConditionalKind.contains &&
@@ -2055,7 +2107,8 @@ class SheetSerializer {
             rule.kind != SmlConditionalKind.topPercent &&
             rule.kind != SmlConditionalKind.bottomPercent &&
             rule.kind != SmlConditionalKind.aboveAverage &&
-            rule.kind != SmlConditionalKind.belowAverage) {
+            rule.kind != SmlConditionalKind.belowAverage &&
+            rule.kind != SmlConditionalKind.colorScale) {
           if (rule.formula.isNotEmpty) {
             w.writeStartElement('formula');
             w.writeText(rule.formula);

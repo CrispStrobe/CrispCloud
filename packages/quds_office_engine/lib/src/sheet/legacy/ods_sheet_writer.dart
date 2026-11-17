@@ -353,6 +353,27 @@ abstract final class OdsSheetWriter {
     }
     final conditional = StringBuffer();
     for (final rule in sheet.conditionalFormats) {
+      if (rule.kind == SmlConditionalKind.colorScale) {
+        final stops = rule.colorScaleStops;
+        if (stops.length < 2) continue;
+        final entries = StringBuffer();
+        for (final stop in stops) {
+          entries.write(
+            '<calcext:color-scale-entry '
+            'calcext:value="${stop.value}" '
+            'calcext:type="${_escapeAttr(stop.type)}" '
+            'calcext:color="#${stop.colorRgb.toLowerCase()}"/>',
+          );
+        }
+        conditional.write(
+          '<calcext:conditional-format calcext:target-range-address="'
+          '${_plainSheet(sheet.name)}.${rule.range.start.a1}:'
+          '${_plainSheet(sheet.name)}.${rule.range.end.a1}">'
+          '<calcext:color-scale>$entries</calcext:color-scale>'
+          '</calcext:conditional-format>',
+        );
+        continue;
+      }
       final style = layout.conditionalStyle(rule);
       conditional.write(
         '<calcext:conditional-format calcext:target-range-address="'
@@ -575,6 +596,7 @@ abstract final class OdsSheetWriter {
       SmlConditionalKind.bottomPercent => 'bottom-percent(${rule.rank})',
       SmlConditionalKind.aboveAverage => 'above-average',
       SmlConditionalKind.belowAverage => 'below-average',
+      SmlConditionalKind.colorScale => '',
     };
   }
 
