@@ -145,6 +145,43 @@ abstract final class OdtDocumentWriter {
         );
         story.writeEndElement();
       }
+      void variant(
+        String tag,
+        List<WmlParagraph> paragraphs,
+        List<WmlVisual> visuals,
+      ) {
+        if (paragraphs.isEmpty && visuals.isEmpty) return;
+        story.writeStartElement(tag, prefix: 'style');
+        stories.withStory(
+          () => _writeBlocks(story, [...paragraphs, ...visuals], stories),
+        );
+        story.writeEndElement();
+      }
+
+      variant('header-first', section.firstHeader, section.firstHeaderVisuals);
+      variant('footer-first', section.firstFooter, section.firstFooterVisuals);
+      variant('header-left', section.evenHeader, section.evenHeaderVisuals);
+      variant('footer-left', section.evenFooter, section.evenFooterVisuals);
+      final hasFirstOrEvenHeader =
+          section.firstHeader.isNotEmpty ||
+          section.firstHeaderVisuals.isNotEmpty ||
+          section.evenHeader.isNotEmpty ||
+          section.evenHeaderVisuals.isNotEmpty;
+      final hasFirstOrEvenFooter =
+          section.firstFooter.isNotEmpty ||
+          section.firstFooterVisuals.isNotEmpty ||
+          section.evenFooter.isNotEmpty ||
+          section.evenFooterVisuals.isNotEmpty;
+      if (hasFirstOrEvenHeader &&
+          section.header.isEmpty &&
+          section.headerVisuals.isEmpty) {
+        story.writeEmptyElement('header', prefix: 'style');
+      }
+      if (hasFirstOrEvenFooter &&
+          section.footer.isEmpty &&
+          section.footerVisuals.isEmpty) {
+        story.writeEmptyElement('footer', prefix: 'style');
+      }
       final storyXml = story.toXml();
       final pageKey =
           '${_pageLayoutKey(section)}|${_storyKey(storyXml, section, stories)}';
