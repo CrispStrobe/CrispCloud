@@ -29,6 +29,7 @@ XmlElement _odtBody(OpcPackage package) => XmlDocument.parse(
 ).root!.firstChild('body')!.firstChild('text')!;
 
 void main() {
+  headerVariantTests();
   tocTests();
   fieldTests();
   paragraphBreakTests();
@@ -763,5 +764,41 @@ void tocTests() {
     expect(content, contains('Details'));
     expect(content, contains('<text:tab/>2'));
     expect(content, contains('<text:tab/>4'));
+  });
+}
+
+void headerVariantTests() {
+  test('writes first and even header/footer variants', () {
+    final document = WmlDocument(
+      sections: [
+        WmlSection(
+          firstHeader: [
+            WmlParagraph(inlines: [WmlRun(text: 'First header')]),
+          ],
+          firstFooter: [
+            WmlParagraph(inlines: [WmlRun(text: 'First footer')]),
+          ],
+          evenHeader: [
+            WmlParagraph(inlines: [WmlRun(text: 'Even header')]),
+          ],
+          evenFooter: [
+            WmlParagraph(inlines: [WmlRun(text: 'Even footer')]),
+          ],
+          blocks: [
+            WmlParagraph(inlines: [WmlRun(text: 'Body')]),
+          ],
+        ),
+      ],
+    );
+    final package = OpcPackage.openBytes(
+      OdtDocumentWriter.writeBytes(document),
+    );
+    final styles = package.getPart('/styles.xml')!.readText();
+    expect(styles, contains('<style:header-first>'));
+    expect(styles, contains('<style:footer-first>'));
+    expect(styles, contains('<style:header-left>'));
+    expect(styles, contains('<style:footer-left>'));
+    expect(styles, contains('First header'));
+    expect(styles, contains('Even footer'));
   });
 }
