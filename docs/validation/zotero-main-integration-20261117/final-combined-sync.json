@@ -1,0 +1,10 @@
+{
+  "from": "691f4359a68cadd76d32177aa200c59e0ac8cf69",
+  "to": "554eddc179856b648a83fa2b49f395071e8a7e71",
+  "write": [
+    "packages/quds_office_editor/lib/src/embed/office_editors.dart"
+  ],
+  "delete": [],
+  "pinned_files": 2552,
+  "applied": true
+}

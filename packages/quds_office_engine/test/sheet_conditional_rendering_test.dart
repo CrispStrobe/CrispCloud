@@ -4,6 +4,189 @@ import 'package:quds_office_engine/quds_office_engine.dart';
 import 'package:test/test.dart';
 
 void main() {
+  group('numeric evaluation stays finite and bounded', () {
+    for (final function in ['ROUND', 'ROUNDUP', 'ROUNDDOWN']) {
+      for (final digits in ['1000000000', '-1000000000', '1e308']) {
+        for (final referenced in [false, true]) {
+          test(
+            '$function rejects $digits precision (reference=$referenced)',
+            () {
+              final sheet = SmlWorksheet(name: 'Data', sheetId: 1);
+              sheet.cellA1('B1').value = double.parse(digits);
+              final expression = '$function(1,${referenced ? 'B1' : digits})';
+              final context = FormulaContext(
+                workbook: SmlWorkbook(sheets: [sheet]),
+                sheet: sheet,
+                origin: _a1,
+              );
+              final value = evaluateFormulaForCache(expression, context);
+              expect(
+                value,
+                isA<FormulaErrorValue>().having(
+                  (error) => error.code,
+                  'code',
+                  '#NUM!',
+                ),
+              );
+              expect(
+                _rule(
+                  formula: '$expression>0',
+                ).matches(SmlCell(ref: _a1), sheet),
+                isFalse,
+              );
+            },
+          );
+        }
+      }
+    }
+
+    for (final expression in [
+      '(1e308*1e308)>0',
+      'SUM(1e308,1e308)>0',
+      'IF(1e308*1e308,TRUE,FALSE)',
+      '(1e308*1e308)^2>0',
+      '2^1000000000>0',
+      '1e999>0',
+      'ROUND(1,1e999)>0',
+      'ROUNDUP(1,1e999)>0',
+      'ROUNDDOWN(1,1e999)>0',
+    ]) {
+      test(
+        'numeric overflow cannot become a matching Boolean: $expression',
+        () {
+          final sheet = SmlWorksheet(name: 'Data', sheetId: 1);
+          final context = FormulaContext(
+            workbook: SmlWorkbook(sheets: [sheet]),
+            sheet: sheet,
+            origin: _a1,
+          );
+          expect(
+            evaluateFormulaForCache(expression, context),
+            isA<FormulaErrorValue>().having(
+              (error) => error.code,
+              'code',
+              '#NUM!',
+            ),
+          );
+          expect(
+            _rule(formula: expression).matches(SmlCell(ref: _a1), sheet),
+            isFalse,
+          );
+        },
+      );
+    }
+
+    test(
+      'nonfinite referenced caches and uncached intermediates stay errors',
+      () {
+        final sheet = SmlWorksheet(name: 'Data', sheetId: 1);
+        for (final value in [
+          double.infinity,
+          double.negativeInfinity,
+          double.nan,
+        ]) {
+          sheet.cellA1('B1').value = value;
+          for (final expression in ['B1>0', 'B1^2>0', 'IF(B1,TRUE,FALSE)']) {
+            expect(
+              _rule(formula: expression).matches(SmlCell(ref: _a1), sheet),
+              isFalse,
+              reason: expression,
+            );
+          }
+        }
+        sheet.cellA1('B1')
+          ..value = null
+          ..formula = 'SUM(1e308,1e308)';
+        expect(
+          _rule(formula: 'B1>0').matches(SmlCell(ref: _a1), sheet),
+          isFalse,
+        );
+        expect(sheet.cellA1('B1').value, isNull);
+      },
+    );
+
+    test('ordinary rounding and powers retain finite scalar results', () {
+      final book = SmlWorkbook();
+      final context = FormulaContext(
+        workbook: book,
+        sheet: book.firstSheet,
+        origin: _a1,
+      );
+      for (final entry in <String, double>{
+        'ROUND(12.345,2)': 12.35,
+        'ROUND(1234,-2)': 1200,
+        'ROUNDUP(1.231,2)': 1.24,
+        'ROUNDUP(-1.231,2)': -1.24,
+        'ROUNDDOWN(-1.239,2)': -1.23,
+        'ROUND(1e308,2)': 1e308,
+        'ROUND(1e-308,308)': 1e-308,
+        '2^10': 1024,
+        '(-2)^3': -8,
+        '4^0.5': 2,
+        '2^-3': 0.125,
+        '(-2)^1000000000': double.infinity,
+      }.entries) {
+        if (entry.value.isInfinite) {
+          expect(
+            evaluateFormulaForCache(entry.key, context),
+            isA<FormulaErrorValue>(),
+          );
+        } else {
+          final value = evaluateFormulaForCache(entry.key, context);
+          expect(value, isA<num>(), reason: entry.key);
+          expect(
+            (value as num).toDouble() / entry.value,
+            closeTo(1, 1e-12),
+            reason: entry.key,
+          );
+        }
+      }
+    });
+
+    test('explicit error handlers can handle numeric failures', () {
+      final sheet = SmlWorksheet(name: 'Data', sheetId: 1);
+      for (final expression in [
+        'ISERROR(SUM(1e308,1e308))',
+        'IFERROR(ROUND(1,1000000000),TRUE)',
+        'IFERROR((1e308*1e308)^2,TRUE)',
+      ]) {
+        expect(
+          _rule(formula: expression).matches(SmlCell(ref: _a1), sheet),
+          isTrue,
+          reason: expression,
+        );
+      }
+    });
+
+    test(
+      'shared power and logarithm functions reject nonfinite input promptly',
+      () {
+        final book = SmlWorkbook();
+        final context = FormulaContext(
+          workbook: book,
+          sheet: book.firstSheet,
+          origin: _a1,
+        );
+        for (final expression in [
+          'POWER(1e308,1000000000)',
+          'POWER("Infinity",2)',
+          'LN("Infinity")',
+          'EXP("Infinity")',
+        ]) {
+          expect(
+            evaluateFormulaForCache(expression, context),
+            isA<FormulaErrorValue>().having(
+              (error) => error.code,
+              'code',
+              '#NUM!',
+            ),
+            reason: expression,
+          );
+        }
+      },
+    );
+  });
+
   test('authored priority wins independently for fill and font', () {
     final sheet = SmlWorksheet(name: 'Data', sheetId: 1);
     final low = _rule(priority: 8, fill: '0000FF', font: '112233');

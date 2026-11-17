@@ -184,6 +184,241 @@ class GermanWritingRulesProvider extends OfficeProofingProvider {
       'lauft',
     ),
     _GermanPresentParadigm('essen', 'esse', 'isst', 'isst', 'essen', 'esst'),
+    _GermanPresentParadigm(
+      'bleiben',
+      'bleibe',
+      'bleibst',
+      'bleibt',
+      'bleiben',
+      'bleibt',
+    ),
+    _GermanPresentParadigm(
+      'stehen',
+      'stehe',
+      'stehst',
+      'steht',
+      'stehen',
+      'steht',
+    ),
+    _GermanPresentParadigm(
+      'sitzen',
+      'sitze',
+      'sitzt',
+      'sitzt',
+      'sitzen',
+      'sitzt',
+    ),
+    _GermanPresentParadigm(
+      'liegen',
+      'liege',
+      'liegst',
+      'liegt',
+      'liegen',
+      'liegt',
+    ),
+    _GermanPresentParadigm(
+      'heißen',
+      'heiße',
+      'heißt',
+      'heißt',
+      'heißen',
+      'heißt',
+    ),
+    _GermanPresentParadigm(
+      'wissen',
+      'weiß',
+      'weißt',
+      'weiß',
+      'wissen',
+      'wisst',
+    ),
+    _GermanPresentParadigm(
+      'denken',
+      'denke',
+      'denkst',
+      'denkt',
+      'denken',
+      'denkt',
+    ),
+    _GermanPresentParadigm(
+      'glauben',
+      'glaube',
+      'glaubst',
+      'glaubt',
+      'glauben',
+      'glaubt',
+    ),
+    _GermanPresentParadigm(
+      'hoffen',
+      'hoffe',
+      'hoffst',
+      'hofft',
+      'hoffen',
+      'hofft',
+    ),
+    _GermanPresentParadigm(
+      'kennen',
+      'kenne',
+      'kennst',
+      'kennt',
+      'kennen',
+      'kennt',
+    ),
+    _GermanPresentParadigm(
+      'verstehen',
+      'verstehe',
+      'verstehst',
+      'versteht',
+      'verstehen',
+      'versteht',
+    ),
+    _GermanPresentParadigm(
+      'bringen',
+      'bringe',
+      'bringst',
+      'bringt',
+      'bringen',
+      'bringt',
+    ),
+    _GermanPresentParadigm(
+      'kaufen',
+      'kaufe',
+      'kaufst',
+      'kauft',
+      'kaufen',
+      'kauft',
+    ),
+    _GermanPresentParadigm(
+      'schreiben',
+      'schreibe',
+      'schreibst',
+      'schreibt',
+      'schreiben',
+      'schreibt',
+    ),
+    _GermanPresentParadigm('hören', 'höre', 'hörst', 'hört', 'hören', 'hört'),
+    _GermanPresentParadigm(
+      'helfen',
+      'helfe',
+      'hilfst',
+      'hilft',
+      'helfen',
+      'helft',
+    ),
+    _GermanPresentParadigm(
+      'fragen',
+      'frage',
+      'fragst',
+      'fragt',
+      'fragen',
+      'fragt',
+    ),
+    _GermanPresentParadigm(
+      'antworten',
+      'antworte',
+      'antwortest',
+      'antwortet',
+      'antworten',
+      'antwortet',
+    ),
+    _GermanPresentParadigm(
+      'warten',
+      'warte',
+      'wartest',
+      'wartet',
+      'warten',
+      'wartet',
+    ),
+    _GermanPresentParadigm(
+      'wohnen',
+      'wohne',
+      'wohnst',
+      'wohnt',
+      'wohnen',
+      'wohnt',
+    ),
+    _GermanPresentParadigm('leben', 'lebe', 'lebst', 'lebt', 'leben', 'lebt'),
+    _GermanPresentParadigm(
+      'spielen',
+      'spiele',
+      'spielst',
+      'spielt',
+      'spielen',
+      'spielt',
+    ),
+    _GermanPresentParadigm(
+      'suchen',
+      'suche',
+      'suchst',
+      'sucht',
+      'suchen',
+      'sucht',
+    ),
+    _GermanPresentParadigm(
+      'zeigen',
+      'zeige',
+      'zeigst',
+      'zeigt',
+      'zeigen',
+      'zeigt',
+    ),
+    _GermanPresentParadigm(
+      'stellen',
+      'stelle',
+      'stellst',
+      'stellt',
+      'stellen',
+      'stellt',
+    ),
+    _GermanPresentParadigm('legen', 'lege', 'legst', 'legt', 'legen', 'legt'),
+    _GermanPresentParadigm(
+      'halten',
+      'halte',
+      'hältst',
+      'hält',
+      'halten',
+      'haltet',
+    ),
+    _GermanPresentParadigm(
+      'tragen',
+      'trage',
+      'trägst',
+      'trägt',
+      'tragen',
+      'tragt',
+    ),
+    _GermanPresentParadigm(
+      'treffen',
+      'treffe',
+      'triffst',
+      'trifft',
+      'treffen',
+      'trefft',
+    ),
+    _GermanPresentParadigm(
+      'schlafen',
+      'schlafe',
+      'schläfst',
+      'schläft',
+      'schlafen',
+      'schlaft',
+    ),
+    _GermanPresentParadigm(
+      'vergessen',
+      'vergesse',
+      'vergisst',
+      'vergisst',
+      'vergessen',
+      'vergesst',
+    ),
+    _GermanPresentParadigm(
+      'trinken',
+      'trinke',
+      'trinkst',
+      'trinkt',
+      'trinken',
+      'trinkt',
+    ),
   ];
   static final Map<String, _GermanPresentParadigm> _presentByForm =
       <String, _GermanPresentParadigm>{
@@ -191,7 +426,7 @@ class GermanWritingRulesProvider extends OfficeProofingProvider {
           for (final String form in paradigm.forms) form: paradigm,
       };
   static final RegExp _pronounVerb = RegExp(
-    '(?<!$_wordEdge)(ich|du|wir|ihr)$_horizontalSpace('
+    '(?<!$_wordEdge)(ich|du|er|man|wir|ihr)$_horizontalSpace('
     '${_presentByForm.keys.map(RegExp.escape).join('|')})(?!$_wordEdge)',
     caseSensitive: false,
     unicode: true,
@@ -238,6 +473,15 @@ class GermanWritingRulesProvider extends OfficeProofingProvider {
     'sage',
     'ist',
     'soll',
+    'sitze',
+    'liege',
+    'glaube',
+    'frage',
+    'suche',
+    'stelle',
+    'warte',
+    'trage',
+    'halte',
   };
   static final RegExp _subordinatePrefix = RegExp(
     r'(?<![\p{L}\p{M}\p{N}_])(?:weil|wenn|dass|ob|obwohl|falls|damit|'
@@ -250,6 +494,99 @@ class GermanWritingRulesProvider extends OfficeProofingProvider {
     r'^[ \t\u00a0\u202f]+\p{L}',
     unicode: true,
   );
+  static final RegExp _precedingFiniteWord = RegExp(
+    '(?<!$_wordEdge)([\\p{L}\\p{M}]+)$_horizontalSpace\$',
+    unicode: true,
+  );
+  static final RegExp _lastClauseWord = RegExp(
+    r'([\p{L}\p{M}]+)[^\p{L}\p{M}\p{N}]*$',
+    unicode: true,
+  );
+  static final RegExp _anotherNominative = RegExp(
+    '(?<!$_wordEdge)(?:ich|du|er|wir|man)(?!$_wordEdge)',
+    caseSensitive: false,
+    unicode: true,
+  );
+  static final Set<String> _infinitiveGovernors = <String>{
+    for (final _GermanPresentParadigm paradigm in _presentParadigms)
+      if (const <String>{
+        'können',
+        'müssen',
+        'dürfen',
+        'sollen',
+        'wollen',
+        'mögen',
+        'werden',
+        'gehen',
+        'bleiben',
+        'helfen',
+        'lernen',
+        'sehen',
+        'hören',
+      }.contains(paradigm.infinitive))
+        ...paradigm.forms,
+    'möchte',
+    'möchtest',
+    'möchten',
+    'möchtet',
+    'könne',
+    'könnest',
+    'könnet',
+    'konnte',
+    'konntest',
+    'konnten',
+    'konntet',
+    'könnte',
+    'könntest',
+    'könnten',
+    'könntet',
+    'müsse',
+    'müssest',
+    'müsset',
+    'musste',
+    'musstest',
+    'mussten',
+    'musstet',
+    'müsste',
+    'müsstest',
+    'müssten',
+    'müsstet',
+    'dürfe',
+    'dürfest',
+    'dürfet',
+    'durfte',
+    'durftest',
+    'durften',
+    'durftet',
+    'dürfte',
+    'dürftest',
+    'dürften',
+    'dürftet',
+    'solle',
+    'sollest',
+    'sollet',
+    'sollte',
+    'solltest',
+    'sollten',
+    'solltet',
+    'wolle',
+    'wollest',
+    'wollet',
+    'wollte',
+    'wolltest',
+    'wollten',
+    'wolltet',
+    'würde',
+    'würdest',
+    'würden',
+    'würdet',
+    'lasse',
+    'lässt',
+    'lasst',
+    'lassen',
+    'ließ',
+    'ließen',
+  };
 
   // "seit" and "seid" are both dictionary words. Recognize only contexts
   // that identify their role without a sentence parser. In particular, never
@@ -292,6 +629,50 @@ class GermanWritingRulesProvider extends OfficeProofingProvider {
       match.start > 96 ? match.start - 96 : 0,
       match.start,
     );
+    final RegExpMatch? precedingVerb = _precedingFiniteWord.firstMatch(prefix);
+    if (precedingVerb != null &&
+        (_presentByForm.containsKey(precedingVerb.group(1)!.toLowerCase()) ||
+            _infinitiveGovernors.contains(
+              precedingVerb.group(1)!.toLowerCase(),
+            ))) {
+      // Inversion already supplies the finite verb: "Kann ich gehen?",
+      // "Will er lesen?". The following infinitive does not agree with the
+      // pronoun. Do not issue a second, contradictory correction there.
+      return true;
+    }
+    final _GermanPresentParadigm? paradigm = _presentByForm[verb];
+    if (paradigm != null && _germanFormsEquivalent(verb, paradigm.infinitive)) {
+      final int end = match.end + 180 < text.length
+          ? match.end + 180
+          : text.length;
+      final String following = text.substring(match.end, end);
+      final RegExpMatch? stop = _grammarClauseEnd.firstMatch(following);
+      final String clause = stop == null
+          ? following
+          : following.substring(0, stop.start);
+      final RegExpMatch? last = _lastClauseWord.firstMatch(clause);
+      final String? lastWord = last?.group(1)?.toLowerCase();
+      final _GermanPresentParadigm? governor = _presentByForm[lastWord];
+      final bool finiteGovernor =
+          governor == null ||
+          _germanFormsEquivalent(lastWord!, governor.forSubject(subject)) ||
+          const <String>{'er', 'man'}.contains(subject) &&
+              governor.isThirdPersonSubjunctive(lastWord);
+      if (last != null &&
+          finiteGovernor &&
+          _infinitiveGovernors.contains(lastWord) &&
+          !_anotherNominative.hasMatch(clause)) {
+        // A subordinate clause can put its finite governor after the
+        // infinitive: "weil ich helfen kann", "ob er arbeiten wird".
+        return true;
+      }
+      if (_subordinatePrefix.hasMatch(prefix) &&
+          stop == null &&
+          end < text.length) {
+        // A bounded lookahead cannot rule out a later finite governor.
+        return true;
+      }
+    }
     final String originalVerb = match.group(2)!;
     // All-capital text loses the noun/verb capitalization cue. In a directly
     // introduced subordinate clause, a reviewed noun homograph can instead be
@@ -317,7 +698,6 @@ class GermanWritingRulesProvider extends OfficeProofingProvider {
     // Keep plausible plural forms untouched even after that comma.
     if (_comparisonPrefix.hasMatch(prefix)) return true;
     final RegExpMatch? coordination = _coordinationPrefix.firstMatch(prefix);
-    final _GermanPresentParadigm? paradigm = _presentByForm[verb];
     if (coordination != null &&
         (coordination.group(1) == null ||
             !prefix
@@ -325,12 +705,19 @@ class GermanWritingRulesProvider extends OfficeProofingProvider {
                 .trimRight()
                 .endsWith(',') ||
             paradigm != null &&
-                (verb == paradigm.wir || verb == paradigm.ihr))) {
+                (_germanFormsEquivalent(verb, paradigm.wir) ||
+                    _germanFormsEquivalent(verb, paradigm.ihr)))) {
       return true;
     }
     final String originalSubject = match.group(1)!;
     if (originalSubject != subject &&
         (_nominalPronounPrefix.hasMatch(prefix) ||
+            subject == 'man' &&
+                (_dativePrefix.hasMatch(prefix) ||
+                    precedingVerb != null &&
+                        _governedCases.containsKey(
+                          precedingVerb.group(1)!.toLowerCase(),
+                        )) ||
             verb == 'ist' && const <String>{'ich', 'du'}.contains(subject))) {
       return true;
     }
@@ -413,7 +800,12 @@ class GermanWritingRulesProvider extends OfficeProofingProvider {
           ruleId: ruleId,
           message: message,
           category: category,
-          replacements: replacements,
+          replacements: request.language == 'de-CH'
+              ? <String>[
+                  for (final String replacement in replacements)
+                    replacement.replaceAll('ß', 'ss').replaceAll('ẞ', 'SS'),
+                ]
+              : replacements,
         ),
       );
     }
@@ -490,11 +882,14 @@ class GermanWritingRulesProvider extends OfficeProofingProvider {
       // forms retain their established behavior; capitalized infinitives are
       // also ambiguous in all-capital text, so leave those untouched.
       if (verb != lowerVerb &&
-          (verb != verb.toUpperCase() || lowerVerb == paradigm.infinitive)) {
+          (verb != verb.toUpperCase() ||
+              _germanFormsEquivalent(lowerVerb, paradigm.infinitive))) {
         continue;
       }
       final String replacement = paradigm.forSubject(subject);
-      if (replacement == lowerVerb ||
+      if (_germanFormsEquivalent(replacement, lowerVerb) ||
+          const <String>{'er', 'man'}.contains(subject) &&
+              paradigm.isThirdPersonSubjunctive(lowerVerb) ||
           _ambiguousAgreementContext(text, match, subject, lowerVerb)) {
         continue;
       }
@@ -665,6 +1060,12 @@ String _matchCase(String source, String replacement) =>
     ? '${replacement[0].toUpperCase()}${replacement.substring(1)}'
     : replacement;
 
+// Grammar compares inflection independently of regional sharp-s spelling.
+// Spelling still diagnoses ss/ß orthography where appropriate; grammar must
+// not reject a correctly inflected Swiss form or duplicate that finding.
+bool _germanFormsEquivalent(String a, String b) =>
+    a.replaceAll('ß', 'ss') == b.replaceAll('ß', 'ss');
+
 /// Discretionary hyphens belong to layout, not grammar. The projection removes
 /// them only from checker text and maps every result back to the untouched
 /// UTF-16 source. Controls inside a replacement belong to that replacement;
@@ -732,13 +1133,28 @@ class _GermanPresentParadigm {
   final String wir;
   final String ihr;
 
-  Set<String> get forms => <String>{ich, du, thirdPerson, wir, ihr};
+  Set<String> get forms => <String>{
+    for (final String form in <String>[
+      ich,
+      du,
+      thirdPerson,
+      wir,
+      ihr,
+    ]) ...<String>[form, form.replaceAll('ß', 'ss')],
+  };
+
+  // First-person -e forms are also common third-person Konjunktiv I forms:
+  // "er habe", "man nehme", "er werde". A local agreement rule cannot
+  // determine the intended mood and must preserve those homographs.
+  bool isThirdPersonSubjunctive(String form) =>
+      _germanFormsEquivalent(form, ich) && form.endsWith('e');
 
   String forSubject(String subject) => switch (subject) {
     'ich' => ich,
     'du' => du,
     'wir' => wir,
     'ihr' => ihr,
+    'er' || 'man' => thirdPerson,
     _ => throw ArgumentError.value(subject, 'subject'),
   };
 }

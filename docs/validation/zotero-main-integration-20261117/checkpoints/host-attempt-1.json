@@ -1,0 +1,115 @@
+{
+  "status": "failed",
+  "source": "d6ee82193c423a843daaeb8c20cab12810f6019b",
+  "canonical": "bacce8e11c6ab5596d01532b074ebaf9a377db90",
+  "reason": "Strict vendored analysis rejected six lint infos: four constant constructors, one constant declaration, one missing block.",
+  "passed_test_executions": {
+    "host": 41,
+    "service": 39
+  },
+  "accepted_qualification": false,
+  "remaining_required_commands_executed": false,
+  "source_unchanged": true,
+  "dependencies_unchanged": true,
+  "analysis_config_restored": true,
+  "archive_sha256": "3f865dd7d504f8d54251e009bea095d23da89e3ca4ae79bf0a89b55f00481468",
+  "archive_bytes": 948869,
+  "members": {
+    "host-qualification/analysis-package-config.json": {
+      "sha256": "a6dd61116525628a31265643b37a99c74cdf7bc8bf1ec87899e20c059eb82953",
+      "bytes": 26781
+    },
+    "host-qualification/dependencies-after.json": {
+      "sha256": "e50cce7545706d858e4714252bd24ce41253c61e2b0d616324234fafe107ac7d",
+      "bytes": 794050
+    },
+    "host-qualification/dependencies-before.json": {
+      "sha256": "e50cce7545706d858e4714252bd24ce41253c61e2b0d616324234fafe107ac7d",
+      "bytes": 794050
+    },
+    "host-qualification/host-analysis.log": {
+      "sha256": "aa418623af9e5241be82ec3694ad2813c7c2b3cb8692ed6d8ab55077f5682175",
+      "bytes": 420
+    },
+    "host-qualification/host-tests.log": {
+      "sha256": "c7d312fc7fa21d27e97dc28415bdd0fe5e757f2072bafb9b9ce96271fa213a69",
+      "bytes": 9235
+    },
+    "host-qualification/receipt.json": {
+      "sha256": "4ebc5102054216dd1549edaa92abd799b7eee3316705b6f9abd10fb6f3d06b8c",
+      "bytes": 17118
+    },
+    "host-qualification/service-tests.log": {
+      "sha256": "23ac600ab5b5c1cd2e2670bc7ed32c60557e4bbf7c01c5db8a489cf83dfaa76c",
+      "bytes": 2797
+    },
+    "host-qualification/source-after.json": {
+      "sha256": "8b9d56badd72d6bc2fb49e6ec44772cd51581c28dc792878e111c4eb29302698",
+      "bytes": 528857
+    },
+    "host-qualification/source-before.json": {
+      "sha256": "8b9d56badd72d6bc2fb49e6ec44772cd51581c28dc792878e111c4eb29302698",
+      "bytes": 528857
+    },
+    "host-qualification/vendor-analysis.log": {
+      "sha256": "86975e37332e0748bdc0dc75242353e20d449d76c7bd7ad8e1d767c8e907dece",
+      "bytes": 2210
+    },
+    "host-qualification/vendor-source.log": {
+      "sha256": "327eacdca5deadbefe306741703e6effb1c8234d10769b17f01d3ab8cbe25dc0",
+      "bytes": 203
+    },
+    "host-qualification/vendor-tracked.log": {
+      "sha256": "327eacdca5deadbefe306741703e6effb1c8234d10769b17f01d3ab8cbe25dc0",
+      "bytes": 203
+    },
+    "review/host-failed-attempt-independent-review.json": {
+      "sha256": "5ea2ed9a497fae4c69672e5683279a53f3611c726a832d3b386c9903b1e7c2cc",
+      "bytes": 3096
+    },
+    "review/host-independent-audit-d6ee8219.json": {
+      "sha256": "f6f6d013f9ca116f9b6f0fe4ff3af2cd87154dc5c6f9dcc8c524b47d7c571a06",
+      "bytes": 12488
+    },
+    "review/host-independent-audit.py": {
+      "sha256": "8dcd8e46a55b0c007acd56170844e392fea966644008a3c347eff94194adeac4",
+      "bytes": 5290
+    },
+    "review/host-runner-preflight-review.json": {
+      "sha256": "8c90478b69b767f7245538555030dd05bab3d5b03f6b144632cf3de7a65a94db",
+      "bytes": 2763
+    },
+    "runner/format-incoming-host.py": {
+      "sha256": "a3fe7daf78f8b484a80fbbbdd18aa48d21db15432ab01e03e14a0419032db643",
+      "bytes": 2630
+    },
+    "runner/host-format-correction.json": {
+      "sha256": "5448e2e35c0f38e3e8d2c2ff76d2fa6c97608b91cf5c885d168cd5ad463ff69c",
+      "bytes": 1142
+    },
+    "runner/host-format-preflight.log": {
+      "sha256": "ff2e3312afc802063ce778634aa05375ad2373c4671b65eb8d82ef6e4805eb50",
+      "bytes": 8091
+    },
+    "runner/host-format-resolved-preflight.log": {
+      "sha256": "e423453df4d184b9675cc4027bd53a6f6f017df0abbe61238af7a2c97fc4e7f8",
+      "bytes": 140
+    },
+    "runner/host-formatter-application.log": {
+      "sha256": "c3712976e8f8b38a8f6657edf7e7228e62c36351ec0dfd4f2f75111d6b0fe179",
+      "bytes": 143
+    },
+    "runner/host-launcher.log": {
+      "sha256": "0005da14b2cbc5e520df40a7e92512e13b87e40b7f2601f7db359b8280876364",
+      "bytes": 3330
+    },
+    "runner/host-runner-origin.json": {
+      "sha256": "ee7af690e36d47fc064ae590beb08e60bb1e898c5c033525a613069da4e75cc8",
+      "bytes": 2501
+    },
+    "runner/run-integrated-host.py": {
+      "sha256": "ee582bca9857b213dd952aaffb4c3056e42ac523e17f852ad838311d80ddeae6",
+      "bytes": 27593
+    }
+  }
+}

@@ -327,7 +327,7 @@ class _OdpLayout {
 
   String pageStyle() {
     if (!_graphics.containsKey('__page')) {
-      final name = 'dp1';
+      const name = 'dp1';
       _graphics['__page'] = name;
       _buffers.add(
         '<style:style style:name="$name" style:family="drawing-page">'

@@ -1,0 +1,9 @@
+{
+  "archive": "/workspace/scratch/5ce2ad01fc79/validation-runtime/continuation-setup-evidence.tar.gz",
+  "sha256": "b548a4ea7358c49bdf4325631880c939bee72a0f1aa56b4b4ea99d42c177080f",
+  "bytes": 129230,
+  "members": 60,
+  "all_member_bytes_read_back_and_verified": true,
+  "setup_status": "passed",
+  "application_test_count": 0
+}
