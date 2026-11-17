@@ -19,6 +19,14 @@ void main() {
               inlines: [WmlRun(text: 'Quarterly review')],
             ),
             WmlParagraph(
+              properties: WmlParagraphProps(numId: 1),
+              inlines: [WmlRun(text: 'First bullet')],
+            ),
+            WmlParagraph(
+              properties: WmlParagraphProps(numId: 1),
+              inlines: [WmlRun(text: 'Second bullet')],
+            ),
+            WmlParagraph(
               properties: WmlParagraphProps(
                 justification: WmlJustification.center,
               ),
@@ -77,6 +85,9 @@ void main() {
     expect(content, contains('Plain '));
     expect(content, contains('bold'));
     expect(content, contains('fo:font-weight="bold"'));
+    expect(content, contains('<text:list'));
+    expect(content, contains('First bullet'));
+    expect(content, contains('Second bullet'));
     expect(content, contains('<table:table'));
     expect(content, contains('Pictures/image1.png'));
     expect(styles, contains('fo:page-width'));
