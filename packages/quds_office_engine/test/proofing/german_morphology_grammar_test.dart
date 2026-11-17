@@ -109,8 +109,6 @@ void main() {
     'Wir fahren zu dem See und zu der See.',
     'Sie arbeitet mit dem Steuer und der Steuer.',
     'Das ist für den Kiefer und die Kiefer.',
-    'Das ist für dem Leiter.', // Gender cannot be inferred safely here.
-    'Sie kommt mit das Band.', // Several genders require different articles.
     'Er kommt mit den Daten und den Eltern.',
     'Sie kommt mit den Teams und den Autos.',
     'Mit dem Herzen ist alles gut.',

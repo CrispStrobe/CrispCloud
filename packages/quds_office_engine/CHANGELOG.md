@@ -4,6 +4,13 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Keep ODT column breaks and keep-together settings distinct when caching
+  paragraph styles, and emit section column settings on the ODF columns child.
+
+- Add the independently ignorable `de.grammar.verb-object-case` rule for
+  complete, bounded pronoun/verb/object clauses. Preserve valid fronted-object
+  readings and suppress unsafe adjective-case guesses in incomplete frames.
+
 - Write ODT section columns with the required nested column properties, keep
   empty-section page anchors inside their column section, and omit invalid
   column gaps without changing the document model.

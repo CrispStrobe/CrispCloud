@@ -971,7 +971,7 @@ class GermanWritingRulesProvider extends OfficeProofingProvider {
         issue.end,
         issue.message,
         category: OfficeProofingCategory.grammar,
-        replacements: <String>[issue.replacement],
+        replacements: <String>[issue.replacement, ...issue.alternatives],
       );
     }
     final List<(String, int)> delimiters = <(String, int)>[];

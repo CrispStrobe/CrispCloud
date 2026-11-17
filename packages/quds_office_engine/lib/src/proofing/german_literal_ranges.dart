@@ -73,7 +73,7 @@ final class GermanLiteralTextRanges {
     unicode: true,
   );
   static final _exampleQuotation = RegExp(
-    r'''^[ \t]*([„‚»›«‹“‘"'])([^\r\n]{1,512})([“‘«‹»›”’"'])[ \t]+(?:(?:steht|erscheint)[ \t]+(?:im Text|im Beispiel|in der Datei)|ist ein Beispiel)[.!]?[ \t]*$''',
+    r'''^[ \t]*([„‚»›«‹“‘"'])([^\r\n]{1,512})([“‘«‹»›”’"'])[ \t]+(?:(?:steht|erscheint)[ \t]+(?:im Text|im Beispiel|in der Datei|(?:hier[ \t]+)?als Zitat)|ist ein Beispiel)[.!]?[ \t]*$''',
     unicode: true,
   );
 

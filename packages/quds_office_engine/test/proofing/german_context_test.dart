@@ -159,14 +159,14 @@ void main() {
         actual = actual.replaceRange(
           finding.start - 23,
           finding.end - 23,
-          finding.replacements.single,
+          finding.replacements.first,
         );
         edge = finding.start - 23;
       }
-      // Preserve the frozen gold. These two ambiguous inputs cannot prove the
-      // author's intended meaning/number; retain their separate exact misses.
+      // Keep the valid plural repair for the number-ambiguous teacher case.
+      // Tag now offers complete masculine/neuter alternatives; the first
+      // replacement retains the frozen masculine gold without dropping either.
       final qualified = switch (source) {
-        'Ich habe ein schönen Tag.' => source,
         'Sie antwortet den Lehrer.' => 'Sie antwortet den Lehrern.',
         _ => expected,
       };

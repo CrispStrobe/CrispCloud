@@ -106,13 +106,13 @@ void main() {
     'Die Farbe des Teil bleibt.',
     'Die Stimme des Nachbar zählt.',
     'Die Höhe des Gewinn zählt.',
-    // These article forms do not establish a unique case.
+    // Standalone article forms do not establish a unique case. Complete
+    // copula attributes now have positive coverage in the completion suite.
     'Dieses Leben zählt.',
     'Jenes Ergebnis zählt.',
     'Der Student arbeitet.',
     'Dieser Fehler zählt.',
     'Unser Lehrer arbeitet.',
-    'Das ist das Auto der Student.',
     // Keep nominalized and unresolved analyses, and unknown nouns, untouched.
     'Die Stimme des Jungen zählt.',
     'Die Stimme des Armen zählt.',

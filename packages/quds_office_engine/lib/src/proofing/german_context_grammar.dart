@@ -39,21 +39,34 @@ _GermanVerbContext? _grammarVerbContext(
   if (words.length < 4 ||
       !_contextWhole(text, words, protected, boundaries) ||
       !_grammarAdjacent(text, words[0], words[1]) ||
-      !_grammarAdjacent(text, words[1], words[2]) ||
-      !_grammarDeterminerForms.containsKey(words[2].lower)) {
+      !_grammarAdjacent(text, words[1], words[2])) {
     return null;
   }
+  final prepositional = _contextPrepositionalObject(text, words);
+  if (prepositional != null) return prepositional;
+  if (!_grammarDeterminerForms.containsKey(words[2].lower)) return null;
   final noun = _grammarNounIndex(text, words, 2);
-  if (noun != words.length - 1) return null;
+  if (noun == null) return null;
   final subject = words[0].lower;
   final verb = words[1].lower;
   if ({'das', 'dies', 'es'}.contains(subject) &&
       {'ist', 'sind'}.contains(verb)) {
-    return _GermanVerbContext(2, noun!, _GermanCase.nominative);
+    if (noun == words.length - 1) {
+      return _GermanVerbContext(2, noun, _GermanCase.nominative);
+    }
+    return _contextGenitiveAttribute(text, words, noun);
   }
+  if (noun != words.length - 1) return null;
   if (!_contextPronouns.contains(subject) || words[1].capitalized) return null;
   final paradigm = GermanWritingRulesProvider._presentByForm[verb];
-  if (paradigm == null) return null;
+  if (paradigm == null || !_contextAgrees(paradigm, verb, subject)) return null;
+  // Share the incoming object/subject ambiguity veto with the older verb
+  // contexts too. In particular, "Ihr antwortet der Lehrer" can mean that
+  // the teacher answers her, rather than that you answer the teacher.
+  if (const {'sie', 'es', 'ihr'}.contains(subject) &&
+      _grammarPossiblePostverbalSubject(words, 2, noun, paradigm, words[1])) {
+    return null;
+  }
   final grammaticalCase = switch (paradigm.infinitive) {
     'haben' ||
     'sehen' ||
@@ -67,7 +80,118 @@ _GermanVerbContext? _grammarVerbContext(
     _ => null,
   };
   if (grammaticalCase == null) return null;
-  return _GermanVerbContext(2, noun!, grammaticalCase);
+  return _GermanVerbContext(2, noun, grammaticalCase);
+}
+
+// Only complete copula clauses with an already agreeing head noun phrase.
+// A following adjacent determiner phrase is a genitive attribute here, rather
+// than a guessed subject or an unbounded dependency. Coordination, relative
+// clauses, possessive-dative constructions and nominalizations stay outside.
+_GermanVerbContext? _contextGenitiveAttribute(
+  String text,
+  List<_GermanGrammarWord> words,
+  int head,
+) {
+  final articleIndex = head + 1;
+  if (articleIndex >= words.length ||
+      !_grammarAdjacent(text, words[head], words[articleIndex]) ||
+      !_grammarDeterminerForms.containsKey(words[articleIndex].lower)) {
+    return null;
+  }
+  final nounIndex = _grammarNounIndex(text, words, articleIndex);
+  if (nounIndex != words.length - 1 ||
+      _grammarAdjectiveForms.containsKey(words[nounIndex!].lower)) {
+    return null;
+  }
+  final article = words[2];
+  final determiner = _grammarDeterminerForms[article.lower]!;
+  final headValid = _lookupGrammarNoun(words[head].lower).any(
+    (reading) =>
+        (reading.gender != _GermanGender.plural || determiner.permitsPlural) &&
+        determiner.form(_GermanCase.nominative, reading.gender) ==
+            article.lower &&
+        reading.accepts(words[head].lower, _GermanCase.nominative) &&
+        words
+            .sublist(3, head)
+            .every(
+              (adjective) => _grammarAdjectiveForms[adjective.lower]!.any(
+                (stem) => _germanFormsEquivalent(
+                  '$stem${_grammarAdjectiveEnding(determiner, _GermanCase.nominative, reading.gender)}',
+                  adjective.lower,
+                ),
+              ),
+            ),
+  );
+  return headValid
+      ? _GermanVerbContext(articleIndex, nounIndex, _GermanCase.genitive)
+      : null;
+}
+
+// These finite abstract heads support a prepositional object without silently
+// turning a literal location (auf dem Bus/Dach/Bahnsteig, auf der Arbeit) into
+// one. They are first-party scope limits, not an imported semantic lexicon.
+const _contextPrideObjects = {
+  'ergebnis',
+  'erfolg',
+  'fortschritt',
+  'entscheidung',
+  'beitrag',
+  'leistung',
+};
+const _contextWaitingObjects = {
+  'ergebnis',
+  'antwort',
+  'nachricht',
+  'zusage',
+  'entscheidung',
+  'anruf',
+  'bescheid',
+};
+
+_GermanVerbContext? _contextPrepositionalObject(
+  String text,
+  List<_GermanGrammarWord> words,
+) {
+  if (!_contextPronouns.contains(words.first.lower) || words[1].capitalized) {
+    return null;
+  }
+  final paradigm = GermanWritingRulesProvider._presentByForm[words[1].lower];
+  if (paradigm == null ||
+      !_contextAgrees(paradigm, words[1].lower, words.first.lower)) {
+    return null;
+  }
+  int articleIndex;
+  Set<String> heads;
+  if (paradigm.infinitive == 'sein' &&
+      words.length >= 6 &&
+      words[2].lower == 'stolz' &&
+      words[3].lower == 'auf') {
+    articleIndex = 4;
+    heads = _contextPrideObjects;
+  } else if (paradigm.infinitive == 'warten' &&
+      words.length >= 5 &&
+      words[2].lower == 'auf') {
+    articleIndex = 3;
+    heads = _contextWaitingObjects;
+  } else {
+    return null;
+  }
+  if (!_grammarDeterminerForms.containsKey(words[articleIndex].lower) ||
+      [
+        for (var i = 2; i <= articleIndex; i++) i,
+      ].any((i) => !_grammarAdjacent(text, words[i - 1], words[i]))) {
+    return null;
+  }
+  final noun = _grammarNounIndex(text, words, articleIndex);
+  if (noun != words.length - 1) return null;
+  final readings = GermanNounMorphology.shared.lookup(words[noun!].lower);
+  if (readings.isEmpty ||
+      !readings.every(
+        (reading) => heads.contains(reading.lemma.toLowerCase()),
+      )) {
+    return null;
+  }
+  return _GermanVerbContext(articleIndex, noun, _GermanCase.accusative);
 }
 
 bool _contextAgrees(

@@ -106,6 +106,37 @@ SmlConditionalRule _rule({
 );
 
 void main() {
+  testWidgets('icon sets visibly paint without mutating values or rules', (
+    tester,
+  ) async {
+    final sheet = _sheet(text: '');
+    sheet.cellA1('A1').value = 1;
+    final before = await _paint(tester, sheet);
+    sheet.conditionalFormats.add(
+      SmlConditionalRule(
+        range: SmlRange.parse('A1'),
+        kind: SmlConditionalKind.iconSet,
+        colorScaleStops: const [
+          SmlColorScaleStop(type: 'num', value: 0, colorRgb: 'F8696B'),
+          SmlColorScaleStop(type: 'num', value: 50, colorRgb: 'FFEB84'),
+          SmlColorScaleStop(type: 'num', value: 100, colorRgb: '63BE7B'),
+        ],
+      ),
+    );
+    final state = sheet.conditionalFormatState();
+    final after = await _paint(tester, sheet);
+    var changedPixels = 0;
+    for (var i = 0; i < before.length; i += 4) {
+      if (before[i] != after[i] ||
+          before[i + 1] != after[i + 1] ||
+          before[i + 2] != after[i + 2])
+        changedPixels++;
+    }
+    expect(changedPixels, greaterThan(20));
+    expect(sheet.cellA1('A1').value, 1);
+    expect(sheet.conditionalFormatState(), state);
+  });
+
   testWidgets('data bars visibly paint without changing cell values', (
     tester,
   ) async {

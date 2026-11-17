@@ -119,8 +119,6 @@ void main() {
     'Ich sehe einen Alten.',
     'Ich sehe die Junge.',
     'Ich sehe die Leiter.',
-    'Ich sehe dieser Leiter.',
-    'Ich sehe einem Mensch.',
     'Ich sehe ein kleiner Hund.', // Positive/comparative stem ambiguity.
     'Man vergisst ein wichtiger Termin.',
     'Ich sehe ein kleiner roter Hund.',

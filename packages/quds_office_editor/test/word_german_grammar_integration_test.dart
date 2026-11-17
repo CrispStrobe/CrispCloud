@@ -49,9 +49,21 @@ void main() {
   for (final scenario
       in <({String source, String corrected, String rule, String replacement})>[
         (
+          source: 'Ich habe ein schönen Tag.',
+          corrected: 'Ich habe ein schönes Tag.',
+          rule: 'phrase-agreement',
+          replacement: 'ein schönes Tag',
+        ),
+        (
+          source: 'Ich sehe der neue Kunde.',
+          corrected: 'Ich sehe die neue Kunde.',
+          rule: 'phrase-agreement',
+          replacement: 'die neue Kunde',
+        ),
+        (
           source: 'Sie hat ein roten Mantel.',
           corrected: 'Sie hat einen roten Mantel.',
-          rule: 'verb-case',
+          rule: 'verb-object-case',
           replacement: 'einen',
         ),
         (

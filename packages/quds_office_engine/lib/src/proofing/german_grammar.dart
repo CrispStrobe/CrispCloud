@@ -11,11 +11,13 @@ const Set<String> _germanPhraseRuleIds = <String>{
   'de.grammar.dative-plural',
   'de.grammar.noun-case',
   'de.grammar.adjective-ending',
+  'de.grammar.phrase-agreement',
   'de.grammar.das-dass',
   'de.grammar.subordinate-comma',
   'de.grammar.comparison',
   'de.grammar.noun-verb',
   'de.grammar.verb-case',
+  'de.grammar.genitive-attribute',
   'de.grammar.copula-agreement',
   'de.grammar.word-order',
   'de.grammar.participle',
@@ -27,14 +29,16 @@ final class _GermanGrammarIssue {
     this.start,
     this.end,
     this.replacement,
-    this.message,
-  );
+    this.message, {
+    this.alternatives = const [],
+  });
 
   final String ruleId;
   final int start;
   final int end;
   final String replacement;
   final String message;
+  final List<String> alternatives;
 }
 
 final class _GermanGrammarWord {
@@ -715,7 +719,9 @@ Iterable<_GermanGrammarIssue> _germanGrammarIssues(
         boundaries,
         swiss,
         articleRuleId: verbContext?.articleIndex == i
-            ? 'de.grammar.verb-case'
+            ? verbContext!.grammaticalCase == _GermanCase.genitive
+                  ? 'de.grammar.genitive-attribute'
+                  : 'de.grammar.verb-case'
             : 'de.grammar.preposition-case',
         articleMessage:
             'Artikel und Nomen verlangen in diesem eindeutigen Kasus normalerweise diese Form.',
@@ -1274,22 +1280,20 @@ Iterable<_GermanGrammarIssue> _grammarNounPhrase(
                 (reading, grammaticalCase),
       ];
   if (analyses.isEmpty) return;
-  // In a governed dative phrase, this demonstrative ending explicitly marks
-  // singular. Preserve that number for an otherwise unambiguous neuter noun
-  // whose nominative singular and plural surfaces coincide (Gebäude, Fenster).
-  // Competing lexical genders, unknown readings and all other articles remain
-  // untouched; never force a number for "der/den Computer" or "die Leiter".
-  if (governedCase == _GermanCase.dative &&
-      const {'dies', 'jen'}.contains(determiner.stem) &&
-      article.lower == '${determiner.stem}es' &&
-      readings.any((reading) => reading.gender == _GermanGender.neuter) &&
-      readings.every(
-        (reading) =>
-            reading.gender == _GermanGender.neuter ||
-            reading.gender == _GermanGender.plural,
+  // An ending with no plural use anywhere in this determiner's paradigm
+  // establishes singular even when its case is wrong (für diesem Schlüssel).
+  // Preserve every singular gender. If only plural noun readings exist, do
+  // not invent a singular; the existing plural repair still applies.
+  if (governedCase != null &&
+      readings.any((reading) => reading.gender != _GermanGender.plural) &&
+      !_GermanCase.values.any(
+        (grammaticalCase) =>
+            determiner.permitsPlural &&
+            determiner.form(grammaticalCase, _GermanGender.plural) ==
+                article.lower,
       )) {
     analyses = analyses
-        .where((analysis) => analysis.$1.gender == _GermanGender.neuter)
+        .where((analysis) => analysis.$1.gender != _GermanGender.plural)
         .toList(growable: false);
   }
   // Honor an already valid determiner first. This disambiguates e.g.
@@ -1310,6 +1314,31 @@ Iterable<_GermanGrammarIssue> _grammarNounPhrase(
       ),
     ),
   );
+  if (governedCase != null &&
+      analyses.map((analysis) => analysis.$1.gender).toSet().length > 1 &&
+      (matchingArticles.isEmpty ||
+          adjectives.isNotEmpty &&
+              !matchingArticles.any(agreesWithAdjectives) &&
+              analyses.any(
+                (analysis) =>
+                    determiner.form(analysis.$2, analysis.$1.gender) !=
+                        article.lower &&
+                    agreesWithAdjectives(analysis),
+              ))) {
+    final choice = _grammarPhraseAlternatives(
+      text,
+      article,
+      noun,
+      adjectives,
+      determiner,
+      analyses,
+      swiss,
+    );
+    if (choice != null) {
+      yield choice;
+      return;
+    }
+  }
   if (governedCase != null &&
       adjectives.isNotEmpty &&
       matchingArticles.isNotEmpty &&
@@ -1395,7 +1424,7 @@ Iterable<_GermanGrammarIssue> _grammarNounPhrase(
     // A bare modifier can be an adverb attached to the following adjective:
     // "die automatisch geänderte Datei", "ein leicht beschädigtes Buch".
     // Inflecting it would change the phrase's structure and meaning.
-    if (adjective != adjectives.last && _grammarAdverbModifier(adjective)) {
+    if (_grammarUninflectedModifier(adjectives, adjective)) {
       continue;
     }
     final Set<String> replacements = <String>{
@@ -1418,6 +1447,92 @@ Iterable<_GermanGrammarIssue> _grammarNounPhrase(
       'Die Adjektivendung muss hier zu Artikel, Kasus und Nomen passen.',
     );
   }
+}
+
+bool _grammarUninflectedModifier(
+  List<_GermanGrammarWord> adjectives,
+  _GermanGrammarWord adjective,
+) => adjective != adjectives.last && _grammarAdverbModifier(adjective);
+
+// Offer complete, internally agreeing phrases instead of splicing independent
+// gender guesses into article/adjective/noun findings. Existing valid phrases
+// veto a finding. Bounded alternatives retain competing meanings, in stable
+// grammatical-gender order; this order is not a semantic confidence score.
+_GermanGrammarIssue? _grammarPhraseAlternatives(
+  String text,
+  _GermanGrammarWord article,
+  _GermanGrammarWord noun,
+  List<_GermanGrammarWord> adjectives,
+  _GermanDeterminer determiner,
+  List<(_GermanNounReading, _GermanCase)> analyses,
+  bool swiss,
+) {
+  final ordered = analyses.toList()
+    ..sort((a, b) => a.$1.gender.index.compareTo(b.$1.gender.index));
+  final replacements = <String>{};
+  final original = text.substring(article.start, noun.end);
+  for (final (reading, grammaticalCase) in ordered) {
+    final nouns = reading.inCase(grammaticalCase);
+    if (nouns.isEmpty) return null;
+    var endings = <List<String>>[[]];
+    for (final adjective in adjectives) {
+      final forms = _grammarUninflectedModifier(adjectives, adjective)
+          ? {adjective.text}
+          : {
+              for (final stem in _grammarAdjectiveForms[adjective.lower]!)
+                '$stem${_grammarAdjectiveEnding(determiner, grammaticalCase, reading.gender)}',
+            };
+      endings = [
+        for (final prefix in endings)
+          for (final form in forms) [...prefix, form],
+      ];
+      if (endings.length > 8) return null;
+    }
+    for (final targetNoun in nouns) {
+      if (!GermanNounMorphology.shared.acceptsSpelling(
+        targetNoun,
+        swiss: swiss,
+      )) {
+        // Do not discard an unsupported alternative to manufacture certainty.
+        return null;
+      }
+      for (final targets in endings) {
+        var candidate = original.replaceRange(
+          noun.start - article.start,
+          noun.end - article.start,
+          _matchCase(noun.text, targetNoun),
+        );
+        for (var i = adjectives.length - 1; i >= 0; i--) {
+          candidate = candidate.replaceRange(
+            adjectives[i].start - article.start,
+            adjectives[i].end - article.start,
+            targets[i],
+          );
+        }
+        candidate = candidate.replaceRange(
+          0,
+          article.text.length,
+          _matchCase(
+            article.text,
+            determiner.form(grammaticalCase, reading.gender),
+          ),
+        );
+        if (swiss) candidate = candidate.replaceAll('ß', 'ss');
+        if (_germanFormsEquivalent(candidate, original)) return null;
+        replacements.add(candidate);
+        if (replacements.length > 8) return null;
+      }
+    }
+  }
+  if (replacements.length < 2) return null;
+  return _GermanGrammarIssue(
+    'de.grammar.phrase-agreement',
+    article.start,
+    noun.end,
+    replacements.first,
+    'Diese Nominalgruppe stimmt im regierten Kasus nicht überein. Wählen Sie die zur gemeinten Bedeutung passende vollständige Form.',
+    alternatives: replacements.skip(1).toList(growable: false),
+  );
 }
 
 bool _grammarAdverbModifier(_GermanGrammarWord adjective) =>

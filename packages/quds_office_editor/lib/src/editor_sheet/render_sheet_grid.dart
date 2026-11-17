@@ -877,9 +877,19 @@ class RenderSheetGrid extends RenderBox implements MouseTrackerAnnotation {
           continue;
         }
         if (label.isNotEmpty || isEdit) {
+          // Leave the icon's leading slot clear. Otherwise a numeric glyph
+          // can cover the marker completely (especially with dense fonts).
+          final textCell = !isEdit && conditional.iconSetIndex != null
+              ? ui.Rect.fromLTRB(
+                  cell.left + (cell.width < 14.0 ? cell.width : 14.0),
+                  cell.top,
+                  cell.right,
+                  cell.bottom,
+                )
+              : cell;
           _paintCellText(
             canvas,
-            cell,
+            textCell,
             label,
             isEdit: isEdit,
             align: data.horizontalAlign,

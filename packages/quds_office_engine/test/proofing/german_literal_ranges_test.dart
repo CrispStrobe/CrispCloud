@@ -10,6 +10,8 @@ void main() {
     'Das Wort gelest wird hier erklärt.',
     'Er hat den Titel »gelest« erklärt.',
     '„Er hat das Buch gelest“ steht im Text.',
+    '„Für diesem Schlüssel“ steht hier als Zitat.',
+    '»Für diesem Schlüssel« erscheint als Zitat.',
     'Er hat das Wort gelest.',
     'Das Wort Wort ist hier ein Beispiel.',
   ]) {
