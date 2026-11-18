@@ -1207,22 +1207,22 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
         ),
       ),
     );
-    return DocumentPrintScope(
-      enabled: _controller != null && !_loading && !_busy && !_closing,
-      onPrint: _printDocument,
-      child: CallbackShortcuts(
-        bindings: {
-          const SingleActivator(LogicalKeyboardKey.keyS, control: true): () {
-            if (ModalRoute.of(context)?.isCurrent != false) {
-              unawaited(_save());
-            }
-          },
-          const SingleActivator(LogicalKeyboardKey.keyS, meta: true): () {
-            if (ModalRoute.of(context)?.isCurrent != false) {
-              unawaited(_save());
-            }
-          },
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.keyS, control: true): () {
+          if (ModalRoute.of(context)?.isCurrent != false) {
+            unawaited(_save());
+          }
         },
+        const SingleActivator(LogicalKeyboardKey.keyS, meta: true): () {
+          if (ModalRoute.of(context)?.isCurrent != false) {
+            unawaited(_save());
+          }
+        },
+      },
+      child: DocumentPrintScope(
+        enabled: _controller != null && !_loading && !_busy && !_closing,
+        onPrint: _printDocument,
         child: printContent,
       ),
     );

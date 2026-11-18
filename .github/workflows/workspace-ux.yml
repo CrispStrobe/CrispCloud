@@ -36,6 +36,9 @@ jobs:
           cache: true
       - name: Resolve dependencies
         run: flutter pub get
+      - name: Resolve CLI package formatting context
+        working-directory: cli
+        run: dart pub get --enforce-lockfile
       - name: Install SQLite for isolated filesystem tests
         run: sudo apt-get update && sudo apt-get install -y libsqlite3-dev
       - name: Check formatting and preserve a reviewable correction patch

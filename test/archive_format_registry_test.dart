@@ -16,37 +16,34 @@ const _panel = PanelSourceService();
 
 void main() {
   group('archive recognition across entry points', () {
-    test(
-      'public extension inventory includes archives and credential container hints exactly once',
-      () {
-        final inventory = _viewer.getSupportedExtensions();
-        final archiveSuffixes = inventory[ViewerMode.archive];
-        expect(archiveSuffixes, isNotNull);
-        expect(
-          archiveSuffixes,
-          unorderedEquals([
-            for (final format in archiveFormatCapabilities) ...format.suffixes,
-            // Credential-backed containers use the archive viewer without
-            // advertising an ordinary unencrypted archive reader.
-            '.vc',
-            '.hc',
-            '.tc',
-          ]),
-        );
-        expect(archiveSuffixes!.toSet().length, archiveSuffixes.length);
-        for (final suffix in ['.vc', '.hc', '.tc']) {
-          final name = 'vault$suffix';
-          expect(isVeraCryptViewerName(name), isTrue);
-          expect(_viewer.detectMode(name), ViewerMode.archive);
-          expect(archiveFormatForName(name), isNull);
-          expect(ArchiveService.isArchive(name), isFalse);
-        }
-        for (final document in ['.docx', '.xlsx', '.pptx', '.epub']) {
-          expect(archiveSuffixes, isNot(contains(document)));
-          expect(inventory[ViewerMode.office], contains(document));
-        }
-      },
-    );
+    test('public extension inventory includes archives and credential container hints exactly once', () {
+      final inventory = _viewer.getSupportedExtensions();
+      final archiveSuffixes = inventory[ViewerMode.archive];
+      expect(archiveSuffixes, isNotNull);
+      expect(
+        archiveSuffixes,
+        unorderedEquals([
+          for (final format in archiveFormatCapabilities) ...format.suffixes,
+          // Credential-backed containers use the archive viewer without
+          // advertising an ordinary unencrypted archive reader.
+          '.vc',
+          '.hc',
+          '.tc',
+        ]),
+      );
+      expect(archiveSuffixes!.toSet().length, archiveSuffixes.length);
+      for (final suffix in ['.vc', '.hc', '.tc']) {
+        final name = 'vault$suffix';
+        expect(isVeraCryptViewerName(name), isTrue);
+        expect(_viewer.detectMode(name), ViewerMode.archive);
+        expect(archiveFormatForName(name), isNull);
+        expect(ArchiveService.isArchive(name), isFalse);
+      }
+      for (final document in ['.docx', '.xlsx', '.pptx', '.epub']) {
+        expect(archiveSuffixes, isNot(contains(document)));
+        expect(inventory[ViewerMode.office], contains(document));
+      }
+    });
 
     for (final format in archiveFormatCapabilities) {
       test('${format.label} suffixes agree across navigation, F3 and MIME', () {

@@ -132,6 +132,34 @@ and one-send assertions are unchanged. All new Dart paths and the full exact-hea
 Office/source/collection gates require hosted confirmation. Preserve the closing
 74dd snapshot: 32 success, six failure, four skip, one cancelled, two running.
 
+
+At `82967cf5`, workspace has 980 actual hosted Dart passes and fails only the
+final formatting diff. Resolve CLI's own locked package configuration before
+formatting so its language context agrees with the CLI job, and apply the
+retained archive-fixture formatter output without changing its assertions.
+
+PDF VM/Chrome phases are 209/35 pass with one Ctrl+S failure each. The print
+scope may focus its own ancestor above the nested save handler; put save
+shortcuts outside that scope while keeping the existing focus policy and save
+implementation. Linux/Windows Hex contracts fail three cases because the
+fixture lacks the provider dependency required by the print scope. Supply that
+dependency without changing unsafe-write, conflict or dirty-state assertions.
+
+The Linux SMB fixture reaches zero passes/one failure at unavailable Rust code.
+The preceding CLI bundle build already produces the declared bridge. Bind that
+existing single Linux ELF asset to the fixture, recording its length/digest and
+rejecting missing, ambiguous, linked or wrong-architecture inputs. No additional
+Cargo build, fallback backend or weaker exception assertion is introduced. Four
+pure admission controls pass; real native reconnect/resume execution is pending.
+
+Actual 82967 Office readback is separate from those failures: 540 SDK validations,
+149 native renders, 18 picture-oracle records and 36 passing save cycles; raw
+GIF/JPEG hashes match both SDK and native-render records. The sealed collection
+is 4,097/6,258 lines over 5,596 inputs with 32 source hashes, on a synthetic merge
+whose tree equals the reviewed 82967 tree. Chrome is 737 pass/four skip. These
+source-bound components do not qualify the new source or complete normal CI.
+Keep old 54f and unverified 4,094/6,132 receipts distinct and preserve all failures.
+
 ## Vision
 
 CrispCloud becomes the **definitive open-source cloud file manager**: a single, beautiful, blazing-fast app that connects to *any* cloud or server, runs on *every* platform, and treats privacy and encryption as first-class citizens — not afterthoughts.

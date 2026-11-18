@@ -201,11 +201,24 @@ jobs:
           python3 -m venv "$RUNNER_TEMP/storage-fixture"
           "$RUNNER_TEMP/storage-fixture/bin/pip" install --quiet paramiko impacket
 
+      - name: Bind the already-built CLI SMB bridge to the fixture
+        run: |
+          python3 -m unittest discover -s tool -p test_ci_smb_fixture_bridge.py
+          python3 tool/ci_smb_fixture_bridge.py --bundle cli/build/cli/bundle --receipt build/smb-fixture-bridge.json
+
       - name: Shared SMB reconnect and resume regression
         working-directory: packages/crisp_storage
         env:
           CRISPER_SMB_PYTHON: ${{ runner.temp }}/storage-fixture/bin/python
         run: dart test test/smb_transfer_test.dart
+
+      - name: Preserve the native SMB fixture binding
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smb-fixture-bridge-binding
+          path: build/smb-fixture-bridge.json
+          if-no-files-found: warn
 
       - name: Export dependency inventory
         run: |

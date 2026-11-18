@@ -1458,7 +1458,8 @@
     "tool/linux_secure_storage_json_compat.py",
     "packages/quds_proofing_spacy/lib/quds_proofing_spacy_install.dart",
     "packages/quds_proofing_spacy/lib/src/distribution.dart",
-    "packages/quds_proofing_spacy/lib/src/installer_io.dart"
+    "packages/quds_proofing_spacy/lib/src/installer_io.dart",
+    "tool/ci_smb_fixture_bridge.py"
   ],
   "technical_review_notes": [
     "CrisperBooks is consumed from a single immutable Git revision with its complete tracked tree and the exact package roots independently verified after Pub resolution. It includes the compressed browser Kindle converter, memory-only WASI source and local platform speech controls. Browser source/tests and native parity controls remain separate from binary distribution approval. The WASI shim has crypto.getRandomValues and a Math.random fallback, which is not treated as a secure RNG. Archive integration and syntax/UI changes add no cipher or credential store.",
