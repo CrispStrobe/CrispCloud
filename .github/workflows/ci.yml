@@ -146,6 +146,8 @@ jobs:
           # Source-only fork metadata declares the matching sibling packages.
           (cd packages/quds_reports && dart pub get)
           (cd packages/quds_office_editor && flutter pub get)
+          # Keep spaCy tests in root analysis with their own dev dependency graph.
+          (cd packages/quds_proofing_spacy && dart pub get)
           (cd packages/dart_pdf_editor && flutter pub get)
           (cd packages/dart_pdf_editor_secure_storage && flutter pub get)
           (cd packages/pdf_document && dart pub get)

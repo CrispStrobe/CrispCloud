@@ -1089,3 +1089,12 @@ The only open-source, truly cross-platform (6 platforms including mobile + web),
 ---
 
 *This plan is a living document. Priorities shift as user feedback arrives and the landscape evolves. Update this file — don't let it rot.*
+
+## W7 PR274 final bounded checkpoint (cycle194)
+
+See [the committed handoff](docs/validation/w7-cloud-pr274-handoff.md) for exact
+23aaa928 hosted results, the root analyzer dependency/archive diagnosis and the
+minimal correction. Workspace980PASS, PDF210VM/36ChromePASS and native SMB1PASS
+are measured at23aaa; amended-head terminal qualification remains pending.
+No model, corpus, vendor pin, coverage floor, diagnostic severity or policy
+decision changed. ProviderOFF; draftPR274; no merge.
