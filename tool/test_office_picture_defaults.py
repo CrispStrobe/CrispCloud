@@ -48,4 +48,3 @@ class HostPictureDefaultControls(unittest.TestCase):
                 self.package(path, parts)
                 with self.subTest(fault=fault), self.assertRaises(render.FidelityError):
                     render.picture_package_geometry(path, 'word-gif')
-
