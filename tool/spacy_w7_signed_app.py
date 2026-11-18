@@ -99,13 +99,21 @@ def main():
         for name, pin in manifest['files'].items():
             report['fresh_model_files'][name] = download(base_url + name, bundle / name,
                 pin['sha256'], pin['size_bytes'])
-        run('pub-get', ['flutter', 'pub', 'get'])
+        run('flutter-config', ['flutter', 'config', '--no-enable-swift-package-manager'])
+        run('pub-get', ['flutter', 'pub', 'get', '--enforce-lockfile'])
         shutil.copyfile(ROOT / 'pubspec.lock', out / 'resolved-pubspec.lock')
         report['resolved_lock_sha256'] = digest(ROOT / 'pubspec.lock')
         run('focused-analyze', ['dart', 'analyze', 'lib/services/office_spacy_preferences.dart',
             'lib/services/office_spacy_native.dart', 'lib/services/office_spacy_unsupported.dart',
             'lib/widgets/office_spacy_settings.dart', 'packages/quds_proofing_spacy/lib'])
         run('default-off-controls', ['flutter', 'test', '--no-pub', 'test/office_spacy_preferences_test.dart'])
+        run('prime-pinned-sqlite', ['bash', ROOT / 'tool/prime_apple_sqlite_cache.sh'])
+        from with_ci_apple_sqlite import ASSETS, DIRECTORY
+        report['pinned_sqlite_dependencies'] = {}
+        for name, sha in ASSETS.items():
+            file = ROOT / DIRECTORY / name
+            assert digest(file) == sha
+            report['pinned_sqlite_dependencies'][name] = {'sha256': sha, 'bytes': file.stat().st_size}
         # Use the existing real Runner configuration and sandbox entitlement
         # selection, not an alternate tiny fixture app or substitute entrypoint.
         run('build-actual-app', [sys.executable, ROOT / 'tool/with_ci_apple_sqlite.py', '--',

@@ -141,6 +141,8 @@ jobs:
           cache: true
       - name: Qualify actual signed sandboxed Runner and owned native worker
         if: inputs.spacy_w7_app_qualification
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: python3 tool/spacy_w7_signed_app.py
       - name: Remove temporary signing material
         id: cleanup
