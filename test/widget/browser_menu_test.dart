@@ -275,6 +275,10 @@ void main() {
     'command picker changes a draft and Cancel preserves the saved layout',
     (tester) async {
       final original = store.layout.encode();
+      // setUp awaits store.ready, including document-command migration writes.
+      // Opening and cancelling this draft must add no writes of its own.
+      final originalWrites = List<String>.of(storage.writes);
+      final originalValues = Map<String, String>.of(storage.values);
       await openEditor(tester);
       await tester.tap(find.byKey(const ValueKey('browser-menu-edit-files')));
       await tester.pumpAndSettle();
@@ -294,7 +298,8 @@ void main() {
       await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
       await tester.pumpAndSettle();
       expect(store.layout.encode(), original);
-      expect(storage.writes, isEmpty);
+      expect(storage.writes, originalWrites);
+      expect(storage.values, originalValues);
       expect(called, 0);
     },
   );

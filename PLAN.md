@@ -19,6 +19,16 @@ authored dispatcher bodies. No coverage floor, LCOV line count, assertion or
 collection-receipt requirement changes. Pure reader controls and historical
 LCOV diagnostics are separate from pending exact-head hosted collection.
 
+The exact-head archive workflow also exposed two test-contract mismatches:
+the public viewer intentionally adds three credential-backed VeraCrypt hints
+to the ordinary archive suffix inventory, and the menu store migrates document
+commands before the Cancel test opens a draft. Keep exact inventory equality,
+uniqueness and ordinary-reader rejection for those container hints. Compare
+Cancel's writes and stored values with the post-load baseline so any new write
+or persistent mutation still fails. Production routing and persistence are
+unchanged. The original hosted result (3,826 pass, 16 skip, two fail) remains
+retained; corrected Dart assertions require new exact-head hosted execution.
+
 ## Vision
 
 CrispCloud becomes the **definitive open-source cloud file manager**: a single, beautiful, blazing-fast app that connects to *any* cloud or server, runs on *every* platform, and treats privacy and encryption as first-class citizens — not afterthoughts.
