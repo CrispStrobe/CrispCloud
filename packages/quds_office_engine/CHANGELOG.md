@@ -4,6 +4,30 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Count distinct displayed German corrections after applying source casing,
+  so uppercase and sentence-initial variants do not consume duplicate shortlist
+  slots. Preserve exact personal spelling and the existing candidate budget.
+
+- Add bounded literal tag filters to library, collection and desktop saved-search
+  requests. Multiple tags use repeated parameters to require all tags before
+  pagination. Preserve Unicode and reserved characters, escape initial hyphens,
+  and reject names that Zotero cannot represent literally.
+
+- Recognize internal typographic apostrophes in German dictionary and personal
+  vocabulary lookups while preserving each source apostrophe, hyphen and UTF-16
+  range in corrections. Keep quotation punctuation and noun casing distinct.
+- Offer complete corrections for multiple misspelled parts of explicit German
+  hyphen compounds, sharing one bounded candidate budget and preserving known
+  constituents, whole-word suggestions, locale and authored separator styles.
+
+- Add typed Zotero catalog search scope, sort field and direction options, plus
+  single item-type filtering, across library, collection and desktop saved-search
+  requests. Existing query defaults are preserved; Zotero applies the options
+  before pagination.
+
+- Keep calendar-relative conditional formatting on the injected clock's civil
+  dates across timezone offsets, daylight-saving transitions and year changes.
+
 - Preserve floating text-frame bookmarks through LibreOffice ODT-to-DOCX
   conversion by linking their graphic style to a common ODF parent.
 

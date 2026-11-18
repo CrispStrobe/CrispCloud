@@ -6,6 +6,81 @@ library;
 
 enum ZoteroLibraryType { user, group }
 
+/// Zotero evaluates quick searches across the complete requested catalog.
+/// Full-text matches depend on the connected library's indexed content.
+enum ZoteroSearchMode { titleCreatorYear, everything }
+
+/// Supported catalog ordering, applied by Zotero before pagination.
+enum ZoteroItemSort { dateModified, dateAdded, title, creator, date, itemType }
+
+enum ZoteroSortDirection {
+  ascending,
+  descending;
+
+  String get apiValue => this == ascending ? 'asc' : 'desc';
+}
+
+/// Validates literal catalog tags and returns an immutable, ordered selection.
+///
+/// Whitespace around a tag is trimmed and identical tags are included once;
+/// case and internal whitespace stay intact. Input is bounded to 20 entries,
+/// 256 UTF-16 code units per entry and 2,048 code units in total, including
+/// duplicates and surrounding whitespace. Empty tags and control characters
+/// are refused. An empty selection removes tag filtering.
+///
+/// Zotero's search syntax cannot represent a literal `||` or an initial `\-`
+/// consistently across online and desktop requests. These names are refused
+/// instead of changing which sources match. An ordinary initial hyphen is
+/// supported: the client escapes it when building the request.
+List<String> normalizeZoteroTags(Iterable<String> tags) {
+  final normalized = <String>{};
+  var count = 0;
+  var totalLength = 0;
+  for (final value in tags) {
+    if (++count > 20) {
+      throw const FormatException('Filter with at most 20 Zotero tags.');
+    }
+    if (value.length > 256 ||
+        RegExp(r'[\x00-\x1f\x7f-\x9f\u2028\u2029]').hasMatch(value)) {
+      throw const FormatException(
+        'Use Zotero tags of at most 256 characters without control characters.',
+      );
+    }
+    totalLength += value.length;
+    if (totalLength > 2048) {
+      throw const FormatException(
+        'Use at most 2,048 characters across Zotero tags.',
+      );
+    }
+    // URI encoding must not silently replace an unpaired UTF-16 surrogate.
+    for (var index = 0; index < value.length; index++) {
+      final unit = value.codeUnitAt(index);
+      if (unit >= 0xd800 && unit <= 0xdbff) {
+        if (++index >= value.length ||
+            value.codeUnitAt(index) < 0xdc00 ||
+            value.codeUnitAt(index) > 0xdfff) {
+          throw const FormatException(
+            'Use valid Unicode text for Zotero tags.',
+          );
+        }
+      } else if (unit >= 0xdc00 && unit <= 0xdfff) {
+        throw const FormatException('Use valid Unicode text for Zotero tags.');
+      }
+    }
+    final tag = value.trim();
+    if (tag.isEmpty) {
+      throw const FormatException('Enter a nonempty Zotero tag.');
+    }
+    if (tag.contains('||') || tag.startsWith(r'\-')) {
+      throw const FormatException(
+        r'Zotero cannot filter literal tags containing || or starting with \-.',
+      );
+    }
+    normalized.add(tag);
+  }
+  return List.unmodifiable(normalized);
+}
+
 /// A Zotero library is identified by its kind and numeric ID, not its name.
 class ZoteroLibrary {
   ZoteroLibrary({required this.type, required this.id}) {

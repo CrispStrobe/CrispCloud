@@ -588,7 +588,10 @@ void main() {
       final OfficeProofingResult twoErrors = await provider.check(
         input('Qudsmarke-Huas-Türr'),
       );
-      expect(twoErrors.findings.single.replacements, isEmpty);
+      expect(
+        twoErrors.findings.single.replacements,
+        contains('Qudsmarke-Haus-Tür'),
+      );
     },
   );
 

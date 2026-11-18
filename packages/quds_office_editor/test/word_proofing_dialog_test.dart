@@ -95,6 +95,68 @@ Future<void> _tap(WidgetTester tester, Finder finder) async {
 }
 
 void main() {
+  testWidgets(
+    'native spelling review preserves apostrophes and compounds through undo and redo',
+    (tester) async {
+      // The provider shares a lexicon Future. Exercise both native cases in one
+      // widget clock zone so later checks can drain that Future's continuations.
+      for (final scenario
+          in <({String source, String replacement, String result})>[
+            (
+              source: '🙂 Er draf’s.',
+              replacement: 'darf’s',
+              result: '🙂 Er darf’s.',
+            ),
+            (
+              source: 'Ein Huas\u2011Türr.',
+              replacement: 'Haus\u2011Tür',
+              result: 'Ein Haus\u2011Tür.',
+            ),
+          ]) {
+        final provider = GermanSpellingProvider();
+        // Keep the shared lexicon's futures in the widget clock's zone. Loading
+        // in runAsync leaves real-loop continuations that pumpAndSettle cannot
+        // drain before advancing the service deadline in fake time.
+        var warmed = false;
+        unawaited(provider.warmUp().then((_) => warmed = true));
+        for (var pumps = 0; !warmed && pumps < 1000; pumps++) {
+          await tester.pump(Duration.zero);
+        }
+        expect(
+          warmed,
+          isTrue,
+          reason: 'The shipped dictionary must be loaded.',
+        );
+        final controller = await _open(
+          tester,
+          document: WmlDocument.empty(text: scenario.source),
+          provider: provider,
+        );
+        final correction = find.widgetWithText(
+          OutlinedButton,
+          scenario.replacement,
+        );
+        expect(
+          correction,
+          findsOneWidget,
+          reason:
+              '${controller.proofing.summary.statusMessage} '
+              '${controller.proofing.summary.issues.map((issue) => issue.finding.replacements)}',
+        );
+        await _tap(tester, correction);
+        await tester.pumpAndSettle();
+        expect(controller.document.paragraphs.first.text, scenario.result);
+        expect(controller.proofing.summary.issues, isEmpty);
+        controller.undo();
+        expect(controller.document.paragraphs.first.text, scenario.source);
+        controller.redo();
+        expect(controller.document.paragraphs.first.text, scenario.result);
+        await _tap(tester, find.text('Close'));
+        await tester.pumpAndSettle();
+      }
+    },
+  );
+
   for (final scenario in <({String source, String replacement, String result})>[
     (source: 'Ihr seit hier.', replacement: 'seid', result: 'Ihr seid hier.'),
     (

@@ -4,6 +4,33 @@ All notable changes to `quds_office_editor` are documented here.
 
 ## Unreleased
 
+- Keep native spelling shortlists useful by filtering blank, unchanged,
+  duplicate and malformed replacements before the eight-suggestion limit.
+  Preserve multiword and Unicode corrections, keep unknown words reviewable
+  without a replacement, and protect numeric/connector identifier fragments.
+
+- Add removable Zotero tag filters with an active-count indicator, inline input
+  validation and a bounded chip list for narrow windows. Adding, removing and
+  clearing tags preserve the last submitted query and selected sources; draft
+  query/tag text never changes pagination. Retain filters across catalog scopes
+  and reconnecting within the current dialog.
+
+- Coordinate system spell checks across documents using Flutter's shared native
+  channel. Bound active and queued callers, settle disposal promptly, and keep
+  unfinished OS calls from colliding with a replacement provider.
+- Preserve representable scripts and numeric locale regions without silently
+  dropping dictionary variants; exclude URLs, emails and code from platform
+  findings and reject ranges that cut Unicode graphemes.
+
+- Add reference-browser controls for full-text search, reference type, sort field
+  and direction. Keep paging bound to the submitted search while a new query is
+  being typed, preserve selected sources, and keep controls usable in narrow
+  windows and after reconnecting.
+- Resolve document-declared transitive Zotero URI aliases during basic citation
+  refresh and API bibliography preparation. Older local links can use an explicit
+  synced alias without rewriting citation identities, locators, affixes or unknown
+  metadata. Keep unrelated libraries separate and apply refresh as one undo step.
+
 - Add an optional manual proofing service for preloaded grammar providers. F7
   and explicit checks include it; typing checks skip it with explicit coverage,
   keep separate caches, and preserve deterministic findings on overlap.
