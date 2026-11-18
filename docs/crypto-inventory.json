@@ -1441,7 +1441,6 @@
     "packages/quds_proofing_spacy/W7_SOURCE.json",
     "packages/quds_proofing_spacy/lib/quds_proofing_spacy.dart",
     "packages/quds_proofing_spacy/lib/quds_proofing_spacy_grammar.dart",
-    "packages/quds_proofing_spacy/lib/quds_proofing_spacy_macos.dart",
     "packages/quds_proofing_spacy/lib/quds_proofing_spacy_native.dart",
     "packages/quds_proofing_spacy/lib/src/analysis.dart",
     "packages/quds_proofing_spacy/lib/src/backend.dart",
@@ -1449,7 +1448,6 @@
     "packages/quds_proofing_spacy/lib/src/grammar_planner.dart",
     "packages/quds_proofing_spacy/lib/src/grammar_provider.dart",
     "packages/quds_proofing_spacy/lib/src/native_backend.dart",
-    "packages/quds_proofing_spacy/lib/src/native_backend_macos.dart",
     "packages/quds_proofing_spacy/lib/src/native_backend_unsupported.dart",
     "packages/quds_proofing_spacy/lib/src/source_text.dart",
     "packages/quds_proofing_spacy/lib/src/transport.dart",
@@ -1457,7 +1455,10 @@
     "packages/quds_proofing_spacy/lib/src/worker_unsupported.dart",
     "packages/quds_proofing_spacy/pubspec.yaml",
     "tool/spacy_w7_signed_app.py",
-    "tool/linux_secure_storage_json_compat.py"
+    "tool/linux_secure_storage_json_compat.py",
+    "packages/quds_proofing_spacy/lib/quds_proofing_spacy_install.dart",
+    "packages/quds_proofing_spacy/lib/src/distribution.dart",
+    "packages/quds_proofing_spacy/lib/src/installer_io.dart"
   ],
   "technical_review_notes": [
     "CrisperBooks is consumed from a single immutable Git revision with its complete tracked tree and the exact package roots independently verified after Pub resolution. It includes the compressed browser Kindle converter, memory-only WASI source and local platform speech controls. Browser source/tests and native parity controls remain separate from binary distribution approval. The WASI shim has crypto.getRandomValues and a Math.random fallback, which is not treated as a secure RNG. Archive integration and syntax/UI changes add no cipher or credential store.",

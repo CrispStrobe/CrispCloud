@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:crisp_cloud/models/terminal_pane_layout.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 TerminalPaneLayout _layout() => TerminalPaneSplit(
@@ -173,7 +174,10 @@ void main() {
         {},
         {'kind': 'new-layout'},
         {'kind': 'leaf', 'id': -1},
-        {'kind': 'leaf', 'id': 0.0},
+        // Reject fractional IDs on every backend; integral doubles
+        // retain a distinct type only on the VM.
+        if (!kIsWeb) {'kind': 'leaf', 'id': 0.0},
+        {'kind': 'leaf', 'id': 0.5},
         {'kind': 'leaf', 'id': '0'},
         {...split, 'axis': 'diagonal'},
         {...split, 'fraction': '0.5'},

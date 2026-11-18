@@ -130,6 +130,7 @@ class _FolderDropTargetState extends ConsumerState<FolderDropTarget> {
         prepared.files,
         kind: kind,
         sourceGroups: prepared.groups,
+        requirePreview: true,
         destinationOrigin: destination.origin,
         destinationPath: destination.path,
       );

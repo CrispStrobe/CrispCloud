@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:crisp_cloud/models/terminal_key_binding.dart';
 import 'package:crisp_cloud/services/terminal_key_bindings.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -338,7 +339,10 @@ void main() {
         '{bad',
         'null',
         jsonEncode({'version': 2, 'bindings': []}),
-        jsonEncode({'version': 1.0, 'bindings': []}),
+        // Whole-valued doubles are ints on Dart web. Keep the VM-only
+        // representation check and reject fractions on every backend.
+        if (!kIsWeb) jsonEncode({'version': 1.0, 'bindings': []}),
+        jsonEncode({'version': 1.5, 'bindings': []}),
         jsonEncode({
           'version': 1,
           'bindings': [null],

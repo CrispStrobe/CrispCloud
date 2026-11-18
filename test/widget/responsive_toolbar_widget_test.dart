@@ -258,6 +258,12 @@ Widget _wrapToolbar({
 // Tests
 // ---------------------------------------------------------------------------
 
+String _terminalReadinessState() {
+  final tabs = find.byKey(const ValueKey('terminal-tabs')).evaluate().length;
+  final loading = find.text('Loading saved workspace…').evaluate().length;
+  return 'Terminal header absent: tabs=$tabs, recoveryLoading=$loading';
+}
+
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
@@ -502,7 +508,11 @@ void main() {
         await tester.tap(find.text('Show Terminal'));
         await tester.pump(const Duration(milliseconds: 300));
         expect(find.byTooltip('Hide Terminal'), findsNothing);
-        expect(find.byTooltip('Connect via SSH'), findsOneWidget);
+        expect(
+          find.byTooltip('Connect via SSH'),
+          findsOneWidget,
+          reason: _terminalReadinessState(),
+        );
       } finally {
         debugDefaultTargetPlatformOverride = null;
       }
@@ -533,7 +543,11 @@ void main() {
           await tester.pump(const Duration(milliseconds: 300));
           await tester.tap(find.text('Show Terminal'));
           await tester.pump(const Duration(milliseconds: 300));
-          expect(find.byTooltip('Connect via SSH'), findsOneWidget);
+          expect(
+            find.byTooltip('Connect via SSH'),
+            findsOneWidget,
+            reason: _terminalReadinessState(),
+          );
           await tester.tap(find.byTooltip('More actions'));
           await tester.pump(const Duration(milliseconds: 300));
           expect(find.text('Hide Terminal'), findsOneWidget);

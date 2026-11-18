@@ -47,6 +47,40 @@ validation is pending. Workspace's transfer-review and mobile terminal
 failures remain separate unresolved contracts; no tests are weakened to
 clear them and no complete normal-CI/Office qualification is inferred.
 
+
+At `54feca1a`, the actual workspace job is 975 pass / five fail and Chrome
+is 731 pass / four skip / six fail. Preserve these fresh logs separately from
+older sources. Captured folder and pane drops now explicitly require Preview:
+all three start controls and the shared keyboard/start handler enforce the
+same plan requirement. Ordinary operation dialogs retain internal planning on
+Start. The three existing drop assertions are unchanged. The two mobile SSH
+assertions remain strict and now capture bounded tab/loading state on failure;
+their missing first UI state is not attributed from a zero finder alone.
+
+Five Chrome fixtures assume an integral double is an invalid integer, which
+[Dart web does not guarantee](https://dart.dev/resources/language/number-representation).
+Keep VM-specific representation cases and add fractional invalid versions/IDs
+that stay invalid on both backends, without changing decoder validation or
+skipping test groups. The idle action label follows the existing browser/native
+shell distinction while preserving all start counts and lifecycle assertions.
+
+The fresh external-schema failure binds two cycle-one GIF/JPEG packages to an
+explicit disabled `w:smallCaps w:val="0"` property. The reader admits only that
+exact false default; enabled, implicit, duplicated or unreviewed content still
+fails. All 75 pure renderer controls pass, including new negative cases; the
+retained two-package structure readback preserves exact geometry. This is not
+fresh LibreOffice rendering, pixel/cycle comparison, hosted coverage collection
+or complete Office qualification. New Dart paths and normal hosted checks remain
+unqualified until their exact-head outcomes exist.
+
+The source inventory also still named two macOS adapter files removed by the
+earlier main integration and omitted its three replacement installation and
+distribution sources. Reflect the actual tracked source set (979 to 980 paths)
+and refresh only the inventory/source fingerprints after the reviewed drop
+changes. Policy decision fields remain unchanged. Actual source-policy
+validation passes; this does not establish hosted release evidence or app
+qualification.
+
 ## Vision
 
 CrispCloud becomes the **definitive open-source cloud file manager**: a single, beautiful, blazing-fast app that connects to *any* cloud or server, runs on *every* platform, and treats privacy and encryption as first-class citizens — not afterthoughts.
