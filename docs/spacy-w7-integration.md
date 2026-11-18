@@ -60,3 +60,14 @@ diagnostic selection and guarded Quds source manifest. Existing credential and
 encryption paths, and all policy decision fields, remain unchanged. Refresh
 the lock/source fingerprints after that source review; this records source
 facts and does not authorize submission, release or distribution.
+
+## Linux dependency compiler compatibility
+
+The normal Linux build exposed four deprecated literal-operator spellings in
+the locked `flutter_secure_storage_linux`1.2.3 JSON header. The CI-only
+`tool/linux_secure_storage_json_compat.py` authenticates the lock and original
+header, removes exactly those four spaces, verifies the repaired digest and
+preserves warning strictness. Unknown source bytes fail closed; repeated
+application is idempotent. This changes no storage function body, dependency
+version, encryption implementation, spaCy artifact, numeric gate or default.
+Actual native compilation is a hosted CI gate, separate from source controls.

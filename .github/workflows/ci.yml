@@ -543,6 +543,10 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Repair pinned secure-storage literal declarations for current Clang
+        if: matrix.platform == 'linux'
+        run: python3 tool/linux_secure_storage_json_compat.py
+
       - name: Verify Linux document host build requirements
         if: matrix.platform == 'linux'
         run: |
