@@ -47,7 +47,7 @@ final class SpacyBackendIdentity {
         resourcesSha256 != spacyResourcesSha256 ||
         abiVersion != 1 ||
         textAbiVersion != 1 ||
-        capabilityMask != 15) {
+        (capabilityMask != 15 && capabilityMask != 31)) {
       throw const FormatException('Unsupported spaCy runtime/model identity.');
     }
   }

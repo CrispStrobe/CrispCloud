@@ -1,3 +1,4 @@
+import 'support/office_golden.dart';
 // Word-like text selection: geometry of the selection band and one golden.
 //
 // The original goldens were generated on macOS. Linux references preserve
@@ -15,8 +16,7 @@ const _pageKey = ValueKey('word-selection-page');
 
 String _selectionGolden(String targetPlatform) {
   // TargetPlatformVariant changes selection colours, not the host rasterizer.
-  final hostDirectory = Platform.isLinux ? 'linux/' : '';
-  return 'goldens/${hostDirectory}word_selection_$targetPlatform.png';
+  return officeGolden('word_selection_$targetPlatform.png');
 }
 
 String _run(String text, {int halfPoints = 22}) =>

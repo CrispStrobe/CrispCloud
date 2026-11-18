@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'support/office_golden.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quds_office_editor/quds_office_editor.dart';
@@ -57,7 +58,7 @@ void main() {
             await tester.pumpAndSettle();
             await expectLater(
               find.byKey(const ValueKey('page')),
-              matchesGoldenFile('goldens/${entry.key}_${page + 1}.png'),
+              matchesGoldenFile(officeGolden('${entry.key}_${page + 1}.png')),
             );
           }
           if (cycle == exportCycles) break;

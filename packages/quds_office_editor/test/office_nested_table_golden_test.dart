@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'support/office_golden.dart';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -198,7 +199,7 @@ void main() {
       await _expectPicturePixels(tester);
       await expectLater(
         find.byKey(const ValueKey('nested-table-page')),
-        matchesGoldenFile('goldens/nested_table_content.png'),
+        matchesGoldenFile(officeGolden('nested_table_content.png')),
         reason: 'Native cycle $cycle',
       );
       if (cycle < 3) {

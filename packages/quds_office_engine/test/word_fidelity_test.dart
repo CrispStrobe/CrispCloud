@@ -54,9 +54,9 @@ void main() {
       ],
     );
     final Uint8List bytes = WordSerializer().writeBytes(doc);
-    final String footer = OpcPackage.openBytes(bytes)
-        .getPart('/word/footer1.xml')!
-        .readText();
+    final String footer = OpcPackage.openBytes(
+      bytes,
+    ).getPart('/word/footer1.xml')!.readText();
     expect(footer.contains('PAGE'), isTrue);
     expect(footer.contains('Al Tahreer Neighborhood Profile'), isTrue);
     final LaidOutDocument laid = WordLayoutEngine(font: null).layout(doc);
@@ -118,8 +118,20 @@ void main() {
               ..footer(pageNumber: true))
             .build();
 
+    final footerXml = OpcPackage.openBytes(
+      bytes,
+    ).getPart('/word/footer1.xml')!.readText();
+    expect(footerXml, contains('w:fldCharType="separate"'));
     final WmlDocument doc = WordDeserializer().readBytes(bytes);
     expect(doc.sections.first.footer, isNotEmpty);
+    expect(
+      doc.sections.first.footer.last.inlines
+          .whereType<WmlRun>()
+          .first
+          .properties
+          .fontSizePoints,
+      8,
+    );
     expect(
       doc.sections.first.footer.any(
         (WmlParagraph p) => p.properties.pageNumberField,
@@ -591,9 +603,9 @@ void main() {
       ],
     );
     final Uint8List bytes = WordSerializer().writeBytes(doc);
-    final String xml = OpcPackage.openBytes(bytes)
-        .getPart('/word/document.xml')!
-        .readText();
+    final String xml = OpcPackage.openBytes(
+      bytes,
+    ).getPart('/word/document.xml')!.readText();
     expect(xml.contains('wps:wsp'), isTrue);
     expect(xml.contains('v:rect'), isTrue);
     expect(xml.contains('qudsFrame:'), isFalse);

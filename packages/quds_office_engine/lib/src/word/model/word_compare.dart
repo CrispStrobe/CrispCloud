@@ -1,83 +1,28 @@
 import 'wml_document.dart';
-import 'word_revision.dart';
+import 'word_comparison.dart';
 
-/// Builds insert/delete revisions that turn [original] into [revised].
+/// Compatibility entry point for read-only document comparison.
 abstract final class WordCompare {
-  /// Records paragraph-level differences on [revised].
+  /// Produces a bounded report without modifying either input.
+  static WordComparisonResult diff(
+    WmlDocument original,
+    WmlDocument revised, {
+    WordComparisonOptions options = const WordComparisonOptions(),
+  }) => WordDocumentComparison.compare(original, revised, options: options);
+
+  /// The former mutation API could record deleted text that was absent from
+  /// the revised document and overlapping insert/delete ranges. It could not
+  /// represent deleted paragraphs, so accepting its results could lose text.
+  /// Use [diff] to review two documents and the revision API to review actual
+  /// imported or authored tracked changes. Neither input is touched here.
+  @Deprecated(
+    'Use WordCompare.diff or WordDocumentComparison.compare for a read-only report.',
+  )
   static WmlDocument compare(WmlDocument original, WmlDocument revised) {
-    final List<WmlParagraph> a = original.paragraphs.toList();
-    final List<WmlParagraph> b = revised.paragraphs.toList();
-    final int n = a.length < b.length ? a.length : b.length;
-    for (int i = 0; i < n; i++) {
-      final String left = a[i].text;
-      final String right = b[i].text;
-      if (left == right) {
-        continue;
-      }
-      final int prefix = _commonPrefix(left, right);
-      final int suffix = _commonSuffix(left.substring(prefix), right.substring(prefix));
-      final String deleted = left.substring(prefix, left.length - suffix);
-      final String inserted = right.substring(prefix, right.length - suffix);
-      if (deleted.isNotEmpty) {
-        WordRevisions.record(
-          revised,
-          kind: WmlRevisionKind.delete,
-          paragraphIndex: i,
-          start: prefix,
-          end: prefix + inserted.length,
-          text: deleted,
-        );
-      }
-      if (inserted.isNotEmpty) {
-        WordRevisions.record(
-          revised,
-          kind: WmlRevisionKind.insert,
-          paragraphIndex: i,
-          start: prefix,
-          end: prefix + inserted.length,
-          text: inserted,
-        );
-      }
-    }
-    for (int i = n; i < b.length; i++) {
-      WordRevisions.record(
-        revised,
-        kind: WmlRevisionKind.insert,
-        paragraphIndex: i,
-        start: 0,
-        end: b[i].text.length,
-        text: b[i].text,
-      );
-    }
-    for (int i = n; i < a.length; i++) {
-      WordRevisions.record(
-        revised,
-        kind: WmlRevisionKind.delete,
-        paragraphIndex: n == 0 ? 0 : n - 1,
-        start: 0,
-        end: 0,
-        text: a[i].text,
-      );
-    }
-    return revised;
-  }
-
-  static int _commonPrefix(String a, String b) {
-    final int n = a.length < b.length ? a.length : b.length;
-    var i = 0;
-    while (i < n && a.codeUnitAt(i) == b.codeUnitAt(i)) {
-      i++;
-    }
-    return i;
-  }
-
-  static int _commonSuffix(String a, String b) {
-    final int n = a.length < b.length ? a.length : b.length;
-    var i = 0;
-    while (i < n &&
-        a.codeUnitAt(a.length - 1 - i) == b.codeUnitAt(b.length - 1 - i)) {
-      i++;
-    }
-    return i;
+    throw UnsupportedError(
+      'WordCompare.compare no longer generates unsafe synthetic revisions. '
+      'Use WordCompare.diff or WordDocumentComparison.compare for a read-only '
+      'comparison. Review existing tracked changes with WordRevisions.',
+    );
   }
 }

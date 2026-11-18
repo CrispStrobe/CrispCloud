@@ -38,6 +38,11 @@ class WmlRevision {
 
   bool _targetCaptured;
 
+  /// Whether target identity was already captured, including a missing target.
+  /// Read-only consumers must not redirect a captured-null target through the
+  /// legacy paragraph index after later structural changes.
+  bool get hasCapturedTarget => _targetCaptured;
+
   /// start API.
   int start;
 

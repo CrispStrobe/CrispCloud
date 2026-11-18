@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'support/office_golden.dart';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
@@ -83,11 +84,7 @@ void main() {
       expect(picturePainted, isTrue, reason: 'Fixture picture must be visible');
       await expectLater(
         find.byKey(const ValueKey<String>('document')),
-        matchesGoldenFile(
-          Platform.isLinux
-              ? 'goldens/linux/office_fidelity_word.png'
-              : 'goldens/office_fidelity_word.png',
-        ),
+        matchesGoldenFile(officeGolden('office_fidelity_word.png')),
       );
       doc = WordDeserializer().readBytes(WordSerializer().writeBytes(doc));
     }

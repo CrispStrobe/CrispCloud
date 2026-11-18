@@ -1,0 +1,70 @@
+{
+  "recorded_utc": "2026-11-18T13:00:11.299559+00:00",
+  "host_source": "42555b54",
+  "quds_source": "f383c826205e321eda3ed3bdbcd584e9a2d4da14",
+  "crispembed_source": "28d8ce0eb24963ecd5eb37f823e7ca75ab6df8ee",
+  "ggml_source": "3a27b6c665b191cb230be367db5c52d81dd3e2ac",
+  "managed_office_files": 2723,
+  "bundle": {
+    "version": "1.3.4",
+    "build": "32",
+    "extension_version": "1.3.4",
+    "extension_build": "32",
+    "architecture": "arm64",
+    "strict_signature_verified": true,
+    "native_sha256": "23b1766921fceae79857da062f559ad9f91d1b4dc17a19f4c553e29da846660c",
+    "model_sha256": "fae2e6ab8d6c611d7a9dddd4b3259a871a1d2f95cacc8259f49c1e4ff31ff6cd",
+    "ner_sha256": "1b65fce5864703d971880cf038a67f2ffd1ef99cad2cd49f9dc122d7882cdaa1"
+  },
+  "normal_startup": {
+    "observed_seconds": 15,
+    "running": true,
+    "pids": [
+      17112
+    ],
+    "credential_policy_ready": true,
+    "probe_not_entered": true,
+    "app": "CrispCloud Preview 32.app",
+    "process_identity": "Darwin proc_pidpath exact installed executable; shell command text excluded"
+  },
+  "native_probe": {
+    "passed": true,
+    "warmups": 3,
+    "measured_requests": 25,
+    "fds": {
+      "after_warmup": 9,
+      "before_dispose": 9,
+      "after_dispose": 9
+    },
+    "rss_growth_bytes": 2129920,
+    "entities": [
+      {
+        "text": "Angela Merkel",
+        "label": "PER"
+      },
+      {
+        "text": "Siemens AG",
+        "label": "ORG"
+      },
+      {
+        "text": "M\u00fcnchen",
+        "label": "LOC"
+      }
+    ]
+  },
+  "accepted_test_counts": {
+    "engine": 1171,
+    "editor": 146,
+    "spacy_package": 87,
+    "native_model_free_ctest": 4,
+    "vendor_tool": 9,
+    "host_initial": 47,
+    "host_final_focused": 13
+  },
+  "host_test_cohorts_overlap": true,
+  "model_precision": "F32",
+  "native_grammar_default": "OFF",
+  "mac_native_grammar_qualified": false,
+  "github_actions_queried": false,
+  "store_upload_performed": false
+}

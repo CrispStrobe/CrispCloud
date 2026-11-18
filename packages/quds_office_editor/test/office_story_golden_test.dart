@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'support/office_golden.dart';
 import 'dart:ui' as ui;
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
@@ -168,7 +169,9 @@ void main() {
         );
         await expectLater(
           find.byKey(const ValueKey('page')),
-          matchesGoldenFile('goldens/office_stories_page_${page + 1}.png'),
+          matchesGoldenFile(
+            officeGolden('office_stories_page_${page + 1}.png'),
+          ),
         );
       }
       if (cycle < exportCycles) {

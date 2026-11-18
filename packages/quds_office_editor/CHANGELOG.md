@@ -4,6 +4,8 @@ All notable changes to `quds_office_editor` are documented here.
 
 ## Unreleased
 
+- Keep exact reviewed macOS pixel references separate from Linux references.
+
 - Check native spelling without discretionary soft hyphens while keeping exact
   original UTF-16 finding ranges and undoable corrections. Preserve authored
   layout outside corrections, reject layout-only suggestions, and keep links,

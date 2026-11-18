@@ -1,32 +1,30 @@
 {
   "repository": "CrispStrobe/quds_office_suite",
-  "source_commit": "2e013f26c7d4db54ecabe2c955117cbce5379408",
-  "PR": 153,
-  "upstream_state": "OPEN/DRAFT; integration blocked on PR139 failures",
+  "source_commit": "f383c826205e321eda3ed3bdbcd584e9a2d4da14",
+  "source_branch": "integrate/macbook-current-20261118",
+  "state": "Reconciled current main and incoming native spelling, Zotero, document review and spaCy NER adapters",
   "copied_lib_files_sha256": {
-    "lib/quds_proofing_spacy_native.dart": "b4d68e940536d8272680f21057f1a7695eb78d8a02c338320b2376c6a159a002",
-    "lib/quds_proofing_spacy.dart": "d2ec35f73260fc3bee0d86726aecb9478665355258f0722e77055f09b5e8eb19",
+    "lib/quds_proofing_spacy.dart": "6cd5ae5c4f83addb2c709e191b1e0e09730d5cde90624479beeed832d6647140",
     "lib/quds_proofing_spacy_grammar.dart": "7fda24553f7af314f7e0d3af862c1460c73c0cd8726b4b86021da1044238fa9d",
-    "lib/src/native_backend.dart": "fe15180d48d19b0e79874615708106a88d6f948a026eaef61d26f39961ce9f1b",
-    "lib/src/grammar_planner.dart": "898ff9f67a4acc20e825968f422c9fd1ae1def654ce63ef2942ba0e0cf317314",
-    "lib/src/worker_unsupported.dart": "074c3ad98e4a873ec5d55535b3c1a404da4eb557068437a3b4eb9a622d1e3078",
-    "lib/src/grammar_provider.dart": "892f2a06a7964834dd9c4752f7250ca25da72b5c6fb698b5f266bcb5542eddc3",
-    "lib/src/backend.dart": "4b3cf6561ec8811d8a85a48a7025efda7714ad0a088add42fc065a738993a732",
-    "lib/src/analysis.dart": "65d0577b9ff41e498df5a8606b85a6058623a3bc5591e1efb05a74b5b97c0464",
+    "lib/quds_proofing_spacy_install.dart": "66baacd526455e29e287d2aad4753b2b3f0be6e3270a84e4ea3a7a1baba75c94",
+    "lib/quds_proofing_spacy_native.dart": "b4d68e940536d8272680f21057f1a7695eb78d8a02c338320b2376c6a159a002",
+    "lib/src/analysis.dart": "feeb39df8ebc6b529bd40c9e0bbd646734c049c0f9f2dc3a473bed6668b5a5dc",
+    "lib/src/backend.dart": "571d03e6009fe0c3b359960f7668bd35ea44fe56abe4955dd007bd06265dece5",
     "lib/src/bundle.dart": "970ec6672efada2bcbacd7223804b8cf8d504ec647aec0c289ee43e5c1f802cb",
+    "lib/src/distribution.dart": "e5c33766218a08b1e178adafa919718b5f60f36a4faa471a6ec32c885ef7e6f0",
+    "lib/src/grammar_planner.dart": "898ff9f67a4acc20e825968f422c9fd1ae1def654ce63ef2942ba0e0cf317314",
+    "lib/src/grammar_provider.dart": "892f2a06a7964834dd9c4752f7250ca25da72b5c6fb698b5f266bcb5542eddc3",
+    "lib/src/installer_io.dart": "89ef8c4d20030270f730fc212ca03587735a95aebd22a67a60a9fd8b5dd6b92d",
+    "lib/src/native_backend.dart": "737b82977cb58e63417bf8ab41e1fdde288037d782abf5842cd8fbd14a9d889f",
+    "lib/src/native_backend_unsupported.dart": "4efda0e80b30c33320ab3e1499f3ad80b1a6ac022b74d2e072c2cd63d4b6c358",
     "lib/src/source_text.dart": "fd2f2fdda8e608d32bf3b4a05c10b8777a106495cf97cbfafd3b05dd5e559330",
     "lib/src/transport.dart": "78b38b82fcec385d0d2d96d5861f0e2b0333b8af58bc542dd6d5cc23677f6305",
     "lib/src/worker_native.dart": "4d63dcc14292025493cbab07b839a26fefb66c6e5d4a2558c4fd01e74d46da80",
-    "lib/src/native_backend_unsupported.dart": "ff38d1a0fd5fa93c2157649fdd064dd73830047497359ed2d51d7a07ff2814ae"
+    "lib/src/worker_unsupported.dart": "074c3ad98e4a873ec5d55535b3c1a404da4eb557068437a3b4eb9a622d1e3078"
   },
   "transforms": {
-    "pubspec.yaml": "Remove resolution: workspace for existing CrispCloud path-dependency layout; dependency versions unchanged."
+    "pubspec.yaml": "Remove resolution: workspace for CrispCloud path-dependency layout; dependency constraints unchanged."
   },
-  "added_mac_adapter": "Separate file, same ownership/admission/transport as Linux; admits macosArm64 only. Analysis component candidate, no grammar qualification inheritance. Original Linux source files byte-identical.",
   "provider_default": "OFF",
-  "upstream_analysis_options": {
-    "source_path": "analysis_options.yaml",
-    "sha256": "2605ddd3559825e867cab2f5c4536f4172d6ba3514cb10da19f17d7dbe7179e4",
-    "reason": "Retain original Quds strict analyzer/lint policy for byte-identical vendored sources and new platform adapter."
-  }
+  "bundled_macos_manual_grammar_qualified": false
 }

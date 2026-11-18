@@ -4,6 +4,8 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Emit complete dynamic footer PAGE packets, preserving their result formatting.
+
 - Offer existing accented dictionary forms for short German misspellings such
   as `Cafè` and `Joêl` through a bounded one-edit shortlist. Keep direct choices
   first, prefer matching lexical case within that fallback, and preserve the

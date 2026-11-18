@@ -448,6 +448,26 @@ class WordEditorController extends OfficeController {
   WordProofingSession? _proofing;
   final OfficeProofingVocabulary? _initialProofingVocabulary;
   final OfficeProofingService? _initialProofingService;
+  String _revisionAuthor;
+
+  /// Attribution for changes recorded from now on. Existing changes retain
+  /// their original authors, including across undo and redo.
+  String get revisionAuthor => _revisionAuthor;
+
+  set revisionAuthor(String value) {
+    final author = _normalizeRevisionAuthor(value);
+    if (author == _revisionAuthor) return;
+    _revisionAuthor = author;
+    notifyListeners();
+  }
+
+  static String _normalizeRevisionAuthor(String value) {
+    final author = value.trim();
+    if (author.isEmpty) {
+      throw ArgumentError.value(value, 'revisionAuthor', 'Must not be empty');
+    }
+    return author;
+  }
 
   /// Offline German checkers are available immediately. Checking is opt-in;
   /// hosts can configure additional local providers through the session.
@@ -489,9 +509,11 @@ class WordEditorController extends OfficeController {
     this.layoutEngine,
     OfficeProofingVocabulary? proofingVocabulary,
     OfficeProofingService? proofingService,
+    String revisionAuthor = 'Quds Office',
   }) : document = document ?? WmlDocument.empty(),
        _initialProofingVocabulary = proofingVocabulary,
-       _initialProofingService = proofingService {
+       _initialProofingService = proofingService,
+       _revisionAuthor = _normalizeRevisionAuthor(revisionAuthor) {
     _requestedMode = _config.mode;
     _config = _effectiveConfig(_config);
     relayout();
@@ -510,12 +532,14 @@ class WordEditorController extends OfficeController {
     WordLayoutEngine? layoutEngine,
     OfficeProofingVocabulary? proofingVocabulary,
     OfficeProofingService? proofingService,
+    String revisionAuthor = 'Quds Office',
   }) {
     final WordEditorController controller = WordEditorController(
       config: config,
       layoutEngine: layoutEngine,
       proofingVocabulary: proofingVocabulary,
       proofingService: proofingService,
+      revisionAuthor: revisionAuthor,
     );
     controller.loadBytes(bytes, password: password);
     return controller;
@@ -3609,6 +3633,7 @@ class WordEditorController extends OfficeController {
               start: start,
               end: end,
               text: text,
+              author: revisionAuthor,
             );
             after = WordRevisions.capture(document);
           } else {
@@ -6698,15 +6723,38 @@ class WordEditorController extends OfficeController {
     _resolveRevisions(<WmlRevision>[revision], accept: false);
   }
 
-  void _resolveRevisions(List<WmlRevision> revisions, {required bool accept}) {
+  /// Accepts the supplied pending changes as one undoable operation. A stale,
+  /// conflicted, or protected target rejects the entire batch before editing.
+  /// Foreign or already resolved changes and duplicate references are ignored.
+  void acceptRevisions(Iterable<WmlRevision> revisions) {
+    _resolveRevisions(revisions, accept: true);
+  }
+
+  /// Rejects the supplied pending changes as one undoable operation, with the
+  /// same complete-batch validation as [acceptRevisions].
+  void rejectRevisions(Iterable<WmlRevision> revisions) {
+    _resolveRevisions(revisions, accept: false);
+  }
+
+  void _resolveRevisions(
+    Iterable<WmlRevision> revisions, {
+    required bool accept,
+  }) {
     if (!config.allowsMutation) {
       return;
     }
     // Story-local paragraph indices cannot order targets across stories or
     // after paragraph insertion. Rightmost spans first is sufficient for all
     // independent paragraph targets, and keeps their offsets valid.
-    final List<WmlRevision> targets =
-        revisions.where(document.revisions.contains).toList()
+    final targets =
+        (Set<WmlRevision>.identity()..addAll(
+              revisions.where(
+                (revision) =>
+                    revision.accepted == null &&
+                    document.revisions.contains(revision),
+              ),
+            ))
+            .toList()
           ..sort((a, b) => b.start.compareTo(a.start));
     if (targets.isEmpty) {
       return;
@@ -6742,14 +6790,19 @@ class WordEditorController extends OfficeController {
       _CallbackCommand(
         executeFn: () {
           restore();
-          for (final revision in targets) {
-            if (accept) {
-              WordRevisions.accept(document, revision);
-            } else {
-              WordRevisions.reject(document, revision);
+          try {
+            for (final revision in targets) {
+              if (accept) {
+                WordRevisions.accept(document, revision);
+              } else {
+                WordRevisions.reject(document, revision);
+              }
             }
+            selectedRevisionIndex = null;
+          } on Object {
+            restore();
+            rethrow;
           }
-          selectedRevisionIndex = null;
         },
         undoFn: restore,
       ),
@@ -7221,12 +7274,12 @@ class WordEditorController extends OfficeController {
     notifyListeners();
   }
 
-  /// compareWith API.
-  void compareWith(WmlDocument other) {
-    WordCompare.compare(other, document);
-    relayout();
-    notifyListeners();
-  }
+  /// Compares [original] with this document without changing either input,
+  /// pending revisions, history, or selection. Available in read-only modes.
+  WordComparisonResult compareWith(
+    WmlDocument original, {
+    WordComparisonOptions options = const WordComparisonOptions(),
+  }) => WordDocumentComparison.compare(original, document, options: options);
 
   /// setRestrictEditing API.
   void setRestrictEditing(bool value, {WmlRestrictMode? mode}) {
@@ -7492,43 +7545,98 @@ class WordEditorController extends OfficeController {
 
   /// acceptAllRevisions API.
   void acceptAllRevisions() {
-    _resolveRevisions(List<WmlRevision>.of(document.revisions), accept: true);
+    acceptRevisions(document.revisions);
   }
 
   /// rejectAllRevisions API.
   void rejectAllRevisions() {
-    _resolveRevisions(List<WmlRevision>.of(document.revisions), accept: false);
+    rejectRevisions(document.revisions);
   }
 
-  /// selectedRevision API.
+  /// The selected pending change, or the first pending change for legacy
+  /// accept/reject toolbar actions when no explicit selection exists.
   WmlRevision? get selectedRevision {
     final int? index = selectedRevisionIndex;
-    if (index == null || index < 0 || index >= document.revisions.length) {
-      return document.revisions.isEmpty ? null : document.revisions.first;
+    if (index != null && index >= 0 && index < document.revisions.length) {
+      final revision = document.revisions[index];
+      if (revision.accepted == null) return revision;
     }
-    return document.revisions[index];
+    for (final revision in document.revisions) {
+      if (revision.accepted == null) return revision;
+    }
+    return null;
   }
 
-  /// selectRevision API.
+  /// Selects a pending change and reveals its exact range when its story has
+  /// an editable canvas. Unsupported stories remain selected for review.
   void selectRevision(WmlRevision revision) {
     final int index = document.revisions.indexOf(revision);
-    selectedRevisionIndex = index < 0 ? null : index;
-    notifyListeners();
-  }
-
-  /// stepRevision API.
-  void stepRevision(int delta) {
-    if (document.revisions.isEmpty) {
+    if (index < 0 || revision.accepted != null) {
       selectedRevisionIndex = null;
       notifyListeners();
       return;
     }
-    final int current = selectedRevisionIndex ?? 0;
-    selectedRevisionIndex = (current + delta) % document.revisions.length;
-    if (selectedRevisionIndex! < 0) {
-      selectedRevisionIndex = document.revisions.length - 1;
+    revealRevision(revision);
+  }
+
+  /// Moves through pending changes, wrapping at either end. With no explicit
+  /// selection, Next starts at the first change and Previous at the last.
+  void stepRevision(int delta) {
+    if (delta == 0) return;
+    final pending = document.revisions
+        .where((revision) => revision.accepted == null)
+        .toList();
+    if (pending.isEmpty) {
+      selectedRevisionIndex = null;
+      notifyListeners();
+      return;
     }
-    notifyListeners();
+    final selected = selectedRevisionIndex;
+    final current =
+        selected != null &&
+            selected >= 0 &&
+            selected < document.revisions.length
+        ? pending.indexOf(document.revisions[selected])
+        : -1;
+    final next = current < 0
+        ? (delta > 0 ? delta - 1 : delta) % pending.length
+        : (current + delta) % pending.length;
+    selectRevision(pending[next]);
+  }
+
+  /// Selects and reveals the actual tracked span. Returns false for stale or
+  /// conflicted ranges, disabled selection, and stories without a supported
+  /// canvas (notes and first/even headers/footers). Those changes remain
+  /// available in the review list; they never redirect to a body paragraph.
+  bool revealRevision(WmlRevision revision) {
+    final index = document.revisions.indexOf(revision);
+    if (index < 0 || revision.accepted != null) return false;
+    selectedRevisionIndex = index;
+    if (!config.allowsSelection) {
+      notifyListeners();
+      return false;
+    }
+    commitPendingEdits();
+    final paragraph = WordRevisions.resolveParagraph(document, revision);
+    if (!document.revisions.contains(revision) ||
+        revision.accepted != null ||
+        revision.conflict != null ||
+        paragraph == null ||
+        revision.start < 0 ||
+        revision.end < revision.start ||
+        revision.end > paragraph.text.length ||
+        paragraph.text.substring(revision.start, revision.end) !=
+            revision.text) {
+      notifyListeners();
+      return false;
+    }
+    final revealed = _revealParagraphRange(
+      paragraph,
+      revision.start,
+      revision.end,
+    );
+    if (!revealed) notifyListeners();
+    return revealed;
   }
 
   /// The text a notes editor shows for [note]: one line per paragraph.
@@ -7984,6 +8092,7 @@ class WordEditorController extends OfficeController {
                     start: start,
                     end: end,
                     text: previousText.substring(start, end),
+                    author: revisionAuthor,
                   );
                 }
                 WordRevisions.rebaseEdit(
@@ -8013,6 +8122,7 @@ class WordEditorController extends OfficeController {
                     start: end,
                     end: end + replacement.length,
                     text: replacement,
+                    author: revisionAuthor,
                   );
                 }
               } else {
@@ -8056,15 +8166,22 @@ class WordEditorController extends OfficeController {
     if (!config.allowsSelection || !proofing.isCurrent(issue)) return false;
     commitPendingEdits();
     if (!proofing.isCurrent(issue)) return false;
-    final paragraph = issue.paragraph;
+    return _revealParagraphRange(
+      issue.paragraph,
+      issue.finding.start,
+      issue.finding.end,
+    );
+  }
+
+  bool _revealParagraphRange(WmlParagraph paragraph, int start, int end) {
     for (final comment in document.comments) {
       if (comment.paragraphs.contains(paragraph)) {
         beginCommentEdit(comment.id);
         commentCaret
           ..paragraphIndex = comment.paragraphs.indexOf(paragraph)
-          ..logicalIndex = issue.finding.end
+          ..logicalIndex = end
           ..selectionAnchorParagraph = comment.paragraphs.indexOf(paragraph)
-          ..selectionAnchor = issue.finding.start;
+          ..selectionAnchor = start;
         _syncImeSelection();
         notifyListeners();
         return true;
@@ -8091,9 +8208,9 @@ class WordEditorController extends OfficeController {
         beginHeaderFooterEdit(page, footer: footer);
         headerFooterCaret
           ..paragraphIndex = index
-          ..logicalIndex = issue.finding.end
+          ..logicalIndex = end
           ..selectionAnchorParagraph = index
-          ..selectionAnchor = issue.finding.start;
+          ..selectionAnchor = start;
         _syncImeSelection();
         notifyListeners();
         return true;
@@ -8111,14 +8228,16 @@ class WordEditorController extends OfficeController {
     selectTable(null);
     documentCaret
       ..paragraphIndex = index
-      ..logicalIndex = issue.finding.end
+      ..logicalIndex = end
       ..selectionAnchorParagraph = index
-      ..selectionAnchor = issue.finding.start;
+      ..selectionAnchor = start;
     final page = documentLaidOut.pages.indexWhere(
       (page) =>
           page.lines.any((line) => identical(line.sourceParagraph, paragraph)),
     );
     if (page >= 0) _revealPage(page);
+    onRequestFocus?.call();
+    attachInput();
     _syncImeSelection();
     notifyListeners();
     return true;

@@ -856,13 +856,15 @@ class DocxDocumentBuilder {
         );
       }
       if (page) {
+        // Keep code boundaries plain and put presentation on the result run.
+        // A complete field packet can be recognized as a dynamic PAGE field;
+        // omitting the separator leaves an unrenderable, empty instruction.
         runs.write(
-          '<w:r>${_runProperties(fontSizeHalfPoints: 16)}'
-          '<w:fldChar w:fldCharType="begin"/></w:r>'
-          '<w:r>${_runProperties(fontSizeHalfPoints: 16)}'
-          '<w:instrText xml:space="preserve"> PAGE </w:instrText></w:r>'
-          '<w:r>${_runProperties(fontSizeHalfPoints: 16)}'
-          '<w:fldChar w:fldCharType="end"/></w:r>',
+          '<w:r><w:fldChar w:fldCharType="begin"/></w:r>'
+          '<w:r><w:instrText xml:space="preserve"> PAGE </w:instrText></w:r>'
+          '<w:r><w:fldChar w:fldCharType="separate"/></w:r>'
+          '<w:r>${_runProperties(fontSizeHalfPoints: 16)}<w:t>1</w:t></w:r>'
+          '<w:r><w:fldChar w:fldCharType="end"/></w:r>',
         );
       }
       if (runs.isEmpty) {
