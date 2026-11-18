@@ -23,5 +23,10 @@
     "pubspec.yaml": "Remove resolution: workspace for existing CrispCloud path-dependency layout; dependency versions unchanged."
   },
   "added_mac_adapter": "Separate file, same ownership/admission/transport as Linux; admits macosArm64 only. Analysis component candidate, no grammar qualification inheritance. Original Linux source files byte-identical.",
-  "provider_default": "OFF"
+  "provider_default": "OFF",
+  "upstream_analysis_options": {
+    "source_path": "analysis_options.yaml",
+    "sha256": "2605ddd3559825e867cab2f5c4536f4172d6ba3514cb10da19f17d7dbe7179e4",
+    "reason": "Retain original Quds strict analyzer/lint policy for byte-identical vendored sources and new platform adapter."
+  }
 }

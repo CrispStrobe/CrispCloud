@@ -170,13 +170,16 @@ class SmlConditionalResolver {
       30,
     ).add(Duration(days: serial.floor()));
     final now = _now();
-    final today = DateTime(now.year, now.month, now.day);
+    // Spreadsheet serials and period boundaries represent civil dates. Keep
+    // the clock's calendar fields, but compare/arithmetic in UTC so timezone
+    // offsets and daylight-saving transitions cannot move a boundary day.
+    final today = DateTime.utc(now.year, now.month, now.day);
     bool sameDay(DateTime date, DateTime other) =>
         date.year == other.year &&
         date.month == other.month &&
         date.day == other.day;
     DateTime monthOffset(int months) =>
-        DateTime(today.year, today.month + months, 1);
+        DateTime.utc(today.year, today.month + months, 1);
     final weekStart = today.subtract(Duration(days: today.weekday % 7));
     return switch (rule.formula) {
       'today' => sameDay(cellDate, today),

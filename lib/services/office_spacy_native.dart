@@ -133,32 +133,30 @@ Future<void> runSignedSpacyNativeProbe() async {
     throw StateError('The finite signed-app resource bound failed.');
   }
   final sorted = times.toList()..sort();
-  stdout.writeln(
-    'CRISP_SPACY_W7_RESULT=' +
-        jsonEncode({
-          'schema': 'crispcloud.spacy.w7.signed-app-native.v1',
-          'passed': true,
-          'actual_Runner_entrypoint': true,
-          'real_native_worker': true,
-          'architecture': Abi.current().toString(),
-          'dart': Platform.version,
-          'signed_library_sha256': signedSha,
-          'warmups': 3,
-          'measured_requests': 25,
-          'median_microseconds': sorted[sorted.length ~/ 2],
-          'rss_start': rssStart,
-          'rss_max': rssMax,
-          'fds': {
-            'after_warmup': fdStart,
-            'before_dispose': fdWarm,
-            'after_dispose': fdAfter,
-          },
-          'copied_analysis_survives_dispose': true,
-          'analysis': retained.toJson(),
-          'provider_default': 'OFF',
-          'grammar_quality_qualified': false,
-          'limits':
-              'Diagnostic actual signed Runner/native worker operational sample; not UI/grammar accuracy or a leak proof.',
-        }),
-  );
+  final receipt = jsonEncode({
+    'schema': 'crispcloud.spacy.w7.signed-app-native.v1',
+    'passed': true,
+    'actual_Runner_entrypoint': true,
+    'real_native_worker': true,
+    'architecture': Abi.current().toString(),
+    'dart': Platform.version,
+    'signed_library_sha256': signedSha,
+    'warmups': 3,
+    'measured_requests': 25,
+    'median_microseconds': sorted[sorted.length ~/ 2],
+    'rss_start': rssStart,
+    'rss_max': rssMax,
+    'fds': {
+      'after_warmup': fdStart,
+      'before_dispose': fdWarm,
+      'after_dispose': fdAfter,
+    },
+    'copied_analysis_survives_dispose': true,
+    'analysis': retained.toJson(),
+    'provider_default': 'OFF',
+    'grammar_quality_qualified': false,
+    'limits':
+        'Diagnostic actual signed Runner/native worker operational sample; not UI/grammar accuracy or a leak proof.',
+  });
+  stdout.writeln('CRISP_SPACY_W7_RESULT=$receipt');
 }

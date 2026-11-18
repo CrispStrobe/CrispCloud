@@ -38,10 +38,11 @@ class _OfficeSpacySettingsState extends State<OfficeSpacySettings> {
       );
       await _read();
     } on Object catch (error) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(error.toString())));
+      }
     } finally {
       if (mounted) setState(() => _saving = false);
     }
