@@ -11,6 +11,10 @@ on:
         description: 'Only verify existing W7 Developer ID signing access; no CLI build or publication'
         type: boolean
         default: false
+      spacy_w7_app_qualification:
+        description: 'Only qualify actual signed ARM64 Runner/native worker; no CLI or release publication'
+        type: boolean
+        default: false
   workflow_call:
     inputs:
       release_tag:
@@ -23,7 +27,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   native:
-    if: ${{ !inputs.spacy_w7_signing_preflight }}
+    if: ${{ !inputs.spacy_w7_signing_preflight && !inputs.spacy_w7_app_qualification }}
     strategy:
       fail-fast: false
       matrix:
@@ -98,9 +102,9 @@ jobs:
           fi
 
   spacy-signing-preflight:
-    if: github.event_name == 'workflow_dispatch' && inputs.spacy_w7_signing_preflight
+    if: github.event_name == 'workflow_dispatch' && (inputs.spacy_w7_signing_preflight || inputs.spacy_w7_app_qualification)
     runs-on: macos-15
-    timeout-minutes: 15
+    timeout-minutes: ${{ inputs.spacy_w7_app_qualification && 90 || 15 }}
     permissions:
       contents: read
     steps:
@@ -118,6 +122,26 @@ jobs:
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           ASC_TEAM_ID: ${{ secrets.ASC_TEAM_ID }}
         run: python3 tool/macos_public_signing.py prepare
+      - name: Select available Xcode for the actual app build
+        if: inputs.spacy_w7_app_qualification
+        run: |
+          test -d /Applications/Xcode_26.3.app/Contents/Developer
+          sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
+          xcodebuild -version
+      - name: Set up bundled ebook converter for the actual Runner
+        if: inputs.spacy_w7_app_qualification
+        uses: ./.github/actions/setup-ebook-rust
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+      - uses: subosito/flutter-action@v2
+        if: inputs.spacy_w7_app_qualification
+        with:
+          flutter-version: '3.47.8'
+          channel: stable
+          cache: true
+      - name: Qualify actual signed sandboxed Runner and owned native worker
+        if: inputs.spacy_w7_app_qualification
+        run: python3 tool/spacy_w7_signed_app.py
       - name: Remove temporary signing material
         id: cleanup
         if: always()
@@ -145,3 +169,9 @@ jobs:
         with:
           name: w7-signing-preflight-${{ github.run_id }}
           path: w7-signing-preflight.json
+      - uses: actions/upload-artifact@v4
+        if: always() && inputs.spacy_w7_app_qualification
+        with:
+          name: w7-actual-signed-app-${{ github.run_id }}
+          path: ${{ runner.temp }}/w7-signed-app-evidence
+          if-no-files-found: warn

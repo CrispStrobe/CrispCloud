@@ -71,6 +71,7 @@ import 'services/file_viewer_documents_license.dart';
 import 'services/ebook_licenses.dart';
 import 'services/legacy_doc_licenses.dart';
 import 'services/office_proofing_licenses.dart';
+import 'services/office_spacy.dart';
 import 'services/secure_storage_service.dart';
 import 'services/secure_storage_web.dart';
 import 'services/secure_storage_file.dart';
@@ -291,7 +292,24 @@ const _appVersion = String.fromEnvironment(
   defaultValue: '1.0.0',
 );
 
-Future<void> main() => _startCrispCloud();
+Future<void> main() async {
+  if (const bool.fromEnvironment(
+    'CRISP_W7_NATIVE_PROBE',
+    defaultValue: false,
+  )) {
+    WidgetsFlutterBinding.ensureInitialized();
+    try {
+      await runSignedSpacyNativeProbe();
+      exit(0);
+    } on Object catch (error, stack) {
+      stderr.writeln(
+        'W7 actual signed app native probe failed: $error\n$stack',
+      );
+      exit(1);
+    }
+  }
+  await _startCrispCloud();
+}
 
 Future<void> _startCrispCloud() async {
   CrashReportingService? crashReporting;
@@ -1315,9 +1333,9 @@ class WebMasterPasswordGateState extends ConsumerState<WebMasterPasswordGate> {
     if (password.isEmpty) return;
     if (_isNewVault && password.length < 8) {
       setState(
-        () =>
-            _error = SettingsStrings(context)
-                .text('Use at least 8 characters for the master password.'),
+        () => _error = SettingsStrings(
+          context,
+        ).text('Use at least 8 characters for the master password.'),
       );
       return;
     }
