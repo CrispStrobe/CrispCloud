@@ -294,9 +294,9 @@ const _appVersion = String.fromEnvironment(
 
 Future<void> main() async {
   if (const bool.fromEnvironment(
-    'CRISP_W7_INCLUDE_NATIVE_PROBE',
-    defaultValue: false,
-  ) &&
+        'CRISP_W7_INCLUDE_NATIVE_PROBE',
+        defaultValue: false,
+      ) &&
       Platform.environment['CRISP_W7_NATIVE_PROBE'] == '1') {
     WidgetsFlutterBinding.ensureInitialized();
     try {
@@ -1334,9 +1334,9 @@ class WebMasterPasswordGateState extends ConsumerState<WebMasterPasswordGate> {
     if (password.isEmpty) return;
     if (_isNewVault && password.length < 8) {
       setState(
-        () =>
-            _error = SettingsStrings(context)
-                .text('Use at least 8 characters for the master password.'),
+        () => _error = SettingsStrings(
+          context,
+        ).text('Use at least 8 characters for the master password.'),
       );
       return;
     }
