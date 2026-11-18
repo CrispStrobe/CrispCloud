@@ -6,6 +6,19 @@
 
 > Previous hardening plan (completed 2026-05-29) moved to HISTORY.md.
 
+## W7 native Office coverage source binding — 18 November 2026
+
+PR271 was closed after direct integration into main; closure did not establish
+normal CI acceptance. Main `d395bb3b` retained the older host coverage reader,
+which rejects the current enum/function typedef packet after 329 host tests
+pass. Restore the exact reviewed declaration packet and verify the complete
+`dart.library.ffi` conditional-export packet before separating its selector and
+non-FFI fallback from required native instrumentation. Retain every source hash;
+require the native implementation and reject additional fallback imports or
+authored dispatcher bodies. No coverage floor, LCOV line count, assertion or
+collection-receipt requirement changes. Pure reader controls and historical
+LCOV diagnostics are separate from pending exact-head hosted collection.
+
 ## Vision
 
 CrispCloud becomes the **definitive open-source cloud file manager**: a single, beautiful, blazing-fast app that connects to *any* cloud or server, runs on *every* platform, and treats privacy and encryption as first-class citizens — not afterthoughts.

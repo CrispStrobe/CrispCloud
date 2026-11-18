@@ -4,6 +4,8 @@ import tempfile
 import unittest
 from office_host_coverage import (
     BROWSER_COPY_SOURCE, COPY_TYPES_SOURCE, COPY_TYPE_DECLARATIONS,
+    SPACY_SELECTOR_SOURCE, SPACY_FALLBACK_SOURCE, SPACY_NATIVE_SOURCE,
+    SPACY_EXPORT_DECLARATION,
     report_coverage, require_all_sources,
 )
 
@@ -164,6 +166,64 @@ class HostCoverageControls(unittest.TestCase):
         self.assertEqual(report['uninstrumented_files'], [native])
         with self.assertRaisesRegex(ValueError, 'office_device_export_native.dart'):
             require_all_sources(report)
+
+    def test_repository_export_declarations_match_reviewed_packet(self):
+        lcov = self._copy_sources()
+        repository_source = Path(__file__).resolve().parents[1] / COPY_TYPES_SOURCE
+        (self.root / COPY_TYPES_SOURCE).write_bytes(repository_source.read_bytes())
+        report = report_coverage(lcov, self.root)
+        require_all_sources(report)
+        self.assertEqual(report['declaration_only_sources'][0]['path'], COPY_TYPES_SOURCE)
+
+    def _spacy_sources(self):
+        lcov = self._copy_sources()
+        (self.root / SPACY_SELECTOR_SOURCE).write_text(SPACY_EXPORT_DECLARATION)
+        (self.root / SPACY_FALLBACK_SOURCE).write_text('void unavailable() {}\n')
+        (self.root / SPACY_NATIVE_SOURCE).write_text('void nativeService() {}\n')
+        return lcov + f'SF:{SPACY_NATIVE_SOURCE}\nDA:1,1\nLF:1\nLH:1\nend_of_record\n'
+
+    def test_spacy_platform_inventory_preserves_hashes_and_native_requirement(self):
+        report = report_coverage(self._spacy_sources(), self.root)
+        require_all_sources(report)
+        self.assertEqual(report['instrumented_lines'], 5)
+        self.assertEqual(len(report['source_sha256']), 9)
+        self.assertIn(SPACY_NATIVE_SOURCE, report['required_native_sources'])
+        self.assertNotIn(SPACY_SELECTOR_SOURCE, report['required_native_sources'])
+        self.assertNotIn(SPACY_FALLBACK_SOURCE, report['required_native_sources'])
+        self.assertEqual(report['browser_only_sources'][-1]['path'], SPACY_FALLBACK_SOURCE)
+        self.assertEqual(report['browser_only_sources'][-1]['status'], 'not_measured_by_native_run')
+
+    def test_repository_spacy_selector_matches_reviewed_platform_packet(self):
+        lcov = self._spacy_sources()
+        actual = Path(__file__).resolve().parents[1] / SPACY_SELECTOR_SOURCE
+        (self.root / SPACY_SELECTOR_SOURCE).write_bytes(actual.read_bytes())
+        require_all_sources(report_coverage(lcov, self.root))
+
+    def test_spacy_native_source_cannot_escape_required_coverage(self):
+        lcov = self._spacy_sources()
+        lcov = lcov.replace(f'SF:{SPACY_NATIVE_SOURCE}\nDA:1,1\nLF:1\nLH:1\nend_of_record\n', '')
+        with self.assertRaisesRegex(ValueError, 'office_spacy_native.dart'):
+            require_all_sources(report_coverage(lcov, self.root))
+
+    def test_spacy_dispatcher_body_or_changed_gate_cannot_be_exempted(self):
+        lcov = self._spacy_sources()
+        for source in (SPACY_EXPORT_DECLARATION + 'int sideEffect() => 1;\n',
+                       SPACY_EXPORT_DECLARATION.replace('dart.library.ffi', 'dart.library.html')):
+            (self.root / SPACY_SELECTOR_SOURCE).write_text(source)
+            with self.subTest(source=source), self.assertRaisesRegex(ValueError, 'conditional export changed'):
+                report_coverage(lcov, self.root)
+
+    def test_spacy_fallback_direct_import_prevents_native_exemption(self):
+        lcov = self._spacy_sources()
+        (self.root / 'lib/bootstrap.dart').write_text("import 'services/office_spacy_unsupported.dart';\n")
+        with self.assertRaisesRegex(ValueError, 'additional import/reference'):
+            report_coverage(lcov, self.root)
+
+    def test_spacy_platform_sources_cannot_be_omitted(self):
+        lcov = self._spacy_sources()
+        (self.root / SPACY_NATIVE_SOURCE).unlink()
+        with self.assertRaisesRegex(ValueError, 'Incomplete spaCy'):
+            report_coverage(lcov, self.root)
 
     def test_browser_or_declaration_changes_remain_in_source_fingerprint(self):
         lcov = self._copy_sources()
