@@ -71,3 +71,15 @@ preserves warning strictness. Unknown source bytes fail closed; repeated
 application is idempotent. This changes no storage function body, dependency
 version, encryption implementation, spaCy artifact, numeric gate or default.
 Actual native compilation is a hosted CI gate, separate from source controls.
+
+## Host coverage platform inventory
+
+The host collector retains all Office source hashes and requires native line
+instrumentation. Its exact declaration packet includes the current exporter
+function typedefs. The spaCy dispatcher is accepted as non-executable only when
+its complete conditional export matches the reviewed `dart.library.ffi` packet.
+The non-FFI fallback is listed separately as unmeasured by the native run; direct
+references to that fallback reject the classification. The native implementation
+remains mandatory, and unknown bodies, gates or filenames do not escape coverage.
+Retained LCOV readback is diagnostic until a successful source-bound collection
+receipt exists; no native/browser execution or coverage-hit counts are invented.
