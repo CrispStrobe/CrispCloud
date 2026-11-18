@@ -234,12 +234,17 @@ class ZoteroItem {
     this.date = '',
     this.doi = '',
     this.url = '',
+    this.abstractNote = '',
+    this.publicationTitle = '',
+    this.publisher = '',
+    List<String> tags = const [],
     List<ZoteroCreator> creators = const [],
     Map<String, dynamic>? cslJson,
     Uri? citationUri,
     this.citationHtml,
     this.bibliographyHtml,
-  }) : creators = List.unmodifiable(creators),
+  }) : tags = List.unmodifiable(tags.toSet()),
+       creators = List.unmodifiable(creators),
        // Keep the public argument name and the private optional override.
        // ignore: prefer_initializing_formals
        _citationUri = citationUri,
@@ -255,6 +260,17 @@ class ZoteroItem {
   final String date;
   final String doi;
   final String url;
+  final String abstractNote;
+
+  /// Container name from the item type's publication-title field, such as
+  /// `bookTitle`, `proceedingsTitle` or `websiteTitle`.
+  final String publicationTitle;
+  final String publisher;
+
+  /// Exact manual and automatic tag names, deduplicated in source order.
+  /// These are display metadata; validate with [normalizeZoteroTags] before
+  /// using them as filters, since not every literal name is representable.
+  final List<String> tags;
   final List<ZoteroCreator> creators;
 
   /// CSL JSON snapshot supplied by Zotero; suitable for embedding in a field.

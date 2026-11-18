@@ -939,6 +939,10 @@ class ZoteroClient {
       version: _integer(json['version']) ?? 0,
       doi: _string(data['DOI']),
       url: _string(data['url']),
+      abstractNote: _string(data['abstractNote']),
+      publicationTitle: _publicationTitle(data, itemType),
+      publisher: _string(data['publisher']),
+      tags: _itemTags(data['tags']),
       creators: creators is List
           ? creators.map((value) {
               final creator = _object(value);
@@ -957,6 +961,35 @@ class ZoteroClient {
           : null,
       bibliographyHtml: json['bib'] is String ? json['bib'] as String : null,
     );
+  }
+
+  static String _publicationTitle(Map<String, dynamic> data, String itemType) {
+    // Zotero's schema maps these type-specific fields to publicationTitle.
+    final field = switch (itemType) {
+      'blogPost' => 'blogTitle',
+      'bookSection' => 'bookTitle',
+      'conferencePaper' => 'proceedingsTitle',
+      'dictionaryEntry' => 'dictionaryTitle',
+      'encyclopediaArticle' => 'encyclopediaTitle',
+      'forumPost' => 'forumTitle',
+      'presentation' => 'sessionTitle',
+      'radioBroadcast' || 'tvBroadcast' => 'programTitle',
+      'webpage' => 'websiteTitle',
+      _ => 'publicationTitle',
+    };
+    final title = _string(data[field]);
+    return title.isEmpty ? _string(data['publicationTitle']) : title;
+  }
+
+  static List<String> _itemTags(Object? value) {
+    if (value is! List<Object?>) return const [];
+    final tags = <String>[];
+    for (final entry in value) {
+      if (entry is! Map<String, dynamic>) continue;
+      final name = entry['tag'];
+      if (name is String && name.isNotEmpty) tags.add(name);
+    }
+    return tags;
   }
 
   /// Desktop exports include a one-element CSL array as a JSON string;

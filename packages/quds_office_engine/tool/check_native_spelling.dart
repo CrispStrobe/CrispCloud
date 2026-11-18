@@ -123,6 +123,49 @@ const _cases = <_SpellingCase>[
     'Lernnen',
     expected: <(String, String?)>[('Lernnen', 'Lehnten')],
   ),
+  _SpellingCase('marked-numeric-prefixes', '1\u0301Huas 𝟘\u0308Huas'),
+  _SpellingCase('marked-connector-prefixes', '_\u0301Huas ‿\u0308Huas'),
+  _SpellingCase(
+    'prose-next-to-marked-identifiers',
+    '_\u0301 Huas',
+    expected: <(String, String?)>[('Huas', 'Haus')],
+  ),
+  _SpellingCase(
+    'short-accent-noun',
+    'Cafè',
+    expected: <(String, String?)>[('Cafè', 'Café')],
+  ),
+  _SpellingCase(
+    'short-accent-name',
+    'Joêl',
+    expected: <(String, String?)>[('Joêl', 'Joël')],
+  ),
+  _SpellingCase(
+    'short-accent-adjective',
+    'hier rosè',
+    expected: <(String, String?)>[('rosè', 'rosé')],
+  ),
+  _SpellingCase(
+    'short-accent-uppercase',
+    'CAFÈ',
+    expected: <(String, String?)>[('CAFÈ', 'CAFÉ')],
+  ),
+  _SpellingCase(
+    'short-accent-decomposed',
+    '🙂 Cafe\u0300',
+    expected: <(String, String?)>[('Cafe\u0300', 'Café')],
+  ),
+  _SpellingCase(
+    'short-accent-compound',
+    'Joêl\u2011Huas',
+    expected: <(String, String?)>[('Joêl\u2011Huas', 'Joël\u2011Haus')],
+  ),
+  _SpellingCase(
+    'short-accent-swiss',
+    'Cafè',
+    language: 'de-CH',
+    expected: <(String, String?)>[('Cafè', 'Café')],
+  ),
 ];
 
 Future<void> main() async {

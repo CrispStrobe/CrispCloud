@@ -9,16 +9,6 @@ import 'german_literal_ranges.dart';
 import 'office_proofing.dart';
 import 'proofing_text_ranges.dart';
 
-Set<int> _sourceGraphemeBoundaries(String text) {
-  final Set<int> boundaries = <int>{0};
-  int end = 0;
-  for (final String cluster in text.characters) {
-    end += cluster.length;
-    boundaries.add(end);
-  }
-  return boundaries;
-}
-
 final RegExp _internalApostrophe = RegExp(
   r'(?<=[\p{L}\p{M}])\u2019(?=\p{L})',
   unicode: true,
@@ -239,12 +229,8 @@ class GermanSpellingProvider extends OfficeProofingProvider {
     r"\p{L}[\p{L}\p{M}\u00ad]*(?:[-\u2010\u2011'’]\p{L}[\p{L}\p{M}\u00ad]*)*",
     unicode: true,
   );
-  static final RegExp _identifierBefore = RegExp(
-    r'[\p{N}\p{Pc}]$',
-    unicode: true,
-  );
-  static final RegExp _identifierAfter = RegExp(
-    r'^[\p{N}\p{Pc}]',
+  static final RegExp _identifierLeading = RegExp(
+    r'[\p{N}\p{Pc}]',
     unicode: true,
   );
   static const String _alphabet = 'abcdefghijklmnopqrstuvwxyzäöüß';
@@ -327,7 +313,22 @@ class GermanSpellingProvider extends OfficeProofingProvider {
         _GermanLexicon.load());
     final bool swiss = request.language == 'de-CH';
     final List<OfficeProofingFinding> findings = <OfficeProofingFinding>[];
-    final Set<int> boundaries = _sourceGraphemeBoundaries(request.text);
+    final Set<int> boundaries = <int>{0};
+    final Set<int> identifierStarts = <int>{};
+    final Set<int> identifierEnds = <int>{};
+    int boundary = 0;
+    for (final String cluster in request.text.characters) {
+      final int start = boundary;
+      boundary += cluster.length;
+      boundaries.add(boundary);
+      // A numeric/connector edge owns all of its combining marks. Reuse this
+      // one grapheme pass instead of a fixed lookbehind or repeated prefix
+      // scans, including supplementary digits and arbitrarily marked edges.
+      if (_identifierLeading.matchAsPrefix(request.text, start) != null) {
+        identifierStarts.add(start);
+        identifierEnds.add(boundary);
+      }
+    }
     final OfficeProofingTextRanges protectedRanges = OfficeProofingTextRanges(
       request.text,
     );
@@ -354,7 +355,8 @@ class GermanSpellingProvider extends OfficeProofingProvider {
       }
       if (protectedRanges.overlaps(token.start, token.end) ||
           literals.overlaps(token.start, token.end) ||
-          _isIdentifierFragment(request.text, token.start, token.end)) {
+          identifierEnds.contains(token.start) ||
+          identifierStarts.contains(token.end)) {
         continue;
       }
       final String original = token.group(0)!;
@@ -438,23 +440,6 @@ class GermanSpellingProvider extends OfficeProofingProvider {
   }
 
   static final RegExp _letterOrNumber = RegExp(r'[\p{L}\p{N}]', unicode: true);
-
-  static bool _isIdentifierFragment(String text, int start, int end) {
-    // A lexical replacement must not rewrite just the letters of foo42 or
-    // snake_case. Two UTF-16 units cover an adjacent supplementary digit;
-    // anchoring keeps unrelated numbers across whitespace out of this check.
-    return start > 0 &&
-            _identifierBefore.hasMatch(
-              text.substring(start >= 2 ? start - 2 : 0, start),
-            ) ||
-        end < text.length &&
-            _identifierAfter.hasMatch(
-              text.substring(
-                end,
-                end + 2 <= text.length ? end + 2 : text.length,
-              ),
-            );
-  }
 
   static bool _isSentenceInitial(String text, int offset) {
     if (_startsDirectQuotation(text, offset)) return true;
@@ -1011,18 +996,25 @@ class GermanSpellingProvider extends OfficeProofingProvider {
     // suffix buckets allow first-letter mistakes and transposition-plus-typo
     // cases without generating the quadratic neighborhood of every edit.
     // Every visited entry consumes the same maximumCandidateChecks budget.
-    // Adjacent transpositions count as one edit; terms beyond two edits are
-    // never offered by this fallback. This is a bounded shortlist, not an
-    // exhaustive edit-distance search or a word-acceptance heuristic.
-    if (lower.length >= 5 && canSearch()) {
+    // Short words can also need letters outside the edit alphabet, such as
+    // Cafè -> Café. Admit only one edit for three/four-unit words so their
+    // neighborhood stays conservative. Adjacent transpositions count as one
+    // edit; longer words retain the two-edit limit. This is a bounded shortlist,
+    // not an exhaustive edit-distance search or a word-acceptance heuristic.
+    if (lower.length >= 3 && canSearch()) {
+      final int maximumDistance = lower.length >= 5 ? 2 : 1;
       final List<(String, int)> matches = <(String, int)>[];
       for (final String value in lexicon.suggestionCandidates(lower)) {
         if (!canSearch()) break;
         if (value == word || !checked.add(value)) continue;
         examined++;
         budget.remaining--;
-        final int distance = _boundedEditDistance(lower, value.toLowerCase());
-        if (distance <= 2 && lexicon.exact(value, swiss: swiss)) {
+        final int distance = _boundedEditDistance(
+          lower,
+          value.toLowerCase(),
+          limit: maximumDistance,
+        );
+        if (distance <= maximumDistance && lexicon.exact(value, swiss: swiss)) {
           matches.add((value, distance));
         }
       }
@@ -1032,7 +1024,17 @@ class GermanSpellingProvider extends OfficeProofingProvider {
         final int byLength = (a.$1.length - word.length).abs().compareTo(
           (b.$1.length - word.length).abs(),
         );
-        return byLength != 0 ? byLength : a.$1.compareTo(b.$1);
+        if (byLength != 0) return byLength;
+        if (maximumDistance == 1 && !upper) {
+          // Match direct-edit case preference for the new short-word path.
+          // Unrelated titlecase forms must not fill a lowercase shortlist
+          // before a same-case lexical correction such as rosè -> rosé.
+          final bool sourceLower = word == lower;
+          final bool aSameCase = (a.$1 == a.$1.toLowerCase()) == sourceLower;
+          final bool bSameCase = (b.$1 == b.$1.toLowerCase()) == sourceLower;
+          if (aSameCase != bSameCase) return aSameCase ? -1 : 1;
+        }
+        return a.$1.compareTo(b.$1);
       });
       for (final (String value, int _) in matches) {
         if (found.length >= maximumSuggestions) break;

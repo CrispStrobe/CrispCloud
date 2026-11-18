@@ -42,7 +42,6 @@ final class OfficePlatformSpellingProvider extends OfficeProofingProvider {
   static final _language = RegExp(r'^[a-z]{2,8}$');
   static final _script = RegExp(r'^[a-z]{4}$');
   static final _region = RegExp(r'^(?:[A-Z]{2}|[0-9]{3})$');
-  static final _identifierLeading = RegExp(r'[\p{N}\p{Pc}]', unicode: true);
   static final _visibleSuggestionText = RegExp(
     r'[^\p{M}\p{Cf}\p{Z}]',
     unicode: true,
@@ -54,6 +53,7 @@ final class OfficePlatformSpellingProvider extends OfficeProofingProvider {
   /// legitimate in spelling corrections and are kept verbatim.
   static List<String> _suggestionsFor(
     String original,
+    String checkedOriginal,
     List<String> suggestions,
   ) {
     final accepted = <String>{};
@@ -61,6 +61,7 @@ final class OfficePlatformSpellingProvider extends OfficeProofingProvider {
       if (suggestion.isEmpty ||
           suggestion.length > 256 ||
           suggestion == original ||
+          suggestion.replaceAll('\u00ad', '') == checkedOriginal ||
           suggestion.trim().isEmpty ||
           !_visibleSuggestionText.hasMatch(suggestion) ||
           accepted.contains(suggestion) ||
@@ -157,6 +158,10 @@ final class OfficePlatformSpellingProvider extends OfficeProofingProvider {
     }
     try {
       final locale = _localeFor(request.language)!;
+      final source = _PlatformSpellingText(request.text);
+      if (source.text.isEmpty) {
+        return result(OfficeProofingStatus.success, 'No text to check.');
+      }
       final spans = await _scheduler.run(
         owner: this,
         timeout: timeout,
@@ -173,7 +178,7 @@ final class OfficePlatformSpellingProvider extends OfficeProofingProvider {
           if (service is DefaultSpellCheckService) {
             service.lastSavedResults = null;
           }
-          return service.fetchSpellCheckSuggestions(locale, request.text);
+          return service.fetchSpellCheckSuggestions(locale, source.text);
         },
       );
       if (_disposed) {
@@ -189,53 +194,31 @@ final class OfficePlatformSpellingProvider extends OfficeProofingProvider {
         );
       }
       final findings = <OfficeProofingFinding>[];
-      final protected = OfficeProofingTextRanges(request.text);
-      final boundaries = <int>{0};
-      final identifierStarts = <int>{};
-      final identifierEnds = <int>{};
-      for (final cluster in GraphemeClusters.segment(request.text)) {
-        boundaries.add(cluster.end);
-        // A digit/connector and its combining marks form one identifier edge.
-        // Reuse grapheme segmentation so an arbitrarily long marked edge does
-        // not require copying or rescanning a prefix for each native finding.
-        if (_identifierLeading.matchAsPrefix(request.text, cluster.start) !=
-            null) {
-          identifierStarts.add(cluster.start);
-          identifierEnds.add(cluster.end);
-        }
-      }
       if (!request.ignoredRuleIds.contains('platform.spelling')) {
         for (final span in spans) {
-          if (span.range.start < 0 ||
-              span.range.end > request.text.length ||
-              span.range.end <= span.range.start ||
-              !boundaries.contains(span.range.start) ||
-              !boundaries.contains(span.range.end)) {
-            throw const FormatException('Invalid platform spelling range.');
-          }
+          final range = source.sourceRange(span.range);
           // An OS dictionary may report only the letter portion of foo42 or
           // snake_case. Do not turn that into a partial identifier edit. Letter
           // adjacency is deliberately allowed: CJK dictionaries can return a
           // valid word from a continuous passage, and hyphen parts are words.
-          if (protected.overlaps(span.range.start, span.range.end) ||
-              identifierEnds.contains(span.range.start) ||
-              identifierStarts.contains(span.range.end)) {
+          if (source.isProtected(span.range, range)) {
             continue;
           }
-          final original = request.text.substring(
-            span.range.start,
-            span.range.end,
-          );
+          final original = request.text.substring(range.start, range.end);
           findings.add(
             OfficeProofingFinding.forRequest(
               request,
               providerId: id,
-              start: span.range.start,
-              end: span.range.end,
+              start: range.start,
+              end: range.end,
               ruleId: 'platform.spelling',
               message: 'The system dictionary does not recognize this word.',
               category: OfficeProofingCategory.spelling,
-              replacements: _suggestionsFor(original, span.suggestions),
+              replacements: _suggestionsFor(
+                original,
+                source.text.substring(span.range.start, span.range.end),
+                span.suggestions,
+              ),
             ),
           );
         }
@@ -272,6 +255,83 @@ final class OfficePlatformSpellingProvider extends OfficeProofingProvider {
     _disposed = true;
     _scheduler.cancel(this);
   }
+}
+
+/// Native services use UTF-16 offsets in their input. Omit discretionary soft
+/// hyphens only from that input, then recover the exact original Word interval.
+/// Real hyphens, punctuation, joiners and whitespace retain their meaning.
+final class _PlatformSpellingText {
+  _PlatformSpellingText(String source) {
+    final sourceProtected = OfficeProofingTextRanges(source);
+    _sourceProtected = sourceProtected;
+    if (source.contains('\u00ad')) {
+      final buffer = StringBuffer();
+      final offsets = <int>[];
+      for (var at = 0; at < source.length; at++) {
+        final unit = source.codeUnitAt(at);
+        if (unit == 0x00ad) continue;
+        buffer.writeCharCode(unit);
+        offsets.add(at);
+      }
+      text = buffer.toString();
+      _sourceOffsets = offsets;
+      _checkedProtected = OfficeProofingTextRanges(text);
+      _sourceBoundaries = <int>{
+        0,
+        for (final cluster in GraphemeClusters.segment(source)) cluster.end,
+      };
+    } else {
+      text = source;
+      _sourceOffsets = null;
+      _checkedProtected = sourceProtected;
+      _sourceBoundaries = _checkedBoundaries;
+    }
+    for (final cluster in GraphemeClusters.segment(text)) {
+      _checkedBoundaries.add(cluster.end);
+      // A marked digit/connector is one edge, even when a layout control hid
+      // the adjacency in the source. Build this once for all returned spans.
+      if (_identifierLeading.matchAsPrefix(text, cluster.start) != null) {
+        _identifierStarts.add(cluster.start);
+        _identifierEnds.add(cluster.end);
+      }
+    }
+  }
+
+  static final _identifierLeading = RegExp(r'[\p{N}\p{Pc}]', unicode: true);
+  late final String text;
+  late final List<int>? _sourceOffsets;
+  late final OfficeProofingTextRanges _sourceProtected;
+  late final OfficeProofingTextRanges _checkedProtected;
+  late final Set<int> _sourceBoundaries;
+  final _checkedBoundaries = <int>{0};
+  final _identifierStarts = <int>{};
+  final _identifierEnds = <int>{};
+
+  /// Nonempty intervals own controls between their first and last retained
+  /// units. Controls outside the word are never pulled into its correction.
+  TextRange sourceRange(TextRange range) {
+    if (range.start < 0 ||
+        range.end > text.length ||
+        range.end <= range.start ||
+        !_checkedBoundaries.contains(range.start) ||
+        !_checkedBoundaries.contains(range.end)) {
+      throw const FormatException('Invalid platform spelling range.');
+    }
+    final offsets = _sourceOffsets;
+    final start = offsets == null ? range.start : offsets[range.start];
+    final end = offsets == null ? range.end : offsets[range.end - 1] + 1;
+    if (!_sourceBoundaries.contains(start) ||
+        !_sourceBoundaries.contains(end)) {
+      throw const FormatException('Invalid platform spelling source range.');
+    }
+    return TextRange(start: start, end: end);
+  }
+
+  bool isProtected(TextRange checked, TextRange original) =>
+      _sourceProtected.overlaps(original.start, original.end) ||
+      _checkedProtected.overlaps(checked.start, checked.end) ||
+      _identifierEnds.contains(checked.start) ||
+      _identifierStarts.contains(checked.end);
 }
 
 final class _SpellingDisposed implements Exception {

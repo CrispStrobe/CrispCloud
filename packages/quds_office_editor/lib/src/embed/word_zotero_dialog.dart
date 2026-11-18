@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'office_controller.dart';
 import 'word_zotero_format.dart';
+import 'word_zotero_library.dart';
 import 'word_zotero_sources.dart';
 
 /// Connection preferences belong to the host session, never to a document.
@@ -426,13 +427,24 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
     }
   }
 
-  Future<void> _addTag() async {
+  Future<void> _addTag() => _applyTag(_tag.text, clearDraft: true);
+
+  Future<void> _applyTag(
+    String value, {
+    required bool clearDraft,
+    bool requireExact = false,
+  }) async {
     if (_busy || (_savedSearchMode && _savedSearchKey == null)) return;
     try {
-      final tag = normalizeZoteroTags([_tag.text]).single;
+      final tag = normalizeZoteroTags([value]).single;
+      if (requireExact && tag != value) {
+        throw const FormatException(
+          'Tags with surrounding spaces cannot be filtered exactly here.',
+        );
+      }
       if (_tags.contains(tag)) {
         setState(() {
-          _tag.clear();
+          if (clearDraft) _tag.clear();
           _tagError = null;
         });
         return;
@@ -440,7 +452,7 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
       final tags = normalizeZoteroTags([..._tags, tag]);
       setState(() {
         _tags = tags;
-        _tag.clear();
+        if (clearDraft) _tag.clear();
         _tagError = null;
       });
     } on FormatException catch (error) {
@@ -451,6 +463,49 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
     // never silently submitted by paging, removing a tag or clearing filters.
     await _run(() => _loadItems(useSubmittedQuery: true));
   }
+
+  Future<void> _showItemDetails(ZoteroItem item) async {
+    if (_busy) return;
+    final client = _client;
+    final library = _session.library;
+    final generation = _catalogGeneration;
+    if (client == null || library == null) return;
+    final tag = await showDialog<String>(
+      context: context,
+      builder: (_) => ZoteroItemDetailsDialog(item: item, activeTags: _tags),
+    );
+    if (tag == null || !_catalogIsCurrent(client, library, generation)) return;
+    await _applyTag(tag, clearDraft: false, requireExact: true);
+  }
+
+  Future<void> _reviewSelection() async {
+    if (_busy || _selected.isEmpty) return;
+    final selection = Map<String, ZoteroCitationItem>.of(_selected);
+    final keys = await showDialog<List<String>>(
+      context: context,
+      builder: (_) => ZoteroSelectedReferencesDialog(selection: selection),
+    );
+    if (!mounted || keys == null) return;
+    // Do not overwrite a selection changed while another route was open.
+    if (_selected.length != selection.length ||
+        selection.entries.any(
+          (entry) => !identical(_selected[entry.key], entry.value),
+        )) {
+      return;
+    }
+    setState(() {
+      _selected
+        ..clear()
+        ..addEntries(keys.map((key) => MapEntry(key, selection[key]!)));
+    });
+  }
+
+  Widget _reviewSelectionButton(String key) => TextButton.icon(
+    key: ValueKey(key),
+    onPressed: _busy || _selected.isEmpty ? null : _reviewSelection,
+    icon: const Icon(Icons.checklist),
+    label: const Text('Review selected'),
+  );
 
   Future<void> _removeTag(String tag) async {
     if (_busy) return;
@@ -1335,7 +1390,10 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
                         minHeight: _catalogMinHeight(size),
                       ),
                       _documentTab(),
-                      _scrollableTab(_importTab(), minHeight: 600),
+                      _scrollableTab(
+                        _importTab(),
+                        minHeight: size.width < 600 ? 656 : 600,
+                      ),
                     ],
                   ),
                 ),
@@ -1359,8 +1417,10 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
 
   double _catalogMinHeight(Size size) {
     final narrow = size.width < 600;
+    // Selection review adds another wrapped action row on narrow screens.
+    // Keep space for that row as well as the existing results viewport.
     final base = narrow
-        ? (widget.localTransport == null ? 820.0 : 960.0)
+        ? (widget.localTransport == null ? 876.0 : 1016.0)
         : (widget.localTransport == null ? 660.0 : 800.0);
     if (_session.library == null || !_searchOptionsExpanded) return base;
     // Expanded options wrap at narrow widths. Preserve a usable results list
@@ -2038,27 +2098,43 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
                   itemBuilder: (context, index) {
                     final item = _page!.items[index];
                     if (!item.isCitable) return const SizedBox.shrink();
-                    return CheckboxListTile(
-                      value: _selected.containsKey(item.sourceId),
-                      dense: true,
-                      title: Text(
-                        zoteroHtmlToPlainText(item.title),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      subtitle: Text(
-                        [
-                          item.creatorSummary,
-                          item.year,
-                          item.itemType,
-                          if (item.citationUri == null) 'Embedded source only',
-                        ].where((text) => text.isNotEmpty).join(' · '),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      onChanged: _busy
-                          ? null
-                          : (selected) => _selectItem(item, selected ?? false),
+                    return Row(
+                      children: [
+                        Expanded(
+                          child: CheckboxListTile(
+                            value: _selected.containsKey(item.sourceId),
+                            dense: true,
+                            title: Text(
+                              zoteroHtmlToPlainText(item.title),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            subtitle: Text(
+                              [
+                                item.creatorSummary,
+                                item.year,
+                                item.itemType,
+                                if (item.citationUri == null)
+                                  'Embedded source only',
+                              ].where((text) => text.isNotEmpty).join(' · '),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            onChanged: _busy
+                                ? null
+                                : (selected) =>
+                                      _selectItem(item, selected ?? false),
+                          ),
+                        ),
+                        IconButton(
+                          key: ValueKey('zotero-details-${item.sourceId}'),
+                          tooltip: 'Reference details',
+                          onPressed: _busy
+                              ? null
+                              : () => _showItemDetails(item),
+                          icon: const Icon(Icons.info_outline),
+                        ),
+                      ],
                     );
                   },
                 ),
@@ -2112,6 +2188,7 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             Text('${_selected.length} selected'),
+            _reviewSelectionButton('zotero-review-library-selection'),
             TextButton(
               onPressed: _busy || _selected.isEmpty
                   ? null
@@ -2413,6 +2490,7 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
               child: const Text('Load references'),
             ),
             if (_imported.isNotEmpty) Text('${_imported.length} loaded'),
+            _reviewSelectionButton('zotero-review-import-selection'),
           ],
         ),
         if (_imported.isNotEmpty)
