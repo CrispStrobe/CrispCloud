@@ -12,7 +12,7 @@ def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def embed(app, library, bundle, notices, expected):
+def embed(app, library, bundle, notices, expected, ner=None):
     if digest(library) != expected:
         raise ValueError('Native library does not match the compiled identity')
     subprocess.run(['codesign', '--verify', '--strict', str(library)], check=True)
@@ -27,6 +27,11 @@ def embed(app, library, bundle, notices, expected):
         shutil.rmtree(destination)
     destination.mkdir(parents=True)
     shutil.copytree(bundle, destination / 'bundle')
+    if ner is not None:
+        if digest(ner) != '1b65fce5864703d971880cf038a67f2ffd1ef99cad2cd49f9dc122d7882cdaa1':
+            raise ValueError('Unexpected optional named-entity model')
+        (destination / 'ner').mkdir()
+        shutil.copy2(ner, destination / 'ner/ner.gguf')
     native = destination / expected
     native.mkdir()
     shutil.copy2(library, native / 'libcrispembed-spacy.dylib')
@@ -44,5 +49,6 @@ if __name__ == '__main__':
     for name in ['app', 'library', 'bundle', 'notices']:
         parser.add_argument('--' + name, required=True, type=Path)
     parser.add_argument('--sha256', required=True)
+    parser.add_argument('--ner', type=Path)
     args = parser.parse_args()
-    embed(args.app, args.library, args.bundle, args.notices, args.sha256)
+    embed(args.app, args.library, args.bundle, args.notices, args.sha256, args.ner)

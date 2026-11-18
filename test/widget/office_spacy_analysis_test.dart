@@ -10,6 +10,7 @@ void main() {
     tester,
   ) async {
     var calls = 0;
+    bool? requestedEntities;
     await tester.pumpWidget(
       MaterialApp(
         home: Builder(
@@ -17,8 +18,9 @@ void main() {
             onPressed: () => showOfficeSpacyAnalysisDialog(
               context,
               'Eine Schildkröte schläft.',
-              analyze: (text) async {
+              analyze: (text, {bool includeEntities = false}) async {
                 calls++;
+                requestedEntities = includeEntities;
                 throw StateError('No model loaded');
               },
             ),
@@ -34,9 +36,15 @@ void main() {
       tester.widget<EditableText>(find.byType(EditableText)).focusNode.hasFocus,
       isTrue,
     );
+    expect(
+      tester.widget<CheckboxListTile>(find.byType(CheckboxListTile)).value,
+      isFalse,
+    );
+    await tester.tap(find.text('People, places and organizations'));
     await tester.tap(find.text('Analyze'));
     await tester.pumpAndSettle();
     expect(calls, 1);
+    expect(requestedEntities, isTrue);
     expect(find.textContaining('No model loaded'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
@@ -51,7 +59,7 @@ void main() {
             onPressed: () => showOfficeSpacyAnalysisDialog(
               context,
               'Text',
-              analyze: (_) => pending.future,
+              analyze: (_, {bool includeEntities = false}) => pending.future,
             ),
             child: const Text('Open'),
           ),

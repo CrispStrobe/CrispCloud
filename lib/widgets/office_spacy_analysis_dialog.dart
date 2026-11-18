@@ -6,7 +6,8 @@ import '../services/office_spacy.dart';
 Future<void> showOfficeSpacyAnalysisDialog(
   BuildContext context,
   String text, {
-  Future<LinguisticAnalysisResult> Function(String) analyze =
+  Future<LinguisticAnalysisResult> Function(String, {bool includeEntities})
+      analyze =
       analyzeOfficeSpacyText,
 }) => showDialog<void>(
   context: context,
@@ -16,7 +17,11 @@ Future<void> showOfficeSpacyAnalysisDialog(
 class _AnalysisDialog extends StatefulWidget {
   const _AnalysisDialog({required this.text, required this.analyze});
   final String text;
-  final Future<LinguisticAnalysisResult> Function(String) analyze;
+  final Future<LinguisticAnalysisResult> Function(
+    String, {
+    bool includeEntities,
+  })
+  analyze;
   @override
   State<_AnalysisDialog> createState() => _AnalysisDialogState();
 }
@@ -26,6 +31,7 @@ class _AnalysisDialogState extends State<_AnalysisDialog> {
   LinguisticAnalysisResult? _result;
   String? _error;
   bool _busy = false;
+  bool _entities = false;
   @override
   void dispose() {
     _text.dispose();
@@ -39,7 +45,10 @@ class _AnalysisDialogState extends State<_AnalysisDialog> {
       _result = null;
     });
     try {
-      final result = await widget.analyze(_text.text);
+      final result = await widget.analyze(
+        _text.text,
+        includeEntities: _entities,
+      );
       if (mounted) {
         setState(() {
           _result = result;
@@ -76,6 +85,14 @@ class _AnalysisDialogState extends State<_AnalysisDialog> {
             enabled: !_busy,
             decoration: const InputDecoration(labelText: 'Text'),
           ),
+          CheckboxListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('People, places and organizations'),
+            value: _entities,
+            onChanged: _busy
+                ? null
+                : (value) => setState(() => _entities = value ?? false),
+          ),
           if (_busy) const LinearProgressIndicator(),
           if (_error != null)
             Padding(
@@ -90,12 +107,19 @@ class _AnalysisDialogState extends State<_AnalysisDialog> {
             Expanded(
               child: SingleChildScrollView(
                 child: SelectableText(
-                  result.tokens
-                      .map(
-                        (token) =>
-                            '${token.text}  ·  ${token.lemma}  ·  ${token.pos}  ·  ${token.morphology}',
-                      )
-                      .join('\n'),
+                  (result.entitiesAvailable
+                          ? [
+                              for (final entity in result.entities)
+                                '${entity.text} · ${entity.label}',
+                              '',
+                            ].join('\n')
+                          : '') +
+                      result.tokens
+                          .map(
+                            (token) =>
+                                '${token.text}  ·  ${token.lemma}  ·  ${token.pos}  ·  ${token.morphology}',
+                          )
+                          .join('\n'),
                 ),
               ),
             ),

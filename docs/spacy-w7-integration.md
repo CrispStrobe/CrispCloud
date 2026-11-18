@@ -1,8 +1,8 @@
 # Local MacBook integration — 18 November 2026
 
-Build 32 imports Quds `ca42a7fa3947d0b59b9b2d3e14e807116327d714`: current upstream main plus the reconciled native spelling, Zotero workspace, document review/comparison, and spaCy distribution/NER-adapter work. All managed engine/editor/spaCy sources are checked by the guarded inventory; existing host report customizations and the independently pinned legacy parser are retained.
+Build 32 imports Quds `f383c826205e321eda3ed3bdbcd584e9a2d4da14`: current upstream main plus the reconciled native spelling, Zotero workspace, document review/comparison, and spaCy distribution/NER-adapter work. All managed engine/editor/spaCy sources are checked by the guarded inventory; existing host report customizations and the independently pinned legacy parser are retained.
 
-The native ARM64 component is built from CrispEmbed `28d8ce0eb` (including merged PRs #238, #239 and #240), with static PCRE2 and F32 model weights. The signed component and the authenticated five-file model bundle travel inside the app. Runtime analysis performs no download and uses no Python, daemon or pipe. NER weights are not included; NER remains optional.
+The native ARM64 component is built from CrispEmbed `28d8ce0eb` (including merged PRs #238, #239 and #240), with static PCRE2 and F32 model weights. The signed component and the authenticated five-file model bundle travel inside the app. Runtime analysis performs no download and uses no Python, daemon or pipe. The separately authenticated named-entity model is bundled and runs only when its analysis checkbox is selected. It is never used for grammar.
 
 Word's Review ribbon exposes German analysis, working Spell check, Review changes and Compare documents. Analysis runs only on an explicit action and never changes document text. Comparison uses separate documents and exports a report through the existing copy exporter. Ordinary typing and persisted optional grammar defaults remain unchanged. Mac grammar qualification is not inherited from the historical Linux library.
 

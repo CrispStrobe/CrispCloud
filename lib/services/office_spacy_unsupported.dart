@@ -5,7 +5,9 @@ Future<OfficeProofingService?> openOfficeSpacyManualService() async => null;
 Future<void> runSignedSpacyNativeProbe() async =>
     throw UnsupportedError('The native W7 probe requires macOS ARM64.');
 
-Future<LinguisticAnalysisResult> analyzeOfficeSpacyText(String text) async =>
-    throw UnsupportedError(
-      'Native German analysis is unavailable on this platform.',
-    );
+Future<LinguisticAnalysisResult> analyzeOfficeSpacyText(
+  String text, {
+  bool includeEntities = false,
+}) async => throw UnsupportedError(
+  'Native German analysis is unavailable on this platform.',
+);

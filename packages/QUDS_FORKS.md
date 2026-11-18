@@ -449,4 +449,4 @@ intact. The native spaCy backend is separate work.
 
 ## MacBook integration, 18 November 2026
 
-Current canonical pin: `ca42a7fa3947d0b59b9b2d3e14e807116327d714`. Includes the upstream main reconciliation and current spelling, Zotero, review/comparison and optional spaCy sources. `tool/office_fidelity_manifest.json` is the authoritative managed inventory; the separate legacy parser pin is retained.
+Current canonical pin: `f383c826205e321eda3ed3bdbcd584e9a2d4da14`. Includes the upstream main reconciliation and current spelling, Zotero, review/comparison and optional spaCy sources. `tool/office_fidelity_manifest.json` is the authoritative managed inventory; the separate legacy parser pin is retained.

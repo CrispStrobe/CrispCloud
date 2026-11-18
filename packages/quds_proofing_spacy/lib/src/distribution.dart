@@ -137,9 +137,20 @@ final class SpacyNerDownload {
   Uri get url => spacyResolveUrl(revision, path);
 }
 
-/// Null until the canonically converted `ner.gguf` is published and
-/// read back from its immutable revision.
-const SpacyNerDownload? spacyNerDownload = null;
+/// Canonical CPython 3.12.14 conversion published by CrispEmbed run
+/// 44302008411 (main 28d8ce0e) at an immutable revision and read back from an
+/// empty cache. Runtime-owner receipts: 1,776/1,776 sentences and 1,758/1,758
+/// entities identical to original spaCy. Display only; never used for grammar.
+const _publishedNer = SpacyNerDownload(
+  revision: '8b5d7084bab236fff9921ef5e397069163e83738',
+  path: 'ner/ner.gguf',
+  sha256: '1b65fce5864703d971880cf038a67f2ffd1ef99cad2cd49f9dc122d7882cdaa1',
+  bytes: 6135456,
+);
+
+/// The published NER model, or null for catalogs without one. Hosts must
+/// tolerate null (offer no NER) rather than assume a model exists.
+SpacyNerDownload? get spacyNerDownload => _publishedNer;
 
 /// Availability of a platform in this catalog, with a user-facing reason.
 final class SpacyPlatformStatus {
@@ -217,8 +228,54 @@ const spacyLinuxX64Package = SpacyPlatformPackage(
   ),
 );
 
+/// macOS arm64 library built from CrispEmbed main 28d8ce0e (ggml + SGEMM
+/// default engine, runtime PR #240).
+const spacyMacosArm64LibrarySha256 =
+    '918a069e3ce3e6786fd11f91d9f7b6c9a99b1c18a96493ef86ab586146dc2992';
+
+const spacyMacosArm64Package = SpacyPlatformPackage(
+  platform: SpacyPlatform.macosArm64,
+  revision: '24e607cbcf4187e7589619e725134c27d4d83817',
+  archivePath:
+      'packages/macos-arm64/28d8ce0eb24963ecd5eb37f823e7ca75ab6df8ee/'
+      'spacy-de_core_news_sm-3.8.0-macos-arm64-f32.tar.gz',
+  archiveSha256:
+      '492c8bfb9e78d5e3fe9163918e2038900578f977aee830683cae7d7be6525fec',
+  archiveBytes: 7879182,
+  manifestSha256:
+      'aa28595a374f3db683ebd88e49db857bc6bd74de0e811e41d72808e233f01bf4',
+  manifestBytes: 10911,
+  libraryEntrypoint:
+      'native/$spacyMacosArm64LibrarySha256/libcrispembed-spacy.dylib',
+  librarySha256: spacyMacosArm64LibrarySha256,
+  libraryBytes: 2162776,
+  profile: 'de_core_news_sm-3.8.0-f32-macos-arm64',
+  systemRequirements: [
+    'Apple silicon, macOS 13 or newer (system libc++ only; PCRE2 static)',
+    'Unsigned library: a hardened/sandboxed app must allow it or ship it '
+        'inside its own signed bundle',
+  ],
+  qualification: SpacyBuildQualification(
+    librarySha256: spacyMacosArm64LibrarySha256,
+    analysis:
+        'Hosted macOS 15 arm64 run 44302625032 on the library installed from '
+        'this exact capsule: ctest, 21 text-API controls, development parity '
+        '(16 cases, 113 tokens, 22 sentences, 1,201 numerical stages exact). '
+        'Optional NER attaches and decodes on this library (local Quds worker '
+        'check). Component evidence; not a signed-app qualification.',
+    limitations: [
+      'No manual grammar qualification for this build; the grammar planner '
+          'refuses it.',
+      'Not signed or notarized.',
+    ],
+  ),
+);
+
 /// Catalog entries in the order hosts should present them.
-const spacyCatalogPackages = <SpacyPlatformPackage>[spacyLinuxX64Package];
+const spacyCatalogPackages = <SpacyPlatformPackage>[
+  spacyLinuxX64Package,
+  spacyMacosArm64Package,
+];
 
 const spacyBundleDownload = SpacyBundleDownload(
   revision: spacyLinuxPublicationRevision,
@@ -237,7 +294,6 @@ SpacyPlatformStatus spacyPlatformStatus(SpacyPlatform platform) {
     }
   }
   final reason = switch (platform) {
-    SpacyPlatform.macosArm64 => _pendingNative,
     SpacyPlatform.linuxArm64 => _pendingNative,
     SpacyPlatform.windowsX64 || SpacyPlatform.windowsArm64 =>
       'No Windows native build or qualification exists yet.',
@@ -246,7 +302,8 @@ SpacyPlatformStatus spacyPlatformStatus(SpacyPlatform platform) {
       'Mobile apps must ship the native library inside the signed app; only '
           'the model bundle may be downloaded. No mobile build is qualified.',
     SpacyPlatform.web => 'Native analysis is unavailable in the browser.',
-    SpacyPlatform.linuxX64 => 'No package is configured.',
+    SpacyPlatform.linuxX64 ||
+    SpacyPlatform.macosArm64 => 'No package is configured.',
   };
   return SpacyPlatformStatus._(platform, null, reason);
 }

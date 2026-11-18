@@ -76,6 +76,14 @@ void main() {
     );
   });
 
+  test('the macOS package is published without a grammar claim', () {
+    final mac = spacyPlatformStatus(SpacyPlatform.macosArm64).package!;
+    expect(mac.libraryEntrypoint.split('/')[1], mac.librarySha256);
+    expect(mac.qualification.grammarQualified, isFalse);
+    expect(mac.url.toString(), contains('/resolve/${mac.revision}/packages/'));
+    expect(spacyNerDownload!.url.toString(), endsWith('/ner/ner.gguf'));
+  });
+
   test('claims are bound to exact library digests', () {
     expect(
       spacyQualificationFor(spacyLinuxX64LibrarySha256)!.grammarQualified,
@@ -101,7 +109,11 @@ void main() {
   test('unpublished platforms are unavailable with a stated reason', () {
     for (final platform in SpacyPlatform.values) {
       final status = spacyPlatformStatus(platform);
-      expect(status.available, platform == SpacyPlatform.linuxX64);
+      expect(
+        status.available,
+        platform == SpacyPlatform.linuxX64 ||
+            platform == SpacyPlatform.macosArm64,
+      );
       if (!status.available) expect(status.reason, isNotEmpty);
     }
   });

@@ -75,6 +75,19 @@ Future<void> main(List<String> arguments) async {
       'closed_tree_reverified': bundle != null,
       'seconds': started.elapsedMilliseconds / 1000,
     };
+    final ner = spacyNerDownload;
+    if (ner != null) {
+      final path = await installer.installNer(ner);
+      report['ner'] = {
+        'url': ner.url.toString(),
+        'sha256': ner.sha256,
+        'bytes': ner.bytes,
+        'installed_directory_name': File(path).parent.uri.pathSegments
+            .where((part) => part.isNotEmpty)
+            .last,
+        'closed_tree_reverified': await installer.installedNer(ner) != null,
+      };
+    }
     report['passed'] = true;
   } on Object catch (error) {
     report['failure'] = '${error.runtimeType}: $error';

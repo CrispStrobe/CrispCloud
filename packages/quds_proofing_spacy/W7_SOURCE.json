@@ -1,6 +1,6 @@
 {
   "repository": "CrispStrobe/quds_office_suite",
-  "source_commit": "ca42a7fa3947d0b59b9b2d3e14e807116327d714",
+  "source_commit": "f383c826205e321eda3ed3bdbcd584e9a2d4da14",
   "source_branch": "integrate/macbook-current-20261118",
   "state": "Reconciled current main and incoming native spelling, Zotero, document review and spaCy NER adapters",
   "copied_lib_files_sha256": {
@@ -11,7 +11,7 @@
     "lib/src/analysis.dart": "feeb39df8ebc6b529bd40c9e0bbd646734c049c0f9f2dc3a473bed6668b5a5dc",
     "lib/src/backend.dart": "571d03e6009fe0c3b359960f7668bd35ea44fe56abe4955dd007bd06265dece5",
     "lib/src/bundle.dart": "970ec6672efada2bcbacd7223804b8cf8d504ec647aec0c289ee43e5c1f802cb",
-    "lib/src/distribution.dart": "6c2670da23e27a1eb44783eb3fe22619e39571894e5c5eb87c1a46270493ddb5",
+    "lib/src/distribution.dart": "e5c33766218a08b1e178adafa919718b5f60f36a4faa471a6ec32c885ef7e6f0",
     "lib/src/grammar_planner.dart": "898ff9f67a4acc20e825968f422c9fd1ae1def654ce63ef2942ba0e0cf317314",
     "lib/src/grammar_provider.dart": "892f2a06a7964834dd9c4752f7250ca25da72b5c6fb698b5f266bcb5542eddc3",
     "lib/src/installer_io.dart": "89ef8c4d20030270f730fc212ca03587735a95aebd22a67a60a9fd8b5dd6b92d",
