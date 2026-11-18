@@ -367,8 +367,9 @@ class PdfOperationsService {
         _watermarkPlacement(document.page(index), index, watermark, image),
     ];
     final warnings = _sourceWarnings(document);
-    if (_needsComplexShaping(watermark.text ?? ''))
+    if (_needsComplexShaping(watermark.text ?? '')) {
       warnings.add(_shapingWarning);
+    }
     final editor = PdfEditor(document);
     final names = _annotationNames(document);
     for (final placement in placements) {
@@ -480,8 +481,9 @@ class PdfOperationsService {
           throw PdfOperationException('invalidOcr',
               'OCR spans require finite positive bounds and confidence 0–1.');
         }
-        if (span.confidence >= minConfidence)
+        if (span.confidence >= minConfidence) {
           _checkAuthoredText(span.text, font);
+        }
       }
     }
     final warnings = _sourceWarnings(document);
@@ -656,21 +658,26 @@ class PdfOperationsService {
     Never fail(String message) =>
         throw PdfOperationException('invalidForm', message);
     if (field.isReadOnly) fail('The field is read-only.');
-    if (field.isPassword)
+    if (field.isPassword) {
       fail('Password field values are not written by batch filling.');
-    if (field.scripts.hasUnsupported)
+    }
+    if (field.scripts.hasUnsupported) {
       fail('The field uses an unsupported form script.');
-    if (field.scripts.calculate != null)
+    }
+    if (field.scripts.calculate != null) {
       fail('The field is calculated; fill its source fields instead.');
+    }
     switch (field.type) {
       case PdfFieldType.text:
         if (value is! String) fail('A text field requires a string.');
         final check = field.checkInput(value);
-        if (!check.isValid)
+        if (!check.isValid) {
           fail('The field’s validation rule rejected this value.');
+        }
         final normalized = check.value;
-        if (field.isRequired && normalized.trim().isEmpty)
+        if (field.isRequired && normalized.trim().isEmpty) {
           fail('The field is required.');
+        }
         if (field.maxLength != null &&
             normalized.runes.length > field.maxLength!) {
           fail('The value exceeds the field’s maximum length.');
@@ -682,8 +689,9 @@ class PdfOperationsService {
         return normalized;
       case PdfFieldType.checkBox:
         if (value is! bool) fail('A checkbox requires true or false.');
-        if (field.isRequired && !value)
+        if (field.isRequired && !value) {
           fail('This required checkbox must be checked.');
+        }
         return value;
       case PdfFieldType.radioGroup:
         if (value is! String ||
@@ -718,8 +726,9 @@ class PdfOperationsService {
               .where((option) => option.$1 == item || option.$2 == item)
               .toList();
           if (options.isEmpty) {
-            if (!_editableChoice(field))
+            if (!_editableChoice(field)) {
               fail('A choice value is not one of the field’s options.');
+            }
             labels.add(item);
             normalized.add(item);
           } else if (options.length > 1 &&
@@ -964,8 +973,9 @@ class PdfOperationsService {
             'The watermark text does not fit page ${index + 1}.');
       }
       fontSize = math.min(fontSize, (height - 6) / (lineCount * 1.25));
-      if (unitTextWidth > 0)
+      if (unitTextWidth > 0) {
         fontSize = math.min(fontSize, (width - 6) / unitTextWidth);
+      }
       if (fontSize < .5) {
         throw PdfOperationException('invalidWatermark',
             'The watermark would be too small to read on page ${index + 1}.');

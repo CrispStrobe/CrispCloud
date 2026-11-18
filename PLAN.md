@@ -29,6 +29,24 @@ or persistent mutation still fails. Production routing and persistence are
 unchanged. The original hosted result (3,826 pass, 16 skip, two fail) remains
 retained; corrected Dart assertions require new exact-head hosted execution.
 
+At `9180c25c`, fresh workspace, image and shared-PDF logs remain red. The
+image failure identifies the maintained engine's uncancellable 16 ms
+`ExtendedLoop` wait after crop teardown. Own and cancel pending transition
+timers before disposing crop controllers, complete waiting futures without
+completion callbacks, and guard resumed crop operations against disposal.
+Keep the existing three platform crop assertions and pending-timer invariant;
+add overlapping-loop cancellation and zero-duration controls to the normal
+hosted image lifecycle job. No timed test drain hides the failure.
+
+The shared-PDF job passed its 15-, 45- and 149-test phases (five skips in the
+last phase), but failed CLI formatting and eleven strict analyzer infos.
+Apply its retained formatter patch, brace ten existing single-statement
+branches, and express the existing page-index set directly as a set literal.
+No assertion, validation or diagnostic severity is removed. Exact-head hosted
+validation is pending. Workspace's transfer-review and mobile terminal
+failures remain separate unresolved contracts; no tests are weakened to
+clear them and no complete normal-CI/Office qualification is inferred.
+
 ## Vision
 
 CrispCloud becomes the **definitive open-source cloud file manager**: a single, beautiful, blazing-fast app that connects to *any* cloud or server, runs on *every* platform, and treats privacy and encryption as first-class citizens — not afterthoughts.
