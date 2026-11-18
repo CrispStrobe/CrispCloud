@@ -8,14 +8,15 @@ import workmanager_apple
 @main
 @objc class AppDelegate: FlutterAppDelegate {
 
-  /// Shared Flutter engine.  SceneDelegate instances re-use this engine so
-  /// that all windows share one Dart isolate.
-  lazy var flutterEngine: FlutterEngine = {
-    let engine = FlutterEngine(name: "crisp_cloud_engine")
+  /// Each scene owns an engine: a FlutterEngine can render into only one
+  /// FlutterViewController at a time. Sharing it detaches the previous window.
+  func makeSceneEngine(name: String) -> FlutterEngine {
+    let engine = FlutterEngine(name: name)
     engine.run()
     GeneratedPluginRegistrant.register(with: engine)
+    setupFileProviderChannel(messenger: engine.binaryMessenger)
     return engine
-  }()
+  }
 
   override func application(
     _ application: UIApplication,
@@ -58,9 +59,6 @@ import workmanager_apple
         )
       }
     }
-
-    // Pre-warm the engine so the first scene connects instantly.
-    _ = flutterEngine
 
     // When UIApplicationSceneManifest is present (multi-window) the system
     // creates FlutterViewControllers through SceneDelegate, so we only need

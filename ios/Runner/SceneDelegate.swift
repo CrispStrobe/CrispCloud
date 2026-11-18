@@ -14,8 +14,8 @@
 // 3. Handle NSUserActivity (Siri shortcuts, Handoff, Spotlight) and route
 //    them to the appropriate Flutter service via their respective channels.
 //
-// One SceneDelegate instance is created per window.  Flutter shares one
-// engine (managed by AppDelegate.flutterEngine) across all scenes.
+// One SceneDelegate and Flutter engine are created per window. Flutter's scene
+// delegate forwards activation, URL and plugin lifecycle events to that engine.
 
 import UIKit
 import Flutter
@@ -24,9 +24,9 @@ import PDFKit
 import QuickLook
 
 @available(iOS 13.0, *)
-class SceneDelegate: UIResponder, UIWindowSceneDelegate {
+class SceneDelegate: FlutterSceneDelegate {
 
-    var window: UIWindow?
+    private var sceneEngine: FlutterEngine?
 
     // MethodChannels for this scene's Flutter view controller.
     private var multiWindowChannel: FlutterMethodChannel?
@@ -38,19 +38,24 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     // MARK: - Scene lifecycle
 
-    func scene(
+    override func scene(
         _ scene: UIScene,
         willConnectTo session: UISceneSession,
         options connectionOptions: UIScene.ConnectionOptions
     ) {
         guard let windowScene = scene as? UIWindowScene else { return }
 
-        // Re-use the shared Flutter engine set up in AppDelegate so all
-        // scenes share one Dart isolate.
-        let engine = (UIApplication.shared.delegate as? AppDelegate)?.flutterEngine
-            ?? FlutterEngine(name: "scene_engine_\(session.persistentIdentifier)")
+        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else { return }
+        let engine = appDelegate.makeSceneEngine(
+            name: "scene_engine_\(session.persistentIdentifier)"
+        )
+        sceneEngine = engine
+        registerSceneLifeCycle(with: engine)
 
         let controller = FlutterViewController(engine: engine, nibName: nil, bundle: nil)
+        controller.setFlutterViewDidRenderCallback {
+            NSLog("[CrispCloud] First Flutter frame rendered")
+        }
 
         let newWindow = UIWindow(windowScene: windowScene)
         newWindow.rootViewController = controller
@@ -59,6 +64,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         setupChannels(messenger: controller.binaryMessenger,
                       sceneId: session.persistentIdentifier)
+
+        super.scene(scene, willConnectTo: session, options: connectionOptions)
 
         notifyWindowStateChanged()
 
@@ -70,21 +77,25 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         NSLog("[CrispCloud] Scene connected: \(session.persistentIdentifier)")
     }
 
-    func sceneDidDisconnect(_ scene: UIScene) {
+    override func sceneDidDisconnect(_ scene: UIScene) {
+        super.sceneDidDisconnect(scene)
         NSLog("[CrispCloud] Scene disconnected")
         notifyWindowStateChanged()
     }
 
-    func sceneDidBecomeActive(_ scene: UIScene) {
+    override func sceneDidBecomeActive(_ scene: UIScene) {
+        super.sceneDidBecomeActive(scene)
         NSLog("[CrispCloud] Scene became active")
         notifyWindowStateChanged()
     }
 
-    func sceneWillResignActive(_ scene: UIScene) {
+    override func sceneWillResignActive(_ scene: UIScene) {
+        super.sceneWillResignActive(scene)
         NSLog("[CrispCloud] Scene will resign active")
     }
 
-    func scene(_ scene: UIScene, continue userActivity: NSUserActivity) {
+    override func scene(_ scene: UIScene, continue userActivity: NSUserActivity) {
+        super.scene(scene, continue: userActivity)
         handleUserActivity(userActivity)
     }
 
@@ -227,15 +238,20 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             result(nil)
 
         case "removeAllShortcuts":
-            if #available(iOS 12.0, *) {
-                INVoiceShortcutCenter.shared.getAllVoiceShortcuts { shortcuts, _ in
-                    shortcuts?.forEach { vs in
-                        INVoiceShortcutCenter.shared.deleteVoiceShortcut(
-                            withIdentifier: vs.identifier) { _, _ in }
+            // Apps can remove their donations and suggestions, but cannot
+            // delete voice shortcuts that the user owns in the Shortcuts app.
+            INVoiceShortcutCenter.shared.setShortcutSuggestions([])
+            INInteraction.deleteAll { error in
+                DispatchQueue.main.async {
+                    if let error = error {
+                        result(FlutterError(code: "SHORTCUT_DELETE_FAILED",
+                                            message: error.localizedDescription,
+                                            details: nil))
+                    } else {
+                        result(nil)
                     }
                 }
             }
-            result(nil)
 
         default:
             result(FlutterMethodNotImplemented)
@@ -313,6 +329,10 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     private func requestNewScene(label: String, result: @escaping FlutterResult) {
+        guard UIApplication.shared.supportsMultipleScenes else {
+            result(false)
+            return
+        }
         let options  = UIWindowScene.ActivationRequestOptions()
         let activity = NSUserActivity(activityType: "com.crispcloud.newwindow")
         activity.title = label
@@ -322,13 +342,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             userActivity: activity,
             options: options
         ) { error in
-            if let error = error {
-                NSLog("[CrispCloud] requestSceneSessionActivation error: \(error.localizedDescription)")
-                result(false)
-            } else {
-                result(true)
-            }
+            NSLog("[CrispCloud] requestSceneSessionActivation error: \(error.localizedDescription)")
         }
+        // UIKit invokes the handler only on failure. A successful request has
+        // no completion callback; windowStateChanged reports the actual scene.
+        result(true)
     }
 
     private func closeScene(withId sceneId: String) {
