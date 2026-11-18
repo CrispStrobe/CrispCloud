@@ -1,4 +1,5 @@
 import 'office_dimension_dialog.dart';
+import 'office_spacy_analysis_dialog.dart';
 // lib/widgets/office_editor_ribbon.dart
 //
 // Host ribbon for the embedded Quds Office editors. The package paints the
@@ -7,6 +8,8 @@ import 'office_dimension_dialog.dart';
 // commands, sheet formatting, slide transitions and animations.
 
 import 'dart:math' as math;
+import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart'
@@ -17,6 +20,7 @@ import 'package:quds_office_editor/quds_office_editor.dart';
 import '../l10n/office_editor_strings.dart';
 import '../l10n/office_ribbon_control_strings.dart';
 import '../services/office_editor_menu.dart';
+import '../services/office_device_export.dart';
 import '../services/office_picture.dart';
 import 'office_editor_dialogs.dart';
 import 'office_page_layout_dialog.dart';
@@ -1127,11 +1131,29 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
           _group('Proofing', <Widget>[
             _bigButton(Icons.analytics_outlined, 'Word count', _wordCount),
             _bigButton(Icons.spellcheck, 'Spell check', _spellCheck),
+            _bigButton(Icons.manage_search, 'German analysis', () {
+              showOfficeSpacyAnalysisDialog(
+                context,
+                _word.document.paragraphs
+                    .map((paragraph) => paragraph.text)
+                    .join('\n'),
+              );
+            }),
           ]),
           _group('Comments', <Widget>[
             _bigButton(Icons.comment_outlined, 'New comment', _insertComment),
           ]),
           _group('Tracking', <Widget>[
+            _bigButton(
+              Icons.rate_review_outlined,
+              'Review changes',
+              () => _reviewWord(WordReviewTab.changes),
+            ),
+            _bigButton(
+              Icons.compare_arrows,
+              'Compare documents',
+              () => _reviewWord(WordReviewTab.compare),
+            ),
             _bigButton(
               Icons.track_changes,
               _trackChanges ? 'Tracking on' : 'Track changes',
@@ -3338,17 +3360,39 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
     }
   }
 
+  Future<void> _reviewWord(WordReviewTab tab) => showWordReviewDialog(
+    context,
+    controller: _word,
+    documentName: widget.title.isEmpty ? 'Current document' : widget.title,
+    initialTab: tab,
+    pickDocument: () async {
+      final picked = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: const ['docx', 'docm', 'dotx', 'dotm'],
+        withData: true,
+      );
+      if (picked == null || picked.files.isEmpty) return null;
+      final file = picked.files.single;
+      final bytes = file.bytes;
+      if (bytes == null || bytes.isEmpty || bytes.length > 64 * 1024 * 1024) {
+        throw const FormatException(
+          'Choose a Word document smaller than 64 MiB.',
+        );
+      }
+      final document = await compute(_decodeComparisonWord, bytes);
+      return WordComparisonDocument(document: document, name: file.name);
+    },
+    onExportReport: (name, json) async =>
+        await exportOfficeCopy(
+          Uint8List.fromList(utf8.encode(json)),
+          name,
+          'Export comparison report',
+        ) !=
+        null,
+  );
+
   void _spellCheck() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          context.tr(
-            'Spell checking uses the host integration. No spell-check provider '
-            'is configured in this build.',
-          ),
-        ),
-      ),
-    );
+    showWordProofingDialog(context, controller: _word);
   }
 
   // ---------------------------------------------------------------------------
@@ -3988,4 +4032,35 @@ class _SlideTextColorCommand implements OfficeCommand {
 
   @override
   OfficeCommand invert() => this;
+}
+
+WmlDocument _decodeComparisonWord(Uint8List bytes) {
+  final package = OpcPackage.openBytes(bytes);
+  if (package.kind != OpcPackageKind.word) {
+    throw const FormatException('Choose a Word document.');
+  }
+  final relationship = package.packageRelationships.firstByType(
+    RelationshipTypes.officeDocument,
+  );
+  if (relationship == null) {
+    throw const FormatException('The Word document content is missing.');
+  }
+  final part = package.getPart(
+    package.packageRelationships.resolve(relationship),
+  );
+  if (part == null) {
+    throw const FormatException('The Word document content is missing.');
+  }
+  final root = XmlDocument.parse(part.readText()).root;
+  if (root?.localName != 'document' ||
+      !{
+        OfficeNamespaces.w,
+        'http://purl.oclc.org/ooxml/wordprocessingml/main',
+      }.contains(root?.namespaceUri) ||
+      !root!.childElements.any((element) => element.localName == 'body')) {
+    throw const FormatException(
+      'The package does not contain a Word document.',
+    );
+  }
+  return WordDeserializer().read(package);
 }

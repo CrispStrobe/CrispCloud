@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'support/office_golden.dart';
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
@@ -186,7 +187,7 @@ void main() {
         );
         await expectLater(
           find.byKey(_pageKey),
-          matchesGoldenFile('goldens/table_grid_$phase.png'),
+          matchesGoldenFile(officeGolden('table_grid_$phase.png')),
           reason: 'Independently authored $phase visual reference',
         );
 

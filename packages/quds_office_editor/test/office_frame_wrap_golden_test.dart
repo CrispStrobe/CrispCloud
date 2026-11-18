@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'support/office_golden.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -48,7 +49,7 @@ void main() {
         await tester.pumpAndSettle();
         await expectLater(
           find.byKey(const ValueKey('frame-page')),
-          matchesGoldenFile('goldens/frame_wrap_${wrap.name}.png'),
+          matchesGoldenFile(officeGolden('frame_wrap_${wrap.name}.png')),
           reason: '${wrap.name} cycle $cycle',
         );
         if (cycle < 3) {

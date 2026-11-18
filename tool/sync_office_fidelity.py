@@ -29,8 +29,8 @@ def digest(data):
     return hashlib.sha256(data).hexdigest()
 
 
-def git(source, *args, optional=False):
-    result = subprocess.run(['git', '-C', str(source), *args], capture_output=True)
+def git(source, *args, optional=False, input_data=None):
+    result = subprocess.run(['git', '-C', str(source), *args], capture_output=True, input=input_data)
     if result.returncode:
         if optional:
             return None
@@ -94,9 +94,37 @@ def shared(name):
     if (parts[:3] == ('packages', 'quds_office_engine', 'third_party')
             and len(parts) >= 5 and parts[3] in ('hyphenation', 'proofing', 'fonttools')):
         return True
-    if len(parts) < 3 or parts[0] != 'packages' or parts[1] not in ('quds_office_engine', 'quds_office_editor', 'legacy_doc_parser', 'quds_reports'):
+    if len(parts) < 3 or parts[0] != 'packages' or parts[1] not in ('quds_office_engine', 'quds_office_editor', 'legacy_doc_parser', 'quds_reports', 'quds_proofing_spacy'):
         return False
     return parts[2] in ('lib', 'test', 'tool', 'CHANGELOG.md')
+
+
+def source_files(source, ref, names):
+    """Read a frozen source inventory in one Git process, including missing files."""
+    names = sorted(names)
+    for name in names:
+        safe_path(name)
+    requests = [f'{ref}:{name}' for name in names]
+    result = git(source, 'cat-file', '--batch', input_data=('\n'.join(requests) + '\n').encode())
+    output, offset = {}, 0
+    for name in names:
+        end = result.index(b'\n', offset)
+        header = result[offset:end].split()
+        offset = end + 1
+        if header[-1] == b'missing':
+            output[name] = None
+            continue
+        if len(header) != 3 or header[1] != b'blob':
+            raise SyncError(f'Expected a regular source blob: {name}')
+        size = int(header[2])
+        output[name] = result[offset:offset + size]
+        offset += size
+        if result[offset:offset + 1] != b'\n':
+            raise SyncError('Malformed Git blob stream')
+        offset += 1
+    if offset != len(result):
+        raise SyncError('Unexpected trailing Git blob data')
+    return output
 
 
 def plan(source, target_root, ref, branch=None):
@@ -107,18 +135,22 @@ def plan(source, target_root, ref, branch=None):
     target = git(source, 'rev-parse', '--verify', '--end-of-options', ref+'^{commit}').decode().strip()
     git(source, 'cat-file', '-e', base+'^{commit}')
     expected = manifest['files']
+    tree = git(source, 'diff', '--name-only', '--no-renames', base, target).decode().splitlines()
+    tree += git(source, 'ls-tree', '-r', '--name-only', target, '--',
+                'packages/quds_proofing_spacy').decode().splitlines()
+    names = sorted({name for name in expected if not standalone_path(name, independent)} |
+                   {name for name in tree if shared(name) and not standalone_path(name, independent)})
+    originals = source_files(source, base, names)
+    incoming = source_files(source, target, names)
     for name, sha in expected.items():
         safe_path(name)
         path = target_root/name
         if path.is_symlink() or not path.is_file() or digest(path.read_bytes()) != sha:
             raise SyncError(f'Vendor drift: {name}; reconcile the host change first')
         if not standalone_path(name, independent):
-            original = git(source, 'show', f'{base}:{name}')
+            original = originals[name]
             if digest(original) != sha:
                 raise SyncError(f'Manifest does not match its source commit: {name}')
-    changed = git(source, 'diff', '--name-only', '--no-renames', base, target).decode().splitlines()
-    names = sorted({name for name in expected if not standalone_path(name, independent)} |
-                   {name for name in changed if shared(name) and not standalone_path(name, independent)})
     writes, deletes = {}, []
     hashes = {name: sha for name, sha in expected.items() if standalone_path(name, independent)}
     for name in names:
@@ -127,10 +159,11 @@ def plan(source, target_root, ref, branch=None):
         # Check ancestors as well: a symlinked directory could escape the repo.
         if not path.resolve().is_relative_to(target_root.resolve()):
             raise SyncError(f'Path escapes the host checkout: {name}')
-        before = git(source, 'show', f'{base}:{name}', optional=True)
-        after = git(source, 'show', f'{target}:{name}', optional=True)
+        before = originals[name]
+        after = incoming[name]
         current = path.read_bytes() if path.is_file() else None
-        if path.is_symlink() or current not in (before, after):
+        if path.is_symlink() or (current not in (before, after)
+                                 and not (current is None and name not in expected)):
             raise SyncError(f'Unsynced host customization: {name}')
         if after is None:
             if current is not None:

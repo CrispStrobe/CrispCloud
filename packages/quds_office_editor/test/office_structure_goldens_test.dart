@@ -1,5 +1,6 @@
-import 'dart:convert';
 import 'dart:io';
+import 'support/office_golden.dart';
+import 'dart:convert';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
@@ -24,8 +25,7 @@ WmlDocument _authoredSource() {
 String _structureGolden(String phase, int page) {
   // Host rasterization differs even with the bundled faces; keep reviewed
   // references per host like the word-selection golden.
-  final directory = Platform.isLinux ? 'linux/' : '';
-  return 'goldens/${directory}structure_${phase}_${page + 1}.png';
+  return officeGolden('structure_${phase}_${page + 1}.png');
 }
 
 void _applyPhase(WmlDocument document, String phase) {

@@ -279,15 +279,22 @@ class ZoteroClient {
   }
 
   /// Executes an existing saved search in Zotero, with an optional additional
-  /// title/creator/year filter. Pagination and sorting happen in Zotero before
-  /// results are returned. Notes/attachments may be returned by the saved
-  /// search; callers should use [ZoteroItem.isCitable] for citation selection.
+  /// quick-search, single item-type filter and literal [tags]. Every tag must
+  /// match. Pagination and sorting happen in Zotero before results are returned.
+  /// Notes/attachments may be returned by the saved search; callers should use
+  /// [ZoteroItem.isCitable] for citation selection. See [normalizeZoteroTags] for
+  /// tag input limits and names that Zotero cannot represent literally.
   Future<ZoteroPage<ZoteroItem>> savedSearchItems(
     ZoteroLibrary library,
     String searchKey, {
     String query = '',
     int start = 0,
     int limit = 50,
+    ZoteroSearchMode searchMode = ZoteroSearchMode.titleCreatorYear,
+    ZoteroItemSort sort = ZoteroItemSort.dateModified,
+    ZoteroSortDirection direction = ZoteroSortDirection.descending,
+    String? itemType,
+    List<String> tags = const [],
   }) async {
     _requireLocalSearches();
     validateZoteroKey(searchKey);
@@ -298,6 +305,11 @@ class ZoteroClient {
         query: query,
         start: start,
         limit: limit,
+        searchMode: searchMode,
+        sort: sort,
+        direction: direction,
+        itemType: itemType,
+        tags: tags,
       );
     } on ZoteroApiException catch (error) {
       if (error.kind != ZoteroApiErrorKind.notFound) rethrow;
@@ -318,18 +330,39 @@ class ZoteroClient {
 
   /// Browses/searches top-level items. [ZoteroItem.isCitable] distinguishes
   /// bibliographic items from standalone notes and attachments.
+  /// Filters and ordering apply to the whole library or collection, before
+  /// pagination. [itemType] accepts one Zotero type name, such as `book` or
+  /// `journalArticle`; it does not accept Boolean search expressions.
+  /// Every literal [tags] value must match. See [normalizeZoteroTags] for input
+  /// limits and names that Zotero cannot represent literally.
   Future<ZoteroPage<ZoteroItem>> items(
     ZoteroLibrary library, {
     String? collectionKey,
     String query = '',
     int start = 0,
     int limit = 50,
+    ZoteroSearchMode searchMode = ZoteroSearchMode.titleCreatorYear,
+    ZoteroItemSort sort = ZoteroItemSort.dateModified,
+    ZoteroSortDirection direction = ZoteroSortDirection.descending,
+    String? itemType,
+    List<String> tags = const [],
   }) async {
     if (collectionKey != null) validateZoteroKey(collectionKey);
     final path = collectionKey == null
         ? '${_libraryPath(library)}/items/top'
         : '${_libraryPath(library)}/collections/$collectionKey/items/top';
-    return _items(library, path, query: query, start: start, limit: limit);
+    return _items(
+      library,
+      path,
+      query: query,
+      start: start,
+      limit: limit,
+      searchMode: searchMode,
+      sort: sort,
+      direction: direction,
+      itemType: itemType,
+      tags: tags,
+    );
   }
 
   Future<ZoteroPage<ZoteroItem>> _items(
@@ -338,18 +371,36 @@ class ZoteroClient {
     required String query,
     required int start,
     required int limit,
+    required ZoteroSearchMode searchMode,
+    required ZoteroItemSort sort,
+    required ZoteroSortDirection direction,
+    required String? itemType,
+    required List<String> tags,
   }) async {
     if (query.length > 1024 || RegExp(r'[\x00-\x1f\x7f]').hasMatch(query)) {
       throw ArgumentError('Use a Zotero search of at most 1024 characters.');
     }
+    if (itemType != null &&
+        !RegExp(r'^[a-zA-Z][a-zA-Z0-9]{0,63}$').hasMatch(itemType)) {
+      throw ArgumentError('Use a single Zotero item type, such as book.');
+    }
     final text = query.trim();
-    final parameters = {
+    final tagFilters = normalizeZoteroTags(tags);
+    final parameters = <String, Object>{
       ..._pagination(start, limit),
       'include': 'data,csljson',
-      'sort': 'dateModified',
-      'direction': 'desc',
+      'sort': sort.name,
+      'direction': direction.apiValue,
+      'itemType': ?itemType,
       if (text.isNotEmpty) 'q': text,
-      if (text.isNotEmpty) 'qmode': 'titleCreatorYear',
+      if (text.isNotEmpty) 'qmode': searchMode.name,
+      if (tagFilters.isNotEmpty)
+        'tag': [
+          for (final tag in tagFilters)
+            // Repeated parameters mean AND. Escape an initial hyphen so a
+            // literal name never becomes Zotero's exclusion operator.
+            tag.startsWith('-') ? '\\$tag' : tag,
+        ],
     };
     final uri = _uri(path, parameters);
     final response = await _request(uri);
@@ -672,7 +723,7 @@ class ZoteroClient {
     return library.apiPath;
   }
 
-  Uri _uri(String path, [Map<String, String> parameters = const {}]) => isLocal
+  Uri _uri(String path, [Map<String, Object> parameters = const {}]) => isLocal
       ? Uri.http(
           'localhost:23119',
           '/api$path',
@@ -888,6 +939,10 @@ class ZoteroClient {
       version: _integer(json['version']) ?? 0,
       doi: _string(data['DOI']),
       url: _string(data['url']),
+      abstractNote: _string(data['abstractNote']),
+      publicationTitle: _publicationTitle(data, itemType),
+      publisher: _string(data['publisher']),
+      tags: _itemTags(data['tags']),
       creators: creators is List
           ? creators.map((value) {
               final creator = _object(value);
@@ -906,6 +961,35 @@ class ZoteroClient {
           : null,
       bibliographyHtml: json['bib'] is String ? json['bib'] as String : null,
     );
+  }
+
+  static String _publicationTitle(Map<String, dynamic> data, String itemType) {
+    // Zotero's schema maps these type-specific fields to publicationTitle.
+    final field = switch (itemType) {
+      'blogPost' => 'blogTitle',
+      'bookSection' => 'bookTitle',
+      'conferencePaper' => 'proceedingsTitle',
+      'dictionaryEntry' => 'dictionaryTitle',
+      'encyclopediaArticle' => 'encyclopediaTitle',
+      'forumPost' => 'forumTitle',
+      'presentation' => 'sessionTitle',
+      'radioBroadcast' || 'tvBroadcast' => 'programTitle',
+      'webpage' => 'websiteTitle',
+      _ => 'publicationTitle',
+    };
+    final title = _string(data[field]);
+    return title.isEmpty ? _string(data['publicationTitle']) : title;
+  }
+
+  static List<String> _itemTags(Object? value) {
+    if (value is! List<Object?>) return const [];
+    final tags = <String>[];
+    for (final entry in value) {
+      if (entry is! Map<String, dynamic>) continue;
+      final name = entry['tag'];
+      if (name is String && name.isNotEmpty) tags.add(name);
+    }
+    return tags;
   }
 
   /// Desktop exports include a one-element CSL array as a JSON string;

@@ -127,6 +127,7 @@ export 'src/word/model/word_lists.dart';
 export 'src/word/model/word_mail_merge.dart';
 export 'src/word/model/word_notes.dart';
 export 'src/word/model/word_revision.dart';
+export 'src/word/model/word_comparison.dart';
 export 'src/word/model/word_small_caps.dart';
 export 'src/word/model/word_styles.dart';
 export 'src/word/model/word_table.dart';

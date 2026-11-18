@@ -176,6 +176,39 @@ final class LinguisticSentence {
   };
 }
 
+/// An optional named-entity span covering whole tokens of one analysis unit.
+///
+/// Entities are reported only when the loaded native runtime provides an
+/// entity recognizer; Dart never infers them. Offsets follow the token
+/// convention: half-open UTF-16 offsets relative to the request text.
+final class LinguisticEntity {
+  const LinguisticEntity({
+    required this.startToken,
+    required this.endToken,
+    required this.start,
+    required this.end,
+    required this.label,
+    required this.text,
+  });
+
+  /// Half-open token range.
+  final int startToken;
+  final int endToken;
+  final int start;
+  final int end;
+  final String label;
+  final String text;
+
+  Map<String, Object> toJson() => {
+    'start_token': startToken,
+    'end_token': endToken,
+    'start_utf16': start,
+    'end_utf16': end,
+    'label': label,
+    'text': text,
+  };
+}
+
 final class LinguisticAnalysisResult {
   LinguisticAnalysisResult._(
     this.request,
@@ -183,13 +216,18 @@ final class LinguisticAnalysisResult {
     this.message,
     this.identity,
     this.tokens,
-    this.sentences,
-  );
+    this.sentences, {
+    this.entities = const [],
+    this.entitiesAvailable = false,
+  });
 
+  /// [entities] is null when the runtime has no entity recognizer, which is
+  /// distinct from an empty list (recognizer ran and found nothing).
   factory LinguisticAnalysisResult.success({
     required LinguisticAnalysisRequest request,
     required SpacyBackendIdentity identity,
     required Iterable<LinguisticToken> tokens,
+    Iterable<LinguisticEntity>? entities,
   }) {
     identity.validate();
     if (request.locale != 'de-DE') {
@@ -197,6 +235,10 @@ final class LinguisticAnalysisResult {
     }
     final owned = List<LinguisticToken>.unmodifiable(tokens);
     final sentences = _validateAnalysis(request, owned);
+    final ownedEntities = entities == null
+        ? const <LinguisticEntity>[]
+        : List<LinguisticEntity>.unmodifiable(entities);
+    if (entities != null) _validateEntities(request, owned, ownedEntities);
     return LinguisticAnalysisResult._(
       request,
       LinguisticAnalysisStatus.success,
@@ -204,6 +246,8 @@ final class LinguisticAnalysisResult {
       identity,
       owned,
       List.unmodifiable(sentences),
+      entities: ownedEntities,
+      entitiesAvailable: entities != null,
     );
   }
 
@@ -232,6 +276,12 @@ final class LinguisticAnalysisResult {
   final SpacyBackendIdentity? identity;
   final List<LinguisticToken> tokens;
   final List<LinguisticSentence> sentences;
+
+  /// Optional named entities; empty when unavailable or none were found.
+  final List<LinguisticEntity> entities;
+
+  /// Whether the runtime reported entity recognition for this result.
+  final bool entitiesAvailable;
   bool get isSuccess => status == LinguisticAnalysisStatus.success;
   static const capabilities = <String>{
     'tokens',
@@ -248,7 +298,30 @@ final class LinguisticAnalysisResult {
     'identity': identity?.toJson(),
     'tokens': tokens.map((token) => token.toJson()).toList(),
     'sentences': sentences.map((sentence) => sentence.toJson()).toList(),
+    if (entitiesAvailable)
+      'entities': entities.map((entity) => entity.toJson()).toList(),
   };
+}
+
+void _validateEntities(
+  LinguisticAnalysisRequest request,
+  List<LinguisticToken> tokens,
+  List<LinguisticEntity> entities,
+) {
+  var previousEnd = 0;
+  for (final entity in entities) {
+    if (entity.startToken < previousEnd ||
+        entity.endToken <= entity.startToken ||
+        entity.endToken > tokens.length ||
+        entity.label.isEmpty ||
+        entity.label.length > 64 ||
+        entity.start != tokens[entity.startToken].start ||
+        entity.end != tokens[entity.endToken - 1].end ||
+        request.text.substring(entity.start, entity.end) != entity.text) {
+      throw const FormatException('Invalid native entity span.');
+    }
+    previousEnd = entity.endToken;
+  }
 }
 
 List<LinguisticSentence> _validateAnalysis(

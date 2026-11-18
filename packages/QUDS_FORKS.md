@@ -445,3 +445,8 @@ section activation for ODT tables of contents, restores bounded PAGE/NUMPAGES
 conversion with cache/style/link preservation, and suppresses ambiguous bookmark
 ends. Incoming chart-table export and production ODF cell/story workflows remain
 intact. The native spaCy backend is separate work.
+
+
+## MacBook integration, 18 November 2026
+
+Current canonical pin: `ca42a7fa3947d0b59b9b2d3e14e807116327d714`. Includes the upstream main reconciliation and current spelling, Zotero, review/comparison and optional spaCy sources. `tool/office_fidelity_manifest.json` is the authoritative managed inventory; the separate legacy parser pin is retained.

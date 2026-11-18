@@ -208,18 +208,17 @@ void main() {
     expect(letter.paragraphs.first.text, 'Hello Ada');
     final WmlDocument original = WmlDocument.empty(text: 'Hello');
     final WmlDocument revised = WmlDocument.empty(text: 'Hello world');
-    WordCompare.compare(original, revised);
-    expect(revised.revisions, isNotEmpty);
+    final compared = WordCompare.diff(original, revised);
+    expect(compared.modifiedCount, 1);
+    expect(revised.revisions, isEmpty);
+    expect(revised.paragraphs.first.text, 'Hello world');
     final WmlDocument shorter = WmlDocument.empty(text: 'Keep');
     shorter.sections.first.blocks.add(
       WmlParagraph(inlines: <WmlInline>[WmlRun(text: 'Gone')]),
     );
     final WmlDocument kept = WmlDocument.empty(text: 'Keep');
-    WordCompare.compare(shorter, kept);
-    expect(
-      kept.revisions.any((WmlRevision r) => r.kind == WmlRevisionKind.delete),
-      isTrue,
-    );
+    expect(WordCompare.diff(shorter, kept).deletedCount, 1);
+    expect(kept.revisions, isEmpty);
     WordCitations.insert(
       letter,
       letter.paragraphs.first,

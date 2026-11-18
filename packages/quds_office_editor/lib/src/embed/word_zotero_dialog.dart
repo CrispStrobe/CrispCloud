@@ -8,6 +8,8 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'office_controller.dart';
 import 'word_zotero_format.dart';
+import 'word_zotero_library.dart';
+import 'word_zotero_sources.dart';
 
 /// Connection preferences belong to the host session, never to a document.
 class ZoteroSession {
@@ -91,8 +93,17 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
   late final TextEditingController _style;
   late final TextEditingController _locale;
   final _search = TextEditingController();
+  final _tag = TextEditingController();
   final _libraryId = TextEditingController();
   final _import = TextEditingController();
+  String _submittedSearch = '';
+  List<String> _tags = const [];
+  String? _tagError;
+  var _searchMode = ZoteroSearchMode.titleCreatorYear;
+  var _itemSort = ZoteroItemSort.dateModified;
+  var _sortDirection = ZoteroSortDirection.descending;
+  String? _itemType;
+  var _searchOptionsExpanded = false;
   late Object _target;
   ZoteroClient? _client;
   ZoteroKeyInfo? _identity;
@@ -158,6 +169,7 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
       _style,
       _locale,
       _search,
+      _tag,
       _libraryId,
       _import,
     ]) {
@@ -373,7 +385,10 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
     });
   }
 
-  Future<void> _loadItems({int start = 0}) async {
+  Future<void> _loadItems({
+    int start = 0,
+    bool useSubmittedQuery = false,
+  }) async {
     final library = _session.library;
     final client = _client;
     if (library == null || client == null) return;
@@ -381,22 +396,129 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
     _page = null;
     final searchKey = _savedSearchKey;
     if (_savedSearchMode && searchKey == null) return;
+    // Editing the search box does not change the query behind an existing
+    // page. Both forward and backward paging use the last submitted text.
+    if (!useSubmittedQuery) _submittedSearch = _search.text;
     final page = _savedSearchMode
         ? await client.savedSearchItems(
             library,
             searchKey!,
-            query: _search.text,
+            query: _submittedSearch,
             start: start,
+            searchMode: _searchMode,
+            sort: _itemSort,
+            direction: _sortDirection,
+            itemType: _itemType,
+            tags: _tags,
           )
         : await client.items(
             library,
             collectionKey: _collectionKey,
-            query: _search.text,
+            query: _submittedSearch,
             start: start,
+            searchMode: _searchMode,
+            sort: _itemSort,
+            direction: _sortDirection,
+            itemType: _itemType,
+            tags: _tags,
           );
     if (_catalogIsCurrent(client, library, generation)) {
       setState(() => _page = page);
     }
+  }
+
+  Future<void> _addTag() => _applyTag(_tag.text, clearDraft: true);
+
+  Future<void> _applyTag(
+    String value, {
+    required bool clearDraft,
+    bool requireExact = false,
+  }) async {
+    if (_busy || (_savedSearchMode && _savedSearchKey == null)) return;
+    try {
+      final tag = normalizeZoteroTags([value]).single;
+      if (requireExact && tag != value) {
+        throw const FormatException(
+          'Tags with surrounding spaces cannot be filtered exactly here.',
+        );
+      }
+      if (_tags.contains(tag)) {
+        setState(() {
+          if (clearDraft) _tag.clear();
+          _tagError = null;
+        });
+        return;
+      }
+      final tags = normalizeZoteroTags([..._tags, tag]);
+      setState(() {
+        _tags = tags;
+        if (clearDraft) _tag.clear();
+        _tagError = null;
+      });
+    } on FormatException catch (error) {
+      setState(() => _tagError = error.message);
+      return;
+    }
+    // Tag actions filter the current search. Draft text in either input is
+    // never silently submitted by paging, removing a tag or clearing filters.
+    await _run(() => _loadItems(useSubmittedQuery: true));
+  }
+
+  Future<void> _showItemDetails(ZoteroItem item) async {
+    if (_busy) return;
+    final client = _client;
+    final library = _session.library;
+    final generation = _catalogGeneration;
+    if (client == null || library == null) return;
+    final tag = await showDialog<String>(
+      context: context,
+      builder: (_) => ZoteroItemDetailsDialog(item: item, activeTags: _tags),
+    );
+    if (tag == null || !_catalogIsCurrent(client, library, generation)) return;
+    await _applyTag(tag, clearDraft: false, requireExact: true);
+  }
+
+  Future<void> _reviewSelection() async {
+    if (_busy || _selected.isEmpty) return;
+    final selection = Map<String, ZoteroCitationItem>.of(_selected);
+    final keys = await showDialog<List<String>>(
+      context: context,
+      builder: (_) => ZoteroSelectedReferencesDialog(selection: selection),
+    );
+    if (!mounted || keys == null) return;
+    // Do not overwrite a selection changed while another route was open.
+    if (_selected.length != selection.length ||
+        selection.entries.any(
+          (entry) => !identical(_selected[entry.key], entry.value),
+        )) {
+      return;
+    }
+    setState(() {
+      _selected
+        ..clear()
+        ..addEntries(keys.map((key) => MapEntry(key, selection[key]!)));
+    });
+  }
+
+  Widget _reviewSelectionButton(String key) => TextButton.icon(
+    key: ValueKey(key),
+    onPressed: _busy || _selected.isEmpty ? null : _reviewSelection,
+    icon: const Icon(Icons.checklist),
+    label: const Text('Review selected'),
+  );
+
+  Future<void> _removeTag(String tag) async {
+    if (_busy) return;
+    setState(
+      () => _tags = List.unmodifiable(_tags.where((item) => item != tag)),
+    );
+    await _run(() => _loadItems(useSubmittedQuery: true));
+  }
+
+  Future<void> _clearTags() async {
+    if (_busy || _tags.isEmpty) return;
+    setState(() => _tags = const []);
+    await _run(() => _loadItems(useSubmittedQuery: true));
   }
 
   bool _catalogIsCurrent(
@@ -952,9 +1074,13 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
     String text;
     ZoteroFormattedText? formattedText;
     if (online) {
+      final resolver = ZoteroSourceResolver(
+        items,
+        local: _client?.isLocal ?? _useLocal,
+      );
       final addresses = <String, ZoteroSourceAddress>{};
       for (final item in items) {
-        final address = _addressOf(item);
+        final address = resolver.addressOf(item);
         if (address == null) {
           throw const FormatException(
             'Some sources cannot be resolved through this library connection. Use the basic bibliography or copy embedded CSL JSON.',
@@ -1012,7 +1138,8 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
   Future<void> _refresh() => _run(() async {
     _checkTarget();
     if (_client == null) throw StateError('Connect a Zotero library first.');
-    final fields = _controller.zoteroFields
+    final allFields = _controller.zoteroFields;
+    final fields = allFields
         .where(
           (field) =>
               field.citation != null &&
@@ -1031,10 +1158,18 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
     }
     // Validate the whole operation before making a request. In particular, an
     // online connection must not partially fetch a document with local sources.
+    // Custom/native citations may declare aliases for a basic source without
+    // being eligible for replacement themselves.
+    final resolver = ZoteroSourceResolver(
+      allFields.expand(
+        (field) => field.citation?.items ?? const <ZoteroCitationItem>[],
+      ),
+      local: _client!.isLocal,
+    );
     final addresses = <String, ZoteroSourceAddress>{};
     for (final field in fields) {
       for (final item in field.citation!.items) {
-        final address = _addressOf(item);
+        final address = resolver.addressOf(item);
         if (address == null) continue;
         _connectedClient(address);
         addresses[address.canonicalUri.toString()] = address;
@@ -1094,7 +1229,7 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
       final citation = field.citation!;
       final items = <ZoteroCitationItem>[];
       for (final item in citation.items) {
-        final address = _addressOf(item);
+        final address = resolver.addressOf(item);
         final data = address == null
             ? null
             : fetched[address.canonicalUri.toString()];
@@ -1252,12 +1387,13 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
                     children: [
                       _scrollableTab(
                         _libraryTab(),
-                        minHeight: size.width < 600
-                            ? (widget.localTransport == null ? 820 : 960)
-                            : (widget.localTransport == null ? 660 : 800),
+                        minHeight: _catalogMinHeight(size),
                       ),
                       _documentTab(),
-                      _scrollableTab(_importTab(), minHeight: 600),
+                      _scrollableTab(
+                        _importTab(),
+                        minHeight: size.width < 600 ? 656 : 600,
+                      ),
                     ],
                   ),
                 ),
@@ -1279,6 +1415,22 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
         ),
       );
 
+  double _catalogMinHeight(Size size) {
+    final narrow = size.width < 600;
+    // Selection review adds another wrapped action row on narrow screens.
+    // Keep space for that row as well as the existing results viewport.
+    final base = narrow
+        ? (widget.localTransport == null ? 876.0 : 1016.0)
+        : (widget.localTransport == null ? 660.0 : 800.0);
+    if (_session.library == null || !_searchOptionsExpanded) return base;
+    // Expanded options wrap at narrow widths. Preserve a usable results list
+    // while keeping the default catalog and its paging controls compact.
+    return base +
+        (size.width < 380 ? 520 : (narrow ? 340 : 180)) +
+        140 +
+        (_tags.isEmpty ? 0 : 220);
+  }
+
   Widget _banner(String text, {bool error = false}) => Container(
     width: double.infinity,
     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
@@ -1287,6 +1439,251 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
         : Theme.of(context).colorScheme.surfaceContainerHigh,
     child: Text(text, maxLines: 4, overflow: TextOverflow.ellipsis),
   );
+
+  Widget _catalogSearchOptions() {
+    final enabled = !_busy && (!_savedSearchMode || _savedSearchKey != null);
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Wrap(
+            spacing: 12,
+            runSpacing: 10,
+            children: [
+              SizedBox(
+                width: 220,
+                child: DropdownButtonFormField<ZoteroSearchMode>(
+                  key: const ValueKey('zotero-search-mode'),
+                  initialValue: _searchMode,
+                  isExpanded: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Search in',
+                    isDense: true,
+                  ),
+                  items: const [
+                    DropdownMenuItem(
+                      value: ZoteroSearchMode.titleCreatorYear,
+                      child: Text('Titles, creators and years'),
+                    ),
+                    DropdownMenuItem(
+                      value: ZoteroSearchMode.everything,
+                      child: Text('Include full text'),
+                    ),
+                  ],
+                  onChanged: !enabled
+                      ? null
+                      : (value) => _run(() async {
+                          if (value == null) return;
+                          _searchMode = value;
+                          await _loadItems();
+                        }),
+                ),
+              ),
+              SizedBox(
+                width: 180,
+                child: DropdownButtonFormField<String>(
+                  key: const ValueKey('zotero-item-type'),
+                  initialValue: _itemType ?? '',
+                  isExpanded: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Reference type',
+                    isDense: true,
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: '', child: Text('All types')),
+                    DropdownMenuItem(value: 'book', child: Text('Book')),
+                    DropdownMenuItem(
+                      value: 'bookSection',
+                      child: Text('Book section'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'journalArticle',
+                      child: Text('Journal article'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'conferencePaper',
+                      child: Text('Conference paper'),
+                    ),
+                    DropdownMenuItem(value: 'thesis', child: Text('Thesis')),
+                    DropdownMenuItem(value: 'report', child: Text('Report')),
+                    DropdownMenuItem(value: 'webpage', child: Text('Web page')),
+                  ],
+                  onChanged: !enabled
+                      ? null
+                      : (value) => _run(() async {
+                          _itemType = value == '' ? null : value;
+                          await _loadItems();
+                        }),
+                ),
+              ),
+              SizedBox(
+                width: 170,
+                child: DropdownButtonFormField<ZoteroItemSort>(
+                  key: const ValueKey('zotero-item-sort'),
+                  initialValue: _itemSort,
+                  isExpanded: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Sort by',
+                    isDense: true,
+                  ),
+                  items: const [
+                    DropdownMenuItem(
+                      value: ZoteroItemSort.dateModified,
+                      child: Text('Date modified'),
+                    ),
+                    DropdownMenuItem(
+                      value: ZoteroItemSort.dateAdded,
+                      child: Text('Date added'),
+                    ),
+                    DropdownMenuItem(
+                      value: ZoteroItemSort.title,
+                      child: Text('Title'),
+                    ),
+                    DropdownMenuItem(
+                      value: ZoteroItemSort.creator,
+                      child: Text('Creator'),
+                    ),
+                    DropdownMenuItem(
+                      value: ZoteroItemSort.date,
+                      child: Text('Publication date'),
+                    ),
+                    DropdownMenuItem(
+                      value: ZoteroItemSort.itemType,
+                      child: Text('Reference type'),
+                    ),
+                  ],
+                  onChanged: !enabled
+                      ? null
+                      : (value) => _run(() async {
+                          if (value == null) return;
+                          _itemSort = value;
+                          await _loadItems();
+                        }),
+                ),
+              ),
+              SizedBox(
+                width: 140,
+                child: DropdownButtonFormField<ZoteroSortDirection>(
+                  key: const ValueKey('zotero-sort-direction'),
+                  initialValue: _sortDirection,
+                  isExpanded: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Order',
+                    isDense: true,
+                  ),
+                  items: const [
+                    DropdownMenuItem(
+                      value: ZoteroSortDirection.ascending,
+                      child: Text('Ascending'),
+                    ),
+                    DropdownMenuItem(
+                      value: ZoteroSortDirection.descending,
+                      child: Text('Descending'),
+                    ),
+                  ],
+                  onChanged: !enabled
+                      ? null
+                      : (value) => _run(() async {
+                          if (value == null) return;
+                          _sortDirection = value;
+                          await _loadItems();
+                        }),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: TextField(
+                  key: const ValueKey('zotero-tag-input'),
+                  controller: _tag,
+                  enabled: enabled,
+                  decoration: InputDecoration(
+                    labelText: 'Filter by tag',
+                    hintText: 'Enter an exact tag name',
+                    isDense: true,
+                    errorText: _tagError,
+                    errorMaxLines: 4,
+                  ),
+                  onChanged: (_) {
+                    if (_tagError != null) setState(() => _tagError = null);
+                  },
+                  onSubmitted: (_) => _addTag(),
+                ),
+              ),
+              IconButton(
+                key: const ValueKey('zotero-add-tag'),
+                tooltip: 'Add tag',
+                onPressed: enabled ? _addTag : null,
+                icon: const Icon(Icons.add),
+              ),
+            ],
+          ),
+          const Padding(
+            padding: EdgeInsets.only(top: 6, bottom: 8),
+            child: Text(
+              'Match every added tag. Press Enter or + to add one. Capitalization is kept as entered.',
+              style: TextStyle(fontSize: 12),
+            ),
+          ),
+          if (_tags.isNotEmpty) ...[
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 160),
+              child: SingleChildScrollView(
+                child: LayoutBuilder(
+                  builder: (context, constraints) => Wrap(
+                    spacing: 8,
+                    runSpacing: 4,
+                    children: [
+                      for (final tag in _tags)
+                        InputChip(
+                          key: ValueKey('zotero-tag-$tag'),
+                          label: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              maxWidth: min(
+                                240,
+                                max(32, constraints.maxWidth - 80),
+                              ),
+                            ),
+                            child: Text(
+                              tag,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          tooltip: tag,
+                          deleteButtonTooltipMessage: 'Remove tag $tag',
+                          onDeleted: enabled ? () => _removeTag(tag) : null,
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: TextButton(
+                key: const ValueKey('zotero-clear-tags'),
+                onPressed: enabled ? _clearTags : null,
+                child: const Text('Clear tags'),
+              ),
+            ),
+          ],
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
+            child: Text(
+              'Options apply to the complete result set. Full-text matches depend on what Zotero has indexed.',
+              style: TextStyle(fontSize: 12),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _savedSearchNavigation() => Row(
     children: [
@@ -1635,28 +2032,51 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
               ],
             ),
           const SizedBox(height: 8),
-          TextField(
-            controller: _search,
-            enabled: !_busy && (!_savedSearchMode || _savedSearchKey != null),
-            decoration: InputDecoration(
-              labelText: _savedSearchMode
-                  ? 'Search within saved search'
-                  : 'Search title, creator, or year',
-              isDense: true,
-              prefixIcon: const Icon(Icons.search),
-              suffixIcon: IconButton(
-                onPressed:
-                    _busy || (_savedSearchMode && _savedSearchKey == null)
-                    ? null
-                    : () => _run(_loadItems),
-                tooltip: 'Search',
-                icon: const Icon(Icons.arrow_forward),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _search,
+                  enabled:
+                      !_busy && (!_savedSearchMode || _savedSearchKey != null),
+                  decoration: InputDecoration(
+                    labelText: _savedSearchMode
+                        ? 'Search within saved search'
+                        : _searchMode == ZoteroSearchMode.everything
+                        ? 'Search references and full text'
+                        : 'Search title, creator, or year',
+                    isDense: true,
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: IconButton(
+                      onPressed:
+                          _busy || (_savedSearchMode && _savedSearchKey == null)
+                          ? null
+                          : () => _run(_loadItems),
+                      tooltip: 'Search',
+                      icon: const Icon(Icons.arrow_forward),
+                    ),
+                  ),
+                  onSubmitted: (_) {
+                    if (!_busy) _run(_loadItems);
+                  },
+                ),
               ),
-            ),
-            onSubmitted: (_) {
-              if (!_busy) _run(_loadItems);
-            },
+              IconButton(
+                key: const ValueKey('zotero-search-options'),
+                tooltip: 'Search options',
+                isSelected: _searchOptionsExpanded,
+                onPressed: () => setState(
+                  () => _searchOptionsExpanded = !_searchOptionsExpanded,
+                ),
+                icon: Badge(
+                  isLabelVisible: _tags.isNotEmpty,
+                  label: Text('${_tags.length}'),
+                  child: const Icon(Icons.tune),
+                ),
+              ),
+            ],
           ),
+          if (_searchOptionsExpanded) _catalogSearchOptions(),
         ],
         Expanded(
           child: _page == null
@@ -1678,27 +2098,43 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
                   itemBuilder: (context, index) {
                     final item = _page!.items[index];
                     if (!item.isCitable) return const SizedBox.shrink();
-                    return CheckboxListTile(
-                      value: _selected.containsKey(item.sourceId),
-                      dense: true,
-                      title: Text(
-                        zoteroHtmlToPlainText(item.title),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      subtitle: Text(
-                        [
-                          item.creatorSummary,
-                          item.year,
-                          item.itemType,
-                          if (item.citationUri == null) 'Embedded source only',
-                        ].where((text) => text.isNotEmpty).join(' · '),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      onChanged: _busy
-                          ? null
-                          : (selected) => _selectItem(item, selected ?? false),
+                    return Row(
+                      children: [
+                        Expanded(
+                          child: CheckboxListTile(
+                            value: _selected.containsKey(item.sourceId),
+                            dense: true,
+                            title: Text(
+                              zoteroHtmlToPlainText(item.title),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            subtitle: Text(
+                              [
+                                item.creatorSummary,
+                                item.year,
+                                item.itemType,
+                                if (item.citationUri == null)
+                                  'Embedded source only',
+                              ].where((text) => text.isNotEmpty).join(' · '),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            onChanged: _busy
+                                ? null
+                                : (selected) =>
+                                      _selectItem(item, selected ?? false),
+                          ),
+                        ),
+                        IconButton(
+                          key: ValueKey('zotero-details-${item.sourceId}'),
+                          tooltip: 'Reference details',
+                          onPressed: _busy
+                              ? null
+                              : () => _showItemDetails(item),
+                          icon: const Icon(Icons.info_outline),
+                        ),
+                      ],
                     );
                   },
                 ),
@@ -1707,10 +2143,14 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                _page!.items.isEmpty
-                    ? '0 references'
-                    : '${_page!.start + 1}–${_page!.start + _page!.items.length}${_page!.totalResults == null ? '' : ' of ${_page!.totalResults}'}',
+              Expanded(
+                child: Text(
+                  _page!.items.isEmpty
+                      ? '0 references'
+                      : '${_page!.start + 1}–${_page!.start + _page!.items.length}${_page!.totalResults == null ? '' : ' of ${_page!.totalResults}'}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
               Row(
                 children: [
@@ -1721,6 +2161,7 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
                         : () => _run(
                             () => _loadItems(
                               start: max(0, _page!.start - _page!.limit),
+                              useSubmittedQuery: true,
                             ),
                           ),
                     icon: const Icon(Icons.chevron_left),
@@ -1729,8 +2170,12 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
                     tooltip: 'Next page',
                     onPressed: _busy || !_page!.hasMore
                         ? null
-                        : () =>
-                              _run(() => _loadItems(start: _page!.nextStart!)),
+                        : () => _run(
+                            () => _loadItems(
+                              start: _page!.nextStart!,
+                              useSubmittedQuery: true,
+                            ),
+                          ),
                     icon: const Icon(Icons.chevron_right),
                   ),
                 ],
@@ -1743,6 +2188,7 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             Text('${_selected.length} selected'),
+            _reviewSelectionButton('zotero-review-library-selection'),
             TextButton(
               onPressed: _busy || _selected.isEmpty
                   ? null
@@ -2044,6 +2490,7 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
               child: const Text('Load references'),
             ),
             if (_imported.isNotEmpty) Text('${_imported.length} loaded'),
+            _reviewSelectionButton('zotero-review-import-selection'),
           ],
         ),
         if (_imported.isNotEmpty)

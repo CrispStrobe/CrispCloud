@@ -7,7 +7,6 @@ import 'package:path/path.dart' as p;
 import 'package:quds_office_engine/quds_office_engine.dart';
 import 'package:quds_proofing_spacy/quds_proofing_spacy_native.dart';
 import 'package:quds_proofing_spacy/quds_proofing_spacy_grammar.dart';
-import 'package:quds_proofing_spacy/quds_proofing_spacy_macos.dart';
 
 import 'office_spacy_preferences.dart';
 
@@ -109,7 +108,7 @@ Future<void> runSignedSpacyNativeProbe() async {
   _explicitNativeOptIn();
   final worker = await startSpacyWorker(
     bundle: const SpacyBundle.germanF32(),
-    backendFactory: SpacyMacOSBackendFactory(
+    backendFactory: SpacyNativeBackendFactory(
       bundleDirectory: p.join(resources, 'bundle'),
       libraryPath: p.join(resources, signedSha, 'libcrispembed-spacy.dylib'),
       librarySha256: signedSha,
@@ -166,8 +165,9 @@ Future<void> runSignedSpacyNativeProbe() async {
       retained = result;
     }
     final sample = _descriptorSample();
-    if (sample.limit != descriptorLimit)
+    if (sample.limit != descriptorLimit) {
       throw StateError('Descriptor limit changed.');
+    }
     fdWarm = sample.count;
   } finally {
     await worker.dispose();
@@ -176,8 +176,9 @@ Future<void> runSignedSpacyNativeProbe() async {
     throw StateError('Owned analysis did not survive native worker disposal.');
   }
   final after = _descriptorSample();
-  if (after.limit != descriptorLimit)
+  if (after.limit != descriptorLimit) {
     throw StateError('Descriptor limit changed.');
+  }
   final fdAfter = after.count;
   final rssMax = rss.reduce((a, b) => a > b ? a : b);
   if (rssMax - rssStart > 32 * 1024 * 1024 || fdAfter > fdStart) {
@@ -212,9 +213,53 @@ Future<void> runSignedSpacyNativeProbe() async {
     'analysis': retained.toJson(),
     'provider_default': 'OFF',
     'grammar_quality_qualified': false,
-    'limits':
-        'Diagnostic actual signed Runner/native worker operational sample; not UI/grammar accuracy or a leak proof.',
+    'limits': 'Diagnostic actual signed Runner/native worker operational sample; not UI/grammar accuracy or a leak proof.',
   });
   stdout.writeln('CRISP_SPACY_W7_RESULT=$receipt');
   await stdout.flush();
+}
+
+/// Explicit analysis action. The model and signed native component travel with
+/// this build; no download or grammar provider is enabled by opening a document.
+Future<LinguisticAnalysisResult> analyzeOfficeSpacyText(String text) async {
+  if (Abi.current() != Abi.macosArm64) {
+    throw UnsupportedError(
+      'Bundled German analysis requires an Apple Silicon Mac.',
+    );
+  }
+  const signedSha = String.fromEnvironment('CRISP_SPACY_SIGNED_LIBRARY_SHA256');
+  if (!RegExp(r'^[0-9a-f]{64}$').hasMatch(signedSha)) {
+    throw StateError(
+      'This build does not include the German analysis component.',
+    );
+  }
+  final resources = p.join(
+    File(Platform.resolvedExecutable).parent.parent.path,
+    'Resources',
+    'spacy-w7',
+  );
+  _explicitNativeOptIn();
+  final worker = await startSpacyWorker(
+    bundle: const SpacyBundle.germanF32(),
+    backendFactory: SpacyNativeBackendFactory(
+      bundleDirectory: p.join(resources, 'bundle'),
+      libraryPath: p.join(resources, signedSha, 'libcrispembed-spacy.dylib'),
+      librarySha256: signedSha,
+    ),
+  );
+  try {
+    return await worker.analyze(
+      LinguisticAnalysisRequest(
+        text: text,
+        documentId: 'manual-analysis',
+        blockId: 'text',
+        revision: 0,
+        locale: 'de-DE',
+        startOffset: 0,
+        configurationId: 'bundled-manual-analysis',
+      ),
+    );
+  } finally {
+    await worker.dispose();
+  }
 }
