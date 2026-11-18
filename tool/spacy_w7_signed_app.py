@@ -118,7 +118,7 @@ def main():
         # selection, not an alternate tiny fixture app or substitute entrypoint.
         run('build-actual-app', [sys.executable, ROOT / 'tool/with_ci_apple_sqlite.py', '--',
             sys.executable, ROOT / 'tool/macos_distribution.py', 'build', '--profile', 'appstore', '--',
-            '--no-pub', '--dart-define=CRISP_W7_NATIVE_PROBE=true',
+            '--no-pub', '--dart-define=CRISP_W7_INCLUDE_NATIVE_PROBE=true',
             '--dart-define=CRISP_SPACY_SIGNED_LIBRARY_SHA256=' + signed_sha])
         apps = list((ROOT / 'build/macos/Build/Products/Release').glob('*.app'))
         assert len(apps) == 1
@@ -169,11 +169,17 @@ def main():
         report['executable_sha256'] = digest(executable)
         report['executable_file'] = subprocess.check_output(['file', str(executable)], text=True)
         report['native_probe_started'] = True
-        run('actual-signed-app-native-worker', [executable], timeout=180)
+        probe_env = dict(os.environ, CRISP_W7_NATIVE_PROBE='1')
+        run('actual-signed-app-native-worker', [executable], timeout=180, env=probe_env)
         lines = (out / 'actual-signed-app-native-worker.log').read_text().splitlines()
         rows = [json.loads(line.split('CRISP_SPACY_W7_RESULT=', 1)[1]) for line in lines if 'CRISP_SPACY_W7_RESULT=' in line]
         assert len(rows) == 1 and rows[0]['passed'] is True
         report['actual_native_worker'] = rows[0]
+        startup_env = dict(os.environ)
+        startup_env.pop('CRISP_W7_NATIVE_PROBE', None)
+        run('actual-signed-app-startup', ['bash', ROOT / 'tool/macos_startup_smoke.sh',
+            app, '30', out / 'actual-signed-app-startup-ui.log'], timeout=120, env=startup_env)
+        report['normal_signed_app_startup'] = 'PASS: existing startup smoke, probe env absent'
         report['tested_runtime_sources_sha256'] = {str(p.relative_to(ROOT)): digest(p)
             for prefix in ('lib', 'packages/quds_proofing_spacy/lib') for p in (ROOT / prefix).rglob('*.dart')}
         report['passed'] = True

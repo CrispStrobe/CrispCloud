@@ -294,9 +294,10 @@ const _appVersion = String.fromEnvironment(
 
 Future<void> main() async {
   if (const bool.fromEnvironment(
-    'CRISP_W7_NATIVE_PROBE',
+    'CRISP_W7_INCLUDE_NATIVE_PROBE',
     defaultValue: false,
-  )) {
+  ) &&
+      Platform.environment['CRISP_W7_NATIVE_PROBE'] == '1') {
     WidgetsFlutterBinding.ensureInitialized();
     try {
       await runSignedSpacyNativeProbe();
