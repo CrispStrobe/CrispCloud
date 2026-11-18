@@ -354,35 +354,6 @@ class HostWordPictureTests(unittest.TestCase):
             for name, content in parts.items():
                 archive.writestr(name, content)
 
-    def test_explicit_disabled_small_caps_retains_exact_picture_geometry(self):
-        with tempfile.TemporaryDirectory() as folder:
-            path = Path(folder) / 'source.docx'
-            for fmt in ('gif', 'jpeg'):
-                parts = self.parts(fmt)
-                parts['word/document.xml'] = parts['word/document.xml'].replace(
-                    b'<w:i w:val="0"/>',
-                    b'<w:i w:val="0"/><w:smallCaps w:val="0"/>', 1)
-                self.package(path, parts)
-                with self.subTest(fmt=fmt):
-                    self.assertEqual(render.picture_package_geometry(path, 'word-' + fmt),
-                                     self.geometry(fmt))
-
-    def test_small_caps_cannot_admit_enabled_implicit_or_unreviewed_content(self):
-        faults = [b'<w:smallCaps w:val="1"/>', b'<w:smallCaps/>',
-                  b'<w:smallCaps w:val="true"/>',
-                  b'<w:smallCaps w:val="0" w:extra="0"/>',
-                  b'<w:smallCaps w:val="0"><w:b/></w:smallCaps>',
-                  b'<w:smallCaps w:val="0"/><w:smallCaps w:val="0"/>']
-        with tempfile.TemporaryDirectory() as folder:
-            path = Path(folder) / 'source.docx'
-            for fault in faults:
-                parts = self.parts()
-                parts['word/document.xml'] = parts['word/document.xml'].replace(
-                    b'<w:i w:val="0"/>', b'<w:i w:val="0"/>' + fault, 1)
-                self.package(path, parts)
-                with self.subTest(fault=fault), self.assertRaises(render.FidelityError):
-                    render.picture_package_geometry(path, 'word-gif')
-
     def geometry(self, fmt='gif'):
         return {'page_twips': [11906, 16838], 'margin_twips': [1440] * 4,
                 'inline_offset_emu': [0, 0], 'extent_emu': [762000, 381000],

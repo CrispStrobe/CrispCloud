@@ -81,6 +81,30 @@ changes. Policy decision fields remain unchanged. Actual source-policy
 validation passes; this does not establish hosted release evidence or app
 qualification.
 
+
+At `f70a3f43`, the new archive job is 3,826 pass / 16 skip / two fail,
+and workspace is 976 pass / four fail. Both identify hydrated ancestor-column
+reviews whose explicit Start must remain available without beginning a transfer
+on drop. Preserve that already captured/reviewed column path with internal
+planning on Start; ordinary row and pane drops still require visible Preview.
+All existing null and non-null Start assertions remain unchanged.
+
+The mobile failures now expose one tab with recovery still loading. Give each
+mock toolbar fixture its own empty recovery storage/authority while retaining
+the actual recovery service, codec and unchanged SSH assertions; do not share a
+previous fake-scheduler fixture's default backend lifetime. This is fixture
+isolation, not a claim about production recovery failure or real SSH execution.
+
+The host job failed before collection because new controls had been added to
+managed `tool/office-validation/test_render.py`. Restore its exact pinned hash
+and keep the two additional controls in host-owned
+`tool/test_office_picture_defaults.py`, wired separately into normal CI. The
+existing 80 renderer/limitation controls and two host controls pass locally with
+the unchanged tracked auxiliary oracle present. Preserve the initial sparse
+checkout's missing-oracle failure. Vendor manifests, source pins, collection
+requirements, native instrumentation and numerical/pixel floors are unchanged;
+all new exact-head hosted qualification remains pending.
+
 ## Vision
 
 CrispCloud becomes the **definitive open-source cloud file manager**: a single, beautiful, blazing-fast app that connects to *any* cloud or server, runs on *every* platform, and treats privacy and encryption as first-class citizens — not afterthoughts.

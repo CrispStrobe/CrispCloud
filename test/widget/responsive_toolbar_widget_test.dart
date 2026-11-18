@@ -23,12 +23,14 @@ import 'package:crisp_cloud/models/operation_progress.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/providers/auth_provider.dart';
 import 'package:crisp_cloud/providers/providers.dart';
+import 'package:crisp_cloud/providers/terminal_workspace_recovery_provider.dart';
 import 'package:crisp_cloud/services/cloud_storage_interface.dart';
 import 'package:crisp_cloud/services/filen_config_service.dart';
 import 'package:crisp_cloud/services/secure_storage_service.dart';
 import 'package:crisp_cloud/services/sync_database.dart';
 import 'package:crisp_cloud/services/sync_engine.dart';
 import 'package:crisp_cloud/services/theme_service.dart';
+import 'package:crisp_cloud/services/terminal_workspace_recovery.dart';
 import 'package:crisp_cloud/screens/file_browser_screen.dart';
 import 'package:crisp_cloud/widgets/file_toolbar.dart';
 import 'package:crisp_cloud/widgets/file_panel.dart';
@@ -179,7 +181,18 @@ List<Override> _baseOverrides({
   String providerName = 'MockCloud',
 }) {
   final db = SyncDatabase.forTesting(NativeDatabase.memory());
+  // Each toolbar fixture owns its settings lifetime and async recovery queue.
+  // Resetting mock preferences must not reuse a previous widget test's pending
+  // default-backed authority. Keep the real recovery service and codec.
+  String? recoveryRecord;
+  final recovery = TerminalWorkspaceRecovery(
+    read: () async => recoveryRecord,
+    write: (value) async {
+      recoveryRecord = value;
+    },
+  );
   return [
+    terminalWorkspaceRecoveryProvider.overrideWithValue(recovery),
     secureStorageProvider.overrideWithValue(InMemorySecureStorage()),
     authProvider.overrideWith(
       (ref) => _TestAuthNotifier(
