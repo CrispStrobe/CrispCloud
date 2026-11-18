@@ -105,6 +105,33 @@ checkout's missing-oracle failure. Vendor manifests, source pins, collection
 requirements, native instrumentation and numerical/pixel floors are unchanged;
 all new exact-head hosted qualification remains pending.
 
+
+At `74dd79fc`, Linux and host preflight expose drift in managed `render.py`.
+Restore both managed renderer/test hashes. Host-specific disabled-default
+admission now lives in `tool/office_host_render.py`, which authenticates the
+pinned renderer before use. Only its structure check derives a view without the
+single exact disabled `smallCaps` property; the untouched originals still enter
+SDK validation, native rendering, hashing and pixel/cycle comparisons. Report
+raw/view hashes and the adapter identity. Existing 80 pinned controls and three
+host controls pass; added negatives reject text/layout changes and prove raw
+package bytes remain unchanged. This is not actual hosted rendering acceptance.
+
+The exact current PDF failures include one formatter patch, missing save
+feedback after a successful sibling write, and Ctrl+S reaching no host save.
+Apply the retained formatter output, supply the notification provider dependency
+in the operations fixture, and scope save shortcuts to the current host dialog.
+Do not weaken save-count or persisted-content assertions. Mobile tests need one
+frame after popup dismissal mounts asynchronous recovery; retain the strict SSH
+finder and loading-state diagnostics rather than waiting out a timeout.
+
+The new Chrome failure is 736 pass / four skip / one fail at the first held-input
+assertion. The mock could return a later command response ahead of a held one;
+keep those replies ordered and strengthen the test with an explicit held-command
+handshake plus concurrent selection. Production tmux code, input sizes, deadlines
+and one-send assertions are unchanged. All new Dart paths and the full exact-head
+Office/source/collection gates require hosted confirmation. Preserve the closing
+74dd snapshot: 32 success, six failure, four skip, one cancelled, two running.
+
 ## Vision
 
 CrispCloud becomes the **definitive open-source cloud file manager**: a single, beautiful, blazing-fast app that connects to *any* cloud or server, runs on *every* platform, and treats privacy and encryption as first-class citizens — not afterthoughts.

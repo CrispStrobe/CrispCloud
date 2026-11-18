@@ -390,15 +390,7 @@ def word_picture_package_geometry(path, case):
             check(props, 'w:jc', {'w:val': 'left'}, [])
             if has_empty_run:
                 run = check(first, 'w:r', {}, ['w:rPr', 'w:t'])
-                # The current writer explicitly serializes smallCaps=false.
-                # Admit only that exact default; enabled/implicit/duplicate
-                # small caps and every other unreviewed property still fail.
-                children = ['w:rFonts', 'w:b', 'w:i', 'w:color', 'w:sz']
-                run_props = check(run, 'w:rPr', {})
-                if run_props.find('w:smallCaps', ns) is not None:
-                    children.insert(3, 'w:smallCaps')
-                    check(run_props, 'w:smallCaps', {'w:val': '0'}, [])
-                check(run_props, '.', {}, children)
+                run_props = check(run, 'w:rPr', {}, ['w:rFonts', 'w:b', 'w:i', 'w:color', 'w:sz'])
                 check(run_props, 'w:rFonts', {'w:ascii': 'Arial', 'w:hAnsi': 'Arial', 'w:cs': 'Arial'}, [])
                 for tag, value in (('b', '0'), ('i', '0'), ('color', '000000'), ('sz', '22')):
                     check(run_props, 'w:' + tag, {'w:val': value}, [])

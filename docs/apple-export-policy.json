@@ -15,7 +15,7 @@
   },
   "inventory_sha256": "52e7e1ce44517b13e8af5d6b5ca9d1a8bee7ba1f1b2bb74cb134676ecaafe8fb",
   "pubspec_lock_sha256": "deae8510a003385de66b2baf07abaae85705703c8c13943412b02087f2089709",
-  "reviewed_source_sha256": "4c554f4ea9a895738f61c94b8c253df44c0eaa3802edcbbb56ec033b372a8e75",
+  "reviewed_source_sha256": "15238a4ccc6de0dc3d675594d5f310267b17c13cf6891fa2dd0c65f4cdd38495",
   "testflight": {
     "distribution_review": "no_france",
     "reference": "Reviewed external group b044f8c9-394b-47dd-a470-796fd052580a is invitation-only (publicLinkEnabled=false) and contains exactly the project owner (cstr+beta@mailbox.org), who is outside France. The previous public-link group 2649c41c-6c58-4dfd-b07a-03b2f537e73f had its public link disabled on 2026-11-08 and is not used for this release. On 2026-11-15 the existing internal group 66ef90c0-2fa6-4621-a976-c61f6573e1ca also contained exactly the same reviewed project owner. The internal tester resource ID is pinned below and membership is rechecked before assignment; this adds no recipients or public links.",

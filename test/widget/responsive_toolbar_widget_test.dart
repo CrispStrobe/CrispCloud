@@ -520,6 +520,8 @@ void main() {
         await tester.pump(const Duration(milliseconds: 300));
         await tester.tap(find.text('Show Terminal'));
         await tester.pump(const Duration(milliseconds: 300));
+        // Popup dismissal mounts recovery; rebuild after its async load.
+        await tester.pump();
         expect(find.byTooltip('Hide Terminal'), findsNothing);
         expect(
           find.byTooltip('Connect via SSH'),
@@ -556,6 +558,8 @@ void main() {
           await tester.pump(const Duration(milliseconds: 300));
           await tester.tap(find.text('Show Terminal'));
           await tester.pump(const Duration(milliseconds: 300));
+          // Popup dismissal mounts recovery; rebuild after its async load.
+          await tester.pump();
           expect(
             find.byTooltip('Connect via SSH'),
             findsOneWidget,

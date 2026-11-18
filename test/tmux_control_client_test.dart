@@ -462,8 +462,18 @@ void main() {
       await server.start(client);
       final session = client.panes['%0']!.session;
       server.holdPrefix = 'send-keys';
+      server.heldEntered = Completer<void>();
       session.terminal.textInput('a' * 5000);
+      await server.heldEntered!.future;
+      // Force a later command while the input reply is held. Browser timer
+      // clamping can also trigger the refresh timer during _events; its reply
+      // must not be mistaken for the earlier stalled input response.
+      var selectionCompleted = false;
+      final selecting = client.selectPane('%0').then((_) {
+        selectionCompleted = true;
+      });
       await _events();
+      expect(selectionCompleted, isFalse);
       expect(
         server.commands.where((command) => command.startsWith('send-keys')),
         hasLength(1),
@@ -472,6 +482,7 @@ void main() {
       expect(session.isConnected, isFalse);
       expect(session.error.toString(), contains('Pending terminal input'));
       server.replyToHeld();
+      await selecting;
       await _events();
       expect(
         server.commands.where((command) => command.startsWith('send-keys')),
@@ -960,6 +971,8 @@ class _Server {
   Completer<void>? captureGate, captureEntered;
   bool failClose = false, injectHook = false;
   int? heldSerial;
+  Completer<void>? heldEntered;
+  final heldFollowingReplies = <List<int>>[];
   void Function(String)? afterCommand;
 
   TmuxControlClient client({
@@ -1054,6 +1067,7 @@ class _Server {
       final number = ++serial;
       if (holdPrefix != null && command.startsWith(holdPrefix!)) {
         heldSerial = number;
+        if (heldEntered?.isCompleted == false) heldEntered!.complete();
         return;
       }
       var body = <String>[];
@@ -1178,7 +1192,11 @@ class _Server {
         output.add(ascii.encode('%begin 1 999 0\nhook output\n%end 1 999 0\n'));
       }
       final encoded = utf8.encode(response.toString());
-      if (deferReplies) {
+      if (heldSerial != null) {
+        // A later command cannot overtake an earlier blocked response in
+        // this ordered control stream, even when a refresh timer fires.
+        heldFollowingReplies.add(encoded);
+      } else if (deferReplies) {
         deferredReplies.add(encoded);
       } else {
         output.add(encoded);
@@ -1193,5 +1211,13 @@ class _Server {
     output.add(ascii.encode('%begin 1 $number 1\n%end 1 $number 1\n'));
     heldSerial = null;
     holdPrefix = null;
+    for (final reply in heldFollowingReplies) {
+      if (deferReplies) {
+        deferredReplies.add(reply);
+      } else {
+        output.add(reply);
+      }
+    }
+    heldFollowingReplies.clear();
   }
 }
