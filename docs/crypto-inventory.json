@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "review_date": "2026-11-17",
+  "review_date": "2026-11-18",
   "repository": "https://github.com/CrispStrobe/CrispCloud",
   "scope": "Source-level inventory of the finished application, including portable helpers. Runtime reachability and platform behavior are described in crypto-audit.md. This inventory is not an export classification or a binary scan. System printing reuses the existing PDF/Office document engines and adds no encryption implementation. Notification history is bounded and session-only.",
   "required_providers": [
@@ -461,6 +461,21 @@
         "docs/veracrypt-support.md"
       ],
       "note": "Read-only AES-XTS file containers with PIM/keyfiles/native TrueCrypt, four explicitly selected header slots, and bounded FAT/NTFS/ext browsing. Argon2id is native-only; browser PBKDF2 is bounded. Existing MIT PointyCastle dependency, no new runtime dependency. Cascades, system encryption, exFAT and writes unsupported. Desktop CLI remains separate. CRC/XTS do not authenticate payload contents."
+    },
+    {
+      "name": "Optional local German linguistic analysis",
+      "algorithms": [
+        "SHA-256 for artifact identity"
+      ],
+      "implementations": [
+        "Existing locked Dart crypto package"
+      ],
+      "sources": [
+        "packages/quds_proofing_spacy/lib/src/native_backend.dart",
+        "packages/quds_proofing_spacy/lib/src/native_backend_macos.dart",
+        "lib/services/office_spacy_native.dart"
+      ],
+      "note": "Manual provider is OFF by default. The owned native worker validates immutable F32 model/library identities; this adds no encryption implementation. The signed Runner diagnostic and normal-startup check do not publish or activate a provider."
     }
   ],
   "reviewed_files": [
@@ -1417,7 +1432,31 @@
     "packages/dartssh2/lib/src/forward/dynamic_forward_stub.dart",
     "packages/dartssh2/lib/src/socket/ssh_socket.dart",
     "packages/dartssh2/lib/src/socket/ssh_socket_js.dart",
-    "packages/dartssh2/lib/src/socket/ssh_socket_io.dart"
+    "packages/dartssh2/lib/src/socket/ssh_socket_io.dart",
+    "lib/services/office_spacy.dart",
+    "lib/services/office_spacy_native.dart",
+    "lib/services/office_spacy_preferences.dart",
+    "lib/services/office_spacy_unsupported.dart",
+    "lib/widgets/office_spacy_settings.dart",
+    "packages/quds_proofing_spacy/W7_SOURCE.json",
+    "packages/quds_proofing_spacy/lib/quds_proofing_spacy.dart",
+    "packages/quds_proofing_spacy/lib/quds_proofing_spacy_grammar.dart",
+    "packages/quds_proofing_spacy/lib/quds_proofing_spacy_macos.dart",
+    "packages/quds_proofing_spacy/lib/quds_proofing_spacy_native.dart",
+    "packages/quds_proofing_spacy/lib/src/analysis.dart",
+    "packages/quds_proofing_spacy/lib/src/backend.dart",
+    "packages/quds_proofing_spacy/lib/src/bundle.dart",
+    "packages/quds_proofing_spacy/lib/src/grammar_planner.dart",
+    "packages/quds_proofing_spacy/lib/src/grammar_provider.dart",
+    "packages/quds_proofing_spacy/lib/src/native_backend.dart",
+    "packages/quds_proofing_spacy/lib/src/native_backend_macos.dart",
+    "packages/quds_proofing_spacy/lib/src/native_backend_unsupported.dart",
+    "packages/quds_proofing_spacy/lib/src/source_text.dart",
+    "packages/quds_proofing_spacy/lib/src/transport.dart",
+    "packages/quds_proofing_spacy/lib/src/worker_native.dart",
+    "packages/quds_proofing_spacy/lib/src/worker_unsupported.dart",
+    "packages/quds_proofing_spacy/pubspec.yaml",
+    "tool/spacy_w7_signed_app.py"
   ],
   "technical_review_notes": [
     "CrisperBooks is consumed from a single immutable Git revision with its complete tracked tree and the exact package roots independently verified after Pub resolution. It includes the compressed browser Kindle converter, memory-only WASI source and local platform speech controls. Browser source/tests and native parity controls remain separate from binary distribution approval. The WASI shim has crypto.getRandomValues and a Math.random fallback, which is not treated as a secure RNG. Archive integration and syntax/UI changes add no cipher or credential store.",
@@ -1436,7 +1475,8 @@
     "The archive continuation and concurrent main are merged with both histories retained. The reviewed path set is the union of both source inventories, including both retained CFB-name and Word-font sources. Distribution declarations are unchanged. Encrypted split-7z lifetime fixes, bounded reader selections and explicit pane-source capture add no cipher, credential store or network destination. All original branch/PR heads and exact-source validation receipts remain reachable.",
     "Final canonical parser pin 731e370 includes bounded CFB metadata and complete directory ownership, typed display-field evidence, explicit opt-in cached-result export and list visibility/formatting audits. Quds consumes it at 389e879. The combined parser passed 3406 Dart tests, 188 Python controls and actual JavaScript acceptance; Quds engine passed 1634 tests and the app legacy-Word cohort passed 35 tests. Changes add validation and document conversion, not encryption or activation of embedded objects.",
     "Dependency cleanup removes the bundled libsmb2 implementation and enables the already reviewed Rust SMB graph by default. Signing/encryption requirements remain in force; real platform/NAS qualification is separate. Optional macFUSE/FUSE-T integration now requires CRISP_ENABLE_FUSE=true at compile time, and is absent from default artifacts. The iOS signal generator and three Automake helper adapters are independently authored MIT code; the AWK Bison exception is preserved completely. These licensing changes do not establish patent clearance or change Apple distribution declarations.",
-    "The 15 November VeraCrypt extension reuses MIT PointyCastle for AES-XTS with native Argon2id, PBKDF2 PIMs, keyfiles and native TrueCrypt headers. The bundled read-only FAT/NTFS/ext path keeps captured byte-source ownership, explicit header selection, bounded reads and non-persisted keys. Native derivation uses a serialized cancellable isolate queue; browser Argon2 is refused and PBKDF2 is capped. No new dependency, credential store, network destination or distribution decision is introduced. Independent Python/OpenSSL fixtures and compiled-JavaScript probes qualify the documented profile, not arbitrary upstream containers or native device packaging."
+    "The 15 November VeraCrypt extension reuses MIT PointyCastle for AES-XTS with native Argon2id, PBKDF2 PIMs, keyfiles and native TrueCrypt headers. The bundled read-only FAT/NTFS/ext path keeps captured byte-source ownership, explicit header selection, bounded reads and non-persisted keys. Native derivation uses a serialized cancellable isolate queue; browser Argon2 is refused and PBKDF2 is capped. No new dependency, credential store, network destination or distribution decision is introduced. Independent Python/OpenSSL fixtures and compiled-JavaScript probes qualify the documented profile, not arbitrary upstream containers or native device packaging.",
+    "2026-11-18 incremental W7 source/dependency review: lock adds only local quds_proofing_spacy; existing locked versions/hashes are unchanged. Existing credential/encryption paths and policy decision fields are unchanged. Added source fingerprint coverage includes the SHA-256 identity backends, local settings/worker entrypoint and signed CI driver; no submission, release or distribution action."
   ],
   "external_source_manifests": [
     "docs/ebook-source-manifest.json"

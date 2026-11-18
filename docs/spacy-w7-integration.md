@@ -48,3 +48,15 @@ passes identity/profile/read-only notarization access and cleanup. Initial
 signs the native library but stops at the missing agreement API before app
 build, sandbox loading or worker inference. Preserve that failure; only an
 actual subsequent signed Runner result can close the corresponding gates.
+
+## Source fingerprint review — 18 November 2026
+
+The dependency lock adds only the local `quds_proofing_spacy` package; existing
+locked dependency versions/hashes are unchanged. The optional backend uses the
+already locked `crypto` SHA-256 implementation for native/model identity, with
+no new encryption implementation or network download path in the app. Reviewed
+source changes cover the explicit OFF preference/manual service, signed Runner
+diagnostic selection and guarded Quds source manifest. Existing credential and
+encryption paths, and all policy decision fields, remain unchanged. Refresh
+the lock/source fingerprints after that source review; this records source
+facts and does not authorize submission, release or distribution.
