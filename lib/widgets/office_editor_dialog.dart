@@ -1,5 +1,7 @@
 import '../services/document_printing.dart';
 import '../services/office_measurement_preferences.dart';
+import '../services/office_spacy.dart';
+import '../services/office_spacy_preferences.dart';
 import 'document_print_scope.dart';
 import 'viewer_escape_scope.dart';
 import 'app_scaffold_messenger.dart' show TransientSnackBar;
@@ -199,6 +201,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
   @override
   void initState() {
     super.initState();
+    OfficeSpacyPreferences.changes.addListener(_onSpacyChanged);
     _target = widget.targetOverride;
     unawaited(_load());
     unawaited(_loadUnits());
@@ -214,6 +217,8 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
 
   @override
   void dispose() {
+    _spacyGeneration++;
+    OfficeSpacyPreferences.changes.removeListener(_onSpacyChanged);
     _zoteroTransport?.dispose();
     _zoteroSession.apiKey = null;
     _workspace?.dispose();
@@ -347,6 +352,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
         _dirty = controller?.isDirty ?? false;
         _loading = false;
       });
+      _onSpacyChanged();
       _activity?.opened();
       _workspace ??= DocumentWorkspaceSession.attach(context, _close);
       _registerMenu();
@@ -360,6 +366,36 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
             '${_localizedError(e)}';
       });
     }
+  }
+
+  int _spacyGeneration = 0;
+
+  void _onSpacyChanged() {
+    final controller = _controller;
+    final generation = ++_spacyGeneration;
+    if (controller is! WordEditorController) return;
+    controller.proofing.configureManual(null);
+    unawaited(() async {
+      try {
+        final service = await openOfficeSpacyManualService();
+        if (!mounted ||
+            generation != _spacyGeneration ||
+            !identical(controller, _controller)) {
+          await service?.dispose();
+          return;
+        }
+        controller.proofing.configureManual(service);
+      } on Object catch (error, stack) {
+        _log.warn('optional native grammar unavailable', error, stack);
+        if (mounted && generation == _spacyGeneration) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Optional German grammar is unavailable: $error'),
+            ),
+          );
+        }
+      }
+    }());
   }
 
   void _onControllerChanged() {

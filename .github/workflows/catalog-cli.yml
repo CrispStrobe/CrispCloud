@@ -6,6 +6,15 @@ on:
   pull_request:
     paths: ['cli/**', 'packages/crisp_catalog/**', 'tool/verify_catalog_sources.py', 'tool/collect_catalog_licenses.py', 'tool/build_cli_bundle.py', '.github/workflows/catalog-cli.yml']
   workflow_dispatch:
+    inputs:
+      spacy_w7_signing_preflight:
+        description: 'Only verify existing W7 Developer ID signing access; no CLI build or publication'
+        type: boolean
+        default: false
+      spacy_w7_app_qualification:
+        description: 'Only qualify actual signed ARM64 Runner/native worker; no CLI or release publication'
+        type: boolean
+        default: false
   workflow_call:
     inputs:
       release_tag:
@@ -18,6 +27,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   native:
+    if: ${{ !inputs.spacy_w7_signing_preflight && !inputs.spacy_w7_app_qualification }}
     strategy:
       fail-fast: false
       matrix:
@@ -90,3 +100,80 @@ jobs:
           if [ "$RUNNER_OS" = macOS ]; then
             gh release upload "$RELEASE_TAG" "crispcloud-cli-${{ matrix.os }}.notarization.json" --clobber
           fi
+
+  spacy-signing-preflight:
+    if: github.event_name == 'workflow_dispatch' && (inputs.spacy_w7_signing_preflight || inputs.spacy_w7_app_qualification)
+    runs-on: macos-15
+    timeout-minutes: ${{ inputs.spacy_w7_app_qualification && 90 || 15 }}
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+      - name: Verify existing identity, profiles and read-only notarization access
+        id: signing
+        env:
+          MACOS_DEVELOPER_ID_P12_BASE64: ${{ secrets.MACOS_DEVELOPER_ID_P12_BASE64 }}
+          MACOS_DEVELOPER_ID_P12_PASSWORD: ${{ secrets.MACOS_DEVELOPER_ID_P12_PASSWORD }}
+          MACOS_DEVELOPER_ID_SHA1: ${{ secrets.MACOS_DEVELOPER_ID_SHA1 }}
+          MACOS_DEVELOPER_ID_PROFILE_BASE64: ${{ secrets.MACOS_DEVELOPER_ID_PROFILE_BASE64 }}
+          MACOS_DEVELOPER_ID_FINDEREXT_PROFILE_BASE64: ${{ secrets.MACOS_DEVELOPER_ID_FINDEREXT_PROFILE_BASE64 }}
+          ASC_API_KEY_P8_BASE64: ${{ secrets.ASC_API_KEY_P8_BASE64 }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_TEAM_ID: ${{ secrets.ASC_TEAM_ID }}
+        run: python3 tool/macos_public_signing.py prepare
+      - name: Select available Xcode for the actual app build
+        if: inputs.spacy_w7_app_qualification
+        run: |
+          test -d /Applications/Xcode_26.3.app/Contents/Developer
+          sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
+          xcodebuild -version
+      - name: Set up bundled ebook converter for the actual Runner
+        if: inputs.spacy_w7_app_qualification
+        uses: ./.github/actions/setup-ebook-rust
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+      - uses: subosito/flutter-action@v2
+        if: inputs.spacy_w7_app_qualification
+        with:
+          flutter-version: '3.47.8'
+          channel: stable
+          cache: true
+      - name: Qualify actual signed sandboxed Runner and owned native worker
+        if: inputs.spacy_w7_app_qualification
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 tool/spacy_w7_signed_app.py
+      - name: Remove temporary signing material
+        id: cleanup
+        if: always()
+        run: python3 tool/macos_public_signing.py cleanup
+      - name: Record bounded outcome
+        if: always()
+        env:
+          SIGNING_OUTCOME: ${{ steps.signing.outcome }}
+          CLEANUP_OUTCOME: ${{ steps.cleanup.outcome }}
+        run: |
+          python3 - <<'PY'
+          import json, os, platform
+          from pathlib import Path
+          result = {'schema': 'crispcloud.spacy.w7.signing-preflight.v1',
+              'source': os.environ['GITHUB_SHA'], 'run': os.environ['GITHUB_RUN_ID'],
+              'system': platform.platform(), 'architecture': platform.machine(),
+              'signing_preflight': os.environ['SIGNING_OUTCOME'],
+              'cleanup': os.environ['CLEANUP_OUTCOME'],
+              'actual_signed_app_tested': False, 'native_model_run': False,
+              'release_or_notary_submission': False, 'provider_default': 'OFF'}
+          Path('w7-signing-preflight.json').write_text(json.dumps(result, indent=2) + '\n')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: w7-signing-preflight-${{ github.run_id }}
+          path: w7-signing-preflight.json
+      - uses: actions/upload-artifact@v4
+        if: always() && inputs.spacy_w7_app_qualification
+        with:
+          name: w7-actual-signed-app-${{ github.run_id }}
+          path: ${{ runner.temp }}/w7-signed-app-evidence
+          if-no-files-found: warn

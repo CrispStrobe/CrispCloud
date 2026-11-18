@@ -1501,6 +1501,13 @@ packages:
       relative: true
     source: path
     version: "1.5.0"
+  quds_proofing_spacy:
+    dependency: "direct main"
+    description:
+      path: "packages/quds_proofing_spacy"
+      relative: true
+    source: path
+    version: "0.1.0"
   quds_reports:
     dependency: transitive
     description:

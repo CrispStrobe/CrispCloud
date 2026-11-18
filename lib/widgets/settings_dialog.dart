@@ -43,6 +43,7 @@ import '../l10n/workspace_ux_strings.dart';
 import '../l10n/external_terminal_strings.dart';
 import 'external_terminal_dialog.dart';
 import 'transfer_bandwidth_dialog.dart';
+import 'office_spacy_settings.dart';
 
 // ---------------------------------------------------------------------------
 // Public entry point
@@ -80,6 +81,7 @@ class SettingsDialog extends ConsumerWidget {
             const NotificationSettingsPanel(),
             const Divider(height: 1),
             _LanguageSection(),
+            const OfficeSpacySettings(),
             const Divider(height: 1),
             _AppearanceSection(),
             const Divider(height: 1),
