@@ -3,6 +3,8 @@ import 'package:characters/characters.dart';
 import 'office_proofing.dart';
 import 'proofing_text_ranges.dart';
 
+part 'arabic_extended_rules.dart';
+
 /// Independently authored Modern Standard Arabic writing checks.
 ///
 /// The word lists and messages were written for Quds from general knowledge
@@ -18,6 +20,16 @@ import 'proofing_text_ranges.dart';
 /// original UTF-16 offsets; the text is never rewritten. Links, email
 /// addresses and closed backtick spans are excluded.
 class ArabicWritingRulesProvider extends OfficeProofingProvider {
+  /// [enabledOptionalRuleIds] opts in to rules from
+  /// [arabicExtendedOptionalRuleIds] (prescriptive usage, vowelling hints and
+  /// other convention-dependent checks); all other rules run by default.
+  ArabicWritingRulesProvider({
+    Set<String> enabledOptionalRuleIds = const <String>{},
+  }) : enabledOptionalRuleIds = Set<String>.unmodifiable(
+         enabledOptionalRuleIds.intersection(arabicExtendedOptionalRuleIds),
+       );
+
+  final Set<String> enabledOptionalRuleIds;
   bool _disposed = false;
 
   @override
@@ -43,6 +55,14 @@ class ArabicWritingRulesProvider extends OfficeProofingProvider {
     'ar.repetition.word',
     'ar.spacing.conjunction-waw',
     'ar.digits.mixed',
+  };
+
+  /// Every rule id: the original set, the default-on extension and the
+  /// opt-in extension (see `arabic_extended_rules.dart`).
+  static const Set<String> allRuleIds = <String>{
+    ...ruleIds,
+    ...arabicExtendedDefaultRuleIds,
+    ...arabicExtendedOptionalRuleIds,
   };
 
   /// Words that begin with hamzat al-qat' (bare spelling -> corrected
@@ -511,6 +531,17 @@ class ArabicWritingRulesProvider extends OfficeProofingProvider {
         replacements: <String>[digits(0x660), digits(0x30)],
       );
     }
+
+    _ArabicExtendedRules(
+      text,
+      words,
+      protected,
+      add,
+      (String ruleId) =>
+          !request.ignoredRuleIds.contains(ruleId) &&
+          (!arabicExtendedOptionalRuleIds.contains(ruleId) ||
+              enabledOptionalRuleIds.contains(ruleId)),
+    ).run();
 
     findings.sort((a, b) => a.start.compareTo(b.start));
     return OfficeProofingResult(
