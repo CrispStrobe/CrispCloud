@@ -136,6 +136,16 @@ List<TextSpan> _visibleSpans(WidgetTester tester) => [
 ];
 
 void main() {
+  testWidgets('Review opens with the CrispOffice default reviewer', (
+    tester,
+  ) async {
+    final controller = _controller();
+    await _open(tester, controller);
+    final author = tester.widget<TextField>(_key('review-author'));
+    expect(author.controller!.text, 'CrispOffice');
+    expect(find.text('Quds Office'), findsNothing);
+  });
+
   testWidgets('tracking and reviewer controls affect future edits with undo', (
     tester,
   ) async {

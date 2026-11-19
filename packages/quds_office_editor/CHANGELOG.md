@@ -4,6 +4,64 @@ All notable changes to `quds_office_editor` are documented here.
 
 ## Unreleased
 
+- Make Insert commands compact and configurable, save ribbon layout preferences,
+  simplify the title bar, and provide desktop File menus and native macOS window
+  controls. Use CrispOffice for the default reviewer and newly created comments.
+- Route inserted tables, pictures and diagrams through document undo history.
+  Protect New, Open, Close and Quit with save confirmation, keep Save As paths
+  unchanged on cancellation/failure, and preserve edits made during saving.
+- Add PDF save-state revisions and repeatable snapshot encoding so a successful
+  save can mark the document clean without clearing undo or mutating live PDF
+  object identifiers while writing.
+
+- Add native Studio bulk export for all matching archive results and explicit
+  resume of an existing export directory. Freeze the selection and provenance,
+  verify exact originals, preserve conflicts and report each run's written,
+  existing and failed counts with cancellation and EN/DE/AR feedback.
+- Add native directory import with optional recursion, explicit MBOX dialect,
+  bounded traversal/parsing and relative-folder provenance. Recheck source
+  files, preserve them unchanged, skip recognized export staging and distinguish
+  completed, partial, limited and cancelled outcomes. Generic EML reimport does
+  not restore exported manifest provenance, profiles or saved searches.
+
+- Add a native Mail archive with EML/streamed MBOX import, connected-message and
+  selected-folder collection, local FTS search and filters, saved searches,
+  exact-original EML export, integrity checks and index rebuilding. Include
+  EN/DE/AR controls, narrow layouts, cancellation and opt-in redacted diagnostics.
+  Explicit archived copies survive account disconnection and cache removal.
+- Add Gmail and Microsoft 365 / Outlook browser sign-in to native Studio Mail,
+  reusing the guarded mailbox reader/actions/composer. Include session cleanup,
+  optional redacted diagnostics and localized permission/throttle feedback.
+- Add Yahoo, iCloud and Fastmail presets with official TLS endpoints, app-password
+  guidance and primary-login/iCloud fallback settings.
+- Add a native Studio Exchange Server (EWS) account window with explicit HTTPS
+  configuration, NTLMv2 by default and optional Basic authentication. Browse
+  folders and bounded message pages, read MIME bodies and attachment details,
+  change read/flag state, move messages and use Deleted Items. Compose, reply and
+  forward through EWS with explicit uncertainty acknowledgement before retry.
+  This foreground host clears credentials, transient downloaded messages and
+  retained drafts on disconnect or close; explicit archived copies are kept
+  separately. It does not provide a durable outbox.
+- Restore Studio's saved EML reader alongside native Mail accounts, preserving
+  original message bytes, full/compact reading and safe delayed file selection.
+  Keep native account transports outside the browser Mail entry and use a
+  mailbox list/detail layout on narrow windows.
+- Fetch selected native messages through the bounded Quds IMAP provider with
+  mailbox/UIDVALIDITY/UID checks. Reject insecure-origin account discovery and
+  contain server diagnostics at the Studio boundary.
+- Use the Word RenderBox surface for plain-text Mail composition. Validate one
+  recipient and headers, encode non-ASCII MIME safely, separate SMTP submission
+  from Sent-folder filing, and retain unconfirmed drafts with an explicit
+  acknowledgement before another attempt. Keep confirmed acceptance final when
+  subsequent cleanup fails, and independently abort both owned transports when
+  releasing a session. This remains a foreground,
+  session-only host; durable outbox and real-provider qualification are separate.
+- Retain incoming reply, text-only forward and mark-read actions. Quote the
+  loaded plain-text body with Unicode-safe truncation, protect uncertain drafts
+  from replacement, and verify read flags through the bounded UID provider
+  before updating the foreground message. Explicit draft discard does not cancel
+  an already submitted message.
+
 - Add **Add Zotero annotation** to the native Word ribbon and **Add annotation
   from Zotero…** to the references workspace. Text annotations and their active
   citations insert as one undoable operation and return focus to writing.

@@ -354,10 +354,7 @@ class ProxyBox extends PwBox {
       // Imported via pw_box callers; decoration paint is in pw_paint.
       _paintDeco(context, offset, size, deco);
     }
-    child?.paint(
-      context,
-      offset.translate(childOffset.dx, childOffset.dy),
-    );
+    child?.paint(context, offset.translate(childOffset.dx, childOffset.dy));
     onPaint?.call(context, offset);
   }
 }
@@ -467,7 +464,8 @@ String _sampleGradient(List<String> colors, double t) {
 String _lerpHex(String a, String b, double t) {
   int ch(String hex, int shift) {
     final String clean = hex.replaceAll('#', '');
-    final int n = int.tryParse(
+    final int n =
+        int.tryParse(
           clean.length >= 6 ? clean.substring(clean.length - 6) : clean,
           radix: 16,
         ) ??
@@ -723,11 +721,7 @@ class Page {
     final int headingAt = ctx.headings.length;
     final PwBox body = build(ctx).layout(
       ctx,
-      BoxConstraints(
-        minWidth: contentW,
-        maxWidth: contentW,
-        maxHeight: bodyH,
-      ),
+      BoxConstraints(minWidth: contentW, maxWidth: contentW, maxHeight: bodyH),
     );
     ctx.restampHeadings(
       from: headingAt,
@@ -783,10 +777,9 @@ class Page {
         return null;
       }
       ctx.pageNumber = sink.nextPageNumber;
-      return cb(ctx).layout(
+      return cb(
         ctx,
-        BoxConstraints(maxWidth: contentW, maxHeight: maxH),
-      );
+      ).layout(ctx, BoxConstraints(maxWidth: contentW, maxHeight: maxH));
     }
 
     void flush() {
@@ -951,7 +944,7 @@ class MultiPage extends Page {
 class Document {
   /// Document API.
   Document({
-    this.title = 'Quds Office',
+    this.title = 'CrispOffice',
     this.author = '',
     this.theme,
     this.font,
@@ -1116,10 +1109,9 @@ class _PageSink {
     ctx.links.clear();
     final PdfCanvas canvas = PdfCanvas(format.width, format.height);
     ctx.canvas = canvas;
-    final PwBox? bg = background?.call(ctx).layout(
-      ctx,
-      BoxConstraints.tight(PwSize(format.width, format.height)),
-    );
+    final PwBox? bg = background
+        ?.call(ctx)
+        .layout(ctx, BoxConstraints.tight(PwSize(format.width, format.height)));
     bg?.paint(ctx, PwOffset.zero);
     if (watermark != null) {
       canvas.save();
@@ -1143,10 +1135,9 @@ class _PageSink {
       ctx,
       PwOffset(inset.left, format.height - inset.bottom - footerH),
     );
-    final PwBox? fg = foreground?.call(ctx).layout(
-      ctx,
-      BoxConstraints.tight(PwSize(format.width, format.height)),
-    );
+    final PwBox? fg = foreground
+        ?.call(ctx)
+        .layout(ctx, BoxConstraints.tight(PwSize(format.width, format.height)));
     fg?.paint(ctx, PwOffset.zero);
     canvas.endText();
     pages.add(

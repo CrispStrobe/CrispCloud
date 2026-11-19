@@ -4,6 +4,48 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Extend `vba-excel` with conditional `Do`/`Loop` and `While`/`Wend` loops,
+  `Exit Do`, and ordered `Select Case` alternatives, ranges, and comparisons.
+  Keep source evaluation within the existing shared budgets and execute nested
+  blocks with explicit continuations for portable maximum-depth behavior.
+- Add a classification report and compiler, boundary, CLI, MCP, atomicity,
+  and cold JavaScript depth regressions for the new control flow.
+
+- Use CrispOffice for new revision/comment authors, document producer metadata,
+  PDF titles, Zotero processor identification and built-in samples. Preserve
+  explicit authors and attribution already stored in imported documents.
+
+- Add the `vba-excel` language compiler for an explicitly invoked Excel VBA
+  subset. Lower supported scalar expressions, variables, worksheet/range
+  bindings, conditions, and bounded loops into the existing native macro plan,
+  with source diagnostics and compile-time resource bounds.
+- Resolve worksheet names through the shared command handler, preserving native
+  zero-based indexes and translating VBA one-based indexes in the compiler.
+- Add `.bas` compile, validation, and execution CLI commands, default MCP
+  compilation, a monthly totals example, and portable JavaScript qualification.
+  Embedded projects remain inert; full VBA and document-dependent branching
+  remain unsupported.
+
+- Add `quds_office_automation.dart` with versioned, parameterized native macros,
+  successful-call recording, detached document transactions, host operation
+  allowlists, limits, cooperative cancellation, and a language-compiler registry
+  suitable for explicit future VBA adapters. Embedded VBA remains inert.
+- Promote all 67 fidelity document operations into one portable catalog shared
+  by native macros and MCP while retaining the original CLI entry points.
+  Refuse unsupported protected edits and require explicit host image lookups.
+- Add macro and MCP stdio CLIs, structured diagnostics, complete-output file
+  publication, examples, and regression tests including opaque VBA preservation.
+
+- Preserve combining maddah and hamza in Arabic phrase comparison and reject
+  matches inside Unicode word/identifier tokens without changing source offsets.
+- Keep distinct findings from one provider separate when merging equivalent
+  cross-provider findings; retain complex-script language and formatting when
+  deciding whether adjacent Word runs may coalesce.
+- Add explicit active-language-only Word override removal while preserving the
+  existing low-level reset defaults and unrelated native language metadata.
+- Split proofing ranges without changing unselected text, and retain run
+  boundaries when joining them would change script-dependent language routing.
+
 - Add Zotero's native Add Annotation command for Zotero 9 and later. Selected
   text annotations use the research-note insertion protocol, preserving active
   citations, comments and supported formatting in one staged transaction.

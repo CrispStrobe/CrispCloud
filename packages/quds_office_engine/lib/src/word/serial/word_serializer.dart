@@ -1399,11 +1399,15 @@ class WordSerializer {
         },
       );
     }
-    if (r.proofingLanguage != null) {
+    if (r.proofingLanguage != null || r.complexScriptLanguage != null) {
       w.writeEmptyElement(
         'lang',
         prefix: 'w',
-        attributes: {'w:val': r.proofingLanguage!},
+        attributes: {
+          if (r.proofingLanguage != null) 'w:val': r.proofingLanguage!,
+          if (r.complexScriptLanguage != null)
+            'w:bidi': r.complexScriptLanguage!,
+        },
       );
     }
     w.writeEndElement();

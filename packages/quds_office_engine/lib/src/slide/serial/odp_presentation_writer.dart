@@ -546,7 +546,7 @@ abstract final class OdpPresentationWriter {
     value('initial-creator', 'meta', presentation.properties.creator);
     value('creation-date', 'meta', presentation.properties.createdIso);
     value('date', 'dc', presentation.properties.modifiedIso);
-    value('generator', 'meta', 'Quds Office');
+    value('generator', 'meta', 'CrispOffice');
     w.writeEndElement();
     w.writeEndElement();
     return w.toXml();

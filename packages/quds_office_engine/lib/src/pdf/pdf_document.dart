@@ -100,7 +100,7 @@ class PdfAcroField {
 /// Native PDF 1.7 compiler.
 class PdfDocument {
   /// PdfDocument API.
-  PdfDocument({this.title = 'Quds Office', this.author = ''});
+  PdfDocument({this.title = 'CrispOffice', this.author = ''});
 
   /// title API.
   final String title;
@@ -126,7 +126,7 @@ class PdfDocument {
     SfntFont? font,
     OfficeFontSet? fonts,
     PdfSaveOptions saveOptions = const PdfSaveOptions(),
-    String title = 'Quds Office',
+    String title = 'CrispOffice',
   }) => OfficePdfExport.word(
     document,
     font: font,
@@ -141,7 +141,7 @@ class PdfDocument {
     SfntFont? font,
     OfficeFontSet? fonts,
     PdfSaveOptions saveOptions = const PdfSaveOptions(),
-    String title = 'Quds Office',
+    String title = 'CrispOffice',
     String? password,
   }) => OfficePdfExport.fromBytes(
     bytes,
@@ -158,7 +158,7 @@ class PdfDocument {
     SfntFont? font,
     OfficeFontSet? fonts,
     PdfSaveOptions saveOptions = const PdfSaveOptions(),
-    String title = 'Quds Office',
+    String title = 'CrispOffice',
   }) => OfficePdfExport.workbook(
     book,
     font: font,
@@ -173,7 +173,7 @@ class PdfDocument {
     SfntFont? font,
     OfficeFontSet? fonts,
     PdfSaveOptions saveOptions = const PdfSaveOptions(),
-    String title = 'Quds Office',
+    String title = 'CrispOffice',
   }) => OfficePdfExport.presentation(
     deck,
     font: font,
@@ -260,7 +260,7 @@ class PdfDocument {
       _PdfObj(
         infoId,
         '<</Title ${_pdfString(title)}/Author ${_pdfString(author)}'
-        '/Producer ${_pdfString('Quds Office Engine')}'
+        '/Producer ${_pdfString('CrispOffice Engine')}'
         '${options.pdfA ? '/GTS_PDFXVersion ${_pdfString('PDF/A')}' : ''}>>',
       ),
     );

@@ -5,6 +5,7 @@ import 'package:quds_office_editor/quds_office_editor.dart';
 
 class _ProbeProvider extends OfficeProofingProvider {
   _ProbeProvider({
+    this.id = 'session-test',
     this.status = OfficeProofingStatus.success,
     this.languages,
     this.gate,
@@ -19,7 +20,7 @@ class _ProbeProvider extends OfficeProofingProvider {
   bool disposed = false;
 
   @override
-  String get id => 'session-test';
+  final String id;
 
   @override
   int get configurationRevision => version;
@@ -723,7 +724,12 @@ void main() {
         expect(summary.complete, isFalse);
         expect(summary.checkedParagraphCount, 0);
         expect(summary.issues, isEmpty);
-        expect(summary.statusMessage, contains(status.name));
+        expect(
+          summary.statusMessage,
+          status == OfficeProofingStatus.unsupported
+              ? contains('No configured checker supports')
+              : contains(status.name),
+        );
         provider.status = OfficeProofingStatus.success;
         final retry = await h.session.checkNow();
         expect(provider.requests, hasLength(2));
@@ -742,7 +748,108 @@ void main() {
       final summary = await h.session.checkNow();
       expect(provider.requests, isEmpty);
       expect(summary.complete, isFalse);
-      expect(summary.statusMessage, contains('does not support en-GB'));
+      expect(
+        summary.statusMessage,
+        contains('No configured checker supports en-GB'),
+      );
+    },
+  );
+
+  test(
+    'a successful paragraph cannot cover another unsupported paragraph',
+    () async {
+      final provider = _ProbeProvider(languages: <String>{'de-DE'});
+      final h = _Harness(
+        provider: provider,
+        document: WmlDocument(
+          sections: [
+            WmlSection(
+              blocks: [
+                _paragraph(
+                  'Guter Text.',
+                  properties: WmlParagraphProps(proofingLanguage: 'de-DE'),
+                ),
+                _paragraph(
+                  'A short text.',
+                  properties: WmlParagraphProps(proofingLanguage: 'en-GB'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+      final summary = await h.session.checkNow();
+      expect(provider.requests.single.language, 'de-DE');
+      expect(summary.reports, hasLength(2));
+      expect(summary.checkedParagraphCount, 1);
+      expect(summary.paragraphCount, 2);
+      expect(summary.complete, isFalse);
+      expect(summary.statusMessage, contains('1 of 2 paragraphs checked'));
+      expect(summary.statusMessage, contains('coverage is incomplete'));
+      expect(summary.statusMessage, isNot(contains('No issues found')));
+      expect(summary.statusMessage, isNot(contains('does not support')));
+
+      // Reports are the evidence of coverage even when a caller supplies a
+      // count that says all paragraphs were checked.
+      final recounted = WordProofingSummary(
+        hasResults: true,
+        paragraphCount: 2,
+        checkedParagraphCount: 2,
+        reports: summary.reports,
+      );
+      expect(recounted.complete, isFalse);
+      expect(recounted.statusMessage, contains('coverage is incomplete'));
+    },
+  );
+
+  test(
+    'language-specific checkers complete every paragraph without unsupported warnings',
+    () async {
+      final german = _ProbeProvider(
+        id: 'german-checker',
+        languages: <String>{'de-DE'},
+      );
+      final english = _ProbeProvider(
+        id: 'english-checker',
+        languages: <String>{'en-GB'},
+      );
+      final h = _Harness(
+        providers: [german, english],
+        document: WmlDocument(
+          sections: [
+            WmlSection(
+              blocks: [
+                _paragraph(
+                  'Guter Text.',
+                  properties: WmlParagraphProps(proofingLanguage: 'de-DE'),
+                ),
+                _paragraph(
+                  'A short text.',
+                  properties: WmlParagraphProps(proofingLanguage: 'en-GB'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+      final summary = await h.session.checkNow();
+      expect(german.requests.single.language, 'de-DE');
+      expect(english.requests.single.language, 'en-GB');
+      expect(summary.reports, hasLength(2));
+      for (final report in summary.reports) {
+        expect(
+          report.results.map((result) => result.status),
+          containsAll([
+            OfficeProofingStatus.success,
+            OfficeProofingStatus.unsupported,
+          ]),
+        );
+      }
+      expect(summary.checkedParagraphCount, 2);
+      expect(summary.complete, isTrue);
+      expect(summary.statusMessage, contains('No issues found'));
+      expect(summary.statusMessage, isNot(contains('does not support')));
+      expect(summary.statusMessage, isNot(contains('unsupported')));
     },
   );
 

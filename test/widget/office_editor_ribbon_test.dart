@@ -24,6 +24,9 @@ Widget _host(
   OfficeEditorKind kind, {
   Locale? locale,
 }) {
+  if (controller is WordEditorController) {
+    controller.proofing.enabled = false;
+  }
   return MaterialApp(
     locale: locale,
     localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -43,6 +46,8 @@ Widget _host(
           Expanded(
             child: switch (kind) {
               OfficeEditorKind.word => QudsWordEditor(
+                // Proofing is covered separately; ribbon tests avoid native IO.
+                enableLiveProofing: false,
                 controller: controller as WordEditorController,
                 config: controller.config,
               ),

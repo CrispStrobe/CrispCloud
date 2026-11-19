@@ -16,7 +16,7 @@ import '../widgets/pw_types.dart';
 Uint8List buildAyatWaAsharPdf({SfntFont? font, SfntFont? fontBold}) {
   final Document doc = Document(
     title: 'آيَاتٌ وَأَشْعَارٌ',
-    author: 'Quds Studio',
+    author: 'CrispOffice',
     font: font,
     fontBold: fontBold,
     theme: const ThemeData(
@@ -104,7 +104,12 @@ Uint8List buildAyatWaAsharPdf({SfntFont? font, SfntFont? fontBold}) {
           style: TextStyle(fontSize: 10.5, color: '44403C', height: 1.6),
         ),
         const SizedBox(height: 10),
-        _band('سُورَةُ الْفَاتِحَةِ', 'حَفْصٌ عَنْ عَاصِمٍ  ·  سَبْعُ آيَاتٍ', '14532D', 'DCFCE7'),
+        _band(
+          'سُورَةُ الْفَاتِحَةِ',
+          'حَفْصٌ عَنْ عَاصِمٍ  ·  سَبْعُ آيَاتٍ',
+          '14532D',
+          'DCFCE7',
+        ),
         ..._numberedAyat(const <String>[
           'بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ',
           'الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ',
@@ -186,13 +191,13 @@ Uint8List buildAyatWaAsharPdf({SfntFont? font, SfntFont? fontBold}) {
         _ayatCard(
           '٢٥٥',
           'اللَّهُ لَا إِلَهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ '
-          'لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ '
-          'لَهُ مَا فِي السَّمَاوَاتِ وَمَا فِي الْأَرْضِ '
-          'مَنْ ذَا الَّذِي يَشْفَعُ عِنْدَهُ إِلَّا بِإِذْنِهِ '
-          'يَعْلَمُ مَا بَيْنَ أَيْدِيهِمْ وَمَا خَلْفَهُمْ '
-          'وَلَا يُحِيطُونَ بِشَيْءٍ مِنْ عِلْمِهِ إِلَّا بِمَا شَاءَ '
-          'وَسِعَ كُرْسِيُّهُ السَّمَاوَاتِ وَالْأَرْضَ '
-          'وَلَا يَئُودُهُ حِفْظُهُمَا وَهُوَ الْعَلِيُّ الْعَظِيمُ',
+              'لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ '
+              'لَهُ مَا فِي السَّمَاوَاتِ وَمَا فِي الْأَرْضِ '
+              'مَنْ ذَا الَّذِي يَشْفَعُ عِنْدَهُ إِلَّا بِإِذْنِهِ '
+              'يَعْلَمُ مَا بَيْنَ أَيْدِيهِمْ وَمَا خَلْفَهُمْ '
+              'وَلَا يُحِيطُونَ بِشَيْءٍ مِنْ عِلْمِهِ إِلَّا بِمَا شَاءَ '
+              'وَسِعَ كُرْسِيُّهُ السَّمَاوَاتِ وَالْأَرْضَ '
+              'وَلَا يَئُودُهُ حِفْظُهُمَا وَهُوَ الْعَلِيُّ الْعَظِيمُ',
         ),
         const NewPage(),
         Header(
@@ -258,7 +263,11 @@ Uint8List buildAyatWaAsharPdf({SfntFont? font, SfntFont? fontBold}) {
             color: '9F1239',
           ),
         ),
-        _poetMeta('مِنْ مَدِيحِ سَيْفِ الدَّوْلَةِ', 'الطَّوِيلُ', 'الْقَرْنُ الرَّابِعُ'),
+        _poetMeta(
+          'مِنْ مَدِيحِ سَيْفِ الدَّوْلَةِ',
+          'الطَّوِيلُ',
+          'الْقَرْنُ الرَّابِعُ',
+        ),
         _bayt(
           'عَلَى قَدْرِ أَهْلِ الْعَزْمِ تَأْتِي الْعَزَائِمُ',
           'وَتَأْتِي عَلَى قَدْرِ الْكِرَامِ الْمَكَارِمُ',
@@ -322,7 +331,12 @@ Uint8List buildAyatWaAsharPdf({SfntFont? font, SfntFont? fontBold}) {
         ),
         const SizedBox(height: 10),
         Table.fromTextArray(
-          headers: const <String>['الْقِطْعَةُ', 'الْفَنُّ', 'الْبَحْرُ / الرِّوَايَةُ', 'الْعَصْرُ'],
+          headers: const <String>[
+            'الْقِطْعَةُ',
+            'الْفَنُّ',
+            'الْبَحْرُ / الرِّوَايَةُ',
+            'الْعَصْرُ',
+          ],
           columnWidths: const <double>[1.6, 0.9, 1.5, 1.1],
           cellHeight: 22,
           headerDecoration: '1C1917',
@@ -341,10 +355,30 @@ Uint8List buildAyatWaAsharPdf({SfntFont? font, SfntFont? fontBold}) {
             <String>['الْإِسْرَاءُ ٨٢', 'قُرْآنٌ', 'حَفْصٌ', 'مَكِّيَّةٌ'],
             <String>['آيَةُ الْكُرْسِيِّ', 'قُرْآنٌ', 'حَفْصٌ', 'مَدَنِيَّةٌ'],
             <String>['قِفَا نَبْكِ', 'شِعْرٌ', 'الطَّوِيلُ', 'جَاهِلِيٌّ'],
-            <String>['وَلَقَدْ ذَكَرْتُكِ', 'شِعْرٌ', 'الْكَامِلُ', 'جَاهِلِيٌّ'],
-            <String>['عَلَى قَدْرِ أَهْلِ الْعَزْمِ', 'شِعْرٌ', 'الطَّوِيلُ', 'عَبَّاسِيٌّ'],
-            <String>['أَرَاكَ عَصِيَّ الدَّمْعِ', 'شِعْرٌ', 'الطَّوِيلُ', 'حَمْدَانِيٌّ'],
-            <String>['أَضْحَى التَّنَائِي', 'شِعْرٌ', 'الْبَسِيطُ', 'أَنْدَلُسِيٌّ'],
+            <String>[
+              'وَلَقَدْ ذَكَرْتُكِ',
+              'شِعْرٌ',
+              'الْكَامِلُ',
+              'جَاهِلِيٌّ',
+            ],
+            <String>[
+              'عَلَى قَدْرِ أَهْلِ الْعَزْمِ',
+              'شِعْرٌ',
+              'الطَّوِيلُ',
+              'عَبَّاسِيٌّ',
+            ],
+            <String>[
+              'أَرَاكَ عَصِيَّ الدَّمْعِ',
+              'شِعْرٌ',
+              'الطَّوِيلُ',
+              'حَمْدَانِيٌّ',
+            ],
+            <String>[
+              'أَضْحَى التَّنَائِي',
+              'شِعْرٌ',
+              'الْبَسِيطُ',
+              'أَنْدَلُسِيٌّ',
+            ],
           ],
         ),
         const SizedBox(height: 14),
@@ -376,7 +410,11 @@ Uint8List buildAyatWaAsharPdf({SfntFont? font, SfntFont? fontBold}) {
               Text(
                 'قُدْس أُوفِس  ·  عَيِّنَةُ الْمَعْرِضِ',
                 textAlign: TextAlign.start,
-                style: TextStyle(fontSize: 8, color: 'FDBA74', letterSpacing: 0.4),
+                style: TextStyle(
+                  fontSize: 8,
+                  color: 'FDBA74',
+                  letterSpacing: 0.4,
+                ),
               ),
               SizedBox(height: 4),
               Text(
@@ -413,7 +451,11 @@ Widget _cover() {
             Text(
               'قُدْس أُوفِس  ·  دِيوَانُ الْعَيِّنَةِ  ·  تَجْوَال',
               textAlign: TextAlign.start,
-              style: TextStyle(fontSize: 8, color: 'FED7AA', letterSpacing: 0.5),
+              style: TextStyle(
+                fontSize: 8,
+                color: 'FED7AA',
+                letterSpacing: 0.5,
+              ),
             ),
             SizedBox(height: 8),
             Text(
@@ -440,11 +482,31 @@ Widget _cover() {
         spacing: 6,
         runSpacing: 6,
         children: const <Widget>[
-          Badge('قُرْآنٌ', backgroundColor: 'DCFCE7', foregroundColor: '14532D'),
-          Badge('شِعْرٌ جَاهِلِيٌّ', backgroundColor: 'FFE4E6', foregroundColor: '9F1239'),
-          Badge('شِعْرٌ عَبَّاسِيٌّ', backgroundColor: 'FFEDD5', foregroundColor: '9A3412'),
-          Badge('أَنْدَلُسِيٌّ', backgroundColor: 'E0E7FF', foregroundColor: '3730A3'),
-          Badge('مَشْكُولٌ', backgroundColor: 'FEF3C7', foregroundColor: '92400E'),
+          Badge(
+            'قُرْآنٌ',
+            backgroundColor: 'DCFCE7',
+            foregroundColor: '14532D',
+          ),
+          Badge(
+            'شِعْرٌ جَاهِلِيٌّ',
+            backgroundColor: 'FFE4E6',
+            foregroundColor: '9F1239',
+          ),
+          Badge(
+            'شِعْرٌ عَبَّاسِيٌّ',
+            backgroundColor: 'FFEDD5',
+            foregroundColor: '9A3412',
+          ),
+          Badge(
+            'أَنْدَلُسِيٌّ',
+            backgroundColor: 'E0E7FF',
+            foregroundColor: '3730A3',
+          ),
+          Badge(
+            'مَشْكُولٌ',
+            backgroundColor: 'FEF3C7',
+            foregroundColor: '92400E',
+          ),
         ],
       ),
       const SizedBox(height: 16),
@@ -473,12 +535,14 @@ Widget _cover() {
         items: <StepItem>[
           StepItem(
             title: 'مِنَ الذِّكْرِ الْحَكِيمِ',
-            subtitle: 'الْفَاتِحَةُ · الْإِخْلَاصُ · الْعَصْرُ · آيَاتٌ قِصَارٌ',
+            subtitle:
+                'الْفَاتِحَةُ · الْإِخْلَاصُ · الْعَصْرُ · آيَاتٌ قِصَارٌ',
             done: true,
           ),
           StepItem(
             title: 'مِنْ عُيُونِ الشِّعْرِ',
-            subtitle: 'امْرُؤُ الْقَيْسِ · عَنْتَرَةُ · الْمُتَنَبِّي · أَبُو فِرَاسٍ · ابْنُ زَيْدُونَ',
+            subtitle:
+                'امْرُؤُ الْقَيْسِ · عَنْتَرَةُ · الْمُتَنَبِّي · أَبُو فِرَاسٍ · ابْنُ زَيْدُونَ',
             done: true,
           ),
           StepItem(

@@ -49,10 +49,17 @@ final class OfficeThesaurusTerm {
 
 /// Related concepts stay separate from the alternatives of a meaning.
 final class OfficeThesaurusRelation {
-  const OfficeThesaurusRelation({required this.type, required this.target});
+  const OfficeThesaurusRelation({
+    required this.type,
+    required this.target,
+    this.label,
+  });
 
   final String type;
   final String target;
+
+  /// Display label resolved from a sense or term target when available.
+  final String? label;
 }
 
 final class OfficeThesaurusSense {
@@ -428,7 +435,12 @@ final class OfficeThesaurusService {
         }
       }
       _checkEpoch(epoch);
-      final ordered = senses.values.toList();
+      final ordered = await _resolveRelations(
+        pack,
+        senses.values.toList(),
+        epoch,
+      );
+      _checkEpoch(epoch);
       final display = sourceForm;
       ordered.sort((a, b) {
         final aExact = a.terms.any((term) => term.text == display);
@@ -696,6 +708,88 @@ final class OfficeThesaurusService {
           pos: _optionalString(_object(value)['pos']),
         ),
     ];
+  }
+
+  Future<List<OfficeThesaurusSense>> _resolveRelations(
+    OfficeThesaurusPackManifest pack,
+    List<OfficeThesaurusSense> values,
+    int epoch,
+  ) async {
+    final termLabels = <String, String>{
+      for (final sense in values)
+        for (final term in sense.terms) term.id: term.text,
+    };
+    final senseLabels = <String, String>{
+      for (final sense in values)
+        if (sense.terms.isNotEmpty) sense.id: sense.terms.first.text,
+    };
+    Future<String?> labelFor(String target) async {
+      final known = senseLabels[target] ?? termLabels[target];
+      if (known != null) return known;
+      if (!target.startsWith('oewn-') && !target.startsWith('ot-')) return null;
+      try {
+        final shard = await _shard(
+          pack,
+          'senses/${thesaurusShard(target)}.json',
+          epoch,
+        );
+        _checkEpoch(epoch);
+        final value = shard[target];
+        if (value == null) return null;
+        final sense = _parseSense(_object(value));
+        final text = sense.terms.isEmpty ? null : sense.terms.first.text;
+        if (text != null) senseLabels[target] = text;
+        return text;
+      } on Object {
+        // A label may be missing, but a reset invalidates the whole lookup.
+        _checkEpoch(epoch);
+        return null;
+      }
+    }
+
+    Future<List<OfficeThesaurusRelation>> resolved(
+      Iterable<OfficeThesaurusRelation> relations,
+    ) async {
+      final output = <OfficeThesaurusRelation>[];
+      for (final relation in relations.take(128)) {
+        final label = await labelFor(relation.target);
+        output.add(
+          OfficeThesaurusRelation(
+            type: relation.type,
+            target: relation.target,
+            label: label,
+          ),
+        );
+      }
+      return output;
+    }
+
+    final output = <OfficeThesaurusSense>[];
+    for (final sense in values) {
+      output.add(
+        OfficeThesaurusSense(
+          id: sense.id,
+          source: sense.source,
+          pos: sense.pos,
+          gloss: sense.gloss,
+          examples: sense.examples,
+          labels: sense.labels,
+          terms: <OfficeThesaurusTerm>[
+            for (final term in sense.terms)
+              OfficeThesaurusTerm(
+                id: term.id,
+                text: term.text,
+                labels: term.labels,
+                sourceIds: term.sourceIds,
+                relations: await resolved(term.relations),
+                note: term.note,
+              ),
+          ],
+          relations: await resolved(sense.relations),
+        ),
+      );
+    }
+    return output;
   }
 
   Future<void> _addSenses(

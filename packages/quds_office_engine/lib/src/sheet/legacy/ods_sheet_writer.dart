@@ -77,7 +77,7 @@ abstract final class OdsSheetWriter {
     w.writeAttribute('office:version', '1.3');
     w.writeStartElement('meta', prefix: 'office');
     w.writeStartElement('generator', prefix: 'meta');
-    w.writeText('Quds Office');
+    w.writeText('CrispOffice');
     w.writeEndElement();
     w.writeEndElement();
     w.writeEndElement();

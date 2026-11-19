@@ -318,6 +318,126 @@ void main() {
     },
   );
 
+  for (final rejectRead in [false, true]) {
+    test('pack clear rejects delayed relation labels when the read '
+        '${rejectRead ? 'fails' : 'completes'}', () async {
+      final fixture = _relatedFixture();
+      final files = fixture.files();
+      final relationPath =
+          'en/senses/${thesaurusShard('oewn-institution')}.json';
+      final started = Completer<void>(), release = Completer<void>();
+      final service = OfficeThesaurusService(
+        loadAsset: (path) async {
+          if (path == relationPath) {
+            started.complete();
+            await release.future;
+            if (rejectRead) throw StateError('The old asset was removed.');
+          }
+          return files[path];
+        },
+      );
+      final pending = service.lookup(query('bank'));
+      await started.future;
+      service.clear();
+      release.complete();
+      final result = await pending;
+      expect(result.status, OfficeThesaurusStatus.failedPack);
+      expect(result.senses, isEmpty);
+      expect(result.message, contains('pack changed'));
+      expect(service.cachedShardCount, 0);
+      expect(service.cachedResultCount, 0);
+    });
+  }
+
+  test(
+    'an old relation read cannot replace a result cached after pack clear',
+    () async {
+      final fixture = _relatedFixture();
+      final files = fixture.files();
+      final relationPath =
+          'en/senses/${thesaurusShard('oewn-institution')}.json';
+      final started = Completer<void>(), release = Completer<void>();
+      var delayed = false;
+      final service = OfficeThesaurusService(
+        loadAsset: (path) async {
+          if (path == relationPath && !delayed) {
+            delayed = true;
+            started.complete();
+            await release.future;
+          }
+          return files[path];
+        },
+      );
+      final obsolete = service.lookup(query('bank'));
+      await started.future;
+      service.clear();
+      final replacement = await service.lookup(query('bank'));
+      expect(replacement.status, OfficeThesaurusStatus.ready);
+      expect(replacement.senses.single.relations.single.label, 'institution');
+      release.complete();
+      final old = await obsolete;
+      expect(old.status, OfficeThesaurusStatus.failedPack);
+      expect(old.message, contains('pack changed'));
+      expect(await service.lookup(query('bank')), same(replacement));
+      expect(service.cachedResultCount, 1);
+    },
+  );
+
+  test(
+    'a missing optional relation label keeps the main entry usable',
+    () async {
+      final fixture = _relatedFixture();
+      final files = fixture.files()
+        ..remove('en/senses/${thesaurusShard('oewn-institution')}.json');
+      final service = OfficeThesaurusService(
+        loadAsset: (path) async => files[path],
+      );
+      final result = await service.lookup(query('bank'));
+      expect(result.status, OfficeThesaurusStatus.ready);
+      expect(result.senses.single.terms.map((term) => term.text), [
+        'bank',
+        'depository',
+      ]);
+      expect(result.senses.single.relations.single.target, 'oewn-institution');
+      expect(result.senses.single.relations.single.label, isNull);
+    },
+  );
+
+  test(
+    'pack clear during relation loading cannot cache stale results',
+    () async {
+      final fixture = PackFixture()
+        ..sense('good', ['good', 'fine'])
+        ..sense('oewn-institution', ['institution']);
+      fixture.senses['good']!['relations'] = [
+        {'type': 'hypernym', 'target': 'oewn-institution'},
+      ];
+      final files = fixture.files();
+      final targetPath = 'en/senses/${thesaurusShard('oewn-institution')}.json';
+      expect(thesaurusShard('good'), isNot(thesaurusShard('oewn-institution')));
+      final started = Completer<void>(), release = Completer<void>();
+      final service = OfficeThesaurusService(
+        loadAsset: (path) async {
+          if (path == targetPath) {
+            started.complete();
+            await release.future;
+          }
+          return files[path];
+        },
+      );
+      final pending = service.lookup(query('good'));
+      await started.future;
+      service.clear();
+      release.complete();
+      final result = await pending;
+      expect(result.status, OfficeThesaurusStatus.failedPack);
+      expect(result.message, contains('pack changed'));
+      expect(service.cachedShardCount, 0);
+      expect(service.cachedResultCount, 0);
+      expect(service.revision, 1);
+    },
+  );
+
   test(
     'cache limits remain bounded and repeated results retain candidate identity',
     () async {
@@ -385,6 +505,16 @@ void main() {
 
 OfficeThesaurusQuery query(String text, [String language = 'en-US']) =>
     OfficeThesaurusQuery(text: text, language: language);
+
+PackFixture _relatedFixture() {
+  final fixture = PackFixture()
+    ..sense('finance', ['bank', 'depository'])
+    ..sense('oewn-institution', ['institution', 'organization']);
+  fixture.senses['finance']!['relations'] = [
+    {'type': 'hypernym', 'target': 'oewn-institution'},
+  ];
+  return fixture;
+}
 
 class PackFixture {
   PackFixture({this.locale = 'en'});

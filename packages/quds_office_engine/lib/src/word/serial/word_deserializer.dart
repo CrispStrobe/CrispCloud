@@ -20,6 +20,7 @@ import '../model/word_content_controls.dart';
 import '../model/word_fields.dart';
 import '../model/word_link.dart';
 import '../model/word_notes.dart';
+import '../model/word_proofing_language.dart';
 import '../model/word_revision.dart';
 import '../model/word_styles.dart';
 import '../model/word_toc.dart';
@@ -1314,7 +1315,7 @@ class WordDeserializer {
     final bool deleted = reader.localName == 'del';
     final String author =
         reader.getAttribute('author', namespaceUri: OfficeNamespaces.w) ??
-        'Quds Office';
+        'CrispOffice';
     final String date =
         reader.getAttribute('date', namespaceUri: OfficeNamespaces.w) ?? '';
     final int start = paragraph.text.length;
@@ -2223,6 +2224,15 @@ class WordDeserializer {
             'val',
             namespaceUri: OfficeNamespaces.w,
           );
+          props.complexScriptLanguage = reader.getAttribute(
+            'bidi',
+            namespaceUri: OfficeNamespaces.w,
+          );
+        case 'rtl' || 'cs':
+          final on = _onOff(
+            reader.getAttribute('val', namespaceUri: OfficeNamespaces.w),
+          );
+          props.complexScript = (props.complexScript ?? false) || on;
         case 'noProof':
           props.noProof = _onOff(
             reader.getAttribute('val', namespaceUri: OfficeNamespaces.w),
@@ -3409,12 +3419,19 @@ class WordDeserializer {
       return;
     }
     if (readProofingLanguage) {
-      document.proofingLanguage = XmlDocument.parse(part.readText()).root
+      final defaultLanguage = XmlDocument.parse(part.readText()).root
           ?.firstChild('docDefaults', namespaceUri: OfficeNamespaces.w)
           ?.firstChild('rPrDefault', namespaceUri: OfficeNamespaces.w)
           ?.firstChild('rPr', namespaceUri: OfficeNamespaces.w)
-          ?.firstChild('lang', namespaceUri: OfficeNamespaces.w)
-          ?.getAttribute('val', namespaceUri: OfficeNamespaces.w);
+          ?.firstChild('lang', namespaceUri: OfficeNamespaces.w);
+      document.proofingLanguage = defaultLanguage?.getAttribute(
+        'val',
+        namespaceUri: OfficeNamespaces.w,
+      );
+      document.complexScriptLanguage = defaultLanguage?.getAttribute(
+        'bidi',
+        namespaceUri: OfficeNamespaces.w,
+      );
     }
     document.styles.clear();
     final XmlPullReader reader = WordMarkupCompatibilityReader(part.readText());
@@ -3589,24 +3606,35 @@ class WordDeserializer {
     }
   }
 
-  /// Removes direct Latin-language overrides from a detached paragraph preview.
+  /// Removes direct language overrides from a detached paragraph preview.
   ///
   /// The source identifies the current table/paragraph/character style context.
   /// Effective inherited run languages remain available for live proofing,
   /// while sparse export continues to omit the removed direct override. Other
-  /// formatting, East Asian/bidi language metadata, and the live document and
+  /// formatting, East Asian language metadata, and the live document and
   /// package are unchanged. Returns false when the selected text already
   /// inherits its language. The preview must be detached and have source text.
+  /// Set [includeComplexScript] to also remove direct `w:lang/@w:bidi`
+  /// overrides. Otherwise complex-script metadata is preserved.
+  /// Set [activeLanguageOnly] to clear only the language slots used by each
+  /// selected fragment, preserving inactive slots. A mixed-script fragment
+  /// can use both slots. This takes precedence over [includeComplexScript].
   bool clearRunProofingLanguage(
     WmlDocument document,
     WmlParagraph sourceParagraph,
     WmlParagraph previewParagraph,
     int start,
-    int end,
-  ) => _StyleCascade(
-    this,
-    document,
-  ).clearRunProofingLanguage(sourceParagraph, previewParagraph, start, end);
+    int end, {
+    bool includeComplexScript = false,
+    bool activeLanguageOnly = false,
+  }) => _StyleCascade(this, document).clearRunProofingLanguage(
+    sourceParagraph,
+    previewParagraph,
+    start,
+    end,
+    includeComplexScript: includeComplexScript,
+    activeLanguageOnly: activeLanguageOnly,
+  );
 
   /// Recompute effective formatting after editing a source style definition.
   void refreshStyles(WmlDocument document) {
@@ -3868,7 +3896,7 @@ class WordDeserializer {
           document.comments.length;
       final String author =
           reader.getAttribute('author', namespaceUri: OfficeNamespaces.w) ??
-          'Quds Office';
+          'CrispOffice';
       final String initials =
           reader.getAttribute('initials', namespaceUri: OfficeNamespaces.w) ??
           '';

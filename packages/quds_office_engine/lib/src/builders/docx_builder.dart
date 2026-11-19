@@ -941,7 +941,7 @@ class DocxDocumentBuilder {
     );
     for (int i = 0; i < _comments.length; i++) {
       buf.write(
-        '<w:comment w:id="$i" w:author="Quds Office" w:date="2026-01-01T00:00:00Z" w:initials="QO">'
+        '<w:comment w:id="$i" w:author="CrispOffice" w:date="2026-01-01T00:00:00Z" w:initials="CO">'
         '<w:p><w:r><w:t xml:space="preserve">${OfficeMarkup.escape(_comments[i])}</w:t></w:r></w:p>'
         '</w:comment>',
       );

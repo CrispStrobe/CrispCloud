@@ -73,6 +73,60 @@ bool _clear(
 );
 
 void main() {
+  for (final selection in [
+    (name: 'Latin', start: 0, end: 5, latin: 'de-CH', complex: 'ar-SA'),
+    (name: 'Arabic', start: 6, end: 10, latin: 'en-GB', complex: null),
+    (name: 'mixed', start: 0, end: 10, latin: 'de-CH', complex: null),
+  ]) {
+    test(
+      'active-only ${selection.name} reset preserves inactive metadata even with includeComplexScript',
+      () {
+        final document = _fixture(
+          _paragraph().replaceFirst('Alpha Beta', 'Latin عربي'),
+        );
+        final source = document.paragraphs.single;
+        final originalParts = _parts(document);
+        final preview = WmlClone.paragraph(source);
+        expect(
+          WordDeserializer().clearRunProofingLanguage(
+            document,
+            source,
+            preview,
+            selection.start,
+            selection.end,
+            includeComplexScript: true,
+            activeLanguageOnly: true,
+          ),
+          isTrue,
+        );
+        final selected = preview.inlines
+            .whereType<WmlRun>()
+            .toList()[selection.start == 0 ? 0 : 1];
+        expect(selected.properties.proofingLanguage, selection.latin);
+        expect(selected.properties.complexScriptLanguage, selection.complex);
+        expect(selected.properties.noProof, isFalse);
+        expect(selected.properties.sourcePropertiesXml, contains('ja-JP'));
+        expect(selected.properties.sourcePropertiesXml, contains('spacing'));
+        expect(
+          selected.properties.importedValues!['lang:bidi'],
+          '${selection.complex}',
+        );
+        expect(_props(source).proofingLanguage, 'en-GB');
+        expect(_props(source).complexScriptLanguage, 'ar-SA');
+        expect(_parts(document), originalParts);
+        source.inlines = preview.inlines;
+        final saved = _reload(document).paragraphs.single.inlines
+            .whereType<WmlRun>()
+            .toList()[selection.start == 0 ? 0 : 1];
+        expect(saved.properties.proofingLanguage, selection.latin);
+        expect(saved.properties.complexScriptLanguage, selection.complex);
+        expect(saved.properties.sourcePropertiesXml, contains('ja-JP'));
+        expect(saved.properties.sourcePropertiesXml, contains('spacing'));
+        expect(saved.properties.noProof, isFalse);
+      },
+    );
+  }
+
   for (final character in [false, true]) {
     test(
       'clearing a direct override restores ${character ? 'character' : 'paragraph'} style live and after save',

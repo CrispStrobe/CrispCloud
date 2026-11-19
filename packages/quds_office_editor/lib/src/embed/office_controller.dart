@@ -48,12 +48,41 @@ final class WordTextProofingTarget {
     required this.language,
     required this.checkingEnabled,
     required this.unavailableReason,
+    this.scriptLanguages = const {},
+    this.detectedLanguages = const {},
+    this.detectionPending = false,
   });
 
   final bool isSelection;
 
   /// Effective language, or null when the target contains several languages.
   final String? language;
+
+  /// The Word language of the target's text per script, in text order:
+  /// `w:lang/@w:val` for Latin (and other non-complex) scripts,
+  /// `w:lang/@w:bidi` for Arabic and Hebrew. A null value means the text of
+  /// that script has several languages.
+  final Map<TextScript, String?> scriptLanguages;
+
+  /// Languages automatic detection found per script (null: several). Empty
+  /// when detection is off, has not run yet ([detectionPending]) or found
+  /// nothing certain.
+  final Map<TextScript, String?> detectedLanguages;
+
+  /// Detection is configured but has not run for this text yet; hosts may
+  /// call [WordEditorController.detectTextProofingLanguages].
+  final bool detectionPending;
+
+  /// Whether "Apply detected language" would change a script's language.
+  bool get canApplyDetectedLanguages =>
+      canEdit &&
+      detectedLanguages.entries.any((entry) {
+        final detected = entry.value;
+        if (detected == null) return true;
+        final current = scriptLanguages[entry.key];
+        return current == null ||
+            primaryLanguageSubtag(current) != primaryLanguageSubtag(detected);
+      });
 
   /// Whether this text permits proofing; null denotes a mixed selection.
   /// This is independent of the session's Check as you type preference.
@@ -767,7 +796,7 @@ class WordEditorController extends OfficeController {
     this.layoutEngine,
     OfficeProofingVocabulary? proofingVocabulary,
     OfficeProofingService? proofingService,
-    String revisionAuthor = 'Quds Office',
+    String revisionAuthor = 'CrispOffice',
   }) : document = document ?? WmlDocument.empty(),
        _initialProofingVocabulary = proofingVocabulary,
        _initialProofingService = proofingService,
@@ -790,7 +819,7 @@ class WordEditorController extends OfficeController {
     WordLayoutEngine? layoutEngine,
     OfficeProofingVocabulary? proofingVocabulary,
     OfficeProofingService? proofingService,
-    String revisionAuthor = 'Quds Office',
+    String revisionAuthor = 'CrispOffice',
   }) {
     final WordEditorController controller = WordEditorController(
       config: config,
@@ -1357,6 +1386,11 @@ class WordEditorController extends OfficeController {
   /// Host opens web / file targets. Internal anchors stay in the editor.
   void Function(WmlHyperlink link)? onFollowExternalLink;
 
+  /// Host-owned language support/download UI. These callbacks never download
+  /// anything themselves and run only after a successful language edit.
+  void Function(String language)? onProofingLanguageChanged;
+  VoidCallback? onManageProofingDownloads;
+
   /// relayout API.
   void relayout({bool localEdit = false}) {
     _syncEmptyParagraphDirection();
@@ -1685,8 +1719,8 @@ class WordEditorController extends OfficeController {
   /// insertComment API.
   void insertComment({
     String text = '',
-    String author = 'Quds Office',
-    String initials = 'QO',
+    String author = 'CrispOffice',
+    String initials = 'CO',
     int? parentId,
     List<WmlParagraph>? paragraphs,
     List<WmlVisual>? visuals,
@@ -1803,8 +1837,8 @@ class WordEditorController extends OfficeController {
   void replyToComment(
     int parentId, {
     required String text,
-    String author = 'Quds Office',
-    String initials = 'QO',
+    String author = 'CrispOffice',
+    String initials = 'CO',
   }) {
     final String body = text.trim();
     if (body.isEmpty) {
@@ -9239,6 +9273,9 @@ class WordEditorController extends OfficeController {
     }
     final ranges = <_WordTextProofingRange>[];
     final languages = <String>{};
+    final scriptLanguages = <TextScript, Set<String>>{};
+    final detectedLanguages = <TextScript, Set<String>>{};
+    var detectionPending = false;
     final enabledValues = <bool>{};
     String? unavailable;
     if (!config.allowsMutation ||
@@ -9322,6 +9359,27 @@ class WordEditorController extends OfficeController {
             ),
           ),
         );
+        if (proofing.automaticLanguageDetection &&
+            proofing.languageDetector != null) {
+          final detection = proofing.detectedLanguages(text);
+          if (detection == null) {
+            detectionPending |= scriptSegments(
+              text.substring(from, to),
+            ).isNotEmpty;
+          } else {
+            for (final segment in detection.segments) {
+              final language = segment.language;
+              if (language == null ||
+                  segment.end <= from ||
+                  segment.start >= to) {
+                continue;
+              }
+              detectedLanguages
+                  .putIfAbsent(segment.script, () => <String>{})
+                  .add(language);
+            }
+          }
+        }
       }
       var offset = 0;
       for (final inline in paragraph.inlines) {
@@ -9337,14 +9395,61 @@ class WordEditorController extends OfficeController {
         } else if (inline is WmlRun) {
           final end = offset + inline.text.length;
           if (selected && from < end && to > offset) {
-            languages.add(
-              normalizeProofingLanguage(
-                inline.properties.proofingLanguage ??
-                    paragraph.properties.proofingLanguage ??
-                    document.proofingLanguage ??
-                    'de-DE',
-              ),
+            final fragment = from <= offset && to >= end
+                ? inline
+                : WmlRun(
+                    text: inline.text.substring(
+                      (from - offset).clamp(0, inline.text.length),
+                      (to - offset).clamp(0, inline.text.length),
+                    ),
+                    properties: inline.properties,
+                  );
+            final latinLanguage = normalizeProofingLanguage(
+              inline.properties.proofingLanguage ??
+                  paragraph.properties.proofingLanguage ??
+                  document.proofingLanguage ??
+                  'de-DE',
             );
+            for (final segment in scriptSegments(fragment.text)) {
+              final complex =
+                  inline.properties.complexScript == true ||
+                  segment.script.isComplex;
+              scriptLanguages
+                  .putIfAbsent(segment.script, () => <String>{})
+                  .add(
+                    complex
+                        ? normalizeProofingLanguage(
+                            inline.properties.complexScriptLanguage ??
+                                document.complexScriptLanguage ??
+                                latinLanguage,
+                          )
+                        : latinLanguage,
+                  );
+            }
+            if (wordRunUsesLatinScriptLanguage(fragment)) {
+              languages.add(
+                normalizeProofingLanguage(
+                  inline.properties.proofingLanguage ??
+                      paragraph.properties.proofingLanguage ??
+                      document.proofingLanguage ??
+                      'de-DE',
+                ),
+              );
+            }
+            if (wordRunUsesComplexScriptLanguage(fragment)) {
+              languages.add(
+                normalizeProofingLanguage(
+                  wordRunProofingLanguage(
+                        fragment,
+                        paragraph,
+                        documentLanguage: document.proofingLanguage,
+                        documentComplexScriptLanguage:
+                            document.complexScriptLanguage,
+                      ) ??
+                      'de-DE',
+                ),
+              );
+            }
             enabledValues.add(inline.properties.noProof != true);
             if (inline.isAtomic || fieldDepth > 0) {
               unavailable ??=
@@ -9383,6 +9488,7 @@ class WordEditorController extends OfficeController {
         headerFooterVariant: _editingHeaderFooterVariant,
         note: note,
         documentLanguage: document.proofingLanguage,
+        documentComplexScriptLanguage: document.complexScriptLanguage,
         styles: _textProofingStylesToken,
         tracking: document.trackRevisions,
         restricted: document.restrictEditing,
@@ -9394,6 +9500,15 @@ class WordEditorController extends OfficeController {
       language: languages.length == 1 ? languages.single : null,
       checkingEnabled: enabledValues.length == 1 ? enabledValues.single : null,
       unavailableReason: unavailable,
+      scriptLanguages: Map.unmodifiable({
+        for (final entry in scriptLanguages.entries)
+          entry.key: entry.value.length == 1 ? entry.value.single : null,
+      }),
+      detectedLanguages: Map.unmodifiable({
+        for (final entry in detectedLanguages.entries)
+          entry.key: entry.value.length == 1 ? entry.value.single : null,
+      }),
+      detectionPending: detectionPending,
     );
   }
 
@@ -9557,6 +9672,8 @@ class WordEditorController extends OfficeController {
       [
         run.text,
         run.properties.proofingLanguage,
+        run.properties.complexScriptLanguage,
+        run.properties.complexScript,
         run.properties.noProof,
         run.properties.styleId,
         run.properties.bold,
@@ -9587,13 +9704,17 @@ class WordEditorController extends OfficeController {
       ],
   ]);
 
-  /// Changes the language of exactly [target]. Null removes run overrides so
-  /// the text inherits its character/paragraph styles and paragraph/document
-  /// defaults. Returns false if the
-  /// displayed target became stale or cannot be changed safely.
+  /// Changes the active language slots of exactly [target], preserving inactive
+  /// language metadata and other formatting. Unmarked mixed-script fragments
+  /// use both slots. Null removes those overrides so the text inherits its
+  /// character/paragraph styles and paragraph/document defaults. Set
+  /// [activeLanguageOnly] to false to explicitly change or clear both slots.
+  /// Returns false if the displayed target became stale or cannot be changed
+  /// safely.
   bool setTextProofingLanguage(
     String? language, {
     required WordTextProofingTarget target,
+    bool activeLanguageOnly = true,
   }) {
     final normalized = language == null
         ? null
@@ -9601,22 +9722,153 @@ class WordEditorController extends OfficeController {
     if (normalized != null && normalized.isEmpty) return false;
     if (normalized == null) {
       final reader = WordDeserializer();
-      return _setTextProofingOption(
+      final before = contentRevision;
+      final applied = _setTextProofingOption(
         target,
-        prepare: (source, preview, start, end) => reader
-            .clearRunProofingLanguage(document, source, preview, start, end),
+        prepare: (source, preview, start, end) =>
+            reader.clearRunProofingLanguage(
+              document,
+              source,
+              preview,
+              start,
+              end,
+              includeComplexScript: true,
+              activeLanguageOnly: activeLanguageOnly,
+            ),
       );
+      if (applied && contentRevision != before) {
+        final inherited = textProofingTarget;
+        for (final tag in <String>{
+          ...?inherited?.scriptLanguages.values.whereType<String>(),
+          if (inherited?.language case final String tag) tag,
+        }) {
+          onProofingLanguageChanged?.call(tag);
+        }
+      }
+      return applied;
     }
-    return _setTextProofingOption(
+    final before = contentRevision;
+    final applied = _setTextProofingOption(
       target,
-      prepare: (source, preview, start, end) => _prepareTextProofingRuns(
-        preview,
-        start,
-        end,
-        needsChange: (properties) => properties.proofingLanguage != normalized,
-        update: (properties) => properties.proofingLanguage = normalized,
-      ),
+      prepare: (source, preview, start, end) => activeLanguageOnly
+          ? _prepareTextProofingLanguage(preview, start, end, normalized)
+          : _prepareTextProofingRuns(
+              preview,
+              start,
+              end,
+              needsChange: (properties) =>
+                  properties.proofingLanguage != normalized ||
+                  properties.complexScriptLanguage != normalized,
+              update: (properties) => properties
+                ..proofingLanguage = normalized
+                ..complexScriptLanguage = normalized,
+            ),
     );
+    if (applied && contentRevision != before) {
+      onProofingLanguageChanged?.call(normalized);
+    }
+    return applied;
+  }
+
+  /// Runs automatic language detection for the paragraphs of [target] (when
+  /// a detector is configured), so a fresh [textProofingTarget] shows the
+  /// detected languages. Never changes the document.
+  Future<void> detectTextProofingLanguages(
+    WordTextProofingTarget target,
+  ) async {
+    final texts = {for (final range in target._ranges) range.paragraph.text};
+    if (texts.isEmpty || proofing.languageDetector == null) return;
+    await proofing.detectLanguages(texts.toList());
+    if (!isDisposed) notifyListeners();
+  }
+
+  /// "Apply detected language": writes the detected language of each script
+  /// segment of [target] into the document, `w:lang/@w:val` for Latin (and
+  /// other non-complex) text and `w:lang/@w:bidi` for Arabic- and
+  /// Hebrew-script text (or any run marked complex script). A slot whose
+  /// language already has the detected primary subtag keeps its tag (so
+  /// de-CH stays de-CH). One undoable history command covers the selection.
+  /// Returns false when the target is stale, not editable or has no
+  /// detection; true (possibly without changes) otherwise.
+  bool applyDetectedTextProofingLanguages({
+    required WordTextProofingTarget target,
+  }) {
+    if (target.detectedLanguages.isEmpty) return false;
+    final documentLanguage = document.proofingLanguage;
+    final documentComplex = document.complexScriptLanguage;
+    final before = contentRevision;
+    final applied = _setTextProofingOption(
+      target,
+      prepare: (source, preview, start, end) {
+        final detection = proofing.detectedLanguages(source.text);
+        if (detection == null) return false;
+        var changed = false;
+        for (final segment in detection.segments) {
+          final detected = segment.language;
+          if (detected == null) continue;
+          final from = segment.start < start ? start : segment.start;
+          final to = segment.end > end ? end : segment.end;
+          if (from >= to) continue;
+          final tag = normalizeProofingLanguage(
+            wordLanguageTagForDetected(detected),
+          );
+          final range = WmlRunEdit.normalizeRange(preview, from, to);
+          if (range.start == range.end) continue;
+          WmlRunEdit.splitProofingRange(preview, range.start, range.end);
+          final latin = <WmlRunProps>{};
+          final complex = <WmlRunProps>{};
+          var offset = 0;
+          for (final run in preview.inlines.whereType<WmlRun>()) {
+            final runEnd = offset + run.text.length;
+            if (offset >= range.start &&
+                runEnd <= range.end &&
+                runEnd > offset) {
+              final useComplex =
+                  run.properties.complexScript == true ||
+                  segment.script.isComplex;
+              final uses = useComplex
+                  ? wordRunUsesComplexScriptLanguage(run)
+                  : wordRunUsesLatinScriptLanguage(run);
+              final current = useComplex
+                  ? run.properties.complexScriptLanguage ?? documentComplex
+                  : run.properties.proofingLanguage ??
+                        preview.properties.proofingLanguage ??
+                        documentLanguage;
+              if (uses &&
+                  (current == null ||
+                      primaryLanguageSubtag(current) !=
+                          primaryLanguageSubtag(tag))) {
+                (useComplex ? complex : latin).add(run.properties);
+              }
+            }
+            offset = runEnd;
+          }
+          if (latin.isEmpty && complex.isEmpty) continue;
+          changed |= _prepareTextProofingRuns(
+            preview,
+            range.start,
+            range.end,
+            needsChange: (properties) =>
+                latin.contains(properties) || complex.contains(properties),
+            update: (properties) {
+              if (complex.contains(properties)) {
+                properties.complexScriptLanguage = tag;
+              } else {
+                properties.proofingLanguage = tag;
+              }
+            },
+          );
+        }
+        return changed;
+      },
+    );
+    if (applied && contentRevision != before) {
+      for (final language
+          in target.detectedLanguages.values.whereType<String>().toSet()) {
+        onProofingLanguageChanged?.call(language);
+      }
+    }
+    return applied;
   }
 
   /// Includes or excludes exactly [target] in document proofing. One history
@@ -9634,6 +9886,49 @@ class WordEditorController extends OfficeController {
       update: (properties) => properties.noProof = !enabled,
     ),
   );
+
+  static bool _prepareTextProofingLanguage(
+    WmlParagraph preview,
+    int start,
+    int end,
+    String language,
+  ) {
+    final range = WmlRunEdit.normalizeRange(preview, start, end);
+    final routingChanged = WmlRunEdit.splitProofingRange(
+      preview,
+      range.start,
+      range.end,
+    );
+    // Choose the slots from each selected fragment after splitting. Unselected
+    // letters must not choose its slots, and a mixed fragment can use both.
+    final latinProperties = {
+      for (final run in preview.inlines.whereType<WmlRun>())
+        if (wordRunUsesLatinScriptLanguage(run)) run.properties,
+    };
+    final complexProperties = {
+      for (final run in preview.inlines.whereType<WmlRun>())
+        if (wordRunUsesComplexScriptLanguage(run)) run.properties,
+    };
+    final propertiesChanged = _prepareTextProofingRuns(
+      preview,
+      range.start,
+      range.end,
+      needsChange: (properties) =>
+          latinProperties.contains(properties) &&
+              properties.proofingLanguage != language ||
+          complexProperties.contains(properties) &&
+              properties.complexScriptLanguage != language,
+      update: (properties) {
+        if (latinProperties.contains(properties)) {
+          properties.proofingLanguage = language;
+        }
+        if (complexProperties.contains(properties)) {
+          properties.complexScriptLanguage = language;
+        }
+      },
+    );
+    return propertiesChanged || routingChanged;
+  }
 
   static bool _prepareTextProofingRuns(
     WmlParagraph preview,
@@ -9763,6 +10058,7 @@ class WordEditorController extends OfficeController {
     );
     relayout();
     notifyListeners();
+    onProofingLanguageChanged?.call(language);
   }
 
   /// Saves the displayed language together with the hyphenation toggle so an
@@ -12870,7 +13166,7 @@ class SheetEditorController extends OfficeController {
   void setCellComment(
     String text, {
     SmlCellRef? ref,
-    String author = 'Quds Office',
+    String author = 'CrispOffice',
   }) {
     if (!config.allowsMutation) {
       return;

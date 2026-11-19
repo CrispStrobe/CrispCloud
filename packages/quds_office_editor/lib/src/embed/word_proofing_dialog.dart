@@ -315,6 +315,7 @@ class _WordProofingDialogState extends State<WordProofingDialog> {
         <String, OfficeProofingResult>{};
     for (final OfficeProofingReport report in summary.reports) {
       for (final OfficeProofingResult result in report.results) {
+        if (result.status == OfficeProofingStatus.unsupported) continue;
         statuses.putIfAbsent(
           '${result.providerId}/${result.request.language}/${result.status.name}',
           () => result,

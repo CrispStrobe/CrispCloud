@@ -7,7 +7,7 @@ WmlParagraph _paragraph(String text) =>
 
 WordEditorController _controller({
   String text = 'aaXXbbYYccZZdd',
-  String author = 'Quds Office',
+  String author = 'CrispOffice',
   WmlDocument? document,
 }) {
   final controller = WordEditorController(
@@ -77,8 +77,41 @@ class _ReviewProofingProvider extends OfficeProofingProvider {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  test(
+    'CrispOffice defaults preserve imported revision and comment authors',
+    () {
+      final original = WordEditorController(
+        document: WmlDocument.empty(text: 'Existing document'),
+        revisionAuthor: 'Quds Office',
+      );
+      addTearDown(original.dispose);
+      original.document.trackRevisions = true;
+      _at(original, original.document.paragraphs.first.text.length);
+      original.insertText(' old change');
+      original.insertComment(
+        text: 'Historical comment',
+        author: 'Quds Office',
+        initials: 'QO',
+      );
+
+      final reopened = WordEditorController.fromBytes(original.saveBytes());
+      addTearDown(reopened.dispose);
+      expect(reopened.revisionAuthor, 'CrispOffice');
+      expect(reopened.document.revisions.single.author, 'Quds Office');
+      expect(reopened.document.comments.single.author, 'Quds Office');
+      expect(reopened.document.comments.single.initials, 'QO');
+
+      _at(reopened, 0);
+      reopened.insertText('New ');
+      reopened.insertComment(text: 'New comment');
+      expect(reopened.document.revisions.last.author, 'CrispOffice');
+      expect(reopened.document.comments.last.author, 'CrispOffice');
+      expect(reopened.document.comments.last.initials, 'CO');
+    },
+  );
+
   test('author configuration trims names and rejects empty attribution', () {
-    expect(_controller().revisionAuthor, 'Quds Office');
+    expect(_controller().revisionAuthor, 'CrispOffice');
     final controller = _controller(author: '  Alice Example  ');
     expect(controller.revisionAuthor, 'Alice Example');
     controller.revisionAuthor = '  Bob Example\n';

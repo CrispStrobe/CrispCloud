@@ -47,6 +47,56 @@ class _WordReviewPaneState extends State<WordReviewPane> {
     'en-IN': 'English (India)',
   };
 
+  /// English and Arabic names of the primary languages the detector and
+  /// the per-script summary name most often.
+  static const Map<String, (String, String)> _languageNames = {
+    'ar': ('Arabic', 'العربية'),
+    'de': ('German', 'الألمانية'),
+    'el': ('Greek', 'اليونانية'),
+    'en': ('English', 'الإنجليزية'),
+    'es': ('Spanish', 'الإسبانية'),
+    'fa': ('Persian', 'الفارسية'),
+    'fr': ('French', 'الفرنسية'),
+    'he': ('Hebrew', 'العبرية'),
+    'it': ('Italian', 'الإيطالية'),
+    'ku': ('Kurdish', 'الكردية'),
+    'la': ('Latin', 'اللاتينية'),
+    'nl': ('Dutch', 'الهولندية'),
+    'pl': ('Polish', 'البولندية'),
+    'ps': ('Pashto', 'البشتوية'),
+    'pt': ('Portuguese', 'البرتغالية'),
+    'ru': ('Russian', 'الروسية'),
+    'sd': ('Sindhi', 'السندية'),
+    'tr': ('Turkish', 'التركية'),
+    'ug': ('Uyghur', 'الأويغورية'),
+    'uk': ('Ukrainian', 'الأوكرانية'),
+    'ur': ('Urdu', 'الأردية'),
+    'yi': ('Yiddish', 'اليديشية'),
+  };
+
+  String _languageName(String? tag) {
+    if (tag == null) return _s('several languages', 'عدة لغات');
+    final name = _languageNames[primaryLanguageSubtag(tag)];
+    return name == null ? tag : _s(name.$1, name.$2);
+  }
+
+  String _scriptLabel(TextScript script) => switch (script) {
+    TextScript.latin => _s('Latin text', 'النص اللاتيني'),
+    TextScript.arabic => _s('Arabic text', 'النص العربي'),
+    TextScript.hebrew => _s('Hebrew text', 'النص العبري'),
+    TextScript.cyrillic => _s('Cyrillic text', 'النص السيريلي'),
+    TextScript.greek => _s('Greek text', 'النص اليوناني'),
+    TextScript.other => _s('Other text', 'نص آخر'),
+  };
+
+  /// "Latin text: German · Arabic text: Arabic".
+  String _scriptSummary(Map<TextScript, String?> languages) => [
+    for (final entry in languages.entries)
+      '${_scriptLabel(entry.key)}: ${_languageName(entry.value)}',
+  ].join(' · ');
+
+  WordTextProofingTarget? _detectionRequested;
+
   late WordReviewPaneTab _tab;
   late final TextEditingController _author;
   final TextEditingController _changeSearch = TextEditingController();
@@ -413,11 +463,19 @@ class _WordReviewPaneState extends State<WordReviewPane> {
     final problems = <String>{
       for (final report in summary.reports)
         for (final result in report.results)
-          if (result.status != OfficeProofingStatus.success)
+          if (result.status != OfficeProofingStatus.success &&
+              result.status != OfficeProofingStatus.unsupported)
             '${result.providerId}: ${result.message ?? result.status.name}',
     };
     return <Widget>[
       if (_c.reviewTextProofingOptionsVisible) _textProofingOptions(),
+      if (_c.onManageProofingDownloads != null)
+        TextButton.icon(
+          key: const ValueKey<String>('proofing-downloads-manager'),
+          onPressed: _c.onManageProofingDownloads,
+          icon: const Icon(Icons.download_outlined),
+          label: Text(_s('Language downloads', 'تنزيلات اللغة')),
+        ),
       SwitchListTile.adaptive(
         key: const ValueKey<String>('live-proofing-background'),
         contentPadding: EdgeInsets.zero,
@@ -699,6 +757,7 @@ class _WordReviewPaneState extends State<WordReviewPane> {
               ),
             ),
           ),
+          ..._detectedLanguageOptions(target, editable),
           CheckboxListTile(
             key: const ValueKey<String>('live-proofing-text-enabled'),
             contentPadding: EdgeInsets.zero,
@@ -736,6 +795,54 @@ class _WordReviewPaneState extends State<WordReviewPane> {
           const SizedBox(height: 4),
         ],
       ],
+    );
+  }
+
+  List<Widget> _detectedLanguageOptions(
+    WordTextProofingTarget? target,
+    bool editable,
+  ) {
+    if (target == null || target.scriptLanguages.isEmpty) return const [];
+    if (target.detectionPending && !identical(_detectionRequested, target)) {
+      _detectionRequested = target;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) unawaited(_c.detectTextProofingLanguages(target));
+      });
+    }
+    final detected = target.detectedLanguages;
+    final differs = target.canApplyDetectedLanguages;
+    return <Widget>[
+      Text(
+        _scriptSummary(target.scriptLanguages),
+        key: const ValueKey<String>('live-proofing-text-scripts'),
+        style: Theme.of(context).textTheme.bodySmall,
+      ),
+      if (detected.isNotEmpty)
+        Text(
+          '${_s('Detected', 'المكتشفة')}: ${_scriptSummary(detected)}',
+          key: const ValueKey<String>('live-proofing-text-detected'),
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+      if (detected.isNotEmpty)
+        Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: TextButton(
+            key: const ValueKey<String>('live-proofing-apply-detected'),
+            onPressed: editable && differs
+                ? () => _applyDetectedLanguages(target)
+                : null,
+            child: Text(_s('Apply detected language', 'تطبيق اللغة المكتشفة')),
+          ),
+        ),
+    ];
+  }
+
+  void _applyDetectedLanguages(WordTextProofingTarget target) {
+    if (!(ModalRoute.of(context)?.isCurrent ?? true)) return;
+    final revision = _c.contentRevision;
+    _afterTextProofingChange(
+      _c.applyDetectedTextProofingLanguages(target: target),
+      changedFrom: revision,
     );
   }
 

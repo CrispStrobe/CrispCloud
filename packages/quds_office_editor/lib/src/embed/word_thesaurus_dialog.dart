@@ -497,14 +497,16 @@ class _WordThesaurusDialogState extends State<WordThesaurusDialog> {
                   for (final relation in sense.relations)
                     ListTile(
                       dense: true,
-                      title: Text('${relation.type}: ${relation.target}'),
+                      title: Text(
+                        '${relation.type}: ${relation.label ?? relation.target}',
+                      ),
                     ),
                   for (final term in sense.terms)
                     for (final relation in term.relations)
                       ListTile(
                         dense: true,
                         title: Text(
-                          '${term.text} · ${relation.type}: ${relation.target}',
+                          '${term.text} · ${relation.type}: ${relation.label ?? relation.target}',
                         ),
                       ),
                 ],

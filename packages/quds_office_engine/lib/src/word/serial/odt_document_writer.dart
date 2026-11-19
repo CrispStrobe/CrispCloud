@@ -1548,7 +1548,7 @@ abstract final class OdtDocumentWriter {
     value('initial-creator', 'meta', document.properties.creator);
     value('creation-date', 'meta', document.properties.createdIso);
     value('date', 'dc', document.properties.modifiedIso);
-    value('generator', 'meta', 'Quds Office');
+    value('generator', 'meta', 'CrispOffice');
     w.writeEndElement();
     w.writeEndElement();
     return w.toXml();

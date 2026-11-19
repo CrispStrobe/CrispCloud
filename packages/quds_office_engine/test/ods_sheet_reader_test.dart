@@ -103,7 +103,7 @@ void annotationAndAuthoredDateTests() {
             (note) => note.ref.a1 == ref,
           );
           expect(comment.text, 'Private note');
-          expect(comment.author, 'Quds Office');
+          expect(comment.author, 'CrispOffice');
         }
       }
 

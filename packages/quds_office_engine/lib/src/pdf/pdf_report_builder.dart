@@ -81,7 +81,7 @@ class PdfReportBuilder {
   PdfReportBuilder({
     OfficeDocumentTheme? theme,
     this.font,
-    this.title = 'Quds Office',
+    this.title = 'CrispOffice',
     this.author = '',
     OfficePageSize? page,
     this.margin = 48,

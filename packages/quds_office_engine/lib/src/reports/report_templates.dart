@@ -1285,7 +1285,7 @@ const List<(String, String, String, int, int)> _commercialLines =
     <(String, String, String, int, int)>[
       (
         'QOS-ENT',
-        'Quds Office Suite — Enterprise license (per seat)',
+        'CrispOffice — Enterprise license (per seat)',
         'حزمة القدس المكتبية — ترخيص مؤسسات (لكل مستخدم)',
         25,
         180,
@@ -2653,7 +2653,7 @@ Map<String, Object?> _certificateData(bool ar) {
       'department': t('Product Development', 'إدارة تطوير المنتجات'),
     },
     'reason': t(
-      'leading the successful launch of the Quds Report Studio',
+      'leading the successful launch of the CrispOffice Reports',
       'قيادة الإطلاق الناجح لاستوديو القدس للتقارير',
     ),
     'date': DateTime(2026, 10, 10),
@@ -3460,7 +3460,8 @@ const Map<String, String> _featureShowcaseEn = <String, String>{
   'title': 'SALES ORDER',
   'lead': 'We confirm this order under the published terms.',
   'linkLabel': 'Delivery terms',
-  'italicLine': 'Prices include preparation. Delivery follows the schedule below.',
+  'italicLine':
+      'Prices include preparation. Delivery follows the schedule below.',
   'customer': 'Al-Noor Trading',
   'customerHint': 'Customer',
   'po': 'PO-441',
@@ -3494,9 +3495,7 @@ Map<String, Object?> _featureShowcaseData(bool ar) {
       'phone': '+218 21 444 0101',
       'email': 'sales@quds.example',
     },
-    'billTo': <String, Object?>{
-      'city': t('Tripoli', 'طرابلس'),
-    },
+    'billTo': <String, Object?>{'city': t('Tripoli', 'طرابلس')},
     'order': <String, Object?>{
       'number': 'SO-2026-0142',
       'date': DateTime(2026, 10, 10),

@@ -382,6 +382,33 @@ final class SpacyPackageInstaller {
     return file.path;
   }
 
+  /// Removes only this app-owned data model; the shared runtime stays.
+  Future<void> removeNer(SpacyNerDownload ner) async {
+    if (!RegExp(r'^[a-f0-9]{64}$').hasMatch(ner.sha256)) {
+      throw const SpacyInstallException('Invalid named-entity model identity.');
+    }
+    final parent = Directory('${root.path}/ner');
+    if (FileSystemEntity.typeSync(root.path, followLinks: false) ==
+            FileSystemEntityType.link ||
+        FileSystemEntity.typeSync(parent.path, followLinks: false) ==
+            FileSystemEntityType.link) {
+      throw const SpacyInstallException(
+        'Model storage cannot be a symbolic link.',
+      );
+    }
+    final directory = _nerFile(ner).parent;
+    final type = FileSystemEntity.typeSync(directory.path, followLinks: false);
+    if (type == FileSystemEntityType.notFound) return;
+    if (type != FileSystemEntityType.directory) {
+      throw const SpacyInstallException('Model storage is not a directory.');
+    }
+    final trash = Directory(
+      '${root.path}/.removing-ner-${ner.sha256}-${DateTime.now().microsecondsSinceEpoch}',
+    );
+    directory.renameSync(trash.path);
+    trash.deleteSync(recursive: true);
+  }
+
   /// Downloads the optional NER model (no executable code).
   Future<String> installNer(
     SpacyNerDownload ner, {

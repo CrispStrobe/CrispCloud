@@ -54,6 +54,15 @@ void main() {
     ('وقف امام الباب.', 'ar.hamza.initial', 'امام', 'أمام'),
     // harakat are matched loosely and kept in the suggestion
     ('ذهبَ الَى السوق.', 'ar.hamza.initial', 'الَى', 'إلَى'),
+    ('قرأت اخبار اليوم.', 'ar.hamza.initial', 'اخبار', 'أخبار'),
+    ('هذا افضل حل.', 'ar.hamza.initial', 'افضل', 'أفضل'),
+    ('وصلت اخيرا إلى البيت.', 'ar.hamza.initial', 'اخيرا', 'أخيرا'),
+    ('سافر إلى اسيا.', 'ar.hamza.initial', 'اسيا', 'آسيا'),
+    ('قرأ اية من القرآن.', 'ar.hamza.initial', 'اية', 'آية'),
+    ('غاب لانهم مرضى.', 'ar.hamza.initial', 'لانهم', 'لأنهم'),
+    ('اكد الوزير الخبر.', 'ar.hamza.initial', 'اكد', 'أكد'),
+    ('ابو بكر صديقه.', 'ar.hamza.initial', 'ابو', 'أبو'),
+    ('فانه يعرف الطريق.', 'ar.hamza.initial', 'فانه', 'فإنه'),
     // ar.ta-marbuta.final
     ('ذهبت الى المدرسه صباحا.', 'ar.ta-marbuta.final', 'المدرسه', 'المدرسة'),
     ('درس في الجامعه سنوات.', 'ar.ta-marbuta.final', 'الجامعه', 'الجامعة'),
@@ -63,10 +72,18 @@ void main() {
     ('كتب رسالة للحكومه.', 'ar.ta-marbuta.final', 'للحكومه', 'للحكومة'),
     ('يحب اللغه العربية.', 'ar.ta-marbuta.final', 'اللغه', 'اللغة'),
     ('يحب اللغة العربيه.', 'ar.ta-marbuta.final', 'العربيه', 'العربية'),
+    ('زار القاهره.', 'ar.ta-marbuta.final', 'القاهره', 'القاهرة'),
+    ('هذه المرحلة الثانيه.', 'ar.ta-marbuta.final', 'الثانيه', 'الثانية'),
+    ('كان مفيدا للغايه.', 'ar.ta-marbuta.final', 'للغايه', 'للغاية'),
+    ('تحدث عن الحريه.', 'ar.ta-marbuta.final', 'الحريه', 'الحرية'),
     // ar.alif-maqsura.final
     ('انتظر حتي الصباح.', 'ar.alif-maqsura.final', 'حتي', 'حتى'),
     ('متي يبدأ الدرس؟', 'ar.alif-maqsura.final', 'متي', 'متى'),
     ('نقل إلى المستشفي.', 'ar.alif-maqsura.final', 'المستشفي', 'المستشفى'),
+    ('زار المسجد الأقصي.', 'ar.alif-maqsura.final', 'الأقصي', 'الأقصى'),
+    ('شارك في المنتدي.', 'ar.alif-maqsura.final', 'المنتدي', 'المنتدى'),
+    ('جلسنا في المقهي.', 'ar.alif-maqsura.final', 'المقهي', 'المقهى'),
+    ('عمت الفوضي المكان.', 'ar.alif-maqsura.final', 'الفوضي', 'الفوضى'),
     // ar.ya.final
     ('الكتاب فى الحقيبة.', 'ar.ya.final', 'فى', 'في'),
     ('الرجل الذى جاء.', 'ar.ya.final', 'الذى', 'الذي'),
@@ -152,6 +169,18 @@ void main() {
     'الحياة جميلة والصلاة عماد الدين.',
     'الله أكبر.',
     'التوجيه والتنبيه مهمان.',
+    // Combining hamza is part of the spelling, not an optional vowel mark.
+    'ذهب ا\u0655لى البيت.',
+    'ا\u0654نا في البيت.',
+    // Arabic substrings in mixed-script identifiers are not prose words.
+    'المعرف xالى واسم الىbar.',
+    'المعرف 123الى وآخر الى123.',
+    'القيمة _الى أو الى_.',
+    'القيمة x\u200Dالى.',
+    'fooو هو',
+    'و المدرسهX',
+    // لان is also the valid verb "became soft", not necessarily لأن.
+    'لان الحديد بالحرارة.',
   ];
   for (final String text in controls) {
     test('control has no finding: $text', () async {
@@ -257,6 +286,50 @@ void main() {
       for (final (_, String rule, _, _) in positives) rule,
     };
     expect(seen, ArabicWritingRulesProvider.ruleIds);
+  });
+
+  // These marks form letters; erasing them can invent a missing-hamza error
+  // and then preserve the original mark alongside a second, precomposed hamza.
+  for (final (String mark, String text) in <(String, String)>[
+    ('U+0653 madda', 'ا\u0653نا'),
+    ('U+0654 hamza above', 'ا\u0654ن'),
+    ('U+0655 hamza below', 'ا\u0655لى'),
+  ]) {
+    test('lexical matching preserves $mark', () async {
+      final List<OfficeProofingFinding> findings = await check(text);
+      expect(
+        findings.map((f) => '${f.ruleId}:${f.replacements}').toList(),
+        isEmpty,
+      );
+    });
+  }
+
+  test(
+    'decomposed letters preserve adjacent correction UTF-16 offsets',
+    () async {
+      const String text = '😀 ا\u0655لى، الَى';
+      final List<OfficeProofingFinding> findings = await check(
+        text,
+        startOffset: 100,
+      );
+      expect(findings, hasLength(1));
+      final OfficeProofingFinding finding = findings.single;
+      expect(finding.ruleId, 'ar.hamza.initial');
+      expect(finding.originalText, 'الَى');
+      expect(finding.start, 100 + text.indexOf('الَى'));
+      expect(finding.end, 100 + text.length);
+      expect(finding.replacements, <String>['إلَى']);
+    },
+  );
+
+  test('semantic combining marks still allow punctuation checks', () async {
+    final List<OfficeProofingFinding> findings = await check(
+      'جاء النبا\u0654?',
+    );
+    expect(findings, hasLength(1));
+    expect(findings.single.ruleId, 'ar.punctuation.arabic-mark');
+    expect(findings.single.originalText, '?');
+    expect(findings.single.replacements, <String>['؟']);
   });
 
   test('disposed provider is unavailable', () async {

@@ -616,7 +616,9 @@ class PdfEditorController extends PdfViewerController {
     super.file,
     super.lists,
     super.config = const OfficeSurfaceConfig(),
-  });
+  }) {
+    commands.addListener(_recordContentChange);
+  }
 
   /// fromBytes API.
   factory PdfEditorController.fromBytes(
@@ -633,6 +635,55 @@ class PdfEditorController extends PdfViewerController {
   }
 
   final CommandPipeline commands = CommandPipeline();
+
+  int _contentRevision = 0;
+  int _savedRevision = 0;
+  PdfFile? _savedFile;
+
+  /// Monotonic revision of edits observed by this controller. Hosts compare
+  /// this with the captured revision after asynchronous file writing.
+  int get contentRevision => _contentRevision;
+
+  @override
+  bool get isDirty => identical(file, _savedFile)
+      ? _contentRevision != _savedRevision
+      : super.isDirty;
+
+  /// Records a successful save without removing undo or redo history.
+  /// Call only after writing and checking [contentRevision] and [file].
+  void markClean() {
+    _savedFile = file;
+    _savedRevision = _contentRevision;
+    notifyListeners();
+  }
+
+  void _recordContentChange() {
+    _contentRevision++;
+    notifyListeners();
+  }
+
+  @override
+  Future<void> loadBytesAsync(
+    Uint8List bytes, {
+    String? password,
+    void Function(OfficeOpenProgress progress)? onProgress,
+    void Function(Object error)? onLoadError,
+  }) async {
+    await super.loadBytesAsync(
+      bytes,
+      password: password,
+      onProgress: onProgress,
+      onLoadError: onLoadError,
+    );
+    commands.clear();
+    markClean();
+  }
+
+  @override
+  void dispose() {
+    commands.removeListener(_recordContentChange);
+    super.dispose();
+  }
 
   /// canUndo API.
   bool get canUndo => commands.canUndo;
@@ -759,24 +810,27 @@ class PdfEditorController extends PdfViewerController {
     if (field == null || field.readOnly || !config.allowsMutation) {
       return;
     }
+    if (field.value == value) return;
     field.value = value;
     _file?.form.needAppearances = true;
     _file?.markDirty(field.pageIndex);
-    notifyListeners();
+    _recordContentChange();
   }
 
   /// deletePage API.
   void deletePageAt(int index) {
+    final int before = pageCount;
     _file?.deletePage(index);
     _lists = _file?.displayLists() ?? _lists;
-    notifyListeners();
+    if (pageCount != before) _recordContentChange();
   }
 
   /// insertBlankPage API.
   void insertBlankPage(int index) {
+    if (_file == null) return;
     _file?.insertBlankPage(index);
     _lists = _file?.displayLists() ?? _lists;
-    notifyListeners();
+    _recordContentChange();
   }
 
   /// rotatePage API.
@@ -784,9 +838,11 @@ class PdfEditorController extends PdfViewerController {
 
   /// Rotate [index] by [degrees] and rebuild the display lists.
   void rotatePageAt(int index, int degrees) {
+    if (_file == null || pageCount == 0) return;
+    final int before = _file!.pageAt(index).rotate;
     _file?.rotatePage(index, degrees);
     _lists = _file?.displayLists() ?? _lists;
-    notifyListeners();
+    if (_file!.pageAt(index).rotate != before) _recordContentChange();
   }
 
   /// Remove a markup annotation, undoable.
@@ -804,9 +860,10 @@ class PdfEditorController extends PdfViewerController {
 
   /// mergeFrom API.
   void mergeFrom(PdfFile other) {
+    if (_file == null || other.pageCount == 0) return;
     _file?.appendPages(other);
     _lists = _file?.displayLists() ?? _lists;
-    notifyListeners();
+    _recordContentChange();
   }
 
   /// extractPages API.
@@ -829,7 +886,7 @@ class PdfEditorController extends PdfViewerController {
     }
     PdfXfdf.importXml(file, xml);
     _lists = file.displayLists();
-    notifyListeners();
+    _recordContentChange();
   }
 
   /// redactSelection API.
@@ -842,7 +899,9 @@ class PdfEditorController extends PdfViewerController {
         !config.allowsMutation) {
       return;
     }
-    for (final ({int page, Rect rect}) item in range.boxes(_lists)) {
+    final List<({int page, Rect rect})> boxes = range.boxes(_lists);
+    if (boxes.isEmpty) return;
+    for (final ({int page, Rect rect}) item in boxes) {
       file.redactRect(
         item.page,
         PdfRect(
@@ -854,7 +913,7 @@ class PdfEditorController extends PdfViewerController {
         mode: mode,
       );
     }
-    notifyListeners();
+    _recordContentChange();
   }
 
   /// saveBytes API.
@@ -863,10 +922,14 @@ class PdfEditorController extends PdfViewerController {
     if (file == null) {
       return Uint8List(0);
     }
-    return PdfIncrementalSave.write(
-      originalBytes: file.originalBytes,
-      file: file,
-    );
+    return _encodePdfSnapshot(file);
+  }
+
+  /// Encodes without committing save state or changing the editable PDF model.
+  Future<Uint8List> saveBytesAsync() async {
+    final PdfFile? file = _file;
+    if (file == null) return Uint8List(0);
+    return compute<PdfFile, Uint8List>(_encodePdfSnapshot, file);
   }
 
   /// undo API.
@@ -882,6 +945,43 @@ class PdfEditorController extends PdfViewerController {
     if (commands.canRedo) {
       commands.redo();
       notifyListeners();
+    }
+  }
+}
+
+// The incremental writer allocates PDF object IDs and edits page dictionaries.
+// Encoding is only a snapshot: cancellation and failed disk writes must leave
+// those allocations out of the live model, so repeated saves stay complete.
+Uint8List _encodePdfSnapshot(PdfFile file) {
+  final int? infoObjectId = file.infoObjectId;
+  final pages =
+      <({PdfPageRec page, int? objectId, Map<String, PdfCos> values})>[
+        for (final page in file.pageRecs)
+          (
+            page: page,
+            objectId: page.objectId,
+            values: Map<String, PdfCos>.of(page.dict.values),
+          ),
+      ];
+  final annots = <({PdfAnnot annot, int? objectId})>[
+    for (final page in file.pageRecs)
+      for (final annot in page.annots) (annot: annot, objectId: annot.objectId),
+  ];
+  try {
+    return PdfIncrementalSave.write(
+      originalBytes: file.originalBytes,
+      file: file,
+    );
+  } finally {
+    file.infoObjectId = infoObjectId;
+    for (final saved in pages) {
+      saved.page.objectId = saved.objectId;
+      saved.page.dict.values
+        ..clear()
+        ..addAll(saved.values);
+    }
+    for (final saved in annots) {
+      saved.annot.objectId = saved.objectId;
     }
   }
 }

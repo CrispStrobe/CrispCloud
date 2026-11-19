@@ -15,7 +15,7 @@ class WmlRevision {
     required this.start,
     required this.end,
     required this.text,
-    this.author = 'Quds Office',
+    this.author = 'CrispOffice',
     this.dateIso = '',
     this.accepted,
     this.targetParagraph,
@@ -171,7 +171,7 @@ abstract final class WordRevisions {
     required int start,
     required int end,
     required String text,
-    String author = 'Quds Office',
+    String author = 'CrispOffice',
     WmlParagraph? paragraph,
     bool preserveSourceRange = false,
   }) {

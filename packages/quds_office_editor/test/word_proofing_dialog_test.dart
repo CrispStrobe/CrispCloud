@@ -511,7 +511,9 @@ void main() {
                 find.byKey(const ValueKey<String>('proofing-status')),
               )
               .data,
-          contains('Test checker is ${status.name}.'),
+          status == OfficeProofingStatus.unsupported
+              ? contains('No configured checker supports')
+              : contains('Test checker is ${status.name}.'),
         );
         expect(find.textContaining('No issues found'), findsNothing);
         expect(

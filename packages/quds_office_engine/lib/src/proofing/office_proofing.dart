@@ -204,6 +204,92 @@ abstract class OfficeProofingProvider {
   Future<void> dispose() async {}
 }
 
+int _categoryPriority(OfficeProofingCategory category) => switch (category) {
+  OfficeProofingCategory.grammar => 0,
+  OfficeProofingCategory.spelling => 1,
+  OfficeProofingCategory.style => 2,
+};
+
+/// Successful findings in source order. Findings of different providers with
+/// the same category for the identical range and text that agree on at least
+/// one replacement are one review item: the first in provider order in
+/// [results] keeps its rule and message, and the other findings' extra
+/// replacements follow its own (e.g. an Arabic hamza rule and a dictionary
+/// both correcting `الى` to `إلى`). Findings of different categories stay
+/// separate, contextual grammar before an edit-distance spelling guess for
+/// the identical source word, as do disagreeing findings.
+List<OfficeProofingFinding> _mergeAgreeingFindings(
+  List<OfficeProofingResult> results,
+) {
+  final order = <OfficeProofingFinding, int>{};
+  final all = <OfficeProofingFinding>[];
+  for (var index = 0; index < results.length; index++) {
+    final result = results[index];
+    if (result.status != OfficeProofingStatus.success) continue;
+    for (final finding in result.findings) {
+      order[finding] = index;
+      all.add(finding);
+    }
+  }
+  int compare(OfficeProofingFinding a, OfficeProofingFinding b) {
+    final int byStart = a.start.compareTo(b.start);
+    if (byStart != 0) return byStart;
+    final int byEnd = a.end.compareTo(b.end);
+    if (byEnd != 0) return byEnd;
+    final int byCategory = _categoryPriority(
+      a.category,
+    ).compareTo(_categoryPriority(b.category));
+    if (byCategory != 0) return byCategory;
+    return order[a]!.compareTo(order[b]!);
+  }
+
+  all.sort(compare);
+  final merged = <OfficeProofingFinding>[];
+  final absorbed = <OfficeProofingFinding>{};
+  for (var i = 0; i < all.length; i++) {
+    final kept = all[i];
+    if (absorbed.contains(kept)) continue;
+    var replacements = kept.replacements;
+    final providers = {kept.providerId};
+    for (var j = i + 1; j < all.length; j++) {
+      final other = all[j];
+      if (other.start != kept.start || other.end != kept.end) break;
+      if (absorbed.contains(other) ||
+          providers.contains(other.providerId) ||
+          other.category != kept.category ||
+          other.originalText != kept.originalText ||
+          !other.replacements.any(replacements.contains)) {
+        continue;
+      }
+      absorbed.add(other);
+      providers.add(other.providerId);
+      replacements = [
+        ...replacements,
+        for (final value in other.replacements)
+          if (!replacements.contains(value)) value,
+      ];
+    }
+    merged.add(
+      identical(replacements, kept.replacements)
+          ? kept
+          : OfficeProofingFinding(
+              documentId: kept.documentId,
+              blockId: kept.blockId,
+              revision: kept.revision,
+              providerId: kept.providerId,
+              start: kept.start,
+              end: kept.end,
+              originalText: kept.originalText,
+              ruleId: kept.ruleId,
+              message: kept.message,
+              category: kept.category,
+              replacements: replacements,
+            ),
+    );
+  }
+  return merged;
+}
+
 /// Checked provider results for a single immutable input snapshot.
 class OfficeProofingReport {
   OfficeProofingReport({
@@ -211,24 +297,7 @@ class OfficeProofingReport {
     required List<OfficeProofingResult> results,
   }) : results = List<OfficeProofingResult>.unmodifiable(results),
        findings = List<OfficeProofingFinding>.unmodifiable(
-         <OfficeProofingFinding>[
-           for (final OfficeProofingResult result in results)
-             if (result.status == OfficeProofingStatus.success)
-               ...result.findings,
-         ]..sort((OfficeProofingFinding a, OfficeProofingFinding b) {
-           final int byStart = a.start.compareTo(b.start);
-           if (byStart != 0) return byStart;
-           final int byEnd = a.end.compareTo(b.end);
-           if (byEnd != 0) return byEnd;
-           int priority(OfficeProofingCategory category) => switch (category) {
-             OfficeProofingCategory.grammar => 0,
-             OfficeProofingCategory.spelling => 1,
-             OfficeProofingCategory.style => 2,
-           };
-           // Keep both review items; put contextual grammar before an edit-
-           // distance spelling guess for the identical source word/range.
-           return priority(a.category).compareTo(priority(b.category));
-         }),
+         _mergeAgreeingFindings(results),
        );
 
   final OfficeProofingRequest request;

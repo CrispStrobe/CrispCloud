@@ -296,7 +296,7 @@ final class WordZoteroCitingSession {
         'supportsImportExport': false,
         'supportsTextInsertion': canInsertNoteText,
         'supportsCitationMerging': false,
-        'processorName': 'Quds Office',
+        'processorName': 'CrispOffice',
       };
     }
     if (args.isEmpty || args.first != documentId) {

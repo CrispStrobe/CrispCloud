@@ -1,0 +1,18 @@
+{
+  "schema": "crispcloud.quds-language-sync.v1",
+  "qudsSourceCommit": "d9bee6e507f6b631aee55bb8a89187119410847f",
+  "filesVerified": 2855,
+  "hostTests": {
+    "nonRibbonPassed": 82,
+    "ribbonPassedAfterExplicitProofingFixtureIsolation": 8,
+    "totalUniquePassed": 90
+  },
+  "qudsAcceptance": "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/validation/language-downloads-20261119/README.md",
+  "newFeaturesScope": "CrispOffice downloads UI; reusable editor callbacks and language/error fixes synchronized into CrispCloud.",
+  "ciQueriedOrAwaited": false,
+  "logSha256": {
+    "crispcloud-quds-language-host-green.log": "09c9e1d9b119eb9bc9d382a0a4191562ebf8e2d18c692f77748323dbc5104f23",
+    "crispcloud-quds-language-ribbon-green.log": "32424be96f4eb65a74042e62b117d24f1a884b2b6e5e38a87bc45d1c6914d0ba",
+    "crispcloud-quds-language-final-fidelity.log": "613453052660b8b47af916cd4d99f28b299473b3bc87428554f5493739183e2e"
+  }
+}

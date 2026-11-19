@@ -18,6 +18,7 @@ abstract final class WordPropertyIo {
     'u': '${r.underline}',
     'vertAlign': '${r.vertAlign}',
     'lang': '${r.proofingLanguage}',
+    'lang:bidi': '${r.complexScriptLanguage}',
     'noProof': '${r.noProof}',
   };
   static Map<String, String> paragraphValues(WmlParagraphProps p) => {
@@ -59,13 +60,15 @@ abstract final class WordPropertyIo {
     final XmlElement result = parse(source, generated.localName);
     for (final String key in current.keys) {
       if (current[key] == imported[key]) continue;
-      if (key == 'lang' || key == 'rPr') {
-        // Language owns only @w:val. Preserve East Asian/bidi languages and
-        // unrelated paragraph-mark formatting from the native source.
-        if (key == 'lang') {
+      if (key == 'lang' || key == 'lang:bidi' || key == 'rPr') {
+        // Each language value owns only its own attribute. Preserve East
+        // Asian language and unrelated formatting from the native source.
+        if (key == 'lang' || key == 'lang:bidi') {
+          final attribute = key == 'lang' ? 'val' : 'bidi';
           mergeLanguage(
             result,
-            generated.firstChild('lang')?.getAttribute('val'),
+            generated.firstChild('lang')?.getAttribute(attribute),
+            attribute: attribute,
           );
         } else {
           var marker = result.firstChild(
@@ -129,7 +132,14 @@ abstract final class WordPropertyIo {
   }
 
   /// Change the owned language attribute while preserving native metadata.
-  static void mergeLanguage(XmlElement runProperties, String? language) {
+  static void mergeLanguage(
+    XmlElement runProperties,
+    String? language, {
+    String attribute = 'val',
+  }) {
+    if (attribute != 'val' && attribute != 'bidi') {
+      throw ArgumentError.value(attribute, 'attribute');
+    }
     var lang = runProperties.firstChild(
       'lang',
       namespaceUri: OfficeNamespaces.w,
@@ -145,7 +155,7 @@ abstract final class WordPropertyIo {
     if (lang == null) return;
     if (language == null || language.isEmpty) {
       lang.attributes.removeWhere(
-        (a) => a.localName == 'val' && a.namespaceUri == OfficeNamespaces.w,
+        (a) => a.localName == attribute && a.namespaceUri == OfficeNamespaces.w,
       );
       if (lang.attributes.every((a) => a.prefix == 'xmlns')) {
         runProperties.children.remove(lang);
@@ -153,7 +163,7 @@ abstract final class WordPropertyIo {
     } else {
       lang.setAttribute('w', OfficeNamespaces.w, prefix: 'xmlns');
       lang.setAttribute(
-        'val',
+        attribute,
         language,
         prefix: 'w',
         namespaceUri: OfficeNamespaces.w,

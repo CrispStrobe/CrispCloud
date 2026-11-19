@@ -4,6 +4,7 @@ import 'wml_document.dart';
 import 'word_bookmarks.dart';
 import 'word_content_controls.dart';
 import 'word_field_spans.dart';
+import 'word_proofing_language.dart';
 
 /// Split and format [WmlRun] spans inside a paragraph.
 abstract final class WmlRunEdit {
@@ -71,6 +72,30 @@ abstract final class WmlRunEdit {
       }
       offset = end;
     }
+  }
+
+  /// Isolates a proofing range and reports whether a selected fragment changes
+  /// language slots just by being separated from surrounding complex-script
+  /// letters. Callers must retain that split even if its properties are equal.
+  static bool splitProofingRange(WmlParagraph paragraph, int start, int end) {
+    final range = normalizeRange(paragraph, start, end);
+    if (range.start == range.end) return false;
+    var offset = 0;
+    var routingChanged = false;
+    for (final run in paragraph.inlines.whereType<WmlRun>()) {
+      final from = (range.start - offset).clamp(0, run.text.length);
+      final to = (range.end - offset).clamp(0, run.text.length);
+      if (from < to &&
+          run.properties.complexScript != true &&
+          wordTextHasComplexScriptLetter(run.text) &&
+          !wordTextHasComplexScriptLetter(run.text.substring(from, to))) {
+        routingChanged = true;
+      }
+      offset += run.text.length;
+    }
+    splitAt(paragraph, range.end);
+    splitAt(paragraph, range.start);
+    return routingChanged;
   }
 
   /// Moves the actual tail, including zero-width source markup, to a new
@@ -441,14 +466,20 @@ abstract final class WmlRunEdit {
       return;
     }
     final List<WmlInline> next = <WmlInline>[];
+    bool? previousComplexScript;
     for (final WmlInline inline in paragraph.inlines) {
+      final complexScript = inline is WmlRun
+          ? wordRunUsesComplexScriptLanguage(inline)
+          : null;
       if (inline is WmlRun &&
           next.isNotEmpty &&
           next.last is WmlRun &&
+          previousComplexScript == complexScript &&
           _sameRun(next.last as WmlRun, inline)) {
         (next.last as WmlRun).text += inline.text;
       } else {
         next.add(inline);
+        previousComplexScript = complexScript;
       }
     }
     paragraph.inlines
@@ -525,6 +556,8 @@ abstract final class WmlRunEdit {
         a.csFont == b.csFont &&
         a.vertAlign == b.vertAlign &&
         a.proofingLanguage == b.proofingLanguage &&
+        a.complexScriptLanguage == b.complexScriptLanguage &&
+        a.complexScript == b.complexScript &&
         a.noProof == b.noProof;
   }
 }

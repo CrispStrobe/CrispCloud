@@ -1642,7 +1642,7 @@ abstract final class OdsSheetReader {
     }
     return (
       text: _text(annotation),
-      author: author == null || author.isEmpty ? 'Quds Office' : author,
+      author: author == null || author.isEmpty ? 'CrispOffice' : author,
     );
   }
 

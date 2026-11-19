@@ -36,6 +36,12 @@ final class _Provider extends OfficeProofingProvider {
   }
 }
 
+final class _UnsupportedProvider extends _Provider {
+  _UnsupportedProvider(super.id);
+  @override
+  bool supportsLanguage(String language) => false;
+}
+
 WmlDocument _document({List<WmlInline>? inlines}) => WmlDocument(
   proofingLanguage: 'de-DE',
   sections: [
@@ -173,6 +179,55 @@ String _text(WidgetTester tester, String key) =>
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(OfficeHostFonts.ensureRegistered);
+
+  testWidgets('unrelated language providers stay silent in English review', (
+    tester,
+  ) async {
+    final h = _Harness(document: _document()..proofingLanguage = 'en-GB');
+    final german = _UnsupportedProvider('german-spelling');
+    h.controller.proofing.configure(
+      OfficeProofingService(providers: [_Provider('english-fixture'), german]),
+    );
+    await h.mount(tester);
+    await h.openOptions(tester);
+    final check = h.controller.checkDocumentProofing();
+    await _flush(tester);
+    await check;
+    expect(german.requests, isEmpty);
+    expect(
+      h.controller.proofing.summary.reports
+          .expand((r) => r.results)
+          .any((r) => r.status == OfficeProofingStatus.unsupported),
+      isTrue,
+    );
+    expect(find.textContaining('does not support en-GB'), findsNothing);
+    expect(find.textContaining('german-spelling:'), findsNothing);
+  });
+
+  test(
+    'language support is requested only after successful changes, not stale edits or Undo',
+    () {
+      final controller = WordEditorController(document: _document());
+      addTearDown(controller.dispose);
+      final requests = <String>[];
+      controller.onProofingLanguageChanged = requests.add;
+      final target = controller.textProofingTarget!;
+      expect(
+        controller.setTextProofingLanguage('en-GB', target: target),
+        isTrue,
+      );
+      expect(requests, ['en-GB']);
+      expect(
+        controller.setTextProofingLanguage('fr-FR', target: target),
+        isFalse,
+      );
+      expect(requests, ['en-GB']);
+      controller.undo();
+      expect(requests, ['en-GB']);
+      controller.setProofingLanguage('fr-FR');
+      expect(requests, ['en-GB', 'fr-FR']);
+    },
+  );
 
   testWidgets(
     'language status opens paragraph options without a dialog or document edit',

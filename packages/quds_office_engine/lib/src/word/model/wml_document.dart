@@ -254,8 +254,8 @@ class WmlComment {
   /// WmlComment API.
   WmlComment({
     required this.id,
-    this.author = 'Quds Office',
-    this.initials = 'QO',
+    this.author = 'CrispOffice',
+    this.initials = 'CO',
     this.dateIso = '',
     String text = '',
     List<WmlParagraph>? paragraphs,
@@ -1225,6 +1225,10 @@ class WmlDocument {
 
   /// Document default language, stored in styles.xml docDefaults/rPr/lang.
   String? proofingLanguage;
+
+  /// Document default complex-script language (docDefaults `w:lang/@w:bidi`).
+  /// Read-only for proofing routing; styles.xml keeps the attribute.
+  String? complexScriptLanguage;
 
   /// Automatic linguistic hyphenation (`w:autoHyphenation`).
   /// Explicit soft hyphens remain usable when this is disabled.
