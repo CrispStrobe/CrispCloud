@@ -887,6 +887,47 @@ class RenderSheetGrid extends RenderBox implements MouseTrackerAnnotation {
                   cell.bottom,
                 )
               : cell;
+          Color background = isEdit
+              ? _theme.pageBackground
+              : fill ?? _tableBand(textCol, textRow) ?? _theme.pageBackground;
+          Rect? dataBarRect;
+          Color? dataBarBackground;
+          final double? fraction = conditional.dataBarFraction;
+          if (!isEdit && fraction != null) {
+            dataBarRect = Rect.fromLTWH(
+              cell.left + 1,
+              cell.top + 1,
+              ((cell.width - 2) * fraction).clamp(0, cell.width - 2),
+              cell.height - 2,
+            );
+            dataBarBackground = Color.alphaBlend(
+              (_rgbColor(conditional.dataBarColor) ?? const Color(0xFF638EC6))
+                  .withValues(alpha: 0.72),
+              background,
+            );
+          }
+          void tintBackground(Color tint) {
+            background = Color.alphaBlend(tint, background);
+            if (dataBarBackground != null) {
+              dataBarBackground = Color.alphaBlend(tint, dataBarBackground!);
+            }
+          }
+
+          if (!isEdit &&
+              config.allowsSelection &&
+              (merge == null
+                  ? selection.contains(ref)
+                  : _mergeSelected(merge))) {
+            tintBackground(_theme.selectionFill);
+          }
+          final int findIndex = _findHitIndex(textCol, textRow);
+          if (!isEdit && findIndex >= 0) {
+            tintBackground(
+              findIndex == activeFindIndex
+                  ? const Color(0x99F4B183)
+                  : const Color(0x66FFE699),
+            );
+          }
           _paintCellText(
             canvas,
             textCell,
@@ -894,6 +935,9 @@ class RenderSheetGrid extends RenderBox implements MouseTrackerAnnotation {
             isEdit: isEdit,
             align: data.horizontalAlign,
             color: _rgbColor(conditional.fontRgb ?? data.fontRgb),
+            background: background,
+            dataBarRect: dataBarRect,
+            dataBarBackground: dataBarBackground,
             bold: data.fontBold,
             fontSize: data.fontSize,
           );
@@ -1792,7 +1836,13 @@ class RenderSheetGrid extends RenderBox implements MouseTrackerAnnotation {
       SmlHAlign.left => TextAlign.left,
       SmlHAlign.general => rtl ? TextAlign.right : TextAlign.left,
     };
-    final Color ink = color ?? _theme.chromeText;
+    final Color ink =
+        color ??
+        _theme.resolveDocumentColor(
+          _theme.adaptDocumentColors
+              ? const Color(0xFF222222)
+              : _theme.chromeText,
+        );
     if (colored && FormulaRefScanner.scan(text).isNotEmpty) {
       return TextPainter(
         text: FormulaRefStyle.textSpan(
@@ -2014,6 +2064,9 @@ class RenderSheetGrid extends RenderBox implements MouseTrackerAnnotation {
     required bool isEdit,
     SmlHAlign align = SmlHAlign.general,
     Color? color,
+    Color? background,
+    Rect? dataBarRect,
+    Color? dataBarBackground,
     bool bold = false,
     double fontSize = 11,
   }) {
@@ -2024,11 +2077,20 @@ class RenderSheetGrid extends RenderBox implements MouseTrackerAnnotation {
       canvas.restore();
       return;
     }
+    final Color authored =
+        color ??
+        (_theme.adaptDocumentColors
+            ? const Color(0xFF222222)
+            : _theme.chromeText);
+    final Color ink = _theme.resolveDocumentColor(
+      authored,
+      background: background,
+    );
     final TextPainter painter = _textPainter(
       label,
       colored: isEdit,
       horizontal: align,
-      color: color,
+      color: ink,
       bold: bold,
       fontSize: fontSize,
     )..layout(maxWidth: maxW);
@@ -2058,7 +2120,37 @@ class RenderSheetGrid extends RenderBox implements MouseTrackerAnnotation {
         );
       }
     }
-    painter.paint(canvas, Offset(textX, textY));
+    final Color barInk = dataBarBackground == null
+        ? ink
+        : _theme.resolveDocumentColor(authored, background: dataBarBackground);
+    if (dataBarRect != null && barInk != ink) {
+      // A conditional data bar may cover only part of a label. Clip the two
+      // ink colours instead of repainting antialiased glyphs over one another.
+      canvas.save();
+      canvas.clipPath(
+        Path()
+          ..fillType = PathFillType.evenOdd
+          ..addRect(cell)
+          ..addRect(dataBarRect.intersect(cell)),
+      );
+      painter.paint(canvas, Offset(textX, textY));
+      canvas.restore();
+      final barPainter = _textPainter(
+        label,
+        colored: isEdit,
+        horizontal: align,
+        color: barInk,
+        bold: bold,
+        fontSize: fontSize,
+      )..layout(maxWidth: maxW);
+      canvas.save();
+      canvas.clipRect(dataBarRect);
+      barPainter.paint(canvas, Offset(textX, textY));
+      canvas.restore();
+      barPainter.dispose();
+    } else {
+      painter.paint(canvas, Offset(textX, textY));
+    }
     if (isEdit && config.showsCaret && hasFocus) {
       final double caretH = painter.height < 2
           ? fontSize * 1.25
@@ -2077,6 +2169,7 @@ class RenderSheetGrid extends RenderBox implements MouseTrackerAnnotation {
             PaintRunText.looksRtl(label),
       );
     }
+    painter.dispose();
     canvas.restore();
   }
 

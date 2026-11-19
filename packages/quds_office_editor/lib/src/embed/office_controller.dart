@@ -19,6 +19,7 @@ import '../editor_word/word_run_metrics.dart';
 import '../proofing/word_proofing.dart';
 import 'office_clipboard.dart';
 import 'office_theme.dart';
+import 'word_page_layout.dart';
 
 /// The persistent review workspace shown beside (or below) a Word document.
 enum WordReviewPaneTab { proofing, changes }
@@ -5356,6 +5357,140 @@ class WordEditorController extends OfficeController {
       end++;
     }
     return sections.sublist(start, end + 1);
+  }
+
+  /// Capture a Page Layout draft without changing section content or history.
+  WordPageLayoutTarget capturePageLayout() {
+    final WmlSection section = sectionAtCaret;
+    return WordPageLayoutTarget(
+      document: document,
+      section: section,
+      contentRevision: contentRevision,
+      settings: WordPageLayoutSettings.fromSection(section).copyWith(
+        differentOddEven: document.sections.any(
+          (WmlSection item) => item.differentOddEven,
+        ),
+      ),
+      sections: document.sections,
+      sectionSettings: <WordPageLayoutSettings>[
+        for (final WmlSection item in document.sections)
+          WordPageLayoutSettings.fromSection(item),
+      ],
+    );
+  }
+
+  /// Whether a detached dialog still describes the same document and layout.
+  bool isPageLayoutTargetCurrent(WordPageLayoutTarget target) {
+    if (isDisposed ||
+        !identical(target.document, document) ||
+        target.contentRevision != contentRevision ||
+        target.sections.length != document.sections.length ||
+        target.sectionSettings.length != document.sections.length ||
+        !document.sections.contains(target.section)) {
+      return false;
+    }
+    for (var index = 0; index < document.sections.length; index++) {
+      if (!identical(target.sections[index], document.sections[index]) ||
+          !target.sectionSettings[index].matches(
+            WordPageLayoutSettings.fromSection(document.sections[index]),
+          )) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /// Apply supported page settings as one validated, undoable command.
+  ///
+  /// For the current section, changed paper/margins propagate to continuous
+  /// siblings sharing its page, matching the ribbon's existing geometry edits.
+  /// Columns and first-page/line-number options belong to the chosen section.
+  /// Whole-document scope sets the chosen values on every section while
+  /// preserving section starts. Odd/even headers are document-wide in DOCX.
+  /// A successful no-op returns true without creating a history entry.
+  bool applyPageLayout(
+    WordPageLayoutSettings settings, {
+    WordPageLayoutScope scope = WordPageLayoutScope.currentSection,
+    WordPageLayoutTarget? target,
+  }) {
+    if (isDisposed ||
+        !config.allowsMutation ||
+        settings.validationIssue != null) {
+      return false;
+    }
+    final WordPageLayoutTarget captured = target ?? capturePageLayout();
+    if (!isPageLayoutTargetCurrent(captured)) return false;
+    final List<WmlSection> sections = captured.sections;
+    final int selected = sections.indexOf(captured.section);
+    var groupStart = selected;
+    while (groupStart > 0 &&
+        sections[groupStart].breakKind == WmlSectionBreakKind.continuous) {
+      groupStart--;
+    }
+    var groupEnd = selected;
+    while (groupEnd + 1 < sections.length &&
+        sections[groupEnd + 1].breakKind == WmlSectionBreakKind.continuous) {
+      groupEnd++;
+    }
+    final bool wholeDocument = scope == WordPageLayoutScope.wholeDocument;
+    final bool paperChanged = !settings.samePaper(captured.settings);
+    final bool marginsChanged = !settings.sameMargins(captured.settings);
+    final bool oddEvenChanged =
+        settings.differentOddEven != captured.settings.differentOddEven;
+    final List<WordPageLayoutSettings> before = captured.sectionSettings;
+    final List<WordPageLayoutSettings> after = <WordPageLayoutSettings>[];
+    for (var index = 0; index < sections.length; index++) {
+      final bool selectedSection = wholeDocument || index == selected;
+      final bool sharedPage = index >= groupStart && index <= groupEnd;
+      final WordPageLayoutSettings next = before[index].copyWith(
+        pageSize: wholeDocument || (sharedPage && paperChanged)
+            ? settings.pageSize
+            : null,
+        margins: wholeDocument || (sharedPage && marginsChanged)
+            ? settings.margins
+            : null,
+        columnCount: selectedSection ? settings.columnCount : null,
+        columnSpace: selectedSection ? settings.columnSpace : null,
+        columnSeparator: selectedSection ? settings.columnSeparator : null,
+        sectionStart: !wholeDocument && index == selected
+            ? settings.sectionStart
+            : null,
+        differentFirstPage: selectedSection
+            ? settings.differentFirstPage
+            : null,
+        differentOddEven: wholeDocument || oddEvenChanged
+            ? settings.differentOddEven
+            : null,
+        lineNumbers: selectedSection ? settings.lineNumbers : null,
+      );
+      // Shared page geometry must also leave any sibling columns usable.
+      if (!next.matches(before[index]) && next.validationIssue != null) {
+        return false;
+      }
+      after.add(next);
+    }
+    final List<int> changed = <int>[
+      for (var index = 0; index < sections.length; index++)
+        if (!before[index].matches(after[index])) index,
+    ];
+    if (changed.isEmpty) return true;
+    commands.commit(
+      _CallbackCommand(
+        executeFn: () {
+          for (final int index in changed) {
+            after[index].applyTo(sections[index]);
+          }
+        },
+        undoFn: () {
+          for (final int index in changed) {
+            before[index].applyTo(sections[index]);
+          }
+        },
+      ),
+    );
+    relayout();
+    notifyListeners();
+    return true;
   }
 
   /// setPageMargins API.

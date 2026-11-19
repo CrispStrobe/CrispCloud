@@ -112,6 +112,132 @@ void main() {
     expect(opened.slides.first.shapes.single.table?.colCount, 3);
   });
 
+  test('parseSlideShapes keeps table cell text colors separate from fills', () {
+    const String xml = '''
+<p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
+ xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+  <p:graphicFrame>
+    <p:nvGraphicFramePr><p:cNvPr id="2" name="Table"/></p:nvGraphicFramePr>
+    <a:graphic><a:graphicData><a:tbl><a:tr>
+      <a:tc>
+        <a:txBody><a:p>
+          <a:r><a:rPr><a:solidFill><a:srgbClr val="000000"/></a:solidFill></a:rPr><a:t>Black</a:t></a:r>
+          <a:r><a:rPr><a:solidFill><a:srgbClr val="AA0000"/></a:solidFill></a:rPr><a:t> later run</a:t></a:r>
+        </a:p></a:txBody>
+        <a:tcPr><a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill></a:tcPr>
+      </a:tc>
+      <a:tc>
+        <a:txBody><a:p><a:r><a:rPr><a:solidFill><a:schemeClr val="accent1"/></a:solidFill></a:rPr><a:t>Themed</a:t></a:r></a:p></a:txBody>
+        <a:tcPr><a:solidFill><a:srgbClr val="303030"/></a:solidFill></a:tcPr>
+      </a:tc>
+      <a:tc>
+        <a:txBody><a:p><a:r><a:t>Automatic</a:t></a:r></a:p></a:txBody>
+        <a:tcPr><a:solidFill><a:srgbClr val="F0E0D0"/></a:solidFill></a:tcPr>
+      </a:tc>
+    </a:tr></a:tbl></a:graphicData></a:graphic>
+  </p:graphicFrame>
+  <p:sp>
+    <p:nvSpPr><p:cNvPr id="3" name="Neighbor"/></p:nvSpPr>
+    <p:spPr><a:solidFill><a:srgbClr val="556677"/></a:solidFill>
+      <a:ln><a:solidFill><a:srgbClr val="102030"/></a:solidFill></a:ln>
+    </p:spPr>
+    <p:txBody><a:p><a:r><a:rPr><a:solidFill><a:srgbClr val="ABCDEF"/></a:solidFill></a:rPr><a:t>Neighbor</a:t></a:r></a:p></p:txBody>
+  </p:sp>
+</p:sld>''';
+    final List<PmlShape> shapes = parseSlideShapes(
+      xml,
+      colors: const <String, String>{'accent1': '224466'},
+    );
+    expect(shapes, hasLength(2));
+    final List<PmlTableCell> cells = shapes.first.table!.rows.single;
+    expect(cells.map((cell) => cell.textColor), <String>[
+      '000000',
+      '224466',
+      '',
+    ]);
+    expect(cells.map((cell) => cell.fillColor), <String>[
+      'FFFFFF',
+      '303030',
+      'F0E0D0',
+    ]);
+    expect(cells.map((cell) => cell.text), <String>[
+      'Black later run',
+      'Themed',
+      'Automatic',
+    ]);
+    expect(shapes.first.textColor, isEmpty);
+    expect(shapes.first.fillColor, isEmpty);
+    expect(shapes.last.textColor, 'ABCDEF');
+    expect(shapes.last.fillColor, '556677');
+    expect(shapes.last.strokeColor, '102030');
+  });
+
+  test('round-trips slide table cell colors without leaking into shapes', () {
+    PmlPresentation deck = PmlPresentation(
+      slides: <PmlSlide>[
+        PmlSlide(
+          id: 256,
+          shapes: <PmlShape>[
+            PmlShape(
+              id: 2,
+              name: 'Table',
+              table: PmlTable(
+                rows: <List<PmlTableCell>>[
+                  <PmlTableCell>[
+                    PmlTableCell(
+                      text: 'Black',
+                      textColor: '000000',
+                      fillColor: 'FFFFFF',
+                    ),
+                    PmlTableCell(
+                      text: 'Distinct',
+                      textColor: '123456',
+                      fillColor: '303030',
+                    ),
+                    PmlTableCell(text: 'Automatic', fillColor: 'F0E0D0'),
+                  ],
+                ],
+              ),
+            ),
+            PmlShape(
+              id: 3,
+              name: 'Neighbor',
+              text: 'Neighbor',
+              textColor: 'ABCDEF',
+              fillColor: '556677',
+              strokeColor: '102030',
+            ),
+          ],
+        ),
+      ],
+    );
+    for (int cycle = 0; cycle < 3; cycle++) {
+      deck = SlideDeserializer().readBytes(SlideSerializer().writeBytes(deck));
+      final List<PmlShape> shapes = deck.slides.single.shapes;
+      expect(shapes, hasLength(2));
+      final List<PmlTableCell> cells = shapes.first.table!.rows.single;
+      expect(cells.map((cell) => cell.textColor), <String>[
+        '000000',
+        '123456',
+        '',
+      ], reason: 'Cell colors must survive save/reopen cycle $cycle.');
+      expect(cells.map((cell) => cell.fillColor), <String>[
+        'FFFFFF',
+        '303030',
+        'F0E0D0',
+      ]);
+      expect(cells.map((cell) => cell.text), <String>[
+        'Black',
+        'Distinct',
+        'Automatic',
+      ]);
+      expect(shapes.first.textColor, isEmpty);
+      expect(shapes.last.textColor, 'ABCDEF');
+      expect(shapes.last.fillColor, '556677');
+      expect(shapes.last.strokeColor, '102030');
+    }
+  });
+
   test(
     'parseSlideShapes keeps noFill and run ink separate from shape fill',
     () {

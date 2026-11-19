@@ -173,12 +173,18 @@ abstract final class PaintOfficeVisual {
         0,
       ]);
     }
-    final double sl = (image.width * adj.cropLeft).clamp(0, image.width / 2);
-    final double st = (image.height * adj.cropTop).clamp(0, image.height / 2);
-    final double sr = (image.width * adj.cropRight).clamp(0, image.width / 2);
+    final double sl = (image.width * adj.cropLeft).clamp(0, image.width * 0.99);
+    final double st = (image.height * adj.cropTop).clamp(
+      0,
+      image.height * 0.99,
+    );
+    final double sr = (image.width * adj.cropRight).clamp(
+      0,
+      image.width * 0.99,
+    );
     final double sb = (image.height * adj.cropBottom).clamp(
       0,
-      image.height / 2,
+      image.height * 0.99,
     );
     if (cropPreview) {
       final double keepW = (1 - adj.cropLeft - adj.cropRight).clamp(0.12, 1);

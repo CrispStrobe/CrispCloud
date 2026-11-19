@@ -1,5 +1,7 @@
 import 'dart:typed_data';
 
+import 'package:image/image.dart' as img;
+
 import '../opc/zip/deflate_codec.dart';
 
 /// Decoded raster ready for a PDF image XObject.
@@ -77,6 +79,39 @@ abstract final class PdfImageCodec {
 
   /// decodePng API.
   static PdfRaster? decodePng(Uint8List bytes) {
+    final raster = _decodePngCore(bytes);
+    return raster ?? _decodePngWithPackage(bytes);
+  }
+
+  static PdfRaster? _decodePngWithPackage(Uint8List bytes) {
+    try {
+      final decoded = img.decodePng(bytes);
+      if (decoded == null) return null;
+      final rgba = decoded
+          .convert(numChannels: 4)
+          .getBytes(order: img.ChannelOrder.rgba);
+      final pixelCount = decoded.width * decoded.height;
+      final rgb = Uint8List(pixelCount * 3);
+      final alpha = Uint8List(pixelCount);
+      for (var i = 0; i < pixelCount; i++) {
+        final source = i * 4;
+        rgb[i * 3] = rgba[source];
+        rgb[i * 3 + 1] = rgba[source + 1];
+        rgb[i * 3 + 2] = rgba[source + 2];
+        alpha[i] = rgba[source + 3];
+      }
+      return PdfRaster(
+        width: decoded.width,
+        height: decoded.height,
+        rgb: rgb,
+        alpha: alpha,
+      );
+    } on Object {
+      return null;
+    }
+  }
+
+  static PdfRaster? _decodePngCore(Uint8List bytes) {
     if (bytes.length < 33 ||
         bytes[0] != 0x89 ||
         bytes[1] != 0x50 ||
@@ -107,6 +142,10 @@ abstract final class PdfImageCodec {
         height = _u32(data, 4);
         bitDepth = data[8];
         colorType = data[9];
+        if (data.length > 12 && data[12] != 0) {
+          // Adam7 is decoded by the package fallback below.
+          return null;
+        }
       } else if (type == 'PLTE') {
         palette = data;
       } else if (type == 'tRNS') {
@@ -147,7 +186,7 @@ abstract final class PdfImageCodec {
         ? Uint8List(width * height)
         : null;
     final List<int> prev = List<int>.filled(stride, 0);
-      var src = 0;
+    var src = 0;
     var dst = 0;
     var dstA = 0;
     for (int y = 0; y < height; y++) {
@@ -188,8 +227,7 @@ abstract final class PdfImageCodec {
             g = row[x * 3 + 1];
             b = row[x * 3 + 2];
             if (alpha != null && keyed && trns.length >= 6) {
-              final bool match =
-                  r == trns[1] && g == trns[3] && b == trns[5];
+              final bool match = r == trns[1] && g == trns[3] && b == trns[5];
               alpha[dstA++] = match ? 0 : 255;
             }
           case 3:

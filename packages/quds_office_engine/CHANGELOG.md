@@ -4,6 +4,18 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Extend `vba-excel` with fixed one-dimensional scalar arrays, constant bounds,
+  indexed reads/writes, typed defaults, `LBound`/`UBound`, and `For Each` over
+  arrays and explicit rectangular ranges. Add read-only range row/column
+  coordinates while retaining source-only evaluation and shared work limits.
+- Bound active array slots and retained string occupancy across procedure
+  calls. Preserve bare helper-call comparison syntax alongside indexed
+  assignment, and add an array report plus compiler, boundary, CLI, MCP,
+  rollback, and cold JavaScript regressions.
+- Preserve slide table cell text colors when reopening PPTX files. Keep the
+  first representative cell ink separate from its fill and enclosing shape,
+  including theme-resolved colors and repeated save/reopen cycles.
+
 - Extend `vba-excel` with conditional `Do`/`Loop` and `While`/`Wend` loops,
   `Exit Do`, and ordered `Select Case` alternatives, ranges, and comparisons.
   Keep source evaluation within the existing shared budgets and execute nested

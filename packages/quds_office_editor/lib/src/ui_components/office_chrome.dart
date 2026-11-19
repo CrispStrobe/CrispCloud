@@ -72,9 +72,15 @@ class OfficeChrome {
         ..color = theme.gridLine
         ..style = PaintingStyle.stroke,
     );
-    final ParagraphBuilder name = ParagraphBuilder(
-      ParagraphStyle(fontSize: 12, fontFamily: fontFamily),
-    )..addText(nameBox);
+    final ParagraphBuilder name =
+        ParagraphBuilder(ParagraphStyle(fontSize: 12, fontFamily: fontFamily))
+          ..pushStyle(
+            TextStyle(
+              color: theme.resolveDocumentColor(const Color(0xFF222222)),
+              fontSize: 12,
+            ),
+          );
+    name.addText(nameBox);
     final Paragraph nameParagraph = name.build()
       ..layout(const ParagraphConstraints(width: nameW - 16));
     canvas.drawParagraph(nameParagraph, const Offset(8, 6));

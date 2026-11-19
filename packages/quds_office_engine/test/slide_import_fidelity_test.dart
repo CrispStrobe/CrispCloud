@@ -7,9 +7,15 @@ const String _ns =
     'xmlns:p="${OfficeNamespaces.p}" xmlns:a="${OfficeNamespaces.a}" '
     'xmlns:r="${OfficeNamespaces.r}"';
 
-String _sld(String shapes, {String root = 'sld', String name = ''}) =>
+String _sld(
+  String shapes, {
+  String root = 'sld',
+  String name = '',
+  String background = '',
+}) =>
     '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-    '<p:$root $_ns><p:cSld${name.isEmpty ? '' : ' name="$name"'}><p:spTree>'
+    '<p:$root $_ns><p:cSld${name.isEmpty ? '' : ' name="$name"'}>$background'
+    '<p:spTree>'
     '<p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/>'
     '</p:nvGrpSpPr><p:grpSpPr/>$shapes</p:spTree></p:cSld>'
     '${root == 'sldMaster' ? '<p:clrMap bg1="lt1" tx1="dk1" bg2="lt2" '
@@ -58,7 +64,11 @@ const String _theme =
     '</a:clrScheme></a:themeElements></a:theme>';
 
 /// A deck with one master, one "Title Slide" layout and the given slides.
-PmlPresentation _deck(List<String> slides, {List<int>? order}) {
+PmlPresentation _deck(
+  List<String> slides, {
+  List<int>? order,
+  String masterBackground = '',
+}) {
   final OpcPackage package = OpcPackage.create(OpcPackageKind.slide);
   final RelationshipCollection presRels = package.relationshipsFor(
     '/ppt/presentation.xml',
@@ -92,6 +102,7 @@ PmlPresentation _deck(List<String> slides, {List<int>? order}) {
               text: 'Click to edit Master text styles',
             ),
         root: 'sldMaster',
+        background: masterBackground,
       ),
     ),
   );
@@ -204,9 +215,67 @@ void main() {
       ]);
       final PmlShape picture = deck.slides.single.shapes.single;
       expect(picture.visual?.kind, OfficeVisualKind.picture);
+      expect(picture.fillColor, isEmpty);
+      expect(picture.strokeColor, isEmpty);
       expect(picture.transform.x, 914400);
       expect(picture.transform.cx, 1828800);
       expect(picture.transform.cy, 1371600);
+    });
+
+    test('picture srcRect keeps deep crops and edge expansion', () {
+      final PmlPresentation deck = _deck(<String>[
+        _sld(
+          '<p:pic><p:nvPicPr><p:cNvPr id="2" name="Cropped"/>'
+          '<p:cNvPicPr/><p:nvPr/></p:nvPicPr><p:blipFill>'
+          '<a:blip r:embed="rId9"/><a:srcRect l="10000" t="2739" '
+          'r="67691" b="-1896"/><a:stretch/></p:blipFill><p:spPr>'
+          '${_xfrm(0, 0, 914400, 914400)}</p:spPr></p:pic>',
+        ),
+      ]);
+      final PictureAdjust crop =
+          deck.slides.single.shapes.single.visual!.picture;
+      expect(crop.cropLeft, closeTo(0.1, 0.00001));
+      expect(crop.cropTop, closeTo(0.02739, 0.00001));
+      expect(crop.cropRight, closeTo(0.67691, 0.00001));
+      expect(crop.cropBottom, closeTo(-0.01896, 0.00001));
+    });
+
+    test('rich text keeps run styles, paragraph defaults, and anchor', () {
+      final PmlPresentation deck = _deck(<String>[
+        _sld(
+          '<p:sp><p:nvSpPr><p:cNvPr id="2" name="Rich"/>'
+          '<p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr><p:spPr>'
+          '${_xfrm(0, 0, 9144000, 914400)}</p:spPr><p:txBody>'
+          '<a:bodyPr anchor="ctr"/><a:p><a:pPr algn="ctr"/><a:r>'
+          '<a:rPr sz="3300" b="1"><a:solidFill><a:prstClr val="white">'
+          '<a:lumMod val="65000"/></a:prstClr></a:solidFill>'
+          '<a:latin typeface="Microsoft Sans Serif"/></a:rPr>'
+          '<a:t>Title</a:t></a:r></a:p><a:p><a:r><a:rPr b="1" i="1"/>'
+          '<a:t>Date</a:t></a:r><a:endParaRPr sz="1100"/></a:p>'
+          '</p:txBody></p:sp>',
+        ),
+      ]);
+      final PmlShape shape = deck.slides.single.shapes.single;
+      expect(shape.textAnchor, PmlTextAnchor.center);
+      expect(shape.textAlign, PmlTextAlign.center);
+      expect(shape.richText, hasLength(2));
+      expect(shape.richText[0].runs.single.fontSizePt, 33);
+      expect(shape.richText[0].runs.single.bold, isTrue);
+      expect(shape.richText[0].runs.single.color, 'A6A6A6');
+      expect(shape.richText[1].runs.single.fontSizePt, 0);
+      expect(shape.richText[1].defaultFontSizePt, 11);
+    });
+
+    test('master background resolves theme lumMod', () {
+      final PmlPresentation deck = _deck(
+        <String>[_sld(_textBox(2, 'Slide'))],
+        masterBackground:
+            '<p:bg><p:bgPr><a:solidFill><a:schemeClr val="bg1">'
+            '<a:lumMod val="95000"/></a:schemeClr></a:solidFill>'
+            '<a:effectLst/></p:bgPr></p:bg>',
+      );
+      expect(deck.master.background, 'F2F2F2');
+      expect(deck.slides.single.background, 'F2F2F2');
     });
 
     test('scheme colors and p:style refs resolve through the theme', () {

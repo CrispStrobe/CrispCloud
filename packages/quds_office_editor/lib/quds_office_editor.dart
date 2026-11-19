@@ -9,6 +9,7 @@ export 'src/core/virtual_viewport.dart';
 export 'src/embed/office_clipboard.dart';
 export 'src/embed/office_context_menu.dart';
 export 'src/embed/office_controller.dart';
+export 'src/embed/word_page_layout.dart';
 export 'src/embed/office_direction_keys.dart';
 export 'src/embed/office_editors.dart';
 export 'src/embed/office_host_fonts.dart';

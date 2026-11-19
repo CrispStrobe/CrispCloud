@@ -72,6 +72,9 @@ const _maxString = 32767;
 const _maxSteps = 10000;
 const _maxArguments = 16;
 const _maxCalls = 32;
+const _maxArrayElements = 4096;
+const _maxActiveArrayElements = 16384;
+const _maxActiveArrayStringUnits = 1048576;
 const _maxExactInteger = 9007199254740991;
 const _comparisonOperators = <String>{'=', '<>', '<', '>', '<=', '>='};
 
@@ -419,10 +422,17 @@ sealed class _Statement {
 }
 
 class _Declaration extends _Statement {
-  const _Declaration(super.token, this.type, this.isConst, this.initializer);
+  const _Declaration(
+    super.token,
+    this.type,
+    this.isConst,
+    this.initializer, {
+    this.bounds,
+  });
   final _Declared type;
   final bool isConst;
   final _Expr? initializer;
+  final (_Expr, _Expr)? bounds;
 }
 
 class _Assignment extends _Statement {
@@ -450,6 +460,13 @@ class _For extends _Statement {
   final _Expr start;
   final _Expr end;
   final _Expr step;
+  final List<_Statement> body;
+}
+
+class _ForEach extends _Statement {
+  const _ForEach(super.token, this.counter, this.collection, this.body);
+  final _Token counter;
+  final _Expr collection;
   final List<_Statement> body;
 }
 
@@ -542,6 +559,7 @@ class _Parser {
   int position = 0;
   int expressionDepth = 0;
   int statementCount = 0;
+  final Set<String> arrayNames = <String>{};
   _Token get current => tokens[position];
   bool _is(String text) =>
       (current.kind == _TokenKind.identifier ||
@@ -609,6 +627,7 @@ class _Parser {
         }
         _endStatement();
         final ending = isFunction ? 'function' : 'sub';
+        arrayNames.clear();
         final body = _body(0, () => _atEnd(ending));
         _expect('end');
         _expect(ending);
@@ -697,12 +716,22 @@ class _Parser {
       } else if (_is('for')) {
         final token = current;
         position++;
+        final each = _take('each');
         final counter = _identifier();
-        _expect('=');
-        final start = _expression();
-        _expect('to');
-        final end = _expression();
-        final step = _take('step') ? _expression() : _Literal(token, 1);
+        _Expr? collection;
+        _Expr? start;
+        _Expr? end;
+        _Expr? step;
+        if (each) {
+          _expect('in');
+          collection = _expression();
+        } else {
+          _expect('=');
+          start = _expression();
+          _expect('to');
+          end = _expression();
+          step = _take('step') ? _expression() : _Literal(token, 1);
+        }
         _endStatement();
         final body = _body(depth + 1, () => _is('next'));
         _expect('next');
@@ -713,7 +742,11 @@ class _Parser {
           }
         }
         _endStatement();
-        result.add(_For(token, counter, start, end, step, body));
+        result.add(
+          each
+              ? _ForEach(token, counter, collection!, body)
+              : _For(token, counter, start!, end!, step!, body),
+        );
       } else if (_is('do')) {
         final token = current;
         position++;
@@ -857,7 +890,8 @@ class _Parser {
           !_is('let') &&
           !_is('worksheets') &&
           tokens[position + 1].text != '=' &&
-          tokens[position + 1].text != '.') {
+          tokens[position + 1].text != '.' &&
+          !_indexedAssignmentAhead()) {
         final name = _identifier();
         if (current.kind == _TokenKind.separator && current.text == ':') {
           context.unsupported(
@@ -943,18 +977,65 @@ class _Parser {
     _endStatement();
   }
 
+  bool _indexedAssignmentAhead() {
+    // Without a declared array, `Helper (1) = 2` remains a bare call whose
+    // argument is a parenthesized comparison. Only array names disambiguate
+    // this otherwise identical token shape as an indexed assignment.
+    if (!arrayNames.contains(current.lower) ||
+        tokens[position + 1].text != '(') {
+      return false;
+    }
+    var depth = 0;
+    for (var index = position + 1; index < tokens.length; index++) {
+      final token = tokens[index];
+      if (token.kind == _TokenKind.end || token.kind == _TokenKind.separator) {
+        return false;
+      }
+      if (token.kind == _TokenKind.symbol && token.text == '(') depth++;
+      if (token.kind == _TokenKind.symbol &&
+          token.text == ')' &&
+          --depth == 0) {
+        return tokens[index + 1].text == '=';
+      }
+    }
+    return false;
+  }
+
   List<_Declaration> _declarations(bool isConst) {
     position++;
     final result = <_Declaration>[];
     do {
       final name = _identifier();
+      (_Expr, _Expr)? bounds;
+      if (_take('(')) {
+        if (isConst || _is(')')) {
+          context.unsupported(
+            name,
+            'Only fixed-size local Dim arrays are supported.',
+          );
+        }
+        final first = _expression();
+        bounds = _take('to')
+            ? (first, _expression())
+            : (_Literal(name, 0), first);
+        if (_is(',')) {
+          context.unsupported(
+            name,
+            'Only one-dimensional arrays are supported.',
+          );
+        }
+        _expect(')');
+      }
       final type = _declaredType();
+      if (bounds != null) arrayNames.add(name.lower);
       _Expr? initializer;
       if (isConst) {
         _expect('=');
         initializer = _expression();
       }
-      result.add(_Declaration(name, type, isConst, initializer));
+      result.add(
+        _Declaration(name, type, isConst, initializer, bounds: bounds),
+      );
       if (result.length > _maxVariables) {
         context.limit(name, 'Too many declarations.');
       }
@@ -1131,10 +1212,25 @@ class _Parser {
 }
 
 class _Symbol {
-  const _Symbol(this.type, this.isConst, this.token);
+  const _Symbol(
+    this.type,
+    this.isConst,
+    this.token, {
+    this.array,
+    this.initializer,
+  });
   final _Declared type;
   final bool isConst;
   final _Token token;
+  final _ArrayBounds? array;
+  final _Expr? initializer;
+}
+
+class _ArrayBounds {
+  const _ArrayBounds(this.lower, this.upper);
+  final int lower;
+  final int upper;
+  int get length => upper - lower + 1;
 }
 
 /// Static object-shape validation also visits branches that will not execute.
@@ -1149,6 +1245,9 @@ class _Checker {
   Map<String, _Symbol> symbols = <String, _Symbol>{};
   final List<_Kind> withKinds = <_Kind>[];
   final Set<String> counters = <String>{};
+  final Set<String> eachCounters = <String>{};
+  final Map<_Symbol, Object> constantValues = <_Symbol, Object>{};
+  int constantWork = 0;
   int doDepth = 0;
   final Map<String, Set<String>> calls = <String, Set<String>>{};
   late _Procedure currentProcedure;
@@ -1185,6 +1284,8 @@ class _Checker {
     'range',
     'cells',
     'rgb',
+    'lbound',
+    'ubound',
     'empty',
     'null',
     'nothing',
@@ -1251,6 +1352,7 @@ class _Checker {
       symbols = <String, _Symbol>{...globals};
       withKinds.clear();
       counters.clear();
+      eachCounters.clear();
       doDepth = 0;
       for (final parameter in procedure.parameters) {
         _declare(_Declaration(parameter.name, parameter.type, false, null));
@@ -1363,11 +1465,91 @@ class _Checker {
         initializer.token,
       );
     }
+    _ArrayBounds? array;
+    if (declaration.bounds case final bounds?) {
+      if (declaration.type == _Declared.range ||
+          declaration.type == _Declared.worksheet) {
+        context.unsupported(
+          declaration.token,
+          'Array elements must be scalar.',
+        );
+      }
+      final lower = _arrayBound(bounds.$1);
+      final upper = _arrayBound(bounds.$2);
+      if (lower > upper) {
+        context.type(
+          declaration.token,
+          'An array lower bound exceeds its upper bound.',
+        );
+      }
+      array = _ArrayBounds(lower, upper);
+      if (array.length > _maxArrayElements) {
+        context.limit(
+          declaration.token,
+          'An array may contain at most $_maxArrayElements elements.',
+        );
+      }
+    }
     symbols[name] = _Symbol(
       declaration.type,
       declaration.isConst,
       declaration.token,
+      array: array,
+      initializer: declaration.initializer,
     );
+  }
+
+  int _arrayBound(_Expr expression) {
+    _constant(expression);
+    _compatible(_Kind.number, _expression(expression), expression.token);
+    // Resolve only constants actually used by a bound. Dependency discovery is
+    // iterative; a long chain of prior constants must not multiply AST depth
+    // on the host stack. Declaration order is already a topological order.
+    final needed = <_Symbol>{};
+    final pending = <_Expr>[expression];
+    while (pending.isNotEmpty) {
+      final current = pending.removeLast();
+      switch (current) {
+        case _Name():
+          final symbol = _symbol(current.token);
+          if (!constantValues.containsKey(symbol) && needed.add(symbol)) {
+            pending.add(symbol.initializer!);
+          }
+        case _Unary():
+          pending.add(current.operand);
+        case _Binary():
+          pending.add(current.left);
+          pending.add(current.right);
+        default:
+          break;
+      }
+    }
+    final evaluator = _Evaluator(context, module, this)..work = constantWork;
+    for (final entry in symbols.entries) {
+      final symbol = entry.value;
+      if (needed.contains(symbol)) {
+        constantValues[symbol] = evaluator._convert(
+          symbol.type,
+          evaluator._evaluate(symbol.initializer!),
+          symbol.token,
+        );
+      }
+      if (constantValues[symbol] case final value?) {
+        evaluator.values[entry.key] = value;
+      }
+    }
+    final result = evaluator._integer(
+      evaluator._evaluate(expression),
+      expression.token,
+    );
+    constantWork = evaluator.work;
+    if (result < -2147483648 || result > 2147483647) {
+      context.type(
+        expression.token,
+        'Array bounds must be signed 32-bit integers.',
+      );
+    }
+    return result;
   }
 
   void _constant(_Expr expression) {
@@ -1401,6 +1583,9 @@ class _Checker {
         case _Assignment(target: final _Name target):
           variable = target.token;
         case _For():
+          variable = statement.counter;
+          _implicit(statement.body);
+        case _ForEach():
           variable = statement.counter;
           _implicit(statement.body);
         case _ConditionalLoop():
@@ -1452,7 +1637,15 @@ class _Checker {
           final valueKind = _expression(statement.value);
           if (statement.target case final _Name target) {
             final symbol = _symbol(target.token);
-            if (symbol.isConst || counters.contains(target.token.lower)) {
+            if (symbol.array != null) {
+              context.unsupported(
+                target.token,
+                'Whole-array assignment is unsupported; use an element subscript.',
+              );
+            }
+            if (symbol.isConst ||
+                (counters.contains(target.token.lower) &&
+                    !eachCounters.contains(target.token.lower))) {
               context.unsupported(
                 target.token,
                 'Constants and active For counters cannot be assigned.',
@@ -1467,6 +1660,22 @@ class _Checker {
                 'Set is required only for declared Worksheet and Range variables.',
               );
             }
+            _assignable(symbol.type, valueKind, statement.value.token);
+          } else if (statement.target case final _Call target) {
+            if (statement.isSet) {
+              context.unsupported(
+                target.token,
+                'Array elements are scalar and cannot use Set.',
+              );
+            }
+            final symbol = _symbol(target.token);
+            if (symbol.array == null) {
+              context.unsupported(
+                target.token,
+                'Indexed assignments require a declared array.',
+              );
+            }
+            _arrayIndex(target);
             _assignable(symbol.type, valueKind, statement.value.token);
           } else if (statement.target case final _Member target) {
             if (statement.isSet) {
@@ -1494,6 +1703,7 @@ class _Checker {
         case _For():
           final counter = _symbol(statement.counter);
           if (counter.isConst ||
+              counter.array != null ||
               (counter.type != _Declared.long &&
                   counter.type != _Declared.variant)) {
             context.type(
@@ -1515,6 +1725,38 @@ class _Checker {
             _compatible(_Kind.number, _expression(value), value.token);
           }
           _statements(statement.body, nested: true);
+          counters.remove(statement.counter.lower);
+        case _ForEach():
+          final counter = _symbol(statement.counter);
+          final collection = statement.collection;
+          final isArray =
+              collection is _Name &&
+              symbols[collection.token.lower]?.array != null;
+          if (!isArray && _expression(collection) != _Kind.range) {
+            context.type(
+              collection.token,
+              'For Each requires a local array or explicit Range.',
+            );
+          }
+          if (counter.isConst ||
+              counter.array != null ||
+              counter.type != (isArray ? _Declared.variant : _Declared.range)) {
+            context.type(
+              statement.counter,
+              isArray
+                  ? 'For Each over an array requires a mutable Variant variable.'
+                  : 'For Each over a Range requires a mutable Range variable.',
+            );
+          }
+          if (!counters.add(statement.counter.lower)) {
+            context.unsupported(
+              statement.counter,
+              'Nested loops must use distinct counters.',
+            );
+          }
+          eachCounters.add(statement.counter.lower);
+          _statements(statement.body, nested: true);
+          eachCounters.remove(statement.counter.lower);
           counters.remove(statement.counter.lower);
         case _ConditionalLoop():
           if (statement.condition case final condition?) {
@@ -1642,7 +1884,14 @@ class _Checker {
             : _Kind.string;
       case _Name():
         if (expression.token.lower == 'thisworkbook') return _Kind.workbook;
-        return _kindOf(_symbol(expression.token).type);
+        final symbol = _symbol(expression.token);
+        if (symbol.array != null) {
+          context.type(
+            expression.token,
+            'An array needs an element subscript; whole-array values are unsupported.',
+          );
+        }
+        return _kindOf(symbol.type);
       case _WithValue():
         if (withKinds.isEmpty) {
           context.unsupported(
@@ -1652,6 +1901,24 @@ class _Checker {
         }
         return withKinds.last;
       case _Call():
+        if (symbols[expression.token.lower]?.array != null) {
+          return _arrayIndex(expression);
+        }
+        if (expression.token.lower == 'lbound' ||
+            expression.token.lower == 'ubound') {
+          if (expression.arguments.isEmpty || expression.arguments.length > 2) {
+            context.type(
+              expression.token,
+              '${expression.token.text} requires an array and an optional dimension.',
+            );
+          }
+          _arraySymbol(expression.arguments.first);
+          if (expression.arguments.length == 2) {
+            final dimension = expression.arguments[1];
+            _compatible(_Kind.number, _expression(dimension), dimension.token);
+          }
+          return _Kind.number;
+        }
         if (expression.token.lower == 'worksheets') {
           _count(expression.token, expression.arguments, 1);
           final kind = _expression(expression.arguments.single);
@@ -1711,6 +1978,10 @@ class _Checker {
           _arguments(expression, 0, allowProperty: true);
           return name == 'font' ? _Kind.font : _Kind.interior;
         }
+        if (receiver == _Kind.range && (name == 'row' || name == 'column')) {
+          _arguments(expression, 0, allowProperty: true);
+          return _Kind.number;
+        }
         context.unsupported(
           expression.token,
           'Unsupported object member or document read: ${expression.token.text}.',
@@ -1756,6 +2027,27 @@ class _Checker {
         'vba_name_error',
         'Unknown name ${token.text}; active selections, default members, and undeclared reads are unsupported.',
       );
+
+  _Symbol _arraySymbol(_Expr expression) {
+    if (expression is! _Name) {
+      context.type(
+        expression.token,
+        'A declared local array name is required.',
+      );
+    }
+    final symbol = _symbol(expression.token);
+    if (symbol.array == null) {
+      context.type(expression.token, 'A declared local array is required.');
+    }
+    return symbol;
+  }
+
+  _Kind _arrayIndex(_Call expression) {
+    _count(expression.token, expression.arguments, 1);
+    final index = expression.arguments.single;
+    _compatible(_Kind.number, _expression(index), index.token);
+    return _kindOf(_symbol(expression.token).type);
+  }
 
   List<_Expr> _arguments(
     _Member member,
@@ -1827,6 +2119,13 @@ class _Uninitialized {
   const _Uninitialized();
 }
 
+class _Array {
+  const _Array(this.bounds, this.type, this.elements);
+  final _ArrayBounds bounds;
+  final _Declared type;
+  final List<Object> elements;
+}
+
 class _Workbook {
   const _Workbook();
 }
@@ -1887,6 +2186,14 @@ class _ForFrame extends _ExecutionFrame {
   bool afterBody = false;
 }
 
+class _ForEachFrame extends _ExecutionFrame {
+  _ForEachFrame(this.loop, this.collection, this.length);
+  final _ForEach loop;
+  final Object collection;
+  final int length;
+  int index = 0;
+}
+
 class _Evaluator {
   _Evaluator(this.context, this.module, this.checker);
   final _Context context;
@@ -1898,10 +2205,13 @@ class _Evaluator {
   Map<String, _Symbol> symbols = <String, _Symbol>{};
   Map<String, Object> globalValues = <String, Object>{};
   int activeCalls = 0;
+  int activeArrayElements = 0;
+  int activeArrayStringUnits = 0;
   int work = 0;
   int encodedBytes = 0;
 
   OfficeMacro compile() {
+    work = checker.constantWork;
     final procedure =
         module.procedures[context.source.entryPoint.toLowerCase()]!;
     symbols = checker.globals;
@@ -1952,6 +2262,8 @@ class _Evaluator {
     final callerValues = values;
     final callerSymbols = symbols;
     final callerWithValues = withValues;
+    final callerArrayElements = activeArrayElements;
+    final callerArrayStringUnits = activeArrayStringUnits;
     activeCalls++;
     symbols = checker.locals[procedure.name.lower]!;
     values = <String, Object>{...globalValues};
@@ -1987,6 +2299,8 @@ class _Evaluator {
       values = callerValues;
       symbols = callerSymbols;
       withValues = callerWithValues;
+      activeArrayElements = callerArrayElements;
+      activeArrayStringUnits = callerArrayStringUnits;
       activeCalls--;
     }
   }
@@ -2000,6 +2314,23 @@ class _Evaluator {
   };
 
   void _initialize(_Declaration declaration) {
+    if (symbols[declaration.token.lower]!.array case final bounds?) {
+      final count = bounds.length;
+      if (count > _maxActiveArrayElements - activeArrayElements) {
+        context.limit(
+          declaration.token,
+          'Active procedures may contain at most $_maxActiveArrayElements array elements.',
+        );
+      }
+      _charge(count, declaration.token);
+      activeArrayElements += count;
+      values[declaration.token.lower] = _Array(
+        bounds,
+        declaration.type,
+        List<Object>.filled(count, _default(declaration.type)),
+      );
+      return;
+    }
     if (declaration.initializer != null) {
       values[declaration.token.lower] = _convert(
         declaration.type,
@@ -2010,12 +2341,17 @@ class _Evaluator {
   }
 
   void _tick(_Token token) {
-    if (++work > _maxWork) {
+    _charge(1, token);
+  }
+
+  void _charge(int amount, _Token token) {
+    if (amount > _maxWork - work) {
       context.limit(
         token,
         'Compilation exceeds $_maxWork evaluation/statement visits.',
       );
     }
+    work += amount;
   }
 
   _ExitKind? _execute(List<_Statement> statements) {
@@ -2050,6 +2386,31 @@ class _Evaluator {
           frames.add(_BodyFrame(frame.loop.body));
           continue;
         }
+        if (frame is _ForEachFrame) {
+          if (frame.index == frame.length) {
+            frames.removeLast();
+            continue;
+          }
+          _tick(frame.loop.token);
+          final collection = frame.collection;
+          final Object value;
+          if (collection is _Array) {
+            value = _initialized(
+              collection.elements[frame.index],
+              frame.loop.counter,
+            );
+          } else {
+            final range = collection as _Range;
+            final columns = range.maxColumn - range.minColumn + 1;
+            final row = range.minRow + frame.index ~/ columns;
+            final column = range.minColumn + frame.index % columns;
+            value = _Range(range.sheet, row, column, row, column);
+          }
+          values[frame.loop.counter.lower] = value;
+          frame.index++;
+          frames.add(_BodyFrame(frame.loop.body));
+          continue;
+        }
         if (frame is _ConditionalFrame) {
           final loop = frame.loop;
           if (frame.afterBody && loop.testAfter && !_continues(loop)) {
@@ -2078,6 +2439,13 @@ class _Evaluator {
           case _Declaration():
             _initialize(statement);
           case _Assignment():
+            if (statement.target case final _Call target) {
+              final array = values[target.token.lower]! as _Array;
+              final index = _arrayOffset(array, target.arguments.single);
+              final value = _evaluate(statement.value);
+              _writeArrayElement(array, index, value, target.token);
+              break;
+            }
             final value = _evaluate(statement.value);
             if (statement.target case final _Name name) {
               values[name.token.lower] = _convert(
@@ -2125,6 +2493,8 @@ class _Evaluator {
             frames.add(_BodyFrame(selected));
           case _For():
             frames.add(_startFor(statement));
+          case _ForEach():
+            frames.add(_startForEach(statement));
           case _Invoke():
             final arguments = <Object>[
               for (final argument in statement.arguments) _evaluate(argument),
@@ -2170,12 +2540,35 @@ class _Evaluator {
     return _ForFrame(loop, type, start, step, count);
   }
 
+  _ForEachFrame _startForEach(_ForEach loop) {
+    final collection = _evaluate(loop.collection);
+    final int length;
+    if (collection is _Array) {
+      length = collection.elements.length;
+    } else {
+      final range = collection as _Range;
+      length =
+          (range.maxRow - range.minRow + 1) *
+          (range.maxColumn - range.minColumn + 1);
+    }
+    if (length > _maxWork - work) {
+      context.limit(
+        loop.token,
+        'For Each exceeds the remaining compilation work budget.',
+      );
+    }
+    return _ForEachFrame(loop, collection, length);
+  }
+
   bool _leaveLoop(List<_ExecutionFrame> frames, _ExitKind kind) {
     if (kind != _ExitKind.forLoop && kind != _ExitKind.doLoop) return false;
     while (frames.isNotEmpty) {
       final frame = frames.removeLast();
       if (frame is _WithFrame) withValues.removeLast();
-      if (kind == _ExitKind.forLoop && frame is _ForFrame) return true;
+      if (kind == _ExitKind.forLoop &&
+          (frame is _ForFrame || frame is _ForEachFrame)) {
+        return true;
+      }
       if (kind == _ExitKind.doLoop &&
           frame is _ConditionalFrame &&
           frame.loop.isDo) {
@@ -2223,16 +2616,33 @@ class _Evaluator {
       case _Name():
         if (expression.token.lower == 'thisworkbook') return const _Workbook();
         final value = values[expression.token.lower]!;
-        if (value is _Uninitialized) {
-          context.unsupported(
-            expression.token,
-            'Uninitialized Variant/objects (Empty or Nothing) are unsupported; assign before reading.',
-          );
-        }
-        return value;
+        return _initialized(value, expression.token);
       case _WithValue():
         return withValues.last;
       case _Call():
+        if (values[expression.token.lower] case final _Array array) {
+          return _initialized(
+            array.elements[_arrayOffset(array, expression.arguments.single)],
+            expression.token,
+          );
+        }
+        if (expression.token.lower == 'lbound' ||
+            expression.token.lower == 'ubound') {
+          final array = _evaluate(expression.arguments.first) as _Array;
+          if (expression.arguments.length == 2) {
+            final dimension = expression.arguments[1];
+            if (_integer(_evaluate(dimension), dimension.token) != 1) {
+              context.fail(
+                dimension.token,
+                'vba_subscript_out_of_range',
+                'One-dimensional arrays require dimension 1.',
+              );
+            }
+          }
+          return expression.token.lower == 'lbound'
+              ? array.bounds.lower
+              : array.bounds.upper;
+        }
         final arguments = <Object>[
           for (final argument in expression.arguments) _evaluate(argument),
         ];
@@ -2271,6 +2681,8 @@ class _Evaluator {
           return _Range(receiver, row, column, row, column);
         }
         final range = receiver as _Range;
+        if (expression.token.lower == 'row') return range.minRow;
+        if (expression.token.lower == 'column') return range.minColumn;
         return expression.token.lower == 'font'
             ? _Font(range)
             : _Interior(range);
@@ -2356,6 +2768,46 @@ class _Evaluator {
       '<=' => comparison <= 0,
       _ => comparison >= 0,
     };
+  }
+
+  Object _initialized(Object value, _Token token) {
+    if (value is _Uninitialized) {
+      context.unsupported(
+        token,
+        'Uninitialized Variant/objects (Empty or Nothing) are unsupported; assign before reading.',
+      );
+    }
+    return value;
+  }
+
+  int _arrayOffset(_Array array, _Expr expression) {
+    final index = _integer(_evaluate(expression), expression.token);
+    if (index < array.bounds.lower || index > array.bounds.upper) {
+      context.fail(
+        expression.token,
+        'vba_subscript_out_of_range',
+        'Array subscript $index is outside ${array.bounds.lower}..${array.bounds.upper}.',
+      );
+    }
+    return index - array.bounds.lower;
+  }
+
+  void _writeArrayElement(_Array array, int index, Object value, _Token token) {
+    final converted = _convert(array.type, value, token);
+    final previous = array.elements[index];
+    final previousUnits = previous is String ? previous.length : 0;
+    final nextUnits = converted is String ? converted.length : 0;
+    if (nextUnits >
+        _maxActiveArrayStringUnits - activeArrayStringUnits + previousUnits) {
+      context.limit(
+        token,
+        'Strings in active array elements exceed $_maxActiveArrayStringUnits UTF-16 code units.',
+      );
+    }
+    // Count occupied string units per slot, even when Dart shares a String
+    // object. This portable bound is independent of host allocation details.
+    activeArrayStringUnits += nextUnits - previousUnits;
+    array.elements[index] = converted;
   }
 
   Object _convert(_Declared type, Object value, _Token token) {

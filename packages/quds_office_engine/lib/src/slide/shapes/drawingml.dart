@@ -7,6 +7,7 @@ import '../../xml/xml_writer.dart';
 import '../anim/pml_motion_io.dart';
 import '../model/pml_arrange.dart';
 import '../model/pml_presentation.dart';
+import 'slide_rich_text.dart';
 
 /// parseSlideShapes helper.
 ///
@@ -65,7 +66,23 @@ List<PmlShape> parseSlideShapes(
   var explicitFill = false;
   var explicitLine = false;
   String? styleRef;
+  var hiddenDepth = 0;
   while (reader.next()) {
+    // `a14:hiddenFill` / `hiddenLine` / `hiddenEffects` record the formatting
+    // PowerPoint hides behind the current fallback. They must never win over
+    // the visible `noFill` / `ln` / effect list.
+    if (hiddenDepth > 0) {
+      if (reader.eventType == XmlEventType.endElement &&
+          reader.depth <= hiddenDepth) {
+        hiddenDepth = 0;
+      }
+      continue;
+    }
+    if (reader.eventType == XmlEventType.startElement &&
+        reader.localName.startsWith('hidden')) {
+      hiddenDepth = reader.depth;
+      continue;
+    }
     if (reader.eventType == XmlEventType.endElement) {
       if (reader.localName == 'xfrm') {
         inXfrm = false;
@@ -258,6 +275,12 @@ List<PmlShape> parseSlideShapes(
         'straightConnector1' => PmlShapePreset.connector,
         _ => PmlShapePreset.rect,
       };
+    } else if (reader.localName == 'bodyPr' && current != null) {
+      current.textAnchor = switch (reader.getAttribute('anchor')) {
+        'ctr' => PmlTextAnchor.center,
+        'b' => PmlTextAnchor.bottom,
+        _ => PmlTextAnchor.top,
+      };
     } else if (reader.localName == 'noFill' &&
         inSpPr &&
         !inLn &&
@@ -293,7 +316,7 @@ List<PmlShape> parseSlideShapes(
     } else if (reader.localName == 'tcPr' && currentCell != null) {
       inTcPr = true;
     } else if (_colorElements.contains(reader.localName) && current != null) {
-      final String? val = _readColor(reader, colors);
+      final String? val = resolveDrawingmlColor(reader, colors);
       if (val != null && val.isNotEmpty) {
         if (inTcPr && currentCell != null) {
           currentCell.fillColor = val;
@@ -302,7 +325,11 @@ List<PmlShape> parseSlideShapes(
         } else if (fillPending) {
           current.fillColor = val;
         } else if (textFillPending) {
-          current.textColor = val;
+          if (currentCell != null) {
+            if (currentCell.textColor.isEmpty) currentCell.textColor = val;
+          } else if (current.textColor.isEmpty) {
+            current.textColor = val;
+          }
         } else if (styleRef == 'fill') {
           current.fillColor = val;
         } else if (styleRef == 'line') {
@@ -365,11 +392,15 @@ List<PmlShape> parseSlideShapes(
       }
     }
   }
-  _captureTextSources(xml, shapes);
+  _captureTextSources(xml, shapes, colors);
   return shapes;
 }
 
-void _captureTextSources(String xml, List<PmlShape> shapes) {
+void _captureTextSources(
+  String xml,
+  List<PmlShape> shapes,
+  Map<String, String> colors,
+) {
   final Map<int, PmlShape> byId = <int, PmlShape>{
     for (final PmlShape shape in shapes) shape.id: shape,
   };
@@ -384,14 +415,18 @@ void _captureTextSources(String xml, List<PmlShape> shapes) {
         reader.namespaceUri == OfficeNamespaces.p &&
         current != null) {
       final XmlElement body = XmlDocument.readElement(reader);
+      final String snapshot = XmlDocument(
+        root: body,
+      ).toXmlString(declaration: false);
       current.textSource = PmlTextSource(
-        xml: XmlDocument(root: body).toXmlString(declaration: false),
+        xml: snapshot,
         text: current.text,
         fontSizePt: current.fontSizePt,
         textColor: current.textColor,
         textAlign: current.textAlign,
         rightToLeft: current.rightToLeft,
       );
+      current.richText = parsePmlRichText(snapshot, colors);
     }
   }
 }
@@ -405,7 +440,10 @@ const Set<String> _colorElements = <String>{
 
 /// Reads a DrawingML color element (consuming it) as `RRGGBB`, applying the
 /// `lumMod` / `lumOff` / `shade` / `tint` modifiers PowerPoint themes use.
-String? _readColor(XmlPullReader reader, Map<String, String> colors) {
+String? resolveDrawingmlColor(
+  XmlPullReader reader,
+  Map<String, String> colors,
+) {
   final String name = reader.localName;
   final String val = reader.getAttribute('val') ?? '';
   String? hex = switch (name) {

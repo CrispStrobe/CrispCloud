@@ -52,6 +52,98 @@ enum PmlShapePreset { rect, roundRect, ellipse, triangle, connector, freeform }
 /// Enum PmlTextAlign.
 enum PmlTextAlign { left, center, right, justify }
 
+/// Vertical placement of a text frame inside its shape.
+enum PmlTextAnchor { top, center, bottom }
+
+/// One styled DrawingML text run.
+class PmlTextRun {
+  PmlTextRun({
+    this.text = '',
+    this.fontSizePt = 0,
+    this.bold = false,
+    this.italic = false,
+    this.underline = false,
+    this.strike = false,
+    this.color = '',
+    this.baseline = 0,
+    this.fontFamily = '',
+  });
+
+  String text;
+  double fontSizePt;
+  bool bold;
+  bool italic;
+  bool underline;
+  bool strike;
+  String color;
+  double baseline;
+  String fontFamily;
+
+  PmlTextRun copy() => PmlTextRun(
+    text: text,
+    fontSizePt: fontSizePt,
+    bold: bold,
+    italic: italic,
+    underline: underline,
+    strike: strike,
+    color: color,
+    baseline: baseline,
+    fontFamily: fontFamily,
+  );
+}
+
+/// One DrawingML paragraph with its runs and layout settings.
+class PmlTextParagraph {
+  PmlTextParagraph({
+    List<PmlTextRun>? runs,
+    this.align = PmlTextAlign.left,
+    this.level = 0,
+    this.marginLeftPt = 0,
+    this.indentPt = 0,
+    this.lineSpacing = 1,
+    this.spaceBeforePt = 0,
+    this.spaceAfterPt = 0,
+    this.rightToLeft = false,
+    this.defaultTabPt = 72,
+    this.defaultFontSizePt = 0,
+    this.defaultColor = '',
+    this.defaultBold = false,
+    this.defaultItalic = false,
+  }) : runs = runs ?? <PmlTextRun>[];
+
+  List<PmlTextRun> runs;
+  PmlTextAlign align;
+  int level;
+  double marginLeftPt;
+  double indentPt;
+  double lineSpacing;
+  double spaceBeforePt;
+  double spaceAfterPt;
+  bool rightToLeft;
+  double defaultTabPt;
+  double defaultFontSizePt;
+  String defaultColor;
+  bool defaultBold;
+  bool defaultItalic;
+
+  PmlTextParagraph copy() => PmlTextParagraph(
+    runs: <PmlTextRun>[for (final PmlTextRun run in runs) run.copy()],
+    align: align,
+    level: level,
+    marginLeftPt: marginLeftPt,
+    indentPt: indentPt,
+    lineSpacing: lineSpacing,
+    spaceBeforePt: spaceBeforePt,
+    spaceAfterPt: spaceAfterPt,
+    rightToLeft: rightToLeft,
+    defaultTabPt: defaultTabPt,
+    defaultFontSizePt: defaultFontSizePt,
+    defaultColor: defaultColor,
+    defaultBold: defaultBold,
+    defaultItalic: defaultItalic,
+  );
+}
+
 /// Class PmlTableCell.
 class PmlTableCell {
   /// PmlTableCell API.
@@ -251,6 +343,8 @@ class PmlShape {
     this.table,
     this.rightToLeft,
     this.textAlign = PmlTextAlign.left,
+    this.textAnchor = PmlTextAnchor.top,
+    List<PmlTextParagraph>? richText,
     this.groupId,
     this.placeholder = false,
     this.placeholderType = '',
@@ -261,6 +355,7 @@ class PmlShape {
     this.strokeWidth = 1,
     this.hyperlinkUrl = '',
   }) : path = path ?? <PmlPathPoint>[],
+       richText = richText ?? <PmlTextParagraph>[],
        mediaBytes = mediaBytes ?? <int>[];
 
   /// id API.
@@ -307,6 +402,12 @@ class PmlShape {
 
   /// textAlign API.
   PmlTextAlign textAlign;
+
+  /// Vertical text-frame placement from `a:bodyPr/@anchor`.
+  PmlTextAnchor textAnchor;
+
+  /// Rich paragraph/run model when the source text has not been replaced.
+  List<PmlTextParagraph> richText;
 
   /// Shapes that share a [groupId] move together.
   int? groupId;
@@ -357,6 +458,10 @@ class PmlShape {
       table: table?.copy(),
       rightToLeft: rightToLeft,
       textAlign: textAlign,
+      textAnchor: textAnchor,
+      richText: <PmlTextParagraph>[
+        for (final PmlTextParagraph paragraph in richText) paragraph.copy(),
+      ],
       groupId: groupId,
       placeholder: placeholder,
       placeholderType: placeholderType,
@@ -390,6 +495,7 @@ class PmlSlide {
     List<PmlShape>? shapes,
     this.layoutName = 'Blank',
     this.masterName = 'Office Theme',
+    this.background = 'FFFFFF',
     this.notes = '',
     this.sourcePartUri,
     this.transition = const PmlSlideTransition(),
@@ -409,6 +515,9 @@ class PmlSlide {
 
   /// masterName API.
   String masterName;
+
+  /// Resolved solid slide background (`RRGGBB`), inherited from layout/master.
+  String background;
 
   /// Original owning part, retained when slides are reordered.
   String? sourcePartUri;
@@ -431,6 +540,7 @@ class PmlSlide {
       id: id ?? this.id,
       layoutName: layoutName,
       masterName: masterName,
+      background: background,
       notes: notes,
       sourcePartUri: id == null || id == this.id ? sourcePartUri : null,
       transition: transition,

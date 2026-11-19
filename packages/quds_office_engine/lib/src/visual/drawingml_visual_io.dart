@@ -32,10 +32,11 @@ abstract final class DrawingmlVisualIo {
   /// srcToCrop API.
   static double srcToCrop(String? raw) {
     final int? value = int.tryParse(raw ?? '');
-    if (value == null || value <= 0) {
+    if (value == null || value == 0) {
       return 0;
     }
-    return (value / 100000).clamp(0.0, 0.49);
+    // PowerPoint permits deep crops and negative values for edge expansion.
+    return (value / 100000).clamp(-0.99, 0.99);
   }
 
   /// DrawingML `a:lum/@bright` is 1000ths of a percent; 0 is unchanged.

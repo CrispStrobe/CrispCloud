@@ -1,7 +1,19 @@
+import 'package:flutter/material.dart' show MaterialApp;
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quds_office_editor/quds_office_editor.dart';
+
+// The default Word review tooltips use the application host's Overlay.
+Widget _withAppOverlay(Widget child) => MaterialApp(home: child);
+
+Future<void> _disposeWordHost(
+  WidgetTester tester,
+  WordEditorController controller,
+) async {
+  await tester.pumpWidget(const SizedBox.shrink());
+  controller.dispose();
+}
 
 void main() {
   test('word controller inserts, undoes, and respects viewing mode', () {
@@ -182,12 +194,14 @@ void main() {
       ..logicalIndex = 2
       ..collapseSelection();
     await tester.pumpWidget(
-      Directionality(
-        textDirection: TextDirection.ltr,
-        child: SizedBox(
-          width: 800,
-          height: 600,
-          child: QudsWordEditor(controller: controller),
+      _withAppOverlay(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: SizedBox(
+            width: 800,
+            height: 600,
+            child: QudsWordEditor(controller: controller),
+          ),
         ),
       ),
     );
@@ -196,6 +210,7 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.tab);
     await tester.pump();
     expect(controller.document.paragraphs.first.text, 'Hi\t');
+    await _disposeWordHost(tester, controller);
   });
 
   testWidgets('word editor backspace key deletes a character', (
@@ -208,12 +223,14 @@ void main() {
       ..logicalIndex = 2
       ..collapseSelection();
     await tester.pumpWidget(
-      Directionality(
-        textDirection: TextDirection.ltr,
-        child: SizedBox(
-          width: 800,
-          height: 600,
-          child: QudsWordEditor(controller: controller),
+      _withAppOverlay(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: SizedBox(
+            width: 800,
+            height: 600,
+            child: QudsWordEditor(controller: controller),
+          ),
         ),
       ),
     );
@@ -222,6 +239,7 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.backspace);
     await tester.pump();
     expect(controller.document.paragraphs.first.text, 'H');
+    await _disposeWordHost(tester, controller);
   });
 
   testWidgets(
@@ -231,12 +249,14 @@ void main() {
         document: WmlDocument.empty(text: 'Hi'),
       );
       await tester.pumpWidget(
-        Directionality(
-          textDirection: TextDirection.ltr,
-          child: SizedBox(
-            width: 800,
-            height: 600,
-            child: QudsWordEditor(controller: controller),
+        _withAppOverlay(
+          Directionality(
+            textDirection: TextDirection.ltr,
+            child: SizedBox(
+              width: 800,
+              height: 600,
+              child: QudsWordEditor(controller: controller),
+            ),
           ),
         ),
       );
@@ -256,6 +276,7 @@ void main() {
       controller.applyImeText('Hi!');
       expect(controller.document.paragraphs.first.text, 'Hi!');
       thief.detach();
+      await _disposeWordHost(tester, controller);
     },
   );
 
@@ -270,12 +291,14 @@ void main() {
       ..collapseSelection();
     controller.insertText('!');
     await tester.pumpWidget(
-      Directionality(
-        textDirection: TextDirection.ltr,
-        child: SizedBox(
-          width: 800,
-          height: 600,
-          child: QudsWordEditor(controller: controller),
+      _withAppOverlay(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: SizedBox(
+            width: 800,
+            height: 600,
+            child: QudsWordEditor(controller: controller),
+          ),
         ),
       ),
     );
@@ -292,6 +315,7 @@ void main() {
     await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
     await tester.pump();
     expect(controller.document.paragraphs.first.text, 'Hi!');
+    await _disposeWordHost(tester, controller);
   });
 
   testWidgets('word editor shift arrows grow and shrink the selection', (
@@ -304,12 +328,14 @@ void main() {
       ..logicalIndex = 1
       ..collapseSelection();
     await tester.pumpWidget(
-      Directionality(
-        textDirection: TextDirection.ltr,
-        child: SizedBox(
-          width: 800,
-          height: 600,
-          child: QudsWordEditor(controller: controller),
+      _withAppOverlay(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: SizedBox(
+            width: 800,
+            height: 600,
+            child: QudsWordEditor(controller: controller),
+          ),
         ),
       ),
     );
@@ -336,6 +362,7 @@ void main() {
     expect(controller.caret.isCollapsed, isTrue);
     expect(controller.caret.logicalIndex, 1);
     await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+    await _disposeWordHost(tester, controller);
   });
 
   testWidgets('word editor ctrl+a selects the whole document', (
@@ -358,12 +385,14 @@ void main() {
       ..logicalIndex = 1
       ..collapseSelection();
     await tester.pumpWidget(
-      Directionality(
-        textDirection: TextDirection.ltr,
-        child: SizedBox(
-          width: 800,
-          height: 600,
-          child: QudsWordEditor(controller: controller),
+      _withAppOverlay(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: SizedBox(
+            width: 800,
+            height: 600,
+            child: QudsWordEditor(controller: controller),
+          ),
         ),
       ),
     );
@@ -378,6 +407,7 @@ void main() {
     expect(controller.caret.paragraphIndex, 1);
     expect(controller.caret.logicalIndex, 3);
     expect(controller.caret.isCollapsed, isFalse);
+    await _disposeWordHost(tester, controller);
   });
 
   test('sheet controller toggles rightToLeft and moves selection', () {
@@ -2102,25 +2132,27 @@ void main() {
   ) async {
     late OfficeController ready;
     await tester.pumpWidget(
-      Directionality(
-        textDirection: TextDirection.ltr,
-        child: SizedBox(
-          width: 800,
-          height: 600,
-          child: QudsOfficeHost(
-            kind: OpcPackageKind.word,
-            config: const OfficeSurfaceConfig(
-              mode: OfficeInteractionMode.viewing,
-              theme: OfficeTheme.dark,
-              showRulers: false,
+      _withAppOverlay(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: SizedBox(
+            width: 800,
+            height: 600,
+            child: QudsOfficeHost(
+              kind: OpcPackageKind.word,
+              config: const OfficeSurfaceConfig(
+                mode: OfficeInteractionMode.viewing,
+                theme: OfficeTheme.dark,
+                showRulers: false,
+              ),
+              toolbarBuilder: (BuildContext context, OfficeController c) {
+                return SizedBox(
+                  height: 28,
+                  child: Text(c.config.strings.viewing),
+                );
+              },
+              onControllerReady: (OfficeController c) => ready = c,
             ),
-            toolbarBuilder: (BuildContext context, OfficeController c) {
-              return SizedBox(
-                height: 28,
-                child: Text(c.config.strings.viewing),
-              );
-            },
-            onControllerReady: (OfficeController c) => ready = c,
           ),
         ),
       ),
@@ -2799,12 +2831,14 @@ void main() {
     var requested = false;
     word.onFindRequested = () => requested = true;
     await tester.pumpWidget(
-      Directionality(
-        textDirection: TextDirection.ltr,
-        child: SizedBox(
-          width: 800,
-          height: 600,
-          child: QudsWordEditor(controller: word),
+      _withAppOverlay(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: SizedBox(
+            width: 800,
+            height: 600,
+            child: QudsWordEditor(controller: word),
+          ),
         ),
       ),
     );
@@ -2816,6 +2850,7 @@ void main() {
     await tester.pump();
     expect(requested, isTrue);
     expect(word.findSession.active, isTrue);
+    await _disposeWordHost(tester, word);
   });
 
   testWidgets('word lines laid out with paint metrics fit the column', (

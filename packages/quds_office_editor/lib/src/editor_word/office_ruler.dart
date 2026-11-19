@@ -6,6 +6,7 @@ import 'package:quds_office_engine/quds_office_engine.dart';
 
 import '../embed/office_theme.dart';
 import '../ui_components/office_chrome.dart';
+import 'paint_run_text.dart';
 
 /// Which control the pointer is on.
 enum RulerHitKind {
@@ -743,12 +744,16 @@ abstract final class WordRuler {
     double? contentLeft,
     double? contentRight,
   }) {
-    const Color barFill = Color(0xFFEEEEEE);
-    const Color marginWell = Color(0xFFD0D0D0);
-    const Color contentWell = Color(0xFFFAFAFA);
-    const Color wellStroke = Color(0xFFB8B8B8);
-    const Color hairline = Color(0xFFB0B0B0);
-    const Color tickColor = Color(0xFF5C5C5C);
+    // Rulers belong to the surrounding chrome, independently of the paper
+    // colour. Keep the established light palette and honour dark/high-contrast
+    // surfaces, including hosts that deliberately retain white document pages.
+    final bool dark = theme.chromeFill.computeLuminance() < 0.4;
+    final Color barFill = dark ? theme.chromeFill : const Color(0xFFEEEEEE);
+    final Color marginWell = dark ? theme.frozenFill : const Color(0xFFD0D0D0);
+    final Color contentWell = dark ? theme.headerFill : const Color(0xFFFAFAFA);
+    final Color wellStroke = dark ? theme.gridLine : const Color(0xFFB8B8B8);
+    final Color hairline = dark ? theme.pageBorder : const Color(0xFFB0B0B0);
+    final Color tickColor = dark ? theme.headerText : const Color(0xFF5C5C5C);
 
     final Rect hBar = Rect.fromLTWH(0, 0, view.width, size);
     final Rect vBar = Rect.fromLTWH(0, 0, size, view.height);
@@ -812,6 +817,7 @@ abstract final class WordRuler {
       pageWidth: pageWidth,
       originPageX: originX,
       unit: unit,
+      fontFamily: theme.fontFamily,
       rtl: rtl,
       color: tickColor,
     );
@@ -842,19 +848,20 @@ abstract final class WordRuler {
       pageHeight: pageHeight,
       originPageY: originY,
       unit: unit,
+      fontFamily: theme.fontFamily,
       color: tickColor,
     );
     canvas.restore();
 
     canvas.drawRect(
       Rect.fromLTWH(0, 0, size, size),
-      Paint()..color = const Color(0xFFE4E4E4),
+      Paint()..color = dark ? theme.frozenFill : const Color(0xFFE4E4E4),
     );
     canvas.drawLine(
       Offset(3, 3),
       Offset(size - 4, size - 4),
       Paint()
-        ..color = const Color(0xFFC0C0C0)
+        ..color = dark ? theme.headerText : const Color(0xFFC0C0C0)
         ..strokeWidth = 1,
     );
     canvas.drawRect(
@@ -887,6 +894,9 @@ abstract final class WordRuler {
       pageWidth: pageWidth,
       tabs: tabs,
       rtl: rtl,
+      color: dark
+          ? theme.headerText.withValues(alpha: 0.55)
+          : const Color(0xFFB8B8B8),
       contentLeft: contentLeft,
       contentRight: contentRight,
     );
@@ -1032,7 +1042,10 @@ abstract final class WordRuler {
       canvas.drawLine(
         Offset(content.left, content.top + 0.5),
         Offset(content.right, content.top + 0.5),
-        Paint()..color = const Color(0x66FFFFFF),
+        Paint()
+          ..color = contentFill.computeLuminance() < 0.4
+              ? stroke.withValues(alpha: 0.35)
+              : const Color(0x66FFFFFF),
       );
     }
     canvas.drawRRect(
@@ -1100,6 +1113,7 @@ abstract final class WordRuler {
     required bool rtl,
     required Color color,
     required OfficeLengthUnit unit,
+    required String? fontFamily,
   }) {
     final Paint tick = Paint()
       ..color = color.withValues(alpha: 0.55)
@@ -1126,6 +1140,7 @@ abstract final class WordRuler {
           '${n ~/ unit.rulerDivisions * unit.rulerLabelMultiplier}',
           Offset(x, 3.5),
           color,
+          fontFamily: fontFamily,
         );
       }
     }
@@ -1139,6 +1154,7 @@ abstract final class WordRuler {
     required double originPageY,
     required Color color,
     required OfficeLengthUnit unit,
+    required String? fontFamily,
   }) {
     final Paint tick = Paint()
       ..color = color.withValues(alpha: 0.55)
@@ -1162,6 +1178,7 @@ abstract final class WordRuler {
           '${n ~/ unit.rulerDivisions * unit.rulerLabelMultiplier}',
           Offset(size / 2, y - 5.5),
           color,
+          fontFamily: fontFamily,
         );
       }
     }
@@ -1232,11 +1249,12 @@ abstract final class WordRuler {
     required double pageWidth,
     required List<WmlTabStop> tabs,
     required bool rtl,
+    required Color color,
     double? contentLeft,
     double? contentRight,
   }) {
     final Paint mark = Paint()
-      ..color = const Color(0xFFB8B8B8)
+      ..color = color
       ..strokeWidth = 1
       ..strokeCap = StrokeCap.round;
     final ({double left, double right}) box = resolveContent(
@@ -1323,15 +1341,11 @@ abstract final class WordRuler {
       box.shift(const Offset(0.4, 0.7)),
       Paint()..color = const Color(0x33000000),
     );
+    canvas.drawRRect(box, Paint()..color = _markerFill(theme, active: active));
     canvas.drawRRect(
       box,
       Paint()
-        ..color = active ? const Color(0xFFD6E8F8) : const Color(0xFFFBFBFB),
-    );
-    canvas.drawRRect(
-      box,
-      Paint()
-        ..color = active ? theme.focusRing : const Color(0xFF3D3D3D)
+        ..color = _markerStroke(theme, active: active)
         ..style = PaintingStyle.stroke
         ..strokeWidth = active ? 1.35 : 1,
     );
@@ -1347,20 +1361,35 @@ abstract final class WordRuler {
       path.shift(const Offset(0.4, 0.7)),
       Paint()..color = const Color(0x33000000),
     );
+    canvas.drawPath(path, Paint()..color = _markerFill(theme, active: active));
     canvas.drawPath(
       path,
       Paint()
-        ..color = active ? const Color(0xFFD6E8F8) : const Color(0xFFFBFBFB),
-    );
-    canvas.drawPath(
-      path,
-      Paint()
-        ..color = active ? theme.focusRing : const Color(0xFF3D3D3D)
+        ..color = _markerStroke(theme, active: active)
         ..style = PaintingStyle.stroke
         ..strokeWidth = active ? 1.35 : 1
         ..strokeJoin = StrokeJoin.round,
     );
   }
+
+  static Color _markerFill(OfficeTheme theme, {required bool active}) {
+    if (theme.chromeFill.computeLuminance() >= 0.4) {
+      return active ? const Color(0xFFD6E8F8) : const Color(0xFFFBFBFB);
+    }
+    return active
+        ? Color.alphaBlend(
+            theme.focusRing.withValues(alpha: 0.22),
+            theme.handleFill,
+          )
+        : theme.handleFill;
+  }
+
+  static Color _markerStroke(OfficeTheme theme, {required bool active}) =>
+      active
+      ? theme.focusRing
+      : theme.chromeFill.computeLuminance() < 0.4
+      ? theme.headerText
+      : const Color(0xFF3D3D3D);
 
   static void _paintTab(
     Canvas canvas,
@@ -1369,7 +1398,11 @@ abstract final class WordRuler {
     required OfficeTheme theme,
     required bool active,
   }) {
-    final Color color = active ? theme.focusRing : const Color(0xFF2B579A);
+    final Color color = active
+        ? theme.focusRing
+        : theme.chromeFill.computeLuminance() < 0.4
+        ? theme.selectionStroke
+        : const Color(0xFF2B579A);
     final Paint stroke = Paint()
       ..color = color
       ..strokeWidth = 1.6
@@ -1406,11 +1439,16 @@ abstract final class WordRuler {
     Canvas canvas,
     String text,
     Offset center,
-    Color color,
-  ) {
+    Color color, {
+    required String? fontFamily,
+  }) {
     final ParagraphBuilder b =
         ParagraphBuilder(
           ParagraphStyle(
+            fontFamily: PaintRunText.familyFor(
+              text: text,
+              themeFamily: fontFamily,
+            ),
             fontSize: 9,
             fontWeight: FontWeight.w500,
             textAlign: TextAlign.center,
@@ -1445,7 +1483,14 @@ abstract final class WordRuler {
     };
     x = x.clamp(size + 8, view.width - 72);
     final ParagraphBuilder b = ParagraphBuilder(
-      ParagraphStyle(fontSize: 10, textAlign: TextAlign.center),
+      ParagraphStyle(
+        fontFamily: PaintRunText.familyFor(
+          text: text,
+          themeFamily: theme.fontFamily,
+        ),
+        fontSize: 10,
+        textAlign: TextAlign.center,
+      ),
     )..pushStyle(TextStyle(color: theme.chromeText, fontSize: 10));
     b.addText(text);
     final Paragraph p = b.build()
@@ -1453,7 +1498,7 @@ abstract final class WordRuler {
     final Rect box = Rect.fromLTWH(x - 32, size + 6, 64, 18);
     canvas.drawRRect(
       RRect.fromRectAndRadius(box, const Radius.circular(4)),
-      Paint()..color = const Color(0xF2FFFFFF),
+      Paint()..color = theme.chromeFill,
     );
     canvas.drawRRect(
       RRect.fromRectAndRadius(box, const Radius.circular(4)),

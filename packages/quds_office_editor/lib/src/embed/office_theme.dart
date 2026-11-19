@@ -40,6 +40,8 @@ class OfficeTheme {
     required this.focusRing,
     this.fontFamily,
     this.textSelectionFill,
+    this.documentText = const Color(0xFF222222),
+    this.adaptDocumentColors = false,
   });
 
   /// canvasBackground API.
@@ -95,6 +97,61 @@ class OfficeTheme {
 
   /// fontFamily API.
   final String? fontFamily;
+
+  /// Readable document ink used by [resolveDocumentColor] on dark paper.
+  /// This affects painting only, never authored styles or exported colours.
+  final Color documentText;
+
+  /// Adapt low-contrast document ink to dark display surfaces. Hosts can turn
+  /// this off when exact on-screen colour reproduction is required.
+  final bool adaptDocumentColors;
+
+  /// Preserve authored ink on light backgrounds and when it already has enough
+  /// contrast. On dark paper, lighten low-contrast ink without inverting images
+  /// or changing the document. Callers must pass the actual background for
+  /// shaded cells, frames, paragraphs and highlighted runs.
+  Color resolveDocumentColor(Color color, {Color? background}) {
+    if (!adaptDocumentColors) return color;
+    final Color surface = background ?? pageBackground;
+    if (surface.computeLuminance() >= 0.3) return color;
+
+    double contrast(Color ink) {
+      final double foreground = Color.alphaBlend(
+        ink,
+        surface,
+      ).computeLuminance();
+      final double backdrop = surface.computeLuminance();
+      return foreground > backdrop
+          ? (foreground + 0.05) / (backdrop + 0.05)
+          : (backdrop + 0.05) / (foreground + 0.05);
+    }
+
+    final double current = contrast(color);
+    if (current >= 4.5) return color;
+    final Color target = documentText.withValues(alpha: color.a);
+    if (contrast(target) <= current) return color;
+    final double largest = color.r > color.g
+        ? (color.r > color.b ? color.r : color.b)
+        : (color.g > color.b ? color.g : color.b);
+    final double smallest = color.r < color.g
+        ? (color.r < color.b ? color.r : color.b)
+        : (color.g < color.b ? color.g : color.b);
+    if (largest - smallest < 0.08 || contrast(target) < 4.5) return target;
+
+    // Retain the hue of links and authored colour accents, changing only as
+    // much as necessary for readable contrast against this display backing.
+    var lower = 0.0;
+    var upper = 1.0;
+    for (var step = 0; step < 12; step++) {
+      final double middle = (lower + upper) / 2;
+      if (contrast(Color.lerp(color, target, middle)!) < 4.5) {
+        lower = middle;
+      } else {
+        upper = middle;
+      }
+    }
+    return Color.lerp(color, target, upper)!;
+  }
 
   /// Translucent fill for selected document text (Word canvas: text runs,
   /// whole table cells and pictures inside a text selection).
@@ -171,6 +228,8 @@ class OfficeTheme {
     snapGuide: Color(0xFFFF7AC3),
     slideBackground: Color(0xFF2B2B2B),
     focusRing: Color(0xFF5B9BD5),
+    documentText: Color(0xFFF2F2F2),
+    adaptDocumentColors: true,
   );
 
   /// highContrast API.
@@ -193,6 +252,8 @@ class OfficeTheme {
     slideBackground: Color(0xFF000000),
     focusRing: Color(0xFFFFFF00),
     textSelectionFill: Color(0x99FFFF00),
+    documentText: Color(0xFFFFFFFF),
+    adaptDocumentColors: true,
   );
 
   /// copyWith API.
@@ -216,6 +277,8 @@ class OfficeTheme {
     Color? focusRing,
     String? fontFamily,
     Color? textSelectionFill,
+    Color? documentText,
+    bool? adaptDocumentColors,
   }) {
     return OfficeTheme(
       canvasBackground: canvasBackground ?? this.canvasBackground,
@@ -237,6 +300,8 @@ class OfficeTheme {
       focusRing: focusRing ?? this.focusRing,
       fontFamily: fontFamily ?? this.fontFamily,
       textSelectionFill: textSelectionFill ?? this.textSelectionFill,
+      documentText: documentText ?? this.documentText,
+      adaptDocumentColors: adaptDocumentColors ?? this.adaptDocumentColors,
     );
   }
 }

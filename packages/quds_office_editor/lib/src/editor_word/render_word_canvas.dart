@@ -4578,13 +4578,16 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
             themeFamily: _theme.fontFamily,
           ),
           fontFamilyFallback: PaintRunText.fallbacksFor(text),
-          color: line.hyperlink != null
-              ? const Color(0xFF0563C1)
-              : _colorFromHex(
-                  line.overlayColor == null || line.overlayColor!.isEmpty
-                      ? '444444'
-                      : line.overlayColor!,
-                ),
+          color: _documentInk(
+            line,
+            line.hyperlink != null
+                ? const Color(0xFF0563C1)
+                : _colorFromHex(
+                    line.overlayColor == null || line.overlayColor!.isEmpty
+                        ? '444444'
+                        : line.overlayColor!,
+                  ),
+          ),
           decoration: line.hyperlink != null
               ? TextDecoration.underline
               : TextDecoration.none,
@@ -4683,7 +4686,7 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
             fontSize: line.glyphs.isEmpty ? 11 : line.glyphs.first.fontSize,
             fontFamily: PaintRunText.latinFallbacks.first,
             fontFamilyFallback: PaintRunText.latinFallbacks,
-            color: const Color(0xFF222222),
+            color: _documentInk(line, const Color(0xFF222222)),
             height: 1.0,
           ),
         ),
@@ -4796,11 +4799,16 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
     if (text.isEmpty) {
       return;
     }
+    final Color ink = _documentInk(
+      line,
+      _colorFromHex(first.color),
+      glyph: first,
+    );
     final TextPainter painter = PaintRunText.painterFor(
       text: text,
       first: first,
       themeFamily: _theme.fontFamily,
-      color: _colorFromHex(first.color),
+      color: ink,
       decoration: first.underline == WmlUnderline.none
           ? TextDecoration.none
           : TextDecoration.underline,
@@ -4845,7 +4853,7 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
           text: text,
           first: first,
           themeFamily: _theme.fontFamily,
-          color: _colorFromHex(first.color),
+          color: ink,
         );
       } else {
         painter.paint(canvas, Offset(paintX, top));
@@ -4853,6 +4861,90 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
     } finally {
       painter.dispose();
     }
+  }
+
+  Color _documentInk(LaidOutLine line, Color authored, {LaidOutGlyph? glyph}) {
+    if (!_theme.adaptDocumentColors ||
+        line.pageIndex < 0 ||
+        line.pageIndex >= laidOut.pages.length) {
+      return authored;
+    }
+    final LaidOutPage page = laidOut.pages[line.pageIndex];
+    final Offset point = Offset(
+      glyph == null ? line.x + 1 : glyph.x + glyph.advance / 2,
+      line.y + line.height / 2,
+    );
+    Color? background = _theme.pageBackground;
+    // Follow the same painter order as _paintFrames: an outer cell/frame can
+    // be covered by a nested paragraph shade or another filled container.
+    // Pixels beneath pictures/charts are unknown; leave their overlay ink
+    // authored instead of assuming they have the dark page's background.
+    for (final LaidOutBox box in page.frames) {
+      if (box.height <= 0.5 ||
+          !Rect.fromLTWH(box.x, box.y, box.width, box.height).contains(point)) {
+        continue;
+      }
+      if (box.kind == LaidOutBoxKind.tocEntry ||
+          box.kind == LaidOutBoxKind.lineNumber ||
+          box.kind == LaidOutBoxKind.footnote) {
+        continue;
+      }
+      if (box.visual != null && box.kind != LaidOutBoxKind.tableCell) {
+        background = null;
+        continue;
+      }
+      if (box.kind == LaidOutBoxKind.equation && box.omml != null) {
+        background = const Color(0xFFF7FBFF);
+        continue;
+      }
+      final String? fill = box.fillColor;
+      if (fill != null && fill.isNotEmpty) {
+        background = _colorFromHex(fill);
+      }
+      if (background != null &&
+          box.kind == LaidOutBoxKind.tableCell &&
+          config.allowsSelection &&
+          _cellSelected(box)) {
+        background = Color.alphaBlend(_textSelectionFill, background);
+      }
+    }
+    if (_pageUsesHeaderFooterStory(page)) {
+      final LaidOutBand band = editingFooter
+          ? page.footerBand
+          : page.headerBand;
+      if (Rect.fromLTWH(
+        band.left,
+        band.top,
+        band.width,
+        math.max(band.height, 28),
+      ).contains(point)) {
+        background = const Color(0xFFF7F9FC);
+      }
+    }
+    if (background == null) return authored;
+    if (_editingHeaderFooter &&
+        point.dy >= page.headerBand.height &&
+        point.dy < page.height - page.footerBand.height) {
+      background = Color.alphaBlend(const Color(0x55F3F3F3), background);
+    }
+    if (glyph != null) {
+      if (glyph.commentIds.isNotEmpty) {
+        final bool active =
+            selectedCommentId != null &&
+            glyph.commentIds.contains(selectedCommentId);
+        background = Color.alphaBlend(
+          Color(active ? 0xFFF4B183 : 0xFFFFF2CC).withValues(alpha: 0.88),
+          background,
+        );
+      }
+      if (glyph.highlight != null) {
+        background = Color.alphaBlend(
+          _colorFromHex(glyph.highlight!).withValues(alpha: 0.45),
+          background,
+        );
+      }
+    }
+    return _theme.resolveDocumentColor(authored, background: background);
   }
 
   void _drawTocLeader(

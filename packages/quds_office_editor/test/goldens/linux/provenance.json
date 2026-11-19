@@ -1,18 +1,7 @@
 {
-  "schema": 1,
-  "purpose": "Exact Linux-host references for the existing macOS/Windows target-colour golden variants.",
-  "reference_origin": {
-    "repository": "CrispStrobe/CrispCloud",
-    "commit": "5a62b10fc7f366b0229434667b91baccc0af8b53",
-    "test": "packages/quds_office_editor/test/word_selection_paint_test.dart",
-    "test_sha256": "9c30a4972c68369f9a03d81835d1c465bc982c7ebeaec8815d7edce835a52d02",
-    "capture": "Source-bound execution in an isolated baseline worktree; comparator testImage PNGs copied unchanged.",
-    "matching_candidate_commit": "db5e3f7516b1e6c08cc2926f6d5afdceba85792d",
-    "matching_candidate_contexts": [
-      "standalone editor package",
-      "CrispCloud app root"
-    ]
-  },
+  "schema": 2,
+  "purpose": "Exact Linux-host references for the existing macOS/Windows target-colour selection golden variants, including resolved ruler fonts.",
+  "policy": "Exact pixel comparison remains enabled. This update changes only reviewed ruler-label pixels in the two Linux references; the original macOS-authored masters are preserved.",
   "toolchain": {
     "host_os": "linux",
     "flutter": "3.47.8",
@@ -21,160 +10,224 @@
     "flutter_engine_commit": "cf636b1dfb818dd6a3ff16e390e93b1a036969c8",
     "flutter_tester_sha256": "800f4ca182df7dd2fb46a42dea5d76277b9dbc5e8cd2915e02bcbc978681b45f"
   },
-  "comparison": "Every changed pixel is on a 3x3 local edge. Selection component bounds and the six recorded table borders are identical. These measurements support a rasterization difference; they do not establish its exact upstream cause.",
-  "policy": "Route by actual host OS independently of target colour variant. Preserve existing masters. Exact pixel comparison remains enabled; no tolerance, skipped test, or update-goldens command is introduced.",
+  "ruler_font_refresh": {
+    "source_commit": "ec6d527e9aaf207e131217ec24c65cd9ae409433",
+    "execution_commit_before": "ec6d527e9aaf207e131217ec24c65cd9ae409433",
+    "execution_commit_after": "18d16d20389a008bdfaca408e84e846d488d8ccb",
+    "test": "packages/quds_office_editor/test/word_selection_paint_test.dart",
+    "test_sha256": "fb8fa1e1c18e8de184f8ace6c9897830164f8f13ff90c88e53f869aa948ca462",
+    "ruler_source_sha256": "f3a3fef3d7a0923e3b3be7f8c302ccc82ca2cf78bc0f33bc3b96db7052a0ff1a",
+    "capture": "Comparator testImage PNGs copied unchanged from the source-bound incoming editor replay. Execution commits differ only in validation documentation.",
+    "reason": "The integrated ruler font resolver now uses the configured registered font. Old Linux references contained Ahem square glyphs; the current ruler labels are readable digits.",
+    "review": "Actual, original and isolated-difference images were visually inspected; all 1,290 changed pixels per reference lie within the top or left 24-pixel ruler strips. No document, selection or table pixel changed.",
+    "evidence": "docs/validation/mail-archive-resume-20261119/incoming/editor-ruler-golden-diagnostic/"
+  },
   "references": [
     {
       "target_platform": "macOS",
       "file": "word_selection_macOS.png",
-      "reference_sha256": "543a0f9f663158a7027f3f4c2cc3095e539535c7ba6a66ce1ddceb4656fc34c3",
-      "preserved_macos_authored_master": "../word_selection_macOS.png",
-      "preserved_master_sha256": "72ed624b9b87adebf058b4741ac7ecc62f9783f1d9dc3a9e5da98bbe53ba18ce",
-      "baseline_candidate_and_hosted_render_bytes_identical": true,
+      "reference_sha256": "128574cf7ddba0b860901a68a4485328e170a4b0d24a5a3b1c6b32b0f70ebaa5",
+      "previous_linux_reference_sha256": "543a0f9f663158a7027f3f4c2cc3095e539535c7ba6a66ce1ddceb4656fc34c3",
       "image_size": [
         820,
         560
       ],
-      "changed_pixels_vs_preserved_master": 9769,
-      "changed_pixels_on_3x3_edges": 9769,
-      "changed_pixels_in_text_bands": 9322,
-      "changed_pixels_outside_text_bands": 447,
-      "median_max_channel_delta": 9.0,
-      "maximum_channel_delta": 153,
-      "identical_selection_component_boxes_xyxy": [
-        [
-          160,
-          136,
-          745,
-          210
-        ],
-        [
-          160,
-          242,
-          329,
-          261
-        ],
-        [
-          160,
-          278,
-          264,
-          296
-        ]
-      ],
-      "identical_table_border_boxes_xyxy": {
-        "top": [
-          159,
-          304,
-          561,
-          305
-        ],
-        "middle": [
-          159,
-          338,
-          561,
-          339
-        ],
-        "bottom": [
-          159,
-          372,
-          561,
-          373
-        ],
-        "left": [
-          159,
-          304,
-          160,
-          373
-        ],
-        "center": [
-          359,
-          304,
-          360,
-          373
-        ],
-        "right": [
-          559,
-          304,
-          560,
-          373
-        ]
-      }
+      "changed_pixels_vs_previous_linux_reference": 1290,
+      "changed_pixels_outside_24px_rulers": 0,
+      "document_selection_and_table_pixels_identical": true
     },
     {
       "target_platform": "windows",
       "file": "word_selection_windows.png",
-      "reference_sha256": "db199f9171960e169ce59764948a891210166c03da3c3d2529923ab78bc99643",
-      "preserved_macos_authored_master": "../word_selection_windows.png",
-      "preserved_master_sha256": "abe7ade5434636638758a1658ced7a8d6f48b6580c238ffab05e8cce99d05462",
-      "baseline_candidate_and_hosted_render_bytes_identical": true,
+      "reference_sha256": "3d0adafc213e36d073a84e1e1d0b41e5eb1708443a118fffd055b41083994d22",
+      "previous_linux_reference_sha256": "db199f9171960e169ce59764948a891210166c03da3c3d2529923ab78bc99643",
       "image_size": [
         820,
         560
       ],
-      "changed_pixels_vs_preserved_master": 9519,
-      "changed_pixels_on_3x3_edges": 9519,
-      "changed_pixels_in_text_bands": 9072,
-      "changed_pixels_outside_text_bands": 447,
-      "median_max_channel_delta": 9.0,
-      "maximum_channel_delta": 147,
-      "identical_selection_component_boxes_xyxy": [
-        [
-          160,
-          136,
-          745,
-          210
-        ],
-        [
-          160,
-          242,
-          329,
-          261
-        ],
-        [
-          160,
-          278,
-          264,
-          296
-        ]
-      ],
-      "identical_table_border_boxes_xyxy": {
-        "top": [
-          159,
-          304,
-          561,
-          305
-        ],
-        "middle": [
-          159,
-          338,
-          561,
-          339
-        ],
-        "bottom": [
-          159,
-          372,
-          561,
-          373
-        ],
-        "left": [
-          159,
-          304,
-          160,
-          373
-        ],
-        "center": [
-          359,
-          304,
-          360,
-          373
-        ],
-        "right": [
-          559,
-          304,
-          560,
-          373
-        ]
-      }
+      "changed_pixels_vs_previous_linux_reference": 1290,
+      "changed_pixels_outside_24px_rulers": 0,
+      "document_selection_and_table_pixels_identical": true
     }
-  ]
+  ],
+  "original_linux_reference_record": {
+    "schema": 1,
+    "purpose": "Exact Linux-host references for the existing macOS/Windows target-colour golden variants.",
+    "reference_origin": {
+      "repository": "CrispStrobe/CrispCloud",
+      "commit": "5a62b10fc7f366b0229434667b91baccc0af8b53",
+      "test": "packages/quds_office_editor/test/word_selection_paint_test.dart",
+      "test_sha256": "9c30a4972c68369f9a03d81835d1c465bc982c7ebeaec8815d7edce835a52d02",
+      "capture": "Source-bound execution in an isolated baseline worktree; comparator testImage PNGs copied unchanged.",
+      "matching_candidate_commit": "db5e3f7516b1e6c08cc2926f6d5afdceba85792d",
+      "matching_candidate_contexts": [
+        "standalone editor package",
+        "CrispCloud app root"
+      ]
+    },
+    "toolchain": {
+      "host_os": "linux",
+      "flutter": "3.47.8",
+      "dart": "3.13.7",
+      "flutter_framework_commit": "737ba8f885dc774b53b442759999a312c9461e4e",
+      "flutter_engine_commit": "cf636b1dfb818dd6a3ff16e390e93b1a036969c8",
+      "flutter_tester_sha256": "800f4ca182df7dd2fb46a42dea5d76277b9dbc5e8cd2915e02bcbc978681b45f"
+    },
+    "comparison": "Every changed pixel is on a 3x3 local edge. Selection component bounds and the six recorded table borders are identical. These measurements support a rasterization difference; they do not establish its exact upstream cause.",
+    "policy": "Route by actual host OS independently of target colour variant. Preserve existing masters. Exact pixel comparison remains enabled; no tolerance, skipped test, or update-goldens command is introduced.",
+    "references": [
+      {
+        "target_platform": "macOS",
+        "file": "word_selection_macOS.png",
+        "reference_sha256": "543a0f9f663158a7027f3f4c2cc3095e539535c7ba6a66ce1ddceb4656fc34c3",
+        "preserved_macos_authored_master": "../word_selection_macOS.png",
+        "preserved_master_sha256": "72ed624b9b87adebf058b4741ac7ecc62f9783f1d9dc3a9e5da98bbe53ba18ce",
+        "baseline_candidate_and_hosted_render_bytes_identical": true,
+        "image_size": [
+          820,
+          560
+        ],
+        "changed_pixels_vs_preserved_master": 9769,
+        "changed_pixels_on_3x3_edges": 9769,
+        "changed_pixels_in_text_bands": 9322,
+        "changed_pixels_outside_text_bands": 447,
+        "median_max_channel_delta": 9.0,
+        "maximum_channel_delta": 153,
+        "identical_selection_component_boxes_xyxy": [
+          [
+            160,
+            136,
+            745,
+            210
+          ],
+          [
+            160,
+            242,
+            329,
+            261
+          ],
+          [
+            160,
+            278,
+            264,
+            296
+          ]
+        ],
+        "identical_table_border_boxes_xyxy": {
+          "top": [
+            159,
+            304,
+            561,
+            305
+          ],
+          "middle": [
+            159,
+            338,
+            561,
+            339
+          ],
+          "bottom": [
+            159,
+            372,
+            561,
+            373
+          ],
+          "left": [
+            159,
+            304,
+            160,
+            373
+          ],
+          "center": [
+            359,
+            304,
+            360,
+            373
+          ],
+          "right": [
+            559,
+            304,
+            560,
+            373
+          ]
+        }
+      },
+      {
+        "target_platform": "windows",
+        "file": "word_selection_windows.png",
+        "reference_sha256": "db199f9171960e169ce59764948a891210166c03da3c3d2529923ab78bc99643",
+        "preserved_macos_authored_master": "../word_selection_windows.png",
+        "preserved_master_sha256": "abe7ade5434636638758a1658ced7a8d6f48b6580c238ffab05e8cce99d05462",
+        "baseline_candidate_and_hosted_render_bytes_identical": true,
+        "image_size": [
+          820,
+          560
+        ],
+        "changed_pixels_vs_preserved_master": 9519,
+        "changed_pixels_on_3x3_edges": 9519,
+        "changed_pixels_in_text_bands": 9072,
+        "changed_pixels_outside_text_bands": 447,
+        "median_max_channel_delta": 9.0,
+        "maximum_channel_delta": 147,
+        "identical_selection_component_boxes_xyxy": [
+          [
+            160,
+            136,
+            745,
+            210
+          ],
+          [
+            160,
+            242,
+            329,
+            261
+          ],
+          [
+            160,
+            278,
+            264,
+            296
+          ]
+        ],
+        "identical_table_border_boxes_xyxy": {
+          "top": [
+            159,
+            304,
+            561,
+            305
+          ],
+          "middle": [
+            159,
+            338,
+            561,
+            339
+          ],
+          "bottom": [
+            159,
+            372,
+            561,
+            373
+          ],
+          "left": [
+            159,
+            304,
+            160,
+            373
+          ],
+          "center": [
+            359,
+            304,
+            360,
+            373
+          ],
+          "right": [
+            559,
+            304,
+            560,
+            373
+          ]
+        }
+      }
+    ]
+  }
 }

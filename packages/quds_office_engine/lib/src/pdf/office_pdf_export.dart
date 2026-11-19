@@ -336,7 +336,7 @@ abstract final class OfficePdfExport {
         0,
         slideW,
         slideH,
-        deck.master.background.isEmpty ? 'FFFFFF' : deck.master.background,
+        slide.background.isEmpty ? 'FFFFFF' : slide.background,
       );
       for (final PmlShape shape in deck.master.shapes) {
         _paintShape(sink, deck, slide, shape);
@@ -458,7 +458,7 @@ abstract final class OfficePdfExport {
           0,
           slideW,
           slideH,
-          deck.master.background.isEmpty ? 'FFFFFF' : deck.master.background,
+          slide.background.isEmpty ? 'FFFFFF' : slide.background,
         );
         for (final PmlShape shape in deck.master.shapes) {
           _paintShape(sink, deck, slide, shape);
@@ -1661,18 +1661,27 @@ abstract final class OfficePdfExport {
       }
       final String text = deck.resolveText(shape, slide);
       if (text.isNotEmpty) {
-        final String ink = shape.textColor.isNotEmpty
-            ? shape.textColor
-            : (shape.fillColor.isEmpty ? '1A1A1A' : _contrast(shape.fillColor));
-        final double rawSize = shape.fontSizePt > 0
-            ? shape.fontSizePt.clamp(8, 48)
-            : (h * 0.22).clamp(10, 28);
-        final double size = math.min(rawSize, math.max(8, h * 0.55));
-        final bool singleLine = !text.contains('\n');
-        final double top = singleLine && h < size * 2.8
-            ? y + math.max(2, (h - size) / 2)
-            : y + math.max(4, size * 0.1);
-        _wrapShapeText(sink, text, x + 10, top, w - 20, size, ink);
+        final bool richCurrent =
+            shape.richText.isNotEmpty &&
+            (shape.textSource?.text ?? shape.text) == shape.text;
+        if (richCurrent) {
+          _paintRichText(sink, shape, x, y, w, h);
+        } else {
+          final String ink = shape.textColor.isNotEmpty
+              ? shape.textColor
+              : (shape.fillColor.isEmpty
+                    ? '1A1A1A'
+                    : _contrast(shape.fillColor));
+          final double rawSize = shape.fontSizePt > 0
+              ? shape.fontSizePt.clamp(8, 48)
+              : (h * 0.22).clamp(10, 28);
+          final double size = math.min(rawSize, math.max(8, h * 0.55));
+          final bool singleLine = !text.contains('\n');
+          final double top = singleLine && h < size * 2.8
+              ? y + math.max(2, (h - size) / 2)
+              : y + math.max(4, size * 0.1);
+          _wrapShapeText(sink, text, x + 10, top, w - 20, size, ink);
+        }
       }
     }
     sink.canvas.restore();
@@ -1822,6 +1831,357 @@ abstract final class OfficePdfExport {
     }
   }
 
+  static void _paintRichText(
+    _PageSink sink,
+    PmlShape shape,
+    double x,
+    double y,
+    double w,
+    double h,
+  ) {
+    const double leftInset = 7.2;
+    const double topInset = 3.6;
+    const double rightInset = 7.2;
+    final double width = math.max(8, w - leftInset - rightInset);
+    final List<PmlTextParagraph> paragraphs = shape.richText;
+    const String fallbackColor = '000000';
+    final double fallbackSize = shape.fontSizePt > 0 ? shape.fontSizePt : 12;
+    double total = 0;
+    for (final PmlTextParagraph paragraph in paragraphs) {
+      final PmlTextRun? run = _firstRichRun(paragraph);
+      final String text = _paragraphText(paragraph);
+      final bool blank = text.trim().isEmpty;
+      final double autoSize = (h * 0.22).clamp(10.0, 18.0);
+      final double size = (run?.fontSizePt ?? 0) > 0
+          ? run!.fontSizePt
+          : (blank
+                ? (paragraph.defaultFontSizePt > 0
+                      ? paragraph.defaultFontSizePt
+                      : fallbackSize)
+                : autoSize);
+      final bool bold =
+          (run?.bold ?? false) &&
+          !(run?.fontFamily.toLowerCase().contains('microsoft sans serif') ??
+              false);
+      final int lines = blank
+          ? 1
+          : sink.lineCount(
+              text,
+              size,
+              maxWidth: width - paragraph.marginLeftPt,
+              bold: bold,
+              italic: run?.italic ?? false,
+            );
+      total +=
+          paragraph.spaceBeforePt +
+          lines * size * 1.25 +
+          paragraph.spaceAfterPt;
+    }
+    double cy = switch (shape.textAnchor) {
+      PmlTextAnchor.center => y + (h - total) / 2,
+      PmlTextAnchor.bottom => y + h - total - topInset,
+      PmlTextAnchor.top => y + topInset,
+    };
+    for (final PmlTextParagraph paragraph in paragraphs) {
+      final PmlTextRun? run = _firstRichRun(paragraph);
+      final String text = _paragraphText(paragraph);
+      final bool blank = text.trim().isEmpty;
+      final double autoSize = (h * 0.22).clamp(10.0, 18.0);
+      final double size = (run?.fontSizePt ?? 0) > 0
+          ? run!.fontSizePt
+          : (blank
+                ? (paragraph.defaultFontSizePt > 0
+                      ? paragraph.defaultFontSizePt
+                      : fallbackSize)
+                : autoSize);
+      final String color = (run?.color ?? '').isNotEmpty
+          ? run!.color
+          : fallbackColor;
+      // PowerPoint falls back to the regular face when only Microsoft Sans
+      // Serif Regular is installed; synthesising bold changes every metric.
+      final bool bold =
+          (run?.bold ?? false) &&
+          !(run?.fontFamily.toLowerCase().contains('microsoft sans serif') ??
+              false);
+      final bool italic = run?.italic ?? false;
+      final String? family = (run?.fontFamily ?? '').isEmpty
+          ? null
+          : run!.fontFamily;
+      cy += paragraph.spaceBeforePt;
+      if (text.trim().isEmpty) {
+        cy += size * 1.25;
+        cy += paragraph.spaceAfterPt;
+        continue;
+      }
+      final double px = x + leftInset + paragraph.marginLeftPt;
+      final double maxWidth = math.max(8, width - paragraph.marginLeftPt);
+      final _TextAlign align = switch (paragraph.align) {
+        PmlTextAlign.center => _TextAlign.center,
+        PmlTextAlign.right => _TextAlign.right,
+        PmlTextAlign.left || PmlTextAlign.justify => _TextAlign.left,
+      };
+      if (text.contains('\t')) {
+        final List<String> parts = text.split('\t');
+        var cx = px;
+        final double tab = paragraph.defaultTabPt <= 0
+            ? 72
+            : paragraph.defaultTabPt;
+        for (final String part in parts) {
+          if (part.isNotEmpty) {
+            sink.drawText(
+              part,
+              cx,
+              cy + size,
+              size,
+              color,
+              maxWidth: px + maxWidth - cx,
+              align: _TextAlign.left,
+              bold: bold,
+              italic: italic,
+              family: family,
+            );
+            cx += sink.measure(part, size);
+          }
+          final double offset = math.max(0, cx - px);
+          final double next = ((offset / tab).floor() + 1) * tab;
+          cx = math.min(px + maxWidth, px + next);
+        }
+        cy += size * 1.25;
+      } else if (_hasMixedRichStyles(paragraph)) {
+        cy += _paintStyledParagraph(
+          sink,
+          paragraph,
+          px,
+          cy,
+          maxWidth,
+          align,
+          size,
+          fallbackColor,
+        );
+      } else {
+        sink.drawText(
+          text,
+          px,
+          cy + size,
+          size,
+          color,
+          maxWidth: maxWidth,
+          align: align,
+          bold: bold,
+          italic: italic,
+          family: family,
+        );
+        final int lines = sink.lineCount(
+          text,
+          size,
+          maxWidth: maxWidth,
+          bold: bold,
+          italic: italic,
+        );
+        cy += lines * size * 1.25;
+      }
+      cy += paragraph.spaceAfterPt;
+    }
+  }
+
+  static bool _hasMixedRichStyles(PmlTextParagraph paragraph) {
+    String? first;
+    for (final PmlTextRun run in paragraph.runs) {
+      if (run.text.trim().isEmpty) continue;
+      final String key =
+          '${run.fontSizePt}|${run.bold}|${run.italic}|${run.color}|${run.fontFamily}';
+      if (first == null) {
+        first = key;
+      } else if (first != key) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  static double _paintStyledParagraph(
+    _PageSink sink,
+    PmlTextParagraph paragraph,
+    double x,
+    double y,
+    double maxWidth,
+    _TextAlign align,
+    double fallbackSize,
+    String fallbackColor,
+  ) {
+    final List<_RichWord> words = <_RichWord>[];
+    var segments = <_RichSegment>[];
+    var spaceBefore = false;
+    var pendingSpace = false;
+    var pendingBreak = false;
+    for (final PmlTextRun run in paragraph.runs) {
+      final double size = run.fontSizePt > 0 ? run.fontSizePt : fallbackSize;
+      final String color = run.color.isEmpty ? fallbackColor : run.color;
+      final bool bold =
+          run.bold &&
+          !run.fontFamily.toLowerCase().contains('microsoft sans serif');
+      for (final int cp in run.text.runes) {
+        final String ch = String.fromCharCode(cp);
+        if (ch == '\n') {
+          if (segments.isNotEmpty) {
+            words.add(_RichWord(segments, spaceBefore, pendingBreak));
+            segments = <_RichSegment>[];
+          }
+          pendingBreak = true;
+          pendingSpace = false;
+          continue;
+        }
+        if (ch.trim().isEmpty) {
+          if (segments.isNotEmpty) {
+            words.add(_RichWord(segments, spaceBefore, pendingBreak));
+            segments = <_RichSegment>[];
+            pendingBreak = false;
+          }
+          pendingSpace = true;
+          continue;
+        }
+        if (segments.isEmpty) {
+          spaceBefore = pendingSpace;
+          pendingSpace = false;
+        }
+        if (segments.isNotEmpty &&
+            segments.last.matches(
+              size,
+              color,
+              bold,
+              run.italic,
+              run.fontFamily,
+            )) {
+          segments.last.text += ch;
+        } else {
+          segments.add(
+            _RichSegment(
+              text: ch,
+              size: size,
+              color: color,
+              bold: bold,
+              italic: run.italic,
+              family: run.fontFamily,
+            ),
+          );
+        }
+        if (ch == '-') {
+          words.add(_RichWord(segments, spaceBefore, pendingBreak));
+          segments = <_RichSegment>[];
+          pendingBreak = false;
+          spaceBefore = false;
+        }
+      }
+    }
+    if (segments.isNotEmpty) {
+      words.add(_RichWord(segments, spaceBefore, pendingBreak));
+    }
+    if (words.isEmpty) return 0;
+
+    final List<List<_RichWord>> lines = <List<_RichWord>>[];
+    var line = <_RichWord>[];
+    var lineWidth = 0.0;
+    for (final _RichWord word in words) {
+      if (word.breakBefore && line.isNotEmpty) {
+        lines.add(line);
+        line = <_RichWord>[];
+        lineWidth = 0;
+      }
+      final _RichSegment? first = word.segments.isEmpty
+          ? null
+          : word.segments.first;
+      final double gap = word.spaceBefore && first != null
+          ? sink.spaceWidth(
+              first.size,
+              bold: first.bold,
+              italic: first.italic,
+              family: first.family,
+            )
+          : 0;
+      final double wordWidth = gap + word.width(sink);
+      if (line.isNotEmpty && lineWidth + wordWidth > maxWidth) {
+        lines.add(line);
+        line = <_RichWord>[];
+        lineWidth = 0;
+      }
+      line.add(word);
+      lineWidth += wordWidth;
+    }
+    if (line.isNotEmpty) lines.add(line);
+
+    var cy = y;
+    for (final List<_RichWord> current in lines) {
+      var width = 0.0;
+      var height = 0.0;
+      for (final _RichWord word in current) {
+        final _RichSegment? first = word.segments.isEmpty
+            ? null
+            : word.segments.first;
+        if (word.spaceBefore && first != null) {
+          width += sink.spaceWidth(
+            first.size,
+            bold: first.bold,
+            italic: first.italic,
+            family: first.family,
+          );
+        }
+        width += word.width(sink);
+        final double wordHeight = word.height;
+        if (wordHeight > height) height = wordHeight;
+      }
+      var cx = x;
+      if (align == _TextAlign.center) {
+        cx += (maxWidth - width) / 2;
+      } else if (align == _TextAlign.right) {
+        cx += maxWidth - width;
+      }
+      for (final _RichWord word in current) {
+        final _RichSegment? first = word.segments.isEmpty
+            ? null
+            : word.segments.first;
+        if (word.spaceBefore && first != null) {
+          cx += sink.spaceWidth(
+            first.size,
+            bold: first.bold,
+            italic: first.italic,
+            family: first.family,
+          );
+        }
+        for (final _RichSegment segment in word.segments) {
+          sink.drawText(
+            segment.text,
+            cx,
+            cy + segment.size,
+            segment.size,
+            segment.color,
+            bold: segment.bold,
+            italic: segment.italic,
+            family: segment.family.isEmpty ? null : segment.family,
+          );
+          cx += sink.measureStyled(
+            segment.text,
+            segment.size,
+            bold: segment.bold,
+            italic: segment.italic,
+            family: segment.family,
+          );
+        }
+      }
+      cy += (height <= 0 ? fallbackSize : height) * 1.25;
+    }
+    return cy - y;
+  }
+
+  static PmlTextRun? _firstRichRun(PmlTextParagraph paragraph) {
+    for (final PmlTextRun run in paragraph.runs) {
+      if (run.text.isNotEmpty) return run;
+    }
+    return paragraph.runs.isEmpty ? null : paragraph.runs.first;
+  }
+
+  static String _paragraphText(PmlTextParagraph paragraph) =>
+      paragraph.runs.map((PmlTextRun run) => run.text).join();
+
   static void _wrapShapeText(
     _PageSink sink,
     String text,
@@ -1889,21 +2249,31 @@ abstract final class OfficePdfExport {
       }
       return;
     }
-    final List<String> words = text.split(RegExp(r'\s+'));
-    var line = '';
     var cy = y;
-    for (final String word in words) {
-      final String next = line.isEmpty ? word : '$line $word';
-      if (sink.measure(next, size) > maxWidth && line.isNotEmpty) {
-        sink.drawText(line, x, cy + size, size, color);
-        line = word;
+    for (final String paragraph in text.split('\n')) {
+      if (paragraph.isEmpty) {
         cy += size * 1.25;
-      } else {
-        line = next;
+        continue;
       }
-    }
-    if (line.isNotEmpty) {
-      sink.drawText(line, x, cy + size, size, color);
+      final List<String> words = paragraph
+          .split(RegExp(r'\s+'))
+          .where((String word) => word.isNotEmpty)
+          .toList(growable: false);
+      var line = '';
+      for (final String word in words) {
+        final String next = line.isEmpty ? word : '$line $word';
+        if (sink.measure(next, size) > maxWidth && line.isNotEmpty) {
+          sink.drawText(line, x, cy + size, size, color);
+          line = word;
+          cy += size * 1.25;
+        } else {
+          line = next;
+        }
+      }
+      if (line.isNotEmpty) {
+        sink.drawText(line, x, cy + size, size, color);
+      }
+      cy += size * 1.35;
     }
   }
 
@@ -1924,6 +2294,69 @@ abstract final class OfficePdfExport {
     final int g = (rgb >> 8) & 0xFF;
     final int b = rgb & 0xFF;
     return (0.299 * r + 0.587 * g + 0.114 * b) < 140 ? 'FFFFFF' : '1A1A1A';
+  }
+}
+
+class _RichSegment {
+  _RichSegment({
+    required this.text,
+    required this.size,
+    required this.color,
+    required this.bold,
+    required this.italic,
+    required this.family,
+  });
+
+  String text;
+  final double size;
+  final String color;
+  final bool bold;
+  final bool italic;
+  final String family;
+
+  bool matches(
+    double size,
+    String color,
+    bool bold,
+    bool italic,
+    String family,
+  ) =>
+      this.size == size &&
+      this.color == color &&
+      this.bold == bold &&
+      this.italic == italic &&
+      this.family == family;
+}
+
+class _RichWord {
+  _RichWord(this.segments, this.spaceBefore, this.breakBefore);
+
+  final List<_RichSegment> segments;
+  final bool spaceBefore;
+  final bool breakBefore;
+
+  double get size => segments.isEmpty ? 0 : segments.first.size;
+
+  double get height {
+    var result = 0.0;
+    for (final _RichSegment segment in segments) {
+      if (segment.size > result) result = segment.size;
+    }
+    return result;
+  }
+
+  double width(_PageSink sink) {
+    var result = 0.0;
+    for (final _RichSegment segment in segments) {
+      result += sink.measureStyled(
+        segment.text,
+        segment.size,
+        bold: segment.bold,
+        italic: segment.italic,
+        family: segment.family,
+      );
+    }
+    return result;
   }
 }
 
@@ -2471,6 +2904,78 @@ class _PageSink {
       }
     }
     return true;
+  }
+
+  /// Number of laid-out lines for [text] at [size].
+  int lineCount(
+    String text,
+    double size, {
+    double? maxWidth,
+    bool bold = false,
+    bool italic = false,
+  }) {
+    final SfntFont? layoutFont = pack.layoutFont;
+    if (layoutFont == null) {
+      return math.max(1, text.split('\n').length);
+    }
+    final List<BrokenLine> lines = LineBreaker.breakLines(
+      text: text,
+      maxWidth: maxWidth ?? 1e9,
+      widthOf: (int cp) =>
+          pack.widthOf(cp, size, weight: bold ? 700 : 400, italic: italic),
+      glyphIdOf: (int cp) =>
+          pack.glyphIdOf(cp, weight: bold ? 700 : 400, italic: italic),
+      markAttachOf: GposMarkToBase.fnFor(
+        layoutFont,
+        size,
+        faceFor: (int cp) =>
+            pack.fontFor(cp, weight: bold ? 700 : 400, italic: italic),
+      ),
+    );
+    return math.max(1, lines.length);
+  }
+
+  /// Advance width of a single space for line layout.
+  double spaceWidth(
+    double size, {
+    bool bold = false,
+    bool italic = false,
+    String? family,
+  }) => pack.widthOf(
+    32,
+    size,
+    family: family,
+    weight: bold ? 700 : 400,
+    italic: italic,
+  );
+
+  /// Measure using the actual run face rather than the regular fallback.
+  double measureStyled(
+    String text,
+    double size, {
+    bool bold = false,
+    bool italic = false,
+    String? family,
+  }) {
+    final List<BrokenLine> lines = LineBreaker.breakLines(
+      text: text,
+      maxWidth: 1e9,
+      widthOf: (int cp) => pack.widthOf(
+        cp,
+        size,
+        family: family,
+        weight: bold ? 700 : 400,
+        italic: italic,
+      ),
+      glyphIdOf: (int cp) => pack.glyphIdOf(
+        cp,
+        family: family,
+        weight: bold ? 700 : 400,
+        italic: italic,
+      ),
+      justify: false,
+    );
+    return lines.fold<double>(0, (width, line) => math.max(width, line.width));
   }
 
   /// measure API.

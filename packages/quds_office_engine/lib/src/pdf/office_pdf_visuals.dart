@@ -131,7 +131,29 @@ abstract final class OfficePdfVisuals {
         maskBytes: raster.alpha,
       ),
     );
-    canvas.drawImage(name, x, y, w, h);
+    final PictureAdjust adj = visual.picture;
+    final double cropLeft = adj.cropLeft.clamp(0.0, 0.9);
+    final double cropTop = adj.cropTop.clamp(0.0, 0.9);
+    final double cropRight = adj.cropRight.clamp(0.0, 0.9);
+    final double cropBottom = adj.cropBottom.clamp(0.0, 0.9);
+    if (cropLeft > 0 || cropTop > 0 || cropRight > 0 || cropBottom > 0) {
+      final double keepW = (1 - cropLeft - cropRight).clamp(0.1, 1.0);
+      final double keepH = (1 - cropTop - cropBottom).clamp(0.1, 1.0);
+      final double fullW = w / keepW;
+      final double fullH = h / keepH;
+      canvas.save();
+      canvas.clipRect(x, y, w, h);
+      canvas.drawImage(
+        name,
+        x - cropLeft * fullW,
+        y - cropTop * fullH,
+        fullW,
+        fullH,
+      );
+      canvas.restore();
+    } else {
+      canvas.drawImage(name, x, y, w, h);
+    }
   }
 
   static void _column(
