@@ -1869,7 +1869,7 @@
     "packages/quds_office_editor/lib/src/editor_slide/render_slide_stage.dart": "41067e1153cb936b89eae9ee178adba66cb0ef99869b9b1060927bef15b29ba2",
     "packages/quds_office_editor/lib/src/editor_word/caret_engine.dart": "085b7ef4d4f6c327b53bfa184a3f6d4e5cc225aeb448b60be03284e6d8fe2801",
     "packages/quds_office_editor/lib/src/editor_word/office_ruler.dart": "f3a3fef3d7a0923e3b3be7f8c302ccc82ca2cf78bc0f33bc3b96db7052a0ff1a",
-    "packages/quds_office_editor/lib/src/editor_word/paint_run_text.dart": "dc94d91e6ec217651e763893bbb291e1feed05ca04e630bb0d039b71dc49d031",
+    "packages/quds_office_editor/lib/src/editor_word/paint_run_text.dart": "b7df081eb8575e8e89fe3cf50f4e916f233e7f3a8336c48be0ad408a9388cbbc",
     "packages/quds_office_editor/lib/src/editor_word/proofing_geometry.dart": "8210a778704748cd52783e32832949d1c6e69010139eaef1bedaf3bde26970ea",
     "packages/quds_office_editor/lib/src/editor_word/render_word_canvas.dart": "acab9d490f5cfe7dd05a10c4c42895a0bcadba9237db46ec69f530e093662905",
     "packages/quds_office_editor/lib/src/editor_word/table_history.dart": "5bb83807c45fd62aa5e3ae55def7538fb5da904c7237f43c51311994fa0c8640",
@@ -2876,7 +2876,7 @@
     "tool/office-validation/test_render.py": "1ba68e18608d74387cbc1c779ceb72af76bf7741463c282684aec93bf3825472"
   },
   "source_branch": "integrate/recent-pptx",
-  "source_commit": "0a9d403a43746dbedb3536d84808699c031cda66",
+  "source_commit": "5c791d8cead2eaca6f3bc5e311471995f95b177b",
   "source_repository": "CrispStrobe/quds_office_suite",
   "standalone_sources": {
     "packages/legacy_doc_parser": {
