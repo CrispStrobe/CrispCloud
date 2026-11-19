@@ -10,6 +10,7 @@ import 'package:crisp_cloud/widgets/pdf_operations_dialog.dart';
 import 'package:dart_pdf_editor/dart_pdf_editor.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pdf_document/pdf_document.dart';
 import 'package:pdf_graphics/pdf_graphics.dart' show PdfTextExtractor;
@@ -84,6 +85,8 @@ Future<void> _open(
     DefaultAssetBundle(
       bundle: _fontBundle,
       child: MaterialApp(
+        // Editor-local notifications use the same provider scope as the app.
+        builder: (_, child) => ProviderScope(child: child!),
         home: Builder(
           builder: (context) => Scaffold(
             body: FilledButton(

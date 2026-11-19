@@ -6,6 +6,7 @@ import 'package:crisp_cloud/models/ssh_terminal_config.dart';
 import 'package:crisp_cloud/models/ssh_terminal_profile.dart';
 import 'package:crisp_cloud/models/tmux_session_options.dart';
 import 'package:crisp_cloud/services/ssh_terminal_profiles.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -268,7 +269,10 @@ void main() {
       for (final raw in [
         '{invalid',
         jsonEncode({'version': 99, 'profiles': []}),
-        jsonEncode({'version': 1.0, 'profiles': []}),
+        // Whole-valued doubles are ints on Dart web. Keep the VM-only
+        // representation check and reject fractions on every backend.
+        if (!kIsWeb) jsonEncode({'version': 1.0, 'profiles': []}),
+        jsonEncode({'version': 1.5, 'profiles': []}),
         jsonEncode({
           'version': 1,
           'profiles': [profile.toJson(), profile.toJson()],

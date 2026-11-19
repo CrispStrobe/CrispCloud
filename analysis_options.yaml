@@ -38,6 +38,11 @@ analyzer:
     - packages/pdf_operations/test/**
     - packages/pdf_operations/tool/**
     - packages/crisp_storage/test/**
+    # Retained compiler evidence copies, not executable source roots. Their
+    # exact original identities remain recorded in the adjacent receipt.
+    - docs/validation/zotero-fidelity-20261116/full-app-build/environment/flutter-build-system.dart
+    - docs/validation/zotero-fidelity-20261116/full-app-build/environment/flutter-kernel-target.dart
+    - docs/validation/zotero-fidelity-20261116/full-app-build/inputs/dart_tool/flutter_build/dart_plugin_registrant.dart
     - build/**
     - android/**
     - ios/**

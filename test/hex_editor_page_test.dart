@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:madedit2_hex/madedit2_hex.dart';
 import 'package:crisp_cloud/widgets/hex_editor_dialog.dart';
 
@@ -33,6 +34,7 @@ void main() {
   ) async {
     await tester.pumpWidget(
       MaterialApp(
+        builder: (_, child) => ProviderScope(child: child!),
         home: Builder(
           builder: (context) => Scaffold(
             body: ElevatedButton(

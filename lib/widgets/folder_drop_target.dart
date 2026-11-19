@@ -130,6 +130,10 @@ class _FolderDropTargetState extends ConsumerState<FolderDropTarget> {
         prepared.files,
         kind: kind,
         sourceGroups: prepared.groups,
+        // A hydrated column supplies an already captured/reviewed target.
+        // Keep its explicit Start path; _start still plans and revalidates.
+        // Ordinary row drops require the visible Preview first.
+        requirePreview: widget.captureDestination == null,
         destinationOrigin: destination.origin,
         destinationPath: destination.path,
       );

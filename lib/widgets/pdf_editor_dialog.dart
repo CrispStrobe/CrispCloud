@@ -11,6 +11,7 @@ import 'package:dart_pdf_editor/dart_pdf_editor.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, listEquals;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 import 'package:pdf_cos/pdf_cos.dart' show CosPasswordException;
@@ -1206,10 +1207,24 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
         ),
       ),
     );
-    return DocumentPrintScope(
-      enabled: _controller != null && !_loading && !_busy && !_closing,
-      onPrint: _printDocument,
-      child: printContent,
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.keyS, control: true): () {
+          if (ModalRoute.of(context)?.isCurrent != false) {
+            unawaited(_save());
+          }
+        },
+        const SingleActivator(LogicalKeyboardKey.keyS, meta: true): () {
+          if (ModalRoute.of(context)?.isCurrent != false) {
+            unawaited(_save());
+          }
+        },
+      },
+      child: DocumentPrintScope(
+        enabled: _controller != null && !_loading && !_busy && !_closing,
+        onPrint: _printDocument,
+        child: printContent,
+      ),
     );
   }
 }

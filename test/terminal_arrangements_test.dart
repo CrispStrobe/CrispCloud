@@ -5,6 +5,7 @@ import 'package:crisp_cloud/models/ssh_terminal_config.dart';
 import 'package:crisp_cloud/models/terminal_arrangement.dart';
 import 'package:crisp_cloud/models/tmux_session_options.dart';
 import 'package:crisp_cloud/services/terminal_arrangements.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -171,7 +172,10 @@ void main() {
         {'splitFraction': -0.1},
         {'splitFraction': 0.9},
         {'splitAxis': 'diagonal'},
-        {'activeIndex': 0.0},
+        // Reject fractional IDs on every backend; integral doubles
+        // retain a distinct type only on the VM.
+        if (!kIsWeb) {'activeIndex': 0.0},
+        {'activeIndex': 0.5},
         {'secondIndex': '0'},
         {'tabs': 'bad'},
         {
@@ -439,7 +443,10 @@ void main() {
           '{bad json',
           'null',
           jsonEncode({'version': 99, 'arrangements': []}),
-          jsonEncode({'version': 1.0, 'arrangements': []}),
+          // Whole-valued doubles are ints on Dart web. Keep the VM-only
+          // representation check and reject fractions on every backend.
+          if (!kIsWeb) jsonEncode({'version': 1.0, 'arrangements': []}),
+          jsonEncode({'version': 1.5, 'arrangements': []}),
           jsonEncode({'version': 1, 'arrangements': 'invalid'}),
           jsonEncode({
             'version': 1,

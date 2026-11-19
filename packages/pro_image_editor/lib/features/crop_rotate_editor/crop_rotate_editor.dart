@@ -660,6 +660,7 @@ class CropRotateEditorState extends State<CropRotateEditor>
 
   @override
   void dispose() {
+    disposeTransitionLoops();
     _onScaleEndDebounce.dispose();
     _onScaleAllowUpdateDebounce.dispose();
     _bottomBarScrollCtrl.dispose();
@@ -898,6 +899,7 @@ class CropRotateEditorState extends State<CropRotateEditor>
           transitionFunction:
               cropRotateEditorConfigs.scaleAnimationCurve.transform,
         );
+        if (!mounted) return;
         startOffset = targetOffset;
         _setOffsetLimits();
         addHistory();
@@ -920,6 +922,7 @@ class CropRotateEditorState extends State<CropRotateEditor>
           transitionFunction:
               cropRotateEditorConfigs.scaleAnimationCurve.transform,
         );
+        if (!mounted) return;
         startZoom = targetZoom;
         _setOffsetLimits();
         addHistory();
@@ -2235,6 +2238,7 @@ class CropRotateEditorState extends State<CropRotateEditor>
         transitionFunction: animationCurve.transform,
       );
 
+      if (!mounted) return;
       cropRect = targetCropRect;
       translate = targetOffset;
       userScaleFactor = targetZoom;
@@ -2318,6 +2322,7 @@ class CropRotateEditorState extends State<CropRotateEditor>
       transitionFunction: Curves.decelerate.transform,
     );
 
+    if (!mounted) return;
     userScaleFactor = targetZoom;
     manualScaleFactor = targetZoom;
     translate = targetOffset;

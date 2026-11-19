@@ -227,12 +227,12 @@ void main() {
     expect(
         form.fields.map((field) => field.name), ['customer.name', 'omitted']);
     final shared = form.fieldNamed('customer.name')!;
-    expect(
-        [
-          for (var i = 0; i < shared.widgets.length; i++)
-            shared.widgetPageIndex(i)
-        ].toSet(),
-        {0, 2});
+    expect({
+      for (var i = 0; i < shared.widgets.length; i++) shared.widgetPageIndex(i)
+    }, {
+      0,
+      2
+    });
     expect(form.fieldNamed('omitted')!.widgetPageIndex(0), 0);
   });
 

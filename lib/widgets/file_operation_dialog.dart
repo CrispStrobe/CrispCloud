@@ -42,6 +42,7 @@ Future<FileOperationPlan?> showFileOperationDialog(
   PanelSide side,
   List<FileItem> files, {
   required FileOperationKind kind,
+  bool requirePreview = false,
   PanelFileOrigin? sourceOrigin,
   PanelFileOrigin? destinationOrigin,
   String? destinationPath,
@@ -225,6 +226,7 @@ Future<FileOperationPlan?> showFileOperationDialog(
           context: context,
           barrierDismissible: false,
           builder: (_) => FileOperationDialog(
+            requirePreview: requirePreview,
             side: side,
             files: group.value,
             kind: kind,
@@ -257,6 +259,7 @@ Future<FileOperationPlan?> showFileOperationDialog(
       context: context,
       barrierDismissible: false,
       builder: (_) => FileOperationDialog(
+        requirePreview: requirePreview,
         side: side,
         files: List.unmodifiable(files),
         kind: kind,
@@ -285,6 +288,7 @@ class FileOperationDialog extends ConsumerStatefulWidget {
     required this.side,
     required this.files,
     required this.kind,
+    this.requirePreview = false,
     this.sourceOrigin,
     this.destinationOrigin,
     this.destinationPath,
@@ -302,6 +306,11 @@ class FileOperationDialog extends ConsumerStatefulWidget {
   final PanelSide side;
   final List<FileItem> files;
   final FileOperationKind kind;
+
+  /// Captured drag/drop destinations require an explicit reviewed plan before
+  /// any foreground, background, scheduled or keyboard start can execute.
+  /// Ordinary operation dialogs retain planning on Start.
+  final bool requirePreview;
   final PanelFileOrigin? sourceOrigin;
   final PanelFileOrigin? destinationOrigin;
   final String? destinationPath;
@@ -844,6 +853,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
 
   Future<void> _start({bool background = false, DateTime? notBefore}) async {
     if (_busy || _finished) return;
+    if (widget.requirePreview && _plan == null) return;
     if (background &&
         (widget.sourceBackend != null || !widget.allowBackground)) {
       return;
@@ -1895,6 +1905,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                         !_finished &&
                             _error == null &&
                             (plan == null || plan.canExecute) &&
+                            (!widget.requirePreview || plan != null) &&
                             !_preparing &&
                             !unavailableVerifiedDelta &&
                             backgroundCanWait
@@ -1927,6 +1938,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                         !_finished &&
                             _error == null &&
                             (plan == null || plan.canExecute) &&
+                            (!widget.requirePreview || plan != null) &&
                             !_preparing &&
                             !unavailableVerifiedDelta &&
                             backgroundCanWait
@@ -1942,6 +1954,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                     !_finished &&
                         _error == null &&
                         (plan == null || plan.canExecute) &&
+                        (!widget.requirePreview || plan != null) &&
                         !_preparing &&
                         !unavailableVerifiedDelta
                     ? _start

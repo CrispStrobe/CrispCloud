@@ -23,12 +23,14 @@ import 'package:crisp_cloud/models/operation_progress.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/providers/auth_provider.dart';
 import 'package:crisp_cloud/providers/providers.dart';
+import 'package:crisp_cloud/providers/terminal_workspace_recovery_provider.dart';
 import 'package:crisp_cloud/services/cloud_storage_interface.dart';
 import 'package:crisp_cloud/services/filen_config_service.dart';
 import 'package:crisp_cloud/services/secure_storage_service.dart';
 import 'package:crisp_cloud/services/sync_database.dart';
 import 'package:crisp_cloud/services/sync_engine.dart';
 import 'package:crisp_cloud/services/theme_service.dart';
+import 'package:crisp_cloud/services/terminal_workspace_recovery.dart';
 import 'package:crisp_cloud/screens/file_browser_screen.dart';
 import 'package:crisp_cloud/widgets/file_toolbar.dart';
 import 'package:crisp_cloud/widgets/file_panel.dart';
@@ -179,7 +181,18 @@ List<Override> _baseOverrides({
   String providerName = 'MockCloud',
 }) {
   final db = SyncDatabase.forTesting(NativeDatabase.memory());
+  // Each toolbar fixture owns its settings lifetime and async recovery queue.
+  // Resetting mock preferences must not reuse a previous widget test's pending
+  // default-backed authority. Keep the real recovery service and codec.
+  String? recoveryRecord;
+  final recovery = TerminalWorkspaceRecovery(
+    read: () async => recoveryRecord,
+    write: (value) async {
+      recoveryRecord = value;
+    },
+  );
   return [
+    terminalWorkspaceRecoveryProvider.overrideWithValue(recovery),
     secureStorageProvider.overrideWithValue(InMemorySecureStorage()),
     authProvider.overrideWith(
       (ref) => _TestAuthNotifier(
@@ -257,6 +270,12 @@ Widget _wrapToolbar({
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
+
+String _terminalReadinessState() {
+  final tabs = find.byKey(const ValueKey('terminal-tabs')).evaluate().length;
+  final loading = find.text('Loading saved workspace…').evaluate().length;
+  return 'Terminal header absent: tabs=$tabs, recoveryLoading=$loading';
+}
 
 void main() {
   setUp(() {
@@ -501,8 +520,14 @@ void main() {
         await tester.pump(const Duration(milliseconds: 300));
         await tester.tap(find.text('Show Terminal'));
         await tester.pump(const Duration(milliseconds: 300));
+        // Popup dismissal mounts recovery; rebuild after its async load.
+        await tester.pump();
         expect(find.byTooltip('Hide Terminal'), findsNothing);
-        expect(find.byTooltip('Connect via SSH'), findsOneWidget);
+        expect(
+          find.byTooltip('Connect via SSH'),
+          findsOneWidget,
+          reason: _terminalReadinessState(),
+        );
       } finally {
         debugDefaultTargetPlatformOverride = null;
       }
@@ -533,7 +558,13 @@ void main() {
           await tester.pump(const Duration(milliseconds: 300));
           await tester.tap(find.text('Show Terminal'));
           await tester.pump(const Duration(milliseconds: 300));
-          expect(find.byTooltip('Connect via SSH'), findsOneWidget);
+          // Popup dismissal mounts recovery; rebuild after its async load.
+          await tester.pump();
+          expect(
+            find.byTooltip('Connect via SSH'),
+            findsOneWidget,
+            reason: _terminalReadinessState(),
+          );
           await tester.tap(find.byTooltip('More actions'));
           await tester.pump(const Duration(milliseconds: 300));
           expect(find.text('Hide Terminal'), findsOneWidget);

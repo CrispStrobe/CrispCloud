@@ -100,7 +100,10 @@ void main() {
     expect(fixture.session.starts, 0);
     expect(fixture.localSourceReads, 0);
     expect(find.text('Ready to start a session.'), findsOneWidget);
-    expect(find.text('Start local shell'), findsOneWidget);
+    expect(
+      find.text(kIsWeb ? 'Start built-in shell' : 'Start local shell'),
+      findsOneWidget,
+    );
     expect(find.textContaining('Starting the built-in'), findsNothing);
     fixture.providers.read(focusAreaProvider.notifier).state = FocusArea.local;
     await tester.pump();

@@ -27,6 +27,13 @@ MIGRATED_ENGINE_SOURCES = [
 
 BROWSER_COPY_SOURCE = 'lib/services/office_device_export_web.dart'
 COPY_TYPES_SOURCE = 'lib/services/office_device_export_types.dart'
+SPACY_SELECTOR_SOURCE = 'lib/services/office_spacy.dart'
+SPACY_FALLBACK_SOURCE = 'lib/services/office_spacy_unsupported.dart'
+SPACY_NATIVE_SOURCE = 'lib/services/office_spacy_native.dart'
+SPACY_EXPORT_DECLARATION = """
+export 'office_spacy_unsupported.dart'
+    if (dart.library.ffi) 'office_spacy_native.dart';
+"""
 # This exemption is intentionally narrow. A method, initializer or other body
 # added to this file must not become invisible just because of its filename.
 COPY_TYPE_DECLARATIONS = """
@@ -35,14 +42,21 @@ enum OfficeCopyOutcome { savedCopy, downloadedCopy }
 typedef OfficeDeviceExporter = Future<OfficeCopyOutcome?> Function(
   Uint8List bytes,
   String suggestedName,
-  String dialogTitle,
-);
+  String dialogTitle, {
+  String? initialDirectory,
+});
+typedef OfficeSaveAsExporter = Future<String?> Function(
+  Uint8List bytes,
+  String suggestedName,
+  String dialogTitle, {
+  String? initialDirectory,
+});
 """
 
 
 def _without_comments(source):
-    # The checked declaration grammar admits no string except dart:typed_data;
-    # comment-like text cannot hide an executable string or function in it.
+    # Reviewed packets admit only their fixed import/export URI strings;
+    # comment-like text cannot hide an executable string or function in them.
     return re.sub(r'/\*.*?\*/|//[^\n]*', '', source, flags=re.DOTALL)
 
 
@@ -86,7 +100,34 @@ def classify_sources(sources, hashes):
             'path': COPY_TYPES_SOURCE,
             'source_sha256': hashes[COPY_TYPES_SOURCE],
             'status': 'checked_declarations_only',
-            'reason': 'Verified enum and function typedef; no authored executable bodies.',
+            'reason': 'Verified enum and function typedefs; no authored executable bodies.',
+        })
+    spacy_sources = {SPACY_SELECTOR_SOURCE, SPACY_FALLBACK_SOURCE, SPACY_NATIVE_SOURCE}
+    if spacy_sources.intersection(sources):
+        if not spacy_sources.issubset(sources):
+            raise ValueError('Incomplete spaCy conditional-export source inventory')
+        selector = sources[SPACY_SELECTOR_SOURCE]
+        if _declaration_tokens(selector.read_text(encoding='utf-8')) != \
+                _declaration_tokens(SPACY_EXPORT_DECLARATION):
+            raise ValueError('spaCy conditional export changed; review its executable/platform scope')
+        fallback_reference = re.compile(r"['\"][^'\"]*office_spacy_unsupported\.dart['\"]")
+        for candidate in selector.parent.parent.rglob('*.dart'):
+            # The selector's entire token packet was verified above. Every
+            # other reference could make the fallback reachable on native VM.
+            if candidate != selector and fallback_reference.search(
+                    _without_comments(candidate.read_text(encoding='utf-8'))):
+                raise ValueError('spaCy fallback has an additional import/reference: ' + str(candidate))
+        browser.append({
+            'path': SPACY_FALLBACK_SOURCE,
+            'source_sha256': hashes[SPACY_FALLBACK_SOURCE],
+            'status': 'not_measured_by_native_run',
+            'reason': 'Selected only without dart.library.ffi; requires separate non-FFI/browser execution evidence.',
+        })
+        declarations.append({
+            'path': SPACY_SELECTOR_SOURCE,
+            'source_sha256': hashes[SPACY_SELECTOR_SOURCE],
+            'status': 'checked_conditional_export_only',
+            'reason': 'Exact conditional export verified; no authored executable bodies. Native implementation remains mandatory.',
         })
     separated = {entry['path'] for entry in [*browser, *declarations]}
     return sorted(set(sources) - separated), browser, declarations
@@ -168,7 +209,7 @@ def report_coverage(lcov, root=ROOT):
             'browser_only_sources': browser,
             'declaration_only_sources': declarations,
             'migrated_engine_sources': MIGRATED_ENGINE_SOURCES,
-            'scope_note': 'Generic package navigation, bounded Office search, Word package preservation, legacy Word extraction and text-only DOCX conversion, and bounded CFB reading live in Quds engine and are validated by its mandatory tests. Host scope includes captured conversion storage and UI; percentages are not directly comparable to the earlier 7-file, 9-file or 12-file host scopes. Browser-only and verified declaration-only sources retain hashes and reasons separately; native results do not establish browser execution.',
+            'scope_note': 'Generic package navigation, bounded Office search, Word package preservation, legacy Word extraction and text-only DOCX conversion, and bounded CFB reading live in Quds engine and are validated by its mandatory tests. Host scope includes captured conversion storage and UI; percentages are not directly comparable to the earlier 7-file, 9-file or 12-file host scopes. Platform-excluded and verified declaration-only sources retain hashes and reasons separately; native results do not establish non-FFI/browser execution.',
             'collection': {'verified': False, 'reason': 'LCOV text parsed without a collection receipt'},
             'source_tree_sha256': hashlib.sha256(json.dumps(hashes, sort_keys=True).encode()).hexdigest(),
             'source_sha256': hashes,

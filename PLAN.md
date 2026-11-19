@@ -6,6 +6,160 @@
 
 > Previous hardening plan (completed 2026-05-29) moved to HISTORY.md.
 
+## W7 native Office coverage source binding — 18 November 2026
+
+PR271 was closed after direct integration into main; closure did not establish
+normal CI acceptance. Main `d395bb3b` retained the older host coverage reader,
+which rejects the current enum/function typedef packet after 329 host tests
+pass. Restore the exact reviewed declaration packet and verify the complete
+`dart.library.ffi` conditional-export packet before separating its selector and
+non-FFI fallback from required native instrumentation. Retain every source hash;
+require the native implementation and reject additional fallback imports or
+authored dispatcher bodies. No coverage floor, LCOV line count, assertion or
+collection-receipt requirement changes. Pure reader controls and historical
+LCOV diagnostics are separate from pending exact-head hosted collection.
+
+The exact-head archive workflow also exposed two test-contract mismatches:
+the public viewer intentionally adds three credential-backed VeraCrypt hints
+to the ordinary archive suffix inventory, and the menu store migrates document
+commands before the Cancel test opens a draft. Keep exact inventory equality,
+uniqueness and ordinary-reader rejection for those container hints. Compare
+Cancel's writes and stored values with the post-load baseline so any new write
+or persistent mutation still fails. Production routing and persistence are
+unchanged. The original hosted result (3,826 pass, 16 skip, two fail) remains
+retained; corrected Dart assertions require new exact-head hosted execution.
+
+At `9180c25c`, fresh workspace, image and shared-PDF logs remain red. The
+image failure identifies the maintained engine's uncancellable 16 ms
+`ExtendedLoop` wait after crop teardown. Own and cancel pending transition
+timers before disposing crop controllers, complete waiting futures without
+completion callbacks, and guard resumed crop operations against disposal.
+Keep the existing three platform crop assertions and pending-timer invariant;
+add overlapping-loop cancellation and zero-duration controls to the normal
+hosted image lifecycle job. No timed test drain hides the failure.
+
+The shared-PDF job passed its 15-, 45- and 149-test phases (five skips in the
+last phase), but failed CLI formatting and eleven strict analyzer infos.
+Apply its retained formatter patch, brace ten existing single-statement
+branches, and express the existing page-index set directly as a set literal.
+No assertion, validation or diagnostic severity is removed. Exact-head hosted
+validation is pending. Workspace's transfer-review and mobile terminal
+failures remain separate unresolved contracts; no tests are weakened to
+clear them and no complete normal-CI/Office qualification is inferred.
+
+
+At `54feca1a`, the actual workspace job is 975 pass / five fail and Chrome
+is 731 pass / four skip / six fail. Preserve these fresh logs separately from
+older sources. Captured folder and pane drops now explicitly require Preview:
+all three start controls and the shared keyboard/start handler enforce the
+same plan requirement. Ordinary operation dialogs retain internal planning on
+Start. The three existing drop assertions are unchanged. The two mobile SSH
+assertions remain strict and now capture bounded tab/loading state on failure;
+their missing first UI state is not attributed from a zero finder alone.
+
+Five Chrome fixtures assume an integral double is an invalid integer, which
+[Dart web does not guarantee](https://dart.dev/resources/language/number-representation).
+Keep VM-specific representation cases and add fractional invalid versions/IDs
+that stay invalid on both backends, without changing decoder validation or
+skipping test groups. The idle action label follows the existing browser/native
+shell distinction while preserving all start counts and lifecycle assertions.
+
+The fresh external-schema failure binds two cycle-one GIF/JPEG packages to an
+explicit disabled `w:smallCaps w:val="0"` property. The reader admits only that
+exact false default; enabled, implicit, duplicated or unreviewed content still
+fails. All 75 pure renderer controls pass, including new negative cases; the
+retained two-package structure readback preserves exact geometry. This is not
+fresh LibreOffice rendering, pixel/cycle comparison, hosted coverage collection
+or complete Office qualification. New Dart paths and normal hosted checks remain
+unqualified until their exact-head outcomes exist.
+
+The source inventory also still named two macOS adapter files removed by the
+earlier main integration and omitted its three replacement installation and
+distribution sources. Reflect the actual tracked source set (979 to 980 paths)
+and refresh only the inventory/source fingerprints after the reviewed drop
+changes. Policy decision fields remain unchanged. Actual source-policy
+validation passes; this does not establish hosted release evidence or app
+qualification.
+
+
+At `f70a3f43`, the new archive job is 3,826 pass / 16 skip / two fail,
+and workspace is 976 pass / four fail. Both identify hydrated ancestor-column
+reviews whose explicit Start must remain available without beginning a transfer
+on drop. Preserve that already captured/reviewed column path with internal
+planning on Start; ordinary row and pane drops still require visible Preview.
+All existing null and non-null Start assertions remain unchanged.
+
+The mobile failures now expose one tab with recovery still loading. Give each
+mock toolbar fixture its own empty recovery storage/authority while retaining
+the actual recovery service, codec and unchanged SSH assertions; do not share a
+previous fake-scheduler fixture's default backend lifetime. This is fixture
+isolation, not a claim about production recovery failure or real SSH execution.
+
+The host job failed before collection because new controls had been added to
+managed `tool/office-validation/test_render.py`. Restore its exact pinned hash
+and keep the two additional controls in host-owned
+`tool/test_office_picture_defaults.py`, wired separately into normal CI. The
+existing 80 renderer/limitation controls and two host controls pass locally with
+the unchanged tracked auxiliary oracle present. Preserve the initial sparse
+checkout's missing-oracle failure. Vendor manifests, source pins, collection
+requirements, native instrumentation and numerical/pixel floors are unchanged;
+all new exact-head hosted qualification remains pending.
+
+
+At `74dd79fc`, Linux and host preflight expose drift in managed `render.py`.
+Restore both managed renderer/test hashes. Host-specific disabled-default
+admission now lives in `tool/office_host_render.py`, which authenticates the
+pinned renderer before use. Only its structure check derives a view without the
+single exact disabled `smallCaps` property; the untouched originals still enter
+SDK validation, native rendering, hashing and pixel/cycle comparisons. Report
+raw/view hashes and the adapter identity. Existing 80 pinned controls and three
+host controls pass; added negatives reject text/layout changes and prove raw
+package bytes remain unchanged. This is not actual hosted rendering acceptance.
+
+The exact current PDF failures include one formatter patch, missing save
+feedback after a successful sibling write, and Ctrl+S reaching no host save.
+Apply the retained formatter output, supply the notification provider dependency
+in the operations fixture, and scope save shortcuts to the current host dialog.
+Do not weaken save-count or persisted-content assertions. Mobile tests need one
+frame after popup dismissal mounts asynchronous recovery; retain the strict SSH
+finder and loading-state diagnostics rather than waiting out a timeout.
+
+The new Chrome failure is 736 pass / four skip / one fail at the first held-input
+assertion. The mock could return a later command response ahead of a held one;
+keep those replies ordered and strengthen the test with an explicit held-command
+handshake plus concurrent selection. Production tmux code, input sizes, deadlines
+and one-send assertions are unchanged. All new Dart paths and the full exact-head
+Office/source/collection gates require hosted confirmation. Preserve the closing
+74dd snapshot: 32 success, six failure, four skip, one cancelled, two running.
+
+
+At `82967cf5`, workspace has 980 actual hosted Dart passes and fails only the
+final formatting diff. Resolve CLI's own locked package configuration before
+formatting so its language context agrees with the CLI job, and apply the
+retained archive-fixture formatter output without changing its assertions.
+
+PDF VM/Chrome phases are 209/35 pass with one Ctrl+S failure each. The print
+scope may focus its own ancestor above the nested save handler; put save
+shortcuts outside that scope while keeping the existing focus policy and save
+implementation. Linux/Windows Hex contracts fail three cases because the
+fixture lacks the provider dependency required by the print scope. Supply that
+dependency without changing unsafe-write, conflict or dirty-state assertions.
+
+The Linux SMB fixture reaches zero passes/one failure at unavailable Rust code.
+The preceding CLI bundle build already produces the declared bridge. Bind that
+existing single Linux ELF asset to the fixture, recording its length/digest and
+rejecting missing, ambiguous, linked or wrong-architecture inputs. No additional
+Cargo build, fallback backend or weaker exception assertion is introduced. Four
+pure admission controls pass; real native reconnect/resume execution is pending.
+
+Actual 82967 Office readback is separate from those failures: 540 SDK validations,
+149 native renders, 18 picture-oracle records and 36 passing save cycles; raw
+GIF/JPEG hashes match both SDK and native-render records. The sealed collection
+is 4,097/6,258 lines over 5,596 inputs with 32 source hashes, on a synthetic merge
+whose tree equals the reviewed 82967 tree. Chrome is 737 pass/four skip. These
+source-bound components do not qualify the new source or complete normal CI.
+Keep old 54f and unverified 4,094/6,132 receipts distinct and preserve all failures.
+
 ## Vision
 
 CrispCloud becomes the **definitive open-source cloud file manager**: a single, beautiful, blazing-fast app that connects to *any* cloud or server, runs on *every* platform, and treats privacy and encryption as first-class citizens — not afterthoughts.
@@ -935,3 +1089,12 @@ The only open-source, truly cross-platform (6 platforms including mobile + web),
 ---
 
 *This plan is a living document. Priorities shift as user feedback arrives and the landscape evolves. Update this file — don't let it rot.*
+
+## W7 PR274 final bounded checkpoint (cycle194)
+
+See [the committed handoff](docs/validation/w7-cloud-pr274-handoff.md) for exact
+23aaa928 hosted results, the root analyzer dependency/archive diagnosis and the
+minimal correction. Workspace980PASS, PDF210VM/36ChromePASS and native SMB1PASS
+are measured at23aaa; amended-head terminal qualification remains pending.
+No model, corpus, vendor pin, coverage floor, diagnostic severity or policy
+decision changed. ProviderOFF; draftPR274; no merge.

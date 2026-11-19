@@ -185,6 +185,7 @@ class _FilePanelState extends ConsumerState<FilePanel> {
             files,
             kind: FileOperationKind.copy,
             sourceGroups: groups,
+            requirePreview: true,
             destinationOrigin: destination,
             destinationPath: destination.source.currentPath,
           );
