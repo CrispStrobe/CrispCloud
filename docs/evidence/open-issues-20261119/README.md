@@ -13,9 +13,11 @@ No GitHub Actions runs/status queues were queried or awaited.
   names replace forbidden separators/characters; Google-native documents gain
   their exported extension. The preview shows source display names and mapped
   destinations. Mapping collisions fail planning before writes. Same-storage
-  operations, relative-path profiles and Move retain their existing behavior. This ID-addressed view
+  operations, relative-path profiles and Move retain their existing behavior.
+  This ID-addressed view
   does not support persistent recovery across app restart; filename mapping
-  is unavailable with relative-path profiles. This view never deletes sources. Live Google/Internxt account qualification
+  is unavailable with relative-path profiles. This view never deletes sources.
+  Live Google/Internxt account qualification
   is separate from local HTTP/provider fixtures.
 - #273: optional verified, immutable per-directory metadata records and explicit
   restoration UI. See [format and restoration](../../metadata-sidecars.md).
@@ -26,12 +28,15 @@ No GitHub Actions runs/status queues were queried or awaited.
 
 ## Validation
 
-The final focused suite passed 380 tests, with 29 explicit platform/native
+The final focused suite passed 380 tests, plus two Settings/sidecar dialog checks, with 29 explicit platform/native
 capability skips. Installer/packaging Python tests passed 6/6. The signed sandbox
 IPC probe passed with an 89-byte container socket path and verified cleanup.
 The FUSE-T SMB fixture passed both 1,200-file mount/read/unmount cycles.
 Compiled CLI installation, catalogue scanning and offline querying also passed.
-Build and final receipts are recorded in acceptance.json. Native
+Normal macOS build 33 (`lib/main.dart`, code commit `62ac562f`) built, passed
+development signing and signature verification, and rendered its startup UI
+with a healthy credential preflight for 20 seconds. Receipts are in
+[acceptance.json](acceptance.json). Native
 metadata fields unsupported by the Flutter runner remain explicit skips;
 sidecar timestamp/content/tamper/symlink tests execute against real local files.
 A standalone FUSE mount does not qualify actual Google/Internxt cloud mounts.

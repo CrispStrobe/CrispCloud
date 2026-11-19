@@ -1,0 +1,96 @@
+{
+  "schema": "crispcloud.open-issues.acceptance.v1",
+  "date": "2026-11-19",
+  "sourceCommit": "62ac562f3efe6d584d2f8015b8397216dcbd880c",
+  "issues": [
+    2,
+    272,
+    273,
+    99
+  ],
+  "tests": {
+    "focused": {
+      "passed": 380,
+      "skipped": 29,
+      "failed": 0
+    },
+    "settingsWidget": {
+      "passed": 1,
+      "failed": 0
+    },
+    "installerAndPackaging": {
+      "passed": 6,
+      "failed": 0
+    },
+    "sidecarVerificationUI": {
+      "passed": 1,
+      "failed": 0
+    }
+  },
+  "analysis": "No issues in the new services, options, settings widget and probe; existing Google adapter has five style infos.",
+  "live": {
+    "signedSandboxIPC": {
+      "passed": true,
+      "socketBytes": 89,
+      "usesAppContainerTemp": true,
+      "cleanupVerified": true
+    },
+    "fuseTSMB": {
+      "passed": true,
+      "cycles": 2,
+      "listedEntriesPerCycle": 1203,
+      "unicodeRead": true,
+      "writeRejected": true,
+      "offlineError": true,
+      "unmount": true,
+      "logSha256Note": "Combined live log contains the superseded extension assertion; both FUSE mount cycles passed. Final Drive fixture rerun is green in regression-final.log."
+    },
+    "cli": {
+      "compiledBothCommands": true,
+      "installedIntoPathWithSpaces": true,
+      "nativeCatalogueScan": true,
+      "offlineCatalogueQuery": true,
+      "fixtureBytes": 11
+    }
+  },
+  "limitations": [
+    "Live Google Drive/Internxt account copy is not qualified; provider and HTTP fixtures pass.",
+    "ID-addressed copies do not support persistent recovery across app restart.",
+    "Filename mapping does not apply to Move, same-storage or relative-path profiles.",
+    "App Store builds exclude FUSE; its helper remains direct-distribution only.",
+    "Windows/Linux-specific cases and unavailable native capabilities remain explicit skips."
+  ],
+  "ciQueriedOrAwaited": false,
+  "logSha256": {
+    "regression-final.log": "afbaf66c1f197cf4b941941736edf8ba70b409d4848c8b7b294fd99872b305f6",
+    "settings-widget.log": "2d077287eb2198ee0341131ccc0614eaf889452852f1271512df2f43687d76b5",
+    "cli-tests-final.log": "d5e49f8ef7cce885903ae2344b01699c1c194badb44a8202e454e31d98339129",
+    "signed-ipc-live.log": "c2e5a34836551b1b132bfa29cff9df37272cb1b339d46db89596c5d9d7f05f49",
+    "cli-catalog-live.log": "c2815a33bfb356240b742067568e4da01efe4ad212db318f073993262d420cda",
+    "cli-index-live.json": "62a73e2640d6efcefcef696a412f3382a1d228e21fe0624e373c366731a010fd",
+    "fuse-readdir.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "metadata-ui2.log": "2f2567a71f1bd0da325b898a5d2a7c6ff4f1b13526919c8ed55185507efb67ef",
+    "app-build-final.log": "b1d416a511384b28312f6a652e25cb0a871f5289f69b7ef46c76721d88179c42",
+    "app-sign-final.log": "c97f64eedbf5a36be7643e913e46d21623f7d9b3e80f5b22d2c6c771f57dcbdc",
+    "app-startup-final.log": "4fa7784a80067f576a262edcc0871db25cc878d3ff6f7986e16949d537d25a1a",
+    "app-startup-final-result.log": "27c4507fc758524e46ea81b8aeaa70d38f81b47884b1fabdf971ecb0fde84cd6"
+  },
+  "implementationCommits": [
+    "4f79a5adafb42245b4c990119d1cb053be2a52d2",
+    "62ac562f3efe6d584d2f8015b8397216dcbd880c"
+  ],
+  "pushedToMain": true,
+  "macOSApp": {
+    "version": "1.3.4",
+    "build": "33",
+    "sourceCommit": "62ac562f3efe6d584d2f8015b8397216dcbd880c",
+    "normalEntrypoint": "lib/main.dart",
+    "releaseBuild": true,
+    "developmentSigned": true,
+    "signatureVerified": true,
+    "startupSmokeSeconds": 20,
+    "startupPassed": true,
+    "profile": "appstore",
+    "fuseBundled": false
+  }
+}
