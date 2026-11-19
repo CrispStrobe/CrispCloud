@@ -443,5 +443,13 @@
   "accessed": "Zugegriffen",
   "computeMd5": "MD5 berechnen",
 
-  "protocol": "Protokoll"
+  "protocol": "Protokoll",
+  "officeBrand": "CrispOffice",
+  "officeDocuments": "Dokumente (.docx)",
+  "officeSpreadsheets": "Tabellen (.xlsx)",
+  "officePresentations": "Präsentationen (.pptx)",
+  "officePdf": "PDF-Dokumente",
+  "officeMail": "E-Mail",
+  "officeEditorAbout": "Die Bearbeitung in CrispOffice basiert auf der unabhängigen Open-Source-Engine CrispOffice (MIT). Unterstützt werden OOXML-Dokumente (.docx, .xlsx, .pptx); Speichern schreibt in die Originaldatei zurück.",
+  "officeTrademarkNotice": "Produktnamen beschreiben ausschließlich Dateiformate und Kompatibilität. CrispOffice ist unabhängige Software und steht in keiner Verbindung zu Microsoft oder anderen Office-Anbietern."
 }

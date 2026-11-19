@@ -190,6 +190,44 @@ void main() {
     expect(finding.end, finding.start + 3);
   });
 
+  for (final (String name, String text) in <(String, String)>[
+    ('hamza above', 'ا\u0654ين الكتاب؟'),
+    ('hamza below', 'ذهب ا\u0655لى البيت.'),
+    ('maddah above', 'ا\u0653ن الأوان.'),
+  ]) {
+    test('correct decomposed $name remains unchanged', () async {
+      final ArabicWritingRulesProvider provider = ArabicWritingRulesProvider();
+      final OfficeProofingResult result = await provider.check(request(text));
+      expect(result.status, OfficeProofingStatus.success);
+      expect(result.request.text, text);
+      expect(result.findings, isEmpty);
+    });
+  }
+
+  test('correction offsets preserve preceding decomposed spelling', () async {
+    const String text =
+        '😀 ا\u0653ن الأوان؛ ا\u0654ين الكتاب؟ ذهب ا\u0655لى المدرسه.';
+    const int startOffset = 100;
+    final List<OfficeProofingFinding> findings = await check(
+      text,
+      startOffset: startOffset,
+    );
+    final OfficeProofingFinding finding = findings.single;
+    expect(finding.ruleId, 'ar.ta-marbuta.final');
+    expect(finding.originalText, 'المدرسه');
+    expect(finding.start, startOffset + text.indexOf('المدرسه'));
+    expect(finding.end, finding.start + 'المدرسه'.length);
+    expect(finding.replacements, <String>['المدرسة']);
+    expect(
+      text.replaceRange(
+        finding.start - startOffset,
+        finding.end - startOffset,
+        finding.replacements.single,
+      ),
+      '😀 ا\u0653ن الأوان؛ ا\u0654ين الكتاب؟ ذهب ا\u0655لى المدرسة.',
+    );
+  });
+
   test('ignored rule ids suppress findings', () async {
     final List<OfficeProofingFinding> findings = await check(
       'ذهب الى المدرسه.',

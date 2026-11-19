@@ -14,9 +14,9 @@ enum NewDocumentKind {
   text('Text / code', 'txt'),
   markdown('Markdown', 'md'),
   csv('CSV table', 'csv'),
-  word('Word document', 'docx'),
-  spreadsheet('Spreadsheet', 'xlsx'),
-  presentation('Presentation', 'pptx'),
+  word('Documents (.docx)', 'docx'),
+  spreadsheet('Spreadsheets (.xlsx)', 'xlsx'),
+  presentation('Presentations (.pptx)', 'pptx'),
   pdf('PDF', 'pdf'),
   picture('Image', 'png'),
   ebook('EPUB book', 'epub');

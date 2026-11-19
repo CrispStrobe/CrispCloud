@@ -116,7 +116,10 @@ class GDriveClientAdapter extends CloudStorageClient
     _clientSecret = parts.length > 1 ? parts[1].trim() : null;
 
     if (_clientId == null || _clientId!.isEmpty) {
-      throw GDriveOperationFailure(GDriveOperationCode.clientId, 'Client ID is required');
+      throw GDriveOperationFailure(
+        GDriveOperationCode.clientId,
+        'Client ID is required',
+      );
     }
 
     // Check for stored refresh token first (re-auth without browser)
@@ -774,7 +777,11 @@ class GDriveClientAdapter extends CloudStorageClient
     final docMimeType = meta['mimeType'] as String? ?? '';
     final targetMime = exportMimeType ?? _googleDocsMimeTypes[docMimeType];
     if (targetMime == null) {
-      throw GDriveOperationFailure(GDriveOperationCode.unsupportedDocument, 'Not a Google Docs file or unknown type: $docMimeType', {'type': docMimeType});
+      throw GDriveOperationFailure(
+        GDriveOperationCode.unsupportedDocument,
+        'Not a Google Docs file or unknown type: $docMimeType',
+        {'type': docMimeType},
+      );
     }
 
     final uri = Uri.parse(
@@ -803,7 +810,7 @@ class GDriveClientAdapter extends CloudStorageClient
             'mimeType':
                 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
             'ext': '.docx',
-            'label': 'Word',
+            'label': 'DOCX document',
           },
           {'mimeType': 'application/pdf', 'ext': '.pdf', 'label': 'PDF'},
           {'mimeType': 'text/plain', 'ext': '.txt', 'label': 'Plain Text'},
@@ -817,7 +824,7 @@ class GDriveClientAdapter extends CloudStorageClient
             'mimeType':
                 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             'ext': '.xlsx',
-            'label': 'Excel',
+            'label': 'XLSX spreadsheet',
           },
           {'mimeType': 'application/pdf', 'ext': '.pdf', 'label': 'PDF'},
           {'mimeType': 'text/csv', 'ext': '.csv', 'label': 'CSV'},
@@ -833,7 +840,7 @@ class GDriveClientAdapter extends CloudStorageClient
             'mimeType':
                 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
             'ext': '.pptx',
-            'label': 'PowerPoint',
+            'label': 'PPTX presentation',
           },
           {'mimeType': 'application/pdf', 'ext': '.pdf', 'label': 'PDF'},
           {'mimeType': 'text/plain', 'ext': '.txt', 'label': 'Plain Text'},
@@ -954,7 +961,12 @@ class GDriveClientAdapter extends CloudStorageClient
     await _ensureToken();
 
     final fileId = await _resolveFileId(remotePath);
-    if (fileId == null) throw GDriveOperationFailure(GDriveOperationCode.fileNotFound, 'File not found: $remotePath', {'path': remotePath});
+    if (fileId == null)
+      throw GDriveOperationFailure(
+        GDriveOperationCode.fileNotFound,
+        'File not found: $remotePath',
+        {'path': remotePath},
+      );
 
     // Check if this is a Google Docs file that needs export
     final meta = await _apiGet(
@@ -1086,7 +1098,12 @@ class GDriveClientAdapter extends CloudStorageClient
   Future<void> copyPath(String sourcePath, String targetPath) async {
     await _ensureToken();
     final fileId = await _resolveFileId(sourcePath);
-    if (fileId == null) throw GDriveOperationFailure(GDriveOperationCode.fileNotFound, 'File not found: $sourcePath', {'path': sourcePath});
+    if (fileId == null)
+      throw GDriveOperationFailure(
+        GDriveOperationCode.fileNotFound,
+        'File not found: $sourcePath',
+        {'path': sourcePath},
+      );
     final parentId = await _resolvePathToId(targetPath) ?? 'root';
     final fileName = p.posix.basename(sourcePath);
     _log.info('Server-side copy (GDrive): $sourcePath → $targetPath');
@@ -1104,7 +1121,11 @@ class GDriveClientAdapter extends CloudStorageClient
       body: body,
     );
     if (resp.statusCode != 200) {
-      throw GDriveOperationFailure(GDriveOperationCode.copy, 'GDrive copy failed (${resp.statusCode}): ${resp.body}', {'status': resp.statusCode, 'body': resp.body});
+      throw GDriveOperationFailure(
+        GDriveOperationCode.copy,
+        'GDrive copy failed (${resp.statusCode}): ${resp.body}',
+        {'status': resp.statusCode, 'body': resp.body},
+      );
     }
   }
 
@@ -1205,7 +1226,12 @@ class GDriveClientAdapter extends CloudStorageClient
   Future<void> movePath(String sourcePath, String targetPath) async {
     await _ensureToken();
     final fileId = await _resolveFileId(sourcePath);
-    if (fileId == null) throw GDriveOperationFailure(GDriveOperationCode.pathNotFound, 'Not found: $sourcePath', {'path': sourcePath});
+    if (fileId == null)
+      throw GDriveOperationFailure(
+        GDriveOperationCode.pathNotFound,
+        'Not found: $sourcePath',
+        {'path': sourcePath},
+      );
 
     // Get current parents
     final meta = await _apiGet(
@@ -1227,7 +1253,11 @@ class GDriveClientAdapter extends CloudStorageClient
     );
 
     if (resp.statusCode != 200) {
-      throw GDriveOperationFailure(GDriveOperationCode.move, 'GDrive move failed (${resp.statusCode}): ${resp.body}', {'status': resp.statusCode, 'body': resp.body});
+      throw GDriveOperationFailure(
+        GDriveOperationCode.move,
+        'GDrive move failed (${resp.statusCode}): ${resp.body}',
+        {'status': resp.statusCode, 'body': resp.body},
+      );
     }
 
     _pathToId.remove(sourcePath);
@@ -1237,7 +1267,12 @@ class GDriveClientAdapter extends CloudStorageClient
   Future<void> renamePath(String path, String newName) async {
     await _ensureToken();
     final fileId = await _resolveFileId(path);
-    if (fileId == null) throw GDriveOperationFailure(GDriveOperationCode.pathNotFound, 'Not found: $path', {'path': path});
+    if (fileId == null)
+      throw GDriveOperationFailure(
+        GDriveOperationCode.pathNotFound,
+        'Not found: $path',
+        {'path': path},
+      );
 
     final body = json.encode({'name': newName});
     final uri = Uri.parse('$_apiBase/files/$fileId');
@@ -1314,7 +1349,11 @@ class GDriveClientAdapter extends CloudStorageClient
   // --- Internal helpers ---
 
   Future<void> _ensureToken() async {
-    if (_accessToken == null) throw GDriveOperationFailure(GDriveOperationCode.unauthenticated, 'Not authenticated');
+    if (_accessToken == null)
+      throw GDriveOperationFailure(
+        GDriveOperationCode.unauthenticated,
+        'Not authenticated',
+      );
     if (_tokenExpiry != null && DateTime.now().isAfter(_tokenExpiry!)) {
       await _refreshAccessToken();
     }
@@ -1322,7 +1361,10 @@ class GDriveClientAdapter extends CloudStorageClient
 
   Future<void> _refreshAccessToken() async {
     if (_refreshToken == null || _clientId == null) {
-      throw GDriveOperationFailure(GDriveOperationCode.missingRefresh, 'Cannot refresh: missing refresh token or client ID');
+      throw GDriveOperationFailure(
+        GDriveOperationCode.missingRefresh,
+        'Cannot refresh: missing refresh token or client ID',
+      );
     }
 
     final body = <String, String>{
@@ -1370,7 +1412,11 @@ class GDriveClientAdapter extends CloudStorageClient
       await launchUrl(authUri, mode: LaunchMode.externalApplication);
     } else {
       await server.close();
-      throw const ConnectionFailure(ConnectionFailureCode.oauthBrowserUnavailable, 'Could not open browser for Google Drive authorization', {'provider': 'Google Drive'});
+      throw const ConnectionFailure(
+        ConnectionFailureCode.oauthBrowserUnavailable,
+        'Could not open browser for Google Drive authorization',
+        {'provider': 'Google Drive'},
+      );
     }
 
     // Wait for redirect with auth code
@@ -1415,7 +1461,11 @@ class GDriveClientAdapter extends CloudStorageClient
     }
 
     if (authCode == null) {
-      throw const ConnectionFailure(ConnectionFailureCode.oauthCancelled, 'Google Drive authorization was cancelled or failed', {'provider': 'Google Drive'});
+      throw const ConnectionFailure(
+        ConnectionFailureCode.oauthCancelled,
+        'Google Drive authorization was cancelled or failed',
+        {'provider': 'Google Drive'},
+      );
     }
 
     // Exchange code for tokens
@@ -1526,7 +1576,11 @@ class GDriveClientAdapter extends CloudStorageClient
     }
 
     if (resp.statusCode != 200) {
-      throw GDriveOperationFailure(GDriveOperationCode.api, 'GDrive API error (${resp.statusCode}): ${resp.body}', {'status': resp.statusCode, 'body': resp.body});
+      throw GDriveOperationFailure(
+        GDriveOperationCode.api,
+        'GDrive API error (${resp.statusCode}): ${resp.body}',
+        {'status': resp.statusCode, 'body': resp.body},
+      );
     }
 
     return json.decode(resp.body) as Map<String, dynamic>;
@@ -1548,7 +1602,11 @@ class GDriveClientAdapter extends CloudStorageClient
     );
 
     if (resp.statusCode != 200) {
-      throw GDriveOperationFailure(GDriveOperationCode.api, 'GDrive API error (${resp.statusCode}): ${resp.body}', {'status': resp.statusCode, 'body': resp.body});
+      throw GDriveOperationFailure(
+        GDriveOperationCode.api,
+        'GDrive API error (${resp.statusCode}): ${resp.body}',
+        {'status': resp.statusCode, 'body': resp.body},
+      );
     }
 
     return json.decode(resp.body) as Map<String, dynamic>;

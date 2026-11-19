@@ -6,10 +6,11 @@ import 'package:flutter/services.dart';
 const appCopyrightNotice = '© 2025–2026 CrispStrobe';
 const appTrademarkNotice =
     'Microsoft, Excel, Office, OneDrive, PowerPoint, Windows and Word are '
-    'trademarks of the Microsoft group of companies. CrispCloud is an '
-    'independent application and is not affiliated with, sponsored by or '
-    'endorsed by Microsoft. Other product names and trademarks belong to '
-    'their respective owners.';
+    'trademarks of the Microsoft group of companies. CrispCloud and '
+    'CrispOffice are independent applications and are not affiliated with, '
+    'sponsored by or endorsed by Microsoft. Product names are used only to '
+    'describe file formats and compatibility. Other product names and '
+    'trademarks belong to their respective owners.';
 const appLegalNotice = '$appCopyrightNotice\n\n$appTrademarkNotice';
 
 String appSourceUrl(String gitHash) =>

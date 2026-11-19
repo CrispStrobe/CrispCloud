@@ -1242,4 +1242,30 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get protocol => 'Protocolo';
+
+  @override
+  String get officeBrand => 'CrispOffice';
+
+  @override
+  String get officeDocuments => 'Documents (.docx)';
+
+  @override
+  String get officeSpreadsheets => 'Spreadsheets (.xlsx)';
+
+  @override
+  String get officePresentations => 'Presentations (.pptx)';
+
+  @override
+  String get officePdf => 'PDF documents';
+
+  @override
+  String get officeMail => 'Mail';
+
+  @override
+  String get officeEditorAbout =>
+      'CrispOffice editing is powered by the independent open-source CrispOffice document engine (MIT). It supports OOXML documents (.docx, .xlsx, .pptx) and saves back to the original file.';
+
+  @override
+  String get officeTrademarkNotice =>
+      'Product names are used only to describe file formats and compatibility. CrispOffice is independent software and is not affiliated with, sponsored by, or endorsed by Microsoft or any other office-suite vendor.';
 }

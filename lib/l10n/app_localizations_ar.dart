@@ -1235,4 +1235,30 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get protocol => 'البروتوكول';
+
+  @override
+  String get officeBrand => 'CrispOffice';
+
+  @override
+  String get officeDocuments => 'المستندات (.docx)';
+
+  @override
+  String get officeSpreadsheets => 'جداول البيانات (.xlsx)';
+
+  @override
+  String get officePresentations => 'العروض التقديمية (.pptx)';
+
+  @override
+  String get officePdf => 'مستندات PDF';
+
+  @override
+  String get officeMail => 'البريد';
+
+  @override
+  String get officeEditorAbout =>
+      'يعتمد التحرير في CrispOffice على محرك CrispOffice المستقل مفتوح المصدر (MIT). يدعم مستندات OOXML ‏(.docx و.xlsx و.pptx) ويحفظ في الملف الأصلي.';
+
+  @override
+  String get officeTrademarkNotice =>
+      'تُستخدم أسماء المنتجات فقط لوصف صيغ الملفات والتوافق. CrispOffice برنامج مستقل وغير تابع أو معتمد من Microsoft أو أي جهة أخرى.';
 }

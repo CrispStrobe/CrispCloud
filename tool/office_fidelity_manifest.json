@@ -2152,7 +2152,7 @@
     "packages/quds_office_engine/lib/src/pdf/pdf_canvas.dart": "cab74f5ccdd3ed4e55a5db2edbf2076bbf318e156bc3448b28ca9ba4c6ac527b",
     "packages/quds_office_engine/lib/src/pdf/pdf_document.dart": "a9114581caf59635c538a7eb0b337bf1907a6bdd4ff2b6419cd1551ff150ae81",
     "packages/quds_office_engine/lib/src/pdf/pdf_font.dart": "d0c309b3091e9b6f245cafcc144d88d93e4b9f8b7e4887bd10f0c3c550351f67",
-    "packages/quds_office_engine/lib/src/proofing/arabic_writing_rules.dart": "1f4187ab0ab6d0e3cc596d93bab857bd136ddb6884e3353a4c7e200cdb2f5676",
+    "packages/quds_office_engine/lib/src/proofing/arabic_writing_rules.dart": "457d033c48d694424d64ee14642053498d94ea0ac1dea31419b458a8cdf522ad",
     "packages/quds_office_engine/lib/src/proofing/data/german_common_00.dart": "a9297b80fb74caf783b6b9497c5155324d21e8706954c96c99db640c08da9fc4",
     "packages/quds_office_engine/lib/src/proofing/data/german_lexicon_data.dart": "beb4e809b577fc950e39ffb759b9435834d1f2763e7d00911816da21b8b5d3a1",
     "packages/quds_office_engine/lib/src/proofing/data/german_morphology_data.dart": "3e8944139d410a20d5c8b3f03326e0ed3085abfeb81cf4c8e5426983b70dc842",
@@ -2462,7 +2462,7 @@
     "packages/quds_office_engine/test/pdf_text_string_encoding_test.dart": "cea64441dbf9a6d526aceb63e19efb81e6f3303ec7ba27f09a8c529b227f8160",
     "packages/quds_office_engine/test/pdf_unicode_alias_export_test.dart": "6a50e1a94b20e7682be66b2ae233adaef8a732a18902c1fd4363cc57b56fb621",
     "packages/quds_office_engine/test/pdf_widgets_test.dart": "0bbfd4b5a59bdd2f4facc7d3d2ae43011da6924d3df1f7c1ae3010284c3bd863",
-    "packages/quds_office_engine/test/proofing/arabic_writing_rules_test.dart": "41bcfd2ad2181c5ef257e6bd7257ef6d1964c6b4897560060d17dc8942d1ee99",
+    "packages/quds_office_engine/test/proofing/arabic_writing_rules_test.dart": "2013b4b910a496fad7ea227db197da431669269ca8c0b0ff4571b463ad6c83cf",
     "packages/quds_office_engine/test/proofing/german_agreement_context_test.dart": "35dcb37e8bff79aa6efa333048ac0af865724d8034abfeff5289364341a9f431",
     "packages/quds_office_engine/test/proofing/german_agreement_facts_test.dart": "278ad4e7ac7321ec79a4f7921fa9f747289cf105f0b870ec59b790735a47cc2f",
     "packages/quds_office_engine/test/proofing/german_context_completion_test.dart": "3fba6dae7d0c355443686a4e6f66415b1712552039d625308d81128ac5c6cb84",
@@ -2795,7 +2795,7 @@
     "tool/office-validation/test_render.py": "1ba68e18608d74387cbc1c779ceb72af76bf7741463c282684aec93bf3825472"
   },
   "source_branch": "main",
-  "source_commit": "dc267fb4957d5a6499ce8174fd4a2acc39a4acf8",
+  "source_commit": "f705d4ba70607ae630331847fc21986aa501b0f6",
   "source_repository": "CrispStrobe/quds_office_suite",
   "standalone_sources": {
     "packages/legacy_doc_parser": {

@@ -2433,6 +2433,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Protocol'**
   String get protocol;
+
+  /// Independent office-engine brand shown to users
+  ///
+  /// In en, this message translates to:
+  /// **'CrispOffice'**
+  String get officeBrand;
+
+  /// No description provided for @officeDocuments.
+  ///
+  /// In en, this message translates to:
+  /// **'Documents (.docx)'**
+  String get officeDocuments;
+
+  /// No description provided for @officeSpreadsheets.
+  ///
+  /// In en, this message translates to:
+  /// **'Spreadsheets (.xlsx)'**
+  String get officeSpreadsheets;
+
+  /// No description provided for @officePresentations.
+  ///
+  /// In en, this message translates to:
+  /// **'Presentations (.pptx)'**
+  String get officePresentations;
+
+  /// No description provided for @officePdf.
+  ///
+  /// In en, this message translates to:
+  /// **'PDF documents'**
+  String get officePdf;
+
+  /// No description provided for @officeMail.
+  ///
+  /// In en, this message translates to:
+  /// **'Mail'**
+  String get officeMail;
+
+  /// No description provided for @officeEditorAbout.
+  ///
+  /// In en, this message translates to:
+  /// **'CrispOffice editing is powered by the independent open-source CrispOffice document engine (MIT). It supports OOXML documents (.docx, .xlsx, .pptx) and saves back to the original file.'**
+  String get officeEditorAbout;
+
+  /// No description provided for @officeTrademarkNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Product names are used only to describe file formats and compatibility. CrispOffice is independent software and is not affiliated with, sponsored by, or endorsed by Microsoft or any other office-suite vendor.'**
+  String get officeTrademarkNotice;
 }
 
 class _AppLocalizationsDelegate

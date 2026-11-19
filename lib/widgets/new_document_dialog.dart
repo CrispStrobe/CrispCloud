@@ -3,6 +3,7 @@ import '../services/document_workspace_session.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../l10n/app_localizations.dart';
 import '../l10n/document_workspace_strings.dart';
 import '../l10n/provider_operation_strings.dart';
 import '../providers/providers.dart';
@@ -217,16 +218,16 @@ class _NewDocumentDialogState extends State<NewDocumentDialog> {
                                   vertical: 12,
                                 ),
                                 backgroundColor: _kind == kind
-                                    ? Theme.of(context)
-                                          .colorScheme
-                                          .secondaryContainer
+                                    ? Theme.of(
+                                        context,
+                                      ).colorScheme.secondaryContainer
                                     : null,
                                 side: BorderSide(
                                   color: _kind == kind
                                       ? Theme.of(context).colorScheme.primary
-                                      : Theme.of(context)
-                                            .colorScheme
-                                            .outlineVariant,
+                                      : Theme.of(
+                                          context,
+                                        ).colorScheme.outlineVariant,
                                 ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
@@ -240,15 +241,29 @@ class _NewDocumentDialogState extends State<NewDocumentDialog> {
                                 children: [
                                   Icon(_kindIcon(kind), size: 28),
                                   const SizedBox(height: 6),
-                                  Text(
-                                    documentTr(context, kind.label),
-                                    textAlign: TextAlign.center,
-                                  ),
+                                  Text(switch (kind) {
+                                    NewDocumentKind.word =>
+                                      AppLocalizations.of(
+                                            context,
+                                          )?.officeDocuments ??
+                                          'Documents (.docx)',
+                                    NewDocumentKind.spreadsheet =>
+                                      AppLocalizations.of(
+                                            context,
+                                          )?.officeSpreadsheets ??
+                                          'Spreadsheets (.xlsx)',
+                                    NewDocumentKind.presentation =>
+                                      AppLocalizations.of(
+                                            context,
+                                          )?.officePresentations ??
+                                          'Presentations (.pptx)',
+                                    _ => documentTr(context, kind.label),
+                                  }, textAlign: TextAlign.center),
                                   Text(
                                     '.${kind.extension}',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodySmall,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodySmall,
                                   ),
                                 ],
                               ),

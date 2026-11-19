@@ -531,5 +531,14 @@
   "accessed": "Accessed",
   "computeMd5": "Compute MD5",
 
-  "protocol": "Protocol"
+  "protocol": "Protocol",
+  "officeBrand": "CrispOffice",
+  "@officeBrand": { "description": "Independent office-engine brand shown to users" },
+  "officeDocuments": "Documents (.docx)",
+  "officeSpreadsheets": "Spreadsheets (.xlsx)",
+  "officePresentations": "Presentations (.pptx)",
+  "officePdf": "PDF documents",
+  "officeMail": "Mail",
+  "officeEditorAbout": "CrispOffice editing is powered by the independent open-source CrispOffice document engine (MIT). It supports OOXML documents (.docx, .xlsx, .pptx) and saves back to the original file.",
+  "officeTrademarkNotice": "Product names are used only to describe file formats and compatibility. CrispOffice is independent software and is not affiliated with, sponsored by, or endorsed by Microsoft or any other office-suite vendor."
 }

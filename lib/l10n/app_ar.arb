@@ -531,5 +531,13 @@
   "accessed": "تاريخ الوصول",
   "computeMd5": "حساب MD5",
 
-  "protocol": "البروتوكول"
+  "protocol": "البروتوكول",
+  "officeBrand": "CrispOffice",
+  "officeDocuments": "المستندات (.docx)",
+  "officeSpreadsheets": "جداول البيانات (.xlsx)",
+  "officePresentations": "العروض التقديمية (.pptx)",
+  "officePdf": "مستندات PDF",
+  "officeMail": "البريد",
+  "officeEditorAbout": "يعتمد التحرير في CrispOffice على محرك CrispOffice المستقل مفتوح المصدر (MIT). يدعم مستندات OOXML ‏(.docx و.xlsx و.pptx) ويحفظ في الملف الأصلي.",
+  "officeTrademarkNotice": "تُستخدم أسماء المنتجات فقط لوصف صيغ الملفات والتوافق. CrispOffice برنامج مستقل وغير تابع أو معتمد من Microsoft أو أي جهة أخرى."
 }

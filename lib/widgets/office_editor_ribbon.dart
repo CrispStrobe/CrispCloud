@@ -17,6 +17,7 @@ import 'package:flutter/foundation.dart'
 import 'package:flutter/material.dart';
 import 'package:quds_office_editor/quds_office_editor.dart';
 
+import '../l10n/app_localizations.dart';
 import '../l10n/office_editor_strings.dart';
 import '../l10n/office_ribbon_control_strings.dart';
 import '../services/office_editor_menu.dart';
@@ -667,8 +668,9 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
             ),
           ),
           IconButton(
-            tooltip: OfficeRibbonControlStrings(context)
-                .text(_collapsed ? 'Expand ribbon' : 'Collapse ribbon'),
+            tooltip: OfficeRibbonControlStrings(
+              context,
+            ).text(_collapsed ? 'Expand ribbon' : 'Collapse ribbon'),
             iconSize: 17,
             visualDensity: VisualDensity.compact,
             padding: EdgeInsets.zero,
@@ -2307,8 +2309,9 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
 
   Widget _vertAlignControl() {
     return PopupMenuButton<WmlVertAlign>(
-      tooltip: OfficeRibbonControlStrings(context)
-          .text('Superscript / subscript'),
+      tooltip: OfficeRibbonControlStrings(
+        context,
+      ).text('Superscript / subscript'),
       icon: const Icon(Icons.superscript, size: 17),
       iconSize: 17,
       padding: EdgeInsets.zero,
@@ -2801,15 +2804,8 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
     showOfficeModal<void>(
       context: context,
       builder: (BuildContext ctx) => AlertDialog(
-        title: Text(context.tr('Office editor')),
-        content: Text(
-          context.tr(
-            'Word, spreadsheet and presentation editing is powered by the '
-            'open-source Quds Office engine (MIT).\n\n'
-            'The editor supports OOXML documents (.docx, .xlsx, .pptx). '
-            'Save writes back to the original file.',
-          ),
-        ),
+        title: Text(AppLocalizations.of(context)!.officeBrand),
+        content: Text(AppLocalizations.of(context)!.officeEditorAbout),
         actions: <Widget>[
           TextButton(
             onPressed: () => Navigator.pop(ctx),

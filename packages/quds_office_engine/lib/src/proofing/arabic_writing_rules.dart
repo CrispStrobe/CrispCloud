@@ -11,8 +11,9 @@ import 'proofing_text_ranges.dart';
 /// on syntax or meaning are either offered with several suggestions or left
 /// out (for example `علي` is also the name Ali, `فان` is also "perishing").
 ///
-/// Matching ignores harakat (U+064B–U+065F, U+0670) and tatweel (U+0640), but
-/// findings always cover the original source text and suggestions keep the
+/// Matching ignores harakat (U+064B–U+065F except U+0653–U+0655, plus U+0670)
+/// and tatweel (U+0640). Combining maddah and hamza remain part of the spelling.
+/// Findings always cover the original source text and suggestions keep the
 /// writer's harakat, replacing only the corrected letters. Offsets are
 /// original UTF-16 offsets; the text is never rewritten. Links, email
 /// addresses and closed backtick spans are excluded.
@@ -203,6 +204,11 @@ class ArabicWritingRulesProvider extends OfficeProofingProvider {
   static final RegExp _word = RegExp('[$_letters][$_letters$_marks]*');
   static final RegExp _mark = RegExp('[$_marks]');
   static final RegExp _arabicLetter = RegExp('[$_letters]');
+  static const Set<String> _orthographicMarks = <String>{
+    '\u0653', // Combining maddah above.
+    '\u0654', // Combining hamza above.
+    '\u0655', // Combining hamza below.
+  };
 
   /// The bare spelling and, for each bare letter, its source offset.
   static (String, List<int>) _bare(String word) {
@@ -210,7 +216,7 @@ class ArabicWritingRulesProvider extends OfficeProofingProvider {
     final List<int> positions = <int>[];
     for (int i = 0; i < word.length; i++) {
       final String unit = word[i];
-      if (_mark.hasMatch(unit)) continue;
+      if (_mark.hasMatch(unit) && !_orthographicMarks.contains(unit)) continue;
       bare.write(unit);
       positions.add(i);
     }
