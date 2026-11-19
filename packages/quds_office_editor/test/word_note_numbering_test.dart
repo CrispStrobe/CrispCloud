@@ -171,7 +171,9 @@ void main() {
     'notes pane shows body order and keeps edit identity after insertion',
     (tester) async {
       final word = WordEditorController(document: _document(999));
-      addTearDown(word.dispose);
+      addTearDown(() {
+        if (!word.isDisposed) word.dispose();
+      });
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -206,6 +208,9 @@ void main() {
       expect(after.controller, same(before.controller));
       expect(after.focusNode, same(before.focusNode));
       expect(after.controller!.text, 'Original note');
+      // Dispose the host-owned controller before the pending-timer check.
+      await tester.pumpWidget(const SizedBox.shrink());
+      word.dispose();
     },
   );
 
@@ -228,7 +233,9 @@ void main() {
       ),
     );
     final word = WordEditorController(document: doc);
-    addTearDown(word.dispose);
+    addTearDown(() {
+      if (!word.isDisposed) word.dispose();
+    });
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
@@ -248,5 +255,7 @@ void main() {
     expect(find.text('Note (source ID 99)'), findsOneWidget);
     expect(find.text('Note 91'), findsNothing);
     expect(find.byKey(const ValueKey<String>('notes-edit-91')), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+    word.dispose();
   });
 }

@@ -59,6 +59,8 @@ Future<RenderWordCanvas> _mount(
   LaidOutDocument layout, {
   Map<WmlParagraph, List<OfficeProofingFinding>> findings = const {},
   ValueChanged<OfficeContextHit>? onContextMenu,
+  ValueChanged<OfficeContextHit>? onReviewTap,
+  bool compact = false,
 }) async {
   await tester.pumpWidget(
     Directionality(
@@ -66,12 +68,14 @@ Future<RenderWordCanvas> _mount(
       child: RepaintBoundary(
         key: _boundaryKey,
         child: WordCanvas(
+          compact: compact,
           document: document,
           laidOut: layout,
           caret: CaretEngine(),
           config: const OfficeSurfaceConfig(showRulers: false),
           proofingFindings: findings,
           onContextMenu: onContextMenu,
+          onReviewTap: onReviewTap,
         ),
       ),
     ),
@@ -486,6 +490,116 @@ void main() {
       expect(hits.last.proofingOffset, index + 2);
     }
   });
+
+  testWidgets(
+    'compact proofing hits use story text inside default header bands',
+    (tester) async {
+      final paragraph = _paragraph('Fehler here.');
+      final document = _document([paragraph]);
+      document.sections.single.margins = const WmlPageMargins(
+        top: 4,
+        bottom: 4,
+        left: 4,
+        right: 4,
+      );
+      final layout = _layout(document);
+      final primary = <OfficeContextHit>[];
+      final secondary = <OfficeContextHit>[];
+      final canvas = await _mount(
+        tester,
+        document,
+        layout,
+        compact: true,
+        findings: {
+          paragraph: [_finding(paragraph, 0, 6)],
+        },
+        onReviewTap: primary.add,
+        onContextMenu: secondary.add,
+      );
+      final line = layout.pages.first.lines.first;
+      final glyph = line.glyphs.firstWhere(
+        (glyph) => glyph.glyph.logicalIndex == 1,
+      );
+      final local = Offset(
+        glyph.x + glyph.advance * .2,
+        line.y + line.height / 2,
+      );
+      expect(
+        layout.pages.first.headerBand.contains(local.dx, local.dy),
+        isTrue,
+      );
+      final gesture = await tester.startGesture(
+        canvas.localToGlobal(local),
+        kind: PointerDeviceKind.mouse,
+        buttons: kPrimaryMouseButton,
+      );
+      await gesture.up();
+      await tester.pump();
+      expect(primary.single.paragraph, same(paragraph));
+      expect(primary.single.proofingOffset, 1);
+      await _rightClick(tester, canvas, 0, local);
+      expect(secondary.single.paragraph, same(paragraph));
+      expect(secondary.single.proofingOffset, 1);
+    },
+  );
+
+  for (final footer in [false, true]) {
+    testWidgets(
+      'full-page ${footer ? 'footer' : 'header'} keeps exact proofing pointer hits',
+      (tester) async {
+        final paragraph = _paragraph('Fehler');
+        final document = _document([_paragraph('Body text.')]);
+        (footer
+                ? document.sections.single.footer
+                : document.sections.single.header)
+            .add(paragraph);
+        final layout = _layout(document);
+        final primary = <OfficeContextHit>[];
+        final secondary = <OfficeContextHit>[];
+        final canvas = await _mount(
+          tester,
+          document,
+          layout,
+          findings: {
+            paragraph: [_finding(paragraph, 0, 6)],
+          },
+          onReviewTap: primary.add,
+          onContextMenu: secondary.add,
+        );
+        final line =
+            (footer ? layout.pages.first.footer : layout.pages.first.header)
+                .single;
+        final painter = PaintRunText.plain(
+          text: line.overlayText!,
+          fontSize: line.overlaySize,
+          color: Colors.black,
+          themeFamily: OfficeTheme.light.fontFamily,
+        )..layout();
+        addTearDown(painter.dispose);
+        final box = painter
+            .getBoxesForSelection(
+              const TextSelection(baseOffset: 1, extentOffset: 2),
+            )
+            .single;
+        final local = Offset(
+          line.x + box.left + (box.right - box.left) * .2,
+          line.y + line.height / 2,
+        );
+        final gesture = await tester.startGesture(
+          canvas.localToGlobal(canvas.windowForPagePoint(0, local)),
+          kind: PointerDeviceKind.mouse,
+          buttons: kPrimaryMouseButton,
+        );
+        await gesture.up();
+        await tester.pump();
+        expect(primary.single.paragraph, same(paragraph));
+        expect(primary.single.proofingOffset, 1);
+        await _rightClick(tester, canvas, 0, local);
+        expect(secondary.single.paragraph, same(paragraph));
+        expect(secondary.single.proofingOffset, 1);
+      },
+    );
+  }
 
   for (final inHeader in [false, true]) {
     testWidgets(

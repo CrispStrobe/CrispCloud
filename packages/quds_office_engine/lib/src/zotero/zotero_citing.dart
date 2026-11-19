@@ -7,9 +7,17 @@ import 'zotero_client.dart';
 enum ZoteroCitingCommand {
   addEditCitation,
   addEditBibliography,
+  addNote,
+
+  /// Opens Zotero's annotation picker, available in Zotero 9 and later.
+  addAnnotation,
   refresh,
   setDocPrefs,
-  removeCodes,
+  removeCodes;
+
+  /// These commands must insert research content before staged preferences or
+  /// temporary fields can be applied. A cancelled picker supplies no text.
+  bool get insertsNoteText => this == addNote || this == addAnnotation;
 }
 
 typedef ZoteroCitingHandler =
@@ -360,6 +368,25 @@ class ZoteroCitingClient {
             arguments.length == 3 &&
             arguments[1] == 'Http' &&
             _isNoteType(arguments[2]);
+      case 'Document.insertText':
+        valid = arguments.length == 2 && arguments[1] is String;
+      case 'Document.convertPlaceholdersToFields':
+        valid =
+            arguments.length == 4 &&
+            arguments[1] is List<Object?> &&
+            _isNoteType(arguments[2]) &&
+            arguments[3] == 'Http';
+        if (valid) {
+          final ids = arguments[1] as List<Object?>;
+          valid =
+              ids.length <= 10000 &&
+              ids.toSet().length == ids.length &&
+              ids.every(
+                (id) =>
+                    id is String &&
+                    RegExp(r'^[A-Za-z0-9]{1,128}$').hasMatch(id),
+              );
+        }
       case 'Document.convert':
         valid =
             arguments.length == 4 &&
@@ -443,7 +470,6 @@ class ZoteroCitingClient {
         }
         for (final key in <String>[
           'supportsImportExport',
-          'supportsTextInsertion',
           'supportsCitationMerging',
         ]) {
           if (result.containsKey(key) && result[key] != false) {
@@ -451,6 +477,10 @@ class ZoteroCitingClient {
             // implemented by this driver yet.
             throw _invalid();
           }
+        }
+        if (result.containsKey('supportsTextInsertion') &&
+            result['supportsTextInsertion'] is! bool) {
+          throw _invalid();
         }
       case 'Document.getDocumentData':
         if (result is! String) throw _invalid();
@@ -471,6 +501,17 @@ class ZoteroCitingClient {
         for (final field in result) {
           final id = _validateField(field);
           if (!ids.add(id)) throw _invalid();
+        }
+        knownFields.addAll(ids);
+      case 'Document.convertPlaceholdersToFields':
+        final placeholders = arguments[1] as List<Object?>;
+        if (result is! List<Object?> || result.length != placeholders.length) {
+          throw _invalid();
+        }
+        final ids = <Object>{};
+        for (final field in result) {
+          final id = _validateField(field);
+          if (knownFields.contains(id) || !ids.add(id)) throw _invalid();
         }
         knownFields.addAll(ids);
       case 'Document.cursorInField':

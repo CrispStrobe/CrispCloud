@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:quds_office_engine/quds_office_engine.dart';
 
 import 'word_zotero_format.dart';
+import 'word_zotero_stored_details.dart';
 
 List<(String, String)> _detailFields(ZoteroItem item) => [
   ('Title', zoteroHtmlToPlainText(item.title)),
@@ -187,6 +188,94 @@ class _ZoteroItemDetailsDialogState extends State<ZoteroItemDetailsDialog> {
   }
 }
 
+/// Inspects the stored CSL snapshot, including offline and mixed-library
+/// sources. Opening or copying details never fetches or changes a reference.
+class ZoteroStoredReferenceDetailsDialog extends StatefulWidget {
+  const ZoteroStoredReferenceDetailsDialog({super.key, required this.item});
+
+  final ZoteroCitationItem item;
+
+  @override
+  State<ZoteroStoredReferenceDetailsDialog> createState() =>
+      _ZoteroStoredReferenceDetailsDialogState();
+}
+
+class _ZoteroStoredReferenceDetailsDialogState
+    extends State<ZoteroStoredReferenceDetailsDialog> {
+  String? _copyStatus;
+  bool _copying = false;
+
+  Future<void> _copyDetails() async {
+    setState(() => _copying = true);
+    try {
+      await Clipboard.setData(
+        ClipboardData(text: zoteroStoredReferenceDetailsText(widget.item)),
+      );
+      if (mounted) setState(() => _copyStatus = 'Reference details copied.');
+    } on PlatformException {
+      if (mounted) {
+        setState(
+          () => _copyStatus =
+              'Could not copy. Select the text to copy it manually.',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _copying = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    key: const ValueKey('zotero-stored-reference-details-dialog'),
+    insetPadding: const EdgeInsets.all(16),
+    scrollable: true,
+    title: const Text('Stored reference details'),
+    content: SizedBox(
+      width: 620,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Metadata stored with this reference. No updates are fetched.',
+          ),
+          const SizedBox(height: 12),
+          if (_copyStatus != null) ...[
+            Semantics(
+              liveRegion: true,
+              child: Text(
+                _copyStatus!,
+                key: const ValueKey('zotero-stored-details-copy-status'),
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+          for (final (label, value) in zoteroStoredReferenceDetailFields(
+            widget.item,
+          )) ...[
+            Text(label, style: Theme.of(context).textTheme.labelLarge),
+            SelectableText(value),
+            const SizedBox(height: 12),
+          ],
+        ],
+      ),
+    ),
+    actions: [
+      TextButton.icon(
+        key: const ValueKey('zotero-copy-stored-reference-details'),
+        onPressed: _copying ? null : _copyDetails,
+        icon: const Icon(Icons.copy),
+        label: const Text('Copy details'),
+      ),
+      TextButton(
+        key: const ValueKey('zotero-stored-details-close'),
+        onPressed: () => Navigator.pop(context),
+        child: const Text('Close'),
+      ),
+    ],
+  );
+}
+
 /// Stages selection changes using the caller's original keys. Reusing immutable
 /// citation values retains source identities, locators and unknown metadata.
 class ZoteroSelectedReferencesDialog extends StatefulWidget {
@@ -262,30 +351,44 @@ class _ZoteroSelectedReferencesDialogState
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      IconButton(
-                        key: ValueKey('zotero-selection-up-$key'),
-                        tooltip: 'Move reference up',
-                        onPressed: index == 0 ? null : () => _move(index, -1),
-                        icon: const Icon(Icons.arrow_upward),
-                      ),
-                      IconButton(
-                        key: ValueKey('zotero-selection-down-$key'),
-                        tooltip: 'Move reference down',
-                        onPressed: index == _keys.length - 1
-                            ? null
-                            : () => _move(index, 1),
-                        icon: const Icon(Icons.arrow_downward),
-                      ),
-                      IconButton(
-                        key: ValueKey('zotero-selection-remove-$key'),
-                        tooltip: 'Remove selected reference',
-                        onPressed: () => setState(() => _keys.removeAt(index)),
-                        icon: const Icon(Icons.close),
-                      ),
-                    ],
+                  Align(
+                    alignment: AlignmentDirectional.centerEnd,
+                    child: Wrap(
+                      alignment: WrapAlignment.end,
+                      children: [
+                        IconButton(
+                          key: ValueKey('zotero-selection-details-$key'),
+                          tooltip: 'Stored reference details',
+                          onPressed: () => showDialog<void>(
+                            context: context,
+                            builder: (_) =>
+                                ZoteroStoredReferenceDetailsDialog(item: item),
+                          ),
+                          icon: const Icon(Icons.info_outline),
+                        ),
+                        IconButton(
+                          key: ValueKey('zotero-selection-up-$key'),
+                          tooltip: 'Move reference up',
+                          onPressed: index == 0 ? null : () => _move(index, -1),
+                          icon: const Icon(Icons.arrow_upward),
+                        ),
+                        IconButton(
+                          key: ValueKey('zotero-selection-down-$key'),
+                          tooltip: 'Move reference down',
+                          onPressed: index == _keys.length - 1
+                              ? null
+                              : () => _move(index, 1),
+                          icon: const Icon(Icons.arrow_downward),
+                        ),
+                        IconButton(
+                          key: ValueKey('zotero-selection-remove-$key'),
+                          tooltip: 'Remove selected reference',
+                          onPressed: () =>
+                              setState(() => _keys.removeAt(index)),
+                          icon: const Icon(Icons.close),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),

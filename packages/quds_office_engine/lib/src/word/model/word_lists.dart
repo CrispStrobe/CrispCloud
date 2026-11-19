@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import '../../opc/content_types.dart';
 import '../../opc/opc_archive.dart';
@@ -33,7 +34,13 @@ abstract final class WordLists {
   /// Returns a reusable document-local list definition without replacing any
   /// imported numbering. Definitions live in the package, so IDs survive save,
   /// reopen, isolate transfer, and paragraph undo/redo.
-  static int numberingId(WmlDocument document, {required bool numbered}) {
+  /// Set [independent] for a separate list whose counters must not continue an
+  /// existing Quds list. Its immutable level definitions can still be shared.
+  static int numberingId(
+    WmlDocument document, {
+    required bool numbered,
+    bool independent = false,
+  }) {
     final OpcPackage package = document.package ??= OpcPackage.create(
       OpcPackageKind.word,
     );
@@ -51,10 +58,17 @@ abstract final class WordLists {
       part?.readText() ?? '<w:numbering xmlns:w="${OfficeNamespaces.w}"/>',
     );
     final XmlElement root = xml.root!;
-    final String name = 'Quds-${numbered ? 'decimal' : 'bullet'}-v1';
+    // Keep independent instances outside the reusable-list namespace. A later
+    // ordinary list must not pick up an imported research note's counters.
+    final String name =
+        'Quds-${numbered ? 'decimal' : 'bullet'}${independent ? '-independent' : ''}-v1';
+    String? sharedAbstractId;
     for (final XmlElement definition in root.childrenNamed('abstractNum')) {
       if (definition.firstChild('name')?.getAttribute('val') != name) continue;
       final String? abstractId = definition.getAttribute('abstractNumId');
+      if (int.tryParse(abstractId ?? '') == null) continue;
+      sharedAbstractId = abstractId;
+      if (independent) break;
       for (final XmlElement instance in root.childrenNamed('num')) {
         if (instance.firstChild('abstractNumId')?.getAttribute('val') ==
             abstractId) {
@@ -81,42 +95,53 @@ abstract final class WordLists {
     while (used.contains(id)) {
       id++;
     }
-    final StringBuffer levels = StringBuffer();
-    for (var level = 0; level < 9; level++) {
-      final String label = numbered
-          ? (level == 0
-                ? '%1.'
-                : List<String>.generate(
-                    level + 1,
-                    (int i) => '%${i + 1}',
-                  ).join('.'))
-          : _bulletLabel(level).trim();
-      levels.write(
-        '<w:lvl w:ilvl="$level"><w:start w:val="1"/>'
-        '<w:numFmt w:val="${numbered ? 'decimal' : 'bullet'}"/>'
-        '<w:lvlText w:val="$label"/><w:pPr><w:ind w:left="${(level + 1) * 360}"'
-        ' w:hanging="180"/></w:pPr></w:lvl>',
+    if (sharedAbstractId == null) {
+      final StringBuffer levels = StringBuffer();
+      for (var level = 0; level < 9; level++) {
+        final String label = numbered
+            ? (level == 0
+                  ? '%1.'
+                  : List<String>.generate(
+                      level + 1,
+                      (int i) => '%${i + 1}',
+                    ).join('.'))
+            : _bulletLabel(level).trim();
+        levels.write(
+          '<w:lvl w:ilvl="$level"><w:start w:val="1"/>'
+          '<w:numFmt w:val="${numbered ? 'decimal' : 'bullet'}"/>'
+          '<w:lvlText w:val="$label"/><w:pPr><w:ind w:left="${(level + 1) * 360}"'
+          ' w:hanging="180"/></w:pPr></w:lvl>',
+        );
+      }
+      final XmlElement definition = XmlDocument.parse(
+        '<w:abstractNum xmlns:w="${OfficeNamespaces.w}" w:abstractNumId="$id">'
+        '<w:multiLevelType w:val="hybridMultilevel"/><w:name w:val="$name"/>'
+        '$levels</w:abstractNum>',
+      ).root!;
+      final int firstInstance = root.children.indexWhere(
+        (XmlNode node) =>
+            node is XmlElement &&
+            (node.localName == 'num' || node.localName == 'numIdMacAtCleanup'),
       );
+      if (firstInstance >= 0) {
+        root.children.insert(firstInstance, definition..parent = root);
+      } else {
+        root.addChild(definition);
+      }
     }
-    final XmlElement definition = XmlDocument.parse(
-      '<w:abstractNum xmlns:w="${OfficeNamespaces.w}" w:abstractNumId="$id">'
-      '<w:multiLevelType w:val="hybridMultilevel"/><w:name w:val="$name"/>'
-      '$levels</w:abstractNum>',
+    final instance = XmlDocument.parse(
+      '<w:num xmlns:w="${OfficeNamespaces.w}" w:numId="$id">'
+      '<w:abstractNumId w:val="${sharedAbstractId ?? id}"/></w:num>',
     ).root!;
-    final int firstInstance = root.children.indexWhere(
-      (XmlNode node) => node is XmlElement && node.localName == 'num',
+    final cleanupIndex = root.children.indexWhere(
+      (XmlNode node) =>
+          node is XmlElement && node.localName == 'numIdMacAtCleanup',
     );
-    if (firstInstance >= 0) {
-      root.children.insert(firstInstance, definition..parent = root);
+    if (cleanupIndex >= 0) {
+      root.children.insert(cleanupIndex, instance..parent = root);
     } else {
-      root.addChild(definition);
+      root.addChild(instance);
     }
-    root.addChild(
-      XmlDocument.parse(
-        '<w:num xmlns:w="${OfficeNamespaces.w}" w:numId="$id">'
-        '<w:abstractNumId w:val="$id"/></w:num>',
-      ).root!,
-    );
     if (part == null) {
       package.createPart(
         uri,
@@ -242,5 +267,85 @@ abstract final class WordLists {
       1 => '◦ ',
       _ => '▪ ',
     };
+  }
+}
+
+/// A small undo snapshot of Word's numbering part and its relationship.
+///
+/// Media, unrelated parts and unrelated document relationships are not copied
+/// or replaced. A relationship ID reused since capture is allocated afresh on
+/// restore; paragraph numbering refers to list IDs, not relationship IDs.
+final class WordListNumberingSnapshot {
+  WordListNumberingSnapshot._(
+    this._bytes,
+    this._relationships, {
+    required this.uri,
+    required this.contentType,
+    required this.overrideType,
+  });
+
+  factory WordListNumberingSnapshot.capture(WmlDocument document) {
+    final package = document.package;
+    final relationships = package
+        ?.relationshipsFor('/word/document.xml')
+        .byType(RelationshipTypes.numbering)
+        .toList();
+    final relationship = relationships?.firstOrNull;
+    final uri = relationship == null
+        ? '/word/numbering.xml'
+        : package!.relationshipsFor('/word/document.xml').resolve(relationship);
+    final part = package?.getPart(uri);
+    return WordListNumberingSnapshot._(
+      part?.readBytes(),
+      relationships ?? const <PackageRelationship>[],
+      uri: uri,
+      contentType: part?.contentType,
+      overrideType: package?.contentTypes.overrides[uri],
+    );
+  }
+
+  final String uri;
+  final Uint8List? _bytes;
+  final String? contentType;
+  final String? overrideType;
+  final List<PackageRelationship> _relationships;
+
+  void restore(WmlDocument document) {
+    var package = document.package;
+    if (package == null) {
+      if (_bytes == null && _relationships.isEmpty) return;
+      package = document.package = OpcPackage.create(OpcPackageKind.word);
+    }
+    final bytes = _bytes;
+    if (bytes == null) {
+      package.deletePart(uri);
+    } else {
+      final part = package.getPart(uri);
+      if (part == null) {
+        package.createPart(uri, contentType!, bytes);
+      } else {
+        part.contentType = contentType!;
+        part.writeBytes(bytes);
+      }
+    }
+    final type = overrideType;
+    if (type == null) {
+      package.contentTypes.removeOverride(uri);
+    } else {
+      package.contentTypes.setOverride(uri, type);
+    }
+    final relationships = package.relationshipsFor('/word/document.xml');
+    for (final current
+        in relationships.byType(RelationshipTypes.numbering).toList()) {
+      relationships.removeById(current.id);
+    }
+    for (final previous in _relationships) {
+      relationships.add(
+        type: previous.type,
+        target: previous.target,
+        targetMode: previous.targetMode,
+        id: relationships.byId(previous.id) == null ? previous.id : null,
+      );
+    }
   }
 }

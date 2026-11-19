@@ -7,8 +7,12 @@ import 'package:quds_office_engine/quds_office_engine.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'office_controller.dart';
+import 'word_zotero_composer.dart';
+import 'word_zotero_document_sources.dart';
 import 'word_zotero_format.dart';
+import 'word_zotero_import.dart';
 import 'word_zotero_library.dart';
+import 'word_zotero_snapshot.dart';
 import 'word_zotero_sources.dart';
 
 /// Connection preferences belong to the host session, never to a document.
@@ -22,12 +26,30 @@ class ZoteroSession {
   String locale = 'en-US';
 }
 
+class _ZoteroSelectionExport {
+  const _ZoteroSelectionExport.stored() : format = null;
+  const _ZoteroSelectionExport.connected(ZoteroExportFormat value)
+    : format = value;
+
+  final ZoteroExportFormat? format;
+}
+
+/// The workspace page to show when opening Zotero references.
+enum WordZoteroTab { library, document, importCslJson }
+
 /// Shared Quds citation workspace. The host supplies its own network transport
 /// and may opt into its existing credential store. [localTransport] explicitly
 /// enables desktop access and must connect directly to localhost without a
 /// remote proxy. It is never used as a fallback for the web transport.
 /// Without a transport, local
 /// CSL import, field editing, and embedded-source export remain available.
+/// An existing field at the caret opens [WordZoteroTab.document] by default.
+/// Hosts can set [initialTab] explicitly, or pass [initialCommand] to open the
+/// Document page and immediately start an explicitly requested desktop action.
+/// With [closeAfterCommand], a compact progress dialog returns to the editor
+/// after success, cancellation or an unchanged result. Errors remain visible.
+/// The ordinary references workspace stays open unless the user closes it or
+/// chooses a reference to reveal in the document.
 Future<void> showWordZoteroDialog(
   BuildContext context, {
   required WordEditorController controller,
@@ -35,9 +57,26 @@ Future<void> showWordZoteroDialog(
   ZoteroTransport? localTransport,
   ZoteroSession? session,
   Future<void> Function(String? apiKey)? persistApiKey,
-}) {
+  WordZoteroTab? initialTab,
+  ZoteroCitingCommand? initialCommand,
+  bool closeAfterCommand = false,
+}) async {
+  if (closeAfterCommand && initialCommand == null) {
+    throw ArgumentError('A direct Zotero command is required.');
+  }
+  if (_hasZoteroComposition(controller)) {
+    ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Finish the current text composition before using Zotero.',
+        ),
+      ),
+    );
+    return;
+  }
   controller.commitPendingEdits();
-  return showDialog<void>(
+  final document = controller.document;
+  final destination = await showDialog<WmlZoteroField>(
     context: context,
     builder: (_) => _WordZoteroDialog(
       controller: controller,
@@ -45,20 +84,44 @@ Future<void> showWordZoteroDialog(
       localTransport: localTransport,
       session: session ?? ZoteroSession(),
       persistApiKey: persistApiKey,
+      initialTab: initialTab,
+      initialCommand: initialCommand,
+      closeAfterCommand: closeAfterCommand,
     ),
   );
+  if (!context.mounted ||
+      controller.isDisposed ||
+      !identical(document, controller.document) ||
+      ModalRoute.of(context)?.isCurrent == false) {
+    return;
+  }
+  if (destination != null) {
+    controller.revealZoteroField(destination);
+  } else if (closeAfterCommand && !_hasZoteroComposition(controller)) {
+    controller.requestEditingFocus();
+  }
+}
+
+bool _hasZoteroComposition(WordEditorController controller) {
+  final body = controller.input.composing;
+  final note = controller.noteEditingTarget?.composing;
+  return (body.isValid && !body.isCollapsed) ||
+      (note != null && note.isValid && !note.isCollapsed);
 }
 
 Object _editTarget(WordEditorController controller) => (
   document: controller.document,
   revision: controller.contentRevision,
+  composing: controller.input.composing,
   caret: controller.caret,
   paragraph: controller.caret.paragraphIndex,
   offset: controller.caret.logicalIndex,
   anchorParagraph: controller.caret.selectionAnchorParagraph,
   anchorOffset: controller.caret.selectionAnchor,
+  note: controller.noteEditingTarget,
   headerFooter: controller.isEditingHeaderFooter,
   footer: controller.isEditingFooter,
+  headerFooterVariant: controller.editingHeaderFooterVariant,
   section: controller.isEditingHeaderFooter
       ? controller.editingSectionIndex
       : null,
@@ -78,17 +141,25 @@ class _WordZoteroDialog extends StatefulWidget {
     this.localTransport,
     required this.session,
     this.persistApiKey,
+    required this.initialTab,
+    this.initialCommand,
+    required this.closeAfterCommand,
   });
   final WordEditorController controller;
   final ZoteroTransport? transport;
   final ZoteroTransport? localTransport;
   final ZoteroSession session;
   final Future<void> Function(String? apiKey)? persistApiKey;
+  final WordZoteroTab? initialTab;
+  final ZoteroCitingCommand? initialCommand;
+  final bool closeAfterCommand;
   @override
   State<_WordZoteroDialog> createState() => _WordZoteroDialogState();
 }
 
 class _WordZoteroDialogState extends State<_WordZoteroDialog> {
+  late final WordZoteroTab _initialTab;
+  List<WmlZoteroField>? _initialFields;
   late final TextEditingController _key;
   late final TextEditingController _style;
   late final TextEditingController _locale;
@@ -96,6 +167,8 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
   final _tag = TextEditingController();
   final _libraryId = TextEditingController();
   final _import = TextEditingController();
+  final _importSearch = TextEditingController();
+  final _importResultsScroll = ScrollController();
   String _submittedSearch = '';
   List<String> _tags = const [];
   String? _tagError;
@@ -125,7 +198,7 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
   String? _error;
   String? _notice;
   final _selected = <String, ZoteroCitationItem>{};
-  final _imported = <ZoteroCitationItem>[];
+  final _imported = <ZoteroImportedReference>[];
   WordEditorController get _controller => widget.controller;
   ZoteroSession get _session => widget.session;
   bool get _useLocal => _session.useLocal;
@@ -141,6 +214,16 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
   void initState() {
     super.initState();
     _target = _editTarget(_controller);
+    // Share the opening scan with the initial Document page. This keeps a
+    // 1000-citation document to one parse even when choosing the page from the
+    // current caret. Later builds always obtain fresh, short-lived handles.
+    final fields = _initialFields = _controller.zoteroFields;
+    _initialTab = widget.initialCommand != null
+        ? WordZoteroTab.document
+        : widget.initialTab ??
+              (_controller.findZoteroFieldAtCaret(fields: fields) == null
+                  ? WordZoteroTab.library
+                  : WordZoteroTab.document);
     _key = TextEditingController(text: _session.apiKey ?? '');
     _style = TextEditingController(text: _session.style);
     _locale = TextEditingController(text: _session.locale);
@@ -159,6 +242,12 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
         backoffState: _session._onlineBackoff,
       );
     }
+    final command = widget.initialCommand;
+    if (command != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _citeWithDesktop(command);
+      });
+    }
   }
 
   @override
@@ -172,22 +261,35 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
       _tag,
       _libraryId,
       _import,
+      _importSearch,
     ]) {
       controller.dispose();
     }
+    _importResultsScroll.dispose();
     super.dispose();
   }
 
-  Future<void> _run(Future<void> Function() action) async {
+  Future<void> _run(
+    Future<void> Function() action, {
+    bool closeOnSuccess = false,
+  }) async {
     if (_busy) return;
     setState(() {
       _busy = true;
       _error = null;
       _notice = null;
     });
+    var returnToDocument = false;
     try {
       await action();
+      returnToDocument = closeOnSuccess;
     } catch (error) {
+      if (closeOnSuccess &&
+          error is ZoteroCitingException &&
+          error.kind == ZoteroCitingErrorKind.cancelled &&
+          !error.desktopMayNeedRestart) {
+        returnToDocument = true;
+      }
       if (mounted) {
         setState(() {
           _error = switch (error) {
@@ -210,6 +312,11 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+    if (mounted &&
+        returnToDocument &&
+        ModalRoute.of(context)?.isCurrent == true) {
+      Navigator.of(context).pop();
+    }
   }
 
   void _checkTarget() {
@@ -226,6 +333,48 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
     _target = _editTarget(_controller);
     setState(() => _notice = 'Document updated. You can undo this change.');
   }
+
+  Future<void> _unlinkAll() => _run(() async {
+    _checkTarget();
+    final fields = _controller.zoteroFields;
+    if (fields.isEmpty) return;
+    final citations = fields
+        .where((field) => field.kind == ZoteroFieldKind.citation)
+        .length;
+    final bibliographies = fields.length - citations;
+    final confirmed = await _showReview<bool>(
+      (dialogContext) => AlertDialog(
+        title: const Text('Unlink all Zotero citations?'),
+        scrollable: true,
+        content: SizedBox(
+          width: 480,
+          child: Text(
+            'Convert $citations citation field(s) and $bibliographies bibliography field(s) throughout this document to ordinary text.\n\n'
+            'The visible text, formatting and notes will stay in place. Zotero will no longer be able to update these references. Save a linked copy first if you will need citation updates later.\n\n'
+            'You can undo the complete conversion while this document remains open. If any field cannot be converted safely, the whole document will be kept unchanged.',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            key: const ValueKey('zotero-confirm-unlink-all'),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Unlink all'),
+          ),
+        ],
+      ),
+    );
+    if (!mounted || confirmed != true) return;
+    var count = 0;
+    _write(() => count = _controller.unlinkZoteroFields());
+    setState(
+      () => _notice =
+          '$count Zotero field(s) converted to ordinary text. You can undo the complete conversion.',
+    );
+  });
 
   void _clearLibrary() {
     _catalogGeneration++;
@@ -500,6 +649,57 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
     });
   }
 
+  Future<void> _showDocumentSources() => _run(() async {
+    final target = _editTarget(_controller);
+    final selection = Map<String, ZoteroCitationItem>.of(_selected);
+    final references = zoteroDocumentReferences(_documentItems);
+    final keys = await _showReview<List<String>>(
+      (_) => ZoteroDocumentSourcesDialog(
+        references: references,
+        selectedKeys: {
+          for (final reference in references)
+            if (_selected.containsKey(reference.selectionKey))
+              reference.selectionKey,
+        },
+        otherSelectionCount: _selected.keys
+            .where((key) => !key.startsWith('document:'))
+            .length,
+      ),
+    );
+    if (!mounted || keys == null) return;
+    if (target != _editTarget(_controller) ||
+        _selected.length != selection.length ||
+        selection.entries.any(
+          (entry) => !identical(_selected[entry.key], entry.value),
+        )) {
+      throw StateError(
+        'The document or source selection changed. Open cited references again to continue.',
+      );
+    }
+    final sources = {
+      for (final reference in references)
+        reference.selectionKey: reference.item,
+    };
+    setState(() {
+      // Retained selections keep their place relative to other tabs. Append
+      // newly selected sources in the order chosen in the cited-source dialog.
+      _selected.removeWhere(
+        (key, _) => key.startsWith('document:') && !keys.contains(key),
+      );
+      for (final key in keys) {
+        _selected.putIfAbsent(key, () => sources[key]!);
+      }
+    });
+  });
+
+  Future<void> _showStoredReferenceDetails(ZoteroCitationItem item) async {
+    if (_busy) return;
+    await showDialog<void>(
+      context: context,
+      builder: (_) => ZoteroStoredReferenceDetailsDialog(item: item),
+    );
+  }
+
   Widget _reviewSelectionButton(String key) => TextButton.icon(
     key: ValueKey(key),
     onPressed: _busy || _selected.isEmpty ? null : _reviewSelection,
@@ -702,16 +902,82 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
   }) => _run(() async {
     _checkTarget();
     _saveFormat();
-    final address = items.length == 1 ? _addressOf(items.single) : null;
+    // Resolve before building a new route so metadata limits report through
+    // the workspace's recoverable error handling, not Flutter's build errors.
+    final availableSources = [
+      for (final reference in zoteroDocumentReferences([
+        ..._documentItems,
+        ..._selected.values,
+        for (final reference in _imported) reference.item,
+      ]))
+        reference.item,
+    ];
+    final searchClient = _client;
+    final searchLibrary = _session.library;
+    final offlineSearchIds = <String, String>{};
     final result = await _showReview<ZoteroCitation>(
-      (_) => _CitationComposer(
+      (_) => ZoteroCitationComposer(
         items: items,
+        availableSources: availableSources,
         existing: field?.citation,
         existingCache: field?.cachedText,
         style: _session.style,
-        loadStyleSnapshot: address == null || _client == null
+        searchZoteroSources: searchClient == null || searchLibrary == null
             ? null
-            : () async {
+            : (query, start) async {
+                // Search the connected library, not just the currently viewed
+                // collection. Only usable citable CSL records enter a draft.
+                final page = await searchClient.items(
+                  searchLibrary,
+                  query: query,
+                  start: start,
+                  limit: 25,
+                );
+                final sources = <ZoteroCitationItem>[];
+                for (final item in page.items) {
+                  if (!item.isCitable || item.cslJson == null) continue;
+                  final uri = item.citationUri;
+                  if (uri != null) {
+                    sources.add(
+                      ZoteroCitationItem.fromCsl(
+                        itemData: item.cslJson!,
+                        uris: [uri.toString()],
+                      ),
+                    );
+                  } else {
+                    // Unsynced local sources cannot be identified by their
+                    // API route; retain a fresh standalone CSL snapshot.
+                    final id = offlineSearchIds.putIfAbsent(item.key, () {
+                      final nonce = Random.secure().nextInt(1 << 30);
+                      final time = DateTime.now().microsecondsSinceEpoch;
+                      return 'quds-offline-$time-$nonce';
+                    });
+                    sources.add(
+                      ZoteroCitationItem.fromJson({
+                        'id': id,
+                        'uris': <String>[],
+                        'itemData': {...item.cslJson!, 'id': id},
+                      }),
+                    );
+                  }
+                }
+                return ZoteroPage<ZoteroCitationItem>(
+                  items: sources,
+                  start: page.start,
+                  limit: page.limit,
+                  totalResults: page.totalResults,
+                  nextStart: page.nextStart,
+                );
+              },
+        loadStyleSnapshot: _client == null
+            ? null
+            : (source) async {
+                final address = _addressOf(source);
+                if (address == null) {
+                  throw const FormatException(
+                    'This source has no linked Zotero identity for a style preview.',
+                  );
+                }
                 final item = await _connectedClient(address).item(
                   address.library,
                   address.key,
@@ -780,10 +1046,23 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
               WordZoteroDocumentData.read(_controller.document),
             ) ==
             null;
+    final current = items == null ? _controller.zoteroFieldAtCaret : null;
+    final selectedField =
+        field ??
+        switch (command) {
+          ZoteroCitingCommand.addEditCitation
+              when current?.kind == ZoteroFieldKind.citation =>
+            current,
+          ZoteroCitingCommand.addEditBibliography
+              when current?.kind == ZoteroFieldKind.bibliography =>
+            current,
+          _ => null,
+        };
     final transaction = _controller.beginZoteroTransaction(
       documentId: id,
-      selectedField: field,
+      selectedField: selectedField,
       seedCitation: chooseStyle ? null : seed,
+      command: command,
     );
     final cancellation = ZoteroCitingCancellation();
     setState(() => _citingCancellation = cancellation);
@@ -867,6 +1146,16 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
       _checkTarget();
       transaction.assertCurrent();
       final result = transaction.session;
+      if (command.insertsNoteText && !result.hasInsertedNoteText) {
+        final content = command == ZoteroCitingCommand.addAnnotation
+            ? 'annotation'
+            : 'note';
+        setState(
+          () => _notice =
+              'No Zotero $content was inserted. The document was kept.',
+        );
+        return;
+      }
       result.prepareReview();
       if (seed != null && !result.hasAcceptedSeedCitation) {
         setState(
@@ -947,7 +1236,7 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
     } finally {
       if (mounted) setState(() => _citingCancellation = null);
     }
-  });
+  }, closeOnSuccess: widget.closeAfterCommand);
 
   Widget _desktopTools() => Card(
     key: const ValueKey('zotero-desktop-tools'),
@@ -977,6 +1266,25 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
                     : () =>
                           _citeWithDesktop(ZoteroCitingCommand.addEditCitation),
                 child: const Text('Citation in Zotero…'),
+              ),
+              OutlinedButton(
+                key: const ValueKey('zotero-add-note'),
+                onPressed: _busy || !_canEdit
+                    ? null
+                    : () => _citeWithDesktop(ZoteroCitingCommand.addNote),
+                child: const Text('Add note from Zotero…'),
+              ),
+              Tooltip(
+                message:
+                    'Insert text annotations and comments with active citations. Requires Zotero 9 or later.',
+                child: OutlinedButton(
+                  key: const ValueKey('zotero-add-annotation'),
+                  onPressed: _busy || !_canEdit
+                      ? null
+                      : () =>
+                            _citeWithDesktop(ZoteroCitingCommand.addAnnotation),
+                  child: const Text('Add annotation from Zotero…'),
+                ),
               ),
               OutlinedButton(
                 onPressed: _busy || !_canEdit
@@ -1286,6 +1594,22 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
     }
   });
 
+  Future<void> _copyStoredSelection() => _run(() async {
+    final text = zoteroSelectionCslJson(_selected.values);
+    try {
+      await Clipboard.setData(ClipboardData(text: text));
+    } on PlatformException {
+      throw const FormatException(
+        'Could not copy stored reference metadata to the clipboard.',
+      );
+    }
+    if (mounted) {
+      setState(
+        () => _notice = 'Stored reference metadata copied to the clipboard.',
+      );
+    }
+  });
+
   Future<({String text, ZoteroFormattedText? formattedText})?>
   _reviewBibliography(
     String title,
@@ -1301,6 +1625,7 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.closeAfterCommand) return _commandDialog();
     final size = MediaQuery.sizeOf(context);
     return PopScope(
       canPop: _citingCancellation == null,
@@ -1311,6 +1636,7 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
           height: max(160, min(760, size.height - 32)),
           child: DefaultTabController(
             length: 3,
+            initialIndex: _initialTab.index,
             child: Column(
               children: [
                 Padding(
@@ -1322,6 +1648,8 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
                       const Expanded(
                         child: Text(
                           'Zotero references',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w600,
@@ -1374,14 +1702,28 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
                 ),
                 if (_busy && !_reviewing)
                   const LinearProgressIndicator(minHeight: 2),
-                if (!_canEdit)
-                  _banner(
-                    _controller.document.trackRevisions
-                        ? 'Turn off Track changes to insert or edit citations. Existing fields remain preserved.'
-                        : 'This document is read-only. You can browse and export reference data.',
+                if (!_canEdit || _error != null || _notice != null)
+                  ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxHeight: min(160, size.height * 0.25),
+                    ),
+                    child: SingleChildScrollView(
+                      key: const ValueKey('zotero-workspace-messages'),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (!_canEdit)
+                            _banner(
+                              _controller.document.trackRevisions
+                                  ? 'Turn off Track changes to insert or edit citations. Existing fields remain preserved.'
+                                  : 'This document is read-only. You can browse and export reference data.',
+                            ),
+                          if (_error != null) _banner(_error!, error: true),
+                          if (_notice != null) _banner(_notice!),
+                        ],
+                      ),
+                    ),
                   ),
-                if (_error != null) _banner(_error!, error: true),
-                if (_notice != null) _banner(_notice!),
                 Expanded(
                   child: TabBarView(
                     children: [
@@ -1390,10 +1732,7 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
                         minHeight: _catalogMinHeight(size),
                       ),
                       _documentTab(),
-                      _scrollableTab(
-                        _importTab(),
-                        minHeight: size.width < 600 ? 656 : 600,
-                      ),
+                      _importTab(),
                     ],
                   ),
                 ),
@@ -1401,6 +1740,72 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _commandDialog() {
+    final command = widget.initialCommand!;
+    final title = switch (command) {
+      ZoteroCitingCommand.addEditCitation => 'Zotero citation',
+      ZoteroCitingCommand.addEditBibliography => 'Zotero bibliography',
+      ZoteroCitingCommand.addNote => 'Add note from Zotero',
+      ZoteroCitingCommand.addAnnotation => 'Add annotation from Zotero',
+      ZoteroCitingCommand.refresh => 'Refresh Zotero citations',
+      ZoteroCitingCommand.setDocPrefs => 'Zotero document style',
+      ZoteroCitingCommand.removeCodes => 'Unlink Zotero citations',
+    };
+    final cancellation = _citingCancellation;
+    return PopScope(
+      canPop: !_busy && !_reviewing,
+      child: AlertDialog(
+        key: const ValueKey('zotero-direct-command'),
+        title: Text(title),
+        scrollable: true,
+        content: SizedBox(
+          width: 460,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (_busy && !_reviewing) ...[
+                const LinearProgressIndicator(),
+                const SizedBox(height: 16),
+              ],
+              Text(
+                _error ??
+                    _notice ??
+                    'Finish or cancel the open dialog in Zotero. You will return to your document when Zotero finishes.',
+                key: const ValueKey('zotero-command-status'),
+              ),
+              if (command == ZoteroCitingCommand.addAnnotation) ...[
+                const SizedBox(height: 12),
+                const Text(
+                  'Requires Zotero 9 or later. Choose text annotations; image and ink annotations are not yet supported.',
+                  key: ValueKey('zotero-annotation-requirements'),
+                ),
+              ],
+            ],
+          ),
+        ),
+        actions: [
+          if (cancellation != null)
+            TextButton(
+              onPressed: cancellation.isCancelled
+                  ? null
+                  : () => setState(cancellation.cancel),
+              child: Text(
+                cancellation.isCancelled ? 'Cancelling…' : 'Cancel operation',
+              ),
+            )
+          else
+            TextButton(
+              onPressed: _busy || _reviewing
+                  ? null
+                  : () => Navigator.of(context).pop(),
+              child: const Text('Return to document'),
+            ),
+        ],
       ),
     );
   }
@@ -1417,18 +1822,22 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
 
   double _catalogMinHeight(Size size) {
     final narrow = size.width < 600;
+    final textScale = max(1.0, MediaQuery.textScalerOf(context).scale(14) / 14);
     // Selection review adds another wrapped action row on narrow screens.
     // Keep space for that row as well as the existing results viewport.
     final base = narrow
         ? (widget.localTransport == null ? 876.0 : 1016.0)
         : (widget.localTransport == null ? 660.0 : 800.0);
-    if (_session.library == null || !_searchOptionsExpanded) return base;
+    if (_session.library == null || !_searchOptionsExpanded) {
+      return base * textScale;
+    }
     // Expanded options wrap at narrow widths. Preserve a usable results list
     // while keeping the default catalog and its paging controls compact.
-    return base +
-        (size.width < 380 ? 520 : (narrow ? 340 : 180)) +
-        140 +
-        (_tags.isEmpty ? 0 : 220);
+    return (base +
+            (size.width < 380 ? 520 : (narrow ? 340 : 180)) +
+            140 +
+            (_tags.isEmpty ? 0 : 220)) *
+        textScale;
   }
 
   Widget _banner(String text, {bool error = false}) => Container(
@@ -1437,7 +1846,7 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
     color: error
         ? Theme.of(context).colorScheme.errorContainer
         : Theme.of(context).colorScheme.surfaceContainerHigh,
-    child: Text(text, maxLines: 4, overflow: TextOverflow.ellipsis),
+    child: Text(text),
   );
 
   Widget _catalogSearchOptions() {
@@ -2229,18 +2638,29 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
                 icon: const Icon(Icons.format_quote),
                 label: const Text('Insert citation'),
               ),
-            PopupMenuButton<ZoteroExportFormat>(
+            PopupMenuButton<_ZoteroSelectionExport>(
               enabled: !_busy && _selected.isNotEmpty,
               tooltip: 'Copy selected references',
-              onSelected: (format) => _copySources(format: format),
-              itemBuilder: (_) => ZoteroExportFormat.values
-                  .map(
-                    (format) => PopupMenuItem(
-                      value: format,
-                      child: Text('Copy ${format.name}'),
-                    ),
-                  )
-                  .toList(),
+              onSelected: (choice) {
+                final format = choice.format;
+                if (format == null) {
+                  _copyStoredSelection();
+                } else {
+                  _copySources(format: format);
+                }
+              },
+              itemBuilder: (_) => [
+                const PopupMenuItem(
+                  value: _ZoteroSelectionExport.stored(),
+                  child: Text('Copy stored CSL JSON'),
+                ),
+                const PopupMenuDivider(),
+                for (final format in ZoteroExportFormat.values)
+                  PopupMenuItem(
+                    value: _ZoteroSelectionExport.connected(format),
+                    child: Text('Copy ${format.name}'),
+                  ),
+              ],
               child: const Padding(
                 padding: EdgeInsets.all(10),
                 child: Text('Export selected ▾'),
@@ -2261,7 +2681,9 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
   };
 
   Widget _documentTab() {
-    final fields = _controller.zoteroFields;
+    final fields = _initialFields ?? _controller.zoteroFields;
+    _initialFields = null;
+    final current = _controller.findZoteroFieldAtCaret(fields: fields);
     // The field list already parsed every citation for this build. Reuse it
     // for action availability instead of rescanning the entire document for
     // each button, including while the Library tab is visible.
@@ -2276,6 +2698,7 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                if (current != null) _currentFieldTools(current),
                 if (widget.localTransport != null) _desktopTools(),
                 const Text(
                   'Citation fields retain source data in DOCX. Basic author–year text supports offline work; Zotero-formatted bibliographies use your selected style.',
@@ -2314,6 +2737,14 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
                   spacing: 8,
                   runSpacing: 6,
                   children: [
+                    OutlinedButton.icon(
+                      key: const ValueKey('zotero-cited-references'),
+                      onPressed: _busy || !hasDocumentItems
+                          ? null
+                          : _showDocumentSources,
+                      icon: const Icon(Icons.library_books_outlined),
+                      label: const Text('Cited references…'),
+                    ),
                     FilledButton(
                       onPressed:
                           _busy ||
@@ -2342,8 +2773,60 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
                           : () => _copySources(),
                       child: const Text('Copy embedded CSL JSON'),
                     ),
+                    OutlinedButton.icon(
+                      key: const ValueKey('zotero-unlink-all'),
+                      onPressed: _busy || !_canEdit || fields.isEmpty
+                          ? null
+                          : _unlinkAll,
+                      icon: const Icon(Icons.link_off),
+                      label: const Text('Unlink all citations…'),
+                    ),
                   ],
                 ),
+                if (_selected.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  Text('${_selected.length} selected across all tabs'),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 6,
+                    children: [
+                      _reviewSelectionButton(
+                        'zotero-review-document-selection',
+                      ),
+                      TextButton.icon(
+                        key: const ValueKey('zotero-copy-document-selection'),
+                        onPressed: _busy ? null : _copyStoredSelection,
+                        icon: const Icon(Icons.copy),
+                        label: const Text('Copy stored CSL JSON'),
+                      ),
+                      if (widget.localTransport != null)
+                        FilledButton(
+                          key: const ValueKey(
+                            'zotero-cite-document-selection-native',
+                          ),
+                          onPressed:
+                              _busy ||
+                                  !_canEdit ||
+                                  _selected.values.any(
+                                    (item) => item.uris.isEmpty,
+                                  )
+                              ? null
+                              : () => _citeWithDesktop(
+                                  ZoteroCitingCommand.addEditCitation,
+                                  items: _selected.values.toList(),
+                                ),
+                          child: const Text('Insert with Zotero…'),
+                        ),
+                      OutlinedButton(
+                        key: const ValueKey('zotero-cite-document-selection'),
+                        onPressed: _busy || !_canEdit
+                            ? null
+                            : () => _compose(_selected.values.toList()),
+                        child: const Text('Review and insert citation…'),
+                      ),
+                    ],
+                  ),
+                ],
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 8),
                   child: Text(
@@ -2378,9 +2861,13 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
                     '${field.kind.name}${field.canEdit ? '' : ' · preserved, read-only structure'}${citation == null ? '' : ' · ${citation.items.length} source(s)'}',
                   ),
                   trailing: PopupMenuButton<String>(
-                    enabled: !_busy && _canEdit && field.isValid,
+                    key: ValueKey('zotero-reference-actions-$index'),
+                    enabled: !_busy && !_controller.isDisposed && field.isValid,
                     tooltip: 'Reference actions',
                     onSelected: (action) {
+                      if (action == 'reveal') {
+                        Navigator.of(context).pop(field);
+                      }
                       if (action == 'native') {
                         _citeWithDesktop(
                           field.kind == ZoteroFieldKind.citation
@@ -2405,17 +2892,25 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
                       }
                     },
                     itemBuilder: (_) => [
-                      if (widget.localTransport != null && field.canEdit)
+                      PopupMenuItem(
+                        value: 'reveal',
+                        enabled: _controller.canRevealZoteroField(field),
+                        child: const Text('Go to reference'),
+                      ),
+                      if (_canEdit &&
+                          widget.localTransport != null &&
+                          field.canEdit)
                         const PopupMenuItem(
                           value: 'native',
                           child: Text('Edit in Zotero…'),
                         ),
-                      if (citation != null && field.canEdit)
+                      if (_canEdit && citation != null && field.canEdit)
                         const PopupMenuItem(
                           value: 'edit',
                           child: Text('Edit citation'),
                         ),
-                      if (field.kind == ZoteroFieldKind.bibliography &&
+                      if (_canEdit &&
+                          field.kind == ZoteroFieldKind.bibliography &&
                           field.canEdit) ...[
                         const PopupMenuItem(
                           value: 'basic',
@@ -2427,7 +2922,7 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
                             child: Text('Update Zotero bibliography'),
                           ),
                       ],
-                      if (!field.locked && !field.nested)
+                      if (_canEdit && !field.locked && !field.nested)
                         const PopupMenuItem(
                           value: 'unlink',
                           child: Text('Convert to text (undoable)'),
@@ -2442,97 +2937,251 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
     );
   }
 
-  Widget _importTab() => Padding(
-    padding: const EdgeInsets.all(16),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const Text(
-          'In Zotero, export references as CSL JSON, then paste the file contents here. Sources stay embedded in the document. Records without a Zotero item URI remain offline references.',
-        ),
-        const SizedBox(height: 12),
-        Expanded(
-          child: TextField(
-            key: const ValueKey('zotero-csl-import'),
-            controller: _import,
-            expands: true,
-            minLines: null,
-            maxLines: null,
-            enabled: !_busy,
-            decoration: const InputDecoration(
-              labelText: 'CSL JSON (up to 1 MB / 500 sources)',
-              alignLabelWithHint: true,
-              border: OutlineInputBorder(),
-            ),
+  Widget _currentFieldTools(WmlZoteroField field) => Card(
+    key: const ValueKey('zotero-current-field'),
+    child: Padding(
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            field.kind == ZoteroFieldKind.citation
+                ? 'Citation at the caret'
+                : 'Bibliography at the caret',
+            style: const TextStyle(fontWeight: FontWeight.bold),
           ),
-        ),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-            OutlinedButton(
-              onPressed: _busy
-                  ? null
-                  : () => _run(() async {
-                      final items = zoteroImportCslJson(_import.text);
-                      setState(() {
-                        _selected.removeWhere(
-                          (key, _) => key.startsWith('import:'),
-                        );
-                        _imported
-                          ..clear()
-                          ..addAll(items);
-                        _notice =
-                            '${items.length} references loaded. Choose a citation below.';
-                      });
-                    }),
-              child: const Text('Load references'),
-            ),
-            if (_imported.isNotEmpty) Text('${_imported.length} loaded'),
-            _reviewSelectionButton('zotero-review-import-selection'),
-          ],
-        ),
-        if (_imported.isNotEmpty)
-          SizedBox(
-            height: 160,
-            child: ListView.builder(
-              itemCount: _imported.length,
-              itemBuilder: (context, index) {
-                final item = _imported[index];
-                final key = 'import:$index:${item.id}';
-                return CheckboxListTile(
-                  dense: true,
-                  value: _selected.containsKey(key),
-                  title: Text(
-                    zoteroHtmlToPlainText(
-                      '${item.itemData?['title'] ?? item.id}',
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+          if (field.canEdit) ...[
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 6,
+              children: [
+                if (widget.localTransport != null)
+                  FilledButton(
+                    key: const ValueKey('zotero-edit-current-native'),
+                    onPressed: _busy || !_canEdit
+                        ? null
+                        : () => _citeWithDesktop(
+                            field.kind == ZoteroFieldKind.citation
+                                ? ZoteroCitingCommand.addEditCitation
+                                : ZoteroCitingCommand.addEditBibliography,
+                            field: field,
+                          ),
+                    child: const Text('Edit current reference in Zotero…'),
                   ),
-                  onChanged: _busy
-                      ? null
-                      : (value) => setState(() {
-                          if (value == false) {
-                            _selected.remove(key);
-                          } else if (_selected.length < 20) {
-                            _selected[key] = item;
-                          }
-                        }),
-                );
-              },
+                if (field.citation != null)
+                  OutlinedButton(
+                    key: const ValueKey('zotero-edit-current'),
+                    onPressed: _busy || !_canEdit
+                        ? null
+                        : () => _compose(field.citation!.items, field: field),
+                    child: const Text('Edit current citation…'),
+                  ),
+              ],
             ),
-          ),
-        FilledButton(
-          onPressed: _busy || !_canEdit || _selected.isEmpty
-              ? null
-              : () => _compose(_selected.values.toList()),
-          child: Text('Insert ${_selected.length} selected source(s)'),
-        ),
-      ],
+          ],
+        ],
+      ),
     ),
   );
+
+  void _filterImportedReferences({bool clear = false}) {
+    setState(() {
+      if (clear) _importSearch.clear();
+    });
+    if (_importResultsScroll.hasClients) _importResultsScroll.jumpTo(0);
+  }
+
+  Widget _importTab() {
+    final visible = filterZoteroImportedReferences(
+      _imported,
+      _importSearch.text,
+    );
+    final outsideResults =
+        _selected.length -
+        visible
+            .where((entry) => _selected.containsKey(entry.selectionKey))
+            .length;
+    final textScale = max(1.0, MediaQuery.textScalerOf(context).scale(14) / 14);
+    return LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        key: const ValueKey('zotero-import-scroll'),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(
+              'In Zotero, export references as CSL JSON, then paste the file contents here. Sources stay embedded in the document. Records without a Zotero item URI remain offline references.',
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              height: max(160, min(300, constraints.maxHeight * 0.45)),
+              child: TextField(
+                key: const ValueKey('zotero-csl-import'),
+                controller: _import,
+                expands: true,
+                minLines: null,
+                maxLines: null,
+                enabled: !_busy,
+                decoration: const InputDecoration(
+                  labelText: 'CSL JSON (up to 1 MB / 500 sources)',
+                  alignLabelWithHint: true,
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                OutlinedButton(
+                  onPressed: _busy
+                      ? null
+                      : () => _run(() async {
+                          final items = zoteroImportCslJson(_import.text);
+                          final references = [
+                            for (final (index, item) in items.indexed)
+                              ZoteroImportedReference(index: index, item: item),
+                          ];
+                          setState(() {
+                            _selected.removeWhere(
+                              (key, _) => key.startsWith('import:'),
+                            );
+                            _imported
+                              ..clear()
+                              ..addAll(references);
+                            _importSearch.clear();
+                            _notice =
+                                '${items.length} references loaded. Search or choose sources below.';
+                          });
+                          if (_importResultsScroll.hasClients) {
+                            _importResultsScroll.jumpTo(0);
+                          }
+                        }),
+                  child: const Text('Load references'),
+                ),
+                _reviewSelectionButton('zotero-review-import-selection'),
+                if (_selected.isNotEmpty)
+                  TextButton.icon(
+                    key: const ValueKey('zotero-copy-import-selection'),
+                    onPressed: _busy ? null : _copyStoredSelection,
+                    icon: const Icon(Icons.copy),
+                    label: const Text('Copy stored CSL JSON'),
+                  ),
+              ],
+            ),
+            if (_imported.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              TextField(
+                key: const ValueKey('zotero-import-search'),
+                controller: _importSearch,
+                enabled: !_busy,
+                decoration: InputDecoration(
+                  labelText: 'Search imported references',
+                  helperText:
+                      'Title, creator, year or DOI. All words must match.',
+                  helperMaxLines: 3,
+                  isDense: true,
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: _importSearch.text.isEmpty
+                      ? null
+                      : IconButton(
+                          key: const ValueKey('zotero-clear-import-search'),
+                          tooltip: 'Clear imported reference search',
+                          onPressed: _busy
+                              ? null
+                              : () => _filterImportedReferences(clear: true),
+                          icon: const Icon(Icons.clear),
+                        ),
+                ),
+                onChanged: (_) => _filterImportedReferences(),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '${visible.length} of ${_imported.length} shown · ${_selected.length} selected'
+                '${outsideResults == 0 ? '' : ' ($outsideResults outside these results)'}',
+                key: const ValueKey('zotero-import-result-count'),
+              ),
+              const SizedBox(height: 4),
+              SizedBox(
+                height: 160 * textScale,
+                child: visible.isEmpty
+                    ? const Center(
+                        child: Text(
+                          'No imported references match this search.',
+                          key: ValueKey('zotero-import-no-matches'),
+                        ),
+                      )
+                    : ListView.builder(
+                        key: const ValueKey('zotero-import-results'),
+                        controller: _importResultsScroll,
+                        itemCount: visible.length,
+                        itemBuilder: (context, index) {
+                          final entry = visible[index];
+                          final key = entry.selectionKey;
+                          return Row(
+                            children: [
+                              Expanded(
+                                child: CheckboxListTile(
+                                  key: ValueKey(key),
+                                  dense: true,
+                                  value: _selected.containsKey(key),
+                                  title: Text(
+                                    entry.title,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  subtitle: entry.subtitle.isEmpty
+                                      ? null
+                                      : Text(
+                                          entry.subtitle,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                  onChanged: _busy
+                                      ? null
+                                      : (value) => setState(() {
+                                          _error = null;
+                                          if (value == false) {
+                                            _selected.remove(key);
+                                          } else if (_selected.length < 20) {
+                                            _selected[key] = entry.item;
+                                          } else {
+                                            _error =
+                                                'Select at most 20 sources per citation.';
+                                          }
+                                        }),
+                                ),
+                              ),
+                              IconButton(
+                                key: ValueKey('zotero-import-details-$key'),
+                                tooltip: 'Stored reference details',
+                                onPressed: _busy
+                                    ? null
+                                    : () => _showStoredReferenceDetails(
+                                        entry.item,
+                                      ),
+                                icon: const Icon(Icons.info_outline),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+              ),
+            ],
+            FilledButton(
+              onPressed: _busy || !_canEdit || _selected.isEmpty
+                  ? null
+                  : () => _compose(_selected.values.toList()),
+              child: Text('Insert ${_selected.length} selected source(s)'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _BibliographyReview extends StatefulWidget {
@@ -2701,349 +3350,6 @@ class _ZoteroFormattedPreview extends StatelessWidget {
         ),
         child: Text.rich(content(0.65)),
       ),
-    );
-  }
-}
-
-class _CitationComposer extends StatefulWidget {
-  const _CitationComposer({
-    required this.items,
-    this.existing,
-    this.existingCache,
-    this.loadStyleSnapshot,
-    this.style = 'apa',
-  });
-  final List<ZoteroCitationItem> items;
-  final ZoteroCitation? existing;
-  final String? existingCache;
-  final Future<String> Function()? loadStyleSnapshot;
-  final String style;
-  @override
-  State<_CitationComposer> createState() => _CitationComposerState();
-}
-
-class _CitationComposerState extends State<_CitationComposer> {
-  late List<ZoteroCitationItem> _items;
-  late final TextEditingController _text;
-  var _basic = true;
-  var _loading = false;
-  String? _error;
-  @override
-  void initState() {
-    super.initState();
-    _items = List.of(widget.items);
-    _basic =
-        widget.existing == null ||
-        widget.existing!.properties['qudsFormat'] == 'basic-author-year';
-    _text = TextEditingController(
-      text:
-          widget.existingCache ??
-          widget.existing?.plainCitation ??
-          zoteroBasicCitation(_items),
-    );
-  }
-
-  @override
-  void dispose() {
-    _text.dispose();
-    super.dispose();
-  }
-
-  void _update(int index, Map<String, dynamic> changes) {
-    setState(() {
-      _items[index] = ZoteroCitationItem.fromJson({
-        ..._items[index].toJson(),
-        ...changes,
-      });
-      if (_basic) _text.text = zoteroBasicCitation(_items);
-    });
-  }
-
-  Future<void> _loadStyle() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-    try {
-      final text = await widget.loadStyleSnapshot!();
-      if (mounted) {
-        setState(() {
-          _basic = false;
-          _text.text = text;
-        });
-      }
-    } catch (error) {
-      if (mounted) {
-        setState(
-          () => _error = switch (error) {
-            ZoteroApiException e => e.message,
-            FormatException e => e.message,
-            StateError e => e.message,
-            _ =>
-              'The style preview could not be loaded. Your current text was kept.',
-          },
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) => AlertDialog(
-    title: Text(
-      widget.existing == null
-          ? 'Insert Zotero citation'
-          : 'Edit Zotero citation',
-    ),
-    content: SizedBox(
-      width: 650,
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const Text(
-              'Source metadata stays linked. Review the visible text before inserting.',
-            ),
-            for (var index = 0; index < _items.length; index++)
-              _sourceOptions(index),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<bool>(
-              key: ValueKey(_basic),
-              initialValue: _basic,
-              isExpanded: true,
-              decoration: const InputDecoration(
-                labelText: 'Citation text format',
-              ),
-              items: const [
-                DropdownMenuItem(
-                  value: true,
-                  child: Text(
-                    'Basic author–year',
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                DropdownMenuItem(
-                  value: false,
-                  child: Text(
-                    'Custom text / preserve current format',
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-              onChanged: _loading
-                  ? null
-                  : (value) => setState(() {
-                      _basic = value!;
-                      if (_basic) _text.text = zoteroBasicCitation(_items);
-                    }),
-            ),
-            const SizedBox(height: 10),
-            if (widget.loadStyleSnapshot != null) ...[
-              OutlinedButton(
-                onPressed: _loading ? null : _loadStyle,
-                child: Text(
-                  _loading
-                      ? 'Loading style preview…'
-                      : 'Use ${widget.style} single-source preview',
-                ),
-              ),
-              const Text(
-                'Individual preview only. Review locators and document numbering before inserting.',
-                style: TextStyle(fontSize: 12),
-              ),
-            ],
-            if (_error != null)
-              Text(
-                _error!,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              ),
-            TextField(
-              key: const ValueKey('zotero-citation-preview'),
-              controller: _text,
-              minLines: 2,
-              maxLines: 5,
-              readOnly: _basic,
-              decoration: const InputDecoration(
-                labelText: 'Visible citation text',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Basic format is a portable fallback, not a full CSL style. Imported citations keep their current text until you choose a replacement.',
-              style: TextStyle(fontSize: 12),
-            ),
-          ],
-        ),
-      ),
-    ),
-    actions: [
-      TextButton(
-        onPressed: () => Navigator.pop(context),
-        child: const Text('Cancel'),
-      ),
-      FilledButton(
-        onPressed: _loading
-            ? null
-            : () {
-                if (_text.text.trim().isEmpty) return;
-                final existing = widget.existing;
-                // Imported formattedCitation strings can use a different
-                // processor dialect. Preserve them verbatim while the visible
-                // cache is unchanged; never reinterpret them as HTML here.
-                final formattedCitation =
-                    !_basic &&
-                        existing != null &&
-                        _text.text ==
-                            (widget.existingCache ?? existing.plainCitation)
-                    ? existing.formattedCitation
-                    : null;
-                final citation = existing == null
-                    ? ZoteroCitation(
-                        citationId:
-                            'Q${DateTime.now().microsecondsSinceEpoch.toRadixString(36)}${Random.secure().nextInt(1 << 30).toRadixString(36)}',
-                        items: _items,
-                        plainCitation: _text.text,
-                      )
-                    : existing.withItems(
-                        _items,
-                        plainCitation: _text.text,
-                        formattedCitation: formattedCitation,
-                      );
-                Navigator.pop(
-                  context,
-                  ZoteroCitation.fromJson({
-                    ...citation.toJson(),
-                    'properties': {
-                      ...citation.properties,
-                      'qudsFormat': _basic ? 'basic-author-year' : 'custom',
-                    },
-                  }),
-                );
-              },
-        child: Text(
-          widget.existing == null ? 'Insert citation' : 'Update citation',
-        ),
-      ),
-    ],
-  );
-
-  Widget _sourceOptions(int index) {
-    final item = _items[index];
-    return ExpansionTile(
-      tilePadding: EdgeInsets.zero,
-      title: Text(
-        zoteroHtmlToPlainText('${item.itemData?['title'] ?? item.id}'),
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-      ),
-      subtitle: Text(
-        item.uris.isEmpty ? 'Offline embedded source' : 'Linked Zotero source',
-        style: const TextStyle(fontSize: 12),
-      ),
-      children: [
-        Wrap(
-          spacing: 10,
-          runSpacing: 8,
-          children: [
-            SizedBox(
-              width: 145,
-              child: TextFormField(
-                initialValue: item.locator,
-                decoration: const InputDecoration(
-                  labelText: 'Locator (e.g. 12–15)',
-                  isDense: true,
-                ),
-                onChanged: (value) => _update(index, {'locator': value}),
-              ),
-            ),
-            SizedBox(
-              width: 150,
-              child: DropdownButtonFormField<String>(
-                isExpanded: true,
-                initialValue:
-                    const [
-                      '',
-                      'page',
-                      'chapter',
-                      'section',
-                      'paragraph',
-                      'volume',
-                      'figure',
-                    ].contains(item.label)
-                    ? item.label
-                    : '',
-                decoration: const InputDecoration(
-                  labelText: 'Locator label',
-                  isDense: true,
-                ),
-                items:
-                    const [
-                          '',
-                          'page',
-                          'chapter',
-                          'section',
-                          'paragraph',
-                          'volume',
-                          'figure',
-                        ]
-                        .map(
-                          (label) => DropdownMenuItem(
-                            value: label,
-                            child: Text(
-                              label.isEmpty ? 'Page (default)' : label,
-                            ),
-                          ),
-                        )
-                        .toList(),
-                onChanged: (value) => _update(index, {'label': value ?? ''}),
-              ),
-            ),
-            SizedBox(
-              width: 160,
-              child: TextFormField(
-                initialValue: item.prefix,
-                decoration: const InputDecoration(
-                  labelText: 'Prefix',
-                  isDense: true,
-                ),
-                onChanged: (value) => _update(index, {'prefix': value}),
-              ),
-            ),
-            SizedBox(
-              width: 160,
-              child: TextFormField(
-                initialValue: item.suffix,
-                decoration: const InputDecoration(
-                  labelText: 'Suffix',
-                  isDense: true,
-                ),
-                onChanged: (value) => _update(index, {'suffix': value}),
-              ),
-            ),
-          ],
-        ),
-        CheckboxListTile(
-          dense: true,
-          title: const Text('Suppress author'),
-          value: item.suppressAuthor,
-          onChanged: (value) => _update(index, {
-            'suppress-author': value ?? false,
-            'author-only': false,
-          }),
-        ),
-        CheckboxListTile(
-          dense: true,
-          title: const Text('Author only'),
-          value: item.authorOnly,
-          onChanged: (value) => _update(index, {
-            'author-only': value ?? false,
-            'suppress-author': false,
-          }),
-        ),
-      ],
     );
   }
 }

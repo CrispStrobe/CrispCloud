@@ -63,6 +63,7 @@ class WordCanvas extends LeafRenderObjectWidget {
     this.selectedCommentId,
     this.onSelectComment,
     this.onContextMenu,
+    this.onReviewTap,
     this.onInsertTableRowAt,
     this.onInsertTableColumnAt,
     this.onBeginTableResize,
@@ -213,6 +214,9 @@ class WordCanvas extends LeafRenderObjectWidget {
   /// onContextMenu API.
   final ValueChanged<OfficeContextHit>? onContextMenu;
 
+  /// A completed primary tap on checked text or a tracked change.
+  final ValueChanged<OfficeContextHit>? onReviewTap;
+
   /// Function API.
   final void Function(WmlTable table, int index)? onInsertTableRowAt;
 
@@ -332,6 +336,7 @@ class WordCanvas extends LeafRenderObjectWidget {
       selectedCommentId: selectedCommentId,
       onSelectComment: onSelectComment,
       onContextMenu: onContextMenu,
+      onReviewTap: onReviewTap,
       onInsertTableRowAt: onInsertTableRowAt,
       onInsertTableColumnAt: onInsertTableColumnAt,
       onBeginTableResize: onBeginTableResize,
@@ -401,6 +406,7 @@ class WordCanvas extends LeafRenderObjectWidget {
       ..selectedCommentId = selectedCommentId
       ..onSelectComment = onSelectComment
       ..onContextMenu = onContextMenu
+      ..onReviewTap = onReviewTap
       ..onInsertTableRowAt = onInsertTableRowAt
       ..onInsertTableColumnAt = onInsertTableColumnAt
       ..onBeginTableResize = onBeginTableResize
@@ -480,6 +486,7 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
     this.selectedCommentId,
     this.onSelectComment,
     this.onContextMenu,
+    this.onReviewTap,
     this.onInsertTableRowAt,
     this.onInsertTableColumnAt,
     this.onBeginTableResize,
@@ -628,6 +635,9 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
   /// onContextMenu API.
   ValueChanged<OfficeContextHit>? onContextMenu;
 
+  /// A completed primary tap on checked text or a tracked change.
+  ValueChanged<OfficeContextHit>? onReviewTap;
+
   /// Function API.
   void Function(WmlTable table, int index)? onInsertTableRowAt;
 
@@ -705,6 +715,38 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
 
   /// editingFooter API.
   bool get _editingHeaderFooter => editingHeader || editingFooter;
+
+  bool _isActiveHeaderFooterLine(LaidOutLine line) =>
+      _editingHeaderFooter &&
+      storyParagraphs?.contains(line.sourceParagraph) == true &&
+      (editingFooter ? line.isFooter : !line.isFooter);
+
+  bool _pageUsesHeaderFooterStory(LaidOutPage page) =>
+      (editingFooter ? page.footer : page.header).any(
+        _isActiveHeaderFooterLine,
+      );
+
+  bool _caretIsOnLine(LaidOutLine line, {required bool lastOfParagraph}) {
+    if (line.paragraphIndex != caret.paragraphIndex) return false;
+    final offsets = line.proofingOffsets;
+    if (line.glyphs.isNotEmpty || offsets == null) {
+      return caret.isOnLine(line, lastOfParagraph: lastOfParagraph);
+    }
+    final sourceOffsets = offsets.whereType<int>().toList(growable: false);
+    if (sourceOffsets.isEmpty) return false;
+    if (sourceOffsets.contains(caret.logicalIndex)) return true;
+    final source = line.sourceParagraph?.text ?? line.sourceText ?? '';
+    // Trimmed whitespace stays in the source. Its caret sits at the nearest
+    // painted edge; tab-separated parts keep their own source boundaries.
+    final first = sourceOffsets.first;
+    final last = sourceOffsets.last;
+    return (caret.logicalIndex < first &&
+            first <= source.length &&
+            source.substring(0, first).trim().isEmpty) ||
+        (caret.logicalIndex > last &&
+            last <= source.length &&
+            source.substring(last).trim().isEmpty);
+  }
 
   TapGestureRecognizer? _tap;
   PanGestureRecognizer? _pan;
@@ -1212,7 +1254,14 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
   }
 
   void _ensureRecognizers() {
-    _tap ??= TapGestureRecognizer(debugOwner: this);
+    _tap ??= TapGestureRecognizer(debugOwner: this)
+      ..onTapUp = (details) {
+        if (_tapCount == 1 &&
+            !HardwareKeyboard.instance.isShiftPressed &&
+            !_ctrlFollow) {
+          _handleReviewTap(details.localPosition, details.globalPosition);
+        }
+      };
     _pan ??= PanGestureRecognizer(debugOwner: this)
       ..onUpdate = (DragUpdateDetails details) {
         if (_scrollDrag) {
@@ -1575,12 +1624,14 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
             ]
           : page.lines;
       for (final LaidOutLine line in pool) {
-        if (line.paragraphIndex != index) {
+        if (line.paragraphIndex != index ||
+            (line.sourceParagraph != null &&
+                !identical(line.sourceParagraph, para))) {
           continue;
         }
         first ??= line;
         final bool last = _isLastParagraphLine(page, line);
-        if (caret.isOnLine(line, lastOfParagraph: last)) {
+        if (_caretIsOnLine(line, lastOfParagraph: last)) {
           return line;
         }
       }
@@ -1589,6 +1640,9 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
   }
 
   LaidOutBox? _cellBoxForParagraph(int paraIndex) {
+    // Header/footer paragraph indices belong to a separate story. A body
+    // table at the same index cannot supply that story's ruler bounds.
+    if (_editingHeaderFooter) return null;
     for (final LaidOutPage page in laidOut.pages) {
       for (final LaidOutBox box in page.frames) {
         if (box.table == null) {
@@ -1872,6 +1926,149 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
     );
   }
 
+  /// Context at the current text caret for keyboard-invoked review menus.
+  ///
+  /// [proofingOffset] may identify the start of a selected finding while the
+  /// menu remains anchored to the visual caret. Only the menu position is
+  /// clamped when the caret is offscreen; the source, selection, viewport and
+  /// layout are left unchanged. An unavailable or mismatched story has no hit.
+  OfficeContextHit? contextHitForCaret({int? proofingOffset}) {
+    if (!attached ||
+        !hasSize ||
+        size.isEmpty ||
+        !size.width.isFinite ||
+        !size.height.isFinite ||
+        laidOut.pages.isEmpty ||
+        (editingHeader && editingFooter)) {
+      return null;
+    }
+    final paragraphs =
+        storyParagraphs ??
+        (_editingHeaderFooter
+            ? null
+            : document.paragraphs.toList(growable: false));
+    final paragraphIndex = caret.paragraphIndex;
+    if (paragraphs == null ||
+        paragraphIndex < 0 ||
+        paragraphIndex >= paragraphs.length) {
+      return null;
+    }
+    final paragraph = paragraphs[paragraphIndex];
+    final textLength = paragraph.text.length;
+    final sourceOffset = proofingOffset ?? caret.logicalIndex;
+    if (caret.logicalIndex < 0 ||
+        caret.logicalIndex > textLength ||
+        sourceOffset < 0 ||
+        sourceOffset > textLength) {
+      return null;
+    }
+
+    LaidOutPage? caretPage;
+    LaidOutLine? caretLine;
+    Offset? anchor;
+    var nearestDistance = double.infinity;
+    for (var pageIndex = 0; pageIndex < laidOut.pages.length; pageIndex++) {
+      final page = laidOut.pages[pageIndex];
+      final lines = editingFooter
+          ? page.footer
+          : editingHeader
+          ? page.header
+          : page.lines;
+      for (final line in lines) {
+        if (line.pageIndex != pageIndex ||
+            line.paragraphIndex != paragraphIndex ||
+            !identical(line.sourceParagraph, paragraph) ||
+            !_caretIsOnLine(
+              line,
+              lastOfParagraph:
+                  line.glyphs.isEmpty ||
+                  CaretEngine.logicalSpan(line).max == textLength,
+            )) {
+          continue;
+        }
+        final stem = _caretPaintRect(
+          line,
+          paragraphRtl: _paragraphRtl(paragraphIndex, line: line),
+        );
+        final position = windowForPagePoint(pageIndex, stem.bottomLeft);
+        if (!position.dx.isFinite || !position.dy.isFinite) continue;
+        final visiblePosition = Offset(
+          position.dx.clamp(0.0, math.max(0.0, size.width - 1)),
+          position.dy.clamp(0.0, math.max(0.0, size.height - 1)),
+        );
+        final distance = (position - visiblePosition).distanceSquared;
+        // Repeated headers/footers share source identity. Prefer the visible
+        // occurrence, without revealing another page or moving its caret.
+        if (distance < nearestDistance) {
+          nearestDistance = distance;
+          caretPage = page;
+          caretLine = line;
+          anchor = visiblePosition;
+        }
+      }
+    }
+    if (caretPage == null || caretLine == null || anchor == null) return null;
+    final globalPosition = localToGlobal(anchor);
+    if (!globalPosition.dx.isFinite || !globalPosition.dy.isFinite) return null;
+
+    var cell = _cellForLine(
+      caretPage,
+      caretLine,
+      containingFrame: _frameContaining(paragraph),
+    );
+    if (cell != null) {
+      final table = cell.table;
+      final row = cell.tableRow;
+      final column = cell.tableCol;
+      if (table == null ||
+          row == null ||
+          row < 0 ||
+          row >= table.rows.length ||
+          column == null ||
+          column < 0 ||
+          column >= table.rows[row].cells.length ||
+          !WordTree.paragraphs(
+            table.rows[row].cells[column].blocks,
+          ).any((candidate) => identical(candidate, paragraph))) {
+        cell = null;
+      }
+    }
+
+    WmlRun? caretRun;
+    var runEnd = 0;
+    for (final inline in paragraph.inlines) {
+      if (inline is! WmlRun) continue;
+      caretRun = inline;
+      runEnd += inline.text.length;
+      if (caret.logicalIndex < runEnd) break;
+    }
+    final link = caretRun?.hyperlink ?? caretLine.hyperlink;
+    int? commentId;
+    for (final id in caretRun?.commentIds.reversed ?? const <int>[]) {
+      if (WordComment.byId(document, id) != null) {
+        commentId = id;
+        break;
+      }
+    }
+    return OfficeContextHit(
+      kind: cell != null
+          ? OfficeContextKind.table
+          : commentId != null
+          ? OfficeContextKind.comment
+          : link != null
+          ? OfficeContextKind.hyperlink
+          : OfficeContextKind.document,
+      globalPosition: globalPosition,
+      paragraph: paragraph,
+      proofingOffset: sourceOffset,
+      table: cell?.table,
+      tableRow: cell?.tableRow,
+      tableCol: cell?.tableCol,
+      link: link,
+      commentId: commentId,
+    );
+  }
+
   (int, Offset) _hitPage(Offset window) {
     if (compact) {
       return (0, window);
@@ -1907,6 +2104,12 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
         if (chromeFooter != null &&
             ((chromeFooter && editingFooter) ||
                 (!chromeFooter && editingHeader))) {
+          if (!_pageUsesHeaderFooterStory(laidOut.pages[page])) {
+            // A first/even page or another section can show a different
+            // story with the same paragraph indices. Switch before typing.
+            if (onBeginHeaderFooterEdit == null) return;
+            onBeginHeaderFooterEdit!.call(page, footer: chromeFooter);
+          }
           _placeChromeCaret(laidOut.pages[page], local, extend: extend);
           markNeedsPaint();
           onChanged?.call();
@@ -2034,6 +2237,9 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
   }
 
   bool? _chromeHit(LaidOutPage page, Offset local) {
+    // A compact story surface has no page chrome. Its first lines can still
+    // overlap the layout's default header band.
+    if (compact) return null;
     if (page.footerBand.contains(local.dx, local.dy)) {
       return true;
     }
@@ -2054,8 +2260,11 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
       line = story.last;
     }
     if (line != null) {
+      final displayedOffset = _hitOffsetOnLine(line, local);
+      final sourceOffset = line.proofingOffsetAt(displayedOffset);
+      if (sourceOffset == null) return;
       caret.paragraphIndex = line.paragraphIndex;
-      caret.logicalIndex = _hitOffsetOnLine(line, local);
+      caret.logicalIndex = sourceOffset;
     } else {
       caret.paragraphIndex = 0;
       caret.logicalIndex = 0;
@@ -2112,6 +2321,9 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
       }
     }
     if (_editingHeaderFooter) {
+      // A drag may extend within repeated occurrences of this source story,
+      // but never across unrelated first/even/default stories.
+      if (!_pageUsesHeaderFooterStory(laidPage)) return;
       _placeChromeCaret(laidPage, local, extend: extend);
       if (notify) {
         markNeedsPaint();
@@ -2526,6 +2738,60 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
     return _lineAt(page, local);
   }
 
+  void _handleReviewTap(Offset window, Offset globalPosition) {
+    if (onReviewTap == null || !config.allowsSelection) return;
+    final (pageIndex, local) = _hitPage(window);
+    if (pageIndex < 0 || pageIndex >= laidOut.pages.length) return;
+    final page = laidOut.pages[pageIndex];
+    if (_visualAt(page, local) != null || _equationAt(page, local) != null) {
+      return;
+    }
+    final line = !compact && page.headerBand.contains(local.dx, local.dy)
+        ? _nearestChromeLine(page.header, local)
+        : !compact && page.footerBand.contains(local.dx, local.dy)
+        ? _nearestChromeLine(page.footer, local)
+        : _proofingLineAt(page, local);
+    if (line == null ||
+        local.dx < line.x ||
+        local.dx > line.x + line.width ||
+        local.dy < line.y ||
+        local.dy > line.y + line.height) {
+      return;
+    }
+    final paragraph = line.sourceParagraph;
+    if (paragraph == null) return;
+    final offset = line.proofingOffsetAt(_hitOffsetOnLine(line, local));
+    if (offset == null) return;
+    final hasIssue =
+        proofingFindings[paragraph]?.any(
+          (finding) =>
+              offset >= finding.start &&
+              (finding.start == finding.end
+                  ? offset == finding.end
+                  : offset < finding.end),
+        ) ??
+        false;
+    final hasRevision = document.revisions.any(
+      (revision) =>
+          revision.accepted == null &&
+          identical(
+            WordRevisions.resolveParagraph(document, revision),
+            paragraph,
+          ) &&
+          offset >= revision.start &&
+          offset < revision.end,
+    );
+    if (!hasIssue && !hasRevision) return;
+    onReviewTap!(
+      OfficeContextHit(
+        kind: OfficeContextKind.document,
+        globalPosition: globalPosition,
+        paragraph: paragraph,
+        proofingOffset: offset,
+      ),
+    );
+  }
+
   void _handleContext(PointerDownEvent event) {
     final (int pageHint, Offset localHint) = _hitPage(event.localPosition);
     final _TableGeom? handle = pageHint >= 0 && pageHint < laidOut.pages.length
@@ -2573,9 +2839,9 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
     }
     final LaidOutLine? textLine =
         visual == null && equation == null && handle == null
-        ? laidPage.headerBand.contains(local.dx, local.dy)
+        ? !compact && laidPage.headerBand.contains(local.dx, local.dy)
               ? _nearestChromeLine(laidPage.header, local)
-              : laidPage.footerBand.contains(local.dx, local.dy)
+              : !compact && laidPage.footerBand.contains(local.dx, local.dy)
               ? _nearestChromeLine(laidPage.footer, local)
               : _proofingLineAt(laidPage, local)
         : null;
@@ -3331,6 +3597,10 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
       _paintFrames(canvas, page, paintHandles: false);
       _paintSelectedTables(canvas, page);
       _paintTableBandChrome(canvas, page);
+      if (_pageUsesHeaderFooterStory(page)) {
+        // Put the editing background below the actual text and selection.
+        _paintHeaderFooterChrome(canvas, page);
+      }
       for (final LaidOutLine line in page.header) {
         _drawOverlay(
           canvas,
@@ -3420,8 +3690,8 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
           marginRight: _marginRightOf(page),
         );
       }
-      if (_editingHeaderFooter) {
-        _paintHeaderFooterChrome(canvas, page);
+      if (_pageUsesHeaderFooterStory(page)) {
+        _paintHeaderFooterCaret(canvas, page);
       }
       canvas.restore();
       canvas.save();
@@ -3471,6 +3741,9 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
   }
 
   bool _cellSelected(LaidOutBox box) {
+    // A selection in page chrome must not select body cells that happen to
+    // have matching paragraph indices.
+    if (_editingHeaderFooter) return false;
     if (selectedTable != null &&
         box.table != null &&
         identical(selectedTable, box.table)) {
@@ -4258,15 +4531,6 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1,
     );
-    final List<LaidOutLine> story = editingFooter ? page.footer : page.header;
-    for (final LaidOutLine line in story) {
-      if (config.showsCaret &&
-          hasFocus &&
-          caret.visible &&
-          caret.isOnLine(line, lastOfParagraph: identical(line, story.last))) {
-        _paintCaret(canvas, line);
-      }
-    }
     final TextPainter label = TextPainter(
       text: TextSpan(
         text: editingFooter ? 'Footer' : 'Header',
@@ -4280,6 +4544,17 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
     )..layout();
     label.paint(canvas, Offset(band.left + 8, band.top + 4));
     label.dispose();
+  }
+
+  void _paintHeaderFooterCaret(Canvas canvas, LaidOutPage page) {
+    if (!config.showsCaret || !hasFocus || !caret.visible) return;
+    final story = editingFooter ? page.footer : page.header;
+    for (final line in story) {
+      if (_isActiveHeaderFooterLine(line) &&
+          _caretIsOnLine(line, lastOfParagraph: identical(line, story.last))) {
+        _paintCaret(canvas, line);
+      }
+    }
   }
 
   double _marginRightOf(LaidOutPage page) {
@@ -4361,6 +4636,32 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
       pageWidth: pageWidth,
       marginRight: marginRight,
     );
+    if (_isActiveHeaderFooterLine(line) &&
+        config.allowsSelection &&
+        !caret.isCollapsed &&
+        caret.coversParagraph(line.paragraphIndex)) {
+      final selection = caret.normalizedRange;
+      final start = line.paragraphIndex == selection.startPara
+          ? selection.startIdx
+          : 0;
+      final end = line.paragraphIndex == selection.endPara
+          ? selection.endIdx
+          : (line.sourceParagraph?.text.length ?? 0);
+      for (final range in WordProofingGeometry.displayRanges(
+        line,
+        start,
+        end,
+      )) {
+        for (final box in painter.getBoxesForSelection(
+          TextSelection(baseOffset: range.start, extentOffset: range.end),
+        )) {
+          canvas.drawRect(
+            box.toRect().shift(Offset(x, line.y)),
+            Paint()..color = _textSelectionFill,
+          );
+        }
+      }
+    }
     painter.paint(canvas, Offset(x, line.y));
     _paintProofingOverlay(canvas, line, painter, x);
     painter.dispose();
@@ -4598,15 +4899,19 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
   List<WmlParagraph> _storyForLine(LaidOutLine? line) {
     if (storyParagraphs != null &&
         _editingHeaderFooter &&
-        (line == null ||
-            (editingFooter && line.isFooter) ||
-            (editingHeader && !line.isFooter))) {
+        (line == null || _isActiveHeaderFooterLine(line))) {
       return storyParagraphs!;
     }
     if (line != null &&
         (line.isFooter || (line.overlayText != null && line.glyphs.isEmpty))) {
       final WmlSection? section = _pageSectionForLine(line);
       if (section != null) {
+        final stories = line.isFooter
+            ? [section.footer, section.firstFooter, section.evenFooter]
+            : [section.header, section.firstHeader, section.evenHeader];
+        for (final story in stories) {
+          if (story.contains(line.sourceParagraph)) return story;
+        }
         return line.isFooter ? section.footer : section.header;
       }
     }
@@ -4656,7 +4961,7 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
   }
 
   void _paintCaret(Canvas canvas, LaidOutLine line) {
-    final bool paragraphRtl = _paragraphRtl(line.paragraphIndex);
+    final bool paragraphRtl = _paragraphRtl(line.paragraphIndex, line: line);
     final String paragraph =
         line.sourceText ??
         line.sourceParagraph?.text ??
@@ -4693,6 +4998,45 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
   }
 
   Rect _caretPaintRect(LaidOutLine line, {required bool paragraphRtl}) {
+    if (line.glyphs.isEmpty && line.overlayText != null) {
+      final painter = _overlayPainter(line);
+      final offsets = line.proofingOffsets;
+      var displayOffset = caret.logicalIndex;
+      if (offsets != null) {
+        var nearestDistance = 1 << 30;
+        displayOffset = 0;
+        for (var index = 0; index < offsets.length; index++) {
+          final source = offsets[index];
+          if (source == null) continue;
+          final distance = (source - caret.logicalIndex).abs();
+          if (distance < nearestDistance) {
+            nearestDistance = distance;
+            displayOffset = index;
+          }
+        }
+      }
+      final page = line.pageIndex >= 0 && line.pageIndex < laidOut.pages.length
+          ? laidOut.pages[line.pageIndex]
+          : null;
+      final origin = _overlayOrigin(
+        line,
+        painter,
+        pageWidth: page?.width,
+        marginRight: page == null ? null : _marginRightOf(page),
+      );
+      final caretOffset = painter.getOffsetForCaret(
+        TextPosition(offset: displayOffset.clamp(0, line.overlayText!.length)),
+        Rect.zero,
+      );
+      final rect = Rect.fromLTWH(
+        origin + caretOffset.dx,
+        line.y + caretOffset.dy,
+        1,
+        painter.height,
+      );
+      painter.dispose();
+      return rect;
+    }
     final String paragraph =
         line.sourceText ??
         line.sourceParagraph?.text ??

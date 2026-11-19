@@ -554,7 +554,7 @@ void main() {
   );
 
   test(
-    'unsupported HTML/text insertion capability is refused before advertising it',
+    'unsupported document transfer capability is refused before advertising it',
     () async {
       var n = 0;
       await expectLater(
@@ -562,7 +562,7 @@ void main() {
           (_) async => ++n == 1
               ? _command('Application.getActiveDocument', [])
               : _complete(),
-          handler: (_, _) => {..._active(), 'supportsTextInsertion': true},
+          handler: (_, _) => {..._active(), 'supportsImportExport': true},
         ),
         throwsA(_failure(ZoteroCitingErrorKind.invalidResponse)),
       );

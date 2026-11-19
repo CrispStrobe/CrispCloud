@@ -176,6 +176,9 @@ abstract final class OfficeContextMenu {
     required List<OfficeContextAction> actions,
     required ValueChanged<String> onSelect,
     String? filterHint,
+    bool enableFiltering = true,
+    bool keyboardNavigation = false,
+    VoidCallback? onDismiss,
   }) {
     if (actions.isEmpty) {
       return null;
@@ -192,6 +195,7 @@ abstract final class OfficeContextMenu {
     }
     final TextDirection direction =
         Directionality.maybeOf(context) ?? TextDirection.ltr;
+    final sourceRoute = ModalRoute.of(context);
     var closed = false;
     late final OverlayEntry entry;
     void close() {
@@ -200,6 +204,7 @@ abstract final class OfficeContextMenu {
       }
       closed = true;
       OfficeContextMenu.dismiss(entry);
+      onDismiss?.call();
     }
 
     entry = OverlayEntry(
@@ -210,10 +215,12 @@ abstract final class OfficeContextMenu {
           theme: theme,
           direction: direction,
           filterHint: filterHint,
+          enableFiltering: enableFiltering,
+          keyboardNavigation: keyboardNavigation,
           onDismiss: close,
           onSelect: (String id) {
             close();
-            onSelect(id);
+            if (sourceRoute?.isCurrent ?? true) onSelect(id);
           },
         );
       },
@@ -372,7 +379,7 @@ abstract final class OfficeContextMenu {
     if (hit.kind == OfficeContextKind.comment && hit.commentId != null) {
       final WmlComment? comment = WordComment.byId(
         controller.document,
-        hit.commentId!,
+        WordComment.threadRootId(controller.document, hit.commentId!),
       );
       final bool resolved = comment?.resolved ?? false;
       items.addAll(<OfficeContextAction>[
@@ -823,6 +830,8 @@ class _OfficeContextOverlay extends StatefulWidget {
     required this.onDismiss,
     required this.onSelect,
     this.filterHint,
+    this.enableFiltering = true,
+    this.keyboardNavigation = false,
   });
 
   /// globalPosition API.
@@ -840,6 +849,14 @@ class _OfficeContextOverlay extends StatefulWidget {
   /// Shown while the query is empty. Typing filters when this is set or the
   /// menu has more than eight commands.
   final String? filterHint;
+
+  /// Inline writing suggestions leave typing and the IME with the document.
+  /// Regular context menus retain their searchable keyboard interaction.
+  final bool enableFiltering;
+
+  /// Keyboard-opened menus take focus even when they have no search field.
+  /// Pointer-opened inline suggestions keep the document's typing focus.
+  final bool keyboardNavigation;
 
   /// onDismiss API.
   final VoidCallback onDismiss;
@@ -884,12 +901,25 @@ class _OfficeContextOverlayState extends State<_OfficeContextOverlay> {
   int _selected = 0;
 
   @override
+  void initState() {
+    super.initState();
+    if (widget.keyboardNavigation) {
+      // An overlay shares an already-focused application scope. Autofocus
+      // alone cannot take ownership from the editor's existing primary focus.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _focus.requestFocus();
+      });
+    }
+  }
+
+  @override
   void dispose() {
     _focus.dispose();
     super.dispose();
   }
 
   bool get _filtering {
+    if (!widget.enableFiltering) return false;
     if (widget.filterHint != null) {
       return true;
     }
@@ -1016,7 +1046,7 @@ class _OfficeContextOverlayState extends State<_OfficeContextOverlay> {
   }
 
   KeyEventResult _onKey(FocusNode node, KeyEvent event) {
-    if (!_filtering || event is KeyUpEvent) {
+    if ((!_filtering && !widget.keyboardNavigation) || event is KeyUpEvent) {
       return KeyEventResult.ignored;
     }
     final LogicalKeyboardKey key = event.logicalKey;
@@ -1032,7 +1062,7 @@ class _OfficeContextOverlayState extends State<_OfficeContextOverlay> {
       }
       return KeyEventResult.handled;
     }
-    if (key == LogicalKeyboardKey.backspace) {
+    if (_filtering && key == LogicalKeyboardKey.backspace) {
       if (_query.isNotEmpty) {
         setState(() {
           _query = _query.substring(0, _query.length - 1);
@@ -1042,7 +1072,8 @@ class _OfficeContextOverlayState extends State<_OfficeContextOverlay> {
       }
       return KeyEventResult.handled;
     }
-    if (key == LogicalKeyboardKey.enter) {
+    if (key == LogicalKeyboardKey.enter ||
+        key == LogicalKeyboardKey.numpadEnter) {
       final OfficeContextAction? action = _selectedAction(_visible);
       if (action != null) {
         widget.onSelect(action.id);
@@ -1050,6 +1081,19 @@ class _OfficeContextOverlayState extends State<_OfficeContextOverlay> {
       return KeyEventResult.handled;
     }
     final int count = _selectableCount(_visible);
+    if (key == LogicalKeyboardKey.home || key == LogicalKeyboardKey.end) {
+      if (count > 0) {
+        setState(() {
+          _selected = key == LogicalKeyboardKey.home ? 0 : count - 1;
+          _reveal(MediaQuery.sizeOf(context));
+        });
+      }
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.tab) {
+      widget.onDismiss();
+      return KeyEventResult.handled;
+    }
     if (key == LogicalKeyboardKey.arrowDown ||
         key == LogicalKeyboardKey.arrowUp) {
       if (count > 0) {
@@ -1062,6 +1106,7 @@ class _OfficeContextOverlayState extends State<_OfficeContextOverlay> {
       }
       return KeyEventResult.handled;
     }
+    if (!_filtering) return KeyEventResult.handled;
     if (HardwareKeyboard.instance.isControlPressed ||
         HardwareKeyboard.instance.isMetaPressed ||
         HardwareKeyboard.instance.isAltPressed) {
@@ -1087,6 +1132,7 @@ class _OfficeContextOverlayState extends State<_OfficeContextOverlay> {
     final _MenuPalette palette = _MenuPalette.of(widget.theme);
     final Size screen = MediaQuery.sizeOf(context);
     final bool filtering = _filtering;
+    final bool keyboard = filtering || widget.keyboardNavigation;
     final List<OfficeContextAction> items = _visible;
     final double extent = _extent(items);
     final double view = _viewHeight(screen, extent);
@@ -1127,7 +1173,7 @@ class _OfficeContextOverlayState extends State<_OfficeContextOverlay> {
                 height: height,
                 child: Focus(
                   focusNode: _focus,
-                  autofocus: filtering,
+                  autofocus: keyboard,
                   onKeyEvent: _onKey,
                   child: Material(
                     key: const Key('office-context-menu'),
@@ -1236,7 +1282,7 @@ class _OfficeContextOverlayState extends State<_OfficeContextOverlay> {
                                                   action: action,
                                                   palette: palette,
                                                   selected:
-                                                      filtering &&
+                                                      keyboard &&
                                                       !action.isCaption &&
                                                       action.enabled &&
                                                       identical(

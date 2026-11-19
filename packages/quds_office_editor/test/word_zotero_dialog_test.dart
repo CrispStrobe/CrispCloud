@@ -298,6 +298,92 @@ Future<void> _documentAction(
 }
 
 void main() {
+  testWidgets(
+    'citation editing searches connected Zotero without leaving the editor',
+    (tester) async {
+      final requests = <ZoteroHttpRequest>[];
+      final session = ZoteroSession()..library = ZoteroLibrary.user(42);
+      final controller = await _openDialog(
+        tester,
+        session: session,
+        document: _linkedDocument([
+          ['http://zotero.org/users/42/items/ABCD1234'],
+        ]),
+        transport: (request) async {
+          requests.add(request);
+          expect(request.uri.path, '/users/42/items/top');
+          expect(request.uri.queryParameters['q'], 'companion');
+          expect(request.uri.queryParameters['start'], '0');
+          expect(request.uri.queryParameters['include'], 'data,csljson');
+          return _json([
+            _apiItem('IJKL9012', 'Companion study'),
+            // Standalone notes are never proposed for citations.
+            {
+              ..._apiItem('NOTE0001', 'A note'),
+              'data': {
+                'key': 'NOTE0001',
+                'itemType': 'note',
+                'title': 'A note',
+              },
+            },
+          ]);
+        },
+      );
+      await tester.tap(find.text('Document'));
+      await tester.pumpAndSettle();
+      final actions = find.byTooltip('Reference actions');
+      await tester.ensureVisible(actions);
+      await tester.tap(actions);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Edit citation'));
+      await tester.pumpAndSettle();
+
+      final searchButton = find.byKey(
+        const ValueKey('zotero-composer-search-zotero'),
+      );
+      await tester.ensureVisible(searchButton);
+      await tester.tap(searchButton);
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const ValueKey('zotero-connected-source-query')),
+        'companion',
+      );
+      expect(requests, isEmpty);
+      // Typing schedules the empty-query button's enabled-state rebuild.
+      // Wait for that frame before attempting an explicit search.
+      await tester.pump();
+      final submitSearch = find.byKey(
+        const ValueKey('zotero-connected-source-search'),
+      );
+      expect(tester.widget<FilledButton>(submitSearch).onPressed, isNotNull);
+      await tester.ensureVisible(submitSearch);
+      await tester.pump();
+      expect(submitSearch.hitTestable(), findsOneWidget);
+      await tester.tap(submitSearch);
+      await tester.pumpAndSettle();
+      expect(requests, hasLength(1));
+      expect(find.text('Companion study'), findsOneWidget);
+      expect(find.text('A note'), findsNothing);
+      await tester.tap(find.byKey(const ValueKey('zotero-connected-source-0')));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.byKey(const ValueKey('zotero-connected-source-add')),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('zotero-composer-apply')));
+      await tester.pumpAndSettle();
+      final field = controller.zoteroFields.single;
+      expect(field.citation!.items, hasLength(2));
+      expect(field.citation!.items[1].itemData!['title'], 'Companion study');
+      expect(field.citation!.items[1].uris, [
+        'http://zotero.org/users/42/items/IJKL9012',
+      ]);
+      expect(field.citation!.items[1].locator, isEmpty);
+      expect(controller.canUndo, isTrue);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   for (final count in [50, 51, 101, 1000]) {
     testWidgets(
       'refresh batches $count sources and duplicate citations into one undo',

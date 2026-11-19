@@ -197,10 +197,11 @@ final class OfficePlatformSpellingProvider extends OfficeProofingProvider {
       if (!request.ignoredRuleIds.contains('platform.spelling')) {
         for (final span in spans) {
           final range = source.sourceRange(span.range);
-          // An OS dictionary may report only the letter portion of foo42 or
-          // snake_case. Do not turn that into a partial identifier edit. Letter
-          // adjacency is deliberately allowed: CJK dictionaries can return a
-          // valid word from a continuous passage, and hyphen parts are words.
+          // An OS dictionary may report a whole identifier or only its letter
+          // portion. Protect both rather than offering to rewrite foo42 or
+          // snake_case. Letter adjacency is deliberately allowed: CJK
+          // dictionaries can return a word from a continuous passage, and
+          // hyphen parts are words.
           if (source.isProtected(span.range, range)) {
             continue;
           }
@@ -288,23 +289,24 @@ final class _PlatformSpellingText {
     }
     for (final cluster in GraphemeClusters.segment(text)) {
       _checkedBoundaries.add(cluster.end);
-      // A marked digit/connector is one edge, even when a layout control hid
-      // the adjacency in the source. Build this once for all returned spans.
-      if (_identifierLeading.matchAsPrefix(text, cluster.start) != null) {
+      // A digit/connector owns its whole grapheme, including marks and any
+      // Unicode Prepend characters before it. A layout control may have hidden
+      // this adjacency in the source. Build this once for all returned spans.
+      if (_identifierMarker.hasMatch(cluster.text)) {
         _identifierStarts.add(cluster.start);
         _identifierEnds.add(cluster.end);
       }
     }
   }
 
-  static final _identifierLeading = RegExp(r'[\p{N}\p{Pc}]', unicode: true);
+  static final _identifierMarker = RegExp(r'[\p{N}\p{Pc}]', unicode: true);
   late final String text;
   late final List<int>? _sourceOffsets;
   late final OfficeProofingTextRanges _sourceProtected;
   late final OfficeProofingTextRanges _checkedProtected;
   late final Set<int> _sourceBoundaries;
   final _checkedBoundaries = <int>{0};
-  final _identifierStarts = <int>{};
+  final _identifierStarts = <int>[];
   final _identifierEnds = <int>{};
 
   /// Nonempty intervals own controls between their first and last retained
@@ -331,7 +333,26 @@ final class _PlatformSpellingText {
       _sourceProtected.overlaps(original.start, original.end) ||
       _checkedProtected.overlaps(checked.start, checked.end) ||
       _identifierEnds.contains(checked.start) ||
-      _identifierStarts.contains(checked.end);
+      _containsOrPrecedesIdentifier(checked);
+
+  /// Starts are sorted by the single grapheme pass above. Include the range's
+  /// end to protect a word immediately before a digit/connector, and its
+  /// interior to protect identifiers reported as a whole or across components.
+  /// Binary search keeps the lookup bounded for arbitrary native result order.
+  bool _containsOrPrecedesIdentifier(TextRange range) {
+    var lower = 0;
+    var upper = _identifierStarts.length;
+    while (lower < upper) {
+      final middle = (lower + upper) ~/ 2;
+      if (_identifierStarts[middle] < range.start) {
+        lower = middle + 1;
+      } else {
+        upper = middle;
+      }
+    }
+    return lower < _identifierStarts.length &&
+        _identifierStarts[lower] <= range.end;
+  }
 }
 
 final class _SpellingDisposed implements Exception {

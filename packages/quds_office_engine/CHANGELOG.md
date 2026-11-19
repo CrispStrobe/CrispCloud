@@ -4,6 +4,39 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Add Zotero's native Add Annotation command for Zotero 9 and later. Selected
+  text annotations use the research-note insertion protocol, preserving active
+  citations, comments and supported formatting in one staged transaction.
+- Expose `ZoteroCitingCommand.insertsNoteText` so hosts apply the same insertion
+  preflight and cancelled-picker handling to Add Note and Add Annotation.
+
+- Import simple bulleted and numbered Zotero research-note lists as native Word
+  lists, including ordered-list starting values, rich item text and active
+  citations. Keep surrounding prose and existing list counters separate, with
+  scoped numbering-part undo/redo snapshots that preserve unrelated package
+  content. Nested lists, multiple paragraphs per item and custom list markers
+  remain explicitly unsupported.
+
+- Add native Zotero research-note insertion through the HTTP Citing Protocol,
+  retaining paragraph/heading structure, supported character formatting,
+  hyperlinks and active citation placeholders. Stage complete note operations,
+  respect document citation order and note placement, and refuse unsupported or
+  incomplete fragments before applying them.
+
+- Recognize decomposed accented forms of all shipped German dictionary letters,
+  including Joël and Škoda, and normalize accents separated by soft hyphens.
+  Personal and ignored words share the same case-sensitive comparison.
+- Keep soft hyphens from exposing links, email, code and numeric/connector
+  identifier fragments to German spelling corrections. Preserve exact source
+  offsets and complete graphemes, including Unicode Prepend characters.
+
+- Add bounded, read-only Word document comparison with paragraph alignment,
+  grapheme-safe inline differences, revision text projections, modeled
+  formatting/structure comparisons, stable locations and JSON reports.
+  Disclose scope limits and coarse alignment; preserve input revision state.
+- Deprecate the invalid mutating `WordCompare.compare` implementation and fail
+  before mutation. Use `WordDocumentComparison.compare` or `WordCompare.diff`.
+
 - Emit complete dynamic footer PAGE packets, preserving their result formatting.
 
 - Offer existing accented dictionary forms for short German misspellings such

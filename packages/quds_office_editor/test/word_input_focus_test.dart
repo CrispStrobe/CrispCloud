@@ -21,7 +21,12 @@ Widget _app(Widget child) => MaterialApp(
 );
 
 Widget _editor(WordEditorController controller, FocusNode focus) =>
-    QudsWordEditor(key: _editorKey, controller: controller, focusNode: focus);
+    QudsWordEditor(
+      key: _editorKey,
+      controller: controller,
+      focusNode: focus,
+      enableLiveProofing: false,
+    );
 
 Future<void> _focusEditor(
   WidgetTester tester,

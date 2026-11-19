@@ -12,6 +12,8 @@ import 'source_text.dart';
 
 typedef _VersionNative = Uint32 Function();
 typedef _VersionDart = int Function();
+typedef _SetEnabledNative = Uint32 Function(Uint32);
+typedef _SetEnabledDart = int Function(int);
 typedef _CapabilitiesNative = Uint32 Function(Pointer<Void>);
 typedef _CapabilitiesDart = int Function(Pointer<Void>);
 typedef _CreateNative =
@@ -206,8 +208,14 @@ final class SpacyNativeBackendFactory implements SpacyBackendFactory {
     // distribution catalog, never inferred from the ABI.
     if (!_loadableAbis.contains(Abi.current())) {
       throw const SpacyUnavailableException(
-        'Native spaCy analysis is available only for Linux x86-64 and '
-        'macOS arm64 libraries.',
+        'Native spaCy analysis is available only for Linux (x86-64, arm64), '
+        'macOS arm64 and Windows x86-64 libraries.',
+      );
+    }
+    if (nerPath != null && bundle.formatVersion != 1) {
+      throw const SpacyUnavailableException(
+        'A separate NER model applies to the German bundle only; English and '
+        'French entities come from their own model.',
       );
     }
     final String directory;
@@ -228,13 +236,14 @@ final class SpacyNativeBackendFactory implements SpacyBackendFactory {
         'Install the native spaCy library in its SHA-256 directory.',
       );
     }
-    await _verifyBundle(directory);
+    await _verifyBundle(directory, bundle);
     await _verifyFile(
       File(library),
       librarySha256,
       maximumBytes: 128 * 1024 * 1024,
     );
     final bindings = _loadBindings(library, librarySha256);
+    _enable(bindings, namedEntities: nerPath != null);
     final allocations = Arena();
     Pointer<Void> context = nullptr;
     late final _NativeBackend backend;
@@ -250,9 +259,9 @@ final class SpacyNativeBackendFactory implements SpacyBackendFactory {
       error.asTypedList(_errorCapacity).fillRange(0, _errorCapacity, 0);
       context = bindings.create(
         '$directory/model.gguf'.toNativeUtf8(allocator: allocations),
-        spacyModelSha256.toNativeUtf8(allocator: allocations),
+        bundle.modelFile.sha256.toNativeUtf8(allocator: allocations),
         '$directory/resources.json'.toNativeUtf8(allocator: allocations),
-        spacyResourcesSha256.toNativeUtf8(allocator: allocations),
+        bundle.resourcesFile.sha256.toNativeUtf8(allocator: allocations),
         error,
         _errorCapacity,
       );
@@ -288,12 +297,13 @@ final class SpacyNativeBackendFactory implements SpacyBackendFactory {
           );
         }
       }
-      final identity = SpacyBackendIdentity(
+      final identity = SpacyBackendIdentity.forBundle(
+        bundle,
         librarySha256: librarySha256,
         capabilityMask: bindings.contextCapabilities(context),
       );
       identity.validate(bundle);
-      backend = _NativeBackend(bindings, context, identity);
+      backend = _NativeBackend(bindings, context, identity, bundle);
       context = nullptr; // Finalization owns the handle before another await.
     } finally {
       if (context != nullptr) bindings.free(context);
@@ -302,7 +312,7 @@ final class SpacyNativeBackendFactory implements SpacyBackendFactory {
     try {
       // Detect ordinary installation replacement during opening. The install
       // contract still requires immutability; hashes do not lock pathnames.
-      await _verifyBundle(directory);
+      await _verifyBundle(directory, bundle);
       await _verifyFile(
         File(library),
         librarySha256,
@@ -316,7 +326,33 @@ final class SpacyNativeBackendFactory implements SpacyBackendFactory {
   }
 }
 
-const _loadableAbis = {Abi.linuxX64, Abi.macosArm64};
+const _loadableAbis = {
+  Abi.linuxX64,
+  Abi.linuxArm64,
+  Abi.macosArm64,
+  Abi.windowsX64,
+};
+
+/// Enables the opened library for this process after the host's explicit
+/// opt-in (a factory exists only then). Libraries exporting
+/// `crispembed_spacy_set_enabled` are enabled through it, without touching
+/// the process environment; flags are only ever added, so a worker for one
+/// language never disables another worker's gates. Older libraries without
+/// that export fall back to [enableSpacyNativeGateForProcess] (POSIX only).
+void _enable(_Bindings bindings, {required bool namedEntities}) {
+  final wanted = 1 | (namedEntities ? 2 : 0);
+  final setEnabled = bindings.setEnabled;
+  if (setEnabled != null) {
+    final previous = setEnabled(wanted);
+    if (previous | wanted != wanted) setEnabled(previous | wanted);
+    return;
+  }
+  if (!enableSpacyNativeGateForProcess(namedEntities: namedEntities)) {
+    throw const SpacyUnavailableException(
+      'Native analysis cannot be enabled with this library on this platform.',
+    );
+  }
+}
 
 typedef _SetEnvNative = Int32 Function(Pointer<Utf8>, Pointer<Utf8>, Int32);
 typedef _SetEnvDart = int Function(Pointer<Utf8>, Pointer<Utf8>, int);
@@ -327,7 +363,9 @@ typedef _SetEnvDart = int Function(Pointer<Utf8>, Pointer<Utf8>, int);
 ///
 /// `Platform.environment` is a startup snapshot and does not reflect this.
 bool enableSpacyNativeGateForProcess({bool namedEntities = false}) {
-  if (!_loadableAbis.contains(Abi.current())) return false;
+  if (!_loadableAbis.contains(Abi.current()) || Platform.isWindows) {
+    return false;
+  }
   final setenv = DynamicLibrary.process()
       .lookupFunction<_SetEnvNative, _SetEnvDart>('setenv');
   final allocations = Arena();
@@ -371,8 +409,8 @@ _Bindings _loadBindings(String path, String hash) {
   }
 }
 
-Future<void> _verifyBundle(String directory) async {
-  for (final artifact in SpacyBundle.files) {
+Future<void> _verifyBundle(String directory, SpacyBundle bundle) async {
+  for (final artifact in bundle.pinnedFiles) {
     await _verifyFile(
       File('$directory/${artifact.file}'),
       artifact.sha256,
@@ -380,12 +418,6 @@ Future<void> _verifyBundle(String directory) async {
       maximumBytes: artifact.bytes,
     );
   }
-  await _verifyFile(
-    File('$directory/manifest.json'),
-    spacyBundleManifestSha256,
-    expectedBytes: 23762,
-    maximumBytes: 23762,
-  );
 }
 
 Future<void> _verifyFile(
@@ -444,6 +476,11 @@ final class _Bindings {
     legacyCapabilities = library.lookupFunction<_VersionNative, _VersionDart>(
       'crispembed_spacy_capabilities',
     );
+    if (library.providesSymbol('crispembed_spacy_set_enabled')) {
+      setEnabled = library.lookupFunction<_SetEnabledNative, _SetEnabledDart>(
+        'crispembed_spacy_set_enabled',
+      );
+    }
     contextCapabilities = library
         .lookupFunction<_CapabilitiesNative, _CapabilitiesDart>(
           'crispembed_spacy_context_capabilities',
@@ -490,6 +527,9 @@ final class _Bindings {
   late final _VersionDart textAbiVersion;
   late final _VersionDart legacyCapabilities;
   late final _CapabilitiesDart contextCapabilities;
+
+  /// Null for libraries built before the process-wide enable API.
+  _SetEnabledDart? setEnabled;
   _AttachNerDart? attachNer;
   _CountDart? entityCount;
   _EntityDart? entity;
@@ -505,10 +545,11 @@ final class _Bindings {
 }
 
 final class _NativeBackend implements SpacyBackend, Finalizable {
-  _NativeBackend(this._bindings, this._context, this.identity) {
+  _NativeBackend(this._bindings, this._context, this.identity, this._bundle) {
     _bindings.finalizer.attach(this, _context, detach: this);
   }
   final _Bindings _bindings;
+  final SpacyBundle _bundle;
   Pointer<Void> _context;
   @override
   final SpacyBackendIdentity identity;
@@ -532,10 +573,13 @@ final class _NativeBackend implements SpacyBackend, Finalizable {
         'The native spaCy context is disposed.',
       );
     }
-    if (request.locale != 'de-DE') {
+    if (!_bundle.acceptsLocale(request.locale)) {
       return failure(
         LinguisticAnalysisStatus.unsupported,
-        'This analysis profile supports de-DE only.',
+        _bundle.language == SpacyLanguage.german
+            ? 'This analysis profile supports de-DE only.'
+            : 'This analysis profile supports '
+                  '${_bundle.language.displayName} text only.',
       );
     }
     final allocations = Arena();

@@ -158,6 +158,25 @@ class _WordReviewDialogState extends State<WordReviewDialog> {
     }).toList();
   }
 
+  Map<WmlRevision, WmlParagraph?> _reviewTargets(List<WmlRevision> pending) {
+    // Most imported/editor revisions already capture paragraph identity. Only
+    // legacy index-only entries need a single shared body traversal. Resolving
+    // every revision separately would rescan the whole document per preview.
+    final body = pending.any((revision) => !revision.hasCapturedTarget)
+        ? _c.document.paragraphs.toList()
+        : const <WmlParagraph>[];
+    return <WmlRevision, WmlParagraph?>{
+      for (final revision in pending)
+        revision:
+            revision.targetParagraph ??
+            (!revision.hasCapturedTarget &&
+                    revision.paragraphIndex >= 0 &&
+                    revision.paragraphIndex < body.length
+                ? body[revision.paragraphIndex]
+                : null),
+    };
+  }
+
   void _act(VoidCallback action) {
     try {
       action();
@@ -719,7 +738,10 @@ class _WordReviewDialogState extends State<WordReviewDialog> {
                         );
                       },
                     );
-                    final detail = _changeDetail(selected!);
+                    final detail = _changeDetail(
+                      selected!,
+                      _reviewTargets(pending),
+                    );
                     if (constraints.maxWidth < 680) {
                       return Column(
                         children: <Widget>[
@@ -747,11 +769,15 @@ class _WordReviewDialogState extends State<WordReviewDialog> {
     );
   }
 
-  Widget _changeDetail(WmlRevision revision) {
+  Widget _changeDetail(
+    WmlRevision revision,
+    Map<WmlRevision, WmlParagraph?> targets,
+  ) {
     final paragraph = WordRevisions.resolveParagraph(_c.document, revision);
+    targets[revision] = paragraph;
     String? problem;
     try {
-      WordRevisions.validateRevision(_c.document, revision);
+      WordRevisions.validateRevision(_c.document, revision, resolved: targets);
     } on Object catch (error) {
       problem = '$error';
     }
@@ -838,7 +864,7 @@ class _WordReviewDialogState extends State<WordReviewDialog> {
               ),
             ],
           ),
-          if (paragraph != null) _paragraphPreview(paragraph),
+          if (paragraph != null) _paragraphPreview(paragraph, targets),
           const SizedBox(height: 12),
           Text(
             _s(
@@ -852,15 +878,14 @@ class _WordReviewDialogState extends State<WordReviewDialog> {
     );
   }
 
-  Widget _paragraphPreview(WmlParagraph paragraph) {
+  Widget _paragraphPreview(
+    WmlParagraph paragraph,
+    Map<WmlRevision, WmlParagraph?> targets,
+  ) {
     final revisions =
-        _pending
-            .where(
-              (revision) => identical(
-                WordRevisions.resolveParagraph(_c.document, revision),
-                paragraph,
-              ),
-            )
+        targets.entries
+            .where((entry) => identical(entry.value, paragraph))
+            .map((entry) => entry.key)
             .toList()
           ..sort((a, b) => a.start.compareTo(b.start));
     final text = paragraph.text;

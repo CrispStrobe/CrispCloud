@@ -19,9 +19,11 @@ final RegExp _internalApostrophe = RegExp(
 String normalizeGermanWord(String word) {
   const Map<String, String> composed = <String, String>{
     'a\u0308': 'ä',
+    'e\u0308': 'ë',
     'o\u0308': 'ö',
     'u\u0308': 'ü',
     'A\u0308': 'Ä',
+    'E\u0308': 'Ë',
     'O\u0308': 'Ö',
     'U\u0308': 'Ü',
     'a\u0301': 'á',
@@ -60,15 +62,18 @@ String normalizeGermanWord(String word) {
     'C\u0327': 'Ç',
     'n\u0303': 'ñ',
     'N\u0303': 'Ñ',
+    's\u030c': 'š',
+    'S\u030c': 'Š',
   };
-  String result = word;
+  // A discretionary layout control can separate a base from its combining
+  // accent. Remove it before composing the dictionary's canonical forms.
+  String result = word.replaceAll('\u00ad', '');
   for (final MapEntry<String, String> entry in composed.entries) {
     if (result.contains(entry.key)) {
       result = result.replaceAll(entry.key, entry.value);
     }
   }
   return result
-      .replaceAll('\u00ad', '')
       .replaceAll('\u2010', '-')
       .replaceAll('\u2011', '-')
       // U+2019 also closes quotations. Only an internal lexical apostrophe
@@ -229,10 +234,6 @@ class GermanSpellingProvider extends OfficeProofingProvider {
     r"\p{L}[\p{L}\p{M}\u00ad]*(?:[-\u2010\u2011'’]\p{L}[\p{L}\p{M}\u00ad]*)*",
     unicode: true,
   );
-  static final RegExp _identifierLeading = RegExp(
-    r'[\p{N}\p{Pc}]',
-    unicode: true,
-  );
   static const String _alphabet = 'abcdefghijklmnopqrstuvwxyzäöüß';
 
   @override
@@ -313,25 +314,7 @@ class GermanSpellingProvider extends OfficeProofingProvider {
         _GermanLexicon.load());
     final bool swiss = request.language == 'de-CH';
     final List<OfficeProofingFinding> findings = <OfficeProofingFinding>[];
-    final Set<int> boundaries = <int>{0};
-    final Set<int> identifierStarts = <int>{};
-    final Set<int> identifierEnds = <int>{};
-    int boundary = 0;
-    for (final String cluster in request.text.characters) {
-      final int start = boundary;
-      boundary += cluster.length;
-      boundaries.add(boundary);
-      // A numeric/connector edge owns all of its combining marks. Reuse this
-      // one grapheme pass instead of a fixed lookbehind or repeated prefix
-      // scans, including supplementary digits and arbitrarily marked edges.
-      if (_identifierLeading.matchAsPrefix(request.text, start) != null) {
-        identifierStarts.add(start);
-        identifierEnds.add(boundary);
-      }
-    }
-    final OfficeProofingTextRanges protectedRanges = OfficeProofingTextRanges(
-      request.text,
-    );
+    final source = _GermanSpellingText(request.text);
     final literals = GermanLiteralTextRanges(request.text);
     final Map<(String, bool, String?), List<String>> suggestions =
         <(String, bool, String?), List<String>>{};
@@ -346,17 +329,8 @@ class GermanSpellingProvider extends OfficeProofingProvider {
           );
         }
       }
-      // Do not widen a lexical replacement over an adjacent mark or joiner.
-      // Unsupported token fragments must not invalidate ordinary findings
-      // elsewhere in the same paragraph.
-      if (!boundaries.contains(token.start) ||
-          !boundaries.contains(token.end)) {
-        continue;
-      }
-      if (protectedRanges.overlaps(token.start, token.end) ||
-          literals.overlaps(token.start, token.end) ||
-          identifierEnds.contains(token.start) ||
-          identifierStarts.contains(token.end)) {
+      if (source.isProtected(token.start, token.end) ||
+          literals.overlaps(token.start, token.end)) {
         continue;
       }
       final String original = token.group(0)!;
@@ -378,8 +352,8 @@ class GermanSpellingProvider extends OfficeProofingProvider {
         request.text,
         token,
         word,
-        protectedRanges,
-        boundaries,
+        source.protectedRanges,
+        source.boundaries,
       );
       final (String, bool, String?) suggestionKey = (
         word,
@@ -1116,6 +1090,81 @@ class GermanSpellingProvider extends OfficeProofingProvider {
   @override
   Future<void> dispose() async {
     _disposed = true;
+  }
+}
+
+/// The lexical tokenizer and findings retain their exact source offsets. The
+/// comparison view removes only discretionary soft hyphens so they cannot hide
+/// links, code or numeric/connector adjacency. Both views retain their own
+/// protections and grapheme boundaries; no replacement widens over a joiner.
+final class _GermanSpellingText {
+  _GermanSpellingText(String source) {
+    protectedRanges = OfficeProofingTextRanges(source);
+    final String checked;
+    if (source.contains('\u00ad')) {
+      final buffer = StringBuffer();
+      final offsets = List<int>.filled(source.length + 1, 0);
+      int checkedOffset = 0;
+      for (int at = 0; at < source.length; at++) {
+        offsets[at] = checkedOffset;
+        final unit = source.codeUnitAt(at);
+        if (unit == 0x00ad) continue;
+        buffer.writeCharCode(unit);
+        checkedOffset++;
+      }
+      offsets[source.length] = checkedOffset;
+      checked = buffer.toString();
+      _checkedOffsets = offsets;
+      _checkedProtected = OfficeProofingTextRanges(checked);
+      boundaries = <int>{0};
+      int sourceOffset = 0;
+      for (final cluster in source.characters) {
+        sourceOffset += cluster.length;
+        boundaries.add(sourceOffset);
+      }
+    } else {
+      checked = source;
+      _checkedOffsets = null;
+      _checkedProtected = protectedRanges;
+      boundaries = _checkedBoundaries;
+    }
+    int boundary = 0;
+    for (final cluster in checked.characters) {
+      final start = boundary;
+      boundary += cluster.length;
+      _checkedBoundaries.add(boundary);
+      // Marked and supplementary digits/connectors own their entire projected
+      // grapheme, with no limit on intervening discretionary controls or marks.
+      // Unicode Prepend characters can precede the digit inside this same
+      // grapheme. Inspect the whole cluster, not just its first code point.
+      if (_identifierMarker.hasMatch(cluster)) {
+        _identifierStarts.add(start);
+        _identifierEnds.add(boundary);
+      }
+    }
+  }
+
+  static final _identifierMarker = RegExp(r'[\p{N}\p{Pc}]', unicode: true);
+  late final OfficeProofingTextRanges protectedRanges;
+  late final Set<int> boundaries;
+  late final OfficeProofingTextRanges _checkedProtected;
+  late final List<int>? _checkedOffsets;
+  final _checkedBoundaries = <int>{0};
+  final _identifierStarts = <int>{};
+  final _identifierEnds = <int>{};
+
+  bool isProtected(int start, int end) {
+    final offsets = _checkedOffsets;
+    final checkedStart = offsets == null ? start : offsets[start];
+    final checkedEnd = offsets == null ? end : offsets[end];
+    return !boundaries.contains(start) ||
+        !boundaries.contains(end) ||
+        !_checkedBoundaries.contains(checkedStart) ||
+        !_checkedBoundaries.contains(checkedEnd) ||
+        protectedRanges.overlaps(start, end) ||
+        _checkedProtected.overlaps(checkedStart, checkedEnd) ||
+        _identifierEnds.contains(checkedStart) ||
+        _identifierStarts.contains(checkedEnd);
   }
 }
 

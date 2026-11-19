@@ -230,8 +230,10 @@ final class LinguisticAnalysisResult {
     Iterable<LinguisticEntity>? entities,
   }) {
     identity.validate();
-    if (request.locale != 'de-DE') {
-      throw const FormatException('Only de-DE analysis is declared.');
+    if (!(identity.bundle?.acceptsLocale(request.locale) ?? false)) {
+      throw const FormatException(
+        'The request locale is not declared for this analysis bundle.',
+      );
     }
     final owned = List<LinguisticToken>.unmodifiable(tokens);
     final sentences = _validateAnalysis(request, owned);

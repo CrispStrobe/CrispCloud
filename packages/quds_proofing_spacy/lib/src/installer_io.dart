@@ -55,6 +55,7 @@ final class SpacyInstallation {
     required this.libraryPath,
     required this.librarySha256,
     required this.package,
+    this.bundle = const SpacyBundle.germanF32(),
   });
 
   /// Content-addressed root (`.../packages/<archive sha256>`).
@@ -65,6 +66,9 @@ final class SpacyInstallation {
   final String? libraryPath;
   final String? librarySha256;
   final SpacyPlatformPackage? package;
+
+  /// The pinned bundle in [bundleDirectory] (German for package installs).
+  final SpacyBundle bundle;
 
   SpacyBuildQualification? get qualification =>
       librarySha256 == null ? null : spacyQualificationFor(librarySha256!);
@@ -108,8 +112,9 @@ final class SpacyPackageInstaller {
 
   Directory _packageDirectory(SpacyPlatformPackage package) =>
       Directory('${root.path}/packages/${package.archiveSha256}');
-  Directory _bundleDirectory() =>
-      Directory('${root.path}/bundles/$spacyBundleManifestSha256');
+  Directory _bundleDirectory([
+    SpacyBundle bundle = const SpacyBundle.germanF32(),
+  ]) => Directory('${root.path}/bundles/${bundle.manifestSha256}');
 
   /// The verified installation of [package], or null when it is absent.
   /// Throws when an installation exists but fails verification, so a damaged
@@ -214,6 +219,150 @@ final class SpacyPackageInstaller {
       return (await installedBundle())!;
     } finally {
       _removeStaging(staging);
+    }
+  }
+
+  /// The verified installation of a separately published language bundle
+  /// opened with the v2-capable library of [runtime], or null when either is
+  /// absent. Throws when an existing tree fails verification.
+  Future<SpacyInstallation?> installedLanguage(
+    SpacyLanguageDownload download,
+    SpacyPlatformPackage runtime,
+  ) async {
+    _requireRuntime(download, runtime);
+    final directory = _bundleDirectory(download.bundle);
+    if (FileSystemEntity.typeSync(directory.path, followLinks: false) ==
+        FileSystemEntityType.notFound) {
+      return null;
+    }
+    await _verifyLanguageTree(directory, download.bundle);
+    final package = await installed(runtime);
+    if (package == null) return null;
+    return SpacyInstallation._(
+      directory: directory.path,
+      bundleDirectory: directory.path,
+      libraryPath: package.libraryPath,
+      librarySha256: package.librarySha256,
+      package: runtime,
+      bundle: download.bundle,
+    );
+  }
+
+  /// True when the language bundle files alone are installed and verified.
+  Future<bool> hasLanguageBundle(SpacyLanguageDownload download) async {
+    final directory = _bundleDirectory(download.bundle);
+    if (FileSystemEntity.typeSync(directory.path, followLinks: false) ==
+        FileSystemEntityType.notFound) {
+      return false;
+    }
+    await _verifyLanguageTree(directory, download.bundle);
+    return true;
+  }
+
+  /// Explicit download of a language bundle and, when not yet installed, the
+  /// v2-capable library capsule [runtime]. Every file is checked against its
+  /// compiled-in SHA-256/length before use; both trees are published with
+  /// one rename each and verified again.
+  Future<SpacyInstallation> installLanguage(
+    SpacyLanguageDownload download,
+    SpacyPlatformPackage runtime, {
+    SpacyDownloadProgress? onProgress,
+    SpacyInstallCancellation? cancellation,
+  }) async {
+    _requireRuntime(download, runtime);
+    final needsRuntime = await installed(runtime) == null;
+    final total =
+        download.totalBytes + (needsRuntime ? runtime.archiveBytes : 0);
+    if (needsRuntime) {
+      await install(
+        runtime,
+        cancellation: cancellation,
+        onProgress: onProgress == null
+            ? null
+            : (received, _) => onProgress(received, total),
+      );
+    }
+    await installLanguageBundle(
+      download,
+      onProgress: onProgress,
+      cancellation: cancellation,
+      offsetBytes: needsRuntime ? runtime.archiveBytes : 0,
+      totalBytes: total,
+    );
+    final result = await installedLanguage(download, runtime);
+    if (result == null) {
+      throw const SpacyInstallException(
+        'The language installation is incomplete after download.',
+      );
+    }
+    return result;
+  }
+
+  /// Downloads only a language bundle's five files (no executable code), for
+  /// hosts that ship a v2-capable library inside the app. Returns the
+  /// verified bundle directory.
+  Future<String> installLanguageBundle(
+    SpacyLanguageDownload download, {
+    SpacyDownloadProgress? onProgress,
+    SpacyInstallCancellation? cancellation,
+    int offsetBytes = 0,
+    int? totalBytes,
+  }) async {
+    final destination = _bundleDirectory(download.bundle);
+    if (await hasLanguageBundle(download)) return destination.path;
+    final staging = _createStaging();
+    try {
+      final tree = Directory(
+        '${staging.path}/${download.bundle.manifestSha256}',
+      )..createSync();
+      var offset = offsetBytes;
+      for (final artifact in download.files) {
+        await _download(
+          download.url(artifact),
+          File('${tree.path}/${artifact.file}'),
+          artifact.sha256,
+          artifact.bytes,
+          onProgress: onProgress,
+          totalBytes: totalBytes ?? download.totalBytes,
+          offsetBytes: offset,
+          cancellation: cancellation,
+        );
+        offset += artifact.bytes;
+      }
+      await _publish(
+        tree,
+        destination,
+        () => _verifyLanguageTree(destination, download.bundle),
+      );
+      return destination.path;
+    } finally {
+      _removeStaging(staging);
+    }
+  }
+
+  /// Removes a language bundle (the shared library capsule stays installed).
+  Future<void> removeLanguage(SpacyLanguageDownload download) async {
+    final directory = _bundleDirectory(download.bundle);
+    if (FileSystemEntity.typeSync(directory.path, followLinks: false) ==
+        FileSystemEntityType.notFound) {
+      return;
+    }
+    final trash = Directory(
+      '${root.path}/.removing-${download.bundle.manifestSha256}-'
+      '${DateTime.now().microsecondsSinceEpoch}',
+    );
+    directory.renameSync(trash.path);
+    trash.deleteSync(recursive: true);
+  }
+
+  void _requireRuntime(
+    SpacyLanguageDownload download,
+    SpacyPlatformPackage runtime,
+  ) {
+    if (download.bundle.formatVersion != 1 && !runtime.opensVersion2Bundles) {
+      throw const SpacyInstallException(
+        'This native package cannot open the selected language bundle.',
+      );
     }
   }
 
@@ -659,6 +808,12 @@ Future<void> _verifyPackageTree(
     ),
   });
 }
+
+Future<void> _verifyLanguageTree(Directory directory, SpacyBundle bundle) =>
+    _verifyClosedTree(directory, {
+      for (final artifact in bundle.pinnedFiles)
+        artifact.file: (sha256: artifact.sha256, bytes: artifact.bytes),
+    });
 
 Future<void> _verifyBundleTree(Directory directory) =>
     _verifyClosedTree(directory, {

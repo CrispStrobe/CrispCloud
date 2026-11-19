@@ -16,6 +16,7 @@ Future<SpacyTransport> startWorker({
   required Duration requestTimeout,
 }) async {
   final worker = _NativeWorker(
+    bundle,
     maximumPendingRequests,
     maximumTextCodeUnits,
     requestTimeout,
@@ -30,7 +31,7 @@ Future<SpacyTransport> startWorker({
       onError: worker._errors.sendPort,
       onExit: worker._exits.sendPort,
       errorsAreFatal: true,
-      debugName: 'quds-spacy-de-analysis',
+      debugName: 'quds-spacy-${bundle.language.code}-analysis',
     );
     worker._spawned = true;
     await worker._ready.future.timeout(startupTimeout);
@@ -53,10 +54,12 @@ final class _Pending {
 
 final class _NativeWorker implements SpacyTransport {
   _NativeWorker(
+    this._bundle,
     this.maximumPendingRequests,
     this.maximumTextCodeUnits,
     this.requestTimeout,
   );
+  final SpacyBundle _bundle;
   final int maximumPendingRequests;
   final int maximumTextCodeUnits;
   final Duration requestTimeout;
@@ -102,7 +105,7 @@ final class _NativeWorker implements SpacyTransport {
       case _Ready():
         _commands = raw.commands;
         try {
-          raw.identity.validate();
+          raw.identity.validate(_bundle);
           _identity = raw.identity;
           if (!_ready.isCompleted) _ready.complete();
           if (_disposed) _commands!.send(const _Stop());
@@ -171,12 +174,15 @@ final class _NativeWorker implements SpacyTransport {
     }
     // Admission occurs before coalescing so an invalid replacement cannot
     // cancel a previously valid request for the same source unit.
-    if (request.locale != 'de-DE') {
+    if (!_bundle.acceptsLocale(request.locale)) {
       return Future.value(
         _failure(
           request,
           LinguisticAnalysisStatus.unsupported,
-          'This analysis profile supports de-DE only.',
+          _bundle.language == SpacyLanguage.german
+              ? 'This analysis profile supports de-DE only.'
+              : 'This analysis profile supports '
+                    '${_bundle.language.displayName} text only.',
         ),
       );
     }
@@ -356,7 +362,7 @@ Future<void> _workerMain(_Boot boot) async {
   SpacyBackend? backend;
   try {
     backend = await boot.factory.open(boot.bundle);
-    backend.identity.validate();
+    backend.identity.validate(boot.bundle);
     _WorkerState(boot.replies, backend).listen();
   } on Object {
     try {

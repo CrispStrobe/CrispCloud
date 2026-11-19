@@ -195,7 +195,8 @@ void main() {
       expect((remaining.start, remaining.end), (8, 10));
       expect(insertion.accepted, isTrue);
       expect(deletion.accepted, isTrue);
-      expect(controller.selectedRevisionIndex, isNull);
+      expect(controller.selectedRevision, same(remaining));
+      expect(controller.selectedRevisionIndex, 0);
       controller.undo();
       expect(paragraph.text, 'aaXXbbYYccZZdd');
       expect(controller.document.revisions, [
@@ -285,6 +286,54 @@ void main() {
       expect(controller.isDirty, isFalse);
     });
   }
+
+  for (final accept in <bool>[true, false]) {
+    test(
+      'resolving a middle change keeps the successor through undo and redo (${accept ? 'accept' : 'reject'})',
+      () {
+        final controller = _controller();
+        final paragraph = controller.document.paragraphs.single;
+        final first = _revision(controller, paragraph, 2, 4);
+        final middle = _revision(controller, paragraph, 6, 8);
+        final last = _revision(controller, paragraph, 10, 12);
+        controller.selectedRevisionIndex = 1;
+        if (accept) {
+          controller.acceptRevision(middle);
+        } else {
+          controller.rejectRevision(middle);
+        }
+        expect(controller.selectedRevision, same(last));
+        controller.undo();
+        expect(controller.selectedRevision, same(middle));
+        controller.redo();
+        expect(controller.selectedRevision, same(last));
+        if (accept) {
+          controller.acceptRevision(last);
+        } else {
+          controller.rejectRevision(last);
+        }
+        expect(controller.selectedRevision, same(first));
+      },
+    );
+  }
+
+  test(
+    'resolving another batch preserves an unaffected explicit selection',
+    () {
+      final controller = _controller();
+      final paragraph = controller.document.paragraphs.single;
+      final first = _revision(controller, paragraph, 2, 4);
+      final middle = _revision(controller, paragraph, 6, 8);
+      final last = _revision(controller, paragraph, 10, 12);
+      controller.selectedRevisionIndex = 1;
+      controller.acceptRevisions(<WmlRevision>[first, last]);
+      expect(controller.selectedRevision, same(middle));
+      controller.undo();
+      expect(controller.selectedRevision, same(middle));
+      controller.redo();
+      expect(controller.selectedRevision, same(middle));
+    },
+  );
 
   test('navigation starts at first or last pending and wraps exact spans', () {
     final firstParagraph = _paragraph('aaXXbb');
@@ -377,7 +426,7 @@ void main() {
   }
 
   test(
-    'notes and alternate headers never fall back to a matching body span',
+    'disabled alternate headers never fall back to a matching body span',
     () {
       final controller = _controller(text: 'same CHANGE body');
       final section = controller.document.sections.single;
@@ -386,19 +435,11 @@ void main() {
         _paragraph('same CHANGE even header'),
         _paragraph('same CHANGE first footer'),
         _paragraph('same CHANGE even footer'),
-        _paragraph('same CHANGE footnote'),
-        _paragraph('same CHANGE endnote'),
       ];
       section.firstHeader.add(unsupported[0]);
       section.evenHeader.add(unsupported[1]);
       section.firstFooter.add(unsupported[2]);
       section.evenFooter.add(unsupported[3]);
-      controller.document.footnotes.add(
-        WmlNote(id: 1, endnote: false, paragraphs: [unsupported[4]]),
-      );
-      controller.document.endnotes.add(
-        WmlNote(id: 2, endnote: true, paragraphs: [unsupported[5]]),
-      );
       controller.relayout();
       _at(controller, 2);
       for (final paragraph in unsupported) {

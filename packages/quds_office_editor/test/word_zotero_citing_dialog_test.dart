@@ -110,6 +110,9 @@ Future<WordEditorController> _open(
   WidgetTester tester, {
   _Desktop? desktop,
   WmlDocument? document,
+  ZoteroCitingCommand? initialCommand,
+  bool navigateToDocument = true,
+  ({int start, int end})? selection,
 }) async {
   tester.view.devicePixelRatio = 1;
   tester.view.physicalSize = const Size(1300, 1000);
@@ -120,6 +123,11 @@ Future<WordEditorController> _open(
   );
   controller.caret.logicalIndex = 7;
   controller.caret.collapseSelection();
+  if (selection != null) {
+    controller.caret.logicalIndex = selection.end;
+    controller.caret.selectionAnchor = selection.start;
+    controller.caret.selectionAnchorParagraph = 0;
+  }
   addTearDown(controller.dispose);
   await tester.pumpWidget(
     MaterialApp(
@@ -131,6 +139,7 @@ Future<WordEditorController> _open(
               controller: controller,
               localTransport: desktop?.send,
               session: ZoteroSession()..apiKey = 'online-secret',
+              initialCommand: initialCommand,
             ),
             child: const Text('Open Zotero'),
           ),
@@ -140,8 +149,10 @@ Future<WordEditorController> _open(
   );
   await tester.tap(find.text('Open Zotero'));
   await tester.pumpAndSettle();
-  await tester.tap(find.text('Document'));
-  await tester.pumpAndSettle();
+  if (navigateToDocument) {
+    await tester.tap(find.text('Document'));
+    await tester.pumpAndSettle();
+  }
   return controller;
 }
 
@@ -153,13 +164,175 @@ Future<void> _tap(WidgetTester tester, String label) async {
 }
 
 void main() {
+  testWidgets('a direct citation action starts once without navigating tabs', (
+    tester,
+  ) async {
+    final desktop = _Desktop(_insertScript());
+    final controller = await _open(
+      tester,
+      desktop: desktop,
+      initialCommand: ZoteroCitingCommand.addEditCitation,
+      navigateToDocument: false,
+    );
+    expect(desktop.command, 'addEditCitation');
+    expect(desktop.requests, hasLength(7));
+    expect(controller.zoteroFields.single.cachedText, 'Ebd., 34.');
+    expect(find.textContaining('Zotero updated the document'), findsOneWidget);
+    await _tap(tester, 'Library');
+    await _tap(tester, 'Document');
+    expect(desktop.requests, hasLength(7));
+    controller.undo();
+    expect(controller.zoteroFields, isEmpty);
+    expect(controller.canUndo, isFalse);
+  });
+
+  testWidgets('a direct action edits the citation enclosing the selection', (
+    tester,
+  ) async {
+    final document = WmlDocument.empty(text: 'Before ');
+    WordZotero.insertCitation(
+      document.paragraphs.single,
+      _citation('existing', '(Old)'),
+    );
+    final desktop = _Desktop([
+      (d) => d.message('Application.getActiveDocument', []),
+      (d) => d.message('Document.cursorInField', [d.documentId, 'Http']),
+      (d) => d.message('Field.setCode', [
+        d.documentId,
+        d.fieldId,
+        _code('existing', '(Updated)'),
+      ]),
+      (d) => d.message('Field.setText', [
+        d.documentId,
+        d.fieldId,
+        '<i>(Updated)</i>',
+        true,
+      ]),
+      (d) => d.message('Document.complete', [d.documentId]),
+    ]);
+    final controller = await _open(
+      tester,
+      document: document,
+      desktop: desktop,
+      initialCommand: ZoteroCitingCommand.addEditCitation,
+      navigateToDocument: false,
+      selection: (start: 7, end: 12),
+    );
+    expect(desktop.command, 'addEditCitation');
+    expect(desktop.fieldId, isNotEmpty);
+    expect(controller.zoteroFields, hasLength(1));
+    expect(controller.zoteroFields.single.citation!.citationId, 'existing');
+    expect(controller.zoteroFields.single.cachedText, '(Updated)');
+    controller.undo();
+    expect(controller.zoteroFields.single.cachedText, '(Old)');
+    expect(controller.canUndo, isFalse);
+    expect(controller.caret.selectionAnchor, 7);
+    expect(controller.caret.logicalIndex, 12);
+  });
+
+  for (final command in [
+    ZoteroCitingCommand.refresh,
+    ZoteroCitingCommand.setDocPrefs,
+    ZoteroCitingCommand.addEditBibliography,
+  ]) {
+    testWidgets('a direct ${command.name} action uses its native command', (
+      tester,
+    ) async {
+      final desktop = _Desktop([
+        (d) => d.message('Application.getActiveDocument', []),
+        (d) => d.message('Document.complete', [d.documentId]),
+      ]);
+      final controller = await _open(
+        tester,
+        desktop: desktop,
+        initialCommand: command,
+        navigateToDocument: false,
+      );
+      expect(desktop.command, command.name);
+      expect(desktop.requests, hasLength(2));
+      expect(controller.canUndo, isFalse);
+      expect(
+        find.textContaining('without changing the document'),
+        findsOneWidget,
+      );
+    });
+  }
+
+  testWidgets(
+    'a direct desktop action without a transport keeps the document',
+    (tester) async {
+      final controller = await _open(
+        tester,
+        initialCommand: ZoteroCitingCommand.addEditCitation,
+        navigateToDocument: false,
+      );
+      expect(find.textContaining('unavailable in this host'), findsOneWidget);
+      expect(controller.zoteroFields, isEmpty);
+      expect(controller.canUndo, isFalse);
+    },
+  );
+
   testWidgets('desktop tools are absent when the host has no local transport', (
     tester,
   ) async {
     await _open(tester);
     expect(find.text('Citation in Zotero…'), findsNothing);
+    expect(find.text('Add annotation from Zotero…'), findsNothing);
     expect(find.text('Document style…'), findsNothing);
     expect(find.text('Refresh all with Zotero'), findsNothing);
+  });
+
+  testWidgets('annotation workspace command discards cancelled staged edits', (
+    tester,
+  ) async {
+    final desktop = _Desktop([
+      (d) => d.message('Application.getActiveDocument', []),
+      (d) =>
+          d.message('Document.setDocumentData', [d.documentId, _data('Http')]),
+      (d) => d.message('Document.insertField', [d.documentId, 'Http', 0]),
+      (d) => d.message('Field.delete', [d.documentId, d.fieldId]),
+      (d) => d.message('Document.complete', [d.documentId]),
+    ]);
+    final controller = await _open(tester, desktop: desktop);
+    expect(
+      find.byTooltip(
+        'Insert text annotations and comments with active citations. Requires Zotero 9 or later.',
+      ),
+      findsOneWidget,
+    );
+    await _tap(tester, 'Add annotation from Zotero…');
+    expect(desktop.command, 'addAnnotation');
+    expect(desktop.requests, hasLength(5));
+    expect(controller.document.paragraphs.single.text, 'Before after');
+    expect(controller.zoteroFields, isEmpty);
+    expect(WordZoteroDocumentData.read(controller.document), isEmpty);
+    expect(controller.canUndo, isFalse);
+    expect(controller.isDirty, isFalse);
+    expect(
+      find.text('No Zotero annotation was inserted. The document was kept.'),
+      findsOneWidget,
+    );
+    expect(find.text('Document'), findsOneWidget);
+  });
+
+  testWidgets('annotation workspace action is disabled during Track changes', (
+    tester,
+  ) async {
+    final desktop = _Desktop([]);
+    final document = WmlDocument.empty(text: 'Before after')
+      ..trackRevisions = true;
+    final controller = await _open(
+      tester,
+      desktop: desktop,
+      document: document,
+    );
+    final button = tester.widget<OutlinedButton>(
+      find.byKey(const ValueKey<String>('zotero-add-annotation')),
+    );
+    expect(button.onPressed, isNull);
+    expect(desktop.requests, isEmpty);
+    expect(controller.document.paragraphs.single.text, 'Before after');
+    expect(controller.canUndo, isFalse);
   });
 
   testWidgets(

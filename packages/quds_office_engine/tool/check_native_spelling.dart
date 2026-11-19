@@ -13,6 +13,7 @@ final class _SpellingCase {
     this.maximumSuggestions = 5,
     this.personal = const <String>[],
     this.expected = const <(String, String?)>[],
+    this.finalFindingAtEnd = false,
   });
 
   final String id;
@@ -21,6 +22,8 @@ final class _SpellingCase {
   final int maximumSuggestions;
   final List<String> personal;
   final List<(String, String?)> expected;
+  // Distinguishes the final prose word from identically spelled protected text.
+  final bool finalFindingAtEnd;
 }
 
 const _cases = <_SpellingCase>[
@@ -166,6 +169,76 @@ const _cases = <_SpellingCase>[
     language: 'de-CH',
     expected: <(String, String?)>[('Cafè', 'Café')],
   ),
+  _SpellingCase(
+    'decomposed-shipped-names',
+    'Joe\u0308l Citroe\u0308n Bronte\u0308 Danae\u0308 S\u030ckoda S\u030ckodas',
+  ),
+  _SpellingCase(
+    'decomposed-austrian-names',
+    'Joe\u0308l S\u030ckoda',
+    language: 'de-AT',
+  ),
+  _SpellingCase(
+    'decomposed-swiss-names',
+    'Joe\u0308l S\u030ckoda',
+    language: 'de-CH',
+  ),
+  _SpellingCase(
+    'decomposed-uppercase-names',
+    'JOE\u0308L CITROE\u0308N S\u030cKODA',
+  ),
+  _SpellingCase(
+    'soft-hyphen-accent-composition',
+    'Ha\u00ad\u0308user Gru\u00ad\u0308ße Joe\u00ad\u0308l',
+  ),
+  _SpellingCase(
+    'decomposed-name-repair',
+    '🙂 Joe\u0308ll S\u030ckodaa',
+    expected: <(String, String?)>[
+      ('Joe\u0308ll', 'Joël'),
+      ('S\u030ckodaa', 'Škoda'),
+    ],
+  ),
+  _SpellingCase(
+    'decomposed-compound-repair',
+    '🙂 Joe\u0308l\u2011Huas',
+    expected: <(String, String?)>[('Joe\u0308l\u2011Huas', 'Joël\u2011Haus')],
+  ),
+  _SpellingCase(
+    'personal-canonical-alias',
+    'QudsJoe\u0308l QudsS\u030c',
+    personal: <String>['QudsJoël', 'QudsŠ'],
+  ),
+  _SpellingCase(
+    'soft-hyphen-identifier-prefixes',
+    '42\u00adHuas _\u00adHuas 𝟘\u00ad\u0301Huas Huas',
+    expected: <(String, String?)>[('Huas', 'Haus')],
+    finalFindingAtEnd: true,
+  ),
+  _SpellingCase(
+    'soft-hyphen-protected-text',
+    'ht\u00adtps://example.invalid/Huas Huas@exam\u00adple.invalid `\u00ad`Huas`` Huas',
+    expected: <(String, String?)>[('Huas', 'Haus')],
+    finalFindingAtEnd: true,
+  ),
+  _SpellingCase(
+    'source-protected-code',
+    '`Huas`\u00ad` Huas',
+    expected: <(String, String?)>[('Huas', 'Haus')],
+    finalFindingAtEnd: true,
+  ),
+  _SpellingCase(
+    'prepended-identifier-edges',
+    '\u06004\u0301\u00adHuas Huas\u{110bd}𝟘 Huas',
+    expected: <(String, String?)>[('Huas', 'Haus')],
+    finalFindingAtEnd: true,
+  ),
+  _SpellingCase(
+    'projected-joiner-boundary',
+    'Huas\u00ad\u200d Huas',
+    expected: <(String, String?)>[('Huas', 'Haus')],
+    finalFindingAtEnd: true,
+  ),
 ];
 
 Future<void> main() async {
@@ -211,11 +284,18 @@ Future<void> main() async {
                   finding.replacements.contains(replacement));
         }
       }
+      if (sample.finalFindingAtEnd) {
+        accepted =
+            accepted &&
+            report.findings.isNotEmpty &&
+            report.findings.last.end == origin + sample.text.length;
+      }
       results.add(<String, Object?>{
         'id': sample.id,
         'text': sample.text,
         'language': sample.language,
         'maximumSuggestions': sample.maximumSuggestions,
+        'finalFindingAtEnd': sample.finalFindingAtEnd,
         'status': report.status.name,
         'accepted': accepted,
         'findings': <Map<String, Object?>>[

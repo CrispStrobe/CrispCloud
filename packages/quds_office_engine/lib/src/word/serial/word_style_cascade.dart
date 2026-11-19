@@ -13,7 +13,7 @@ class _StyleCascade {
   String? defaultParagraph;
   bool _missingStyles = false;
 
-  bool apply() {
+  bool _load({bool includeTheme = true}) {
     final package = document.package;
     if (package == null) return false;
     final office = package.packageRelationships.firstByType(
@@ -44,7 +44,7 @@ class _StyleCascade {
     final theme = package.getPart(
       themeRel == null ? '/word/theme/theme1.xml' : rels.resolve(themeRel),
     );
-    if (theme != null) {
+    if (includeTheme && theme != null) {
       final t = XmlDocument.parse(theme.readText()).root!;
       final elements = t.firstChild('themeElements');
       for (final color
@@ -81,6 +81,11 @@ class _StyleCascade {
         }
       }
     }
+    return true;
+  }
+
+  bool apply() {
+    if (!_load()) return false;
     for (final section in document.sections) {
       walk(section.blocks);
       for (final story in [
@@ -101,6 +106,165 @@ class _StyleCascade {
       walk(comment.paragraphs);
     }
     return true;
+  }
+
+  bool clearRunProofingLanguage(
+    WmlParagraph source,
+    WmlParagraph preview,
+    int start,
+    int end,
+  ) {
+    if (identical(source, preview) || source.text != preview.text) {
+      throw ArgumentError('Use a detached preview with the source text.');
+    }
+    if (start < 0 || end < start || end > preview.text.length) {
+      throw RangeError('The proofing range must be within the preview text.');
+    }
+    _load(includeTheme: false);
+    List<XmlElement>? tableLayers;
+    var occurrences = 0;
+    void locate(
+      Iterable<WmlBlock> blocks, [
+      List<XmlElement> inherited = const [],
+    ]) {
+      for (final block in blocks) {
+        if (identical(block, preview)) {
+          throw ArgumentError('The preview must not belong to the document.');
+        }
+        if (identical(block, source)) {
+          tableLayers = inherited;
+          occurrences++;
+        }
+        if (block is WmlTable) {
+          for (var row = 0; row < block.rows.length; row++) {
+            final layers = _tableCellLayers(block, row);
+            for (final cell in block.rows[row].cells) {
+              locate(cell.blocks, layers);
+            }
+          }
+        } else {
+          for (final children in WordTree.childLists(block)) {
+            locate(children, inherited);
+          }
+        }
+      }
+    }
+
+    for (final section in document.sections) {
+      locate(section.blocks);
+      for (final story in [
+        section.header,
+        section.footer,
+        section.firstHeader,
+        section.firstFooter,
+        section.evenHeader,
+        section.evenFooter,
+      ]) {
+        locate(story);
+      }
+    }
+    for (final note in [...document.footnotes, ...document.endnotes]) {
+      locate(note.blocks);
+    }
+    for (final comment in document.comments) {
+      locate(comment.paragraphs);
+    }
+    if (occurrences != 1) {
+      throw StateError('The source must have one current document owner.');
+    }
+    if (start == end) return false;
+    final paragraphStyles = chain(
+      source.properties.styleId ?? defaultParagraph,
+    );
+    // Also isolate callers that supplied a shallow preview. Publish the
+    // prepared inline list only after every selected run has been resolved.
+    final prepared = WmlClone.paragraph(preview);
+    var changed = false;
+    WmlRunEdit.applyRange(prepared, start, end, (props) {
+      final inherited = merged('rPr', [
+        for (final layer in tableLayers!) layer.firstChild('rPr'),
+        for (final style in paragraphStyles) style.firstChild('rPr'),
+        for (final style in chain(props.styleId)) style.firstChild('rPr'),
+      ]).firstChild('lang')?.getAttribute('val');
+      final imported = props.importedValues;
+      final hasSparseSource =
+          imported != null && props.sourcePropertiesXml != null;
+      final direct = _proofingRunProperties(
+        hasSparseSource
+            ? props.sourcePropertiesXml!
+            : WordSerializer().runPropertiesXml(props),
+      );
+      final directLanguage = direct
+          .firstChild('lang', namespaceUri: OfficeNamespaces.w)
+          ?.getAttribute('val', namespaceUri: OfficeNamespaces.w);
+      final pendingOverride =
+          hasSparseSource && imported['lang'] != '${props.proofingLanguage}';
+      if (directLanguage == null &&
+          !pendingOverride &&
+          props.proofingLanguage == inherited) {
+        return;
+      }
+      WordPropertyIo.mergeLanguage(direct, null);
+      props.proofingLanguage = inherited;
+      props.sourcePropertiesXml = XmlDocument(
+        root: direct,
+      ).toXmlString(declaration: false);
+      props.importedValues = hasSparseSource
+          ? {...imported, 'lang': '$inherited'}
+          : WordPropertyIo.runValues(props);
+      if (direct.firstChild('lang', namespaceUri: OfficeNamespaces.w) == null) {
+        props.explicitProperties.remove('lang');
+      }
+      changed = true;
+    });
+    if (changed) preview.inlines = prepared.inlines;
+    return changed;
+  }
+
+  XmlElement _proofingRunProperties(String xml) {
+    // Newly authored runPropertiesXml is a fragment with an inherited `w`
+    // prefix. Give that fragment its native context before matching @w:val.
+    final wrapper = XmlDocument.parse(
+      '<w:proofingContext xmlns:w="${OfficeNamespaces.w}">$xml</w:proofingContext>',
+    ).root!;
+    final properties = xml.isEmpty
+        ? XmlElement(
+            localName: 'rPr',
+            prefix: 'w',
+            namespaceUri: OfficeNamespaces.w,
+          )
+        : wrapper.firstChild('rPr', namespaceUri: OfficeNamespaces.w);
+    if (properties == null) {
+      throw const FormatException('Invalid direct run properties.');
+    }
+    return properties..setAttribute('w', OfficeNamespaces.w, prefix: 'xmlns');
+  }
+
+  List<XmlElement> _tableCellLayers(WmlTable table, int row) {
+    final layers = chain(table.properties.styleId);
+    final source = WordPropertyIo.parse(
+      table.properties.sourcePropertiesXml,
+      'tblPr',
+    );
+    final lookElement = source.firstChild(
+      'tblLook',
+      namespaceUri: OfficeNamespaces.w,
+    );
+    final look = lookElement == null
+        ? reader._tableLooks[table] ?? const _TableLook()
+        : _TableLook.element(lookElement);
+    final conditional = <String>{
+      'wholeTable',
+      if (look.bandedRows) row.isEven ? 'band1Horz' : 'band2Horz',
+      if (row == 0 && look.firstRow) 'firstRow',
+    };
+    return <XmlElement>[
+      if (layers.isEmpty) XmlElement(localName: 'tableDefaults'),
+      ...layers,
+      for (final style in layers)
+        for (final region in style.childrenNamed('tblStylePr'))
+          if (conditional.contains(region.getAttribute('type'))) region,
+    ];
   }
 
   List<XmlElement> chain(String? id, [Set<String>? seen]) {
@@ -389,26 +553,9 @@ class _StyleCascade {
       } else if (block is WmlFrame) {
         walk(block.blocks, tableLayers);
       } else if (block is WmlTable) {
-        final layers = chain(block.properties.styleId);
-        final look = reader._tableLooks[block] ?? const _TableLook();
         for (int row = 0; row < block.rows.length; row++) {
+          final cellLayers = _tableCellLayers(block, row);
           for (int col = 0; col < block.rows[row].cells.length; col++) {
-            final conditional = <String>{
-              'wholeTable',
-              if (look.bandedRows) row.isEven ? 'band1Horz' : 'band2Horz',
-              if (row == 0 && look.firstRow) 'firstRow',
-            };
-            final cellLayers = <XmlElement>[
-              if (layers.isEmpty) XmlElement(localName: 'tableDefaults'),
-              ...layers,
-            ];
-            for (final style in layers) {
-              for (final region in style.childrenNamed('tblStylePr')) {
-                if (conditional.contains(region.getAttribute('type'))) {
-                  cellLayers.add(region);
-                }
-              }
-            }
             walk(block.rows[row].cells[col].blocks, cellLayers);
           }
         }

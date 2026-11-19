@@ -72,6 +72,7 @@ final class SpacyPlatformPackage {
     required this.qualification,
     required this.profile,
     this.systemRequirements = const [],
+    this.opensVersion2Bundles = false,
   });
 
   final SpacyPlatform platform;
@@ -94,7 +95,49 @@ final class SpacyPlatformPackage {
   final String profile;
   final List<String> systemRequirements;
 
+  /// True for libraries built from CrispEmbed source with the v2 runtime
+  /// (PR #244 and later): they also open the separately published English
+  /// and French bundles. Earlier libraries reject them.
+  final bool opensVersion2Bundles;
+
   Uri get url => spacyResolveUrl(revision, archivePath);
+}
+
+/// One separately published language bundle (five pinned files, no
+/// executable code) in its own Hub repository. It is opened by a v2-capable
+/// library from a [SpacyPlatformPackage] with [opensVersion2Bundles].
+final class SpacyLanguageDownload {
+  const SpacyLanguageDownload({
+    required this.bundle,
+    required this.repository,
+    required this.revision,
+    required this.license,
+    required this.entityLabels,
+    required this.qualification,
+  });
+
+  final SpacyBundle bundle;
+  final String repository;
+
+  /// Full 40-hex Hub commit holding `bundle/*`; never a branch name.
+  final String revision;
+
+  /// User-facing license summary; the full texts are installed as files.
+  final String license;
+  final List<String> entityLabels;
+
+  /// Analysis evidence for the bundle (exact libraries are listed per
+  /// package qualification). Never a grammar claim.
+  final String qualification;
+
+  SpacyLanguage get language => bundle.language;
+  List<SpacyArtifact> get files => bundle.pinnedFiles;
+  Uri url(SpacyArtifact artifact) => spacyResolveUrl(
+    revision,
+    'bundle/${artifact.file}',
+    repository: repository,
+  );
+  int get totalBytes => files.fold(0, (sum, file) => sum + file.bytes);
 }
 
 /// The five model files, downloadable without a native library. Hosts which
@@ -164,7 +207,11 @@ final class SpacyPlatformStatus {
   bool get available => package != null;
 }
 
-Uri spacyResolveUrl(String revision, String path) {
+Uri spacyResolveUrl(
+  String revision,
+  String path, {
+  String repository = spacyHuggingFaceRepository,
+}) {
   if (!RegExp(r'^[0-9a-f]{40}$').hasMatch(revision) ||
       path.isEmpty ||
       path.startsWith('/') ||
@@ -173,10 +220,7 @@ Uri spacyResolveUrl(String revision, String path) {
           .any((part) => part.isEmpty || part == '.' || part == '..')) {
     throw ArgumentError('Only immutable revision paths can be resolved.');
   }
-  return Uri.https(
-    'huggingface.co',
-    '/$spacyHuggingFaceRepository/resolve/$revision/$path',
-  );
+  return Uri.https('huggingface.co', '/$repository/resolve/$revision/$path');
 }
 
 /// Immutable revision that holds the bundle files and the Linux capsule.
@@ -328,7 +372,7 @@ const spacyRecordedBuilds = <SpacyBuildQualification>[
 
 /// Qualification for an exact library, or null for an unrecorded build.
 SpacyBuildQualification? spacyQualificationFor(String librarySha256) {
-  for (final package in spacyCatalogPackages) {
+  for (final package in [...spacyCatalogPackages, ...spacyRuntimePackages]) {
     if (package.librarySha256 == librarySha256) return package.qualification;
   }
   for (final build in spacyRecordedBuilds) {
@@ -336,3 +380,198 @@ SpacyBuildQualification? spacyQualificationFor(String librarySha256) {
   }
   return null;
 }
+
+// ---------------------------------------------------------------------------
+// Version-2 runtime packages and separately published language bundles.
+//
+// The native library is language-independent. Capsules built from CrispEmbed
+// main 45b05770 (after the v2 runtime, PR #244) hold the same German bundle as
+// before plus a library that also opens the English and French bundles.
+// They carry no grammar claim; the German manual grammar provider stays bound
+// to its qualified build ([spacyGrammarNativeSha256]).
+
+const _v2Source = '45b057700880e125d701d941a9e3123679960d35';
+
+/// CrispEmbed run that loaded the published English and French bundles with
+/// the published runtime capsules and compared them with original spaCy.
+const spacyLanguageConsumerRun = '44377019364';
+
+const _v2Analysis =
+    'Hosted development parity on this exact library (CrispEmbed run '
+    '44369523105): German 16 cases, 113 tokens, 1,201 numerical stages exact; '
+    'spacy_smoke vs original spaCy 60/60 texts, 835 tokens, 29/29 entities. '
+    'English and French bundles opened from the published capsule through '
+    'the C ABI (run $spacyLanguageConsumerRun): UD English-EWT test 2,077/2,077 '
+    'texts, 25,531 tokens, 1,876/1,876 entities; UD French-GSD test 416/416 '
+    'texts, 9,786 tokens, 469/469 entities identical to original spaCy '
+    '3.8.18. Component evidence; not an app qualification.';
+
+const _v2Limitations = [
+  'No manual grammar qualification for this build; the grammar planner '
+      'refuses it.',
+];
+
+const spacyLinuxX64RuntimeLibrarySha256 =
+    '6e21ae15b08922520a2cb6bcba3ed27ae7f6476a6bde1cec33607ab9489045f4';
+
+const spacyLinuxX64RuntimePackage = SpacyPlatformPackage(
+  platform: SpacyPlatform.linuxX64,
+  revision: 'd143d26a3edd7b51bdfdf12a6cda5b6243ec69d0',
+  archivePath:
+      'packages/linux-x86_64/$_v2Source/'
+      'spacy-de_core_news_sm-3.8.0-linux-x86_64-f32.tar.gz',
+  archiveSha256:
+      'c8bbbb86fdd362117c2b5c94453f975b33fab6953a78c13db37b255caa816ce5',
+  archiveBytes: 8045365,
+  manifestSha256:
+      '9fe9b4b3fdb96600121261f80b23b2536b24b380702ab1ba8a4e0ab430df84a2',
+  manifestBytes: 10886,
+  libraryEntrypoint:
+      'native/$spacyLinuxX64RuntimeLibrarySha256/libcrispembed-spacy.so',
+  librarySha256: spacyLinuxX64RuntimeLibrarySha256,
+  libraryBytes: 2716896,
+  profile: 'de_core_news_sm-3.8.0-f32-linux-x86_64',
+  systemRequirements: [
+    'x86-64; glibc 2.34 or newer and libstdc++ (GLIBCXX 3.4.29); PCRE2 static',
+  ],
+  opensVersion2Bundles: true,
+  qualification: SpacyBuildQualification(
+    librarySha256: spacyLinuxX64RuntimeLibrarySha256,
+    analysis: _v2Analysis,
+    limitations: _v2Limitations,
+  ),
+);
+
+const spacyLinuxArm64RuntimeLibrarySha256 =
+    '21d15c1e48418d7db0d7cf5626330ce6d9c31c637a09cd1ae57020a9f9a17c45';
+
+const spacyLinuxArm64RuntimePackage = SpacyPlatformPackage(
+  platform: SpacyPlatform.linuxArm64,
+  revision: 'fd75184d58944ec5f6c4cb037a48eae6e6f5942f',
+  archivePath:
+      'packages/linux-arm64/$_v2Source/'
+      'spacy-de_core_news_sm-3.8.0-linux-arm64-f32.tar.gz',
+  archiveSha256:
+      '41c07dbe1ecc21fb2c3409aa5d6d13a1d47cb213bff485e2c4e06bfe0d02b0c6',
+  archiveBytes: 7977603,
+  manifestSha256:
+      '3f7ad88e9e28fe921bbd40547366ced4512cbe9807bb75b839b7bc14dd588dc4',
+  manifestBytes: 10941,
+  libraryEntrypoint:
+      'native/$spacyLinuxArm64RuntimeLibrarySha256/libcrispembed-spacy.so',
+  librarySha256: spacyLinuxArm64RuntimeLibrarySha256,
+  libraryBytes: 2388288,
+  profile: 'de_core_news_sm-3.8.0-f32-linux-arm64',
+  systemRequirements: [
+    'arm64 (aarch64); glibc 2.34 or newer and libstdc++ (GLIBCXX 3.4.29); '
+        'PCRE2 static',
+  ],
+  opensVersion2Bundles: true,
+  qualification: SpacyBuildQualification(
+    librarySha256: spacyLinuxArm64RuntimeLibrarySha256,
+    analysis: _v2Analysis,
+    limitations: _v2Limitations,
+  ),
+);
+
+const spacyMacosArm64RuntimeLibrarySha256 =
+    'f3300152c8b063960ff9c21785241bb8b99ffc8f1b2150e362b46d78b0272647';
+
+const spacyMacosArm64RuntimePackage = SpacyPlatformPackage(
+  platform: SpacyPlatform.macosArm64,
+  revision: 'cf833ae59e6e92773af90c4cbae67a2ba68dec03',
+  archivePath:
+      'packages/macos-arm64/$_v2Source/'
+      'spacy-de_core_news_sm-3.8.0-macos-arm64-f32.tar.gz',
+  archiveSha256:
+      '200a09b1f582e67abf813355424c0ae9066d47a076c2bf641daed0ff605c7d8c',
+  archiveBytes: 7930303,
+  manifestSha256:
+      'd3daca5dd08d0c881a307feae80cc3507a3b653ff28a4c8122dfbb62220893d2',
+  manifestBytes: 11154,
+  libraryEntrypoint:
+      'native/$spacyMacosArm64RuntimeLibrarySha256/libcrispembed-spacy.dylib',
+  librarySha256: spacyMacosArm64RuntimeLibrarySha256,
+  libraryBytes: 2284856,
+  profile: 'de_core_news_sm-3.8.0-f32-macos-arm64',
+  systemRequirements: [
+    'Apple silicon, macOS 13 or newer (system libc++ only; PCRE2 static)',
+    'Unsigned library: a hardened/sandboxed app must allow it or ship it '
+        'inside its own signed bundle',
+  ],
+  opensVersion2Bundles: true,
+  qualification: SpacyBuildQualification(
+    librarySha256: spacyMacosArm64RuntimeLibrarySha256,
+    analysis: _v2Analysis,
+    limitations: [..._v2Limitations, 'Not signed or notarized.'],
+  ),
+);
+
+/// Packages whose library opens the English and French bundles, one per
+/// platform. Only platforms with a published v2 capsule are listed; the
+/// Windows v2 capsule failed its text-API controls (CrispEmbed run
+/// 44369523105) and is not published.
+const spacyRuntimePackages = <SpacyPlatformPackage>[
+  spacyLinuxX64RuntimePackage,
+  spacyLinuxArm64RuntimePackage,
+  spacyMacosArm64RuntimePackage,
+];
+
+/// The v2-capable package for [platform], or null when none is published.
+SpacyPlatformPackage? spacyRuntimePackage(SpacyPlatform platform) {
+  for (final package in spacyRuntimePackages) {
+    if (package.platform == platform) return package;
+  }
+  return null;
+}
+
+/// en_core_web_sm 3.8.0 bundle, published by CrispEmbed run 44372635419
+/// (main e91b054d) at an immutable revision and read back from an empty
+/// cache (every file's SHA-256 and length).
+const spacyEnglishDownload = SpacyLanguageDownload(
+  bundle: SpacyBundle.englishF32(),
+  repository: 'cstr/crispembed-spacy-en-core-web-sm-3.8.0',
+  revision: 'eb659259b489593ddf29c747bc4562fbad5570f4',
+  license:
+      'MIT (ExplosionAI GmbH). Training-source notices (OntoNotes 5, '
+      'ClearNLP conversion, WordNet 3.0 License) are installed verbatim; no '
+      'corpus text is included.',
+  entityLabels: [
+    'CARDINAL', 'DATE', 'EVENT', 'FAC', 'GPE', 'LANGUAGE', 'LAW', 'LOC', //
+    'MONEY', 'NORP', 'ORDINAL', 'ORG', 'PERCENT', 'PERSON', 'PRODUCT',
+    'QUANTITY', 'TIME', 'WORK_OF_ART',
+  ],
+  qualification:
+      '2,077/2,077 UD English-EWT test texts (25,531 tokens) and 1,876/1,876 '
+      'entities identical to original spaCy 3.8.18 (macOS arm64 and hosted '
+      'Linux x86-64 run 44363961502; published-bundle consumers in run '
+      '$spacyLanguageConsumerRun). Analysis only; no grammar claim.',
+);
+
+/// fr_core_news_sm 3.8.0 bundle, published by the same run.
+const spacyFrenchDownload = SpacyLanguageDownload(
+  bundle: SpacyBundle.frenchF32(),
+  repository: 'cstr/crispembed-spacy-fr-core-news-sm-3.8.0',
+  revision: '5e90593195cc4ecd20ceb864d932d7d7f5e3d762',
+  license:
+      'LGPL-LR (Lesser General Public License for Linguistic Resources), as '
+      'the official fr_core_news_sm package; this is a format conversion of '
+      'that resource. Training-source notices (UD French Sequoia LGPL-LR, '
+      'WikiNER CC BY 4.0, spaCy lookups MIT) are installed verbatim; no corpus '
+      'text is included.',
+  entityLabels: ['LOC', 'MISC', 'ORG', 'PER'],
+  qualification:
+      '416/416 UD French-GSD test texts (9,786 tokens) and 469/469 entities '
+      'identical to original spaCy 3.8.18 (macOS arm64 and hosted Linux '
+      'x86-64 run 44363955799; published-bundle consumers in run '
+      '$spacyLanguageConsumerRun). Analysis only; no grammar claim.',
+);
+
+/// The published bundle for an additional language; null for German (which
+/// ships inside every package) or an unpublished language.
+SpacyLanguageDownload? spacyLanguageDownload(SpacyLanguage language) =>
+    switch (language) {
+      SpacyLanguage.english => spacyEnglishDownload,
+      SpacyLanguage.french => spacyFrenchDownload,
+      SpacyLanguage.german => null,
+    };

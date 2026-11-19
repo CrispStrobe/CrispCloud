@@ -12,7 +12,9 @@ import '../../xml/xml_node.dart';
 import '../../xml/xml_reader.dart';
 import '../math/omml_document.dart';
 import '../math/omml_io.dart';
+import '../model/wml_clone.dart';
 import '../model/wml_document.dart';
+import '../model/wml_run_edit.dart';
 import '../model/word_bookmarks.dart';
 import '../model/word_content_controls.dart';
 import '../model/word_fields.dart';
@@ -3587,6 +3589,25 @@ class WordDeserializer {
     }
   }
 
+  /// Removes direct Latin-language overrides from a detached paragraph preview.
+  ///
+  /// The source identifies the current table/paragraph/character style context.
+  /// Effective inherited run languages remain available for live proofing,
+  /// while sparse export continues to omit the removed direct override. Other
+  /// formatting, East Asian/bidi language metadata, and the live document and
+  /// package are unchanged. Returns false when the selected text already
+  /// inherits its language. The preview must be detached and have source text.
+  bool clearRunProofingLanguage(
+    WmlDocument document,
+    WmlParagraph sourceParagraph,
+    WmlParagraph previewParagraph,
+    int start,
+    int end,
+  ) => _StyleCascade(
+    this,
+    document,
+  ).clearRunProofingLanguage(sourceParagraph, previewParagraph, start, end);
+
   /// Recompute effective formatting after editing a source style definition.
   void refreshStyles(WmlDocument document) {
     final OpcPackage? package = document.package;
@@ -3934,17 +3955,19 @@ class WordDeserializer {
 class _TableLook {
   const _TableLook({this.firstRow = true, this.bandedRows = true});
 
-  factory _TableLook.read(XmlPullReader reader) {
-    final String? val = reader.getAttribute(
-      'val',
-      namespaceUri: OfficeNamespaces.w,
-    );
+  factory _TableLook.read(XmlPullReader reader) => _TableLook._attributes(
+    (name) => reader.getAttribute(name, namespaceUri: OfficeNamespaces.w),
+  );
+
+  factory _TableLook.element(XmlElement element) => _TableLook._attributes(
+    (name) => element.getAttribute(name, namespaceUri: OfficeNamespaces.w),
+  );
+
+  factory _TableLook._attributes(String? Function(String) attribute) {
+    final String? val = attribute('val');
     final int mask = int.tryParse(val ?? '', radix: 16) ?? 0x04A0;
     bool flag(String name, bool fallback) {
-      final String? raw = reader.getAttribute(
-        name,
-        namespaceUri: OfficeNamespaces.w,
-      );
+      final String? raw = attribute(name);
       return raw == null ? fallback : (raw == '1' || raw == 'true');
     }
 

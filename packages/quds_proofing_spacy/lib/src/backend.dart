@@ -40,14 +40,34 @@ final class SpacyBackendIdentity {
   final int textAbiVersion;
   final int capabilityMask;
 
+  /// Identity for [bundle] with the given native build and capabilities.
+  factory SpacyBackendIdentity.forBundle(
+    SpacyBundle bundle, {
+    required String librarySha256,
+    required int capabilityMask,
+  }) => SpacyBackendIdentity(
+    librarySha256: librarySha256,
+    bundleSha256: bundle.manifestSha256,
+    modelSha256: bundle.modelFile.sha256,
+    resourcesSha256: bundle.resourcesFile.sha256,
+    capabilityMask: capabilityMask,
+  );
+
+  /// The pinned bundle this identity names, or null for an unknown model.
+  SpacyBundle? get bundle => SpacyBundle.forModelSha256(modelSha256);
+
+  /// Validates against [bundle], or against the pinned bundle named by
+  /// [modelSha256] when omitted (German, English or French).
   void validate([SpacyBundle? bundle]) {
-    if (!RegExp(r'^[0-9a-f]{64}$').hasMatch(librarySha256) ||
-        bundleSha256 != spacyBundleManifestSha256 ||
-        modelSha256 != spacyModelSha256 ||
-        resourcesSha256 != spacyResourcesSha256 ||
+    final expected = bundle ?? this.bundle;
+    if (expected == null ||
+        !RegExp(r'^[0-9a-f]{64}$').hasMatch(librarySha256) ||
+        bundleSha256 != expected.manifestSha256 ||
+        modelSha256 != expected.modelFile.sha256 ||
+        resourcesSha256 != expected.resourcesFile.sha256 ||
         abiVersion != 1 ||
         textAbiVersion != 1 ||
-        (capabilityMask != 15 && capabilityMask != 31)) {
+        !expected.capabilityMasks.contains(capabilityMask)) {
       throw const FormatException('Unsupported spaCy runtime/model identity.');
     }
   }

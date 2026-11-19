@@ -1,6 +1,106 @@
+import 'dart:convert';
+
 import 'package:quds_office_engine/quds_office_engine.dart';
 
 import 'word_zotero_format.dart';
+
+/// Reuses source metadata without carrying an earlier citation's page number,
+/// affixes, author mode or processor position into a new occurrence.
+/// Unrecognized source metadata and all URI aliases remain untouched.
+ZoteroCitationItem zoteroReusableCitationItem(ZoteroCitationItem item) {
+  final json = Map<String, dynamic>.of(item.toJson());
+  for (final key in const [
+    'locator',
+    'label',
+    'prefix',
+    'suffix',
+    'suppress-author',
+    'author-only',
+    'position',
+    'near-note',
+    'first-reference-note-number',
+    'locator-date',
+    'locator-extra',
+  ]) {
+    json.remove(key);
+  }
+  return ZoteroCitationItem.fromJson(json);
+}
+
+/// A stored source in first-cited order, ready to cite again. A linked source
+/// uses its first available embedded snapshot and retains every declared alias.
+final class ZoteroDocumentReference {
+  const ZoteroDocumentReference({
+    required this.selectionKey,
+    required this.item,
+    required this.occurrences,
+  });
+
+  final String selectionKey;
+  final ZoteroCitationItem item;
+  final int occurrences;
+}
+
+/// Groups only explicitly linked Zotero identities. Equal bare IDs or keys in
+/// different libraries never merge. Offline records with different stored data
+/// remain separate, even when an imported document reused their CSL IDs.
+List<ZoteroDocumentReference> zoteroDocumentReferences(
+  Iterable<ZoteroCitationItem> sources,
+) {
+  final items = sources.toList(growable: false);
+  final resolver = ZoteroSourceResolver(items, local: false);
+  final groups = <String, List<ZoteroCitationItem>>{};
+  for (final item in items) {
+    final address = resolver.addressOf(item);
+    final key = address == null
+        ? 'stored:${jsonEncode(_orderedJson(zoteroReusableCitationItem(item).toJson()))}'
+        : 'linked:${address.canonicalUri}';
+    groups.putIfAbsent(key, () => []).add(item);
+  }
+  return List.unmodifiable([
+    for (final entry in groups.entries) _documentReference(entry),
+  ]);
+}
+
+ZoteroDocumentReference _documentReference(
+  MapEntry<String, List<ZoteroCitationItem>> group,
+) {
+  final items = group.value;
+  final chosen = items.firstWhere(
+    (item) => item.itemData != null && item.itemData!.isNotEmpty,
+    orElse: () => items.first,
+  );
+  final uris = <String>{for (final item in items) ...item.uris};
+  final canonicalUris =
+      uris
+          .map(ZoteroSourceAddress.parse)
+          .whereType<ZoteroSourceAddress>()
+          .map((address) => address.canonicalUri.toString())
+          .toSet()
+          .toList()
+        ..sort();
+  final identity = canonicalUris.isEmpty
+      ? group.key
+      : 'linked:${canonicalUris.first}';
+  final reusable = zoteroReusableCitationItem(chosen);
+  return ZoteroDocumentReference(
+    selectionKey: 'document:$identity',
+    item: ZoteroCitationItem.fromJson({
+      ...reusable.toJson(),
+      if (uris.isNotEmpty) 'uris': uris.toList(),
+    }),
+    occurrences: items.length,
+  );
+}
+
+Object? _orderedJson(Object? value) {
+  if (value is Map<String, dynamic>) {
+    final keys = value.keys.toList()..sort();
+    return {for (final key in keys) key: _orderedJson(value[key])};
+  }
+  if (value is List) return value.map(_orderedJson).toList();
+  return value;
+}
 
 /// Resolves explicitly declared Zotero URI aliases before a connected operation.
 ///

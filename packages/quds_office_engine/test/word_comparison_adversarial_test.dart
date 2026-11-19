@@ -295,4 +295,95 @@ void main() {
     );
     expect(frame.blocks.single, same(frame));
   });
+
+  test('moving an unchanged comment to another text range is reported', () {
+    WmlDocument fixture(bool moved) => _doc([
+      WmlParagraph(
+        inlines: [
+          WmlRun(text: 'alpha ', commentIds: moved ? [] : [7]),
+          WmlRun(text: 'beta', commentIds: moved ? [7] : []),
+        ],
+      ),
+    ])..comments.add(WmlComment(id: 7, text: 'Keep this comment.'));
+    final report = WordDocumentComparison.compare(
+      fixture(false),
+      fixture(true),
+    );
+    expect(report.structureCount, 1);
+    expect(report.modifiedCount, 0);
+    _reconstruct(report);
+  });
+
+  test('equivalent comment anchors ignore run splitting and native IDs', () {
+    final original = _doc([
+      WmlParagraph(
+        inlines: [
+          WmlRun(text: 'alpha beta', commentIds: [7]),
+        ],
+      ),
+    ])..comments.add(WmlComment(id: 7, text: 'Same comment.'));
+    final revised = _doc([
+      WmlParagraph(
+        inlines: [
+          WmlRun(text: 'alpha ', commentIds: [88]),
+          WmlRun(text: 'beta', commentIds: [88]),
+        ],
+      ),
+    ])..comments.add(WmlComment(id: 88, text: 'Same comment.'));
+    final report = WordDocumentComparison.compare(original, revised);
+    expect(report.hasChanges, isFalse);
+    _reconstruct(report);
+  });
+
+  for (final opaque in [false, true]) {
+    test(
+      '${opaque ? 'opaque' : 'visual'} block movement between paragraphs is reported',
+      () {
+        WmlBlock object() => opaque
+            ? _opaque('same native content').content
+            : WmlVisual(
+                visual: OfficeVisual(
+                  kind: OfficeVisualKind.picture,
+                  title: 'Same visual',
+                  width: 100,
+                  height: 40,
+                ),
+              );
+        final original = _doc([_p('A'), object(), _p('B')]);
+        final revised = _doc([_p('A'), _p('B'), object()]);
+        final report = WordDocumentComparison.compare(original, revised);
+        expect(report.structureCount, 1);
+        expect(report.modifiedCount, 0);
+        expect(
+          report.changes.single.details.join(' '),
+          contains('After paragraph'),
+        );
+        _reconstruct(report);
+      },
+    );
+  }
+
+  test(
+    'body and frame bookmark ID renumbering uses independent story scopes',
+    () {
+      WmlParagraph bookmarked(String id, String name, String text) =>
+          WmlParagraph(
+            inlines: [
+              WmlBookmarkBoundary(id: id, name: name, isStart: true),
+              WmlRun(text: text),
+              WmlBookmarkBoundary(id: id, isStart: false),
+            ],
+          );
+      WmlDocument fixture(String bodyId, String frameId) => _doc([
+        bookmarked(bodyId, 'BodyBookmark', 'body text'),
+        WmlFrame(blocks: [bookmarked(frameId, 'FrameBookmark', 'frame text')]),
+      ]);
+      final original = fixture('1', '2');
+      // The same native ID is valid in the body's and frame's separate stories.
+      final revised = fixture('9', '9');
+      final report = WordDocumentComparison.compare(original, revised);
+      expect(report.hasChanges, isFalse);
+      _reconstruct(report);
+    },
+  );
 }

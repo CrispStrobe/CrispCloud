@@ -64,6 +64,9 @@ void main() {
 
   testWidgets('the notes pane edits, adds and deletes notes', (tester) async {
     final WordEditorController word = _withNote();
+    addTearDown(() {
+      if (!word.isDisposed) word.dispose();
+    });
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
@@ -112,5 +115,8 @@ void main() {
     word.undo();
     await tester.pump();
     expect(tester.widget<TextField>(field).controller!.text, 'Note body');
+    // The test host owns this controller, including its live-proofing timer.
+    await tester.pumpWidget(const SizedBox.shrink());
+    word.dispose();
   });
 }
