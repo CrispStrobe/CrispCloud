@@ -13,6 +13,22 @@
   "logSha256": {
     "crispcloud-quds-language-host-green.log": "09c9e1d9b119eb9bc9d382a0a4191562ebf8e2d18c692f77748323dbc5104f23",
     "crispcloud-quds-language-ribbon-green.log": "32424be96f4eb65a74042e62b117d24f1a884b2b6e5e38a87bc45d1c6914d0ba",
-    "crispcloud-quds-language-final-fidelity.log": "613453052660b8b47af916cd4d99f28b299473b3bc87428554f5493739183e2e"
+    "crispcloud-quds-language-final-fidelity.log": "613453052660b8b47af916cd4d99f28b299473b3bc87428554f5493739183e2e",
+    "crispcloud-language-build34.log": "b55bc4b02042031b2e74a4e43b5858bf94a1796571a3c6ced8759ec5183363f4",
+    "crispcloud-language-build34-sign.log": "c97f64eedbf5a36be7643e913e46d21623f7d9b3e80f5b22d2c6c771f57dcbdc",
+    "crispcloud-language-build34-startup.log": "b1606522237145dec8aee2d743c324e5cfa83b6548da370eac48b58962b2a552",
+    "crispcloud-language-build34-startup-result.log": "27c4507fc758524e46ea81b8aeaa70d38f81b47884b1fabdf971ecb0fde84cd6",
+    "crispcloud-language-final-proof.log": "613453052660b8b47af916cd4d99f28b299473b3bc87428554f5493739183e2e"
+  },
+  "macOSApp": {
+    "version": "1.3.4",
+    "build": "34",
+    "sourceCommit": "d6e219bb57f2010ea329cfd2f27de9b8f4404653",
+    "architecture": "arm64",
+    "developmentSigned": true,
+    "signatureVerified": true,
+    "startupSeconds": 20,
+    "applicationShellRendered": true,
+    "credentialPolicyReady": true
   }
 }
