@@ -7,6 +7,7 @@ import 'package:path/path.dart' as p;
 import '../models/file_item.dart';
 import '../models/storage_reference.dart';
 import 'file_operation_options.dart';
+import 'metadata_sidecar_service.dart';
 import 'file_operation_content_strategy.dart';
 import 'destination_name_mask.dart';
 import 'duplicate_name_template.dart';
@@ -59,6 +60,20 @@ List<String> retainedTransferStagePaths(Map<String, dynamic>? recovery) {
 /// [stat] and [list] must propagate access/network errors, never report them as
 /// missing files. writeFile must not delete an existing destination on failure.
 abstract class FileOperationBackend implements StorageScanSource {
+  Future<(FileOperationBackend, List<FileItem>)> prepareCopySource(
+    List<FileItem> files,
+    FileOperationBackend destination,
+    FileOperationOptions options,
+  ) async => (this, files);
+  String destinationNameFor(FileItem file) => paths.basename(file.path!);
+  bool isValidListedChild(String parent, FileItem child) =>
+      child.path != null &&
+      child.name != '.' &&
+      child.name != '..' &&
+      paths.dirname(paths.normalize(child.path!)) == parent &&
+      paths.basename(child.path!) == child.name &&
+      !child.name.contains('/') &&
+      !child.name.contains('\\');
   @override
   Object get identity;
   String? get persistentStorageId => null;
@@ -547,6 +562,15 @@ class FileOperationService {
   }) async {
     final entries = <FileOperationEntry>[];
     final errors = <String>[];
+    if (options.kind == FileOperationKind.copy) {
+      final prepared = await source.prepareCopySource(
+        files,
+        destination,
+        options,
+      );
+      source = prepared.$1;
+      files = prepared.$2;
+    }
     final target = destination.paths.normalize(targetDirectory);
     final plan = FileOperationPlan(
       source: source,
@@ -795,6 +819,10 @@ class FileOperationService {
         return;
       }
       final entry = FileOperationEntry(file, output);
+      if (file.metadata?['destinationNameMapped'] == true) {
+        entry.message =
+            'Destination name: ${file.metadata?['sourceDisplayName']} → ${file.name}';
+      }
       if (duplicateNameBase != null) {
         entry.recovery = {'duplicateNameBase': duplicateNameBase};
       }
@@ -924,14 +952,7 @@ class FileOperationService {
         }
         children.sort((a, b) => a.name.compareTo(b.name));
         for (final child in children) {
-          if (child.path == null ||
-              child.name == '.' ||
-              child.name == '..' ||
-              source.paths.dirname(source.paths.normalize(child.path!)) !=
-                  path ||
-              source.paths.basename(child.path!) != child.name ||
-              child.name.contains('/') ||
-              child.name.contains('\\')) {
+          if (!source.isValidListedChild(path, child)) {
             errors.add(
               'Invalid child path returned by ${source.label}: ${child.path}',
             );
@@ -950,7 +971,7 @@ class FileOperationService {
     try {
       for (final root in unique) {
         String relative =
-            options.destinationName ?? source.paths.basename(root.key);
+            options.destinationName ?? source.destinationNameFor(root.value);
         if (options.preserveRelativePaths) {
           if (!source.isWithin(base!, root.key)) {
             errors.add('Source is outside the relative base: ${root.key}');
@@ -1704,7 +1725,7 @@ class FileOperationService {
             }
           }
           await checkpoint?.call(entry, 'metadata');
-          await _preserveMetadata(source, target, entry, options);
+          await _preserveMetadata(source, target, entry, options, control);
           if (options.kind == FileOperationKind.move) {
             await control.checkpoint();
             _checkSources(source, target);
@@ -1801,7 +1822,7 @@ class FileOperationService {
             );
           }
           await checkpoint?.call(entry, 'directoryMetadata');
-          await _preserveMetadata(source, target, entry, options);
+          await _preserveMetadata(source, target, entry, options, control);
           entry.recovery = {
             ...?entry.recovery,
             'directoryMetadataApplied': true,
@@ -1858,6 +1879,7 @@ class FileOperationService {
     FileOperationBackend target,
     FileOperationEntry entry,
     FileOperationOptions options,
+    FileOperationControl control,
   ) async {
     try {
       if (entry.source.isSymlink == true &&
@@ -1930,6 +1952,18 @@ class FileOperationService {
           ),
         );
       }
+      if (options.saveMetadataSidecars) {
+        _checkSources(source, target);
+        await MetadataSidecarService.save(
+          source,
+          target,
+          entry,
+          control: control,
+        );
+        _checkSources(source, target);
+      }
+    } on FileOperationCancelled {
+      rethrow;
     } catch (error) {
       throw FileOperationMetadataFailure(error);
     }
@@ -1957,7 +1991,13 @@ class FileOperationService {
     if (cleanupRetainedFiles) {
       await _cleanupRetainedStages(plan, entry, control, checkpoint);
     }
-    await _preserveMetadata(plan.source, plan.destination, entry, plan.options);
+    await _preserveMetadata(
+      plan.source,
+      plan.destination,
+      entry,
+      plan.options,
+      control,
+    );
     if (plan.options.kind == FileOperationKind.move) {
       await control.checkpoint();
       _checkSources(plan.source, plan.destination);

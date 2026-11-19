@@ -17,6 +17,7 @@ import 'package:path/path.dart' as p;
 import 'package:url_launcher/url_launcher.dart';
 
 import 'cloud_storage_interface.dart';
+import 'cloud_object_reader.dart';
 import 'bounded_http_transfer.dart';
 import 'bounded_transfer_stream.dart';
 import 'gdrive_config_service.dart';
@@ -27,7 +28,10 @@ import 'storage_trash.dart';
 import './connection_failure.dart';
 
 class GDriveClientAdapter extends CloudStorageClient
-    implements StorageTrashOperations, FreshCloudDirectoryReader {
+    implements
+        StorageTrashOperations,
+        FreshCloudDirectoryReader,
+        CloudObjectReader {
   static const _log = Log('GDriveClient');
 
   final GDriveConfigService _config;
@@ -611,9 +615,8 @@ class GDriveClientAdapter extends CloudStorageClient
           operation: 'Google Drive upload',
         );
         if (end < length) {
-          final range = RegExp(
-            r'^bytes=0-(\d+)$',
-          ).firstMatch(response.headers['range'] ?? '');
+          final range = RegExp(r'^bytes=0-(\d+)$')
+              .firstMatch(response.headers['range'] ?? '');
           if (response.statusCode != 308 ||
               range == null ||
               int.tryParse(range.group(1)!) != end - 1) {
@@ -730,12 +733,10 @@ class GDriveClientAdapter extends CloudStorageClient
 
   /// Google Apps MIME types that require export (can't be downloaded directly).
   static const _googleDocsMimeTypes = <String, String>{
-    'application/vnd.google-apps.document':
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.google-apps.document': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     'application/vnd.google-apps.spreadsheet':
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    'application/vnd.google-apps.presentation':
-        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'application/vnd.google-apps.presentation': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
     'application/vnd.google-apps.drawing': 'application/pdf',
     'application/vnd.google-apps.script':
         'application/vnd.google-apps.script+json',
@@ -807,8 +808,7 @@ class GDriveClientAdapter extends CloudStorageClient
       case 'application/vnd.google-apps.document':
         return [
           {
-            'mimeType':
-                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'mimeType': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
             'ext': '.docx',
             'label': 'DOCX document',
           },
@@ -821,8 +821,7 @@ class GDriveClientAdapter extends CloudStorageClient
       case 'application/vnd.google-apps.spreadsheet':
         return [
           {
-            'mimeType':
-                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'mimeType': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             'ext': '.xlsx',
             'label': 'XLSX spreadsheet',
           },
@@ -837,8 +836,7 @@ class GDriveClientAdapter extends CloudStorageClient
       case 'application/vnd.google-apps.presentation':
         return [
           {
-            'mimeType':
-                'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            'mimeType': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
             'ext': '.pptx',
             'label': 'PPTX presentation',
           },
@@ -868,8 +866,7 @@ class GDriveClientAdapter extends CloudStorageClient
     final resp = await _apiGet(
       '/files/$fileId/revisions',
       queryParams: {
-        'fields':
-            'revisions(id,modifiedTime,originalFilename,mimeType,size,lastModifyingUser/displayName,keepForever)',
+        'fields': 'revisions(id,modifiedTime,originalFilename,mimeType,size,lastModifyingUser/displayName,keepForever)',
         'pageSize': '1000',
       },
     );
@@ -1023,9 +1020,73 @@ class GDriveClientAdapter extends CloudStorageClient
     if (fileId == null) {
       throw StateError('The download source no longer exists.');
     }
+    yield* readObjectContents(fileId, onProgress: onProgress);
+  }
+
+  @override
+  Future<Map<String, dynamic>> readObjectMetadata(String id) async {
+    await _ensureToken();
+    final value = await _apiGet(
+      '/files/${Uri.encodeComponent(id)}',
+      queryParams: {
+        'fields':
+            'id,name,mimeType,size,modifiedTime,parents,version,md5Checksum',
+        'supportsAllDrives': 'true',
+      },
+    );
+    return {
+      ...value,
+      if (_exportExtensions[value['mimeType']] case final extension?)
+        'downloadExtension': extension.startsWith('.')
+            ? extension.substring(1)
+            : extension,
+    };
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> listObjectChildren(String id) async {
+    await _ensureToken();
+    final result = <Map<String, dynamic>>[];
+    String? page;
+    do {
+      final response = await _apiGet(
+        '/files',
+        queryParams: {
+          'q': "'${_escapeQuery(id)}' in parents and trashed=false",
+          'fields': 'nextPageToken,files(id,name,mimeType,size,modifiedTime,parents,version,md5Checksum)',
+          'pageSize': '1000',
+          'supportsAllDrives': 'true',
+          'includeItemsFromAllDrives': 'true',
+          if (page != null) 'pageToken': page,
+        },
+      );
+      result.addAll(
+        ((response['files'] as List?) ?? []).map((raw) {
+          final value = Map<String, dynamic>.from(raw as Map);
+          return {
+            ...value,
+            if (_exportExtensions[value['mimeType']] case final extension?)
+              'downloadExtension': extension.startsWith('.')
+                  ? extension.substring(1)
+                  : extension,
+          };
+        }),
+      );
+      page = response['nextPageToken'] as String?;
+    } while (page != null);
+    return result;
+  }
+
+  @override
+  Stream<List<int>> readObjectContents(
+    String fileId, {
+    void Function(int, int)? onProgress,
+  }) async* {
+    await _ensureToken();
+    fileId = Uri.encodeComponent(fileId);
     final metadata = await _apiGet(
       '/files/$fileId',
-      queryParams: {'fields': 'mimeType,size'},
+      queryParams: {'fields': 'mimeType,size', 'supportsAllDrives': 'true'},
     );
     final mime = metadata['mimeType'] as String?;
     final exportMime = _googleDocsMimeTypes[mime];
@@ -1033,10 +1094,9 @@ class GDriveClientAdapter extends CloudStorageClient
       throw StateError('Cannot download a folder as file bytes.');
     }
     final uri = exportMime == null
-        ? Uri.parse('$_apiBase/files/$fileId?alt=media')
-        : Uri.parse(
-            '$_apiBase/files/$fileId/export',
-          ).replace(queryParameters: {'mimeType': exportMime});
+        ? Uri.parse('$_apiBase/files/$fileId?alt=media&supportsAllDrives=true')
+        : Uri.parse('$_apiBase/files/$fileId/export')
+              .replace(queryParameters: {'mimeType': exportMime});
     yield* streamHttpDownload(
       uri,
       operation: 'Google Drive download',
@@ -1552,9 +1612,8 @@ class GDriveClientAdapter extends CloudStorageClient
     String endpoint, {
     Map<String, String>? queryParams,
   }) async {
-    final uri = Uri.parse(
-      '$_apiBase$endpoint',
-    ).replace(queryParameters: queryParams);
+    final uri = Uri.parse('$_apiBase$endpoint')
+        .replace(queryParameters: queryParams);
     final resp = await http.get(
       uri,
       headers: {'Authorization': 'Bearer $_accessToken'},

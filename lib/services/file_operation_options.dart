@@ -54,6 +54,7 @@ class FileOperationOptions {
     this.preserveExtendedAttributes = false,
     this.preserveAcl = false,
     this.preserveWindowsAttributes = false,
+    this.saveMetadataSidecars = false,
     this.verifyContents = false,
     this.stopOnError = true,
     this.copySymbolicLinks = false,
@@ -87,6 +88,7 @@ class FileOperationOptions {
   final bool preserveExtendedAttributes;
   final bool preserveAcl;
   final bool preserveWindowsAttributes;
+  final bool saveMetadataSidecars;
   final bool verifyContents;
   final bool stopOnError;
   final bool copySymbolicLinks;
@@ -129,6 +131,11 @@ class FileOperationOptions {
 
   void validateTransferSettings() {
     DuplicateNameTemplate(duplicateNameTemplate);
+    if (saveMetadataSidecars && !verifyContents) {
+      throw const FormatException(
+        "Metadata sidecars require content verification.",
+      );
+    }
     if (copyMethod == FileCopyMethod.verifiedDelta &&
         (kind != FileOperationKind.copy ||
             fileConflict == FileConflictPolicy.append ||
@@ -168,7 +175,8 @@ class FileOperationOptions {
       preserveOwnership ||
       preserveExtendedAttributes ||
       preserveAcl ||
-      preserveWindowsAttributes;
+      preserveWindowsAttributes ||
+      saveMetadataSidecars;
 
   FileSearchQuery get searchFilter => FileSearchQuery(
     namePattern: pattern?.expression ?? '*',
@@ -202,6 +210,7 @@ class FileOperationOptions {
     'preserveExtendedAttributes': preserveExtendedAttributes,
     'preserveAcl': preserveAcl,
     'preserveWindowsAttributes': preserveWindowsAttributes,
+    'saveMetadataSidecars': saveMetadataSidecars,
     'verifyContents': verifyContents,
     'stopOnError': stopOnError,
     'copySymbolicLinks': copySymbolicLinks,
@@ -244,6 +253,7 @@ class FileOperationOptions {
       preserveExtendedAttributes: json['preserveExtendedAttributes'] == true,
       preserveAcl: json['preserveAcl'] == true,
       preserveWindowsAttributes: json['preserveWindowsAttributes'] == true,
+      saveMetadataSidecars: json['saveMetadataSidecars'] == true,
       verifyContents: json['verifyContents'] == true,
       stopOnError: json['stopOnError'] != false,
       copySymbolicLinks: json['copySymbolicLinks'] == true,

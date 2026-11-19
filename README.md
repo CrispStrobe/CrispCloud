@@ -357,6 +357,8 @@ Current container support includes reviewed native archive moves/recovery, direc
 
 Cloud connections can remain open simultaneously in both panes. See [provider setup](docs/PROVIDER_SETUP.md#multiple-simultaneous-cloud-connections) and [Nextcloud browser requirements](docs/PROVIDER_SETUP.md#browser-access-webpwa) for session behavior, CORS, HTTPS and server configuration.
 
+Optional [metadata sidecars](docs/metadata-sidecars.md) preserve backup metadata on destinations without native metadata support. Enable them in Copy/Move; restore a chosen record from Settings.
+
 ## Offline catalogues and CLI
 
 Tools → Catalogues provides SQLite catalogue browsing, Cathy/Catfish CAF import/export, paged search and size rankings, cancellation and safe refresh. See [catalogue usage and limits](docs/catalogues.md). The primary CLI command is `crispcloud`; `crisp` remains an alias. CrispSorter uses `crispsorter` and its lightweight `crispcat` companion.

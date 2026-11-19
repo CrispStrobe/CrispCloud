@@ -38,6 +38,8 @@ with tempfile.TemporaryDirectory(prefix='.crispcloud-cli-', dir=output.parent) a
     shutil.copy2(root / 'LICENSE.txt', bundle / 'LICENSE-CRISPCLOUD.txt')
     shutil.copy2(root / 'packages/crisp_storage/NOTICES', bundle / 'STORAGE-NOTICES.txt')
     shutil.copy2(root / 'packages/crisp_catalog/README.md', bundle / 'CATALOG-README.md')
+    shutil.copy2(root / 'cli/install.sh', bundle / 'install.sh')
+    shutil.copy2(root / 'cli/README.md', bundle / 'README.md')
     subprocess.run([sys.executable, str(root / 'tool/collect_catalog_licenses.py'), '--output', str(bundle / 'catalog-licenses')], check=True)
     destination = output / 'bundle'
     backup = output / f'.previous-bundle-{uuid.uuid4().hex}'

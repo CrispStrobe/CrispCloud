@@ -380,7 +380,7 @@ void main() {
         'application/vnd.google-apps.document',
       );
       expect(formats.length, equals(6));
-      expect(formats.any((f) => f['label'] == 'Word'), isTrue);
+      expect(formats.any((f) => f['ext'] == '.docx'), isTrue);
       expect(formats.any((f) => f['label'] == 'PDF'), isTrue);
       expect(formats.any((f) => f['label'] == 'Plain Text'), isTrue);
       expect(formats.any((f) => f['label'] == 'EPUB'), isTrue);
@@ -391,7 +391,7 @@ void main() {
         'application/vnd.google-apps.spreadsheet',
       );
       expect(formats.length, equals(4));
-      expect(formats.any((f) => f['label'] == 'Excel'), isTrue);
+      expect(formats.any((f) => f['ext'] == '.xlsx'), isTrue);
       expect(formats.any((f) => f['label'] == 'CSV'), isTrue);
     });
 
@@ -400,7 +400,7 @@ void main() {
         'application/vnd.google-apps.presentation',
       );
       expect(formats.length, equals(3));
-      expect(formats.any((f) => f['label'] == 'PowerPoint'), isTrue);
+      expect(formats.any((f) => f['ext'] == '.pptx'), isTrue);
       expect(formats.any((f) => f['label'] == 'PDF'), isTrue);
     });
 

@@ -68,6 +68,8 @@ class DistributionTests(unittest.TestCase):
             self.assertIn('smb2 0.43.0', (bundle / 'STORAGE-NOTICES.txt').read_text())
             self.assertTrue((bundle / 'bin/crispcloud').is_file())
             self.assertTrue((bundle / 'bin/crisp').is_file())
+            self.assertEqual((bundle / 'install.sh').read_bytes(), (root / 'cli/install.sh').read_bytes())
+            self.assertTrue((bundle / 'README.md').is_file())
             self.assertTrue(components.check_artifact(bundle))
 
 

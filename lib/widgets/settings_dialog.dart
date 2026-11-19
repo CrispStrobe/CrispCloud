@@ -1,4 +1,5 @@
 import 'notification_settings.dart';
+import 'storage_tools_settings.dart';
 // lib/widgets/settings_dialog.dart
 //
 // Unified settings dialog opened from the AppBar gear icon, the macOS app
@@ -100,6 +101,7 @@ class SettingsDialog extends ConsumerWidget {
             _FileColorsSection(),
             const Divider(height: 1),
             _AdvancedSection(),
+            const StorageToolsSettings(),
           ],
         ),
       ),

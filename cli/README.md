@@ -20,6 +20,17 @@ The primary command is `crispcloud`, matching the full-product naming of
 `crispsorter`. `crisp` remains a compatibility alias with identical commands and
 JSON/exit-code behavior. Both executables are included in the native bundle.
 
+### Install a downloaded macOS/Linux bundle
+
+Extract the complete CLI archive, then run `sh install.sh` inside its `bundle`
+directory. This installs the executables **and** their native libraries under
+`~/.local/lib/crispcloud`, with commands in `~/.local/bin`. Add that bin directory
+to PATH. Use `sh install.sh --prefix /absolute/path` for another user-owned prefix.
+The installer refuses to overwrite unrelated commands and keeps previous releases.
+Do not copy only one executable out of the bundle: its native libraries and
+notices must stay alongside it. The CLI uses its own connection configuration;
+it does not automatically inherit desktop-app credentials.
+
 ## Largest local files and folders
 
 ```bash

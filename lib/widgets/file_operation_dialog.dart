@@ -375,6 +375,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
   bool _preserveXattrs = false;
   bool _preserveAcl = false;
   bool _preserveWindowsAttributes = false;
+  bool _sidecars = false;
   FileOperationControl _control = FileOperationControl();
   final _origins = <PanelSide, PanelFileOrigin>{};
   late final PanelNotifier _panel;
@@ -615,7 +616,8 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
     preserveRelativePaths: _relative,
     relativeBase: _relativeBase.text,
     preserveModified: _preserveTime,
-    verifyContents: _verify,
+    verifyContents: _verify || _sidecars,
+    saveMetadataSidecars: _sidecars,
     stopOnError: _stopOnError,
     copySymbolicLinks: _copyLinks,
     preservePermissions: _preservePermissions,
@@ -692,6 +694,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
     _preserveAcl = options.preserveAcl;
     _preserveWindowsAttributes = options.preserveWindowsAttributes;
     _verify = options.verifyContents;
+    _sidecars = options.saveMetadataSidecars;
     _stopOnError = options.stopOnError;
     _copyLinks = options.copySymbolicLinks;
     _mask.text = options.pattern?.expression ?? '*';
@@ -1549,6 +1552,16 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                         (value) => _verify = value,
                       ),
                       _toggle(
+                        context.commanderTr(
+                          "Save metadata sidecars (verified copy)",
+                        ),
+                        _sidecars,
+                        (value) {
+                          _sidecars = value;
+                          if (value) _verify = true;
+                        },
+                      ),
+                      _toggle(
                         context.commanderTr("Preserve file modification times"),
                         _preserveTime,
                         (value) => _preserveTime = value,
@@ -1812,7 +1825,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                                   : Icons.insert_drive_file_outlined,
                             ),
                             title: Text(
-                              '${entry.source.path} → ${entry.destination}',
+                              '${entry.source.metadata?['sourceDisplayName'] ?? entry.source.path} → ${entry.destination}',
                               style: const TextStyle(fontSize: 12),
                             ),
                             subtitle: Text(

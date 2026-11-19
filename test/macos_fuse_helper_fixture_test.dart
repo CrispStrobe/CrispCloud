@@ -14,7 +14,8 @@ void main() {
       ['$root/macos/build_fuse_bridge.sh'],
       environment: {
         'SRCROOT': '$root/macos',
-        'DART_DEFINES': 'Q1JJU1BfRU5BQkxFX0ZVU0U9dHJ1ZQ==',
+        'CRISP_BUILD_PROFILE': 'github',
+        'DART_DEFINES': 'Q1JJU1BfRU5BQkxFX0ZVU0U9dHJ1ZQ==,Q1JJU1BfRElTVFJJQlVUSU9OPWdpdGh1Yg==',
         'TARGET_BUILD_DIR': '${directory.path}/build',
         'UNLOCALIZED_RESOURCES_FOLDER_PATH': 'Resources',
         'EXPANDED_CODE_SIGN_IDENTITY': '-',
@@ -24,6 +25,17 @@ void main() {
     final original = File(
       '${directory.path}/build/Resources/crispcloud_fuse_bridge',
     );
+    // The supported build is direct-distribution. Exercise the legacy
+    // inherit-entitled fixture separately without weakening the build policy.
+    final signing = await Process.run('/usr/bin/codesign', [
+      '--force',
+      '--sign',
+      '-',
+      '--entitlements',
+      '$root/macos/Runner/FuseBridge.entitlements',
+      original.path,
+    ]);
+    expect(signing.exitCode, 0, reason: '${signing.stderr}');
     final originalBytes = await original.readAsBytes();
     final standalone = await prepareStandaloneFuseHelper(
       original.path,

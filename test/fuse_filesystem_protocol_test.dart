@@ -188,6 +188,36 @@ Uint8List _path(String path, [int? flags]) {
 }
 
 void main() {
+  test(
+    'IPC uses its approved temporary root with a short private socket path',
+    () async {
+      final root = await Directory.systemTemp.createTemp('fuse-approved-');
+      final fs = FuseFilesystem(
+        client: _CloudClient(),
+        remotePath: '/remote',
+        temporaryDirectory: root,
+      );
+      final serving = fs.serveRequests();
+      try {
+        final path = await fs.ready;
+        expect(path, startsWith('${root.path}/cf'));
+        expect(path, endsWith('/s'));
+        expect(utf8.encode(path).length, lessThan(104));
+        final peer = await Socket.connect(
+          InternetAddress(path, type: InternetAddressType.unix),
+          0,
+        );
+        peer.destroy();
+      } finally {
+        await fs.dispose();
+        await serving;
+        expect(await root.list().isEmpty, isTrue);
+        await root.delete();
+      }
+    },
+    skip: Platform.isWindows,
+  );
+
   test('Azure mounts large blobs through its bounded range capability', () async {
     final client = AzureBlobAdapter(
       config: AzureConfigService(secureStorage: InMemorySecureStorage()),

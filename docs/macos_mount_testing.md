@@ -1,6 +1,8 @@
 # macOS mount testing
 
-The macOS mount options are experimental and read-only. The macFUSE/FUSE-T
+The macOS mount options are experimental and read-only. Current App Store
+builds exclude FUSE; the optional helper belongs to the explicit GitHub/direct
+distribution profile. The macFUSE/FUSE-T
 bridge supports files above 64 MiB for Azure Blob using bounded range reads;
 other providers retain the whole-file limit. Independent rclone NFS mounts do
 not use that limit. Run native tests
@@ -32,7 +34,9 @@ Build the universal helper and run the opt-in test from the repository root:
 ```sh
 mkdir -p /tmp/crispcloud-fuse-test
 SRCROOT="$PWD/macos" TARGET_BUILD_DIR=/tmp/crispcloud-fuse-test \
-  UNLOCALIZED_RESOURCES_FOLDER_PATH=Resources sh macos/build_fuse_bridge.sh
+  UNLOCALIZED_RESOURCES_FOLDER_PATH=Resources CRISP_BUILD_PROFILE=github \
+  DART_DEFINES=Q1JJU1BfRU5BQkxFX0ZVU0U9dHJ1ZQ==,Q1JJU1BfRElTVFJJQlVUSU9OPWdpdGh1Yg== \
+  sh macos/build_fuse_bridge.sh
 CRISPCLOUD_FUSE_TEST_BACKEND=macfuse-fskit \
   CRISPCLOUD_FUSE_TEST_HELPER=/tmp/crispcloud-fuse-test/Resources/crispcloud_fuse_bridge \
   flutter test --no-pub test/fuse_live_macos_test.dart
@@ -114,3 +118,14 @@ library needs explicit library-validation review. Inherited sandbox rights,
 mount-directory access and IPC socket access also need an isolated development
 host test. Use a unique probe bundle identity with no credential or preference
 APIs, rather than launching the production identity with a temporary HOME.
+
+## IPC temporary-directory regression
+
+The service uses `Directory.systemTemp`, never a hardcoded `/tmp`, with a private
+0700 random directory and short socket basename. Unit tests inject an approved
+root and check socket location and cleanup. The test-only Flutter entrypoint
+`tool/fuse_signed_ipc_probe.dart` exercises root-getattr IPC without production
+startup, credentials or preferences. Build it without enabling FUSE in the App
+Store profile, copy the bundle to a unique probe identity and sign with sandbox
+and network client/server entitlements. This qualifies IPC allocation only; it
+does not change the distribution policy or qualify mounting from a sandbox.

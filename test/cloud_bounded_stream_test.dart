@@ -410,6 +410,84 @@ void main() {
     });
   }
 
+  test(
+    'Drive object reader preserves exact IDs, paginates and exports documents',
+    () async {
+      final seen = <Uri>[];
+      await http.runWithClient(
+        () async {
+          final adapter = await _adapter(true) as GDriveClientAdapter;
+          final metadata = await adapter.readObjectMetadata('exact-doc');
+          expect(metadata['name'], 'Budget/actual');
+          expect(metadata['downloadExtension'], 'docx');
+          final children = await adapter.listObjectChildren('exact-folder');
+          expect(children.map((f) => f['id']), ['exact-doc', 'second']);
+          expect(
+            await adapter
+                .readObjectContents('exact-doc')
+                .expand((b) => b)
+                .toList(),
+            utf8.encode('exported'),
+          );
+        },
+        () => MockClient((request) async {
+          if (_isToken(request))
+            return _json({
+              'access_token': 'fixture-access',
+              'expires_in': 3600,
+            });
+          seen.add(request.url);
+          expect(request.headers['Authorization'], 'Bearer fixture-access');
+          if (request.url.path.endsWith('/files')) {
+            expect(
+              request.url.queryParameters['q'],
+              "'exact-folder' in parents and trashed=false",
+            );
+            expect(
+              request.url.queryParameters['includeItemsFromAllDrives'],
+              'true',
+            );
+            return request.url.queryParameters['pageToken'] == 'next'
+                ? _json({
+                    'files': [
+                      {
+                        'id': 'second',
+                        'name': 'two',
+                        'parents': ['exact-folder'],
+                      },
+                    ],
+                  })
+                : _json({
+                    'nextPageToken': 'next',
+                    'files': [
+                      {
+                        'id': 'exact-doc',
+                        'name': 'Budget/actual',
+                        'parents': ['exact-folder'],
+                      },
+                    ],
+                  });
+          }
+          if (request.url.path.endsWith('/files/exact-doc/export')) {
+            expect(
+              request.url.queryParameters['mimeType'],
+              contains('wordprocessingml.document'),
+            );
+            return http.Response('exported', 200);
+          }
+          expect(request.url.path, '/drive/v3/files/exact-doc');
+          return _json({
+            'id': 'exact-doc',
+            'name': 'Budget/actual',
+            'mimeType': 'application/vnd.google-apps.document',
+            'parents': ['exact-folder'],
+          });
+        }),
+      );
+      expect(seen.any((u) => u.path.contains('Budget')), isFalse);
+    },
+  );
+
   test('Google Drive rejects duplicate file names instead of choosing an arbitrary object', () async {
     await http.runWithClient(
       () async {

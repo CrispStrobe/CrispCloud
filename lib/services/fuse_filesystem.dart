@@ -59,6 +59,7 @@ class _ReadBuffer {
   static const int chunkSize = 256 * 1024; // 256 KB
 
   final String remotePath;
+
   int bufferOffset = 0; // byte offset of the first byte in [data].
   Uint8List data = Uint8List(0);
   bool eof = false;
@@ -138,6 +139,10 @@ class FuseFilesystem {
   final CloudStorageClient client;
   final bool readOnly;
 
+  /// Defaults to the process's sandbox-approved temporary directory. Tests and
+  /// hosts may supply another writable directory; never fall back to /tmp.
+  final Directory? temporaryDirectory;
+
   /// Root path on the cloud provider exposed through this mount.
   final String remotePath;
 
@@ -161,8 +166,12 @@ class FuseFilesystem {
   /// Unix socket / named-pipe path for IPC with the helper process.
   String _socketPath = '';
 
-  FuseFilesystem({required this.client, required this.remotePath,
-      this.readOnly = true});
+  FuseFilesystem({
+    required this.client,
+    required this.remotePath,
+    this.readOnly = true,
+    this.temporaryDirectory,
+  });
 
   Future<String> get ready => _ready.future;
 
@@ -200,8 +209,10 @@ class FuseFilesystem {
     if (Platform.isWindows) {
       _socketPath = r'\\.\pipe\crispcloud_fuse_' + _uniqueSuffix();
     } else {
-      final tempRoot = Platform.isMacOS ? Directory('/tmp') : Directory.systemTemp;
-      _socketDirectory = await tempRoot.createTemp('crispcloud_fuse_');
+      final tempRoot = temporaryDirectory ?? Directory.systemTemp;
+      // Short names leave room for macOS container paths under sockaddr_un's
+      // 104-byte limit. The random directory remains private to this mount.
+      _socketDirectory = await tempRoot.createTemp('cf');
       // createTemp follows the process umask on some platforms. The IPC
       // directory must be private before the socket is created.
       if (!setFileMode(_socketDirectory!.path, 0x1c0 /* 0700 */)) {
@@ -211,7 +222,7 @@ class FuseFilesystem {
         );
       }
       _ensureActive();
-      _socketPath = p.join(_socketDirectory!.path, 'ipc.sock');
+      _socketPath = p.join(_socketDirectory!.path, 's');
       if (utf8.encode(_socketPath).length >= 104) {
         throw StateError('FUSE IPC socket path exceeds the Unix socket limit');
       }
@@ -308,11 +319,16 @@ class FuseFilesystem {
   ) async {
     if (_disposed) return;
     try {
-      if (readOnly && const {
-        FuseOpcode.write, FuseOpcode.create, FuseOpcode.mkdir,
-        FuseOpcode.unlink, FuseOpcode.rmdir, FuseOpcode.rename,
-        FuseOpcode.truncate,
-      }.contains(opcode)) {
+      if (readOnly &&
+          const {
+            FuseOpcode.write,
+            FuseOpcode.create,
+            FuseOpcode.mkdir,
+            FuseOpcode.unlink,
+            FuseOpcode.rmdir,
+            FuseOpcode.rename,
+            FuseOpcode.truncate,
+          }.contains(opcode)) {
         _sendError(socket, reqId, errno: 30); // EROFS
         return;
       }
@@ -400,7 +416,9 @@ class FuseFilesystem {
   /// readdir → list directory, cache result.
   Future<Uint8List> _opReaddir(Uint8List payload) async {
     final path = _decodeString(payload, 0);
-    final resolved = path == '/' || path.isEmpty ? null : await _itemForPath(path);
+    final resolved = path == '/' || path.isEmpty
+        ? null
+        : await _itemForPath(path);
     if (path != '/' && path.isNotEmpty && resolved == null) {
       throw const _FuseError(2); // ENOENT
     }
@@ -415,8 +433,10 @@ class FuseFilesystem {
   /// read → satisfy from read-ahead buffer or download.
   Future<Uint8List> _opRead(Uint8List payload) async {
     int offset = 0;
-    final handleId = _readUint32(payload, offset); offset += 4;
-    final readOffset = _readUint64(payload, offset); offset += 8;
+    final handleId = _readUint32(payload, offset);
+    offset += 4;
+    final readOffset = _readUint64(payload, offset);
+    offset += 8;
     final readLen = _readUint32(payload, offset);
 
     final buf = _readBuffers[handleId];
@@ -445,7 +465,8 @@ class FuseFilesystem {
       throw const _FuseError(21); // EISDIR
     }
     if (client is! CloudStorageRangeReader &&
-        info['size'] is num && (info['size'] as num) > maxReadFileBytes) {
+        info['size'] is num &&
+        (info['size'] as num) > maxReadFileBytes) {
       throw const _FuseError(27); // EFBIG
     }
     final handleId = _nextHandle++;
@@ -456,9 +477,12 @@ class FuseFilesystem {
   /// write → buffer locally.
   Future<Uint8List> _opWrite(Uint8List payload) async {
     int offset = 0;
-    final handleId = _readUint32(payload, offset); offset += 4;
-    final writeOffset = _readUint64(payload, offset); offset += 8;
-    final dataLen = _readUint32(payload, offset); offset += 4;
+    final handleId = _readUint32(payload, offset);
+    offset += 4;
+    final writeOffset = _readUint64(payload, offset);
+    offset += 8;
+    final dataLen = _readUint32(payload, offset);
+    offset += 4;
     final data = payload.sublist(offset, offset + dataLen);
 
     final buf = _writeBuffers[handleId];
@@ -513,7 +537,8 @@ class FuseFilesystem {
   /// rename → cloud rename/move.
   Future<Uint8List> _opRename(Uint8List payload) async {
     int off = 0;
-    final oldPath = _decodeString(payload, off); off += 4 + utf8.encode(oldPath).length;
+    final oldPath = _decodeString(payload, off);
+    off += 4 + utf8.encode(oldPath).length;
     final newPath = _decodeString(payload, off);
 
     final oldRemote = _fullRemotePath(oldPath);
@@ -548,7 +573,8 @@ class FuseFilesystem {
   /// truncate → truncate write-back buffer.
   Future<Uint8List> _opTruncate(Uint8List payload) async {
     int off = 0;
-    final handleId = _readUint32(payload, off); off += 4;
+    final handleId = _readUint32(payload, off);
+    off += 4;
     final newSize = _readUint64(payload, off);
 
     final wbuf = _writeBuffers[handleId];
@@ -606,11 +632,8 @@ class FuseFilesystem {
     final rangeReader = client;
     if (rangeReader is CloudStorageRangeReader) {
       try {
-        final bytes = await (rangeReader as CloudStorageRangeReader).readFileRange(
-          buf.remotePath,
-          offset,
-          _ReadBuffer.chunkSize,
-        );
+        final bytes = await (rangeReader as CloudStorageRangeReader)
+            .readFileRange(buf.remotePath, offset, _ReadBuffer.chunkSize);
         _ensureActive();
         if (bytes.length > _ReadBuffer.chunkSize) throw const _FuseError(5);
         buf.bufferOffset = offset;
@@ -642,7 +665,10 @@ class FuseFilesystem {
     } on _FuseError {
       rethrow;
     } catch (e) {
-      _log.error('Read-ahead fetch failed at $offset+${_ReadBuffer.chunkSize}', e);
+      _log.error(
+        'Read-ahead fetch failed at $offset+${_ReadBuffer.chunkSize}',
+        e,
+      );
       throw const _FuseError(5); // EIO
     }
   }
@@ -696,11 +722,16 @@ class FuseFilesystem {
     }
   }
 
-  Future<({String remotePath, Map<String, dynamic> item})?> _itemForPath(String path) async {
+  Future<({String remotePath, Map<String, dynamic> item})?> _itemForPath(
+    String path,
+  ) async {
     // macOS clients may send a decomposed filename for a composed remote
     // name, including in intermediate directory components. Resolve each
     // component in the parent listing and retain the provider's spelling.
-    final segments = p.posix.split(path).where((s) => s != '/' && s.isNotEmpty && s != '.').toList();
+    final segments = p.posix
+        .split(path)
+        .where((s) => s != '/' && s.isNotEmpty && s != '.')
+        .toList();
     if (segments.contains('..')) throw const _FuseError(13); // EACCES
     var current = remotePath;
     Map<String, dynamic>? item;
@@ -708,7 +739,13 @@ class FuseFilesystem {
       final entries = await _listCached(current);
       _ensureActive();
       final normalized = unorm.nfc(segments[i]);
-      final matches = entries.where((e) => e['name'] is String && unorm.nfc(e['name'] as String) == normalized).toList();
+      final matches = entries
+          .where(
+            (e) =>
+                e['name'] is String &&
+                unorm.nfc(e['name'] as String) == normalized,
+          )
+          .toList();
       // Never pick one of two remote objects that a normalizing filesystem
       // cannot distinguish, even when the requested bytes match one exactly.
       if (matches.length > 1) throw const _FuseError(17); // EEXIST
@@ -750,7 +787,8 @@ class FuseFilesystem {
     // omit the type from individual entries because the list supplies it.
     if (result['folders'] is List && result['files'] is List) {
       return [
-        for (final folder in (result['folders'] as List).cast<Map<String, dynamic>>())
+        for (final folder
+            in (result['folders'] as List).cast<Map<String, dynamic>>())
           {...folder, 'type': 'folder'},
         ...(result['files'] as List).cast<Map<String, dynamic>>(),
       ];
@@ -762,9 +800,7 @@ class FuseFilesystem {
       }
     }
     // Some adapters return a flat map where keys are file names.
-    return result.values
-        .whereType<Map<String, dynamic>>()
-        .toList();
+    return result.values.whereType<Map<String, dynamic>>().toList();
   }
 
   // ---------------------------------------------------------------------------
@@ -789,12 +825,14 @@ class FuseFilesystem {
     return _encodeAttr(isDir: isDir, size: size, modTimeMs: modTimeMs);
   }
 
-  bool _isDirectory(Map<String, dynamic> item) => item['type'] == 'folder' ||
-        item['type'] == 'directory' ||
-        item['isDirectory'] == true;
+  bool _isDirectory(Map<String, dynamic> item) =>
+      item['type'] == 'folder' ||
+      item['type'] == 'directory' ||
+      item['isDirectory'] == true;
 
   int _parseModTime(Map<String, dynamic> item) {
-    final v = item['modificationTime'] ?? item['lastModified'] ?? item['modified'];
+    final v =
+        item['modificationTime'] ?? item['lastModified'] ?? item['modified'];
     if (v is int) return v;
     if (v is String) {
       final dt = DateTime.tryParse(v);
@@ -821,7 +859,11 @@ class FuseFilesystem {
     final mode = isDir ? 0x41ED : 0x81A4;
     view.setUint32(0, mode, Endian.big);
     view.setUint64(4, size, Endian.big);
-    view.setUint64(12, modTimeMs ?? DateTime.now().millisecondsSinceEpoch, Endian.big);
+    view.setUint64(
+      12,
+      modTimeMs ?? DateTime.now().millisecondsSinceEpoch,
+      Endian.big,
+    );
     view.setUint32(20, isDir ? 2 : 1, Endian.big);
     return out;
   }

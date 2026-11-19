@@ -10,6 +10,8 @@ import 'package:uuid/uuid.dart';
 import '../models/file_item.dart';
 import '../models/storage_reference.dart';
 import 'cloud_storage_interface.dart';
+import 'cloud_object_reader.dart';
+import 'cloud_object_copy_source.dart';
 import 'file_operation_content_strategy.dart';
 import 'file_operation_service.dart';
 import 'local_file_service.dart';
@@ -1236,6 +1238,22 @@ class _NativeStageDigest implements Sink<Digest> {
 }
 
 class CloudOperationBackend extends FileOperationBackend {
+  @override
+  Future<(FileOperationBackend, List<FileItem>)> prepareCopySource(
+    List<FileItem> files,
+    FileOperationBackend destination,
+    FileOperationOptions options,
+  ) async {
+    final reader = client;
+    if (reader is! CloudObjectReader ||
+        identity == destination.identity ||
+        options.preserveRelativePaths) {
+      return (this, files);
+    }
+    final source = CloudObjectCopySource(this, reader as CloudObjectReader);
+    return (source, await source.capture(files));
+  }
+
   CloudOperationBackend(this.client, {required bool Function() isCurrent})
     // Keep the public named callback while storing it privately.
     // ignore: prefer_initializing_formals
