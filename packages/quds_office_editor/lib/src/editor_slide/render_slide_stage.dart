@@ -1568,6 +1568,20 @@ class RenderSlideStage extends RenderBox implements MouseTrackerAnnotation {
       Offset.zero & _slideSize,
       Paint()..color = _slidePaper(target),
     );
+    for (final PmlShape shape in target.backgroundShapes) {
+      if (skipIds != null && skipIds.contains(shape.id)) {
+        continue;
+      }
+      final PmlAnimSample sample = samples?[shape.id] ?? PmlAnimSample.identity;
+      if (!sample.visible || sample.opacity <= 0.01) {
+        continue;
+      }
+      final Rect r = _shapeRect(shape);
+      canvas.save();
+      PaintSlideMotion.applyShapeSample(canvas, r, sample);
+      _paintShapeInRect(canvas, shape, r);
+      canvas.restore();
+    }
     for (final PmlShape shape in target.shapes) {
       if (skipIds != null && skipIds.contains(shape.id)) {
         continue;

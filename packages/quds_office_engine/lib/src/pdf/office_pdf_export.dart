@@ -280,7 +280,10 @@ abstract final class OfficePdfExport {
     final Set<int> cps = <int>{};
     for (final PmlSlide slide in deck.slides) {
       _collectShaped(slide.notes, cps);
-      for (final PmlShape shape in slide.shapes) {
+      for (final PmlShape shape in <PmlShape>[
+        ...slide.backgroundShapes,
+        ...slide.shapes,
+      ]) {
         _collectShaped(deck.resolveText(shape, slide), cps);
         if (shape.visual != null) {
           _collectShaped(shape.visual!.title, cps);
@@ -338,7 +341,10 @@ abstract final class OfficePdfExport {
         slideH,
         slide.background.isEmpty ? 'FFFFFF' : slide.background,
       );
-      for (final PmlShape shape in deck.master.shapes) {
+      for (final PmlShape shape
+          in slide.backgroundShapes.isNotEmpty
+              ? slide.backgroundShapes
+              : deck.master.shapes) {
         _paintShape(sink, deck, slide, shape);
       }
       for (final PmlShape shape in slide.shapes) {
@@ -378,7 +384,12 @@ abstract final class OfficePdfExport {
         }
       }
 
-      linkShapes(deck.master.shapes, scaled: notes);
+      linkShapes(
+        slide.backgroundShapes.isNotEmpty
+            ? slide.backgroundShapes
+            : deck.master.shapes,
+        scaled: notes,
+      );
       linkShapes(slide.shapes, scaled: notes);
       if (notes) {
         sink.drawText(
@@ -460,7 +471,10 @@ abstract final class OfficePdfExport {
           slideH,
           slide.background.isEmpty ? 'FFFFFF' : slide.background,
         );
-        for (final PmlShape shape in deck.master.shapes) {
+        for (final PmlShape shape
+            in slide.backgroundShapes.isNotEmpty
+                ? slide.backgroundShapes
+                : deck.master.shapes) {
           _paintShape(sink, deck, slide, shape);
         }
         for (final PmlShape shape in slide.shapes) {
@@ -484,7 +498,11 @@ abstract final class OfficePdfExport {
           }
         }
 
-        linkShapes(deck.master.shapes);
+        linkShapes(
+          slide.backgroundShapes.isNotEmpty
+              ? slide.backgroundShapes
+              : deck.master.shapes,
+        );
         linkShapes(slide.shapes);
         sink.drawText(
           '${index + 1} / ${deck.slides.length}',

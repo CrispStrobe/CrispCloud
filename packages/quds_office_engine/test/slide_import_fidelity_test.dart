@@ -68,6 +68,7 @@ PmlPresentation _deck(
   List<String> slides, {
   List<int>? order,
   String masterBackground = '',
+  String layoutShapes = '',
 }) {
   final OpcPackage package = OpcPackage.create(OpcPackageKind.slide);
   final RelationshipCollection presRels = package.relationshipsFor(
@@ -123,7 +124,8 @@ PmlPresentation _deck(
               xfrm: _xfrm(685800, 2130425, 7772400, 1470025),
               text: 'Click to edit Master title style',
             ) +
-            _placeholder(3, 'subTitle', idx: 1, text: 'Click to add subtitle'),
+            _placeholder(3, 'subTitle', idx: 1, text: 'Click to add subtitle') +
+            layoutShapes,
         root: 'sldLayout',
         name: 'Title Slide',
       ),
@@ -264,6 +266,22 @@ void main() {
       expect(shape.richText[0].runs.single.color, 'A6A6A6');
       expect(shape.richText[1].runs.single.fontSizePt, 0);
       expect(shape.richText[1].defaultFontSizePt, 11);
+    });
+
+    test('layout decorations paint behind slide content', () {
+      final PmlPresentation deck = _deck(
+        <String>[_sld(_textBox(2, 'Slide'))],
+        layoutShapes:
+            '<p:sp><p:nvSpPr><p:cNvPr id="9" name="Band"/><p:cNvSpPr/>'
+            '<p:nvPr/></p:nvSpPr><p:spPr>${_xfrm(0, 0, 9144000, 6858000)}'
+            '<a:solidFill><a:srgbClr val="FFB300"/></a:solidFill>'
+            '</p:spPr></p:sp>',
+      );
+      final PmlSlide slide = deck.slides.single;
+      expect(slide.backgroundShapes, hasLength(1));
+      expect(slide.backgroundShapes.single.name, 'Band');
+      expect(slide.backgroundShapes.single.fillColor, 'FFB300');
+      expect(slide.shapes.single.name, 'TextBox 2');
     });
 
     test('master background resolves theme lumMod', () {

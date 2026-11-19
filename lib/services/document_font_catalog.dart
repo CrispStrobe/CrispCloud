@@ -97,6 +97,10 @@ const documentFontAssets = <DocumentFontAsset>[
     weight: 700,
   ),
   DocumentFontAsset(
+    asset: '${_pdfFontPrefix}DejaVuSans.ttf',
+    family: 'DejaVu Sans',
+  ),
+  DocumentFontAsset(
     asset: '${_pdfFontPrefix}Carlito-Regular.ttf',
     family: 'Carlito',
     aliases: ['Calibri'],
@@ -158,4 +162,5 @@ const documentFontFallbacks = [
   'Liberation Sans',
   'Liberation Serif',
   'Noto Naskh Arabic',
+  'DejaVu Sans',
 ];
