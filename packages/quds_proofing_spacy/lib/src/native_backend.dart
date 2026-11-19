@@ -174,6 +174,7 @@ final class SpacyNativeBackendFactory implements SpacyBackendFactory {
     required this.librarySha256,
     this.nerPath,
     this.nerSha256,
+    this.hostBundled = false,
   }) {
     if ((nerPath == null) != (nerSha256 == null) ||
         (nerPath != null &&
@@ -200,6 +201,12 @@ final class SpacyNativeBackendFactory implements SpacyBackendFactory {
   /// dropping entities.
   final String? nerPath;
   final String? nerSha256;
+
+  /// The library ships inside the host's own code-signed app bundle (for
+  /// example `Contents/Frameworks` of a sandboxed macOS app), so it cannot
+  /// live in a SHA-256-named directory. The code signature seals it for the
+  /// lifetime of the process; [librarySha256] is still verified before load.
+  final bool hostBundled;
 
   @override
   Future<SpacyBackend> open(SpacyBundle bundle) async {
@@ -231,7 +238,7 @@ final class SpacyNativeBackendFactory implements SpacyBackendFactory {
     final parent = File(
       library,
     ).parent.uri.pathSegments.lastWhere((part) => part.isNotEmpty);
-    if (parent != librarySha256) {
+    if (!hostBundled && parent != librarySha256) {
       throw const SpacyUnavailableException(
         'Install the native spaCy library in its SHA-256 directory.',
       );

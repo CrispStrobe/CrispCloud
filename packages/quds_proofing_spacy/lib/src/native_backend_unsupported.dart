@@ -9,12 +9,14 @@ final class SpacyNativeBackendFactory implements SpacyBackendFactory {
     required this.librarySha256,
     this.nerPath,
     this.nerSha256,
+    this.hostBundled = false,
   });
   final String bundleDirectory;
   final String libraryPath;
   final String librarySha256;
   final String? nerPath;
   final String? nerSha256;
+  final bool hostBundled;
   @override
   Future<SpacyBackend> open(SpacyBundle bundle) async =>
       throw const SpacyUnavailableException(

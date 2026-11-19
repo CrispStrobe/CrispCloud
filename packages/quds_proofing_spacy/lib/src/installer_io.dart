@@ -248,6 +248,15 @@ final class SpacyPackageInstaller {
     );
   }
 
+  /// The verified directory of a language bundle installed on its own (for
+  /// hosts that ship a v2-capable library inside the app), or null when it
+  /// is absent. Throws when an existing tree fails verification.
+  Future<String?> installedLanguageBundle(
+    SpacyLanguageDownload download,
+  ) async => await hasLanguageBundle(download)
+      ? _bundleDirectory(download.bundle).path
+      : null;
+
   /// True when the language bundle files alone are installed and verified.
   Future<bool> hasLanguageBundle(SpacyLanguageDownload download) async {
     final directory = _bundleDirectory(download.bundle);
@@ -442,6 +451,22 @@ final class SpacyPackageInstaller {
     } finally {
       _removeStaging(staging);
     }
+  }
+
+  /// Removes the bundle-only German installation ([installBundle]).
+  /// Callers must dispose workers using it first.
+  Future<void> removeBundle() async {
+    final directory = _bundleDirectory();
+    if (FileSystemEntity.typeSync(directory.path, followLinks: false) ==
+        FileSystemEntityType.notFound) {
+      return;
+    }
+    final trash = Directory(
+      '${root.path}/.removing-$spacyBundleManifestSha256-'
+      '${DateTime.now().microsecondsSinceEpoch}',
+    );
+    directory.renameSync(trash.path);
+    trash.deleteSync(recursive: true);
   }
 
   /// Removes an installation. Callers must dispose workers using it first.

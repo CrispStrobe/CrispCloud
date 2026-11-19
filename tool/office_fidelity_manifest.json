@@ -2822,9 +2822,9 @@
     "packages/quds_proofing_spacy/lib/src/distribution.dart": "c0d0149e5c6745f6cd585010af8393215badec510a99c2ade1b7ee8653e14c60",
     "packages/quds_proofing_spacy/lib/src/grammar_planner.dart": "898ff9f67a4acc20e825968f422c9fd1ae1def654ce63ef2942ba0e0cf317314",
     "packages/quds_proofing_spacy/lib/src/grammar_provider.dart": "892f2a06a7964834dd9c4752f7250ca25da72b5c6fb698b5f266bcb5542eddc3",
-    "packages/quds_proofing_spacy/lib/src/installer_io.dart": "0f4ea0d862c35edf3639af908508e95cbd3b925d24152fafde2498914890c078",
-    "packages/quds_proofing_spacy/lib/src/native_backend.dart": "df11274c4ea84fbe3588fdb68f366e94e7abdc0e7a9804ded60216e8ccbcad27",
-    "packages/quds_proofing_spacy/lib/src/native_backend_unsupported.dart": "4efda0e80b30c33320ab3e1499f3ad80b1a6ac022b74d2e072c2cd63d4b6c358",
+    "packages/quds_proofing_spacy/lib/src/installer_io.dart": "8e4557421f1148f768c5377ab3fb225b55153d2599bb32941c90b4a94a7dcd93",
+    "packages/quds_proofing_spacy/lib/src/native_backend.dart": "878a124d937f81a58c777ae47102b45f4caf2cf0638eaa0b419e72ddc6e1b852",
+    "packages/quds_proofing_spacy/lib/src/native_backend_unsupported.dart": "fafa14f3c4ed60b2fede10608762753e45b67bd73c62838d57e19da0d5a26bdc",
     "packages/quds_proofing_spacy/lib/src/source_text.dart": "fd2f2fdda8e608d32bf3b4a05c10b8777a106495cf97cbfafd3b05dd5e559330",
     "packages/quds_proofing_spacy/lib/src/transport.dart": "78b38b82fcec385d0d2d96d5861f0e2b0333b8af58bc542dd6d5cc23677f6305",
     "packages/quds_proofing_spacy/lib/src/worker_native.dart": "5ad6e5a4ba38c20fb847049eb08ec75a7edf617ad6fc11eabb51e4318e323652",
@@ -2838,6 +2838,7 @@
     "packages/quds_proofing_spacy/test/language_catalog_test.dart": "7f4136ad9e8982d32e81fba7d077300e0861bb41ff0eed54891332cc80f89ef1",
     "packages/quds_proofing_spacy/test/ner_removal_test.dart": "7090823d54e5552852fe6a2d5e08ec00b991a10de0d12ee1ba4d648e22d3e936",
     "packages/quds_proofing_spacy/test/worker_test.dart": "a2731ca47b669548bbe5c19acec2fc24ba00a065d781bedd2eecbedbd52e51eb",
+    "packages/quds_proofing_spacy/tool/build.py": "d1159a29b81fb4859dc0146560d439acc9ec78bfe0dd61b802eb38dc4fdfc155",
     "packages/quds_proofing_spacy/tool/consume_distribution.dart": "cecbc3a4c52dc8880c9eae7add5a925b0c74660e9d1ba1aee7aaae0ffe02cdf6",
     "packages/quds_proofing_spacy/tool/evaluate_grammar.dart": "ae2ef1b2c81b4bba313ca7e9245d691b7e2d30d43b1b81c3736cfb654e47ffc2",
     "packages/quds_proofing_spacy/tool/grammar_web_capability_probe.dart": "9d53927212faacd10ceb39cb21d6cf0585676e22abb3549ca450fae23e853df4",
@@ -2857,7 +2858,7 @@
     "tool/office-validation/test_render.py": "1ba68e18608d74387cbc1c779ceb72af76bf7741463c282684aec93bf3825472"
   },
   "source_branch": "main",
-  "source_commit": "d9bee6e507f6b631aee55bb8a89187119410847f",
+  "source_commit": "9ceb994d8edce3989228f1244cda90ecc9884931",
   "source_repository": "CrispStrobe/quds_office_suite",
   "standalone_sources": {
     "packages/legacy_doc_parser": {
