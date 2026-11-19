@@ -1922,6 +1922,7 @@ abstract final class OfficePdfExport {
       };
       if (text.contains('\t')) {
         final List<String> parts = text.split('\t');
+        final double tabBase = x + paragraph.marginLeftPt;
         var cx = px;
         final double tab = paragraph.defaultTabPt <= 0
             ? 72
@@ -1942,9 +1943,9 @@ abstract final class OfficePdfExport {
             );
             cx += sink.measure(part, size);
           }
-          final double offset = math.max(0, cx - px);
+          final double offset = math.max(0, cx - tabBase);
           final double next = ((offset / tab).floor() + 1) * tab;
-          cx = math.min(px + maxWidth, px + next);
+          cx = math.min(px + maxWidth, tabBase + next);
         }
         cy += size * 1.25;
       } else if (_hasMixedRichStyles(paragraph)) {
