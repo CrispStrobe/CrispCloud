@@ -1,7 +1,7 @@
 {
   "schema": "crispcloud.quds-language-sync.v1",
-  "qudsSourceCommit": "d9bee6e507f6b631aee55bb8a89187119410847f",
-  "filesVerified": 2855,
+  "qudsSourceCommit": "756885bc9cb1612f8d400889f8d3020cec9ad945",
+  "filesVerified": 2856,
   "hostTests": {
     "nonRibbonPassed": 82,
     "ribbonPassedAfterExplicitProofingFixtureIsolation": 8,
@@ -18,17 +18,28 @@
     "crispcloud-language-build34-sign.log": "c97f64eedbf5a36be7643e913e46d21623f7d9b3e80f5b22d2c6c771f57dcbdc",
     "crispcloud-language-build34-startup.log": "b1606522237145dec8aee2d743c324e5cfa83b6548da370eac48b58962b2a552",
     "crispcloud-language-build34-startup-result.log": "27c4507fc758524e46ea81b8aeaa70d38f81b47884b1fabdf971ecb0fde84cd6",
-    "crispcloud-language-final-proof.log": "613453052660b8b47af916cd4d99f28b299473b3bc87428554f5493739183e2e"
+    "crispcloud-language-final-proof.log": "613453052660b8b47af916cd4d99f28b299473b3bc87428554f5493739183e2e",
+    "crispcloud-spacy-incoming-tests.log": "d7d10b75ecf03f085177aca00de80fcac9fd83f6d320e10ad1a0b9e8ca084932",
+    "crispcloud-language-build35.log": "6ee3faf0a2916d9559d2debab802b62ed3a32cd77b0ff9bc1aca61390b52ced0",
+    "crispcloud-language-build35-sign.log": "c97f64eedbf5a36be7643e913e46d21623f7d9b3e80f5b22d2c6c771f57dcbdc",
+    "crispcloud-language-build35-startup.log": "b1606522237145dec8aee2d743c324e5cfa83b6548da370eac48b58962b2a552",
+    "crispcloud-language-build35-startup-result.log": "27c4507fc758524e46ea81b8aeaa70d38f81b47884b1fabdf971ecb0fde84cd6",
+    "crispcloud-language-build35-fidelity.log": "4502c11df9d883b1468805f06e6f7f89d3b4c1d8ae22c7ce6a8f98112af52194"
   },
   "macOSApp": {
     "version": "1.3.4",
-    "build": "34",
-    "sourceCommit": "d6e219bb57f2010ea329cfd2f27de9b8f4404653",
+    "build": "35",
+    "sourceCommit": "510eafff",
     "architecture": "arm64",
     "developmentSigned": true,
     "signatureVerified": true,
     "startupSeconds": 20,
     "applicationShellRendered": true,
-    "credentialPolicyReady": true
-  }
+    "credentialPolicyReady": true,
+    "officeSourceCodeCommit": "9ceb994d8edce3989228f1244cda90ecc9884931",
+    "latestPinnedSourceHasIdenticalBundledOfficeFiles": true,
+    "executableSha256": "0037bbefe652b31a59a961eeb0ebbea0d3b0bf41ce89f7de5a8c8f7e49e0b116"
+  },
+  "additionalBundledRuntimeHostTests": 5,
+  "bundledRuntimeQudsAcceptance": "https://github.com/CrispStrobe/quds_office_suite/blob/756885bc9cb1612f8d400889f8d3020cec9ad945/docs/validation/language-downloads-20261119/README.md"
 }

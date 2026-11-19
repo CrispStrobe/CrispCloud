@@ -2858,7 +2858,7 @@
     "tool/office-validation/test_render.py": "1ba68e18608d74387cbc1c779ceb72af76bf7741463c282684aec93bf3825472"
   },
   "source_branch": "main",
-  "source_commit": "9ceb994d8edce3989228f1244cda90ecc9884931",
+  "source_commit": "756885bc9cb1612f8d400889f8d3020cec9ad945",
   "source_repository": "CrispStrobe/quds_office_suite",
   "standalone_sources": {
     "packages/legacy_doc_parser": {
