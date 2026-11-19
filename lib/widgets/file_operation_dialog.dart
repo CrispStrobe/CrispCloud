@@ -1549,7 +1549,10 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                       _toggle(
                         context.commanderTr("Verify contents (SHA-256)"),
                         _verify,
-                        (value) => _verify = value,
+                        (value) {
+                          _verify = value;
+                          if (!value) _sidecars = false;
+                        },
                       ),
                       _toggle(
                         context.commanderTr(

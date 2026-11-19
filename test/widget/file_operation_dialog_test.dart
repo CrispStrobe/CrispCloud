@@ -316,6 +316,30 @@ void main() {
         ),
       );
 
+  testWidgets('sidecars and mandatory verification remain consistent', (
+    tester,
+  ) async {
+    await open(tester);
+    final sidecars = find.text('Save metadata sidecars (verified copy)');
+    final verify = find.text('Verify contents (SHA-256)');
+    Finder toggleFor(Finder text) => find.descendant(
+      of: find.ancestor(of: text, matching: find.byType(Row)).first,
+      matching: find.byType(Checkbox),
+    );
+    Checkbox checkboxFor(Finder text) =>
+        tester.widget<Checkbox>(toggleFor(text));
+    expect(checkboxFor(sidecars).value, isFalse);
+    await tester.ensureVisible(sidecars);
+    await tester.tap(toggleFor(sidecars));
+    await tester.pumpAndSettle();
+    expect(checkboxFor(sidecars).value, isTrue);
+    expect(checkboxFor(verify).value, isTrue);
+    await tester.tap(toggleFor(verify));
+    await tester.pumpAndSettle();
+    expect(checkboxFor(sidecars).value, isFalse);
+    expect(checkboxFor(verify).value, isFalse);
+  });
+
   testWidgets(
     'verified block copy explains first-copy traffic and gates incompatible controls',
     (tester) async {
