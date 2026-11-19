@@ -1,0 +1,307 @@
+{
+  "date": "2026-11-19",
+  "issue": "https://github.com/CrispStrobe/CrispCloud/issues/96",
+  "base_main": "49b13011c91686df6bb6ac48f930bf5b82c829e2",
+  "scope": "Owner-provided Nextcloud 33.0.11 on VPS over a private loopback SSH tunnel, plus a temporary subdirectory mount. Reporter deployments remain unavailable.",
+  "focused_regressions": {
+    "passed": 178,
+    "skipped": 0
+  },
+  "final_acceptance": {
+    "passed": 47,
+    "skipped": 0,
+    "authentication_unit_tests": 4,
+    "webdav_mock_server_integration_tests": 39,
+    "native_live_tests": 4,
+    "authentication_tests_overlap_previous_run": 3
+  },
+  "browser": {
+    "baseline": {
+      "status": 401,
+      "challengeExposed": false
+    },
+    "results": [
+      {
+        "case": "Nextcloud installation URL",
+        "passed": true,
+        "listings": 2,
+        "upload": true,
+        "restore": true,
+        "contentVerified": true
+      },
+      {
+        "case": "Nextcloud pasted DAV URL",
+        "passed": true,
+        "listings": 2,
+        "upload": true,
+        "restore": true,
+        "contentVerified": true
+      },
+      {
+        "case": "Nextcloud legacy DAV URL",
+        "passed": true,
+        "listings": 2,
+        "upload": true,
+        "restore": true,
+        "contentVerified": true
+      },
+      {
+        "case": "Nextcloud email alias",
+        "passed": true,
+        "listings": 2,
+        "upload": true,
+        "restore": true,
+        "contentVerified": true
+      },
+      {
+        "case": "Nextcloud email alias with canonical DAV URL",
+        "passed": true,
+        "listings": 2,
+        "upload": true,
+        "restore": true,
+        "contentVerified": true
+      },
+      {
+        "case": "Nextcloud email-shaped account ID",
+        "passed": true,
+        "listings": 2,
+        "upload": true,
+        "restore": true,
+        "contentVerified": true
+      },
+      {
+        "case": "WebDAV Nextcloud endpoint",
+        "passed": true,
+        "listings": 2,
+        "upload": true,
+        "restore": true,
+        "contentVerified": true
+      },
+      {
+        "case": "WebDAV email alias",
+        "passed": true,
+        "listings": 2,
+        "upload": true,
+        "restore": true,
+        "contentVerified": true
+      },
+      {
+        "case": "WebDAV email-shaped account ID",
+        "passed": true,
+        "listings": 2,
+        "upload": true,
+        "restore": true,
+        "contentVerified": true
+      },
+      {
+        "case": "Nextcloud subdirectory installation",
+        "passed": true,
+        "listings": 2,
+        "upload": true,
+        "restore": true,
+        "contentVerified": true
+      },
+      {
+        "case": "Nextcloud pasted subdirectory DAV URL",
+        "passed": true,
+        "listings": 2,
+        "upload": true,
+        "restore": true,
+        "contentVerified": true
+      },
+      {
+        "case": "WebDAV subdirectory endpoint",
+        "passed": true,
+        "listings": 2,
+        "upload": true,
+        "restore": true,
+        "contentVerified": true
+      }
+    ]
+  },
+  "native_adapter_matrix": [
+    {
+      "case": "Nextcloud installation URL",
+      "passed": true,
+      "listings": 2,
+      "upload": true,
+      "restore": true,
+      "contentVerified": true
+    },
+    {
+      "case": "Nextcloud pasted DAV URL",
+      "passed": true,
+      "listings": 2,
+      "upload": true,
+      "restore": true,
+      "contentVerified": true
+    },
+    {
+      "case": "Nextcloud legacy DAV URL",
+      "passed": true,
+      "listings": 2,
+      "upload": true,
+      "restore": true,
+      "contentVerified": true
+    },
+    {
+      "case": "Nextcloud email alias",
+      "passed": true,
+      "listings": 2,
+      "upload": true,
+      "restore": true,
+      "contentVerified": true
+    },
+    {
+      "case": "Nextcloud email alias with canonical DAV URL",
+      "passed": true,
+      "listings": 2,
+      "upload": true,
+      "restore": true,
+      "contentVerified": true
+    },
+    {
+      "case": "Nextcloud email-shaped account ID",
+      "passed": true,
+      "listings": 2,
+      "upload": true,
+      "restore": true,
+      "contentVerified": true
+    },
+    {
+      "case": "WebDAV Nextcloud endpoint",
+      "passed": true,
+      "listings": 2,
+      "upload": true,
+      "restore": true,
+      "contentVerified": true
+    },
+    {
+      "case": "WebDAV email alias",
+      "passed": true,
+      "listings": 2,
+      "upload": true,
+      "restore": true,
+      "contentVerified": true
+    },
+    {
+      "case": "WebDAV email-shaped account ID",
+      "passed": true,
+      "listings": 2,
+      "upload": true,
+      "restore": true,
+      "contentVerified": true
+    },
+    {
+      "case": "Nextcloud subdirectory installation",
+      "passed": true,
+      "listings": 2,
+      "upload": true,
+      "restore": true,
+      "contentVerified": true
+    },
+    {
+      "case": "Nextcloud pasted subdirectory DAV URL",
+      "passed": true,
+      "listings": 2,
+      "upload": true,
+      "restore": true,
+      "contentVerified": true
+    },
+    {
+      "case": "WebDAV subdirectory endpoint",
+      "passed": true,
+      "listings": 2,
+      "upload": true,
+      "restore": true,
+      "contentVerified": true
+    }
+  ],
+  "panes": {
+    "two_nextcloud_accounts": true,
+    "webdav_and_nextcloud_accounts": true,
+    "verified_before_swap": true,
+    "verified_after_swap_and_refresh": true
+  },
+  "protocol_reproduction": [
+    {
+      "case": "root approved preflight",
+      "status": 204,
+      "originAllowed": true
+    },
+    {
+      "case": "root unapproved preflight",
+      "status": 401,
+      "originAllowed": false
+    },
+    {
+      "case": "root unauthenticated DAV",
+      "status": 401,
+      "challengeInHTTP": true,
+      "challengeExposed": false
+    },
+    {
+      "case": "root pre-fix duplicated DAV path",
+      "status": 404
+    },
+    {
+      "case": "subdirectory approved preflight",
+      "status": 204,
+      "originAllowed": true
+    },
+    {
+      "case": "subdirectory unapproved preflight",
+      "status": 401,
+      "originAllowed": false
+    },
+    {
+      "case": "subdirectory unauthenticated DAV",
+      "status": 401,
+      "challengeInHTTP": true,
+      "challengeExposed": false
+    },
+    {
+      "case": "subdirectory pre-fix duplicated DAV path",
+      "status": 404
+    }
+  ],
+  "cleanup": {
+    "accounts_removed": 2,
+    "apache": [
+      {
+        "file": "nextcloud.conf",
+        "matches_original": true
+      },
+      {
+        "file": "nextcloud-test-cors.inc",
+        "matches_original": true
+      }
+    ],
+    "server": {
+      "installed": true,
+      "version": "33.0.11.2",
+      "versionstring": "33.0.11",
+      "edition": "",
+      "maintenance": false,
+      "needsDbUpgrade": false,
+      "productname": "Nextcloud",
+      "extendedSupport": false
+    }
+  },
+  "source_sha256": {
+    "lib/services/nextcloud_endpoint.dart": "65ff29e4be2cb84966be2b8214b6ea15d4c1c8aac4edbe3f223243b3604616b6",
+    "lib/services/nextcloud_client_adapter.dart": "73d9c6056553e6bc6ad70fe848998b25bc0e231089abfdcdf0304c86099c310b",
+    "lib/services/webdav_client_adapter.dart": "9e8c5e3a38483e5527f1bfc3ed3b885b661f5356411a226bc84b3c60d348e664",
+    "test/support/nextcloud_connection_probe.dart": "48abb2b9f819486e0d00b59ff9a100dfd11d64e9c31512d2f2a1f55d0eb6e001",
+    "tool/probes/nextcloud_connection_web.dart": "5b4c8887479a2329f3b6362d43b46382088dbd11b5aa8c934111c6e7798ce4e6"
+  },
+  "web_probe_js_sha256": "768d91342a970dffffe2ae171542c6b7a4b18a889893cfcee32326299c06b70a",
+  "qualification_notes": [
+    "Initial browser run exposed an extra OPTIONS/204 byte-transfer failure; corrected direct GET/PUT passed the final browser run.",
+    "A disconnected SSH tunnel invalidated an earlier native live run; the final 47-check run used a healthy keepalive tunnel.",
+    "The mock server emitted raw Unicode DAV hrefs; corrected URI encoding and all 39 mock-server integration checks passed.",
+    "Browser DAV operations do not require CORS exposure of WWW-Authenticate after the fix; the legacy challenge reproduced HTTP 401 with no exposed challenge.",
+    "The installed optional delta API has a separate CORS scope; its availability is not required for DAV login or transfers.",
+    "No credentials, compiled credential-bearing probe bundle, or private server configuration is published."
+  ]
+}

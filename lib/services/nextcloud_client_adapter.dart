@@ -34,6 +34,7 @@ import 'secure_storage_service.dart';
 import './connection_failure.dart';
 import './nextcloud_operation_failure.dart';
 import 'nextcloud_browser_failure.dart';
+import 'nextcloud_endpoint.dart';
 
 class NextcloudAuthenticationException implements Exception {
   const NextcloudAuthenticationException();
@@ -64,6 +65,7 @@ class NextcloudClientAdapter extends CloudStorageClient
   String? _username;
   String? _password;
   String? _serverUrl; // e.g. https://nextcloud.example.com (no trailing slash)
+  NextcloudEndpoint? _endpoint;
 
   bool _authenticated = false;
 
@@ -133,12 +135,40 @@ class NextcloudClientAdapter extends CloudStorageClient
       );
     }
     final username = parsed.$1;
-    final serverUrl = parsed.$2;
+    var endpoint = NextcloudEndpoint.parse(parsed.$2, username);
+    final serverUrl = endpoint.server.toString();
 
     // Verify credentials by listing the root WebDAV directory
     try {
-      final testUri = _davUri(serverUrl, username, '/');
-      final resp = await _propfind(testUri, username, password, depth: '0');
+      var resp = await _propfind(
+        endpoint.uriForPath('/'),
+        username,
+        password,
+        depth: '0',
+      );
+      if (!endpoint.explicitHome && [401, 403, 404].contains(resp.statusCode)) {
+        // Email/LDAP login aliases need not match the DAV principal's user ID.
+        // Discovery stays within the explicitly chosen installation.
+        final discovery = await _propfind(
+          endpoint.discoveryUri,
+          username,
+          password,
+          depth: '0',
+          principal: true,
+        );
+        if (discovery.statusCode == 207) {
+          final discovered = _principalEndpoint(endpoint, discovery.body);
+          if (discovered != null && discovered.davRoot != endpoint.davRoot) {
+            endpoint = discovered;
+            resp = await _propfind(
+              endpoint.uriForPath('/'),
+              username,
+              password,
+              depth: '0',
+            );
+          }
+        }
+      }
       if (resp.statusCode == 401) {
         throw const NextcloudAuthenticationException();
       }
@@ -158,16 +188,19 @@ class NextcloudClientAdapter extends CloudStorageClient
       );
     }
 
-    _username = username;
-    _password = password;
-    _serverUrl = serverUrl;
-    _authenticated = true;
-
     await _config.saveCredentials({
       'username': username,
       'password': password,
       'serverUrl': serverUrl,
+      'davRootUrl': endpoint.davRoot.toString(),
     });
+
+    _username = username;
+    _password = password;
+    _serverUrl = serverUrl;
+    _endpoint = endpoint;
+    _authenticated = true;
+    deltaSyncServerAppUrl = null;
 
     _log.info('Logged in to Nextcloud as $username @ $serverUrl');
 
@@ -180,11 +213,14 @@ class NextcloudClientAdapter extends CloudStorageClient
   Future<void> _detectDeltaSyncApp() async {
     if (_serverUrl == null) return;
     final appUrl = '$_serverUrl/index.php/apps/crispcloud_delta';
+    final client = http.Client();
     try {
-      final resp = await http.get(
-        Uri.parse('$appUrl/api/status'),
-        headers: {'Authorization': _basicAuth(_username!, _password!)},
-      );
+      final request = http.Request('GET', Uri.parse('$appUrl/api/status'))
+        ..followRedirects = false
+        ..headers['Authorization'] = _basicAuth(_username!, _password!);
+      final resp = await (() async {
+        return http.Response.fromStream(await client.send(request));
+      })().timeout(const Duration(seconds: 5));
       if (resp.statusCode == 200 && resp.body.contains('crispcloud_delta')) {
         deltaSyncServerAppUrl = appUrl;
         _log.info('Delta sync server app detected at $appUrl');
@@ -192,11 +228,15 @@ class NextcloudClientAdapter extends CloudStorageClient
     } catch (e) {
       // App not installed — delta sync will use client-cached block maps
       _log.debug('Delta sync server app not detected: $e');
+    } finally {
+      client.close();
     }
   }
 
   @override
   Future<void> logout() async {
+    deltaSyncServerAppUrl = null;
+    _endpoint = null;
     _username = null;
     _password = null;
     _serverUrl = null;
@@ -222,9 +262,11 @@ class NextcloudClientAdapter extends CloudStorageClient
 
     // Quick connectivity check
     try {
-      final testUri = _davUri(serverUrl, username, '/');
+      final endpoint = _savedEndpoint(creds);
+      final testUri = endpoint.uriForPath('/');
       final resp = await _propfind(testUri, username, password, depth: '0');
       if (resp.statusCode != 207) return false;
+      _endpoint = endpoint;
     } catch (e) {
       _log.warn('restoreCredentials connectivity check failed', e);
       return false;
@@ -232,7 +274,7 @@ class NextcloudClientAdapter extends CloudStorageClient
 
     _username = username;
     _password = password;
-    _serverUrl = serverUrl;
+    _serverUrl = _endpoint!.server.toString();
     _authenticated = true;
     _log.info('Restored Nextcloud credentials for $username');
     return true;
@@ -293,27 +335,18 @@ class NextcloudClientAdapter extends CloudStorageClient
     final folders = <Map<String, dynamic>>[];
     final files = <Map<String, dynamic>>[];
 
-    // Skip the first entry — it's the directory itself (depth=0)
-    for (var i = 1; i < items.length; i++) {
-      final item = items[i];
+    // DAV does not require the directory itself to be the first response.
+    // Resolve hrefs against the actual home, including subdirectory installs.
+    final endpoint =
+        _endpoint ?? NextcloudEndpoint.parse(_serverUrl!, _username!);
+    for (final item in items) {
       final name = item['name'] as String? ?? '';
       if (name.isEmpty || name == '.' || name == '..') continue;
 
       // Build user-visible path relative to DAV root
       final itemDavPath = item['href'] as String? ?? '';
-      final davRoot =
-          '/remote.php/dav/files/${Uri.encodeComponent(_username!)}/';
-      String relativePath;
-      if (itemDavPath.startsWith(davRoot)) {
-        relativePath =
-            '/${Uri.decodeComponent(itemDavPath.substring(davRoot.length))}';
-      } else {
-        relativePath = p.posix.join(cleanPath, name);
-      }
-      relativePath = relativePath.replaceAll(RegExp(r'/+'), '/');
-      if (relativePath.endsWith('/')) {
-        relativePath = relativePath.substring(0, relativePath.length - 1);
-      }
+      final relativePath = endpoint.relativePath(itemDavPath);
+      if (relativePath == null || relativePath == cleanPath) continue;
 
       final entry = <String, dynamic>{
         'uuid': relativePath,
@@ -356,11 +389,13 @@ class NextcloudClientAdapter extends CloudStorageClient
 
   void Function() _captureTransfer() {
     final user = _username, password = _password, server = _serverUrl;
+    final home = _endpoint?.davRoot;
     void check() {
       if (!isAuthenticated ||
           user != _username ||
           password != _password ||
-          server != _serverUrl) {
+          server != _serverUrl ||
+          home != _endpoint?.davRoot) {
         throw StateError(
           'The original Nextcloud account is no longer available.',
         );
@@ -672,7 +707,7 @@ class NextcloudClientAdapter extends CloudStorageClient
     await _ensureAuth();
 
     final uri = Uri.parse(
-      '$_serverUrl/remote.php/dav/versions/$_username/versions/$fileId',
+      '$_serverUrl/remote.php/dav/versions/${Uri.encodeComponent(_endpoint?.davUserId ?? _username!)}/versions/$fileId',
     );
     final resp = await _propfind(uri, _username!, _password!, depth: '1');
 
@@ -701,7 +736,7 @@ class NextcloudClientAdapter extends CloudStorageClient
     await _ensureAuth();
 
     final sourceUri = Uri.parse(
-      '$_serverUrl/remote.php/dav/versions/$_username/versions/$fileId/$versionId',
+      '$_serverUrl/remote.php/dav/versions/${Uri.encodeComponent(_endpoint?.davUserId ?? _username!)}/versions/$fileId/$versionId',
     );
     final destUri = _davUri(
       _serverUrl!,
@@ -750,20 +785,59 @@ class NextcloudClientAdapter extends CloudStorageClient
       );
     }
 
+    _endpoint = _savedEndpoint(creds);
     _username = creds['username'];
     _password = creds['password'];
-    _serverUrl = creds['serverUrl'];
+    _serverUrl = _endpoint!.server.toString();
     _authenticated = true;
   }
 
   /// Build the WebDAV URI for a path.
   Uri _davUri(String serverUrl, String username, String path) {
-    final cleanPath = _normalizePath(path);
-    final encodedUsername = Uri.encodeComponent(username);
-    final encodedPath = cleanPath.split('/').map(Uri.encodeComponent).join('/');
-    return Uri.parse(
-      '$serverUrl/remote.php/dav/files/$encodedUsername$encodedPath',
+    final endpoint = serverUrl == _serverUrl && username == _username
+        ? _endpoint ?? NextcloudEndpoint.parse(serverUrl, username)
+        : NextcloudEndpoint.parse(serverUrl, username);
+    return endpoint.uriForPath(_normalizePath(path));
+  }
+
+  NextcloudEndpoint _savedEndpoint(Map<String, String> credentials) {
+    final endpoint = NextcloudEndpoint.parse(
+      credentials['serverUrl']!,
+      credentials['username']!,
     );
+    final root = credentials['davRootUrl'];
+    return root == null ? endpoint : endpoint.withSavedRoot(root);
+  }
+
+  NextcloudEndpoint? _principalEndpoint(
+    NextcloudEndpoint endpoint,
+    String body,
+  ) {
+    final document = xml.XmlDocument.parse(body);
+    for (final propstat in document.findAllElements(
+      'propstat',
+      namespace: 'DAV:',
+    )) {
+      final status = propstat
+          .findElements('status', namespace: 'DAV:')
+          .firstOrNull
+          ?.innerText;
+      if (status == null ||
+          !RegExp(r'^HTTP/\S+ 200(?:\s|$)').hasMatch(status)) {
+        continue;
+      }
+      for (final principal in propstat.findAllElements(
+        'current-user-principal',
+        namespace: 'DAV:',
+      )) {
+        final href = principal
+            .findElements('href', namespace: 'DAV:')
+            .firstOrNull
+            ?.innerText;
+        if (href != null) return endpoint.forPrincipal(href);
+      }
+    }
+    return null;
   }
 
   /// Ensure path starts with / and has no trailing slash (unless root).
@@ -788,14 +862,18 @@ class NextcloudClientAdapter extends CloudStorageClient
     String username,
     String password, {
     String depth = '1',
+    bool principal = false,
   }) async {
     final req = http.Request('PROPFIND', uri);
+    req.followRedirects = false;
     req.headers['Authorization'] = _basicAuth(username, password);
     req.headers['Depth'] = depth;
     req.headers['Content-Type'] = 'application/xml; charset=utf-8';
-    req.body = '''<?xml version="1.0" encoding="utf-8"?>
+    req.body =
+        '''<?xml version="1.0" encoding="utf-8"?>
 <d:propfind xmlns:d="DAV:" xmlns:oc="http://owncloud.org/ns" xmlns:nc="http://nextcloud.org/ns">
   <d:prop>
+    ${principal ? '<d:current-user-principal/>' : ''}
     <d:displayname/>
     <d:getcontentlength/>
     <d:getlastmodified/>
@@ -1074,6 +1152,12 @@ class NextcloudClientAdapter extends CloudStorageClient
         uri.userInfo.isNotEmpty ||
         uri.hasQuery ||
         uri.hasFragment) {
+      return null;
+    }
+
+    try {
+      NextcloudEndpoint.parse(serverUrl, username);
+    } on FormatException {
       return null;
     }
 

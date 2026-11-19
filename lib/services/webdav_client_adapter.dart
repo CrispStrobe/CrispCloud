@@ -2,6 +2,7 @@ import 'package:crisp_storage/crisp_storage.dart' as storage;
 
 // lib/services/webdav_client_adapter.dart
 import 'dart:async';
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
@@ -180,7 +181,30 @@ class WebDavClientAdapter extends CloudStorageClient
   @override
   String? get bucketId => _host;
 
-  void _initClient(String url, String user, String password) {
+  webdav.Client _configuredClient(String url, String user, String password) {
+    final client = _clientFactory(url, user, password);
+    // Browsers can hide WWW-Authenticate on a cross-origin 401. Send the
+    // explicitly supplied credentials on the first request, while retaining
+    // the library's Digest negotiation when a server challenges Basic.
+    client.setHeaders({
+      'Content-Type': 'application/octet-stream',
+      'Authorization': 'Basic ${base64Encode(utf8.encode('$user:$password'))}',
+    });
+    client.setConnectTimeout(30000);
+    client.setSendTimeout(30000);
+    client.setReceiveTimeout(30000);
+    // WdDio otherwise recursively follows 302 with the account's credentials.
+    client.c.options.validateStatus = (status) =>
+        status != null && (status < 300 || status >= 400);
+    return client;
+  }
+
+  void _initClient(
+    String url,
+    String user,
+    String password, {
+    webdav.Client? verifiedClient,
+  }) {
     _streamClient?.close();
     _streamClient = kIsWeb
         ? null
@@ -195,8 +219,8 @@ class WebDavClientAdapter extends CloudStorageClient
               allowLocalHttp: true,
             ),
           );
-    _client = _clientFactory(url, user, password);
-    _client!.setHeaders({'Content-Type': 'application/octet-stream'});
+    _client?.c.close(force: true);
+    _client = verifiedClient ?? _configuredClient(url, user, password);
   }
 
   @override
@@ -219,10 +243,25 @@ class WebDavClientAdapter extends CloudStorageClient
       );
     }
 
+    final endpoint = Uri.tryParse(host);
+    if (user.isEmpty ||
+        endpoint == null ||
+        !['http', 'https'].contains(endpoint.scheme) ||
+        endpoint.host.isEmpty ||
+        endpoint.userInfo.isNotEmpty ||
+        endpoint.hasQuery ||
+        endpoint.hasFragment) {
+      throw WebDavException(
+        WebDavOperationCode.invalidIdentity,
+        'Format must be user@ServerURL',
+      );
+    }
+
+    final tempClient = _configuredClient(host, user, password);
     try {
-      final tempClient = _clientFactory(host, user, password);
       await tempClient.readDir('/');
     } catch (e) {
+      tempClient.c.close(force: true);
       throw WebDavException(
         WebDavOperationCode.connectionFailed,
         'Connection failed: $e',
@@ -230,15 +269,20 @@ class WebDavClientAdapter extends CloudStorageClient
       );
     }
 
-    await _config.saveCredentials({
-      'username': user,
-      'password': password,
-      'host': host,
-    });
+    try {
+      await _config.saveCredentials({
+        'username': user,
+        'password': password,
+        'host': host,
+      });
+    } catch (_) {
+      tempClient.c.close(force: true);
+      rethrow;
+    }
 
     _user = user;
     _host = host;
-    _initClient(host, user, password);
+    _initClient(host, user, password, verifiedClient: tempClient);
   }
 
   @override
@@ -248,9 +292,25 @@ class WebDavClientAdapter extends CloudStorageClient
   }) async {
     await _ensureClient();
 
-    // Note: webdav_client 1.2.2 returns a List<int>, but it loads fully into memory.
-    // It does not expose a stream directly for progress updates easily without modifying the lib.
-    final data = await _client!.read(remotePath);
+    // The library's byte helper first sends OPTIONS and requires HTTP 200.
+    // A valid browser CORS endpoint can return 204 instead. GET itself performs
+    // authentication and does not need that extra, incompatible probe.
+    final client = _client!;
+    final response = await client.c.req<List<int>>(
+      client,
+      'GET',
+      Uri(pathSegments: remotePath.split('/')).toString(),
+      optionsHandler: (options) =>
+          options.responseType = dio.ResponseType.bytes,
+    );
+    if (response.statusCode != 200) {
+      throw dio.DioException.badResponse(
+        statusCode: response.statusCode ?? 0,
+        requestOptions: response.requestOptions,
+        response: response,
+      );
+    }
+    final data = response.data ?? const <int>[];
 
     if (onProgress != null) {
       onProgress(data.length, data.length);
@@ -326,8 +386,9 @@ class WebDavClientAdapter extends CloudStorageClient
     if (_client != null) return;
 
     final creds = await _config.readCredentials();
-    if (creds == null)
+    if (creds == null) {
       throw WebDavException(WebDavOperationCode.notLoggedIn, 'Not logged in');
+    }
 
     _user = creds['username'];
     _host = creds['host'];
@@ -465,10 +526,39 @@ class WebDavClientAdapter extends CloudStorageClient
     String targetPath, {
     Function(int, int)? onProgress,
   }) async {
+    if (fileName.isEmpty ||
+        fileName == '.' ||
+        fileName == '..' ||
+        fileName.contains('/') ||
+        fileName.contains(r'\') ||
+        fileName.contains('\u0000')) {
+      throw const FormatException('Enter a file name without path separators.');
+    }
+    if (kIsWeb && fileData.length > 32 * 1024 * 1024) {
+      throw UnsupportedError(
+        'WebDAV uploads above 32 MiB require the desktop app.',
+      );
+    }
     await _ensureClient();
     final remotePath = p.posix.join(targetPath, fileName);
-
-    await _client!.write(remotePath, Uint8List.fromList(fileData));
+    final client = _client!;
+    final parent = p.posix.dirname(remotePath);
+    if (parent != '/' && parent != '.') {
+      await client.mkdirAll(Uri(pathSegments: parent.split('/')).toString());
+    }
+    final response = await client.c.req<Object?>(
+      client,
+      'PUT',
+      Uri(pathSegments: remotePath.split('/')).toString(),
+      data: Uint8List.fromList(fileData),
+    );
+    if (![200, 201, 204].contains(response.statusCode)) {
+      throw dio.DioException.badResponse(
+        statusCode: response.statusCode ?? 0,
+        requestOptions: response.requestOptions,
+        response: response,
+      );
+    }
 
     if (onProgress != null) {
       onProgress(fileData.length, fileData.length);

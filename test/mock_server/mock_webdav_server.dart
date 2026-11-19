@@ -219,7 +219,9 @@ ${responses.join('\n')}
   }
 
   String _propfindEntry(String path, _FsNode node) {
-    final href = _xmlEscape(path == '/' ? '/' : path);
+    // DAV hrefs are URI references, not raw IRIs. Keep Unicode and literal
+    // percent signs encoded on the wire, as real Nextcloud responses do.
+    final href = _xmlEscape(Uri(pathSegments: path.split('/')).toString());
     final displayName = _xmlEscape(_name(path));
     final lm = HttpDate.format(node.lastModified);
     final resourcetype = node.isDirectory

@@ -1,5 +1,10 @@
 # Cloud connections and Nextcloud browser failures
 
+The [2026-11-19 compatibility acceptance](evidence/nextcloud-96-20261119/README.md)
+addresses the newer email-login, pasted-DAV-URL, WebDAV transfer and pane-swap
+comments on issue 96. It includes 12-case real Chrome and native adapter matrices
+against the owner's VPS, plus mixed WebDAV/Nextcloud pane verification.
+
 ## Issue 98: keep two live cloud connections
 
 Opening another connection previously called `logout()` on the primary client.

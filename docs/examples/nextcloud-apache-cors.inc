@@ -3,11 +3,14 @@
 # the EXACT origin shown by CrispCloud (scheme + host + optional port, no path).
 # Use HTTPS for a public deployment. Do not use a wildcard or allow null origins.
 # This covers DAV file operations; OCS/custom-app APIs need their own review.
+# The two route patterns below assume a root installation. If Nextcloud is
+# installed at /nextcloud, change BOTH ^/remote patterns to ^/nextcloud/remote
+# (and use your actual escaped installation path for a different subdirectory).
 SetEnvIfExpr "req('Origin') == 'https://crispcloud.example' && %{REQUEST_URI} =~ m#^/remote[.]php/(dav|webdav)(/|$)#" CC_NC_CORS=1
 Header always set Access-Control-Allow-Origin "https://crispcloud.example" env=CC_NC_CORS
 Header always set Access-Control-Allow-Methods "GET, HEAD, OPTIONS, PROPFIND, PUT, MKCOL, DELETE, COPY, MOVE" env=CC_NC_CORS
 Header always set Access-Control-Allow-Headers "Authorization, Depth, Content-Type, Destination, Overwrite, If-Match, Range" env=CC_NC_CORS
-Header always set Access-Control-Expose-Headers "ETag, DAV, Allow, Content-Range, Accept-Ranges" env=CC_NC_CORS
+Header always set Access-Control-Expose-Headers "ETag, DAV, Allow, Content-Range, Accept-Ranges, WWW-Authenticate" env=CC_NC_CORS
 Header always merge Vary Origin
 
 # Browser preflight has no DAV credentials. Only the exact approved origin and

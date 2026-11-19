@@ -316,15 +316,29 @@ Nextcloud is an open-source self-hosted cloud platform. CrispCloud connects via 
 | Field | Value |
 |-------|-------|
 | Server URL | `https://your-nextcloud-server.com` |
-| Username | Your Nextcloud username |
+| Username | Your Nextcloud login name (including an email address when supported by the server) |
 | Password | App password (recommended) or account password |
 
 ### Browser access (Web/PWA)
 
 Desktop access succeeding does not establish browser access: browsers enforce CORS,
 TLS trust and mixed-content restrictions. Enter the installation root, including
-any subdirectory (for example `https://cloud.example/nextcloud`), not the full DAV
-endpoint. The browser error now identifies the exact DAV endpoint and app origin.
+any subdirectory (for example `https://cloud.example/nextcloud`). You can also
+paste the complete **home** WebDAV URL copied from Nextcloud Files settings:
+`https://cloud.example/nextcloud/remote.php/dav/files/ACCOUNT-ID/` or the legacy
+`…/remote.php/webdav/` URL. CrispCloud separates that DAV home from the installation
+root instead of appending a second DAV endpoint. A URL for an individual file or
+subfolder is not an installation/home URL; use the WebDAV provider for a custom
+folder root.
+
+The login name and DAV account ID can differ with email aliases or LDAP. Keep the
+login name supplied by your server. When a derived home returns 401/403/404,
+CrispCloud asks that same installation for the authenticated DAV principal and
+verifies its home before saving the connection. An explicitly pasted home is
+preserved. Two-factor/SSO installations can still require a Nextcloud app password;
+an authentication rejection is not evidence of a CORS failure.
+
+The browser error identifies the exact DAV endpoint and app origin.
 
 For a cross-origin deployment, the server administrator must allow the **exact
 CrispCloud origin** on the DAV route. Handle the unauthenticated `OPTIONS`
@@ -332,14 +346,19 @@ preflight and permit `PROPFIND` plus the `Authorization`, `Depth` and
 `Content-Type` request headers. File operations additionally need the methods
 and headers they use, such as `PUT`, `MKCOL`, `COPY`, `MOVE`, `DELETE`,
 `Destination`, `Overwrite`, `If-Match` and `Range`; expose response metadata such
-as `ETag`, `Content-Range` and `Accept-Ranges`. Keep normal DAV authentication
+as `ETag`, `Content-Range` and `Accept-Ranges`. Generic WebDAV servers using Digest
+authentication must also expose `WWW-Authenticate` so a browser client can read
+their challenge. CrispCloud sends supplied Basic credentials on the first
+WebDAV request and retains the verified client for subsequent listings.
+Keep normal DAV authentication
 for actual requests. Do not solve this by disabling authentication or using an
 untrusted public CORS proxy.
 
 A tested Apache example is provided in
 [`nextcloud-apache-cors.inc`](examples/nextcloud-apache-cors.inc). Include it
 inside the Nextcloud virtual host after replacing every example origin with
-the exact scheme/host/port displayed by CrispCloud. Run `apache2ctl configtest`
+the exact scheme/host/port displayed by CrispCloud. For a subdirectory installation,
+also adjust both DAV path patterns as described in the example. Run `apache2ctl configtest`
 before a graceful reload. It permits unauthenticated, empty DAV preflight for
 that one origin while preserving authentication on actual file requests. It
 covers DAV routes; OCS sharing and custom delta APIs require separate scoped
