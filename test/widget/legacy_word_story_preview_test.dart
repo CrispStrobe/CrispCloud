@@ -4,6 +4,7 @@ import 'package:crisp_cloud/l10n/app_localizations.dart';
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/providers/providers.dart';
+import 'package:crisp_cloud/services/document_fonts.dart';
 import 'package:crisp_cloud/services/office_document_service.dart';
 import 'package:crisp_cloud/widgets/hex_viewer.dart';
 import 'package:crisp_cloud/widgets/internal_viewer_dialog.dart';
@@ -45,6 +46,7 @@ Future<void> _open(
   String name = 'notes.doc',
   Locale locale = const Locale('en'),
 }) async {
+  await tester.runAsync(DocumentFonts.ensureRegistered);
   tester.view.physicalSize = const Size(1280, 900);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
@@ -171,6 +173,7 @@ void main() {
           hasLength(6),
         );
         if (pane) {
+          await tester.runAsync(DocumentFonts.ensureRegistered);
           final harness = await WorkspaceTestHarness.create();
           addTearDown(harness.dispose);
           harness.cloud.put('/textboxes.doc', bytes);

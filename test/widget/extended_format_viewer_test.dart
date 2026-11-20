@@ -5,6 +5,7 @@ import 'package:archive/archive.dart';
 import 'package:crisp_cloud/l10n/app_localizations.dart';
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
+import 'package:crisp_cloud/services/document_fonts.dart';
 import 'package:crisp_cloud/services/editor_document.dart';
 import 'package:crisp_cloud/widgets/email_message_view.dart';
 import 'package:crisp_cloud/widgets/internal_viewer_dialog.dart';
@@ -26,6 +27,9 @@ Future<void> _open(
   Uint8List bytes, {
   Locale? locale,
 }) async {
+  if (const ['doc', 'dot', 'rtf'].contains(name.split('.').last)) {
+    await tester.runAsync(DocumentFonts.ensureRegistered);
+  }
   await tester.pumpWidget(
     ProviderScope(
       child: MaterialApp(
@@ -120,11 +124,11 @@ Iterable<(String, TextStyle)> _styledText(
 
 void main() {
   for (final scenario in [
-    ('doc', const Locale('en'), 'Partial preview of a binary Word document.'),
+    ('doc', const Locale('en'), 'Partial preview of a binary Writer document.'),
     (
       'dot',
       const Locale('de'),
-      'Teilweise Vorschau eines binären Word-Dokuments.',
+      'Teilweise Vorschau eines binären Writer-Dokuments.',
     ),
   ]) {
     testWidgets(

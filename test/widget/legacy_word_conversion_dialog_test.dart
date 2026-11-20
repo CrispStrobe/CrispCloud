@@ -116,7 +116,7 @@ void main() {
     );
     await tester.tap(find.text('Open conversion'));
     await _chooseText(tester, label: 'Nur Text (integriert)');
-    expect(find.text('Älteres Word-Dokument konvertieren'), findsOneWidget);
+    expect(find.text('In DOCX konvertieren'), findsOneWidget);
     expect(find.textContaining('Das Original bleibt erhalten'), findsOneWidget);
     await tester.tap(find.text('Abbrechen'));
     await tester.pumpAndSettle();

@@ -212,11 +212,12 @@ Future<void> _open(
     isFolder: false,
     size: 9,
   );
+  final detachedBytes = detached ? sessions.bytes(0) : null;
   Widget editor(_Target selectedTarget) => KeePassEditorDialog(
     file: file,
     side: PanelSide.local,
     targetOverride: detached ? null : selectedTarget,
-    bytesOverride: detached ? sessions.bytes(0) : null,
+    bytesOverride: detachedBytes,
     sessionOpener: opener ?? sessions.open,
     readOnly: readOnly,
     inactivityTimeout: inactivity,

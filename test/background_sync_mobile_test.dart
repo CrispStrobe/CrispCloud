@@ -861,7 +861,8 @@ void main() {
     expect(client.isAuthenticated, isTrue);
     expect(client.bucketId, _webDavCredentials['host']);
     expect(client.userId, _webDavCredentials['username']);
-    expect(network.requests, hasLength(2));
+    // Explicit credentials authenticate the initial PROPFIND.
+    expect(network.requests, hasLength(1));
     await client.logout();
     expect(network.closed, isTrue);
     expect(secure.mutations, isEmpty);

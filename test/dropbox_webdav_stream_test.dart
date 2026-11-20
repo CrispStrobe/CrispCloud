@@ -79,6 +79,12 @@ class _DavClient extends Fake implements webdav.Client {
   final _StreamDio c;
   @override
   void setHeaders(Map<String, dynamic> headers) {}
+  @override
+  void setConnectTimeout(int milliseconds) {}
+  @override
+  void setSendTimeout(int milliseconds) {}
+  @override
+  void setReceiveTimeout(int milliseconds) {}
 }
 
 Future<WebDavClientAdapter> _dav(_StreamDio transport) async {

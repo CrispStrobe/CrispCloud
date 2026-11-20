@@ -111,7 +111,7 @@ Future<void> _choose(WidgetTester tester, String label) async {
 }
 
 Future<void> _prepare(WidgetTester tester) async {
-  await _choose(tester, 'Structured Word (built in)');
+  await _choose(tester, 'Structured Writer (built in)');
   await _tapUntil(
     tester,
     _key('primary'),
@@ -157,7 +157,7 @@ void main() {
           await _prepare(tester);
         } else {
           await _tap(tester, _key('method'));
-          expect(find.text('Structured Word (built in)'), findsNothing);
+          expect(find.text('Structured Writer (built in)'), findsNothing);
           await _tap(tester, find.text('Text only (built in)').last);
           expect(_key('output-text'), findsNothing);
           await _tapUntil(
@@ -282,7 +282,7 @@ void main() {
         source: source,
         onSave: (copy) async => saves.add(copy),
       );
-      await _choose(tester, 'Structured Word (built in)');
+      await _choose(tester, 'Structured Writer (built in)');
       expect(find.text('legacy (converted).docx'), findsOneWidget);
       await _tap(tester, _key('output-structured'));
       await _tap(tester, find.text('DOCM (VBA macros)').last);
@@ -329,7 +329,7 @@ void main() {
         onSave: (copy) async => saves.add(copy),
       );
       expect(tester.widget<FilledButton>(_key('primary')).onPressed, isNull);
-      await _choose(tester, 'Structured Word (built in)');
+      await _choose(tester, 'Structured Writer (built in)');
       expect(find.textContaining('Support is partial'), findsOneWidget);
       expect(find.text('legacy (converted).docx'), findsOneWidget);
       expect(find.text('DOCM (VBA macros)'), findsNothing);
@@ -442,7 +442,7 @@ void main() {
         ),
         onSave: (copy) async => saves.add(copy),
       );
-      await _choose(tester, 'Structured Word (built in)');
+      await _choose(tester, 'Structured Writer (built in)');
       await _tapUntil(
         tester,
         _key('primary'),
@@ -450,7 +450,7 @@ void main() {
       );
       expect(saves, isEmpty);
       expect(outcome.completed, isFalse);
-      expect(find.text('Structured Word (built in)'), findsOneWidget);
+      expect(find.text('Structured Writer (built in)'), findsOneWidget);
       expect(find.text('Review converted copy'), findsNothing);
       expect(find.text('Create text-only DOCX'), findsNothing);
       expect(find.text('legacy (converted).docx'), findsOneWidget);

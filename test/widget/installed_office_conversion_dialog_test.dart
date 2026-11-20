@@ -353,7 +353,7 @@ void main() {
     );
     await _convertUntil(tester, find.byKey(_error));
     expect(
-      find.text('The converter did not return a valid Word package.'),
+      find.text('The converter did not return a valid Writer package.'),
       findsOneWidget,
     );
     expect(find.text('Review converted copy'), findsNothing);
