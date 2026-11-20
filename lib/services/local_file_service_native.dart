@@ -164,7 +164,8 @@ class MacosFileService
   final SecureBookmarks _bookmarks;
   final Future<List<FileSystemEntity>> Function() _resolveBookmarks;
   List<FileSystemEntity> _resolvedBookmarks = <FileSystemEntity>[];
-  FileSystemEntity? _streamScope;
+  final List<FileSystemEntity?> _streamScopes = <FileSystemEntity?>[];
+  int _streamReaders = 0;
 
   @override
   String currentPath = Platform.environment['HOME'] ?? '/';
@@ -420,8 +421,9 @@ class MacosFileService
       try {
         await _bookmarks.startAccessingSecurityScopedResource(saveScope);
         final file = File(accessPath);
-        if (!await file.parent.exists())
+        if (!await file.parent.exists()) {
           await file.parent.create(recursive: true);
+        }
         await file.writeAsBytes(data);
         await _bookmarks.stopAccessingSecurityScopedResource(saveScope);
         return;
@@ -566,15 +568,24 @@ class MacosFileService
   @override
   Future<bool> beginStreamAccess(String path) async {
     if (!await ensureAccess(path)) return false;
-    _streamScope = await _beginScope(path);
+    final scope = await _beginScope(path);
+    _streamScopes.add(scope);
+    _streamReaders++;
     return true;
   }
 
   @override
   Future<void> endStreamAccess() async {
-    final scope = _streamScope;
-    _streamScope = null;
-    await _endScope(scope);
+    if (_streamReaders == 0) return;
+    // The legacy interface has no per-reader token. Keep all acquired scopes
+    // until the last reader finishes so one viewer cannot revoke another's
+    // grant, then balance every acquisition exactly once.
+    if (--_streamReaders != 0) return;
+    final scopes = List<FileSystemEntity?>.of(_streamScopes);
+    _streamScopes.clear();
+    for (final scope in scopes) {
+      await _endScope(scope);
+    }
   }
 
   @override

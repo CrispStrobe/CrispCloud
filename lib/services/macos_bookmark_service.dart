@@ -31,6 +31,22 @@ class MacOSBookmarkService {
   static const String _legacyPathKey = 'macos_bookmark_path_v2';
 
   static final _bookmarks = SecureBookmarks();
+  // A folder grant belongs to the whole application session. Keep its resolved
+  // native URL alive so metadata reads, F3, F4 and previews share that grant.
+  // Re-resolving the same path would replace the plugin's URL instance while
+  // other operations still hold it.
+  static final _sessionScopes =
+      <String, ({String data, FileSystemEntity entity, bool active})>{};
+  static Future<void> _pendingScopeOperation = Future<void>.value();
+
+  static Future<T> _serialize<T>(Future<T> Function() operation) {
+    final next = _pendingScopeOperation.then((_) => operation());
+    _pendingScopeOperation = next.then<void>(
+      (_) {},
+      onError: (Object _, StackTrace __) {},
+    );
+    return next;
+  }
 
   static Future<List<Map<String, String>>> _loadEntries() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -105,7 +121,7 @@ class MacOSBookmarkService {
   }
 
   /// Bookmark [path] and add/replace it in the persisted grant list.
-  static Future<void> addBookmark(String path) async {
+  static Future<void> addBookmark(String path) => _serialize(() async {
     final String bookmarkData = await _bookmarks.bookmark(File(path));
     final List<Map<String, String>> entries = await _loadEntries();
     entries.removeWhere(
@@ -120,8 +136,9 @@ class MacOSBookmarkService {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString(_legacyPathKey, path);
     await prefs.setString(_legacyDataKey, bookmarkData);
+    await _restoreSessionScopes();
     debugPrint('✅ Saved macOS bookmark for: $path');
-  }
+  });
 
   /// Request a new folder grant and persist it.
   static Future<String?> requestDirectoryAccess({
@@ -151,25 +168,51 @@ class MacOSBookmarkService {
     }
   }
 
-  /// Resolve every stored bookmark. Stale entries are dropped.
-  static Future<List<FileSystemEntity>> getResolvedBookmarks() async {
+  /// Restore and retain the user's folder grants for the entire application.
+  /// A transient resolve failure never deletes a previously saved grant.
+  static Future<List<FileSystemEntity>> getResolvedBookmarks() =>
+      _serialize(_restoreSessionScopes);
+
+  static Future<List<FileSystemEntity>> _restoreSessionScopes() async {
     if (!Platform.isMacOS) return <FileSystemEntity>[];
-    final List<Map<String, String>> entries = await _loadEntries();
-    final List<FileSystemEntity> resolved = <FileSystemEntity>[];
-    final List<Map<String, String>> kept = <Map<String, String>>[];
-    for (final Map<String, String> entry in entries) {
-      try {
-        final FileSystemEntity entity = await _bookmarks.resolveBookmark(
-          entry['data']!,
-        );
-        resolved.add(entity);
-        kept.add(entry);
-      } catch (e) {
-        debugPrint('⚠️ Stale bookmark for ${entry['path']}: $e');
+    final entries = await _loadEntries();
+    final latest = <String, Map<String, String>>{
+      for (final entry in entries)
+        normalizeAccessPath(entry['path']!).toLowerCase(): entry,
+    };
+    for (final key in _sessionScopes.keys.toList()) {
+      final held = _sessionScopes[key]!;
+      if (latest[key]?['data'] == held.data) continue;
+      _sessionScopes.remove(key);
+      if (held.active) {
+        await _bookmarks.stopAccessingSecurityScopedResource(held.entity);
       }
     }
-    if (kept.length != entries.length) {
-      await _saveEntries(kept);
+    final resolved = <FileSystemEntity>[];
+    for (final entry in latest.entries) {
+      final previous = _sessionScopes[entry.key];
+      if (previous?.active == true) {
+        resolved.add(previous!.entity);
+        continue;
+      }
+      try {
+        final entity =
+            previous?.entity ??
+            await _bookmarks.resolveBookmark(entry.value['data']!);
+        final active = await _bookmarks.startAccessingSecurityScopedResource(
+          entity,
+        );
+        _sessionScopes[entry.key] = (
+          data: entry.value['data']!,
+          entity: entity,
+          active: active,
+        );
+        resolved.add(entity);
+      } catch (error) {
+        debugPrint(
+          '⚠️ Could not restore saved folder access for ${entry.value['path']}: $error',
+        );
+      }
     }
     return resolved;
   }
@@ -211,20 +254,22 @@ class MacOSBookmarkService {
     }.toList();
   }
 
-  static Future<void> removeBookmark(String path) async {
+  static Future<void> removeBookmark(String path) => _serialize(() async {
     final List<Map<String, String>> entries = await _loadEntries();
     entries.removeWhere(
       (Map<String, String> entry) => isSameOrUnderPath(entry['path']!, path),
     );
     await _saveEntries(entries);
     await _forgetPath(path);
-  }
+    await _restoreSessionScopes();
+  });
 
-  static Future<void> clearBookmarks() async {
+  static Future<void> clearBookmarks() => _serialize(() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.remove(_bookmarksKey);
     await prefs.remove(_pathsKey);
     await prefs.remove(_legacyDataKey);
     await prefs.remove(_legacyPathKey);
-  }
+    await _restoreSessionScopes();
+  });
 }
