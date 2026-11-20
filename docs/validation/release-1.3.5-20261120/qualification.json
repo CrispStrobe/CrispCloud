@@ -1,0 +1,44 @@
+{
+  "version": "1.3.5+44",
+  "release_code_commit": "15ffe8f0ba6653572f0d52d85f620e4d442e3bd9",
+  "compiled_mac_source": "2f3a31f8bae3d3fa0f688fda8c632a53173c6a1e",
+  "office_main": "a652a205e6daf6b4b8e3baec04db1c1b52fabd0d",
+  "office_compiled_source": "bbfc015acf22f8552993e846b07b469e04b87533",
+  "managed_office_files": 3017,
+  "post_compile_changes": [
+    ".github/workflows/macos-release.yml",
+    "docs/apple-export-policy.json",
+    "docs/releases/1.3.5.md",
+    "tool/macos_public_signing.py",
+    "tool/office_fidelity_manifest.json",
+    "tool/test_public_signing.py"
+  ],
+  "application_runtime_source_identical": true,
+  "macos_package": {
+    "version": "1.3.5+44",
+    "platform": "MAC_OS",
+    "architecture": "arm64",
+    "package": "/tmp/crispcloud-release-1.3.5-20261120/CrispCloud-1.3.5-44.pkg",
+    "sha256": "b7e2c198763fdf346a4a6f3f0e07a2bf2a018fd0ea8b4766ad2f1d2d87bdd6ac",
+    "built_git_commit": "2f3a31f8bae3d3fa0f688fda8c632a53173c6a1e",
+    "ancestry_head": "15ffe8f0ba6653572f0d52d85f620e4d442e3bd9"
+  },
+  "tests": {
+    "engine_passed": 2351,
+    "controller_passed": 154,
+    "controller_image_only_skips": 8,
+    "mail_downloads_host_passed": 876,
+    "mail_reader_passed": 85,
+    "host_integration_passed": 105,
+    "signing_passed": 15,
+    "crypto_evidence_passed": 42,
+    "distribution_passed": 11,
+    "testflight_guard_passed": 27,
+    "publication_passed": 12
+  },
+  "signed_startup_seconds": 20,
+  "development_and_appstore_designated_requirements_equal": true,
+  "github_actions_status_queried": false,
+  "apple_delivery": "recorded after upload; pre-refresh package was never uploaded",
+  "mail_physical_flicker_acceptance": "pending unlocked desktop"
+}
