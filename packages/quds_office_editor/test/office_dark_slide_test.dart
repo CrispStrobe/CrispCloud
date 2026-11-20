@@ -247,6 +247,30 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(OfficeHostFonts.ensureRegistered);
 
+  testWidgets('unfilled slide text stays readable over inherited decorations', (
+    tester,
+  ) async {
+    final PmlSlide slide = PmlSlide(
+      id: 256,
+      backgroundShapes: <PmlShape>[
+        _shape(2, y: 40, width: 320, height: 100, fill: 'FFFFFF', text: ''),
+      ],
+      shapes: <PmlShape>[
+        _shape(2, x: 40, y: 60, width: 280, text: 'Visible black text'),
+      ],
+    );
+    for (final OfficeTheme theme in <OfficeTheme>[
+      OfficeTheme.dark,
+      OfficeTheme.highContrast,
+    ]) {
+      final _Raster raster = await _paint(tester, slide, theme: theme);
+      expect(
+        raster.count(const ui.Rect.fromLTWH(48, 68, 264, 28), 0x000000),
+        greaterThan(25),
+      );
+    }
+  });
+
   testWidgets('native and authored slide backgrounds retain readable ink', (
     tester,
   ) async {
@@ -561,12 +585,9 @@ void main() {
       const darkCell = ui.Rect.fromLTWH(384, 93, 290, 25);
       expect(dark.contrastPixels(whiteCell, 0xFFFFFF), greaterThan(25));
       expect(dark.contrastPixels(darkCell, 0x303030), greaterThan(25));
-      // Contrast above measures readable glyph coverage. Opaque pixel counts
-      // vary with the installed fallback font and antialiasing; separately
-      // confirm that the expected adapted ink is present.
       expect(
         dark.count(const ui.Rect.fromLTWH(384, 93, 290, 25), 0xF2F2F2),
-        isPositive,
+        greaterThan(15),
       );
       expect(
         dark.count(const ui.Rect.fromLTWH(408, 218, 240, 28), 0x000000),

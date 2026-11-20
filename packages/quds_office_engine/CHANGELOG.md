@@ -4,6 +4,23 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Add bounded VBA `Len`, `Left$`, `Right$`, and `Mid$` string intrinsics with
+  explicit UTF-16 semantics, a versioned conformance corpus, and portable
+  VM/JavaScript receipts. Refuse malformed UTF-16 at workbook-write boundaries
+  while preserving valid internal substring operations and transactional runs.
+
+- Integrate inherited PPTX decorations, block arrows, short PDF heading fitting
+  and authored LTR numeric text. Preserve hidden-master flags and resolved empty
+  decoration lists through import/copy/save while retaining layout decorations,
+  background ownership and rich-run overrides. Apply inherited PDF font scaling
+  only once, retain numeric order across wrapping, and include arrow outlines,
+  emoji fallback and flipped connector diagonals.
+
+- Add bounded, read-only Zotero child-note and attachment metadata pages with
+  exact parent/library validation, inert note markup, and explicit pagination.
+  Retain local database provenance on catalog snapshots so inspecting their
+  children requires the same identified Zotero 10+ database.
+
 - Keep imported slide runs as a source snapshot while applying scalar edits
   to derived rendering runs. Respect explicit plain-run overrides, inherited
   backgrounds, and PDF text tab-stop alignment.

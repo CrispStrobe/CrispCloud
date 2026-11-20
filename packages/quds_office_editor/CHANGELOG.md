@@ -4,6 +4,22 @@ All notable changes to `quds_office_editor` are documented here.
 
 ## Unreleased
 
+- Add explicit Mail attachment selection and removal, with immutable draft
+  snapshots, cancellable bounded file reads, a ten-file/10 MiB total limit,
+  and mixed MIME submission through the existing providers. Preserve attachment
+  bytes and Unicode filenames through explicit uncertain-send retries.
+- Inspect a catalog reference's child notes and attachment metadata through
+  **Reference details → Notes and attachments**. Add paginated browsing,
+  bounded inert note previews and copying, explicit retry and library-version
+  restart, and guards for changed connections. Preserve selection/search drafts
+  and read-only document history; desktop children retain the parent response's
+  database identity and require Zotero 10 or later.
+- Preserve inherited slide decorations independently of slide animation IDs,
+  retain hidden-master flags and visible layout decorations through save/reopen,
+  and include decoration backing in dark-display text contrast. Integrate block
+  arrows, symbol/emoji fallback and flipped connectors while retaining imported
+  rich-text edits and anchored hit testing.
+
 - Keep painting and caret hit testing aligned for anchored slide text, apply
   current scalar formatting to imported rich text, and preserve inherited
   backgrounds and the established 16-point fallback.

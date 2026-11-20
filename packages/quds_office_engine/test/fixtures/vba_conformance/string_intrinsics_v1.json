@@ -1,0 +1,1723 @@
+{
+  "schemaVersion": 1,
+  "suite": "vba-string-intrinsics",
+  "dialect": "vba-excel",
+  "cases": [
+    {
+      "id": "len-basic",
+      "feature": "Len",
+      "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = Len(\"\")\n  Worksheets(1).Range(\"A2\").Value2 = Len(\"Office\")\n  Worksheets(1).Range(\"A3\").Value2 = Len(\"a\"\"b\")\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A1",
+              "value": 0
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A2",
+              "value": 6
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A3",
+              "value": 3
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/len-function"
+        ],
+        "note": "Expected values derived from the published function contract; no Office host was executed."
+      }
+    },
+    {
+      "id": "left-clamped-counts",
+      "feature": "Left$",
+      "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = Left$(\"abc\",0)\n  Worksheets(1).Range(\"A2\").Value2 = Left$(\"abc\",1)\n  Worksheets(1).Range(\"A3\").Value2 = Left$(\"abc\",3)\n  Worksheets(1).Range(\"A4\").Value2 = Left$(\"abc\",2147483647)\n  Worksheets(1).Range(\"A5\").Value2 = Left$(\"\",2147483647)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A1",
+              "value": ""
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A2",
+              "value": "a"
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A3",
+              "value": "abc"
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A4",
+              "value": "abc"
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A5",
+              "value": ""
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/left-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/5f10a9e1-b6ba-4a92-bd94-c4c99da74ef2"
+        ],
+        "note": "Expected values derived from the published function contract; no Office host was executed."
+      }
+    },
+    {
+      "id": "right-clamped-counts",
+      "feature": "Right$",
+      "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = Right$(\"abc\",0)\n  Worksheets(1).Range(\"A2\").Value2 = Right$(\"abc\",1)\n  Worksheets(1).Range(\"A3\").Value2 = Right$(\"abc\",3)\n  Worksheets(1).Range(\"A4\").Value2 = Right$(\"abc\",2147483647)\n  Worksheets(1).Range(\"A5\").Value2 = Right$(\"\",2147483647)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A1",
+              "value": ""
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A2",
+              "value": "c"
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A3",
+              "value": "abc"
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A4",
+              "value": "abc"
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A5",
+              "value": ""
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/right-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/5f10a9e1-b6ba-4a92-bd94-c4c99da74ef2"
+        ],
+        "note": "Expected values derived from the published function contract; no Office host was executed."
+      }
+    },
+    {
+      "id": "mid-one-based-optional",
+      "feature": "Mid$",
+      "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = Mid$(\"abc\",1)\n  Worksheets(1).Range(\"A2\").Value2 = Mid$(\"abc\",2)\n  Worksheets(1).Range(\"A3\").Value2 = Mid$(\"abc\",3)\n  Worksheets(1).Range(\"A4\").Value2 = Mid$(\"abc\",4)\n  Worksheets(1).Range(\"A5\").Value2 = Mid$(\"abc\",2147483647)\n  Worksheets(1).Range(\"A6\").Value2 = Mid$(\"abc\",2,0)\n  Worksheets(1).Range(\"A7\").Value2 = Mid$(\"abc\",2,1)\n  Worksheets(1).Range(\"A8\").Value2 = Mid$(\"abc\",2,2147483647)\n  Worksheets(1).Range(\"A9\").Value2 = Mid$(\"\",1)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A1",
+              "value": "abc"
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A2",
+              "value": "bc"
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A3",
+              "value": "c"
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A4",
+              "value": ""
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A5",
+              "value": ""
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A6",
+              "value": ""
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A7",
+              "value": "b"
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A8",
+              "value": "bc"
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A9",
+              "value": ""
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/5f10a9e1-b6ba-4a92-bd94-c4c99da74ef2"
+        ],
+        "note": "Expected values derived from the published function contract; no Office host was executed."
+      }
+    },
+    {
+      "id": "utf16-code-units",
+      "feature": "Len",
+      "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = Len(\"A\ud83d\ude00B\")\n  Worksheets(1).Range(\"A2\").Value2 = Len(\"e\u0301\")\n  Worksheets(1).Range(\"A3\").Value2 = Mid$(\"A\ud83d\ude00B\",2,2)\n  Worksheets(1).Range(\"A4\").Value2 = Left$(\"A\ud83d\ude00B\",3)\n  Worksheets(1).Range(\"A5\").Value2 = Right$(\"A\ud83d\ude00B\",3)\n  Worksheets(1).Range(\"A6\").Value2 = Len(Left$(\"\ud83d\ude00\",1))\n  Worksheets(1).Range(\"A7\").Value2 = Len(Right$(\"\ud83d\ude00\",1))\n  Worksheets(1).Range(\"A8\").Value2 = Len(Mid$(\"\ud83d\ude00\",1,1))\n  Worksheets(1).Range(\"A9\").Value2 = Left$(\"\ud83d\ude00\",1) & Right$(\"\ud83d\ude00\",1)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A1",
+              "value": 4
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A2",
+              "value": 2
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A3",
+              "value": "\ud83d\ude00"
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A4",
+              "value": "A\ud83d\ude00"
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A5",
+              "value": "\ud83d\ude00B"
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A6",
+              "value": 1
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A7",
+              "value": 1
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A8",
+              "value": 1
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A9",
+              "value": "\ud83d\ude00"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/c86480b2-aef2-4488-b177-f55e13cc51f2"
+        ],
+        "note": "The Quds dialect explicitly indexes UTF-16 code units. This aligns with the nominal VBA String representation; it is not an Office-host observation or a claim about every implementation-defined string character set."
+      }
+    },
+    {
+      "id": "case-insensitive-names",
+      "feature": "Left$",
+      "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = lEn(lEfT$(\"abcdef\",3))\n  Worksheets(1).Range(\"A2\").Value2 = rIgHt$(mId$(\"abcdef\",2,4),2)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A1",
+              "value": 3
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A2",
+              "value": "de"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Expected values derived from the published function contract; no Office host was executed."
+      }
+    },
+    {
+      "id": "variant-and-integral-double",
+      "feature": "Left$",
+      "source": "Sub Main()\n  Dim text As Variant, count As Variant, start As Double\n  text = \"abcdef\"\n  count = 3.0\n  start = 2.0\n  Worksheets(1).Range(\"A1\").Value2 = Len(text)\n  Worksheets(1).Range(\"A2\").Value2 = Left$(text,count)\n  Worksheets(1).Range(\"A3\").Value2 = Right$(text,count)\n  Worksheets(1).Range(\"A4\").Value2 = Mid$(text,start,count)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A1",
+              "value": 6
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A2",
+              "value": "abc"
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A3",
+              "value": "def"
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A4",
+              "value": "bcd"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Expected values derived from the published function contract; no Office host was executed."
+      }
+    },
+    {
+      "id": "arrays-control-flow-and-calls",
+      "feature": "Mid$",
+      "source": "Option Explicit\nSub Main()\n  Dim texts() As String, text As Variant, row As Long\n  ReDim texts(1 To 2)\n  texts(1) = \"  alpha\"\n  texts(2) = \"  beta\"\n  row = 1\n  For Each text In texts\n    If Len(text) > 2 Then\n      Worksheets(1).Cells(row,1).Value2 = Tail(text)\n    End If\n    row = row + 1\n  Next text\nEnd Sub\nFunction Tail(ByVal text As String) As String\n  Tail = Mid$(text,3)\nEnd Function\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A1",
+              "value": "alpha"
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A2",
+              "value": "beta"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Expected values derived from the published function contract; no Office host was executed."
+      }
+    },
+    {
+      "id": "argument-evaluation-once-in-order",
+      "feature": "Mid$",
+      "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = Mid$(MakeText(),StartAt(),TakeCount())\nEnd Sub\nFunction MakeText() As String\n  Worksheets(1).Range(\"Z1\").Value2 = \"text\"\n  MakeText = \"abcdef\"\nEnd Function\nFunction StartAt() As Long\n  Worksheets(1).Range(\"Z2\").Value2 = \"start\"\n  StartAt = 2\nEnd Function\nFunction TakeCount() As Long\n  Worksheets(1).Range(\"Z3\").Value2 = \"length\"\n  TakeCount = 3\nEnd Function\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "Z1",
+              "value": "text"
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "Z2",
+              "value": "start"
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "Z3",
+              "value": "length"
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A1",
+              "value": "bcd"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Expected values derived from the published function contract; no Office host was executed."
+      }
+    },
+    {
+      "id": "arguments-run-even-for-empty-result",
+      "feature": "Mid$",
+      "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = Mid$(\"abc\",2147483647,TakeCount())\nEnd Sub\nFunction TakeCount() As Long\n  Worksheets(1).Range(\"Z1\").Value2 = \"length evaluated\"\n  TakeCount = 2\nEnd Function\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "Z1",
+              "value": "length evaluated"
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A1",
+              "value": ""
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Expected values derived from the published function contract; no Office host was executed."
+      }
+    },
+    {
+      "id": "nested-argument-evaluation",
+      "feature": "Right$",
+      "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = Right$(Left$(MakeText(),FirstCount()),SecondCount())\nEnd Sub\nFunction MakeText() As String\n  Worksheets(1).Range(\"Z1\").Value2 = \"text\"\n  MakeText = \"abcdef\"\nEnd Function\nFunction FirstCount() As Long\n  Worksheets(1).Range(\"Z2\").Value2 = \"first\"\n  FirstCount = 4\nEnd Function\nFunction SecondCount() As Long\n  Worksheets(1).Range(\"Z3\").Value2 = \"second\"\n  SecondCount = 2\nEnd Function\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "Z1",
+              "value": "text"
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "Z2",
+              "value": "first"
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "Z3",
+              "value": "second"
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A1",
+              "value": "cd"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Expected values derived from the published function contract; no Office host was executed."
+      }
+    },
+    {
+      "id": "clamped-copy-budget-accepts-three-max-strings",
+      "feature": "Len",
+      "source": "Sub Main()\n  Dim value As String, index As Long\n  value = \"x\"\n  For index = 1 To 14\n    value = value & value & \"x\"\n  Next index\n  value = Left$(value,2147483647)\n  value = Right$(value,2147483647)\n  value = Mid$(value,1)\n  Worksheets(1).Range(\"A1\").Value2 = Len(value)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A1",
+              "value": 32767
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Three 32767-code-unit copies share the work budget. Requested counts are clamped before charging; Len does not copy its operand."
+      }
+    },
+    {
+      "id": "copy-budget-shared-across-intrinsics",
+      "feature": "Left$",
+      "source": "Sub Main()\n  Dim value As String, index As Long\n  value = \"x\"\n  For index = 1 To 14\n    value = value & value & \"x\"\n  Next index\n  value = Left$(value,2147483647)\n  value = Right$(value,2147483647)\n  value = Mid$(value,1)\n  value = Left$(value,2147483647)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_limit_exceeded",
+          "line": 10,
+          "column": 11
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Deliberate bounded dialect rule or diagnostic location, not a claim of complete VBA coercion or Office-host parity."
+      }
+    },
+    {
+      "id": "len-refuses-number",
+      "feature": "Len",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Len(42)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 16
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Deliberate bounded dialect rule or diagnostic location, not a claim of complete VBA coercion or Office-host parity."
+      }
+    },
+    {
+      "id": "len-refuses-boolean",
+      "feature": "Len",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Len(True)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 16
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Deliberate bounded dialect rule or diagnostic location, not a claim of complete VBA coercion or Office-host parity."
+      }
+    },
+    {
+      "id": "left-refuses-numeric-text",
+      "feature": "Left$",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Left$(42,1)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 18
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Deliberate bounded dialect rule or diagnostic location, not a claim of complete VBA coercion or Office-host parity."
+      }
+    },
+    {
+      "id": "right-refuses-boolean-text",
+      "feature": "Right$",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Right$(True,1)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 19
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Deliberate bounded dialect rule or diagnostic location, not a claim of complete VBA coercion or Office-host parity."
+      }
+    },
+    {
+      "id": "mid-refuses-numeric-text",
+      "feature": "Mid$",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Mid$(42,1)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 17
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Deliberate bounded dialect rule or diagnostic location, not a claim of complete VBA coercion or Office-host parity."
+      }
+    },
+    {
+      "id": "left-refuses-string-count",
+      "feature": "Left$",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Left$(\"abc\",\"2\")\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 24
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Deliberate bounded dialect rule or diagnostic location, not a claim of complete VBA coercion or Office-host parity."
+      }
+    },
+    {
+      "id": "right-refuses-boolean-count",
+      "feature": "Right$",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Right$(\"abc\",True)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 25
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Deliberate bounded dialect rule or diagnostic location, not a claim of complete VBA coercion or Office-host parity."
+      }
+    },
+    {
+      "id": "left-refuses-fractional-count",
+      "feature": "Left$",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Left$(\"abc\",1.5)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 24
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Deliberate bounded dialect rule or diagnostic location, not a claim of complete VBA coercion or Office-host parity."
+      }
+    },
+    {
+      "id": "right-refuses-fractional-count",
+      "feature": "Right$",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Right$(\"abc\",0.5)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 25
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Deliberate bounded dialect rule or diagnostic location, not a claim of complete VBA coercion or Office-host parity."
+      }
+    },
+    {
+      "id": "left-refuses-negative-count",
+      "feature": "Left$",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Left$(\"abc\",-1)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 24
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Deliberate bounded dialect rule or diagnostic location, not a claim of complete VBA coercion or Office-host parity."
+      }
+    },
+    {
+      "id": "right-refuses-negative-count",
+      "feature": "Right$",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Right$(\"abc\",-2147483648)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 25
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Deliberate bounded dialect rule or diagnostic location, not a claim of complete VBA coercion or Office-host parity."
+      }
+    },
+    {
+      "id": "left-refuses-long-overflow",
+      "feature": "Left$",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Left$(\"abc\",2147483648)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 24
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Deliberate bounded dialect rule or diagnostic location, not a claim of complete VBA coercion or Office-host parity."
+      }
+    },
+    {
+      "id": "right-refuses-long-overflow",
+      "feature": "Right$",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Right$(\"abc\",2147483648)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 25
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Deliberate bounded dialect rule or diagnostic location, not a claim of complete VBA coercion or Office-host parity."
+      }
+    },
+    {
+      "id": "mid-refuses-zero-start",
+      "feature": "Mid$",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Mid$(\"abc\",0)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 23
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Deliberate bounded dialect rule or diagnostic location, not a claim of complete VBA coercion or Office-host parity."
+      }
+    },
+    {
+      "id": "mid-refuses-negative-start",
+      "feature": "Mid$",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Mid$(\"abc\",-1)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 23
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Deliberate bounded dialect rule or diagnostic location, not a claim of complete VBA coercion or Office-host parity."
+      }
+    },
+    {
+      "id": "mid-refuses-fractional-start",
+      "feature": "Mid$",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Mid$(\"abc\",1.5)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 23
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Deliberate bounded dialect rule or diagnostic location, not a claim of complete VBA coercion or Office-host parity."
+      }
+    },
+    {
+      "id": "mid-refuses-start-overflow",
+      "feature": "Mid$",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Mid$(\"abc\",2147483648)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 23
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Deliberate bounded dialect rule or diagnostic location, not a claim of complete VBA coercion or Office-host parity."
+      }
+    },
+    {
+      "id": "mid-refuses-string-start",
+      "feature": "Mid$",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Mid$(\"abc\",\"2\")\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 23
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Deliberate bounded dialect rule or diagnostic location, not a claim of complete VBA coercion or Office-host parity."
+      }
+    },
+    {
+      "id": "mid-refuses-boolean-start",
+      "feature": "Mid$",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Mid$(\"abc\",True)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 23
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Deliberate bounded dialect rule or diagnostic location, not a claim of complete VBA coercion or Office-host parity."
+      }
+    },
+    {
+      "id": "mid-refuses-negative-length",
+      "feature": "Mid$",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Mid$(\"abc\",1,-1)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 25
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Deliberate bounded dialect rule or diagnostic location, not a claim of complete VBA coercion or Office-host parity."
+      }
+    },
+    {
+      "id": "mid-refuses-fractional-length",
+      "feature": "Mid$",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Mid$(\"abc\",1,0.5)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 25
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Deliberate bounded dialect rule or diagnostic location, not a claim of complete VBA coercion or Office-host parity."
+      }
+    },
+    {
+      "id": "mid-refuses-length-overflow",
+      "feature": "Mid$",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Mid$(\"abc\",1,2147483648)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 25
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Deliberate bounded dialect rule or diagnostic location, not a claim of complete VBA coercion or Office-host parity."
+      }
+    },
+    {
+      "id": "mid-refuses-string-length",
+      "feature": "Mid$",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Mid$(\"abc\",1,\"2\")\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 25
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Deliberate bounded dialect rule or diagnostic location, not a claim of complete VBA coercion or Office-host parity."
+      }
+    },
+    {
+      "id": "mid-refuses-boolean-length",
+      "feature": "Mid$",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Mid$(\"abc\",1,False)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 25
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Deliberate bounded dialect rule or diagnostic location, not a claim of complete VBA coercion or Office-host parity."
+      }
+    },
+    {
+      "id": "mid-validates-length-past-end",
+      "feature": "Mid$",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Mid$(\"abc\",2147483647,-1)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 34
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Deliberate bounded dialect rule or diagnostic location, not a claim of complete VBA coercion or Office-host parity."
+      }
+    },
+    {
+      "id": "utf16-diagnostic-column",
+      "feature": "Left$",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Left$(\"\ud83d\ude00\",-1)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 23
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Deliberate bounded dialect rule or diagnostic location, not a claim of complete VBA coercion or Office-host parity."
+      }
+    },
+    {
+      "id": "len-requires-argument",
+      "feature": "Len",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Len()\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 12
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Deliberate bounded dialect rule or diagnostic location, not a claim of complete VBA coercion or Office-host parity."
+      }
+    },
+    {
+      "id": "len-refuses-extra-argument",
+      "feature": "Len",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Len(\"abc\",1)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 12
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Deliberate bounded dialect rule or diagnostic location, not a claim of complete VBA coercion or Office-host parity."
+      }
+    },
+    {
+      "id": "left-requires-count",
+      "feature": "Left$",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Left$(\"abc\")\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 12
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Deliberate bounded dialect rule or diagnostic location, not a claim of complete VBA coercion or Office-host parity."
+      }
+    },
+    {
+      "id": "left-refuses-third-argument",
+      "feature": "Left$",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Left$(\"abc\",1,2)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 12
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Deliberate bounded dialect rule or diagnostic location, not a claim of complete VBA coercion or Office-host parity."
+      }
+    },
+    {
+      "id": "right-requires-count",
+      "feature": "Right$",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Right$(\"abc\")\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 12
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Deliberate bounded dialect rule or diagnostic location, not a claim of complete VBA coercion or Office-host parity."
+      }
+    },
+    {
+      "id": "right-refuses-third-argument",
+      "feature": "Right$",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Right$(\"abc\",1,2)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 12
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Deliberate bounded dialect rule or diagnostic location, not a claim of complete VBA coercion or Office-host parity."
+      }
+    },
+    {
+      "id": "mid-requires-start",
+      "feature": "Mid$",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Mid$(\"abc\")\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 12
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Deliberate bounded dialect rule or diagnostic location, not a claim of complete VBA coercion or Office-host parity."
+      }
+    },
+    {
+      "id": "mid-refuses-fourth-argument",
+      "feature": "Mid$",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Mid$(\"abc\",1,2,3)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 12
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Deliberate bounded dialect rule or diagnostic location, not a claim of complete VBA coercion or Office-host parity."
+      }
+    },
+    {
+      "id": "refuses-unsuffixed-left",
+      "feature": "Left$",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Left(\"abc\",1)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 3,
+          "column": 12
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Deliberate bounded dialect rule or diagnostic location, not a claim of complete VBA coercion or Office-host parity."
+      }
+    },
+    {
+      "id": "refuses-unsuffixed-right",
+      "feature": "Right$",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Right(\"abc\",1)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 3,
+          "column": 12
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Deliberate bounded dialect rule or diagnostic location, not a claim of complete VBA coercion or Office-host parity."
+      }
+    },
+    {
+      "id": "refuses-unsuffixed-mid",
+      "feature": "Mid$",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Mid(\"abc\",1)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 3,
+          "column": 12
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Deliberate bounded dialect rule or diagnostic location, not a claim of complete VBA coercion or Office-host parity."
+      }
+    },
+    {
+      "id": "refuses-unapproved-suffix-len",
+      "feature": "Len",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Len$(\"abc\")\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 3,
+          "column": 15
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Deliberate bounded dialect rule or diagnostic location, not a claim of complete VBA coercion or Office-host parity."
+      }
+    },
+    {
+      "id": "refuses-unapproved-suffix-other",
+      "feature": "Other",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Other$(\"abc\")\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 3,
+          "column": 17
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Deliberate bounded dialect rule or diagnostic location, not a claim of complete VBA coercion or Office-host parity."
+      }
+    },
+    {
+      "id": "rejects-wrong-type-in-inactive-branch",
+      "feature": "Len",
+      "source": "Sub Main()\n  If False Then\n    result = Len(42)\n  End If\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 18
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Deliberate bounded dialect rule or diagnostic location, not a claim of complete VBA coercion or Office-host parity."
+      }
+    },
+    {
+      "id": "refuses-variant-number-as-text",
+      "feature": "Len",
+      "source": "Sub Main()\n  Dim result As Variant, value As Variant\n  value = 42\n  result = Len(value)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 4,
+          "column": 16
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Deliberate bounded dialect rule or diagnostic location, not a claim of complete VBA coercion or Office-host parity."
+      }
+    },
+    {
+      "id": "refuses-variant-string-as-count",
+      "feature": "Left$",
+      "source": "Sub Main()\n  Dim result As Variant, value As Variant\n  value = \"2\"\n  result = Left$(\"abc\",value)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 4,
+          "column": 24
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Deliberate bounded dialect rule or diagnostic location, not a claim of complete VBA coercion or Office-host parity."
+      }
+    },
+    {
+      "id": "refuses-uninitialized-variant",
+      "feature": "Len",
+      "source": "Sub Main()\n  Dim result As Variant, value As Variant\n  result = Len(value)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 3,
+          "column": 16
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Deliberate bounded dialect rule or diagnostic location, not a claim of complete VBA coercion or Office-host parity."
+      }
+    },
+    {
+      "id": "refuses-intrinsic-in-const",
+      "feature": "Len",
+      "source": "Sub Main()\n  Const size As Long = Len(\"abc\")\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 2,
+          "column": 24
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Deliberate bounded dialect rule or diagnostic location, not a claim of complete VBA coercion or Office-host parity."
+      }
+    },
+    {
+      "id": "refuses-null-state",
+      "feature": "Left$",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Left$(Null,1)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_name_error",
+          "line": 3,
+          "column": 18
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Null and Empty are reserved but unavailable values in the current dialect; unresolved names retain the existing stable vba_name_error diagnostic. No Office host was executed."
+      }
+    },
+    {
+      "id": "refuses-empty-state",
+      "feature": "Len",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Len(Empty)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_name_error",
+          "line": 3,
+          "column": 16
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Null and Empty are reserved but unavailable values in the current dialect; unresolved names retain the existing stable vba_name_error diagnostic. No Office host was executed."
+      }
+    },
+    {
+      "id": "diagnostic-cr-line-endings",
+      "feature": "Mid$",
+      "source": "Sub Main()\r  result = Mid$(\"abc\",0)\rEnd Sub\r",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 23
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Source positions count CR and CRLF as single line breaks, matching the compiler lexer. This is a dialect diagnostic convention, not an Office-host observation."
+      }
+    },
+    {
+      "id": "diagnostic-crlf-line-endings",
+      "feature": "Mid$",
+      "source": "Sub Main()\r\n  result = Mid$(\"abc\",0)\r\nEnd Sub\r\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 23
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Source positions count CR and CRLF as single line breaks, matching the compiler lexer. This is a dialect diagnostic convention, not an Office-host observation."
+      }
+    },
+    {
+      "id": "refuses-emitted-high-surrogate-value",
+      "feature": "Left$",
+      "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = Left$(\"\ud83d\ude00\",1)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 29
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/c86480b2-aef2-4488-b177-f55e13cc51f2"
+        ],
+        "note": "UTF-16 halves may exist inside expressions, but malformed emitted text is refused at the write member before native plan expansion. This prevents lossy document publication; no Office host was executed."
+      }
+    },
+    {
+      "id": "refuses-emitted-low-surrogate-value",
+      "feature": "Right$",
+      "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = Right$(\"\ud83d\ude00\",1)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 29
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/c86480b2-aef2-4488-b177-f55e13cc51f2"
+        ],
+        "note": "UTF-16 halves may exist inside expressions, but malformed emitted text is refused at the write member before native plan expansion. This prevents lossy document publication; no Office host was executed."
+      }
+    },
+    {
+      "id": "refuses-emitted-high-surrogate-formula",
+      "feature": "Left$",
+      "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Formula = \"=\"\"\" & Left$(\"\ud83d\ude00\",1) & \"\"\"\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 29
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/c86480b2-aef2-4488-b177-f55e13cc51f2"
+        ],
+        "note": "UTF-16 halves may exist inside expressions, but malformed emitted text is refused at the write member before native plan expansion. This prevents lossy document publication; no Office host was executed."
+      }
+    },
+    {
+      "id": "refuses-emitted-low-surrogate-formula",
+      "feature": "Right$",
+      "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Formula = \"=\"\"\" & Right$(\"\ud83d\ude00\",1) & \"\"\"\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 29
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/c86480b2-aef2-4488-b177-f55e13cc51f2"
+        ],
+        "note": "UTF-16 halves may exist inside expressions, but malformed emitted text is refused at the write member before native plan expansion. This prevents lossy document publication; no Office host was executed."
+      }
+    },
+    {
+      "id": "refuses-malformed-selector-for-value",
+      "feature": "Left$",
+      "source": "Sub Main()\n  Worksheets(Left$(\"\ud83d\ude00\",1)).Range(\"A1\").Value2 = \"ordinary\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 41
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/c86480b2-aef2-4488-b177-f55e13cc51f2"
+        ],
+        "note": "UTF-16 halves may exist inside expressions, but malformed emitted text is refused at the write member before native plan expansion. This prevents lossy document publication; no Office host was executed."
+      }
+    },
+    {
+      "id": "refuses-malformed-selector-for-clear",
+      "feature": "Right$",
+      "source": "Sub Main()\n  Worksheets(Right$(\"\ud83d\ude00\",1)).Range(\"A1\").ClearContents\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 3
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/c86480b2-aef2-4488-b177-f55e13cc51f2"
+        ],
+        "note": "Malformed emitted selectors are refused before native plan expansion. ClearContents uses its existing statement-start diagnostic token; property writes use their member token. This prevents lossy document publication; no Office host was executed."
+      }
+    },
+    {
+      "id": "refuses-malformed-selector-for-format",
+      "feature": "Left$",
+      "source": "Sub Main()\n  Worksheets(Left$(\"\ud83d\ude00\",1)).Range(\"A1\").Font.Bold = True\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 46
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/c86480b2-aef2-4488-b177-f55e13cc51f2"
+        ],
+        "note": "UTF-16 halves may exist inside expressions, but malformed emitted text is refused at the write member before native plan expansion. This prevents lossy document publication; no Office host was executed."
+      }
+    },
+    {
+      "id": "emits-paired-and-recombined-supplementary-text",
+      "feature": "UTF-16 publication",
+      "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = \"A\ud83d\ude00B\"\n  Worksheets(1).Range(\"A2\").Value2 = Left$(\"\ud83d\ude00\",1) & Right$(\"\ud83d\ude00\",1)\n  Worksheets(1).Range(\"A3\").Formula = \"=\"\"\ud83d\ude00\"\"\"\n  Worksheets(\"\ud83d\ude00\").Range(\"A1\").Value2 = Mid$(\"A\ud83d\ude00B\",2,2)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A1",
+              "value": "A\ud83d\ude00B"
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A2",
+              "value": "\ud83d\ude00"
+            }
+          },
+          {
+            "tool": "xlsx.cellFormula",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A3",
+              "formula": "=\"\ud83d\ude00\""
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": "\ud83d\ude00",
+              "cell": "A1",
+              "value": "\ud83d\ude00"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/c86480b2-aef2-4488-b177-f55e13cc51f2"
+        ],
+        "note": "Valid supplementary pairs and reassembled halves remain valid native values, formulas, and sheet selectors. The portable harness verifies native plan JSON round trips; workbook publication has separate integration qualification."
+      }
+    }
+  ]
+}

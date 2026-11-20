@@ -60,7 +60,7 @@ void applySlideStep(
     case 'shapeGeometry':
       final target = shape();
       final before = target.transform;
-      final transform = PmlTransform(
+      final transform = before.copyWith(
         x: (s.number('x', fallback: before.xPoints) * 12700).round(),
         y: (s.number('y', fallback: before.yPoints) * 12700).round(),
         cx: (s.number('width', fallback: before.widthPoints, min: 0.01) * 12700)
@@ -71,6 +71,8 @@ void applySlideStep(
                 .round(),
         rot: (s.number('rotation', fallback: before.rotationDegrees) * 60000)
             .round(),
+        flipH: before.flipH,
+        flipV: before.flipV,
       );
       target.transform = transform;
       if (target.visual case final OfficeVisual visual) {

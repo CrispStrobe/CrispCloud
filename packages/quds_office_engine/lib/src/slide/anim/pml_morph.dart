@@ -229,6 +229,8 @@ class PmlMorph {
       cx: _lerpInt(a.cx, b.cx, t),
       cy: _lerpInt(a.cy, b.cy, t),
       rot: _lerpRot(a.rot, b.rot, t),
+      flipH: t < 0.5 ? a.flipH : b.flipH,
+      flipV: t < 0.5 ? a.flipV : b.flipV,
     );
   }
 

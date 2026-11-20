@@ -44,10 +44,14 @@ class ZoteroItemDetailsDialog extends StatefulWidget {
     super.key,
     required this.item,
     required this.activeTags,
+    this.onBrowseChildren,
+    this.childrenUnavailableReason,
   });
 
   final ZoteroItem item;
   final List<String> activeTags;
+  final Future<void> Function()? onBrowseChildren;
+  final String? childrenUnavailableReason;
 
   @override
   State<ZoteroItemDetailsDialog> createState() =>
@@ -57,6 +61,18 @@ class ZoteroItemDetailsDialog extends StatefulWidget {
 class _ZoteroItemDetailsDialogState extends State<ZoteroItemDetailsDialog> {
   String? _copyStatus;
   bool _copying = false;
+  bool _browsingChildren = false;
+
+  Future<void> _browseChildren() async {
+    final browse = widget.onBrowseChildren;
+    if (browse == null || _browsingChildren) return;
+    setState(() => _browsingChildren = true);
+    try {
+      await browse();
+    } finally {
+      if (mounted) setState(() => _browsingChildren = false);
+    }
+  }
 
   String? _tagUnavailableReason(String tag) {
     if (widget.activeTags.contains(tag)) {
@@ -113,6 +129,21 @@ class _ZoteroItemDetailsDialogState extends State<ZoteroItemDetailsDialog> {
                   SelectableText(value),
                   const SizedBox(height: 12),
                 ],
+              if (widget.onBrowseChildren != null ||
+                  widget.childrenUnavailableReason != null) ...[
+                TextButton.icon(
+                  key: const ValueKey('zotero-browse-item-children'),
+                  onPressed:
+                      widget.onBrowseChildren == null || _browsingChildren
+                      ? null
+                      : _browseChildren,
+                  icon: const Icon(Icons.folder_open),
+                  label: const Text('Notes and attachments…'),
+                ),
+                if (widget.childrenUnavailableReason != null)
+                  Text(widget.childrenUnavailableReason!),
+                const SizedBox(height: 12),
+              ],
               if (item.tags.isNotEmpty) ...[
                 Text(
                   'Tags (${item.tags.length})',

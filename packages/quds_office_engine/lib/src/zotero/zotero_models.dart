@@ -13,6 +13,9 @@ enum ZoteroSearchMode { titleCreatorYear, everything }
 /// Search modes accepted by Zotero's tag catalog endpoints.
 enum ZoteroTagSearchMode { contains, startsWith }
 
+/// Read-only child records available beneath a bibliographic catalog item.
+enum ZoteroItemChildKind { note, attachment }
+
 /// Supported catalog ordering, applied by Zotero before pagination.
 enum ZoteroItemSort { dateModified, dateAdded, title, creator, date, itemType }
 
@@ -266,6 +269,7 @@ class ZoteroItem {
     Uri? citationUri,
     this.citationHtml,
     this.bibliographyHtml,
+    this.localServerId,
   }) : tags = List.unmodifiable(tags.toSet()),
        creators = List.unmodifiable(creators),
        // Keep the public argument name and the private optional override.
@@ -304,6 +308,14 @@ class ZoteroItem {
   final String? citationHtml;
   final String? bibliographyHtml;
 
+  /// Database provenance from this exact local catalog response, when present.
+  ///
+  /// This is neither a credential nor a persistent source identity. Keep it
+  /// with the in-memory catalog snapshot only; never put it into CSL exports
+  /// or document metadata. Online and older desktop responses leave it null.
+  /// Pass it to `ZoteroClient.itemChildren` when inspecting this local item.
+  final String? localServerId;
+
   final Uri? _citationUri;
 
   /// Durable citation identity, independent of desktop's `/users/0` alias.
@@ -323,6 +335,56 @@ class ZoteroItem {
   String get year => RegExp(r'\b\d{4}\b').firstMatch(date)?.group(0) ?? '';
   bool get isCitable =>
       !const {'attachment', 'note', 'annotation'}.contains(itemType);
+}
+
+/// A child note or attachment returned by a read-only catalog request.
+///
+/// All text is supplied metadata. [noteHtml] is raw, untrusted markup: hosts
+/// must convert or sanitize it before display and must not load its resources.
+/// [filename], [url] and [linkMode] never authorize opening or downloading a
+/// file. Missing optional metadata remains empty instead of being inferred.
+class ZoteroItemChild {
+  ZoteroItemChild({
+    required this.library,
+    required this.key,
+    required this.parentKey,
+    required this.kind,
+    this.title = '',
+    this.noteHtml = '',
+    this.filename = '',
+    this.contentType = '',
+    this.linkMode = '',
+    this.url = '',
+    this.version = 0,
+  }) {
+    validateZoteroKey(key);
+    validateZoteroKey(parentKey);
+    if (key == parentKey || version < 0) {
+      throw ArgumentError(
+        'Use a distinct Zotero child and nonnegative version.',
+      );
+    }
+  }
+
+  final ZoteroLibrary library;
+  final String key;
+  final String parentKey;
+  final ZoteroItemChildKind kind;
+  final String title;
+
+  /// Notes and attachments can both contain an embedded HTML note.
+  final String noteHtml;
+
+  /// Empty for linked files when Zotero supplies a path instead of a filename.
+  /// Native paths and attachment download links are deliberately not exposed.
+  final String filename;
+  final String contentType;
+
+  /// Zotero's literal attachment mode, such as `imported_file` or `linked_url`.
+  /// Unknown modes remain inert metadata rather than acquiring file behavior.
+  final String linkMode;
+  final String url;
+  final int version;
 }
 
 class ZoteroPage<T> {

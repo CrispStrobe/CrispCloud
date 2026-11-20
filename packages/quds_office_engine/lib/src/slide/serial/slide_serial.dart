@@ -57,7 +57,7 @@ class SlideDeserializer {
             relId = reader.attributeValue(a);
           }
         }
-        pres.slides.add(PmlSlide(id: id));
+        pres.slides.add(PmlSlide(id: id, backgroundShapesResolved: true));
         final PackageRelationship? rel = relId == null
             ? null
             : presentationRels.byId(relId);
@@ -103,6 +103,7 @@ class SlideDeserializer {
       final slidePart = package.getPart(uri);
       if (slidePart != null) {
         final String slideXml = slidePart.readText();
+        pres.slides[i].showMasterShapes = _showsMasterShapes(slideXml);
         final _SlideTemplate? layout = templates.layoutOf(uri);
         final Set<PmlShape> positioned = Set<PmlShape>.identity();
         final List<PmlShape> shapes = parseSlideShapes(
@@ -132,9 +133,10 @@ class SlideDeserializer {
             layout.master?.placeholders ?? const <PmlShape>[],
           ]);
           pres.slides[i].backgroundShapes.addAll(<PmlShape>[
-            for (final PmlShape shape
-                in layout.master?.decorations ?? const <PmlShape>[])
-              shape.copy(),
+            if (pres.slides[i].showMasterShapes && layout.showsMasterShapes)
+              for (final PmlShape shape
+                  in layout.master?.decorations ?? const <PmlShape>[])
+                shape.copy(),
             for (final PmlShape shape in layout.decorations) shape.copy(),
           ]);
         }
@@ -214,6 +216,22 @@ class SlideDeserializer {
   /// readBytes API.
   PmlPresentation readBytes(Uint8List bytes, {String? password}) =>
       read(OpcPackage.openBytes(bytes, password: password));
+
+  /// `showMasterSp` hides master decorations without hiding layout shapes or
+  /// the editable slide content. XML Schema booleans default to true here.
+
+  static bool _showsMasterShapes(String xml) {
+    final XmlPullReader reader = XmlPullReader(xml);
+    while (reader.next()) {
+      if (reader.eventType == XmlEventType.startElement &&
+          reader.namespaceUri == OfficeNamespaces.p &&
+          (reader.localName == 'sld' || reader.localName == 'sldLayout')) {
+        final String? value = reader.getAttribute('showMasterSp')?.trim();
+        return value != '0' && value != 'false';
+      }
+    }
+    return true;
+  }
 
   static bool _slideIsHidden(String xml) {
     final int start = xml.indexOf('<p:sld');
@@ -365,6 +383,8 @@ class _SlideTemplate {
     required this.decorations,
     this.background,
     this.inheritsMasterBackground = false,
+    this.showsMasterShapes = true,
+
     this.master,
   });
 
@@ -374,6 +394,8 @@ class _SlideTemplate {
   final List<PmlShape> decorations;
   final String? background;
   final bool inheritsMasterBackground;
+  final bool showsMasterShapes;
+
   final _SlideTemplate? master;
 }
 
@@ -458,6 +480,8 @@ class _SlideTemplates {
       decorations: _decorations(shapes, package, uri),
       background: background ?? master?.background,
       inheritsMasterBackground: background == null,
+      showsMasterShapes: SlideDeserializer._showsMasterShapes(xml),
+
       master: master,
     );
   }

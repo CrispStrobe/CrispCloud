@@ -488,10 +488,103 @@ class ZoteroClient {
     };
     final uri = _uri(path, parameters);
     final response = await _request(uri);
-    final items = _array(
-      _decode(response),
-    ).map((json) => _item(_object(json), library)).toList();
+    final items = _array(_decode(response))
+        .map(
+          (json) => _item(
+            _object(json),
+            library,
+            localServerId: isLocal ? response.header('Zotero-Server-ID') : null,
+          ),
+        )
+        .toList();
     return _page(items, response, uri, start, limit);
+  }
+
+  /// Reads direct child notes and attachment metadata for a catalog reference.
+  ///
+  /// This does not retrieve attachment bytes, annotations, or citation data.
+  /// Pagination is explicit on both APIs, including desktop's otherwise
+  /// unbounded default. Every child must belong to [parentKey] and the selected
+  /// library; one invalid record refuses the page instead of silently omitting
+  /// it. Pages contain at most 100 records, responses at most 8 MiB of UTF-8,
+  /// note HTML at most 1 MiB of UTF-8 per record, and other display
+  /// strings at most 8,192 code units. Optional strings remain empty if absent.
+  ///
+  /// On desktop, pass the parent's [ZoteroItem.localServerId]. It must already
+  /// match this client's pinned database before the request starts. Older or
+  /// headerless catalog snapshots cannot safely identify child records by key
+  /// alone. This parameter is unused online and never sent to the online API.
+  ///
+  /// Protocol: https://www.zotero.org/support/dev/web_api/v3/basics#items
+  /// Database pin: https://www.zotero.org/support/dev/web_api/v3/local_api#server_id
+  Future<ZoteroPage<ZoteroItemChild>> itemChildren(
+    ZoteroLibrary library,
+    String parentKey, {
+    String? expectedLocalServerId,
+    int start = 0,
+    int limit = 50,
+  }) async {
+    validateZoteroKey(parentKey);
+    final uri = _uri('${_libraryPath(library)}/items/$parentKey/children', {
+      ..._pagination(start, limit),
+      'include': 'data',
+      'sort': 'dateAdded',
+      'direction': 'asc',
+    });
+    if (isLocal) {
+      if (expectedLocalServerId == null || _localServerId == null) {
+        throw const ZoteroApiException(
+          kind: ZoteroApiErrorKind.unavailable,
+          message:
+              'Use Zotero 10 or later and reconnect to inspect notes and attachments.',
+        );
+      }
+      if (expectedLocalServerId != _localServerId) {
+        throw const ZoteroApiException(
+          kind: ZoteroApiErrorKind.unavailable,
+          message:
+              'Zotero desktop library changed. Reconnect to its local library.',
+        );
+      }
+    }
+    final response = await _request(uri);
+    const maxResponseBytes = 8 * 1024 * 1024;
+    if (response.body.length > maxResponseBytes ||
+        utf8.encode(response.body).length > maxResponseBytes) {
+      throw const ZoteroApiException(
+        kind: ZoteroApiErrorKind.invalidResponse,
+        message: 'The Zotero notes and attachments response is too large.',
+      );
+    }
+    final Object? decoded = _decode(response);
+    if (decoded is! List<Object?> || decoded.length > limit) {
+      throw _invalidResponse();
+    }
+    for (final header in const ['Total-Results', 'Last-Modified-Version']) {
+      final value = response.header(header);
+      if (value != null) {
+        final number = int.tryParse(value);
+        if (number == null || number < 0) throw _invalidResponse();
+      }
+    }
+    final keys = <String>{};
+    final items = <ZoteroItemChild>[];
+    for (final record in decoded) {
+      final child = _itemChild(_childObject(record), library, parentKey);
+      if (!keys.add(child.key)) throw _invalidResponse();
+      items.add(child);
+    }
+    final page = _page(items, response, uri, start, limit);
+    final next = page.nextStart;
+    final total = page.totalResults;
+    if ((next != null && (next <= start || items.isEmpty)) ||
+        (total != null &&
+            ((items.isNotEmpty &&
+                    (start >= total || items.length > total - start)) ||
+                (next != null && next >= total)))) {
+      throw _invalidResponse();
+    }
+    return page;
   }
 
   /// Retrieves CSL data and a formatted *individual* citation snapshot.
@@ -519,7 +612,11 @@ class ZoteroClient {
           : 'data,csljson',
       if (includeFormatted) ..._formatting(style, locale),
     });
-    final item = _item(_object(_decode(response)), library);
+    final item = _item(
+      _object(_decode(response)),
+      library,
+      localServerId: isLocal ? response.header('Zotero-Server-ID') : null,
+    );
     if (item.key != key) throw _invalidResponse();
     if (expected != null && item.citationUri != expected) {
       throw _identityMismatch();
@@ -726,7 +823,11 @@ class ZoteroClient {
     if (records.length != expected.length) throw _identityMismatch();
     final items = <String, ZoteroItem>{};
     for (final record in records) {
-      final item = _item(_object(record), library);
+      final item = _item(
+        _object(record),
+        library,
+        localServerId: isLocal ? response.header('Zotero-Server-ID') : null,
+      );
       if (items.containsKey(item.key) ||
           !expected.containsKey(item.key) ||
           item.citationUri != expected[item.key]) {
@@ -974,7 +1075,11 @@ class ZoteroClient {
     );
   }
 
-  ZoteroItem _item(Map<String, dynamic> json, ZoteroLibrary library) {
+  ZoteroItem _item(
+    Map<String, dynamic> json,
+    ZoteroLibrary library, {
+    String? localServerId,
+  }) {
     final data = _object(json['data']);
     final key = _responseKey(json['key'] ?? data['key']);
     if (data['key'] != null && data['key'] != key) throw _invalidResponse();
@@ -1044,7 +1149,96 @@ class ZoteroClient {
           ? json['citation'] as String
           : null,
       bibliographyHtml: json['bib'] is String ? json['bib'] as String : null,
+      localServerId: localServerId,
     );
+  }
+
+  static Map<String, Object?> _childObject(Object? value) {
+    if (value is! Map<String, Object?>) throw _invalidResponse();
+    return value;
+  }
+
+  static ZoteroItemChild _itemChild(
+    Map<String, Object?> json,
+    ZoteroLibrary library,
+    String parentKey,
+  ) {
+    final key = _responseKey(json['key']);
+    final data = _childObject(json['data']);
+    if (data.containsKey('key') && _responseKey(data['key']) != key) {
+      throw _invalidResponse();
+    }
+    final version = json['version'];
+    if (version is! int || version < 0) throw _invalidResponse();
+    if (data.containsKey('version') &&
+        (data['version'] is! int || data['version'] != version)) {
+      throw _invalidResponse();
+    }
+    final source = _childObject(json['library']);
+    final sourceId = source['id'];
+    if (source['type'] != library.type.name ||
+        sourceId is! int ||
+        sourceId < 0 ||
+        (!library.isLocalUser && sourceId != library.id)) {
+      throw _invalidResponse();
+    }
+    if (_responseKey(data['parentItem']) != parentKey || key == parentKey) {
+      throw _invalidResponse();
+    }
+    final kind = switch (data['itemType']) {
+      'note' => ZoteroItemChildKind.note,
+      'attachment' => ZoteroItemChildKind.attachment,
+      _ => throw _invalidResponse(),
+    };
+    return ZoteroItemChild(
+      library: library,
+      key: key,
+      parentKey: parentKey,
+      kind: kind,
+      version: version,
+      title: _childString(data, 'title'),
+      noteHtml: _childString(
+        data,
+        'note',
+        maxLength: 1024 * 1024,
+        maxBytes: 1024 * 1024,
+      ),
+      filename: _childString(data, 'filename'),
+      contentType: _childString(data, 'contentType'),
+      linkMode: _childString(data, 'linkMode'),
+      url: _childString(data, 'url'),
+    );
+  }
+
+  static String _childString(
+    Map<String, Object?> data,
+    String name, {
+    int maxLength = 8192,
+    int? maxBytes,
+  }) {
+    if (!data.containsKey(name)) return '';
+    final value = data[name];
+    if (value is! String || value.length > maxLength) {
+      throw _invalidResponse();
+    }
+    // Keep exact text, but do not let malformed UTF-16 become replacement
+    // characters when the host displays or copies a note.
+    for (var index = 0; index < value.length; index++) {
+      final unit = value.codeUnitAt(index);
+      if (unit >= 0xd800 && unit <= 0xdbff) {
+        if (++index >= value.length ||
+            value.codeUnitAt(index) < 0xdc00 ||
+            value.codeUnitAt(index) > 0xdfff) {
+          throw _invalidResponse();
+        }
+      } else if (unit >= 0xdc00 && unit <= 0xdfff) {
+        throw _invalidResponse();
+      }
+    }
+    if (maxBytes != null && utf8.encode(value).length > maxBytes) {
+      throw _invalidResponse();
+    }
+    return value;
   }
 
   static String _publicationTitle(Map<String, dynamic> data, String itemType) {

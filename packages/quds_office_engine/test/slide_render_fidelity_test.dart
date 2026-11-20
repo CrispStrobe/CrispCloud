@@ -1,9 +1,10 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:quds_office_engine/quds_office_engine.dart';
 import 'package:test/test.dart';
 
-PmlPresentation _richDeck() {
+PmlPresentation _richDeck({String text = 'Imported text'}) {
   final OpcPackage package = OpcPackage.create(OpcPackageKind.slide);
   package
       .getPart('/ppt/slides/slide1.xml')!
@@ -15,7 +16,7 @@ PmlPresentation _richDeck() {
         '</a:xfrm><a:noFill/></p:spPr><p:txBody><a:bodyPr/><a:p>'
         '<a:pPr algn="l" rtl="0"/><a:r><a:rPr sz="1200">'
         '<a:solidFill><a:srgbClr val="FF0000"/></a:solidFill></a:rPr>'
-        '<a:t>Imported text</a:t></a:r></a:p></p:txBody></p:sp>'
+        '<a:t>$text</a:t></a:r></a:p></p:txBody></p:sp>'
         '</p:spTree></p:cSld></p:sld>',
       );
   return SlideDeserializer().read(package);
@@ -41,6 +42,61 @@ String _pageStreams(Uint8List pdf) {
 }
 
 void main() {
+  for (final bool embeddedFont in <bool>[false, true]) {
+    test(
+      'numeric rich text keeps line breaks with embeddedFont=$embeddedFont',
+      () {
+        final OfficeFontSet fonts = embeddedFont
+            ? OfficeFontSet(
+                primary: SfntFont.parse(
+                  File(
+                    '../quds_office_editor/fonts/LiberationSans-Regular.ttf',
+                  ).readAsBytesSync(),
+                ),
+              )
+            : const OfficeFontSet();
+        final PdfFile pdf = PdfFile.open(
+          OfficePdfExport.presentation(
+            _richDeck(text: '123\n\n456'),
+            fonts: fonts,
+          ),
+        );
+        final List<PdfDrawText> painted = pdf
+            .displayList(0)
+            .ops
+            .whereType<PdfDrawText>()
+            .toList();
+        final Map<double, StringBuffer> lines = <double, StringBuffer>{};
+        for (final PdfDrawText glyph in painted) {
+          (lines[glyph.y] ??= StringBuffer()).write(glyph.text);
+        }
+        expect(lines.values.map((line) => line.toString()), <String>[
+          '123',
+          '456',
+        ]);
+        final List<double> baselines = lines.keys.toList();
+        expect((baselines.last - baselines.first).abs(), closeTo(30, 0.01));
+      },
+    );
+  }
+
+  test('numeric rich text keeps authored single-line LTR order', () {
+    const String text = '(12.3) / 45-67';
+    final PdfFile pdf = PdfFile.open(
+      OfficePdfExport.presentation(_richDeck(text: text)),
+    );
+    final List<PdfDrawText> painted = pdf
+        .displayList(0)
+        .ops
+        .whereType<PdfDrawText>()
+        .toList();
+    expect(painted.map((glyph) => glyph.text).join(), text);
+    expect(painted.map((glyph) => glyph.y).toSet(), hasLength(1));
+    for (int i = 1; i < painted.length; i++) {
+      expect(painted[i].x, greaterThan(painted[i - 1].x));
+    }
+  });
+
   for (final PdfSlideExportMode mode in PdfSlideExportMode.values) {
     test(
       'PDF $mode inherits master paper and keeps an explicit slide color',

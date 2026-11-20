@@ -28,6 +28,10 @@ Future<void> _mount(
   WidgetTester tester,
   PmlShape shape, {
   void Function(int index, {bool extend})? onPlaceCaret,
+  List<PmlShape> backgroundShapes = const <PmlShape>[],
+  Map<int, PmlAnimSample>? animSamples,
+  bool presenting = false,
+  OfficeTheme theme = OfficeTheme.light,
 }) async {
   await tester.pumpWidget(
     Directionality(
@@ -40,10 +44,55 @@ Future<void> _mount(
             width: 768,
             height: 453,
             child: SlideStage(
-              slide: PmlSlide(id: 256, shapes: <PmlShape>[shape]),
+              slide: PmlSlide(
+                id: 256,
+                shapes: <PmlShape>[shape],
+                backgroundShapes: backgroundShapes,
+              ),
               selected: shape,
-              editing: true,
+              editing: !presenting,
+              presenting: presenting,
+              animSamples: animSamples,
               onPlaceCaret: onPlaceCaret,
+              config: OfficeSurfaceConfig(
+                theme: theme,
+                showSlideHandles: false,
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+  await tester.pump();
+  expect(tester.takeException(), isNull);
+}
+
+Future<void> _present(
+  WidgetTester tester,
+  PmlSlide slide, {
+  Map<int, PmlAnimSample>? samples,
+  PmlSlide? outgoing,
+}) async {
+  await tester.pumpWidget(
+    Directionality(
+      textDirection: TextDirection.ltr,
+      child: Align(
+        alignment: Alignment.topLeft,
+        child: RepaintBoundary(
+          key: _boundaryKey,
+          child: SizedBox(
+            width: 720,
+            height: 405,
+            child: SlideStage(
+              slide: slide,
+              presenting: true,
+              animSamples: samples,
+              outgoingSlide: outgoing,
+              transitionProgress: outgoing == null ? 1 : 0.5,
+              playingTransition: outgoing == null
+                  ? null
+                  : const PmlSlideTransition(kind: PmlTransitionKind.morph),
               config: const OfficeSurfaceConfig(showSlideHandles: false),
             ),
           ),
@@ -54,6 +103,36 @@ Future<void> _mount(
   await tester.pump();
   expect(tester.takeException(), isNull);
 }
+
+PmlSlide _decoratedSlide() => PmlSlide(
+  id: 256,
+  backgroundShapes: <PmlShape>[
+    PmlShape(
+      id: 2,
+      name: 'Master decoration',
+      fillColor: 'FF0000',
+      transform: const PmlTransform(
+        x: 30 * 12700,
+        y: 40 * 12700,
+        cx: 60 * 12700,
+        cy: 40 * 12700,
+      ),
+    ),
+  ],
+  shapes: <PmlShape>[
+    PmlShape(
+      id: 2,
+      name: 'Slide content',
+      fillColor: '0000FF',
+      transform: const PmlTransform(
+        x: 180 * 12700,
+        y: 40 * 12700,
+        cx: 60 * 12700,
+        cy: 40 * 12700,
+      ),
+    ),
+  ],
+);
 
 Future<Rect?> _inkBounds(WidgetTester tester, int rgb) async {
   final RenderRepaintBoundary boundary = tester.renderObject(
@@ -120,6 +199,55 @@ void _captureRichRuns(PmlShape shape) {
 }
 
 void main() {
+  testWidgets(
+    'slide animation cannot hide an inherited decoration with the same id',
+    (WidgetTester tester) async {
+      final PmlSlide slide = _decoratedSlide();
+      await _present(tester, slide);
+      final Rect decoration = (await _inkBounds(tester, 0xFF0000))!;
+      expect(await _inkBounds(tester, 0x0000FF), isNotNull);
+
+      await _present(
+        tester,
+        slide,
+        samples: <int, PmlAnimSample>{2: PmlAnimSample.hidden},
+      );
+      expect(await _inkBounds(tester, 0x0000FF), isNull);
+      expect(await _inkBounds(tester, 0xFF0000), decoration);
+    },
+  );
+
+  testWidgets('morph keeps inherited decorations when content ids match', (
+    WidgetTester tester,
+  ) async {
+    final PmlSlide outgoing = _decoratedSlide();
+    final PmlSlide incoming = outgoing.copy(id: 257);
+    await _present(tester, outgoing);
+    final Rect decoration = (await _inkBounds(tester, 0xFF0000))!;
+
+    await _present(tester, incoming, outgoing: outgoing);
+    expect(await _inkBounds(tester, 0xFF0000), decoration);
+    expect(await _inkBounds(tester, 0x0000FF), isNotNull);
+  });
+
+  testWidgets('inherited decorations retain their authored rotation', (
+    WidgetTester tester,
+  ) async {
+    final PmlSlide slide = _decoratedSlide();
+    final PmlTransform original = slide.backgroundShapes.single.transform;
+    slide.backgroundShapes.single.transform = PmlTransform(
+      x: original.x,
+      y: original.y,
+      cx: original.cx,
+      cy: original.cy,
+      rot: 90 * 60000,
+    );
+    await _present(tester, slide);
+    final Rect decoration = (await _inkBounds(tester, 0xFF0000))!;
+    expect(decoration.width, closeTo(40, 1));
+    expect(decoration.height, closeTo(60, 1));
+  });
+
   for (final PmlTextAnchor anchor in <PmlTextAnchor>[
     PmlTextAnchor.center,
     PmlTextAnchor.bottom,
@@ -177,5 +305,47 @@ void main() {
     final Rect plain = (await _inkBounds(tester, 0x0000FF))!;
     expect(rich.width, closeTo(plain.width, 1));
     expect(rich.height, closeTo(plain.height, 1));
+  });
+  testWidgets('master decoration IDs do not inherit slide animation samples', (
+    WidgetTester tester,
+  ) async {
+    final PmlShape content = _shape()..text = 'Hidden slide content';
+    final PmlShape decoration = PmlShape(
+      id: content.id,
+      name: 'Master decoration',
+      fillColor: '00FF00',
+      transform: const PmlTransform(cx: 100 * 12700, cy: 100 * 12700),
+    );
+    await _mount(
+      tester,
+      content,
+      backgroundShapes: <PmlShape>[decoration],
+      presenting: true,
+      animSamples: <int, PmlAnimSample>{content.id: PmlAnimSample.hidden},
+    );
+    expect(await _inkBounds(tester, 0x00FF00), isNotNull);
+    expect(await _inkBounds(tester, 0xFF0000), isNull);
+  });
+
+  testWidgets('dark slide text uses the decoration painted behind it', (
+    WidgetTester tester,
+  ) async {
+    final PmlShape content = _shape()
+      ..text = 'Readable ink'
+      ..textColor = '000000';
+    final PmlShape decoration = PmlShape(
+      id: content.id,
+      name: 'White layout background',
+      fillColor: 'FFFFFF',
+      transform: const PmlTransform(cx: 720 * 12700, cy: 405 * 12700),
+    );
+    await _mount(
+      tester,
+      content,
+      backgroundShapes: <PmlShape>[decoration],
+      theme: OfficeTheme.dark,
+    );
+    expect(await _inkBounds(tester, 0x000000), isNotNull);
+    expect(content.textColor, '000000');
   });
 }

@@ -7,6 +7,7 @@ import 'package:quds_office_engine/quds_office_engine.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'office_controller.dart';
+import 'word_zotero_children.dart';
 import 'word_zotero_composer.dart';
 import 'word_zotero_document_sources.dart';
 import 'word_zotero_format.dart';
@@ -622,7 +623,27 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
     if (client == null || library == null) return;
     final tag = await showDialog<String>(
       context: context,
-      builder: (_) => ZoteroItemDetailsDialog(item: item, activeTags: _tags),
+      builder: (_) => ZoteroItemDetailsDialog(
+        item: item,
+        activeTags: _tags,
+        childrenUnavailableReason: client.isLocal && item.localServerId == null
+            ? 'Use Zotero 10 or later and reconnect to inspect notes and attachments.'
+            : null,
+        onBrowseChildren: client.isLocal && item.localServerId == null
+            ? null
+            : () async {
+                if (!_catalogIsCurrent(client, library, generation)) return;
+                await showDialog<void>(
+                  context: context,
+                  builder: (_) => ZoteroItemChildrenDialog(
+                    client: client,
+                    parent: item,
+                    isCurrent: () =>
+                        _catalogIsCurrent(client, library, generation),
+                  ),
+                );
+              },
+      ),
     );
     if (tag == null || !_catalogIsCurrent(client, library, generation)) return;
     await _applyTag(tag, clearDraft: false, requireExact: true);

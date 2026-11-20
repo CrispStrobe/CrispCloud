@@ -16,12 +16,14 @@ abstract final class PmlArrange {
             .map((PmlShape s) => s.transform.x)
             .reduce((int a, int b) => a < b ? a : b);
         for (final PmlShape shape in shapes) {
-          shape.transform = PmlTransform(
+          shape.transform = shape.transform.copyWith(
             x: edge,
             y: shape.transform.y,
             cx: shape.transform.cx,
             cy: shape.transform.cy,
             rot: shape.transform.rot,
+            flipH: shape.transform.flipH,
+            flipV: shape.transform.flipV,
           );
         }
       case PmlAlignAxis.right:
@@ -29,12 +31,14 @@ abstract final class PmlArrange {
             .map((PmlShape s) => s.transform.x + s.transform.cx)
             .reduce((int a, int b) => a > b ? a : b);
         for (final PmlShape shape in shapes) {
-          shape.transform = PmlTransform(
+          shape.transform = shape.transform.copyWith(
             x: edge - shape.transform.cx,
             y: shape.transform.y,
             cx: shape.transform.cx,
             cy: shape.transform.cy,
             rot: shape.transform.rot,
+            flipH: shape.transform.flipH,
+            flipV: shape.transform.flipV,
           );
         }
       case PmlAlignAxis.center:
@@ -46,12 +50,14 @@ abstract final class PmlArrange {
             .reduce((int a, int b) => a > b ? a : b);
         final int mid = (minX + maxX) ~/ 2;
         for (final PmlShape shape in shapes) {
-          shape.transform = PmlTransform(
+          shape.transform = shape.transform.copyWith(
             x: mid - shape.transform.cx ~/ 2,
             y: shape.transform.y,
             cx: shape.transform.cx,
             cy: shape.transform.cy,
             rot: shape.transform.rot,
+            flipH: shape.transform.flipH,
+            flipV: shape.transform.flipV,
           );
         }
       case PmlAlignAxis.top:
@@ -59,12 +65,14 @@ abstract final class PmlArrange {
             .map((PmlShape s) => s.transform.y)
             .reduce((int a, int b) => a < b ? a : b);
         for (final PmlShape shape in shapes) {
-          shape.transform = PmlTransform(
+          shape.transform = shape.transform.copyWith(
             x: shape.transform.x,
             y: edge,
             cx: shape.transform.cx,
             cy: shape.transform.cy,
             rot: shape.transform.rot,
+            flipH: shape.transform.flipH,
+            flipV: shape.transform.flipV,
           );
         }
       case PmlAlignAxis.bottom:
@@ -72,12 +80,14 @@ abstract final class PmlArrange {
             .map((PmlShape s) => s.transform.y + s.transform.cy)
             .reduce((int a, int b) => a > b ? a : b);
         for (final PmlShape shape in shapes) {
-          shape.transform = PmlTransform(
+          shape.transform = shape.transform.copyWith(
             x: shape.transform.x,
             y: edge - shape.transform.cy,
             cx: shape.transform.cx,
             cy: shape.transform.cy,
             rot: shape.transform.rot,
+            flipH: shape.transform.flipH,
+            flipV: shape.transform.flipV,
           );
         }
       case PmlAlignAxis.middle:
@@ -89,12 +99,14 @@ abstract final class PmlArrange {
             .reduce((int a, int b) => a > b ? a : b);
         final int mid = (minY + maxY) ~/ 2;
         for (final PmlShape shape in shapes) {
-          shape.transform = PmlTransform(
+          shape.transform = shape.transform.copyWith(
             x: shape.transform.x,
             y: mid - shape.transform.cy ~/ 2,
             cx: shape.transform.cx,
             cy: shape.transform.cy,
             rot: shape.transform.rot,
+            flipH: shape.transform.flipH,
+            flipV: shape.transform.flipV,
           );
         }
     }
@@ -131,12 +143,14 @@ abstract final class PmlArrange {
       final PmlShape shape = ordered[index];
       final int position =
           cursor + _roundedRatio(space * index, ordered.length - 1);
-      shape.transform = PmlTransform(
+      shape.transform = shape.transform.copyWith(
         x: horizontal ? position : shape.transform.x,
         y: horizontal ? shape.transform.y : position,
         cx: shape.transform.cx,
         cy: shape.transform.cy,
         rot: shape.transform.rot,
+        flipH: shape.transform.flipH,
+        flipV: shape.transform.flipV,
       );
       cursor += horizontal ? shape.transform.cx : shape.transform.cy;
     }

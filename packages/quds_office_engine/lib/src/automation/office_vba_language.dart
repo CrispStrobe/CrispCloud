@@ -77,6 +77,7 @@ const _maxActiveArrayElements = 16384;
 const _maxActiveArrayStringUnits = 1048576;
 const _maxExactInteger = 9007199254740991;
 const _comparisonOperators = <String>{'=', '<>', '<', '>', '<=', '>='};
+const _stringIntrinsics = <String>{'len', r'left$', r'right$', r'mid$'};
 
 class _Context {
   const _Context(this.source);
@@ -233,7 +234,15 @@ class _Lexer {
           if (!_letter(next) && !_digit(next) && next != 95) break;
           _advance();
         }
-        final text = source.substring(start, offset);
+        var text = source.substring(start, offset);
+        // Only the implemented String-returning intrinsics may carry a type
+        // suffix. This does not admit suffixed variable or procedure names.
+        if (offset < source.length &&
+            source.codeUnitAt(offset) == 36 &&
+            _stringIntrinsics.contains('${text.toLowerCase()}\$')) {
+          _advance();
+          text = source.substring(start, offset);
+        }
         if (text.length > 128) {
           context.limit(
             token(_TokenKind.identifier, text),
@@ -301,7 +310,7 @@ class _Lexer {
       }
       context.unsupported(
         token(_TokenKind.symbol, String.fromCharCode(code)),
-        'Unsupported character; VBA type suffixes, dates, and directives are not supported.',
+        'Unsupported character; variable type suffixes, dates, and directives are not supported.',
       );
     }
     _add(_Token(_TokenKind.end, '', line, column));
@@ -1337,6 +1346,7 @@ class _Checker {
   final Map<String, Set<String>> calls = <String, Set<String>>{};
   late _Procedure currentProcedure;
   static const _reserved = <String>{
+    ..._stringIntrinsics,
     'sub',
     'end',
     'dim',
@@ -2017,6 +2027,9 @@ class _Checker {
         if ((symbols[expression.token.lower]?.isArray ?? false)) {
           return _arrayIndex(expression);
         }
+        if (_stringIntrinsics.contains(expression.token.lower)) {
+          return _stringIntrinsic(expression);
+        }
         if (expression.token.lower == 'lbound' ||
             expression.token.lower == 'ubound') {
           if (expression.arguments.isEmpty || expression.arguments.length > 2) {
@@ -2160,6 +2173,30 @@ class _Checker {
     final index = expression.arguments.single;
     _compatible(_Kind.number, _expression(index), index.token);
     return _kindOf(_symbol(expression.token).type);
+  }
+
+  _Kind _stringIntrinsic(_Call expression) {
+    final name = expression.token.lower;
+    final arguments = expression.arguments;
+    if (name == r'mid$') {
+      if (arguments.length < 2 || arguments.length > 3) {
+        context.type(
+          expression.token,
+          '${expression.token.text} requires a string, start, and optional length.',
+        );
+      }
+    } else {
+      _count(expression.token, arguments, name == 'len' ? 1 : 2);
+    }
+    for (var index = 0; index < arguments.length; index++) {
+      final argument = arguments[index];
+      _compatible(
+        index == 0 ? _Kind.string : _Kind.number,
+        _expression(argument),
+        argument.token,
+      );
+    }
+    return name == 'len' ? _Kind.number : _Kind.string;
   }
 
   List<_Expr> _arguments(
@@ -2468,7 +2505,7 @@ class _Evaluator {
     if (amount > _maxWork - work) {
       context.limit(
         token,
-        'Compilation exceeds $_maxWork evaluation/statement visits.',
+        'Compilation exceeds $_maxWork work units (evaluation, statements, array elements, and copied string units).',
       );
     }
     work += amount;
@@ -2788,6 +2825,9 @@ class _Evaluator {
         final arguments = <Object>[
           for (final argument in expression.arguments) _evaluate(argument),
         ];
+        if (_stringIntrinsics.contains(expression.token.lower)) {
+          return _stringIntrinsic(expression, arguments);
+        }
         if (expression.token.lower == 'worksheets') {
           return _sheet(arguments.single, expression.token);
         }
@@ -3139,6 +3179,48 @@ class _Evaluator {
     return value;
   }
 
+  Object _stringIntrinsic(_Call expression, List<Object> arguments) {
+    final text = _string(arguments.first, expression.arguments.first.token);
+    final name = expression.token.lower;
+    if (name == 'len') return text.length;
+
+    final second = _stringIndex(
+      arguments[1],
+      expression.arguments[1].token,
+      isStart: name == r'mid$',
+    );
+    // Validate an explicit length even when start is beyond the input. All
+    // argument expressions have already been evaluated once, in source order.
+    final requested = name == r'mid$'
+        ? arguments.length == 3
+              ? _stringIndex(arguments[2], expression.arguments[2].token)
+              : text.length
+        : second;
+    final start = name == r'mid$' ? second - 1 : 0;
+    final available = start < text.length ? text.length - start : 0;
+    final count = requested < available ? requested : available;
+    // Charge the actual result, including full-input slices, before allocating.
+    // Dart String indices are UTF-16 units on both the VM and JavaScript.
+    _charge(count, expression.token);
+    if (count == 0) return '';
+    final offset = name == r'right$' ? text.length - count : start;
+    return text.substring(offset, offset + count);
+  }
+
+  int _stringIndex(Object value, _Token token, {bool isStart = false}) {
+    final index = _integer(value, token);
+    final minimum = isStart ? 1 : 0;
+    if (index < minimum || index > 2147483647) {
+      context.type(
+        token,
+        isStart
+            ? 'String start must be a one-based signed 32-bit integer.'
+            : 'String length must be a nonnegative signed 32-bit integer.',
+      );
+    }
+    return index;
+  }
+
   bool _boolean(Object value, _Token token) {
     if (value is! bool) {
       context.type(
@@ -3303,6 +3385,26 @@ class _Evaluator {
     return '${hex(color & 255)}${hex((color >> 8) & 255)}${hex((color >> 16) & 255)}';
   }
 
+  void _nativeString(Object? value, _Token token) {
+    if (value is! String) return;
+    for (var index = 0; index < value.length; index++) {
+      final unit = value.codeUnitAt(index);
+      if (unit < 0xd800 || unit > 0xdfff) continue;
+      final paired =
+          unit <= 0xdbff &&
+          index + 1 < value.length &&
+          value.codeUnitAt(index + 1) >= 0xdc00 &&
+          value.codeUnitAt(index + 1) <= 0xdfff;
+      if (!paired) {
+        context.type(
+          token,
+          'Native spreadsheet writes require well-formed UTF-16; isolated surrogates cannot be published losslessly.',
+        );
+      }
+      index++;
+    }
+  }
+
   void _emitRange(
     _Range range,
     String operation,
@@ -3317,6 +3419,13 @@ class _Evaluator {
         token,
         'Range expansion exceeds $_maxSteps emitted operations.',
       );
+    }
+    // Source expressions may split/recombine UTF-16 pairs, but the workbook
+    // serializer cannot publish isolated surrogates without replacing them.
+    // Check each template string once before expanding its native operations.
+    _nativeString(range.sheet.selector, token);
+    for (final value in fields.values) {
+      _nativeString(value, token);
     }
     for (var row = range.minRow; row <= range.maxRow; row++) {
       for (var column = range.minColumn; column <= range.maxColumn; column++) {

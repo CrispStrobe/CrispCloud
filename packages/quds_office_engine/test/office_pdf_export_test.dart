@@ -105,6 +105,111 @@ void main() {
     expect(stream, contains('/F2 11 Tf'));
   });
 
+  test('PPT heading fit scales explicit and inherited run sizes once', () {
+    final PmlShape shape = PmlShape(
+      id: 2,
+      name: 'Heading',
+      text: 'An unusually long heading',
+      fontSizePt: 20,
+      fillColor: '',
+      transform: const PmlTransform(cx: 60 * 12700, cy: 30 * 12700),
+      richText: <PmlTextParagraph>[
+        PmlTextParagraph(
+          defaultFontSizePt: 20,
+          runs: <PmlTextRun>[
+            PmlTextRun(text: 'An unusually '),
+            PmlTextRun(text: 'long heading', fontSizePt: 20),
+          ],
+        ),
+      ],
+    );
+    final PmlPresentation deck = PmlPresentation(
+      slides: <PmlSlide>[
+        PmlSlide(id: 256, shapes: <PmlShape>[shape]),
+      ],
+    );
+    final String stream = _inflated(OfficePdfExport.presentation(deck)).join();
+    final Set<double> sizes = RegExp(
+      r'/\S+ ([0-9.]+) Tf',
+    ).allMatches(stream).map((match) => double.parse(match.group(1)!)).toSet();
+    expect(sizes, <double>{15});
+    expect(shape.richText.single.runs.first.fontSizePt, 0);
+    expect(shape.richText.single.runs.last.fontSizePt, 20);
+  });
+
+  test('PPT numeric-only text remains in authored left-to-right order', () {
+    const String text = '1 2 3 4';
+    final PmlPresentation deck = PmlPresentation(
+      slides: <PmlSlide>[
+        PmlSlide(
+          id: 256,
+          shapes: <PmlShape>[
+            PmlShape(
+              id: 2,
+              name: 'Numbers',
+              text: text,
+              fillColor: '',
+              transform: const PmlTransform(cx: 400 * 12700, cy: 100 * 12700),
+              richText: <PmlTextParagraph>[
+                PmlTextParagraph(
+                  runs: <PmlTextRun>[PmlTextRun(text: text, fontSizePt: 20)],
+                ),
+              ],
+            ),
+          ],
+        ),
+      ],
+    );
+    final String stream = _inflated(OfficePdfExport.presentation(deck)).join();
+    final List<RegExpMatch> glyphs = RegExp(
+      r'1 0 0 -1 ([0-9.]+) [0-9.]+ Tm\n\(([^()]*)\) Tj',
+    ).allMatches(stream).toList();
+    expect(glyphs.map((match) => match.group(2)!).join(), text);
+    final List<double> positions = glyphs
+        .map((match) => double.parse(match.group(1)!))
+        .toList();
+    expect(positions, orderedEquals(<double>[...positions]..sort()));
+  });
+
+  test('PPT resolved empty decorations do not revive the global master', () {
+    final PmlShape master = PmlShape(
+      id: 2,
+      name: 'Global decoration',
+      text: 'Global marker',
+      fillColor: 'CC3300',
+      hyperlinkUrl: 'https://example.org/global',
+      transform: const PmlTransform(cx: 100 * 12700, cy: 100 * 12700),
+    );
+    final PmlPresentation deck = PmlPresentation(
+      slides: <PmlSlide>[PmlSlide(id: 256, backgroundShapes: <PmlShape>[])],
+      master: PmlMaster(
+        name: 'Global',
+        background: '112233',
+        shapes: <PmlShape>[master],
+      ),
+    );
+    for (final int perPage in <int>[1, 2]) {
+      final Uint8List resolved = OfficePdfExport.presentation(
+        deck,
+        slidesPerPage: perPage,
+      );
+      final String stream = _inflated(resolved).join();
+      expect(stream, contains('0.067 0.133 0.200 rg'));
+      expect(stream, isNot(contains('(Global) Tj')));
+      expect(stream, isNot(contains('(marker) Tj')));
+      expect(_ascii(resolved), isNot(contains('https://example.org/global')));
+    }
+    deck.slides[0] = PmlSlide(id: 256);
+    final Uint8List authored = OfficePdfExport.presentation(deck);
+    expect(_inflated(authored).join(), contains('(Global) Tj'));
+    expect(_inflated(authored).join(), contains('(marker) Tj'));
+    expect(_ascii(authored), contains('https://example.org/global'));
+    deck.slides.single.showMasterShapes = false;
+    final Uint8List suppressed = OfficePdfExport.presentation(deck);
+    expect(_inflated(suppressed).join(), isNot(contains('(Global) Tj')));
+    expect(_ascii(suppressed), isNot(contains('https://example.org/global')));
+  });
+
   test('Word PDF keeps pages, headers, tables, lists, and pictures', () {
     final WmlDocument doc = WmlDocument(
       sections: <WmlSection>[
