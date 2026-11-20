@@ -153,4 +153,82 @@ void main() {
     relayout(<WmlParagraph>[p]);
     expect(WordIncrementalLayoutStats.incremental, 0);
   });
+  for (final emptyBetween in [false, true]) {
+    test('removing a wrapping frame discards older breaks '
+        '(empty intermediate: $emptyBetween)', () {
+      final WmlParagraph target = _p('Old cached glyphs.');
+      final List<WmlBlock> blocks = <WmlBlock>[
+        _p('First unchanged paragraph.'),
+        _p('Second unchanged paragraph.'),
+        target,
+      ];
+      document = WmlDocument(
+        sections: <WmlSection>[WmlSection(blocks: blocks)],
+      );
+      engine = WordLayoutEngine(font: null);
+      laid = engine.layout(document, updateFields: false);
+
+      if (emptyBetween) {
+        runOf(target).text = '';
+        laid = engine.layout(document, updateFields: false);
+      }
+      final WmlFrame frame = WmlFrame(
+        width: 80,
+        height: 40,
+        wrap: WmlFrameWrap.square,
+      );
+      blocks.insert(0, frame);
+      runOf(target).text = 'New content while the frame wraps.';
+      laid = engine.layout(document, updateFields: false);
+
+      // Removing the frame dirties the first remaining block and leaves
+      // this target clean. Its old unwrapped cache must not supply glyphs.
+      blocks.remove(frame);
+      relayout(const <WmlParagraph>[]);
+      expect(WordIncrementalLayoutStats.incremental, 1);
+      expect(
+        laid.pages
+            .expand((page) => page.lines)
+            .where((line) => identical(line.sourceParagraph, target)),
+        isNotEmpty,
+      );
+    });
+  }
+
+  test(
+    'foreign engine reuse remeasures every section with current metrics',
+    () {
+      document = WmlDocument(
+        sections: <WmlSection>[
+          WmlSection(blocks: <WmlBlock>[_p(_text(0) * 4)]),
+          WmlSection(blocks: <WmlBlock>[_p(_text(2) * 3)]),
+        ],
+      );
+      final firstEngine = WordLayoutEngine(
+        font: null,
+        fallbackWidthFactor: 0.35,
+      );
+      final previous = firstEngine.layout(document, updateFields: false);
+      final secondEngine = WordLayoutEngine(
+        font: null,
+        fallbackWidthFactor: 0.9,
+      );
+      final actual = secondEngine.layout(
+        document,
+        updateFields: false,
+        // Even the ordinary fallback must discard the foreign first section.
+        fromSectionIndex: 1,
+        reuse: previous,
+        dirtyParagraphs: <WmlParagraph>{},
+      );
+      final expected = WordLayoutEngine(
+        font: null,
+        fallbackWidthFactor: 0.9,
+      ).layout(document, updateFields: false);
+      expect(wordLayoutFingerprint(actual), wordLayoutFingerprint(expected));
+      expect(actual.pages.first, isNot(same(previous.pages.first)));
+      expect(WordIncrementalLayoutStats.incremental, 0);
+      expect(WordIncrementalLayoutStats.fallbacks, 1);
+    },
+  );
 }

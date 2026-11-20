@@ -377,51 +377,63 @@ void main() {
   ]) {
     final name = command.name;
     for (final reverse in [false, true]) {
-      test('$name table replacement restores selection and native owners on undo', () {
-        final controller = _controller();
-        controller.caret
-          ..logicalIndex = reverse ? 1 : 6
-          ..selectionAnchor = reverse ? 6 : 1
-          ..selectionAnchorParagraph = 0;
-        final document = controller.document;
-        final before = _state(document);
-        final beforeNumbering = _numberingXml(document);
-        final transaction = _begin(controller, command: command);
-        _stageCitedNote(transaction, html: _tableResearchHtml);
-        _complete(transaction);
-        expect(_state(document), before);
-        expect(controller.canUndo, isFalse);
-        transaction.apply();
+      test(
+        '$name table replacement restores ${reverse ? 'backward' : 'forward'} selection and native owners on undo',
+        () {
+          final controller = _controller();
+          controller.caret
+            ..logicalIndex = reverse ? 1 : 6
+            ..selectionAnchor = reverse ? 6 : 1
+            ..selectionAnchorParagraph = 0;
+          final document = controller.document;
+          final before = _state(document);
+          final beforeNumbering = _numberingXml(document);
+          final transaction = _begin(controller, command: command);
+          _stageCitedNote(transaction, html: _tableResearchHtml);
+          _complete(transaction);
+          expect(_state(document), before);
+          expect(controller.canUndo, isFalse);
+          transaction.apply();
 
-        final blocks = document.sections.single.blocks;
-        final table = blocks.whereType<WmlTable>().single;
-        expect(blocks.first, isA<WmlParagraph>());
-        expect((blocks.first as WmlParagraph).text, 'B');
-        expect(table.grid, [90.0, 180.0]);
-        final cellParagraph = table.rows.single.cells.first.blocks.single as WmlParagraph;
-        expect(cellParagraph.text, 'First (First, 2024)');
-        expect(cellParagraph.properties.listLabel, '3. ');
-        final suffix = blocks[blocks.indexOf(table) + 1] as WmlParagraph;
-        expect(suffix.text, 'After');
-        expect(document.paragraphs.elementAt(controller.caret.paragraphIndex), same(suffix));
-        expect(controller.caret.logicalIndex, 0);
-        expect(controller.zoteroFields.map((f) => f.citation!.citationId),
-            ['first', 'second']);
-        expect(controller.zoteroFields.first.paragraph, same(cellParagraph));
-        final after = _state(document);
+          final blocks = document.sections.single.blocks;
+          final table = blocks.whereType<WmlTable>().single;
+          expect(blocks.first, isA<WmlParagraph>());
+          expect((blocks.first as WmlParagraph).text, 'B');
+          expect(table.grid, [90.0, 180.0]);
+          final cellParagraph =
+              table.rows.single.cells.first.blocks.single as WmlParagraph;
+          expect(cellParagraph.text, 'First (First, 2024)');
+          expect(cellParagraph.properties.listLabel, '3. ');
+          final suffix = blocks[blocks.indexOf(table) + 1] as WmlParagraph;
+          expect(suffix.text, 'After');
+          expect(
+            document.paragraphs.elementAt(controller.caret.paragraphIndex),
+            same(suffix),
+          );
+          expect(controller.caret.logicalIndex, 0);
+          expect(controller.zoteroFields.map((f) => f.citation!.citationId), [
+            'first',
+            'second',
+          ]);
+          expect(controller.zoteroFields.first.paragraph, same(cellParagraph));
+          final after = _state(document);
 
-        controller.undo();
-        expect(_state(document), before);
-        expect(_numberingXml(document), beforeNumbering);
-        expect(document.sections.single.blocks.whereType<WmlTable>(), isEmpty);
-        expect(controller.caret.selectionAnchor, reverse ? 6 : 1);
-        expect(controller.caret.logicalIndex, reverse ? 1 : 6);
-        expect(controller.canUndo, isFalse);
-        controller.redo();
-        expect(_state(document), after);
-        expect(document.sections.single.blocks, contains(same(table)));
-        expect(controller.zoteroFields.first.paragraph, same(cellParagraph));
-      });
+          controller.undo();
+          expect(_state(document), before);
+          expect(_numberingXml(document), beforeNumbering);
+          expect(
+            document.sections.single.blocks.whereType<WmlTable>(),
+            isEmpty,
+          );
+          expect(controller.caret.selectionAnchor, reverse ? 6 : 1);
+          expect(controller.caret.logicalIndex, reverse ? 1 : 6);
+          expect(controller.canUndo, isFalse);
+          controller.redo();
+          expect(_state(document), after);
+          expect(document.sections.single.blocks, contains(same(table)));
+          expect(controller.zoteroFields.first.paragraph, same(cellParagraph));
+        },
+      );
     }
 
     for (final endnote in [false, true]) {
@@ -429,8 +441,10 @@ void main() {
       test('$name table in an authored $label returns to the Notes pane', () {
         final document = _document();
         final note = WordNotes.insert(
-          document, document.paragraphs.last,
-          text: 'Left chosen Right', endnote: endnote,
+          document,
+          document.paragraphs.last,
+          text: 'Left chosen Right',
+          endnote: endnote,
         );
         final controller = _controller(document: document);
         const selection = TextSelection(baseOffset: 11, extentOffset: 5);
@@ -438,7 +452,9 @@ void main() {
         final before = _state(document);
         final transaction = _begin(controller, command: command);
         _stageCitedNote(
-          transaction, html: _tableResearchHtml, noteType: endnote ? 2 : 1,
+          transaction,
+          html: _tableResearchHtml,
+          noteType: endnote ? 2 : 1,
         );
         _complete(transaction);
         transaction.apply();
@@ -446,15 +462,30 @@ void main() {
         expect(note.blocks, hasLength(3));
         expect(controller.noteEditText(note), 'Left \n Right');
         expect(controller.noteEditingTarget?.note, same(note));
-        expect(controller.noteEditingTarget?.selection,
-            const TextSelection.collapsed(offset: 6));
+        expect(
+          controller.noteEditingTarget?.selection,
+          const TextSelection.collapsed(offset: 6),
+        );
         expect(document.footnotes.length + document.endnotes.length, 1);
-        expect(controller.zoteroFields.every((f) => note.allParagraphs.contains(f.paragraph)), isTrue);
-        final reopened = WordDeserializer().readBytes(WordSerializer().writeBytes(document));
-        final restored = (endnote ? reopened.endnotes : reopened.footnotes).single;
-        expect(restored.blocks.whereType<WmlTable>().single.grid, [90.0, 180.0]);
-        expect(WordZotero.fields(reopened).map((f) => f.citation!.citationId),
-            ['first', 'second']);
+        expect(
+          controller.zoteroFields.every(
+            (f) => note.allParagraphs.contains(f.paragraph),
+          ),
+          isTrue,
+        );
+        final reopened = WordDeserializer().readBytes(
+          WordSerializer().writeBytes(document),
+        );
+        final restored =
+            (endnote ? reopened.endnotes : reopened.footnotes).single;
+        expect(restored.blocks.whereType<WmlTable>().single.grid, [
+          90.0,
+          180.0,
+        ]);
+        expect(WordZotero.fields(reopened).map((f) => f.citation!.citationId), [
+          'first',
+          'second',
+        ]);
         controller.undo();
         expect(_state(document), before);
         expect(controller.noteEditingTarget?.selection, selection);
@@ -462,24 +493,32 @@ void main() {
         expect(controller.canUndo, isFalse);
         controller.redo();
         expect(note.blocks, contains(same(table)));
-        expect(controller.noteEditingTarget?.selection,
-            const TextSelection.collapsed(offset: 6));
+        expect(
+          controller.noteEditingTarget?.selection,
+          const TextSelection.collapsed(offset: 6),
+        );
       });
     }
 
-    test('$name abandoned table staging leaves document and numbering unchanged', () {
-      final controller = _controller();
-      final before = _state(controller.document);
-      final numbering = _numberingXml(controller.document);
-      final transaction = _begin(controller, command: command);
-      _stageCitedNote(transaction, html: _tableResearchHtml);
-      expect(transaction.apply, throwsStateError);
-      expect(_state(controller.document), before);
-      expect(_numberingXml(controller.document), numbering);
-      expect(controller.document.sections.single.blocks.whereType<WmlTable>(), isEmpty);
-      expect(controller.canUndo, isFalse);
-      expect(controller.isDirty, isFalse);
-    });
+    test(
+      '$name abandoned table staging leaves document and numbering unchanged',
+      () {
+        final controller = _controller();
+        final before = _state(controller.document);
+        final numbering = _numberingXml(controller.document);
+        final transaction = _begin(controller, command: command);
+        _stageCitedNote(transaction, html: _tableResearchHtml);
+        expect(transaction.apply, throwsStateError);
+        expect(_state(controller.document), before);
+        expect(_numberingXml(controller.document), numbering);
+        expect(
+          controller.document.sections.single.blocks.whereType<WmlTable>(),
+          isEmpty,
+        );
+        expect(controller.canUndo, isFalse);
+        expect(controller.isDirty, isFalse);
+      },
+    );
 
     test('$name stale table result preserves the selected text', () {
       final controller = _controller();
@@ -501,28 +540,40 @@ void main() {
       final controller = _controller();
       final before = _state(controller.document);
       final transaction = _begin(controller, command: command);
-      expect(() => _insertText(transaction,
-          '<table><tr><td colspan="2"><p>Unsupported</p></td></tr></table>'),
-          throwsUnsupportedError);
+      expect(
+        () => _insertText(
+          transaction,
+          '<table><tr><td colspan="2"><p>Unsupported</p></td></tr></table>',
+        ),
+        throwsUnsupportedError,
+      );
       expect(_state(controller.document), before);
       expect(controller.canUndo, isFalse);
     });
 
-    testWidgets('$name native dialog completes a cited table as one undo step', (tester) async {
-      final controller = _controller();
-      final before = _state(controller.document);
-      final desktop = _Desktop(_script(html: _tableResearchHtml));
-      await _openTextInsertion(tester, controller, desktop, command: command);
-      expect(desktop.command, name);
-      expect(controller.document.sections.single.blocks.whereType<WmlTable>(), hasLength(1));
-      expect(controller.zoteroFields.map((f) => f.citation!.citationId),
-          ['first', 'second']);
-      expect(controller.caret.logicalIndex, 0);
-      expect(tester.takeException(), isNull);
-      controller.undo();
-      expect(_state(controller.document), before);
-      expect(controller.canUndo, isFalse);
-    });
+    testWidgets(
+      '$name native dialog completes a cited table as one undo step',
+      (tester) async {
+        final controller = _controller();
+        final before = _state(controller.document);
+        final desktop = _Desktop(_script(html: _tableResearchHtml));
+        await _openTextInsertion(tester, controller, desktop, command: command);
+        expect(desktop.command, name);
+        expect(
+          controller.document.sections.single.blocks.whereType<WmlTable>(),
+          hasLength(1),
+        );
+        expect(controller.zoteroFields.map((f) => f.citation!.citationId), [
+          'first',
+          'second',
+        ]);
+        expect(controller.caret.logicalIndex, 0);
+        expect(tester.takeException(), isNull);
+        controller.undo();
+        expect(_state(controller.document), before);
+        expect(controller.canUndo, isFalse);
+      },
+    );
   }
 
   test('annotated note is staged, preserves prose and positions the caret', () {
@@ -1399,32 +1450,35 @@ void main() {
         },
       );
 
-      test('a moved note selection refuses a staged ${command.name}', () {
-        final document = _document();
-        final note = WordNotes.insert(
-          document,
-          document.paragraphs.last,
-          text: 'Authored',
-          endnote: endnote,
-        );
-        final controller = _controller(document: document);
-        controller.setNoteEditingTarget(
-          note,
-          const TextSelection(baseOffset: 1, extentOffset: 4),
-        );
-        final before = _state(document);
-        final transaction = _begin(controller, command: command);
-        _stageCitedNote(transaction);
-        _complete(transaction);
-        controller.setNoteEditingTarget(
-          note,
-          const TextSelection(baseOffset: 1, extentOffset: 5),
-        );
-        expect(transaction.apply, throwsStateError);
-        expect(_state(document), before);
-        expect(controller.canUndo, isFalse);
-        expect(controller.isDirty, isFalse);
-      });
+      test(
+        'a moved ${endnote ? 'endnote' : 'footnote'} selection refuses a staged ${command.name}',
+        () {
+          final document = _document();
+          final note = WordNotes.insert(
+            document,
+            document.paragraphs.last,
+            text: 'Authored',
+            endnote: endnote,
+          );
+          final controller = _controller(document: document);
+          controller.setNoteEditingTarget(
+            note,
+            const TextSelection(baseOffset: 1, extentOffset: 4),
+          );
+          final before = _state(document);
+          final transaction = _begin(controller, command: command);
+          _stageCitedNote(transaction);
+          _complete(transaction);
+          controller.setNoteEditingTarget(
+            note,
+            const TextSelection(baseOffset: 1, extentOffset: 5),
+          );
+          expect(transaction.apply, throwsStateError);
+          expect(_state(document), before);
+          expect(controller.canUndo, isFalse);
+          expect(controller.isDirty, isFalse);
+        },
+      );
     }
 
     for (final reverse in [false, true]) {

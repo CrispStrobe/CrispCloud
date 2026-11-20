@@ -97,6 +97,99 @@ void _set(PmlPresentation deck, Map<String, Object?> values) => applySlideStep(
 );
 
 void main() {
+  test('imported nondefault insets do not author rich text replacement', () {
+    var deck = SlideDeserializer().read(
+      _package(
+        attributes: 'lIns="114300" tIns="63500" rIns="152400" bIns="38100"',
+      ),
+    );
+    final shape = _shape(deck);
+    expect(shape.textInsets.left, 9);
+    expect(shape.hasTextInsetChanges, isFalse);
+    expect(shape.copy().hasTextInsetChanges, isFalse);
+    shape.text = 'Replacement\nSecond line';
+    expect(shape.resolvedRichText, isEmpty);
+    expect(shape.textInsetOverrides, isEmpty);
+    for (var cycle = 0; cycle < 3; cycle++) {
+      final bytes = SlideSerializer().writeBytes(deck);
+      final properties = _properties(bytes);
+      for (final entry in <String, String>{
+        'lIns': '114300',
+        'tIns': '63500',
+        'rIns': '152400',
+        'bIns': '38100',
+      }.entries) {
+        expect(
+          properties.getAttribute(entry.key, namespaceUri: ''),
+          entry.value,
+        );
+      }
+      deck = SlideDeserializer().readBytes(bytes);
+      expect(_shape(deck).text, 'Replacement\nSecond line');
+      expect(_shape(deck).hasTextInsetChanges, isFalse);
+    }
+  });
+
+  test(
+    'direct inset edits use the imported baseline for replacement and PDF',
+    () {
+      var deck = SlideDeserializer().read(
+        _package(attributes: 'lIns="114300"'),
+      );
+      final shape = _shape(deck);
+      shape.textInsets = shape.textInsets.withSide(PmlTextInsetSide.left, 7.2);
+      expect(shape.hasTextInsetChanges, isTrue);
+      shape.textInsets = shape.textInsets.withSide(PmlTextInsetSide.left, 9);
+      expect(shape.hasTextInsetChanges, isFalse);
+      shape.textInsets = shape.textInsets.withSide(PmlTextInsetSide.left, 7.2);
+      shape.text = 'Replacement';
+      expect(shape.textInsetOverrides, isEmpty);
+      expect(shape.textSource!.textInsets.left, 9);
+      expect(shape.resolvedRichText.single.runs.single.text, 'Replacement');
+      expect(shape.copy().hasTextInsetChanges, isTrue);
+      for (var cycle = 0; cycle < 3; cycle++) {
+        final text = _pdfText(deck);
+        expect(text.map((op) => op.text).join(), 'Replacement');
+        expect(text.first.x, closeTo(17.2, 0.01));
+        final bytes = SlideSerializer().writeBytes(deck);
+        expect(
+          _properties(bytes).getAttribute('lIns', namespaceUri: ''),
+          '91440',
+        );
+        deck = SlideDeserializer().readBytes(bytes);
+        expect(_shape(deck).textSource!.textInsets.left, 7.2);
+        expect(_shape(deck).hasTextInsetChanges, isFalse);
+      }
+    },
+  );
+
+  test('same-value native inset edits retain explicit replacement intent', () {
+    var deck = SlideDeserializer().read(_package(attributes: 'lIns="0114300"'));
+    _set(deck, <String, Object?>{'marginLeft': 9});
+    final shape = _shape(deck)..text = 'Replacement';
+    expect(shape.textInsets.left, shape.textSource!.textInsets.left);
+    expect(shape.hasTextInsetChanges, isTrue);
+    expect(shape.textInsetOverrides, <PmlTextInsetSide>{PmlTextInsetSide.left});
+    expect(shape.resolvedRichText.single.runs.single.text, 'Replacement');
+    final copy = shape.copy();
+    expect(copy.hasTextInsetChanges, isTrue);
+    copy.textInsetOverrides.clear();
+    expect(copy.hasTextInsetChanges, isFalse);
+    expect(shape.hasTextInsetChanges, isTrue);
+    for (var cycle = 0; cycle < 3; cycle++) {
+      final text = _pdfText(deck);
+      expect(text.map((op) => op.text).join(), 'Replacement');
+      expect(text.first.x, closeTo(19, 0.01));
+      final bytes = SlideSerializer().writeBytes(deck);
+      expect(
+        _properties(bytes).getAttribute('lIns', namespaceUri: ''),
+        '114300',
+      );
+      deck = SlideDeserializer().readBytes(bytes);
+      expect(_shape(deck).hasTextInsetChanges, isFalse);
+    }
+  });
+
   test('margin-only edits keep unsaved independently styled rich runs', () {
     final shape = PmlShape(
       id: 2,

@@ -4,14 +4,75 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Extend Word VBA paragraph formatting with explicit exact, minimum and
+  custom multiple line-spacing pairs, `Space1` / `Space15` / `Space2`, and
+  `LinesToPoints` / `PointsToLines`. Lower each explicit rule/amount pair to
+  one guarded native `docx.lineSpacing` edit; refuse incomplete pairs and
+  intervening document mutations without reading live document state.
+  Preserve independent spacing inheritance, native metadata and opaque VBA
+  parts. Correct alternate-prefix native spacing projection during style
+  resolution and repeated save/reopen. Keep ordinary macro policy, recording
+  and atomic publication boundaries.
+
+- Extend Word VBA `ListFormat` with `ApplyOutlineNumberDefault`, write-only
+  `ListLevelNumber` and `ListIndent` / `ListOutdent`. Add guarded native outline
+  creation and level changes, preserving list identities, imported definitions,
+  paragraph metadata and atomic publication. Resolve target levels and their
+  supported indentation instead of guessing from display labels or numbering
+  IDs. Refuse missing levels, boundary overflow and unsupported source geometry;
+  retain existing single-level defaults and serializer-sensitive field guards.
+  Preserve inherited right indentation during new list edits. Resolve native
+  indentation correctly when imported Word XML uses alternate or rebound
+  namespace prefixes, retaining original extension metadata over save/reopen.
+
+- Preserve foreign namespace bindings and attributes whose names collide with
+  namespace prefixes during native Word list edits. Retain imported numbering
+  suppression source metadata through style refresh and repeated save/reopen.
+
+- Extend Word VBA with typed `Range.ListFormat` selectors, aliases, helpers and
+  `With`; add `ApplyBulletDefault`, `ApplyNumberDefault`, and `RemoveNumbers`
+  with named optional enum arguments. Resolve apply/remove toggles at native
+  execution time using guarded numbering definitions, preserve imported lists
+  and opaque content, and retain atomic publication. New lists use deterministic
+  Quds defaults; all-number removal refuses selected LISTNUM fields, while
+  paragraph-only removal preserves supported field packets. Refuse list edits
+  when serialization would discard unbalanced field boundaries, including those
+  crossing opaque content, before publishing any mutation. See the Word dialect contract for
+  supported list behavior values and remaining gallery/layout limits.
+
+- Extend Word VBA with typed `TabStops` selectors, aliases and helpers,
+  `Add` with named/optional numeric arguments, and `ClearAll`. Add native
+  single-position tab updates and inherited custom-tab clearing, retaining
+  unrelated source XML, style inheritance and the document default-tab interval.
+  Preserve exact signed twip positions and normal atomic publication/permissions.
+  Collection reads, returned `TabStop` objects and implicit hanging-indent
+  behavior remain outside this bounded source adapter.
+
 - Extend Word VBA with typed Font/ParagraphFormat helpers, Paragraph.Format,
   reading order and exact single/1.5/double line-spacing presets. Preserve
   independent native spacing attributes and keep foreign/nested layout XML
   opaque on reopen. Add PowerPoint text-frame margins with exact EMU validation,
   per-side native ownership and matching inset placement in PDF/live models.
+  Compare margin edits with the imported baseline so unchanged native margins
+  preserve plain replacement behavior and direct edits back to defaults apply.
   Shared module helpers gain named arguments, optional scalar defaults and
   explicit omitted-Variant/IsMissing handling. These remain bounded adapters;
   named application-member arguments and live document reads are not added.
+
+- Invalidate Word paragraph break caches before dirty or full-layout paths,
+  including frame wrapping and empty paragraphs that do not replace the cache.
+  Prevent stale glyphs reappearing when later edits move an unchanged paragraph
+  into ordinary flow, while retaining break reuse for proven-clean paragraphs.
+
+- Preserve bounded rectangular Zotero research-note and annotation tables as
+  native Word blocks, including rich cell content, pictures, independent lists
+  and active citations in row order. Map consistent column widths and supported
+  cell fills while sharing whole-note resource budgets. Preserve surrounding
+  prose, authored-note markers and a main-flow caret after trailing tables.
+  Refuse merged/nested tables, unsupported styling and table-cell destinations
+  for table payloads before publication. See the
+  [implementation and validation record](../../docs/validation/zotero-research-tables-20261120/README.md)
+  for the tested source and remaining application acceptance.
 
 - Continue the bounded Word/PowerPoint VBA adapters with Word document aliases,
   `Paragraphs.Item`, small caps, superscript/subscript and fixed-palette

@@ -396,6 +396,7 @@ class PmlTextSource {
     required this.textColor,
     required this.textAlign,
     required this.rightToLeft,
+    this.textInsets = const PmlTextInsets(),
     this.textScale = 1,
     this.lineSpacingReduction = 0,
   });
@@ -417,6 +418,9 @@ class PmlTextSource {
 
   /// Imported paragraph direction.
   final bool? rightToLeft;
+
+  /// Imported direct margins, before any explicit or scalar inset edits.
+  final PmlTextInsets textInsets;
 
   final double textScale;
   final double lineSpacingReduction;
@@ -629,7 +633,9 @@ class PmlShape {
   bool get hasTextInsetChanges =>
       textInsetOverrides.isNotEmpty ||
       PmlTextInsetSide.values.any(
-        (side) => textInsets[side] != const PmlTextInsets()[side],
+        (side) =>
+            textInsets[side] !=
+            (textSource?.textInsets ?? const PmlTextInsets())[side],
       );
 
   /// `a:normAutofit/@fontScale`, normalized to 0.0–1.0.

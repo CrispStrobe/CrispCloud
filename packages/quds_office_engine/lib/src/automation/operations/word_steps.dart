@@ -2,6 +2,8 @@ import 'package:quds_office_engine/quds_office_engine.dart';
 import 'package:quds_office_engine/src/word/serial/word_property_io.dart';
 
 import 'step_input.dart';
+import 'word_list_steps.dart';
+import 'word_spacing_steps.dart';
 import 'word_structure_steps.dart';
 
 const _storyFields = <String>['story', 'section', 'note', 'comment'];
@@ -13,6 +15,9 @@ const wordOperations = <String, List<String>>{
   'characterStyle': ['paragraph', 'run', 'style', ..._storyFields],
   'tableStyle': ['table', 'style'],
   'styleDefinition': ['style', 'type', 'rPr', 'pPr', 'tblPr', 'tcPr'],
+  'tabStop': ['paragraph', 'position', 'alignment', 'leader', ..._storyFields],
+  'clearTabStops': ['paragraph', ..._storyFields],
+  'lineSpacing': ['paragraph', 'rule', 'points', ..._storyFields],
   'paragraphFormat': [
     'paragraph',
     'alignment',
@@ -64,6 +69,10 @@ const wordOperations = <String, List<String>>{
   'list': ['paragraph', 'numbered', 'level'],
   'listClear': ['paragraph'],
   'listRestart': ['paragraph', 'at'],
+  'listDefault': ['paragraph', 'numbered'],
+  'listOutlineDefault': ['paragraph'],
+  'listLevel': ['paragraph', 'level', 'delta'],
+  'removeNumbers': ['paragraph', 'numberType'],
   'hyperlink': ['paragraph', 'run', 'target', ..._storyFields],
   'tableCellText': ['table', 'row', 'column', 'gridColumn', 'text'],
   'headerFooterText': ['section', 'story', 'paragraph', 'text'],
@@ -150,9 +159,43 @@ void applyStep(
       WordDeserializer().refreshStyles(doc);
     case 'styleDefinition':
       _editStyle(doc, s);
+    case 'tabStop':
+      final position = s.number('position', min: -1584, max: 1584);
+      final twips = position * 20;
+      if (twips.round() / 20 != position) {
+        throw ArgumentError('position must use exact 0.05-point increments');
+      }
+      final alignment = WmlTabAlignment.values.byName(
+        s.string('alignment', fallback: 'left'),
+      );
+      final leader = WmlTabLeader.values.byName(
+        s.string('leader', fallback: 'none'),
+      );
+      WordDeserializer().editParagraphTabStops(
+        doc,
+        paragraph(),
+        tab: WmlTabStop(
+          position: position,
+          alignment: alignment,
+          leader: leader,
+        ),
+      );
+    case 'clearTabStops':
+      WordDeserializer().editParagraphTabStops(doc, paragraph());
+    case 'lineSpacing':
+      setWordLineSpacing(
+        doc,
+        paragraph(),
+        rule: s.string('rule'),
+        points: s.number('points'),
+      );
     case 'paragraphFormat':
       final target = paragraph();
+      if (s.has('lineSpacing') || s.has('lineSpacingRule')) {
+        validateWordLineSpacingSource(doc, target);
+      }
       final p = target.properties.copy();
+      List<WmlTabStop>? replacementTabs;
       // An explicit script assignment must remain direct formatting even
       // when the requested default equals the current inherited value.
       for (final entry in <String, String>{
@@ -168,7 +211,6 @@ void applyStep(
         'right': 'ind',
         'firstLine': 'ind',
         'hanging': 'ind',
-        'tabs': 'tabs',
         'dropCapLines': 'framePr',
         'shading': 'shd',
         'border': 'pBdr',
@@ -219,8 +261,8 @@ void applyStep(
           throw ArgumentError('tabs must be an array');
         }
         final positions = <double>{};
-        p.tabs = [for (final value in input) _tab(value, positions)];
-        p.tabs.sort((a, b) => a.position.compareTo(b.position));
+        replacementTabs = [for (final value in input) _tab(value, positions)];
+        replacementTabs.sort((a, b) => a.position.compareTo(b.position));
       }
       if (s.has('columnBreakBefore')) {
         p.columnBreakBefore = s.boolean('columnBreakBefore');
@@ -239,6 +281,19 @@ void applyStep(
         p.pageBreakBefore = s.boolean('pageBreakBefore');
       }
       if (s.has('rtl')) p.rightToLeft = s.boolean('rtl');
+      if (replacementTabs != null) {
+        // Replacing a legacy native tabs array owns the full effective custom
+        // set. Clear inherited positions before adding its requested stops;
+        // prepare all formatting on a detached candidate before publication.
+        WordDeserializer().editParagraphTabStops(
+          doc,
+          target,
+          replacement: replacementTabs,
+          paragraphProperties: p,
+        );
+      } else {
+        target.properties = p;
+      }
       if (s.has('columnBreakBefore') && !p.columnBreakBefore) {
         // A saved leading break reopens as an inline token. Clear that token
         // as well as the paragraph hint, without removing breaks within text.
@@ -255,7 +310,6 @@ void applyStep(
           break;
         }
       }
-      target.properties = p;
     case 'runFormat':
       final p = paragraph();
       final range = _range(p, s);
@@ -511,6 +565,23 @@ void applyStep(
         numbered: s.boolean('numbered'),
         level: s.integer('level', fallback: 0, max: 8),
         document: doc,
+      );
+    case 'listDefault':
+      applyDefaultWordList(doc, paragraph(), numbered: s.boolean('numbered'));
+    case 'listOutlineDefault':
+      applyDefaultWordOutline(doc, paragraph());
+    case 'listLevel':
+      changeWordListLevel(
+        doc,
+        paragraph(),
+        level: s.has('level') ? s.integer('level', max: 8) : null,
+        delta: s.has('delta') ? s.integer('delta', min: -1, max: 1) : null,
+      );
+    case 'removeNumbers':
+      removeWordNumbers(
+        doc,
+        paragraph(),
+        numberType: s.string('numberType', fallback: 'all'),
       );
     case 'listClear':
       WordLists.clear(paragraph());

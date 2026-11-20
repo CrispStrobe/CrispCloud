@@ -617,6 +617,7 @@ void _captureTextSources(
         textColor: current.textColor,
         textAlign: current.textAlign,
         rightToLeft: current.rightToLeft,
+        textInsets: current.textInsets,
         textScale: current.textScale,
         lineSpacingReduction: current.lineSpacingReduction,
       );

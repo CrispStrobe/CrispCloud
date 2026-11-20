@@ -29,7 +29,7 @@ class _StyleCascade {
     );
     _missingStyles = part == null;
     final root = part == null ? null : XmlDocument.parse(part.readText()).root;
-    defaults = root?.firstChild('docDefaults');
+    defaults = _wordChild(root, 'docDefaults');
     for (final style in root?.childrenNamed('style') ?? <XmlElement>[]) {
       final id = style.getAttribute('styleId');
       if (id == null) continue;
@@ -106,6 +106,321 @@ class _StyleCascade {
       walk(comment.paragraphs);
     }
     return true;
+  }
+
+  static bool _word(XmlElement element, String name) =>
+      element.localName == name &&
+      (element.namespaceUri == OfficeNamespaces.w ||
+          (element.namespaceUri.isEmpty && element.prefix == 'w'));
+
+  static XmlElement? _wordChild(XmlElement? parent, String name) =>
+      parent?.childElements.where((child) => _word(child, name)).firstOrNull;
+
+  static String? _tabAttribute(XmlElement element, String name) => element
+      .attributes
+      .where(
+        (a) =>
+            a.localName == name &&
+            (a.namespaceUri == OfficeNamespaces.w ||
+                (a.namespaceUri.isEmpty && a.prefix == 'w')),
+      )
+      .firstOrNull
+      ?.value;
+
+  /// Native tab layers are cumulative by position, unlike most pPr children.
+  /// Keep clear and bar records here: the projection consumes them, while a
+  /// subsequent custom-tab edit must also know about non-positioning bars.
+  static void _mergeTabs(XmlElement target, XmlElement incoming) {
+    target.setAttribute('w', OfficeNamespaces.w, prefix: 'xmlns');
+    for (final child in incoming.childElements) {
+      if (!_word(child, 'tab')) continue;
+      final raw = _tabAttribute(child, 'pos');
+      final position = WordDeserializer._measureTwips(raw ?? '0');
+      target.children.removeWhere(
+        (old) =>
+            old is XmlElement &&
+            _word(old, 'tab') &&
+            WordDeserializer._measureTwips(_tabAttribute(old, 'pos') ?? '0') ==
+                position,
+      );
+      // This node is only the effective projection, never sparse source.
+      // Normalize native prefixes so an inherited declaration on the source
+      // pPr cannot become an unbound alias when its child is copied here.
+      final effective = XmlElement(
+        localName: 'tab',
+        prefix: 'w',
+        namespaceUri: OfficeNamespaces.w,
+      );
+      for (final name in ['pos', 'val', 'leader']) {
+        final value = _tabAttribute(child, name);
+        if (value != null) {
+          effective.setAttribute(
+            name,
+            value,
+            prefix: 'w',
+            namespaceUri: OfficeNamespaces.w,
+          );
+        }
+      }
+      target.addChild(effective);
+    }
+  }
+
+  List<XmlElement> _tabContainers(XmlElement properties) => properties
+      .childElements
+      .where((child) => _word(child, 'tabs'))
+      .toList(growable: false);
+
+  void _checkTabSource(XmlElement properties) {
+    if (!_word(properties, 'pPr')) {
+      throw UnsupportedError(
+        'Tab operations require an unambiguous native paragraph-properties namespace.',
+      );
+    }
+    bool containsTabs(XmlElement node) =>
+        _word(node, 'tabs') ||
+        _word(node, 'tab') ||
+        node.childElements.any(containsTabs);
+    void checkAlternatives(XmlElement node) {
+      if (node.localName == 'AlternateContent' &&
+          node.namespaceUri ==
+              'http://schemas.openxmlformats.org/markup-compatibility/2006' &&
+          containsTabs(node)) {
+        throw UnsupportedError(
+          'Tab operations do not edit tabs inside markup-compatibility alternatives.',
+        );
+      }
+      for (final child in node.childElements) {
+        checkAlternatives(child);
+      }
+    }
+
+    checkAlternatives(properties);
+    final containers = _tabContainers(properties);
+    if (containers.length > 1) {
+      throw UnsupportedError(
+        'Tab operations require at most one direct native tabs element per formatting layer.',
+      );
+    }
+    final positions = <int>{};
+    for (final container in containers) {
+      for (final tab in container.childElements.where(
+        (child) => _word(child, 'tab'),
+      )) {
+        final raw = _tabAttribute(tab, 'pos') ?? '';
+        final position = RegExp(r'^[+-]?[0-9]+$').hasMatch(raw)
+            ? int.tryParse(raw)
+            : null;
+        if (position == null ||
+            position < -2147483648 ||
+            position > 2147483647) {
+          throw UnsupportedError(
+            'Tab operations require signed 32-bit integer twip positions in native source tabs.',
+          );
+        }
+        if (!positions.add(position)) {
+          throw UnsupportedError(
+            'Tab operations cannot edit duplicate native tab positions in one formatting layer.',
+          );
+        }
+        if (!const {
+          'left',
+          'center',
+          'right',
+          'decimal',
+          'bar',
+          'clear',
+          'num',
+          'start',
+          'end',
+        }.contains(_tabAttribute(tab, 'val'))) {
+          throw UnsupportedError(
+            'Tab operations require a recognized native tab alignment.',
+          );
+        }
+      }
+    }
+  }
+
+  void _checkPackageTabAlternatives() {
+    // The main-story reader selects MC branches before capturing sparse pPr.
+    // Inspect original Word XML as well, including wrappers around a pPr or
+    // an entire applicable style. Refuse conservatively at document scope:
+    // native tab writes cannot keep all alternative branches synchronized.
+    for (final part in document.package?.parts ?? <PackagePart>[]) {
+      final type = part.contentType;
+      if (!type.endsWith('+xml') ||
+          (!type.contains('wordprocessingml') &&
+              !type.contains('vnd.ms-word'))) {
+        continue;
+      }
+      final source = part.readText();
+      if (!source.contains('AlternateContent')) continue;
+      final input = XmlPullReader(source);
+      final alternatives = <int>[];
+      final tabContainers = <int>[];
+      while (input.next()) {
+        if (input.eventType == XmlEventType.startElement) {
+          if (input.namespaceUri == OfficeNamespaces.w &&
+              input.localName == 'tabs') {
+            tabContainers.add(input.depth);
+          }
+          if (input.namespaceUri == OfficeNamespaces.mc &&
+              input.localName == 'AlternateContent') {
+            alternatives.add(input.depth);
+          } else if (alternatives.isNotEmpty &&
+              input.namespaceUri == OfficeNamespaces.w &&
+              (input.localName == 'tabs' ||
+                  (input.localName == 'tab' && tabContainers.isNotEmpty))) {
+            throw UnsupportedError(
+              'Tab operations do not edit documents with tabs inside markup-compatibility alternatives.',
+            );
+          }
+        } else if (input.eventType == XmlEventType.endElement) {
+          if (alternatives.isNotEmpty && input.depth < alternatives.last) {
+            alternatives.removeLast();
+          }
+          if (tabContainers.isNotEmpty && input.depth < tabContainers.last) {
+            tabContainers.removeLast();
+          }
+        }
+      }
+    }
+  }
+
+  void editParagraphTabStops(
+    WmlParagraph target,
+    WmlTabStop? tab, {
+    List<WmlTabStop>? replacement,
+    WmlParagraphProps? properties,
+  }) {
+    if (tab != null && replacement != null) {
+      throw ArgumentError('Use either one tab or a replacement collection.');
+    }
+    if (tab != null) {
+      final twips = tab.position * 20;
+      if (!tab.position.isFinite ||
+          tab.position.abs() > 1584 ||
+          twips.round() / 20 != tab.position) {
+        throw ArgumentError(
+          'Tab position must be within -1584..1584 points in exact 0.05-point increments.',
+        );
+      }
+    }
+    if (replacement != null &&
+        replacement.any(
+          (stop) => !stop.position.isFinite || stop.position < 0,
+        )) {
+      throw ArgumentError(
+        'Replacement tab positions must be finite and nonnegative.',
+      );
+    }
+    _checkPackageTabAlternatives();
+    _load(includeTheme: false);
+    List<XmlElement>? tableLayers;
+    var occurrences = 0;
+    void locate(
+      Iterable<WmlBlock> blocks, [
+      List<XmlElement> inherited = const [],
+    ]) {
+      for (final block in blocks) {
+        if (identical(block, target)) {
+          tableLayers = inherited;
+          occurrences++;
+        }
+        if (block is WmlTable) {
+          for (var row = 0; row < block.rows.length; row++) {
+            final layers = _tableCellLayers(block, row);
+            for (final cell in block.rows[row].cells) {
+              locate(cell.blocks, layers);
+            }
+          }
+        } else {
+          for (final children in WordTree.childLists(block)) {
+            locate(children, inherited);
+          }
+        }
+      }
+    }
+
+    for (final section in document.sections) {
+      locate(section.blocks);
+      for (final story in [
+        section.header,
+        section.footer,
+        section.firstHeader,
+        section.firstFooter,
+        section.evenHeader,
+        section.evenFooter,
+      ]) {
+        locate(story);
+      }
+    }
+    for (final note in [...document.footnotes, ...document.endnotes]) {
+      locate(note.blocks);
+    }
+    for (final comment in document.comments) {
+      locate(comment.paragraphs);
+    }
+    if (occurrences != 1) {
+      throw StateError('The paragraph must have one current document owner.');
+    }
+    final props = (properties ?? target.properties).copy();
+    // Commit pending non-tab edits into the detached direct fragment before
+    // changing tab ownership. No effective inherited values are copied here.
+    final direct = WordPropertyIo.parse(
+      WordSerializer().paragraphPropertiesXml(props),
+      'pPr',
+    );
+    final layers = <XmlElement?>[
+      _wordChild(_wordChild(defaults, 'pPrDefault'), 'pPr'),
+      for (final t in tableLayers!) _wordChild(t, 'pPr'),
+      for (final s in chain(props.styleId ?? defaultParagraph))
+        _wordChild(s, 'pPr'),
+      direct,
+    ];
+    for (final layer in layers.whereType<XmlElement>()) {
+      _checkTabSource(layer);
+    }
+    if (tab == null) {
+      final effective = merged('pPr', layers);
+      for (final container in _tabContainers(effective)) {
+        for (final stop in container.childElements.where(
+          (child) => _word(child, 'tab'),
+        )) {
+          if (_tabAttribute(stop, 'val') == 'clear') continue;
+          WordPropertyIo.writeTabStop(
+            direct,
+            int.parse(_tabAttribute(stop, 'pos')!),
+            'clear',
+          );
+        }
+      }
+    }
+    for (final stop in replacement ?? [?tab]) {
+      WordPropertyIo.writeTabStop(
+        direct,
+        pointsToTwips(stop.position),
+        stop.alignment.name,
+        // Explicit none also overrides an inherited leader at this position.
+        leader: stop.leader.name,
+      );
+    }
+    final effective = merged('pPr', layers);
+    props.tabs.clear();
+    for (final container in _tabContainers(effective)) {
+      reader._readTabs(
+        XmlPullReader(
+          XmlDocument(root: container).toXmlString(declaration: false),
+        )..next(),
+        props,
+      );
+    }
+    props.sourcePropertiesXml = XmlDocument(
+      root: direct,
+    ).toXmlString(declaration: false);
+    props.importedValues = WordPropertyIo.paragraphValues(props);
+    target.properties = props;
   }
 
   bool clearRunProofingLanguage(
@@ -314,6 +629,70 @@ class _StyleCascade {
     ];
   }
 
+  static XmlElement _numberingProjection(XmlElement source) {
+    final projection = source.copy();
+    final bindings = <String, String>{};
+    for (XmlElement? node = source; node != null; node = node.parent) {
+      for (final attribute in node.attributes) {
+        if (attribute.prefix == 'xmlns' || attribute.qualifiedName == 'xmlns') {
+          bindings.putIfAbsent(attribute.qualifiedName, () => attribute.value);
+        }
+      }
+    }
+    // Moving numPr under the effective pPr must retain the namespace context
+    // of its IDs and levels. Their native prefix need not be the literal w.
+    for (final entry in bindings.entries) {
+      if (projection.attributes.any((a) => a.qualifiedName == entry.key)) {
+        continue;
+      }
+      final prefixed = entry.key.startsWith('xmlns:');
+      projection.attributes.add(
+        XmlAttribute(
+          localName: prefixed ? entry.key.substring(6) : 'xmlns',
+          prefix: prefixed ? 'xmlns' : '',
+          namespaceUri: 'http://www.w3.org/2000/xmlns/',
+          value: entry.value,
+        ),
+      );
+    }
+    return projection;
+  }
+
+  static XmlElement _layoutAttributeProjection(XmlElement source) {
+    // Only effective indentation/spacing attributes are projected here. Source
+    // prefixes on copied attributes can become unbound, or a later layer rebinds
+    // an earlier layer's prefix. Normalize native attributes in this detached
+    // projection; the full direct/style XML retains all extension metadata.
+    final result =
+        XmlElement(
+            localName: source.localName,
+            prefix: 'w',
+            namespaceUri: OfficeNamespaces.w,
+          )
+          ..attributes.add(
+            XmlAttribute(
+              localName: 'w',
+              prefix: 'xmlns',
+              namespaceUri: 'http://www.w3.org/2000/xmlns/',
+              value: OfficeNamespaces.w,
+            ),
+          );
+    for (final attribute in source.attributes) {
+      if (attribute.namespaceUri == OfficeNamespaces.w ||
+          (attribute.namespaceUri.isEmpty && attribute.prefix == 'w')) {
+        result.attributes.add(
+          XmlAttribute(
+            localName: attribute.localName,
+            prefix: 'w',
+            namespaceUri: OfficeNamespaces.w,
+            value: attribute.value,
+          ),
+        );
+      }
+    }
+    return result;
+  }
+
   XmlElement merged(
     String name,
     Iterable<XmlElement?> layers, {
@@ -323,9 +702,18 @@ class _StyleCascade {
       ..setAttribute('w', OfficeNamespaces.w, prefix: 'xmlns');
     for (final layer in layers) {
       if (layer == null) continue;
-      for (final child in layer.childElements) {
+      for (final incoming in layer.childElements) {
+        final child = name == 'pPr' && _word(incoming, 'numPr')
+            ? _numberingProjection(incoming)
+            : name == 'pPr' &&
+                  (_word(incoming, 'ind') || _word(incoming, 'spacing'))
+            ? _layoutAttributeProjection(incoming)
+            : incoming;
         if (name == 'pPr' &&
-            (child.localName == 'spacing' || child.localName == 'bidi') &&
+            (child.localName == 'spacing' ||
+                child.localName == 'bidi' ||
+                child.localName == 'ind' ||
+                child.localName == 'tabs') &&
             child.namespaceUri != OfficeNamespaces.w &&
             !(child.namespaceUri.isEmpty && child.prefix == 'w')) {
           // Do not merge opaque same-name extensions into an effective Word
@@ -334,6 +722,12 @@ class _StyleCascade {
         }
         if (child.localName == 'sectPr') continue;
         final old = result.firstChild(child.localName);
+        if (name == 'pPr' && child.localName == 'tabs') {
+          final effective = old ?? WordPropertyIo.parse('', 'tabs');
+          _mergeTabs(effective, child);
+          if (old == null) result.addChild(effective);
+          continue;
+        }
         if (name == 'rPr' &&
             const {'noProof', 'rtl', 'cs'}.contains(child.localName)) {
           // An omitted on/off value enables these properties. Do not retain
@@ -454,8 +848,13 @@ class _StyleCascade {
 
   void paragraph(WmlParagraph p, List<XmlElement> tableLayers) {
     final bool previouslyImported = p.properties.importedValues != null;
-    if (p.properties.importedValues != null ||
-        p.properties.numberingSuppressed) {
+    // A fresh import can already contain native numId=0. Its source XML owns
+    // extension metadata that a full generated pPr cannot reproduce. Only
+    // materialize a new suppression when there is no direct source to retain.
+    final authoredSuppression =
+        p.properties.numberingSuppressed &&
+        (p.properties.sourcePropertiesXml?.isEmpty ?? true);
+    if (previouslyImported || authoredSuppression) {
       p.properties.sourcePropertiesXml = WordSerializer()
           .paragraphPropertiesXml(p.properties);
     }
@@ -498,9 +897,9 @@ class _StyleCascade {
     final id = p.properties.styleId ?? defaultParagraph;
     final paragraphChain = chain(id);
     final pp = merged('pPr', [
-      defaults?.firstChild('pPrDefault')?.firstChild('pPr'),
-      for (final t in tableLayers) t.firstChild('pPr'),
-      for (final s in paragraphChain) s.firstChild('pPr'),
+      _wordChild(_wordChild(defaults, 'pPrDefault'), 'pPr'),
+      for (final t in tableLayers) _wordChild(t, 'pPr'),
+      for (final s in paragraphChain) _wordChild(s, 'pPr'),
       direct,
     ]);
     // Preserve non-formatting paragraph metadata (fields, notes, bookmarks).
