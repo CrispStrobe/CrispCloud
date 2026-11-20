@@ -1,3 +1,4 @@
+import '../services/pdf_open_preferences.dart';
 import '../widgets/file_delete_dialog.dart';
 import '../widgets/catalogue_file_action.dart';
 // lib/screens/screen_dialogs.dart
@@ -400,7 +401,11 @@ Future<void> showRenameDialog(BuildContext context, WidgetRef ref) async {
 }
 
 /// F3: Open cursor item in a full-screen internal viewer dialog.
-void viewSelectedFile(BuildContext context, WidgetRef ref) {
+void viewSelectedFile(
+  BuildContext context,
+  WidgetRef ref, {
+  bool secondaryPdfViewer = false,
+}) {
   final activePanel = ref.read(activePanelProvider);
   final panel = ref.read(panelProvider(activePanel));
   // TC/DC view the file under the cursor, not the selection set.
@@ -410,7 +415,17 @@ void viewSelectedFile(BuildContext context, WidgetRef ref) {
   if (target == null || target.isFolder) return;
   // Full-screen DC-style viewer: text/ASCII/binary/hex/image/markdown/PDF/
   // media/font/CSV/office/archive with streaming hex for huge local files.
-  unawaited(_viewFile(context, ref, panel, activePanel, target));
+  if (secondaryPdfViewer && !target.name.toLowerCase().endsWith('.pdf')) return;
+  unawaited(
+    _viewFile(
+      context,
+      ref,
+      panel,
+      activePanel,
+      target,
+      secondaryPdfViewer: secondaryPdfViewer,
+    ),
+  );
 }
 
 Future<void> _viewFile(
@@ -418,8 +433,9 @@ Future<void> _viewFile(
   WidgetRef ref,
   PanelNotifier panel,
   PanelSide side,
-  FileItem target,
-) async {
+  FileItem target, {
+  bool secondaryPdfViewer = false,
+}) async {
   var viewedFile = target;
   try {
     InternalViewerAction action = InternalViewerAction.close;
@@ -432,6 +448,7 @@ Future<void> _viewFile(
         context,
         file: target,
         side: side,
+        secondaryPdfViewer: secondaryPdfViewer,
         bytesOverride: bytes,
         displayName: target.name,
       );
@@ -440,6 +457,7 @@ Future<void> _viewFile(
         context,
         file: target,
         side: side,
+        secondaryPdfViewer: secondaryPdfViewer,
         onFileChanged: (file) => viewedFile = file,
       );
     }
@@ -460,14 +478,35 @@ Future<void> _viewFile(
 }
 
 /// Shift+F4: choose the text/code editor, hex editor or system editor.
-void chooseEditorForSelection(BuildContext context, WidgetRef ref) {
+void chooseEditorForSelection(
+  BuildContext context,
+  WidgetRef ref, {
+  bool alternateShortcut = false,
+}) {
   final activePanel = ref.read(activePanelProvider);
   final panel = ref.read(panelProvider(activePanel));
   final target =
       panel.cursorItem ??
       (panel.selection.isNotEmpty ? panel.selection.first : null);
   if (target == null || target.isFolder) return;
-  unawaited(showEditorChooser(context, ref, target, activePanel));
+  unawaited(() async {
+    final prefs = await PdfOpenPreferences.load();
+    if (!context.mounted) return;
+    if (alternateShortcut &&
+        target.name.toLowerCase().endsWith('.pdf') &&
+        prefs.shiftF4 == PdfAlternateEditAction.secondary) {
+      await _editFile(
+        context,
+        ref,
+        panel,
+        activePanel,
+        target,
+        pdfBackend: prefs.secondaryEditor,
+      );
+    } else {
+      await showEditorChooser(context, ref, target, activePanel);
+    }
+  }());
 }
 
 /// F4: Open cursor item in the file editor.
@@ -486,15 +525,17 @@ Future<void> _editFile(
   WidgetRef ref,
   PanelNotifier panel,
   PanelSide side,
-  FileItem target,
-) async {
+  FileItem target, {
+  PdfEditorBackend? pdfBackend,
+}) async {
   if (await tryShowCatalogueFile(
     context,
     file: target,
     side: side,
     origin: panel.originForOperation(target),
-  ))
+  )) {
     return;
+  }
   if (!context.mounted) return;
 
   try {
@@ -508,7 +549,13 @@ Future<void> _editFile(
       );
       return;
     }
-    await showFileEditorDialog(context, ref, target, side);
+    await showFileEditorDialog(
+      context,
+      ref,
+      target,
+      side,
+      pdfBackend: pdfBackend,
+    );
   } catch (error) {
     if (context.mounted) {
       ScaffoldMessenger.of(

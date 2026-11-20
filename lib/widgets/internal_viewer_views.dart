@@ -6,6 +6,8 @@
 
 import 'dart:typed_data';
 
+import '../services/pdf_zoom_transform.dart';
+
 import 'package:flutter/material.dart';
 
 import '../l10n/page_navigation_strings.dart';
@@ -558,10 +560,56 @@ class _StreamingSafeViewState extends State<StreamingSafeView> {
 // PDF page panel (pdfx)
 // ---------------------------------------------------------------------------
 
-class PdfPagePanel extends StatelessWidget {
+class PdfPagePanel extends StatefulWidget {
   final PdfController controller;
 
   const PdfPagePanel({super.key, required this.controller});
+  @override
+  State<PdfPagePanel> createState() => PdfPagePanelState();
+}
+
+class PdfPagePanelState extends State<PdfPagePanel> {
+  late PdfControllerPinch controller = PdfControllerPinch(
+    document: widget.controller.document,
+  );
+  Size _viewport = Size.zero;
+  void _scale(double scale, {Offset? sceneCenter}) {
+    controller.value = pdfZoomTransform(
+      controller.value,
+      _viewport,
+      scale,
+      sceneCenter: sceneCenter,
+    );
+  }
+
+  void zoomBy(double factor) =>
+      _scale(controller.value.getMaxScaleOnAxis() * factor);
+  void _fit(bool width) {
+    if (controller.pagesCount == null) return;
+    final rect = controller.getPageRect(controller.page);
+    if (rect == null || rect.isEmpty) return;
+    final x = _viewport.width / rect.width;
+    final y = _viewport.height / rect.height;
+    _scale(width ? x : (x < y ? x : y), sceneCenter: rect.center);
+  }
+
+  @override
+  void didUpdateWidget(PdfPagePanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!identical(oldWidget.controller, widget.controller)) {
+      final old = controller;
+      controller = PdfControllerPinch(document: widget.controller.document);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        old.dispose();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -569,10 +617,16 @@ class PdfPagePanel extends StatelessWidget {
     return Column(
       children: [
         Expanded(
-          child: PdfView(
-            controller: controller,
-            scrollDirection: Axis.vertical,
-            pageSnapping: false,
+          child: LayoutBuilder(
+            builder: (context, box) {
+              _viewport = Size(box.maxWidth, box.maxHeight);
+              return PdfViewPinch(
+                controller: controller,
+                minScale: .25,
+                maxScale: 16,
+                scrollDirection: Axis.vertical,
+              );
+            },
           ),
         ),
         Container(
@@ -581,8 +635,9 @@ class PdfPagePanel extends StatelessWidget {
             color: theme.colorScheme.surfaceContainerHighest,
             border: Border(top: BorderSide(color: theme.dividerColor)),
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          child: Wrap(
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               IconButton(
                 tooltip: PageNavigationStrings(context).text('first'),
@@ -598,6 +653,31 @@ class PdfPagePanel extends StatelessWidget {
                     controller.jumpToPage(current - 1);
                   }
                 },
+              ),
+              IconButton(
+                tooltip: context.commanderTr('Zoom out'),
+                onPressed: () => zoomBy(1 / 1.2),
+                icon: const Icon(Icons.zoom_out),
+              ),
+              ValueListenableBuilder<Matrix4>(
+                valueListenable: controller,
+                builder: (context, value, _) =>
+                    Text('${(value.getMaxScaleOnAxis() * 100).round()}%'),
+              ),
+              IconButton(
+                tooltip: context.commanderTr('Zoom in'),
+                onPressed: () => zoomBy(1.2),
+                icon: const Icon(Icons.zoom_in),
+              ),
+              TextButton(
+                onPressed: () {
+                  _fit(true);
+                },
+                child: Text(context.commanderTr('Fit width')),
+              ),
+              TextButton(
+                onPressed: () => _fit(false),
+                child: Text(context.commanderTr('Fit page')),
               ),
               PdfPageNumber(
                 controller: controller,

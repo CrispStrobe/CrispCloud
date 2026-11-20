@@ -22,6 +22,27 @@ Uint8List _fixture() {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  test('PDF rotation has undo/redo and viewing mode cannot mutate it', () {
+    final c = PdfEditorController.fromBytes(_fixture());
+    addTearDown(c.dispose);
+    c.markClean();
+    c.rotateCurrentPage(90);
+    expect(c.file!.pageAt(0).rotate, 90);
+    expect(c.commands.canUndo, isTrue);
+    c.undo();
+    expect(c.file!.pageAt(0).rotate, 0);
+    c.redo();
+    expect(c.file!.pageAt(0).rotate, 90);
+    final view = PdfEditorController.fromBytes(
+      _fixture(),
+      config: const OfficeSurfaceConfig(mode: OfficeInteractionMode.viewing),
+    );
+    addTearDown(view.dispose);
+    view.rotateCurrentPage(90);
+    expect(view.file!.pageAt(0).rotate, 0);
+    expect(view.contentRevision, 0);
+  });
+
   test(
     'PDF encoding is repeatable and does not commit annotation or page IDs',
     () {

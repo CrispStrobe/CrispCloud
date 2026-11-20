@@ -1,5 +1,7 @@
+import 'package:crisp_cloud/services/pdf_open_preferences.dart';
+import 'package:quds_office_editor/quds_office_editor.dart' as office;
+
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
@@ -59,6 +61,7 @@ Future<void> _open(
   WidgetTester tester,
   _MemoryPdfStore store, {
   PdfDeviceExporter? exporter,
+  PdfEditorBackend backend = PdfEditorBackend.pdfEditor,
 }) async {
   tester.view.physicalSize = const Size(1200, 900);
   tester.view.devicePixelRatio = 1;
@@ -84,6 +87,7 @@ Future<void> _open(
                     preferencesOverride: preferences,
                     deviceExporterOverride: exporter,
                     autoRenderWorker: false,
+                    backend: backend,
                   ),
                 ),
               ),
@@ -112,6 +116,114 @@ Finder get _unsaved => find.byKey(const ValueKey('pdf-unsaved-dialog'));
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
+
+  testWidgets('CrispOffice PDF opens clean and closing does not rewrite it', (
+    tester,
+  ) async {
+    final store = _MemoryPdfStore();
+    await _open(tester, store, backend: PdfEditorBackend.crispOffice);
+    expect(find.byType(office.QudsPdfEditor), findsOneWidget);
+    expect(find.text('sample.pdf *'), findsNothing);
+    await tester.tap(_close);
+    await tester.pumpAndSettle();
+    expect(_unsaved, findsNothing);
+    expect(store.writes, isEmpty);
+  });
+  testWidgets(
+    'CrispOffice PDF saves through the shared host and remains dirty on failure',
+    (tester) async {
+      final store = _MemoryPdfStore();
+      await _open(tester, store, backend: PdfEditorBackend.crispOffice);
+      await tester.tap(find.byKey(const ValueKey('office-pdf-rotate')));
+      await tester.pumpAndSettle();
+      expect(find.text('sample.pdf *'), findsOneWidget);
+      store.writer = (_) => Future.error(
+        const PdfSaveConflictException('changed outside editor'),
+      );
+      await tester.tap(_save);
+      await tester.pumpAndSettle();
+      expect(find.text('sample.pdf *'), findsOneWidget);
+      store.writer = null;
+      await tester.tap(_save);
+      await tester.pumpAndSettle();
+      expect(find.text('sample.pdf *'), findsNothing);
+      expect(PdfDocument.open(store.writes.last).pageCount, 2);
+    },
+  );
+  testWidgets(
+    'CrispOffice newer edits remain dirty while a captured save completes',
+    (tester) async {
+      final store = _MemoryPdfStore();
+      final done = Completer<PdfSaveOutcome>();
+      store.writer = (_) => done.future;
+      await _open(tester, store, backend: PdfEditorBackend.crispOffice);
+      final c = tester
+          .widget<office.QudsPdfEditor>(find.byType(office.QudsPdfEditor))
+          .controller;
+      c.rotateCurrentPage(90);
+      await tester.pumpAndSettle();
+      await tester.tap(_save);
+      await tester.pump();
+      c.rotateCurrentPage(90);
+      await tester.pump();
+      done.complete(PdfSaveOutcome.savedOriginal);
+      await tester.pumpAndSettle();
+      expect(find.text('sample.pdf *'), findsOneWidget);
+    },
+  );
+  testWidgets(
+    'native menu Undo and Save target the selected CrispOffice editor',
+    (tester) async {
+      final store = _MemoryPdfStore();
+      await _open(tester, store, backend: PdfEditorBackend.crispOffice);
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(PdfEditorDialog)),
+      );
+      final c = tester
+          .widget<office.QudsPdfEditor>(find.byType(office.QudsPdfEditor))
+          .controller;
+      expect(container.read(pdfEditorMenuProvider)!.canSave, isFalse);
+      c.rotateCurrentPage(90);
+      await tester.pumpAndSettle();
+      expect(container.read(pdfEditorMenuProvider)!.canUndo, isTrue);
+      container.read(pdfEditorMenuProvider)!.perform(PdfEditorMenuAction.undo);
+      await tester.pumpAndSettle();
+      expect(c.file!.pageAt(0).rotate, 0);
+      container.read(pdfEditorMenuProvider)!.perform(PdfEditorMenuAction.redo);
+      await tester.pumpAndSettle();
+      expect(c.file!.pageAt(0).rotate, 90);
+      container.read(pdfEditorMenuProvider)!.perform(PdfEditorMenuAction.save);
+      await tester.pumpAndSettle();
+      expect(store.writes, hasLength(1));
+      expect(container.read(pdfEditorMenuProvider)!.canSave, isFalse);
+    },
+  );
+
+  testWidgets('CrispOffice signed PDFs retain the shared copy-only rule', (
+    tester,
+  ) async {
+    final store = _MemoryPdfStore(input: buildPdfEditorFixture(signed: true));
+    await _open(tester, store, backend: PdfEditorBackend.crispOffice);
+    expect(
+      find.textContaining('Save a copy to preserve the signed original.'),
+      findsOneWidget,
+    );
+    await tester.tap(find.byKey(const ValueKey('office-pdf-rotate')));
+    await tester.pumpAndSettle();
+    await tester.tap(_save);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.byKey(const ValueKey('pdf-copy-name')), findsOneWidget);
+    expect(store.writes, isEmpty);
+    await tester.enterText(
+      find.byKey(const ValueKey('pdf-copy-name')),
+      'office-copy.pdf',
+    );
+    await tester.tap(find.widgetWithText(FilledButton, 'Save a copy'));
+    await tester.pumpAndSettle();
+    expect(store.copyNames, ['office-copy.pdf']);
+    expect(store.writes, isEmpty);
+  });
 
   testWidgets(
     'native PDF chrome removes the duplicate row only after acknowledgement',
@@ -324,6 +436,43 @@ void main() {
       findsOneWidget,
     );
   });
+
+  testWidgets(
+    'F4 honors the configured alternative PDF editor before loading bytes',
+    (tester) async {
+      await const PdfOpenPreferences(editor: PdfEditorBackend.crispOffice)
+          .save();
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            home: Consumer(
+              builder: (context, ref, _) => Scaffold(
+                body: TextButton(
+                  onPressed: () => showFileEditorDialog(
+                    context,
+                    ref,
+                    FileItem(
+                      name: 'large.pdf',
+                      isFolder: false,
+                      size: 65 * 1024 * 1024,
+                    ),
+                    PanelSide.local,
+                  ),
+                  child: const Text('Edit configured'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('Edit configured'));
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<PdfEditorDialog>(find.byType(PdfEditorDialog)).backend,
+        PdfEditorBackend.crispOffice,
+      );
+    },
+  );
 
   testWidgets('undo back to the opened bytes clears host dirty state', (
     tester,

@@ -1,3 +1,4 @@
+import '../services/pdf_open_preferences.dart';
 import '../services/document_printing.dart';
 import 'document_print_scope.dart';
 import '../services/document_workspace_session.dart';
@@ -70,6 +71,7 @@ Future<void> showFileEditorDialog(
   FileItem file,
   PanelSide side, {
   bool forceText = false,
+  PdfEditorBackend? pdfBackend,
 }) async {
   if (file.isFolder) return;
   try {
@@ -91,7 +93,15 @@ Future<void> showFileEditorDialog(
         return;
       }
       if (isPdfFileName(file.name)) {
-        await showPdfEditorDialog(context, ref, file, side);
+        final prefs = await PdfOpenPreferences.load();
+        if (!context.mounted) return;
+        await showPdfEditorDialog(
+          context,
+          ref,
+          file,
+          side,
+          backend: pdfBackend ?? prefs.editor,
+        );
         return;
       }
       final mediaKind = mediaKindForFileName(file.name);

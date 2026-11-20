@@ -1,4 +1,5 @@
 import 'notification_settings.dart';
+import 'pdf_open_settings.dart';
 import 'storage_tools_settings.dart';
 // lib/widgets/settings_dialog.dart
 //
@@ -80,6 +81,7 @@ class SettingsDialog extends ConsumerWidget {
           children: [
             _GeneralSection(),
             const NotificationSettingsPanel(),
+            const PdfOpenSettings(),
             const Divider(height: 1),
             _LanguageSection(),
             const OfficeSpacySettings(),

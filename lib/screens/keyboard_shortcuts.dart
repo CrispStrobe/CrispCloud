@@ -215,8 +215,12 @@ KeyEventResult handleKeyEvent(
       }
       return KeyEventResult.handled;
     }
+    if (shift && key == LogicalKeyboardKey.f3) {
+      viewSelectedFile(context, ref, secondaryPdfViewer: true);
+      return KeyEventResult.handled;
+    }
     if (shift && key == LogicalKeyboardKey.f4) {
-      chooseEditorForSelection(context, ref);
+      chooseEditorForSelection(context, ref, alternateShortcut: true);
       return KeyEventResult.handled;
     }
     if (shift && key == LogicalKeyboardKey.f6) {

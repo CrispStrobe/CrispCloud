@@ -103,6 +103,8 @@ import '../l10n/document_viewer_strings.dart';
 import 'email_message_view.dart';
 import 'mbox_message_view.dart';
 import '../services/office_pdf_service.dart';
+import '../services/pdf_open_preferences.dart';
+import 'pdf_renderer_view.dart';
 import '../services/office_page_preview.dart';
 import '../services/pdf_text_service.dart';
 import '../services/system_preview_service.dart';
@@ -174,6 +176,7 @@ Future<InternalViewerAction> showInternalViewer(
   String? displayName,
   PanelFileOrigin? origin,
   ValueChanged<FileItem>? onFileChanged,
+  bool secondaryPdfViewer = false,
 }) async {
   if (await tryShowCatalogueFile(
     context,
@@ -196,6 +199,7 @@ Future<InternalViewerAction> showInternalViewer(
         displayName: displayName,
         origin: origin,
         onFileChanged: onFileChanged,
+        secondaryPdfViewer: secondaryPdfViewer,
       ),
     ),
   );
@@ -212,6 +216,7 @@ class _ViewerSessionHost extends ConsumerStatefulWidget {
     this.displayName,
     this.origin,
     this.onFileChanged,
+    this.secondaryPdfViewer = false,
   });
   final FileItem file;
   final PanelSide side;
@@ -219,6 +224,7 @@ class _ViewerSessionHost extends ConsumerStatefulWidget {
   final String? displayName;
   final PanelFileOrigin? origin;
   final ValueChanged<FileItem>? onFileChanged;
+  final bool secondaryPdfViewer;
   @override
   ConsumerState<_ViewerSessionHost> createState() => _ViewerSessionHostState();
 }
@@ -312,6 +318,7 @@ class _ViewerSessionHostState extends ConsumerState<_ViewerSessionHost> {
       onPrevious: onPrevious,
       onNext: onNext,
       positionLabel: position,
+      secondaryPdfViewer: widget.secondaryPdfViewer,
     );
   }
 }
@@ -323,6 +330,7 @@ class InternalViewerDialog extends ConsumerStatefulWidget {
   final VoidCallback? onPrevious;
   final VoidCallback? onNext;
   final String? positionLabel;
+  final bool secondaryPdfViewer;
 
   /// When set, these bytes are viewed instead of reading [file]
   /// (used by tests and by archive-member viewing).
@@ -341,6 +349,7 @@ class InternalViewerDialog extends ConsumerStatefulWidget {
     this.onPrevious,
     this.onNext,
     this.positionLabel,
+    this.secondaryPdfViewer = false,
   });
 
   @override
@@ -377,6 +386,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   int _prepareToken = 0;
   int _bytesPerLine = 16;
   double _zoom = 1.0;
+  PdfViewerBackend? _pdfBackend;
+  final _pdfRendererKey = GlobalKey<PdfRendererViewState>();
+  final _nativePdfKey = GlobalKey<PdfPagePanelState>();
 
   /// When a plain .gz/.bz2 was expanded, the (decompressed) inner file name.
   String? _expansionName;
@@ -1158,6 +1170,18 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           return;
         case ViewerMode.pdf:
           setState(() => _preparing = true);
+          final pdfPreferences = await PdfOpenPreferences.load();
+          _pdfBackend ??= widget.secondaryPdfViewer
+              ? pdfPreferences.secondaryViewer
+              : pdfPreferences.viewer;
+          if (!mounted || token != _prepareToken) return;
+          if (_pdfBackend != PdfViewerBackend.native) {
+            await _ensureFullData();
+            if (mounted && token == _prepareToken) {
+              setState(() => _preparing = false);
+            }
+            return;
+          }
           final localPath = _nativeViewPath;
           PdfDocument? doc;
           bool streamAccess = false;
@@ -2093,6 +2117,15 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   }
 
   void _adjustZoom(double delta) {
+    if (_mode == ViewerMode.pdf && !_pdfShowText) {
+      final factor = delta > 0 ? 1.2 : 1 / 1.2;
+      if (_pdfBackend == PdfViewerBackend.native) {
+        _nativePdfKey.currentState?.zoomBy(factor);
+      } else {
+        _pdfRendererKey.currentState?.zoomBy(factor);
+      }
+      return;
+    }
     final next = (_zoom + delta).clamp(0.7, 3.0);
     if ((next - _zoom).abs() < 0.001) return;
     setState(() => _zoom = next);
@@ -3748,26 +3781,62 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   Widget _pdfViewToggle() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
-      child: SegmentedButton<bool>(
-        style: _compactButtonStyle,
-        segments: [
-          ButtonSegment(
-            value: false,
-            label: Text(context.commanderTr("Pages")),
+      child: Wrap(
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          DropdownButton<PdfViewerBackend>(
+            key: const ValueKey('pdf-viewer-backend'),
+            value: _pdfBackend,
+            items: [
+              for (final backend in PdfViewerBackend.values)
+                DropdownMenuItem(
+                  value: backend,
+                  child: Text(
+                    context.commanderTr(pdfViewerBackendLabel(backend)),
+                  ),
+                ),
+            ],
+            onChanged: (backend) {
+              if (backend == null) return;
+              _pdfBackend = backend;
+              _selectMode(ViewerMode.pdf);
+            },
           ),
-          ButtonSegment(value: true, label: Text(context.commanderTr("Text"))),
+          IconButton(
+            tooltip: context.commanderTr('Open secondary PDF viewer'),
+            icon: const Icon(Icons.swap_horiz),
+            onPressed: () async {
+              final prefs = await PdfOpenPreferences.load();
+              if (!mounted) return;
+              _pdfBackend = prefs.secondaryViewer;
+              _selectMode(ViewerMode.pdf);
+            },
+          ),
+          SegmentedButton<bool>(
+            style: _compactButtonStyle,
+            segments: [
+              ButtonSegment(
+                value: false,
+                label: Text(context.commanderTr("Pages")),
+              ),
+              ButtonSegment(
+                value: true,
+                label: Text(context.commanderTr("Text")),
+              ),
+            ],
+            selected: {_pdfShowText},
+            onSelectionChanged: (selection) {
+              final showText = selection.first;
+              setState(() => _pdfShowText = showText);
+              if (showText &&
+                  _pdfText == null &&
+                  !_pdfTextLoading &&
+                  _pdfTextError == null) {
+                unawaited(_loadPdfText());
+              }
+            },
+          ),
         ],
-        selected: {_pdfShowText},
-        onSelectionChanged: (selection) {
-          final showText = selection.first;
-          setState(() => _pdfShowText = showText);
-          if (showText &&
-              _pdfText == null &&
-              !_pdfTextLoading &&
-              _pdfTextError == null) {
-            unawaited(_loadPdfText());
-          }
-        },
       ),
     );
   }
@@ -4778,6 +4847,23 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   // -------------------------------------------------------------------------
 
   Widget _buildPdfBody(ThemeData theme) {
+    if (_pdfShowText) return _buildPdfTextView(theme);
+    if (_pdfBackend != null &&
+        _pdfBackend != PdfViewerBackend.native &&
+        _fullData != null) {
+      return KeyedSubtree(
+        key: ValueKey(_pdfBackend),
+        child: PdfRendererView(
+          key: _pdfRendererKey,
+          bytes: _fullData!,
+          backend: _pdfBackend!,
+          onCompatibility: () {
+            _pdfBackend = PdfViewerBackend.native;
+            _selectMode(ViewerMode.pdf);
+          },
+        ),
+      );
+    }
     final controller = _pdfController;
     if (controller == null) {
       return Center(
@@ -4789,7 +4875,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     }
     return _pdfShowText
         ? _buildPdfTextView(theme)
-        : PdfPagePanel(controller: controller);
+        : PdfPagePanel(key: _nativePdfKey, controller: controller);
   }
 
   Widget _buildPdfTextView(ThemeData theme) {
@@ -4832,15 +4918,20 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   }
 
   Future<void> _loadPdfText() async {
-    final data = _fullData;
-    if (data == null || _pdfTextLoading) return;
+    if (_pdfTextLoading) return;
+    final prepareToken = _prepareToken;
+    final loadToken = _loadToken;
+    bool current() =>
+        mounted && prepareToken == _prepareToken && loadToken == _loadToken;
     setState(() {
       _pdfTextLoading = true;
       _pdfTextError = null;
     });
     try {
+      final data = await _ensureFullData();
+      if (!current()) return;
       final text = await _pdfTextService.extractText(data);
-      if (!mounted) return;
+      if (!current()) return;
       setState(() {
         _pdfTextLoading = false;
         if (text == null) {
@@ -4852,7 +4943,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         }
       });
     } catch (e) {
-      if (!mounted) return;
+      if (!current()) return;
       setState(() {
         _pdfTextLoading = false;
         _pdfTextError = InternalViewerStrings(context)

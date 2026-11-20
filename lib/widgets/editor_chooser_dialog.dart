@@ -1,3 +1,6 @@
+import '../services/pdf_open_preferences.dart';
+import 'pdf_editor_dialog.dart';
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -24,7 +27,7 @@ Future<void> showEditorChooser(
   // in the editor (with a way to reopen in hex) and never written back.
   final knownText = isTextEditableName(file.name);
   final canUseSystem = !kIsWeb && file.path != null;
-  final choice = await showDialog<EditorKind>(
+  final choice = await showDialog<Object>(
     context: context,
     builder: (dialogContext) => SimpleDialog(
       title: const Text('Open with…'),
@@ -38,6 +41,17 @@ Future<void> showEditorChooser(
             style: Theme.of(dialogContext).textTheme.bodySmall,
           ),
         ),
+        if (isPdfFileName(file.name))
+          for (final backend in PdfEditorBackend.values)
+            _option(
+              dialogContext,
+              icon: Icons.picture_as_pdf_outlined,
+              title: pdfEditorBackendLabel(backend),
+              subtitle: backend == PdfEditorBackend.crispOffice
+                  ? 'Highlights, page rotation and undo/redo'
+                  : 'Text, forms, annotations and page editing',
+              value: backend,
+            ),
         _option(
           dialogContext,
           icon: Icons.code,
@@ -67,6 +81,8 @@ Future<void> showEditorChooser(
   );
   if (choice == null || !context.mounted) return;
   switch (choice) {
+    case final PdfEditorBackend backend:
+      await showPdfEditorDialog(context, ref, file, side, backend: backend);
     case EditorKind.text:
       await showFileEditorDialog(context, ref, file, side, forceText: true);
     case EditorKind.hex:
@@ -81,7 +97,7 @@ Widget _option(
   required IconData icon,
   required String title,
   required String subtitle,
-  required EditorKind value,
+  required Object value,
 }) {
   return SimpleDialogOption(
     onPressed: () => Navigator.of(context).pop(value),

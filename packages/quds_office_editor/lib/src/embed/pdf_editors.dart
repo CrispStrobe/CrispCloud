@@ -351,7 +351,8 @@ class _QudsPdfViewerState extends State<QudsPdfViewer> {
                 c.setScale(1);
                 return KeyEventResult.handled;
               }
-              if (event.logicalKey == LogicalKeyboardKey.escape) {
+              if (event.logicalKey == LogicalKeyboardKey.escape &&
+                  c.selection != null) {
                 c.setSelection(null);
                 return KeyEventResult.handled;
               }

@@ -838,11 +838,23 @@ class PdfEditorController extends PdfViewerController {
 
   /// Rotate [index] by [degrees] and rebuild the display lists.
   void rotatePageAt(int index, int degrees) {
-    if (_file == null || pageCount == 0) return;
-    final int before = _file!.pageAt(index).rotate;
-    _file?.rotatePage(index, degrees);
-    _lists = _file?.displayLists() ?? _lists;
-    if (_file!.pageAt(index).rotate != before) _recordContentChange();
+    final file = _file;
+    if (file == null ||
+        pageCount == 0 ||
+        !config.allowsMutation ||
+        file.permissions?.canModify == false)
+      return;
+    final before = file.pageAt(index).rotate;
+    final after = ((before + degrees) % 360 + 360) % 360;
+    if (after == before) return;
+    void apply(int rotation) {
+      file.rotatePage(index, rotation - file.pageAt(index).rotate);
+      _lists = file.displayLists();
+    }
+
+    commands.commit(
+      FormatRangeDelta(apply: () => apply(after), revert: () => apply(before)),
+    );
   }
 
   /// Remove a markup annotation, undoable.
