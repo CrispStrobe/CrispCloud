@@ -1882,7 +1882,7 @@
     "packages/quds_office_editor/lib/src/embed/office_font_pack.dart": "9e88aba90b5180f485660f1b762255b4eed20d53718f3861530ed8222ea210b0",
     "packages/quds_office_editor/lib/src/embed/office_font_pack_catalog.dart": "b2c2e80d6f1e275046d89a9e4a8dfaa65002d63ba875a872b288e0fa6118f2d0",
     "packages/quds_office_editor/lib/src/embed/office_font_pack_store.dart": "d17e9672efff404c9b4c1abe978456acc185e88da81c7b2367301ece6fe6a4f3",
-    "packages/quds_office_editor/lib/src/embed/office_font_pack_store_io.dart": "33b2dca954917de36bf39b7c4512dea4425c5c5131bda04032abf7d0fe42199b",
+    "packages/quds_office_editor/lib/src/embed/office_font_pack_store_io.dart": "28ddbdd3c710d45ff325a94113cad639436632c0727554181d4154f03a4749e2",
     "packages/quds_office_editor/lib/src/embed/office_font_pack_store_stub.dart": "e91384f174b63ca1659bdfe8b0f27b7fb54d75812acee0f78082edb2736c7090",
     "packages/quds_office_editor/lib/src/embed/office_host_fonts.dart": "32fc9fd172cc3680032fdf6434e7c092e539b13d3e1967f0bcd5fcbf217a808a",
     "packages/quds_office_editor/lib/src/embed/office_system_font_face.dart": "127329db4ff75de5bed28fe6841a9198256cd682f86139911c89425e18e83958",
@@ -2002,6 +2002,7 @@
     "packages/quds_office_editor/test/office_direction_chord_test.dart": "12a145f71ee856cff8ad549a8ac2ce6255cca7a7f918bed22bc92e597bb2ddff",
     "packages/quds_office_editor/test/office_fidelity_golden_test.dart": "e339b23026538087a8c852a1376b90ec50da64ed9e61e54d6a93f4d867f3d920",
     "packages/quds_office_editor/test/office_fidelity_workflow_test.dart": "e3e6effb1a6444812bccd4f3d68240345fd15decd1da126b057eee710fe0236b",
+    "packages/quds_office_editor/test/office_font_pack_store_test.dart": "0b2629c7fd8f0699c9716390b8725ee604f5201d3f3e33a39f7962d575370b88",
     "packages/quds_office_editor/test/office_frame_outline_test.dart": "0e3809e30cf7f96e278aefcd6f6f285ad4466d35602b1a8f35c4da98cce8d774",
     "packages/quds_office_editor/test/office_frame_wrap_golden_test.dart": "f50dc43ee0762c838990da43a3583bff38f156491b9832a279bf62e504dd897b",
     "packages/quds_office_editor/test/office_input_ownership_test.dart": "e6e9581a8d0145bf379add176b3a1fe66e083947fb281919da6bd7bb7919ea1a",
@@ -2991,7 +2992,7 @@
     "tool/office-validation/test_render.py": "1ba68e18608d74387cbc1c779ceb72af76bf7741463c282684aec93bf3825472"
   },
   "source_branch": "integrate/recent-pptx",
-  "source_commit": "f39d67eb4091ebcc74991b1fe5f1ec4e0c006566",
+  "source_commit": "b29c2298a2731189a438f39f90136573bf0bc5c8",
   "source_repository": "CrispStrobe/quds_office_suite",
   "standalone_sources": {
     "packages/legacy_doc_parser": {

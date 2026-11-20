@@ -32,11 +32,13 @@ class OfficeFontPackStatus {
 /// caller supplies a writable app-support directory; the signed application
 /// bundle is never modified.
 class OfficeFontPackStore {
-  OfficeFontPackStore(this.rootPath);
+  OfficeFontPackStore(this.rootPath, {List<OfficeFontPack>? packs})
+    : packs = packs ?? catalog;
 
   final String rootPath;
+  final List<OfficeFontPack> packs;
 
-  static const List<OfficeFontPack> packs = <OfficeFontPack>[
+  static const List<OfficeFontPack> catalog = <OfficeFontPack>[
     officeCoreFontPack,
     officeVisualFontPack,
   ];
