@@ -47,3 +47,36 @@ inventory verifies all 2,991 Office files against that source.
 
 Rendering quality still depends on PDF features and renderer support. Keep the
 alternative engines available for documents that render better in another one.
+
+## Live Mac acceptance
+
+The signed preview was opened separately from the user's running application.
+A synthetic two-page PDF was used throughout; its SHA-256 remained
+`616bafc7191901a659bb6e42db5b7afd1c6f7492c3d32b88af9323ba11a3ba68`.
+
+The default viewer, native compatibility viewer and CrispOffice viewer rendered
+the PDF. Native zoom visibly changed from 100% to 120%; Fit page showed the
+complete page at 35%. CrispOffice fit/zoom and navigation to page two also worked.
+The primary editor opened through the F3 Edit action. The chooser exposed both
+PDF editors, and the CrispOffice alternative opened, rotated a page, undid that
+rotation and displayed the shared unsaved-change prompt; Discard closed it.
+No source file was written by these checks.
+
+Live controls were exercised through existing callbacks in the owned debug
+application, with rendered screenshots inspected. This checks the native PDFx
+renderer and the real local-file host, but does not certify OS-generated
+shortcuts or physical pinch gestures. Widget tests cover shortcut/routing
+contracts. Repeated forced native accessibility toggles in an earlier automation
+run produced a deactivated-widget error and native AX-tree update errors; that
+stress run is not counted as passing. A clean launch without those toggles and
+a move/resize/minimize/app-switch cycle remained healthy.
+
+The live pass also caught a stale primary zoom percentage: the renderer changed
+scale but did not notify its general controller listeners. The host now observes
+`viewportChanges` as well, with regressions checking that the displayed percentage
+matches the actual zoom after zoom and fit commands.
+
+[Native 100%](validation/pdf-choices-20261120/native-100.png),
+[native 120%](validation/pdf-choices-20261120/native-120.png),
+[native Fit page](validation/pdf-choices-20261120/native-fit-page.png), and
+[CrispOffice viewer](validation/pdf-choices-20261120/office-viewer.png).

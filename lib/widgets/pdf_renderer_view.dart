@@ -38,6 +38,7 @@ class PdfRendererViewState extends State<PdfRendererView> {
   void initState() {
     super.initState();
     _viewer.addListener(_changed);
+    _viewer.viewportChanges.addListener(_changed);
     _scheduleOpen();
   }
 
@@ -80,6 +81,7 @@ class PdfRendererViewState extends State<PdfRendererView> {
 
   @override
   void dispose() {
+    _viewer.viewportChanges.removeListener(_changed);
     _viewer.removeListener(_changed);
     _viewer.dispose();
     _office?.dispose();

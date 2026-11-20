@@ -35,6 +35,16 @@ void main() {
         key.currentState!.zoomBy(1.2);
         await tester.pumpAndSettle();
         expect(key.currentState!.zoom, greaterThan(before));
+        expect(
+          find.text('${(key.currentState!.zoom * 100).round()}%'),
+          findsOneWidget,
+        );
+        await tester.tap(find.text('Fit page'));
+        await tester.pumpAndSettle();
+        expect(
+          find.text('${(key.currentState!.zoom * 100).round()}%'),
+          findsOneWidget,
+        );
         if (backend == PdfViewerBackend.pdfEditor) {
           final view = tester.widget<editor.PdfViewer>(
             find.byType(editor.PdfViewer),
