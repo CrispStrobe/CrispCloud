@@ -4,6 +4,17 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Continue the bounded Word/PowerPoint VBA adapters with Word document aliases,
+  `Paragraphs.Item`, small caps, superscript/subscript and fixed-palette
+  highlighting; add PowerPoint typed text-frame/formatting/transition helpers,
+  vertical text anchors, slide visibility, click advancing, duration and eleven
+  supported entry effects. Preserve per-property transition source provenance
+  and explicit formatting intent. Qualify the combined engine source with
+  2,190 local regression cases, strict analysis and matching VM/JavaScript
+  execution of both actual BAS examples. Preserve Morph/native transition
+  compatibility and the accepted per-note numbering reader fix. See the
+  continuation record for source hashes, results and host/UI limits.
+
 - Extend staged Zotero research-content insertion to authored footnotes/endnotes
   and explicit single-paragraph replacement ranges. Preserve citation order,
   note ownership, rich content and leading note markers without creating nested

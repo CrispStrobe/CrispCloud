@@ -86,6 +86,10 @@ class PmlSlideTransition {
     this.durationMs = 700,
     this.advanceOnClick = true,
     this.advanceAfterMs,
+    this.source,
+    this.effectOverride = false,
+    this.durationOverride = false,
+    this.advanceOnClickOverride = false,
   });
 
   /// kind API.
@@ -102,6 +106,13 @@ class PmlSlideTransition {
 
   /// advanceAfterMs API.
   final int? advanceAfterMs;
+
+  /// Original native transition and its projected values. A property edit can
+  /// retain unsupported effects, sound settings, and extension metadata.
+  final PmlTransitionSource? source;
+  final bool effectOverride;
+  final bool durationOverride;
+  final bool advanceOnClickOverride;
 
   /// isNone API.
   bool get isNone => kind == PmlTransitionKind.none;
@@ -123,8 +134,34 @@ class PmlSlideTransition {
       advanceAfterMs: clearAdvanceAfter
           ? null
           : (advanceAfterMs ?? this.advanceAfterMs),
+      source: source,
+      effectOverride: effectOverride || kind != null || direction != null,
+      durationOverride: durationOverride || durationMs != null,
+      advanceOnClickOverride: advanceOnClickOverride || advanceOnClick != null,
     );
   }
+}
+
+/// Immutable import snapshot for per-property transition serialization.
+class PmlTransitionSource {
+  const PmlTransitionSource({
+    required this.xml,
+    required this.value,
+    this.isOpaqueContainer = false,
+    this.unsupportedContext,
+  });
+
+  final String xml;
+  final PmlSlideTransition value;
+
+  /// A root markup-compatibility container whose choice semantics are not
+  /// projected into the editable transition model. Preserve it on unrelated
+  /// saves, and refuse explicit transition changes.
+  final bool isOpaqueContainer;
+
+  /// An inherited compatibility context that cannot be reproduced faithfully.
+  /// Saving must refuse instead of dropping or reinterpreting those directives.
+  final String? unsupportedContext;
 }
 
 /// Class PmlShapeAnimation.

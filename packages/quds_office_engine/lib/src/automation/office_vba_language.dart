@@ -164,7 +164,46 @@ const _wordConstants = <String, int>{
   'wdunderlinedashlong': 39,
   'wdunderlinewavydouble': 43,
   'wdunderlinedashlongheavy': 55,
+  'wdauto': 0,
+  'wdnohighlight': 0,
+  'wdblack': 1,
+  'wdblue': 2,
+  'wdturquoise': 3,
+  'wdbrightgreen': 4,
+  'wdpink': 5,
+  'wdred': 6,
+  'wdyellow': 7,
+  'wdwhite': 8,
+  'wddarkblue': 9,
+  'wdteal': 10,
+  'wdgreen': 11,
+  'wdviolet': 12,
+  'wddarkred': 13,
+  'wddarkyellow': 14,
+  'wdgray50': 15,
+  'wdgray25': 16,
+  'wdbyauthor': -1,
 };
+// WdColorIndex uses a fixed palette; zero clears Range highlighting.
+const _wordHighlights = <String?>[
+  null,
+  '000000',
+  '0000FF',
+  '00FFFF',
+  '00FF00',
+  'FF00FF',
+  'FF0000',
+  'FFFF00',
+  'FFFFFF',
+  '000080',
+  '008080',
+  '008000',
+  '800080',
+  '800000',
+  '808000',
+  '808080',
+  'C0C0C0',
+];
 const _wordUnderlines = <int, String>{
   0: 'none',
   1: 'single',
@@ -186,6 +225,7 @@ const _wordUnderlines = <int, String>{
   55: 'dashLongHeavy',
 };
 const _wordReserved = <String>{
+  'application',
   'thisdocument',
   'activedocument',
   'document',
@@ -197,6 +237,23 @@ const _wordReserved = <String>{
   'wdalignparagraphjustify',
 };
 const _powerPointConstants = <String, int>{
+  'msoanchortop': 1,
+  'msoanchortopbaseline': 2,
+  'msoanchormiddle': 3,
+  'msoanchorbottom': 4,
+  'msoanchorbottombaseline': 5,
+  'msoverticalanchormixed': -2,
+  'ppeffectnone': 0,
+  'ppeffectcut': 257,
+  'ppeffectfadesmoothly': 3849,
+  'ppeffectpushdown': 3852,
+  'ppeffectpushleft': 3853,
+  'ppeffectpushright': 3854,
+  'ppeffectpushup': 3855,
+  'ppeffectwipeleft': 2817,
+  'ppeffectwipeup': 2818,
+  'ppeffectwiperight': 2819,
+  'ppeffectwipedown': 2820,
   'msofalse': 0,
   'msotrue': -1,
   'msoctrue': 1,
@@ -221,6 +278,7 @@ const _powerPointReserved = <String>{
   'shape',
   'textframe',
   'textrange',
+  'slideshowtransition',
 };
 
 class _Context {
@@ -523,7 +581,9 @@ enum _Kind {
   workbook,
   font,
   interior,
+  wordApplication,
   document,
+  paragraphs,
   paragraph,
   paragraphFormat,
   powerPointApplication,
@@ -537,6 +597,7 @@ enum _Kind {
   powerPointFont,
   powerPointColor,
   powerPointParagraphFormat,
+  slideShowTransition,
   triState,
 }
 
@@ -554,6 +615,10 @@ enum _Declared {
   slide,
   shape,
   textRange,
+  textFrame,
+  powerPointFont,
+  powerPointParagraphFormat,
+  slideShowTransition,
 }
 
 bool _objectType(_Declared type) =>
@@ -564,7 +629,11 @@ bool _objectType(_Declared type) =>
     type == _Declared.presentation ||
     type == _Declared.slide ||
     type == _Declared.shape ||
-    type == _Declared.textRange;
+    type == _Declared.textRange ||
+    type == _Declared.textFrame ||
+    type == _Declared.powerPointFont ||
+    type == _Declared.powerPointParagraphFormat ||
+    type == _Declared.slideShowTransition;
 
 const _powerPointObjectKinds = <_Kind>{
   _Kind.powerPointApplication,
@@ -578,6 +647,7 @@ const _powerPointObjectKinds = <_Kind>{
   _Kind.powerPointFont,
   _Kind.powerPointColor,
   _Kind.powerPointParagraphFormat,
+  _Kind.slideShowTransition,
 };
 
 // These are source values, never native JSON null or unbound object bindings.
@@ -596,6 +666,10 @@ _Kind _kindOf(_Declared type) => switch (type) {
   _Declared.slide => _Kind.slide,
   _Declared.shape => _Kind.shape,
   _Declared.textRange => _Kind.textRange,
+  _Declared.textFrame => _Kind.textFrame,
+  _Declared.powerPointFont => _Kind.powerPointFont,
+  _Declared.powerPointParagraphFormat => _Kind.powerPointParagraphFormat,
+  _Declared.slideShowTransition => _Kind.slideShowTransition,
 };
 
 sealed class _Expr {
@@ -1429,10 +1503,16 @@ class _Parser {
       'slide' when context.isPowerPoint => _Declared.slide,
       'shape' when context.isPowerPoint => _Declared.shape,
       'textrange' when context.isPowerPoint => _Declared.textRange,
+      'textframe' when context.isPowerPoint => _Declared.textFrame,
+      'font' when context.isPowerPoint => _Declared.powerPointFont,
+      'paragraphformat' when context.isPowerPoint =>
+        _Declared.powerPointParagraphFormat,
+      'slideshowtransition' when context.isPowerPoint =>
+        _Declared.slideShowTransition,
       _ => context.unsupported(
         token,
         context.isPowerPoint
-            ? 'Supported declarations are Long, Double, String, Boolean, Variant, Presentation, Slide, Shape, and TextRange.'
+            ? 'Supported declarations are Long, Double, String, Boolean, Variant, Presentation, Slide, Shape, TextFrame, TextRange, Font, ParagraphFormat, and SlideShowTransition.'
             : context.isWord
             ? 'Supported declarations are Long, Double, String, Boolean, Variant, Document, Paragraph, and Range.'
             : 'Supported declarations are Long, Double, String, Boolean, Variant, Worksheet, and Range.',
@@ -2237,7 +2317,9 @@ class _Checker {
           final kind = _expression(statement.target);
           final wordObject =
               context.isWord &&
-              (kind == _Kind.document ||
+              (kind == _Kind.wordApplication ||
+                  kind == _Kind.document ||
+                  kind == _Kind.paragraphs ||
                   kind == _Kind.paragraph ||
                   kind == _Kind.font ||
                   kind == _Kind.paragraphFormat);
@@ -2324,6 +2406,17 @@ class _Checker {
     final receiver = _expression(target.receiver);
     final property = target.token.lower;
     if (context.isPowerPoint) {
+      if (receiver == _Kind.textFrame && property == 'verticalanchor') {
+        return _Kind.number;
+      }
+      if (receiver == _Kind.slideShowTransition) {
+        if (property == 'hidden' || property == 'advanceonclick') {
+          return _Kind.triState;
+        }
+        if (property == 'entryeffect' || property == 'duration') {
+          return _Kind.number;
+        }
+      }
       if (receiver == _Kind.textRange && property == 'text') {
         return _Kind.string;
       }
@@ -2359,10 +2452,16 @@ class _Checker {
       );
     }
     if (context.isWord) {
+      if (receiver == _Kind.range && property == 'highlightcolorindex') {
+        return _Kind.number;
+      }
       if (receiver == _Kind.font) {
         if (property == 'bold' ||
             property == 'italic' ||
-            property == 'strikethrough') {
+            property == 'strikethrough' ||
+            property == 'smallcaps' ||
+            property == 'superscript' ||
+            property == 'subscript') {
           return _Kind.boolean;
         }
         if (property == 'size' ||
@@ -2436,7 +2535,13 @@ class _Checker {
           }
         }
         if (context.isWord) {
-          if (expression.token.lower == 'thisdocument') return _Kind.document;
+          if (expression.token.lower == 'thisdocument' ||
+              expression.token.lower == 'activedocument') {
+            return _Kind.document;
+          }
+          if (expression.token.lower == 'application') {
+            return _Kind.wordApplication;
+          }
           if (_wordConstants.containsKey(expression.token.lower)) {
             return _Kind.number;
           }
@@ -2539,7 +2644,17 @@ class _Checker {
           return _powerPointMember(expression, receiver);
         }
         if (context.isWord) {
+          if (receiver == _Kind.wordApplication && name == 'activedocument') {
+            _arguments(expression, 0, allowProperty: true);
+            return _Kind.document;
+          }
           if (receiver == _Kind.document && name == 'paragraphs') {
+            if (expression.arguments == null) return _Kind.paragraphs;
+            final argument = _arguments(expression, 1).single;
+            _compatible(_Kind.number, _expression(argument), argument.token);
+            return _Kind.paragraph;
+          }
+          if (receiver == _Kind.paragraphs && name == 'item') {
             final argument = _arguments(expression, 1).single;
             _compatible(_Kind.number, _expression(argument), argument.token);
             return _Kind.paragraph;
@@ -2649,6 +2764,10 @@ class _Checker {
       if (expression.arguments == null) return _Kind.shapes;
       _powerPointSelector(expression, shape: true);
       return _Kind.shape;
+    }
+    if (receiver == _Kind.slide && name == 'slideshowtransition') {
+      _arguments(expression, 0, allowProperty: true);
+      return _Kind.slideShowTransition;
     }
     if (receiver == _Kind.shapes && name == 'item') {
       _powerPointSelector(expression, shape: true);
@@ -2884,6 +3003,14 @@ class _WordDocument {
   const _WordDocument();
 }
 
+class _WordApplication {
+  const _WordApplication();
+}
+
+class _WordParagraphs {
+  const _WordParagraphs();
+}
+
 class _WordParagraph {
   const _WordParagraph(this.index);
   final int index;
@@ -2935,6 +3062,11 @@ class _Shape {
 class _TextFrame {
   const _TextFrame(this.shape);
   final _Shape shape;
+}
+
+class _SlideShowTransition {
+  const _SlideShowTransition(this.slide);
+  final _Slide slide;
 }
 
 class _TextRange {
@@ -3449,8 +3581,12 @@ class _Evaluator {
           }
         }
         if (context.isWord) {
-          if (expression.token.lower == 'thisdocument') {
+          if (expression.token.lower == 'thisdocument' ||
+              expression.token.lower == 'activedocument') {
             return const _WordDocument();
+          }
+          if (expression.token.lower == 'application') {
+            return const _WordApplication();
           }
         } else if (context.isExcel &&
             expression.token.lower == 'thisworkbook') {
@@ -3516,7 +3652,11 @@ class _Evaluator {
           return _evaluatePowerPointMember(expression, receiver, arguments);
         }
         if (context.isWord) {
-          if (receiver is _WordDocument) {
+          if (receiver is _WordApplication) return const _WordDocument();
+          if (receiver is _WordDocument && expression.arguments == null) {
+            return const _WordParagraphs();
+          }
+          if (receiver is _WordDocument || receiver is _WordParagraphs) {
             final index = _integer(arguments.single, expression.token);
             if (index < 1) {
               context.type(
@@ -3632,6 +3772,9 @@ class _Evaluator {
     }
     if (receiver is _Slide || receiver is _Shapes) {
       final slide = receiver is _Slide ? receiver : (receiver as _Shapes).slide;
+      if (expression.token.lower == 'slideshowtransition') {
+        return _SlideShowTransition(slide);
+      }
       if (expression.arguments == null) return _Shapes(slide);
       final value = arguments.single;
       final Object selector = value is String
@@ -3929,6 +4072,26 @@ class _Evaluator {
       case _Declared.textRange:
         if (value is! _TextRange) {
           context.type(token, 'Set requires a TextRange.');
+        }
+        return value;
+      case _Declared.textFrame:
+        if (value is! _TextFrame) {
+          context.type(token, 'Set requires a TextFrame.');
+        }
+        return value;
+      case _Declared.powerPointFont:
+        if (value is! _PowerPointFont) {
+          context.type(token, 'Set requires a PowerPoint Font.');
+        }
+        return value;
+      case _Declared.powerPointParagraphFormat:
+        if (value is! _PowerPointParagraphFormat) {
+          context.type(token, 'Set requires a PowerPoint ParagraphFormat.');
+        }
+        return value;
+      case _Declared.slideShowTransition:
+        if (value is! _SlideShowTransition) {
+          context.type(token, 'Set requires a SlideShowTransition.');
         }
         return value;
     }
@@ -4356,6 +4519,85 @@ class _Evaluator {
     Object value,
     _Token token,
   ) {
+    if (receiver is _TextFrame) {
+      final anchor = switch (_integer(value, token)) {
+        1 => 'top',
+        3 => 'center',
+        4 => 'bottom',
+        _ => null,
+      };
+      if (anchor == null) {
+        context.unsupported(
+          token,
+          'VerticalAnchor supports msoAnchorTop, msoAnchorMiddle and msoAnchorBottom; baseline and mixed anchors are unsupported.',
+        );
+      }
+      _emitPowerPoint(receiver.shape, 'shapeTextFrame', <String, Object?>{
+        'anchor': anchor,
+      }, token);
+      return;
+    }
+    if (receiver is _SlideShowTransition) {
+      if (property == 'hidden' || property == 'advanceonclick') {
+        _emitPowerPointSlide(
+          receiver.slide,
+          property == 'hidden' ? 'slideHidden' : 'slideTransition',
+          <String, Object?>{
+            property == 'hidden' ? 'hidden' : 'advanceOnClick':
+                _powerPointTriState(value, token),
+          },
+          token,
+        );
+      } else if (property == 'duration') {
+        final seconds = _number(value, token);
+        final milliseconds = seconds * 1000;
+        if (milliseconds < 1 ||
+            milliseconds > 2147483647 ||
+            milliseconds.round() / 1000 != seconds) {
+          context.type(
+            token,
+            'SlideShowTransition.Duration requires positive seconds in exact milliseconds within signed Long milliseconds.',
+          );
+        }
+        _emitPowerPointSlide(
+          receiver.slide,
+          'slideTransition',
+          <String, Object?>{'durationMs': milliseconds.round()},
+          token,
+        );
+      } else {
+        final effect = switch (_integer(value, token)) {
+          0 => ('none', null),
+          257 => ('cut', null),
+          3849 => ('fade', null),
+          3852 => ('push', 'down'),
+          3853 => ('push', 'left'),
+          3854 => ('push', 'right'),
+          3855 => ('push', 'up'),
+          2817 => ('wipe', 'left'),
+          2818 => ('wipe', 'up'),
+          2819 => ('wipe', 'right'),
+          2820 => ('wipe', 'down'),
+          _ => null,
+        };
+        if (effect == null) {
+          context.unsupported(
+            token,
+            'EntryEffect supports None, Cut, FadeSmoothly and the four Push/Wipe directions.',
+          );
+        }
+        _emitPowerPointSlide(
+          receiver.slide,
+          'slideTransition',
+          <String, Object?>{
+            'kind': effect.$1,
+            if (effect.$2 != null) 'direction': effect.$2,
+          },
+          token,
+        );
+      }
+      return;
+    }
     if (receiver is _TextRange) {
       _emitPowerPoint(receiver.shape, 'shapeText', <String, Object?>{
         'text': _powerPointText(value, token),
@@ -4504,19 +4746,57 @@ class _Evaluator {
     }, token);
   }
 
+  void _emitPowerPointSlide(
+    _Slide slide,
+    String operation,
+    Map<String, Object?> fields,
+    _Token token,
+  ) {
+    if (steps.length >= _maxSteps) {
+      context.limit(
+        token,
+        'PowerPoint writes exceed $_maxSteps emitted operations.',
+      );
+    }
+    _emitNative('pptx.$operation', <String, Object?>{
+      'slide': slide.index,
+      ...fields,
+    }, token);
+  }
+
   void _writeWord(
     Object receiver,
     String property,
     Object value,
     _Token token,
   ) {
+    if (receiver is _WordRange) {
+      final index = _integer(value, token);
+      if (index < 0 || index >= _wordHighlights.length) {
+        context.unsupported(
+          token,
+          'HighlightColorIndex requires wdNoHighlight or a fixed WdColorIndex color from 1 through 16.',
+        );
+      }
+      _emitWord(receiver, 'runFormat', <String, Object?>{
+        'highlight': _wordHighlights[index],
+      }, token);
+      return;
+    }
     if (receiver is _WordFont) {
       final String field;
       final Object normalized;
       if (property == 'bold' ||
           property == 'italic' ||
-          property == 'strikethrough') {
-        field = property == 'strikethrough' ? 'strike' : property;
+          property == 'strikethrough' ||
+          property == 'smallcaps' ||
+          property == 'superscript' ||
+          property == 'subscript') {
+        field = switch (property) {
+          'strikethrough' => 'strike',
+          'smallcaps' => 'smallCaps',
+          _ => property,
+        };
         normalized = _boolean(value, token);
       } else if (property == 'underline') {
         field = 'underline';

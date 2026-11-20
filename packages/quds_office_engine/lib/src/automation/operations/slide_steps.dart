@@ -3,6 +3,7 @@ import 'step_input.dart';
 
 const slideOperations = <String, List<String>>{
   'shapeText': ['slide', 'shape', 'shapeName', 'topLevel', 'text'],
+  'shapeTextFrame': ['slide', 'shape', 'shapeName', 'topLevel', 'anchor'],
   'shapeFormat': [
     'slide',
     'shape',
@@ -75,6 +76,14 @@ void applySlideStep(
   }
 
   switch (op) {
+    case 'shapeTextFrame':
+      final target = shape();
+      if (target.visual != null || target.table != null) {
+        throw ArgumentError('shapeTextFrame requires a text shape');
+      }
+      final anchor = PmlTextAnchor.values.byName(s.string('anchor'));
+      target.textAnchor = anchor;
+      target.textAnchorOverride = true;
     case 'shapeText':
       final target = shape();
       if (target.visual != null || target.table != null) {
@@ -148,8 +157,19 @@ void applySlideStep(
       final at = s.integer('to', max: deck.slides.length - 1);
       PmlSections.reorderSlide(deck, deck.slides.indexOf(slide), at);
     case 'slideTransition':
+      final transitionIssue = slide.transition.source?.unsupportedContext;
+      if (transitionIssue != null) {
+        throw UnsupportedError(transitionIssue);
+      }
+      if (slide.transition.source?.isOpaqueContainer ?? false) {
+        throw UnsupportedError(
+          'Transition changes do not support markup-compatibility containers',
+        );
+      }
       slide.transition = PmlSlideTransition(
-        kind: PmlTransitionKind.values.byName(s.string('kind')),
+        kind: PmlTransitionKind.values.byName(
+          s.string('kind', fallback: slide.transition.kind.name),
+        ),
         direction: PmlTransitionDir.values.byName(
           s.string('direction', fallback: slide.transition.direction.name),
         ),
@@ -163,6 +183,15 @@ void applySlideStep(
           fallback: slide.transition.advanceOnClick,
         ),
         advanceAfterMs: slide.transition.advanceAfterMs,
+        source: slide.transition.source,
+        effectOverride:
+            slide.transition.effectOverride ||
+            s.has('kind') ||
+            s.has('direction'),
+        durationOverride:
+            slide.transition.durationOverride || s.has('durationMs'),
+        advanceOnClickOverride:
+            slide.transition.advanceOnClickOverride || s.has('advanceOnClick'),
       );
     case 'slideImageReplace':
       final visual = shape().visual;

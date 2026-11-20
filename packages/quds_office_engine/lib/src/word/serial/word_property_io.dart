@@ -95,7 +95,13 @@ abstract final class WordPropertyIo {
       result.children.removeWhere(
         // The regular-size field owns sz; a separate szCs is source data for
         // the complex-script size and must survive a regular-size edit.
-        (n) => n is XmlElement && n.localName == key,
+        // Foreign properties can share local names. Only Word elements and
+        // intentionally unbound internal w fragments belong to this edit.
+        (n) =>
+            n is XmlElement &&
+            n.localName == key &&
+            (n.namespaceUri == OfficeNamespaces.w ||
+                (n.namespaceUri.isEmpty && n.prefix == 'w')),
       );
       final List<XmlElement> replacement = generated.childrenNamed(key);
       if (replacement.isNotEmpty) {

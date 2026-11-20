@@ -333,6 +333,78 @@ void main() {
     }
 
     test(
+      '$label list counters stay separate from body and other note stories',
+      () {
+        var document = WmlDocument.empty(text: 'Body one');
+        document.sections.single.blocks.add(
+          WmlParagraph(inlines: <WmlInline>[WmlRun(text: 'Body two')]),
+        );
+        for (final paragraph in document.paragraphs) {
+          WordLists.applyLevel(paragraph, numbered: true, document: document);
+        }
+        final sharedId = document.paragraphs.first.properties.numId;
+        final noteIds = <int>[];
+        for (var index = 0; index < 3; index++) {
+          final note = WordNotes.insert(
+            document,
+            document.paragraphs.first,
+            endnote: endnote,
+            text: 'Note $index first',
+          );
+          noteIds.add(note.id);
+          note.blocks.add(
+            WmlParagraph(
+              inlines: <WmlInline>[WmlRun(text: 'Note $index second')],
+            ),
+          );
+          for (final paragraph in note.allParagraphs) {
+            WordLists.applyLevel(paragraph, numbered: true, document: document);
+            expect(paragraph.properties.numId, sharedId);
+          }
+          note.paragraphs.first.inlines.insert(
+            0,
+            WmlNoteMarker(
+              endnote: endnote,
+              properties: WmlRunProps(bold: true),
+            ),
+          );
+        }
+        final originalNotes = endnote ? document.endnotes : document.footnotes;
+        WordLists.restart(originalNotes.first.paragraphs.first, at: 3);
+        // Match the existing writer's per-story restart scope. A shared native
+        // numId must not consume the body's or another note's counter.
+        for (var cycle = 0; cycle < 2; cycle++) {
+          document = _reopen(document);
+          expect(
+            document.paragraphs.map(
+              (paragraph) => paragraph.properties.listLabel,
+            ),
+            ['1. ', '2. '],
+          );
+          final notes = endnote ? document.endnotes : document.footnotes;
+          for (final (index, id) in noteIds.indexed) {
+            final note = notes.singleWhere((candidate) => candidate.id == id);
+            expect(
+              note.allParagraphs.map(
+                (paragraph) => paragraph.properties.listLabel,
+              ),
+              index == 0 ? ['3. ', '4. '] : ['1. ', '2. '],
+            );
+            final markers = note.allParagraphs
+                .expand(
+                  (paragraph) => paragraph.inlines.whereType<WmlNoteMarker>(),
+                )
+                .toList();
+            expect(markers, hasLength(1));
+            expect(note.paragraphs.first.inlines.first, same(markers.single));
+            expect(markers.single.endnote, endnote);
+            expect(markers.single.properties.bold, isTrue);
+          }
+        }
+      },
+    );
+
+    test(
       '$label headings lists and images retain the leading reference marker',
       () {
         final document = WmlDocument.empty(text: 'Body');

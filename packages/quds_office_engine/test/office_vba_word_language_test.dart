@@ -539,15 +539,11 @@ End If
     test('Paragraphs cannot expose a live collection without an index', () {
       _reject(
         'value = ThisDocument.Paragraphs.Count',
-        'vba_type_error',
+        'vba_unsupported',
         declarations: 'Dim value As Variant',
       );
     });
-    for (final object in <String>[
-      'ActiveDocument',
-      'Selection',
-      'Application',
-    ]) {
+    for (final object in <String>['Selection']) {
       test('ambient $object is never consulted', () {
         _reject(
           '$object.Paragraphs(1).Range.InsertBefore "x"',

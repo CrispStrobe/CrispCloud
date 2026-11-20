@@ -1484,11 +1484,13 @@ class WordSerializer {
       attributes: <String, String>{'w:val': '${r.fontSizeHalfPoints}'},
     );
     final String? highlight = WmlHighlight.toName(r.highlight);
-    if (highlight != null) {
+    // An explicit clear on an authored run must override inherited styles even
+    // without a sparse import snapshot. Omission would revive the old color.
+    if (highlight != null || r.explicitProperties.contains('highlight')) {
       w.writeEmptyElement(
         'highlight',
         prefix: 'w',
-        attributes: <String, String>{'w:val': highlight},
+        attributes: <String, String>{'w:val': highlight ?? 'none'},
       );
     }
     if (r.underline != WmlUnderline.none) {
@@ -1498,15 +1500,13 @@ class WordSerializer {
         attributes: <String, String>{'w:val': r.underline.xmlValue},
       );
     }
-    if (r.vertAlign != WmlVertAlign.baseline) {
+    // Baseline is also an owned value after an explicit script-mode clear.
+    if (r.vertAlign != WmlVertAlign.baseline ||
+        r.explicitProperties.contains('vertAlign')) {
       w.writeEmptyElement(
         'vertAlign',
         prefix: 'w',
-        attributes: <String, String>{
-          'w:val': r.vertAlign == WmlVertAlign.superscript
-              ? 'superscript'
-              : 'subscript',
-        },
+        attributes: <String, String>{'w:val': r.vertAlign.name},
       );
     }
     if (r.proofingLanguage != null || r.complexScriptLanguage != null) {

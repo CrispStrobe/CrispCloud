@@ -46,6 +46,9 @@ const wordOperations = <String, List<String>>{
     'size',
     'underline',
     'strike',
+    'smallCaps',
+    'superscript',
+    'subscript',
     ..._storyFields,
   ],
   'addNote': ['paragraph', 'text', 'endnote', 'offset'],
@@ -264,6 +267,16 @@ void applyStep(
       final bold = s.has('bold') ? s.boolean('bold') : null;
       final italic = s.has('italic') ? s.boolean('italic') : null;
       final strike = s.has('strike') ? s.boolean('strike') : null;
+      final smallCaps = s.has('smallCaps') ? s.boolean('smallCaps') : null;
+      if (s.has('superscript') && s.has('subscript')) {
+        throw ArgumentError(
+          'Set only one of superscript or subscript per runFormat operation',
+        );
+      }
+      final superscript = s.has('superscript')
+          ? s.boolean('superscript')
+          : null;
+      final subscript = s.has('subscript') ? s.boolean('subscript') : null;
       final underline = s.has('underline')
           ? WmlUnderline.parse(s.string('underline'))
           : null;
@@ -276,10 +289,59 @@ void applyStep(
           ? (s.number('size', min: 0.5, max: 1638) * 2).round()
           : null;
       WmlRunEdit.applyRange(p, range.$1, range.$2, (r) {
+        if (smallCaps == true) {
+          // Word SmallCaps=True explicitly turns AllCaps off. caps is an
+          // opaque property in the current live model, so preserve all other
+          // source/direct properties and add a native false override, including
+          // when caps was inherited from a character or paragraph style.
+          final source = WordPropertyIo.parse(
+            WordSerializer().runPropertiesXml(r),
+            'rPr',
+          );
+          // Namespace declarations can be stored without a namespace URI.
+          // Replace the declaration by qualified name, then use an explicit
+          // namespace so an unrelated source attribute such as x:w survives.
+          source.attributes.removeWhere(
+            (attribute) => attribute.qualifiedName == 'xmlns:w',
+          );
+          source.setAttribute(
+            'w',
+            OfficeNamespaces.w,
+            prefix: 'xmlns',
+            namespaceUri: 'http://www.w3.org/2000/xmlns/',
+          );
+          source.children.removeWhere(
+            (child) =>
+                child is XmlElement &&
+                child.localName == 'caps' &&
+                child.namespaceUri == OfficeNamespaces.w,
+          );
+          source.addChild(
+            XmlElement(
+              localName: 'caps',
+              prefix: 'w',
+              namespaceUri: OfficeNamespaces.w,
+            )..setAttribute(
+              'val',
+              '0',
+              prefix: 'w',
+              namespaceUri: OfficeNamespaces.w,
+            ),
+          );
+          WordPropertyIo.orderChildren(source);
+          r.sourcePropertiesXml = XmlDocument(
+            root: source,
+          ).toXmlString(declaration: false);
+          r.importedValues = WordPropertyIo.runValues(r);
+          r.explicitProperties.add('caps');
+        }
         for (final entry in <String, String>{
           'bold': 'b',
           'italic': 'i',
           'strike': 'strike',
+          'smallCaps': 'smallCaps',
+          'superscript': 'vertAlign',
+          'subscript': 'vertAlign',
           'underline': 'u',
           'color': 'color',
           'highlight': 'highlight',
@@ -294,6 +356,21 @@ void applyStep(
         if (bold != null) r.bold = bold;
         if (italic != null) r.italic = italic;
         if (strike != null) r.strike = strike;
+        if (smallCaps != null) r.smallCaps = smallCaps;
+        if (superscript != null) {
+          if (superscript) {
+            r.vertAlign = WmlVertAlign.superscript;
+          } else if (r.vertAlign == WmlVertAlign.superscript) {
+            r.vertAlign = WmlVertAlign.baseline;
+          }
+        }
+        if (subscript != null) {
+          if (subscript) {
+            r.vertAlign = WmlVertAlign.subscript;
+          } else if (r.vertAlign == WmlVertAlign.subscript) {
+            r.vertAlign = WmlVertAlign.baseline;
+          }
+        }
         if (underline != null) r.underline = underline;
         if (color != null) r.color = color;
         if (s.has('highlight')) r.highlight = highlight;

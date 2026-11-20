@@ -454,6 +454,7 @@ class PmlShape {
     this.rightToLeft,
     this.textAlign = PmlTextAlign.left,
     this.textAnchor = PmlTextAnchor.top,
+    this.textAnchorOverride = false,
     double textScale = 1.0,
     double lineSpacingReduction = 0.0,
     List<PmlTextParagraph>? richText,
@@ -565,6 +566,10 @@ class PmlShape {
 
   /// Vertical text-frame placement from `a:bodyPr/@anchor`.
   PmlTextAnchor textAnchor;
+
+  /// An explicit assignment owns `a:bodyPr/@anchor` even when its projected
+  /// value matches an imported baseline/unsupported anchor's fallback.
+  bool textAnchorOverride;
 
   /// `a:normAutofit/@fontScale`, normalized to 0.0–1.0.
   double get textScale => _textScale;
@@ -761,6 +766,7 @@ class PmlShape {
       rightToLeft: rightToLeft,
       textAlign: textAlign,
       textAnchor: textAnchor,
+      textAnchorOverride: textAnchorOverride,
       textScale: textScale,
       lineSpacingReduction: lineSpacingReduction,
       richText: <PmlTextParagraph>[

@@ -1,4 +1,5 @@
 import 'office_font_pack.dart';
+import 'office_font_pack_catalog.dart';
 import 'office_system_font_face.dart';
 
 /// Web hosts do not install local font files; the pack remains unavailable.
@@ -19,9 +20,17 @@ class OfficeFontPackStatus {
 }
 
 class OfficeFontPackStore {
-  const OfficeFontPackStore(this.rootPath);
+  // Same signature as the native store; web hosts install nothing.
+  const OfficeFontPackStore(this.rootPath, {List<OfficeFontPack>? packs})
+    : packs = packs ?? catalog;
 
   final String rootPath;
+  final List<OfficeFontPack> packs;
+
+  static const List<OfficeFontPack> catalog = <OfficeFontPack>[
+    officeCoreFontPack,
+    officeVisualFontPack,
+  ];
 
   Future<List<OfficeFontPackStatus>> statuses() async =>
       <OfficeFontPackStatus>[];
