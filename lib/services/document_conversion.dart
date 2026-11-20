@@ -238,7 +238,7 @@ Future<DocumentConversionResult> _convert(
       );
     }
     notes.addAll(
-      result.limitations.map((v) => 'Legacy Word limitation: ${v.name}'),
+      result.limitations.map((v) => 'Legacy document limitation: ${v.name}'),
     );
     if (target == 'docx') {
       return _bounded(DocumentConversionResult(bytes, target, notices: notes));

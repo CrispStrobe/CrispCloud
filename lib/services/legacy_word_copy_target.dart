@@ -4,7 +4,7 @@ import 'legacy_word_copy.dart';
 import 'file_operation_service.dart';
 
 /// A create-only destination beside the original, on its captured storage.
-/// It never replaces either the binary document or an existing Word copy.
+/// It never replaces either the binary document or an existing Writer copy.
 class LegacyWordCopyTarget {
   const LegacyWordCopyTarget({required this.backend, required this.sourcePath});
 
@@ -24,7 +24,7 @@ class LegacyWordCopyTarget {
     final output = backend.paths.join(directory, name);
     if (backend.samePath(output, sourcePath) ||
         !backend.samePath(backend.paths.dirname(output), directory)) {
-      throw StateError('Choose a new Word filename beside the original.');
+      throw StateError('Choose a new Writer filename beside the original.');
     }
     // A successful listing verifies directory access; permission errors must
     // not be mistaken for an absent file by a provider-specific stat adapter.
@@ -42,7 +42,7 @@ class LegacyWordCopyTarget {
     final created = await backend.stat(output);
     checkIntegrityCurrent(backend, null);
     if (created == null || created.isFolder || created.isSymlink == true) {
-      throw StateError('The new Word copy could not be verified after saving.');
+      throw StateError('The new Writer copy could not be verified after saving.');
     }
     return created.copyWith(path: output);
   }

@@ -495,8 +495,8 @@ class OfficeEditorStrings {
     'Save writes back to the original file.':
         'Speichern schreibt in die Originaldatei zurück.',
     'Spell checking uses the host integration. No spell-check provider is configured in this build.': 'Die Rechtschreibprüfung benötigt die Host-Integration. In diesem Build ist kein Anbieter konfiguriert.',
-    'Word, spreadsheet and presentation editing is powered by the open-source Quds Office engine (MIT).\n\nThe editor supports OOXML documents (.docx, .xlsx, .pptx). Save writes back to the original file.': 'Das Bearbeiten von Text, Tabellen und Präsentationen basiert auf der Open-Source-Engine Quds Office (MIT).\n\nDer Editor unterstützt OOXML-Dokumente (.docx, .xlsx, .pptx). Speichern schreibt in die Originaldatei zurück.',
-    'Word': 'Word',
+    'Writer, Spreadsheet and Presentation editing is powered by the open-source Quds Office engine (MIT).\n\nThe editor supports OOXML documents (.docx, .xlsx, .pptx). Save writes back to the original file.': 'Das Bearbeiten von Text, Tabellen und Präsentationen basiert auf der Open-Source-Engine Quds Office (MIT).\n\nDer Editor unterstützt OOXML-Dokumente (.docx, .xlsx, .pptx). Speichern schreibt in die Originaldatei zurück.',
+    'Writer': 'Writer',
   };
 
   static const Map<String, String> _fr = <String, String>{

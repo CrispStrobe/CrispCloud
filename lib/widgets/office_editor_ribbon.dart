@@ -1250,6 +1250,7 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
             _bigButton(Icons.select_all, 'Select all', _selectAll),
           ]),
           _group('Font', <Widget>[
+            _sheetFontFamilyDropdown(),
             _sheetFontSizeDropdown(),
             _iconButton(
               Icons.format_bold,
@@ -2217,6 +2218,26 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
           : value.toString(),
       width: 58,
       onChanged: _setFontSize,
+    );
+  }
+
+  Widget _sheetFontFamilyDropdown() {
+    const List<String> families = <String>[
+      'Calibri',
+      'Aptos',
+      'Arial',
+      'Times New Roman',
+      'Courier New',
+      'Liberation Sans',
+      'DejaVu Sans',
+    ];
+    final String current = _sheet.selectionFontFamily;
+    return _smallDropdown<String>(
+      value: current,
+      items: <String>{...families, current}.toList(growable: false),
+      label: (String value) => value,
+      width: 132,
+      onChanged: _sheet.setSelectionFontFamily,
     );
   }
 
@@ -3372,7 +3393,7 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
       final bytes = file.bytes;
       if (bytes == null || bytes.isEmpty || bytes.length > 64 * 1024 * 1024) {
         throw const FormatException(
-          'Choose a Word document smaller than 64 MiB.',
+          'Choose a Writer document smaller than 64 MiB.',
         );
       }
       final document = await compute(_decodeComparisonWord, bytes);
@@ -4033,19 +4054,19 @@ class _SlideTextColorCommand implements OfficeCommand {
 WmlDocument _decodeComparisonWord(Uint8List bytes) {
   final package = OpcPackage.openBytes(bytes);
   if (package.kind != OpcPackageKind.word) {
-    throw const FormatException('Choose a Word document.');
+    throw const FormatException('Choose a Writer document.');
   }
   final relationship = package.packageRelationships.firstByType(
     RelationshipTypes.officeDocument,
   );
   if (relationship == null) {
-    throw const FormatException('The Word document content is missing.');
+    throw const FormatException('The Writer document content is missing.');
   }
   final part = package.getPart(
     package.packageRelationships.resolve(relationship),
   );
   if (part == null) {
-    throw const FormatException('The Word document content is missing.');
+    throw const FormatException('The Writer document content is missing.');
   }
   final root = XmlDocument.parse(part.readText()).root;
   if (root?.localName != 'document' ||
@@ -4055,7 +4076,7 @@ WmlDocument _decodeComparisonWord(Uint8List bytes) {
       }.contains(root?.namespaceUri) ||
       !root!.childElements.any((element) => element.localName == 'body')) {
     throw const FormatException(
-      'The package does not contain a Word document.',
+      'The package does not contain a Writer document.',
     );
   }
   return WordDeserializer().read(package);

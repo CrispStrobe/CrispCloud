@@ -1876,7 +1876,7 @@
     "packages/quds_office_editor/lib/src/editor_word/word_run_metrics.dart": "e897766276789eca80112435ecfadf35d35cf52b9a063543880beddab15a5f6b",
     "packages/quds_office_editor/lib/src/embed/office_clipboard.dart": "68c99d20c83004448d44deebd09e031aecebf84a11f2a5067d0febbe206c2715",
     "packages/quds_office_editor/lib/src/embed/office_context_menu.dart": "d608cbfeae1915ad0154140f6c8f0cec126f8c13b3ed1e4224f60f8e43db378c",
-    "packages/quds_office_editor/lib/src/embed/office_controller.dart": "9e7c0b4ce24f03f4bf9189979123961af3a9bca2b4c0d11e4de68413d64b33d1",
+    "packages/quds_office_editor/lib/src/embed/office_controller.dart": "2338bcca019e9e0df317b3d518905138af9c4e7e9365a8ed2f18698d1f3262a8",
     "packages/quds_office_editor/lib/src/embed/office_direction_keys.dart": "2e3e4a904629e2a09746916d3caf15b6a3558d73d226e38ea495e46a056a22c3",
     "packages/quds_office_editor/lib/src/embed/office_editors.dart": "0879ddb4e6fd951ce7760ba8bf1a7aba7eb6b7b4ac7ece9d8835f6db86e99cec",
     "packages/quds_office_editor/lib/src/embed/office_host_fonts.dart": "990f9833246ec2403661a729c9592551127432a344bb4958f2814d2419120592",
@@ -2941,7 +2941,7 @@
     "tool/office-validation/test_render.py": "1ba68e18608d74387cbc1c779ceb72af76bf7741463c282684aec93bf3825472"
   },
   "source_branch": "integrate/recent-pptx",
-  "source_commit": "20573cabfd4dcae091e4c705fd58277cc6372075",
+  "source_commit": "1eddb91495bd405a1dfb3b1e8734e93e85b04b1d",
   "source_repository": "CrispStrobe/quds_office_suite",
   "standalone_sources": {
     "packages/legacy_doc_parser": {
