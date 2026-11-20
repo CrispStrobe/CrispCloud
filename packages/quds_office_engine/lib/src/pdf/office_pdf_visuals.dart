@@ -132,6 +132,11 @@ abstract final class OfficePdfVisuals {
       ),
     );
     final PictureAdjust adj = visual.picture;
+    if (adj.shadow) {
+      canvas.setFillColor('B0B0B0');
+      canvas.rect(x + 2.5, y + 2.5, w, h);
+      canvas.fill();
+    }
     final double cropLeft = adj.cropLeft.clamp(0.0, 0.9);
     final double cropTop = adj.cropTop.clamp(0.0, 0.9);
     final double cropRight = adj.cropRight.clamp(0.0, 0.9);

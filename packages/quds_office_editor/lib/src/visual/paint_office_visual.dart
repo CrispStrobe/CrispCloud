@@ -202,6 +202,14 @@ abstract final class PaintOfficeVisual {
         Paint()..color = const Color(0x99FFFFFF),
       );
     }
+    if (adj.shadow) {
+      canvas.drawRect(
+        dest.shift(const Offset(2, 2)),
+        Paint()
+          ..color = const Color(0x55000000)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
+      );
+    }
     canvas.drawImageRect(
       image,
       Rect.fromLTWH(
