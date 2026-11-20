@@ -2027,6 +2027,12 @@ class WordLayoutEngine {
         currentFrames.any(
           (box) => box.frame != null && box.frame!.wrap != WmlFrameWrap.none,
         );
+    // Wrapping uses a separate breaker and does not replace the ordinary
+    // paragraph cache. Discard an older entry: a dirty paragraph may change
+    // its font or text while wrapping, then later move off the frame's page.
+    if (wrapsFrames) {
+      _breakCache[paragraph] = null;
+    }
     // Line breaks of a paragraph the caller proved unchanged since the last
     // layout (incremental layout, clean block) are reused when the width
     // environment is the same; shaping dominates layout cost.

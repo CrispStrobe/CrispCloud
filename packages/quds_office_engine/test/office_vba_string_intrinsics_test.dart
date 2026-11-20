@@ -334,8 +334,8 @@ End Function
       () {
         _reject(r'Const value As String = Left$("abc", 1)', 'vba_unsupported');
         _reject('Dim values(0 To Len("abc")) As Long', 'vba_unsupported');
-        _reject(_write(r'Mid$("abc",,1)'), 'vba_syntax_error');
-        _reject(_write(r'Mid$("abc",1,)'), 'vba_syntax_error');
+        _reject(_write(r'Mid$("abc",,1)'), 'vba_unsupported');
+        _reject(_write(r'Mid$("abc",1,)'), 'vba_unsupported');
       },
     );
   });

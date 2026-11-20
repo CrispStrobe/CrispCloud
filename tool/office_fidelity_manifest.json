@@ -2308,7 +2308,7 @@
     "packages/quds_office_engine/lib/src/visual/office_visual.dart": "a3b8f8ece59b04275fba456803072de1aa84e602f6dedb6f69a51a4090daa949",
     "packages/quds_office_engine/lib/src/word/layout/word_contained_layout.dart": "23aef5888b747f1d36b1ce605809425ea119531988ff0177f35886f57f4facb9",
     "packages/quds_office_engine/lib/src/word/layout/word_incremental_layout.dart": "c74836744f52c82b4cbcddeb3a5e9c82d073c9335eb8151e4e80d9cb1d02f2f3",
-    "packages/quds_office_engine/lib/src/word/layout/word_layout.dart": "42606c04655e7053d3fc0aad17ab775f4841b0eaf6f3654fdfa075a5d13b2750",
+    "packages/quds_office_engine/lib/src/word/layout/word_layout.dart": "33031790bac4f2551bd9fb4eb743360290fd1bffbe54b143424b6ce1932186f9",
     "packages/quds_office_engine/lib/src/word/layout/word_note_layout.dart": "9f12a80648a8bd13483e6bf4564b7f4353fb7c0c5b198f1493575799735c6b51",
     "packages/quds_office_engine/lib/src/word/layout/word_run_measure.dart": "9bd2e673493b11fa8e516046a799a8fd8643da8f85f13f7b3a3811f732779cc9",
     "packages/quds_office_engine/lib/src/word/layout/word_table_row_layout.dart": "ab18b2ec0a3471237dff60aa6aad4d0ddf780f889307cfde0b78a09b2552deae",
@@ -2583,7 +2583,7 @@
     "packages/quds_office_engine/test/office_vba_procedures_integration_test.dart": "9f7b5f864e3203faed9d18f774580bc528354747e4a47b81ec71f39075bcf7f5",
     "packages/quds_office_engine/test/office_vba_procedures_test.dart": "35f7b914ac211518b99c517ed77dbfd8d13e3156df50bcc82bee2653ba5ed18a",
     "packages/quds_office_engine/test/office_vba_string_intrinsics_integration_test.dart": "197f639911a80b69c8b5e1d423ac91d6e3af383df717a212e0cb0b19bfade813",
-    "packages/quds_office_engine/test/office_vba_string_intrinsics_test.dart": "bfc190d04498bd436f3c2034e07b2e1d53e487c80c25cf4c5a52d63368a4451f",
+    "packages/quds_office_engine/test/office_vba_string_intrinsics_test.dart": "0f46a552571734be23a5c8e8f1a12d1e0199f07bb1503f68985b09841b435f6d",
     "packages/quds_office_engine/test/office_vba_variant_conformance_test.dart": "3e85379ea1bdb1c4b98402974a171fc0c53e2c475dca45b0a0d50100ca5258c5",
     "packages/quds_office_engine/test/office_vba_variant_conversions_integration_test.dart": "0cc53d64df0f34ee332998bf0cc7840887902ab65b844616767571a6df3287f2",
     "packages/quds_office_engine/test/office_vba_variant_conversions_test.dart": "519264969e41ae97a1b31b9316f1ac99698c58bd48ff9f469aeca071d92db843",
@@ -3019,7 +3019,7 @@
     "tool/office-validation/test_render.py": "1ba68e18608d74387cbc1c779ceb72af76bf7741463c282684aec93bf3825472"
   },
   "source_branch": "main",
-  "source_commit": "89910ff6363cd45ced5faf0e48b11cac46754b28",
+  "source_commit": "bbfc015acf22f8552993e846b07b469e04b87533",
   "source_repository": "CrispStrobe/quds_office_suite",
   "standalone_sources": {
     "packages/legacy_doc_parser": {
