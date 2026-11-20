@@ -21,10 +21,19 @@ part of 'word_layout.dart';
 //     pages are spliced in (paragraph indices shifted when paragraphs were
 //     inserted or removed) and layout stops.
 //
+// Footnotes are part of the flow state: a checkpoint also records how many
+// notes were placed and the note slices already reserved on pages not yet
+// finished; the layout keeps the final slices of every page, the placement
+// order and the shaped note stories. Resuming restores them, convergence
+// requires them to be equal, and the splice takes the old layout's note
+// slices for the reused pages. Note-overflow pages and endnotes (appended
+// after the body) are made again by every layout. A change of note
+// numbering or note content falls back.
+//
 // Anything the checkpoints cannot capture falls back to the ordinary path:
-// footnotes/endnotes (page reserves and note numbering are document-wide),
 // field updates, wrapping frames on the page at the resume or convergence
-// point, missing or foreign state, and section list changes. A layout rule
+// point, missing or foreign state, note numbering or note content changes,
+// and section list changes. A layout rule
 // that looks ahead across top-level blocks (keep-with-next, widow control)
 // must extend the dirty range or disable reuse here; the equivalence suite
 // (`incremental_layout_equivalence_test.dart`) and [verifyIncrementalLayout]
@@ -60,6 +69,8 @@ class _Checkpoint {
     required this.adjacentAfter,
     required this.paragraphIndex,
     required this.wrapFrames,
+    this.placedNotes = 0,
+    this.pendingNotes,
   });
 
   final int pagesLength;
@@ -76,6 +87,13 @@ class _Checkpoint {
 
   /// A text-wrapping frame is on the page being filled.
   final bool wrapFrames;
+
+  /// Footnotes placed so far (a prefix of the placement order).
+  final int placedNotes;
+
+  /// Note slices already reserved on unfinished pages (index >=
+  /// [pagesLength]); null when there are none.
+  final Map<int, List<_NoteSlice>>? pendingNotes;
 
   bool get hasContent => lines > 0 || frames > 0;
 
@@ -104,6 +122,8 @@ class _Checkpoint {
       adjacentAfter: adjacentAfter,
       paragraphIndex: paragraphIndex + delta,
       wrapFrames: wrapFrames,
+      placedNotes: placedNotes,
+      pendingNotes: pendingNotes,
     );
   }
 }
@@ -126,6 +146,72 @@ class _IncrementalState {
   final Object owner;
   final WmlDocument document;
   final List<_SectionRecord?> sections;
+
+  /// Pages made by the body flow; later pages hold only note overflow and
+  /// endnotes and are made again by every layout.
+  int flowPages = 0;
+
+  /// Footnote and endnote state at the end of the layout (null without
+  /// notes).
+  _NoteState? notes;
+}
+
+/// Document-wide note state of one layout (see the file comment).
+class _NoteState {
+  _NoteState({
+    required this.slices,
+    required this.placedOrder,
+    required this.stories,
+    required this.numbering,
+    required this.content,
+    required this.endnotePage,
+    required this.endnoteLines,
+    required this.endnoteFrames,
+  });
+
+  /// Final note slices per page.
+  final Map<int, List<_NoteSlice>> slices;
+
+  /// Footnote ids in placement order.
+  final List<int> placedOrder;
+
+  /// Shaped note stories, reused while numbering and content are unchanged.
+  final Map<WmlNote, _NoteStory> stories;
+
+  /// Note order and labels ([WordNoteNumbering]) and note content.
+  final List<Object> numbering;
+  final List<Object> content;
+
+  /// The page endnotes were appended to, and its note lines and frames
+  /// before them (-1: no endnotes).
+  final int endnotePage;
+  final int endnoteLines;
+  final int endnoteFrames;
+}
+
+bool _sameObjects(List<Object> a, List<Object> b) {
+  if (a.length != b.length) return false;
+  for (int i = 0; i < a.length; i++) {
+    final Object x = a[i];
+    final Object y = b[i];
+    if (x is String ? x != y : !identical(x, y)) return false;
+  }
+  return true;
+}
+
+bool _sameSlices(List<_NoteSlice>? a, List<_NoteSlice>? b) {
+  if ((a?.length ?? 0) != (b?.length ?? 0)) return false;
+  if (a == null || b == null) return true;
+  for (int i = 0; i < a.length; i++) {
+    if (!identical(a[i].story, b[i].story) ||
+        a[i].start != b[i].start ||
+        a[i].end != b[i].end ||
+        !identical(a[i].section, b[i].section) ||
+        a[i].sectionIndex != b[i].sectionIndex) {
+      return false;
+    }
+  }
+  return true;
 }
 
 /// Where the new flow met the old one.
@@ -196,8 +282,10 @@ class _Recorder {
     WmlBlock block,
     _Flow flow,
     int paragraphIndex,
-    double? adjacentAfter,
-  ) {
+    double? adjacentAfter, {
+    int placedNotes = 0,
+    Map<int, List<_NoteSlice>>? pendingNotes,
+  }) {
     final _SectionRecord record = sections[sectionIndex]!;
     record.blocks.add(block);
     record.texts.add(_blockText(block));
@@ -213,6 +301,8 @@ class _Recorder {
         adjacentAfter: adjacentAfter,
         paragraphIndex: paragraphIndex,
         wrapFrames: _hasWrapFrames(flow.currentFrames),
+        placedNotes: placedNotes,
+        pendingNotes: pendingNotes,
       ),
     );
   }
@@ -226,6 +316,7 @@ class _Recorder {
     _Flow flow,
     int paragraphIndex,
     double? adjacentAfter,
+    bool Function(_Checkpoint checkpoint, List<int> oldOrder) notesMatch,
   ) {
     final _Convergence? target = convergence;
     if (target == null || sectionIndex < target.lastDirtySection) {
@@ -256,7 +347,8 @@ class _Recorder {
         flow.current.length != cp.lines ||
         flow.currentFrames.length != cp.frames ||
         cp.wrapFrames ||
-        _hasWrapFrames(flow.currentFrames)) {
+        _hasWrapFrames(flow.currentFrames) ||
+        !notesMatch(cp, target.old.notes?.placedOrder ?? const <int>[])) {
       return false;
     }
     final List<LaidOutPage> oldPages = target.oldPages;

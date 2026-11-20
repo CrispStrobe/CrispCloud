@@ -398,7 +398,8 @@ void main() {
   }
 
   for (final endnote in <bool>[false, true]) {
-    test('notes endnote=$endnote retain full-layout fallback', () {
+    test('notes endnote=$endnote reuse unchanged content and invalidate '
+        'changed text', () {
       final document = _corpus();
       final paragraph = document.paragraphs.elementAt(5);
       paragraph.inlines.add(
@@ -419,10 +420,63 @@ void main() {
         reuse: previous,
         dirtyParagraphs: <WmlParagraph>{paragraph},
       );
-      _equivalent(document, actual, 'note fallback');
+      _equivalent(document, actual, 'unchanged note reuse');
+      expect(WordIncrementalLayoutStats.incremental, 1);
+      expect(WordIncrementalLayoutStats.fallbacks, 0);
+
+      WordIncrementalLayoutStats.reset();
+      final noteParagraph = note.paragraphs.single;
+      WmlRunEdit.replaceRange(noteParagraph, 0, 0, 'Changed note $_mixed');
+      final changedNote = engine.layout(
+        document,
+        updateFields: false,
+        reuse: actual,
+        dirtyParagraphs: <WmlParagraph>{noteParagraph},
+      );
+      _equivalent(document, changedNote, 'changed note text fallback');
       expect(WordIncrementalLayoutStats.incremental, 0);
       expect(WordIncrementalLayoutStats.fallbacks, 1);
     });
+
+    for (final format in <String>['run', 'paragraph']) {
+      test('note $format formatting endnote=$endnote invalidates reuse', () {
+        final document = _corpus();
+        document.paragraphs
+            .elementAt(5)
+            .inlines
+            .add(WmlRun(text: '3', noteRefId: 3, noteRefEndnote: endnote));
+        final noteParagraph = _paragraph('Native note $_mixed');
+        final note = WmlNote(
+          id: 3,
+          endnote: endnote,
+          paragraphs: <WmlParagraph>[noteParagraph],
+        );
+        (endnote ? document.endnotes : document.footnotes).add(note);
+        final engine = WordLayoutEngine(font: null);
+        final previous = engine.layout(document, updateFields: false);
+        final text = noteParagraph.text;
+        if (format == 'run') {
+          noteParagraph.inlines
+                  .whereType<WmlRun>()
+                  .single
+                  .properties
+                  .fontSizeHalfPoints =
+              36;
+        } else {
+          noteParagraph.properties.lineSpacing = 2;
+        }
+        expect(noteParagraph.text, text);
+        final actual = engine.layout(
+          document,
+          updateFields: false,
+          reuse: previous,
+          dirtyParagraphs: <WmlParagraph>{noteParagraph},
+        );
+        _equivalent(document, actual, 'changed note $format formatting');
+        expect(WordIncrementalLayoutStats.incremental, 0);
+        expect(WordIncrementalLayoutStats.fallbacks, 1);
+      });
+    }
   }
 
   test('discarded state and section-list changes use fresh flow', () {

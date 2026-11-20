@@ -5,18 +5,15 @@ import 'package:quds_office_engine/quds_office_automation.dart';
 import 'package:quds_office_engine/quds_office_engine.dart';
 import 'package:test/test.dart';
 
-Future<ProcessResult> _run(List<String> args) =>
-    Process.run(Platform.resolvedExecutable, <String>[
-      if (Platform.packageConfig case final String packages)
-        '--packages=$packages',
-      'tool/macros/office_macro.dart',
-      ...args,
-    ]);
+import 'support/office_macro_cli.dart';
+
+Future<ProcessResult> _run(List<String> args) => runOfficeMacroCli(args);
 
 Map<String, Object?> _json(Object? value) =>
     jsonDecode(value! as String) as Map<String, Object?>;
 
 void main() {
+  registerOfficeMacroCliCleanup();
   late Directory directory;
   File file(String name) => File('${directory.path}/$name');
   setUp(
@@ -124,6 +121,7 @@ End Sub
       expect(xml(output), xml(replayed));
       expect(input.readAsBytesSync(), before);
     },
+    timeout: officeMacroCliTestTimeout,
   );
 
   test(
@@ -195,5 +193,6 @@ End Sub
       expect(rejected.exitCode, 1);
       expect(plan.readAsStringSync(), 'existing plan');
     },
+    timeout: officeMacroCliTestTimeout,
   );
 }

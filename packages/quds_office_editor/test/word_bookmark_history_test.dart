@@ -373,16 +373,20 @@ void main() {
       expect(controller.commands.canUndo, isTrue);
       expect(controller.commands.canRedo, isTrue);
 
+      // Since c098f756, redo first records the surviving Notes draft as a new
+      // edit, which retires the older body redo branch (as typing would).
       controller.redo();
-      expect(controller.document.paragraphs.single.text, 'Body+?');
+      expect(controller.document.paragraphs.single.text, 'Body+');
+      expect(controller.noteEditText(pending), 'Pending edit one');
       expect(controller.commands.canRedo, isFalse);
       controller.setNoteText(pending, 'Pending edit two');
       controller.undo();
-      expect(controller.noteEditText(pending), 'Pending original');
+      expect(controller.noteEditText(pending), 'Pending edit one');
       controller.redo();
       expect(controller.noteEditText(pending), 'Pending edit two');
       controller.undo();
       controller.undo();
+      expect(controller.noteEditText(pending), 'Pending original');
       expect(controller.document.paragraphs.single.text, 'Body+');
       controller.undo();
       expect(controller.document.paragraphs.single.text, 'Body');

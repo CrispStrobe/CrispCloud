@@ -170,7 +170,7 @@ void main() {
     expect(controller.document.paragraphs.first.properties.indent.firstLine, 0);
   });
 
-  test('word tab inserts a half-inch gap', () {
+  test('word tab advances to the next half-inch default stop', () {
     final WordEditorController controller = WordEditorController(
       document: WmlDocument.empty(text: 'AB'),
     );
@@ -183,7 +183,14 @@ void main() {
         controller.laidOut.pages.first.lines.first.glyphs;
     expect(glyphs, hasLength(3));
     expect(glyphs[1].glyph.codePoint, 0x09);
-    expect(glyphs[1].advance, closeTo(kDefaultTabWidth, 0.01));
+    // Like Word, a default tab ends at the next 0.5" stop from the paragraph
+    // start rather than adding a fixed 0.5" gap after the preceding text.
+    expect(glyphs[1].advance, lessThan(kDefaultTabWidth));
+    expect(
+      glyphs[0].advance + glyphs[1].advance,
+      closeTo(kDefaultTabWidth, 0.01),
+    );
+    expect(glyphs[2].x - glyphs[0].x, closeTo(kDefaultTabWidth, 0.01));
   });
 
   testWidgets('word editor tab key inserts a tab', (WidgetTester tester) async {

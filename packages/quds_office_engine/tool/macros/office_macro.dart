@@ -5,7 +5,20 @@ import 'dart:typed_data';
 import 'package:quds_office_engine/quds_office_automation.dart';
 
 /// Explicit, headless macro invocation. Input documents never auto-run code.
+///
+/// The process always terminates explicitly once the command is done. Hosts
+/// such as `flutter_tester` keep running after `main` returns, so returning
+/// alone would leave an orphaned process behind its parent.
 Future<void> main(List<String> args) async {
+  try {
+    await _main(args);
+  } finally {
+    await Future.wait<void>(<Future<void>>[stdout.flush(), stderr.flush()]);
+    exit(exitCode);
+  }
+}
+
+Future<void> _main(List<String> args) async {
   try {
     if (args.length == 1 && args.first == 'operations') {
       _print(<String, Object?>{

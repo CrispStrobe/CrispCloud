@@ -254,6 +254,84 @@ abstract final class WordBookmarks {
     return repairs;
   }
 
+  /// Bookmark endpoints in the main story of [blocks], in document order.
+  ///
+  /// Textbox stories inside removed frames are excluded: removing a frame
+  /// removes both halves of every range in its own story.
+  static List<WmlBookmarkBoundary> boundariesInBlocks(
+    Iterable<WmlBlock> blocks,
+  ) => boundariesIn(_blockStories(blocks).first);
+
+  /// Bookmark endpoints in [paragraphs], in order.
+  static List<WmlBookmarkBoundary> boundariesIn(
+    Iterable<WmlParagraph> paragraphs,
+  ) => <WmlBookmarkBoundary>[
+    for (final paragraph in paragraphs)
+      ...paragraph.inlines.whereType<WmlBookmarkBoundary>(),
+  ];
+
+  /// Word's rule for a deletion that removed whole paragraphs carrying
+  /// bookmark endpoints ([removed], in document order, collected before the
+  /// edit): a range lying entirely inside the deletion is gone; a range with
+  /// only one endpoint inside keeps its name and is clamped to the remaining
+  /// content, i.e. the lost endpoint moves to the deletion point.
+  ///
+  /// [anchor] is the surviving paragraph at the deletion point, in the same
+  /// story; the clamped endpoints are inserted at its start ([atStart], the
+  /// paragraph after the deletion) or appended at its end (the paragraph the
+  /// deletion started in, already trimmed), or at inline [index] when given
+  /// (a joined paragraph). Call it once the removed paragraphs have left the
+  /// story. An endpoint whose partner is also
+  /// gone, or that cannot be matched, is dropped. Returns the number of
+  /// endpoints reinserted.
+  static int clampRemoved(
+    WmlDocument document,
+    List<WmlBookmarkBoundary> removed, {
+    required WmlParagraph? anchor,
+    required bool atStart,
+    int? index,
+  }) {
+    if (removed.isEmpty || anchor == null) return 0;
+    final story = _stories(document)
+        .where((paragraphs) => paragraphs.any((p) => identical(p, anchor)))
+        .firstOrNull;
+    if (story == null) return 0;
+    String? idOf(WmlBookmarkBoundary marker) {
+      try {
+        return canonicalId(marker.id);
+      } on StateError {
+        return null;
+      }
+    }
+
+    final starts = <String>{};
+    final ends = <String>{};
+    for (final marker in boundariesIn(story)) {
+      final id = idOf(marker);
+      if (id == null) continue;
+      (marker.isStart ? starts : ends).add(id);
+    }
+    final kept = <WmlBookmarkBoundary>[];
+    for (final marker in removed) {
+      final id = idOf(marker);
+      if (id == null) continue;
+      final present = marker.isStart ? starts : ends;
+      final partner = marker.isStart ? ends : starts;
+      if (present.contains(id) || !partner.contains(id)) continue;
+      present.add(id);
+      kept.add(marker);
+    }
+    if (kept.isEmpty) return 0;
+    if (index != null) {
+      anchor.inlines.insertAll(index.clamp(0, anchor.inlines.length), kept);
+    } else if (atStart) {
+      anchor.inlines.insertAll(0, kept);
+    } else {
+      anchor.inlines.addAll(kept);
+    }
+    return kept.length;
+  }
+
   /// Native ranges are joined by ID, not by a nesting stack: Word permits
   /// overlapping bookmarks whose end order differs from their start order.
   static List<WmlBookmarkRange> ranges(WmlDocument document) {

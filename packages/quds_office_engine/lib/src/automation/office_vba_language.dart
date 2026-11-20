@@ -274,6 +274,7 @@ const _wordListMethods = <String>{
   'removenumbers',
 };
 const _wordSpacingMethods = <String>{'space1', 'space15', 'space2'};
+const _wordParagraphControls = <String>{'openup', 'closeup', 'openorcloseup'};
 const _wordUnitConversions = <String>{'linestopoints', 'pointstolines'};
 const _powerPointConstants = <String, int>{
   'msoanchortop': 1,
@@ -869,6 +870,11 @@ class _WordSpacingOperation extends _Statement {
   final _Member target;
 }
 
+class _WordParagraphControl extends _Statement {
+  const _WordParagraphControl(super.token, this.target);
+  final _Member target;
+}
+
 class _For extends _Statement {
   const _For(
     super.token,
@@ -1248,6 +1254,9 @@ class _Parser {
           } else if (target is _Member &&
               _wordSpacingMethods.contains(target.token.lower)) {
             result.add(_WordSpacingOperation(target.token, target));
+          } else if (target is _Member &&
+              _wordParagraphControls.contains(target.token.lower)) {
+            result.add(_WordParagraphControl(target.token, target));
           } else if (target is _Call) {
             result.add(_Invoke(target.token, target.arguments));
           } else if (target is _Name) {
@@ -1491,6 +1500,7 @@ class _Parser {
               'clearall',
               ..._wordListMethods,
               ..._wordSpacingMethods,
+              ..._wordParagraphControls,
             }.contains(target.token.lower)) {
           final arguments = target.arguments ?? <_Expr>[];
           if (target.arguments == null &&
@@ -1517,6 +1527,8 @@ class _Parser {
                 ? _WordListOperation(target.token, call)
                 : _wordSpacingMethods.contains(target.token.lower)
                 ? _WordSpacingOperation(target.token, call)
+                : _wordParagraphControls.contains(target.token.lower)
+                ? _WordParagraphControl(target.token, call)
                 : _WordTabOperation(target.token, call),
           );
         } else if (!isSet &&
@@ -2445,6 +2457,19 @@ class _Checker {
             context.type(
               statement.token,
               'Spacing methods require an explicit Word ParagraphFormat.',
+            );
+          }
+          _count(
+            statement.target.token,
+            statement.target.arguments ?? const <_Expr>[],
+            0,
+          );
+        case _WordParagraphControl():
+          final kind = _expression(statement.target.receiver);
+          if (kind != _Kind.paragraph && kind != _Kind.paragraphFormat) {
+            context.type(
+              statement.token,
+              'Paragraph spacing controls require an explicit Word Paragraph or ParagraphFormat.',
             );
           }
           _count(
@@ -3935,6 +3960,18 @@ class _Evaluator {
                 _ => 2.0,
               },
               'lineSpacingRule': 'auto',
+            }, statement.token);
+          case _WordParagraphControl():
+            final receiver = _evaluate(statement.target.receiver);
+            final range = receiver is _WordParagraph
+                ? _WordRange(receiver)
+                : (receiver as _WordParagraphFormat).range;
+            _emitWord(range, 'paragraphSpaceBefore', <String, Object?>{
+              'action': switch (statement.target.token.lower) {
+                'openup' => 'open',
+                'closeup' => 'close',
+                _ => 'toggle',
+              },
             }, statement.token);
           case _With():
             withValues.add(_evaluate(statement.target));

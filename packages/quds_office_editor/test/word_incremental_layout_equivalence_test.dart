@@ -126,10 +126,9 @@ Future<void> _script(
     } on UnsupportedError {
       return; // e.g. joining across a structural content control
     } on StateError catch (error) {
-      // A full relayout (unchanged by incremental layout) can reject a model
-      // that earlier scripted edits left inconsistent, e.g. a bookmark end
-      // without its start after a cross-paragraph delete. Not a layout
-      // mismatch: stop editing this document and report it.
+      // A full relayout (unchanged by incremental layout) rejects a model
+      // that earlier scripted edits left inconsistent. Not a layout
+      // mismatch: stop editing this document and fail with the reason.
       if (local) rethrow;
       run.modelErrors.add('$label: $name: $error');
       throw const _StopDocument();
@@ -256,8 +255,10 @@ Future<_Run> _runDocument(String label, WordEditorController c) async {
       await _script(c, p, '$label ¶$p', run);
     }
   } on _StopDocument {
-    // ignore: avoid_print
-    print('EQUIVALENCE_MODEL_ERROR ${run.modelErrors.join('; ')}');
+    // Cross-paragraph deletes keep paired markers consistent (bookmarks are
+    // clamped or removed with their range), so no scripted edit may leave a
+    // model a full relayout rejects.
+    fail('EQUIVALENCE_MODEL_ERROR ${run.modelErrors.join('; ')}');
   }
   return run;
 }
@@ -484,23 +485,55 @@ void main() {
       });
     }
 
-    test('footnotes fall back to the full path and stay exact', () async {
-      WordIncrementalLayoutStats.reset();
-      final WordEditorController c = WordEditorController(
-        document: _footnotes(),
-      );
-      addTearDown(c.dispose);
-      _at(c, 3, 10);
-      c.insertFootnote(text: 'Eine Fußnote mit etwas Text.');
-      c.commitPendingEdits();
-      _at(c, 20, 5);
-      c.insertFootnote(text: 'A second note.');
-      c.commitPendingEdits();
-      final _Run run = await _runDocument('footnotes', c);
-      expect(run.checks, greaterThan(20));
-      expect(WordIncrementalLayoutStats.incremental, 0);
-      expect(WordIncrementalLayoutStats.fallbacks, greaterThan(20));
-    });
+    // Notes are part of the incremental flow state: page reserves, note
+    // continuations onto later pages, endnotes appended after the body.
+    String longNote(int n) => List<String>.generate(
+      n,
+      (int i) =>
+          'Fußnotentext $i mit einer längeren Erläuterung, '
+          'which continues in English and ',
+    ).join();
+    final Map<String, void Function(WordEditorController)> noteSetups =
+        <String, void Function(WordEditorController)>{
+          'footnotes': (WordEditorController c) {
+            _at(c, 3, 10);
+            c.insertFootnote(text: 'Eine Fußnote mit etwas Text.');
+            c.commitPendingEdits();
+            _at(c, 20, 5);
+            c.insertFootnote(text: 'A second note.');
+            c.commitPendingEdits();
+          },
+          'footnotes continued onto the next page and endnotes':
+              (WordEditorController c) {
+                _at(c, 8, 4);
+                c.insertFootnote(text: longNote(40));
+                c.commitPendingEdits();
+                _at(c, 9, 2);
+                c.insertFootnote(text: 'Kurz.');
+                c.commitPendingEdits();
+                _at(c, 25, 6);
+                c.insertFootnote(text: 'Endnote eins.', endnote: true);
+                c.commitPendingEdits();
+                _at(c, 33, 3);
+                c.insertFootnote(text: longNote(6), endnote: true);
+                c.commitPendingEdits();
+              },
+        };
+    for (final MapEntry<String, void Function(WordEditorController)> entry
+        in noteSetups.entries) {
+      test('${entry.key} stay exact on the incremental path', () async {
+        final WordEditorController c = WordEditorController(
+          document: _footnotes(),
+        );
+        addTearDown(c.dispose);
+        entry.value(c);
+        WordIncrementalLayoutStats.reset();
+        final _Run run = await _runDocument(entry.key, c);
+        expect(run.checks, greaterThan(20));
+        expect(WordIncrementalLayoutStats.incremental, greaterThan(20));
+        expect(WordIncrementalLayoutStats.converged, greaterThan(5));
+      });
+    }
 
     for (final File file in _fixtures()) {
       final String name = file.path.split('/').skip(1).join('/');
@@ -590,5 +623,58 @@ void main() {
     // the flow meets the old layout right after the edited paragraph:
     // resume one block early, the edited block, one block of margin.
     expect(WordIncrementalLayoutStats.converged, greaterThanOrEqualTo(18));
+  });
+
+  test('the first keystroke after paint fitting is incremental', () {
+    final WordEditorController c = WordEditorController(document: _mixedLong());
+    addTearDown(c.dispose);
+    final _Run run = _Run();
+    for (final int p in <int>[60, 10, 100]) {
+      c.fitPaintMetrics(themeFamily: c.config.theme.fontFamily);
+      WordIncrementalLayoutStats.reset();
+      _at(c, p, _paras(c)[p].text.length);
+      c.insertText('x');
+      expect(WordIncrementalLayoutStats.incremental, 1, reason: '¶$p');
+      expect(WordIncrementalLayoutStats.fallbacks, 0);
+      _expectEquivalent(c, 'type after fit ¶$p', run);
+      // A wrapped line moves everything below: still exact.
+      c.insertText(_long);
+      _expectEquivalent(c, 'long after fit ¶$p', run);
+    }
+  });
+
+  test('the first keystroke after a formatting change is incremental', () {
+    final WordEditorController c = WordEditorController(document: _mixedLong());
+    addTearDown(c.dispose);
+    final _Run run = _Run();
+    _select(c, 30, 0, 30, 12);
+    c.applyRunFormat((WmlRunProps props) => props.italic = true);
+    WordIncrementalLayoutStats.reset();
+    _at(c, 30, 5);
+    c.insertText('y');
+    expect(WordIncrementalLayoutStats.incremental, 1);
+    _expectEquivalent(c, 'type after italic', run);
+  });
+
+  test('footnotes: typing converges right after the edited paragraph', () {
+    final WordEditorController c = WordEditorController(document: _footnotes());
+    addTearDown(c.dispose);
+    _at(c, 3, 10);
+    c.insertFootnote(text: 'Eine Fußnote.');
+    c.commitPendingEdits();
+    _at(c, 12, 4);
+    c.insertFootnote(text: 'Endnote.', endnote: true);
+    c.commitPendingEdits();
+    final _Run run = _Run();
+    _at(c, 5, _paras(c)[5].text.length);
+    c.insertText('x');
+    WordIncrementalLayoutStats.reset();
+    for (var i = 0; i < 10; i++) {
+      c.insertText('y');
+      _expectEquivalent(c, 'type $i', run);
+    }
+    expect(WordIncrementalLayoutStats.incremental, 10);
+    expect(WordIncrementalLayoutStats.converged, greaterThanOrEqualTo(8));
+    expect(WordIncrementalLayoutStats.blocksLaidOut, lessThan(10 * 6));
   });
 }

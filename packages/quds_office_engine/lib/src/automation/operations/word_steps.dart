@@ -18,6 +18,7 @@ const wordOperations = <String, List<String>>{
   'tabStop': ['paragraph', 'position', 'alignment', 'leader', ..._storyFields],
   'clearTabStops': ['paragraph', ..._storyFields],
   'lineSpacing': ['paragraph', 'rule', 'points', ..._storyFields],
+  'paragraphSpaceBefore': ['paragraph', 'action', ..._storyFields],
   'paragraphFormat': [
     'paragraph',
     'alignment',
@@ -189,6 +190,8 @@ void applyStep(
         rule: s.string('rule'),
         points: s.number('points'),
       );
+    case 'paragraphSpaceBefore':
+      setWordParagraphSpaceBefore(doc, paragraph(), action: s.string('action'));
     case 'paragraphFormat':
       final target = paragraph();
       if (s.has('lineSpacing') || s.has('lineSpacingRule')) {

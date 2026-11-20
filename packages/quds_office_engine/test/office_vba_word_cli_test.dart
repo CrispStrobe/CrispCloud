@@ -6,13 +6,9 @@ import 'package:quds_office_engine/quds_office_automation.dart';
 import 'package:quds_office_engine/quds_office_engine.dart';
 import 'package:test/test.dart';
 
-Future<ProcessResult> _run(List<String> args) =>
-    Process.run(Platform.resolvedExecutable, <String>[
-      if (Platform.packageConfig case final String packages)
-        '--packages=$packages',
-      'tool/macros/office_macro.dart',
-      ...args,
-    ]);
+import 'support/office_macro_cli.dart';
+
+Future<ProcessResult> _run(List<String> args) => runOfficeMacroCli(args);
 
 Map<String, Object?> _json(Object? value) =>
     jsonDecode(value! as String) as Map<String, Object?>;
@@ -26,6 +22,7 @@ Uint8List _document([String text = 'Original']) =>
     (DocxDocumentBuilder()..paragraph(text)).build();
 
 void main() {
+  registerOfficeMacroCliCleanup();
   late Directory directory;
   File file(String name) => File('${directory.path}/$name');
 
@@ -118,6 +115,7 @@ End Sub
       expect(basXml, nativeXml);
       expect(input.readAsBytesSync(), before);
     },
+    timeout: officeMacroCliTestTimeout,
   );
 
   test(
@@ -139,6 +137,7 @@ End Sub
       expect(error['code'], 'vba_unsupported');
       expect(output.readAsBytesSync(), before);
     },
+    timeout: officeMacroCliTestTimeout,
   );
 
   test(
@@ -168,6 +167,7 @@ End Sub
         expect(output.readAsBytesSync(), outputBefore);
       }
     },
+    timeout: officeMacroCliTestTimeout,
   );
 
   test(
@@ -214,6 +214,7 @@ End Sub
         'DOCM Original',
       );
     },
+    timeout: officeMacroCliTestTimeout,
   );
 
   test(
@@ -245,5 +246,6 @@ End Sub
       );
       expect(output.readAsBytesSync(), [1, 2, 3]);
     },
+    timeout: officeMacroCliTestTimeout,
   );
 }

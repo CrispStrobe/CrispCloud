@@ -596,8 +596,12 @@ void main() {
     },
   );
 
+  // Add Note supports authored notes and selections within one paragraph
+  // since cfd4cee5 (see word_zotero_add_note_controller_test.dart, which also
+  // covers the cross-paragraph refusal). Opening the transaction must still
+  // leave the document and history untouched until Zotero responds.
   test(
-    'Add Note rejects Notes and noncollapsed body targets before native calls',
+    'Add Note opens Notes and single-paragraph body targets without editing before native calls',
     () {
       final document = WmlDocument.empty(text: 'Body');
       final note = WordNotes.insert(
@@ -607,28 +611,41 @@ void main() {
         text: 'Note',
       );
       final controller = _controller(document);
+      // The fixture already contains the footnote's body reference marker.
+      final body = document.paragraphs.single;
+      final bodyText = body.text;
+      final bodyInlines = List<WmlInline>.of(body.inlines);
       controller.setNoteEditingTarget(
         note,
         const TextSelection.collapsed(offset: 2),
       );
       expect(
-        () => controller.beginZoteroTransaction(
+        controller.beginZoteroTransaction(
           documentId: 'add-note',
           command: ZoteroCitingCommand.addNote,
         ),
-        throwsUnsupportedError,
+        isA<WordZoteroTransaction>(),
       );
+      expect(controller.noteEditText(note), 'Note');
+      expect(body.text, bodyText);
+      expect(body.inlines, orderedEquals(bodyInlines));
+      _clean(controller);
       controller.clearNoteEditingTarget();
       controller.caret
         ..logicalIndex = 2
         ..selectionAnchor = 0;
+      final selection = _selection(controller);
       expect(
-        () => controller.beginZoteroTransaction(
+        controller.beginZoteroTransaction(
           documentId: 'add-note',
           command: ZoteroCitingCommand.addNote,
         ),
-        throwsUnsupportedError,
+        isA<WordZoteroTransaction>(),
       );
+      expect(body.text, bodyText);
+      expect(body.inlines, orderedEquals(bodyInlines));
+      expect(controller.noteEditText(note), 'Note');
+      expect(_selection(controller), selection);
       _clean(controller);
     },
   );
