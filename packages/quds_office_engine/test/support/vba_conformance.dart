@@ -7,7 +7,7 @@ import 'package:quds_office_engine/quds_office_automation.dart';
 /// Expectations contain complete native steps or stable source diagnostics.
 /// A passing spec-derived case is not an observation from an Office process.
 class VbaConformanceSuite {
-  const VbaConformanceSuite._(this.id, this.cases);
+  const VbaConformanceSuite._(this.id, this.dialect, this.cases);
 
   factory VbaConformanceSuite.parse(String json) {
     final Object? decoded = jsonDecode(json);
@@ -22,8 +22,9 @@ class VbaConformanceSuite {
       _invalid('schemaVersion', 'only version 1 is supported');
     }
     final id = _identifier(root['suite'], 'suite');
-    if (root['dialect'] != 'vba-excel') {
-      _invalid('dialect', 'must be vba-excel');
+    final dialect = _text(root['dialect'], 'dialect');
+    if (dialect != 'vba-excel' && dialect != 'vba-word') {
+      _invalid('dialect', 'must be vba-excel or vba-word');
     }
     final items = root['cases'];
     if (items is! List<Object?> || items.isEmpty) {
@@ -51,15 +52,17 @@ class VbaConformanceSuite {
           caseId,
           _text(item['feature'], '$path.feature'),
           source,
-          _expectation(item['expected'], source, '$path.expected'),
+          dialect,
+          _expectation(item['expected'], source, '$path.expected', dialect),
           _provenance(item['provenance'], '$path.provenance'),
         ),
       );
     }
-    return VbaConformanceSuite._(id, List.unmodifiable(cases));
+    return VbaConformanceSuite._(id, dialect, List.unmodifiable(cases));
   }
 
   final String id;
+  final String dialect;
   final List<VbaConformanceCase> cases;
 }
 
@@ -68,6 +71,7 @@ class VbaConformanceCase {
     this.id,
     this.feature,
     this.source,
+    this.dialect,
     this.expected,
     this.provenance,
   );
@@ -75,6 +79,7 @@ class VbaConformanceCase {
   final String id;
   final String feature;
   final String source;
+  final String dialect;
   final Map<String, Object?> expected;
   final Map<String, Object?> provenance;
 }
@@ -102,8 +107,10 @@ Map<String, Object?> _compileOutcome(VbaConformanceCase fixture) {
   try {
     final macro = OfficeMacroLanguages().compile(
       OfficeMacroSource(
-        language: 'vba-excel',
-        format: OfficeMacroFormat.xlsx,
+        language: fixture.dialect,
+        format: fixture.dialect == 'vba-word'
+            ? OfficeMacroFormat.docx
+            : OfficeMacroFormat.xlsx,
         moduleName: 'Conformance',
         source: fixture.source,
       ),
@@ -133,7 +140,7 @@ Map<String, Object?> runVbaConformanceSuite(VbaConformanceSuite suite) =>
     <String, Object?>{
       'schemaVersion': 1,
       'suite': suite.id,
-      'dialect': 'vba-excel',
+      'dialect': suite.dialect,
       'caseCount': suite.cases.length,
       'cases': <Object?>[
         for (final fixture in suite.cases) runVbaConformanceCase(fixture),
@@ -163,7 +170,12 @@ Object? _canonical(Object? value) {
   return value;
 }
 
-Map<String, Object?> _expectation(Object? value, String source, String path) {
+Map<String, Object?> _expectation(
+  Object? value,
+  String source,
+  String path,
+  String dialect,
+) {
   final input = _object(value, path);
   if (input.length != 1 ||
       (!input.containsKey('steps') && !input.containsKey('diagnostic'))) {
@@ -179,8 +191,9 @@ Map<String, Object?> _expectation(Object? value, String source, String path) {
       _fields(step, const {'tool', 'arguments'}, stepPath);
       try {
         final native = OfficeMacroStep.fromJson(step);
-        if (!native.tool.startsWith('xlsx.')) {
-          _invalid(stepPath, 'vba-excel expectations must target xlsx');
+        final prefix = dialect == 'vba-word' ? 'docx.' : 'xlsx.';
+        if (!native.tool.startsWith(prefix)) {
+          _invalid(stepPath, '$dialect expectations must target $prefix');
         }
         parsed.add(Map<String, Object?>.unmodifiable(native.toJson()));
       } on OfficeMacroException catch (error) {

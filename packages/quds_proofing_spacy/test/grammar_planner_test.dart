@@ -172,7 +172,8 @@ Future<SpacyGrammarPlan> _plan(
 void main() {
   test('every qualified build gets the same proposal; others none', () async {
     expect(spacyGrammarNativeSha256s, contains(spacyGrammarNativeSha256));
-    expect(spacyGrammarNativeSha256s, hasLength(2));
+    // Linux, app-bundled macOS and the Android arm64 APK library.
+    expect(spacyGrammarNativeSha256s, hasLength(3));
     for (final sha in spacyGrammarNativeSha256s) {
       final input = _input(_modifier, nativeSha: sha);
       final plan = await const SpacyGermanGrammarPlanner().plan(

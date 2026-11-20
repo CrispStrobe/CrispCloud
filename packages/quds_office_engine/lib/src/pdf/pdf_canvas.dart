@@ -31,6 +31,7 @@ class PdfCanvas {
 
   /// Applies a constant opacity through a reusable PDF ExtGState.
   void setAlpha(double alpha) {
+    endText();
     final double value = alpha.clamp(0.0, 1.0);
     final int key = (value * 1000).round();
     _alphaStates.add('GS$key');

@@ -4,6 +4,28 @@ All notable changes to `quds_office_editor` are documented here.
 
 ## Unreleased
 
+- Render presentation normal-autofit line-spacing reduction consistently,
+  including fully collapsed line advances, while retaining glyph extents and
+  excluding authored fixed-point spacing from percentage reduction.
+
+- Import nested and multiparagraph Zotero note/annotation lists through the
+  existing native commands. Preserve citation order, surrounding prose, native
+  numbering, and a single undo/redo step; refuse stale targets and excessive
+  nesting before changing the document.
+
+- Support embedded research-note pictures and Zotero image/ink annotations in
+  the existing native Add Note and Add Annotation controls. Images, active
+  citations, notes and preferences apply together as one undo step, with stale
+  target and cancellation guards. Verify actual editor image painting and
+  repeated DOCX save/reopen with undo/redo.
+
+- Remove inherited selected gradients from the slide canvas immediately after
+  a master background edit, preserving local fills and background ownership.
+
+- Render distinct pentagon and home-plate silhouettes while retaining chevron
+  geometry. Keep the Studio Mail theme's button height with a finite minimum
+  width so PDF organization controls can lay out in both light and dark themes.
+
 - Autosave one local Studio Mail draft per account across SMTP, EWS, Gmail and
   Microsoft 365. Restore incomplete recipients, reply headers and attachment
   snapshots after reconnect; flush close/send, expose storage failure and an

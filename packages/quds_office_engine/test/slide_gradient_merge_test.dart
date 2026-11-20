@@ -69,7 +69,7 @@ void main() {
     expect(shapes.last.fillColor, 'FFFFFF');
   });
 
-  test('path gradient retains the existing solid fallback', () {
+  test('path gradient retains radial stops and the first-color fallback', () {
     final String pathFill = _gradientXml.replaceFirst(
       '<a:lin ang="0"/>',
       '<a:path path="circle"/>',
@@ -79,7 +79,13 @@ void main() {
       '<p:cSld><p:spTree><p:sp><p:spPr>$pathFill</p:spPr>'
       '</p:sp></p:spTree></p:cSld></p:sld>',
     ).single;
-    expect(shape.gradient, isNull);
+    expect(shape.gradient!.radial, isTrue);
+    expect(shape.gradient!.stops.map((stop) => stop.color), [
+      'FF0000',
+      '00FF00',
+      '0000FF',
+    ]);
+    expect(shape.gradient!.stops.map((stop) => stop.position), [0, 0.5, 1]);
     expect(shape.fillColor, 'FF0000');
   });
 

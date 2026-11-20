@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:image/image.dart' as image;
 import 'package:quds_office_engine/quds_office_engine.dart';
 import 'package:quds_office_engine/src/word/model/word_zotero_note.dart';
 import 'package:test/test.dart';
@@ -176,6 +177,368 @@ void main() {
     );
   });
 
+  test('nested mixed lists retain item paragraphs and citation positions', () {
+    final note = WordZoteroNoteText.fromHtml(
+      '<ol start="4"><li><p>First <b>bold</b> $_one</p>'
+      '<p>Continuation</p><ul><li>Nested bullet'
+      '<ol start="8"><li>Deep $_two</li><li><p>Next</p>'
+      '<p>Deep tail</p></li></ol>Bullet tail</li></ul>'
+      '<p>Parent tail</p></li><li>Five</li></ol>',
+    );
+    expect(note.paragraphs.map((p) => p.text), [
+      'First bold (First)',
+      'Continuation',
+      'Nested bullet',
+      'Deep (Second)',
+      'Next',
+      'Deep tail',
+      'Bullet tail',
+      'Parent tail',
+      'Five',
+    ]);
+    expect(note.listItems.values.map((p) => p.level), [
+      0,
+      0,
+      1,
+      2,
+      2,
+      2,
+      1,
+      0,
+      0,
+    ]);
+    expect(note.listItems.values.map((p) => p.continuation), [
+      false,
+      true,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      false,
+    ]);
+    expect(note.listItems.values.map((p) => p.index), [
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+    ]);
+    expect(note.listItems.values.map((p) => p.listId), [
+      0,
+      0,
+      1,
+      2,
+      2,
+      2,
+      1,
+      0,
+      0,
+    ]);
+    expect(
+      note.paragraphs.first.inlines
+          .whereType<WmlRun>()
+          .singleWhere((run) => run.text.trim() == 'bold')
+          .properties
+          .bold,
+      isTrue,
+    );
+    for (final (id, paragraph, text) in [
+      ('ABC123', 0, '(First)'),
+      ('DEF456', 3, '(Second)'),
+    ]) {
+      final placeholder = note.placeholders[id]!;
+      expect(placeholder.paragraphIndex, paragraph);
+      expect(
+        note.paragraphs[paragraph].text.substring(
+          placeholder.start,
+          placeholder.end,
+        ),
+        text,
+      );
+    }
+  });
+
+  test(
+    'mixed implicit and explicit paragraphs retain a single item marker',
+    () {
+      final note = WordZoteroNoteText.fromHtml(
+        '<ul><li>Before<p>Paragraph</p><b>After</b><p></p></li>'
+        '<li>Next<br/>line</li></ul>',
+      );
+      expect(note.paragraphs.map((p) => p.text), [
+        'Before',
+        'Paragraph',
+        'After',
+        '',
+        'Next\nline',
+      ]);
+      expect(note.listItems.values.map((p) => p.continuation), [
+        false,
+        true,
+        true,
+        true,
+        false,
+      ]);
+      expect(note.listItems.values.map((p) => p.index), [0, 0, 0, 0, 1]);
+      expect(
+        note.paragraphs[2].inlines.whereType<WmlRun>().single.properties.bold,
+        isTrue,
+      );
+    },
+  );
+
+  test(
+    'empty and list-only items keep their own marker without phantom tails',
+    () {
+      final note = WordZoteroNoteText.fromHtml(
+        '<ul>\n<li><ul><li>Child</li></ul></li>\n'
+        '<li><p></p><p>Continuation</p></li>\n</ul>',
+      );
+      expect(note.paragraphs.map((p) => p.text), [
+        '',
+        'Child',
+        '',
+        'Continuation',
+      ]);
+      expect(note.listItems.values.map((p) => p.level), [0, 1, 0, 0]);
+      expect(note.listItems.values.map((p) => p.continuation), [
+        false,
+        false,
+        false,
+        true,
+      ]);
+    },
+  );
+
+  test(
+    'independent nested starts and continuations survive repeated DOCX saves',
+    () {
+      var document = WmlDocument.empty(text: 'BeforeAfter');
+      final session = _start(
+        document,
+        '<ol start="4"><li><p>Four</p><p>Continuation</p>'
+        '<ol start="8"><li>Eight</li><li>Nine</li></ol>'
+        '<ol start="2"><li>Two</li></ol><p>Parent tail</p></li>'
+        '<li>Five<ol><li>One</li></ol></li></ol>'
+        '<ul><li>Bullet<ul><li>Nested bullet<ul><li>Deep bullet</li>'
+        '</ul></li></ul></li></ul><ol start="11"><li>Eleven</li></ol>',
+        offset: 6,
+      );
+      _complete(session);
+      const texts = [
+        'Before',
+        'Four',
+        'Continuation',
+        'Eight',
+        'Nine',
+        'Two',
+        'Parent tail',
+        'Five',
+        'One',
+        'Bullet',
+        'Nested bullet',
+        'Deep bullet',
+        'Eleven',
+        'After',
+      ];
+      const labels = <String?>[
+        null,
+        '4. ',
+        null,
+        '8. ',
+        '9. ',
+        '2. ',
+        null,
+        '5. ',
+        '1. ',
+        '• ',
+        '◦ ',
+        '▪ ',
+        '11. ',
+        null,
+      ];
+      const levels = [0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 1, 2, 0, 0];
+      for (var cycle = 0; cycle < 3; cycle++) {
+        final paragraphs = document.paragraphs.toList();
+        expect(paragraphs.map((p) => p.text), texts, reason: 'cycle $cycle');
+        expect(paragraphs.map((p) => p.properties.listLabel), labels);
+        expect(paragraphs.map((p) => p.properties.ilvl), levels);
+        expect(paragraphs[3].properties.numId, paragraphs[4].properties.numId);
+        expect({
+          paragraphs[1].properties.numId,
+          paragraphs[3].properties.numId,
+          paragraphs[5].properties.numId,
+          paragraphs[8].properties.numId,
+          paragraphs[12].properties.numId,
+        }, hasLength(5));
+        for (final index in [2, 6]) {
+          expect(paragraphs[index].properties.numId, isNull);
+          expect(paragraphs[index].properties.numberingSuppressed, isTrue);
+          expect(paragraphs[index].properties.indent.left, 18);
+          expect(paragraphs[index].properties.indent.hanging, 0);
+        }
+        expect(paragraphs[3].properties.indent.left, 36);
+        expect(paragraphs[11].properties.indent.left, 54);
+        document = WordDeserializer().readBytes(
+          WordSerializer().writeBytes(document),
+        );
+      }
+    },
+  );
+
+  test(
+    'nine nested Word levels are preserved and a tenth rejects atomically',
+    () {
+      String nested(int depth) =>
+          '${List.filled(depth, '<ol start="3"><li>').join()}Deep'
+          '${List.filled(depth, '</li></ol>').join()}';
+      final document = WmlDocument.empty();
+      _complete(_start(document, nested(9)));
+      for (final checked in [
+        document,
+        WordDeserializer().readBytes(WordSerializer().writeBytes(document)),
+      ]) {
+        expect(
+          checked.paragraphs.map((p) => p.properties.ilvl),
+          List.generate(9, (index) => index),
+        );
+        expect(
+          checked.paragraphs.map((p) => p.properties.listLabel),
+          List.filled(9, '3. '),
+        );
+        expect(checked.paragraphs.last.text, 'Deep');
+      }
+      final unchanged = WmlDocument.empty(text: 'Keep');
+      expect(() => _start(unchanged, nested(10)), throwsUnsupportedError);
+      expect(unchanged.paragraphs.single.text, 'Keep');
+      expect(unchanged.package, isNull);
+    },
+  );
+
+  for (final noteType in [0, 1, 2]) {
+    test(
+      'nested list images and type $noteType citations retain reading order',
+      () {
+        final picture = image.encodePng(image.Image(width: 4, height: 2));
+        var document = WmlDocument.empty(text: 'BeforeAfter');
+        final session = _start(
+          document,
+          '<ol start="6"><li><p>First $_one</p><ul><li><p>Image '
+          '<a href="https://example.org/figure"><img '
+          'src="data:image/png;base64,${base64Encode(picture)}" '
+          'width="40" height="20" alt="Figure"></a></p>'
+          '<p>Second $_two</p></li></ul><p>Tail</p></li><li>Seven</li></ol>',
+          offset: 6,
+        );
+        _cite(session, noteType);
+        expect(document.visuals, isEmpty);
+        expect(document.paragraphs.single.text, 'BeforeAfter');
+        _complete(session);
+        for (var cycle = 0; cycle < 3; cycle++) {
+          final paragraphs = document.paragraphs.toList();
+          expect(paragraphs.map((p) => p.properties.listLabel), [
+            null,
+            '6. ',
+            '◦ ',
+            null,
+            null,
+            '7. ',
+            null,
+          ]);
+          expect(paragraphs.map((p) => p.properties.ilvl), [
+            0,
+            0,
+            1,
+            1,
+            0,
+            0,
+            0,
+          ]);
+          expect(paragraphs[3].properties.numberingSuppressed, isTrue);
+          expect(paragraphs[3].properties.indent.left, 36);
+          final pictureRun = paragraphs[2].inlines
+              .whereType<WmlRun>()
+              .singleWhere((run) => run.inlineVisual != null);
+          expect(pictureRun.inlineVisual!.visual.imageBytes, picture);
+          expect(pictureRun.inlineVisual!.visual.width, 30);
+          expect(pictureRun.hyperlink!.url, 'https://example.org/figure');
+          final refresh = WordZoteroCitingSession(
+            document: document,
+            documentId: _id,
+          );
+          expect(_fields(refresh).map((field) => field['text']), [
+            '(First)',
+            '(Second)',
+          ]);
+          expect(
+            _fields(refresh).map((field) => field['noteIndex']),
+            noteType == 0 ? [0, 0] : [1, 2],
+          );
+          expect(
+            WordZotero.fields(document).every((field) => field.canEdit),
+            isTrue,
+          );
+          document = WordDeserializer().readBytes(
+            WordSerializer().writeBytes(document),
+          );
+        }
+      },
+    );
+  }
+
+  test(
+    'image-only nested items and continuations keep their paragraph on reopen',
+    () {
+      final picture = image.encodePng(image.Image(width: 4, height: 2));
+      final linked =
+          '<a href="https://example.org/figure"><img '
+          'src="data:image/png;base64,${base64Encode(picture)}" '
+          'width="40" height="20" alt="Figure"></a>';
+      var document = WmlDocument.empty();
+      _complete(
+        _start(
+          document,
+          '<ol><li>Parent<ol start="9"><li>$linked<p>Tail</p></li>'
+          '<li><p>Ten</p><p>$linked</p></li></ol></li></ol>',
+        ),
+      );
+      for (var cycle = 0; cycle < 3; cycle++) {
+        final paragraphs = document.paragraphs.toList();
+        expect(paragraphs.map((p) => p.text), [
+          'Parent',
+          '\uFFFC',
+          'Tail',
+          'Ten',
+          '\uFFFC',
+        ], reason: 'cycle $cycle');
+        expect(paragraphs.map((p) => p.properties.listLabel), [
+          '1. ',
+          '9. ',
+          null,
+          '10. ',
+          null,
+        ]);
+        expect(paragraphs.map((p) => p.properties.ilvl), [0, 1, 1, 1, 1]);
+        for (final index in [1, 4]) {
+          final run = paragraphs[index].inlines.whereType<WmlRun>().single;
+          expect(run.inlineVisual!.visual.imageBytes, picture);
+          expect(run.hyperlink!.url, 'https://example.org/figure');
+          expect(paragraphs[index].properties.indent.left, 36);
+        }
+        expect(paragraphs[4].properties.numberingSuppressed, isTrue);
+        document = WordDeserializer().readBytes(
+          WordSerializer().writeBytes(document),
+        );
+      }
+    },
+  );
+
   for (final noteType in [0, 1, 2]) {
     test(
       'list citations retain active order for note type $noteType and DOCX',
@@ -307,7 +670,6 @@ void main() {
   }
 
   for (final html in [
-    '<ul><li>Outer<ul><li>Nested</li></ul></li></ul>',
     '<ol reversed="reversed"><li>Backwards</li></ol>',
     '<ol start="0"><li>Zero</li></ol>',
     '<ol start="-1"><li>Negative</li></ol>',
@@ -315,10 +677,12 @@ void main() {
     '<ol start="one"><li>Invalid</li></ol>',
     '<ol type="A"><li>Custom</li></ol>',
     '<ol><li value="2">Custom item</li></ol>',
-    '<ul><li><p>First</p><p>Second</p></li></ul>',
-    '<ul><li>Before<p>Paragraph</p></li></ul>',
-    '<ul><li><p>Paragraph</p>After</li></ul>',
-    '<ul><li><p>Paragraph</p><b>After</b></li></ul>',
+    '<ul><li><p>Paragraph<ul><li>Inside paragraph</li></ul></p></li></ul>',
+    '<ul><li><span><ul><li>Inside inline</li></ul></span></li></ul>',
+    '<ul><li><p>First<p>Nested paragraph</p></p></li></ul>',
+    '<ul><li><ul><li value="3">Nested custom</li></ul></li></ul>',
+    '<ul><li><ol start="1000000"><li>Nested limit</li></ol></li></ul>',
+    '<ul><li><a href="https://example.org"><p>Block link</p></a></li></ul>',
     '<ul><li><div>Wrapped</div></li></ul>',
     '<ul><li><h1>Heading</h1></li></ul>',
     '<ul><p>Not an item</p></ul>',

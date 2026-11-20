@@ -36,10 +36,13 @@ abstract final class WordLists {
   /// reopen, isolate transfer, and paragraph undo/redo.
   /// Set [independent] for a separate list whose counters must not continue an
   /// existing Quds list. Its immutable level definitions can still be shared.
+  /// Set [outline] to false for HTML-style nested decimal lists: each label
+  /// contains only its own level's counter, without ancestor numbers.
   static int numberingId(
     WmlDocument document, {
     required bool numbered,
     bool independent = false,
+    bool outline = true,
   }) {
     final OpcPackage package = document.package ??= OpcPackage.create(
       OpcPackageKind.word,
@@ -61,7 +64,7 @@ abstract final class WordLists {
     // Keep independent instances outside the reusable-list namespace. A later
     // ordinary list must not pick up an imported research note's counters.
     final String name =
-        'Quds-${numbered ? 'decimal' : 'bullet'}${independent ? '-independent' : ''}-v1';
+        'Quds-${numbered ? 'decimal' : 'bullet'}${independent ? '-independent' : ''}${numbered && !outline ? '-level' : ''}-v1';
     String? sharedAbstractId;
     for (final XmlElement definition in root.childrenNamed('abstractNum')) {
       if (definition.firstChild('name')?.getAttribute('val') != name) continue;
@@ -99,8 +102,8 @@ abstract final class WordLists {
       final StringBuffer levels = StringBuffer();
       for (var level = 0; level < 9; level++) {
         final String label = numbered
-            ? (level == 0
-                  ? '%1.'
+            ? (!outline || level == 0
+                  ? '%${level + 1}.'
                   : List<String>.generate(
                       level + 1,
                       (int i) => '%${i + 1}',

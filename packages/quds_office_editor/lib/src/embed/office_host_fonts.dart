@@ -1,6 +1,8 @@
 import 'package:flutter/services.dart';
 import 'package:quds_office_engine/quds_office_engine.dart';
 
+import 'office_system_font_validation.dart';
+
 /// Ships metric-compatible core faces with the editor package so paint does
 /// not depend on the host OS font directory.
 ///
@@ -17,6 +19,16 @@ abstract final class OfficeHostFonts {
   static final Map<String, String> _extensionOwners = {};
   static int _revision = 0;
   static final Map<String, List<OfficeFontFace>> _metricFaces = {};
+  static final Map<String, List<InstalledFontData>> _installedFaces = {};
+  static final Map<String, Future<void>> _installedLoads = {};
+  static final Set<String> _installedNames = {};
+  static int _installedSequence = 0;
+
+  static const _replaceableBundledAliases = <String, String>{
+    'arial': 'liberation sans',
+    'times new roman': 'liberation serif',
+    'courier new': 'liberation mono',
+  };
 
   /// Vertical metrics of the same registered face used for painting. Font
   /// bytes stay in memory; documents retain their authored family names.
@@ -55,13 +67,24 @@ abstract final class OfficeHostFonts {
   /// fallback before an asynchronous registration completed.
   static int get registrationRevision => _revision;
 
-  /// The actual bundled family behind a successfully loaded name or alias.
+  /// The loaded paint family behind a successfully registered name or alias.
+  /// Installed replacements use an internal name so old aliases cannot win.
   /// Unknown/unloaded names and unavailable italic faces stay unresolved;
   /// callers must not silently measure a platform fallback as that font.
   static String? registeredFamily(String family, {bool italic = false}) {
     final face = _registeredFaces[family.trim().toLowerCase()];
     if (face == null || (italic && !face.$2)) return null;
     return face.$1;
+  }
+
+  /// The loaded paint name for an installed face; other names stay unchanged.
+  /// A separate Flutter family prevents an earlier bundled alias from winning
+  /// selection after the real installed face becomes available.
+  static String paintFamily(String family) {
+    final key = family.trim().toLowerCase();
+    return _installedFaces.containsKey(key)
+        ? _registeredFaces[key]!.$1
+        : family;
   }
 
   /// Registers bundled faces and common Office/PDF aliases.
@@ -104,6 +127,9 @@ abstract final class OfficeHostFonts {
     final names = <String>{canonical, ...aliases.map((name) => name.trim())};
     for (final name in names) {
       final normalized = name.toLowerCase();
+      if (_installedNames.contains(normalized)) {
+        throw StateError('An installed font already owns this family name.');
+      }
       final existing =
           _registeredFaces[normalized]?.$1.toLowerCase() ??
           _extensionOwners[normalized];
@@ -132,6 +158,121 @@ abstract final class OfficeHostFonts {
         rethrow;
       }
     }
+  }
+
+  /// Registers verified local TrueType bytes, replacing only a bundled Office
+  /// compatibility alias. Custom host families and aliases keep their owners.
+  ///
+  /// Font family and style come from the bytes. Invalid inputs leave fallback
+  /// paint/metrics intact. Repeated identical registrations are idempotent;
+  /// changing an already accepted installed face is deliberately unsupported.
+  static Future<void> registerInstalledFamily({
+    required String family,
+    required List<ByteData> faces,
+  }) async {
+    if (!validInstalledFontFamily(family) ||
+        faces.isEmpty ||
+        faces.length > 16 ||
+        faces.any((face) => face.lengthInBytes > maxInstalledFontBytes) ||
+        faces.fold<int>(0, (sum, face) => sum + face.lengthInBytes) >
+            maxInstalledFamilyBytes) {
+      throw ArgumentError('Invalid installed font family or face collection.');
+    }
+    final canonical = family.trim();
+    final key = canonical.toLowerCase();
+    final parsed = <InstalledFontData>[];
+    final styles = <(int, bool)>{};
+    for (final face in faces) {
+      final bytes = Uint8List.fromList(
+        face.buffer.asUint8List(face.offsetInBytes, face.lengthInBytes),
+      );
+      final data = parseInstalledFont(canonical, bytes);
+      if (data == null || !styles.add((data.weight, data.italic))) {
+        throw ArgumentError('Installed font bytes or style do not match.');
+      }
+      parsed.add(data);
+    }
+    await ensureRegistered();
+    final pending = _installedLoads[key];
+    if (pending != null) await pending;
+    final previous = _installedFaces[key];
+    if (previous != null) {
+      if (!_sameInstalledFaces(previous, parsed)) {
+        throw StateError('An installed family cannot be replaced again.');
+      }
+      return;
+    }
+    final existing = _registeredFaces[key]?.$1.toLowerCase();
+    if (_extensionOwners.containsKey(key) ||
+        _installedNames.contains(key) ||
+        (existing != null && existing != _replaceableBundledAliases[key])) {
+      throw StateError('Another font already owns this family name.');
+    }
+    _installedNames.add(key);
+    final load = _installFamily(key, parsed);
+    _installedLoads[key] = load;
+    try {
+      await load;
+    } on Object {
+      _installedNames.remove(key);
+      rethrow;
+    } finally {
+      if (identical(_installedLoads[key], load)) _installedLoads.remove(key);
+    }
+  }
+
+  static Future<void> _installFamily(
+    String key,
+    List<InstalledFontData> faces,
+  ) async {
+    String paintName;
+    do {
+      paintName = 'Quds Installed ${++_installedSequence}';
+    } while (_registeredFaces.containsKey(paintName.toLowerCase()) ||
+        _extensionOwners.containsKey(paintName.toLowerCase()) ||
+        _installedNames.contains(paintName.toLowerCase()));
+    final paintKey = paintName.toLowerCase();
+    _installedNames.add(paintKey);
+    final loader = FontLoader(paintName);
+    for (final face in faces) {
+      loader.addFont(Future.value(ByteData.sublistView(face.font.bytes)));
+    }
+    try {
+      await loader.load();
+    } on Object {
+      _installedNames.remove(paintKey);
+      rethrow;
+    }
+    final hasItalic = faces.any((face) => face.italic);
+    _metricFaces[paintKey] = [
+      for (final face in faces)
+        OfficeFontFace(
+          font: face.font,
+          family: paintName,
+          weight: face.weight,
+          italic: face.italic,
+        ),
+    ];
+    _registeredFaces[paintKey] = (paintName, hasItalic);
+    _registeredFaces[key] = (paintName, hasItalic);
+    _installedFaces[key] = faces;
+    _revision++;
+  }
+
+  static bool _sameInstalledFaces(
+    List<InstalledFontData> first,
+    List<InstalledFontData> second,
+  ) {
+    if (first.length != second.length) return false;
+    for (var i = 0; i < first.length; i++) {
+      final a = first[i].font.bytes;
+      final b = second[i].font.bytes;
+      if (a.length != b.length) return false;
+      for (var j = 0; j < a.length; j++) {
+        if (a[j] != b[j]) return false;
+      }
+    }
+    return true;
   }
 
   static Future<void> _register() async {

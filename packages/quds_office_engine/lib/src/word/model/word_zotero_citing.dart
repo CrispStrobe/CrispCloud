@@ -1034,21 +1034,41 @@ final class WordZoteroCitingSession {
     final listIds = <int, int>{};
     for (final entry in text.listItems.entries) {
       final item = entry.value;
+      final properties = paragraphs[entry.key].properties;
+      final indent = 18.0 * (item.level + 1);
+      if (item.continuation) {
+        properties
+          ..numId = null
+          ..numberingSuppressed = true
+          ..ilvl = item.level
+          ..listLabel = null
+          ..listRestart = null
+          ..indent = WmlIndent(left: indent)
+          ..explicitIndent = true;
+        continue;
+      }
       final id = listIds.putIfAbsent(
         item.listId,
         () => WordLists.numberingId(
           document,
           numbered: item.numbered,
           independent: true,
+          outline: item.level == 0,
         ),
       );
-      paragraphs[entry.key].properties
+      properties
         ..numId = id
         ..numberingSuppressed = false
-        ..ilvl = 0
-        ..listLabel = item.numbered ? '${item.start + item.index}. ' : '• '
+        ..ilvl = item.level
+        ..listLabel = item.numbered
+            ? '${item.start + item.index}. '
+            : switch (item.level) {
+                0 => '• ',
+                1 => '◦ ',
+                _ => '▪ ',
+              }
         ..listRestart = item.index == 0 ? item.start : null
-        ..indent = const WmlIndent(left: 18, hanging: 9)
+        ..indent = WmlIndent(left: indent, hanging: 9)
         ..explicitIndent = true;
     }
     _noteTextCaretTailLength = paragraph.text.length - insertionOffset;

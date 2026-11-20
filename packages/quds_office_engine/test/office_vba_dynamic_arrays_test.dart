@@ -345,13 +345,20 @@ Worksheets(1).Range("A6").Value2 = UBound(labels)
       expect(_values(macro), <Object?>[0, 0.0, '', false, 3, 3]);
     });
 
-    test('Erase resets fixed Variant elements to unsupported Empty', () {
-      _reject('''
+    test('Erase resets fixed Variant elements to Empty', () {
+      expect(
+        _values(
+          _compile(
+            _module('''
 Dim data(0) As Variant
 data(0) = 12
 Erase data
-Worksheets(1).Range("A1").Value2 = data(0)
-''', 'vba_unsupported');
+Worksheets(1).Range("A1").Value2 = IsEmpty(data(0))
+'''),
+          ),
+        ),
+        <Object?>[true],
+      );
     });
 
     for (final action in <String>[
@@ -637,17 +644,24 @@ End If
       }
     });
 
-    test('new Variant slots require assignment after grow or reset', () {
+    test('new Variant slots are Empty after grow or reset', () {
       for (final action in <String>[
-        'ReDim Preserve data(1)\nWorksheets(1).Range("A1").Value2 = data(1)',
-        'ReDim data(0)\nWorksheets(1).Range("A1").Value2 = data(0)',
+        'ReDim Preserve data(1)\nWorksheets(1).Range("A1").Value2 = IsEmpty(data(1))',
+        'ReDim data(0)\nWorksheets(1).Range("A1").Value2 = IsEmpty(data(0))',
       ]) {
-        _reject('''
+        expect(
+          _values(
+            _compile(
+              _module('''
 Dim data() As Variant
 ReDim data(0)
 data(0) = 12
 $action
-''', 'vba_unsupported');
+'''),
+            ),
+          ),
+          <Object?>[true],
+        );
       }
     });
 

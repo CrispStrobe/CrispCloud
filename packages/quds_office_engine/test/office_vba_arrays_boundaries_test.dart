@@ -361,11 +361,10 @@ End Sub
       }
     });
 
-    test(
-      'For Each binding reads an Empty Variant even if its body does not',
-      () {
-        expect(
-          () => _compile(
+    test('For Each binding can visit each default Empty Variant slot', () {
+      expect(
+        _values(
+          _compile(
             _module('''
 Dim values(0 To 2) As Variant, item As Variant, count As Long
 For Each item In values
@@ -374,10 +373,10 @@ Next item
 Worksheets(1).Range("A1").Value2 = count
 '''),
           ),
-          throwsA(_error('vba_unsupported')),
-        );
-      },
-    );
+        ),
+        <Object?>[3],
+      );
+    });
 
     test('early Exit For does not read later uninitialized Variant slots', () {
       final plan = _compile(

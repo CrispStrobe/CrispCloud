@@ -145,15 +145,30 @@ void main() {
     expect(claimed, spacyGrammarNativeSha256s);
   });
 
-  test('the Android app library is recorded for analysis only', () {
+  test('the Android app library is recorded for analysis and grammar', () {
     final build = spacyQualificationForHostBundled(
       librarySha256: spacyAndroidArm64BundledSha256,
     )!;
     expect(build.analysis, contains('16-case development panel'));
-    expect(build.grammarQualified, isFalse);
-    expect(spacyGrammarNativeSha256s, isNot(contains(build.librarySha256)));
-    // A different (for example stripped) copy is unrecorded.
+    expect(build.grammarQualified, isTrue);
+    expect(build.grammar, contains('W6'));
+    expect(build.codeSha256, isNull);
+    expect(spacyGrammarNativeSha256s, contains(build.librarySha256));
+    // ELF has no signature-independent code digest: only the exact bytes.
+    expect(
+      spacyGrammarQualifiedIdentity(
+        SpacyBackendIdentity(librarySha256: spacyAndroidArm64BundledSha256),
+      ),
+      isTrue,
+    );
+    // A different (for example stripped) copy is unrecorded and refused.
     expect(spacyQualificationFor('0' * 64), isNull);
+    expect(
+      spacyGrammarQualifiedIdentity(
+        SpacyBackendIdentity(librarySha256: '0' * 64),
+      ),
+      isFalse,
+    );
   });
 
   test('unpublished platforms are unavailable with a stated reason', () {

@@ -289,7 +289,7 @@ End Function
       }
       _reject(
         'Dim value As Variant\n${_write('Len(value)')}',
-        'vba_unsupported',
+        'vba_type_error',
       );
     });
 

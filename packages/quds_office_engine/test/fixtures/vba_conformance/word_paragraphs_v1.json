@@ -1,0 +1,1172 @@
+{
+  "schemaVersion": 1,
+  "suite": "vba-word-paragraphs",
+  "dialect": "vba-word",
+  "cases": [
+    {
+      "id": "insertbefore-first-paragraph",
+      "feature": "Paragraph prefix insertion",
+      "source": "Sub Main()\n  ThisDocument.Paragraphs(1).Range.InsertBefore \"Hello \"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "Hello "
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md"
+        ],
+        "note": "The first paragraph range receives a prefix; the adapter lowers the one-based selector to native paragraph zero. No Office host was executed."
+      }
+    },
+    {
+      "id": "document-paragraph-range-aliases-byval",
+      "feature": "Object bindings",
+      "source": "Sub Stamp(ByVal doc As Document, ByVal para As Paragraph, ByVal target As Range)\n  doc.Paragraphs(1).Range.InsertBefore \"D\"\n  para.Range.InsertBefore \"P\"\n  target.InsertBefore \"R\"\nEnd Sub\nSub Main()\n  Dim doc As Document, para As Paragraph, target As Range\n  Set doc = ThisDocument\n  Set para = doc.Paragraphs(2)\n  Set target = doc.Paragraphs(3).Range\n  Call Stamp(doc, para, target)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "D"
+            }
+          },
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 1,
+              "start": 0,
+              "end": 0,
+              "text": "P"
+            }
+          },
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 2,
+              "start": 0,
+              "end": 0,
+              "text": "R"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md"
+        ],
+        "note": "Set and explicit ByVal preserve each supported Word object selector without live document access. No Office host was executed."
+      }
+    },
+    {
+      "id": "insertbefore-call-forms-and-empty-text",
+      "feature": "Method statements",
+      "source": "Sub Main()\n  Dim target As Range\n  Set target = ThisDocument.Paragraphs(1).Range\n  target.InsertBefore \"A\"\n  target.InsertBefore(\"B\")\n  Call target.InsertBefore(\"C\")\n  target.InsertBefore \"\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "A"
+            }
+          },
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "B"
+            }
+          },
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "C"
+            }
+          },
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": ""
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md"
+        ],
+        "note": "The three supported method statement forms retain emission order; an empty actual String is admitted. No Office host was executed."
+      }
+    },
+    {
+      "id": "nested-with-font-and-paragraph-format",
+      "feature": "Formatting paths",
+      "source": "Sub Main()\n  With ThisDocument\n    With .Paragraphs(3)\n      With .Range\n        With .Font\n          .Bold = True\n          .Italic = False\n          .Size = 11.5\n          .Name = \"Arial\"\n          .Color = RGB(17, 34, 51)\n        End With\n        With .ParagraphFormat\n          .Alignment = wdAlignParagraphCenter\n          .SpaceBefore = 0\n          .SpaceAfter = 12.5\n        End With\n      End With\n    End With\n  End With\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 2,
+              "bold": true
+            }
+          },
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 2,
+              "italic": false
+            }
+          },
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 2,
+              "size": 11.5
+            }
+          },
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 2,
+              "font": "Arial"
+            }
+          },
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 2,
+              "color": "112233"
+            }
+          },
+          {
+            "tool": "docx.paragraphFormat",
+            "arguments": {
+              "paragraph": 2,
+              "alignment": "center"
+            }
+          },
+          {
+            "tool": "docx.paragraphFormat",
+            "arguments": {
+              "paragraph": 2,
+              "before": 0
+            }
+          },
+          {
+            "tool": "docx.paragraphFormat",
+            "arguments": {
+              "paragraph": 2,
+              "after": 12.5
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md"
+        ],
+        "note": "Nested With resolves supported typed objects; formatting targets current native paragraph text, excluding a Word paragraph mark. No Office host was executed."
+      }
+    },
+    {
+      "id": "font-size-exact-halfpoint-boundaries",
+      "feature": "Font size precision",
+      "source": "Sub Main()\n  ThisDocument.Paragraphs(1).Range.Font.Size = 0.5\n  ThisDocument.Paragraphs(1).Range.Font.Size = 1638\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 0,
+              "size": 0.5
+            }
+          },
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 0,
+              "size": 1638
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.font.size",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md"
+        ],
+        "note": "The dialect admits exact half-point sizes from 0.5 through 1638 to preserve the native serialized value. No Office host was executed."
+      }
+    },
+    {
+      "id": "alignment-constants-const-array-bounds",
+      "feature": "Word constants and arrays",
+      "source": "Const LastAlignment As Long = wdAlignParagraphJustify\nSub Main()\n  Dim values(wdAlignParagraphLeft To LastAlignment) As Long, i As Long\n  values(0) = wdAlignParagraphLeft\n  values(1) = wdAlignParagraphCenter\n  values(2) = wdAlignParagraphRight\n  values(3) = wdAlignParagraphJustify\n  For i = LBound(values) To UBound(values)\n    ThisDocument.Paragraphs(1).Range.ParagraphFormat.Alignment = values(i)\n  Next i\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.paragraphFormat",
+            "arguments": {
+              "paragraph": 0,
+              "alignment": "left"
+            }
+          },
+          {
+            "tool": "docx.paragraphFormat",
+            "arguments": {
+              "paragraph": 0,
+              "alignment": "center"
+            }
+          },
+          {
+            "tool": "docx.paragraphFormat",
+            "arguments": {
+              "paragraph": 0,
+              "alignment": "right"
+            }
+          },
+          {
+            "tool": "docx.paragraphFormat",
+            "arguments": {
+              "paragraph": 0,
+              "alignment": "justify"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.wdparagraphalignment",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md"
+        ],
+        "note": "The four admitted Word enumeration constants retain values zero through three and may appear in scalar Const expressions and fixed array bounds. No Office host was executed."
+      }
+    },
+    {
+      "id": "paragraph-spacing-exact-twip-boundaries",
+      "feature": "Paragraph spacing precision",
+      "source": "Sub Main()\n  ThisDocument.Paragraphs(1).Range.ParagraphFormat.SpaceBefore = 0\n  ThisDocument.Paragraphs(1).Range.ParagraphFormat.SpaceAfter = 0.05\n  ThisDocument.Paragraphs(1).Range.ParagraphFormat.SpaceBefore = 107374182.35\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.paragraphFormat",
+            "arguments": {
+              "paragraph": 0,
+              "before": 0
+            }
+          },
+          {
+            "tool": "docx.paragraphFormat",
+            "arguments": {
+              "paragraph": 0,
+              "after": 0.05
+            }
+          },
+          {
+            "tool": "docx.paragraphFormat",
+            "arguments": {
+              "paragraph": 0,
+              "before": 107374182.35
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphformat.spacebefore",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md"
+        ],
+        "note": "Native points must map exactly to nonnegative integral twentieth-points no larger than 2147483647; this serialization ceiling is an explicit dialect bound. No Office host was executed."
+      }
+    },
+    {
+      "id": "safe-xml-supplementary-tab-and-font-name",
+      "feature": "Word publication text",
+      "source": "Sub Main()\n  ThisDocument.Paragraphs(2).Range.InsertBefore \"A\ud83d\ude00\t&<>B\"\n  ThisDocument.Paragraphs(2).Range.Font.Name = \"Noto \u0646\u0633\u062e\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 1,
+              "start": 0,
+              "end": 0,
+              "text": "A\ud83d\ude00\t&<>B"
+            }
+          },
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 1,
+              "font": "Noto \u0646\u0633\u062e"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md"
+        ],
+        "note": "Valid supplementary UTF-16 and XML punctuation are preserved; a text tab is admitted, and the font name contains no XML attribute whitespace. No Office host was executed."
+      }
+    },
+    {
+      "id": "shared-variant-states-and-conversions",
+      "feature": "Shared scalar language",
+      "source": "Sub Main()\n  Dim value As Variant, target As Range\n  Set target = ThisDocument.Paragraphs(1).Range\n  target.InsertBefore CStr(IsEmpty(value))\n  value = Null\n  target.InsertBefore CStr(IsNull(value))\n  target.InsertBefore CStr(CLng(2.5)) & \":\" & Mid$(\"prefix\", 2, 3)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "True"
+            }
+          },
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "True"
+            }
+          },
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "2:ref"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Word uses the same explicit Variant states, ties-to-even conversion, invariant formatting and strict String intrinsics as the shared source language. No Office host was executed."
+      }
+    },
+    {
+      "id": "shared-dynamic-arrays-and-loop",
+      "feature": "Shared arrays and control flow",
+      "source": "Sub Main()\n  Dim values() As Variant, i As Long\n  ReDim values(1 To 2)\n  values(1) = \"A\"\n  values(2) = \"B\"\n  ReDim Preserve values(1 To 3)\n  For i = LBound(values) To UBound(values)\n    If IsEmpty(values(i)) Then\n      values(i) = \"E\"\n    End If\n    ThisDocument.Paragraphs(1).Range.InsertBefore CStr(values(i))\n  Next i\n  Erase values\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "A"
+            }
+          },
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "B"
+            }
+          },
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "E"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Dynamic array growth preserves prior values and creates Empty elements; the shared loop emits an ordered static Word plan. No Office host was executed."
+      }
+    },
+    {
+      "id": "scalar-function-and-range-parameter",
+      "feature": "Shared procedures",
+      "source": "Function Label(ByVal number As Long) As String\n  Label = Left$(\"report\", 3) & CStr(number)\nEnd Function\nSub Stamp(ByVal target As Range, ByVal text As String)\n  target.InsertBefore text\nEnd Sub\nSub Main()\n  Call Stamp(ThisDocument.Paragraphs(2).Range, Label(3))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 1,
+              "start": 0,
+              "end": 0,
+              "text": "rep3"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md"
+        ],
+        "note": "A scalar helper function and a ByVal Word Range parameter compose through the existing bounded procedure model. No Office host was executed."
+      }
+    },
+    {
+      "id": "receiver-and-argument-evaluated-once-in-order",
+      "feature": "Evaluation order",
+      "source": "Function PickParagraph() As Long\n  ThisDocument.Paragraphs(1).Range.InsertBefore \"receiver\"\n  PickParagraph = 2\nEnd Function\nFunction BuildText() As String\n  ThisDocument.Paragraphs(1).Range.InsertBefore \"argument\"\n  BuildText = \"result\"\nEnd Function\nSub Main()\n  ThisDocument.Paragraphs(PickParagraph()).Range.InsertBefore BuildText()\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "receiver"
+            }
+          },
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "argument"
+            }
+          },
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 1,
+              "start": 0,
+              "end": 0,
+              "text": "result"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md"
+        ],
+        "note": "The receiver selector and text argument each execute once, in source order, before the outer insertion is emitted. No Office host was executed."
+      }
+    },
+    {
+      "id": "paragraph-existence-is-deferred",
+      "feature": "Document-independent selector",
+      "source": "Sub Main()\n  ThisDocument.Paragraphs(9007199254740991).Range.InsertBefore \"Deferred\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 9007199254740990,
+              "start": 0,
+              "end": 0,
+              "text": "Deferred"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md"
+        ],
+        "note": "Exact safe numeric selectors are admitted without reading a document; paragraph existence and Quds recursive body traversal are checked by native execution, not claimed as full Word collection parity. No Office host was executed."
+      }
+    },
+    {
+      "id": "nullable-conditions-and-select-case",
+      "feature": "Shared conditional control flow",
+      "source": "Sub Main()\n  Dim value As Variant\n  value = Null\n  If value Then\n    ThisDocument.Paragraphs(1).Range.InsertBefore \"unreachable\"\n  Else\n    ThisDocument.Paragraphs(1).Range.InsertBefore \"null\"\n  End If\n  value = Empty\n  If value Then\n    ThisDocument.Paragraphs(1).Range.InsertBefore \"unreachable\"\n  Else\n    ThisDocument.Paragraphs(1).Range.InsertBefore \"empty\"\n  End If\n  Select Case 2\n    Case 1\n      ThisDocument.Paragraphs(1).Range.InsertBefore \"unreachable\"\n    Case 2\n      ThisDocument.Paragraphs(1).Range.InsertBefore \"selected\"\n  End Select\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "null"
+            }
+          },
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "empty"
+            }
+          },
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "selected"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "The shared dialect treats Empty and Null conditions as false and retains deterministic Select Case execution. No Office host was executed."
+      }
+    },
+    {
+      "id": "paragraph-index-zero",
+      "feature": "Selector validation",
+      "source": "Sub Main()\n  ThisDocument.Paragraphs(0).Range.InsertBefore \"x\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 16
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "A paragraph index must be an actual positive exact integral number. No Office host was executed."
+      }
+    },
+    {
+      "id": "paragraph-index-fractional",
+      "feature": "Selector validation",
+      "source": "Sub Main()\n  ThisDocument.Paragraphs(1.5).Range.InsertBefore \"x\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 16
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "A paragraph index must be an actual positive exact integral number. No Office host was executed."
+      }
+    },
+    {
+      "id": "paragraph-index-actual-string",
+      "feature": "Selector validation",
+      "source": "Sub Main()\n  Dim value As Variant\n  value = \"1\"\n  ThisDocument.Paragraphs(value).Range.InsertBefore \"x\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 4,
+          "column": 16
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "A numeric-looking String remains a String and is refused by the strict paragraph selector. No Office host was executed."
+      }
+    },
+    {
+      "id": "insertbefore-actual-number",
+      "feature": "Strict method arguments",
+      "source": "Sub Main()\n  Dim value As Variant\n  value = 42\n  ThisDocument.Paragraphs(1).Range.InsertBefore value\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 4,
+          "column": 36
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "InsertBefore requires an actual String; numeric values require an explicit CStr conversion. No Office host was executed."
+      }
+    },
+    {
+      "id": "insertbefore-null-refused",
+      "feature": "Strict method arguments",
+      "source": "Sub Main()\n  ThisDocument.Paragraphs(1).Range.InsertBefore Null\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 36
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "The actual Null state does not satisfy the strict String method signature. No Office host was executed."
+      }
+    },
+    {
+      "id": "insertbefore-empty-refused",
+      "feature": "Strict method arguments",
+      "source": "Sub Main()\n  ThisDocument.Paragraphs(1).Range.InsertBefore Empty\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 36
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "The actual Empty state does not satisfy the strict String method signature. No Office host was executed."
+      }
+    },
+    {
+      "id": "insertbefore-malformed-surrogate",
+      "feature": "Word Unicode boundary",
+      "source": "Sub Main()\n  ThisDocument.Paragraphs(1).Range.InsertBefore Left$(\"\ud83d\ude00\", 1)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 36
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "A String slice may contain a surrogate half internally, but malformed UTF-16 cannot enter a Word native text operation. No Office host was executed."
+      }
+    },
+    {
+      "id": "insertbefore-xml-nul-refused",
+      "feature": "Word XML boundary",
+      "source": "Sub Main()\n  ThisDocument.Paragraphs(1).Range.InsertBefore \"a\u0000b\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 36
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "XML 1.0-invalid text is refused before a native plan is returned. No Office host was executed."
+      }
+    },
+    {
+      "id": "insertbefore-xml-fffe-refused",
+      "feature": "Word XML boundary",
+      "source": "Sub Main()\n  ThisDocument.Paragraphs(1).Range.InsertBefore \"a\ufffeb\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 36
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "XML 1.0-invalid text is refused before a native plan is returned. No Office host was executed."
+      }
+    },
+    {
+      "id": "insertbefore-xml-ffff-refused",
+      "feature": "Word XML boundary",
+      "source": "Sub Main()\n  ThisDocument.Paragraphs(1).Range.InsertBefore \"a\uffffb\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 36
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "XML 1.0-invalid text is refused before a native plan is returned. No Office host was executed."
+      }
+    },
+    {
+      "id": "literal-linebreak-refused-by-source-grammar",
+      "feature": "Single-paragraph restriction",
+      "source": "Sub Main()\n  ThisDocument.Paragraphs(1).Range.InsertBefore \"before\nafter\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_syntax_error",
+          "line": 2,
+          "column": 49
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Literal line breaks are refused by the existing source string grammar; this is a syntax refusal, not a claim that a Word method ran. No Office host was executed."
+      }
+    },
+    {
+      "id": "font-bold-refuses-numeric-variant",
+      "feature": "Strict formatting types",
+      "source": "Sub Main()\n  Dim value As Variant\n  value = -1\n  ThisDocument.Paragraphs(1).Range.Font.Bold = value\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 4,
+          "column": 41
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "The bounded Font.Bold setter accepts actual Boolean values, not numeric VBA toggle/coercion values. No Office host was executed."
+      }
+    },
+    {
+      "id": "font-size-quarter-point-refused",
+      "feature": "Font size precision",
+      "source": "Sub Main()\n  ThisDocument.Paragraphs(1).Range.Font.Size = 0.75\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 41
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Font.Size must be an exact half-point from 0.5 through 1638; silent native rounding is not permitted. No Office host was executed."
+      }
+    },
+    {
+      "id": "font-size-zero-refused",
+      "feature": "Font size precision",
+      "source": "Sub Main()\n  ThisDocument.Paragraphs(1).Range.Font.Size = 0\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 41
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Font.Size must be an exact half-point from 0.5 through 1638; silent native rounding is not permitted. No Office host was executed."
+      }
+    },
+    {
+      "id": "font-size-above-bound-refused",
+      "feature": "Font size precision",
+      "source": "Sub Main()\n  ThisDocument.Paragraphs(1).Range.Font.Size = 1638.5\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 41
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Font.Size must be an exact half-point from 0.5 through 1638; silent native rounding is not permitted. No Office host was executed."
+      }
+    },
+    {
+      "id": "font-name-empty-refused",
+      "feature": "Font attribute publication",
+      "source": "Sub Main()\n  ThisDocument.Paragraphs(1).Range.Font.Name = \"\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 41
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Font.Name is a nonempty actual String in this adapter. No Office host was executed."
+      }
+    },
+    {
+      "id": "font-name-tab-refused",
+      "feature": "Font attribute publication",
+      "source": "Sub Main()\n  ThisDocument.Paragraphs(1).Range.Font.Name = \"A\tB\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 41
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "A tab is valid insertion text but refused in Font.Name because XML attribute normalization would change the name. No Office host was executed."
+      }
+    },
+    {
+      "id": "font-color-outside-rgb-refused",
+      "feature": "Font color bounds",
+      "source": "Sub Main()\n  ThisDocument.Paragraphs(1).Range.Font.Color = 16777216\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 2,
+          "column": 41
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Exact integer colors outside zero through 16777215 use the existing shared unsupported-color diagnostic; system, palette and other non-RGB representations are outside the dialect. No Office host was executed."
+      }
+    },
+    {
+      "id": "alignment-other-word-enumeration-refused",
+      "feature": "Bounded alignment",
+      "source": "Sub Main()\n  ThisDocument.Paragraphs(1).Range.ParagraphFormat.Alignment = 4\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 2,
+          "column": 52
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "The adapter supports only left, center, right and justify; other valid Word alignment enumeration values remain unsupported. No Office host was executed."
+      }
+    },
+    {
+      "id": "alignment-fractional-refused",
+      "feature": "Strict alignment type",
+      "source": "Sub Main()\n  ThisDocument.Paragraphs(1).Range.ParagraphFormat.Alignment = 0.5\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 52
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Alignment requires an exact integral numeric enumeration value. No Office host was executed."
+      }
+    },
+    {
+      "id": "paragraph-spacing-fractional-twip-refused",
+      "feature": "Paragraph spacing precision",
+      "source": "Sub Main()\n  ThisDocument.Paragraphs(1).Range.ParagraphFormat.SpaceBefore = 0.03\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 52
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Spacing must have exact nonnegative integral twentieth-points no larger than 2147483647. No Office host was executed."
+      }
+    },
+    {
+      "id": "paragraph-spacing-negative-refused",
+      "feature": "Paragraph spacing precision",
+      "source": "Sub Main()\n  ThisDocument.Paragraphs(1).Range.ParagraphFormat.SpaceAfter = -0.05\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 52
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Spacing must have exact nonnegative integral twentieth-points no larger than 2147483647. No Office host was executed."
+      }
+    },
+    {
+      "id": "paragraph-spacing-above-native-bound-refused",
+      "feature": "Paragraph spacing precision",
+      "source": "Sub Main()\n  ThisDocument.Paragraphs(1).Range.ParagraphFormat.SpaceAfter = 107374182.4\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 52
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Spacing must have exact nonnegative integral twentieth-points no larger than 2147483647. No Office host was executed."
+      }
+    },
+    {
+      "id": "range-text-live-read-refused",
+      "feature": "Document access boundaries",
+      "source": "Sub Main()\n  Dim value As String\n  value = ThisDocument.Paragraphs(1).Range.Text\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 3,
+          "column": 44
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Source compilation has no document read access; Word Range.Text is deliberately not implemented. No Office host was executed."
+      }
+    },
+    {
+      "id": "range-text-replacement-refused",
+      "feature": "Paragraph mark boundaries",
+      "source": "Sub Main()\n  ThisDocument.Paragraphs(1).Range.Text = \"replacement\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 2,
+          "column": 36
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "A Word paragraph range contains its paragraph mark; whole-range Text replacement is refused instead of silently replacing only native paragraph text. No Office host was executed."
+      }
+    },
+    {
+      "id": "unused-excel-root-refused-in-word",
+      "feature": "Static dialect isolation",
+      "source": "Sub Main()\nEnd Sub\nSub Unused()\n  Worksheets(1).Range(\"A1\").Value2 = 1\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 4,
+          "column": 3
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "The checker rejects Excel object roots in unused Word procedures before evaluation. No Office host was executed."
+      }
+    },
+    {
+      "id": "unused-scalar-variant-cannot-bind-word-range",
+      "feature": "Static object binding",
+      "source": "Sub Main()\nEnd Sub\nSub Unused()\n  Dim target As Range, value As Variant\n  Set target = value\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 5,
+          "column": 16
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Scalar Variant values cannot silently satisfy Word object bindings, including in unused code. No Office host was executed."
+      }
+    },
+    {
+      "id": "word-range-for-each-refused",
+      "feature": "Collection restrictions",
+      "source": "Sub Main()\n  Dim target As Range, item As Range\n  Set target = ThisDocument.Paragraphs(1).Range\n  For Each item In target\n  Next item\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 4,
+          "column": 20
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Word ranges are not spreadsheet cell collections; collection iteration remains outside the bounded Word adapter. No Office host was executed."
+      }
+    },
+    {
+      "id": "insertbefore-extra-argument-refused",
+      "feature": "Method arity",
+      "source": "Sub Main()\n  ThisDocument.Paragraphs(1).Range.InsertBefore(\"a\", \"b\")\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 36
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "InsertBefore admits exactly one positional String argument. No Office host was executed."
+      }
+    },
+    {
+      "id": "word-output-shared-string-limit",
+      "feature": "Shared resource bounds",
+      "source": "Sub Main()\n  Dim text As String, i As Long\n  text = \"x\"\n  For i = 1 To 14\n    text = text & text\n  Next i\n  ThisDocument.Paragraphs(1).Range.InsertBefore text & text\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_limit_exceeded",
+          "line": 7,
+          "column": 54
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "The shared maximum String length is 32767 UTF-16 units; doubling 16384 units must fail before Word publication. No Office host was executed."
+      }
+    }
+  ]
+}

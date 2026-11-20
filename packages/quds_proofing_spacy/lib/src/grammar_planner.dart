@@ -13,7 +13,10 @@ import 'package:quds_office_engine/quds_office_engine.dart'
 import 'analysis.dart';
 import 'backend.dart';
 import 'distribution.dart'
-    show spacyGrammarMacosBundledCodeSha256, spacyGrammarMacosBundledSha256;
+    show
+        spacyAndroidArm64BundledSha256,
+        spacyGrammarMacosBundledCodeSha256,
+        spacyGrammarMacosBundledSha256;
 import 'grammar_families.dart';
 
 export 'grammar_families.dart' show SpacyGrammarFamily, spacyGrammarExplanation;
@@ -27,15 +30,22 @@ const spacyGrammarNativeSha256 =
     'ea89842ebf22c08508aff1cfbf18d78a107118af320523009616ff62b6e42977';
 
 /// Every exact native build with recorded manual grammar qualification: the
-/// Linux build above and the app-bundled macOS arm64 library
+/// Linux build above, the app-bundled macOS arm64 library
 /// ([spacyGrammarMacosBundledSha256], qualified by replaying both consumed
-/// panels with annotations and outcomes identical case by case).
+/// panels with annotations and outcomes identical case by case) and the
+/// Android arm64-v8a library shipped byte-exact in the Studio APK
+/// ([spacyAndroidArm64BundledSha256]; W6, W7 and grammar v2 replayed on an
+/// Android emulator through the app's grammar worker). An ELF shared object
+/// carries no embedded signature (APK signing seals the archive, not the
+/// file), so the whole-file SHA-256 is its identity; the app keeps Gradle
+/// from stripping it so the shipped bytes stay exactly these.
 /// Analysis may support other authenticated builds independently; grammar
 /// never silently inherits a qualification. Each entry needs its own
 /// evidence record in `spacyQualificationFor`.
 const spacyGrammarNativeSha256s = <String>{
   spacyGrammarNativeSha256,
   spacyGrammarMacosBundledSha256,
+  spacyAndroidArm64BundledSha256,
 };
 
 /// Signature-independent code digests of qualified host-bundled macOS

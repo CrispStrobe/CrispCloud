@@ -1,0 +1,937 @@
+{
+  "schemaVersion": 1,
+  "suite": "vba-variant-composition",
+  "dialect": "vba-excel",
+  "cases": [
+    {
+      "id": "inline-null-result-composition",
+      "feature": "Nullable expression composition",
+      "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = IsNull((Null & Null) + 1)\n  Worksheets(1).Range(\"A2\").Value2 = IsNull(Not (Null & Null))\n  Worksheets(1).Range(\"A3\").Value2 = IsNull((Null + 1) And True)\n  Worksheets(1).Range(\"A4\").Value2 = IsNull((Null = Null) + 1)\n  Worksheets(1).Range(\"A5\").Value2 = IsNull((Null + 1) = \"x\")\n  Worksheets(1).Range(\"A6\").Value2 = IsNull((Null & Null) = 1)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A1",
+              "value": true
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A2",
+              "value": true
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A3",
+              "value": true
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A4",
+              "value": true
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A5",
+              "value": true
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A6",
+              "value": true
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Supported Null results remain composable without an intermediate Variant assignment; no Office host was executed."
+      }
+    },
+    {
+      "id": "nullable-unary-composition",
+      "feature": "Nullable expression composition",
+      "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = IsNull(+(Null & Null))\n  Worksheets(1).Range(\"A2\").Value2 = IsNull(-(Null = False))\n  Worksheets(1).Range(\"A3\").Value2 = IsNull((Not Null) + 1)\n  Worksheets(1).Range(\"A4\").Value2 = IsNull(Not -Null)\n  Worksheets(1).Range(\"A5\").Value2 = IsNull((+Null) & (-Null))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A1",
+              "value": true
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A2",
+              "value": true
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A3",
+              "value": true
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A4",
+              "value": true
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A5",
+              "value": true
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Supported Null results remain composable without an intermediate Variant assignment; no Office host was executed."
+      }
+    },
+    {
+      "id": "nullable-logical-results-compose",
+      "feature": "Nullable expression composition",
+      "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = (Null + 1) And False\n  Worksheets(1).Range(\"A2\").Value2 = (Null + 1) Or True\n  Worksheets(1).Range(\"A3\").Value2 = IsNull((Null + 1) Xor True)\n  Worksheets(1).Range(\"A4\").Value2 = IsNull((True And Null) + 1)\n  Worksheets(1).Range(\"A5\").Value2 = IsNull((False Or Null) + 1)\n  Worksheets(1).Range(\"A6\").Value2 = IsNull((True Xor Null) & (False And Null))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A1",
+              "value": false
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A2",
+              "value": true
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A3",
+              "value": true
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A4",
+              "value": true
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A5",
+              "value": true
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A6",
+              "value": false
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Supported Null results remain composable without an intermediate Variant assignment; no Office host was executed."
+      }
+    },
+    {
+      "id": "inline-and-assigned-state-equivalence",
+      "feature": "Nullable expression composition",
+      "source": "Sub Main()\n  Dim value As Variant\n  value = Null & Null\n  Worksheets(1).Range(\"A1\").Value2 = IsNull(value + 1)\n  Worksheets(1).Range(\"A2\").Value2 = IsNull((Null & Null) + 1)\n  value = Null + 1\n  Worksheets(1).Range(\"A3\").Value2 = IsNull(value And True)\n  Worksheets(1).Range(\"A4\").Value2 = IsNull((Null + 1) And True)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A1",
+              "value": true
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A2",
+              "value": true
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A3",
+              "value": true
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A4",
+              "value": true
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "A source-level Variant temporary does not change a supported expression's Null semantics."
+      }
+    },
+    {
+      "id": "composed-states-in-conditions",
+      "feature": "Nullable expression composition",
+      "source": "Sub Main()\n  Dim count As Long\n  If Null + 1 Then\n    count = 100\n  Else\n    count = 1\n  End If\n  While Null & Null\n    count = 100\n  Wend\n  Do\n    count = count + 1\n  Loop While +Null\n  Worksheets(1).Range(\"A1\").Value2 = count\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A1",
+              "value": 2
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Computed Null values are false in supported condition contexts, exactly like a direct state or a Variant holding it."
+      }
+    },
+    {
+      "id": "composed-null-select-comparison",
+      "feature": "Nullable expression composition",
+      "source": "Sub Main()\n  Select Case Null + 1\n    Case \"text\"\n      Worksheets(1).Range(\"A1\").Value2 = \"wrong\"\n    Case Else\n      Worksheets(1).Range(\"A1\").Value2 = \"no-match\"\n  End Select\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A1",
+              "value": "no-match"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "A computed Null selector has the same no-match behavior across scalar Case values as a Variant holding Null."
+      }
+    },
+    {
+      "id": "nullable-helpers-and-eager-native-order",
+      "feature": "Nullable expression composition",
+      "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = IsNull((FirstValue() & SecondValue()) + 1)\n  Worksheets(1).Range(\"A2\").Value2 = IsNull((-FirstValue()) And True)\nEnd Sub\nFunction FirstValue() As Variant\n  Worksheets(1).Range(\"B1\").Value2 = \"first\"\n  FirstValue = Null\nEnd Function\nFunction SecondValue() As Variant\n  Worksheets(1).Range(\"B2\").Value2 = \"second\"\n  SecondValue = Null\nEnd Function\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "B1",
+              "value": "first"
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "B2",
+              "value": "second"
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A1",
+              "value": true
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "B1",
+              "value": "first"
+            }
+          },
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A2",
+              "value": true
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Nullable static result inference does not reorder or duplicate helper evaluation or suppress eager operand effects."
+      }
+    },
+    {
+      "id": "computed-null-typed-argument",
+      "feature": "Nullable expression composition",
+      "source": "Sub Main()\n  Call Accept(Null + 1)\nEnd Sub\nSub Accept(ByVal value As Boolean)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_invalid_use_of_null",
+          "line": 2,
+          "column": 8
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Nullable inference retains actual-type validation and refuses unsupported non-Null operands; no Office host was executed."
+      }
+    },
+    {
+      "id": "computed-null-typed-assignment",
+      "feature": "Nullable expression composition",
+      "source": "Sub Main()\n  Dim value As String\n  value = Null + 1\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_invalid_use_of_null",
+          "line": 3,
+          "column": 3
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Nullable inference retains actual-type validation and refuses unsupported non-Null operands; no Office host was executed."
+      }
+    },
+    {
+      "id": "computed-null-typed-return",
+      "feature": "Nullable expression composition",
+      "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = Result()\nEnd Sub\nFunction Result() As String\n  Result = Null + 1\nEnd Function\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_invalid_use_of_null",
+          "line": 5,
+          "column": 3
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Nullable inference retains actual-type validation and refuses unsupported non-Null operands; no Office host was executed."
+      }
+    },
+    {
+      "id": "computed-string-is-not-a-number",
+      "feature": "Nullable expression composition",
+      "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = (CVar(\"x\") & Empty) + 1\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 58
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Nullable inference retains actual-type validation and refuses unsupported non-Null operands; no Office host was executed."
+      }
+    },
+    {
+      "id": "computed-number-is-not-a-boolean",
+      "feature": "Nullable expression composition",
+      "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = (CVar(1) + Empty) And True\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 56
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Nullable inference retains actual-type validation and refuses unsupported non-Null operands; no Office host was executed."
+      }
+    },
+    {
+      "id": "computed-boolean-is-not-a-number",
+      "feature": "Nullable expression composition",
+      "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = (CVar(True) = True) + 1\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 58
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Nullable inference retains actual-type validation and refuses unsupported non-Null operands; no Office host was executed."
+      }
+    },
+    {
+      "id": "computed-empty-does-not-enable-bitwise-not",
+      "feature": "Nullable expression composition",
+      "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = (Not CVar(Empty)) + 1\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 39
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Nullable inference retains actual-type validation and refuses unsupported non-Null operands; no Office host was executed."
+      }
+    },
+    {
+      "id": "known-string-result-still-rejected",
+      "feature": "Nullable expression composition",
+      "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = IsNull((\"x\" & \"y\") + 1)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 50
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Nullable inference retains actual-type validation and refuses unsupported non-Null operands; no Office host was executed."
+      }
+    },
+    {
+      "id": "known-number-result-still-rejected",
+      "feature": "Nullable expression composition",
+      "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = IsNull((1 + 2) And True)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 48
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Nullable inference retains actual-type validation and refuses unsupported non-Null operands; no Office host was executed."
+      }
+    },
+    {
+      "id": "known-boolean-result-still-rejected",
+      "feature": "Nullable expression composition",
+      "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = IsNull((1 = 1) + 1)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 48
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Nullable inference retains actual-type validation and refuses unsupported non-Null operands; no Office host was executed."
+      }
+    },
+    {
+      "id": "known-string-not-still-rejected",
+      "feature": "Nullable expression composition",
+      "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = IsNull(Not (\"x\" & \"y\"))\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 54
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Nullable inference retains actual-type validation and refuses unsupported non-Null operands; no Office host was executed."
+      }
+    },
+    {
+      "id": "known-number-assignment-still-rejected",
+      "feature": "Nullable expression composition",
+      "source": "Sub Main()\n  Dim value As String\n  value = 1 + 2\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 13
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Nullable inference retains actual-type validation and refuses unsupported non-Null operands; no Office host was executed."
+      }
+    },
+    {
+      "id": "unused-known-invalid-result-still-checked",
+      "feature": "Nullable expression composition",
+      "source": "Sub Main()\n\nEnd Sub\nSub Unused()\n  Dim value As Variant\n  value = (1 + 2) And True\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 6,
+          "column": 14
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Nullable inference retains actual-type validation and refuses unsupported non-Null operands; no Office host was executed."
+      }
+    },
+    {
+      "id": "nullable-left-does-not-skip-right-error",
+      "feature": "Nullable expression composition",
+      "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = IsNull((Null + 1) And CBool(\"bad\"))\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 66
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Nullable inference retains actual-type validation and refuses unsupported non-Null operands; no Office host was executed."
+      }
+    },
+    {
+      "id": "computed-null-string-intrinsic-stays-strict",
+      "feature": "Nullable expression composition",
+      "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = Len(Null & Null)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 47
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Nullable inference retains actual-type validation and refuses unsupported non-Null operands; no Office host was executed."
+      }
+    },
+    {
+      "id": "computed-null-cstr-keeps-null-error",
+      "feature": "Nullable expression composition",
+      "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = CStr(Null & Null)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_invalid_use_of_null",
+          "line": 2,
+          "column": 48
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Nullable inference retains actual-type validation and refuses unsupported non-Null operands; no Office host was executed."
+      }
+    },
+    {
+      "id": "computed-null-selector-stays-strict",
+      "feature": "Nullable expression composition",
+      "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = Worksheets(Null & Null).Range(\"A1\").Row\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 38
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Nullable inference retains actual-type validation and refuses unsupported non-Null operands; no Office host was executed."
+      }
+    },
+    {
+      "id": "computed-null-publication-keeps-null-error",
+      "feature": "Nullable expression composition",
+      "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = (Null & Null) + 1\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_invalid_use_of_null",
+          "line": 2,
+          "column": 29
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Nullable inference retains actual-type validation and refuses unsupported non-Null operands; no Office host was executed."
+      }
+    },
+    {
+      "id": "unused-set-range-from-empty",
+      "feature": "Nullable expression composition",
+      "source": "Sub Main()\n  Dim target As Range, value As Variant\n  If False Then\n    Set target = Empty\n  End If\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 4,
+          "column": 18
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "The dialect's Variant bindings are scalar-only, so an object assignment is statically impossible even in an inactive branch."
+      }
+    },
+    {
+      "id": "unused-byval-range-from-empty",
+      "feature": "Nullable expression composition",
+      "source": "Sub Main()\n  Dim value As Variant\n  If False Then\n    Call Accept(Empty)\n  End If\nEnd Sub\nSub Accept(ByVal target As Range)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 4,
+          "column": 17
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "A scalar Variant cannot supply a Worksheet/Range parameter; unused calls retain full static argument checking."
+      }
+    },
+    {
+      "id": "unused-set-range-from-null",
+      "feature": "Nullable expression composition",
+      "source": "Sub Main()\n  Dim target As Range, value As Variant\n  If False Then\n    Set target = Null\n  End If\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 4,
+          "column": 18
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "The dialect's Variant bindings are scalar-only, so an object assignment is statically impossible even in an inactive branch."
+      }
+    },
+    {
+      "id": "unused-byval-range-from-null",
+      "feature": "Nullable expression composition",
+      "source": "Sub Main()\n  Dim value As Variant\n  If False Then\n    Call Accept(Null)\n  End If\nEnd Sub\nSub Accept(ByVal target As Range)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 4,
+          "column": 17
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "A scalar Variant cannot supply a Worksheet/Range parameter; unused calls retain full static argument checking."
+      }
+    },
+    {
+      "id": "unused-set-range-from-variant",
+      "feature": "Nullable expression composition",
+      "source": "Sub Main()\n  Dim target As Range, value As Variant\n  If False Then\n    Set target = value\n  End If\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 4,
+          "column": 18
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "The dialect's Variant bindings are scalar-only, so an object assignment is statically impossible even in an inactive branch."
+      }
+    },
+    {
+      "id": "unused-byval-range-from-variant",
+      "feature": "Nullable expression composition",
+      "source": "Sub Main()\n  Dim value As Variant\n  If False Then\n    Call Accept(value)\n  End If\nEnd Sub\nSub Accept(ByVal target As Range)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 4,
+          "column": 17
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "A scalar Variant cannot supply a Worksheet/Range parameter; unused calls retain full static argument checking."
+      }
+    },
+    {
+      "id": "unused-set-worksheet-from-empty",
+      "feature": "Nullable expression composition",
+      "source": "Sub Main()\n  Dim target As Worksheet, value As Variant\n  If False Then\n    Set target = Empty\n  End If\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 4,
+          "column": 18
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "The dialect's Variant bindings are scalar-only, so an object assignment is statically impossible even in an inactive branch."
+      }
+    },
+    {
+      "id": "unused-byval-worksheet-from-empty",
+      "feature": "Nullable expression composition",
+      "source": "Sub Main()\n  Dim value As Variant\n  If False Then\n    Call Accept(Empty)\n  End If\nEnd Sub\nSub Accept(ByVal target As Worksheet)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 4,
+          "column": 17
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "A scalar Variant cannot supply a Worksheet/Range parameter; unused calls retain full static argument checking."
+      }
+    },
+    {
+      "id": "unused-set-worksheet-from-null",
+      "feature": "Nullable expression composition",
+      "source": "Sub Main()\n  Dim target As Worksheet, value As Variant\n  If False Then\n    Set target = Null\n  End If\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 4,
+          "column": 18
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "The dialect's Variant bindings are scalar-only, so an object assignment is statically impossible even in an inactive branch."
+      }
+    },
+    {
+      "id": "unused-byval-worksheet-from-null",
+      "feature": "Nullable expression composition",
+      "source": "Sub Main()\n  Dim value As Variant\n  If False Then\n    Call Accept(Null)\n  End If\nEnd Sub\nSub Accept(ByVal target As Worksheet)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 4,
+          "column": 17
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "A scalar Variant cannot supply a Worksheet/Range parameter; unused calls retain full static argument checking."
+      }
+    },
+    {
+      "id": "unused-set-worksheet-from-variant",
+      "feature": "Nullable expression composition",
+      "source": "Sub Main()\n  Dim target As Worksheet, value As Variant\n  If False Then\n    Set target = value\n  End If\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 4,
+          "column": 18
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "The dialect's Variant bindings are scalar-only, so an object assignment is statically impossible even in an inactive branch."
+      }
+    },
+    {
+      "id": "unused-byval-worksheet-from-variant",
+      "feature": "Nullable expression composition",
+      "source": "Sub Main()\n  Dim value As Variant\n  If False Then\n    Call Accept(value)\n  End If\nEnd Sub\nSub Accept(ByVal target As Worksheet)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 4,
+          "column": 17
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "A scalar Variant cannot supply a Worksheet/Range parameter; unused calls retain full static argument checking."
+      }
+    },
+    {
+      "id": "real-object-bindings-remain-valid",
+      "feature": "Nullable expression composition",
+      "source": "Sub Main()\n  Dim sheet As Worksheet, cell As Range\n  Set sheet = Worksheets(1)\n  Set cell = sheet.Range(\"A1\")\n  Call Put(sheet, cell)\nEnd Sub\nSub Put(ByVal sheet As Worksheet, ByVal cell As Range)\n  cell.Value2 = sheet.Range(\"B2\").Row\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A1",
+              "value": 2
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Rejecting scalar-to-object bindings does not block actual Worksheet/Range bindings or their supported ByVal parameters."
+      }
+    }
+  ]
+}

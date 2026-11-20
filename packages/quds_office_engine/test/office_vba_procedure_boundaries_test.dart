@@ -166,31 +166,28 @@ End Function
       },
     );
 
-    test(
-      'discarded Variant results are legal but cannot become cell values',
-      () {
-        const helper = '''
+    test('unassigned Variant results are Empty when consumed or discarded', () {
+      const helper = '''
 Function Probe() As Variant
   Worksheets(1).Range("A1").Value2 = 17
 End Function
 ''';
-        expect(
-          _values(
-            _compile('Sub Main()\nCall Probe()\nProbe\nEnd Sub\n$helper'),
-          ),
-          <Object?>[17, 17],
-        );
-        expect(
-          () => _compile('''
+      expect(
+        _values(_compile('Sub Main()\nCall Probe()\nProbe\nEnd Sub\n$helper')),
+        <Object?>[17, 17],
+      );
+      expect(
+        _values(
+          _compile('''
 Sub Main()
   Worksheets(1).Range("A2").Value2 = Probe()
 End Sub
 $helper
 '''),
-          throwsA(_error('vba_unsupported')),
-        );
-      },
-    );
+        ),
+        <Object?>[17, null],
+      );
+    });
 
     test('completed invocations do not accumulate active frames', () {
       final plan = _compile('''

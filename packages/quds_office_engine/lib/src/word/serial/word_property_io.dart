@@ -93,9 +93,9 @@ abstract final class WordPropertyIo {
         continue;
       }
       result.children.removeWhere(
-        (n) =>
-            n is XmlElement &&
-            (n.localName == key || key == 'sz' && n.localName == 'szCs'),
+        // The regular-size field owns sz; a separate szCs is source data for
+        // the complex-script size and must survive a regular-size edit.
+        (n) => n is XmlElement && n.localName == key,
       );
       final List<XmlElement> replacement = generated.childrenNamed(key);
       if (replacement.isNotEmpty) {

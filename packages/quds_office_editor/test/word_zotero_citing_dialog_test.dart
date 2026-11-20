@@ -296,7 +296,7 @@ void main() {
     final controller = await _open(tester, desktop: desktop);
     expect(
       find.byTooltip(
-        'Insert text annotations and comments with active citations. Requires Zotero 9 or later.',
+        'Insert text, image and ink annotations with active citations. Requires Zotero 9 or later.',
       ),
       findsOneWidget,
     );

@@ -88,6 +88,55 @@ void main() {
       (s) => s.remove('schemaVersion'),
     );
     invalid('rejects another dialect', (s) => s['dialect'] = 'native');
+    test('Word schema admits only DOCX expectations and keeps its dialect', () {
+      final input = _minimalSuite()..['dialect'] = 'vba-word';
+      _first(input)['expected'] = <String, Object?>{
+        'steps': <Object?>[
+          <String, Object?>{
+            'tool': 'docx.replaceText',
+            'arguments': <String, Object?>{
+              'paragraph': 0,
+              'start': 0,
+              'end': 0,
+              'text': 'prefix',
+            },
+          },
+        ],
+      };
+      final parsed = VbaConformanceSuite.parse(jsonEncode(input));
+      expect(parsed.dialect, 'vba-word');
+      expect(parsed.cases.single.dialect, 'vba-word');
+      final step =
+          (_first(input)['expected']! as Map<String, Object?>)['steps']!
+              as List<Object?>;
+      (step.single! as Map<String, Object?>)['tool'] = 'xlsx.cellValue';
+      expect(
+        () => VbaConformanceSuite.parse(jsonEncode(input)),
+        throwsFormatException,
+      );
+    });
+    test(
+      'Excel schema retains its existing dialect without added receipt keys',
+      () {
+        final parsed = VbaConformanceSuite.parse(jsonEncode(_minimalSuite()));
+        expect(parsed.dialect, 'vba-excel');
+        expect(parsed.cases.single.dialect, 'vba-excel');
+        expect(runVbaConformanceSuite(parsed).keys.toSet(), {
+          'schemaVersion',
+          'suite',
+          'dialect',
+          'caseCount',
+          'cases',
+        });
+        expect(runVbaConformanceCase(parsed.cases.single).keys.toSet(), {
+          'id',
+          'feature',
+          'provenance',
+          'actual',
+          'nativePlanRoundTrip',
+        });
+      },
+    );
     invalid('rejects empty case collections', (s) => s['cases'] = <Object?>[]);
     invalid('rejects non-array cases', (s) => s['cases'] = 'case');
     invalid('rejects non-object cases', (s) => s['cases'] = <Object?>[null]);

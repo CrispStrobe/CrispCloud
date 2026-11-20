@@ -453,7 +453,7 @@ void main() {
     expect(find.text('Add annotation from Zotero'), findsOneWidget);
     expect(
       find.text(
-        'Requires Zotero 9 or later. Choose text annotations; image and ink annotations are not yet supported.',
+        'Requires Zotero 9 or later. Insert text, image or ink annotations with active citations.',
       ),
       findsOneWidget,
     );

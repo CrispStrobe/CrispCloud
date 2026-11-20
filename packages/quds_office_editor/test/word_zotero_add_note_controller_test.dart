@@ -24,6 +24,11 @@ const _selectedAnnotations =
     '<p><span class="underline" '
     'data-annotation="%7B%22pageLabel%22%3A%224%22%7D">'
     '<u>Another passage</u></span> $_secondPlaceholder</p></div>';
+const _structuredList =
+    '<ol start="3"><li><p>Parent $_firstPlaceholder</p>'
+    '<p><i>More detail</i></p><ul><li><p>Nested $_secondPlaceholder</p>'
+    '<p>Nested detail</p></li></ul><p>After nested</p></li>'
+    '<li><p>Next</p></li></ol>';
 
 String _preferences([int noteType = 0]) => jsonEncode({
   'dataVersion': 4,
@@ -217,6 +222,8 @@ List<Object?> _listProperties(WmlParagraph paragraph) => [
   paragraph.properties.listLabel,
   paragraph.properties.listRestart,
   paragraph.properties.numberingSuppressed,
+  paragraph.properties.indent.left,
+  paragraph.properties.indent.hanging,
 ];
 
 List<String> _citationsInReadingOrder(WmlDocument document) {
@@ -785,6 +792,166 @@ void main() {
       expect(reopened.paragraphs.last.properties.listLabel?.trim(), '1.');
     },
   );
+
+  for (final command in [
+    ZoteroCitingCommand.addNote,
+    ZoteroCitingCommand.addAnnotation,
+  ]) {
+    for (final noteType in [0, 1, 2]) {
+      test(
+        '${command.name} nested list paragraphs and citations have one undo step for style $noteType',
+        () {
+          final controller = _controller();
+          final document = controller.document;
+          final original = document.paragraphs.first;
+          final unrelated = document.paragraphs.last;
+          final before = _state(document);
+          final transaction = _begin(controller, command: command);
+          _stageCitedNote(
+            transaction,
+            html: _structuredList,
+            noteType: noteType,
+          );
+          _complete(transaction);
+          expect(_state(document), before);
+          expect(_numberingXml(document), isNull);
+          expect(controller.canUndo, isFalse);
+          transaction.apply();
+
+          final paragraphs = document.paragraphs.toList();
+          expect(paragraphs, hasLength(9));
+          expect(paragraphs.first.text, 'Before');
+          expect(paragraphs[7].text, 'After');
+          expect(paragraphs.last, same(unrelated));
+          final inserted = paragraphs.skip(1).take(6).toList();
+          expect(inserted.map((p) => p.properties.listLabel?.trim()), [
+            '3.',
+            null,
+            '◦',
+            null,
+            null,
+            '4.',
+          ]);
+          expect(inserted.map((p) => p.properties.ilvl), [0, 0, 1, 1, 0, 0]);
+          expect(inserted.map((p) => p.properties.indent.left), [
+            18,
+            18,
+            36,
+            36,
+            18,
+            18,
+          ]);
+          for (final index in [1, 3, 4]) {
+            expect(inserted[index].properties.numberingSuppressed, isTrue);
+            expect(inserted[index].properties.numId, isNull);
+          }
+          expect(inserted[1].text, 'More detail');
+          expect(
+            inserted[1].inlines.whereType<WmlRun>().single.properties.italic,
+            isTrue,
+          );
+          expect(inserted[3].text, 'Nested detail');
+          expect(inserted[4].text, 'After nested');
+          expect(_citationsInReadingOrder(document), [
+            '(First, 2024)',
+            '(Second, 2025)',
+          ]);
+          expect(controller.caret.paragraphIndex, 6);
+          expect(controller.caret.logicalIndex, 'Next'.length);
+          final after = _state(document);
+          final listState = inserted.map(_listProperties).toList();
+          final numbering = _numberingXml(document);
+
+          // Saving can materialize package parts; undo must still restore the
+          // pre-insertion document and remove only this operation's numbering.
+          WordSerializer().writeBytes(document);
+          controller.undo();
+          expect(_state(document), before);
+          expect(document.paragraphs.first, same(original));
+          expect(document.paragraphs.last, same(unrelated));
+          expect(_numberingXml(document), isNull);
+          expect(controller.caret.paragraphIndex, 0);
+          expect(controller.caret.logicalIndex, 6);
+          expect(controller.canUndo, isFalse);
+          controller.redo();
+          expect(_state(document), after);
+          expect(
+            document.paragraphs.skip(1).take(6).map(_listProperties),
+            listState,
+          );
+          expect(_numberingXml(document), numbering);
+
+          var reopened = document;
+          for (var cycle = 0; cycle < 2; cycle++) {
+            reopened = WordDeserializer().readBytes(
+              WordSerializer().writeBytes(reopened),
+            );
+            final lists = reopened.paragraphs.skip(1).take(6).toList();
+            expect(lists.map((p) => p.properties.listLabel?.trim()), [
+              '3.',
+              null,
+              '◦',
+              null,
+              null,
+              '4.',
+            ]);
+            expect(lists.map((p) => p.properties.indent.left), [
+              18,
+              18,
+              36,
+              36,
+              18,
+              18,
+            ]);
+            expect(_citationsInReadingOrder(reopened), [
+              '(First, 2024)',
+              '(Second, 2025)',
+            ]);
+            expect(
+              WordZotero.fields(reopened).every((field) => field.canEdit),
+              isTrue,
+            );
+            expect(reopened.footnotes, hasLength(noteType == 1 ? 2 : 0));
+            expect(reopened.endnotes, hasLength(noteType == 2 ? 2 : 0));
+          }
+        },
+      );
+    }
+
+    test(
+      '${command.name} stale nested-list result leaves numbering untouched',
+      () {
+        final controller = _controller();
+        final before = _state(controller.document);
+        final transaction = _begin(controller, command: command);
+        _stageCitedNote(transaction, html: _structuredList);
+        _complete(transaction);
+        controller.caret
+          ..logicalIndex = 1
+          ..collapseSelection();
+        expect(transaction.apply, throwsStateError);
+        expect(_state(controller.document), before);
+        expect(_numberingXml(controller.document), isNull);
+        expect(controller.canUndo, isFalse);
+        expect(controller.isDirty, isFalse);
+      },
+    );
+
+    test(
+      '${command.name} excessive list depth refuses the entire insertion',
+      () {
+        final controller = _controller();
+        final before = _state(controller.document);
+        final transaction = _begin(controller, command: command);
+        final html = '${'<ol><li>Item' * 10}Deep${'</li></ol>' * 10}';
+        expect(() => _insertText(transaction, html), throwsUnsupportedError);
+        expect(_state(controller.document), before);
+        expect(_numberingXml(controller.document), isNull);
+        expect(controller.canUndo, isFalse);
+        expect(controller.isDirty, isFalse);
+      },
+    );
+  }
 
   test(
     'redo allocates a numbering relationship without overwriting a reused ID',

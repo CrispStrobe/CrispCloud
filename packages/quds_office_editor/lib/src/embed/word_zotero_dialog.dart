@@ -1363,7 +1363,7 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
               ),
               Tooltip(
                 message:
-                    'Insert text annotations and comments with active citations. Requires Zotero 9 or later.',
+                    'Insert text, image and ink annotations with active citations. Requires Zotero 9 or later.',
                 child: OutlinedButton(
                   key: const ValueKey('zotero-add-annotation'),
                   onPressed: _busy || !_canEdit
@@ -1868,7 +1868,7 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
               if (command == ZoteroCitingCommand.addAnnotation) ...[
                 const SizedBox(height: 12),
                 const Text(
-                  'Requires Zotero 9 or later. Choose text annotations; image and ink annotations are not yet supported.',
+                  'Requires Zotero 9 or later. Insert text, image or ink annotations with active citations.',
                   key: ValueKey('zotero-annotation-requirements'),
                 ),
               ],

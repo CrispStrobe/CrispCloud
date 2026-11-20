@@ -17,4 +17,7 @@ export 'src/automation/office_macro_runtime.dart';
 export 'src/automation/office_operations.dart'
     show OfficeMacroAssetResolver, OfficeMacroFormat, OfficeOperationCatalog;
 export 'src/automation/office_vba_language.dart'
-    show OfficeVbaCompileException, OfficeVbaMacroLanguage;
+    show
+        OfficeVbaCompileException,
+        OfficeVbaMacroLanguage,
+        OfficeVbaWordMacroLanguage;

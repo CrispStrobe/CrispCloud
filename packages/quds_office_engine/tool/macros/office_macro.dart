@@ -19,12 +19,18 @@ Future<void> main(List<String> args) async {
       });
       return;
     }
-    final compileVba = args.isNotEmpty && args.first == 'compile-vba';
+    final compileWordVba = args.isNotEmpty && args.first == 'compile-word-vba';
+    final compileVba =
+        args.isNotEmpty && (args.first == 'compile-vba' || compileWordVba);
     if ((args.length == 3 && args.first == 'compile') ||
         (compileVba && (args.length == 3 || args.length == 4))) {
       final languages = OfficeMacroLanguages();
       final source = compileVba
-          ? _vbaSource(args[1], args.length == 4 ? args[3] : 'Main')
+          ? _vbaSource(
+              args[1],
+              args.length == 4 ? args[3] : 'Main',
+              word: compileWordVba,
+            )
           : OfficeMacroSource.fromJson(_readObject(args[1]));
       final macro = languages.compile(source);
       _write(args[2], Uint8List.fromList(utf8.encode(macro.encode())));
@@ -39,14 +45,22 @@ Future<void> main(List<String> args) async {
       _print(_session(args[1]).inspect());
       return;
     }
+    final wordVba =
+        args.isNotEmpty &&
+        (args.first == 'run-word-vba' || args.first == 'validate-word-vba');
     final vba =
         args.isNotEmpty &&
-        (args.first == 'run-vba' || args.first == 'validate-vba');
+        (args.first == 'run-vba' || args.first == 'validate-vba' || wordVba);
     final run =
-        args.isNotEmpty && (args.first == 'run' || args.first == 'run-vba');
+        args.isNotEmpty &&
+        (args.first == 'run' ||
+            args.first == 'run-vba' ||
+            args.first == 'run-word-vba');
     final validate =
         args.isNotEmpty &&
-        (args.first == 'validate' || args.first == 'validate-vba');
+        (args.first == 'validate' ||
+            args.first == 'validate-vba' ||
+            args.first == 'validate-word-vba');
     if ((!run && !validate) ||
         (run && (args.length < 4 || args.length > 5)) ||
         (validate && (args.length < 3 || args.length > 4))) {
@@ -60,7 +74,11 @@ Future<void> main(List<String> args) async {
         '  compile-vba SOURCE.bas OUTPUT.json [ENTRYPOINT]\n'
         '  run-vba INPUT SOURCE.bas OUTPUT [ENTRYPOINT]\n'
         '  validate-vba INPUT SOURCE.bas [ENTRYPOINT]\n'
-        'VBA commands use the bounded vba-excel dialect (default entry: Main).\n'
+        '  compile-word-vba SOURCE.bas OUTPUT.json [ENTRYPOINT]\n'
+        '  run-word-vba INPUT SOURCE.bas OUTPUT [ENTRYPOINT]\n'
+        '  validate-word-vba INPUT SOURCE.bas [ENTRYPOINT]\n'
+        'VBA commands use vba-excel; word-vba commands use vba-word '
+        '(default entry: Main).\n'
         'Office input/output must have the same extension. Image assets require '
         'a host resolver through the Dart API.',
       );
@@ -79,6 +97,7 @@ Future<void> main(List<String> args) async {
             _vbaSource(
               args[2],
               args.length > parameterIndex ? args[parameterIndex] : 'Main',
+              word: wordVba,
             ),
           )
         : OfficeMacro.parse(_readText(args[2]));
@@ -91,7 +110,7 @@ Future<void> main(List<String> args) async {
     if (run) _write(args[3], session.bytes);
     _print(<String, Object?>{
       ...result.toJson(),
-      if (vba) 'language': 'vba-excel',
+      if (vba) 'language': wordVba ? 'vba-word' : 'vba-excel',
       if (run) 'output': args[3],
     });
   } on OfficeMacroException catch (error) {
@@ -131,13 +150,17 @@ OfficeMacroSession _session(String path) {
 
 String _extension(String path) => path.split('.').last.toLowerCase();
 
-OfficeMacroSource _vbaSource(String path, String entryPoint) {
+OfficeMacroSource _vbaSource(
+  String path,
+  String entryPoint, {
+  bool word = false,
+}) {
   final filename = File(path).uri.pathSegments.last;
   final dot = filename.lastIndexOf('.');
   return OfficeMacroSource(
-    language: 'vba-excel',
+    language: word ? 'vba-word' : 'vba-excel',
     source: _readText(path),
-    format: OfficeMacroFormat.xlsx,
+    format: word ? OfficeMacroFormat.docx : OfficeMacroFormat.xlsx,
     moduleName: dot > 0 ? filename.substring(0, dot) : filename,
     entryPoint: entryPoint,
   );

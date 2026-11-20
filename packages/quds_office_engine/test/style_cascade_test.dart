@@ -6,7 +6,137 @@ import 'package:test/test.dart';
 import '../tool/fidelity/office_steps.dart' as cli;
 import '../tool/fidelity/style_fixture.dart';
 
+OpcPackage _fontSizeFixture(String direct, {String defaults = ''}) {
+  final builder = DocxDocumentBuilder()..paragraph('Regular size');
+  final package = OpcPackage.openBytes(builder.build());
+  package
+      .getPart('/word/document.xml')!
+      .writeText(
+        '<w:document xmlns:w="${OfficeNamespaces.w}"><w:body><w:p><w:r>'
+        '<w:rPr>$direct</w:rPr><w:t>Regular size</w:t></w:r></w:p>'
+        '<w:sectPr/></w:body></w:document>',
+      );
+  package
+      .getPart('/word/styles.xml')!
+      .writeText(
+        '<w:styles xmlns:w="${OfficeNamespaces.w}"><w:docDefaults>'
+        '<w:rPrDefault><w:rPr>$defaults</w:rPr></w:rPrDefault>'
+        '</w:docDefaults></w:styles>',
+      );
+  return package;
+}
+
+Map<String, String?> _sizeProperties(String xml) => <String, String?>{
+  for (final element in XmlDocument.parse(xml).root!.childElements)
+    if (element.namespaceUri == OfficeNamespaces.w &&
+        (element.localName == 'sz' || element.localName == 'szCs'))
+      element.localName: element.getAttribute('val'),
+};
+
 void main() {
+  group('regular font size projection', () {
+    for (final (name, direct, defaults, expected)
+        in <(String, String, String, int)>[
+          (
+            'direct regular size overrides default complex-script size',
+            '<w:sz w:val="21"/>',
+            '<w:sz w:val="20"/><w:szCs w:val="20"/>',
+            21,
+          ),
+          (
+            'regular size wins with complex-script size last',
+            '<w:sz w:val="21"/><w:szCs w:val="32"/>',
+            '',
+            21,
+          ),
+          (
+            'regular size wins with reversed source element order',
+            '<w:szCs w:val="32"/><w:sz w:val="21"/>',
+            '',
+            21,
+          ),
+          (
+            'complex-script-only input retains the compatibility fallback',
+            '<w:szCs w:val="32"/>',
+            '',
+            32,
+          ),
+          (
+            'direct complex-script size does not replace inherited regular size',
+            '<w:szCs w:val="32"/>',
+            '<w:sz w:val="22"/>',
+            22,
+          ),
+        ]) {
+      test(name, () {
+        final package = _fontSizeFixture(direct, defaults: defaults);
+        final originalStyles = XmlDocument.parse(
+          package.getPart('/word/styles.xml')!.readText(),
+        ).toXmlString();
+        var document = WordDeserializer().read(package);
+        final source = _sizeProperties(
+          document.paragraphs.single.inlines
+              .whereType<WmlRun>()
+              .single
+              .properties
+              .sourcePropertiesXml!,
+        );
+        for (var cycle = 0; cycle < 3; cycle++) {
+          final properties = document.paragraphs.single.inlines
+              .whereType<WmlRun>()
+              .single
+              .properties;
+          expect(
+            properties.fontSizeHalfPoints,
+            expected,
+            reason: 'cycle $cycle',
+          );
+          expect(
+            _sizeProperties(properties.sourcePropertiesXml!),
+            source,
+            reason: 'retained direct size properties, cycle $cycle',
+          );
+          final saved = WordSerializer().write(document);
+          expect(
+            XmlDocument.parse(
+              saved.getPart('/word/styles.xml')!.readText(),
+            ).toXmlString(),
+            originalStyles,
+          );
+          document = WordDeserializer().readBytes(saved.save());
+        }
+      });
+    }
+
+    test('native regular size edits retain separate complex-script XML', () {
+      var document = WordDeserializer().read(
+        _fontSizeFixture(
+          '<w:szCs w:val="32"/>',
+          defaults: '<w:sz w:val="20"/><w:szCs w:val="24"/>',
+        ),
+      );
+      cli.applyStep(document, <String, Object?>{
+        'op': 'runFormat',
+        'paragraph': 0,
+        'size': 10.5,
+      });
+      for (var cycle = 0; cycle < 3; cycle++) {
+        document = WordDeserializer().readBytes(
+          WordSerializer().writeBytes(document),
+        );
+        final properties = document.paragraphs.single.inlines
+            .whereType<WmlRun>()
+            .single
+            .properties;
+        expect(properties.fontSizeHalfPoints, 21, reason: 'cycle $cycle');
+        expect(
+          _sizeProperties(properties.sourcePropertiesXml!),
+          <String, String>{'sz': '21', 'szCs': '32'},
+        );
+      }
+    });
+  });
+
   test(
     'scripts apply character/table styles and edit table run definitions',
     () {

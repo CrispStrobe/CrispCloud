@@ -6,6 +6,7 @@ import 'package:flutter/painting.dart';
 import 'package:quds_office_engine/quds_office_engine.dart';
 
 import '../editor_word/paint_run_text.dart';
+import '../embed/office_host_fonts.dart';
 
 typedef VisualImageDecoder =
     void Function(Uint8List bytes, void Function(ui.Image image) onDecoded);
@@ -667,7 +668,9 @@ abstract final class PaintOfficeVisual {
           fontSize: fontSize,
           color: color,
           fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
-          fontFamily: fontFamily ?? PaintRunText.fontFallbacks.first,
+          fontFamily: OfficeHostFonts.paintFamily(
+            fontFamily ?? PaintRunText.fontFallbacks.first,
+          ),
           fontFamilyFallback: PaintRunText.fontFallbacks,
         ),
       ),

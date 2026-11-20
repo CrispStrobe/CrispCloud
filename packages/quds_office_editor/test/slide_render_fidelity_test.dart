@@ -199,6 +199,90 @@ void _captureRichRuns(PmlShape shape) {
 }
 
 void main() {
+  testWidgets('autofit scales all rich lines and their paragraph terminators', (
+    tester,
+  ) async {
+    final PmlShape shape = _shape()
+      ..text = 'Alpha\nBeta\nGamma'
+      ..richText = [
+        for (final word in ['Alpha', 'Beta', 'Gamma'])
+          PmlTextParagraph(runs: [PmlTextRun(text: word, fontSizePt: 20)]),
+      ];
+    await _mount(tester, shape);
+    final Rect before = (await _inkBounds(tester, 0xFF0000))!;
+    final PmlShape fitted = shape.copy()..textScale = 0.5;
+    await _mount(tester, fitted);
+    final Rect after = (await _inkBounds(tester, 0xFF0000))!;
+    expect(after.width, lessThan(before.width * 0.7));
+    expect(after.height, lessThan(before.height * 0.7));
+  });
+
+  testWidgets('autofit spacing reduction reaches plain and rich rendering', (
+    tester,
+  ) async {
+    for (final bool rich in [false, true]) {
+      final PmlShape shape = _shape();
+      if (rich) {
+        shape.richText = [
+          for (final word in ['Alpha', 'Beta', 'Gamma'])
+            PmlTextParagraph(runs: [PmlTextRun(text: word, fontSizePt: 20)]),
+        ];
+      }
+      await _mount(tester, shape);
+      final Rect before = (await _inkBounds(tester, 0xFF0000))!;
+      await _mount(tester, shape.copy()..lineSpacingReduction = 0.3);
+      final Rect after = (await _inkBounds(tester, 0xFF0000))!;
+      expect(after.height, lessThan(before.height - 5), reason: 'rich=$rich');
+      expect(after.width, before.width);
+    }
+  });
+
+  testWidgets('autofit keeps every fitted line in a small frame', (
+    tester,
+  ) async {
+    final PmlShape shape = _shape()
+      ..text = 'Alpha\nBeta\nGamma\nDelta'
+      ..fontSizePt = 40
+      ..textScale = 0.25
+      ..transform = const PmlTransform(
+        x: 30 * 12700,
+        y: 40 * 12700,
+        cx: 300 * 12700,
+        cy: 80 * 12700,
+      )
+      ..richText = [
+        for (final word in ['Alpha', 'Beta', 'Gamma', 'Delta'])
+          PmlTextParagraph(
+            runs: [
+              PmlTextRun(
+                text: word,
+                fontSizePt: 40,
+                color: word == 'Delta' ? '0000FF' : 'FF0000',
+              ),
+            ],
+          ),
+      ];
+    await _mount(tester, shape);
+    expect(await _inkBounds(tester, 0x0000FF), isNotNull);
+  });
+
+  testWidgets('fixed rich leading is unchanged by autofit spacing reduction', (
+    tester,
+  ) async {
+    final PmlShape shape = _shape()
+      ..richText = [
+        for (final word in ['Alpha', 'Beta', 'Gamma'])
+          PmlTextParagraph(
+            lineSpacingPt: 30,
+            runs: [PmlTextRun(text: word, fontSizePt: 20)],
+          ),
+      ];
+    await _mount(tester, shape);
+    final Rect before = (await _inkBounds(tester, 0xFF0000))!;
+    await _mount(tester, shape.copy()..lineSpacingReduction = 0.5);
+    expect(await _inkBounds(tester, 0xFF0000), before);
+  });
+
   testWidgets(
     'slide animation cannot hide an inherited decoration with the same id',
     (WidgetTester tester) async {

@@ -133,11 +133,14 @@ abstract final class OfficePdfVisuals {
     );
     final PictureAdjust adj = visual.picture;
     if (adj.shadow) {
+      canvas.save();
       canvas.setFillColor('B0B0B0');
       canvas.rect(x + 2.5, y + 2.5, w, h);
       canvas.fill();
+      canvas.restore();
     }
     if (adj.transparency > 0.001) {
+      canvas.save();
       canvas.setAlpha(1 - adj.transparency);
     }
     final double cropLeft = adj.cropLeft.clamp(0.0, 0.9);
@@ -162,12 +165,14 @@ abstract final class OfficePdfVisuals {
     } else {
       canvas.drawImage(name, x, y, w, h);
     }
+    if (adj.transparency > 0.001) {
+      canvas.restore();
+    }
     if (adj.borderWidth > 0 && adj.borderColor.isNotEmpty) {
+      canvas.save();
       canvas.setLineWidth(adj.borderWidth);
       canvas.strokeRect(x, y, w, h, adj.borderColor);
-    }
-    if (adj.transparency > 0.001) {
-      canvas.setAlpha(1);
+      canvas.restore();
     }
   }
 

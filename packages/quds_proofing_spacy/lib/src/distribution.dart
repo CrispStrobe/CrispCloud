@@ -357,9 +357,9 @@ SpacyPlatformStatus spacyPlatformStatus(SpacyPlatform platform) {
     SpacyPlatform.macosX64 => 'Intel macOS is not built or qualified.',
     SpacyPlatform.iosArm64 || SpacyPlatform.androidArm64 =>
       'Mobile apps must ship the native library inside the signed app; only '
-          'the model bundle may be downloaded. No mobile build is qualified '
-          'for grammar; the Android arm64 library in the Studio app has '
-          'recorded analysis parity.',
+          'the model bundle may be downloaded. The Android arm64 library in '
+          'the Studio app has recorded analysis and manual German grammar; '
+          'iOS has no recorded claim.',
     SpacyPlatform.web => 'Native analysis is unavailable in the browser.',
     SpacyPlatform.linuxX64 ||
     SpacyPlatform.macosArm64 => 'No package is configured.',
@@ -393,7 +393,9 @@ const spacyGrammarMacosBundledUnsignedSha256 =
 /// The arm64-v8a library the Studio Android app ships byte-exact in its
 /// jniLibs (`tool/build.py --android`: CrispEmbed v2 runtime 45b05770, static
 /// PCRE2, NDK 28.2, API 24, static libc++, stripped by the build; the app
-/// keeps it from being stripped again). Analysis only.
+/// keeps it from being stripped again). Analysis and manual German grammar
+/// are recorded for exactly these bytes. An ELF shared object has no embedded
+/// signature, so the whole-file SHA-256 is the identity (no code digest).
 const spacyAndroidArm64BundledSha256 =
     'ed730f629ce4eafe139885e9b1029a41fe05f3d5032fb992fb61eb834950f7ad';
 
@@ -449,12 +451,28 @@ const spacyRecordedBuilds = <SpacyBuildQualification>[
         'sentences, 2,571 token/sentence fields) exact on these bytes '
         '(integration_test/mobile_native_proofing_test.dart). Component '
         'evidence only.',
+    grammar:
+        'Manual de-DE only: cross-binary replay on these bytes inside the '
+        'Studio APK on an Android 16 arm64 emulator, through the Studio '
+        "host's grammar worker (no NER, capability mask 15). Consumed W6 "
+        'panel 22/30 exact corrections vs 5/30 deterministic and W7 '
+        'extension panel 24/40 vs 14/40, both with no valid or guard '
+        'findings and annotations, planner decisions, arms and corrected '
+        'rechecks identical case by case to the qualified Linux build. '
+        'Grammar v2 panel and 977 UD German-GSD test sentences: all 1,221 '
+        'annotation digests identical to the macOS qualification; '
+        'np-agreement 13/24, preposition-case 18/24 and verb-position 9/24 '
+        'exact native corrections, 0 valid/guard findings and the same 2 '
+        'corpus findings, as recorded. Every row equals the qualified macOS '
+        'library on the same source. Not a general German grammar quality '
+        'claim.',
     limitations: [
-      'No grammar qualification for this build; the planner refuses it.',
       'Emulator, not a physical device. Numerical stage traces, ctest and '
           'the C text-API controls were not run on Android.',
       'Valid only for these exact bytes: an APK build that strips or '
           'rewrites the library again produces an unrecorded build.',
+      'Grammar uses the parser without named entities (capability mask 15).',
+      'arm64-v8a only; the x86_64 library is unrecorded.',
     ],
   ),
   SpacyBuildQualification(

@@ -1422,7 +1422,7 @@
       "source": "Sub Main()\n  Dim result As Variant, value As Variant\n  result = Len(value)\nEnd Sub\n",
       "expected": {
         "diagnostic": {
-          "code": "vba_unsupported",
+          "code": "vba_type_error",
           "line": 3,
           "column": 16
         }
@@ -1432,7 +1432,7 @@
         "references": [
           "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
         ],
-        "note": "Deliberate bounded dialect rule or diagnostic location, not a claim of complete VBA coercion or Office-host parity."
+        "note": "Empty and Null are supported Variant states, but these String intrinsics require an actual String; explicit CStr(Empty) supplies one. No Office host was executed."
       }
     },
     {
@@ -1460,7 +1460,7 @@
       "source": "Sub Main()\n  Dim result As Variant\n  result = Left$(Null,1)\nEnd Sub\n",
       "expected": {
         "diagnostic": {
-          "code": "vba_name_error",
+          "code": "vba_type_error",
           "line": 3,
           "column": 18
         }
@@ -1470,7 +1470,7 @@
         "references": [
           "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
         ],
-        "note": "Null and Empty are reserved but unavailable values in the current dialect; unresolved names retain the existing stable vba_name_error diagnostic. No Office host was executed."
+        "note": "Empty and Null are supported Variant states, but these String intrinsics require an actual String; explicit CStr(Empty) supplies one. No Office host was executed."
       }
     },
     {
@@ -1479,7 +1479,7 @@
       "source": "Sub Main()\n  Dim result As Variant\n  result = Len(Empty)\nEnd Sub\n",
       "expected": {
         "diagnostic": {
-          "code": "vba_name_error",
+          "code": "vba_type_error",
           "line": 3,
           "column": 16
         }
@@ -1489,7 +1489,7 @@
         "references": [
           "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
         ],
-        "note": "Null and Empty are reserved but unavailable values in the current dialect; unresolved names retain the existing stable vba_name_error diagnostic. No Office host was executed."
+        "note": "Empty and Null are supported Variant states, but these String intrinsics require an actual String; explicit CStr(Empty) supplies one. No Office host was executed."
       }
     },
     {

@@ -362,11 +362,11 @@ Worksheets(1).Range("A4").Value2 = (-0.0 <> 0)
       'external workbook':
           'Workbooks("other.xlsx").Worksheets(1).Range("A1").Value2 = 1',
       'COM creation': 'x = CreateObject("Excel.Application")',
-      'arbitrary function': 'x = CStr(1)',
+      'arbitrary function': 'x = CDate(1)',
       'merge fidelity': 'Worksheets(1).Range("A1:B2").Merge',
       'column width units': 'Worksheets(1).Range("A1").ColumnWidth = 12',
       'implicit conversion': 'Dim x As Long\nx = "12"',
-      'uninitialized Variant': 'Dim x\nWorksheets(1).Range("A1").Value2 = x',
+      'Null cell value': 'Worksheets(1).Range("A1").Value2 = Null',
       'uninitialized object': 'Dim x As Worksheet\nx.Range("A1").Value2 = 1',
       'reassigned counter': 'For i = 1 To 3\ni = i + 1\nNext',
       'reused counter': 'For i = 1 To 2\nFor i = 1 To 2\nNext\nNext',
