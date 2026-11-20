@@ -100,6 +100,7 @@ jobs:
           (cd packages/quds_office_engine && dart pub get)
           (cd packages/quds_reports && dart pub get)
           (cd packages/quds_office_editor && flutter pub get)
+          (cd packages/quds_proofing_spacy && dart pub get)
           (cd packages/legacy_doc_parser && dart pub get)
           (cd packages/dart_pdf_editor && flutter pub get)
           (cd packages/dart_pdf_editor_secure_storage && flutter pub get)
