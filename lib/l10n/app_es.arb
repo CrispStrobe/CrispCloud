@@ -531,5 +531,13 @@
   "accessed": "Último acceso",
   "computeMd5": "Calcular MD5",
 
-  "protocol": "Protocolo"
+  "protocol": "Protocolo",
+  "officeBrand": "CrispOffice",
+  "officeDocuments": "Documentos (.docx)",
+  "officeSpreadsheets": "Hojas de cálculo (.xlsx)",
+  "officePresentations": "Presentaciones (.pptx)",
+  "officePdf": "Documentos PDF",
+  "officeMail": "Correo",
+  "officeEditorAbout": "La edición en CrispOffice utiliza el motor de documentos independiente y de código abierto CrispOffice (MIT). Admite documentos OOXML (.docx, .xlsx, .pptx) y guarda los cambios en el archivo original.",
+  "officeTrademarkNotice": "Los nombres de productos se utilizan únicamente para describir formatos de archivo y compatibilidad. CrispOffice es software independiente y no está afiliado, patrocinado ni respaldado por Microsoft ni por ningún otro proveedor de suites ofimáticas."
 }

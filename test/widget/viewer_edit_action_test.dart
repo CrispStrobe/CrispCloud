@@ -1,3 +1,5 @@
+import 'package:crisp_cloud/services/document_fonts.dart';
+
 import 'dart:io';
 
 import 'package:crisp_cloud/widgets/csv_spreadsheet_import_dialog.dart';
@@ -59,6 +61,7 @@ class _Auth extends ChangeNotifier implements AuthNotifier {
 }
 
 void main() {
+  setUpAll(DocumentFonts.ensureRegistered);
   late WorkflowFakeClient cloud;
   late _Auth auth;
   late ProviderContainer container;

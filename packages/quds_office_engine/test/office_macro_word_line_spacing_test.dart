@@ -501,6 +501,62 @@ void main() {
     });
   }
 
+  for (final operation in [
+    _step(),
+    <String, Object?>{
+      'op': 'paragraphFormat',
+      'paragraph': 0,
+      'lineSpacing': 1.5,
+      'lineSpacingRule': 'auto',
+    },
+  ]) {
+    for (final (name, input) in <(String, Uint8List)>[
+      (
+        'within direct properties',
+        _fixture(
+          properties:
+              '<mc:AlternateContent><mc:Choice Requires="x">'
+              '<x:metadata x:val="retain-choice"/></mc:Choice>'
+              '<mc:Fallback><x:metadata x:val="retain-fallback"/></mc:Fallback>'
+              '</mc:AlternateContent>',
+        ),
+      ),
+      (
+        'within a property extension',
+        _fixture(
+          properties:
+              '<x:extension><mc:AlternateContent><mc:Choice Requires="x">'
+              '<x:metadata x:val="retain-choice"/></mc:Choice>'
+              '<mc:Fallback/></mc:AlternateContent></x:extension>',
+        ),
+      ),
+      (
+        'around direct properties',
+        _fixture(
+          body:
+              '<w:p><mc:AlternateContent><mc:Choice Requires="x">'
+              '<w:pPr><x:metadata x:val="retain-choice"/></w:pPr></mc:Choice>'
+              '<mc:Fallback><w:pPr><x:metadata x:val="retain-fallback"/></w:pPr>'
+              '</mc:Fallback></mc:AlternateContent><w:r><w:t>Original</w:t></w:r></w:p>',
+        ),
+      ),
+      (
+        'around a style property packet',
+        _fixture(
+          styles:
+              '<mc:AlternateContent><mc:Choice Requires="x">'
+              '<w:style w:type="paragraph" w:styleId="Choice"><w:pPr>'
+              '<x:metadata x:val="retain-choice"/></w:pPr></w:style></mc:Choice>'
+              '<mc:Fallback/></mc:AlternateContent>',
+        ),
+      ),
+    ]) {
+      test('${operation['op']} refuses nonspacing alternatives $name', () {
+        _refuses(_read(input), operation);
+      });
+    }
+  }
+
   for (final value in <Object?>[
     null,
     true,

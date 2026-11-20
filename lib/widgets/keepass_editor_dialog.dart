@@ -206,6 +206,15 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Supplied attachment bytes can load synchronously from initState.
+    // Looking up the inherited modal route is safe only after that lifecycle
+    // phase, and a locked database must also participate in workspace closing.
+    _workspace ??= DocumentWorkspaceSession.attach(context, _requestClose);
+  }
+
+  @override
   void didUpdateWidget(KeePassEditorDialog oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.file != widget.file ||
@@ -272,7 +281,6 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
       if (!mounted || generation != _generation) return;
       setState(() {
         _activity?.opened();
-        _workspace ??= DocumentWorkspaceSession.attach(context, _requestClose);
         _encrypted = Uint8List.fromList(bytes);
         _loading = false;
       });

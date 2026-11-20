@@ -1234,25 +1234,25 @@ class AppLocalizationsJa extends AppLocalizations {
   String get officeBrand => 'CrispOffice';
 
   @override
-  String get officeDocuments => 'Documents (.docx)';
+  String get officeDocuments => '文書 (.docx)';
 
   @override
-  String get officeSpreadsheets => 'Spreadsheets (.xlsx)';
+  String get officeSpreadsheets => '表計算 (.xlsx)';
 
   @override
-  String get officePresentations => 'Presentations (.pptx)';
+  String get officePresentations => 'プレゼンテーション (.pptx)';
 
   @override
-  String get officePdf => 'PDF documents';
+  String get officePdf => 'PDF 文書';
 
   @override
-  String get officeMail => 'Mail';
+  String get officeMail => 'メール';
 
   @override
   String get officeEditorAbout =>
-      'CrispOffice editing is powered by the independent open-source CrispOffice document engine (MIT). It supports OOXML documents (.docx, .xlsx, .pptx) and saves back to the original file.';
+      'CrispOffice の編集機能は、独立したオープンソースの CrispOffice 文書エンジン（MIT）を使用しています。OOXML 文書（.docx、.xlsx、.pptx）に対応し、変更を元のファイルに保存します。';
 
   @override
   String get officeTrademarkNotice =>
-      'Product names are used only to describe file formats and compatibility. CrispOffice is independent software and is not affiliated with, sponsored by, or endorsed by Microsoft or any other office-suite vendor.';
+      '製品名は、ファイル形式と互換性の説明にのみ使用しています。CrispOffice は独立したソフトウェアであり、Microsoft やその他のオフィススイートの提供元との提携関係はなく、後援や承認も受けていません。';
 }

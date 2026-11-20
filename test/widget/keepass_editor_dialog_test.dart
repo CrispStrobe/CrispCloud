@@ -494,8 +494,25 @@ void main() {
   testWidgets(
     'detached attachment bytes remain read only even without a readOnly flag',
     (tester) async {
-      await _open(tester, _Sessions(), detached: true);
+      final sessions = _Sessions();
+      await _open(tester, sessions, detached: true);
       await _unlock(tester);
+      expect(
+        sessions.opened,
+        hasLength(1),
+        reason: tester
+            .widgetList<Text>(find.byType(Text))
+            .map((t) => t.data)
+            .join(' | '),
+      );
+      expect(
+        _key('entry-one'),
+        findsOneWidget,
+        reason: tester
+            .widgetList<Text>(find.byType(Text))
+            .map((t) => t.data)
+            .join(' | '),
+      );
       await tester.tap(_key('entry-one'));
       await tester.pump();
       expect(find.text('Read only'), findsOneWidget);

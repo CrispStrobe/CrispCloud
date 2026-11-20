@@ -842,8 +842,9 @@ class PdfEditorController extends PdfViewerController {
     if (file == null ||
         pageCount == 0 ||
         !config.allowsMutation ||
-        file.permissions?.canModify == false)
+        file.permissions?.canModify == false) {
       return;
+    }
     final before = file.pageAt(index).rotate;
     final after = ((before + degrees) % 360 + 360) % 360;
     if (after == before) return;

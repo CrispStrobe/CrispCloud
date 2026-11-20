@@ -140,6 +140,7 @@ void main() {
   );
 
   test('Commander workflow captions have explicit translations', () {
+    final missing = <String>[];
     final calls = RegExp(
       r'''\.commanderTr\(\s*(r?)("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')''',
     );
@@ -214,13 +215,12 @@ void main() {
                       value;
                 },
               );
-        expect(
-          CommanderStrings.contains(english),
-          isTrue,
-          reason: '$name / $english',
-        );
+        if (!CommanderStrings.contains(english)) {
+          missing.add('$name / $english');
+        }
       }
     }
+    expect(missing, isEmpty, reason: 'Missing workflow translations');
   });
   test('viewer modes and sync choices have explicit translations', () {
     for (final label in [

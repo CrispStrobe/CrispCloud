@@ -1,3 +1,4 @@
+import 'package:crisp_cloud/services/document_fonts.dart';
 // test/widget/office_editor_dialog_test.dart
 //
 // Tests the F4 Office editor host: routing, slide editor loading and the safe
@@ -58,9 +59,8 @@ class _OversizedOfficeClient extends WorkflowFakeClient {
 
 Uint8List _macroSheet({required bool template}) {
   final source = ZipDecoder().decodeBytes(
-    File(
-      'test/fixtures/office_native_workflows/native-sheet-source.xlsx',
-    ).readAsBytesSync(),
+    File('test/fixtures/office_native_workflows/native-sheet-source.xlsx')
+        .readAsBytesSync(),
   );
   final files = <String, List<int>>{
     for (final file in source.files)
@@ -90,6 +90,7 @@ Uint8List _macroSheet({required bool template}) {
 }
 
 void main() {
+  setUpAll(DocumentFonts.ensureRegistered);
   test('Office extensions are routed to the Office editor', () {
     expect(isOfficeFileName('report.docx'), isTrue);
     expect(isOfficeFileName('budget.xlsx'), isTrue);
