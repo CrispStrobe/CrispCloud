@@ -6,6 +6,8 @@ import json
 import os
 from pathlib import Path
 import plistlib
+import re
+import tempfile
 import subprocess
 import sys
 
@@ -98,9 +100,38 @@ def build(profile, fuse, flutter, arguments):
     previous = config.read_bytes() if config.exists() else None
     config.write_text(f'CRISP_BUILD_PROFILE = {profile}\nCRISP_APP_ENTITLEMENTS = {ENTITLEMENTS[profile]}\n')
     try:
-        return subprocess.run([flutter, 'build', 'macos', '--release',
-            f'--dart-define=CRISP_DISTRIBUTION={profile}',
-            f'--dart-define=CRISP_ENABLE_FUSE={str(fuse).lower()}', *arguments], cwd=ROOT).returncode
+        # Flutter's generated version settings apply to Runner alone. Pass the
+        # same values globally so the Finder extension cannot retain an old
+        # CFBundleVersion or resolve it to an empty string during archive/signing.
+        pubspec = ROOT / 'pubspec.yaml'
+        match = re.search(r'^version:\s*(\S+)\s*$', pubspec.read_text(), re.M) if pubspec.exists() else None
+        version = match[1].split('+', 1) if match else []
+        values = {'build-name': version[0], 'build-number': version[1] if len(version) > 1 else '1'} if version else {}
+        for index, argument in enumerate(arguments):
+            for key in ('build-name', 'build-number'):
+                if argument.startswith(f'--{key}='):
+                    values[key] = argument.split('=', 1)[1]
+                elif argument == f'--{key}' and index + 1 < len(arguments):
+                    values[key] = arguments[index + 1]
+        with tempfile.TemporaryDirectory(prefix='crispcloud-version-') as temporary:
+            environment = os.environ.copy()
+            if values:
+                if not re.fullmatch(r'\d+\.\d+\.\d+', values.get('build-name', '')) or not re.fullmatch(r'\d+', values.get('build-number', '')):
+                    raise ValueError('macOS release requires a numeric version and build number')
+                parent = environment.get('XCODE_XCCONFIG_FILE')
+                text = ''
+                if parent:
+                    parent_path = str(Path(parent).resolve())
+                    if any(c in parent_path for c in ('"', '\n', '\r')):
+                        raise ValueError('Unsafe inherited Xcode configuration path')
+                    text = f'#include "{parent_path}"\n'
+                text += f"FLUTTER_BUILD_NAME = {values['build-name']}\nFLUTTER_BUILD_NUMBER = {values['build-number']}\n"
+                settings = Path(temporary) / 'Version.xcconfig'
+                settings.write_text(text)
+                environment['XCODE_XCCONFIG_FILE'] = str(settings)
+            return subprocess.run([flutter, 'build', 'macos', '--release',
+                f'--dart-define=CRISP_DISTRIBUTION={profile}',
+                f'--dart-define=CRISP_ENABLE_FUSE={str(fuse).lower()}', *arguments], cwd=ROOT, env=environment).returncode
     finally:
         if previous is None:
             config.unlink(missing_ok=True)

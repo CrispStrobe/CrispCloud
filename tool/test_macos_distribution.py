@@ -54,6 +54,25 @@ class ProfileTests(unittest.TestCase):
             with mock.patch.object(subprocess, 'run', side_effect=compiler):
                 self.assertEqual(distribution.build('github', False, 'flutter', ['--no-pub']), 0)
 
+    def test_runner_and_extension_share_version_and_inherited_settings(self):
+        with tempfile.TemporaryDirectory() as d, mock.patch.object(distribution, 'ROOT', Path(d)):
+            (Path(d) / 'pubspec.yaml').write_text('version: 1.3.4+32\n')
+            parent = Path(d) / 'Existing.xcconfig'
+            parent.write_text('ARCHS = arm64\n')
+            settings_path = None
+            def compiler(command, **kwargs):
+                nonlocal settings_path
+                settings_path = Path(kwargs['env']['XCODE_XCCONFIG_FILE'])
+                text = settings_path.read_text()
+                self.assertIn(f'#include "{parent.resolve()}"', text)
+                self.assertIn('FLUTTER_BUILD_NAME = 1.3.5\n', text)
+                self.assertIn('FLUTTER_BUILD_NUMBER = 44\n', text)
+                return subprocess.CompletedProcess(command, 0)
+            with mock.patch.dict(distribution.os.environ, {'XCODE_XCCONFIG_FILE': str(parent)}), mock.patch.object(subprocess, 'run', side_effect=compiler):
+                self.assertEqual(distribution.build('appstore', False, 'flutter', ['--build-name=1.3.5', '--build-number', '44']), 0)
+            self.assertFalse(settings_path.exists())
+            self.assertEqual(parent.read_text(), 'ARCHS = arm64\n')
+
     def test_entitlement_policy_rejects_swapped_signed_profiles(self):
         for profile, sandbox in [('github', True), ('appstore', False)]:
             with self.subTest(profile=profile), self.assertRaises(ValueError):
