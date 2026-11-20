@@ -126,12 +126,6 @@ abstract final class PaintOfficeVisual {
         : rect;
     canvas.save();
     final Offset c = dest.center;
-    if (adj.shadow) {
-      canvas.drawRect(
-        dest.shift(const Offset(3, 3)),
-        Paint()..color = const Color(0x66000000),
-      );
-    }
     if (adj.rotationDeg.abs() > 0.05 || adj.flipH || adj.flipV) {
       canvas.translate(c.dx, c.dy);
       if (adj.rotationDeg.abs() > 0.05) {
@@ -144,9 +138,6 @@ abstract final class PaintOfficeVisual {
       ..filterQuality = FilterQuality.high
       ..isAntiAlias = true
       ..blendMode = BlendMode.srcOver;
-    if (adj.transparency > 0.01) {
-      paint.color = Color.fromRGBO(255, 255, 255, 1 - adj.transparency);
-    }
     if (adj.brightness.abs() > 0.01 ||
         (adj.contrast - 1).abs() > 0.01 ||
         adj.transparency > 0.001) {

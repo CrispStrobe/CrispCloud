@@ -1647,6 +1647,7 @@ abstract final class OfficePdfExport {
           shape.path,
           shape.transform.flipH,
           shape.transform.flipV,
+          gradient: shape.gradient,
         );
       }
       if (shape.strokeColor.isNotEmpty) {
@@ -1698,6 +1699,7 @@ abstract final class OfficePdfExport {
     double w,
     double h,
     PmlGradientFill gradient,
+    List<PmlPathPoint> path,
   ) {
     canvas.save();
     switch (preset) {
@@ -1720,14 +1722,27 @@ abstract final class OfficePdfExport {
       case PmlShapePreset.rightArrow:
         _shapePath(canvas, preset, x, y, w, h);
       case PmlShapePreset.connector:
-      case PmlShapePreset.freeform:
         canvas.rect(x, y, w, h);
+      case PmlShapePreset.freeform:
+        if (path.length >= 2) {
+          canvas.moveTo(x + path.first.x / 12700, y + path.first.y / 12700);
+          for (int i = 1; i < path.length; i++) {
+            canvas.lineTo(x + path[i].x / 12700, y + path[i].y / 12700);
+          }
+          canvas.closePath();
+        } else {
+          canvas.rect(x, y, w, h);
+        }
     }
     canvas.clip();
     final double angle = gradient.angleDegrees;
     final double cx = x + w / 2;
     final double cy = y + h / 2;
-    final double span = math.sqrt(w * w + h * h);
+    final double radians = angle * math.pi / 180;
+    final double span =
+        w * math.cos(radians).abs() + h * math.sin(radians).abs();
+    final double crossSpan =
+        w * math.sin(radians).abs() + h * math.cos(radians).abs();
     canvas.rotateAround(cx, cy, angle);
     const int steps = 72;
     for (int i = 0; i < steps; i++) {
@@ -1736,9 +1751,9 @@ abstract final class OfficePdfExport {
       canvas.setFillColor(_gradientColor(gradient, (t0 + t1) / 2));
       canvas.rect(
         cx - span / 2 + span * t0,
-        cy - span / 2,
+        cy - crossSpan / 2,
         span * (t1 - t0) + 0.35,
-        span,
+        crossSpan,
       );
       canvas.fill();
     }
@@ -2019,8 +2034,10 @@ abstract final class OfficePdfExport {
     bool flipV, {
     PmlGradientFill? gradient,
   }) {
-    if (gradient != null && gradient.stops.length >= 2) {
-      _paintGradient(canvas, preset, x, y, w, h, gradient);
+    if (gradient != null &&
+        gradient.stops.length >= 2 &&
+        preset != PmlShapePreset.connector) {
+      _paintGradient(canvas, preset, x, y, w, h, gradient, path);
       return;
     }
     if (fill.isEmpty) {

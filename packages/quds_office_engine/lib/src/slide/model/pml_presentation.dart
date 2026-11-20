@@ -105,22 +105,17 @@ class PmlGradientStop {
 
 /// A linear DrawingML gradient fill.
 class PmlGradientFill {
-  PmlGradientFill({
-    List<PmlGradientStop>? stops,
-    this.angleDegrees = 0,
-    this.radial = false,
-  }) : stops = stops ?? <PmlGradientStop>[];
+  PmlGradientFill({List<PmlGradientStop>? stops, this.angleDegrees = 0})
+    : stops = stops ?? <PmlGradientStop>[];
 
   final List<PmlGradientStop> stops;
   double angleDegrees;
-  bool radial;
 
   String get fallbackColor => stops.isEmpty ? '' : stops.first.color;
 
   PmlGradientFill copy() => PmlGradientFill(
     stops: <PmlGradientStop>[for (final stop in stops) stop.copy()],
     angleDegrees: angleDegrees,
-    radial: radial,
   );
 }
 
@@ -229,9 +224,6 @@ class PmlTableCell {
 
   /// fillColor API.
   String fillColor;
-
-  /// Optional gradient fill; takes precedence over [fillColor] when present.
-  PmlGradientFill? gradient;
 
   /// textColor API.
   String textColor;
@@ -673,6 +665,7 @@ class PmlSlide {
   String? _primaryMasterBackground;
   XmlElement? _sourceBackground;
   PmlShape? _backgroundPicture;
+  PmlShape? _backgroundGradient;
   bool _backgroundFromSource = false;
 
   /// Authored slide fill retained with its namespace bindings for serialization.
@@ -682,6 +675,9 @@ class PmlSlide {
   /// The selected imported picture, also present first in [backgroundShapes].
   PmlShape? get backgroundPicture => _backgroundPicture;
 
+  /// Selected imported gradient, painted before ordinary decorations.
+  PmlShape? get backgroundGradient => _backgroundGradient;
+
   /// A direct solid-color assignment must be serialized as an authored fill.
   bool get writesSolidBackground =>
       !_backgroundFromSource &&
@@ -689,18 +685,28 @@ class PmlSlide {
       _background.isNotEmpty;
 
   /// Retains an imported fill after its displayed color and image are resolved.
-  void retainSourceBackground(XmlElement? source, {PmlShape? picture}) {
+  void retainSourceBackground(
+    XmlElement? source, {
+    PmlShape? picture,
+    PmlShape? gradient,
+  }) {
     _clearSourceBackground();
     _sourceBackground = source?.copy();
     _backgroundFromSource = true;
     _backgroundPicture = picture;
+    _backgroundGradient = gradient;
     if (picture != null) backgroundShapes.insert(0, picture);
+    if (gradient != null) backgroundShapes.insert(0, gradient);
   }
 
   void _clearSourceBackground() {
     if (_backgroundPicture != null) backgroundShapes.remove(_backgroundPicture);
+    if (_backgroundGradient != null) {
+      backgroundShapes.remove(_backgroundGradient);
+    }
     _sourceBackground = null;
     _backgroundPicture = null;
+    _backgroundGradient = null;
     _backgroundFromSource = false;
   }
 
@@ -797,6 +803,12 @@ class PmlSlide {
       final int index = backgroundShapes.indexOf(_backgroundPicture!);
       if (index >= 0) {
         result._backgroundPicture = result.backgroundShapes[index];
+      }
+    }
+    if (_backgroundGradient != null) {
+      final int index = backgroundShapes.indexOf(_backgroundGradient!);
+      if (index >= 0) {
+        result._backgroundGradient = result.backgroundShapes[index];
       }
     }
     return result;

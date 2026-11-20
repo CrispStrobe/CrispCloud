@@ -661,35 +661,6 @@ void main() {
       }
     });
 
-    test('gradient fills retain stops and angle', () {
-      final PmlPresentation deck = _deck(<String>[
-        _sld(
-          '<p:sp><p:nvSpPr><p:cNvPr id="2" name="Gradient"/>'
-          '<p:cNvSpPr/><p:nvPr/></p:nvSpPr><p:spPr>'
-          '${_xfrm(0, 0, 914400, 914400)}'
-          '<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>'
-          '<a:gradFill><a:gsLst>'
-          '<a:gs pos="0"><a:srgbClr val="112233"/></a:gs>'
-          '<a:gs pos="100000"><a:srgbClr val="AABBCC"/></a:gs>'
-          '</a:gsLst><a:lin ang="5400000"/></a:gradFill>'
-          '</p:spPr></p:sp>',
-        ),
-      ]);
-      final PmlShape shape = deck.slides.single.shapes.single;
-      expect(shape.gradient?.stops, hasLength(2));
-      expect(shape.gradient!.stops.first.color, '112233');
-      expect(shape.gradient!.stops.last.color, 'AABBCC');
-      expect(shape.gradient!.angleDegrees, 90);
-      expect(shape.fillColor, '112233');
-      final PmlPresentation reopened = SlideDeserializer().readBytes(
-        SlideSerializer().writeBytes(deck),
-      );
-      expect(
-        reopened.slides.single.shapes.single.gradient?.stops,
-        hasLength(2),
-      );
-    });
-
     test(
       'authored slide image replaces inherited images behind decorations',
       () {
@@ -972,13 +943,13 @@ void main() {
           layoutBackground: _gradientBackground('ABCDEF', 'FEDCBA'),
         );
         expect(overrides.slides.single.background, '123456');
+        expect(overrides.slides.single.backgroundShapes, hasLength(1));
         expect(
           overrides
               .slides
               .single
-              .backgroundShapes
-              .single
-              .gradient
+              .backgroundGradient
+              ?.gradient
               ?.stops
               .first
               .color,
@@ -992,21 +963,120 @@ void main() {
           layoutBackground: _gradientBackground('ABCDEF', 'FEDCBA'),
         );
         expect(layout.slides.single.background, 'ABCDEF');
+        expect(layout.slides.single.backgroundShapes, hasLength(1));
         expect(
-          layout
-              .slides
-              .single
-              .backgroundShapes
-              .single
-              .gradient
-              ?.stops
-              .first
-              .color,
+          layout.slides.single.backgroundGradient?.gradient?.stops.first.color,
           'ABCDEF',
         );
         expect(layout.slides.single.inheritsMasterBackground, isFalse);
       },
     );
+
+    test(
+      'selected gradient survives copies and repeated saves then clears on edit',
+      () {
+        final PmlPresentation deck = _deck(
+          <String>[
+            _sld('', background: _gradientBackground('112233', 'AABBCC')),
+          ],
+          masterBackground: _pictureBackground,
+          masterBackgroundImage: _backgroundPng(0, 255, 0),
+          masterShapes: _textBox(8, 'Master decoration'),
+        );
+        final PmlSlide copy = deck.slides.single.copy(id: 999);
+        expect(
+          copy.backgroundGradient,
+          isNot(same(deck.slides.single.backgroundGradient)),
+        );
+        expect(copy.backgroundGradient?.gradient?.stops, hasLength(2));
+        deck.slides.add(copy);
+        PmlPresentation saved = deck;
+        for (var i = 0; i < 2; i++) {
+          saved = SlideDeserializer().readBytes(
+            SlideSerializer().writeBytes(saved),
+          );
+          for (final PmlSlide slide in saved.slides) {
+            expect(slide.backgroundPicture, isNull);
+            expect(
+              slide.backgroundGradient?.gradient?.stops.first.color,
+              '112233',
+            );
+            expect(slide.backgroundShapes.map((shape) => shape.name), [
+              'Background',
+              'TextBox 8',
+            ]);
+          }
+        }
+        saved.slides.first.background = '556677';
+        final PmlSlide changed = SlideDeserializer()
+            .readBytes(SlideSerializer().writeBytes(saved))
+            .slides
+            .first;
+        expect(changed.backgroundGradient, isNull);
+        expect(changed.backgroundShapes.map((shape) => shape.name), [
+          'TextBox 8',
+        ]);
+        expect(changed.background, '556677');
+        expect(saved.slides.last.backgroundGradient, isNotNull);
+      },
+    );
+
+    test(
+      'master gradient survives hidden decorations and layout solid overrides it',
+      () {
+        final PmlSlide inherited = _deck(
+          <String>[_sld('', showMasterShapes: '0')],
+          masterBackground: _gradientBackground('112233', 'AABBCC'),
+          masterShapes: _textBox(8, 'Hidden decoration'),
+        ).slides.single;
+        expect(inherited.backgroundShapes, hasLength(1));
+        expect(
+          inherited.backgroundGradient,
+          same(inherited.backgroundShapes.single),
+        );
+        expect(inherited.inheritsMasterBackground, isTrue);
+        inherited.updateMasterBackground('778899');
+        expect(inherited.backgroundGradient, isNull);
+        expect(inherited.backgroundShapes, isEmpty);
+        final PmlSlide overridden = _deck(
+          <String>[_sld('')],
+          masterBackground: _gradientBackground('112233', 'AABBCC'),
+          layoutBackground: _solidBackground('778899'),
+        ).slides.single;
+        expect(overridden.backgroundGradient, isNull);
+        expect(overridden.backgroundShapes, isEmpty);
+        expect(overridden.background, '778899');
+      },
+    );
+
+    test('gradient fills retain stops and angle', () {
+      final PmlPresentation deck = _deck(<String>[
+        _sld(
+          '<p:sp><p:nvSpPr><p:cNvPr id="2" name="Gradient"/>'
+          '<p:cNvSpPr/><p:nvPr/></p:nvSpPr><p:spPr>'
+          '${_xfrm(0, 0, 914400, 914400)}'
+          '<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>'
+          '<a:gradFill><a:gsLst>'
+          '<a:gs pos="0"><a:srgbClr val="112233"/></a:gs>'
+          '<a:gs pos="100000"><a:srgbClr val="AABBCC"/></a:gs>'
+          '</a:gsLst><a:lin ang="5400000"/></a:gradFill>'
+          '</p:spPr></p:sp>',
+        ),
+      ]);
+      final PmlShape shape = deck.slides.single.shapes.single;
+      expect(shape.gradient?.stops, hasLength(2));
+      expect(shape.gradient!.stops.first.color, '112233');
+      expect(shape.gradient!.stops.last.color, 'AABBCC');
+      expect(shape.gradient!.angleDegrees, 90);
+      expect(shape.fillColor, '112233');
+      final PmlPresentation reopened = SlideDeserializer().readBytes(
+        SlideSerializer().writeBytes(deck),
+      );
+      expect(
+        reopened.slides.single.shapes.single.gradient?.stops,
+        hasLength(2),
+      );
+    });
 
     test('master background resolves theme lumMod', () {
       final PmlPresentation deck = _deck(

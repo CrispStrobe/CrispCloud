@@ -1,0 +1,59 @@
+00:00 +0: loading test/slide_gradient_merge_test.dart
+00:00 +0: test/slide_gradient_merge_test.dart: three-stop gradient is copied and round-tripped independently
+00:00 +1: test/slide_gradient_merge_test.dart: a later text gradient does not borrow a preceding shape fill
+00:00 +2: test/slide_gradient_merge_test.dart: path gradient retains the existing solid fallback
+00:00 +3: test/slide_gradient_merge_test.dart: picture shadow precedes the image in PDF export
+00:00 +4: test/slide_import_fidelity_test.dart: shape import text boxes stay text; only p:pic becomes a picture
+00:00 +5: test/slide_import_fidelity_test.dart: shape import text boxes stay text; only p:pic becomes a picture
+00:00 +6: test/slide_import_fidelity_test.dart: shape import text boxes stay text; only p:pic becomes a picture
+00:00 +7: test/slide_import_fidelity_test.dart: shape import extLst a:ext never overrides the xfrm extents
+00:00 +8: test/slide_import_fidelity_test.dart: shape import picture srcRect keeps deep crops and edge expansion
+00:00 +9: test/slide_import_fidelity_test.dart: shape import rich text keeps run styles, paragraph defaults, and anchor
+00:00 +10: test/slide_import_fidelity_test.dart: shape import layout decorations paint behind slide content
+00:00 +11: test/slide_import_fidelity_test.dart: shape import decorations retain ownership, ordering and independent copies
+00:00 +12: test/slide_import_fidelity_test.dart: shape import showMasterSp honors both levels of decoration inheritance
+00:00 +13: test/slide_import_fidelity_test.dart: shape import master decorations precede layout and copy independently
+00:00 +14: test/slide_import_fidelity_test.dart: shape import slide showMasterSp=0 survives saving and copying
+00:00 +15: test/slide_import_fidelity_test.dart: shape import layout showMasterSp=0 retains its own decorations
+00:00 +16: test/slide_import_fidelity_test.dart: shape import slide showMasterSp=false survives saving and copying
+00:00 +17: test/slide_import_fidelity_test.dart: shape import layout showMasterSp=false retains its own decorations
+00:00 +18: test/slide_import_fidelity_test.dart: shape import block arrow presets survive import
+00:00 +19: test/slide_import_fidelity_test.dart: shape import flipped line connectors keep their slide direction
+00:00 +20: test/slide_import_fidelity_test.dart: shape import connector flips 1/0 survive a PPTX roundtrip
+00:00 +21: test/slide_import_fidelity_test.dart: shape import connector flips true/false survive a PPTX roundtrip
+00:00 +22: test/slide_import_fidelity_test.dart: shape import connector flips 0/1 survive a PPTX roundtrip
+00:00 +23: test/slide_import_fidelity_test.dart: shape import connector flips false/true survive a PPTX roundtrip
+00:00 +24: test/slide_import_fidelity_test.dart: shape import connector flips true/true survive a PPTX roundtrip
+00:00 +25: test/slide_import_fidelity_test.dart: shape import background blip becomes a full-slide decoration
+00:00 +26: test/word_kerning_properties_test.dart: adding a language to styleless imports preserves the kerning fallback
+00:00 +27: test/word_kerning_properties_test.dart: adding a language to styleless imports preserves the kerning fallback
+00:00 +28: test/word_kerning_properties_test.dart: adding a language to styleless imports preserves the kerning fallback
+00:00 +29: test/word_kerning_properties_test.dart: adding a language to styleless imports preserves the kerning fallback
+00:00 +30: test/word_kerning_properties_test.dart: adding a language to styleless imports preserves the kerning fallback
+00:00 +31: test/word_kerning_properties_test.dart: adding a language to styleless imports preserves the kerning fallback
+00:00 +32: test/word_kerning_properties_test.dart: adding a language to styleless imports preserves the kerning fallback
+00:00 +33: test/word_kerning_properties_test.dart: adding a language to styleless imports preserves the kerning fallback
+00:00 +34: test/word_kerning_properties_test.dart: adding a language to styleless imports preserves the kerning fallback
+00:00 +35: test/word_kerning_properties_test.dart: adding a language to styleless imports preserves the kerning fallback
+00:00 +36: test/word_kerning_properties_test.dart: adding a language to styleless imports preserves the kerning fallback
+00:00 +37: test/word_kerning_properties_test.dart: adding a language to styleless imports preserves the kerning fallback
+00:00 +38: test/word_kerning_properties_test.dart: adding a language to styleless imports preserves the kerning fallback
+00:00 +39: test/word_kerning_properties_test.dart: adding a language to styleless imports preserves the kerning fallback
+00:00 +40: test/word_kerning_properties_test.dart: adding a language to styleless imports preserves the kerning fallback
+00:00 +41: test/word_kerning_properties_test.dart: adding a language to styleless imports preserves the kerning fallback
+00:00 +42: test/word_kerning_properties_test.dart: adding a language to styleless imports preserves the kerning fallback
+00:00 +43: test/word_kerning_properties_test.dart: adding a language to styleless imports preserves the kerning fallback
+00:00 +44: test/word_kerning_properties_test.dart: adding a language to styleless imports preserves the kerning fallback
+00:00 +45: test/word_kerning_properties_test.dart: adding a language to styleless imports preserves the kerning fallback
+00:00 +46: test/word_kerning_properties_test.dart: adding a language to styleless imports preserves the kerning fallback
+00:00 +47: test/word_kerning_properties_test.dart: adding a language to styleless imports preserves the kerning fallback
+00:00 +48: test/word_kerning_properties_test.dart: adding a language to styleless imports preserves the kerning fallback
+00:00 +49: test/word_kerning_properties_test.dart: adding a language to styleless imports preserves the kerning fallback
+00:00 +50: test/word_kerning_properties_test.dart: adding a language to styleless imports preserves the kerning fallback
+00:00 +51: test/word_kerning_properties_test.dart: adding a language to styleless imports preserves the kerning fallback
+00:00 +52: test/word_kerning_properties_test.dart: adding a language to styleless imports preserves the kerning fallback
+00:00 +53: test/word_kerning_properties_test.dart: adding a language to styleless imports preserves the kerning fallback
+00:00 +54: test/word_kerning_properties_test.dart: inherited threshold stays sparse and direct edits survive save
+00:00 +55: test/word_kerning_properties_test.dart: new documents retain explicit kerning across save and reopen
+00:00 +56: test/word_kerning_properties_test.dart: native kerning thresholds resolve, clone, and round-trip sparsely
+00:00 +57: All tests passed!

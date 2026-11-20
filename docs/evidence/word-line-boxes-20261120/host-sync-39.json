@@ -1,0 +1,21 @@
+{
+  "from": "6171c56ee6f2421b40d9209cc6b897e505d007b1",
+  "to": "c16e121365b7c52c0b66371381c8c58f592e1d8e",
+  "write": [
+    "packages/quds_office_editor/CHANGELOG.md",
+    "packages/quds_office_editor/lib/src/editor_slide/render_slide_stage.dart",
+    "packages/quds_office_editor/lib/src/visual/paint_office_visual.dart",
+    "packages/quds_office_editor/test/picture_adjustment_render_test.dart",
+    "packages/quds_office_editor/test/slide_incoming_pptx_regression_test.dart",
+    "packages/quds_office_engine/CHANGELOG.md",
+    "packages/quds_office_engine/lib/src/pdf/office_pdf_export.dart",
+    "packages/quds_office_engine/lib/src/slide/model/pml_presentation.dart",
+    "packages/quds_office_engine/lib/src/slide/serial/slide_serial.dart",
+    "packages/quds_office_engine/lib/src/slide/shapes/drawingml.dart",
+    "packages/quds_office_engine/test/slide_gradient_merge_test.dart",
+    "packages/quds_office_engine/test/slide_import_fidelity_test.dart"
+  ],
+  "delete": [],
+  "pinned_files": 2939,
+  "applied": true
+}

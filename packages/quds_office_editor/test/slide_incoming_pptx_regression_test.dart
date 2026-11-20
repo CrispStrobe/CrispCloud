@@ -141,6 +141,35 @@ Future<_Raster> _render(
 }
 
 void main() {
+  for (final double angle in [0.0, 90.0]) {
+    testWidgets('gradient reaches edge colors at $angle degrees', (
+      tester,
+    ) async {
+      final PmlShape shape = _shape(2, width: 200, height: 40)
+        ..gradient = PmlGradientFill(
+          angleDegrees: angle,
+          stops: [
+            PmlGradientStop(position: 0, color: 'FF0000'),
+            PmlGradientStop(position: 0.5, color: '00FF00'),
+            PmlGradientStop(position: 1, color: '0000FF'),
+          ],
+        );
+      final _Raster raster = await _render(
+        tester,
+        PmlSlide(id: 256, background: 'FFFFFF', shapes: [shape]),
+      );
+      int channel(int x, int y, int offset) =>
+          raster.bytes[(y * raster.width + x) * 4 + offset];
+      final int firstX = angle == 0 ? 31 : 130;
+      final int firstY = angle == 0 ? 50 : 30;
+      final int lastX = angle == 0 ? 228 : 130;
+      final int lastY = angle == 0 ? 50 : 69;
+      expect(channel(firstX, firstY, 0), greaterThan(220));
+      expect(channel(lastX, lastY, 2), greaterThan(220));
+      expect(channel(130, 50, 1), greaterThan(220));
+    });
+  }
+
   testWidgets('hidden master flag retains resolved layout decorations', (
     tester,
   ) async {

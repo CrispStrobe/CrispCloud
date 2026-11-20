@@ -34,6 +34,7 @@ List<PmlShape> parseSlideShapes(
   final List<PmlGradientStop> gradientStops = <PmlGradientStop>[];
   double? gradientStopPosition;
   double gradientAngle = 0;
+  var gradientIsLinear = true;
 
   /// textFillPending API.
   var textFillPending = false;
@@ -93,18 +94,18 @@ List<PmlShape> parseSlideShapes(
       } else if (reader.localName == 'style') {
         inStyle = false;
         styleRef = null;
-      } else if (reader.localName == 'gradFill') {
+      } else if (reader.localName == 'gradFill' && inGradFill) {
         if (current != null && gradientStops.isNotEmpty) {
           final List<PmlGradientStop> stops = <PmlGradientStop>[
             ...gradientStops,
           ]..sort((a, b) => a.position.compareTo(b.position));
-          current.gradient = PmlGradientFill(
-            stops: stops,
-            angleDegrees: gradientAngle,
-          );
+          current.gradient = gradientIsLinear
+              ? PmlGradientFill(stops: stops, angleDegrees: gradientAngle)
+              : null;
           current.fillColor = stops.first.color;
         }
         inGradFill = false;
+        gradientStops.clear();
         gradientStopPosition = null;
         fillPending = false;
       } else if (reader.localName == 'spPr') {
@@ -172,6 +173,9 @@ List<PmlShape> parseSlideShapes(
         current.visual = OfficeVisual(kind: OfficeVisualKind.picture);
       }
       shapes.add(current);
+      inGradFill = false;
+      gradientStops.clear();
+      gradientStopPosition = null;
       fillPending = false;
       textFillPending = false;
       strokePending = false;
@@ -340,6 +344,7 @@ List<PmlShape> parseSlideShapes(
       gradientStops.clear();
       gradientStopPosition = null;
       gradientAngle = 0;
+      gradientIsLinear = true;
       fillPending = false;
       explicitFill = true;
     } else if ((reader.localName == 'solidFill' ||
@@ -371,6 +376,8 @@ List<PmlShape> parseSlideShapes(
     } else if (reader.localName == 'gs' && inGradFill) {
       gradientStopPosition =
           (int.tryParse(reader.getAttribute('pos') ?? '') ?? 0) / 100000;
+    } else if (reader.localName == 'path' && inGradFill) {
+      gradientIsLinear = false;
     } else if (reader.localName == 'lin' && inGradFill) {
       gradientAngle =
           (int.tryParse(reader.getAttribute('ang') ?? '') ?? 0) / 60000;

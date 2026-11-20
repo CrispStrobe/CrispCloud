@@ -13,3 +13,7 @@ The Ubuntu run used the SMS-created screen `362339.quds-word-layout-20261120`, n
 Full sources, native Word references, metrics and logs: [Quds validation](https://github.com/CrispStrobe/quds_office_suite/tree/e06eb3a7e21b71c1d5d4b1d2cc9abde24774eb26/docs/validation/word-line-boxes-20261120). No proprietary font bytes, font-bearing PDFs or model weights were added to the product. Mac canvas qualification uses the x64 tester under Rosetta; the release build is ARM64.
 
 Signed ARM64 preview 38 is saved at `~/Applications/CrispCloud Word Layout Preview fc143675.app`. Strict deep signature verification and a 20-second startup/credential-policy check passed. The app payload differs from build 37. See `macos-build-38.json` and the build/sign/startup logs. The existing debug app was preserved. This is a local preview; no TestFlight upload was performed.
+
+## Preview 39 follow-up
+
+The installed Office-font integration arrived while preview 38 was building. It was retained and merged into canonical Quds main `c16e121365b7c52c0b66371381c8c58f592e1d8e`, together with incoming main through `2f9bfd33`. CrispCloud’s managed Office source now contains 2,939 files. The follow-up passed 21 host font tests and 57 engine integration tests. Preview 38 remains a verified historical checkpoint; preview 39 includes this newer font/source integration. No font files were added to the product.

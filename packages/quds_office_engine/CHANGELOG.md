@@ -4,6 +4,13 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Integrate captured PPTX linear-gradient and picture-shadow work. Preserve
+  gradient stops and angles through shape copying and save/reopen, render the
+  gradient in PDF, and keep selected slide/layout/master gradient backgrounds
+  separate from decorations so overrides and master edits remain correct.
+  Path gradients retain the prior solid fallback; native PowerPoint rendering
+  is not newly qualified by this increment.
+
 - Resolve PPTX picture and gradient background ownership per slide, layout and
   master, preserving authored overrides independently of hidden master shapes.
   Retain authored background XML and image relationships through copying and

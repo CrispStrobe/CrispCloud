@@ -1176,24 +1176,16 @@ class RenderSlideStage extends RenderBox implements MouseTrackerAnnotation {
         final List<double> stops = <double>[
           for (final stop in gradient.stops) stop.position,
         ];
-        if (gradient.radial) {
-          paint.shader = ui.Gradient.radial(
-            r.center,
-            r.shortestSide / 2,
-            colors,
-            stops,
-          );
-        } else {
-          final double radians = gradient.angleDegrees * math.pi / 180;
-          final double radius = r.longestSide / 2;
-          final Offset direction = Offset(math.cos(radians), math.sin(radians));
-          paint.shader = ui.Gradient.linear(
-            r.center - direction * radius,
-            r.center + direction * radius,
-            colors,
-            stops,
-          );
-        }
+        final double radians = gradient.angleDegrees * math.pi / 180;
+        final Offset direction = Offset(math.cos(radians), math.sin(radians));
+        final double radius =
+            (r.width * direction.dx.abs() + r.height * direction.dy.abs()) / 2;
+        paint.shader = ui.Gradient.linear(
+          r.center - direction * radius,
+          r.center + direction * radius,
+          colors,
+          stops,
+        );
       }
       switch (shape.preset) {
         case PmlShapePreset.rect:
