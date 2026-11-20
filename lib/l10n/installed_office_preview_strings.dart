@@ -2,7 +2,7 @@ import 'package:flutter/widgets.dart';
 
 import '../services/installed_office_converter.dart';
 
-/// Controls for explicitly previewing a Word document with an installed app.
+/// Controls for explicitly previewing a Writer document with an installed app.
 class InstalledOfficePreviewStrings {
   const InstalledOfficePreviewStrings(this.locale);
 
@@ -62,7 +62,7 @@ class InstalledOfficePreviewStrings {
       'timedOut': 'The installed application did not finish in time. You can retry or use the built-in preview.',
       'invalidPdf': 'The application did not return a valid PDF preview.',
       'engineBusy':
-          'Close Microsoft Word before creating this preview, then try again.',
+          'Close Microsoft Office before creating this preview, then try again.',
       'unsafe': 'The application could not apply the required macro and external-link settings.',
       'cleanupFailed': 'The installed application could not finish cleaning up its temporary preview files.',
       'failed': 'The page preview could not be created or opened. Try again or use the built-in preview.',
@@ -87,7 +87,7 @@ class InstalledOfficePreviewStrings {
       'tooLarge': 'Das Dokument überschreitet die Größen- oder Komplexitätsgrenzen der Vorschau.',
       'timedOut': 'Die installierte Anwendung wurde nicht rechtzeitig fertig. Versuchen Sie es erneut oder verwenden Sie die integrierte Vorschau.',
       'invalidPdf': 'Die Anwendung hat keine gültige PDF-Vorschau erstellt.',
-      'engineBusy': 'Schließen Sie Microsoft Word, bevor Sie diese Vorschau erstellen, und versuchen Sie es erneut.',
+      'engineBusy': 'Schließen Sie Microsoft Office, bevor Sie diese Vorschau erstellen, und versuchen Sie es erneut.',
       'unsafe': 'Die Anwendung konnte die erforderlichen Makro- und Verknüpfungseinstellungen nicht anwenden.',
       'cleanupFailed': 'Die installierte Anwendung konnte ihre temporären Vorschaudateien nicht vollständig bereinigen.',
       'failed': 'Die Seitenvorschau konnte nicht erstellt oder geöffnet werden. Versuchen Sie es erneut oder verwenden Sie die integrierte Vorschau.',
@@ -113,7 +113,7 @@ class InstalledOfficePreviewStrings {
       'timedOut': 'L’application installée n’a pas terminé à temps. Réessayez ou utilisez l’aperçu intégré.',
       'invalidPdf': 'L’application n’a pas renvoyé un aperçu PDF valide.',
       'engineBusy':
-          'Fermez Microsoft Word avant de créer cet aperçu, puis réessayez.',
+          'Fermez Microsoft Office avant de créer cet aperçu, puis réessayez.',
       'unsafe': 'L’application n’a pas pu appliquer les paramètres requis pour les macros et les liens externes.',
       'cleanupFailed': 'L’application installée n’a pas pu terminer le nettoyage de ses fichiers d’aperçu temporaires.',
       'failed': 'L’aperçu des pages n’a pas pu être créé ou ouvert. Réessayez ou utilisez l’aperçu intégré.',
@@ -138,7 +138,7 @@ class InstalledOfficePreviewStrings {
       'tooLarge': 'El documento supera los límites de tamaño o complejidad de la vista previa.',
       'timedOut': 'La aplicación instalada no terminó a tiempo. Vuelve a intentarlo o usa la vista previa integrada.',
       'invalidPdf': 'La aplicación no devolvió una vista previa PDF válida.',
-      'engineBusy': 'Cierra Microsoft Word antes de crear esta vista previa y vuelve a intentarlo.',
+      'engineBusy': 'Cierra Microsoft Office antes de crear esta vista previa y vuelve a intentarlo.',
       'unsafe': 'La aplicación no pudo aplicar la configuración requerida de macros y enlaces externos.',
       'cleanupFailed': 'La aplicación instalada no pudo terminar de limpiar sus archivos temporales de vista previa.',
       'failed': 'No se pudo crear o abrir la vista previa de páginas. Vuelve a intentarlo o usa la vista previa integrada.',
@@ -164,7 +164,7 @@ class InstalledOfficePreviewStrings {
       'tooLarge': 'O documento excede os limites de tamanho ou complexidade da pré-visualização.',
       'timedOut': 'A aplicação instalada não terminou a tempo. Tente novamente ou utilize a pré-visualização integrada.',
       'invalidPdf': 'A aplicação não devolveu uma pré-visualização PDF válida.',
-      'engineBusy': 'Feche o Microsoft Word antes de criar esta pré-visualização e tente novamente.',
+      'engineBusy': 'Feche o Microsoft Office antes de criar esta pré-visualização e tente novamente.',
       'unsafe': 'A aplicação não conseguiu aplicar as definições necessárias de macros e ligações externas.',
       'cleanupFailed': 'A aplicação instalada não conseguiu concluir a limpeza dos seus ficheiros temporários de pré-visualização.',
       'failed': 'Não foi possível criar ou abrir a pré-visualização de páginas. Tente novamente ou utilize a pré-visualização integrada.',
@@ -189,7 +189,7 @@ class InstalledOfficePreviewStrings {
       'tooLarge': '文档超过预览的大小或复杂度限制。',
       'timedOut': '已安装的应用未能及时完成。请重试或使用内置预览。',
       'invalidPdf': '应用未返回有效的 PDF 预览。',
-      'engineBusy': '请关闭 Microsoft Word 后再尝试创建此预览。',
+      'engineBusy': '请关闭 Microsoft Office 后再尝试创建此预览。',
       'unsafe': '应用无法应用所需的宏和外部链接设置。',
       'cleanupFailed': '已安装的应用未能完成临时预览文件的清理。',
       'failed': '无法创建或打开页面预览。请重试或使用内置预览。',
@@ -214,7 +214,7 @@ class InstalledOfficePreviewStrings {
       'tooLarge': '文書がプレビューのサイズまたは複雑さの制限を超えています。',
       'timedOut': 'インストール済みアプリが時間内に完了しませんでした。再試行するか内蔵プレビューを使ってください。',
       'invalidPdf': 'アプリが有効な PDF プレビューを返しませんでした。',
-      'engineBusy': 'このプレビューを作成する前に Microsoft Word を閉じてから、再試行してください。',
+      'engineBusy': 'このプレビューを作成する前に Microsoft Office を閉じてから、再試行してください。',
       'unsafe': 'アプリが必要なマクロと外部リンクの設定を適用できませんでした。',
       'cleanupFailed': 'インストール済みアプリが一時プレビューファイルの削除を完了できませんでした。',
       'failed': 'ページプレビューを作成または開くことができませんでした。再試行するか内蔵プレビューを使ってください。',
@@ -239,7 +239,7 @@ class InstalledOfficePreviewStrings {
       'tooLarge': '문서가 미리 보기의 크기 또는 복잡도 제한을 초과합니다.',
       'timedOut': '설치된 앱이 제한 시간 내에 완료하지 못했습니다. 다시 시도하거나 내장 미리 보기를 사용하세요.',
       'invalidPdf': '앱이 유효한 PDF 미리 보기를 반환하지 않았습니다.',
-      'engineBusy': '이 미리 보기를 만들기 전에 Microsoft Word를 닫고 다시 시도하세요.',
+      'engineBusy': '이 미리 보기를 만들기 전에 Microsoft Office를 닫고 다시 시도하세요.',
       'unsafe': '앱이 필요한 매크로 및 외부 링크 설정을 적용하지 못했습니다.',
       'cleanupFailed': '설치된 앱이 임시 미리 보기 파일 정리를 완료하지 못했습니다.',
       'failed': '페이지 미리 보기를 만들거나 열 수 없습니다. 다시 시도하거나 내장 미리 보기를 사용하세요.',
@@ -265,7 +265,7 @@ class InstalledOfficePreviewStrings {
       'timedOut': 'لم ينتهِ التطبيق المثبت في الوقت المحدد. أعد المحاولة أو استخدم المعاينة المدمجة.',
       'invalidPdf': 'لم يُرجع التطبيق معاينة PDF صالحة.',
       'engineBusy':
-          'أغلق Microsoft Word قبل إنشاء هذه المعاينة، ثم أعد المحاولة.',
+          'أغلق Microsoft Office قبل إنشاء هذه المعاينة، ثم أعد المحاولة.',
       'unsafe': 'تعذر على التطبيق تطبيق إعدادات وحدات الماكرو والروابط الخارجية المطلوبة.',
       'cleanupFailed':
           'تعذر على التطبيق المثبت إكمال تنظيف ملفات المعاينة المؤقتة.',

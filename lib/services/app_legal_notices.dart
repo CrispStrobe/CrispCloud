@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 /// legal screen rather than decorating file names and editor controls.
 const appCopyrightNotice = '© 2025–2026 CrispStrobe';
 const appTrademarkNotice =
-    'Microsoft, Excel, Office, OneDrive, PowerPoint, Windows and Word are '
+    'Microsoft, Office, OneDrive and Windows are '
     'trademarks of the Microsoft group of companies. CrispCloud and '
     'CrispOffice are independent applications and are not affiliated with, '
     'sponsored by or endorsed by Microsoft. Product names are used only to '

@@ -80,7 +80,7 @@ LegacyWordPreview projectLegacyWordPreview(LegacyWordDocument document) {
   const maxHtmlUnits = 4 * 1024 * 1024;
   const maxStories = 20000;
   if (document.stories.length > maxStories) {
-    throw const FormatException('Word preview has too many stories.');
+    throw const FormatException('Document preview has too many stories.');
   }
   // The conversion model also retains stories whose anchors are hidden or
   // inside private field results. They must not become visible merely because
@@ -177,7 +177,7 @@ LegacyWordPreview projectLegacyWordPreview(LegacyWordDocument document) {
   final counts = <LegacyWordStoryKind, int>{};
   var htmlLength = document.safeHtml.length;
   if (text.length > maxTextUnits) {
-    throw const FormatException('Word preview exceeds its text limit.');
+    throw const FormatException('Document preview exceeds its text limit.');
   }
   for (final (_, story) in ordered) {
     final number = (counts[story.kind] ?? 0) + 1;
@@ -209,7 +209,7 @@ LegacyWordPreview projectLegacyWordPreview(LegacyWordDocument document) {
     labels.add(label);
     if (text.length + label.length + story.plainText.length + 3 >
         maxTextUnits) {
-      throw const FormatException('Word preview exceeds its text limit.');
+      throw const FormatException('Document preview exceeds its text limit.');
     }
     if (text.isNotEmpty) text.write('\n\n');
     final start = text.length;

@@ -43,7 +43,7 @@ class OfficeRibbonCommonStrings {
       "Insert footnote": "Fußnote einfügen",
       "Insert endnote": "Endnote einfügen",
       "Notes": "Anmerkungen",
-      "Word document": "Word-Dokument",
+      "Writer document": "Writer-Dokument",
       "Spreadsheet": "Tabellenblatt",
       "Slide": "Folie",
       "Formula bar": "Formelleiste",
@@ -121,7 +121,7 @@ class OfficeRibbonCommonStrings {
       "Endnote...": "Note de fin…",
       "Insert footnote": "Insérer une note de bas de page",
       "Insert endnote": "Insérer une note de fin",
-      "Word document": "Document Word",
+      "Writer document": "Document Writer",
       "Spreadsheet": "Feuille de calcul",
       "Slide": "Diapositive",
       "Formula bar": "Barre de formule",
@@ -219,7 +219,7 @@ class OfficeRibbonCommonStrings {
       "Add 12 pt before": "Ajouter 12 pt avant",
       "Add 6 pt after": "Ajouter 6 pt après",
       "Add 6 pt before": "Ajouter 6 pt avant",
-      "Words": "Mots",
+      "Writers": "Mots",
       "Characters (with spaces)": "Caractères (avec espaces)",
       "Characters (no spaces)": "Caractères (sans espaces)",
       "Paragraphs": "Paragraphes",
@@ -247,7 +247,7 @@ class OfficeRibbonCommonStrings {
       "Morph": "Morphose",
       "Spell checking uses the host integration. No spell-check provider is configured in this build.":
           "La vérification orthographique utilise l’intégration de l’hôte. Aucun service de vérification n’est configuré dans cette version.",
-      "Word, spreadsheet and presentation editing is powered by the open-source Quds Office engine (MIT).\n\nThe editor supports OOXML documents (.docx, .xlsx, .pptx). Save writes back to the original file.":
+      "Writer, spreadsheet and presentation editing is powered by the open-source Quds Office engine (MIT).\n\nThe editor supports OOXML documents (.docx, .xlsx, .pptx). Save writes back to the original file.":
           "La modification de textes, feuilles de calcul et présentations utilise le moteur libre Quds Office (MIT).\n\nL’éditeur prend en charge les documents OOXML (.docx, .xlsx, .pptx). L’enregistrement modifie le fichier d’origine.",
       "A presentation needs at least one slide.":
           "Une présentation doit contenir au moins une diapositive.",
@@ -466,7 +466,7 @@ class OfficeRibbonCommonStrings {
       "Ungroup": "Dissocier",
       "Unmerge": "Annuler la fusion",
       "Watermark": "Filigrane",
-      "Word count": "Nombre de mots",
+      "Writer count": "Nombre de mots",
       "Zoom": "Zoom",
       "Footnotes": "Notes de bas de page",
       "Show footnotes": "Afficher les notes de bas de page",
@@ -495,7 +495,7 @@ class OfficeRibbonCommonStrings {
       "Endnote...": "Nota al final…",
       "Insert footnote": "Insertar nota al pie",
       "Insert endnote": "Insertar nota al final",
-      "Word document": "Documento de Word",
+      "Writer document": "Documento de Writer",
       "Spreadsheet": "Hoja de cálculo",
       "Slide": "Diapositiva",
       "Formula bar": "Barra de fórmulas",
@@ -593,7 +593,7 @@ class OfficeRibbonCommonStrings {
       "Add 12 pt before": "Añadir 12 pt antes",
       "Add 6 pt after": "Añadir 6 pt después",
       "Add 6 pt before": "Añadir 6 pt antes",
-      "Words": "Palabras",
+      "Writers": "Palabras",
       "Characters (with spaces)": "Caracteres (con espacios)",
       "Characters (no spaces)": "Caracteres (sin espacios)",
       "Paragraphs": "Párrafos",
@@ -621,7 +621,7 @@ class OfficeRibbonCommonStrings {
       "Morph": "Transformación",
       "Spell checking uses the host integration. No spell-check provider is configured in this build.":
           "La revisión ortográfica usa la integración del sistema. Esta versión no tiene configurado ningún proveedor de revisión.",
-      "Word, spreadsheet and presentation editing is powered by the open-source Quds Office engine (MIT).\n\nThe editor supports OOXML documents (.docx, .xlsx, .pptx). Save writes back to the original file.":
+      "Writer, spreadsheet and presentation editing is powered by the open-source Quds Office engine (MIT).\n\nThe editor supports OOXML documents (.docx, .xlsx, .pptx). Save writes back to the original file.":
           "La edición de documentos, hojas de cálculo y presentaciones utiliza el motor libre Quds Office (MIT).\n\nEl editor admite documentos OOXML (.docx, .xlsx, .pptx). Guardar modifica el archivo original.",
       "A presentation needs at least one slide.":
           "Una presentación necesita al menos una diapositiva.",
@@ -840,7 +840,7 @@ class OfficeRibbonCommonStrings {
       "Ungroup": "Desagrupar",
       "Unmerge": "Separar celdas",
       "Watermark": "Marca de agua",
-      "Word count": "Recuento de palabras",
+      "Writer count": "Recuento de palabras",
       "Zoom": "Zoom",
       "Footnotes": "Notas al pie",
       "Show footnotes": "Mostrar notas al pie",
@@ -869,7 +869,7 @@ class OfficeRibbonCommonStrings {
       "Endnote...": "Nota de fim…",
       "Insert footnote": "Inserir nota de rodapé",
       "Insert endnote": "Inserir nota de fim",
-      "Word document": "Documento Word",
+      "Writer document": "Documento Writer",
       "Spreadsheet": "Folha de cálculo",
       "Slide": "Diapositivo",
       "Formula bar": "Barra de fórmulas",
@@ -967,7 +967,7 @@ class OfficeRibbonCommonStrings {
       "Add 12 pt before": "Adicionar 12 pt antes",
       "Add 6 pt after": "Adicionar 6 pt depois",
       "Add 6 pt before": "Adicionar 6 pt antes",
-      "Words": "Palavras",
+      "Writers": "Palavras",
       "Characters (with spaces)": "Caracteres (com espaços)",
       "Characters (no spaces)": "Caracteres (sem espaços)",
       "Paragraphs": "Parágrafos",
@@ -995,7 +995,7 @@ class OfficeRibbonCommonStrings {
       "Morph": "Transformação",
       "Spell checking uses the host integration. No spell-check provider is configured in this build.":
           "A verificação ortográfica utiliza a integração do anfitrião. Esta versão não tem um fornecedor configurado.",
-      "Word, spreadsheet and presentation editing is powered by the open-source Quds Office engine (MIT).\n\nThe editor supports OOXML documents (.docx, .xlsx, .pptx). Save writes back to the original file.":
+      "Writer, spreadsheet and presentation editing is powered by the open-source Quds Office engine (MIT).\n\nThe editor supports OOXML documents (.docx, .xlsx, .pptx). Save writes back to the original file.":
           "A edição de texto, folhas de cálculo e apresentações utiliza o motor de código aberto Quds Office (MIT).\n\nO editor suporta documentos OOXML (.docx, .xlsx, .pptx). Guardar altera o ficheiro original.",
       "A presentation needs at least one slide.":
           "Uma apresentação precisa de pelo menos um diapositivo.",
@@ -1214,7 +1214,7 @@ class OfficeRibbonCommonStrings {
       "Ungroup": "Desagrupar",
       "Unmerge": "Separar células",
       "Watermark": "Marca de água",
-      "Word count": "Contagem de palavras",
+      "Writer count": "Contagem de palavras",
       "Zoom": "Zoom",
       "Footnotes": "Notas de rodapé",
       "Show footnotes": "Mostrar notas de rodapé",
@@ -1241,7 +1241,7 @@ class OfficeRibbonCommonStrings {
       "Endnote...": "尾注…",
       "Insert footnote": "插入脚注",
       "Insert endnote": "插入尾注",
-      "Word document": "Word 文档",
+      "Writer document": "Writer 文档",
       "Spreadsheet": "电子表格",
       "Slide": "幻灯片",
       "Formula bar": "公式栏",
@@ -1336,7 +1336,7 @@ class OfficeRibbonCommonStrings {
       "Add 12 pt before": "段前增加 12 磅",
       "Add 6 pt after": "段后增加 6 磅",
       "Add 6 pt before": "段前增加 6 磅",
-      "Words": "字词数",
+      "Writers": "字词数",
       "Characters (with spaces)": "字符数（含空格）",
       "Characters (no spaces)": "字符数（不含空格）",
       "Paragraphs": "段落数",
@@ -1364,7 +1364,7 @@ class OfficeRibbonCommonStrings {
       "Morph": "变形",
       "Spell checking uses the host integration. No spell-check provider is configured in this build.":
           "拼写检查使用宿主集成功能。此版本未配置拼写检查服务。",
-      "Word, spreadsheet and presentation editing is powered by the open-source Quds Office engine (MIT).\n\nThe editor supports OOXML documents (.docx, .xlsx, .pptx). Save writes back to the original file.":
+      "Writer, spreadsheet and presentation editing is powered by the open-source Quds Office engine (MIT).\n\nThe editor supports OOXML documents (.docx, .xlsx, .pptx). Save writes back to the original file.":
           "文字、电子表格和演示文稿编辑由开源 Quds Office 引擎（MIT）提供支持。\n\n编辑器支持 OOXML 文档（.docx、.xlsx、.pptx）。保存会写回原始文件。",
       "A presentation needs at least one slide.": "演示文稿至少需要一张幻灯片。",
       "About": "关于",
@@ -1579,7 +1579,7 @@ class OfficeRibbonCommonStrings {
       "Ungroup": "取消组合",
       "Unmerge": "取消合并",
       "Watermark": "水印",
-      "Word count": "字数统计",
+      "Writer count": "字数统计",
       "Zoom": "缩放",
       "Footnotes": "脚注",
       "Show footnotes": "显示脚注",
@@ -1607,7 +1607,7 @@ class OfficeRibbonCommonStrings {
       "Endnote...": "文末脚注…",
       "Insert footnote": "脚注を挿入",
       "Insert endnote": "文末脚注を挿入",
-      "Word document": "Word 文書",
+      "Writer document": "Writer 文書",
       "Spreadsheet": "スプレッドシート",
       "Slide": "スライド",
       "Formula bar": "数式バー",
@@ -1702,7 +1702,7 @@ class OfficeRibbonCommonStrings {
       "Add 12 pt before": "段落前に 12 pt 追加",
       "Add 6 pt after": "段落後に 6 pt 追加",
       "Add 6 pt before": "段落前に 6 pt 追加",
-      "Words": "単語数",
+      "Writers": "単語数",
       "Characters (with spaces)": "文字数（スペースを含む）",
       "Characters (no spaces)": "文字数（スペースを除く）",
       "Paragraphs": "段落数",
@@ -1730,7 +1730,7 @@ class OfficeRibbonCommonStrings {
       "Morph": "変形",
       "Spell checking uses the host integration. No spell-check provider is configured in this build.":
           "スペルチェックにはホストとの連携を使用します。このビルドにはスペルチェックプロバイダーが設定されていません。",
-      "Word, spreadsheet and presentation editing is powered by the open-source Quds Office engine (MIT).\n\nThe editor supports OOXML documents (.docx, .xlsx, .pptx). Save writes back to the original file.":
+      "Writer, spreadsheet and presentation editing is powered by the open-source Quds Office engine (MIT).\n\nThe editor supports OOXML documents (.docx, .xlsx, .pptx). Save writes back to the original file.":
           "文書、表計算、プレゼンテーションの編集にはオープンソースの Quds Office エンジン（MIT）を使用しています。\n\nエディターは OOXML 文書（.docx、.xlsx、.pptx）に対応しています。保存すると元のファイルに書き戻します。",
       "A presentation needs at least one slide.":
           "プレゼンテーションには少なくとも1枚のスライドが必要です。",
@@ -1946,7 +1946,7 @@ class OfficeRibbonCommonStrings {
       "Ungroup": "グループ解除",
       "Unmerge": "結合解除",
       "Watermark": "透かし",
-      "Word count": "文字数",
+      "Writer count": "文字数",
       "Zoom": "ズーム",
       "Footnotes": "脚注",
       "Show footnotes": "脚注を表示",
@@ -1974,7 +1974,7 @@ class OfficeRibbonCommonStrings {
       "Endnote...": "미주…",
       "Insert footnote": "각주 삽입",
       "Insert endnote": "미주 삽입",
-      "Word document": "Word 문서",
+      "Writer document": "Writer 문서",
       "Spreadsheet": "스프레드시트",
       "Slide": "슬라이드",
       "Formula bar": "수식 입력줄",
@@ -2069,7 +2069,7 @@ class OfficeRibbonCommonStrings {
       "Add 12 pt before": "앞에 12 pt 추가",
       "Add 6 pt after": "뒤에 6 pt 추가",
       "Add 6 pt before": "앞에 6 pt 추가",
-      "Words": "단어",
+      "Writers": "단어",
       "Characters (with spaces)": "문자 (공백 포함)",
       "Characters (no spaces)": "문자 (공백 제외)",
       "Paragraphs": "단락",
@@ -2097,7 +2097,7 @@ class OfficeRibbonCommonStrings {
       "Morph": "변형",
       "Spell checking uses the host integration. No spell-check provider is configured in this build.":
           "맞춤법 검사는 호스트 통합 기능을 사용합니다. 이 빌드에는 맞춤법 검사 공급자가 구성되어 있지 않습니다.",
-      "Word, spreadsheet and presentation editing is powered by the open-source Quds Office engine (MIT).\n\nThe editor supports OOXML documents (.docx, .xlsx, .pptx). Save writes back to the original file.":
+      "Writer, spreadsheet and presentation editing is powered by the open-source Quds Office engine (MIT).\n\nThe editor supports OOXML documents (.docx, .xlsx, .pptx). Save writes back to the original file.":
           "문서, 스프레드시트 및 프레젠테이션 편집은 오픈소스 Quds Office 엔진(MIT)을 사용합니다.\n\n편집기는 OOXML 문서(.docx, .xlsx, .pptx)를 지원합니다. 저장하면 원본 파일에 기록됩니다.",
       "A presentation needs at least one slide.":
           "프레젠테이션에는 하나 이상의 슬라이드가 필요합니다.",
@@ -2314,7 +2314,7 @@ class OfficeRibbonCommonStrings {
       "Ungroup": "그룹 해제",
       "Unmerge": "병합 해제",
       "Watermark": "워터마크",
-      "Word count": "단어 수",
+      "Writer count": "단어 수",
       "Zoom": "확대/축소",
       "Footnotes": "각주",
       "Show footnotes": "각주 표시",
@@ -2342,7 +2342,7 @@ class OfficeRibbonCommonStrings {
       "Endnote...": "حاشية ختامية…",
       "Insert footnote": "إدراج حاشية سفلية",
       "Insert endnote": "إدراج حاشية ختامية",
-      "Word document": "مستند Word",
+      "Writer document": "مستند Writer",
       "Spreadsheet": "جدول بيانات",
       "Slide": "شريحة",
       "Formula bar": "شريط الصيغة",
@@ -2438,7 +2438,7 @@ class OfficeRibbonCommonStrings {
       "Add 12 pt before": "إضافة 12 نقطة قبل",
       "Add 6 pt after": "إضافة 6 نقاط بعد",
       "Add 6 pt before": "إضافة 6 نقاط قبل",
-      "Words": "الكلمات",
+      "Writers": "الكلمات",
       "Characters (with spaces)": "الأحرف (مع المسافات)",
       "Characters (no spaces)": "الأحرف (دون مسافات)",
       "Paragraphs": "الفقرات",
@@ -2466,7 +2466,7 @@ class OfficeRibbonCommonStrings {
       "Morph": "تحويل",
       "Spell checking uses the host integration. No spell-check provider is configured in this build.":
           "يستخدم التدقيق الإملائي تكامل المضيف. لم يُضبط مزود للتدقيق الإملائي في هذا الإصدار.",
-      "Word, spreadsheet and presentation editing is powered by the open-source Quds Office engine (MIT).\n\nThe editor supports OOXML documents (.docx, .xlsx, .pptx). Save writes back to the original file.":
+      "Writer, spreadsheet and presentation editing is powered by the open-source Quds Office engine (MIT).\n\nThe editor supports OOXML documents (.docx, .xlsx, .pptx). Save writes back to the original file.":
           "تستند إمكانية تحرير النصوص والجداول والعروض التقديمية إلى محرك Quds Office مفتوح المصدر (MIT).\n\nيدعم المحرر مستندات OOXML ‏(.docx و.xlsx و.pptx). تحفظ التغييرات في الملف الأصلي.",
       "A presentation needs at least one slide.":
           "يجب أن يحتوي العرض التقديمي على شريحة واحدة على الأقل.",
@@ -2684,7 +2684,7 @@ class OfficeRibbonCommonStrings {
       "Ungroup": "فك التجميع",
       "Unmerge": "إلغاء الدمج",
       "Watermark": "علامة مائية",
-      "Word count": "عدد الكلمات",
+      "Writer count": "عدد الكلمات",
       "Zoom": "تكبير/تصغير",
       "Footnotes": "الحواشي السفلية",
       "Show footnotes": "إظهار الحواشي السفلية",
