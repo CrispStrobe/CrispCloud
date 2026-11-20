@@ -6,6 +6,74 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   test(
+    'Word pagination uses actual registered face and style metrics',
+    () async {
+      await OfficeHostFonts.ensureRegistered();
+      final regular = OfficeHostFonts.wordMetrics(
+        65,
+        12,
+        WmlRunProps(asciiFont: 'Arial'),
+      )!;
+      final bold = OfficeHostFonts.wordMetrics(
+        65,
+        12,
+        WmlRunProps(asciiFont: 'Arial', bold: true),
+      )!;
+      final italic = OfficeHostFonts.wordMetrics(
+        65,
+        12,
+        WmlRunProps(asciiFont: 'Arial', italic: true),
+      )!;
+      expect(regular.typographicLineHeight, closeTo(13.798828125, 0.0001));
+      expect(identical(regular.font, bold.font), isFalse);
+      expect(identical(regular.font, italic.font), isFalse);
+      expect(
+        OfficeHostFonts.wordMetrics(
+          65,
+          double.nan,
+          WmlRunProps(asciiFont: 'Arial'),
+        ),
+        isNull,
+      );
+      final paragraph = WmlParagraph(
+        properties: WmlParagraphProps(
+          spacingBefore: 0,
+          spacingAfter: 0,
+          lineSpacing: 1,
+        ),
+        inlines: [
+          WmlRun(
+            text: List.filled(45, 'A line').join('\n'),
+            properties: WmlRunProps(asciiFont: 'Arial', fontSizeHalfPoints: 24),
+          ),
+        ],
+      );
+      final doc = WmlDocument(
+        sections: [
+          WmlSection(
+            pageSize: WmlPageSize(width: 612, height: 792),
+            margins: const WmlPageMargins(
+              top: 72,
+              bottom: 72,
+              left: 72,
+              right: 72,
+            ),
+            blocks: [paragraph],
+          ),
+        ],
+      );
+      final controller = WordEditorController(document: doc);
+      try {
+        controller.fitPaintMetrics();
+        expect(controller.documentLaidOut.pages, hasLength(1));
+        expect(controller.documentLaidOut.pages.single.lines, hasLength(45));
+      } finally {
+        controller.dispose();
+      }
+    },
+  );
+
+  test(
     'bundled names resolve only verified metric-compatible aliases',
     () async {
       await OfficeHostFonts.ensureRegistered();

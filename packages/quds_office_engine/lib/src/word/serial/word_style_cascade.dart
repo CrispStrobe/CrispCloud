@@ -532,6 +532,23 @@ class _StyleCascade {
       }
     }
     p.properties.sourcePropertiesXml = source ?? '';
+    final markerStyles = [for (final s in paragraphChain) s.firstChild('rPr')];
+    final markerXml = merged('rPr', [
+      defaults?.firstChild('rPrDefault')?.firstChild('rPr'),
+      for (final t in tableLayers) t.firstChild('rPr'),
+      ...markerStyles,
+      pp.firstChild('rPr'),
+    ], toggleLayers: markerStyles.whereType<XmlElement>().toSet());
+    if (markerXml.childElements.isNotEmpty) {
+      final marker = WmlRunProps();
+      reader._parseRPr(
+        XmlPullReader(
+          XmlDocument(root: markerXml).toXmlString(declaration: false),
+        )..next(),
+        marker,
+      );
+      p.properties.importedParagraphMark = marker;
+    }
     p.properties.importedValues = WordPropertyIo.paragraphValues(p.properties);
     for (final run in p.inlines.whereType<WmlRun>()) {
       final props = run.properties;

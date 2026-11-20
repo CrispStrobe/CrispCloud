@@ -1,4 +1,5 @@
 import 'package:flutter/services.dart';
+import 'package:quds_office_engine/quds_office_engine.dart';
 
 /// Ships metric-compatible core faces with the editor package so paint does
 /// not depend on the host OS font directory.
@@ -15,6 +16,39 @@ abstract final class OfficeHostFonts {
   static final Map<String, Future<void>> _extensionLoads = {};
   static final Map<String, String> _extensionOwners = {};
   static int _revision = 0;
+  static final Map<String, List<OfficeFontFace>> _metricFaces = {};
+
+  /// Vertical metrics of the same registered face used for painting. Font
+  /// bytes stay in memory; documents retain their authored family names.
+  static FontMetrics? wordMetrics(
+    int codePoint,
+    double sizePoints,
+    WmlRunProps props, {
+    String? themeFamily,
+  }) {
+    if (!sizePoints.isFinite || sizePoints <= 0) return null;
+    final requested = OfficeTypeface.paintFamily(
+      text: String.fromCharCode(codePoint),
+      runFamily: OfficeTypeface.familyForRun(props, codePoint),
+      themeFamily: themeFamily,
+    );
+    final registered =
+        registeredFamily(requested) ??
+        (OfficeTypeface.isRtlCodePoint(codePoint)
+            ? 'Noto Naskh Arabic'
+            : 'Liberation Sans');
+    final faces = _metricFaces[registered.toLowerCase()];
+    if (faces == null) return null;
+    final face = OfficeFontSet(faces: faces).resolve(
+      codePoint < 32 ? 0x20 : codePoint,
+      family: registered,
+      weight: props.bold ? 700 : 400,
+      italic: props.italic,
+    );
+    return face == null
+        ? null
+        : FontMetrics(font: face.font, fontSizePoints: sizePoints);
+  }
 
   /// Changes after a name or alias successfully gains real font bytes.
   /// Measurement caches can use this to discard widths obtained from a
@@ -192,6 +226,36 @@ abstract final class OfficeHostFonts {
       loader.addFont(Future<ByteData>.value(data));
     }
     await loader.load();
+    _metricFaces.putIfAbsent(resolvedFamily.toLowerCase(), () {
+      final parsed = <OfficeFontFace>[];
+      for (final data in faces) {
+        try {
+          final font = SfntFont.parse(
+            data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
+          );
+          final table = font.tables['OS/2'];
+          final bytes = ByteData.sublistView(font.bytes);
+          final weight = table != null && table.length >= 6
+              ? bytes.getUint16(table.offset + 4)
+              : 400;
+          final flags = table != null && table.length >= 64
+              ? bytes.getUint16(table.offset + 62)
+              : 0;
+          parsed.add(
+            OfficeFontFace(
+              font: font,
+              family: resolvedFamily,
+              weight: weight.clamp(1, 1000),
+              italic: flags & 1 != 0,
+            ),
+          );
+        } on FormatException {
+          // Flutter can register formats the pure-Dart parser cannot read.
+          // Keep painting available and explicitly fall back for metrics.
+        }
+      }
+      return parsed;
+    });
     _registeredFaces[family.trim().toLowerCase()] = (resolvedFamily, hasItalic);
     _revision++;
   }

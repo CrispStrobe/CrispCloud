@@ -51,6 +51,7 @@ part of 'word_layout.dart';
           fonts: owner.fonts,
           measure: owner.measure,
           measureRun: owner.measureRun,
+          measureFont: owner.measureFont,
           fallbackWidthFactor: owner.fallbackWidthFactor,
         )
         .._deferredContainedFrames = deferredFrames

@@ -4826,27 +4826,13 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
         text,
         paragraph,
       );
-      var top = first.vertAlign.paintTop(
-        lineY: line.y,
-        lineHeight: line.height,
-        fontSize: first.fontSize,
-      );
-      if (first.vertAlign == WmlVertAlign.baseline && first.fontSize > 0) {
-        // Runs share the baseline of the line's largest run (the layout grows
-        // such a line); without this, small text hangs from the line top.
-        var largest = first.fontSize;
-        for (final LaidOutGlyph g in line.glyphs) {
-          if (g.vertAlign == WmlVertAlign.baseline && g.fontSize > largest) {
-            largest = g.fontSize;
-          }
-        }
-        if (largest > first.fontSize + 0.01) {
-          final double ascent = painter.computeDistanceToActualBaseline(
-            TextBaseline.alphabetic,
-          );
-          top += ascent * (largest / first.fontSize - 1);
-        }
-      }
+      // Layout already positions the baseline, including mixed-size runs,
+      // inline pictures and superscripts. TextPainter's top is not that
+      // baseline: height:1 redistributes leading differently for each face.
+      // Align to the model baseline instead of hanging every face from y.
+      final top =
+          first.y -
+          painter.computeDistanceToActualBaseline(TextBaseline.alphabetic);
       if (first.underline == WmlUnderline.single ||
           first.underline == WmlUnderline.thick) {
         PaintRunText.paintUnderlined(

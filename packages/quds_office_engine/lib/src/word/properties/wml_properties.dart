@@ -345,6 +345,11 @@ class WmlParagraphProps {
   String? sourcePropertiesXml;
   Map<String, String>? importedValues;
 
+  /// Import-resolved paragraph-mark formatting for blank-line layout.
+  /// Direct XML remains authoritative for sparse export.
+  /// This is not an extra visible run or an editable text character.
+  WmlRunProps? importedParagraphMark;
+
   /// WmlParagraphProps API.
   WmlParagraphProps({
     this.justification = WmlJustification.left,
@@ -553,6 +558,7 @@ class WmlParagraphProps {
           endnoteRef: endnoteRef,
         )
         ..sourcePropertiesXml = sourcePropertiesXml
+        ..importedParagraphMark = importedParagraphMark?.copy()
         ..importedValues = importedValues == null
             ? null
             : Map.of(importedValues!);

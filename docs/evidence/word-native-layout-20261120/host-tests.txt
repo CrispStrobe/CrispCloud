@@ -1,0 +1,96 @@
+00:00 +0: loading /private/tmp/crispcloud-german-syntax-20261117/test/widget/office_font_fidelity_test.dart
+00:00 +0: /private/tmp/crispcloud-german-syntax-20261117/test/widget/office_font_fidelity_test.dart: font Apply preserves imported 21 half-points
+00:04 +1: /private/tmp/crispcloud-german-syntax-20261117/test/widget/office_font_fidelity_test.dart: font Apply preserves imported 14 half-points
+00:04 +2: /private/tmp/crispcloud-german-syntax-20261117/test/widget/office_font_fidelity_test.dart: font Apply preserves imported 288 half-points
+00:04 +3: /private/tmp/crispcloud-german-syntax-20261117/test/widget/office_font_fidelity_test.dart: font italic edit preserves mixed run properties and undo
+00:05 +4: /private/tmp/crispcloud-german-syntax-20261117/test/widget/office_font_fidelity_test.dart: untouched font Apply preserves a mixed selection
+00:05 +5: /private/tmp/crispcloud-german-syntax-20261117/test/widget/office_font_fidelity_test.dart: explicit current font family normalizes a mixed selection
+00:06 +6: /private/tmp/crispcloud-german-syntax-20261117/test/widget/office_font_fidelity_test.dart: explicit current half-point size normalizes a mixed selection
+00:06 +7: /private/tmp/crispcloud-german-syntax-20261117/test/widget/office_font_fidelity_test.dart: explicit current underline normalizes only that property
+00:07 +8: /private/tmp/crispcloud-german-syntax-20261117/test/widget/office_font_fidelity_test.dart: font size edit changes only size across selected runs
+00:07 +9: /private/tmp/crispcloud-german-syntax-20261117/test/widget/office_font_fidelity_test.dart: font family edit preserves all unrelated run properties
+00:07 +10: /private/tmp/crispcloud-german-syntax-20261117/test/widget/office_font_fidelity_test.dart: font dialog edits only the active header story
+00:08 +11: /private/tmp/crispcloud-german-syntax-20261117/test/widget/office_font_fidelity_test.dart: font result cannot move from an open header dialog to the body
+00:08 +12: /private/tmp/crispcloud-german-syntax-20261117/test/widget/office_font_fidelity_test.dart: font result cannot follow a changed selection in one document
+00:08 +13: /private/tmp/crispcloud-german-syntax-20261117/test/widget/office_font_fidelity_test.dart: font result cannot overwrite a newer revision at the same caret
+00:08 +14: /private/tmp/crispcloud-german-syntax-20261117/test/widget/office_font_fidelity_test.dart: font result survives paint-only refreshes at its original target
+00:08 +15: /private/tmp/crispcloud-german-syntax-20261117/test/widget/office_font_fidelity_test.dart: font cancel and controller replacement leave documents clean
+00:09 +16: /private/tmp/crispcloud-german-syntax-20261117/test/widget/office_font_fidelity_test.dart: viewing mode does not open the native-menu font editor
+00:18 +17: /private/tmp/crispcloud-german-syntax-20261117/test/widget/office_font_fallback_preview_test.dart: missing font assets leave formatted Office reading available
+00:19 +18: /private/tmp/crispcloud-german-syntax-20261117/test/widget/office_font_fallback_preview_test.dart: missing font assets leave formatted Office reading available
+00:19 +19: /private/tmp/crispcloud-german-syntax-20261117/test/widget/office_font_fallback_preview_test.dart: missing font assets leave formatted Office reading available
+⚠️ [InternalViewer] Document fonts could not load; using available fonts
+  Error: Unable to load asset: "packages/quds_office_editor/fonts/LiberationSans-Regular.ttf".
+The asset does not exist or has empty data.
+00:20 +20: /private/tmp/crispcloud-german-syntax-20261117/test/widget/office_font_fallback_preview_test.dart: missing font assets leave formatted Office reading available
+00:20 +21: /private/tmp/crispcloud-german-syntax-20261117/test/widget/office_layout_units_test.dart: metric layout dialog preserves exact imported geometry on untouched Apply
+00:21 +22: /private/tmp/crispcloud-german-syntax-20261117/test/widget/office_layout_units_test.dart: layout accepts decimal comma and blocks impossible geometry
+00:21 +23: /private/tmp/crispcloud-german-syntax-20261117/test/widget/office_layout_units_test.dart: sheet dimension dialog accepts physical suffixes and cancellation
+00:22 +24: /private/tmp/crispcloud-german-syntax-20261117/test/widget/office_save_fidelity_test.dart: ribbon headings, paragraphs, notes and pictures survive three host saves
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:23 +25: /private/tmp/crispcloud-german-syntax-20261117/test/widget/office_save_fidelity_test.dart: ribbon headings, paragraphs, notes and pictures survive three host saves
+00:23 +26: /private/tmp/crispcloud-german-syntax-20261117/test/widget/office_save_fidelity_test.dart: ribbon headings, paragraphs, notes and pictures survive three host saves
+00:23 +27: /private/tmp/crispcloud-german-syntax-20261117/test/widget/office_save_fidelity_test.dart: ribbon headings, paragraphs, notes and pictures survive three host saves
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:28 +28: /private/tmp/crispcloud-german-syntax-20261117/test/widget/office_save_fidelity_test.dart: new text, style, note and image edits stay dirty during upload
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:29 +29: /private/tmp/crispcloud-german-syntax-20261117/test/widget/office_save_fidelity_test.dart: Save and Close keeps newer edits open until they are saved
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:31 +30: /private/tmp/crispcloud-german-syntax-20261117/test/widget/office_save_fidelity_test.dart: pending note typing stays dirty until its next upload
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:32 +31: /private/tmp/crispcloud-german-syntax-20261117/test/widget/office_save_fidelity_test.dart: Save and Close retains pending note typing until its next upload
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:33 +32: /private/tmp/crispcloud-german-syntax-20261117/test/widget/office_save_fidelity_test.dart: pending cell typing survives Save uploads and retries
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+⚠️ [OfficeEditor] office editor save failed
+  Error: Bad state: Upload failed
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:34 +33: /private/tmp/crispcloud-german-syntax-20261117/test/widget/office_save_fidelity_test.dart: pending cell typing survives Save and Close uploads and retries
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+⚠️ [OfficeEditor] office editor save failed
+  Error: Bad state: Upload failed
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:36 +34: /private/tmp/crispcloud-german-syntax-20261117/test/widget/office_save_fidelity_test.dart: pending slide typing survives Save uploads and retries
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+⚠️ [OfficeEditor] office editor save failed
+  Error: Bad state: Upload failed
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:37 +35: /private/tmp/crispcloud-german-syntax-20261117/test/widget/office_save_fidelity_test.dart: pending slide typing survives Save and Close uploads and retries
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+⚠️ [OfficeEditor] office editor save failed
+  Error: Bad state: Upload failed
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:40 +36: /private/tmp/crispcloud-german-syntax-20261117/test/widget/office_save_fidelity_test.dart: selection changes during upload do not create unsaved edits
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:41 +37: /private/tmp/crispcloud-german-syntax-20261117/test/widget/office_save_fidelity_test.dart: failed upload preserves the original and retains dirty edits
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+⚠️ [OfficeEditor] office editor save failed
+  Error: Bad state: Upload failed
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:42 +38: /private/tmp/crispcloud-german-syntax-20261117/test/widget/office_save_fidelity_test.dart: system Back guards unsaved edits and Cancel permits a later close
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:44 +39: /private/tmp/crispcloud-german-syntax-20261117/test/widget/office_save_fidelity_test.dart: copy export survives failure and cancellation without cleaning the original
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+⚠️ [OfficeEditor] office copy export failed
+  Error: Bad state: Simulated unavailable destination
+00:45 +40: /private/tmp/crispcloud-german-syntax-20261117/test/widget/office_save_fidelity_test.dart: pending copy export blocks Back and retains edits made during export
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:47 +41: All tests passed!

@@ -1587,6 +1587,7 @@ class WordDeserializer {
         case 'rPr':
           final marker = WmlRunProps();
           _parseRPr(reader, marker);
+          props.importedParagraphMark = marker;
           props.proofingLanguage = marker.proofingLanguage;
         case 'bidi':
           props.rightToLeft = _onOff(

@@ -759,6 +759,11 @@ const double kDefaultTabWidth = 36;
 typedef WordGlyphMeasure =
     double Function(int codePoint, double sizePoints, WmlRunProps props);
 
+/// Actual face metrics from a host that owns fonts outside the engine pack.
+/// Width shaping and vertical line metrics must use the same resolved face.
+typedef WordFontMeasure =
+    FontMetrics? Function(int codePoint, double sizePoints, WmlRunProps props);
+
 /// Flowable pagination: Knuth-Plass lines accumulated into physical pages.
 class WordLayoutEngine {
   /// WordLayoutEngine API.
@@ -768,6 +773,7 @@ class WordLayoutEngine {
     this.fallbackWidthFactor = 0.5,
     this.measure,
     this.measureRun,
+    this.measureFont,
   });
 
   /// Primary face used when [fonts] does not cover a code point.
@@ -788,6 +794,8 @@ class WordLayoutEngine {
   /// take precedence over scalar/font metrics; null or invalid measurements
   /// retain the pure-Dart fallback. This does not change glyph IDs for PDF.
   final WordRunMeasure? measureRun;
+
+  final WordFontMeasure? measureFont;
 
   final Map<(SfntFont, double), FontMetrics> _metricsCache = {};
 
@@ -1277,13 +1285,18 @@ class WordLayoutEngine {
     _Flow? flow,
     bool allowBreak = true,
   }) {
-    final WmlRunProps runProps = WmlRunEdit.propsAt(paragraph, 0);
+    final WmlRunProps runProps = paragraph.inlines.isEmpty
+        ? paragraph.properties.importedParagraphMark ??
+              WmlRunEdit.propsAt(paragraph, 0)
+        : WmlRunEdit.propsAt(paragraph, 0);
     final double fontSize = runProps.fontSizePoints;
     final int firstCodePoint = paragraph.text.runes.firstOrNull ?? 0x20;
     final SfntFont? firstFace = _faceFor(firstCodePoint, runProps);
-    final FontMetrics? metrics = firstFace == null
-        ? null
-        : FontMetrics(font: firstFace, fontSizePoints: fontSize);
+    final FontMetrics? metrics =
+        measureFont?.call(firstCodePoint, fontSize, runProps) ??
+        (firstFace == null
+            ? null
+            : FontMetrics(font: firstFace, fontSizePoints: fontSize));
     final double lineHeight = _lineHeight(
       paragraph.properties,
       metrics,
@@ -1591,7 +1604,7 @@ class WordLayoutEngine {
 
     double ascentFor(double size) => metrics == null || fontSize <= 0
         ? size * 0.8
-        : metrics.ascender * size / fontSize;
+        : metrics.typographicAscender * size / fontSize;
     double textHeightOfLine(BrokenLine line) {
       if (paragraph.properties.lineSpacingRule == WmlLineSpacingRule.exact) {
         return lineHeight;
@@ -1602,9 +1615,9 @@ class WordLayoutEngine {
         lineHeight,
         _lineHeight(
           paragraph.properties,
-          firstFace == null
+          metrics == null
               ? null
-              : FontMetrics(font: firstFace, fontSizePoints: largest),
+              : FontMetrics(font: metrics.font, fontSizePoints: largest),
           largest,
         ),
       );
@@ -1623,7 +1636,7 @@ class WordLayoutEngine {
       final double largest = largestSizeOn(line);
       return largest > fontSize + 0.01
           ? ascentFor(largest)
-          : (metrics?.ascender ?? fontSize * 0.8);
+          : (metrics?.typographicAscender ?? fontSize * 0.8);
     }
 
     // An inline picture sits on the baseline: a picture taller than the
@@ -1791,6 +1804,15 @@ class WordLayoutEngine {
       // fallback; a picture line aligns every run with the picture's base.
       final bool lineHasPicture = pictureAscent > 0;
       final double baselineAscent = math.max(textAscentOn(line), pictureAscent);
+      final naturalHeight = metrics == null
+          ? largest * 1.32
+          : metrics.typographicLineHeight * largest / fontSize;
+      // Word puts extra exact/minimum spacing above the text baseline;
+      // multiple spacing leaves the baseline at its normal top position.
+      final baselineLeading =
+          paragraph.properties.lineSpacingRule == WmlLineSpacingRule.auto
+          ? 0.0
+          : heightOfLine(line) - naturalHeight;
       final List<LaidOutGlyph> glyphs = <LaidOutGlyph>[];
       // Mark attachment can replace a shaped glyph object. Track display
       // offsets by source ownership rather than that transient identity.
@@ -1820,11 +1842,12 @@ class WordLayoutEngine {
             x: gx + g.paintDx,
             y:
                 cursorY +
+                baselineLeading +
                 (lineHasPicture
                     ? baselineAscent
                     : (grown
                           ? lineAscent
-                          : (metrics?.ascender ?? baseSize * 0.8))) +
+                          : (metrics?.typographicAscender ?? baseSize * 0.8))) +
                 props.vertAlign.baselineShift(baseSize) -
                 g.paintDy,
             color: props.color,
@@ -2861,13 +2884,14 @@ class WordLayoutEngine {
     FontMetrics? metrics,
     double fontSize,
   ) {
-    // Word's painted single-line box for Calibri/Western text tracks ~115% of
-    // (ascender-descender+lineGap), then multiplies by w:line/240.
-    final double fontLine = metrics == null
-        ? fontSize * 1.2
-        : math.max(fontSize * 1.2, metrics.lineHeight);
-    // Empirically matches Word Calibri line boxes on Table Grid docs.
-    final double single = fontLine * 1.10;
+    // Use the face's typographic line spacing, not its clipping extents plus
+    // a global multiplier. WinAscent/Descent can include rare glyphs well
+    // outside a normal line (notably Aptos), and a 10% margin accumulates
+    // enough drift to change page breaks. Preserve the historical estimate
+    // only when no real face is available; it is not native-qualified.
+    final double single = metrics == null
+        ? fontSize * 1.32
+        : metrics.typographicLineHeight;
     switch (props.lineSpacingRule) {
       case WmlLineSpacingRule.exact:
         return props.lineSpacing;

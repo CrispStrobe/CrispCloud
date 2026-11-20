@@ -40,6 +40,17 @@ class FontMetrics {
   /// Recommended default line height including gap.
   double get lineHeight => ascender - descender + lineGap;
 
+  /// Baseline spacing from hhea, without the potentially larger Windows
+  /// glyph-clipping bounds. macOS Word references qualify this separately
+  /// from [lineHeight], which remains appropriate for clipping safety.
+  double get typographicLineHeight => font.unitsToPoints(
+    font.ascender - font.descender + math.max(0, font.lineGap),
+    fontSizePoints,
+  );
+
+  double get typographicAscender =>
+      font.unitsToPoints(font.ascender, fontSizePoints);
+
   /// advanceWidth API.
   double advanceWidth(int glyphId) =>
       font.unitsToPoints(font.advanceWidth(glyphId), fontSizePoints);

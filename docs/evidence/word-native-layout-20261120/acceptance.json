@@ -1,0 +1,19 @@
+{
+  "qudsSourceCommit": "64f977ab003031d560c6564cf8895b1250d120d9",
+  "hostTestsPassed": 41,
+  "qudsEngineTestsPassed": 182,
+  "qudsEditorTestsPassed": 32,
+  "comparatorControlTestsPassed": 8,
+  "wordReferenceVersion": "16.111.1",
+  "nativeWordDocuments": 16,
+  "nativeWordPages": 24,
+  "pagesAbove95": 20,
+  "allReferencePagesHaveCorrectTextAndPageCounts": true,
+  "targetMet": false,
+  "remainingInitialCorpus": "Four Arial/Times exact-spacing pages remain below the threshold. Complex layouts/scripts are not yet qualified.",
+  "preservedHostOfficeFeatureCommit": "e7ba3544b17817fa1769688c56ed395bf627e63e",
+  "evidence": "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/validation/word-native-layout-20261120/README.md",
+  "hostTestsSha256": "cc44246d4ea4a19974a03e090c8cf4a21bccb6feb8e967ff3ff1334fcab3593b",
+  "ciQueriedOrAwaited": false,
+  "bundledOfficeFilesVerified": 2927
+}
