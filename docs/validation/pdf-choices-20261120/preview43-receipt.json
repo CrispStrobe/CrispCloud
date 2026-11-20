@@ -1,0 +1,30 @@
+{
+  "source": "4ee4eef543f54e0f238eef85514465135c99ddab",
+  "office_source": "d95e814af9556dcea448ba5673e0ba4dc81007d0",
+  "version": "1.3.4",
+  "build": "43",
+  "bundle_identifier": "com.CrispStrobe.cloud",
+  "configuration": "Debug",
+  "signing_team": "N9XSJ4M3GT",
+  "strict_deep_signature_verified": true,
+  "unit_widget_checks": {
+    "integrated_app_tests": 187,
+    "office_tests": 19,
+    "final_viewport_routing_tests": 7
+  },
+  "live": {
+    "three_pdf_viewers_rendered": true,
+    "native_zoom_100_to_120": true,
+    "native_fit_full_page_at_35_percent": true,
+    "primary_and_alternate_editors_opened": true,
+    "office_rotate_undo_discard": true,
+    "source_fixture_unchanged": true,
+    "preview43_primary_zoom_percentage_after_fit": 64,
+    "physical_pinch_and_os_shortcut_delivery_qualified": false
+  },
+  "components_sha256": {
+    "Contents/MacOS/CrispCloud": "43de92695bbaf69ad34c2d6bda64b679f1d4e9b839050dbdef60c6bc5e25ebe7",
+    "Contents/MacOS/CrispCloud.debug.dylib": "da23ed9f80aaa16ee0a016d1680e033eee920a7f61e787d68516e21a375b653e",
+    "Contents/Frameworks/App.framework/Resources/flutter_assets/kernel_blob.bin": "152dd382afe2a1c9b2b02ea9fbbb9b189a8d443c852841256ff47bc8bdb3be94"
+  }
+}
