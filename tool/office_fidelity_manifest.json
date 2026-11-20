@@ -1857,7 +1857,7 @@
     "packages/legacy_doc_parser/tool/text_unicode_web_acceptance.dart": "6388ddf7dce972e7fab38d038de680457346fd41a9ba7d76bbc163b8637d9845",
     "packages/legacy_doc_parser/tool/verify_web.py": "4416173bcdc3bd2acccaabf979be4510dc506a38f07c9c9c763c4cb8593eef70",
     "packages/legacy_doc_parser/tool/web_acceptance.dart": "c001f983e22f55eac72d1f5ff07c06267fb6e60d9441e2007d0702899c0aff9b",
-    "packages/quds_office_editor/CHANGELOG.md": "6cceb55a19a1fd9124eb629f33750f62386a1b43b2039a8c9ad2bce3ca8297a9",
+    "packages/quds_office_editor/CHANGELOG.md": "b5e75326617133fb6456c1b0d72d3ca85a684871c21d47c190191f934cdc1922",
     "packages/quds_office_editor/lib/quds_office_editor.dart": "56c4bff9a9289fd4527c30a0f5061373dccd56fc77bc639322eb826ae5186109",
     "packages/quds_office_editor/lib/src/core/command_pipeline.dart": "dfa04bb658dba1b45868feaa598bf351c4ecab5d88321af43d830f54f13ad0ce",
     "packages/quds_office_editor/lib/src/core/input_bridge.dart": "e053ab3aab15e880abd17cb512f4f80e4c81d21f8818f720382140b38cdbfd5b",
@@ -3001,8 +3001,8 @@
     "tool/office-validation/test_native_render_limitations.py": "ffc4e367871bf40079b2b2868af6b146de5bcfe13b50a17bdede2f2b3398308b",
     "tool/office-validation/test_render.py": "1ba68e18608d74387cbc1c779ceb72af76bf7741463c282684aec93bf3825472"
   },
-  "source_branch": "fix/mail-credential-stores-chrome-20261120",
-  "source_commit": "a71a7f19e7146a19ecf79122477210fd71afb51b",
+  "source_branch": "main",
+  "source_commit": "7e740a53d3fea4b6bd734537e89888b641a8b735",
   "source_repository": "CrispStrobe/quds_office_suite",
   "standalone_sources": {
     "packages/legacy_doc_parser": {
