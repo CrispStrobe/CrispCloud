@@ -2992,8 +2992,8 @@
     "tool/office-validation/test_native_render_limitations.py": "ffc4e367871bf40079b2b2868af6b146de5bcfe13b50a17bdede2f2b3398308b",
     "tool/office-validation/test_render.py": "1ba68e18608d74387cbc1c779ceb72af76bf7741463c282684aec93bf3825472"
   },
-  "source_branch": "main",
-  "source_commit": "d95e814af9556dcea448ba5673e0ba4dc81007d0",
+  "source_branch": "integrate/recent-pptx",
+  "source_commit": "04d93c92042ba1fb83e1c514ca42bf3cca44ca09",
   "source_repository": "CrispStrobe/quds_office_suite",
   "standalone_sources": {
     "packages/legacy_doc_parser": {
