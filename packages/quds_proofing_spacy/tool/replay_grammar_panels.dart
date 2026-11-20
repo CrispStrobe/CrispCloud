@@ -69,7 +69,8 @@ Future<void> main(List<String> arguments) async {
     'Library bytes differ from --library-sha256.',
   );
   scoring.require(
-    spacyGrammarNativeSha256s.contains(librarySha),
+    spacyGrammarNativeSha256s.contains(librarySha) ||
+        spacyGrammarCodeSha256s.contains(machOCodeSha256(libraryBytes)),
     'The planner refuses this build; list it before replaying.',
   );
   final panelBytes = File(options['--panel']!).readAsBytesSync();
@@ -291,14 +292,16 @@ final class _Completed extends OfficeProofingProvider {
       result;
 }
 
-/// Replaces the one field that names the build; everything else must match.
+/// Replaces the one field that names the build (and drops the host-bundled
+/// code digest, which recorded results predate); everything else must match.
 Object? _normalize(Object? value, String recordedLibrary, String library) {
   if (value is Map) {
     return {
       for (final entry in value.entries)
-        entry.key: entry.key == 'library_sha256' && entry.value == library
-            ? recordedLibrary
-            : _normalize(entry.value, recordedLibrary, library),
+        if (entry.key != 'code_sha256')
+          entry.key: entry.key == 'library_sha256' && entry.value == library
+              ? recordedLibrary
+              : _normalize(entry.value, recordedLibrary, library),
     };
   }
   if (value is List) {

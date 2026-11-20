@@ -1,4 +1,5 @@
 import 'bundle.dart';
+import 'macho_code_identity.dart' show machOCodeSha256;
 
 /// Immutable Hugging Face distribution catalog for the German spaCy profile.
 ///
@@ -39,10 +40,19 @@ final class SpacyBuildQualification {
     required this.analysis,
     this.grammar,
     this.limitations = const [],
+    this.codeSha256,
   });
 
   /// The exact native library these claims refer to.
   final String librarySha256;
+
+  /// Signature-independent Mach-O code digest ([machOCodeSha256]) of
+  /// [librarySha256], for host-bundled macOS libraries only. A copy re-signed
+  /// with another identity (for example Apple Distribution or Developer ID)
+  /// has different file bytes but the identical code digest, and carries
+  /// these claims only through [spacyQualificationForHostBundled]. Null
+  /// means the claims apply to the exact file bytes alone.
+  final String? codeSha256;
 
   /// Evidence for token/tag/morphology/lemma/dependency/sentence parity.
   final String analysis;
@@ -261,8 +271,11 @@ const spacyLinuxX64Package = SpacyPlatformPackage(
         'Manual de-DE only: sealed W6 panel (22/30 exact corrections vs 5/30 '
         'deterministic; no findings on 42 valid/10 guard controls) and the W7 '
         'extension panel (CrispEmbed run 44262982569: 24/40 exact, 0 valid or '
-        'guard findings) on this exact library. Not a general German grammar '
-        'quality claim.',
+        'guard findings) on this exact library. Grammar v2 families '
+        '(np-agreement, preposition-case, verb-position): sealed 244-case panel '
+        'and 977 UD German-GSD test sentences, replayed here identically to the '
+        'macOS bundled qualification (CrispEmbed run 44678018577, 0 of 1,221 '
+        'rows differ). Not a general German grammar quality claim.',
     limitations: [
       'Six declared external dependency builds only; not general Linux '
           'portability.',
@@ -358,6 +371,22 @@ SpacyPlatformStatus spacyPlatformStatus(SpacyPlatform platform) {
 const spacyGrammarMacosBundledSha256 =
     'ccc96620e01164d18e8d2e46b9a383677e4430c8889833bedab5b56c16a1b40f';
 
+/// [machOCodeSha256] of [spacyGrammarMacosBundledSha256]: the qualified code
+/// with its signature fields masked. Identical for the ad hoc qualified file
+/// and for copies re-signed with an Apple Distribution or Developer ID
+/// identity (measured on all three); any change to code or load commands
+/// changes it.
+const spacyGrammarMacosBundledCodeSha256 =
+    'f2022b1cf75d831cddbd047eec5f5ac759728fee169ed2b5b785ecda1a07efeb';
+
+/// SHA-256 of `codesign --remove-signature` applied to
+/// [spacyGrammarMacosBundledSha256] (2,300,136 bytes). build_macos_app.sh
+/// requires the shipped library, stripped the same way, to equal it byte for
+/// byte before it records the library as qualified; this is Apple's own
+/// tooling agreeing with [spacyGrammarMacosBundledCodeSha256].
+const spacyGrammarMacosBundledUnsignedSha256 =
+    'f62d2a0cf457a0ac577f45eceba93d8d5f2f450d4fd5a191f0cec61d88886ed2';
+
 /// Exact builds with recorded claims that are not offered as downloadable
 /// packages (for example development candidates or host-bundled libraries).
 /// Lookup is by exact library digest only.
@@ -368,6 +397,7 @@ const spacyRecordedBuilds = <SpacyBuildQualification>[
   // them with the recorded toolchain.
   SpacyBuildQualification(
     librarySha256: spacyGrammarMacosBundledSha256,
+    codeSha256: spacyGrammarMacosBundledCodeSha256,
     analysis:
         'macOS arm64 library built from CrispEmbed v2 runtime 45b05770 with '
         'static PCRE2, ad hoc signed for the Studio app; checked on Apple '
@@ -381,13 +411,20 @@ const spacyRecordedBuilds = <SpacyBuildQualification>[
         '42 valid/10 guard controls) and the W7 extension panel (24/40 exact '
         'vs 14/40, 0 valid or guard findings) with annotations, planner '
         'decisions, arms and corrected rechecks identical case by case to the '
-        'qualified Linux build; native editor gate 10/10. Not a general German '
-        'grammar quality claim.',
+        'qualified Linux build; native editor gate 10/10. Grammar v2 families '
+        'np-agreement, preposition-case and verb-position qualified on these '
+        'bytes (sealed 244-case panel: 13/24, 18/24 and 9/24 exact native '
+        'corrections; 0 valid/guard findings; 977 UD German-GSD test '
+        'sentences: 2 findings, both genuine errors). subject-person failed '
+        'and is experimental. Not a general German grammar quality claim.',
     limitations: [
-      'Valid only for these exact signed bytes inside an app bundle; a '
-          'rebuild with another toolchain is a different, unqualified build.',
+      'Valid only for this exact code inside an app bundle: these ad hoc '
+          'signed bytes, or a copy re-signed by the app build whose '
+          'signature-independent code digest is identical. A rebuild with '
+          'another toolchain is a different, unqualified build.',
       'Grammar uses the parser without named entities (capability mask 15).',
-      'Ad hoc signed; not notarized.',
+      'Qualified on the ad hoc signed bytes; re-signing changes only the '
+          'signature, not the qualified code.',
     ],
   ),
   SpacyBuildQualification(
@@ -403,6 +440,23 @@ const spacyRecordedBuilds = <SpacyBuildQualification>[
     ],
   ),
 ];
+
+/// Qualification for a library shipped inside the host's own signed app
+/// bundle: the exact digest first, otherwise a recorded host-bundled build
+/// with the same signature-independent [codeSha256] (a re-signed copy of
+/// qualified code). Never used for downloaded packages, which stay bound to
+/// their exact bytes.
+SpacyBuildQualification? spacyQualificationForHostBundled({
+  required String librarySha256,
+  String? codeSha256,
+}) {
+  final exact = spacyQualificationFor(librarySha256);
+  if (exact != null || codeSha256 == null) return exact;
+  for (final build in spacyRecordedBuilds) {
+    if (build.codeSha256 == codeSha256) return build;
+  }
+  return null;
+}
 
 /// Qualification for an exact library, or null for an unrecorded build.
 SpacyBuildQualification? spacyQualificationFor(String librarySha256) {

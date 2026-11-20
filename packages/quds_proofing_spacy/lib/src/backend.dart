@@ -1,5 +1,6 @@
 import 'analysis.dart';
 import 'bundle.dart';
+import 'macho_code_identity.dart' show machOCodeSha256;
 
 /// Send only paths/options to a worker; create all native pointers inside open.
 abstract interface class SpacyBackendFactory {
@@ -30,9 +31,16 @@ final class SpacyBackendIdentity {
     this.abiVersion = 1,
     this.textAbiVersion = 1,
     this.capabilityMask = 15,
+    this.codeSha256,
   });
 
   final String librarySha256;
+
+  /// Signature-independent Mach-O code digest ([machOCodeSha256]) measured
+  /// from the same bytes as [librarySha256] when the library ships inside the
+  /// host's signed app bundle; null otherwise. Lets a re-signed copy of
+  /// qualified code be recognized without trusting any host claim.
+  final String? codeSha256;
   final String bundleSha256;
   final String modelSha256;
   final String resourcesSha256;
@@ -45,8 +53,10 @@ final class SpacyBackendIdentity {
     SpacyBundle bundle, {
     required String librarySha256,
     required int capabilityMask,
+    String? codeSha256,
   }) => SpacyBackendIdentity(
     librarySha256: librarySha256,
+    codeSha256: codeSha256,
     bundleSha256: bundle.manifestSha256,
     modelSha256: bundle.modelFile.sha256,
     resourcesSha256: bundle.resourcesFile.sha256,
@@ -62,6 +72,8 @@ final class SpacyBackendIdentity {
     final expected = bundle ?? this.bundle;
     if (expected == null ||
         !RegExp(r'^[0-9a-f]{64}$').hasMatch(librarySha256) ||
+        (codeSha256 != null &&
+            !RegExp(r'^[0-9a-f]{64}$').hasMatch(codeSha256!)) ||
         bundleSha256 != expected.manifestSha256 ||
         modelSha256 != expected.modelFile.sha256 ||
         resourcesSha256 != expected.resourcesFile.sha256 ||
@@ -83,7 +95,8 @@ final class SpacyBackendIdentity {
       resourcesSha256 == other.resourcesSha256 &&
       abiVersion == other.abiVersion &&
       textAbiVersion == other.textAbiVersion &&
-      capabilityMask == other.capabilityMask;
+      capabilityMask == other.capabilityMask &&
+      codeSha256 == other.codeSha256;
 
   @override
   int get hashCode => Object.hash(
@@ -94,6 +107,7 @@ final class SpacyBackendIdentity {
     abiVersion,
     textAbiVersion,
     capabilityMask,
+    codeSha256,
   );
 
   Map<String, Object> toJson() => {
@@ -104,5 +118,6 @@ final class SpacyBackendIdentity {
     'abi_version': abiVersion,
     'text_abi_version': textAbiVersion,
     'capability_mask': capabilityMask,
+    'code_sha256': ?codeSha256,
   };
 }

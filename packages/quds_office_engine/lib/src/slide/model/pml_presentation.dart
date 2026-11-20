@@ -85,6 +85,12 @@ enum PmlShapePreset {
   upArrow,
   leftArrow,
   rightArrow,
+  diamond,
+  hexagon,
+  pentagon,
+  chevron,
+  parallelogram,
+  trapezoid,
 }
 
 /// Enum PmlTextAlign.

@@ -208,6 +208,7 @@ void main() {
       final provider = SpacyGrammarProvider.withTransport(
         transport: transport,
         enabled: true,
+        families: const {SpacyGrammarFamily.nounVerb},
       );
       addTearDown(provider.dispose);
       for (final locale in ['de-AT', 'de-CH', 'de-DE-1901', 'en-US']) {
@@ -225,6 +226,26 @@ void main() {
         expect(result.findings, isEmpty);
       }
       expect(transport.calls, isEmpty);
+
+      // With every qualified family enabled, ignoring one family still
+      // analyzes; ignoring all of them (new or matching deterministic IDs)
+      // makes no call.
+      final all = _ControlledTransport();
+      final multi = SpacyGrammarProvider.withTransport(
+        transport: all,
+        enabled: true,
+      );
+      addTearDown(multi.dispose);
+      final everything = {
+        for (final family in spacyGrammarQualifiedFamilies)
+          family.legacyRuleIds.first,
+      };
+      final none = await multi.check(_request(ignored: everything));
+      expect(none.status, OfficeProofingStatus.success);
+      expect(none.message, contains('ignored'));
+      expect(all.calls, isEmpty);
+      unawaited(multi.check(_request(ignored: {spacyNounVerbRuleId})));
+      expect(all.calls, hasLength(1));
     },
   );
 
@@ -477,6 +498,7 @@ void main() {
       final provider = SpacyGrammarProvider.withTransport(
         transport: transport,
         enabled: true,
+        families: const {SpacyGrammarFamily.nounVerb},
       );
       addTearDown(provider.dispose);
       final pending = provider.check(_request());

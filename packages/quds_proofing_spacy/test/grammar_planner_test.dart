@@ -84,6 +84,7 @@ const _inversion = <_Spec>[
   Set<String> ignored = const {},
   String nativeSha = spacyGrammarNativeSha256,
   int capabilityMask = 15,
+  String? codeSha256,
   Set<int> sentenceEnds = const {},
 }) {
   final buffer = StringBuffer();
@@ -147,6 +148,7 @@ const _inversion = <_Spec>[
       identity: SpacyBackendIdentity(
         librarySha256: nativeSha,
         capabilityMask: capabilityMask,
+        codeSha256: codeSha256,
       ),
       tokens: tokens,
     ),
@@ -589,6 +591,69 @@ void main() {
           'runtime-mismatch',
         );
       }
+    },
+  );
+
+  test(
+    'a re-signed host-bundled copy qualifies only by its measured code digest',
+    () async {
+      // Re-signing the qualified macOS library with a release identity
+      // changes its file digest but not its code digest.
+      final resigned = _input(
+        _modifier,
+        nativeSha: 'b' * 64,
+        codeSha256: spacyGrammarMacosBundledCodeSha256,
+      );
+      final plan = await const SpacyGermanGrammarPlanner().plan(
+        resigned.request,
+        resigned.analysis,
+      );
+      expect(plan.result.status, OfficeProofingStatus.success);
+      expect(plan.result.findings.single.replacements, ['schlafen']);
+      // The exact qualified bytes still qualify with their code digest.
+      final exact = _input(
+        _modifier,
+        nativeSha: spacyGrammarMacosBundledSha256,
+        codeSha256: spacyGrammarMacosBundledCodeSha256,
+      );
+      expect(
+        (await const SpacyGermanGrammarPlanner().plan(
+          exact.request,
+          exact.analysis,
+        )).result.findings,
+        hasLength(1),
+      );
+      // Different code, a missing code digest, or the unsigned-file digest
+      // used as a code digest are all refused.
+      for (final code in [
+        'c' * 64,
+        null,
+        spacyGrammarMacosBundledUnsignedSha256,
+      ]) {
+        final other = _input(_modifier, nativeSha: 'b' * 64, codeSha256: code);
+        expect(
+          (await const SpacyGermanGrammarPlanner().plan(
+            other.request,
+            other.analysis,
+          )).decisions.single.reason,
+          'runtime-mismatch',
+        );
+      }
+      // The capability profile is still enforced for re-signed copies.
+      final withNer = _input(
+        _modifier,
+        nativeSha: 'b' * 64,
+        codeSha256: spacyGrammarMacosBundledCodeSha256,
+        capabilityMask: 31,
+      );
+      expect(
+        (await const SpacyGermanGrammarPlanner().plan(
+          withNer.request,
+          withNer.analysis,
+        )).decisions.single.reason,
+        'runtime-mismatch',
+      );
+      expect(spacyGrammarCodeSha256s, {spacyGrammarMacosBundledCodeSha256});
     },
   );
 

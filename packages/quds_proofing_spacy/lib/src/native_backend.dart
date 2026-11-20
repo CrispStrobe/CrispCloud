@@ -8,6 +8,7 @@ import 'package:ffi/ffi.dart';
 import 'analysis.dart';
 import 'backend.dart';
 import 'bundle.dart';
+import 'macho_code_identity.dart';
 import 'source_text.dart';
 
 typedef _VersionNative = Uint32 Function();
@@ -244,11 +245,18 @@ final class SpacyNativeBackendFactory implements SpacyBackendFactory {
       );
     }
     await _verifyBundle(directory, bundle);
-    await _verifyFile(
-      File(library),
-      librarySha256,
-      maximumBytes: 128 * 1024 * 1024,
-    );
+    // A host-bundled library also yields its signature-independent code
+    // digest, measured from the very bytes whose SHA-256 was just verified.
+    final codeSha256 = hostBundled
+        ? await _verifyHostBundledLibrary(File(library), librarySha256)
+        : null;
+    if (!hostBundled) {
+      await _verifyFile(
+        File(library),
+        librarySha256,
+        maximumBytes: 128 * 1024 * 1024,
+      );
+    }
     final bindings = _loadBindings(library, librarySha256);
     _enable(bindings, namedEntities: nerPath != null);
     final allocations = Arena();
@@ -308,6 +316,7 @@ final class SpacyNativeBackendFactory implements SpacyBackendFactory {
         bundle,
         librarySha256: librarySha256,
         capabilityMask: bindings.contextCapabilities(context),
+        codeSha256: codeSha256,
       );
       identity.validate(bundle);
       backend = _NativeBackend(bindings, context, identity, bundle);
@@ -455,6 +464,39 @@ Future<void> _verifyFile(
         'A pinned spaCy artifact failed SHA-256 verification.',
       );
     }
+  } on FileSystemException {
+    throw const SpacyUnavailableException(
+      'Cannot read a pinned spaCy artifact.',
+    );
+  }
+}
+
+/// Verifies a host-bundled library like [_verifyFile] and returns its
+/// [machOCodeSha256] computed from the same bytes (null for non-Mach-O or
+/// unsigned files, which then carry no code identity).
+Future<String?> _verifyHostBundledLibrary(File file, String hash) async {
+  try {
+    if (FileSystemEntity.typeSync(file.path, followLinks: false) !=
+        FileSystemEntityType.file) {
+      throw const SpacyUnavailableException(
+        'A pinned spaCy artifact is missing, linked or not a regular file.',
+      );
+    }
+    final length = await file.length();
+    if (length < 1 || length > 128 * 1024 * 1024) {
+      throw const SpacyUnavailableException(
+        'A pinned spaCy artifact has the wrong size.',
+      );
+    }
+    final bytes = await file.readAsBytes();
+    if (bytes.length != length ||
+        sha256.convert(bytes).toString() != hash ||
+        await file.length() != length) {
+      throw const SpacyUnavailableException(
+        'A pinned spaCy artifact failed SHA-256 verification.',
+      );
+    }
+    return machOCodeSha256(bytes);
   } on FileSystemException {
     throw const SpacyUnavailableException(
       'Cannot read a pinned spaCy artifact.',

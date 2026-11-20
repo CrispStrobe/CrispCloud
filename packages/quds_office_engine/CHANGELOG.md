@@ -14,7 +14,8 @@ All notable changes to `quds_office_engine` are documented here.
   decoration lists through import/copy/save while retaining layout decorations,
   background ownership and rich-run overrides. Apply inherited PDF font scaling
   only once, retain numeric order across wrapping, and include arrow outlines,
-  emoji fallback and flipped connector diagonals.
+  emoji fallback and flipped connector diagonals. Preserve connector orientation
+  through save/reopen, geometry operations, morphing and full slide copies.
 
 - Add bounded, read-only Zotero child-note and attachment metadata pages with
   exact parent/library validation, inert note markup, and explicit pagination.

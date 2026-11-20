@@ -1690,6 +1690,66 @@ abstract final class OfficePdfExport {
     sink.canvas.restore();
   }
 
+  static void _shapePath(
+    PdfCanvas canvas,
+    PmlShapePreset preset,
+    double x,
+    double y,
+    double w,
+    double h,
+  ) {
+    switch (preset) {
+      case PmlShapePreset.diamond:
+        canvas.moveTo(x + w / 2, y);
+        canvas.lineTo(x + w, y + h / 2);
+        canvas.lineTo(x + w / 2, y + h);
+        canvas.lineTo(x, y + h / 2);
+      case PmlShapePreset.hexagon:
+        canvas.moveTo(x + w * 0.25, y);
+        canvas.lineTo(x + w * 0.75, y);
+        canvas.lineTo(x + w, y + h / 2);
+        canvas.lineTo(x + w * 0.75, y + h);
+        canvas.lineTo(x + w * 0.25, y + h);
+        canvas.lineTo(x, y + h / 2);
+      case PmlShapePreset.pentagon:
+        canvas.moveTo(x, y);
+        canvas.lineTo(x + w * 0.75, y);
+        canvas.lineTo(x + w, y + h / 2);
+        canvas.lineTo(x + w * 0.75, y + h);
+        canvas.lineTo(x, y + h);
+        canvas.lineTo(x + w * 0.25, y + h / 2);
+      case PmlShapePreset.chevron:
+        canvas.moveTo(x, y);
+        canvas.lineTo(x + w * 0.75, y);
+        canvas.lineTo(x + w, y + h / 2);
+        canvas.lineTo(x + w * 0.75, y + h);
+        canvas.lineTo(x, y + h);
+        canvas.lineTo(x + w * 0.25, y + h / 2);
+      case PmlShapePreset.parallelogram:
+        canvas.moveTo(x + w * 0.25, y);
+        canvas.lineTo(x + w, y);
+        canvas.lineTo(x + w * 0.75, y + h);
+        canvas.lineTo(x, y + h);
+      case PmlShapePreset.trapezoid:
+        canvas.moveTo(x + w * 0.2, y);
+        canvas.lineTo(x + w * 0.8, y);
+        canvas.lineTo(x + w, y + h);
+        canvas.lineTo(x, y + h);
+      case PmlShapePreset.rect:
+      case PmlShapePreset.roundRect:
+      case PmlShapePreset.ellipse:
+      case PmlShapePreset.triangle:
+      case PmlShapePreset.connector:
+      case PmlShapePreset.freeform:
+      case PmlShapePreset.downArrow:
+      case PmlShapePreset.upArrow:
+      case PmlShapePreset.leftArrow:
+      case PmlShapePreset.rightArrow:
+        canvas.rect(x, y, w, h);
+    }
+    canvas.closePath();
+  }
+
   static void _arrowPath(
     PdfCanvas canvas,
     double x,
@@ -1792,6 +1852,14 @@ abstract final class OfficePdfExport {
         canvas.stroke();
       case PmlShapePreset.rightArrow:
         _arrowPath(canvas, x, y, w, h, _ArrowDirection.right);
+        canvas.stroke();
+      case PmlShapePreset.diamond:
+      case PmlShapePreset.hexagon:
+      case PmlShapePreset.pentagon:
+      case PmlShapePreset.chevron:
+      case PmlShapePreset.parallelogram:
+      case PmlShapePreset.trapezoid:
+        _shapePath(canvas, preset, x, y, w, h);
         canvas.stroke();
       case PmlShapePreset.freeform:
         if (path.length >= 2) {
@@ -1902,6 +1970,14 @@ abstract final class OfficePdfExport {
         canvas.fill();
       case PmlShapePreset.rightArrow:
         _arrowPath(canvas, x, y, w, h, _ArrowDirection.right);
+        canvas.fill();
+      case PmlShapePreset.diamond:
+      case PmlShapePreset.hexagon:
+      case PmlShapePreset.pentagon:
+      case PmlShapePreset.chevron:
+      case PmlShapePreset.parallelogram:
+      case PmlShapePreset.trapezoid:
+        _shapePath(canvas, preset, x, y, w, h);
         canvas.fill();
       case PmlShapePreset.freeform:
         if (path.length >= 2) {

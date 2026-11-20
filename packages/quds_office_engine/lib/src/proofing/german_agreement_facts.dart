@@ -209,3 +209,157 @@ abstract final class GermanAgreementFacts {
     return GermanNominativeEvidence(reason: 'reviewed', readings: retained);
   }
 }
+
+/// One reviewed present-indicative paradigm with every person, for optional
+/// syntax planners that establish the subject independently.
+final class GermanReviewedPresentParadigm {
+  const GermanReviewedPresentParadigm({
+    required this.infinitive,
+    required this.ich,
+    required this.du,
+    required this.thirdSingular,
+    required this.wir,
+    required this.ihr,
+  });
+
+  final String infinitive;
+  final String ich;
+  final String du;
+  final String thirdSingular;
+  final String wir;
+  final String ihr;
+
+  /// Third plural and the polite form equal the wir form in every paradigm.
+  String get thirdPlural => wir;
+
+  Set<String> get forms => {ich, du, thirdSingular, wir, ihr};
+
+  /// "er habe", "man nehme": first-person -e forms double as Konjunktiv I.
+  bool isThirdPersonSubjunctive(String form) =>
+      _germanFormsEquivalent(form, ich) && form.endsWith('e');
+
+  Map<String, Object> toJson() => {
+    'infinitive': infinitive,
+    'ich': ich,
+    'du': du,
+    'er': thirdSingular,
+    'wir': wir,
+    'ihr': ihr,
+  };
+}
+
+/// A licensed or first-party noun reading with its forms per case.
+/// Case indices: 0 nominative, 1 accusative, 2 dative, 3 genitive.
+/// Gender indices: 0 masculine, 1 feminine, 2 neuter, 3 plural.
+/// An empty case set means unknown, never "no form".
+final class GermanNounCaseReading {
+  GermanNounCaseReading({
+    required this.gender,
+    required Iterable<Set<String>> forms,
+  }) : forms = List<Set<String>>.unmodifiable(
+         forms.map((set) => Set<String>.unmodifiable(set)),
+       );
+
+  final int gender;
+  final List<Set<String>> forms;
+  bool get plural => gender == 3;
+
+  bool accepts(String surface, int grammaticalCase) =>
+      forms[grammaticalCase].any(
+        (form) =>
+            _germanFormsEquivalent(form.toLowerCase(), surface.toLowerCase()),
+      );
+
+  Map<String, Object> toJson() => {
+    'gender': _GermanGender.values[gender].name,
+    'forms': [for (final set in forms) set.toList(growable: false)..sort()],
+  };
+}
+
+/// The closed reviewed determiner paradigm that contains one surface form.
+final class GermanDeterminerFacts {
+  const GermanDeterminerFacts._(this._determiner);
+  final _GermanDeterminer _determiner;
+
+  String get stem => _determiner.stem;
+  bool get definite => _determiner.definite;
+  bool get permitsPlural => _determiner.permitsPlural;
+
+  /// The lowercase form for case/gender indices (see [GermanNounCaseReading]).
+  String form(int grammaticalCase, int gender) => _determiner.form(
+    _GermanCase.values[grammaticalCase],
+    _GermanGender.values[gender],
+  );
+
+  /// Reviewed attributive adjective ending after this determiner.
+  String adjectiveEnding(int grammaticalCase, int gender) =>
+      _grammarAdjectiveEnding(
+        _determiner,
+        _GermanCase.values[grammaticalCase],
+        _GermanGender.values[gender],
+      );
+
+  /// Every (case, gender) reading whose form equals [surface].
+  List<(int, int)> readings(String surface) => [
+    for (var c = 0; c < 4; c++)
+      for (var g = 0; g < 4; g++)
+        if ((g != 3 || permitsPlural) && form(c, g) == surface.toLowerCase())
+          (c, g),
+  ];
+}
+
+/// Additive read-only facts for the optional native planner families.
+/// Nothing here changes the ordinary provider's tables or behavior.
+abstract final class GermanPhraseFacts {
+  static GermanDeterminerFacts? determiner(String surface) {
+    final value = _grammarDeterminerForms[surface.toLowerCase()];
+    return value == null ? null : GermanDeterminerFacts._(value);
+  }
+
+  /// All licensed readings of a complete noun token, or empty when the noun
+  /// is unknown, unresolved or not an accepted spelling.
+  static Future<List<GermanNounCaseReading>> nounReadings(
+    String surface,
+  ) async {
+    final morphology = GermanNounMorphology.shared;
+    await morphology.prepareWords([surface]);
+    if (morphology.hasUnresolvedReading(surface) ||
+        !morphology.acceptsSpelling(surface)) {
+      return const [];
+    }
+    return List<GermanNounCaseReading>.unmodifiable([
+      for (final reading in _lookupGrammarNoun(surface.toLowerCase()))
+        GermanNounCaseReading(
+          gender: reading.gender.index,
+          forms: reading.forms,
+        ),
+    ]);
+  }
+
+  /// Reviewed adjective stems that produce [surface] with a standard ending.
+  static Set<String> reviewedAdjectiveStems(String surface) =>
+      Set<String>.unmodifiable(
+        _grammarAdjectiveForms[surface.toLowerCase()] ?? const <String>{},
+      );
+
+  /// Every reviewed present paradigm that contains [surface].
+  static List<GermanReviewedPresentParadigm> reviewedPresentParadigms(
+    String surface,
+  ) {
+    final lower = normalizeGermanWord(surface).toLowerCase();
+    return List<GermanReviewedPresentParadigm>.unmodifiable([
+      for (final paradigm in GermanWritingRulesProvider._presentParadigms)
+        if (paradigm.forms.any((form) => _germanFormsEquivalent(form, lower)))
+          GermanReviewedPresentParadigm(
+            infinitive: paradigm.infinitive,
+            ich: paradigm.ich,
+            du: paradigm.du,
+            thirdSingular: paradigm.thirdPerson,
+            wir: paradigm.wir,
+            ihr: paradigm.ihr,
+          ),
+    ]);
+  }
+
+  static bool sameForm(String a, String b) => _germanFormsEquivalent(a, b);
+}

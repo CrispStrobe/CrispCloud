@@ -98,6 +98,35 @@ void main() {
     final bundled = spacyQualificationFor(spacyGrammarMacosBundledSha256)!;
     expect(bundled.grammarQualified, isTrue);
     expect(bundled.librarySha256, spacyGrammarMacosBundledSha256);
+    expect(bundled.codeSha256, spacyGrammarMacosBundledCodeSha256);
+    // A re-signed copy of the same code inherits the record only through the
+    // host-bundled lookup; downloads and unknown code stay unqualified.
+    expect(spacyQualificationFor('b' * 64), isNull);
+    expect(
+      spacyQualificationForHostBundled(
+        librarySha256: 'b' * 64,
+        codeSha256: spacyGrammarMacosBundledCodeSha256,
+      ),
+      same(bundled),
+    );
+    expect(
+      spacyQualificationForHostBundled(
+        librarySha256: 'b' * 64,
+        codeSha256: 'c' * 64,
+      ),
+      isNull,
+    );
+    expect(spacyQualificationForHostBundled(librarySha256: 'b' * 64), isNull);
+    expect(
+      spacyQualificationForHostBundled(
+        librarySha256: spacyGrammarMacosBundledSha256,
+      ),
+      same(bundled),
+    );
+    // Only host-bundled recorded builds carry a code identity.
+    for (final package in [...spacyCatalogPackages, ...spacyRuntimePackages]) {
+      expect(package.qualification.codeSha256, isNull);
+    }
     expect(
       spacyCatalogPackages
           .followedBy(spacyRuntimePackages)

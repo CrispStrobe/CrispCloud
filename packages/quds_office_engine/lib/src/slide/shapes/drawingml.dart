@@ -289,6 +289,17 @@ List<PmlShape> parseSlideShapes(
         'upArrow' => PmlShapePreset.upArrow,
         'leftArrow' => PmlShapePreset.leftArrow,
         'rightArrow' => PmlShapePreset.rightArrow,
+        'diamond' || 'flowChartDecision' => PmlShapePreset.diamond,
+        'hexagon' => PmlShapePreset.hexagon,
+        'pentagon' || 'homePlate' => PmlShapePreset.pentagon,
+        'chevron' => PmlShapePreset.chevron,
+        'parallelogram' || 'flowChartData' => PmlShapePreset.parallelogram,
+        'trapezoid' => PmlShapePreset.trapezoid,
+        'round1Rect' ||
+        'round2SameRect' ||
+        'round2DiagRect' ||
+        'plaque' ||
+        'flowChartTerminator' => PmlShapePreset.roundRect,
         _ => PmlShapePreset.rect,
       };
     } else if (reader.localName == 'bodyPr' && current != null) {
@@ -836,6 +847,12 @@ void _writeSlideShape(XmlWriter w, PmlShape shape) {
         PmlShapePreset.upArrow => 'upArrow',
         PmlShapePreset.leftArrow => 'leftArrow',
         PmlShapePreset.rightArrow => 'rightArrow',
+        PmlShapePreset.diamond => 'diamond',
+        PmlShapePreset.hexagon => 'hexagon',
+        PmlShapePreset.pentagon => 'pentagon',
+        PmlShapePreset.chevron => 'chevron',
+        PmlShapePreset.parallelogram => 'parallelogram',
+        PmlShapePreset.trapezoid => 'trapezoid',
         PmlShapePreset.rect => 'rect',
       },
     },

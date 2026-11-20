@@ -316,21 +316,17 @@ class SlideDeserializer {
   static String? _backgroundOf(String xml, Map<String, String> colors) {
     final XmlPullReader reader = XmlPullReader(xml);
     var inBg = false;
-    var fillPending = false;
     while (reader.next()) {
       if (reader.eventType == XmlEventType.endElement) {
         if (reader.localName == 'bg' || reader.localName == 'bgPr') {
           inBg = false;
-          fillPending = false;
         }
         continue;
       }
       if (reader.eventType != XmlEventType.startElement) continue;
       if (reader.localName == 'bg' || reader.localName == 'bgPr') {
         inBg = true;
-      } else if (reader.localName == 'solidFill' && inBg) {
-        fillPending = true;
-      } else if (fillPending &&
+      } else if (inBg &&
           const <String>{
             'srgbClr',
             'schemeClr',
@@ -358,12 +354,10 @@ class SlideDeserializer {
       }
       final XmlPullReader reader = XmlPullReader(part.readText());
       var inBg = false;
-      var fillPending = false;
       while (reader.next()) {
         if (reader.eventType == XmlEventType.endElement) {
           if (reader.localName == 'bg' || reader.localName == 'bgPr') {
             inBg = false;
-            fillPending = false;
           }
           continue;
         }
@@ -373,7 +367,6 @@ class SlideDeserializer {
         if (reader.localName == 'bg' || reader.localName == 'bgPr') {
           inBg = true;
         } else if (reader.localName == 'solidFill' && inBg) {
-          fillPending = true;
         } else if (inBg &&
             const <String>{
               'srgbClr',
