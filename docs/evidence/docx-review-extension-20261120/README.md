@@ -11,7 +11,7 @@ was expected to edit the default header despite the fixture having a separate
 first-page header. The corrected test checks the first-page story changes, the
 default story stays intact, and line breaks/tabs survive three asynchronous
 save/reopen cycles. All 12 related host cases replayed against the final code
-pin, giving **112 unique passing host cases**, with no unresolved failures.
+pin, giving **112 unique passing host cases** before the final slide reconciliation below, with no unresolved failures.
 See [acceptance](acceptance.json) and [final replay](host-final-replay.txt).
 
 The local Dart cache was restored using the enforced existing lockfile. Native
@@ -39,3 +39,17 @@ Quds reconciliation passed 88 engine and 21 editor cases. The final host replay
 passed **29 cases**, including the corrected first-page header expectations and
 17 additional font/history/read-only cases, for **129 unique host cases** across
 the acceptance runs. See [unified host replay](host-unified-replay.txt).
+
+## Local release build 36
+
+Built CrispCloud 1.3.4+36 for macOS ARM64 from `7653a54c`, using the
+qualified Quds `f9128aba` snapshot above. Development signing succeeded with
+the existing build keychain grant. Deep/strict signature verification passed;
+the app rendered its shell, completed credential preflight and stayed healthy
+for 20 seconds. Post-build fidelity verification again matched all 2,892 Office
+files. The acceptance receipt records the executable and local log hashes.
+This is a local release build, not a TestFlight submission.
+
+The separate Word Review Preview remains available for interactive review tests.
+Qualification covers imported run/paragraph formatting and paired text moves;
+structural paragraph/table/section revisions remain outside this qualification.

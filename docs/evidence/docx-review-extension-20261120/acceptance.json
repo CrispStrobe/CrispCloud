@@ -27,5 +27,25 @@
   "additionalFontCases": 17,
   "hostBaseUniquePassed": 112,
   "allVendorFilesVerified": true,
-  "unpublishedConflictCommitReplacedBeforePush": true
+  "unpublishedConflictCommitReplacedBeforePush": true,
+  "localReleaseBuild": {
+    "build": "36",
+    "version": "1.3.4",
+    "sourceCommit": "7653a54c7137629795b53f7a6008587a518efb81",
+    "qudsSourceCommit": "f9128aba7ace7f981746b7282d463cc25a1e6d87",
+    "architecture": "arm64",
+    "developmentSigned": true,
+    "deepStrictSignatureVerified": true,
+    "startupHealthySeconds": 20,
+    "credentialPolicyReady": true,
+    "executableSha256": "ead07bda18e2f77065683c26aebdaacb42af590f38aa73c91fdd5b65a0a2684f",
+    "testFlightSubmitted": false,
+    "logSha256": {
+      "crispcloud-word-review-build36.log": "3495b7fd891e99411fdb9b831633ef783988fdf46ffae349786a438b138a9c18",
+      "crispcloud-word-review-build36-sign.log": "c97f64eedbf5a36be7643e913e46d21623f7d9b3e80f5b22d2c6c771f57dcbdc",
+      "crispcloud-word-review-build36-startup.log": "b1606522237145dec8aee2d743c324e5cfa83b6548da370eac48b58962b2a552",
+      "crispcloud-word-review-build36-startup-result.log": "27c4507fc758524e46ea81b8aeaa70d38f81b47884b1fabdf971ecb0fde84cd6",
+      "crispcloud-word-review-build36-fidelity.log": "f6cef075925247f92cc071f6c0ba9ae1630d993badb0521d0699952c42a93e20"
+    }
+  }
 }

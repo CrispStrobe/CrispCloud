@@ -47,3 +47,6 @@ packages/legacy_doc_parser/doc/evidence/**/*.patch -whitespace
 
 # Retain hashed feature-validation command output verbatim.
 docs/validation/**/*.log -text -whitespace
+
+# Retain Word-produced XML fixture bytes, including its CRLF declaration.
+packages/quds_office_engine/test/fixtures/word_reviews/*.xml -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
