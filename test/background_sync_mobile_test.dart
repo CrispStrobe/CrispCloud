@@ -424,33 +424,41 @@ void main() {
     CredentialStorageMode.sessionOnly,
     CredentialStorageMode.encryptedFile,
   ]) {
-    test('background worker does not read old keychain credentials in ${mode.name}', () async {
-      await CredentialStorageConfig.writeMode(mode);
-      const channel = MethodChannel(
-        'plugins.it_nomads.com/flutter_secure_storage',
-      );
-      final messenger =
-          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
-      var reads = 0;
-      messenger.setMockMethodCallHandler(channel, (call) async {
-        reads++;
-        return jsonEncode(_ftpCredentials);
-      });
-      addTearDown(() => messenger.setMockMethodCallHandler(channel, null));
-      final network = _FtpNetwork();
+    test(
+      'background worker does not read old keychain credentials in ${mode.name}',
+      () async {
+        await CredentialStorageConfig.writeMode(mode);
+        const channel = MethodChannel(
+          'plugins.it_nomads.com/flutter_secure_storage',
+        );
+        final messenger =
+            TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+        var reads = 0;
+        messenger.setMockMethodCallHandler(channel, (call) async {
+          reads++;
+          return jsonEncode(_ftpCredentials);
+        });
+        addTearDown(() => messenger.setMockMethodCallHandler(channel, null));
+        final network = _FtpNetwork();
 
-      await expectLater(
-        mobile.buildClientForProvider('ftp', ftpClientFactory: _ftpFactory(network)),
-        throwsA(isA<mobile.BackgroundSyncClientException>().having(
-          (error) => error.message,
-          'message',
-          contains('selected storage mode'),
-        )),
-      );
+        await expectLater(
+          mobile.buildClientForProvider(
+            'ftp',
+            ftpClientFactory: _ftpFactory(network),
+          ),
+          throwsA(
+            isA<mobile.BackgroundSyncClientException>().having(
+              (error) => error.message,
+              'message',
+              contains('selected storage mode'),
+            ),
+          ),
+        );
 
-      expect(reads, 0);
-      expect(network.connects, 0);
-    });
+        expect(reads, 0);
+        expect(network.connects, 0);
+      },
+    );
   }
 
   test(
@@ -861,7 +869,8 @@ void main() {
     expect(client.isAuthenticated, isTrue);
     expect(client.bucketId, _webDavCredentials['host']);
     expect(client.userId, _webDavCredentials['username']);
-    expect(network.requests, hasLength(2));
+    // Explicit credentials authenticate the initial PROPFIND.
+    expect(network.requests, hasLength(1));
     await client.logout();
     expect(network.closed, isTrue);
     expect(secure.mutations, isEmpty);

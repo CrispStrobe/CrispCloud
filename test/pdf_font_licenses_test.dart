@@ -39,6 +39,18 @@ void main() {
       'Liberation Serif': 'SIL OPEN FONT LICENSE',
       'Liberation Mono': 'SIL OPEN FONT LICENSE',
       'Noto Naskh Arabic': 'SIL OPEN FONT LICENSE',
+      'Arimo': 'SIL OPEN FONT LICENSE',
+      'Caladea': 'SIL OPEN FONT LICENSE',
+      'Courier Prime': 'SIL OPEN FONT LICENSE',
+      'Cousine': 'SIL OPEN FONT LICENSE',
+      'DM Sans': 'SIL OPEN FONT LICENSE',
+      'Inter': 'SIL OPEN FONT LICENSE',
+      'Lato': 'SIL OPEN FONT LICENSE',
+      'Noto Sans': 'SIL OPEN FONT LICENSE',
+      'Open Sans': 'SIL OPEN FONT LICENSE',
+      'PT Sans': 'SIL OPEN FONT LICENSE',
+      'Source Serif 4': 'SIL OPEN FONT LICENSE',
+      'Tinos': 'SIL OPEN FONT LICENSE',
     };
     expect(byFamily.keys, unorderedEquals(expectedLicenses.keys));
     for (final expected in expectedLicenses.entries) {

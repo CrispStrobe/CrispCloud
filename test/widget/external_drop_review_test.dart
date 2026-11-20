@@ -163,8 +163,13 @@ void main() {
     FileOperationDialog dialog,
     String label,
   ) async {
-    await tester.tap(find.widgetWithText(TextButton, label));
-    await tester.pumpAndSettle();
+    if (label == 'Close') {
+      // Successful foreground transfers close the review automatically.
+      expect(find.byType(FileOperationDialog), findsNothing);
+    } else {
+      await tester.tap(find.widgetWithText(TextButton, label));
+      await tester.pumpAndSettle();
+    }
     await pumpUntil(
       tester,
       () => !dialog.sourceBackend!.isCurrent,
@@ -204,7 +209,7 @@ void main() {
       () =>
           transfers!.operations.isNotEmpty &&
           transfers.operations.every((operation) => operation.isComplete) &&
-          find.widgetWithText(TextButton, 'Close').evaluate().isNotEmpty,
+          find.byType(FileOperationDialog).evaluate().isEmpty,
       'The foreground copy or its post-copy directory refresh did not finish.',
     );
     await tester.pumpAndSettle();
@@ -248,7 +253,6 @@ void main() {
       expect(secondary.files['/target/input.txt'], 'dropped content'.codeUnits);
       expect(secondary.files['/elsewhere/input.txt'], isNull);
       expect(primary.writes, isEmpty);
-      expect(access.stopped, isEmpty);
       await closeReview(tester, dialog, 'Close');
       expect(access.stopped, [
         [7],
@@ -371,7 +375,7 @@ Future<void> pumpUntil(
   String reason,
 ) async {
   for (var attempt = 0; attempt < 250; attempt++) {
-    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 20));
     if (done()) return;
     await tester.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 20)),

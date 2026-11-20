@@ -85,11 +85,23 @@ void validateWordLineSpacingSource(
   }
 }
 
-void _checkElement(XmlElement element, {bool alternative = false}) {
-  final insideAlternative =
-      alternative ||
-      (element.localName == 'AlternateContent' &&
-          element.namespaceUri == OfficeNamespaces.mc);
+void _checkElement(
+  XmlElement element, {
+  bool alternative = false,
+  bool paragraphProperties = false,
+}) {
+  final isAlternative =
+      element.localName == 'AlternateContent' &&
+      element.namespaceUri == OfficeNamespaces.mc;
+  final insideAlternative = alternative || isAlternative;
+  final isParagraphProperties = _word(element, 'pPr');
+  final insideProperties = paragraphProperties || isParagraphProperties;
+  if ((isAlternative && paragraphProperties) ||
+      (insideAlternative && isParagraphProperties)) {
+    throw UnsupportedError(
+      'Line-spacing edits cannot preserve alternative paragraph-property packets.',
+    );
+  }
   if (element.localName == 'spacing' && insideAlternative) {
     // Even a foreign spacing lookalike may be discarded when the reader
     // selects an alternative. Refuse rather than claiming to preserve a
@@ -119,6 +131,10 @@ void _checkElement(XmlElement element, {bool alternative = false}) {
     throw UnsupportedError('Ambiguous duplicate native paragraph properties.');
   }
   for (final child in element.childElements) {
-    _checkElement(child, alternative: insideAlternative);
+    _checkElement(
+      child,
+      alternative: insideAlternative,
+      paragraphProperties: insideProperties,
+    );
   }
 }

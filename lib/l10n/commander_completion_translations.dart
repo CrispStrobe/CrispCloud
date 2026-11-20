@@ -1,5 +1,35 @@
 // Additional Commander workflow translations: de, fr, es, pt, zh, ja, ko, ar.
 const commanderCompletionTranslations = <String, List<String>>{
+  "Open secondary PDF viewer": [
+    "Zweiten PDF-Betrachter öffnen",
+    "Ouvrir le lecteur PDF secondaire",
+    "Abrir el visor PDF secundario",
+    "Abrir o visualizador PDF secundário",
+    "打开备用 PDF 查看器",
+    "第2の PDF ビューアーを開く",
+    "보조 PDF 뷰어 열기",
+    "فتح عارض PDF البديل",
+  ],
+  "Fit width": [
+    "An Breite anpassen",
+    "Ajuster à la largeur",
+    "Ajustar al ancho",
+    "Ajustar à largura",
+    "适合宽度",
+    "幅に合わせる",
+    "너비에 맞추기",
+    "ملاءمة العرض",
+  ],
+  "Fit page": [
+    "Ganze Seite",
+    "Ajuster à la page",
+    "Ajustar a la página",
+    "Ajustar à página",
+    "适合页面",
+    "ページに合わせる",
+    "페이지에 맞추기",
+    "ملاءمة الصفحة",
+  ],
   "Launch application": [
     "Anwendung starten",
     "Lancer l’application",

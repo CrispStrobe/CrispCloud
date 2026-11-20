@@ -1233,25 +1233,25 @@ class AppLocalizationsZh extends AppLocalizations {
   String get officeBrand => 'CrispOffice';
 
   @override
-  String get officeDocuments => 'Documents (.docx)';
+  String get officeDocuments => '文档 (.docx)';
 
   @override
-  String get officeSpreadsheets => 'Spreadsheets (.xlsx)';
+  String get officeSpreadsheets => '电子表格 (.xlsx)';
 
   @override
-  String get officePresentations => 'Presentations (.pptx)';
+  String get officePresentations => '演示文稿 (.pptx)';
 
   @override
-  String get officePdf => 'PDF documents';
+  String get officePdf => 'PDF 文档';
 
   @override
-  String get officeMail => 'Mail';
+  String get officeMail => '邮件';
 
   @override
   String get officeEditorAbout =>
-      'CrispOffice editing is powered by the independent open-source CrispOffice document engine (MIT). It supports OOXML documents (.docx, .xlsx, .pptx) and saves back to the original file.';
+      'CrispOffice 的编辑功能由独立开源的 CrispOffice 文档引擎（MIT 许可证）提供支持。它支持 OOXML 文档（.docx、.xlsx、.pptx），并将更改保存回原始文件。';
 
   @override
   String get officeTrademarkNotice =>
-      'Product names are used only to describe file formats and compatibility. CrispOffice is independent software and is not affiliated with, sponsored by, or endorsed by Microsoft or any other office-suite vendor.';
+      '产品名称仅用于描述文件格式和兼容性。CrispOffice 是独立软件，与 Microsoft 或任何其他办公套件供应商无关联，也未获得其赞助或认可。';
 }

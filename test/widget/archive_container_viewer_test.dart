@@ -315,17 +315,24 @@ void main() {
         expect(find.textContaining('64 MB safety limit'), findsOneWidget);
         expect(find.byType(InternalViewerDialog), findsOneWidget);
 
-        await tester.tap(find.byKey(const ValueKey('test-archive')));
-        await tester.pump();
-        final check = tester.widget<ArchiveIntegrityDialog>(
-          find.byType(ArchiveIntegrityDialog),
-        );
-        expect(check.archive.maxStreamingMemberBytes, kArchiveStreamingLimit);
-        await _waitFor(
-          tester,
-          () => find.text('All regular files checked').evaluate().isNotEmpty,
-          attempts: 3000,
-        );
+        // Run the real file stream and its zero-delay yields on the real event
+        // loop. Pumping one fake timer per polling turn serializes every read
+        // and can exhaust the test timeout before a 65 MiB check completes.
+        await tester.runAsync(() async {
+          await tester.tap(find.byKey(const ValueKey('test-archive')));
+          await tester.pump();
+          final check = tester.widget<ArchiveIntegrityDialog>(
+            find.byType(ArchiveIntegrityDialog),
+          );
+          expect(check.archive.maxStreamingMemberBytes, kArchiveStreamingLimit);
+          final elapsed = Stopwatch()..start();
+          while (find.text('All regular files checked').evaluate().isEmpty &&
+              elapsed.elapsed < const Duration(seconds: 45)) {
+            await Future<void>.delayed(const Duration(milliseconds: 10));
+            await tester.pump();
+          }
+        });
+        expect(find.text('All regular files checked'), findsOneWidget);
         expect(
           find.text('Checked 1 · Failed 0 · Skipped 0 · Unchecked 0'),
           findsOneWidget,

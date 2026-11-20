@@ -531,5 +531,13 @@
   "accessed": "접근함",
   "computeMd5": "MD5 계산",
 
-  "protocol": "프로토콜"
+  "protocol": "프로토콜",
+  "officeBrand": "CrispOffice",
+  "officeDocuments": "문서 (.docx)",
+  "officeSpreadsheets": "스프레드시트 (.xlsx)",
+  "officePresentations": "프레젠테이션 (.pptx)",
+  "officePdf": "PDF 문서",
+  "officeMail": "메일",
+  "officeEditorAbout": "CrispOffice의 편집 기능은 독립적인 오픈 소스 CrispOffice 문서 엔진(MIT)을 사용합니다. OOXML 문서(.docx, .xlsx, .pptx)를 지원하며 변경 내용을 원본 파일에 저장합니다.",
+  "officeTrademarkNotice": "제품 이름은 파일 형식과 호환성을 설명하는 데에만 사용됩니다. CrispOffice는 독립적인 소프트웨어이며 Microsoft 또는 다른 오피스 제품 공급업체와 제휴 관계가 없고, 후원이나 보증을 받지 않습니다."
 }

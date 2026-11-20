@@ -58,6 +58,27 @@ void main() {
     expect(result['sameSavedState'], isTrue);
   });
 
+  test(
+    'ordinary 1.15-line conversions retain exact twips through reopens',
+    () async {
+      final result = await portable.runWordLineSpacingDecimalConversions();
+      expect(result['linesToPoints'], 13.8);
+      expect(result['pointsToLines'], 1.15);
+      expect(result['nativeLines'], ['276', '276', '23']);
+      expect(result['savedMultiple'], 1.15);
+      expect(result['additionalReopens'], 2);
+    },
+  );
+
+  for (final scenario in portable.wordLineSpacingPresetGuardCases) {
+    test(
+      '${scenario.$1} refuses validation, execution and native recording',
+      () async {
+        await portable.assertWordLineSpacingPresetGuard(scenario);
+      },
+    );
+  }
+
   for (final (constant, points, rule, amount, nativeLine, nativeRule) in [
     (
       'wdLineSpaceExactly',

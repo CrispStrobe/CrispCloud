@@ -1,3 +1,5 @@
+import 'package:dio/dio.dart' show BaseOptions;
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
@@ -45,6 +47,8 @@ http.Response? setupDropbox(http.Request request) {
 }
 
 class _StreamDio extends Fake implements webdav.WdDio {
+  @override
+  final options = BaseOptions();
   final sizes = <int>[];
   final closeRequests = <bool>[];
   int uploaded = 0;
@@ -79,6 +83,12 @@ class _DavClient extends Fake implements webdav.Client {
   final _StreamDio c;
   @override
   void setHeaders(Map<String, dynamic> headers) {}
+  @override
+  void setConnectTimeout(int milliseconds) {}
+  @override
+  void setSendTimeout(int milliseconds) {}
+  @override
+  void setReceiveTimeout(int milliseconds) {}
 }
 
 Future<WebDavClientAdapter> _dav(_StreamDio transport) async {

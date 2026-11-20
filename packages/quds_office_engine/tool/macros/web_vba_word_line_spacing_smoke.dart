@@ -332,6 +332,69 @@ Future<Map<String, Object?>> runWordLineSpacingExampleReplay(
   return {'operationsPerRun': 6, 'revision': 2, 'sameSavedState': true};
 }
 
+/// Ordinary decimal line multiples must survive conversion and the twip gate.
+Future<Map<String, Object?>> runWordLineSpacingDecimalConversions() async {
+  final plan = wordLineSpacingPlan('''
+Dim points As Double
+Dim lines As Double
+With Application
+  points = .LinesToPoints(1.15)
+  lines = .PointsToLines(13.8)
+End With
+With ActiveDocument.Paragraphs(1).Format
+  .LineSpacingRule = wdLineSpaceExactly
+  .LineSpacing = points
+End With
+With ActiveDocument.Paragraphs(2).Format
+  .LineSpacingRule = wdLineSpaceMultiple
+  .LineSpacing = Application.LinesToPoints(1.15)
+End With
+With ActiveDocument.Paragraphs(3).Format
+  .LineSpacingRule = wdLineSpaceExactly
+  .LineSpacing = lines
+End With
+''');
+  _check(
+    plan.steps.length == 3 &&
+        plan.steps[0].arguments['points'] == 13.8 &&
+        plan.steps[1].arguments['points'] == 13.8 &&
+        plan.steps[2].arguments['points'] == 1.15,
+    'Ordinary decimal conversions did not retain their exact grid values',
+  );
+  final session = OfficeMacroSession(
+    wordLineSpacingInput(),
+    format: OfficeMacroFormat.docx,
+  );
+  await session.run(plan);
+  var saved = session.bytes;
+  for (var cycle = 0; cycle < 3; cycle++) {
+    final state = wordLineSpacingState(saved);
+    _check(
+      state[0]['nativeLine'] == '276' &&
+          state[0]['nativeRule'] == 'exact' &&
+          state[0]['amount'] == 13.8 &&
+          state[1]['nativeLine'] == '276' &&
+          state[1]['nativeRule'] == 'auto' &&
+          state[1]['amount'] == 1.15 &&
+          state[2]['nativeLine'] == '23' &&
+          state[2]['nativeRule'] == 'exact' &&
+          state[2]['amount'] == 1.15,
+      'Ordinary decimal spacing changed during save/reopen',
+    );
+    _checkMacroParts(saved);
+    if (cycle < 2) {
+      saved = WordSerializer().writeBytes(WordDeserializer().readBytes(saved));
+    }
+  }
+  return {
+    'linesToPoints': 13.8,
+    'pointsToLines': 1.15,
+    'nativeLines': ['276', '276', '23'],
+    'savedMultiple': 1.15,
+    'additionalReopens': 2,
+  };
+}
+
 Future<void> assertWordLineSpacingRefusal(
   Uint8List input,
   OfficeMacro plan, {
@@ -371,6 +434,99 @@ Future<void> assertWordLineSpacingRefusal(
       'Rejected playback contaminated the recording',
     );
   }
+}
+
+const wordLineSpacingPresetGuardCases = <(String, String, String, double)>[
+  ('Space1 duplicate spacing', 'duplicate', 'target.Space1', 1.0),
+  ('Space15 spacing alternative', 'alternative', 'Call target.Space15()', 1.5),
+  ('Space2 unbalanced field', 'field', 'Call target.Space2', 2.0),
+  (
+    'single preset duplicate spacing',
+    'duplicate',
+    'target.LineSpacingRule = wdLineSpaceSingle',
+    1.0,
+  ),
+];
+
+Uint8List _presetGuardInput(String kind) {
+  final package = OpcPackage.openBytes(wordLineSpacingInput());
+  final part = package.getPart('/word/document.xml')!;
+  final source = part.readText();
+  final changed = switch (kind) {
+    'duplicate' => source.replaceFirst(
+      '<w:tabs>',
+      '<w:spacing w:line="480" w:lineRule="auto"/><w:tabs>',
+    ),
+    'alternative' => source.replaceFirst(
+      '</w:pPr>',
+      '<mc:AlternateContent '
+          'xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006">'
+          '<mc:Choice Requires="x"><w:spacing w:line="480" w:lineRule="auto"/>'
+          '</mc:Choice><mc:Fallback><w:spacing w:line="240" w:lineRule="auto"/>'
+          '</mc:Fallback></mc:AlternateContent></w:pPr>',
+    ),
+    'field' => source.replaceFirst(
+      '<w:t>Untouched paragraph</w:t>',
+      '<w:fldChar w:fldCharType="begin"/><w:instrText>PAGE</w:instrText>'
+          '<w:t>Untouched paragraph</w:t>',
+    ),
+    _ => throw ArgumentError.value(
+      kind,
+      'kind',
+      'Unknown preset guard fixture',
+    ),
+  };
+  _check(changed != source, 'Preset guard fixture did not change the source');
+  part.writeText(changed);
+  return package.save();
+}
+
+Future<void> assertWordLineSpacingPresetGuard(
+  (String, String, String, double) scenario,
+) async {
+  final (name, kind, statement, multiple) = scenario;
+  final input = _presetGuardInput(kind);
+  final plan = wordLineSpacingPlan('''
+Dim target As ParagraphFormat
+Set target = ActiveDocument.Paragraphs(1).Format
+ActiveDocument.Paragraphs(2).Range.Font.Bold = True
+$statement
+''');
+  await assertWordLineSpacingRefusal(
+    input,
+    plan,
+    stepIndex: 1,
+    tool: 'docx.paragraphFormat',
+  );
+  final session = OfficeMacroSession(input, format: OfficeMacroFormat.docx);
+  session.startRecording('Refused preset: $name');
+  try {
+    await session.callTool('docx.paragraphFormat', {
+      'paragraph': 0,
+      'lineSpacing': multiple,
+      'lineSpacingRule': 'auto',
+    });
+    throw StateError('Unsafe native preset was recorded: $name');
+  } on OfficeMacroException catch (error) {
+    if (error.code != 'operation_failed') rethrow;
+  }
+  _check(
+    session.revision == 0 &&
+        base64Encode(session.bytes) == base64Encode(input) &&
+        session.stopRecording().steps.isEmpty,
+    'Unsafe preset published or contaminated the recording: $name',
+  );
+}
+
+Future<Map<String, Object?>> runWordLineSpacingPresetGuards() async {
+  for (final scenario in wordLineSpacingPresetGuardCases) {
+    await assertWordLineSpacingPresetGuard(scenario);
+  }
+  return {
+    'refusedSourcePlans': 4,
+    'validateAndRunRollback': true,
+    'failedNativeCallsExcluded': 4,
+  };
 }
 
 Future<Map<String, Object?>> runWordLineSpacingPolicies() async {
@@ -532,6 +688,8 @@ Future<void> main() async {
     jsonEncode({
       'example': await runWordLineSpacingExample(source),
       'exampleReplay': await runWordLineSpacingExampleReplay(source),
+      'ordinaryDecimals': await runWordLineSpacingDecimalConversions(),
+      'presetGuards': await runWordLineSpacingPresetGuards(),
       'policies': await runWordLineSpacingPolicies(),
       'rollback': await runWordLineSpacingRollback(),
       'recording': await runWordLineSpacingRecording(),

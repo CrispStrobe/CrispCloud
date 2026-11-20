@@ -531,5 +531,13 @@
   "accessed": "アクセス日時",
   "computeMd5": "MD5 を計算",
 
-  "protocol": "プロトコル"
+  "protocol": "プロトコル",
+  "officeBrand": "CrispOffice",
+  "officeDocuments": "文書 (.docx)",
+  "officeSpreadsheets": "表計算 (.xlsx)",
+  "officePresentations": "プレゼンテーション (.pptx)",
+  "officePdf": "PDF 文書",
+  "officeMail": "メール",
+  "officeEditorAbout": "CrispOffice の編集機能は、独立したオープンソースの CrispOffice 文書エンジン（MIT）を使用しています。OOXML 文書（.docx、.xlsx、.pptx）に対応し、変更を元のファイルに保存します。",
+  "officeTrademarkNotice": "製品名は、ファイル形式と互換性の説明にのみ使用しています。CrispOffice は独立したソフトウェアであり、Microsoft やその他のオフィススイートの提供元との提携関係はなく、後援や承認も受けていません。"
 }

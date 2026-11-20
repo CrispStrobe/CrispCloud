@@ -4,6 +4,7 @@ import 'package:crisp_cloud/l10n/app_localizations.dart';
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/providers/providers.dart';
+import 'package:crisp_cloud/services/document_fonts.dart';
 import 'package:crisp_cloud/widgets/internal_viewer_dialog.dart';
 import 'package:crisp_cloud/widgets/preview_pane.dart';
 import 'package:flutter/material.dart';
@@ -39,6 +40,9 @@ void main() {
       testWidgets(
         '${pane ? 'Preview pane' : 'F3'} paints referenced $format from binary DOC',
         (tester) async {
+          // Font asset reads use real I/O; fake-clock pumpAndSettle cannot
+          // finish them, particularly on a cold Linux runner.
+          await tester.runAsync(DocumentFonts.ensureRegistered);
           final bytes = _vectorDocument(format);
           final parsed = parseLegacyWordDocument(bytes);
           expect(
