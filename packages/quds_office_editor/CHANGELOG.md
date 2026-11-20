@@ -4,6 +4,51 @@ All notable changes to `quds_office_editor` are documented here.
 
 ## Unreleased
 
+- Native Studio Mail saves dated ordered views of visited IMAP, EWS, Gmail and
+  Microsoft 365 folders plus explicitly opened message bodies/attachments.
+  Verified accounts offer a separate Cached mail entry without credentials or
+  provider construction, with confirmed local cleanup for quota recovery.
+  A failed draft save can clear cache and retry in place without losing the
+  current editor or automatically sending/queuing it; cleanup remains available
+  under lowered storage budgets. Preserve Arabic direction in confirmation.
+  Preserve draft/Outbox ownership and exact identities across reconnects;
+  report missing bodies and storage errors.
+
+- Add localized **Drafts for connected accounts** for native IMAP (including
+  discovery), EWS, Gmail and Microsoft 365. Persist verified non-secret routes
+  after successful connection and draft-store open, reuse exact historical
+  draft identities without authentication, and confirm shortcut-only removal.
+  Keep local composition save-only, release prior store ownership, and show
+  directory failures separately from existing interrupted-send warnings.
+
+- Add localized Outbox message review, byte-exact EML and private-envelope export, atomic edit-as-new-draft and explicit stop-retrying for unknown delivery. Preserve Bcc, attachments, threading and other drafts; refuse lossy projection. Keep account/session guards through file export and composer handoff.
+
+- Support independently identified local drafts through the Studio store's
+  optional catalog API. Preserve legacy drafts, pin selection/deletion to
+  account and revision, reject stale editor operations after draft changes,
+  and transfer only the chosen draft into its durable Outbox entry.
+- Add a localized Drafts chooser across IMAP/SMTP, EWS, Gmail and Microsoft 365,
+  with new/resume/confirmed-delete actions and independent reply/forward drafts.
+  Add save-only Local drafts before connecting remembered explicit-server or
+  preset IMAP accounts; guard Send in both UI and action handling and await
+  store ownership release before returning to connection setup.
+
+- Connect Studio Mail Send and Queue in Outbox to durable frozen messages across
+  native SMTP, EWS, Gmail and Microsoft 365. Add a visible account-scoped queue,
+  atomic draft transfer, restart recovery, explicitly acknowledged uncertain
+  retries, cancellation before possible acceptance and local terminal cleanup.
+  English, German and Arabic feedback distinguishes server acceptance from
+  delivery. Queue inspection and reconnect never send automatically.
+
+- Accept supported Zotero research tables through the existing Add Note and
+  Add Annotation commands, preserving active citations, surrounding prose and
+  the single undo/redo transaction. Keep authored-note markers before leading
+  tables and restore the final caret to the main flow after trailing tables.
+  The Notes pane retains table cells while editing surrounding prose; incoming
+  tables require a destination outside existing tables. See the
+  [implementation and validation record](../../docs/validation/zotero-research-tables-20261120/README.md)
+  for source-specific checks and remaining application acceptance.
+
 - Quote HTML-only messages through the bounded inert body projection in Reply,
   Reply all and forwarding. Prefer authoritative plain text, keep Bcc and
   attachment metadata out of quotes, and retain Unicode-safe truncation.
@@ -13,12 +58,15 @@ All notable changes to `quds_office_editor` are documented here.
   images as ordinary files, preserve exact bytes through drafts and sending,
   and keep retained/uncertain drafts protected from replacement.
 
-- Remember up to 20 native IMAP/SMTP accounts in a bounded platform-keychain
-  catalog. Restore the selected account, choose another account explicitly,
+- Remember up to 20 native IMAP/SMTP accounts in a bounded catalog in the
+  selected credential store, including temporary session memory. Restore the
+  selected account, choose another account explicitly,
   and forget only that account. Migrate the previous single-account record
   without losing credentials or resurrecting a forgotten account. Switch
   connected accounts only after saving their retained local draft, preserving
-  existing per-account draft ownership and delayed-operation guards.
+  existing per-account draft ownership and delayed-operation guards. Keep
+  catalog transactions and delayed initialization bound to their selected
+  backend; clear the previous selection before loading another store.
 
 - Insert Zotero research notes and annotations at the active authored footnote
   or endnote caret, and replace deliberate text selections within one paragraph.

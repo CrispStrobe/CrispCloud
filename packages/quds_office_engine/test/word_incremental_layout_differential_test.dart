@@ -253,6 +253,71 @@ void main() {
     expect(WordIncrementalLayoutStats.blocksLaidOut, lessThan(50));
   });
 
+  for (final editText in <bool>[true, false]) {
+    test(
+      '${editText ? 'text' : 'font'} edits while wrapping invalidate older unwrapped breaks',
+      () {
+        final lead = _paragraph('Lead');
+        final target = _paragraph('Original cached paragraph $_mixed');
+        final section = _section(<WmlBlock>[
+          lead,
+          _paragraph('Spacer A'),
+          _paragraph('Spacer B'),
+          target,
+        ]);
+        final document = WmlDocument(sections: <WmlSection>[section]);
+        final engine = WordLayoutEngine(font: null);
+        var previous = engine.layout(document, updateFields: false);
+        _equivalent(document, previous, 'initial unwrapped cache');
+
+        final frame = WmlFrame(
+          x: 0,
+          y: 0,
+          width: 95,
+          height: 80,
+          anchor: WmlFrameAnchor.margin,
+          wrap: WmlFrameWrap.square,
+          blocks: <WmlBlock>[],
+        );
+        section.blocks.insert(1, frame);
+        if (editText) {
+          WmlRunEdit.replaceRange(target, 0, 0, 'Inserted $_mixed');
+        } else {
+          for (final run in target.inlines.whereType<WmlRun>()) {
+            run.properties
+              ..fontSizeHalfPoints = 31
+              ..bold = true;
+          }
+        }
+        previous = engine.layout(
+          document,
+          updateFields: false,
+          reuse: previous,
+          dirtyParagraphs: <WmlParagraph>{target},
+        );
+        _equivalent(document, previous, 'edited with a wrapping frame');
+
+        // The target is beyond the one-block dirty margin after removal.
+        // Its previous checkpoint still contains the frame, so the engine
+        // must lay it out as a clean block instead of converging before it.
+        section.blocks.remove(frame);
+        WordIncrementalLayoutStats.reset();
+        previous = engine.layout(
+          document,
+          updateFields: false,
+          reuse: previous,
+          dirtyParagraphs: <WmlParagraph>{lead},
+        );
+        _equivalent(document, previous, 'clean target after frame removal');
+        expect(WordIncrementalLayoutStats.incremental, 1);
+        expect(WordIncrementalLayoutStats.converged, 0);
+        // The wrapped edit has invalidated the initial unwrapped entries;
+        // they must not become readable merely because the frame is gone.
+        expect(WordIncrementalLayoutStats.breaksReused, 0);
+      },
+    );
+  }
+
   for (final structures in <bool>[false, true]) {
     for (final seed in <int>[7, 43, 109]) {
       test('seed $seed structures=$structures stays exact over 48 edits', () {

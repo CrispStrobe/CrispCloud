@@ -574,11 +574,18 @@ void main() {
       },
     );
 
-    for (final scenario in ['selection', 'viewing', 'selecting']) {
+    for (final scenario in [
+      'cross-paragraph selection',
+      'viewing',
+      'selecting',
+    ]) {
       test('${command.name} image flow keeps the $scenario guard', () {
         final controller = _controller();
-        if (scenario == 'selection') {
+        final crossParagraph = scenario == 'cross-paragraph selection';
+        if (crossParagraph) {
           controller.caret
+            ..paragraphIndex = 1
+            ..logicalIndex = 1
             ..selectionAnchor = 1
             ..selectionAnchorParagraph = 0;
         } else {
@@ -592,7 +599,7 @@ void main() {
         final package = _packageState(controller.document);
         expect(
           () => _begin(controller, command),
-          scenario == 'selection' ? throwsUnsupportedError : throwsStateError,
+          crossParagraph ? throwsUnsupportedError : throwsStateError,
         );
         expect(_state(controller.document), before);
         expect(_packageState(controller.document), package);

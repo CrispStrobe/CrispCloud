@@ -155,6 +155,24 @@ const _wordConstants = <String, int>{
   'wdlinespaceatleast': 3,
   'wdlinespaceexactly': 4,
   'wdlinespacemultiple': 5,
+  'wdaligntableft': 0,
+  'wdaligntabcenter': 1,
+  'wdaligntabright': 2,
+  'wdaligntabdecimal': 3,
+  'wdaligntabbar': 4,
+  'wdaligntablist': 6,
+  'wdtableaderspaces': 0,
+  'wdtableaderdots': 1,
+  'wdtableaderdashes': 2,
+  'wdtableaderlines': 3,
+  'wdtableaderheavy': 4,
+  'wdtableadermiddledot': 5,
+  'wdword8listbehavior': 0,
+  'wdword9listbehavior': 1,
+  'wdword10listbehavior': 2,
+  'wdnumberparagraph': 1,
+  'wdnumberlistnum': 2,
+  'wdnumberallnumbers': 3,
   'wdunderlinenone': 0,
   'wdunderlinesingle': 1,
   'wdunderlinewords': 2,
@@ -240,11 +258,23 @@ const _wordReserved = <String>{
   'document',
   'paragraph',
   'paragraphs',
+  'tabstops',
+  'listformat',
   'wdalignparagraphleft',
   'wdalignparagraphcenter',
   'wdalignparagraphright',
   'wdalignparagraphjustify',
 };
+const _wordListMethods = <String>{
+  'applybulletdefault',
+  'applynumberdefault',
+  'applyoutlinenumberdefault',
+  'listindent',
+  'listoutdent',
+  'removenumbers',
+};
+const _wordSpacingMethods = <String>{'space1', 'space15', 'space2'};
+const _wordUnitConversions = <String>{'linestopoints', 'pointstolines'};
 const _powerPointConstants = <String, int>{
   'msoanchortop': 1,
   'msoanchortopbaseline': 2,
@@ -312,7 +342,9 @@ class _Context {
   bool reserved(String name) =>
       _Checker._reserved.contains(name) ||
       constants.containsKey(name) ||
-      (isWord && _wordReserved.contains(name)) ||
+      (isWord &&
+          (_wordReserved.contains(name) ||
+              _wordUnitConversions.contains(name))) ||
       (isPowerPoint && _powerPointReserved.contains(name));
 
   Never fail(
@@ -600,6 +632,8 @@ enum _Kind {
   paragraphs,
   paragraph,
   paragraphFormat,
+  wordTabStops,
+  wordListFormat,
   powerPointApplication,
   presentation,
   slides,
@@ -627,6 +661,8 @@ enum _Declared {
   paragraph,
   wordFont,
   wordParagraphFormat,
+  wordTabStops,
+  wordListFormat,
   presentation,
   slide,
   shape,
@@ -644,6 +680,8 @@ bool _objectType(_Declared type) =>
     type == _Declared.paragraph ||
     type == _Declared.wordFont ||
     type == _Declared.wordParagraphFormat ||
+    type == _Declared.wordTabStops ||
+    type == _Declared.wordListFormat ||
     type == _Declared.presentation ||
     type == _Declared.slide ||
     type == _Declared.shape ||
@@ -682,6 +720,8 @@ _Kind _kindOf(_Declared type) => switch (type) {
   _Declared.paragraph => _Kind.paragraph,
   _Declared.wordFont => _Kind.font,
   _Declared.wordParagraphFormat => _Kind.paragraphFormat,
+  _Declared.wordTabStops => _Kind.wordTabStops,
+  _Declared.wordListFormat => _Kind.wordListFormat,
   _Declared.presentation => _Kind.presentation,
   _Declared.slide => _Kind.slide,
   _Declared.shape => _Kind.shape,
@@ -811,6 +851,21 @@ class _Clear extends _Statement {
 
 class _InsertBefore extends _Statement {
   const _InsertBefore(super.token, this.target);
+  final _Member target;
+}
+
+class _WordTabOperation extends _Statement {
+  const _WordTabOperation(super.token, this.target);
+  final _Member target;
+}
+
+class _WordListOperation extends _Statement {
+  const _WordListOperation(super.token, this.target);
+  final _Member target;
+}
+
+class _WordSpacingOperation extends _Statement {
+  const _WordSpacingOperation(super.token, this.target);
   final _Member target;
 }
 
@@ -1177,6 +1232,22 @@ class _Parser {
               );
             }
             result.add(_InsertBefore(target.token, target));
+          } else if (target is _Member &&
+              (target.token.lower == 'add' ||
+                  target.token.lower == 'clearall')) {
+            if (target.token.lower == 'add' && target.arguments == null) {
+              context.unsupported(
+                target.token,
+                'Call TabStops.Add requires parenthesized arguments.',
+              );
+            }
+            result.add(_WordTabOperation(target.token, target));
+          } else if (target is _Member &&
+              _wordListMethods.contains(target.token.lower)) {
+            result.add(_WordListOperation(target.token, target));
+          } else if (target is _Member &&
+              _wordSpacingMethods.contains(target.token.lower)) {
+            result.add(_WordSpacingOperation(target.token, target));
           } else if (target is _Call) {
             result.add(_Invoke(target.token, target.arguments));
           } else if (target is _Name) {
@@ -1414,7 +1485,13 @@ class _Parser {
             !isSet &&
             !isLet &&
             target is _Member &&
-            target.token.lower == 'insertbefore') {
+            const {
+              'insertbefore',
+              'add',
+              'clearall',
+              ..._wordListMethods,
+              ..._wordSpacingMethods,
+            }.contains(target.token.lower)) {
           final arguments = target.arguments ?? <_Expr>[];
           if (target.arguments == null &&
               current.kind != _TokenKind.separator &&
@@ -1430,11 +1507,17 @@ class _Parser {
             } while (_take(','));
           }
           _endStatement();
+          final call = _bounded(
+            _Member(target.token, target.receiver, arguments),
+          );
           result.add(
-            _InsertBefore(
-              target.token,
-              _bounded(_Member(target.token, target.receiver, arguments)),
-            ),
+            target.token.lower == 'insertbefore'
+                ? _InsertBefore(target.token, call)
+                : _wordListMethods.contains(target.token.lower)
+                ? _WordListOperation(target.token, call)
+                : _wordSpacingMethods.contains(target.token.lower)
+                ? _WordSpacingOperation(target.token, call)
+                : _WordTabOperation(target.token, call),
           );
         } else if (!isSet &&
             !isLet &&
@@ -1577,6 +1660,8 @@ class _Parser {
       'paragraph' when context.isWord => _Declared.paragraph,
       'font' when context.isWord => _Declared.wordFont,
       'paragraphformat' when context.isWord => _Declared.wordParagraphFormat,
+      'tabstops' when context.isWord => _Declared.wordTabStops,
+      'listformat' when context.isWord => _Declared.wordListFormat,
       'presentation' when context.isPowerPoint => _Declared.presentation,
       'slide' when context.isPowerPoint => _Declared.slide,
       'shape' when context.isPowerPoint => _Declared.shape,
@@ -1592,7 +1677,7 @@ class _Parser {
         context.isPowerPoint
             ? 'Supported declarations are Long, Double, String, Boolean, Variant, Presentation, Slide, Shape, TextFrame, TextRange, Font, ParagraphFormat, and SlideShowTransition.'
             : context.isWord
-            ? 'Supported declarations are Long, Double, String, Boolean, Variant, Document, Paragraph, Range, Font, and ParagraphFormat.'
+            ? 'Supported declarations are Long, Double, String, Boolean, Variant, Document, Paragraph, Range, Font, ParagraphFormat, TabStops, and ListFormat.'
             : 'Supported declarations are Long, Double, String, Boolean, Variant, Worksheet, and Range.',
       ),
     };
@@ -2351,6 +2436,22 @@ class _Checker {
             _expression(arguments.single),
             arguments.single.token,
           );
+        case _WordTabOperation():
+          _wordTabCall(statement.target);
+        case _WordListOperation():
+          _wordListCall(statement.target);
+        case _WordSpacingOperation():
+          if (_expression(statement.target.receiver) != _Kind.paragraphFormat) {
+            context.type(
+              statement.token,
+              'Spacing methods require an explicit Word ParagraphFormat.',
+            );
+          }
+          _count(
+            statement.target.token,
+            statement.target.arguments ?? const <_Expr>[],
+            0,
+          );
         case _For():
           final counter = _symbol(statement.counter);
           if (counter.isConst ||
@@ -2450,7 +2551,9 @@ class _Checker {
                   kind == _Kind.paragraphs ||
                   kind == _Kind.paragraph ||
                   kind == _Kind.font ||
-                  kind == _Kind.paragraphFormat);
+                  kind == _Kind.paragraphFormat ||
+                  kind == _Kind.wordTabStops ||
+                  kind == _Kind.wordListFormat);
           final powerPointObject =
               context.isPowerPoint && _powerPointObjectKinds.contains(kind);
           if (kind != _Kind.worksheet &&
@@ -2462,7 +2565,7 @@ class _Checker {
               context.isPowerPoint
                   ? 'With requires an explicitly bound PowerPoint object.'
                   : context.isWord
-                  ? 'With requires a Document, Paragraph, Range, Font, or ParagraphFormat.'
+                  ? 'With requires a Document, Paragraph, Range, Font, ParagraphFormat, TabStops, or ListFormat.'
                   : 'With requires a Worksheet or Range.',
             );
           }
@@ -2496,6 +2599,111 @@ class _Checker {
           }
       }
     }
+  }
+
+  void _wordListCall(_Member member) {
+    if (_expression(member.receiver) != _Kind.wordListFormat) {
+      context.type(
+        member.token,
+        '${member.token.text} requires Word ListFormat.',
+      );
+    }
+    final arguments = member.arguments ?? const <_Expr>[];
+    if (member.token.lower == 'listindent' ||
+        member.token.lower == 'listoutdent') {
+      _count(member.token, arguments, 0);
+      return;
+    }
+    if (arguments.length > 1) {
+      context.type(
+        member.token,
+        'ListFormat.${member.token.text} accepts one optional argument.',
+      );
+    }
+    if (arguments.isEmpty) return;
+    final parameter = member.token.lower == 'removenumbers'
+        ? 'numbertype'
+        : 'defaultlistbehavior';
+    final argument = arguments.single;
+    if (argument is _NamedArgument && argument.token.lower != parameter) {
+      context.fail(
+        argument.token,
+        'vba_name_error',
+        'Unknown named argument ${argument.token.text} for ListFormat.${member.token.text}.',
+      );
+    }
+    final value = argument is _NamedArgument ? argument.value : argument;
+    if (value is! _OmittedArgument) {
+      _compatible(_Kind.number, _expression(value), value.token);
+    }
+  }
+
+  void _wordTabCall(_Member member) {
+    if (_expression(member.receiver) != _Kind.wordTabStops) {
+      context.type(
+        member.token,
+        '${member.token.text} requires Word TabStops.',
+      );
+    }
+    final arguments = member.arguments ?? const <_Expr>[];
+    if (member.token.lower == 'clearall') {
+      _count(member.token, arguments, 0);
+      return;
+    }
+    const parameters = <String>['position', 'alignment', 'leader'];
+    if (arguments.length > parameters.length) {
+      context.type(member.token, 'TabStops.Add received too many arguments.');
+    }
+    final assigned = <int>{};
+    final bindings = <int>[];
+    var positional = 0;
+    var sawNamed = false;
+    for (final argument in arguments) {
+      final int parameter;
+      final _Expr value;
+      if (argument is _NamedArgument) {
+        sawNamed = true;
+        parameter = parameters.indexOf(argument.token.lower);
+        if (parameter < 0) {
+          context.fail(
+            argument.token,
+            'vba_name_error',
+            'Unknown named argument ${argument.token.text} for TabStops.Add.',
+          );
+        }
+        value = argument.value;
+      } else {
+        if (sawNamed) {
+          context.type(
+            argument.token,
+            'Positional or omitted arguments cannot follow named arguments.',
+          );
+        }
+        parameter = positional++;
+        value = argument;
+      }
+      if (!assigned.add(parameter)) {
+        context.type(
+          argument.token,
+          'TabStops.Add parameter ${parameters[parameter]} is supplied more than once.',
+        );
+      }
+      bindings.add(parameter);
+      if (value is _OmittedArgument) {
+        if (parameter == 0) {
+          context.type(
+            value.token,
+            'Required argument Position cannot be omitted.',
+          );
+        }
+        continue;
+      }
+      _compatible(_Kind.number, _expression(value), value.token);
+    }
+    if (!assigned.contains(0)) {
+      context.type(member.token, 'Required argument Position is missing.');
+    }
+    argumentBindings[member.token] = bindings;
   }
 
   _Procedure _procedureCall(
@@ -2644,6 +2852,9 @@ class _Checker {
       if (receiver == _Kind.range && property == 'highlightcolorindex') {
         return _Kind.number;
       }
+      if (receiver == _Kind.wordListFormat && property == 'listlevelnumber') {
+        return _Kind.number;
+      }
       if (receiver == _Kind.font) {
         if (property == 'bold' ||
             property == 'italic' ||
@@ -2672,6 +2883,7 @@ class _Checker {
           'firstlineindent',
           'readingorder',
           'linespacingrule',
+          'linespacing',
         }.contains(property)) {
           return _Kind.number;
         }
@@ -2701,7 +2913,7 @@ class _Checker {
       case _NamedArgument() || _OmittedArgument():
         context.unsupported(
           expression.token,
-          'Named and omitted arguments are supported only for module helper calls.',
+          'Named and omitted arguments are unsupported on this callable.',
         );
       case _Literal():
         return expression.value is _VariantState
@@ -2773,6 +2985,13 @@ class _Checker {
         }
         if (_stringIntrinsics.contains(expression.token.lower)) {
           return _stringIntrinsic(expression);
+        }
+        if (context.isWord &&
+            _wordUnitConversions.contains(expression.token.lower)) {
+          _count(expression.token, expression.arguments, 1);
+          final argument = expression.arguments.single;
+          _compatible(_Kind.number, _expression(argument), argument.token);
+          return _Kind.number;
         }
         if (_variantIntrinsics.contains(expression.token.lower)) {
           _count(expression.token, expression.arguments, 1);
@@ -2859,6 +3078,12 @@ class _Checker {
             _arguments(expression, 0, allowProperty: true);
             return _Kind.document;
           }
+          if (receiver == _Kind.wordApplication &&
+              _wordUnitConversions.contains(name)) {
+            final argument = _arguments(expression, 1).single;
+            _compatible(_Kind.number, _expression(argument), argument.token);
+            return _Kind.number;
+          }
           if (receiver == _Kind.document && name == 'paragraphs') {
             if (expression.arguments == null) return _Kind.paragraphs;
             final argument = _arguments(expression, 1).single;
@@ -2878,10 +3103,22 @@ class _Checker {
             _arguments(expression, 0, allowProperty: true);
             return _Kind.paragraphFormat;
           }
-          if (receiver == _Kind.range &&
-              (name == 'font' || name == 'paragraphformat')) {
+          if ((receiver == _Kind.paragraph ||
+                  receiver == _Kind.paragraphFormat) &&
+              name == 'tabstops') {
             _arguments(expression, 0, allowProperty: true);
-            return name == 'font' ? _Kind.font : _Kind.paragraphFormat;
+            return _Kind.wordTabStops;
+          }
+          if (receiver == _Kind.range &&
+              (name == 'font' ||
+                  name == 'paragraphformat' ||
+                  name == 'listformat')) {
+            _arguments(expression, 0, allowProperty: true);
+            return switch (name) {
+              'font' => _Kind.font,
+              'listformat' => _Kind.wordListFormat,
+              _ => _Kind.paragraphFormat,
+            };
           }
           context.unsupported(
             expression.token,
@@ -3105,7 +3342,7 @@ class _Checker {
       if (argument is _NamedArgument || argument is _OmittedArgument) {
         context.unsupported(
           argument.token,
-          'Named and omitted arguments are supported only for module helper calls.',
+          'Named and omitted arguments are unsupported on this callable.',
         );
       }
     }
@@ -3139,6 +3376,8 @@ class _Checker {
             expected == _Kind.paragraph ||
             expected == _Kind.font ||
             expected == _Kind.paragraphFormat ||
+            expected == _Kind.wordTabStops ||
+            expected == _Kind.wordListFormat ||
             _powerPointObjectKinds.contains(expected))) {
       // Scalar Variant values may defer scalar checks until evaluation, but
       // cannot ever carry object bindings, including in unexecuted code.
@@ -3262,6 +3501,23 @@ class _WordParagraphFormat {
   final _WordRange range;
 }
 
+class _WordTabStops {
+  const _WordTabStops(this.range);
+  final _WordRange range;
+}
+
+class _WordListFormat {
+  const _WordListFormat(this.range);
+  final _WordRange range;
+}
+
+class _PendingWordLineSpacing {
+  const _PendingWordLineSpacing(this.range, this.rule, this.token);
+  final _WordRange range;
+  final int rule;
+  final _Token token;
+}
+
 class _PowerPointApplication {
   const _PowerPointApplication();
 }
@@ -3369,6 +3625,7 @@ class _Evaluator {
   int activeArrayStringUnits = 0;
   int work = 0;
   int encodedBytes = 0;
+  _PendingWordLineSpacing? pendingWordLineSpacing;
 
   OfficeMacro compile() {
     work = checker.constantWork;
@@ -3395,6 +3652,7 @@ class _Evaluator {
     }
     globalValues = Map<String, Object>.of(values);
     _invoke(procedure, const <Object>[], procedure.name, needsResult: false);
+    _requireCompleteWordLineSpacing();
     try {
       return OfficeMacro(name: name, format: context.format, steps: steps);
     } on OfficeMacroException catch (error) {
@@ -3663,6 +3921,21 @@ class _Evaluator {
               'end': 0,
               'text': text,
             }, statement.target.token);
+          case _WordTabOperation():
+            _wordTabs(statement.target);
+          case _WordListOperation():
+            _wordList(statement.target);
+          case _WordSpacingOperation():
+            final format =
+                _evaluate(statement.target.receiver) as _WordParagraphFormat;
+            _emitWord(format.range, 'paragraphFormat', <String, Object?>{
+              'lineSpacing': switch (statement.target.token.lower) {
+                'space1' => 1.0,
+                'space15' => 1.5,
+                _ => 2.0,
+              },
+              'lineSpacingRule': 'auto',
+            }, statement.token);
           case _With():
             withValues.add(_evaluate(statement.target));
             frames.add(_WithFrame());
@@ -3828,7 +4101,7 @@ class _Evaluator {
       case _NamedArgument() || _OmittedArgument():
         context.unsupported(
           expression.token,
-          'Argument markers require a checked module helper call.',
+          'Argument markers require a checked call.',
         );
       case _Literal():
         return expression.value;
@@ -3906,6 +4179,10 @@ class _Evaluator {
         if (_variantIntrinsics.contains(expression.token.lower)) {
           return _variantIntrinsic(expression, arguments.single);
         }
+        if (context.isWord &&
+            _wordUnitConversions.contains(expression.token.lower)) {
+          return _wordUnitConversion(expression.token, arguments.single);
+        }
         if (expression.token.lower == 'worksheets') {
           return _sheet(arguments.single, expression.token);
         }
@@ -3928,7 +4205,12 @@ class _Evaluator {
           return _evaluatePowerPointMember(expression, receiver, arguments);
         }
         if (context.isWord) {
-          if (receiver is _WordApplication) return const _WordDocument();
+          if (receiver is _WordApplication) {
+            if (_wordUnitConversions.contains(expression.token.lower)) {
+              return _wordUnitConversion(expression.token, arguments.single);
+            }
+            return const _WordDocument();
+          }
           if (receiver is _WordDocument && expression.arguments == null) {
             return const _WordParagraphs();
           }
@@ -3944,14 +4226,21 @@ class _Evaluator {
           }
           if (receiver is _WordParagraph) {
             final range = _WordRange(receiver);
-            return expression.token.lower == 'format'
-                ? _WordParagraphFormat(range)
-                : range;
+            return switch (expression.token.lower) {
+              'format' => _WordParagraphFormat(range),
+              'tabstops' => _WordTabStops(range),
+              _ => range,
+            };
+          }
+          if (receiver is _WordParagraphFormat) {
+            return _WordTabStops(receiver.range);
           }
           final range = receiver as _WordRange;
-          return expression.token.lower == 'font'
-              ? _WordFont(range)
-              : _WordParagraphFormat(range);
+          return switch (expression.token.lower) {
+            'font' => _WordFont(range),
+            'listformat' => _WordListFormat(range),
+            _ => _WordParagraphFormat(range),
+          };
         }
         if (receiver is _Workbook) {
           return _sheet(arguments.single, expression.token);
@@ -4350,6 +4639,16 @@ class _Evaluator {
       case _Declared.wordParagraphFormat:
         if (value is! _WordParagraphFormat) {
           context.type(token, 'Set requires a Word ParagraphFormat.');
+        }
+        return value;
+      case _Declared.wordTabStops:
+        if (value is! _WordTabStops) {
+          context.type(token, 'Set requires Word TabStops.');
+        }
+        return value;
+      case _Declared.wordListFormat:
+        if (value is! _WordListFormat) {
+          context.type(token, 'Set requires Word ListFormat.');
         }
         return value;
       case _Declared.presentation:
@@ -5082,12 +5381,137 @@ class _Evaluator {
     }, token);
   }
 
+  void _wordList(_Member member) {
+    // Capture the selector before evaluating a helper argument. The native
+    // operation decides whether to apply or remove a list at execution time.
+    final format = _evaluate(member.receiver) as _WordListFormat;
+    if (member.token.lower == 'listindent' ||
+        member.token.lower == 'listoutdent') {
+      _emitWord(format.range, 'listLevel', <String, Object?>{
+        'delta': member.token.lower == 'listindent' ? 1 : -1,
+      }, member.token);
+      return;
+    }
+    final removes = member.token.lower == 'removenumbers';
+    final arguments = member.arguments ?? const <_Expr>[];
+    var option = removes ? 3 : 0;
+    if (arguments.isNotEmpty) {
+      final argument = arguments.single;
+      final value = argument is _NamedArgument ? argument.value : argument;
+      if (value is _OmittedArgument) {
+        _tick(value.token);
+      } else {
+        option = _integer(_evaluate(value), value.token);
+      }
+    }
+    if (removes) {
+      if (option != 1 && option != 3) {
+        context.unsupported(
+          member.token,
+          'RemoveNumbers supports wdNumberParagraph and wdNumberAllNumbers; LISTNUM field editing is unsupported.',
+        );
+      }
+      _emitWord(format.range, 'removeNumbers', <String, Object?>{
+        'numberType': option == 1 ? 'paragraph' : 'all',
+      }, member.token);
+    } else {
+      if (option != 0) {
+        context.unsupported(
+          member.token,
+          'DefaultListBehavior supports only wdWord8ListBehavior; web-oriented and Word 2002 list behavior are unsupported.',
+        );
+      }
+      final outline = member.token.lower == 'applyoutlinenumberdefault';
+      _emitWord(
+        format.range,
+        outline ? 'listOutlineDefault' : 'listDefault',
+        <String, Object?>{
+          if (!outline) 'numbered': member.token.lower == 'applynumberdefault',
+        },
+        member.token,
+      );
+    }
+  }
+
+  void _wordTabs(_Member member) {
+    // Bind the receiver first, then evaluate each supplied argument exactly
+    // once in source order. Helpers may emit writes or rebind caller locals.
+    final tabs = _evaluate(member.receiver) as _WordTabStops;
+    if (member.token.lower == 'clearall') {
+      _emitWord(
+        tabs.range,
+        'clearTabStops',
+        const <String, Object?>{},
+        member.token,
+      );
+      return;
+    }
+    _charge(3, member.token);
+    final values = <Object>[0, 0, 0];
+    final arguments = member.arguments!;
+    final bindings = checker.argumentBindings[member.token]!;
+    for (var index = 0; index < arguments.length; index++) {
+      final argument = arguments[index];
+      if (argument is _OmittedArgument) {
+        _tick(argument.token);
+        continue;
+      }
+      final value = argument is _NamedArgument ? argument.value : argument;
+      values[bindings[index]] = _evaluate(value);
+    }
+    final points = _number(values[0], member.token);
+    final twips = points * 20;
+    if (points.abs() > 1584 || twips.round() / 20 != points) {
+      context.type(
+        member.token,
+        'TabStops.Add Position requires exact twentieth-points in -1584..1584.',
+      );
+    }
+    final alignment = _integer(values[1], member.token);
+    if (alignment < 0 || alignment > 3) {
+      context.unsupported(
+        member.token,
+        'TabStops.Add supports left, center, right, and decimal alignment.',
+      );
+    }
+    final leader = _integer(values[2], member.token);
+    if (leader < 0 || leader > 3) {
+      context.unsupported(
+        member.token,
+        'TabStops.Add supports spaces, dots, dashes, and lines leaders.',
+      );
+    }
+    _emitWord(tabs.range, 'tabStop', <String, Object?>{
+      'position': points,
+      'alignment': const <String>[
+        'left',
+        'center',
+        'right',
+        'decimal',
+      ][alignment],
+      'leader': const <String>['none', 'dot', 'hyphen', 'underscore'][leader],
+    }, member.token);
+  }
+
   void _writeWord(
     Object receiver,
     String property,
     Object value,
     _Token token,
   ) {
+    if (receiver is _WordListFormat) {
+      final level = _integer(value, token);
+      if (level < 1 || level > 9) {
+        context.type(
+          token,
+          'ListLevelNumber requires an exact integer in 1..9.',
+        );
+      }
+      _emitWord(receiver.range, 'listLevel', <String, Object?>{
+        'level': level - 1,
+      }, token);
+      return;
+    }
     if (receiver is _WordRange) {
       final index = _integer(value, token);
       if (index < 0 || index >= _wordHighlights.length) {
@@ -5164,15 +5588,52 @@ class _Evaluator {
     }
     if (property == 'linespacingrule') {
       final rule = _integer(value, token);
-      if (rule < 0 || rule > 2) {
+      if (rule < 0 || rule > 5) {
         context.unsupported(
           token,
-          'LineSpacingRule supports wdLineSpaceSingle, wdLineSpace1pt5, and wdLineSpaceDouble; point-based and arbitrary multiple spacing require unsupported LineSpacing semantics.',
+          'LineSpacingRule requires a supported WdLineSpacing constant in 0..5.',
         );
+      }
+      _requireCompleteWordLineSpacing();
+      if (rule >= 3) {
+        pendingWordLineSpacing = _PendingWordLineSpacing(
+          format.range,
+          rule,
+          token,
+        );
+        return;
       }
       _emitWord(format.range, 'paragraphFormat', <String, Object?>{
         'lineSpacing': const <double>[1, 1.5, 2][rule],
         'lineSpacingRule': 'auto',
+      }, token);
+      return;
+    }
+    if (property == 'linespacing') {
+      final pending = pendingWordLineSpacing;
+      if (pending == null ||
+          pending.range.paragraph.index != format.range.paragraph.index) {
+        context.unsupported(
+          token,
+          'LineSpacing requires a preceding AtLeast, Exactly or Multiple rule for the same paragraph, with no intervening document write.',
+        );
+      }
+      final points = _number(value, token);
+      final twips = points * 20;
+      if (points <= 0 || twips > 2147483647 || twips.round() / 20 != points) {
+        context.type(
+          token,
+          'LineSpacing requires positive exact twentieth-points within signed Long twips.',
+        );
+      }
+      pendingWordLineSpacing = null;
+      _emitWord(format.range, 'lineSpacing', <String, Object?>{
+        'rule': const <String>[
+          'atLeast',
+          'exact',
+          'multiple',
+        ][pending.rule - 3],
+        'points': points,
       }, token);
       return;
     }
@@ -5264,6 +5725,42 @@ class _Evaluator {
     return text;
   }
 
+  Object _wordUnitConversion(_Token token, Object value) {
+    final number = _number(value, token);
+    final toPoints = token.lower == 'linestopoints';
+    final unitsPerInput = toPoints ? 240 : 20;
+    final unitsPerOutput = toPoints ? 20 : 240;
+    final units = number * unitsPerInput;
+    // Use the exact native unit grid when the input round-trips on it. This
+    // keeps ordinary values such as 1.15 lines -> 13.8 points representable
+    // without snapping neighboring off-grid inputs or rounding all inputs.
+    final onGrid =
+        units.isFinite &&
+        units.abs() <= _maxExactInteger &&
+        units.round() / unitsPerInput == number;
+    final result = onGrid
+        ? units.round() / unitsPerOutput
+        : toPoints
+        ? number * 12
+        : number / 12;
+    if (!result.isFinite || result.abs() > _maxExactInteger) {
+      context.type(
+        token,
+        'Word unit conversion exceeds the finite numeric bound.',
+      );
+    }
+    return result;
+  }
+
+  void _requireCompleteWordLineSpacing() {
+    final pending = pendingWordLineSpacing;
+    if (pending == null) return;
+    context.unsupported(
+      pending.token,
+      'AtLeast, Exactly and Multiple require a following LineSpacing write to the same paragraph before any other document mutation or the end of the macro.',
+    );
+  }
+
   void _emitWord(
     _WordRange range,
     String operation,
@@ -5351,6 +5848,7 @@ class _Evaluator {
   }
 
   void _emitNative(String tool, Map<String, Object?> arguments, _Token token) {
+    _requireCompleteWordLineSpacing();
     _tick(token);
     final json = <String, Object?>{'tool': tool, 'arguments': arguments};
     final bytes =

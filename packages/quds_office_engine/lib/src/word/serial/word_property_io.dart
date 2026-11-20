@@ -195,6 +195,79 @@ abstract final class WordPropertyIo {
   static bool _wordName(String namespace, String prefix) =>
       namespace == OfficeNamespaces.w || (namespace.isEmpty && prefix == 'w');
 
+  /// Change one native tab stop while retaining unowned attributes, children,
+  /// other positions, and namespace lookalikes in the sparse direct pPr.
+  /// Callers validate source tab positions and duplicate native containers.
+  static void writeTabStop(
+    XmlElement properties,
+    int positionTwips,
+    String alignment, {
+    String? leader,
+  }) {
+    XmlElement? tabs;
+    for (final child in properties.childElements) {
+      if (child.localName == 'tabs' &&
+          _wordName(child.namespaceUri, child.prefix)) {
+        tabs = child;
+        break;
+      }
+    }
+    if (tabs == null) {
+      tabs = XmlElement(
+        localName: 'tabs',
+        prefix: _wordAttributePrefix(properties),
+        namespaceUri: OfficeNamespaces.w,
+      );
+      properties.addChild(tabs);
+    }
+    XmlElement? target;
+    for (final child in tabs.childElements) {
+      if (child.localName != 'tab' ||
+          !_wordName(child.namespaceUri, child.prefix)) {
+        continue;
+      }
+      final position = child.attributes
+          .where(
+            (a) => a.localName == 'pos' && _wordName(a.namespaceUri, a.prefix),
+          )
+          .firstOrNull
+          ?.value;
+      if (int.tryParse(position ?? '') == positionTwips) {
+        target = child;
+        break;
+      }
+    }
+    if (target == null) {
+      target = XmlElement(
+        localName: 'tab',
+        prefix: _wordAttributePrefix(tabs),
+        namespaceUri: OfficeNamespaces.w,
+      );
+      tabs.addChild(target);
+    }
+    target.attributes.removeWhere(
+      (a) =>
+          const {'pos', 'val', 'leader'}.contains(a.localName) &&
+          _wordName(a.namespaceUri, a.prefix),
+    );
+    final prefix = _wordAttributePrefix(target);
+    for (final entry in {
+      'pos': '$positionTwips',
+      'val': alignment,
+      'leader': ?leader,
+    }.entries) {
+      target.attributes.add(
+        XmlAttribute(
+          localName: entry.key,
+          value: entry.value,
+          prefix: prefix,
+          namespaceUri: OfficeNamespaces.w,
+        ),
+      );
+    }
+    orderChildren(properties);
+  }
+
   static void _mergeWordAttributes(
     XmlElement properties,
     String name,

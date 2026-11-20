@@ -1572,7 +1572,9 @@ class WordDeserializer {
       if (reader.eventType != XmlEventType.startElement) {
         continue;
       }
-      if ((reader.localName == 'spacing' || reader.localName == 'bidi') &&
+      if ((reader.localName == 'spacing' ||
+              reader.localName == 'bidi' ||
+              reader.localName == 'tabs') &&
           (reader.depth != depth + 1 ||
               (reader.namespaceUri != OfficeNamespaces.w &&
                   !(reader.namespaceUri.isEmpty && reader.prefix == 'w')))) {
@@ -1959,46 +1961,52 @@ class WordDeserializer {
     }
     final int depth = reader.depth;
     while (reader.next() && reader.depth >= depth) {
-      if (reader.eventType == XmlEventType.startElement &&
-          reader.localName == 'tab') {
-        final String? pos = reader.getAttribute(
-          'pos',
-          namespaceUri: OfficeNamespaces.w,
-        );
-        final String? val = reader.getAttribute(
-          'val',
-          namespaceUri: OfficeNamespaces.w,
-        );
-        final String? leader = reader.getAttribute(
-          'leader',
-          namespaceUri: OfficeNamespaces.w,
-        );
-        if (val == 'clear') {
-          final position = pos == null ? 0.0 : _measurePoints(pos);
-          props.tabs.removeWhere((tab) => tab.position == position);
-          continue;
-        }
-        // A bar stop is a decoration, not a text-positioning tab stop.
-        if (val == 'bar') continue;
-        props.tabs.add(
-          WmlTabStop(
-            position: pos == null ? 0 : _measurePoints(pos),
-            alignment: switch (val) {
-              'center' => WmlTabAlignment.center,
-              'right' => WmlTabAlignment.right,
-              'decimal' => WmlTabAlignment.decimal,
-              _ => WmlTabAlignment.left,
-            },
-            leader: switch (leader) {
-              'dot' => WmlTabLeader.dot,
-              'hyphen' => WmlTabLeader.hyphen,
-              'underscore' => WmlTabLeader.underscore,
-              _ => WmlTabLeader.none,
-            },
-          ),
-        );
+      if (reader.eventType != XmlEventType.startElement) continue;
+      if (reader.depth != depth + 1 ||
+          reader.localName != 'tab' ||
+          (reader.namespaceUri != OfficeNamespaces.w &&
+              !(reader.namespaceUri.isEmpty && reader.prefix == 'w'))) {
+        XmlDocument.readElement(reader);
+        continue;
       }
+      final String? pos = reader.getAttribute(
+        'pos',
+        namespaceUri: OfficeNamespaces.w,
+      );
+      final String? val = reader.getAttribute(
+        'val',
+        namespaceUri: OfficeNamespaces.w,
+      );
+      final String? leader = reader.getAttribute(
+        'leader',
+        namespaceUri: OfficeNamespaces.w,
+      );
+      final position = pos == null ? 0.0 : _measurePoints(pos);
+      // Tabs are cumulative through the style cascade. A later stop owns
+      // only the same position; a clear or bar removes a prior text stop.
+      props.tabs.removeWhere((tab) => tab.position == position);
+      if (val == 'clear') continue;
+      // A bar stop is a decoration, not a text-positioning tab stop.
+      if (val == 'bar') continue;
+      props.tabs.add(
+        WmlTabStop(
+          position: position,
+          alignment: switch (val) {
+            'center' => WmlTabAlignment.center,
+            'right' => WmlTabAlignment.right,
+            'decimal' => WmlTabAlignment.decimal,
+            _ => WmlTabAlignment.left,
+          },
+          leader: switch (leader) {
+            'dot' => WmlTabLeader.dot,
+            'hyphen' => WmlTabLeader.hyphen,
+            'underscore' => WmlTabLeader.underscore,
+            _ => WmlTabLeader.none,
+          },
+        ),
+      );
     }
+    props.tabs.sort((a, b) => a.position.compareTo(b.position));
   }
 
   /// `w:sym`: one character of a symbol font (Symbol, Wingdings, …) —
@@ -3900,6 +3908,28 @@ class WordDeserializer {
     end,
     includeComplexScript: includeComplexScript,
     activeLanguageOnly: activeLanguageOnly,
+  );
+
+  /// Upsert one custom paragraph tab, replace the effective custom collection
+  /// with [replacement], or clear current custom definitions when both are
+  /// null. Default tab settings and hanging indents remain unchanged. Native
+  /// sparse properties retain opaque metadata and inherited tabs are cleared
+  /// with explicit position records. Unsupported ambiguous source is refused
+  /// before the paragraph changes. [paragraphProperties] is an optional
+  /// detached candidate carrying other validated paragraph edits, published
+  /// together with the replacement. Replacement retains the legacy native
+  /// serializer's nonnegative-point input and twip rounding behavior.
+  void editParagraphTabStops(
+    WmlDocument document,
+    WmlParagraph paragraph, {
+    WmlTabStop? tab,
+    List<WmlTabStop>? replacement,
+    WmlParagraphProps? paragraphProperties,
+  }) => _StyleCascade(this, document).editParagraphTabStops(
+    paragraph,
+    tab,
+    replacement: replacement,
+    properties: paragraphProperties,
   );
 
   /// Recompute effective formatting after editing a source style definition.
