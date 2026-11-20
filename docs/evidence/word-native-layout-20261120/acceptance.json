@@ -15,5 +15,25 @@
   "evidence": "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/validation/word-native-layout-20261120/README.md",
   "hostTestsSha256": "cc44246d4ea4a19974a03e090c8cf4a21bccb6feb8e967ff3ff1334fcab3593b",
   "ciQueriedOrAwaited": false,
-  "bundledOfficeFilesVerified": 2927
+  "bundledOfficeFilesVerified": 2927,
+  "localReleaseBuild": {
+    "build": "37",
+    "version": "1.3.4",
+    "sourceCommit": "720dc5c19f728f9111b7a8e44505227022d02539",
+    "qudsSourceCommit": "64f977ab003031d560c6564cf8895b1250d120d9",
+    "architecture": "arm64",
+    "developmentSigned": true,
+    "deepStrictSignatureVerified": true,
+    "startupHealthySeconds": 20,
+    "appPath": "/Users/christianstrobele/Applications/CrispCloud Word Layout Preview 720dc5c1.app",
+    "executableSha256": "d14e1cb2cb2bfcf4b18a6bc4faa7d6b54de3b8cabc9aa227e284ee3a1de9f506",
+    "dartAotSha256": "46d681817948455e8decd1be5b5564a680188632f9f6bca51fa062fffa95b854",
+    "logSha256": {
+      "build37.log": "9d1b55b9d4cab550ff3a5bb1f97b2483b2e55d5abb75b0ca88759a8696729852",
+      "build37-sign.log": "c97f64eedbf5a36be7643e913e46d21623f7d9b3e80f5b22d2c6c771f57dcbdc",
+      "build37-startup.log": "b1606522237145dec8aee2d743c324e5cfa83b6548da370eac48b58962b2a552",
+      "build37-startup-result.log": "27c4507fc758524e46ea81b8aeaa70d38f81b47884b1fabdf971ecb0fde84cd6"
+    },
+    "testFlightSubmitted": false
+  }
 }
