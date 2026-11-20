@@ -1,3 +1,4 @@
+import 'widgets/credential_content_gate.dart';
 import 'providers/notification_provider.dart';
 import 'widgets/app_scaffold_messenger.dart';
 
@@ -1048,7 +1049,9 @@ class MyApp extends ConsumerWidget {
 
 /// Gate widget that shows the lock screen if app lock is enabled.
 class AppLockGate extends ConsumerStatefulWidget {
-  const AppLockGate({super.key});
+  const AppLockGate({super.key, this.child = const FileBrowserScreen()});
+
+  final Widget child;
 
   @override
   ConsumerState<AppLockGate> createState() => _AppLockGateState();
@@ -1167,7 +1170,12 @@ class _AppLockGateState extends ConsumerState<AppLockGate>
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => CredentialContentGate(
+    barrier: _credentialBarrier(context),
+    child: widget.child,
+  );
+
+  Widget? _credentialBarrier(BuildContext context) {
     if (_isChecking) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
@@ -1197,7 +1205,7 @@ class _AppLockGateState extends ConsumerState<AppLockGate>
       );
     }
 
-    return const FileBrowserScreen();
+    return null;
   }
 
   @override
