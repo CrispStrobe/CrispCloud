@@ -2174,7 +2174,7 @@
     "packages/quds_office_engine/lib/src/pdf/file/interp/pdf_interpreter.dart": "176110ee11c8d09f7bc8bbf5a19a47a2f2c0c46f237747d8fee246baedd9a1a2",
     "packages/quds_office_engine/lib/src/pdf/file/text/pdf_text_string.dart": "175f0609122f307dffa6dbacb843755feeaeaf64475c691e40ac4b0e71b31cc2",
     "packages/quds_office_engine/lib/src/pdf/office/pdf_to_office.dart": "ea9d59e9056ed17c6d01adc7b5262c3092328b68b82511a63d0b362bd1c4ef15",
-    "packages/quds_office_engine/lib/src/pdf/office_pdf_export.dart": "18e165c54d4932c8195a9b6b33c57d70281d987914a77c0ff30804f871cf2610",
+    "packages/quds_office_engine/lib/src/pdf/office_pdf_export.dart": "aa50628f3067164f2cd1cb93b8a2b41f0f885eedf35e3cd0b07a431a591689d5",
     "packages/quds_office_engine/lib/src/pdf/office_pdf_visuals.dart": "cf5a5104691fb8e945edbfe112a7e1bd197fed33a3041c5a202561301a0a1577",
     "packages/quds_office_engine/lib/src/pdf/pdf_canvas.dart": "cab74f5ccdd3ed4e55a5db2edbf2076bbf318e156bc3448b28ca9ba4c6ac527b",
     "packages/quds_office_engine/lib/src/pdf/pdf_document.dart": "193a229049869d29076bec21aa6c7032c3c578e05673ce6fc3f9f2a5e802d046",
@@ -2876,7 +2876,7 @@
     "tool/office-validation/test_render.py": "1ba68e18608d74387cbc1c779ceb72af76bf7741463c282684aec93bf3825472"
   },
   "source_branch": "integrate/recent-pptx",
-  "source_commit": "3af48b2d4c05ed14aa28092dd68351d211534d4b",
+  "source_commit": "f007b24503eece6ea0316a3049a10243fcf2dd2c",
   "source_repository": "CrispStrobe/quds_office_suite",
   "standalone_sources": {
     "packages/legacy_doc_parser": {

@@ -1964,6 +1964,7 @@ abstract final class OfficePdfExport {
                   false),
           italic: run?.italic ?? false,
           family: (run?.fontFamily ?? '').isEmpty ? null : run!.fontFamily,
+          baseLevel: paragraph.rightToLeft ? 1 : 0,
         );
         final double available = math.max(8, width - paragraph.marginLeftPt);
         if (natural > available) {
@@ -1998,6 +1999,7 @@ abstract final class OfficePdfExport {
               maxWidth: width - paragraph.marginLeftPt,
               bold: bold,
               italic: run?.italic ?? false,
+              baseLevel: paragraph.rightToLeft ? 1 : 0,
             );
       total +=
           paragraph.spaceBeforePt +
@@ -2069,6 +2071,7 @@ abstract final class OfficePdfExport {
               bold: bold,
               italic: italic,
               family: family,
+              baseLevel: paragraph.rightToLeft ? 1 : 0,
             );
             cx += sink.measure(part, size);
           }
@@ -2089,6 +2092,31 @@ abstract final class OfficePdfExport {
           fallbackColor,
           fitScale,
         );
+      } else if (!paragraph.rightToLeft &&
+          !RegExp(r'\p{L}', unicode: true).hasMatch(text)) {
+        final double textWidth = sink.plainWidth(
+          text,
+          size,
+          bold: bold,
+          italic: italic,
+          family: family,
+        );
+        final double dx = switch (align) {
+          _TextAlign.center => (maxWidth - textWidth) / 2,
+          _TextAlign.right => maxWidth - textWidth,
+          _TextAlign.left || _TextAlign.auto => 0,
+        };
+        sink.drawPlainLtr(
+          text,
+          px + dx,
+          cy + size,
+          size,
+          color,
+          bold: bold,
+          italic: italic,
+          family: family,
+        );
+        cy += size * 1.25;
       } else {
         sink.drawText(
           text,
@@ -2101,6 +2129,7 @@ abstract final class OfficePdfExport {
           bold: bold,
           italic: italic,
           family: family,
+          baseLevel: paragraph.rightToLeft ? 1 : 0,
         );
         final int lines = sink.lineCount(
           text,
@@ -2108,6 +2137,7 @@ abstract final class OfficePdfExport {
           maxWidth: maxWidth,
           bold: bold,
           italic: italic,
+          baseLevel: paragraph.rightToLeft ? 1 : 0,
         );
         cy += lines * size * 1.25;
       }
@@ -2290,6 +2320,7 @@ abstract final class OfficePdfExport {
             bold: segment.bold,
             italic: segment.italic,
             family: segment.family.isEmpty ? null : segment.family,
+            baseLevel: paragraph.rightToLeft ? 1 : 0,
           );
           cx += sink.measureStyled(
             segment.text,
@@ -2297,6 +2328,7 @@ abstract final class OfficePdfExport {
             bold: segment.bold,
             italic: segment.italic,
             family: segment.family,
+            baseLevel: paragraph.rightToLeft ? 1 : 0,
           );
         }
       }
@@ -2839,6 +2871,7 @@ class _PageSink {
     bool bold = false,
     bool italic = false,
     String? family,
+    int? baseLevel,
   }) {
     if (text.isEmpty) {
       return;
@@ -2847,6 +2880,7 @@ class _PageSink {
     if (layoutFont != null) {
       final List<BrokenLine> lines = LineBreaker.breakLines(
         text: text,
+        baseLevel: baseLevel,
         maxWidth: maxWidth ?? 1e9,
         widthOf: (int cp) => pack.widthOf(
           cp,
@@ -3042,12 +3076,70 @@ class _PageSink {
   }
 
   /// Number of laid-out lines for [text] at [size].
+  double plainWidth(
+    String text,
+    double size, {
+    bool bold = false,
+    bool italic = false,
+    String? family,
+  }) {
+    var width = 0.0;
+    for (final int cp in text.runes) {
+      if (cp < 32) continue;
+      width += pack.widthOf(
+        cp,
+        size,
+        family: family,
+        weight: bold ? 700 : 400,
+        italic: italic,
+      );
+    }
+    return width;
+  }
+
+  void drawPlainLtr(
+    String text,
+    double x,
+    double baseline,
+    double size,
+    String color, {
+    bool bold = false,
+    bool italic = false,
+    String? family,
+  }) {
+    var cx = x;
+    for (final int cp in text.runes) {
+      if (cp < 32) continue;
+      final double advance = pack.widthOf(
+        cp,
+        size,
+        family: family,
+        weight: bold ? 700 : 400,
+        italic: italic,
+      );
+      _emit(
+        oldGid: 0,
+        codePoint: cp,
+        x: cx,
+        y: baseline,
+        size: size,
+        color: color,
+        bold: bold,
+        italic: italic,
+        family: family,
+        advance: advance,
+      );
+      cx += advance;
+    }
+  }
+
   int lineCount(
     String text,
     double size, {
     double? maxWidth,
     bool bold = false,
     bool italic = false,
+    int? baseLevel,
   }) {
     final SfntFont? layoutFont = pack.layoutFont;
     if (layoutFont == null) {
@@ -3055,6 +3147,7 @@ class _PageSink {
     }
     final List<BrokenLine> lines = LineBreaker.breakLines(
       text: text,
+      baseLevel: baseLevel,
       maxWidth: maxWidth ?? 1e9,
       widthOf: (int cp) =>
           pack.widthOf(cp, size, weight: bold ? 700 : 400, italic: italic),
@@ -3091,9 +3184,11 @@ class _PageSink {
     bool bold = false,
     bool italic = false,
     String? family,
+    int? baseLevel,
   }) {
     final List<BrokenLine> lines = LineBreaker.breakLines(
       text: text,
+      baseLevel: baseLevel,
       maxWidth: 1e9,
       widthOf: (int cp) => pack.widthOf(
         cp,
