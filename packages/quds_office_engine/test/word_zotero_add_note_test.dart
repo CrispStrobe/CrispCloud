@@ -554,7 +554,7 @@ void main() {
   });
 
   test(
-    'existing footnote and existing citation do not advertise text insertion',
+    'authored footnote advertises text insertion but an existing citation does not',
     () {
       final document = WmlDocument.empty(text: 'Body');
       final note = WordNotes.insert(
@@ -564,8 +564,8 @@ void main() {
         text: 'Note',
       );
       final inNote = _session(document, paragraph: note.paragraphs.single);
-      expect(inNote.canInsertNoteText, isFalse);
-      expect(inNote.assertCanInsertNoteText, throwsUnsupportedError);
+      expect(inNote.canInsertNoteText, isTrue);
+      expect(inNote.assertCanInsertNoteText, returnsNormally);
       WordZotero.insertCitation(
         document.paragraphs.first,
         _citation('field', 'Citation'),

@@ -7772,9 +7772,12 @@ class WordEditorController extends OfficeController {
     final noteTarget = noteEditingTarget;
     _assertNoteTargetReady(noteTarget);
     final insertsNoteText = command?.insertsNoteText == true;
-    if (insertsNoteText && noteTarget != null) {
+    if (insertsNoteText &&
+        (selectedVisual != null ||
+            selectedEquation != null ||
+            selectedTableBand != null)) {
       throw UnsupportedError(
-        'Insert Zotero notes and annotations from the document body. Citations can still be added inside footnotes and endnotes.',
+        'Place the caret or select text within one paragraph before inserting a Zotero note or annotation.',
       );
     }
     commitNoteEdits();
@@ -7791,17 +7794,36 @@ class WordEditorController extends OfficeController {
     final noteRange = noteTarget == null
         ? null
         : _noteSelectionRange(noteTarget);
+    final bodyRange = caret.normalizedRange;
+    final bodyParagraphs = document.paragraphs.toList();
+    final singleBodyParagraph =
+        bodyRange.startPara == bodyRange.endPara &&
+        bodyRange.startPara >= 0 &&
+        bodyRange.startPara < bodyParagraphs.length;
+    if (insertsNoteText &&
+        (noteTarget != null ? noteRange == null : !singleBodyParagraph)) {
+      throw UnsupportedError(
+        'Select text within one paragraph to replace it with a Zotero note or annotation.',
+      );
+    }
     final resolvedField =
         selectedField ?? (noteTarget != null ? findZoteroFieldAtCaret() : null);
     final session = WordZoteroCitingSession(
       document: document,
       documentId: documentId,
       insertionParagraph: noteTarget != null
-          ? (noteTarget.selection.isCollapsed ? noteRange?.paragraph : null)
-          : (caret.isCollapsed ? _activeParagraph : null),
+          ? (noteTarget.selection.isCollapsed || insertsNoteText
+                ? noteRange?.paragraph
+                : null)
+          : (insertsNoteText
+                ? bodyParagraphs[bodyRange.startPara]
+                : (caret.isCollapsed ? _activeParagraph : null)),
       insertionOffset: noteTarget != null
           ? (noteRange?.start ?? 0)
-          : caret.logicalIndex,
+          : (insertsNoteText ? bodyRange.startIdx : caret.logicalIndex),
+      insertionEndOffset: insertsNoteText
+          ? (noteTarget != null ? noteRange?.end : bodyRange.endIdx)
+          : null,
       selectedField: resolvedField,
       seedCitation: seedCitation,
     );

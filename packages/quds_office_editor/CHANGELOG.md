@@ -4,6 +4,12 @@ All notable changes to `quds_office_editor` are documented here.
 
 ## Unreleased
 
+- Insert Zotero research notes and annotations at the active authored footnote
+  or endnote caret, and replace deliberate text selections within one paragraph.
+  Keep native citations in their owning note, preserve the note number and
+  surrounding content, and restore the original selection with one undo.
+  Refuse stale, composing, structural and protected targets before application.
+
 - Render presentation normal-autofit line-spacing reduction consistently,
   including fully collapsed line advances, while retaining glyph extents and
   excluding authored fixed-point spacing from percentage reduction.

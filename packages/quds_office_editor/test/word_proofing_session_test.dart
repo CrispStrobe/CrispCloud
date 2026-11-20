@@ -740,7 +740,7 @@ void main() {
   }
 
   test(
-    'an unsupported document language reports its locale without calling the checker',
+    'an unsupported document language reuses its incomplete report without rechecking',
     () async {
       final provider = _ProbeProvider(languages: <String>{'de-DE'});
       final h = _Harness(provider: provider);
@@ -752,6 +752,69 @@ void main() {
         summary.statusMessage,
         contains('No configured checker supports en-GB'),
       );
+      expect(h.session.checkedParagraphCount, 1);
+
+      for (var pass = 0; pass < 2; pass++) {
+        final cached = await h.session.checkNow();
+        expect(provider.requests, isEmpty);
+        expect(h.session.checkedParagraphCount, 1);
+        expect(cached.checkedParagraphCount, 0);
+        expect(cached.complete, isFalse);
+        expect(
+          cached.statusMessage,
+          contains('No configured checker supports en-GB'),
+        );
+      }
+      expect(h.session.passCount, 3);
+    },
+  );
+
+  test(
+    'a provider revision can enable a previously unsupported cached language',
+    () async {
+      final languages = <String>{'de-DE'};
+      final provider = _ProbeProvider(languages: languages);
+      final h = _Harness(provider: provider);
+      h.document.proofingLanguage = 'en-GB';
+      await h.session.checkNow();
+      await h.session.checkNow();
+      expect(h.session.checkedParagraphCount, 1);
+      expect(provider.requests, isEmpty);
+
+      languages.add('en-GB');
+      provider.version++;
+      final supported = await h.session.checkNow();
+      expect(provider.requests.single.language, 'en-GB');
+      expect(h.session.checkedParagraphCount, 2);
+      expect(supported.checkedParagraphCount, 1);
+      expect(supported.complete, isTrue);
+      expect(supported.issues, hasLength(1));
+
+      await h.session.checkNow();
+      expect(provider.requests, hasLength(1));
+      expect(h.session.checkedParagraphCount, 2);
+    },
+  );
+
+  test(
+    'replacing providers rechecks a previously unsupported cached language',
+    () async {
+      final unsupported = _ProbeProvider(languages: <String>{'de-DE'});
+      final h = _Harness(provider: unsupported);
+      h.document.proofingLanguage = 'en-GB';
+      await h.session.checkNow();
+      await h.session.checkNow();
+      expect(h.session.checkedParagraphCount, 1);
+
+      final supported = _ProbeProvider(languages: <String>{'en-GB'});
+      h.session.configure(OfficeProofingService(providers: [supported]));
+      final summary = await h.session.checkNow();
+      expect(unsupported.requests, isEmpty);
+      expect(supported.requests.single.language, 'en-GB');
+      expect(h.session.checkedParagraphCount, 2);
+      expect(summary.checkedParagraphCount, 1);
+      expect(summary.complete, isTrue);
+      expect(summary.issues, hasLength(1));
     },
   );
 
