@@ -34,6 +34,7 @@ List<PmlShape> parseSlideShapes(
   final List<PmlGradientStop> gradientStops = <PmlGradientStop>[];
   double? gradientStopPosition;
   double gradientAngle = 0;
+  var gradientRadial = false;
   var gradientIsLinear = true;
 
   /// textFillPending API.
@@ -388,6 +389,8 @@ List<PmlShape> parseSlideShapes(
     } else if (reader.localName == 'lin' && inGradFill) {
       gradientAngle =
           (int.tryParse(reader.getAttribute('ang') ?? '') ?? 0) / 60000;
+    } else if (reader.localName == 'path' && inGradFill) {
+      gradientRadial = true;
     } else if (_colorElements.contains(reader.localName) && current != null) {
       final String? val = resolveDrawingmlColor(reader, colors);
       if (val != null && val.isNotEmpty) {

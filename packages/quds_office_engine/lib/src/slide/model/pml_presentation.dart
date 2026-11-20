@@ -105,17 +105,22 @@ class PmlGradientStop {
 
 /// A linear DrawingML gradient fill.
 class PmlGradientFill {
-  PmlGradientFill({List<PmlGradientStop>? stops, this.angleDegrees = 0})
-    : stops = stops ?? <PmlGradientStop>[];
+  PmlGradientFill({
+    List<PmlGradientStop>? stops,
+    this.angleDegrees = 0,
+    this.radial = false,
+  }) : stops = stops ?? <PmlGradientStop>[];
 
   final List<PmlGradientStop> stops;
   double angleDegrees;
+  bool radial;
 
   String get fallbackColor => stops.isEmpty ? '' : stops.first.color;
 
   PmlGradientFill copy() => PmlGradientFill(
     stops: <PmlGradientStop>[for (final stop in stops) stop.copy()],
     angleDegrees: angleDegrees,
+    radial: radial,
   );
 }
 

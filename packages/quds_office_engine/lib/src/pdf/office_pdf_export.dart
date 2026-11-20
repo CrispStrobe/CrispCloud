@@ -1738,6 +1738,23 @@ abstract final class OfficePdfExport {
     final double angle = gradient.angleDegrees;
     final double cx = x + w / 2;
     final double cy = y + h / 2;
+    if (gradient.radial) {
+      const int rings = 72;
+      final double radius = math.sqrt(w * w + h * h) / 2;
+      for (int i = 0; i < rings; i++) {
+        final double t = 1 - i / rings;
+        canvas.setFillColor(_gradientColor(gradient, t));
+        canvas.ellipse(
+          cx - radius * t,
+          cy - radius * t,
+          radius * t * 2,
+          radius * t * 2,
+        );
+        canvas.fill();
+      }
+      canvas.restore();
+      return;
+    }
     final double radians = angle * math.pi / 180;
     final double span =
         w * math.cos(radians).abs() + h * math.sin(radians).abs();
