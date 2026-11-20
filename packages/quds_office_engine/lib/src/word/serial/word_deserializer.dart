@@ -3313,68 +3313,77 @@ class WordDeserializer {
     String docUri,
   ) {
     final Map<int, _NumberingLevel> levels = _readNumbering(package, docUri);
-    if (levels.isEmpty) {
-      for (final WmlParagraph paragraph in document.paragraphs) {
-        final int? numId = paragraph.properties.numId;
-        if (numId != null && numId != 0) {
-          paragraph.properties.listLabel ??= '• ';
-        }
-      }
-      return;
-    }
-    final Map<String, List<int>> counters = <String, List<int>>{};
-    for (final WmlParagraph paragraph in document.paragraphs) {
-      final int? numId = paragraph.properties.numId;
-      // `w:numId="0"` removes the paragraph from any list.
-      if (numId == null || numId == 0) {
-        continue;
-      }
-      final int ilvl = paragraph.properties.ilvl.clamp(0, 8);
-      final _NumberingLevel? level =
-          levels[_levelKey(numId, ilvl)] ?? levels[_levelKey(numId, 0)];
-      if (level == null) {
-        paragraph.properties.listLabel ??= '• ';
-        continue;
-      }
-      if (level.isBullet) {
-        paragraph.properties.listLabel = level.bulletLabel();
-      } else {
-        final String key = '$numId';
-        final List<int> stack = counters.putIfAbsent(
-          key,
-          () => List<int>.filled(9, -1),
-        );
-        final int? restartAt = paragraph.properties.listRestart;
-        stack[ilvl] =
-            restartAt ?? (stack[ilvl] < 0 ? level.start : stack[ilvl] + 1);
-        paragraph.properties.listRestart = null;
-        for (int i = ilvl + 1; i < stack.length; i++) {
-          stack[i] = -1;
-        }
-        for (int i = 0; i < ilvl; i++) {
-          if (stack[i] < 0) {
-            stack[i] = levels[_levelKey(numId, i)]?.start ?? 1;
+    void applyStory(Iterable<WmlParagraph> paragraphs) {
+      if (levels.isEmpty) {
+        for (final WmlParagraph paragraph in paragraphs) {
+          final int? numId = paragraph.properties.numId;
+          if (numId != null && numId != 0) {
+            paragraph.properties.listLabel ??= '• ';
           }
         }
-        paragraph.properties.listLabel = level.decimalLabelStack(
-          stack,
-          ilvl,
-          formats: <String>[
-            for (var i = 0; i <= ilvl; i++)
-              levels[_levelKey(numId, i)]?.fmt ?? level.fmt,
-          ],
-        );
+        return;
       }
-      if (paragraph.properties.indent.left == 0 &&
-          paragraph.properties.indent.hanging == 0 &&
-          (level.left > 0 || level.hanging > 0)) {
-        paragraph.properties.indent = WmlIndent(
-          left: level.left,
-          right: paragraph.properties.indent.right,
-          firstLine: paragraph.properties.indent.firstLine,
-          hanging: level.hanging,
-        );
+      final Map<String, List<int>> counters = <String, List<int>>{};
+      for (final WmlParagraph paragraph in paragraphs) {
+        final int? numId = paragraph.properties.numId;
+        // `w:numId="0"` removes the paragraph from any list.
+        if (numId == null || numId == 0) {
+          continue;
+        }
+        final int ilvl = paragraph.properties.ilvl.clamp(0, 8);
+        final _NumberingLevel? level =
+            levels[_levelKey(numId, ilvl)] ?? levels[_levelKey(numId, 0)];
+        if (level == null) {
+          paragraph.properties.listLabel ??= '• ';
+          continue;
+        }
+        if (level.isBullet) {
+          paragraph.properties.listLabel = level.bulletLabel();
+        } else {
+          final String key = '$numId';
+          final List<int> stack = counters.putIfAbsent(
+            key,
+            () => List<int>.filled(9, -1),
+          );
+          final int? restartAt = paragraph.properties.listRestart;
+          stack[ilvl] =
+              restartAt ?? (stack[ilvl] < 0 ? level.start : stack[ilvl] + 1);
+          paragraph.properties.listRestart = null;
+          for (int i = ilvl + 1; i < stack.length; i++) {
+            stack[i] = -1;
+          }
+          for (int i = 0; i < ilvl; i++) {
+            if (stack[i] < 0) {
+              stack[i] = levels[_levelKey(numId, i)]?.start ?? 1;
+            }
+          }
+          paragraph.properties.listLabel = level.decimalLabelStack(
+            stack,
+            ilvl,
+            formats: <String>[
+              for (var i = 0; i <= ilvl; i++)
+                levels[_levelKey(numId, i)]?.fmt ?? level.fmt,
+            ],
+          );
+        }
+        if (paragraph.properties.indent.left == 0 &&
+            paragraph.properties.indent.hanging == 0 &&
+            (level.left > 0 || level.hanging > 0)) {
+          paragraph.properties.indent = WmlIndent(
+            left: level.left,
+            right: paragraph.properties.indent.right,
+            firstLine: paragraph.properties.indent.firstLine,
+            hanging: level.hanging,
+          );
+        }
       }
+    }
+
+    // Keep each note's list counters independent from the body and other
+    // notes, while resolving all stories against the same native definitions.
+    applyStory(document.paragraphs);
+    for (final note in [...document.footnotes, ...document.endnotes]) {
+      applyStory(note.allParagraphs);
     }
   }
 

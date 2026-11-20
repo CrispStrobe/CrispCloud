@@ -4,6 +4,14 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Extend staged Zotero research-content insertion to authored footnotes/endnotes
+  and explicit single-paragraph replacement ranges. Preserve citation order,
+  note ownership, rich content and leading note markers without creating nested
+  notes. Revalidate ranges before application and retain atomic field, structure,
+  Unicode-boundary and protection guards. Protect ordinary complex Word fields,
+  bookmark endpoints and empty atomic tokens during replacement. Resolve native
+  footnote/endnote list labels with independent counters when reopening DOCX.
+
 - Add the bounded `vba-powerpoint` adapter on the shared VBA compiler: explicit
   slide/shape/text-range bindings, indexed or exact-name selectors, text,
   font/alignment and geometry writes, with strict collection guards for

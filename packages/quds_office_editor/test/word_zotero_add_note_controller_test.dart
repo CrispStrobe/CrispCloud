@@ -297,7 +297,11 @@ List<_Step> _script({bool cancel = false}) => [
     (d) => d.message('Field.setCode', [
       d.documentId,
       d.fields[0]['id'],
-      _code('second', '(Second, 2025)'),
+      _code(
+        'second',
+        '(Second, 2025)',
+        noteIndex: d.fields[0]['noteIndex']! as int,
+      ),
     ]),
     (d) => d.message('Field.setText', [
       d.documentId,
@@ -308,7 +312,11 @@ List<_Step> _script({bool cancel = false}) => [
     (d) => d.message('Field.setCode', [
       d.documentId,
       d.fields[1]['id'],
-      _code('first', '(First, 2024)'),
+      _code(
+        'first',
+        '(First, 2024)',
+        noteIndex: d.fields[1]['noteIndex']! as int,
+      ),
     ]),
     (d) => d.message('Field.setText', [
       d.documentId,
@@ -1131,48 +1139,206 @@ void main() {
     ZoteroCitingCommand.addAnnotation,
   ]) {
     for (final endnote in [false, true]) {
+      for (final noteType in [0, endnote ? 2 : 1]) {
+        test(
+          '${command.name} inserts into an authored ${endnote ? 'endnote' : 'footnote'} with style $noteType',
+          () {
+            final document = _document();
+            final note = WordNotes.insert(
+              document,
+              document.paragraphs.last,
+              text: 'Existing',
+              endnote: endnote,
+            );
+            final controller = _controller(document: document);
+            const selection = TextSelection.collapsed(offset: 2);
+            controller.setNoteEditingTarget(note, selection);
+            final before = _state(document);
+            final body = document.paragraphs.map(_paragraph).toList();
+            final transaction = _begin(controller, command: command);
+            _stageCitedNote(transaction, noteType: noteType);
+            _complete(transaction);
+            expect(_state(document), before);
+            expect(controller.canUndo, isFalse);
+            transaction.apply();
+            const expected =
+                'Ex\nResearch\nA quoted passage (First, 2024) Comment\n'
+                'Conclusion (Second, 2025)\nisting';
+            expect(controller.noteEditText(note), expected);
+            expect(document.paragraphs.map(_paragraph), body);
+            expect(document.footnotes, hasLength(endnote ? 0 : 1));
+            expect(document.endnotes, hasLength(endnote ? 1 : 0));
+            expect(controller.zoteroFields.map((f) => f.citation!.citationId), [
+              'first',
+              'second',
+            ]);
+            expect(
+              controller.zoteroFields.every(
+                (f) => note.allParagraphs.contains(f.paragraph),
+              ),
+              isTrue,
+            );
+            expect(controller.noteEditingTarget?.note, same(note));
+            expect(
+              controller.noteEditingTarget?.selection,
+              TextSelection.collapsed(offset: expected.indexOf('\nisting')),
+            );
+            expect(controller.caret.logicalIndex, 6);
+            final after = _state(document);
+            final reopened = WordDeserializer().readBytes(
+              WordSerializer().writeBytes(document),
+            );
+            final reopenedNote =
+                (endnote ? reopened.endnotes : reopened.footnotes).single;
+            expect(WordNotes.editableText(reopenedNote), expected);
+            expect(WordZotero.fields(reopened), hasLength(2));
+            controller.undo();
+            expect(_state(document), before);
+            expect(controller.noteEditingTarget?.note, same(note));
+            expect(controller.noteEditingTarget?.selection, selection);
+            expect(controller.canUndo, isFalse);
+            controller.redo();
+            expect(_state(document), after);
+            expect(controller.noteEditingTarget?.note, same(note));
+          },
+        );
+      }
+
       test(
-        'an active ${endnote ? 'endnote' : 'footnote'} refuses ${command.name} early',
+        '${command.name} replaces an authored ${endnote ? 'endnote' : 'footnote'} selection and restores its direction on undo',
         () {
           final document = _document();
           final note = WordNotes.insert(
             document,
             document.paragraphs.last,
-            text: 'Existing',
+            text: 'Left chosen Right',
             endnote: endnote,
           );
           final controller = _controller(document: document);
-          controller.setNoteEditingTarget(
-            note,
-            const TextSelection.collapsed(offset: 2),
-          );
+          const selection = TextSelection(baseOffset: 11, extentOffset: 5);
+          controller.setNoteEditingTarget(note, selection);
           final before = _state(document);
-          expect(
-            () => _begin(controller, command: command),
-            throwsUnsupportedError,
-          );
-          expect(_state(document), before);
+          final transaction = _begin(controller, command: command);
+          _insertText(transaction, '<p><b>Replacement</b></p>');
+          _complete(transaction);
+          expect(controller.noteEditText(note), 'Left chosen Right');
+          transaction.apply();
+          expect(controller.noteEditText(note), 'Left Replacement Right');
           expect(controller.noteEditingTarget?.note, same(note));
+          expect(
+            controller.noteEditingTarget?.selection,
+            const TextSelection.collapsed(offset: 16),
+          );
+          controller.undo();
+          expect(_state(document), before);
+          expect(controller.noteEditingTarget?.selection, selection);
           expect(controller.canUndo, isFalse);
+          controller.redo();
+          expect(controller.noteEditText(note), 'Left Replacement Right');
+        },
+      );
+
+      test('a moved note selection refuses a staged ${command.name}', () {
+        final document = _document();
+        final note = WordNotes.insert(
+          document,
+          document.paragraphs.last,
+          text: 'Authored',
+          endnote: endnote,
+        );
+        final controller = _controller(document: document);
+        controller.setNoteEditingTarget(
+          note,
+          const TextSelection(baseOffset: 1, extentOffset: 4),
+        );
+        final before = _state(document);
+        final transaction = _begin(controller, command: command);
+        _stageCitedNote(transaction);
+        _complete(transaction);
+        controller.setNoteEditingTarget(
+          note,
+          const TextSelection(baseOffset: 1, extentOffset: 5),
+        );
+        expect(transaction.apply, throwsStateError);
+        expect(_state(document), before);
+        expect(controller.canUndo, isFalse);
+        expect(controller.isDirty, isFalse);
+      });
+    }
+
+    for (final reverse in [false, true]) {
+      test(
+        '${command.name} replaces a ${reverse ? 'backward' : 'forward'} body selection atomically',
+        () {
+          final controller = _controller();
+          controller.caret
+            ..logicalIndex = reverse ? 1 : 6
+            ..selectionAnchor = reverse ? 6 : 1
+            ..selectionAnchorParagraph = 0;
+          final before = _state(controller.document);
+          final transaction = _begin(controller, command: command);
+          _stageCitedNote(transaction);
+          _complete(transaction);
+          expect(_state(controller.document), before);
+          transaction.apply();
+          expect(controller.document.paragraphs.map((p) => p.text), [
+            'B',
+            'Research',
+            'A quoted passage (First, 2024) Comment',
+            'Conclusion (Second, 2025)',
+            'After',
+            'Unrelated',
+          ]);
+          expect(controller.caret.isCollapsed, isTrue);
+          expect(controller.caret.paragraphIndex, 3);
+          expect(controller.zoteroFields, hasLength(2));
+          final after = _state(controller.document);
+          controller.undo();
+          expect(_state(controller.document), before);
+          expect(controller.caret.selectionAnchor, reverse ? 6 : 1);
+          expect(controller.caret.logicalIndex, reverse ? 1 : 6);
+          expect(controller.canUndo, isFalse);
+          controller.redo();
+          expect(_state(controller.document), after);
+          expect(controller.caret.isCollapsed, isTrue);
         },
       );
     }
 
-    test('a body selection refuses ${command.name} without replacing text', () {
-      final controller = _controller();
-      controller.caret
-        ..selectionAnchor = 1
-        ..selectionAnchorParagraph = 0;
-      final before = _state(controller.document);
-      expect(
-        () => _begin(controller, command: command),
-        throwsUnsupportedError,
+    for (final inNote in [false, true]) {
+      test(
+        '${command.name} refuses a selection across ${inNote ? 'note' : 'body'} paragraphs',
+        () {
+          final controller = _controller();
+          if (inNote) {
+            final note = WordNotes.insert(
+              controller.document,
+              controller.document.paragraphs.last,
+              text: 'First',
+              endnote: false,
+            );
+            note.blocks.add(WmlParagraph(inlines: [WmlRun(text: 'Second')]));
+            controller.setNoteEditingTarget(
+              note,
+              const TextSelection(baseOffset: 2, extentOffset: 9),
+            );
+          } else {
+            controller.caret
+              ..paragraphIndex = 1
+              ..logicalIndex = 2
+              ..selectionAnchor = 1
+              ..selectionAnchorParagraph = 0;
+          }
+          final before = _state(controller.document);
+          expect(
+            () => _begin(controller, command: command),
+            throwsUnsupportedError,
+          );
+          expect(_state(controller.document), before);
+          expect(controller.canUndo, isFalse);
+        },
       );
-      expect(_state(controller.document), before);
-      expect(controller.caret.selectionAnchor, 1);
-      expect(controller.caret.logicalIndex, 6);
-      expect(controller.canUndo, isFalse);
-    });
+    }
 
     test(
       'a caret inside an existing citation refuses ${command.name} before staging',
@@ -1261,6 +1427,38 @@ void main() {
     ZoteroCitingCommand.addAnnotation,
   ]) {
     testWidgets(
+      'the shared ${command.name} command replaces text in the active note',
+      (tester) async {
+        final controller = _controller();
+        final document = controller.document;
+        final note = WordNotes.insert(
+          document,
+          document.paragraphs.last,
+          text: 'Left chosen Right',
+          endnote: true,
+        );
+        const selection = TextSelection(baseOffset: 5, extentOffset: 11);
+        controller.setNoteEditingTarget(note, selection);
+        final before = _state(document);
+        final body = document.paragraphs.map(_paragraph).toList();
+        final desktop = _Desktop(_script());
+        await _openTextInsertion(tester, controller, desktop, command: command);
+        expect(desktop.command, command.name);
+        expect(desktop.requests, hasLength(12));
+        expect(document.paragraphs.map(_paragraph), body);
+        expect(controller.noteEditingTarget?.note, same(note));
+        expect(controller.noteEditText(note), isNot(contains('chosen')));
+        expect(controller.noteEditText(note), contains('(First, 2024)'));
+        expect(controller.zoteroFields, hasLength(2));
+        expect(document.endnotes, hasLength(1));
+        controller.undo();
+        expect(_state(document), before);
+        expect(controller.noteEditingTarget?.selection, selection);
+        expect(controller.canUndo, isFalse);
+      },
+    );
+
+    testWidgets(
       'the shared ${command.name} command inserts live citation paragraphs',
       (tester) async {
         final controller = _controller();
@@ -1289,6 +1487,9 @@ void main() {
       'cancelled ${command.name} selection discards temporary fields and style changes',
       (tester) async {
         final controller = _controller();
+        controller.caret
+          ..selectionAnchor = 1
+          ..selectionAnchorParagraph = 0;
         final desktop = _Desktop(_script(cancel: true));
         final before = _state(controller.document);
         await _openTextInsertion(tester, controller, desktop, command: command);
@@ -1300,6 +1501,8 @@ void main() {
         );
         expect(_state(controller.document), before);
         expect(controller.zoteroFields, isEmpty);
+        expect(controller.caret.selectionAnchor, 1);
+        expect(controller.caret.logicalIndex, 6);
         expect(controller.canUndo, isFalse);
         expect(controller.isDirty, isFalse);
       },

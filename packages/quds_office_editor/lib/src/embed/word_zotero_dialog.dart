@@ -1354,16 +1354,20 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
                           _citeWithDesktop(ZoteroCitingCommand.addEditCitation),
                 child: const Text('Citation in Zotero…'),
               ),
-              OutlinedButton(
-                key: const ValueKey('zotero-add-note'),
-                onPressed: _busy || !_canEdit
-                    ? null
-                    : () => _citeWithDesktop(ZoteroCitingCommand.addNote),
-                child: const Text('Add note from Zotero…'),
+              Tooltip(
+                message:
+                    'Insert research content at the body or Notes caret, or replace selected text within one paragraph.',
+                child: OutlinedButton(
+                  key: const ValueKey('zotero-add-note'),
+                  onPressed: _busy || !_canEdit
+                      ? null
+                      : () => _citeWithDesktop(ZoteroCitingCommand.addNote),
+                  child: const Text('Add note from Zotero…'),
+                ),
               ),
               Tooltip(
                 message:
-                    'Insert text, image and ink annotations with active citations. Requires Zotero 9 or later.',
+                    'Insert text, image and ink annotations at the body or Notes caret, or replace selected text within one paragraph. Requires Zotero 9 or later.',
                 child: OutlinedButton(
                   key: const ValueKey('zotero-add-annotation'),
                   onPressed: _busy || !_canEdit

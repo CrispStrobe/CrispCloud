@@ -1440,7 +1440,7 @@ final class WordProofingSession extends ChangeNotifier {
     final dirty = <_ParagraphSnapshot>[];
     for (final snapshot in captured.paragraphs) {
       final cached = _cachedReports(snapshot, useManual: useManual);
-      if (cached != null && cached.every((report) => report.complete)) {
+      if (cached != null && cached.every(_settled)) {
         // A background pass never carries manual results forward: the next
         // explicit check runs the manual providers again.
         if (!useManual && _cache[snapshot.paragraph]!.includesManual) {
@@ -1534,6 +1534,29 @@ final class WordProofingSession extends ChangeNotifier {
     notifyListeners();
     return _summary;
   }
+
+  /// A cached report that another pass cannot improve: every provider
+  /// succeeded or declares that it does not support the text's language.
+  /// Unavailable, failed or timed-out providers are retried, and so is an
+  /// `unsupported` reply from a provider that claims the language. An
+  /// unsupported-only paragraph (for example English text without an English
+  /// checker) is then not rechecked on every pass; coverage still reports it
+  /// as incomplete.
+  bool _settled(OfficeProofingReport report) => report.results.every((result) {
+    if (result.status == OfficeProofingStatus.success) return true;
+    if (result.status != OfficeProofingStatus.unsupported) return false;
+    for (final service in [_service, ?_manualService]) {
+      for (final provider in service.providers) {
+        if (provider.id != result.providerId) continue;
+        try {
+          return !provider.supportsLanguage(report.request.language);
+        } on Object {
+          return false;
+        }
+      }
+    }
+    return false;
+  });
 
   OfficeProofingRequest _request(
     _ParagraphSnapshot snapshot,
