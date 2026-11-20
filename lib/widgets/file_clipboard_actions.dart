@@ -12,7 +12,7 @@ import '../providers/panel_provider.dart';
 import '../services/file_operation_backend.dart';
 import '../services/file_operation_service.dart';
 import '../services/native_file_operations.dart';
-import 'file_operation_dialog.dart';
+import 'file_operation_quick_start.dart';
 import 'archive_endpoint_actions.dart';
 
 Future<void> copyFilesToClipboard(
@@ -130,6 +130,31 @@ Future<void> pasteFilesFromClipboard(
       }
       cut = external.cut;
     }
+    Future<void> consumeCutSelection() async {
+      // A cut selection is kept until the source is consumed; a cancelled or
+      // partial transfer must remain available for retry.
+      if (cut && internal != null && internal.isCurrent) {
+        var remaining = false;
+        for (final group in internal.groups.entries) {
+          final backend = fileOperationBackend(
+            source: group.key.source,
+            local: ref.read(localFileServiceProvider),
+            isCurrent: () => group.key.isCurrent,
+          );
+          for (final file in group.value) {
+            if (await backend.stat(file.path!) != null) {
+              remaining = true;
+              break;
+            }
+          }
+          if (remaining) break;
+        }
+        if (!remaining && identical(clipboard.selection, internal)) {
+          clipboard.clear();
+        }
+      }
+    }
+
     if (!context.mounted) return;
     if (archiveDestination != null) {
       final result = await showCapturedArchiveImport(
@@ -151,7 +176,8 @@ Future<void> pasteFilesFromClipboard(
         return;
       }
     } else {
-      await showFileOperationDialog(
+      // Cmd+V lands the files directly; progress shows in the status bar.
+      await startFileOperationDirect(
         context,
         ref,
         internal?.side ?? side,
@@ -161,30 +187,11 @@ Future<void> pasteFilesFromClipboard(
         sourceGroups: internal?.groups,
         destinationOrigin: destination!,
         destinationPath: destination.source.currentPath,
+        onSettled: consumeCutSelection,
       );
+      return;
     }
-    // A cut selection is kept until the source is consumed; a cancelled or
-    // partial transfer must remain available for retry.
-    if (cut && internal != null && internal.isCurrent) {
-      var remaining = false;
-      for (final group in internal.groups.entries) {
-        final backend = fileOperationBackend(
-          source: group.key.source,
-          local: ref.read(localFileServiceProvider),
-          isCurrent: () => group.key.isCurrent,
-        );
-        for (final file in group.value) {
-          if (await backend.stat(file.path!) != null) {
-            remaining = true;
-            break;
-          }
-        }
-        if (remaining) break;
-      }
-      if (!remaining && identical(clipboard.selection, internal)) {
-        clipboard.clear();
-      }
-    }
+    await consumeCutSelection();
   } catch (error) {
     if (context.mounted) {
       ScaffoldMessenger.of(context)

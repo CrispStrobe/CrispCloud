@@ -21,6 +21,7 @@ import '../widgets/connection_dialog.dart';
 import '../widgets/editor_chooser_dialog.dart';
 import '../widgets/file_editor_dialog.dart' show showFileEditorDialog;
 import '../widgets/file_operation_dialog.dart';
+import '../widgets/file_operation_quick_start.dart';
 import '../widgets/archive_workspace_dialog.dart';
 import '../widgets/batch_rename_dialog.dart' show showBatchRenameDialog;
 import '../widgets/file_name_dialog.dart';
@@ -583,12 +584,14 @@ void showCopyDialogFromSelection(BuildContext context, WidgetRef ref) {
     return;
   }
   final files = _selectedOrCursor(panel);
-  showFileOperationDialog(
-    context,
-    ref,
-    side,
-    files,
-    kind: FileOperationKind.copy,
+  unawaited(
+    showQuickFileOperation(
+      context,
+      ref,
+      side,
+      files,
+      kind: FileOperationKind.copy,
+    ),
   );
 }
 
@@ -608,13 +611,27 @@ void showMoveDialogFromSelection(BuildContext context, WidgetRef ref) {
     return;
   }
   final files = _selectedOrCursor(panel);
-  showFileOperationDialog(
-    context,
-    ref,
-    side,
-    files,
-    kind: FileOperationKind.move,
+  unawaited(
+    showQuickFileOperation(
+      context,
+      ref,
+      side,
+      files,
+      kind: FileOperationKind.move,
+    ),
   );
+}
+
+/// Shift+Cmd+V / Option+Cmd+V: copy or move the selection to the other panel
+/// with no confirmation box (the "just do it" F5/F6).
+void startDirectTransferFromSelection(
+  BuildContext context,
+  WidgetRef ref, {
+  required FileOperationKind kind,
+}) {
+  final side = ref.read(activePanelProvider);
+  final files = _selectedOrCursor(ref.read(panelProvider(side)));
+  unawaited(startFileOperationDirect(context, ref, side, files, kind: kind));
 }
 
 void showMultiRenameFromSelection(BuildContext context, WidgetRef ref) {

@@ -22,6 +22,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 class _Cloud extends Fake implements CloudStorageClient {
   bool fileExists = true;
   Future<void> Function()? beforeList;
+  int listCalls = 0;
+  @override
+  dynamic noSuchMethod(Invocation invocation) {
+    onCloudTransfer?.call();
+    return super.noSuchMethod(invocation);
+  }
+
   @override
   String get providerName => 'Clipboard test';
   @override
@@ -34,6 +41,7 @@ class _Cloud extends Fake implements CloudStorageClient {
   bool isAuthenticated = true;
   @override
   Future<Map<String, dynamic>> listPath(String path) async {
+    listCalls++;
     await beforeList?.call();
     return {
       'folders': <Map<String, dynamic>>[],
@@ -65,9 +73,17 @@ class _Auth extends ChangeNotifier implements AuthNotifier {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+/// The fakes cannot copy bytes. When a transfer first asks the cloud fake for
+/// anything it does not implement (the download), this hook runs and the
+/// attempt then fails; a test may use it to make the source vanish first, as a
+/// completed move would.
+void Function()? onCloudTransfer;
+
 class _Local extends Fake implements LocalFileService {
   _Local(this.directory) : currentPath = directory.path;
   final Directory directory;
+  @override
+  Future<bool> ensureAccess(String path) async => true;
   @override
   String currentPath;
   @override
@@ -246,30 +262,55 @@ void main() {
           ),
         ),
       );
-      await tester.tap(find.text('Paste here'));
-      await tester.pumpAndSettle();
-      expect(find.byType(FileOperationDialog), findsOneWidget);
+      // Paste starts the move directly. Once the source has gone, the
+      // settled transfer's cleanup checks the cut sources; hold that check
+      // while a newer copy replaces the clipboard.
       final checking = Completer<void>();
       final release = Completer<void>();
       addTearDown(() {
         if (!release.isCompleted) release.complete();
       });
-      auth.client.fileExists = false;
+      onCloudTransfer = () => auth.client.fileExists = false;
+      addTearDown(() => onCloudTransfer = null);
       auth.client.beforeList = () async {
+        if (auth.client.fileExists) return;
         if (!checking.isCompleted) checking.complete();
         await release.future;
       };
-      await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
-      await tester.pumpAndSettle();
+      // The paste chain mixes fake-async continuations with real file IO:
+      // alternate frames and short real waits until the check is held.
+      Future<void> drive(bool Function() done) async {
+        for (var i = 0; i < 400 && !done(); i++) {
+          await tester.pump(const Duration(milliseconds: 10));
+          await tester.runAsync(
+            () => Future<void>.delayed(const Duration(milliseconds: 5)),
+          );
+        }
+      }
+
+      await tester.tap(find.text('Paste here'));
+      await drive(() => checking.isCompleted);
       expect(checking.isCompleted, isTrue);
-      await clipboard.capture(
-        local,
-        local.files!.where((file) => file.name != '..').toList(),
-        native,
-        cut: false,
+      expect(find.byType(FileOperationDialog), findsNothing);
+      await tester.runAsync(
+        () => clipboard.capture(
+          local,
+          local.files!.where((file) => file.name != '..').toList(),
+          native,
+          cut: false,
+        ),
       );
       final latest = clipboard.selection!;
+      final callsBeforeRelease = auth.client.listCalls;
       release.complete();
+      // The held listing resumes; let the settled transfer's cleanup finish.
+      await drive(() => auth.client.listCalls > callsBeforeRelease);
+      for (var i = 0; i < 20; i++) {
+        await tester.pump(const Duration(milliseconds: 10));
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 5)),
+        );
+      }
       await pendingPaste;
       await tester.pumpAndSettle();
       expect(clipboard.selection, same(latest));
@@ -277,6 +318,8 @@ void main() {
       expect(await clipboard.stillOwnsClipboard(native), isTrue);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());
+      // The transfer's bandwidth meter stops after a quiet second.
+      await tester.pump(const Duration(seconds: 2));
     } finally {
       debugDefaultTargetPlatformOverride = originalPlatform;
     }

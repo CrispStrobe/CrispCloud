@@ -68,7 +68,18 @@ class _Cloud extends Fake implements CloudStorageClient {
   @override
   Future<Map<String, dynamic>> listPath(String path) async {
     paths.add(path);
-    return pending == null ? listing : await pending!.future;
+    if (pending != null) return await pending!.future;
+    // Folders created through this fake appear in their parent's listing.
+    final parent = path.endsWith('/') ? path : '$path/';
+    return {
+      'folders': [
+        for (final folder in created)
+          if (folder.startsWith(parent) &&
+              !folder.substring(parent.length).contains('/'))
+            {'name': folder.substring(parent.length)},
+      ],
+      'files': listing['files'],
+    };
   }
 
   @override
@@ -242,6 +253,14 @@ void main() {
       expect(actual.created, ['/ new folder ']);
     },
   );
+
+  test('a new folder becomes the cursor row in its parent', () async {
+    final panel = container.read(panelProvider(PanelSide.remote));
+    await panel.refresh();
+    await panel.createFolder('fresh');
+    expect(actual.created, ['/fresh']);
+    expect(panel.cursorItem?.name, 'fresh');
+  });
 
   test(
     'create folder in the left pane targets its registered account',

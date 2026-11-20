@@ -65,6 +65,12 @@ class WorkspaceUxStrings {
       ShortcutAction.findPattern => s.description(21),
       ShortcutAction.copyWithOptions => s.extra('copyOptions'),
       ShortcutAction.moveWithOptions => s.extra('moveOptions'),
+      ShortcutAction.copyDirect => context.commanderTr(
+        'Copy to Other Panel Now',
+      ),
+      ShortcutAction.moveDirect => context.commanderTr(
+        'Move to Other Panel Now',
+      ),
       ShortcutAction.back => text('back'),
       ShortcutAction.forward => text('forward'),
       ShortcutAction.up => s.extra('upArchive'),

@@ -15,6 +15,7 @@ import '../models/panel_side.dart';
 import '../models/storage_reference.dart';
 import '../models/file_search_query.dart';
 import '../providers/core_providers.dart';
+import '../providers/error_provider.dart';
 import '../providers/focus_area_provider.dart';
 import '../providers/panel_provider.dart';
 import '../providers/transfer_provider.dart';
@@ -240,6 +241,7 @@ Future<FileOperationPlan?> showFileOperationDialog(
             isReviewCurrent: isReviewCurrent,
             onPreparedPlan: onPreparedPlan,
             onForegroundPlan: onForegroundPlan,
+            hostContext: context,
             reviewGroup:
                 groupLabel?.call(index, groups!.length, group.key) ??
                 'Account $index of ${groups!.length}: ${ref.read(panelProvider(side)).storageDisplayName(group.key.storageReference)}',
@@ -274,6 +276,7 @@ Future<FileOperationPlan?> showFileOperationDialog(
         onPreparedPlan: onPreparedPlan,
         onForegroundPlan: onForegroundPlan,
         allowBackground: onForegroundPlan == null,
+        hostContext: context,
       ),
     );
     return result;
@@ -302,6 +305,7 @@ class FileOperationDialog extends ConsumerStatefulWidget {
     this.isReviewCurrent,
     this.onPreparedPlan,
     this.onForegroundPlan,
+    this.hostContext,
   });
   final PanelSide side;
   final List<FileItem> files;
@@ -341,6 +345,10 @@ class FileOperationDialog extends ConsumerStatefulWidget {
   /// partial failure, before the next account can start. Preview/background
   /// dismissal never reports pending work as a successful transfer.
   final Future<void> Function(FileOperationPlan plan)? onForegroundPlan;
+
+  /// The screen that opened this dialog. Start closes the dialog and keeps the
+  /// transfer running; conflict questions are then asked from this context.
+  final BuildContext? hostContext;
   @override
   ConsumerState<FileOperationDialog> createState() =>
       _FileOperationDialogState();
@@ -405,6 +413,9 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
   int? _total;
   FileOperationPlan? _plan;
 
+  late final String _verbText = widget.kind == FileOperationKind.copy
+      ? 'Copy'
+      : 'Move';
   String get _verb => context.commanderTr(
     widget.kind == FileOperationKind.copy ? 'Copy' : 'Move',
   );
@@ -835,24 +846,40 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
     }
   }
 
-  Future<FileConflictResolution> _resolve(
-    FileOperationEntry entry,
-    FileItem existing,
-  ) {
-    if (!mounted) {
-      return Future.value(
-        const FileConflictResolution(FileConflictDecision.cancel),
+  /// Conflict questions for [plan]. While the dialog is open they are asked
+  /// from it; once Start has dismissed it, from the host screen (as Total and
+  /// Double Commander ask "overwrite?" from a background operation).
+  DetailedFileConflictResolver _resolveFor(FileOperationPlan plan) {
+    final host = widget.hostContext;
+    return (entry, existing) {
+      final ask = mounted
+          ? context
+          : (host != null && host.mounted ? host : null);
+      if (ask == null) {
+        return Future.value(
+          const FileConflictResolution(FileConflictDecision.cancel),
+        );
+      }
+      return showFileOperationConflict(
+        ask,
+        entry: entry,
+        existing: existing,
+        source: plan.source,
+        destination: plan.destination,
+        copyMethod: plan.options.copyMethod,
       );
-    }
-    return showFileOperationConflict(
-      context,
-      entry: entry,
-      existing: existing,
-      source: _plan!.source,
-      destination: _plan!.destination,
-      copyMethod: _plan!.options.copyMethod,
-    );
+    };
   }
+
+  /// Start leaves the screen free: the transfer continues in the queue (status
+  /// bar shows progress) unless this dialog itself owns the run's lifetime —
+  /// snapshot/external sources, per-group reporting, or mixed-account groups.
+  bool get _detachOnStart =>
+      widget.allowBackground &&
+      widget.sourceBackend == null &&
+      widget.onForegroundPlan == null &&
+      widget.externalDestinationSide == null &&
+      widget.hostContext != null;
 
   Future<void> _start({bool background = false, DateTime? notBefore}) async {
     if (_busy || _finished) return;
@@ -880,6 +907,8 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
     }
     final notifier = ref.read(transferProvider);
     final targetPanel = ref.read(panelProvider(_destinationSide!));
+    final errors = ref.read(errorProvider);
+    final detach = !background && _detachOnStart;
     setState(() {
       _running = true;
       _error = null;
@@ -888,12 +917,12 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
       plan,
       control: _control,
       notBefore: notBefore,
-      resolveDetailedConflict: background ? null : _resolve,
+      resolveDetailedConflict: background ? null : _resolveFor(plan),
       onQueued: () {
         if (plan.source.isCurrent && plan.destination.isCurrent) {
           _rememberSelection?.call();
         }
-        if (background && mounted) Navigator.pop(context);
+        if ((background || detach) && mounted) Navigator.pop(context);
       },
       onProgress: (entry, bytes, total) {
         if (mounted) {
@@ -965,6 +994,8 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
           _finished = true;
           _error = error.toString();
         });
+      } else {
+        errors.addError('$_verbText failed: $error', cause: error);
       }
     }
   }

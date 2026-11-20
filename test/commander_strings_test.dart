@@ -151,6 +151,7 @@ void main() {
       'pattern_selection_dialog',
       'file_list_dialog',
       'file_operation_dialog',
+      'file_operation_quick_start',
       'file_operation_conflict_dialog',
       'transfer_history_dialog',
       'operations_panel',

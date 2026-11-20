@@ -5939,6 +5939,12 @@ class PanelNotifier extends ChangeNotifier {
   }) async {
     if (_isDisposed || !(canContinue?.call() ?? true)) return;
     _log.info('navigateToPath: $path (side=$side, web=$kIsWeb)');
+    // Going up (".." row, Backspace, Up button) lands on the folder we came
+    // from, never on the parent's ".." row — the commander convention.
+    final leftDirectory = isInArchive || _showingSearchResults || _isFlatView
+        ? null
+        : currentPath;
+    final leftStorage = directoryStorage;
     _rememberNavigationCursor();
     final navigation = ++_navigationRevision;
     final sourceOrigin =
@@ -6117,6 +6123,15 @@ class PanelNotifier extends ChangeNotifier {
         _itemToScrollTo = found;
       } catch (e) {
         _log.warn('operation failed', e);
+      }
+    } else if (leftDirectory != null &&
+        leftStorage != null &&
+        leftStorage == directoryStorage) {
+      final paths = leftStorage.isLocal && !kIsWeb ? p.context : p.posix;
+      final child = _trimTrailingSeparator(paths, leftDirectory);
+      final parent = _trimTrailingSeparator(paths, currentPath);
+      if (child != parent && paths.dirname(child) == parent) {
+        _placeCursorOnPath(child, paths.basename(child), notify: false);
       }
     }
 
@@ -6857,6 +6872,9 @@ class PanelNotifier extends ChangeNotifier {
         },
       );
       await refresh();
+      // Commander convention: the new folder becomes the cursor row in its
+      // parent, so Enter opens it and F5/F6 target it without hunting.
+      if (origin.isCurrent) _placeCursorOnPath(createdPath, name);
     } catch (error) {
       _log.warn('operation failed', error);
       if (!_isDisposed) {
@@ -8396,6 +8414,78 @@ class PanelNotifier extends ChangeNotifier {
   /// Return keyboard focus to this panel's file list.
   void focusList() {
     if (!_isDisposed) listFocusNode.requestFocus();
+  }
+
+  /// Where a switch to "Local" should land: the last local folder this pane
+  /// showed, the other pane's local folder, then the home folder — the first
+  /// that still exists and is readable without an access prompt. The generic
+  /// "/" entry of the source picker is a placeholder, not a destination: in a
+  /// sandbox it is unreadable and produced an error instead of a listing.
+  Future<String> localLandingPath() async {
+    if (kIsWeb) return _localPath;
+    // Never instantiate the other pane just to ask: creating it lists a folder.
+    final otherProvider = panelProvider(
+      side == PanelSide.local ? PanelSide.remote : PanelSide.local,
+    );
+    final other = _ref.exists(otherProvider) ? _ref.read(otherProvider) : null;
+    final candidates = <String>[
+      _localPath,
+      if (other != null && (other.directoryStorage?.isLocal ?? false))
+        other.currentPath,
+    ];
+    for (final candidate in candidates) {
+      if (candidate.isEmpty || !p.isAbsolute(candidate)) continue;
+      if (candidate == p.rootPrefix(candidate)) continue;
+      try {
+        // The access probe also fails for a folder that no longer exists.
+        if (await _localFileService.hasAccessToPath(candidate)) {
+          return candidate;
+        }
+      } catch (_) {
+        // An unreadable candidate is simply skipped.
+      }
+    }
+    try {
+      // The service's own sandbox-aware start folder (home on desktop).
+      return await _localFileService.getSafeFallbackDirectory();
+    } catch (_) {
+      return '/';
+    }
+  }
+
+  /// Put the cursor on the row whose path (or, for path-less rows, name)
+  /// matches, without touching marks or focus. No-op when the row is absent,
+  /// e.g. after the pane navigated elsewhere or a filter hides it.
+  void _placeCursorOnPath(String path, String name, {bool notify = true}) {
+    final files = _files;
+    if (_isDisposed || files == null) return;
+    // Remote listings may spell folder paths with a trailing "/".
+    final paths = directoryStorage?.isLocal == true && !kIsWeb
+        ? p.context
+        : p.posix;
+    final wanted = _trimTrailingSeparator(paths, path);
+    final index = files.indexWhere(
+      (candidate) =>
+          candidate.name != '..' &&
+          (candidate.path != null
+              ? _trimTrailingSeparator(paths, candidate.path!) == wanted
+              : candidate.name == name),
+    );
+    if (index == -1) return;
+    _cursorIndex = index;
+    _itemToScrollTo = files[index];
+    _lastSelected = files[index];
+    if (notify) notifyListeners();
+  }
+
+  static String _trimTrailingSeparator(p.Context paths, String path) {
+    var result = path;
+    while (result.length > 1 &&
+        result.endsWith(paths.separator) &&
+        result != paths.rootPrefix(result)) {
+      result = result.substring(0, result.length - 1);
+    }
+    return result;
   }
 
   /// Re-select [item] by path/name after a viewer or editor closes, then return

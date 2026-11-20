@@ -21,6 +21,7 @@ import '../providers/focus_area_provider.dart';
 import '../providers/terminal_provider.dart';
 import '../providers/toolbar_provider.dart' show panelViewModeProvider;
 import '../services/panel_view_mode_service.dart' show PanelViewMode;
+import '../services/file_operation_options.dart';
 import '../services/keyboard_shortcut_service.dart';
 
 import 'package:path/path.dart' as p;
@@ -445,6 +446,18 @@ KeyEventResult executeBrowserShortcut(
       showCopyDialogFromSelection(context, ref);
     case ShortcutAction.moveWithOptions:
       showMoveDialogFromSelection(context, ref);
+    case ShortcutAction.copyDirect:
+      startDirectTransferFromSelection(
+        context,
+        ref,
+        kind: FileOperationKind.copy,
+      );
+    case ShortcutAction.moveDirect:
+      startDirectTransferFromSelection(
+        context,
+        ref,
+        kind: FileOperationKind.move,
+      );
     case ShortcutAction.back:
       unawaited(panel.navigateBack());
     case ShortcutAction.forward:

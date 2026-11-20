@@ -47,6 +47,8 @@ enum ShortcutAction {
   findPattern,
   copyWithOptions,
   moveWithOptions,
+  copyDirect,
+  moveDirect,
   back,
   forward,
   up,
@@ -310,6 +312,17 @@ class KeyboardShortcutService {
     ),
     ShortcutAction.copyWithOptions: const ShortcutBinding(key: 'F5'),
     ShortcutAction.moveWithOptions: const ShortcutBinding(key: 'F6'),
+    // No-confirm F5/F6 (Cmd on macOS): copy/move to the other panel now.
+    ShortcutAction.copyDirect: const ShortcutBinding(
+      key: 'V',
+      ctrl: true,
+      shift: true,
+    ),
+    ShortcutAction.moveDirect: const ShortcutBinding(
+      key: 'V',
+      ctrl: true,
+      alt: true,
+    ),
     ShortcutAction.back: ShortcutBinding(
       key: LogicalKeyboardKey.arrowLeft.keyLabel,
       alt: true,

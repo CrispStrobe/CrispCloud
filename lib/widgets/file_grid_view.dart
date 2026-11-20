@@ -454,6 +454,8 @@ class _FileGridViewState extends ConsumerState<FileGridView> {
               ShortcutAction.paste,
               ShortcutAction.copyWithOptions,
               ShortcutAction.moveWithOptions,
+              ShortcutAction.copyDirect,
+              ShortcutAction.moveDirect,
             ].contains(command) ||
             keepExtensionRename) &&
         !_canUseFileActions(_targets())) {

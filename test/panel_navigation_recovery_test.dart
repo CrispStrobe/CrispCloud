@@ -208,6 +208,20 @@ void main() {
     expect(accountA.paths.length, primaryRequests);
   });
 
+  test('going up lands the cursor on the folder that was left', () async {
+    await panel.navigateToPath('/two');
+    await panel.navigateUp();
+    expect(panel.currentPath, '/');
+    expect(panel.cursorItem?.name, 'two');
+    expect(panel.selection, isEmpty, reason: 'cursor only, no marks');
+
+    await panel.navigateToPath('/one');
+    final parentRow = panel.files!.firstWhere((file) => file.name == '..');
+    await panel.navigateInto(parentRow);
+    expect(panel.currentPath, '/');
+    expect(panel.cursorItem?.name, 'one');
+  });
+
   test(
     'history and forward position stay independent when switching tabs',
     () async {

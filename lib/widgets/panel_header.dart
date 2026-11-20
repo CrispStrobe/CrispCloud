@@ -396,6 +396,14 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
                               .setSource(selected);
                           return;
                         }
+                        if (selected is LocalPanelSource &&
+                            selected.currentPath == '/') {
+                          // The picker's "Local" entry is a placeholder root.
+                          // Land on a real, readable folder instead.
+                          final landing = await panel.localLandingPath();
+                          if (!mounted || panel.activeTabId != tabId) return;
+                          selected = LocalPanelSource(landing);
+                        }
                         final origin = panel.resolveStorageReference(
                           storageReferenceForSource(selected),
                           selected.currentPath,
