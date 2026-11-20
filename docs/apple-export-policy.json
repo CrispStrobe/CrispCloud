@@ -14,7 +14,7 @@
     "reference": "App Store Connect app 6789570314 has only two 1.0.0 PREPARE_FOR_SUBMISSION versions (macOS and iOS), no released App Store version; the public storefront returned 404. On 2026-11-08 availability was created with all territories except France, and FRA is explicitly available=false with contentStatus CANNOT_SELL."
   },
   "inventory_sha256": "2bc03604b1c4b2520036447e53f7982cd1d8b53506a30bf3eb1f3d51a2ac3c0d",
-  "pubspec_lock_sha256": "ee73f9e123b846d72133e4d4a5a3d4e36641338430196f15b7d72bf78f973480",
+  "pubspec_lock_sha256": "5ae640e5be8570dbd18f79a923c18b86da2cd0e3fd0e73532f85f33c0ea9f5fe",
   "reviewed_source_sha256": "1f29bbc913e18693988ba74b1d5a33f9a40865902dbc16f9fb0489c06429f586",
   "testflight": {
     "distribution_review": "no_france",
