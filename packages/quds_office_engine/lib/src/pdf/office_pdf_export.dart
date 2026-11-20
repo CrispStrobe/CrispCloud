@@ -1690,6 +1690,88 @@ abstract final class OfficePdfExport {
     sink.canvas.restore();
   }
 
+  static void _paintGradient(
+    PdfCanvas canvas,
+    PmlShapePreset preset,
+    double x,
+    double y,
+    double w,
+    double h,
+    PmlGradientFill gradient,
+  ) {
+    canvas.save();
+    switch (preset) {
+      case PmlShapePreset.rect:
+        canvas.rect(x, y, w, h);
+      case PmlShapePreset.roundRect:
+        canvas.roundedRect(x, y, w, h, 8);
+      case PmlShapePreset.ellipse:
+        canvas.ellipse(x, y, w, h);
+      case PmlShapePreset.triangle:
+      case PmlShapePreset.diamond:
+      case PmlShapePreset.hexagon:
+      case PmlShapePreset.pentagon:
+      case PmlShapePreset.chevron:
+      case PmlShapePreset.parallelogram:
+      case PmlShapePreset.trapezoid:
+      case PmlShapePreset.downArrow:
+      case PmlShapePreset.upArrow:
+      case PmlShapePreset.leftArrow:
+      case PmlShapePreset.rightArrow:
+        _shapePath(canvas, preset, x, y, w, h);
+      case PmlShapePreset.connector:
+      case PmlShapePreset.freeform:
+        canvas.rect(x, y, w, h);
+    }
+    canvas.clip();
+    final double angle = gradient.angleDegrees;
+    final double cx = x + w / 2;
+    final double cy = y + h / 2;
+    final double span = math.sqrt(w * w + h * h);
+    canvas.rotateAround(cx, cy, angle);
+    const int steps = 72;
+    for (int i = 0; i < steps; i++) {
+      final double t0 = i / steps;
+      final double t1 = (i + 1) / steps;
+      canvas.setFillColor(_gradientColor(gradient, (t0 + t1) / 2));
+      canvas.rect(
+        cx - span / 2 + span * t0,
+        cy - span / 2,
+        span * (t1 - t0) + 0.35,
+        span,
+      );
+      canvas.fill();
+    }
+    canvas.restore();
+  }
+
+  static String _gradientColor(PmlGradientFill gradient, double t) {
+    final List<PmlGradientStop> stops = gradient.stops;
+    if (t <= stops.first.position) return stops.first.color;
+    if (t >= stops.last.position) return stops.last.color;
+    for (int i = 1; i < stops.length; i++) {
+      if (t <= stops[i].position) {
+        final PmlGradientStop a = stops[i - 1];
+        final PmlGradientStop b = stops[i];
+        final double span = (b.position - a.position).abs();
+        final double f = span < 0.0001 ? 0 : (t - a.position) / span;
+        final int ca = int.tryParse(a.color, radix: 16) ?? 0;
+        final int cb = int.tryParse(b.color, radix: 16) ?? ca;
+        int mix(int shift) {
+          final int va = (ca >> shift) & 0xFF;
+          final int vb = (cb >> shift) & 0xFF;
+          return (va + (vb - va) * f).round().clamp(0, 255);
+        }
+
+        return ((mix(16) << 16) | (mix(8) << 8) | mix(0))
+            .toRadixString(16)
+            .padLeft(6, '0')
+            .toUpperCase();
+      }
+    }
+    return stops.last.color;
+  }
+
   static void _shapePath(
     PdfCanvas canvas,
     PmlShapePreset preset,
@@ -1934,8 +2016,13 @@ abstract final class OfficePdfExport {
     String fill,
     List<PmlPathPoint> path,
     bool flipH,
-    bool flipV,
-  ) {
+    bool flipV, {
+    PmlGradientFill? gradient,
+  }) {
+    if (gradient != null && gradient.stops.length >= 2) {
+      _paintGradient(canvas, preset, x, y, w, h, gradient);
+      return;
+    }
     if (fill.isEmpty) {
       return;
     }

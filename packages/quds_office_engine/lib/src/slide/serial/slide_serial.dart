@@ -312,6 +312,68 @@ class SlideDeserializer {
     return null;
   }
 
+  /// Converts a `p:bg/a:gradFill` into a full-slide gradient decoration.
+  static PmlShape? _backgroundGradientShape(
+    String xml,
+    int width,
+    int height,
+    Map<String, String> colors,
+  ) {
+    final XmlPullReader reader = XmlPullReader(xml);
+    var inBg = false;
+    var inGrad = false;
+    double? position;
+    double angle = 0;
+    final List<PmlGradientStop> stops = <PmlGradientStop>[];
+    while (reader.next()) {
+      if (reader.eventType == XmlEventType.endElement) {
+        if (reader.localName == 'gradFill') {
+          if (stops.length >= 2) {
+            final List<PmlGradientStop> sorted = <PmlGradientStop>[...stops]
+              ..sort((a, b) => a.position.compareTo(b.position));
+            return PmlShape(
+              id: 1,
+              name: 'Background',
+              fillColor: sorted.first.color,
+              gradient: PmlGradientFill(stops: sorted, angleDegrees: angle),
+              transform: PmlTransform(x: 0, y: 0, cx: width, cy: height),
+            );
+          }
+          inGrad = false;
+        } else if (reader.localName == 'bg' || reader.localName == 'bgPr') {
+          inBg = false;
+          inGrad = false;
+        }
+        continue;
+      }
+      if (reader.eventType != XmlEventType.startElement) continue;
+      if (reader.localName == 'bg' || reader.localName == 'bgPr') {
+        inBg = true;
+      } else if (inBg && reader.localName == 'gradFill') {
+        inGrad = true;
+      } else if (inGrad && reader.localName == 'gs') {
+        position =
+            (int.tryParse(reader.getAttribute('pos') ?? '') ?? 0) / 100000;
+      } else if (inGrad && reader.localName == 'lin') {
+        angle = (int.tryParse(reader.getAttribute('ang') ?? '') ?? 0) / 60000;
+      } else if (inGrad &&
+          position != null &&
+          const <String>{
+            'srgbClr',
+            'schemeClr',
+            'sysClr',
+            'prstClr',
+          }.contains(reader.localName)) {
+        final String? color = resolveDrawingmlColor(reader, colors);
+        if (color != null && color.isNotEmpty) {
+          stops.add(PmlGradientStop(position: position, color: color));
+        }
+        position = null;
+      }
+    }
+    return null;
+  }
+
   /// Resolves a solid `p:bg` fill to `RRGGBB`, honoring theme variants.
   static String? _backgroundOf(String xml, Map<String, String> colors) {
     final XmlPullReader reader = XmlPullReader(xml);
@@ -582,6 +644,7 @@ class _SlideTemplates {
         package,
         uri,
         background: SlideDeserializer._backgroundOf(xml, colors),
+        colors: colors,
       ),
       background: SlideDeserializer._backgroundOf(xml, colors),
     );
@@ -592,6 +655,7 @@ class _SlideTemplates {
     OpcPackage package,
     String uri, {
     String? background,
+    Map<String, String> colors = const <String, String>{},
   }) {
     final List<PmlShape> decorations = <PmlShape>[
       for (final PmlShape shape in shapes)
@@ -601,6 +665,13 @@ class _SlideTemplates {
     SlideDeserializer._bindShapeMedia(decorations, package, rels);
     final String? xml = package.getPart(uri)?.readText();
     if (xml != null) {
+      final PmlShape? gradient = SlideDeserializer._backgroundGradientShape(
+        xml,
+        slideWidth,
+        slideHeight,
+        colors,
+      );
+      if (gradient != null) decorations.insert(0, gradient);
       final PmlShape? image = SlideDeserializer._backgroundImageShape(
         xml,
         package,
@@ -608,7 +679,9 @@ class _SlideTemplates {
         slideWidth,
         slideHeight,
       );
-      if (image != null) decorations.insert(0, image);
+      if (image != null) {
+        decorations.insert(gradient == null ? 0 : 1, image);
+      }
     }
     return decorations;
   }

@@ -588,6 +588,35 @@ void main() {
       }
     });
 
+    test('gradient fills retain stops and angle', () {
+      final PmlPresentation deck = _deck(<String>[
+        _sld(
+          '<p:sp><p:nvSpPr><p:cNvPr id="2" name="Gradient"/>'
+          '<p:cNvSpPr/><p:nvPr/></p:nvSpPr><p:spPr>'
+          '${_xfrm(0, 0, 914400, 914400)}'
+          '<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>'
+          '<a:gradFill><a:gsLst>'
+          '<a:gs pos="0"><a:srgbClr val="112233"/></a:gs>'
+          '<a:gs pos="100000"><a:srgbClr val="AABBCC"/></a:gs>'
+          '</a:gsLst><a:lin ang="5400000"/></a:gradFill>'
+          '</p:spPr></p:sp>',
+        ),
+      ]);
+      final PmlShape shape = deck.slides.single.shapes.single;
+      expect(shape.gradient?.stops, hasLength(2));
+      expect(shape.gradient!.stops.first.color, '112233');
+      expect(shape.gradient!.stops.last.color, 'AABBCC');
+      expect(shape.gradient!.angleDegrees, 90);
+      expect(shape.fillColor, '112233');
+      final PmlPresentation reopened = SlideDeserializer().readBytes(
+        SlideSerializer().writeBytes(deck),
+      );
+      expect(
+        reopened.slides.single.shapes.single.gradient?.stops,
+        hasLength(2),
+      );
+    });
+
     test('master background resolves theme lumMod', () {
       final PmlPresentation deck = _deck(
         <String>[_sld(_textBox(2, 'Slide'))],

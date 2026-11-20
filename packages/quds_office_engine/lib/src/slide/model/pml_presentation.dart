@@ -93,6 +93,37 @@ enum PmlShapePreset {
   trapezoid,
 }
 
+/// One colour stop in a DrawingML gradient fill.
+class PmlGradientStop {
+  PmlGradientStop({required this.position, required this.color});
+
+  final double position;
+  final String color;
+
+  PmlGradientStop copy() => PmlGradientStop(position: position, color: color);
+}
+
+/// A linear DrawingML gradient fill.
+class PmlGradientFill {
+  PmlGradientFill({
+    List<PmlGradientStop>? stops,
+    this.angleDegrees = 0,
+    this.radial = false,
+  }) : stops = stops ?? <PmlGradientStop>[];
+
+  final List<PmlGradientStop> stops;
+  double angleDegrees;
+  bool radial;
+
+  String get fallbackColor => stops.isEmpty ? '' : stops.first.color;
+
+  PmlGradientFill copy() => PmlGradientFill(
+    stops: <PmlGradientStop>[for (final stop in stops) stop.copy()],
+    angleDegrees: angleDegrees,
+    radial: radial,
+  );
+}
+
 /// Enum PmlTextAlign.
 enum PmlTextAlign { left, center, right, justify }
 
@@ -198,6 +229,9 @@ class PmlTableCell {
 
   /// fillColor API.
   String fillColor;
+
+  /// Optional gradient fill; takes precedence over [fillColor] when present.
+  PmlGradientFill? gradient;
 
   /// textColor API.
   String textColor;
@@ -378,6 +412,7 @@ class PmlShape {
     this.transform = const PmlTransform(),
     this.text = '',
     this.fillColor = '4472C4',
+    this.gradient,
     this.textColor = '',
     this.fontSizePt = 0,
     this.textSource,
@@ -419,6 +454,9 @@ class PmlShape {
 
   /// fillColor API.
   String fillColor;
+
+  /// Optional gradient fill; takes precedence over [fillColor] when present.
+  PmlGradientFill? gradient;
 
   /// textColor API.
   String textColor;
@@ -538,6 +576,7 @@ class PmlShape {
       transform: transform,
       text: text,
       fillColor: fillColor,
+      gradient: gradient?.copy(),
       textColor: textColor,
       fontSizePt: fontSizePt,
       textSource: textSource,
