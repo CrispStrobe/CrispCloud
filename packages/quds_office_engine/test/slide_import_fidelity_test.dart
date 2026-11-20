@@ -297,6 +297,25 @@ void main() {
       expect(deck.slides.single.shapes.single.preset, PmlShapePreset.downArrow);
     });
 
+    test('flipped line connectors keep their slide direction', () {
+      final PmlPresentation deck = _deck(<String>[
+        _sld(
+          '<p:cxnSp><p:nvCxnSpPr><p:cNvPr id="2" name="Connector"/>'
+          '<p:cNvCxnSpPr/><p:nvPr/></p:nvCxnSpPr><p:spPr>'
+          '<a:xfrm flipH="1" flipV="1"><a:off x="0" y="0"/>'
+          '<a:ext cx="914400" cy="457200"/></a:xfrm>'
+          '<a:prstGeom prst="line"><a:avLst/></a:prstGeom>'
+          '<a:ln w="12700"><a:solidFill><a:srgbClr val="C8C8C8"/>'
+          '</a:solidFill></a:ln></p:spPr></p:cxnSp>',
+        ),
+      ]);
+      final PmlShape connector = deck.slides.single.shapes.single;
+      expect(connector.preset, PmlShapePreset.connector);
+      expect(connector.transform.flipH, isTrue);
+      expect(connector.transform.flipV, isTrue);
+      expect(connector.strokeColor, 'C8C8C8');
+    });
+
     test('master background resolves theme lumMod', () {
       final PmlPresentation deck = _deck(
         <String>[_sld(_textBox(2, 'Slide'))],

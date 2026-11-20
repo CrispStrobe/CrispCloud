@@ -1662,9 +1662,10 @@ abstract final class OfficePdfExport {
         h,
         shape.fillColor,
         shape.path,
+        shape.transform.flipH,
+        shape.transform.flipV,
       );
-      if (shape.strokeColor.isNotEmpty &&
-          shape.preset != PmlShapePreset.connector) {
+      if (shape.strokeColor.isNotEmpty) {
         _strokePreset(
           sink.canvas,
           shape.preset,
@@ -1675,6 +1676,8 @@ abstract final class OfficePdfExport {
           shape.strokeColor,
           shape.strokeWidth <= 0 ? 1 : shape.strokeWidth,
           shape.path,
+          shape.transform.flipH,
+          shape.transform.flipV,
         );
       }
       final String text = deck.resolveText(shape, slide);
@@ -1774,6 +1777,8 @@ abstract final class OfficePdfExport {
     String stroke,
     double width,
     List<PmlPathPoint> path,
+    bool flipH,
+    bool flipV,
   ) {
     canvas.setStrokeColor(stroke);
     canvas.setLineWidth(width.clamp(0.25, 8.0));
@@ -1791,8 +1796,8 @@ abstract final class OfficePdfExport {
         canvas.closePath();
         canvas.stroke();
       case PmlShapePreset.connector:
-        canvas.moveTo(x, y + h / 2);
-        canvas.lineTo(x + w, y + h / 2);
+        canvas.moveTo(flipH ? x + w : x, flipV ? y + h : y);
+        canvas.lineTo(flipH ? x : x + w, flipV ? y : y + h);
         canvas.stroke();
       case PmlShapePreset.downArrow:
       case PmlShapePreset.upArrow:
@@ -1871,6 +1876,8 @@ abstract final class OfficePdfExport {
     double h,
     String fill,
     List<PmlPathPoint> path,
+    bool flipH,
+    bool flipV,
   ) {
     if (fill.isEmpty) {
       return;
@@ -1892,8 +1899,8 @@ abstract final class OfficePdfExport {
       case PmlShapePreset.connector:
         canvas.setStrokeColor(fill);
         canvas.setLineWidth(1.6);
-        canvas.moveTo(x, y + h / 2);
-        canvas.lineTo(x + w, y + h / 2);
+        canvas.moveTo(flipH ? x + w : x, flipV ? y + h : y);
+        canvas.lineTo(flipH ? x : x + w, flipV ? y : y + h);
         canvas.stroke();
       case PmlShapePreset.downArrow:
         _arrowPath(canvas, x, y, w, h, _ArrowDirection.down);

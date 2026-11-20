@@ -13,6 +13,8 @@ class PmlTransform {
     this.cx = 914400,
     this.cy = 914400,
     this.rot = 0,
+    this.flipH = false,
+    this.flipV = false,
   });
 
   /// Offsets and extents in EMUs (1 pt = 12,700 EMUs).
@@ -29,6 +31,12 @@ class PmlTransform {
 
   /// rot API.
   final int rot;
+
+  /// Horizontal flip from `a:xfrm/@flipH`.
+  final bool flipH;
+
+  /// Vertical flip from `a:xfrm/@flipV`.
+  final bool flipV;
 
   /// xPoints API.
   double get xPoints => x / 12700;

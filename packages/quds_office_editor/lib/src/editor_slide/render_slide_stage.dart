@@ -1131,6 +1131,22 @@ class RenderSlideStage extends RenderBox implements MouseTrackerAnnotation {
 
   /// Fill of a shape, or nothing when [PmlShape.fillColor] is empty (no fill).
   void _paintShapeFill(Canvas canvas, PmlShape shape, Rect r, String hex) {
+    if (shape.preset == PmlShapePreset.connector &&
+        shape.strokeColor.isNotEmpty) {
+      final int? stroke = int.tryParse(shape.strokeColor, radix: 16);
+      if (stroke != null) {
+        final bool flipH = shape.transform.flipH;
+        final bool flipV = shape.transform.flipV;
+        canvas.drawLine(
+          Offset(flipH ? r.right : r.left, flipV ? r.bottom : r.top),
+          Offset(flipH ? r.left : r.right, flipV ? r.top : r.bottom),
+          Paint()
+            ..color = Color(0xFF000000 | stroke)
+            ..strokeWidth = shape.strokeWidth <= 0 ? 1 : shape.strokeWidth,
+        );
+      }
+      return;
+    }
     final int? fill = int.tryParse(hex, radix: 16);
     if (fill != null) {
       final Paint paint = Paint()..color = Color(0xFF000000 | fill);
@@ -1155,13 +1171,7 @@ class RenderSlideStage extends RenderBox implements MouseTrackerAnnotation {
             paint,
           );
         case PmlShapePreset.connector:
-          canvas.drawLine(
-            Offset(r.left, r.center.dy),
-            Offset(r.right, r.center.dy),
-            Paint()
-              ..color = paint.color
-              ..strokeWidth = 1.6,
-          );
+          break;
         case PmlShapePreset.freeform:
           final Path path = Path();
           if (shape.path.isNotEmpty) {

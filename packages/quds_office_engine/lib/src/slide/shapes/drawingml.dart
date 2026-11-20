@@ -244,6 +244,8 @@ List<PmlShape> parseSlideShapes(
         cx: current.transform.cx,
         cy: current.transform.cy,
         rot: rot,
+        flipH: reader.getAttribute('flipH') == '1',
+        flipV: reader.getAttribute('flipV') == '1',
       );
       final OfficeVisual? visual = current.visual;
       if (visual != null) {
@@ -256,6 +258,8 @@ List<PmlShape> parseSlideShapes(
         cx: current.transform.cx,
         cy: current.transform.cy,
         rot: current.transform.rot,
+        flipH: current.transform.flipH,
+        flipV: current.transform.flipV,
       );
       positioned?.add(current);
     } else if (reader.localName == 'ext' && inXfrm && current != null) {
@@ -265,6 +269,8 @@ List<PmlShape> parseSlideShapes(
         cx: int.tryParse(reader.getAttribute('cx') ?? '') ?? 0,
         cy: int.tryParse(reader.getAttribute('cy') ?? '') ?? 0,
         rot: current.transform.rot,
+        flipH: current.transform.flipH,
+        flipV: current.transform.flipV,
       );
       positioned?.add(current);
     } else if (reader.localName == 'prstGeom' && current != null) {
@@ -272,7 +278,7 @@ List<PmlShape> parseSlideShapes(
         'ellipse' => PmlShapePreset.ellipse,
         'roundRect' => PmlShapePreset.roundRect,
         'triangle' => PmlShapePreset.triangle,
-        'straightConnector1' => PmlShapePreset.connector,
+        'straightConnector1' || 'line' => PmlShapePreset.connector,
         'downArrow' => PmlShapePreset.downArrow,
         'upArrow' => PmlShapePreset.upArrow,
         'leftArrow' => PmlShapePreset.leftArrow,
