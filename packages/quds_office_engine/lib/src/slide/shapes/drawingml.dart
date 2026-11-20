@@ -326,6 +326,13 @@ List<PmlShape> parseSlideShapes(
         'flowChartTerminator' => PmlShapePreset.roundRect,
         _ => PmlShapePreset.rect,
       };
+    } else if (reader.localName == 'normAutofit' && current != null) {
+      final int scale =
+          int.tryParse(reader.getAttribute('fontScale') ?? '') ?? 100000;
+      final int reduction =
+          int.tryParse(reader.getAttribute('lnSpcReduction') ?? '') ?? 0;
+      current.textScale = (scale / 100000).clamp(0.1, 1.0);
+      current.lineSpacingReduction = (reduction / 100000).clamp(0.0, 0.9);
     } else if (reader.localName == 'bodyPr' && current != null) {
       current.textAnchor = switch (reader.getAttribute('anchor')) {
         'ctr' => PmlTextAnchor.center,

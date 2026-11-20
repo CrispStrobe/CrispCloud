@@ -415,6 +415,8 @@ class PmlShape {
     this.rightToLeft,
     this.textAlign = PmlTextAlign.left,
     this.textAnchor = PmlTextAnchor.top,
+    this.textScale = 1.0,
+    this.lineSpacingReduction = 0.0,
     List<PmlTextParagraph>? richText,
     this.groupId,
     this.placeholder = false,
@@ -479,6 +481,12 @@ class PmlShape {
 
   /// Vertical text-frame placement from `a:bodyPr/@anchor`.
   PmlTextAnchor textAnchor;
+
+  /// `a:normAutofit/@fontScale`, normalized to 0.1–1.0.
+  double textScale;
+
+  /// `a:normAutofit/@lnSpcReduction`, normalized to 0.0–1.0.
+  double lineSpacingReduction;
 
   /// Rich paragraph/run model when the source text has not been replaced.
   List<PmlTextParagraph> richText;
@@ -579,6 +587,8 @@ class PmlShape {
       rightToLeft: rightToLeft,
       textAlign: textAlign,
       textAnchor: textAnchor,
+      textScale: textScale,
+      lineSpacingReduction: lineSpacingReduction,
       richText: <PmlTextParagraph>[
         for (final PmlTextParagraph paragraph in richText) paragraph.copy(),
       ],
