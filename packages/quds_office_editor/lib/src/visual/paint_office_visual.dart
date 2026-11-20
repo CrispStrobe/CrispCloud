@@ -147,7 +147,9 @@ abstract final class PaintOfficeVisual {
     if (adj.transparency > 0.01) {
       paint.color = Color.fromRGBO(255, 255, 255, 1 - adj.transparency);
     }
-    if (adj.brightness.abs() > 0.01 || (adj.contrast - 1).abs() > 0.01) {
+    if (adj.brightness.abs() > 0.01 ||
+        (adj.contrast - 1).abs() > 0.01 ||
+        adj.transparency > 0.001) {
       final double k = adj.contrast;
       final double b = adj.brightness * 255;
       paint.colorFilter = ColorFilter.matrix(<double>[

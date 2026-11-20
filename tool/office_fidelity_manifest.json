@@ -1910,7 +1910,7 @@
     "packages/quds_office_editor/lib/src/thesaurus/bundled_thesaurus_manifest.dart": "147e0114e547226ae3b6f0e1bc02354385a7dfa99084fb35e5d9768578009cde",
     "packages/quds_office_editor/lib/src/ui_components/office_chrome.dart": "d3be67712a86c1daa718ce29c62e06c151d4ebdb488f67034c9afb74dfa61cf0",
     "packages/quds_office_editor/lib/src/visual/paint_drawing_line.dart": "5acccaa56defa41226c5f4bc2b757b9cb906dddc95a0065fcfd3ba7d7d6fd70a",
-    "packages/quds_office_editor/lib/src/visual/paint_office_visual.dart": "6d86abba189d18d828fa8b4e9cb16f5c4b97d9e3275f136e02071e23d12dbdb2",
+    "packages/quds_office_editor/lib/src/visual/paint_office_visual.dart": "98e129b1946b81158fe8dd82b77bfc9a69d701ab4f1838b6b848b84de55e5a62",
     "packages/quds_office_editor/test/content_revision_test.dart": "8a22da3a8e92bc8019600a19bb89abddd80e716f52e9d5a7b2bd82edd50930c0",
     "packages/quds_office_editor/test/drawing_line_painter_test.dart": "39b3bdf6a3fdd307101a4ca2320e99fed5bebf35a73f47314f756e04d1beecfa",
     "packages/quds_office_editor/test/editor_test.dart": "97c2f3a9bb6ca21d863c13cb4f373a2ed08b64a435680db1727a66b2fce4fdac",
@@ -2929,7 +2929,7 @@
     "tool/office-validation/test_render.py": "1ba68e18608d74387cbc1c779ceb72af76bf7741463c282684aec93bf3825472"
   },
   "source_branch": "integrate/recent-pptx",
-  "source_commit": "518ba30e47b68ba3c50f3d8bf55190ba3cc7cde1",
+  "source_commit": "9c544ecc0377222c1c491f34328b4a7a340fc02e",
   "source_repository": "CrispStrobe/quds_office_suite",
   "standalone_sources": {
     "packages/legacy_doc_parser": {
