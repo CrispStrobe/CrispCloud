@@ -2992,7 +2992,7 @@
     "tool/office-validation/test_render.py": "1ba68e18608d74387cbc1c779ceb72af76bf7741463c282684aec93bf3825472"
   },
   "source_branch": "integrate/recent-pptx",
-  "source_commit": "b29c2298a2731189a438f39f90136573bf0bc5c8",
+  "source_commit": "9d49ed2a1d4e4039239c45350c5f1dc7074e2f42",
   "source_repository": "CrispStrobe/quds_office_suite",
   "standalone_sources": {
     "packages/legacy_doc_parser": {
