@@ -30,3 +30,17 @@ The delivery receipt now distinguishes the originally declared release checkout 
 Apple artifact preflight now reads the compiled App framework inside the submitted IPA/ZIP/PKG, bounds its size, and requires the full version/build and source identity to match the frozen checkout. Both Store workflows now embed `marketing+build` in APP_VERSION. The check rejects the actual stale IPA and accepts the newly compiled tagged Mac runtime. This is a consistency guard, not a cryptographic source attestation.
 
 The guard's 43 tests pass, including mislabeled plists, stale compiled source, absent frameworks, bounded reads, and identity tokens split across stream reads. New Office main `c954d00d` was reconciled by the parallel intake; 356 independent engine paragraph-control/layout checks passed after the exact upstream BAS input was added to the guarded mirror. Controller and host qualification for that newer source is recorded separately from the earlier 315-test run.
+
+## Follow-up qualification of Office c954d00d
+
+The follow-up uses CrispCloud checkout `193d2c26` (version `1.3.7+47`) with CrispOffice `c954d00d2fc85604ae394674bca91ea8a1dede0e`, 3,044 guarded files, and the unchanged independent legacy parser. It qualifies source changes; it does not qualify another session's uploaded binary.
+
+- Host: all 315 tests passed across the same 18 affected host files against the newer Office source.
+- Engine: 356 tests passed across Word paragraph controls, VBA integration, paragraph style identity, and incremental layout differential checks.
+- Editor: 184 tests passed; eight image-only checks were skipped. Coverage includes cross-paragraph marker deletion, incremental layout equivalence, bookmark history, Zotero navigation, and embedded editor behavior.
+- Analysis: zero errors, 251 warnings, and 1,333 informational diagnostics. The default local command returns nonzero for these diagnostics; the release workflow's existing `--no-fatal-warnings --no-fatal-infos` policy treats them as nonfatal.
+- Apple artifact preflight: 43 tests passed. Guarded Office inventory and crypto release input checks passed.
+
+The earlier frozen 1.3.6 source also built successfully on macOS (universal arm64/x86_64) and Ubuntu x64. Both actual applications passed a 20-second startup smoke check; the Linux application ran under Xvfb on the Ubuntu VPS in a screen session. The VPS also passed the 315 host and 119 engine checks. These build results do not claim a binary built from the later c954d00d source.
+
+At the final CI observation, [all-platform run 44802843089](https://github.com/CrispStrobe/CrispCloud/actions/runs/44802843089) remained queued and had produced no release binaries. The release remains a draft. Store/TestFlight uploads are explicitly left to the parallel release session at the user's request.
