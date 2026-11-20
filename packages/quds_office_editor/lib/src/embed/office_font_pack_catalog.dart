@@ -274,43 +274,43 @@ const officeVisualFontPack = OfficeFontPack(
     ),
     OfficeFontPackFile(
       fileName: 'PTSans-Regular.ttf',
-      family: 'PTSans',
+      family: 'PT Sans',
       weight: 400,
       italic: false,
       bytes: 442960,
       sha256:
           '9cc831490532009bae2b3ce0d39c62adfc889060beb421593bfd9d2396d0f10a',
-      aliases: <String>[],
+      aliases: <String>['Tahoma'],
     ),
     OfficeFontPackFile(
       fileName: 'PTSans-Bold.ttf',
-      family: 'PTSans',
+      family: 'PT Sans',
       weight: 700,
       italic: false,
       bytes: 470240,
       sha256:
           '3128bd5ecf01816e59a23d54c57a7a6b14615b07db53ff277c77376010265b05',
-      aliases: <String>[],
+      aliases: <String>['Tahoma'],
     ),
     OfficeFontPackFile(
       fileName: 'PTSans-Italic.ttf',
-      family: 'PTSans',
+      family: 'PT Sans',
       weight: 400,
       italic: true,
       bytes: 436452,
       sha256:
           '5a90fe2d0cd798700935240580bdcc12c0ffc9102c0c7163b3418e13bc21debd',
-      aliases: <String>[],
+      aliases: <String>['Tahoma'],
     ),
     OfficeFontPackFile(
       fileName: 'PTSans-BoldItalic.ttf',
-      family: 'PTSans',
+      family: 'PT Sans',
       weight: 700,
       italic: true,
       bytes: 375204,
       sha256:
           '81ac221cdd02bccfa679c74adb122478e9d092e65a722e31ca11469961483785',
-      aliases: <String>[],
+      aliases: <String>['Tahoma'],
     ),
     OfficeFontPackFile(
       fileName: 'CourierPrime-Regular.ttf',
