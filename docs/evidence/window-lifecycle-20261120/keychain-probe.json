@@ -1,0 +1,46 @@
+{
+  "certificate": {
+    "created": {
+      "build": "A",
+      "mode": "create",
+      "status": 0
+    },
+    "read": {
+      "build": "B",
+      "mode": "read",
+      "status": 0
+    },
+    "readExitStatus": 0,
+    "sha256": {
+      "A": "27d227a3074da4a01cec4178eed3f4e59c286b92309556d97570b0b6556e8660",
+      "B": "54f2cf95f8f9885dbbfc94057ad39eb030c04181ddd48c6ab8afc1e412cb60d2"
+    },
+    "designatedRequirements": {
+      "A": "Executable=/private/tmp/quds-word-line-boxes-20261120/keychain-probe/certificate-A\n",
+      "B": "Executable=/private/tmp/quds-word-line-boxes-20261120/keychain-probe/certificate-B\n"
+    }
+  },
+  "adhoc": {
+    "created": {
+      "build": "A",
+      "mode": "create",
+      "status": 0
+    },
+    "read": {
+      "build": "B",
+      "mode": "read",
+      "status": -25293
+    },
+    "readExitStatus": 1,
+    "sha256": {
+      "A": "f70815cc0d9c10fab18bcf4a9b2d52cbfbee36b86306bf1e524124e3a5ccbfb3",
+      "B": "b9165e212f1083de556984b5fff436595d37e523196256aab8356248d9b0df52"
+    },
+    "designatedRequirements": {
+      "A": "Executable=/private/tmp/quds-word-line-boxes-20261120/keychain-probe/adhoc-A\n",
+      "B": "Executable=/private/tmp/quds-word-line-boxes-20261120/keychain-probe/adhoc-B\n"
+    }
+  },
+  "passed": true,
+  "scope": "Synthetic items in disposable keychains only. Interaction disabled in probe processes; no user credential items read or changed."
+}

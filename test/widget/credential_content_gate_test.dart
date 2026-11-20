@@ -3,6 +3,46 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  testWidgets('workspace notifications do not appear on the security cover', (
+    tester,
+  ) async {
+    final barrier = ValueNotifier<Widget?>(null);
+    addTearDown(barrier.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ValueListenableBuilder<Widget?>(
+          valueListenable: barrier,
+          builder: (_, cover, child) =>
+              CredentialContentGate(barrier: cover, child: child!),
+          child: Scaffold(
+            body: Builder(
+              builder: (context) => TextButton(
+                onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Private workspace filename')),
+                ),
+                child: const Text('Save'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+    expect(find.text('Private workspace filename'), findsOneWidget);
+    barrier.value = const Scaffold(body: Text('Locked'));
+    await tester.pumpAndSettle();
+    expect(find.text('Locked'), findsOneWidget);
+    expect(find.text('Private workspace filename'), findsNothing);
+    barrier.value = null;
+    await tester.pumpAndSettle();
+    expect(find.text('Private workspace filename'), findsOneWidget);
+    ScaffoldMessenger.of(
+      tester.element(find.text('Private workspace filename')),
+    ).removeCurrentSnackBar();
+    await tester.pumpAndSettle();
+  });
+
   testWidgets('never mounts protected content before initial authorization', (
     tester,
   ) async {

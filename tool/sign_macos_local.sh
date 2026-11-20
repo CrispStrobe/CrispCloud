@@ -10,10 +10,19 @@
 # and the matching "Apple Development" identity in a keychain on the search
 # list. Profiles are looked up by name; override with APP_PROFILE/EXT_PROFILE.
 #
-# Usage: tool/sign_macos_local.sh [path/to/CrispCloud.app]
+# Usage: tool/sign_macos_local.sh [--check] [path/to/CrispCloud.app]
 set -euo pipefail
 
+CHECK_ONLY=false
+if [ "${1:-}" = --check ]; then CHECK_ONLY=true; shift; fi
 APP="${1:-build/macos/Build/Products/Release/CrispCloud.app}"
+CONFIGURATION="${SIGNING_CONFIGURATION:-Release}"
+if [ -z "${SIGNING_CONFIGURATION:-}" ] && {
+  [ -f "$APP/Contents/Frameworks/App.framework/Resources/flutter_assets/kernel_blob.bin" ] ||
+  [ -f "$APP/Contents/Frameworks/App.framework/Versions/A/Resources/flutter_assets/kernel_blob.bin" ];
+}; then
+  CONFIGURATION=Debug
+fi
 TEAM="${TEAM:-N9XSJ4M3GT}"
 BUNDLE_ID=com.CrispStrobe.cloud
 EXT_BUNDLE_ID=com.CrispStrobe.cloud.FinderExtension
@@ -21,7 +30,9 @@ PROFILE_DIR="$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles"
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 
-[ -d "$APP" ] || { echo "No app bundle at $APP" >&2; exit 1; }
+if ! $CHECK_ONLY; then
+  [ -d "$APP" ] || { echo "No app bundle at $APP" >&2; exit 1; }
+fi
 
 # find_profile <bundle id> -> newest macOS development profile for it
 find_profile() {
@@ -33,6 +44,14 @@ find_profile() {
     [ "$(/usr/libexec/PlistBuddy -c 'Print :Platform:0' "$plist" 2>/dev/null)" = OSX ] || continue
     /usr/libexec/PlistBuddy -c 'Print :ProvisionedDevices' "$plist" >/dev/null 2>&1 || continue
     [ "$(/usr/libexec/PlistBuddy -c 'Print :Entitlements:com.apple.application-identifier' "$plist")" = "$want" ] || continue
+    if [ "$CONFIGURATION" = Debug ] || [ "$CONFIGURATION" = Profile ]; then
+      local debuggable
+      debuggable=$(/usr/libexec/PlistBuddy -c 'Print :Entitlements:get-task-allow' "$plist" 2>/dev/null \
+        || /usr/libexec/PlistBuddy -c 'Print :Entitlements:com.apple.security.get-task-allow' "$plist" 2>/dev/null || true)
+      # macOS profiles need not enumerate unrestricted debug entitlements;
+      # an explicit denial must not be selected for a debug build.
+      [ "$debuggable" != false ] || continue
+    fi
     local exp
     exp=$(date -j -f '%a %b %d %T %Z %Y' "$(/usr/libexec/PlistBuddy -c 'Print :ExpirationDate' "$plist")" +%s 2>/dev/null || echo 0)
     if [ -z "$best" ] || [ "$exp" -gt "$best_exp" ]; then best="$f"; best_exp="$exp"; fi
@@ -83,6 +102,11 @@ mkents() {  # mkents <source .entitlements> <bundle id> <out>
   /usr/libexec/PlistBuddy -c "Add :com.apple.developer.team-identifier string $TEAM" "$3"
 }
 
+if $CHECK_ONLY; then
+  echo "Local signing ready: team $TEAM; identity $IDENT"
+  exit 0
+fi
+
 DISTRIBUTION_PROFILE=$(python3 tool/macos_distribution.py profile --app "$APP")
 APP_ENTITLEMENTS=macos/Runner/Release.entitlements
 HELPER_ENTITLEMENTS=macos/Runner/FuseBridge.entitlements
@@ -109,7 +133,23 @@ if [ -d "$EXT" ]; then
   codesign ${KEYCHAIN_ARGS[@]+"${KEYCHAIN_ARGS[@]}"} --force --options runtime --sign "$IDENT" --entitlements "$WORK/ext.plist" "$EXT"
 fi
 mkents "$APP_ENTITLEMENTS" "$BUNDLE_ID" "$WORK/app-ents.plist"
-codesign ${KEYCHAIN_ARGS[@]+"${KEYCHAIN_ARGS[@]}"} --force --options runtime --sign "$IDENT" --entitlements "$WORK/app-ents.plist" "$APP"
+case "$CONFIGURATION" in
+  Debug|Profile)
+    # The same persistent app identity is used for local debugging, with only
+    # the development permissions the Flutter VM/debugger needs added here.
+    for entitlement in com.apple.security.cs.allow-jit com.apple.security.network.server com.apple.security.get-task-allow; do
+      /usr/libexec/PlistBuddy -c "Delete :$entitlement" "$WORK/app-ents.plist" 2>/dev/null || true
+      /usr/libexec/PlistBuddy -c "Add :$entitlement bool true" "$WORK/app-ents.plist"
+    done
+    ;;
+  Release) ;;
+  *) echo "Unknown signing configuration: $CONFIGURATION" >&2; exit 2 ;;
+esac
+# Pin trust to this Apple-issued team and bundle, not to one executable hash
+# or one development certificate's changing common name. The requirement is
+# stable across ordinary rebuilds and certificate renewal within our team.
+APP_REQUIREMENT="=designated => anchor apple generic and identifier \"$BUNDLE_ID\" and certificate leaf[subject.OU] = \"$TEAM\""
+codesign ${KEYCHAIN_ARGS[@]+"${KEYCHAIN_ARGS[@]}"} --force --options runtime --sign "$IDENT" --entitlements "$WORK/app-ents.plist" --requirements "$APP_REQUIREMENT" "$APP"
 
 codesign --verify --deep --strict "$APP"
 codesign -d --entitlements - --xml "$APP" 2>/dev/null | grep -q "$TEAM.$BUNDLE_ID" \

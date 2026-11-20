@@ -35,7 +35,7 @@ flutter run
 To run on a specific platform:
 
 ```bash
-flutter run -d macos
+bash tool/build_macos_local.sh --debug --launch
 flutter run -d windows
 flutter run -d linux
 flutter run -d chrome          # Web (PWA)

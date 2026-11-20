@@ -52,7 +52,12 @@ class _AppScaffoldMessengerState extends ScaffoldMessengerState {
     final replacement = SnackBar(
       key: snackBar.key,
       content: DefaultTextStyle.merge(
-        style: Theme.of(context).textTheme.bodySmall,
+        // Snackbars use an inverse surface. Copying bodySmall's onSurface
+        // colour makes dark-theme text identical to the light bar surface.
+        // Keep the snackbar's inherited ink and apply only the compact size.
+        style: TextStyle(
+          fontSize: Theme.of(context).textTheme.bodySmall?.fontSize,
+        ),
         child: snackBar.content,
       ),
       backgroundColor: snackBar.backgroundColor,

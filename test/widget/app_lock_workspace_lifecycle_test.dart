@@ -16,10 +16,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 class _Policy extends AppLockService {
   _Policy(super.storage);
   Completer<bool>? recheck;
+  int reads = 0;
   @override
   Future<bool> validateStartupPolicy() async => false;
   @override
-  Future<bool> isEnabled() => recheck?.future ?? Future.value(false);
+  Future<bool> isEnabled() {
+    reads++;
+    return recheck?.future ?? Future.value(false);
+  }
+
   @override
   Future<int> getTimeout() async => 0;
   @override
@@ -105,7 +110,7 @@ void main() {
             overrides: [
               secureStorageProvider.overrideWithValue(store),
               appLockServiceProvider.overrideWithValue(policy),
-              transferProvider.overrideWithValue(transfers),
+              transferProvider.overrideWith((ref) => transfers),
             ],
             child: MaterialApp(
               localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -182,9 +187,26 @@ void main() {
             expect(key.currentState, same(state));
             expect(state.scroll.offset, closeTo(1600, .01));
             expect(state.selected, 42);
+            if (outcome == 'disabled') {
+              final policyReads = policy.reads;
+              // A desktop inactive/resumed pair must not reuse an already
+              // consumed hidden timestamp and cover the workspace again.
+              policy.recheck = Completer<bool>();
+              tester.binding.handleAppLifecycleStateChanged(
+                AppLifecycleState.inactive,
+              );
+              tester.binding.handleAppLifecycleStateChanged(
+                AppLifecycleState.resumed,
+              );
+              await tester.pump();
+              await tester.pump();
+              expect(policy.reads, policyReads);
+              expect(find.text('File 42').hitTestable(), findsOneWidget);
+              expect(state.focus.hasFocus, isTrue);
+            }
           }
         }
-        if (outcome == 'disabled') expect(transfers.resumes, 5);
+        if (outcome == 'disabled') expect(transfers.resumes, 10);
       },
     );
   }

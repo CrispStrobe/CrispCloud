@@ -216,7 +216,7 @@ git clone https://github.com/CrispStrobe/CrispCloud.git
 cd CrispCloud
 flutter pub get
 flutter run -d chrome    # Web
-flutter run -d macos     # macOS
+bash tool/build_macos_local.sh --debug --launch  # macOS: persistent Keychain identity
 flutter run -d windows   # Windows
 flutter run -d linux     # Linux
 ```

@@ -1129,13 +1129,17 @@ class _AppLockGateState extends ConsumerState<AppLockGate>
 
   Future<void> _resume() async {
     if (_isChecking) return;
-    if (_lastPaused != null) await _checkAutoLock();
+    // Consume this background interval once. A later inactive/resumed pair
+    // (for example moving a desktop window) is not another background return.
+    final pausedAt = _lastPaused;
+    _lastPaused = null;
+    if (pausedAt != null) await _checkAutoLock(pausedAt);
     if (mounted && !_isChecking && !_checkFailed && !_isLocked) {
       await ref.read(transferProvider).refreshBackgroundRecovery();
     }
   }
 
-  Future<void> _checkAutoLock() async {
+  Future<void> _checkAutoLock(DateTime pausedAt) async {
     if (_isLocked) return;
     if (mounted) setState(() => _isChecking = true);
     // Keep the protected browser hidden while a system unlock dialog is pending.
@@ -1147,7 +1151,7 @@ class _AppLockGateState extends ConsumerState<AppLockGate>
       if (!enabled) return;
 
       final timeout = await lockService.getTimeout();
-      final elapsed = DateTime.now().difference(_lastPaused!).inSeconds;
+      final elapsed = DateTime.now().difference(pausedAt).inSeconds;
       if (elapsed >= timeout) {
         if (mounted) setState(() => _isLocked = true);
       }

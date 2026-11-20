@@ -7,6 +7,63 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  for (final brightness in Brightness.values) {
+    testWidgets('notification text stays readable in $brightness', (
+      tester,
+    ) async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            theme: ThemeData(
+              colorScheme: ColorScheme.fromSeed(
+                seedColor: Colors.deepPurple,
+                brightness: brightness,
+              ),
+              useMaterial3: true,
+            ),
+            builder: (_, child) => AppScaffoldMessenger(child: child!),
+            home: Scaffold(
+              body: Builder(
+                builder: (context) => TextButton(
+                  onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Readable notification')),
+                  ),
+                  child: const Text('Show'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('Show'));
+      await tester.pumpAndSettle();
+      final textContext = tester.element(find.text('Readable notification'));
+      final ink = DefaultTextStyle.of(textContext).style.color!;
+      final material = tester.widget<Material>(
+        find
+            .descendant(
+              of: find.byType(SnackBar),
+              matching: find.byType(Material),
+            )
+            .first,
+      );
+      final paper = material.color!;
+      final renderedInk = Color.alphaBlend(ink, paper);
+      final a = renderedInk.computeLuminance(), b = paper.computeLuminance();
+      final contrast = ((a > b ? a : b) + .05) / ((a < b ? a : b) + .05);
+      expect(contrast, greaterThanOrEqualTo(4.5));
+      expect(
+        DefaultTextStyle.of(textContext).style.fontSize,
+        Theme.of(textContext).textTheme.bodySmall!.fontSize,
+      );
+      ScaffoldMessenger.of(textContext).removeCurrentSnackBar();
+      await tester.pumpAndSettle();
+    });
+  }
+
   setUp(() => SharedPreferences.setMockInitialValues({}));
   testWidgets(
     'compact save confirmation expires despite persistent notification preference',

@@ -1,4 +1,4 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 
 /// Keeps an authorized workspace alive while credential checks cover it.
 /// Content is first mounted only after authorization. While covered it cannot
@@ -50,9 +50,14 @@ class _CredentialContentGateState extends State<CredentialContentGate> {
     }
   }
 
+  // Workspace notifications must not migrate onto a lock/recovery scaffold.
+  Widget _cover(Widget barrier) => ScaffoldMessenger(
+    child: FocusScope(autofocus: true, child: BlockSemantics(child: barrier)),
+  );
+
   @override
   Widget build(BuildContext context) {
-    if (!_hasAuthorizedContent) return widget.barrier!;
+    if (!_hasAuthorizedContent) return _cover(widget.barrier!);
     final covered = widget.barrier != null;
     return Stack(
       fit: StackFit.expand,
@@ -64,11 +69,7 @@ class _CredentialContentGateState extends State<CredentialContentGate> {
             child: TickerMode(enabled: !covered, child: widget.child),
           ),
         ),
-        if (covered)
-          FocusScope(
-            autofocus: true,
-            child: BlockSemantics(child: widget.barrier!),
-          ),
+        if (covered) _cover(widget.barrier!),
       ],
     );
   }
