@@ -44,3 +44,34 @@ Apple artifact, live availability/group checks and upload/distribution receipts
 are recorded separately after delivery. The reviewed outside-France route,
 recipient allowlist and public-link settings are retained. No GitHub Actions
 runs, jobs, checks or status endpoints were queried or awaited.
+
+
+## Delivery — 20 November 2026
+
+CrispCloud **1.3.5 (44)** was accepted and processed as **VALID** for both macOS
+and iOS/iPadOS. Both builds are **IN_BETA_TESTING** internally and are assigned
+to the existing reviewed external group, with external state
+**WAITING_FOR_BETA_REVIEW**. The group/recipient allowlist, disabled public links
+and outside-France availability policy are unchanged. Exact Apple resource IDs
+and the final read-back are in `testflight-final-state.json`; upload and guarded
+assignment logs are attached.
+
+The iOS archive uses the same qualified runtime source at main `dc6e417e`.
+Xcode export omitted the authorized shared App Group, which was restored to both
+the app and File Provider extension before strict signature verification,
+artifact/live checks, validation and upload. Both bundles have version 1.3.5,
+build 44. Apple accepted the IPA with a future SDK-deadline warning for April
+2027; this is not a current rejection. `packages.json` records both submitted
+package hashes and their compilation sources.
+
+The `v1.3.5` tag points to qualified release code `15ffe8f0`, with the platform
+binary workflow triggered and its release draft created. The existing publisher
+keeps the release private until its complete required binary inventory exists.
+No Actions job/status endpoints were queried or awaited.
+
+The local signed CrispCloud preview (44, runtime `2f3a31f8`) is open for testing.
+The signed standalone CrispOffice preview (48, runtime `bbfc015a`) is staged;
+its application startup was held by macOS sandbox initialization while the
+screen was locked. Physical Mail scrolling/flicker acceptance remains pending.
+The standalone Office app has no App Store Connect record under its current
+bundle ID; these TestFlight uploads belong to CrispCloud.

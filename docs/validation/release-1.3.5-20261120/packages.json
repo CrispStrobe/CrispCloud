@@ -1,0 +1,35 @@
+{
+  "macos": {
+    "version": "1.3.5+44",
+    "platform": "MAC_OS",
+    "architecture": "arm64",
+    "package": "/tmp/crispcloud-release-1.3.5-20261120/CrispCloud-1.3.5-44.pkg",
+    "sha256": "b7e2c198763fdf346a4a6f3f0e07a2bf2a018fd0ea8b4766ad2f1d2d87bdd6ac",
+    "built_git_commit": "2f3a31f8bae3d3fa0f688fda8c632a53173c6a1e",
+    "ancestry_head": "15ffe8f0ba6653572f0d52d85f620e4d442e3bd9"
+  },
+  "ios": {
+    "version": "1.3.5+44",
+    "platform": "IOS",
+    "package": "/tmp/crispcloud-release-1.3.5-20261120/CrispCloud-1.3.5-44.ipa",
+    "sha256": "cf9e0cbd64cbbbed17bd675086fdab53584d6ec0c5b3a4b58684440c949bc498",
+    "source": "dc6e417e081677e5a66830793dde836b00bb084f",
+    "bundles": [
+      {
+        "bundle_id": "com.CrispStrobe.cloud.FileProvider",
+        "version": "1.3.5",
+        "build": "44",
+        "app_group_verified": true,
+        "app_group_restored_after_export": true
+      },
+      {
+        "bundle_id": "com.CrispStrobe.cloud",
+        "version": "1.3.5",
+        "build": "44",
+        "app_group_verified": true,
+        "app_group_restored_after_export": true
+      }
+    ],
+    "signing_identity": "56D3B7D782F2CEF0BBEFEEE30D98C6BA0F31C632"
+  }
+}
