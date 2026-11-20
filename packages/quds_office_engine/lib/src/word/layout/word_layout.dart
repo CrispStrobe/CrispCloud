@@ -181,7 +181,7 @@ class LaidOutLine {
       : proofingOffsets![layoutOffset];
 
   /// Inner left/right pad for table-cell text (`tblCellMar` 108 twips).
-  static const double tableCellPad = 5.4;
+  static const double tableCellPad = 4.25;
 
   /// Inner pad for absolutely placed [WmlFrame] text.
   static const double framePad = 8;
@@ -3348,7 +3348,15 @@ class WordLayoutEngine {
             pageNumber,
             firstInSection: firstInSection,
           );
-    if (visuals.isEmpty) {
+    final List<WmlParagraph> story = isFooter
+        ? section.footerForPage(pageNumber, firstInSection: firstInSection)
+        : section.headerForPage(pageNumber, firstInSection: firstInSection);
+    final List<WmlVisual> inlineVisuals = <WmlVisual>[
+      for (final WmlParagraph paragraph in story)
+        for (final WmlRun run in paragraph.inlines.whereType<WmlRun>())
+          if (run.inlineVisual != null) run.inlineVisual!,
+    ];
+    if (visuals.isEmpty && inlineVisuals.isEmpty) {
       return const <LaidOutBox>[];
     }
     final double bandTop = isFooter
@@ -3357,8 +3365,44 @@ class WordLayoutEngine {
         : section.margins.header;
     final List<LaidOutBox> frames = <LaidOutBox>[];
     var x = section.margins.left;
+    // Header/footer tables are flattened to their paragraphs by the source
+    // model. Keep their inline pictures (typically the organisation logo)
+    // instead of painting U+FFFC as a row of missing-glyph boxes.
+    var inlineX = section.margins.left;
+    for (final WmlVisual item in inlineVisuals) {
+      final OfficeVisual visual = item.visual;
+      if (visuals.any((candidate) => identical(candidate.visual, visual))) {
+        continue;
+      }
+      final double width = visual.width.clamp(16, section.contentWidth);
+      final double height = visual.height.clamp(12, 120);
+      frames.add(
+        LaidOutBox(
+          x: inlineX,
+          y: bandTop,
+          width: width,
+          height: height,
+          fillColor: null,
+          strokeColor: '00000000',
+          kind: LaidOutBoxKind.picture,
+          visual: visual,
+          strokeTop: false,
+          strokeRight: false,
+          strokeBottom: false,
+          strokeLeft: false,
+        ),
+      );
+      inlineX += width + 8;
+    }
     for (final WmlVisual item in visuals) {
       final OfficeVisual visual = item.visual;
+      if (inlineVisuals.any((inline) {
+        final OfficeVisual other = inline.visual;
+        return (other.width - visual.width).abs() < 1 &&
+            (other.height - visual.height).abs() < 1;
+      })) {
+        continue;
+      }
       final double width = visual.width.clamp(16, section.pageSize.width);
       final double height = visual.height.clamp(12, 120);
       final double vx = visual.offsetX != 0
@@ -3741,6 +3785,21 @@ class WordLayoutEngine {
         height: footerH,
       ),
     );
+    // Continuous sections can contribute the same header logo twice on one
+    // page. Keep one painted picture at each header position/size.
+    final Set<String> seenHeaderPictures = <String>{};
+    page.frames.removeWhere((frame) {
+      if (frame.kind != LaidOutBoxKind.picture ||
+          frame.visual == null ||
+          frame.y > page.headerBand.height + 40) {
+        return false;
+      }
+      final int bytes = frame.visual!.imageBytes?.length ?? 0;
+      final String key =
+          '${frame.x.toStringAsFixed(1)}|${frame.width.toStringAsFixed(1)}|'
+          '${frame.height.toStringAsFixed(1)}|$bytes';
+      return !seenHeaderPictures.add(key);
+    });
     page._origin = _PageOrigin(
       section,
       sectionIndex,
@@ -3958,7 +4017,7 @@ class WordLayoutEngine {
       final WmlParagraph paragraph = story[i];
       final WmlRunProps run = WmlRunEdit.propsAt(paragraph, 0);
       final WmlDocument? doc = _layoutDoc;
-      final String source = paragraph.text;
+      final String source = paragraph.text.replaceAll('\uFFFC', ' ');
       final String raw = source.trim();
       final int rawStart = source.length - source.trimLeft().length;
       final String text;

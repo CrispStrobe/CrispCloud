@@ -1888,7 +1888,7 @@
     "packages/quds_office_editor/lib/src/embed/office_system_font_face.dart": "127329db4ff75de5bed28fe6841a9198256cd682f86139911c89425e18e83958",
     "packages/quds_office_editor/lib/src/embed/office_system_font_validation.dart": "6db3d3bfa0881cdfb38fff9c84895788cc3505f70aa915129daf03bdb26783f0",
     "packages/quds_office_editor/lib/src/embed/office_system_fonts.dart": "39838d092e26ab2281bf30cffaccc9d52d76acfccc3c71015a968612470d4f83",
-    "packages/quds_office_editor/lib/src/embed/office_system_fonts_io.dart": "6c1ccc6790e3921c81ea21793a286345d7529f176b930193c532e0caea89f12a",
+    "packages/quds_office_editor/lib/src/embed/office_system_fonts_io.dart": "fa607b5173809b226d63f203ee4fc7a40e7c75ae9e6e865517c444269d7b22b8",
     "packages/quds_office_editor/lib/src/embed/office_system_fonts_stub.dart": "ff83c65b3a34231a650aa46e2912b6f72dab3fc2fec2b64a015722d0e82ea0fd",
     "packages/quds_office_editor/lib/src/embed/office_theme.dart": "d707398a8be0e76573c6074d8e91e5fe50925135f44cace231574833b0aefdbd",
     "packages/quds_office_editor/lib/src/embed/office_units.dart": "cc8d5d9cdff427bf654af00a69382a26c0c814d291b9f544a633e922be77f726",
@@ -2313,7 +2313,7 @@
     "packages/quds_office_engine/lib/src/visual/office_visual.dart": "a3b8f8ece59b04275fba456803072de1aa84e602f6dedb6f69a51a4090daa949",
     "packages/quds_office_engine/lib/src/word/layout/word_contained_layout.dart": "23aef5888b747f1d36b1ce605809425ea119531988ff0177f35886f57f4facb9",
     "packages/quds_office_engine/lib/src/word/layout/word_incremental_layout.dart": "3745d64b3c387624f951cd4af38b6d2e05fcaff4cdaec06416aa9e790e05ced5",
-    "packages/quds_office_engine/lib/src/word/layout/word_layout.dart": "a0385aa798546881829bb366622a44c0fa61bb5623e739e5337e7a43971c9253",
+    "packages/quds_office_engine/lib/src/word/layout/word_layout.dart": "6e27419ab6d4d27e1a3da12b3034bbd1e1d9aa664fd66ea024607ce650d80e6b",
     "packages/quds_office_engine/lib/src/word/layout/word_note_layout.dart": "9f12a80648a8bd13483e6bf4564b7f4353fb7c0c5b198f1493575799735c6b51",
     "packages/quds_office_engine/lib/src/word/layout/word_run_measure.dart": "9bd2e673493b11fa8e516046a799a8fd8643da8f85f13f7b3a3811f732779cc9",
     "packages/quds_office_engine/lib/src/word/layout/word_table_row_layout.dart": "ab18b2ec0a3471237dff60aa6aad4d0ddf780f889307cfde0b78a09b2552deae",
@@ -2355,7 +2355,7 @@
     "packages/quds_office_engine/lib/src/word/serial/word_bookmark_io.dart": "b1c4a0f896af2f8500b607895d3f23ef204729a17361e07553a93df9961a688c",
     "packages/quds_office_engine/lib/src/word/serial/word_comment_io.dart": "a605eda98d8f99561db02a21524db9c6a1a8d06db5bc46e33704580d856f6f59",
     "packages/quds_office_engine/lib/src/word/serial/word_content_control_io.dart": "d7bb3046bdb8030eee54ffb5baaece8a16688eecf9f9a056be20f0b436cebb3b",
-    "packages/quds_office_engine/lib/src/word/serial/word_deserializer.dart": "929c35fe59d9b7267dd74a94f7f0dc4353c8db11c569a5a7f5601c5f4868ded8",
+    "packages/quds_office_engine/lib/src/word/serial/word_deserializer.dart": "6a0707a9b2da6010aaeb40f515671f120eb339952d326b9e3d74e9f1f0bd4e40",
     "packages/quds_office_engine/lib/src/word/serial/word_drawing_io.dart": "d4b779e24fa1eb5b6ea816cace0368a05e9abcc7c7029c9088ea1fda6b36a4bb",
     "packages/quds_office_engine/lib/src/word/serial/word_frame_io.dart": "c305e87f48e65d29d97f512cf0a2fdeb05da5f76641d5d836cf38ac8b2e8de6b",
     "packages/quds_office_engine/lib/src/word/serial/word_heading_io.dart": "9b33040494f89f141f704e18950d9c205f59a0a82a1a19580cffb24e8083ec54",
@@ -3045,8 +3045,8 @@
     "tool/office-validation/test_native_render_limitations.py": "ffc4e367871bf40079b2b2868af6b146de5bcfe13b50a17bdede2f2b3398308b",
     "tool/office-validation/test_render.py": "1ba68e18608d74387cbc1c779ceb72af76bf7741463c282684aec93bf3825472"
   },
-  "source_branch": "main",
-  "source_commit": "c954d00d2fc85604ae394674bca91ea8a1dede0e",
+  "source_branch": "integrate/recent-pptx",
+  "source_commit": "ec70b9423febefcb9b104629d2ad48b0c96e9082",
   "source_repository": "CrispStrobe/quds_office_suite",
   "standalone_sources": {
     "packages/legacy_doc_parser": {
