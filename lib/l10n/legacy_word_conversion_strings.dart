@@ -1,12 +1,12 @@
 import 'dart:ui' show Locale;
 
 import 'package:legacy_doc_parser/legacy_doc_parser.dart'
-    show LegacyWriterConversionException, LegacyWriterConversionLimitation;
+    show LegacyWordConversionException, LegacyWordConversionLimitation;
 
 import 'word_format_strings.dart';
 
-class LegacyWriterConversionStrings {
-  LegacyWriterConversionStrings(this.locale)
+class LegacyWordConversionStrings {
+  LegacyWordConversionStrings(this.locale)
     : _values = _translations[locale.languageCode] ?? _english,
       _structuredValues =
           _structuredTranslations[locale.languageCode] ?? _structuredEnglish,
@@ -36,14 +36,14 @@ class LegacyWriterConversionStrings {
   String get recoveredNotice => _recoveryValues[1];
   String get recoveredAcceptLoss => _recoveryValues[2];
 
-  String limitation(LegacyWriterConversionLimitation limitation) =>
+  String limitation(LegacyWordConversionLimitation limitation) =>
       _structuredValues[limitation.name]!;
 
   String error(Object error) {
-    if (error is LegacyWriterConversionException) {
+    if (error is LegacyWordConversionException) {
       return _values[6 + error.issue.index];
     }
-    return WriterFormatStrings(locale).translate(error.toString()) ?? _values[9];
+    return WordFormatStrings(locale).translate(error.toString()) ?? _values[9];
   }
 
   static const _recoveryEnglish = <String>[
