@@ -3,6 +3,9 @@ include: package:flutter_lints/flutter.yaml
 analyzer:
   exclude:
     - build/**
+    # This standalone Studio launcher imports example tests that are not part
+    # of CrispCloud's source mirror. It runs in the complete Office checkout.
+    - tool/zotero/research_target_acceptance.dart
   language:
     strict-casts: true
     strict-inference: true

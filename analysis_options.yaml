@@ -25,9 +25,6 @@ analyzer:
     - packages/quds_office_engine/test/**
     - packages/quds_office_editor/test/**
     - packages/quds_reports/test/**
-    # Standalone Studio test launcher imports example tests deliberately absent
-    # from the guarded application mirror; its suites run in the Office fork.
-    - packages/quds_office_editor/tool/zotero/research_target_acceptance.dart
     # Standalone parser development roots use their own resolved test packages
     # and are analyzed and tested separately before the application checks.
     - packages/legacy_doc_parser/test/**
