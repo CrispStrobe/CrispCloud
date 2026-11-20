@@ -124,9 +124,12 @@ HELPER="$APP/Contents/Resources/crispcloud_fuse_bridge"
 if [ -x "$HELPER" ]; then
   codesign ${KEYCHAIN_ARGS[@]+"${KEYCHAIN_ARGS[@]}"} --force --sign "$IDENT" --options runtime --entitlements "$HELPER_ENTITLEMENTS" "$HELPER"
 fi
-find "$APP/Contents/Frameworks" -maxdepth 1 -name '*.framework' -print0 2>/dev/null \
+# Xcode Debug places CrispCloud.debug.dylib and __preview.dylib in
+# Contents/MacOS (also inside extensions). Resource-native libraries need the
+# same team too. A valid ad hoc nested signature still fails library validation.
+find "$APP/Contents" -name '*.dylib' -print0 2>/dev/null \
   | xargs -0 -I{} codesign ${KEYCHAIN_ARGS[@]+"${KEYCHAIN_ARGS[@]}"} --force --options runtime --sign "$IDENT" {}
-find "$APP/Contents/Frameworks" -name '*.dylib' -print0 2>/dev/null \
+find "$APP/Contents/Frameworks" -maxdepth 1 -name '*.framework' -print0 2>/dev/null \
   | xargs -0 -I{} codesign ${KEYCHAIN_ARGS[@]+"${KEYCHAIN_ARGS[@]}"} --force --options runtime --sign "$IDENT" {}
 if [ -d "$EXT" ]; then
   mkents macos/FinderExtension/FinderExtension.entitlements "$EXT_BUNDLE_ID" "$WORK/ext.plist"
