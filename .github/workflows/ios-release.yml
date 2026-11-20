@@ -214,6 +214,11 @@ jobs:
             --dart-define=GIT_HASH="$(git rev-parse --short HEAD)"
           PATH="/usr/bin:$PATH" env -u GEM_HOME -u GEM_PATH -u RUBYOPT \
             pod install --project-directory=ios
+          # Xcode 27 rejects (error, not warning) any target below iOS 15.0, and
+          # several pods still declare 12.0/13.0. Raise only those pod targets
+          # in the generated Pods project; app/extension targets are untouched.
+          perl -pi -e 's/IPHONEOS_DEPLOYMENT_TARGET = (\d+)(\.\d+)*;/$1 < 15 ? "IPHONEOS_DEPLOYMENT_TARGET = 15.0;" : $&/ge' \
+            ios/Pods/Pods.xcodeproj/project.pbxproj
           # ARCHIVE UNSIGNED. A bare `xcodebuild archive` insists on an iOS
           # *Development* profile for on-device signing, which CI can't have (only
           # the Distribution cert's private key is available, not a Development
