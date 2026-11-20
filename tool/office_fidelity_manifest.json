@@ -1858,7 +1858,7 @@
     "packages/legacy_doc_parser/tool/verify_web.py": "4416173bcdc3bd2acccaabf979be4510dc506a38f07c9c9c763c4cb8593eef70",
     "packages/legacy_doc_parser/tool/web_acceptance.dart": "c001f983e22f55eac72d1f5ff07c06267fb6e60d9441e2007d0702899c0aff9b",
     "packages/quds_office_editor/CHANGELOG.md": "68b2c9cc4689f9c6e53e0730cd1a051f65858e62868a9fb50a828a5bb4767c53",
-    "packages/quds_office_editor/lib/quds_office_editor.dart": "3b9827046c4326a00323ffb646297bfefba5f125b64ad425242e27d5fc71dd66",
+    "packages/quds_office_editor/lib/quds_office_editor.dart": "81b0d84e8a5d57b34d449e3a0aca430ece226786c39ab41a8d5066aec189da24",
     "packages/quds_office_editor/lib/src/core/command_pipeline.dart": "dfa04bb658dba1b45868feaa598bf351c4ecab5d88321af43d830f54f13ad0ce",
     "packages/quds_office_editor/lib/src/core/input_bridge.dart": "e053ab3aab15e880abd17cb512f4f80e4c81d21f8818f720382140b38cdbfd5b",
     "packages/quds_office_editor/lib/src/editor_pdf/pdf_font_faces.dart": "34092eab580521bbca9cdf553191fbd4b620fca62c59ee0b327e840e5dccbc0d",
@@ -1880,6 +1880,10 @@
     "packages/quds_office_editor/lib/src/embed/office_direction_keys.dart": "2e3e4a904629e2a09746916d3caf15b6a3558d73d226e38ea495e46a056a22c3",
     "packages/quds_office_editor/lib/src/embed/office_editors.dart": "0879ddb4e6fd951ce7760ba8bf1a7aba7eb6b7b4ac7ece9d8835f6db86e99cec",
     "packages/quds_office_editor/lib/src/embed/office_host_fonts.dart": "990f9833246ec2403661a729c9592551127432a344bb4958f2814d2419120592",
+    "packages/quds_office_editor/lib/src/embed/office_system_font_face.dart": "127329db4ff75de5bed28fe6841a9198256cd682f86139911c89425e18e83958",
+    "packages/quds_office_editor/lib/src/embed/office_system_fonts.dart": "39838d092e26ab2281bf30cffaccc9d52d76acfccc3c71015a968612470d4f83",
+    "packages/quds_office_editor/lib/src/embed/office_system_fonts_io.dart": "75eb4130cbe8ae5e70cf72248686837ab63b4251899d0e7ec33d572b158105b4",
+    "packages/quds_office_editor/lib/src/embed/office_system_fonts_stub.dart": "ff83c65b3a34231a650aa46e2912b6f72dab3fc2fec2b64a015722d0e82ea0fd",
     "packages/quds_office_editor/lib/src/embed/office_theme.dart": "d707398a8be0e76573c6074d8e91e5fe50925135f44cace231574833b0aefdbd",
     "packages/quds_office_editor/lib/src/embed/office_units.dart": "cc8d5d9cdff427bf654af00a69382a26c0c814d291b9f544a633e922be77f726",
     "packages/quds_office_editor/lib/src/embed/pdf_controller.dart": "9422fe09774e69fa8a76da424b8f21c6ece899e8725d34d4065b52c4d7408224",
@@ -2934,8 +2938,8 @@
     "tool/office-validation/test_native_render_limitations.py": "ffc4e367871bf40079b2b2868af6b146de5bcfe13b50a17bdede2f2b3398308b",
     "tool/office-validation/test_render.py": "1ba68e18608d74387cbc1c779ceb72af76bf7741463c282684aec93bf3825472"
   },
-  "source_branch": "main",
-  "source_commit": "e06eb3a7e21b71c1d5d4b1d2cc9abde24774eb26",
+  "source_branch": "integrate/recent-pptx",
+  "source_commit": "9bd16ff4d97f2a63f450f161fe10eb3bb2808857",
   "source_repository": "CrispStrobe/quds_office_suite",
   "standalone_sources": {
     "packages/legacy_doc_parser": {

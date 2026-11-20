@@ -1,6 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:quds_office_editor/quds_office_editor.dart'
-    show OfficeHostFonts;
+    show OfficeHostFonts, OfficeSystemFonts, OfficeSystemFontFace;
 
 import 'document_font_catalog.dart';
 
@@ -56,6 +56,28 @@ abstract final class DocumentFonts {
         aliases: faces.expand((face) => face.aliases).toSet().toList(),
         hasItalic: faces.any((face) => face.italic),
       );
+    }
+    // Exact local Office faces are read from the host at runtime, not bundled.
+    // Existing compatibility aliases remain authoritative for Flutter paint.
+    final system = await OfficeSystemFonts.load();
+    final byFamily = <String, List<OfficeSystemFontFace>>{};
+    for (final face in system) {
+      byFamily
+          .putIfAbsent(face.family, () => <OfficeSystemFontFace>[])
+          .add(face);
+    }
+    for (final entry in byFamily.entries) {
+      try {
+        await OfficeHostFonts.registerFamily(
+          family: entry.key,
+          faces: <ByteData>[
+            for (final face in entry.value) ByteData.sublistView(face.bytes),
+          ],
+          hasItalic: entry.value.any((face) => face.italic),
+        );
+      } on Object {
+        // A bundled compatibility alias already owns this family name.
+      }
     }
   }
 

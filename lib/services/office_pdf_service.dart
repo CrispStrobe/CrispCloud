@@ -11,6 +11,8 @@ import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:quds_office_engine/quds_office_engine.dart';
+import 'package:quds_office_editor/quds_office_editor.dart'
+    show OfficeSystemFonts, OfficeSystemFontFace;
 
 import 'document_font_catalog.dart';
 import 'document_fonts.dart';
@@ -75,6 +77,7 @@ Future<OfficePdfResult> convertOfficeToPdfResult(
 
   try {
     final fontBytes = await DocumentFonts.loadExportFaces();
+    final systemFaces = await OfficeSystemFonts.load();
     OfficePdfResult render() {
       final diagnostics = OfficeFontDiagnostics();
       final fonts = OfficeFontSet(
@@ -88,6 +91,14 @@ Future<OfficePdfResult> convertOfficeToPdfResult(
               aliases: documentFontAliases(documentFontAssets[index].family),
               weight: documentFontAssets[index].weight,
               italic: documentFontAssets[index].italic,
+            ),
+          for (final OfficeSystemFontFace face in systemFaces)
+            OfficeFontFace(
+              font: SfntFont.parse(face.bytes),
+              family: face.family,
+              aliases: face.aliases,
+              weight: face.weight,
+              italic: face.italic,
             ),
         ],
       );

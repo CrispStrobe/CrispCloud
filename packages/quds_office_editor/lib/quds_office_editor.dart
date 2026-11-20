@@ -13,6 +13,7 @@ export 'src/embed/word_page_layout.dart';
 export 'src/embed/office_direction_keys.dart';
 export 'src/embed/office_editors.dart';
 export 'src/embed/office_host_fonts.dart';
+export 'src/embed/office_system_fonts.dart';
 export 'src/embed/pdf_controller.dart';
 export 'src/embed/pdf_editors.dart';
 export 'src/embed/pdf_viewer_options.dart';
