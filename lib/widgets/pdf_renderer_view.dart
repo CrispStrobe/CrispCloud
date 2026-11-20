@@ -189,11 +189,13 @@ class PdfRendererViewState extends State<PdfRendererView> {
     }
     final doc = _document;
     if (doc == null || doc.pageCount == 0) return;
-    final box = doc
-        .page(_viewer.currentPage.clamp(0, doc.pageCount - 1))
-        .cropBox;
-    final x = (_size.width - 32) / box.width;
-    final y = (_size.height - 32) / box.height;
+    final page = doc.page(_viewer.currentPage.clamp(0, doc.pageCount - 1));
+    final box = page.cropBox;
+    final sideways = page.rotation == 90 || page.rotation == 270;
+    final widthPoints = sideways ? box.height : box.width;
+    final heightPoints = sideways ? box.width : box.height;
+    final x = (_size.width - 32) / widthPoints;
+    final y = (_size.height - 32) / heightPoints;
     _viewer.setZoom((width ? x : math.min(x, y)).clamp(.25, 16.0));
   }
 

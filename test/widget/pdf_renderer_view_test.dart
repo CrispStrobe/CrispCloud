@@ -56,6 +56,25 @@ void main() {
       },
     );
   }
+  testWidgets('fit width accounts for page rotation', (tester) async {
+    final key = GlobalKey<PdfRendererViewState>();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: PdfRendererView(
+          key: key,
+          bytes: buildPdfEditorFixture(rotation: 90),
+          backend: PdfViewerBackend.pdfEditor,
+          onCompatibility: () {},
+          autoRenderWorker: false,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Fit width'));
+    await tester.pumpAndSettle();
+    expect(key.currentState!.zoom, closeTo((800 - 32) / 400, .001));
+    await tester.pumpWidget(const SizedBox());
+  });
   testWidgets(
     'switching engine replaces the loaded model without writing the source',
     (tester) async {

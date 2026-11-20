@@ -4,13 +4,17 @@ import 'dart:typed_data';
 /// Two blank pages with a real cross-reference table, independent of the
 /// editor's writer. Optional form entries exercise host compatibility gates.
 /// [signed] includes a signature dictionary, not a valid signing certificate.
-Uint8List buildPdfEditorFixture({bool xfa = false, bool signed = false}) {
+Uint8List buildPdfEditorFixture({
+  bool xfa = false,
+  bool signed = false,
+  int rotation = 0,
+}) {
   assert(!xfa || !signed);
   final objects = <String>[
     '<< /Type /Catalog /Pages 2 0 R${xfa || signed ? ' /AcroForm 7 0 R' : ''} >>',
     '<< /Type /Pages /Kids [3 0 R 4 0 R] /Count 2 >>',
     '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 300 400] '
-        '/Resources << >> /Contents 5 0 R >>',
+        '/Rotate $rotation /Resources << >> /Contents 5 0 R >>',
     '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 300 400] '
         '/Resources << >> /Contents 6 0 R >>',
     '<< /Length 0 >>\nstream\n\nendstream',
