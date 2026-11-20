@@ -34,6 +34,7 @@ List<PmlShape> parseSlideShapes(
   final List<PmlGradientStop> gradientStops = <PmlGradientStop>[];
   double? gradientStopPosition;
   double gradientAngle = 0;
+  var gradientRadial = false;
   var gradientIsLinear = true;
 
   /// textFillPending API.
@@ -326,6 +327,13 @@ List<PmlShape> parseSlideShapes(
         'flowChartTerminator' => PmlShapePreset.roundRect,
         _ => PmlShapePreset.rect,
       };
+    } else if (reader.localName == 'normAutofit' && current != null) {
+      final int scale =
+          int.tryParse(reader.getAttribute('fontScale') ?? '') ?? 100000;
+      final int reduction =
+          int.tryParse(reader.getAttribute('lnSpcReduction') ?? '') ?? 0;
+      current.textScale = (scale / 100000).clamp(0.1, 1.0);
+      current.lineSpacingReduction = (reduction / 100000).clamp(0.0, 0.9);
     } else if (reader.localName == 'bodyPr' && current != null) {
       current.textAnchor = switch (reader.getAttribute('anchor')) {
         'ctr' => PmlTextAnchor.center,
@@ -381,6 +389,8 @@ List<PmlShape> parseSlideShapes(
     } else if (reader.localName == 'lin' && inGradFill) {
       gradientAngle =
           (int.tryParse(reader.getAttribute('ang') ?? '') ?? 0) / 60000;
+    } else if (reader.localName == 'path' && inGradFill) {
+      gradientRadial = true;
     } else if (_colorElements.contains(reader.localName) && current != null) {
       final String? val = resolveDrawingmlColor(reader, colors);
       if (val != null && val.isNotEmpty) {

@@ -444,6 +444,14 @@ class PdfDocument {
         xos.write('/${page.images[j].name} ${pageImageIds[i][j]} 0 R');
       }
       final String xoRes = xos.isEmpty ? '' : '/XObject <<$xos>>';
+      final String gsRes = page.extGStates.isEmpty
+          ? ''
+          : '/ExtGState <<${page.extGStates.map((String name) {
+                  final int key = int.tryParse(name.replaceFirst('GS', '')) ?? 1000;
+                  final String alpha = _n(key / 1000);
+                  return '/$name <</ca $alpha/CA $alpha>>';
+                }).join()}'
+                '>>';
       final List<int> annotIds = <int>[...pageAnnotIds[i], ...pageFieldIds[i]];
       final String annots = annotIds.isEmpty
           ? ''
@@ -453,7 +461,7 @@ class PdfDocument {
           pageIds[i],
           '<</Type /Page/Parent $pagesId 0 R/MediaBox [0 0 ${_n(page.width)} ${_n(page.height)}]'
           '/Contents ${contentIds[i]} 0 R/Resources <</Font <<$fonts>>$xoRes'
-          '/ProcSet [/PDF /Text /ImageC]>>$annots>>',
+          '$gsRes/ProcSet [/PDF /Text /ImageC]>>$annots>>',
         ),
       );
       objects.add(_PdfObj.stream(contentIds[i], page.content));
@@ -846,6 +854,7 @@ class PdfPage {
     this.images = const <PdfEmbeddedImage>[],
     this.links = const <PdfLinkAnnot>[],
     this.acroFields = const <PdfAcroField>[],
+    this.extGStates = const <String>{},
   });
 
   /// width API.
@@ -865,6 +874,9 @@ class PdfPage {
 
   /// Real AcroForm widgets on this page (optional).
   final List<PdfAcroField> acroFields;
+
+  /// ExtGState resource names referenced by [content].
+  final Set<String> extGStates;
 }
 
 class _PdfObj {

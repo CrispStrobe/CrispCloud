@@ -24,6 +24,18 @@ class PdfCanvas {
   String _color = '';
   double _fontSize = 0;
   String _fontName = '';
+  final Set<String> _alphaStates = <String>{};
+
+  /// Transparency states referenced by this content stream.
+  Set<String> get alphaStates => Set<String>.unmodifiable(_alphaStates);
+
+  /// Applies a constant opacity through a reusable PDF ExtGState.
+  void setAlpha(double alpha) {
+    final double value = alpha.clamp(0.0, 1.0);
+    final int key = (value * 1000).round();
+    _alphaStates.add('GS$key');
+    _buf.writeln('/GS$key gs');
+  }
 
   /// beginText API.
   void beginText() {

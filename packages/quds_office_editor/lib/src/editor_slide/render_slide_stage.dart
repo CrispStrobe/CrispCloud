@@ -1420,7 +1420,7 @@ class RenderSlideStage extends RenderBox implements MouseTrackerAnnotation {
     }
     return PaintRunText.plain(
       text: text,
-      fontSize: baseSize,
+      fontSize: baseSize * shape.textScale,
       color: color,
       themeFamily: _theme.fontFamily,
       maxLines: lines,
@@ -1445,11 +1445,13 @@ class RenderSlideStage extends RenderBox implements MouseTrackerAnnotation {
       for (final PmlTextRun run in paragraph.runs) {
         final String runText = run.text.replaceAll('\t', '    ');
         if (runText.isEmpty) continue;
-        final double size = run.fontSizePt > 0
-            ? run.fontSizePt
-            : (paragraph.defaultFontSizePt > 0
-                  ? paragraph.defaultFontSizePt
-                  : (shape.fontSizePt > 0 ? shape.fontSizePt : 16));
+        final double size =
+            (run.fontSizePt > 0
+                ? run.fontSizePt
+                : (paragraph.defaultFontSizePt > 0
+                      ? paragraph.defaultFontSizePt
+                      : (shape.fontSizePt > 0 ? shape.fontSizePt : 16))) *
+            shape.textScale;
         final Color authoredColor = run.color.isEmpty
             ? color
             : _hexColor(run.color, color);

@@ -1738,6 +1738,23 @@ abstract final class OfficePdfExport {
     final double angle = gradient.angleDegrees;
     final double cx = x + w / 2;
     final double cy = y + h / 2;
+    if (gradient.radial) {
+      const int rings = 72;
+      final double radius = math.sqrt(w * w + h * h) / 2;
+      for (int i = 0; i < rings; i++) {
+        final double t = 1 - i / rings;
+        canvas.setFillColor(_gradientColor(gradient, t));
+        canvas.ellipse(
+          cx - radius * t,
+          cy - radius * t,
+          radius * t * 2,
+          radius * t * 2,
+        );
+        canvas.fill();
+      }
+      canvas.restore();
+      return;
+    }
     final double radians = angle * math.pi / 180;
     final double span =
         w * math.cos(radians).abs() + h * math.sin(radians).abs();
@@ -2176,7 +2193,7 @@ abstract final class OfficePdfExport {
           : (paragraph.defaultFontSizePt > 0
                 ? paragraph.defaultFontSizePt
                 : fallbackSize);
-      final double size = unscaledSize * fitScale;
+      final double size = unscaledSize * fitScale * shape.textScale;
 
       final bool bold =
           (run?.bold ?? false) &&
@@ -2195,7 +2212,16 @@ abstract final class OfficePdfExport {
             );
       total +=
           paragraph.spaceBeforePt +
-          lines * size * 1.25 +
+          lines *
+              sink.lineHeight(
+                size,
+                bold: bold,
+                italic: run?.italic ?? false,
+                family: (run?.fontFamily ?? '').isEmpty
+                    ? null
+                    : run!.fontFamily,
+              ) *
+              (1 - shape.lineSpacingReduction) +
           paragraph.spaceAfterPt;
     }
     double cy = switch (shape.textAnchor) {
@@ -2212,7 +2238,7 @@ abstract final class OfficePdfExport {
           : (paragraph.defaultFontSizePt > 0
                 ? paragraph.defaultFontSizePt
                 : fallbackSize);
-      final double size = unscaledSize * fitScale;
+      final double size = unscaledSize * fitScale * shape.textScale;
 
       final String color = (run?.color ?? '').isNotEmpty
           ? run!.color
@@ -2290,7 +2316,9 @@ abstract final class OfficePdfExport {
           final double next = ((offset / tab).floor() + 1) * tab;
           cx = math.min(px + maxWidth, tabBase + next);
         }
-        cy += size * 1.25;
+        cy +=
+            sink.lineHeight(size, bold: bold, italic: italic, family: family) *
+            (1 - shape.lineSpacingReduction);
       } else if (_hasMixedRichStyles(paragraph)) {
         cy += _paintStyledParagraph(
           sink,
@@ -2301,7 +2329,7 @@ abstract final class OfficePdfExport {
           align,
           size,
           fallbackColor,
-          fitScale,
+          fitScale * shape.textScale,
         );
       } else if (plainLtrLines != null && plainLtrFits) {
         // Keep authored order within each numeric line without collapsing
@@ -2354,7 +2382,10 @@ abstract final class OfficePdfExport {
           family: family,
           baseLevel: paragraph.rightToLeft ? 1 : 0,
         );
-        cy += lines * size * 1.25;
+        cy +=
+            lines *
+            sink.lineHeight(size, bold: bold, italic: italic, family: family) *
+            (1 - shape.lineSpacingReduction);
       }
       cy += paragraph.spaceAfterPt;
     }
@@ -3357,6 +3388,24 @@ class _PageSink {
   }
 
   /// Number of laid-out lines for [text] at [size].
+  double lineHeight(
+    double size, {
+    bool bold = false,
+    bool italic = false,
+    String? family,
+  }) {
+    final SfntFont? font = pack.fontFor(
+      65,
+      family: family,
+      weight: bold ? 700 : 400,
+      italic: italic,
+    );
+    if (font == null || font.unitsPerEm <= 0) return size * 1.25;
+    final double ratio =
+        (font.ascender - font.descender + font.lineGap) / font.unitsPerEm;
+    return size * math.max(1.0, ratio);
+  }
+
   double plainWidth(
     String text,
     double size, {

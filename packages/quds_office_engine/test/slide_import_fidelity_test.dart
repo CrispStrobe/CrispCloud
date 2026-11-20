@@ -972,6 +972,23 @@ void main() {
       },
     );
 
+    test('normal autofit keeps its authored scale and spacing reduction', () {
+      final PmlPresentation deck = _deck(<String>[
+        _sld(
+          '<p:sp><p:nvSpPr><p:cNvPr id="2" name="Fitted"/>'
+          '<p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr><p:spPr>'
+          '${_xfrm(0, 0, 9144000, 914400)}</p:spPr><p:txBody>'
+          '<a:bodyPr><a:normAutofit fontScale="80000" '
+          'lnSpcReduction="10000"/></a:bodyPr><a:p><a:r>'
+          '<a:rPr sz="1800"/><a:t>Fitted</a:t></a:r></a:p>'
+          '</p:txBody></p:sp>',
+        ),
+      ]);
+      final PmlShape shape = deck.slides.single.shapes.single;
+      expect(shape.textScale, closeTo(0.8, 0.00001));
+      expect(shape.lineSpacingReduction, closeTo(0.1, 0.00001));
+    });
+
     test(
       'selected gradient survives copies and repeated saves then clears on edit',
       () {
