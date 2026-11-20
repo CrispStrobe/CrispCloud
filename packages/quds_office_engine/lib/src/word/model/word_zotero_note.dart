@@ -9,8 +9,18 @@ import 'word_zotero_note_image.dart';
 /// A bounded, inert note fragment with citation placeholders kept separate.
 /// Unsupported structure and formatting are refused before document edits.
 final class WordZoteroNoteText {
-  WordZoteroNoteText._(this.paragraphs, this.placeholders, this.listItems);
+  WordZoteroNoteText._(
+    this.blocks,
+    this.paragraphs,
+    this.placeholders,
+    this.listItems,
+  );
 
+  /// Native blocks in document order, retaining each table's cell ownership.
+  final List<WmlBlock> blocks;
+
+  /// The same paragraph objects as [blocks], flattened in row-major order.
+  /// Citation and list indexes address this view, never disconnected copies.
   final List<WmlParagraph> paragraphs;
   final Map<String, WordZoteroNotePlaceholder> placeholders;
 
@@ -36,6 +46,8 @@ final class WordZoteroNoteText {
     final images = <WmlVisual>[];
     final imageReader = WordZoteroNoteImageReader();
     final items = <WordZoteroNoteListItem>[];
+    final tables = <WmlTable>[];
+    final cells = <({WmlTable table, WmlTableCell cell})>[];
     var listCount = 0;
     var activeLink = false;
     var elements = 0;
@@ -70,6 +82,20 @@ final class WordZoteroNoteText {
       item.implicitParagraphOpen = false;
     }
 
+    void openCellParagraph(_NoteElement element) {
+      if (element.implicitCellParagraphOpen) return;
+      canonical.write('<p>\uE002');
+      element
+        ..implicitCellParagraphOpen = true
+        ..hasText = true;
+    }
+
+    void closeCellParagraph(_NoteElement element) {
+      if (!element.implicitCellParagraphOpen) return;
+      canonical.write('\uE002</p>');
+      element.implicitCellParagraphOpen = false;
+    }
+
     try {
       while (reader.next()) {
         switch (reader.eventType) {
@@ -94,6 +120,12 @@ final class WordZoteroNoteText {
                   name != 'class' &&
                   !(name == 'href' && tag == 'a') &&
                   !(name == 'start' && tag == 'ol') &&
+                  !(_cellTags.contains(tag) &&
+                      const <String>{
+                        'colspan',
+                        'rowspan',
+                        'data-colwidth',
+                      }.contains(name)) &&
                   !(tag == 'img' &&
                       const <String>{
                         'src',
@@ -124,6 +156,77 @@ final class WordZoteroNoteText {
               attributes[name] = value;
             }
             final parent = stack.lastOrNull;
+            if ((_tableContainers.contains(parent?.tag) &&
+                    !(switch (parent?.tag) {
+                      'table' => tag == 'tbody' || tag == 'tr',
+                      'tbody' => tag == 'tr',
+                      'tr' => _cellTags.contains(tag),
+                      _ => false,
+                    })) ||
+                (_tableTags.contains(tag) &&
+                    (attributes['class']?.trim().isNotEmpty == true ||
+                        (!_cellTags.contains(tag) &&
+                            attributes['style']?.trim().isNotEmpty == true)))) {
+              throw _unsupportedTable();
+            }
+            WmlTable? table;
+            WmlTableRow? row;
+            WmlTableCell? cell;
+            int? tableIndex;
+            int? cellIndex;
+            final activeTable = stack
+                .where((element) => element.table != null)
+                .lastOrNull
+                ?.table;
+            if (tag == 'table') {
+              if (activeLink ||
+                  stack.any(
+                    (element) => !const <String>{
+                      'quds-note',
+                      'html',
+                      'body',
+                      'div',
+                    }.contains(element.tag),
+                  )) {
+                throw _unsupportedTable();
+              }
+              if (tables.length >= 64) {
+                throw const FormatException(
+                  'The Zotero note has too many tables.',
+                );
+              }
+              tableIndex = tables.length;
+              table = WmlTable();
+              tables.add(table);
+            } else if (tag == 'tbody') {
+              if (parent?.table == null) throw _unsupportedTable();
+            } else if (tag == 'tr') {
+              if (activeTable == null ||
+                  !const <String>{'table', 'tbody'}.contains(parent?.tag)) {
+                throw _unsupportedTable();
+              }
+              if (activeTable.rows.length >= 256) {
+                throw const FormatException(
+                  'A Zotero note table has too many rows.',
+                );
+              }
+              row = WmlTableRow();
+              activeTable.rows.add(row);
+            } else if (_cellTags.contains(tag)) {
+              final owner = parent?.row;
+              if (owner == null || activeTable == null) {
+                throw _unsupportedTable();
+              }
+              if (owner.cells.length >= 32 || cells.length >= 4096) {
+                throw const FormatException(
+                  'The Zotero note exceeds the table cell bounds.',
+                );
+              }
+              cell = _tableCell(attributes);
+              owner.cells.add(cell);
+              cellIndex = cells.length;
+              cells.add((table: activeTable, cell: cell));
+            }
             if (tag == 'img' &&
                 activeLink &&
                 links.last.placeholderId != null) {
@@ -145,6 +248,8 @@ final class WordZoteroNoteText {
                             'html',
                             'body',
                             'div',
+                            'td',
+                            'th',
                           }.contains(parent?.tag)))) {
               throw _unsupportedList();
             }
@@ -193,20 +298,39 @@ final class WordZoteroNoteText {
                 openItemParagraph(activeItem);
               }
             }
+            if (parent != null && parent.cellFlow) {
+              if (_cellBlockTags.contains(tag)) {
+                closeCellParagraph(parent);
+              } else {
+                openCellParagraph(parent);
+              }
+            }
             final outputTag = tag == 'a' || tag == 'img'
                 ? 'span'
-                : isList || tag == 'li'
+                : isList || tag == 'li' || _tableTags.contains(tag)
                 ? 'div'
                 : tag;
             canonical.write('<$outputTag');
-            final authoredStyle = attributes['style'];
-            final style = _headings.contains(tag)
+            final authoredStyle = _tableTags.contains(tag)
+                ? null
+                : attributes['style'];
+            final style = tag == 'th'
+                ? 'font-weight: bold;'
+                : _headings.contains(tag)
                 ? 'font-weight: bold;${authoredStyle ?? ''}'
                 : authoredStyle;
             if (style != null) {
               canonical.write(' style="${attributeEscape.convert(style)}"');
             }
             canonical.write(tag == 'br' ? '/>' : '>');
+            // Structural markers own separate canonical paragraphs. They are
+            // removed before indexing actual paragraphs and never become text.
+            if (tableIndex != null) {
+              canonical.write('<p>\uE000t$tableIndex\uE001</p>');
+            }
+            if (cellIndex != null) {
+              canonical.write('<p>\uE000c$cellIndex\uE001</p>');
+            }
             int? linkIndex;
             if (tag == 'a') {
               if (activeLink) throw _malformed();
@@ -239,7 +363,22 @@ final class WordZoteroNoteText {
             if (_headings.contains(tag)) {
               canonical.write('\uE000$tag\uE001');
             }
-            stack.add(_NoteElement(outputTag, tag, linkIndex, list, item));
+            stack.add(
+              _NoteElement(
+                outputTag,
+                tag,
+                linkIndex,
+                list,
+                item,
+                table: table,
+                row: row,
+                cell: cell,
+                cellFlow:
+                    cell != null ||
+                    (tag == 'div' &&
+                        stack.any((element) => element.cell != null)),
+              ),
+            );
           case XmlEventType.endElement:
             if (stack.isEmpty) throw _malformed();
             final element = stack.removeLast();
@@ -252,6 +391,15 @@ final class WordZoteroNoteText {
             if (element.linkIndex != null) {
               canonical.write('\uE000${element.linkIndex! * 2 + 1}\uE001');
               activeLink = false;
+            }
+            if (element.cellFlow) closeCellParagraph(element);
+            if (element.cell != null) {
+              if (!element.hasText) canonical.write('<p>\uE002</p>');
+              canonical.write('<p>\uE000/c\uE001</p>');
+            }
+            if (element.table != null) {
+              _finishTable(element.table!);
+              canonical.write('<p>\uE000/t\uE001</p>');
             }
             if (element.tag == 'p' ||
                 (element.tag == 'div' && !element.hasText)) {
@@ -268,7 +416,8 @@ final class WordZoteroNoteText {
                     element.tag == 'p' ||
                     element.tag == 'div' ||
                     element.tag == 'li' ||
-                    element.tag == 'img')) {
+                    element.tag == 'img' ||
+                    _tableTags.contains(element.tag))) {
               stack.last.hasText = true;
             }
           case XmlEventType.characters:
@@ -277,6 +426,17 @@ final class WordZoteroNoteText {
             if (parent?.list != null) {
               if (reader.text.trim().isNotEmpty) throw _unsupportedList();
               break;
+            }
+            if (_tableContainers.contains(parent?.tag)) {
+              if (reader.text.trim().isNotEmpty) throw _unsupportedTable();
+              break;
+            }
+            if (parent != null && parent.cellFlow) {
+              if (!parent.implicitCellParagraphOpen &&
+                  reader.text.trim().isEmpty) {
+                break;
+              }
+              openCellParagraph(parent);
             }
             final item = parent?.item;
             if (item != null) {
@@ -310,18 +470,61 @@ final class WordZoteroNoteText {
         'This Zotero note contains unsupported formatting or embedded content. The document was kept unchanged.',
       );
     }
+    final blocks = <WmlBlock>[];
     final paragraphs = <WmlParagraph>[];
     final placeholders = <String, WordZoteroNotePlaceholder>{};
     final listItems = <int, WordZoteroNoteListItem>{};
     _NoteLink? current;
     var currentStart = 0;
     var currentParagraph = 0;
+    WmlTable? currentTable;
+    WmlTableCell? currentCell;
+    var tableMarks = 0;
+    var cellMarks = 0;
+    final structure = RegExp(r'^\uE000(t[0-9]+|c[0-9]+|/c|/t)\uE001$');
     final marker = RegExp(
       '\uE000([0-9]+|h[1-6]|/h|l[0-9]+|i[0-9]+)\uE001|\uE002',
     );
     for (final sourceRuns in formatted.toParagraphRuns(
       baseProperties: baseProperties,
     )) {
+      final structural = structure.firstMatch(
+        sourceRuns.map((run) => run.text).join(),
+      );
+      if (structural != null) {
+        if (current != null) throw _malformed();
+        final value = structural[1]!;
+        if (value.startsWith('t')) {
+          final index = int.parse(value.substring(1));
+          if (currentTable != null ||
+              currentCell != null ||
+              index != tableMarks++) {
+            throw _malformed();
+          }
+          currentTable = tables[index];
+          blocks.add(currentTable);
+        } else if (value.startsWith('c')) {
+          final index = int.parse(value.substring(1));
+          if (currentCell != null ||
+              index != cellMarks++ ||
+              !identical(cells[index].table, currentTable)) {
+            throw _malformed();
+          }
+          currentCell = cells[index].cell;
+        } else if (value == '/c') {
+          if (currentCell == null || currentCell.blocks.isEmpty) {
+            throw _malformed();
+          }
+          currentCell = null;
+        } else {
+          if (currentTable == null || currentCell != null) {
+            throw _malformed();
+          }
+          currentTable = null;
+        }
+        continue;
+      }
+      if (currentTable != null && currentCell == null) throw _malformed();
       final paragraph = WmlParagraph();
       var offset = 0;
       for (final run in sourceRuns) {
@@ -411,17 +614,126 @@ final class WordZoteroNoteText {
       if (current != null) {
         throw const FormatException('A Zotero note link crosses paragraphs.');
       }
+      (currentCell?.blocks ?? blocks).add(paragraph);
       paragraphs.add(paragraph);
       if (paragraphs.length > 10000) {
         throw const FormatException('The Zotero note has too many paragraphs.');
       }
     }
-    if (paragraphs.every((p) => p.text.trim().isEmpty)) {
+    if (currentTable != null ||
+        currentCell != null ||
+        tableMarks != tables.length ||
+        cellMarks != cells.length) {
+      throw _malformed();
+    }
+    if (tables.isEmpty && paragraphs.every((p) => p.text.trim().isEmpty)) {
       throw const FormatException('The selected Zotero note contains no text.');
     }
     if (listItems.length != items.length) throw _malformed();
-    return WordZoteroNoteText._(paragraphs, placeholders, listItems);
+    return WordZoteroNoteText._(blocks, paragraphs, placeholders, listItems);
   }
+
+  static WmlTableCell _tableCell(Map<String, String> attributes) {
+    for (final name in ['colspan', 'rowspan']) {
+      final value = attributes[name];
+      if (value != null && value.trim() != '1') throw _unsupportedTable();
+    }
+    double? width;
+    final rawWidth = attributes['data-colwidth']?.trim();
+    if (rawWidth != null) {
+      if (!RegExp(r'^[1-9][0-9]{0,3}$').hasMatch(rawWidth)) {
+        throw _unsupportedTable();
+      }
+      final pixels = int.parse(rawWidth);
+      if (pixels > 4000) throw _unsupportedTable();
+      width = pixels * 0.75;
+    }
+    return WmlTableCell(
+      width: width,
+      fillColor: _cellFill(attributes['style']),
+    );
+  }
+
+  static String? _cellFill(String? style) {
+    if (style == null || style.trim().isEmpty) return null;
+    String? fill;
+    var seen = false;
+    for (final declaration in style.split(';')) {
+      if (declaration.trim().isEmpty) continue;
+      final colon = declaration.indexOf(':');
+      if (colon < 0 ||
+          seen ||
+          declaration.substring(0, colon).trim().toLowerCase() !=
+              'background-color') {
+        throw _unsupportedTable();
+      }
+      seen = true;
+      final value = declaration.substring(colon + 1).trim().toLowerCase();
+      if (value == 'transparent') continue;
+      if (RegExp(r'^#[0-9a-f]{6}$').hasMatch(value)) {
+        fill = value.substring(1).toUpperCase();
+      } else if (RegExp(r'^#[0-9a-f]{3}$').hasMatch(value)) {
+        fill = value
+            .substring(1)
+            .split('')
+            .map((part) => '$part$part')
+            .join()
+            .toUpperCase();
+      } else {
+        final rgb = RegExp(
+          r'^rgb\(\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*\)$',
+        ).firstMatch(value);
+        if (rgb == null) throw _unsupportedTable();
+        final components = [for (var i = 1; i <= 3; i++) int.parse(rgb[i]!)];
+        if (components.any((component) => component > 255)) {
+          throw _unsupportedTable();
+        }
+        fill = components
+            .map((component) => component.toRadixString(16).padLeft(2, '0'))
+            .join()
+            .toUpperCase();
+      }
+    }
+    return fill;
+  }
+
+  static void _finishTable(WmlTable table) {
+    if (table.rows.isEmpty || table.rows.first.cells.isEmpty) {
+      throw _unsupportedTable();
+    }
+    final columns = table.rows.first.cells.length;
+    final widths = List<double?>.filled(columns, null);
+    for (final row in table.rows) {
+      if (row.cells.length != columns) throw _unsupportedTable();
+      for (var column = 0; column < columns; column++) {
+        final width = row.cells[column].width;
+        if (width == null) continue;
+        if (widths[column] != null && widths[column] != width) {
+          throw _unsupportedTable();
+        }
+        widths[column] = width;
+      }
+    }
+    final grid = [for (final width in widths) width ?? 120.0];
+    if (grid.fold<double>(0, (sum, width) => sum + width) > 4000) {
+      throw _unsupportedTable();
+    }
+    table.grid.addAll(grid);
+    for (final row in table.rows) {
+      for (var column = 0; column < columns; column++) {
+        row.cells[column].width = grid[column];
+      }
+    }
+  }
+
+  static UnsupportedError _unsupportedTable() => UnsupportedError(
+    'This Zotero note needs rectangular, unmerged tables with supported cell widths and background colors. Nested tables and other table formatting are not supported. The document was kept unchanged.',
+  );
+
+  static const _tableContainers = <String>{'table', 'tbody', 'tr'};
+  static const _cellTags = <String>{'td', 'th'};
+  static const _tableTags = <String>{..._tableContainers, ..._cellTags};
+  static const _cellBlockTags = <String>{..._headings, 'p', 'div', 'ul', 'ol'};
 
   static void _checkMarkers(String value) {
     if (value.contains(RegExp('[\uE000-\uE002]'))) throw _malformed();
@@ -491,6 +803,7 @@ final class WordZoteroNoteText {
   static const _headings = <String>{'h1', 'h2', 'h3', 'h4', 'h5', 'h6'};
   static const _tags = <String>{
     ..._headings,
+    ..._tableTags,
     'quds-note',
     'html',
     'body',
@@ -584,12 +897,27 @@ final class WordZoteroNotePlaceholder {
 }
 
 final class _NoteElement {
-  _NoteElement(this.outputTag, this.tag, this.linkIndex, this.list, this.item);
+  _NoteElement(
+    this.outputTag,
+    this.tag,
+    this.linkIndex,
+    this.list,
+    this.item, {
+    this.table,
+    this.row,
+    this.cell,
+    this.cellFlow = false,
+  });
   final String outputTag;
   final String tag;
   final int? linkIndex;
   final _NoteList? list;
   final _NoteItem? item;
+  final WmlTable? table;
+  final WmlTableRow? row;
+  final WmlTableCell? cell;
+  final bool cellFlow;
+  bool implicitCellParagraphOpen = false;
   bool hasText = false;
 }
 

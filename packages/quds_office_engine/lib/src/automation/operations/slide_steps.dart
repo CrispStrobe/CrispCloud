@@ -3,7 +3,17 @@ import 'step_input.dart';
 
 const slideOperations = <String, List<String>>{
   'shapeText': ['slide', 'shape', 'shapeName', 'topLevel', 'text'],
-  'shapeTextFrame': ['slide', 'shape', 'shapeName', 'topLevel', 'anchor'],
+  'shapeTextFrame': [
+    'slide',
+    'shape',
+    'shapeName',
+    'topLevel',
+    'anchor',
+    'marginLeft',
+    'marginTop',
+    'marginRight',
+    'marginBottom',
+  ],
   'shapeFormat': [
     'slide',
     'shape',
@@ -81,9 +91,38 @@ void applySlideStep(
       if (target.visual != null || target.table != null) {
         throw ArgumentError('shapeTextFrame requires a text shape');
       }
-      final anchor = PmlTextAnchor.values.byName(s.string('anchor'));
-      target.textAnchor = anchor;
-      target.textAnchorOverride = true;
+      final margins = <PmlTextInsetSide, double>{};
+      for (final side in PmlTextInsetSide.values) {
+        final field = switch (side) {
+          PmlTextInsetSide.left => 'marginLeft',
+          PmlTextInsetSide.top => 'marginTop',
+          PmlTextInsetSide.right => 'marginRight',
+          PmlTextInsetSide.bottom => 'marginBottom',
+        };
+        if (!s.has(field)) continue;
+        final points = s.number(field, min: 0, max: 2147483647 / 12700);
+        final emu = points * 12700;
+        if (emu.round() / 12700 != points) {
+          throw ArgumentError(
+            '$field must have an exact integer EMU representation',
+          );
+        }
+        margins[side] = points;
+      }
+      final anchor = s.has('anchor')
+          ? PmlTextAnchor.values.byName(s.string('anchor'))
+          : null;
+      if (anchor == null && margins.isEmpty) {
+        throw ArgumentError('shapeTextFrame requires an anchor or margin');
+      }
+      if (anchor != null) {
+        target.textAnchor = anchor;
+        target.textAnchorOverride = true;
+      }
+      for (final entry in margins.entries) {
+        target.textInsets = target.textInsets.withSide(entry.key, entry.value);
+        target.textInsetOverrides.add(entry.key);
+      }
     case 'shapeText':
       final target = shape();
       if (target.visual != null || target.table != null) {

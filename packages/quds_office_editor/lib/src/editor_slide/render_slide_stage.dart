@@ -1038,7 +1038,7 @@ class RenderSlideStage extends RenderBox implements MouseTrackerAnnotation {
       shape.text,
       r,
       _textColor(shape),
-    )..layout(maxWidth: r.width - 16);
+    )..layout(maxWidth: math.max(8, shape.textInsets.contentWidth(r.width)));
     return PaintRunText.hitIndex(
       painter,
       local - _shapeTextOrigin(shape, r, painter),
@@ -1741,7 +1741,7 @@ class RenderSlideStage extends RenderBox implements MouseTrackerAnnotation {
       r,
       color,
       background: background,
-    )..layout(maxWidth: r.width - 16);
+    )..layout(maxWidth: math.max(8, shape.textInsets.contentWidth(r.width)));
     final Offset origin = _shapeTextOrigin(shape, r, painter);
     if (isEdit && editBase != editCaret) {
       final int start = editBase < editCaret ? editBase : editCaret;
@@ -1780,12 +1780,15 @@ class RenderSlideStage extends RenderBox implements MouseTrackerAnnotation {
   }
 
   Offset _shapeTextOrigin(PmlShape shape, Rect r, TextPainter painter) =>
-      Offset(r.left + 8, switch (shape.textAnchor) {
-        PmlTextAnchor.center =>
-          r.top + math.max(4, (r.height - painter.height) / 2),
-        PmlTextAnchor.bottom => r.bottom - painter.height - 8,
-        PmlTextAnchor.top => r.top + 8,
-      });
+      Offset(
+        r.left + shape.textInsets.left,
+        r.top +
+            shape.textInsets.textTop(
+              r.height,
+              painter.height,
+              shape.textAnchor,
+            ),
+      );
 
   void _paintMorph(
     Canvas canvas,

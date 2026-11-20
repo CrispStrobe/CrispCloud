@@ -2196,10 +2196,10 @@ abstract final class OfficePdfExport {
     double w,
     double h,
   ) {
-    const double leftInset = 7.2;
-    const double topInset = 3.6;
-    const double rightInset = 7.2;
-    final double width = math.max(8, w - leftInset - rightInset);
+    final insets = shape.textInsets;
+    // Retain native overflow for zero-height/autofit boxes and a bounded
+    // minimum wrapping width when the margins consume the shape rectangle.
+    final double width = math.max(8, insets.contentWidth(w));
     final String fallbackColor = shape.textColor.isEmpty
         ? '000000'
         : shape.textColor;
@@ -2249,7 +2249,7 @@ abstract final class OfficePdfExport {
       sink,
       shape,
       paragraph,
-      x + leftInset,
+      x + insets.left,
       top,
       width,
       fallbackSize,
@@ -2261,11 +2261,7 @@ abstract final class OfficePdfExport {
       0,
       (height, paragraph) => height + paragraphHeight(paragraph, 0),
     );
-    double cy = switch (shape.textAnchor) {
-      PmlTextAnchor.center => y + (h - total) / 2,
-      PmlTextAnchor.bottom => y + h - total - topInset,
-      PmlTextAnchor.top => y + topInset,
-    };
+    double cy = y + insets.textTop(h, total, shape.textAnchor);
     for (final PmlTextParagraph paragraph in paragraphs) {
       cy += paragraphHeight(paragraph, cy, paint: true);
     }

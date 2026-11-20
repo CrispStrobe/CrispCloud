@@ -324,6 +324,14 @@ class _StyleCascade {
     for (final layer in layers) {
       if (layer == null) continue;
       for (final child in layer.childElements) {
+        if (name == 'pPr' &&
+            (child.localName == 'spacing' || child.localName == 'bidi') &&
+            child.namespaceUri != OfficeNamespaces.w &&
+            !(child.namespaceUri.isEmpty && child.prefix == 'w')) {
+          // Do not merge opaque same-name extensions into an effective Word
+          // property. Their original XML remains in the source style/layer.
+          continue;
+        }
         if (child.localName == 'sectPr') continue;
         final old = result.firstChild(child.localName);
         if (name == 'rPr' &&

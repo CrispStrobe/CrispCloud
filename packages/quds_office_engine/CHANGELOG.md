@@ -4,6 +4,15 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Extend Word VBA with typed Font/ParagraphFormat helpers, Paragraph.Format,
+  reading order and exact single/1.5/double line-spacing presets. Preserve
+  independent native spacing attributes and keep foreign/nested layout XML
+  opaque on reopen. Add PowerPoint text-frame margins with exact EMU validation,
+  per-side native ownership and matching inset placement in PDF/live models.
+  Shared module helpers gain named arguments, optional scalar defaults and
+  explicit omitted-Variant/IsMissing handling. These remain bounded adapters;
+  named application-member arguments and live document reads are not added.
+
 - Continue the bounded Word/PowerPoint VBA adapters with Word document aliases,
   `Paragraphs.Item`, small caps, superscript/subscript and fixed-palette
   highlighting; add PowerPoint typed text-frame/formatting/transition helpers,

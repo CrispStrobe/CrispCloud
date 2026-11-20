@@ -422,6 +422,53 @@ class PmlTextSource {
   final double lineSpacingReduction;
 }
 
+/// One DrawingML text-body inset. Each side has independent write ownership.
+enum PmlTextInsetSide { left, top, right, bottom }
+
+/// Text-frame margins in points. Defaults are the DrawingML bodyPr defaults.
+class PmlTextInsets {
+  const PmlTextInsets({
+    this.left = 7.2,
+    this.top = 3.6,
+    this.right = 7.2,
+    this.bottom = 3.6,
+  });
+
+  final double left;
+  final double top;
+  final double right;
+  final double bottom;
+
+  double operator [](PmlTextInsetSide side) => switch (side) {
+    PmlTextInsetSide.left => left,
+    PmlTextInsetSide.top => top,
+    PmlTextInsetSide.right => right,
+    PmlTextInsetSide.bottom => bottom,
+  };
+
+  PmlTextInsets withSide(PmlTextInsetSide side, double value) => PmlTextInsets(
+    left: side == PmlTextInsetSide.left ? value : left,
+    top: side == PmlTextInsetSide.top ? value : top,
+    right: side == PmlTextInsetSide.right ? value : right,
+    bottom: side == PmlTextInsetSide.bottom ? value : bottom,
+  );
+
+  double contentWidth(double width) =>
+      width > left + right ? width - left - right : 0;
+
+  double contentHeight(double height) =>
+      height > top + bottom ? height - top - bottom : 0;
+
+  /// The anchor applies inside the inset rectangle, including unequal margins.
+  double textTop(double height, double textHeight, PmlTextAnchor anchor) =>
+      top +
+      switch (anchor) {
+        PmlTextAnchor.top => 0,
+        PmlTextAnchor.center => (height - top - bottom - textHeight) / 2,
+        PmlTextAnchor.bottom => height - top - bottom - textHeight,
+      };
+}
+
 /// Class PmlShape.
 class PmlShape {
   /// PmlShape API.
@@ -455,6 +502,8 @@ class PmlShape {
     this.textAlign = PmlTextAlign.left,
     this.textAnchor = PmlTextAnchor.top,
     this.textAnchorOverride = false,
+    this.textInsets = const PmlTextInsets(),
+    Set<PmlTextInsetSide>? textInsetOverrides,
     double textScale = 1.0,
     double lineSpacingReduction = 0.0,
     List<PmlTextParagraph>? richText,
@@ -467,7 +516,8 @@ class PmlShape {
     this.strokeColor = '',
     this.strokeWidth = 1,
     this.hyperlinkUrl = '',
-  }) : _textScale = _autofitRatio(textScale, 'textScale'),
+  }) : textInsetOverrides = {...?textInsetOverrides},
+       _textScale = _autofitRatio(textScale, 'textScale'),
        _lineSpacingReduction = _autofitRatio(
          lineSpacingReduction,
          'lineSpacingReduction',
@@ -571,6 +621,17 @@ class PmlShape {
   /// value matches an imported baseline/unsupported anchor's fallback.
   bool textAnchorOverride;
 
+  /// Resolved direct text-frame margins. Unedited native attributes stay opaque
+  /// in [textSource]; explicit writes replace only their own unqualified inset.
+  PmlTextInsets textInsets;
+  final Set<PmlTextInsetSide> textInsetOverrides;
+
+  bool get hasTextInsetChanges =>
+      textInsetOverrides.isNotEmpty ||
+      PmlTextInsetSide.values.any(
+        (side) => textInsets[side] != const PmlTextInsets()[side],
+      );
+
   /// `a:normAutofit/@fontScale`, normalized to 0.0–1.0.
   double get textScale => _textScale;
   double _textScale;
@@ -605,7 +666,11 @@ class PmlShape {
   /// Replacing imported text invalidates the old runs altogether.
   List<PmlTextParagraph> get resolvedRichText {
     final PmlTextSource? source = textSource;
-    final bool explicit = hasExplicitTextFormatting || textReplacementRequested;
+    final bool explicit =
+        hasExplicitTextFormatting ||
+        textReplacementRequested ||
+        (hasTextInsetChanges &&
+            (richText.isEmpty || (source != null && source.text != text)));
     if (!explicit && (source == null || richText.isEmpty)) return richText;
     if (!explicit && source!.text != text) return const <PmlTextParagraph>[];
     final bool replace =
@@ -767,6 +832,8 @@ class PmlShape {
       textAlign: textAlign,
       textAnchor: textAnchor,
       textAnchorOverride: textAnchorOverride,
+      textInsets: textInsets,
+      textInsetOverrides: textInsetOverrides,
       textScale: textScale,
       lineSpacingReduction: lineSpacingReduction,
       richText: <PmlTextParagraph>[

@@ -582,9 +582,23 @@ void _captureTextSources(
         reader.namespaceUri == OfficeNamespaces.p &&
         current != null) {
       final XmlElement body = XmlDocument.readElement(reader);
-      final XmlElement? autofit = body
-          .firstChild('bodyPr', namespaceUri: OfficeNamespaces.a)
-          ?.firstChild('normAutofit', namespaceUri: OfficeNamespaces.a);
+      final properties = body.firstChild(
+        'bodyPr',
+        namespaceUri: OfficeNamespaces.a,
+      );
+      current.textInsets = _readTextInsets(properties);
+      current.textAnchor = switch (properties?.getAttribute(
+        'anchor',
+        namespaceUri: '',
+      )) {
+        'ctr' => PmlTextAnchor.center,
+        'b' => PmlTextAnchor.bottom,
+        _ => PmlTextAnchor.top,
+      };
+      final XmlElement? autofit = properties?.firstChild(
+        'normAutofit',
+        namespaceUri: OfficeNamespaces.a,
+      );
       current.textScale = _readAutofitRatio(
         autofit?.getAttribute('fontScale'),
         1,
@@ -1199,6 +1213,7 @@ void _writeSlideShape(XmlWriter w, PmlShape shape) {
       shape.textSource != null ||
       shape.hasExplicitTextFormatting ||
       shape.textAnchorOverride ||
+      shape.hasTextInsetChanges ||
       shape.textAnchor != PmlTextAnchor.top ||
       shape.textReplacementRequested) {
     _writeShapeText(w, shape);
@@ -1210,6 +1225,53 @@ void _writeSlideShape(XmlWriter w, PmlShape shape) {
 
 XmlElement _textElement(String name) =>
     XmlElement(localName: name, prefix: 'a', namespaceUri: OfficeNamespaces.a);
+
+String _insetAttribute(PmlTextInsetSide side) => switch (side) {
+  PmlTextInsetSide.left => 'lIns',
+  PmlTextInsetSide.top => 'tIns',
+  PmlTextInsetSide.right => 'rIns',
+  PmlTextInsetSide.bottom => 'bIns',
+};
+
+PmlTextInsets _readTextInsets(XmlElement? properties) {
+  var result = const PmlTextInsets();
+  for (final side in PmlTextInsetSide.values) {
+    final emu = int.tryParse(
+      properties?.getAttribute(_insetAttribute(side), namespaceUri: '') ?? '',
+    );
+    if (emu != null && emu >= -2147483648 && emu <= 2147483647) {
+      result = result.withSide(side, emu / 12700);
+    }
+  }
+  return result;
+}
+
+void _writeTextInsets(XmlElement body, PmlShape shape) {
+  var properties = body.firstChild('bodyPr', namespaceUri: OfficeNamespaces.a);
+  final imported = _readTextInsets(properties);
+  for (final side in PmlTextInsetSide.values) {
+    final points = shape.textInsets[side];
+    if (!shape.textInsetOverrides.contains(side) && imported[side] == points) {
+      continue;
+    }
+    final emu = points * 12700;
+    if (!emu.isFinite ||
+        emu < -2147483648 ||
+        emu > 2147483647 ||
+        emu.round() / 12700 != points) {
+      throw ArgumentError('Text-frame insets must be exact signed Long EMUs');
+    }
+    if (properties == null) {
+      properties = _textElement('bodyPr')..parent = body;
+      body.children.insert(0, properties);
+    }
+    final name = _insetAttribute(side);
+    properties.removeAttribute(name, namespaceUri: '');
+    properties.attributes.add(
+      XmlAttribute(localName: name, value: '${emu.round()}'),
+    );
+  }
+}
 
 /// Whether a DrawingML radial focus is the supported central point.
 bool isCenteredRadialFillToRect(XmlPullReader reader) => const <String>[
@@ -1447,6 +1509,7 @@ void _writeShapeText(XmlWriter writer, PmlShape shape) {
       ),
     );
   }
+  _writeTextInsets(body, shape);
   _writeAutofit(body, shape);
   final bool replace =
       shape.textReplacementRequested ||

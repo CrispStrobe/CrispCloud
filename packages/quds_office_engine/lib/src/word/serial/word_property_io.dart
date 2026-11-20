@@ -27,6 +27,12 @@ abstract final class WordPropertyIo {
     'jc': '${p.justification}',
     'spacing':
         '${p.spacingBefore}|${p.spacingAfter}|${p.lineSpacing}|${p.lineSpacingRule}',
+    // Keep the aggregate for older snapshots, while separately tracking
+    // attribute groups so a line-spacing write does not own before/after.
+    'spacing:before': '${p.spacingBefore}',
+    'spacing:after': '${p.spacingAfter}',
+    'spacing:line': '${p.lineSpacing}|${p.lineSpacingRule}',
+    'spacing:granular': '1',
     'ind':
         '${p.indent.left}|${p.indent.right}|${p.indent.firstLine}|${p.indent.hanging}',
     'keepLines': '${p.keepTogether}',
@@ -60,7 +66,26 @@ abstract final class WordPropertyIo {
   ) {
     final XmlElement result = parse(source, generated.localName);
     for (final String key in current.keys) {
+      if (generated.localName == 'pPr') {
+        if (key.startsWith('spacing:')) continue;
+        if (key == 'spacing') {
+          _preserveSpacing(result, generated, imported, current);
+          continue;
+        }
+      }
       if (current[key] == imported[key]) continue;
+      if (generated.localName == 'pPr' && key == 'bidi') {
+        // Reading order owns only the Word val attribute, including an
+        // explicit false against inherited RTL. Retain extension metadata.
+        final bidi = generated.firstChild('bidi');
+        _mergeWordAttributes(
+          result,
+          'bidi',
+          const {'val'},
+          {'val': bidi == null ? '0' : bidi.getAttribute('val') ?? '1'},
+        );
+        continue;
+      }
       if (key == 'lang' || key == 'lang:bidi' || key == 'rPr') {
         // Each language value owns only its own attribute. Preserve East
         // Asian language and unrelated formatting from the native source.
@@ -136,6 +161,117 @@ abstract final class WordPropertyIo {
     }
     orderChildren(result);
     return result;
+  }
+
+  static void _preserveSpacing(
+    XmlElement result,
+    XmlElement generated,
+    Map<String, String> imported,
+    Map<String, String> current,
+  ) {
+    const groups = <String, Set<String>>{
+      'before': {'before', 'beforeLines', 'beforeAutospacing'},
+      'after': {'after', 'afterLines', 'afterAutospacing'},
+      'line': {'line', 'lineRule'},
+    };
+    final granular =
+        imported['spacing:granular'] == '1' ||
+        groups.keys.any((group) => imported.containsKey('spacing:$group'));
+    // A removed aggregate remains the legacy explicit all-spacing override.
+    // Old maps without granular snapshots retain their previous behavior.
+    final whole = !imported.containsKey('spacing') || !granular;
+    if (whole && current['spacing'] == imported['spacing']) return;
+    final replacement = generated.firstChild('spacing');
+    for (final entry in groups.entries) {
+      final key = 'spacing:${entry.key}';
+      if (!whole && current[key] == imported[key]) continue;
+      _mergeWordAttributes(result, 'spacing', entry.value, {
+        for (final attribute in entry.value)
+          attribute: ?replacement?.getAttribute(attribute),
+      });
+    }
+  }
+
+  static bool _wordName(String namespace, String prefix) =>
+      namespace == OfficeNamespaces.w || (namespace.isEmpty && prefix == 'w');
+
+  static void _mergeWordAttributes(
+    XmlElement properties,
+    String name,
+    Set<String> owned,
+    Map<String, String> values,
+  ) {
+    XmlElement? target;
+    for (final child in properties.childElements) {
+      if (child.localName == name &&
+          _wordName(child.namespaceUri, child.prefix)) {
+        target = child;
+        break;
+      }
+    }
+    if (target == null) {
+      if (values.isEmpty) return;
+      target = XmlElement(
+        localName: name,
+        prefix: _wordAttributePrefix(properties),
+        namespaceUri: OfficeNamespaces.w,
+      );
+      properties.addChild(target);
+    }
+    target.attributes.removeWhere(
+      (attribute) =>
+          owned.contains(attribute.localName) &&
+          _wordName(attribute.namespaceUri, attribute.prefix),
+    );
+    if (values.isEmpty) return;
+    final prefix = _wordAttributePrefix(target);
+    for (final entry in values.entries) {
+      target.attributes.add(
+        XmlAttribute(
+          localName: entry.key,
+          value: entry.value,
+          prefix: prefix,
+          namespaceUri: OfficeNamespaces.w,
+        ),
+      );
+    }
+  }
+
+  static String _wordAttributePrefix(XmlElement element) {
+    final bindings = <String, String>{};
+    for (XmlElement? node = element; node != null; node = node.parent) {
+      for (final attribute in node.attributes) {
+        if (attribute.prefix == 'xmlns') {
+          bindings.putIfAbsent(attribute.localName, () => attribute.value);
+        } else if (attribute.prefix.isNotEmpty &&
+            attribute.namespaceUri.isNotEmpty) {
+          bindings.putIfAbsent(attribute.prefix, () => attribute.namespaceUri);
+        }
+      }
+      if (node.prefix.isNotEmpty && node.namespaceUri.isNotEmpty) {
+        bindings[node.prefix] ??= node.namespaceUri;
+      }
+    }
+    var prefix = 'w';
+    for (
+      var suffix = 1;
+      bindings[prefix] != null && bindings[prefix] != OfficeNamespaces.w;
+      suffix++
+    ) {
+      prefix = 'w$suffix';
+    }
+    element.attributes.removeWhere(
+      (attribute) => attribute.qualifiedName == 'xmlns:$prefix',
+    );
+    element.attributes.add(
+      XmlAttribute(
+        localName: prefix,
+        value: OfficeNamespaces.w,
+        prefix: 'xmlns',
+        namespaceUri: 'http://www.w3.org/2000/xmlns/',
+      ),
+    );
+    return prefix;
   }
 
   /// Change the owned language attribute while preserving native metadata.

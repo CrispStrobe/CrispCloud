@@ -964,6 +964,8 @@ final class WordZoteroCitingSession {
     );
     WordContentControls.assertCanSplit(paragraph, insertionOffset);
     WordContentControls.assertCanSplit(paragraph, insertionEndOffset);
+    final text = _noteText;
+    if (text != null) _assertNoteBlockTarget(text);
   }
 
   /// Native field result runs can look like ordinary text even when their
@@ -1102,6 +1104,7 @@ final class WordZoteroCitingSession {
       html,
       baseProperties: WmlRunEdit.propsAt(insertionParagraph!, insertionOffset),
     );
+    _assertNoteBlockTarget(parsed);
     if (_fields.length + parsed.placeholders.length > 10000 ||
         _body.length + parsed.paragraphs.length > 100000) {
       throw UnsupportedError(
@@ -1110,6 +1113,16 @@ final class WordZoteroCitingSession {
     }
     _noteText = parsed;
     _selected = null;
+  }
+
+  void _assertNoteBlockTarget(WordZoteroNoteText text) {
+    if (!text.blocks.any((block) => block is WmlTable)) return;
+    final host = WordTree.flowHost(document, insertionParagraph!);
+    if (host == null || host.parent[host.index] is! WmlParagraph) {
+      throw UnsupportedError(
+        'Insert a Zotero note containing tables in a main-flow paragraph of the document or an authored note, outside existing tables.',
+      );
+    }
   }
 
   List<Map<String, Object>> _convertNotePlaceholders(
@@ -1180,7 +1193,10 @@ final class WordZoteroCitingSession {
         '',
       );
     }
-    final paragraphs = [for (final p in text.paragraphs) WmlClone.paragraph(p)];
+    final blocks = [for (final block in text.blocks) WmlClone.block(block)];
+    // Placeholder and list indexes address the same row-major paragraph view
+    // as the parser, while their live containers retain native table ownership.
+    final paragraphs = _flowParagraphs(blocks).toList();
     final entries = _noteTextFields.entries.toList()
       ..sort((a, b) {
         final p = b.value.paragraphIndex.compareTo(a.value.paragraphIndex);
@@ -1251,12 +1267,16 @@ final class WordZoteroCitingSession {
         ..explicitIndent = true;
     }
     _noteTextCaretTailLength = paragraph.text.length - insertionOffset;
-    if (text.listItems.isNotEmpty ||
+    if (blocks.any((block) => block is WmlTable) ||
+        text.listItems.isNotEmpty ||
         paragraphs.any((p) => p.properties.headingLevel != null)) {
-      // Headings and lists must not change the style of surrounding prose.
-      // Keep their complete research note as separate blocks.
+      // Preserve native tables and keep headings/list formatting independent
+      // from surrounding prose. Cell paragraphs never absorb outside text.
       final originalProperties = paragraph.properties.copy();
-      final tail = _splitNoteTextParagraph(paragraph);
+      final tail = _splitNoteTextParagraph(
+        paragraph,
+        preserveReferenceSpace: blocks.first is WmlTable,
+      );
       final owner = _insertionNote;
       final referenceSpacePrefix =
           owner != null &&
@@ -1269,6 +1289,7 @@ final class WordZoteroCitingSession {
           (paragraph.inlines.any((inline) => inline is WmlNoteMarker) ||
               (owner.note.addReference && !owner.note.hasReferenceMarkers));
       final emptyPrefix =
+          (blocks.first is WmlParagraph || owner == null) &&
           (paragraph.text.isEmpty || referenceSpacePrefix) &&
           paragraph.inlines.every(
             (inline) =>
@@ -1278,8 +1299,8 @@ final class WordZoteroCitingSession {
                     inline.hyperlink == null &&
                     inline.commentIds.isEmpty),
           );
-      if (emptyPrefix) {
-        paragraphs.first.inlines.insertAll(
+      if (emptyPrefix && blocks.first is WmlParagraph) {
+        (blocks.first as WmlParagraph).inlines.insertAll(
           0,
           paragraph.inlines.where(
             (inline) =>
@@ -1287,18 +1308,32 @@ final class WordZoteroCitingSession {
                 (referenceSpacePrefix && inline is WmlRun),
           ),
         );
-        slot.parent.removeAt(slot.index);
       }
+      // A leading table in an authored note must leave its automatic marker
+      // and separator in the original main-flow paragraph, outside the cells.
+      if (emptyPrefix) slot.parent.removeAt(slot.index);
       final insertedAt = slot.index + (emptyPrefix ? 0 : 1);
-      slot.parent.insertAll(insertedAt, paragraphs);
-      final last = paragraphs.last;
-      _caretAfter = (paragraph: last, offset: last.text.length);
-      _noteTextCaretTailLength = 0;
-      if (tail.isNotEmpty) {
-        slot.parent.insert(
-          insertedAt + paragraphs.length,
-          WmlParagraph(inlines: tail, properties: originalProperties),
+      slot.parent.insertAll(insertedAt, blocks);
+      if (blocks.last is WmlParagraph) {
+        final last = blocks.last as WmlParagraph;
+        _caretAfter = (paragraph: last, offset: last.text.length);
+        _noteTextCaretTailLength = 0;
+        if (tail.isNotEmpty) {
+          slot.parent.insert(
+            insertedAt + blocks.length,
+            WmlParagraph(inlines: tail, properties: originalProperties),
+          );
+        }
+      } else {
+        // Ending in a table needs a real main-flow caret. In particular, the
+        // Notes pane cannot map a text selection into a table-cell paragraph.
+        final suffix = WmlParagraph(
+          inlines: tail,
+          properties: originalProperties,
         );
+        slot.parent.insert(insertedAt + blocks.length, suffix);
+        _caretAfter = (paragraph: suffix, offset: 0);
+        _noteTextCaretTailLength = suffix.text.length;
       }
       return;
     }
@@ -1329,7 +1364,10 @@ final class WordZoteroCitingSession {
     }
   }
 
-  List<WmlInline> _splitNoteTextParagraph(WmlParagraph paragraph) {
+  List<WmlInline> _splitNoteTextParagraph(
+    WmlParagraph paragraph, {
+    bool preserveReferenceSpace = false,
+  }) {
     // A note's automatic reference mark is not editable text. At offset zero
     // it belongs before the inserted content, including a leading heading or
     // list; it must not move to the suffix paragraph with ordinary boundaries.
@@ -1340,7 +1378,21 @@ final class WordZoteroCitingSession {
         if (inline is WmlNoteMarker) leadingMarkers.add(inline);
       }
     }
-    final tail = WmlRunEdit.splitParagraphInlines(paragraph, insertionOffset);
+    final owner = _insertionNote;
+    final splitOffset =
+        preserveReferenceSpace &&
+            owner != null &&
+            insertionOffset == 0 &&
+            paragraph.text.startsWith(' ') &&
+            identical(
+              WordNotes.editableParagraphs(owner.note).firstOrNull,
+              paragraph,
+            ) &&
+            (leadingMarkers.isNotEmpty ||
+                (owner.note.addReference && !owner.note.hasReferenceMarkers))
+        ? 1
+        : insertionOffset;
+    final tail = WmlRunEdit.splitParagraphInlines(paragraph, splitOffset);
     for (final marker in leadingMarkers) {
       if (tail.remove(marker)) paragraph.inlines.add(marker);
     }

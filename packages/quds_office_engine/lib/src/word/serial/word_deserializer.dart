@@ -1572,6 +1572,16 @@ class WordDeserializer {
       if (reader.eventType != XmlEventType.startElement) {
         continue;
       }
+      if ((reader.localName == 'spacing' || reader.localName == 'bidi') &&
+          (reader.depth != depth + 1 ||
+              (reader.namespaceUri != OfficeNamespaces.w &&
+                  !(reader.namespaceUri.isEmpty && reader.prefix == 'w')))) {
+        // Source extensions may use the same names, or contain a nested Word
+        // lookalike. Only direct native paragraph properties affect layout.
+        // The original pPr fragment remains available for sparse export.
+        XmlDocument.readElement(reader);
+        continue;
+      }
       switch (reader.localName) {
         case 'pPrChange':
           XmlDocument.readElement(reader);

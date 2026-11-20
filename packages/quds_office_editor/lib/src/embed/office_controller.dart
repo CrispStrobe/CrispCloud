@@ -1410,7 +1410,14 @@ class WordEditorController extends OfficeController {
   VoidCallback? onManageProofingDownloads;
 
   /// relayout API.
-  void relayout({bool localEdit = false}) {
+  ///
+  /// [localEdit] declares that only the paragraphs in [dirty] (default: the
+  /// paragraphs of the caret selection after the edit) changed, plus
+  /// inserted or removed blocks and paragraph text. The engine then lays out
+  /// only from the first changed block until the flow meets the previous
+  /// layout again ([WordLayoutEngine.incrementalLayout]); the result equals a
+  /// full layout without field updates.
+  void relayout({bool localEdit = false, Iterable<WmlParagraph>? dirty}) {
     _syncEmptyParagraphDirection();
     // Header/footer text is chrome, not section body content. The incremental
     // layout path reuses page chrome, so edits there would never reach the
@@ -1423,18 +1430,52 @@ class WordEditorController extends OfficeController {
     }
     final WordLayoutEngine engine = _engine;
     final int fromSection = incremental ? sectionIndexAtCaret : 0;
-    documentLaidOut = engine.layout(
-      document,
-      updateFields: !incremental,
-      fromSectionIndex: fromSection,
-      reuse: incremental ? documentLaidOut : null,
-    );
+    if (incremental && WordLayoutEngine.incrementalLayout) {
+      final LaidOutDocument previous = documentLaidOut;
+      // A layout whose lines were paint-fitted in place cannot be reused
+      // line by line; lay out once from the start to record fresh state.
+      documentLaidOut = previous.supportsIncrementalReuse
+          ? engine.layout(
+              document,
+              updateFields: false,
+              fromSectionIndex: fromSection,
+              reuse: previous,
+              dirtyParagraphs: Set<WmlParagraph>.identity()
+                ..addAll(dirty ?? _localEditParagraphs()),
+            )
+          : engine.layout(document, updateFields: false);
+    } else {
+      documentLaidOut = engine.layout(
+        document,
+        updateFields: !incremental,
+        fromSectionIndex: fromSection,
+        reuse: incremental ? documentLaidOut : null,
+      );
+    }
     if (!incremental && WordToc.syncPageNumbers(document, documentLaidOut)) {
       documentLaidOut = engine.layout(document);
     }
     if (!incremental || isEditingComment) {
       _layoutComment();
     }
+  }
+
+  /// Paragraphs a local edit may have changed: the caret selection after it.
+  List<WmlParagraph> _localEditParagraphs() {
+    final List<WmlParagraph> paras = _paragraphs;
+    if (paras.isEmpty) return const <WmlParagraph>[];
+    final range = caret.normalizedRange;
+    final int start = range.startPara < range.endPara
+        ? range.startPara
+        : range.endPara;
+    final int end = range.startPara < range.endPara
+        ? range.endPara
+        : range.startPara;
+    if (end < 0 || start >= paras.length) return const <WmlParagraph>[];
+    return paras.sublist(
+      start.clamp(0, paras.length - 1),
+      end.clamp(0, paras.length - 1) + 1,
+    );
   }
 
   @override
@@ -2137,6 +2178,8 @@ class WordEditorController extends OfficeController {
     List<WmlParagraph> paras,
     String? themeFamily,
   ) {
+    // Fitting moves glyphs in place; such lines are no longer engine output.
+    laid.discardIncrementalState();
     void fit(LaidOutLine line) {
       final String text =
           line.sourceText ??
@@ -3460,7 +3503,9 @@ class WordEditorController extends OfficeController {
       }
     }
     commands.endBatch();
-    relayout();
+    // Like typing and Enter: the split paragraphs are new blocks and the
+    // first one's text changed, so the incremental path sees all of them.
+    relayout(localEdit: true);
     _markLocalEdit();
     _syncImeSelection();
     notifyListeners();
@@ -8587,7 +8632,7 @@ class WordEditorController extends OfficeController {
     if (edit.margins != null && _rulerSection != null) {
       _rulerSection!.margins = edit.margins!;
     }
-    relayout(localEdit: edit.margins == null);
+    relayout(localEdit: edit.margins == null, dirty: _rulerTargets);
     notifyListeners();
   }
 
@@ -9304,6 +9349,11 @@ class WordEditorController extends OfficeController {
   /// Current review selection, rebound after a check of unchanged text. A
   /// finding under the caret takes precedence, so the pane follows navigation
   /// without moving focus or interrupting typing.
+  /// The issue last chosen with [selectProofingIssue], without validating it
+  /// against the caret; cheap to read (no proofing capture), for change
+  /// detection by host chrome.
+  WordProofingIssue? get chosenProofingIssue => _selectedProofingIssue;
+
   WordProofingIssue? get selectedProofingIssue {
     final selected = _selectedProofingIssue;
     final atCaret = proofingIssuesAtCaret;

@@ -301,7 +301,7 @@ End Sub
         for (final parameter in <String>[
           'value As Long',
           'ByRef value As Long',
-          'Optional ByVal value As Long',
+          'Optional ByRef value As Long',
           'ParamArray values()',
         ]) {
           expect(

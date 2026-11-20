@@ -135,6 +135,7 @@ const _stringIntrinsics = <String>{'len', r'left$', r'right$', r'mid$'};
 const _variantIntrinsics = <String>{
   'isempty',
   'isnull',
+  'ismissing',
   'cbool',
   'cdbl',
   'clng',
@@ -146,6 +147,14 @@ const _wordConstants = <String, int>{
   'wdalignparagraphcenter': 1,
   'wdalignparagraphright': 2,
   'wdalignparagraphjustify': 3,
+  'wdreadingorderrtl': 0,
+  'wdreadingorderltr': 1,
+  'wdlinespacesingle': 0,
+  'wdlinespace1pt5': 1,
+  'wdlinespacedouble': 2,
+  'wdlinespaceatleast': 3,
+  'wdlinespaceexactly': 4,
+  'wdlinespacemultiple': 5,
   'wdunderlinenone': 0,
   'wdunderlinesingle': 1,
   'wdunderlinewords': 2,
@@ -520,15 +529,20 @@ class _Lexer {
       }
       if ('().,+-*/&=<>:'.contains(String.fromCharCode(code))) {
         _advance();
+        if (code == 58 &&
+            offset < source.length &&
+            source.codeUnitAt(offset) == 61) {
+          _advance();
+        }
         if ((code == 60 || code == 62) && offset < source.length) {
           final next = source.codeUnitAt(offset);
           if (next == 61 || (code == 60 && next == 62)) _advance();
         }
         final text = source.substring(start, offset);
         _add(
-          token(code == 58 ? _TokenKind.separator : _TokenKind.symbol, text),
+          token(text == ':' ? _TokenKind.separator : _TokenKind.symbol, text),
         );
-        statementStart = code == 58;
+        statementStart = text == ':';
         continue;
       }
       context.unsupported(
@@ -611,6 +625,8 @@ enum _Declared {
   range,
   document,
   paragraph,
+  wordFont,
+  wordParagraphFormat,
   presentation,
   slide,
   shape,
@@ -626,6 +642,8 @@ bool _objectType(_Declared type) =>
     type == _Declared.range ||
     type == _Declared.document ||
     type == _Declared.paragraph ||
+    type == _Declared.wordFont ||
+    type == _Declared.wordParagraphFormat ||
     type == _Declared.presentation ||
     type == _Declared.slide ||
     type == _Declared.shape ||
@@ -662,6 +680,8 @@ _Kind _kindOf(_Declared type) => switch (type) {
   _Declared.range => _Kind.range,
   _Declared.document => _Kind.document,
   _Declared.paragraph => _Kind.paragraph,
+  _Declared.wordFont => _Kind.font,
+  _Declared.wordParagraphFormat => _Kind.paragraphFormat,
   _Declared.presentation => _Kind.presentation,
   _Declared.slide => _Kind.slide,
   _Declared.shape => _Kind.shape,
@@ -685,6 +705,17 @@ class _Literal extends _Expr {
 
 class _Name extends _Expr {
   const _Name(_Token token) : super(token, 1);
+}
+
+// Argument markers stay in source order until a checked helper invocation.
+// They are not ordinary expression values or object-model argument aliases.
+class _NamedArgument extends _Expr {
+  _NamedArgument(_Token token, this.value) : super(token, value.depth + 1);
+  final _Expr value;
+}
+
+class _OmittedArgument extends _Expr {
+  const _OmittedArgument(_Token token) : super(token, 1);
 }
 
 class _WithValue extends _Expr {
@@ -868,9 +899,16 @@ class _Exit extends _Statement {
 }
 
 class _Parameter {
-  const _Parameter(this.name, this.type);
+  const _Parameter(
+    this.name,
+    this.type, {
+    this.isOptional = false,
+    this.defaultValue,
+  });
   final _Token name;
   final _Declared type;
+  final bool isOptional;
+  final _Expr? defaultValue;
 }
 
 class _Procedure {
@@ -1016,14 +1054,52 @@ class _Parser {
             'Procedures accept at most $_maxArguments parameters.',
           );
         }
+        final optionalBefore = _take('optional');
         if (!_take('byval')) {
           context.unsupported(
             current,
-            'Parameters require explicit ByVal; ByRef, Optional, and ParamArray are unsupported.',
+            'Parameters require explicit ByVal; ByRef and ParamArray are unsupported.',
+          );
+        }
+        final optionalAfter = _take('optional');
+        if (optionalBefore && optionalAfter) {
+          _syntax('Optional may occur only once per parameter.');
+        }
+        final optional = optionalBefore || optionalAfter;
+        if (!optional && result.any((parameter) => parameter.isOptional)) {
+          _syntax(
+            'All parameters after an Optional parameter must be Optional.',
           );
         }
         final name = _identifier();
-        result.add(_Parameter(name, _declaredType()));
+        if (_is('(')) {
+          context.unsupported(name, 'Array parameters are unsupported.');
+        }
+        final type = _declaredType();
+        if (optional && _objectType(type)) {
+          context.unsupported(
+            name,
+            'Optional object parameters are unsupported.',
+          );
+        }
+        _Expr? defaultValue;
+        if (_take('=')) {
+          if (!optional) {
+            _syntax(
+              'Only Optional parameters may declare a default value.',
+              name,
+            );
+          }
+          defaultValue = _expression();
+        }
+        result.add(
+          _Parameter(
+            name,
+            type,
+            isOptional: optional,
+            defaultValue: defaultValue,
+          ),
+        );
       } while (_take(','));
     }
     _expect(')');
@@ -1313,7 +1389,7 @@ class _Parser {
                 'Calls accept at most $_maxArguments arguments.',
               );
             }
-            arguments.add(_expression());
+            arguments.add(_argument());
           } while (_take(','));
         }
         _endStatement();
@@ -1350,7 +1426,7 @@ class _Parser {
                   'Calls accept at most $_maxArguments arguments.',
                 );
               }
-              arguments.add(_expression());
+              arguments.add(_argument());
             } while (_take(','));
           }
           _endStatement();
@@ -1379,7 +1455,7 @@ class _Parser {
                 'Calls accept at most $_maxArguments arguments.',
               );
             }
-            arguments.add(_expression());
+            arguments.add(_argument());
           } while (_take(','));
           _endStatement();
           result.add(_Invoke(token, arguments));
@@ -1499,6 +1575,8 @@ class _Parser {
       'range' when !context.isPowerPoint => _Declared.range,
       'document' when context.isWord => _Declared.document,
       'paragraph' when context.isWord => _Declared.paragraph,
+      'font' when context.isWord => _Declared.wordFont,
+      'paragraphformat' when context.isWord => _Declared.wordParagraphFormat,
       'presentation' when context.isPowerPoint => _Declared.presentation,
       'slide' when context.isPowerPoint => _Declared.slide,
       'shape' when context.isPowerPoint => _Declared.shape,
@@ -1514,7 +1592,7 @@ class _Parser {
         context.isPowerPoint
             ? 'Supported declarations are Long, Double, String, Boolean, Variant, Presentation, Slide, Shape, TextFrame, TextRange, Font, ParagraphFormat, and SlideShowTransition.'
             : context.isWord
-            ? 'Supported declarations are Long, Double, String, Boolean, Variant, Document, Paragraph, and Range.'
+            ? 'Supported declarations are Long, Double, String, Boolean, Variant, Document, Paragraph, Range, Font, and ParagraphFormat.'
             : 'Supported declarations are Long, Double, String, Boolean, Variant, Worksheet, and Range.',
       ),
     };
@@ -1624,11 +1702,27 @@ class _Parser {
             'Calls accept at most $_maxArguments arguments.',
           );
         }
-        result.add(_expression());
+        result.add(_argument());
       } while (_take(','));
     }
     _expect(')');
     return result;
+  }
+
+  _Expr _argument() {
+    if (_is(',') ||
+        _is(')') ||
+        current.kind == _TokenKind.separator ||
+        current.kind == _TokenKind.end) {
+      return _OmittedArgument(current);
+    }
+    if (current.kind == _TokenKind.identifier &&
+        tokens[position + 1].text == ':=') {
+      final name = current;
+      position += 2;
+      return _bounded(_NamedArgument(name, _expression()));
+    }
+    return _expression();
   }
 
   T _bounded<T extends _Expr>(T expression) {
@@ -1715,6 +1809,8 @@ class _Checker {
   final Set<String> counters = <String>{};
   final Set<String> eachCounters = <String>{};
   final Map<_Symbol, Object> constantValues = <_Symbol, Object>{};
+  final Map<_Parameter, Object> parameterDefaults = <_Parameter, Object>{};
+  final Map<_Token, List<int>> argumentBindings = <_Token, List<int>>{};
   int constantWork = 0;
   int doDepth = 0;
   final Map<String, Set<String>> calls = <String, Set<String>>{};
@@ -1819,6 +1915,29 @@ class _Checker {
     for (final procedure in module.procedures.values) {
       currentProcedure = procedure;
       calls[procedure.name.lower] = <String>{};
+      // Defaults are declaration-time values. Only module constants are in
+      // scope here, never a parameter, local variable, or caller's With block.
+      symbols = globals;
+      for (final parameter in procedure.parameters) {
+        if (!parameter.isOptional) continue;
+        final initializer = parameter.defaultValue;
+        if (initializer == null) {
+          parameterDefaults[parameter] = parameter.type == _Declared.variant
+              ? const _MissingArgumentValue()
+              : _Evaluator(context, module, this)._default(parameter.type);
+        } else {
+          _constant(initializer);
+          _assignable(
+            parameter.type,
+            _expression(initializer),
+            initializer.token,
+          );
+          parameterDefaults[parameter] = _constantValue(
+            initializer,
+            type: parameter.type,
+          );
+        }
+      }
       symbols = <String, _Symbol>{...globals};
       withKinds.clear();
       counters.clear();
@@ -1973,6 +2092,21 @@ class _Checker {
   int _arrayBound(_Expr expression) {
     _constant(expression);
     _compatible(_Kind.number, _expression(expression), expression.token);
+    final result = _Evaluator(
+      context,
+      module,
+      this,
+    )._integer(_constantValue(expression), expression.token);
+    if (result < -2147483648 || result > 2147483647) {
+      context.type(
+        expression.token,
+        'Array bounds must be signed 32-bit integers.',
+      );
+    }
+    return result;
+  }
+
+  Object _constantValue(_Expr expression, {_Declared? type}) {
     // Resolve only constants actually used by a bound. Dependency discovery is
     // iterative; a long chain of prior constants must not multiply AST depth
     // on the host stack. Declaration order is already a topological order.
@@ -2012,17 +2146,11 @@ class _Checker {
         evaluator.values[entry.key] = value;
       }
     }
-    final result = evaluator._integer(
-      evaluator._evaluate(expression),
-      expression.token,
-    );
+    final value = evaluator._evaluate(expression);
+    final result = type == null
+        ? value
+        : evaluator._convert(type, value, expression.token);
     constantWork = evaluator.work;
-    if (result < -2147483648 || result > 2147483647) {
-      context.type(
-        expression.token,
-        'Array bounds must be signed 32-bit integers.',
-      );
-    }
     return result;
   }
 
@@ -2388,15 +2516,69 @@ class _Checker {
         'A Sub cannot be used as a value; use a scalar Function.',
       );
     }
-    _count(token, arguments, procedure.parameters.length);
+    if (arguments.length > procedure.parameters.length) {
+      context.type(token, '${token.text} received too many arguments.');
+    }
+    final assigned = <int>{};
+    final bindings = <int>[];
+    var positional = 0;
+    var sawNamed = false;
     for (var index = 0; index < arguments.length; index++) {
       final argument = arguments[index];
-      _assignable(
-        procedure.parameters[index].type,
-        _expression(argument),
-        argument.token,
-      );
+      final int parameterIndex;
+      final _Expr value;
+      if (argument is _NamedArgument) {
+        sawNamed = true;
+        parameterIndex = procedure.parameters.indexWhere(
+          (parameter) => parameter.name.lower == argument.token.lower,
+        );
+        if (parameterIndex < 0) {
+          context.fail(
+            argument.token,
+            'vba_name_error',
+            'Unknown named argument ${argument.token.text} for ${token.text}.',
+          );
+        }
+        value = argument.value;
+      } else {
+        if (sawNamed) {
+          context.type(
+            argument.token,
+            'Positional or omitted arguments cannot follow named arguments.',
+          );
+        }
+        parameterIndex = positional++;
+        value = argument;
+      }
+      if (!assigned.add(parameterIndex)) {
+        context.type(
+          argument.token,
+          'Parameter ${procedure.parameters[parameterIndex].name.text} is supplied more than once.',
+        );
+      }
+      bindings.add(parameterIndex);
+      final parameter = procedure.parameters[parameterIndex];
+      if (value is _OmittedArgument) {
+        if (!parameter.isOptional) {
+          context.type(
+            value.token,
+            'Required argument ${parameter.name.text} cannot be omitted.',
+          );
+        }
+        continue;
+      }
+      _assignable(parameter.type, _expression(value), value.token);
     }
+    for (var index = 0; index < procedure.parameters.length; index++) {
+      final parameter = procedure.parameters[index];
+      if (!parameter.isOptional && !assigned.contains(index)) {
+        context.type(
+          token,
+          'Required argument ${parameter.name.text} is missing.',
+        );
+      }
+    }
+    argumentBindings[token] = bindings;
     calls[currentProcedure.name.lower]!.add(procedure.name.lower);
     return procedure;
   }
@@ -2406,7 +2588,14 @@ class _Checker {
     final receiver = _expression(target.receiver);
     final property = target.token.lower;
     if (context.isPowerPoint) {
-      if (receiver == _Kind.textFrame && property == 'verticalanchor') {
+      if (receiver == _Kind.textFrame &&
+          const <String>{
+            'verticalanchor',
+            'marginleft',
+            'margintop',
+            'marginright',
+            'marginbottom',
+          }.contains(property)) {
         return _Kind.number;
       }
       if (receiver == _Kind.slideShowTransition) {
@@ -2481,6 +2670,8 @@ class _Checker {
           'leftindent',
           'rightindent',
           'firstlineindent',
+          'readingorder',
+          'linespacingrule',
         }.contains(property)) {
           return _Kind.number;
         }
@@ -2507,6 +2698,11 @@ class _Checker {
 
   _Kind _expression(_Expr expression) {
     switch (expression) {
+      case _NamedArgument() || _OmittedArgument():
+        context.unsupported(
+          expression.token,
+          'Named and omitted arguments are supported only for module helper calls.',
+        );
       case _Literal():
         return expression.value is _VariantState
             ? _Kind.variant
@@ -2581,6 +2777,21 @@ class _Checker {
         if (_variantIntrinsics.contains(expression.token.lower)) {
           _count(expression.token, expression.arguments, 1);
           final argument = expression.arguments.single;
+          if (expression.token.lower == 'ismissing') {
+            if (argument is! _Name ||
+                !currentProcedure.parameters.any(
+                  (parameter) =>
+                      parameter.isOptional &&
+                      parameter.type == _Declared.variant &&
+                      parameter.name.lower == argument.token.lower,
+                )) {
+              context.unsupported(
+                argument.token,
+                'IsMissing requires a direct Optional ByVal Variant parameter of the current helper.',
+              );
+            }
+            return _Kind.boolean;
+          }
           _scalar(_expression(argument), argument.token);
           return switch (expression.token.lower) {
             'isempty' || 'isnull' || 'cbool' => _Kind.boolean,
@@ -2662,6 +2873,10 @@ class _Checker {
           if (receiver == _Kind.paragraph && name == 'range') {
             _arguments(expression, 0, allowProperty: true);
             return _Kind.range;
+          }
+          if (receiver == _Kind.paragraph && name == 'format') {
+            _arguments(expression, 0, allowProperty: true);
+            return _Kind.paragraphFormat;
           }
           if (receiver == _Kind.range &&
               (name == 'font' || name == 'paragraphformat')) {
@@ -2886,6 +3101,14 @@ class _Checker {
   }
 
   void _count(_Token token, List<_Expr> arguments, int count) {
+    for (final argument in arguments) {
+      if (argument is _NamedArgument || argument is _OmittedArgument) {
+        context.unsupported(
+          argument.token,
+          'Named and omitted arguments are supported only for module helper calls.',
+        );
+      }
+    }
     if (arguments.length != count) {
       context.type(token, '${token.text} requires $count argument(s).');
     }
@@ -2914,6 +3137,8 @@ class _Checker {
             expected == _Kind.range ||
             expected == _Kind.document ||
             expected == _Kind.paragraph ||
+            expected == _Kind.font ||
+            expected == _Kind.paragraphFormat ||
             _powerPointObjectKinds.contains(expected))) {
       // Scalar Variant values may defer scalar checks until evaluation, but
       // cannot ever carry object bindings, including in unexecuted code.
@@ -2953,6 +3178,12 @@ class _Checker {
 
 class _Uninitialized {
   const _Uninitialized();
+}
+
+// Omission is neither Empty nor Null and can never enter a native JSON plan.
+// This bounded dialect exposes it only through IsMissing on its formal.
+class _MissingArgumentValue {
+  const _MissingArgumentValue();
 }
 
 class _Array {
@@ -3202,11 +3433,10 @@ class _Evaluator {
       }
       for (var index = 0; index < arguments.length; index++) {
         final parameter = procedure.parameters[index];
-        values[parameter.name.lower] = _convert(
-          parameter.type,
-          arguments[index],
-          token,
-        );
+        final value = arguments[index];
+        values[parameter.name.lower] = value is _MissingArgumentValue
+            ? value
+            : _convert(parameter.type, value, token);
       }
       _execute(procedure.body);
       if (needsResult) {
@@ -3221,6 +3451,37 @@ class _Evaluator {
       activeArrayStringUnits = callerArrayStringUnits;
       activeCalls--;
     }
+  }
+
+  List<Object> _helperArguments(_Token token, List<_Expr> arguments) {
+    final procedure = module.procedures[token.lower]!;
+    _charge(procedure.parameters.length, token);
+    final result = <Object>[
+      for (final parameter in procedure.parameters)
+        checker.parameterDefaults[parameter] ?? const _Uninitialized(),
+    ];
+    final bindings = checker.argumentBindings[token]!;
+    final supplied = <int>{};
+    // Evaluate source expressions before installing the callee's frame. Named
+    // argument order affects side effects even when declaration order differs.
+    for (var index = 0; index < arguments.length; index++) {
+      final argument = arguments[index];
+      if (argument is _OmittedArgument) {
+        _tick(argument.token);
+        continue;
+      }
+      final value = argument is _NamedArgument ? argument.value : argument;
+      result[bindings[index]] = _evaluate(value);
+      supplied.add(bindings[index]);
+    }
+    for (var index = 0; index < result.length; index++) {
+      final value = result[index];
+      if (!supplied.contains(index) && value is String) {
+        // Reusing a large default cannot reset or evade aggregate copy work.
+        _charge(value.length, token);
+      }
+    }
+    return result;
   }
 
   Object _default(_Declared type) => switch (type) {
@@ -3437,12 +3698,9 @@ class _Evaluator {
           case _ForEach():
             frames.add(_startForEach(statement));
           case _Invoke():
-            final arguments = <Object>[
-              for (final argument in statement.arguments) _evaluate(argument),
-            ];
             _invoke(
               module.procedures[statement.token.lower]!,
-              arguments,
+              _helperArguments(statement.token, statement.arguments),
               statement.token,
               needsResult: false,
             );
@@ -3567,6 +3825,11 @@ class _Evaluator {
   Object _evaluate(_Expr expression) {
     _tick(expression.token);
     switch (expression) {
+      case _NamedArgument() || _OmittedArgument():
+        context.unsupported(
+          expression.token,
+          'Argument markers require a checked module helper call.',
+        );
       case _Literal():
         return expression.value;
       case _Name():
@@ -3597,6 +3860,19 @@ class _Evaluator {
       case _WithValue():
         return withValues.last;
       case _Call():
+        if (expression.token.lower == 'ismissing') {
+          final parameter = expression.arguments.single;
+          _tick(parameter.token);
+          return values[parameter.token.lower] is _MissingArgumentValue;
+        }
+        if (module.procedures.containsKey(expression.token.lower)) {
+          return _invoke(
+            module.procedures[expression.token.lower]!,
+            _helperArguments(expression.token, expression.arguments),
+            expression.token,
+            needsResult: true,
+          );
+        }
         if (values[expression.token.lower] case final _Array array) {
           return _initialized(
             array.elements[_arrayOffset(array, expression.arguments.single)],
@@ -3666,7 +3942,12 @@ class _Evaluator {
             }
             return _WordParagraph(index - 1);
           }
-          if (receiver is _WordParagraph) return _WordRange(receiver);
+          if (receiver is _WordParagraph) {
+            final range = _WordRange(receiver);
+            return expression.token.lower == 'format'
+                ? _WordParagraphFormat(range)
+                : range;
+          }
           final range = receiver as _WordRange;
           return expression.token.lower == 'font'
               ? _WordFont(range)
@@ -3860,6 +4141,13 @@ class _Evaluator {
       value is _VariantState ? false : _boolean(value, token);
 
   Object _initialized(Object value, _Token token) {
+    if (value is _MissingArgumentValue) {
+      context.fail(
+        token,
+        'vba_missing_argument',
+        'An omitted Variant argument must be handled with IsMissing before reading its value.',
+      );
+    }
     if (value is _Uninitialized) {
       context.unsupported(
         token,
@@ -4052,6 +4340,16 @@ class _Evaluator {
       case _Declared.paragraph:
         if (value is! _WordParagraph) {
           context.type(token, 'Set requires a Paragraph.');
+        }
+        return value;
+      case _Declared.wordFont:
+        if (value is! _WordFont) {
+          context.type(token, 'Set requires a Word Font.');
+        }
+        return value;
+      case _Declared.wordParagraphFormat:
+        if (value is! _WordParagraphFormat) {
+          context.type(token, 'Set requires a Word ParagraphFormat.');
         }
         return value;
       case _Declared.presentation:
@@ -4520,6 +4818,26 @@ class _Evaluator {
     _Token token,
   ) {
     if (receiver is _TextFrame) {
+      if (property != 'verticalanchor') {
+        final points = _number(value, token);
+        final emu = points * 12700;
+        if (points < 0 || emu > 2147483647 || emu.round() / 12700 != points) {
+          context.type(
+            token,
+            'TextFrame margins require nonnegative points with exact integer EMUs within signed Long native units.',
+          );
+        }
+        final field = switch (property) {
+          'marginleft' => 'marginLeft',
+          'margintop' => 'marginTop',
+          'marginright' => 'marginRight',
+          _ => 'marginBottom',
+        };
+        _emitPowerPoint(receiver.shape, 'shapeTextFrame', <String, Object?>{
+          field: points,
+        }, token);
+        return;
+      }
       final anchor = switch (_integer(value, token)) {
         1 => 'top',
         3 => 'center',
@@ -4831,6 +5149,33 @@ class _Evaluator {
       return;
     }
     final format = receiver as _WordParagraphFormat;
+    if (property == 'readingorder') {
+      final order = _integer(value, token);
+      if (order != 0 && order != 1) {
+        context.unsupported(
+          token,
+          'ReadingOrder requires wdReadingOrderRtl or wdReadingOrderLtr.',
+        );
+      }
+      _emitWord(format.range, 'paragraphFormat', <String, Object?>{
+        'rtl': order == 0,
+      }, token);
+      return;
+    }
+    if (property == 'linespacingrule') {
+      final rule = _integer(value, token);
+      if (rule < 0 || rule > 2) {
+        context.unsupported(
+          token,
+          'LineSpacingRule supports wdLineSpaceSingle, wdLineSpace1pt5, and wdLineSpaceDouble; point-based and arbitrary multiple spacing require unsupported LineSpacing semantics.',
+        );
+      }
+      _emitWord(format.range, 'paragraphFormat', <String, Object?>{
+        'lineSpacing': const <double>[1, 1.5, 2][rule],
+        'lineSpacingRule': 'auto',
+      }, token);
+      return;
+    }
     if (property == 'keeptogether' || property == 'pagebreakbefore') {
       _emitWord(format.range, 'paragraphFormat', <String, Object?>{
         property == 'keeptogether' ? 'keepTogether' : 'pageBreakBefore':

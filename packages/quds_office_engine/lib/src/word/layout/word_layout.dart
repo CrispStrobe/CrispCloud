@@ -25,6 +25,7 @@ import '../model/word_tree.dart';
 import '../properties/wml_properties.dart';
 
 part 'word_contained_layout.dart';
+part 'word_incremental_layout.dart';
 part 'word_note_layout.dart';
 part 'word_run_measure.dart';
 part 'word_table_row_layout.dart';
@@ -207,7 +208,10 @@ class LaidOutLine {
   final WmlJustification justification;
 
   /// paragraphIndex API.
-  final int paragraphIndex;
+  ///
+  /// Mutable only so incremental layout can renumber reused lines after a
+  /// paragraph was inserted or removed before them.
+  int paragraphIndex;
 
   /// Logical source text covered by this line, including shaped note content.
   String get text {
@@ -563,12 +567,28 @@ class LaidOutPage {
 
   /// footerBand API.
   final LaidOutBand footerBand;
+
+  /// How the engine made this page, so incremental layout can remake it.
+  _PageOrigin? _origin;
 }
 
 /// Class LaidOutDocument.
 class LaidOutDocument {
   /// LaidOutDocument API.
   LaidOutDocument({required this.pages, required this.pageSize});
+
+  /// Flow checkpoints recorded by the engine for incremental relayout.
+  _IncrementalState? _incremental;
+
+  /// True when [WordLayoutEngine.layout] can reuse this result for a local
+  /// edit (see `reuse` and `dirtyParagraphs`).
+  bool get supportsIncrementalReuse => _incremental != null;
+
+  /// Call after mutating any laid-out line, glyph or box in place (for
+  /// example paint-metric fitting): reusing such objects would no longer
+  /// reproduce a fresh layout, so the next local edit falls back to the
+  /// section-level path.
+  void discardIncrementalState() => _incremental = null;
 
   /// pages API.
   final List<LaidOutPage> pages;
@@ -985,21 +1005,86 @@ class WordLayoutEngine {
   /// row at [WmlPageMargins.top] draws cell borders through the logo.
   double _tablePageTop(WmlSection section) => _bodyTopClearingLogo(section);
 
+  /// Global switch for paragraph-level incremental relayout of local edits.
+  /// When false, [layout] ignores `dirtyParagraphs` and uses the
+  /// section-level path (lay out from `fromSectionIndex`). Build with
+  /// `--dart-define=QUDS_FULL_RELAYOUT=true` to start with it off.
+  static bool incrementalLayout = !const bool.fromEnvironment(
+    'QUDS_FULL_RELAYOUT',
+  );
+
+  /// Debug aid: after every incremental layout, also run a full layout and
+  /// throw a [StateError] when the two differ ([wordLayoutFingerprint]).
+  /// `--dart-define=QUDS_VERIFY_INCREMENTAL_LAYOUT=true` turns it on.
+  static bool verifyIncrementalLayout = const bool.fromEnvironment(
+    'QUDS_VERIFY_INCREMENTAL_LAYOUT',
+  );
+
+  _Recorder? _recorder;
+
+  /// Last line breaks per paragraph (see [_BreakCache]).
+  final Expando<_BreakCache> _breakCache = Expando<_BreakCache>();
+
+  /// True while laying out a block an incremental layout proved unchanged.
+  bool _breakCacheReadable = false;
+
   /// layout API.
+  ///
+  /// With [reuse] and [dirtyParagraphs] (and no field update), lays out only
+  /// what a local edit can have changed: the result equals a full layout of
+  /// [document] provided that, since [reuse] was laid out from it, the model
+  /// changed only inside [dirtyParagraphs], by inserting or removing
+  /// top-level blocks, or in paragraph text. Falls back to the section-level
+  /// path from [fromSectionIndex] otherwise.
   LaidOutDocument layout(
     WmlDocument document, {
     bool updateFields = true,
     int fromSectionIndex = 0,
     LaidOutDocument? reuse,
+    Set<WmlParagraph>? dirtyParagraphs,
   }) {
+    if (reuse != null &&
+        dirtyParagraphs != null &&
+        !updateFields &&
+        incrementalLayout) {
+      final LaidOutDocument? incremental = _layoutIncremental(
+        document,
+        reuse,
+        dirtyParagraphs,
+      );
+      if (incremental != null) {
+        WordIncrementalLayoutStats.incremental++;
+        if (verifyIncrementalLayout) {
+          _verifyIncremental(document, incremental);
+        }
+        return incremental;
+      }
+      WordIncrementalLayoutStats.fallbacks++;
+    }
+    _prepareLayout(document, updateFields: updateFields);
+    if (document.footnotes.isNotEmpty || document.endnotes.isNotEmpty) {
+      fromSectionIndex = 0;
+    }
+    final _Recorder recorder = _recorder = _Recorder(document.sections.length);
+    try {
+      return _layoutFrom(
+        document,
+        updateFields: updateFields,
+        fromSectionIndex: fromSectionIndex,
+        reuse: reuse,
+        recorder: recorder,
+      );
+    } finally {
+      _recorder = null;
+    }
+  }
+
+  void _prepareLayout(WmlDocument document, {required bool updateFields}) {
     _layoutDoc = document;
     _noteNumbering = _inheritedNoteNumbering ?? WordNoteNumbering(document);
     _noteStories.clear();
     _noteSlices.clear();
     _placedNotes.clear();
-    if (document.footnotes.isNotEmpty || document.endnotes.isNotEmpty) {
-      fromSectionIndex = 0;
-    }
     // Materialize every nested TOC before paragraph indices are counted. A
     // normal engine layout also binds imported cached entries to live headings;
     // temporary row shaping keeps their original document-wide targets.
@@ -1010,8 +1095,18 @@ class WordLayoutEngine {
       WordToc.rebindHeadings(document);
       WordFields.update(document);
     }
+  }
+
+  LaidOutDocument _layoutFrom(
+    WmlDocument document, {
+    required bool updateFields,
+    required int fromSectionIndex,
+    required LaidOutDocument? reuse,
+    required _Recorder recorder,
+  }) {
     final List<LaidOutPage> pages = <LaidOutPage>[];
     var paragraphIndex = 0;
+    var recorded = true;
     var start = fromSectionIndex.clamp(0, document.sections.length);
     if (start > 0 && reuse != null && start < document.sections.length) {
       while (start > 0 &&
@@ -1031,6 +1126,24 @@ class WordLayoutEngine {
         for (int i = 0; i < start; i++) {
           paragraphIndex += _layoutParagraphCount(document.sections[i]);
         }
+        // Reused sections keep their checkpoints when the old layout has
+        // them for the same sections; otherwise this result cannot seed an
+        // incremental layout.
+        final _IncrementalState? old = reuse._incremental;
+        for (int i = 0; i < start; i++) {
+          final _SectionRecord? record =
+              old != null &&
+                  identical(old.document, document) &&
+                  i < old.sections.length
+              ? old.sections[i]
+              : null;
+          if (record == null ||
+              !identical(record.section, document.sections[i])) {
+            recorded = false;
+            break;
+          }
+          recorder.sections[i] = record;
+        }
       }
     } else {
       start = 0;
@@ -1043,6 +1156,20 @@ class WordLayoutEngine {
         paragraphIndex: paragraphIndex,
       );
     }
+    return _finishLayout(
+      document,
+      pages,
+      updateFields: updateFields,
+      state: recorded ? _IncrementalState(document, recorder.sections) : null,
+    );
+  }
+
+  LaidOutDocument _finishLayout(
+    WmlDocument document,
+    List<LaidOutPage> pages, {
+    required bool updateFields,
+    required _IncrementalState? state,
+  }) {
     if (pages.isEmpty) {
       pages.add(
         _makePage(
@@ -1076,6 +1203,253 @@ class WordLayoutEngine {
     return LaidOutDocument(
       pages: pages,
       pageSize: document.sections.first.pageSize,
+    ).._incremental = state;
+  }
+
+  /// Incremental layout after a local edit, or null when it cannot be proven
+  /// equal to a full layout (see word_incremental_layout.dart).
+  LaidOutDocument? _layoutIncremental(
+    WmlDocument document,
+    LaidOutDocument reuse,
+    Set<WmlParagraph> dirtyParagraphs,
+  ) {
+    final _IncrementalState? old = reuse._incremental;
+    if (old == null ||
+        !identical(old.document, document) ||
+        old.sections.length != document.sections.length ||
+        document.footnotes.isNotEmpty ||
+        document.endnotes.isNotEmpty) {
+      return null;
+    }
+    final int sectionCount = document.sections.length;
+    final List<List<WmlBlock>> blocks = <List<WmlBlock>>[];
+    final List<List<String>> texts = <List<String>>[];
+    var firstSection = -1;
+    var firstBlock = 0;
+    var lastSection = -1;
+    var lastCandidate = 0;
+    var lastOffset = 0;
+    final Set<WmlBlock> dirtyBlocks = Set<WmlBlock>.identity();
+    for (int s = 0; s < sectionCount; s++) {
+      final WmlSection section = document.sections[s];
+      final _SectionRecord? record = old.sections[s];
+      if (record == null || !identical(record.section, section)) return null;
+      final List<WmlBlock> now = WordTree.visibleBlocks(
+        section.blocks,
+      ).toList();
+      final List<String> nowTexts = <String>[
+        for (final b in now) _blockText(b),
+      ];
+      blocks.add(now);
+      texts.add(nowTexts);
+      final int n = now.length;
+      final int m = record.blocks.length;
+      bool clean(int i, int j) =>
+          identical(now[i], record.blocks[j]) &&
+          nowTexts[i] == record.texts[j] &&
+          !_blockContainsAny(now[i], dirtyParagraphs);
+      var p = 0;
+      while (p < n && p < m && clean(p, p)) {
+        p++;
+      }
+      if (p == n && p == m) continue;
+      var q = 0;
+      while (q < n - p && q < m - p && clean(n - 1 - q, m - 1 - q)) {
+        q++;
+      }
+      // One block of margin on each side: an edit can adjust a neighbour
+      // (split/join, list or direction sync) without changing its text.
+      final int start = p > 0 ? p - 1 : 0;
+      final int suffix = q > 0 ? q - 1 : 0;
+      dirtyBlocks.addAll(now.sublist(start, n - suffix));
+      if (firstSection < 0) {
+        if (m == 0 || start >= m) return null;
+        firstSection = s;
+        firstBlock = start;
+      }
+      lastSection = s;
+      lastCandidate = n - suffix;
+      lastOffset = n - m;
+    }
+    _prepareLayout(document, updateFields: false);
+    final _Recorder recorder = _recorder = _Recorder(sectionCount)
+      ..dirtyBlocks = dirtyBlocks;
+    try {
+      if (firstSection < 0) {
+        // Nothing changed in the body (for example a comment edit).
+        for (int s = 0; s < sectionCount; s++) {
+          recorder.sections[s] = old.sections[s];
+        }
+        return LaidOutDocument(
+          pages: List<LaidOutPage>.of(reuse.pages),
+          pageSize: document.sections.first.pageSize,
+        ).._incremental = _IncrementalState(document, recorder.sections);
+      }
+      final _SectionRecord resumeRecord = old.sections[firstSection]!;
+      final _Checkpoint cp = resumeRecord.checkpoints[firstBlock];
+      final List<LaidOutPage> oldPages = reuse.pages;
+      if (cp.pagesLength > oldPages.length) return null;
+      final List<LaidOutLine> lines = <LaidOutLine>[];
+      final List<LaidOutBox> frames = <LaidOutBox>[];
+      if (cp.hasContent) {
+        if (cp.pagesLength >= oldPages.length) return null;
+        final LaidOutPage partial = oldPages[cp.pagesLength];
+        final _PageOrigin? origin = partial._origin;
+        if (origin == null ||
+            partial.lines.length < cp.lines ||
+            origin.bodyFrames < cp.frames) {
+          return null;
+        }
+        lines.addAll(partial.lines.take(cp.lines));
+        frames.addAll(partial.frames.take(cp.frames));
+      }
+      for (int s = 0; s < firstSection; s++) {
+        recorder.sections[s] = old.sections[s];
+      }
+      final _SectionRecord prefix = _SectionRecord(resumeRecord.section)
+        ..blocks.addAll(resumeRecord.blocks.take(firstBlock))
+        ..texts.addAll(resumeRecord.texts.take(firstBlock))
+        ..checkpoints.addAll(resumeRecord.checkpoints.take(firstBlock));
+      recorder.convergence = _Convergence(
+        old: old,
+        oldPages: oldPages,
+        lastDirtySection: lastSection,
+        firstCandidateBlock: lastCandidate,
+        blockOffset: lastOffset,
+      );
+      final List<LaidOutPage> pages = oldPages.sublist(0, cp.pagesLength);
+      var paragraphIndex = _layoutSection(
+        document.sections[firstSection],
+        pages,
+        sectionIndex: firstSection,
+        paragraphIndex: cp.paragraphIndex,
+        resume: (
+          block: firstBlock,
+          checkpoint: cp,
+          lines: lines,
+          frames: frames,
+          prefix: prefix,
+        ),
+      );
+      for (
+        int s = firstSection + 1;
+        s < sectionCount && recorder.splice == null;
+        s++
+      ) {
+        paragraphIndex = _layoutSection(
+          document.sections[s],
+          pages,
+          sectionIndex: s,
+          paragraphIndex: paragraphIndex,
+        );
+      }
+      final _Splice? splice = recorder.splice;
+      if (splice != null) {
+        WordIncrementalLayoutStats.converged++;
+        _applySplice(splice, pages, oldPages, old, recorder);
+      }
+      return _finishLayout(
+        document,
+        pages,
+        updateFields: false,
+        state: _IncrementalState(document, recorder.sections),
+      );
+    } finally {
+      _recorder = null;
+      _breakCacheReadable = false;
+    }
+  }
+
+  void _applySplice(
+    _Splice splice,
+    List<LaidOutPage> pages,
+    List<LaidOutPage> oldPages,
+    _IncrementalState old,
+    _Recorder recorder,
+  ) {
+    final _Checkpoint cp = splice.checkpoint;
+    final int at = cp.pagesLength;
+    final int delta = splice.delta;
+    if (at < oldPages.length) {
+      final LaidOutPage partial = oldPages[at];
+      final _PageOrigin origin = partial._origin!;
+      final List<LaidOutLine> tailLines = partial.lines.sublist(cp.lines);
+      final List<LaidOutBox> tailFrames = partial.frames.sublist(
+        cp.frames,
+        origin.bodyFrames,
+      );
+      _shiftParagraphIndices(tailLines, tailFrames, delta);
+      pages.add(
+        _makePage(
+          origin.section,
+          partial.index,
+          <LaidOutLine>[...splice.lines, ...tailLines],
+          <LaidOutBox>[...splice.frames, ...tailFrames],
+          sectionIndex: origin.sectionIndex,
+          firstInSection: origin.firstInSection,
+        ),
+      );
+      for (int i = at + 1; i < oldPages.length; i++) {
+        final LaidOutPage page = oldPages[i];
+        final int body = page._origin?.bodyFrames ?? page.frames.length;
+        _shiftParagraphIndices(page.lines, page.frames.take(body), delta);
+        pages.add(page);
+      }
+    }
+    // The converged section: new checkpoints up to the splice block, then
+    // the old ones; later sections keep their old records.
+    final int s = splice.sectionIndex;
+    final _SectionRecord oldRecord = old.sections[s]!;
+    final _SectionRecord record = recorder.sections[s]!;
+    _Checkpoint carry(_Checkpoint c) => c.shifted(
+      delta,
+      page: at,
+      lineDelta: splice.lines.length - cp.lines,
+      frameDelta: splice.frames.length - cp.frames,
+    );
+    for (int j = splice.oldBlock; j < oldRecord.blocks.length; j++) {
+      record.blocks.add(oldRecord.blocks[j]);
+      record.texts.add(oldRecord.texts[j]);
+      record.checkpoints.add(carry(oldRecord.checkpoints[j]));
+    }
+    for (int t = s + 1; t < old.sections.length; t++) {
+      final _SectionRecord? later = old.sections[t];
+      if (later == null) {
+        recorder.sections[t] = null;
+        continue;
+      }
+      final _SectionRecord copy = _SectionRecord(later.section)
+        ..blocks.addAll(later.blocks)
+        ..texts.addAll(later.texts);
+      for (final _Checkpoint c in later.checkpoints) {
+        copy.checkpoints.add(carry(c));
+      }
+      recorder.sections[t] = copy;
+    }
+  }
+
+  void _verifyIncremental(WmlDocument document, LaidOutDocument incremental) {
+    final bool saved = incrementalLayout;
+    incrementalLayout = false;
+    final LaidOutDocument full;
+    try {
+      full = layout(document, updateFields: false);
+    } finally {
+      incrementalLayout = saved;
+    }
+    final String a = wordLayoutFingerprint(incremental);
+    final String b = wordLayoutFingerprint(full);
+    if (a == b) return;
+    final List<String> la = a.split('\n');
+    final List<String> lb = b.split('\n');
+    var i = 0;
+    while (i < la.length && i < lb.length && la[i] == lb[i]) {
+      i++;
+    }
+    throw StateError(
+      'Incremental layout differs from a full layout at fingerprint line '
+      '$i:\n  incremental: ${i < la.length ? la[i] : '<end>'}\n'
+      '  full:        ${i < lb.length ? lb[i] : '<end>'}',
     );
   }
 
@@ -1095,32 +1469,79 @@ class WordLayoutEngine {
     List<LaidOutPage> pages, {
     required int sectionIndex,
     required int paragraphIndex,
+    ({
+      int block,
+      _Checkpoint checkpoint,
+      List<LaidOutLine> lines,
+      List<LaidOutBox> frames,
+      _SectionRecord prefix,
+    })?
+    resume,
   }) {
-    _padSectionBreak(section, pages, sectionIndex);
-    final bool continuous =
-        sectionIndex > 0 && section.breakKind == WmlSectionBreakKind.continuous;
-    final _Flow flow = _Flow(
-      section,
-      pages,
-      _makePage,
-      sectionIndex,
-      _noteReserve,
-    );
-    // Leave room under a floating header logo for title/body on page 1.
-    flow.y = _bodyTopClearingLogo(section);
-    flow.columnTop = flow.y;
-    if (continuous && pages.isNotEmpty) {
-      final LaidOutPage last = pages.removeLast();
-      flow.current.addAll(last.lines);
-      flow.currentFrames.addAll(
-        last.frames.where((LaidOutBox b) => !b.isNoteContent),
-      );
-      flow.pageIndex = last.index;
-      flow.y = _contentBottom(last, fallback: _bodyTopClearingLogo(section));
-      flow.columnTop = flow.y;
-    }
+    final _Flow flow;
     double? adjacentParagraphAfter;
-    for (final WmlBlock block in WordTree.visibleBlocks(section.blocks)) {
+    if (resume == null) {
+      _padSectionBreak(section, pages, sectionIndex);
+      final bool continuous =
+          sectionIndex > 0 &&
+          section.breakKind == WmlSectionBreakKind.continuous;
+      flow = _Flow(section, pages, _makePage, sectionIndex, _noteReserve);
+      // Leave room under a floating header logo for title/body on page 1.
+      flow.y = _bodyTopClearingLogo(section);
+      flow.columnTop = flow.y;
+      if (continuous && pages.isNotEmpty) {
+        final LaidOutPage last = pages.removeLast();
+        flow.current.addAll(last.lines);
+        flow.currentFrames.addAll(
+          last.frames.where((LaidOutBox b) => !b.isNoteContent),
+        );
+        flow.pageIndex = last.index;
+        flow.y = _contentBottom(last, fallback: _bodyTopClearingLogo(section));
+        flow.columnTop = flow.y;
+      }
+      _recorder?.begin(section, sectionIndex);
+    } else {
+      final _Checkpoint cp = resume.checkpoint;
+      flow = _Flow(section, pages, _makePage, sectionIndex, _noteReserve)
+        ..pageIndex = cp.pageIndex
+        ..columnIndex = cp.columnIndex
+        ..y = cp.y
+        ..columnTop = cp.columnTop;
+      flow.current.addAll(resume.lines);
+      flow.currentFrames.addAll(resume.frames);
+      adjacentParagraphAfter = cp.adjacentAfter;
+      _recorder?.begin(section, sectionIndex, prefix: resume.prefix);
+    }
+    final List<WmlBlock> blocks = WordTree.visibleBlocks(
+      section.blocks,
+    ).toList();
+    for (int bi = resume?.block ?? 0; bi < blocks.length; bi++) {
+      final WmlBlock block = blocks[bi];
+      final _Recorder? recorder = _recorder;
+      if (recorder != null) {
+        if (recorder.converge(
+          sectionIndex,
+          bi,
+          flow,
+          paragraphIndex,
+          adjacentParagraphAfter,
+        )) {
+          return paragraphIndex;
+        }
+        recorder.record(
+          sectionIndex,
+          block,
+          flow,
+          paragraphIndex,
+          adjacentParagraphAfter,
+        );
+        if (recorder.convergence != null) {
+          WordIncrementalLayoutStats.blocksLaidOut++;
+        }
+        _breakCacheReadable =
+            recorder.convergence != null &&
+            !recorder.dirtyBlocks.contains(block);
+      }
       switch (block) {
         case WmlContentControlBlock():
         case WmlOpaqueBlock():
@@ -1600,9 +2021,32 @@ class WordLayoutEngine {
       return GposMarkToBase.fnFor(baseFace, baseSize)(base, mark);
     }
 
-    final hyphenationOffsets =
-        _layoutDoc?.autoHyphenation == true &&
-            paragraph.properties.suppressAutoHyphens != true
+    final bool wrapsFrames =
+        allowBreak &&
+        flow != null &&
+        currentFrames.any(
+          (box) => box.frame != null && box.frame!.wrap != WmlFrameWrap.none,
+        );
+    // Line breaks of a paragraph the caller proved unchanged since the last
+    // layout (incremental layout, clean block) are reused when the width
+    // environment is the same; shaping dominates layout cost.
+    final _BreakCache? cachedBreaks = wrapsFrames || !_breakCacheReadable
+        ? null
+        : _breakCache[paragraph];
+    final List<BrokenLine>? reusedBreaks =
+        cachedBreaks != null &&
+            cachedBreaks.matches(
+              maxWidth: maxWidth,
+              allowBreak: allowBreak,
+              document: _layoutDoc,
+            )
+        ? cachedBreaks.lines
+        : null;
+    if (reusedBreaks != null) WordIncrementalLayoutStats.breaksReused++;
+    final hyphenationOffsets = reusedBreaks != null
+        ? const <int>[]
+        : _layoutDoc?.autoHyphenation == true &&
+              paragraph.properties.suppressAutoHyphens != true
         ? OfficeHyphenator.breakOffsets(
             text,
             language:
@@ -1619,12 +2063,6 @@ class WordLayoutEngine {
         ? (glyph.logicalIndex - 1).clamp(0, text.length)
         : glyph.logicalIndex;
 
-    final bool wrapsFrames =
-        allowBreak &&
-        flow != null &&
-        currentFrames.any(
-          (box) => box.frame != null && box.frame!.wrap != WmlFrameWrap.none,
-        );
     final justify =
         paragraph.properties.justification == WmlJustification.justify ||
         paragraph.properties.justification == WmlJustification.distributed;
@@ -1650,26 +2088,37 @@ class WordLayoutEngine {
         : null;
     final List<BrokenLine> broken = wrapsFrames
         ? const []
-        : LineBreaker.breakLines(
-            text: text,
-            balanceLines: false,
-            hyphenationOffsets: hyphenationOffsets,
-            maxWidth: maxWidth,
-            widthOf: (cp) => widthAt(cp, 0),
-            widthAt: widthAt,
-            glyphIdAt: glyphIdAt,
-            markAttachOf: markAttach,
-            baseLevel: paragraph.properties.bidiBaseLevel,
-            justify: justify,
-            measureLine: measureRun == null && !hasMeasuredTabs
-                ? null
-                : measuredLine,
-            breakLongWords: !allowBreak,
-            ligate:
-                displayLabels.isEmpty && measureRun == null && !hasMeasuredTabs
-                ? null
-                : measuredRuns,
-          );
+        : reusedBreaks ??
+              LineBreaker.breakLines(
+                text: text,
+                balanceLines: false,
+                hyphenationOffsets: hyphenationOffsets,
+                maxWidth: maxWidth,
+                widthOf: (cp) => widthAt(cp, 0),
+                widthAt: widthAt,
+                glyphIdAt: glyphIdAt,
+                markAttachOf: markAttach,
+                baseLevel: paragraph.properties.bidiBaseLevel,
+                justify: justify,
+                measureLine: measureRun == null && !hasMeasuredTabs
+                    ? null
+                    : measuredLine,
+                breakLongWords: !allowBreak,
+                ligate:
+                    displayLabels.isEmpty &&
+                        measureRun == null &&
+                        !hasMeasuredTabs
+                    ? null
+                    : measuredRuns,
+              );
+    if (!wrapsFrames && reusedBreaks == null) {
+      _breakCache[paragraph] = _BreakCache(
+        broken,
+        maxWidth: maxWidth,
+        allowBreak: allowBreak,
+        document: _layoutDoc,
+      );
+    }
     var cursorY = y + paragraph.properties.spacingBefore;
     var idx = pageIndex;
     var lineOrigin = originX ?? section.margins.left;
@@ -3068,6 +3517,12 @@ class WordLayoutEngine {
         width: section.pageSize.width,
         height: footerH,
       ),
+    );
+    page._origin = _PageOrigin(
+      section,
+      sectionIndex,
+      firstInSection,
+      frames.length,
     );
     _attachNotes(page, section);
     _attachLineNumbers(page, section);

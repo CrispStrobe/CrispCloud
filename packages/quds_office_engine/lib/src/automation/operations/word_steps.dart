@@ -157,13 +157,13 @@ void applyStep(
       // when the requested default equals the current inherited value.
       for (final entry in <String, String>{
         'alignment': 'jc',
-        'before': 'spacing',
-        'after': 'spacing',
-        'lineSpacing': 'spacing',
+        'before': 'spacing:before',
+        'after': 'spacing:after',
+        'lineSpacing': 'spacing:line',
         'keepTogether': 'keepLines',
         'pageBreakBefore': 'pageBreakBefore',
         'rtl': 'bidi',
-        'lineSpacingRule': 'spacing',
+        'lineSpacingRule': 'spacing:line',
         'left': 'ind',
         'right': 'ind',
         'firstLine': 'ind',

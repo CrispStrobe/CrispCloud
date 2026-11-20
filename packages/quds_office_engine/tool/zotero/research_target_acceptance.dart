@@ -4,18 +4,24 @@
 import 'package:test/test.dart';
 
 import '../../test/slide_radial_opacity_test.dart' as suite10;
+import '../../test/word_incremental_layout_prefix_test.dart' as suite13;
 import '../../test/word_zotero_add_note_test.dart' as suite1;
 import '../../test/word_zotero_bibliography_layout_test.dart' as suite7;
 import '../../test/word_zotero_citing_test.dart' as suite3;
 import '../../test/word_zotero_note_images_integration_test.dart' as suite6;
 import '../../test/word_zotero_note_insertion_test.dart' as suite2;
 import '../../test/word_zotero_note_list_test.dart' as suite5;
+import '../../test/word_zotero_note_table_test.dart' as suite11;
+import '../../test/word_zotero_note_tables_integration_test.dart' as suite12;
 import '../../test/word_zotero_preference_flow_test.dart' as suite8;
 import '../../test/word_zotero_research_target_test.dart' as suite0;
 import '../../test/word_zotero_rich_edit_test.dart' as suite4;
 import '../../test/word_zotero_style_preferences_review_test.dart' as suite9;
 
 void main() {
+  group('word_zotero_note_table_test.dart', suite11.main);
+  group('word_zotero_note_tables_integration_test.dart', suite12.main);
+  group('word_incremental_layout_prefix_test.dart', suite13.main);
   group('word_zotero_research_target_test.dart', suite0.main);
   group('word_zotero_add_note_test.dart', suite1.main);
   group('word_zotero_note_insertion_test.dart', suite2.main);
