@@ -2271,7 +2271,7 @@
     "packages/quds_office_engine/lib/src/slide/model/pml_presentation.dart": "f0aefd1aff0a4cacb031322ebc6ded2904cba6d097bc14dc12ac2b2a1f21ff01",
     "packages/quds_office_engine/lib/src/slide/serial/odp_presentation_writer.dart": "1982eb9834374862f42145993a11b1adf37ce275de28ca4450cc262820886547",
     "packages/quds_office_engine/lib/src/slide/serial/slide_section_io.dart": "c00aeed36b9a30c1d7a50b9b831d368c7cf07475c757e371b9bed10f424df7bd",
-    "packages/quds_office_engine/lib/src/slide/serial/slide_serial.dart": "38a1b42bfb4dbbd5c74d95551e41d4cce37d16ea62bed1eb8a40147b4349c59f",
+    "packages/quds_office_engine/lib/src/slide/serial/slide_serial.dart": "9d825a7ab9bf073aa87fc30b4ca00c6b66783649884294d2c3f99ee39e8b6199",
     "packages/quds_office_engine/lib/src/slide/shapes/drawingml.dart": "2ba2f13eba3681d0ef3c7a8b9555c8de5080a15008ccaac4087d796f198bd835",
     "packages/quds_office_engine/lib/src/slide/shapes/slide_rich_text.dart": "2fda59709745678db8707f2aa652c20eaf934cd0164ff82ca6a549a0a95297dc",
     "packages/quds_office_engine/lib/src/thesaurus/office_thesaurus.dart": "cbc2b84e349337f373d6299c61a7c666cc93925add5e37e613b2bebc6d5d6f4f",
@@ -2610,7 +2610,7 @@
     "packages/quds_office_engine/test/sheet_time_period_calendar_test.dart": "5dbaf9d18480f157067463d8c863e5373b1e19d69b76bfec90d033972221ea84",
     "packages/quds_office_engine/test/sheet_wrap_text_fidelity_test.dart": "c6a290e96354247970a9ff498677c0df5e8aadd48b9377c1eb07ad954d06afb7",
     "packages/quds_office_engine/test/slide_arrange_fidelity_test.dart": "be83f895df9ee9e6435791ed12c874379172aad9d1546b1ca18e8e7e11db42f6",
-    "packages/quds_office_engine/test/slide_import_fidelity_test.dart": "a818c19b3538447e69b2d691a783d80c511fab4fbc8736ab7fc682e085281478",
+    "packages/quds_office_engine/test/slide_import_fidelity_test.dart": "d3c68e719c59f81e4c14b3c21aa52543bed4d4ddf7e8bd345714fba130adb205",
     "packages/quds_office_engine/test/slide_incoming_pptx_regression_test.dart": "714c080d29d3c1482153ac5f60bd42990f48ed3cfa862bc6c2536419d2cb801b",
     "packages/quds_office_engine/test/slide_render_fidelity_test.dart": "f0fd88c706e618d70eda5e9b1b991aa50e9ce1188f93203e41a6c9720fc5ffb7",
     "packages/quds_office_engine/test/slide_rich_text_explicit_style_test.dart": "d68a16cd7fea8ca3ff9bceccd453a4549db76a441d46f55a03260bb3a5693fff",
@@ -2910,7 +2910,7 @@
     "tool/office-validation/test_render.py": "1ba68e18608d74387cbc1c779ceb72af76bf7741463c282684aec93bf3825472"
   },
   "source_branch": "integrate/recent-pptx",
-  "source_commit": "67d5a9e3a7ac3c4d784763f97cf78e2ff872cdad",
+  "source_commit": "23d409c9606035236102835d0aa5d327cede5771",
   "source_repository": "CrispStrobe/quds_office_suite",
   "standalone_sources": {
     "packages/legacy_doc_parser": {

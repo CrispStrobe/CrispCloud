@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:quds_office_engine/quds_office_engine.dart';
 import 'package:test/test.dart';
@@ -75,6 +76,7 @@ PmlPresentation _deck(
   String layoutShapes = '',
   String masterShapes = '',
   String? layoutShowMasterShapes,
+  Uint8List? backgroundImage,
 }) {
   final OpcPackage package = OpcPackage.create(OpcPackageKind.slide);
   final RelationshipCollection presRels = package.relationshipsFor(
@@ -179,6 +181,13 @@ PmlPresentation _deck(
           target: '../slideMasters/slideMaster2.xml',
         );
   }
+  if (backgroundImage != null) {
+    package.createPart(
+      '/ppt/media/background.png',
+      'image/png',
+      backgroundImage,
+    );
+  }
   final List<String> ids = <String>[];
   for (int i = 0; i < slides.length; i++) {
     final String uri = '/ppt/slides/slide${i + 1}.xml';
@@ -186,14 +195,20 @@ PmlPresentation _deck(
       package.createPart(uri, OfficeContentTypes.slide, utf8.encode(''));
     }
     package.getPart(uri)!.writeText(slides[i]);
-    package
-        .relationshipsFor(uri)
-        .add(
-          type: RelationshipTypes.slideLayout,
-          target: secondaryMasterBackground != null && i == 1
-              ? '../slideLayouts/slideLayout2.xml'
-              : '../slideLayouts/slideLayout1.xml',
-        );
+    final RelationshipCollection slideRels = package.relationshipsFor(uri);
+    slideRels.add(
+      type: RelationshipTypes.slideLayout,
+      target: secondaryMasterBackground != null && i == 1
+          ? '../slideLayouts/slideLayout2.xml'
+          : '../slideLayouts/slideLayout1.xml',
+    );
+    if (backgroundImage != null) {
+      slideRels.add(
+        type: RelationshipTypes.image,
+        id: 'rId99',
+        target: '../media/background.png',
+      );
+    }
     ids.add(
       presRels
           .add(
@@ -494,6 +509,27 @@ void main() {
         },
       );
     }
+
+    test('background blip becomes a full-slide decoration', () {
+      final Uint8List png = base64Decode(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAFgwJ/lK3cNwAAAABJRU5ErkJggg==',
+      );
+      final PmlPresentation deck = _deck(<String>[
+        _sld(
+          _textBox(2, 'Slide'),
+          background:
+              '<p:bg><p:bgPr><a:blipFill><a:blip r:embed="rId99"/>'
+              '<a:stretch><a:fillRect/></a:stretch></a:blipFill>'
+              '</p:bgPr></p:bg>',
+        ),
+      ], backgroundImage: png);
+      final PmlShape image = deck.slides.single.backgroundShapes.first;
+      expect(image.name, 'Background');
+      expect(image.visual?.kind, OfficeVisualKind.picture);
+      expect(image.visual?.imageBytes, png);
+      expect(image.transform.cx, deck.slideWidth);
+      expect(image.transform.cy, deck.slideHeight);
+    });
 
     test('master background resolves theme lumMod', () {
       final PmlPresentation deck = _deck(
