@@ -36,7 +36,20 @@ def release_info(repo, tag):
     )
     if result.returncode:
         if "(HTTP 404)" in result.stderr:
-            return None
+            # GitHub can omit drafts from the by-tag endpoint even though the
+            # authenticated releases list contains them. Search every page so
+            # reruns retain an older draft and its partial binary uploads.
+            listing = subprocess.run(
+                ["gh", "api", f"repos/{repo}/releases", "--paginate", "--slurp"],
+                capture_output=True, text=True,
+            )
+            if listing.returncode:
+                raise RuntimeError(f"Could not inspect release drafts: {listing.stderr.strip()}")
+            matches = [item for page in json.loads(listing.stdout) for item in page
+                       if item.get("tag_name") == tag]
+            if len(matches) > 1:
+                raise RuntimeError("Multiple releases match the requested tag.")
+            return matches[0] if matches else None
         raise RuntimeError(f"Could not inspect release: {result.stderr.strip()}")
     info = json.loads(result.stdout)
     if info.get("tag_name") != tag:
