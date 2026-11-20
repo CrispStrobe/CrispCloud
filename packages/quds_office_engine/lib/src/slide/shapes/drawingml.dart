@@ -273,6 +273,10 @@ List<PmlShape> parseSlideShapes(
         'roundRect' => PmlShapePreset.roundRect,
         'triangle' => PmlShapePreset.triangle,
         'straightConnector1' => PmlShapePreset.connector,
+        'downArrow' => PmlShapePreset.downArrow,
+        'upArrow' => PmlShapePreset.upArrow,
+        'leftArrow' => PmlShapePreset.leftArrow,
+        'rightArrow' => PmlShapePreset.rightArrow,
         _ => PmlShapePreset.rect,
       };
     } else if (reader.localName == 'bodyPr' && current != null) {
@@ -807,6 +811,10 @@ void _writeSlideShape(XmlWriter w, PmlShape shape) {
         PmlShapePreset.triangle => 'triangle',
         PmlShapePreset.connector => 'straightConnector1',
         PmlShapePreset.freeform => 'rect',
+        PmlShapePreset.downArrow => 'downArrow',
+        PmlShapePreset.upArrow => 'upArrow',
+        PmlShapePreset.leftArrow => 'leftArrow',
+        PmlShapePreset.rightArrow => 'rightArrow',
         PmlShapePreset.rect => 'rect',
       },
     },

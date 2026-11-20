@@ -47,7 +47,18 @@ class PmlTransform {
 }
 
 /// Enum PmlShapePreset.
-enum PmlShapePreset { rect, roundRect, ellipse, triangle, connector, freeform }
+enum PmlShapePreset {
+  rect,
+  roundRect,
+  ellipse,
+  triangle,
+  connector,
+  freeform,
+  downArrow,
+  upArrow,
+  leftArrow,
+  rightArrow,
+}
 
 /// Enum PmlTextAlign.
 enum PmlTextAlign { left, center, right, justify }

@@ -1705,6 +1705,65 @@ abstract final class OfficePdfExport {
     sink.canvas.restore();
   }
 
+  static void _arrowPath(
+    PdfCanvas canvas,
+    double x,
+    double y,
+    double w,
+    double h,
+    _ArrowDirection direction,
+  ) {
+    final bool vertical =
+        direction == _ArrowDirection.down || direction == _ArrowDirection.up;
+    final double shaft = (vertical ? w : h) * 0.48;
+    final double head = (vertical ? h : w) * 0.48;
+    void point(double px, double py) => canvas.lineTo(px, py);
+    void move(double px, double py) => canvas.moveTo(px, py);
+    switch (direction) {
+      case _ArrowDirection.down:
+        final double left = x + (w - shaft) / 2;
+        final double bottom = y + h - head;
+        move(left, y);
+        point(left + shaft, y);
+        point(left + shaft, bottom);
+        point(x + w, bottom);
+        point(x + w / 2, y + h);
+        point(x, bottom);
+        point(left, bottom);
+      case _ArrowDirection.up:
+        final double left = x + (w - shaft) / 2;
+        final double top = y + head;
+        move(left, y + h);
+        point(left + shaft, y + h);
+        point(left + shaft, top);
+        point(x + w, top);
+        point(x + w / 2, y);
+        point(x, top);
+        point(left, top);
+      case _ArrowDirection.left:
+        final double top = y + (h - shaft) / 2;
+        final double right = x + w - head;
+        move(x + w, top);
+        point(x + w, top + shaft);
+        point(right, top + shaft);
+        point(right, y + h);
+        point(x, y + h / 2);
+        point(right, y);
+        point(right, top);
+      case _ArrowDirection.right:
+        final double top = y + (h - shaft) / 2;
+        final double left = x + head;
+        move(x, top);
+        point(x, top + shaft);
+        point(left, top + shaft);
+        point(left, y + h);
+        point(x + w, y + h / 2);
+        point(left, y);
+        point(left, top);
+    }
+    canvas.closePath();
+  }
+
   static void _strokePreset(
     PdfCanvas canvas,
     PmlShapePreset preset,
@@ -1735,6 +1794,11 @@ abstract final class OfficePdfExport {
         canvas.moveTo(x, y + h / 2);
         canvas.lineTo(x + w, y + h / 2);
         canvas.stroke();
+      case PmlShapePreset.downArrow:
+      case PmlShapePreset.upArrow:
+      case PmlShapePreset.leftArrow:
+      case PmlShapePreset.rightArrow:
+        break;
       case PmlShapePreset.freeform:
         if (path.length >= 2) {
           canvas.moveTo(x + path.first.x / 12700, y + path.first.y / 12700);
@@ -1831,6 +1895,18 @@ abstract final class OfficePdfExport {
         canvas.moveTo(x, y + h / 2);
         canvas.lineTo(x + w, y + h / 2);
         canvas.stroke();
+      case PmlShapePreset.downArrow:
+        _arrowPath(canvas, x, y, w, h, _ArrowDirection.down);
+        canvas.fill();
+      case PmlShapePreset.upArrow:
+        _arrowPath(canvas, x, y, w, h, _ArrowDirection.up);
+        canvas.fill();
+      case PmlShapePreset.leftArrow:
+        _arrowPath(canvas, x, y, w, h, _ArrowDirection.left);
+        canvas.fill();
+      case PmlShapePreset.rightArrow:
+        _arrowPath(canvas, x, y, w, h, _ArrowDirection.right);
+        canvas.fill();
       case PmlShapePreset.freeform:
         if (path.length >= 2) {
           canvas.moveTo(x + path.first.x / 12700, y + path.first.y / 12700);
@@ -1864,19 +1940,52 @@ abstract final class OfficePdfExport {
     final List<PmlTextParagraph> paragraphs = shape.richText;
     const String fallbackColor = '000000';
     final double fallbackSize = shape.fontSizePt > 0 ? shape.fontSizePt : 12;
+    double fitScale = 1;
+    final List<PmlTextParagraph> visible = <PmlTextParagraph>[
+      for (final PmlTextParagraph paragraph in paragraphs)
+        if (_paragraphText(paragraph).trim().isNotEmpty) paragraph,
+    ];
+    if (visible.length == 1 && h < fallbackSize * 3) {
+      final PmlTextParagraph paragraph = visible.single;
+      final PmlTextRun? run = _firstRichRun(paragraph);
+      final double size = (run?.fontSizePt ?? 0) > 0
+          ? run!.fontSizePt
+          : fallbackSize;
+      final String text = _paragraphText(paragraph);
+      if (!text.contains('\t') && !text.contains('\n')) {
+        final double natural = sink.measureStyled(
+          text,
+          size,
+          bold:
+              (run?.bold ?? false) &&
+              !(run?.fontFamily.toLowerCase().contains(
+                    'microsoft sans serif',
+                  ) ??
+                  false),
+          italic: run?.italic ?? false,
+          family: (run?.fontFamily ?? '').isEmpty ? null : run!.fontFamily,
+        );
+        final double available = math.max(8, width - paragraph.marginLeftPt);
+        if (natural > available) {
+          fitScale = (available / natural).clamp(0.75, 1.0);
+        }
+      }
+    }
     double total = 0;
     for (final PmlTextParagraph paragraph in paragraphs) {
       final PmlTextRun? run = _firstRichRun(paragraph);
       final String text = _paragraphText(paragraph);
       final bool blank = text.trim().isEmpty;
       final double autoSize = (h * 0.22).clamp(10.0, 18.0);
-      final double size = (run?.fontSizePt ?? 0) > 0
-          ? run!.fontSizePt
-          : (blank
-                ? (paragraph.defaultFontSizePt > 0
-                      ? paragraph.defaultFontSizePt
-                      : fallbackSize)
-                : autoSize);
+      final double size =
+          ((run?.fontSizePt ?? 0) > 0
+              ? run!.fontSizePt
+              : (blank
+                    ? (paragraph.defaultFontSizePt > 0
+                          ? paragraph.defaultFontSizePt
+                          : fallbackSize)
+                    : autoSize)) *
+          fitScale;
       final bool bold =
           (run?.bold ?? false) &&
           !(run?.fontFamily.toLowerCase().contains('microsoft sans serif') ??
@@ -1905,13 +2014,15 @@ abstract final class OfficePdfExport {
       final String text = _paragraphText(paragraph);
       final bool blank = text.trim().isEmpty;
       final double autoSize = (h * 0.22).clamp(10.0, 18.0);
-      final double size = (run?.fontSizePt ?? 0) > 0
-          ? run!.fontSizePt
-          : (blank
-                ? (paragraph.defaultFontSizePt > 0
-                      ? paragraph.defaultFontSizePt
-                      : fallbackSize)
-                : autoSize);
+      final double size =
+          ((run?.fontSizePt ?? 0) > 0
+              ? run!.fontSizePt
+              : (blank
+                    ? (paragraph.defaultFontSizePt > 0
+                          ? paragraph.defaultFontSizePt
+                          : fallbackSize)
+                    : autoSize)) *
+          fitScale;
       final String color = (run?.color ?? '').isNotEmpty
           ? run!.color
           : fallbackColor;
@@ -1976,6 +2087,7 @@ abstract final class OfficePdfExport {
           align,
           size,
           fallbackColor,
+          fitScale,
         );
       } else {
         sink.drawText(
@@ -2027,6 +2139,7 @@ abstract final class OfficePdfExport {
     _TextAlign align,
     double fallbackSize,
     String fallbackColor,
+    double sizeScale,
   ) {
     final List<_RichWord> words = <_RichWord>[];
     var segments = <_RichSegment>[];
@@ -2034,7 +2147,8 @@ abstract final class OfficePdfExport {
     var pendingSpace = false;
     var pendingBreak = false;
     for (final PmlTextRun run in paragraph.runs) {
-      final double size = run.fontSizePt > 0 ? run.fontSizePt : fallbackSize;
+      final double size =
+          (run.fontSizePt > 0 ? run.fontSizePt : fallbackSize) * sizeScale;
       final String color = run.color.isEmpty ? fallbackColor : run.color;
       final bool bold =
           run.bold &&
@@ -2315,6 +2429,8 @@ abstract final class OfficePdfExport {
     return (0.299 * r + 0.587 * g + 0.114 * b) < 140 ? 'FFFFFF' : '1A1A1A';
   }
 }
+
+enum _ArrowDirection { down, up, left, right }
 
 class _RichSegment {
   _RichSegment({

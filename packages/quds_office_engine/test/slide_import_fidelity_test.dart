@@ -284,6 +284,19 @@ void main() {
       expect(slide.shapes.single.name, 'TextBox 2');
     });
 
+    test('block arrow presets survive import', () {
+      final PmlPresentation deck = _deck(<String>[
+        _sld(
+          '<p:sp><p:nvSpPr><p:cNvPr id="2" name="Arrow"/><p:cNvSpPr/>'
+          '<p:nvPr/></p:nvSpPr><p:spPr>${_xfrm(0, 0, 914400, 914400)}'
+          '<a:prstGeom prst="downArrow"><a:avLst/></a:prstGeom>'
+          '<a:solidFill><a:srgbClr val="FFB300"/></a:solidFill>'
+          '</p:spPr></p:sp>',
+        ),
+      ]);
+      expect(deck.slides.single.shapes.single.preset, PmlShapePreset.downArrow);
+    });
+
     test('master background resolves theme lumMod', () {
       final PmlPresentation deck = _deck(
         <String>[_sld(_textBox(2, 'Slide'))],
