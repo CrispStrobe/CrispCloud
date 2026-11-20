@@ -2296,8 +2296,8 @@
     "packages/quds_office_engine/lib/src/slide/model/pml_presentation.dart": "f1f52de35baf5065940d3beaead70b9a0cd5f91f530f63f49d16de960625e594",
     "packages/quds_office_engine/lib/src/slide/serial/odp_presentation_writer.dart": "1982eb9834374862f42145993a11b1adf37ce275de28ca4450cc262820886547",
     "packages/quds_office_engine/lib/src/slide/serial/slide_section_io.dart": "c00aeed36b9a30c1d7a50b9b831d368c7cf07475c757e371b9bed10f424df7bd",
-    "packages/quds_office_engine/lib/src/slide/serial/slide_serial.dart": "6ec6296bf11a91a58e8270943a7af6b53d4ce39cef6c83b1da8dcc974eab45d4",
-    "packages/quds_office_engine/lib/src/slide/shapes/drawingml.dart": "14b8b6ee5e192382c8b61ae7b81af5bcf8692373db5515ace377e7d0efd1db11",
+    "packages/quds_office_engine/lib/src/slide/serial/slide_serial.dart": "e4bf5a6df5bbceb3075fcf50a57f1d5f20337f8913e7b6688caf31204261a666",
+    "packages/quds_office_engine/lib/src/slide/shapes/drawingml.dart": "4a246cd0b7c993b07f97c032c6ca15417db82089b444df375bdf61e79b6a6aea",
     "packages/quds_office_engine/lib/src/slide/shapes/slide_rich_text.dart": "1061ef83efb6d870d14944af76cfc131565650106faedf2f258865ea5598df82",
     "packages/quds_office_engine/lib/src/thesaurus/office_thesaurus.dart": "cbc2b84e349337f373d6299c61a7c666cc93925add5e37e613b2bebc6d5d6f4f",
     "packages/quds_office_engine/lib/src/visual/drawing_line_style.dart": "d4dbf492555193c51f9fe63e844c77b8834e9aed518f2199d59226b7bbd78384",
@@ -2670,7 +2670,7 @@
     "packages/quds_office_engine/test/slide_incoming_pptx_regression_test.dart": "714c080d29d3c1482153ac5f60bd42990f48ed3cfa862bc6c2536419d2cb801b",
     "packages/quds_office_engine/test/slide_normal_autofit_test.dart": "fc507743a04a2283c24d21bd70c8b8869dd0fa4ce1a0259a355b1107173bdbe6",
     "packages/quds_office_engine/test/slide_picture_background_test.dart": "bb8b8dc748ce4944bc41e40c28e32502552bd9f60912157003e9dd268af0bfbc",
-    "packages/quds_office_engine/test/slide_radial_opacity_test.dart": "2c13fec0390ca0f41ac03261da80f7c9fc1b9fe179bc5dfd70afa6bcf71f0ace",
+    "packages/quds_office_engine/test/slide_radial_opacity_test.dart": "1243e5d539c359b182fc907821269e668f059a88eee3a0aa269381258fc44fc6",
     "packages/quds_office_engine/test/slide_render_fidelity_test.dart": "f0fd88c706e618d70eda5e9b1b991aa50e9ce1188f93203e41a6c9720fc5ffb7",
     "packages/quds_office_engine/test/slide_rich_text_explicit_style_test.dart": "d68a16cd7fea8ca3ff9bceccd453a4549db76a441d46f55a03260bb3a5693fff",
     "packages/quds_office_engine/test/slide_section_fidelity_test.dart": "205c65b324cf406daddea223e1dddc2a8b675c9dd1468848dbf1249f3ff55e53",
@@ -2992,8 +2992,8 @@
     "tool/office-validation/test_native_render_limitations.py": "ffc4e367871bf40079b2b2868af6b146de5bcfe13b50a17bdede2f2b3398308b",
     "tool/office-validation/test_render.py": "1ba68e18608d74387cbc1c779ceb72af76bf7741463c282684aec93bf3825472"
   },
-  "source_branch": "integrate/recent-pptx",
-  "source_commit": "9d49ed2a1d4e4039239c45350c5f1dc7074e2f42",
+  "source_branch": "main",
+  "source_commit": "d95e814af9556dcea448ba5673e0ba4dc81007d0",
   "source_repository": "CrispStrobe/quds_office_suite",
   "standalone_sources": {
     "packages/legacy_doc_parser": {

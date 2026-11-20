@@ -480,6 +480,8 @@ class SlideDeserializer {
           pathDepth = reader.depth;
           linear = false;
           radial = reader.getAttribute('path') == 'circle';
+          // An omitted circle focus retains the default center point.
+          centered = true;
         } else if (reader.localName == 'fillToRect' &&
             pathDepth != null &&
             reader.depth == pathDepth + 1) {

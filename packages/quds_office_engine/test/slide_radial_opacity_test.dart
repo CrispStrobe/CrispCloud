@@ -88,7 +88,6 @@ void main() {
   for (final entry in <String, String>{
     'rectangular path': _radial.replaceFirst('path="circle"', 'path="rect"'),
     'shape path': _radial.replaceFirst('path="circle"', 'path="shape"'),
-    'unspecified focus': _radial.replaceFirst(_focus, ''),
     'off-center focus': _radial.replaceFirst('l="50000"', 'l="25000"'),
     'custom tile': _radial.replaceFirst(
       '</a:gradFill>',
@@ -107,6 +106,18 @@ void main() {
       },
     );
   }
+
+  test(
+    'omitted circle focus uses the Office default center in shapes and backgrounds',
+    () {
+      final fill = _radial.replaceFirst(_focus, '');
+      expect(_parseFills([fill]).single.gradient!.radial, isTrue);
+      expect(
+        _background(fill).slides.single.backgroundGradient!.gradient!.radial,
+        isTrue,
+      );
+    },
+  );
 
   test(
     'native radial gradient survives repeated saves and a fresh deck copy',

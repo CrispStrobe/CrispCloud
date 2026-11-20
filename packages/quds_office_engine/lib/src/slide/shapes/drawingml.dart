@@ -449,6 +449,9 @@ List<PmlShape> parseSlideShapes(
       gradientPathDepth = reader.depth;
       gradientIsLinear = false;
       gradientRadial = reader.getAttribute('path') == 'circle';
+      // Office's omitted focus rectangle is the center point. An explicit
+      // noncentral focus still requires geometry outside the bounded model.
+      gradientCentered = true;
     } else if (reader.localName == 'fillToRect' &&
         reader.namespaceUri == OfficeNamespaces.a &&
         inGradFill &&
