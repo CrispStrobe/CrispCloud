@@ -96,9 +96,47 @@ class ReleasePublicationTests(unittest.TestCase):
         self.assertEqual(run.call_count, 1)
 
     @patch.object(release.subprocess, "run")
-    def test_only_explicit_404_means_release_is_missing(self, run):
-        run.return_value = subprocess.CompletedProcess([], 1, "", "gh: not found (HTTP 404)")
+    def test_missing_release_requires_empty_authenticated_listing(self, run):
+        run.side_effect = [
+            subprocess.CompletedProcess([], 1, "", "gh: not found (HTTP 404)"),
+            subprocess.CompletedProcess([], 0, "[[]]", ""),
+        ]
         self.assertIsNone(release.release_info(self.repo, self.tag))
+
+    @patch.object(release.subprocess, "run")
+    def test_draft_hidden_from_tag_lookup_is_retained_from_later_page(self, run):
+        draft = self.complete(assets=[{"name": "partial.zip", "size": 50}])
+        run.side_effect = [
+            subprocess.CompletedProcess([], 1, "", "gh: not found (HTTP 404)"),
+            subprocess.CompletedProcess([], 0, json.dumps([
+                [{"tag_name": "v0.9.0"}], [draft],
+            ]), ""),
+        ]
+        release.prepare(self.repo, self.tag, "Title", "notes.md")
+        self.assertEqual(run.call_count, 2)
+        self.assertEqual(run.call_args.args[0][-2:], ["--paginate", "--slurp"])
+
+    @patch.object(release.subprocess, "run")
+    def test_draft_listing_error_cannot_create_or_publish_release(self, run):
+        for action in [lambda: release.prepare(self.repo, self.tag, "Title", "notes.md"),
+                       lambda: release.publish(self.repo, self.tag)]:
+            run.reset_mock()
+            run.side_effect = [
+                subprocess.CompletedProcess([], 1, "", "gh: not found (HTTP 404)"),
+                subprocess.CompletedProcess([], 1, "", "gh: forbidden (HTTP 403)"),
+            ]
+            with self.assertRaisesRegex(RuntimeError, "inspect release drafts"):
+                action()
+            self.assertEqual(run.call_count, 2)
+
+    @patch.object(release.subprocess, "run")
+    def test_duplicate_tag_in_draft_listing_is_rejected(self, run):
+        run.side_effect = [
+            subprocess.CompletedProcess([], 1, "", "gh: not found (HTTP 404)"),
+            subprocess.CompletedProcess([], 0, json.dumps([[self.complete(), self.complete()]]), ""),
+        ]
+        with self.assertRaisesRegex(RuntimeError, "Multiple releases"):
+            release.release_info(self.repo, self.tag)
 
     @patch.object(release.subprocess, "run")
     def test_wrong_tag_metadata_is_rejected(self, run):
