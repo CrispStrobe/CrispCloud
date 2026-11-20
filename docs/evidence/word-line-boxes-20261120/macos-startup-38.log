@@ -1,0 +1,12 @@
+[IMPORTANT:flutter/shell/platform/darwin/macos/framework/Source/FlutterEngine.mm(685)] Using the Skia rendering backend (Metal).
+flutter: ℹ️ [CrashReportingService] CrashReportingService initialized (enabled)
+flutter: ℹ️ [Main] App starting...
+flutter: ℹ️ [Main] Config path: $USER_HOME/Library/Containers/com.CrispStrobe.cloud/Data/.cloud-storage-config
+flutter: ℹ️ [ProxyService] Installed global overrides: platform TLS verification
+flutter: ℹ️ [FileCache] File cache initialized: 0 entries, 0.0 MB / 500 MB
+flutter: ℹ️ [AuditService] Audit log at $USER_HOME/Library/Containers/com.CrispStrobe.cloud/Data/Library/Application Support/com.CrispStrobe.cloud/audit.jsonl
+flutter: ℹ️ [Main] Application shell rendered
+flutter: ℹ️ [AuthNotifier] Attempting auto-login for SFTP
+flutter: ℹ️ [Main] Credential policy ready
+flutter: ℹ️ [PanelNotifier] navigateToPath: $USER_HOME/Downloads (side=PanelSide.local, web=false)
+flutter: ℹ️ [PanelNotifier] Source switched: Local → Local (path=$USER_HOME/Downloads)

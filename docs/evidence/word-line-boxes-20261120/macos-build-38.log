@@ -1,0 +1,19 @@
+Waiting for another flutter command to release the startup lock...
+The following plugins do not support Swift Package Manager for macos:
+  - crisp_audio
+  - flutter_inappwebview_macos
+  - flutter_local_notifications
+  - flutter_secure_storage_macos
+  - macos_secure_bookmarks
+  - pdfx
+  - system_tray
+This will become an error in a future version of Flutter. Please contact the plugin maintainers to request Swift Package Manager adoption.
+Building macOS application...
+warning: /tmp/crispcloud-german-syntax-20261117/build/macos/ModuleCache.noindex/Cocoa-7K4FFIXEDK2J1JT2OH6I2H7TM.pcm: No such file or directory
+warning: /tmp/crispcloud-german-syntax-20261117/build/macos/ModuleCache.noindex/FinderSync-39SRIOG3I1482SJ3DFBCQCJID.pcm: No such file or directory
+warning: /tmp/crispcloud-german-syntax-20261117/build/macos/ModuleCache.noindex/AppKit-9RLSLU6RIO2FV4EQ0MH5RWC1X.pcm: No such file or directory
+warning: /tmp/crispcloud-german-syntax-20261117/build/macos/ModuleCache.noindex/_SwiftConcurrencyShims-6GI2WPMWYSXC0TPCNDZ59R0YP.pcm: No such file or directory
+warning: /tmp/crispcloud-german-syntax-20261117/build/macos/ModuleCache.noindex/SwiftShims-4ELNE8UCCSEVIJJD7CIOZE4BP.pcm: No such file or directory
+ld: warning: search path '/var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v17.3.7003.10.FPssee/Metal.xctoolchain/usr/lib/swift/macosx' not found
+warning: no rule to process file '/tmp/crispcloud-pub-cache-20261116/hosted/pub.dev/cryptography_flutter-2.3.4/macos/cryptography_flutter/Sources/cryptography_flutter/PrivacyInfo.xcprivacy' of type 'text.xml' for architecture 'arm64' (in target 'cryptography_flutter' from project 'Pods')
+✓ Built build/macos/Build/Products/Release/CrispCloud.app (173.5MB)

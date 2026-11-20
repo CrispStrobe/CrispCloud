@@ -1,0 +1,24 @@
+{
+  "appPath": "/Users/christianstrobele/Applications/CrispCloud Word Layout Preview fc143675.app",
+  "version": "1.3.4",
+  "build": "38",
+  "sourceCommit": "fc1436755a1dac9f4f1bde94a74bdc71419e36c9",
+  "officeSourceCommit": "e06eb3a7e21b71c1d5d4b1d2cc9abde24774eb26",
+  "architecture": "arm64",
+  "signingIdentitySha1": "9484C58A114CBAFE53518D4ACEFE065A60CA2A24",
+  "strictDeepSignatureVerificationPassed": true,
+  "startupHealthySeconds": 20,
+  "startupCredentialPolicyReady": true,
+  "sha256": {
+    "Contents/MacOS/CrispCloud": "a2b1bfba30fb796730307afc7310459ebbafcae38b93ce147cb86a0c3fc34ad7",
+    "Contents/Frameworks/App.framework/Versions/A/App": "d346d9e10c6546188f9f38827ac5d4fb8ce211d40aa777127dea1122bde13cf0"
+  },
+  "previousBuild37Sha256": {
+    "Contents/MacOS/CrispCloud": "d14e1cb2cb2bfcf4b18a6bc4faa7d6b54de3b8cabc9aa227e284ee3a1de9f506",
+    "Contents/Frameworks/App.framework/Versions/A/App": "46d681817948455e8decd1be5b5564a680188632f9f6bca51fa062fffa95b854"
+  },
+  "compiledAppPayloadChanged": true,
+  "existingDebugAppPreserved": true,
+  "buildUsed": "tool/with_ci_apple_sqlite.py; Flutter 3.47.8 release arm64; no product pubspec change retained",
+  "testflightUploaded": false
+}

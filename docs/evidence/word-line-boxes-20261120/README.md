@@ -12,4 +12,4 @@ The Ubuntu run used the SMS-created screen `362339.quds-word-layout-20261120`, n
 
 Full sources, native Word references, metrics and logs: [Quds validation](https://github.com/CrispStrobe/quds_office_suite/tree/e06eb3a7e21b71c1d5d4b1d2cc9abde24774eb26/docs/validation/word-line-boxes-20261120). No proprietary font bytes, font-bearing PDFs or model weights were added to the product. Mac canvas qualification uses the x64 tester under Rosetta; the release build is ARM64.
 
-Build/signature/startup receipt is added after the release artifact is verified.
+Signed ARM64 preview 38 is saved at `~/Applications/CrispCloud Word Layout Preview fc143675.app`. Strict deep signature verification and a 20-second startup/credential-policy check passed. The app payload differs from build 37. See `macos-build-38.json` and the build/sign/startup logs. The existing debug app was preserved. This is a local preview; no TestFlight upload was performed.

@@ -1,0 +1,14 @@
+{
+  "session": "362339.quds-word-layout-20261120",
+  "host": "Ubuntu VPS",
+  "user": "claudeuser",
+  "sourceArchiveSha256": "65f61922856c3d44732485511e79fe9032e5b64d32e03e8c0ff369e7c7114a99",
+  "flutterFramework": "737ba8f885dc774b53b442759999a312c9461e4e",
+  "engineRevision": "cf636b1dfb818dd6a3ff16e390e93b1a036969c8",
+  "testsPassed": 56,
+  "finalExitStatus": 0,
+  "workspace": "/mnt/volume1/quds-word-layout-20261120",
+  "nativeLinux": true,
+  "dockerUsed": false,
+  "snapshotScope": "Quds Word layout/editor code at a3caf4ad, unchanged painting/selection code after final reconciliation. Final save-guard follow-up separately tested on Mac."
+}
