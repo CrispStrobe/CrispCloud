@@ -101,6 +101,11 @@ const documentFontAssets = <DocumentFontAsset>[
     family: 'DejaVu Sans',
   ),
   DocumentFontAsset(
+    asset: 'assets/fonts/NotoEmoji.ttf',
+    family: 'Noto Emoji',
+    aliases: ['Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji'],
+  ),
+  DocumentFontAsset(
     asset: '${_pdfFontPrefix}Carlito-Regular.ttf',
     family: 'Carlito',
     aliases: ['Calibri'],
@@ -163,4 +168,5 @@ const documentFontFallbacks = [
   'Liberation Serif',
   'Noto Naskh Arabic',
   'DejaVu Sans',
+  'Noto Emoji',
 ];

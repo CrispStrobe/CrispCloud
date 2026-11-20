@@ -289,6 +289,8 @@ flutter:
     - assets/fonts/MaterialIcons_LICENSE.txt
     - assets/fonts/Roboto_LICENSE.txt
     - assets/fonts/RobotoMono_LICENSE.txt
+    - assets/fonts/NotoEmoji.ttf
+    - assets/licenses/NotoEmoji-OFL.txt
     - macos/vendor/fuse/COPYING.LIB
     - assets/licenses/pdfium/
     - assets/licenses/office_fonts/

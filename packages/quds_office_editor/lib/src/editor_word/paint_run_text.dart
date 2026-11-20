@@ -29,6 +29,7 @@ abstract final class PaintRunText {
   static const List<String> latinFallbacks = <String>[
     'Liberation Sans',
     'DejaVu Sans',
+    'Noto Emoji',
     'Calibri',
     'Carlito',
     'Liberation Serif',

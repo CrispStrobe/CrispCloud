@@ -43,7 +43,12 @@ abstract final class DocumentFonts {
     await OfficeHostFonts.ensureRegistered();
     // The editor owns Liberation and Noto. These two additional families reuse
     // bytes already bundled by CrispCloud and the PDF editor asset package.
-    for (final family in const ['Carlito', 'Roboto', 'DejaVu Sans']) {
+    for (final family in const [
+      'Carlito',
+      'Roboto',
+      'DejaVu Sans',
+      'Noto Emoji',
+    ]) {
       final faces = documentFontAssets.where((face) => face.family == family);
       await OfficeHostFonts.registerFamily(
         family: family,
