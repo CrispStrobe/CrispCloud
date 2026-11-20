@@ -3518,6 +3518,63 @@ class _PageSink {
   }
 
   /// Number of laid-out lines for [text] at [size].
+  double plainWidth(
+    String text,
+    double size, {
+    bool bold = false,
+    bool italic = false,
+    String? family,
+  }) {
+    var width = 0.0;
+    for (final int cp in text.runes) {
+      if (cp < 32) continue;
+      width += pack.widthOf(
+        cp,
+        size,
+        family: family,
+        weight: bold ? 700 : 400,
+        italic: italic,
+      );
+    }
+    return width;
+  }
+
+  void drawPlainLtr(
+    String text,
+    double x,
+    double baseline,
+    double size,
+    String color, {
+    bool bold = false,
+    bool italic = false,
+    String? family,
+  }) {
+    var cx = x;
+    for (final int cp in text.runes) {
+      if (cp < 32) continue;
+      final double advance = pack.widthOf(
+        cp,
+        size,
+        family: family,
+        weight: bold ? 700 : 400,
+        italic: italic,
+      );
+      _emit(
+        oldGid: 0,
+        codePoint: cp,
+        x: cx,
+        y: baseline,
+        size: size,
+        color: color,
+        bold: bold,
+        italic: italic,
+        family: family,
+        advance: advance,
+      );
+      cx += advance;
+    }
+  }
+
   int lineCount(
     String text,
     double size, {
@@ -3526,6 +3583,7 @@ class _PageSink {
     bool italic = false,
     String? family,
     int? baseLevel,
+    bool forceLayout = false,
   }) {
     if (pack.layoutFont == null && !_needsAuthoredLtr(text, baseLevel)) {
       return math.max(1, text.split('\n').length);
