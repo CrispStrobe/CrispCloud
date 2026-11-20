@@ -13,11 +13,32 @@ part of 'arabic_writing_rules.dart';
 // The rules read camel_tools-style analyses through [ArabicMorphology]. The
 // analyses carry no ranking, so every rule follows one principle: a finding
 // is reported only when NO analysis of the word(s) concerned is compatible
-// with the grammatical requirement. A word the analyzer does not know (an
+// with the grammatical requirement. With a context disambiguation model
+// ([ArabicGrammarReading.contextual]), a word whose best reading in its
+// sentence clearly leads is represented by that reading's analyses only; the
+// principle then applies to them. A word the analyzer does not know (an
 // empty analysis list) never produces a finding. Particles and number words
 // are matched by their spelling (the analyzer normalizes hamza, so it cannot
 // tell أنّ from إنْ); only the words whose form decides the case are judged
 // from their analyses.
+
+/// How the morphology-based rules read a word.
+enum ArabicGrammarReading {
+  /// Every analysis of a word: a rule reports only when no analysis is
+  /// compatible (the behaviour before context disambiguation).
+  allAnalyses,
+
+  /// When the analyzer is an [ArabicContextMorphology] with a loaded model
+  /// and a word's best reading in context leads the second by at least the
+  /// provider's margin, only that reading's analyses; otherwise every
+  /// analysis, as with [allAnalyses].
+  contextual,
+}
+
+/// Default lead of the best context reading over the second before the
+/// rules rely on it (on a probability scale: 0.9 means at least 0.95 against
+/// 0.05).
+const double arabicContextMinMargin = 0.9;
 
 /// Morphology-based rule ids that run by default (when an analyzer is
 /// installed).
@@ -120,11 +141,13 @@ final class _ArabicGrammarRules {
     this.morphology,
     this.add,
     this.enabled,
-    this.reported,
-  ) : bares = <String>[
-        for (final RegExpMatch m in words)
-          ArabicWritingRulesProvider._bare(m.group(0)!).$1,
-      ];
+    this.reported, {
+    this.contextual = false,
+    this.contextMinMargin = arabicContextMinMargin,
+  }) : bares = <String>[
+         for (final RegExpMatch m in words)
+           ArabicWritingRulesProvider._bare(m.group(0)!).$1,
+       ];
 
   final String text;
   final List<RegExpMatch> words;
@@ -133,6 +156,12 @@ final class _ArabicGrammarRules {
   final bool Function(String ruleId) enabled;
   final _ArabicReported reported;
   final List<String> bares;
+  final bool contextual;
+  final double contextMinMargin;
+
+  /// Per word index: the analyses of its confident context reading.
+  Map<int, List<ArabicAnalysis>> _confident =
+      const <int, List<ArabicAnalysis>>{};
 
   static final RegExp _spaces = RegExp(r'^[  ]+$');
   static final RegExp _harakat = RegExp('[ً-ْٰـ]');
@@ -546,8 +575,61 @@ final class _ArabicGrammarRules {
 
   bool _adjacent(int w) => _adjacentPair(words, text, w);
 
+  /// The analyses a rule reasons over for word [w]: its confident context
+  /// reading when there is one, otherwise every analysis.
   List<ArabicAnalysis> _of(int w) =>
-      _analyses[words[w].group(0)!] ?? const <ArabicAnalysis>[];
+      _confident[w] ??
+      _analyses[words[w].group(0)!] ??
+      const <ArabicAnalysis>[];
+
+  /// Fills [_confident] for the words in [wanted] from the context model.
+  Future<void> _disambiguate(Set<String> wanted) async {
+    final ArabicMorphology analyzer = morphology;
+    if (!contextual ||
+        analyzer is! ArabicContextMorphology ||
+        !analyzer.canDisambiguate) {
+      return;
+    }
+    // Only the sentences holding a word some rule needs.
+    final List<List<ArabicContextToken>> sentences = <List<ArabicContextToken>>[
+      for (final List<ArabicContextToken> s in arabicContextSentences(text))
+        if (s.any((ArabicContextToken t) => wanted.contains(t.text))) s,
+    ];
+    if (sentences.isEmpty) return;
+    final List<List<ArabicContextReading>> readings;
+    try {
+      readings = await analyzer.disambiguate(<List<String>>[
+        for (final List<ArabicContextToken> s in sentences)
+          <String>[for (final ArabicContextToken t in s) t.text],
+      ]);
+    } on Object {
+      return;
+    }
+    if (readings.length != sentences.length) return;
+    final Map<int, ArabicContextReading> byStart =
+        <int, ArabicContextReading>{};
+    final Map<int, int> endOf = <int, int>{};
+    for (int s = 0; s < sentences.length; s++) {
+      if (readings[s].length != sentences[s].length) return;
+      for (int t = 0; t < sentences[s].length; t++) {
+        byStart[sentences[s][t].start] = readings[s][t];
+        endOf[sentences[s][t].start] = sentences[s][t].end;
+      }
+    }
+    final Map<int, List<ArabicAnalysis>> confident =
+        <int, List<ArabicAnalysis>>{};
+    for (int w = 0; w < words.length; w++) {
+      final RegExpMatch match = words[w];
+      if (!wanted.contains(match.group(0)) || endOf[match.start] != match.end) {
+        continue;
+      }
+      final List<ArabicAnalysis>? best = byStart[match.start]?.confident(
+        contextMinMargin,
+      );
+      if (best != null && best.isNotEmpty) confident[w] = best;
+    }
+    _confident = confident;
+  }
 
   static bool _isProp(ArabicAnalysis a) => a['pos'] == 'noun_prop';
 
@@ -665,6 +747,7 @@ final class _ArabicGrammarRules {
     } on Object {
       return;
     }
+    await _disambiguate(wanted);
 
     if (enabled('ar.grammar.preposition-case')) _prepositionCase();
     if (enabled('ar.grammar.inna-case')) _innaCase();

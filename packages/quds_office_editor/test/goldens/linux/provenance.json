@@ -1,7 +1,7 @@
 {
   "schema": 2,
-  "purpose": "Exact Linux-host references for the existing macOS/Windows target-colour selection golden variants, including resolved ruler fonts.",
-  "policy": "Exact pixel comparison remains enabled. This update changes only reviewed ruler-label pixels in the two Linux references; the original macOS-authored masters are preserved.",
+  "purpose": "Exact native Linux references for macOS/Windows selection-colour variants with Word-compatible line boxes and paragraph spacing.",
+  "policy": "Exact pixel comparison remains enabled; the native Ubuntu Word line-box refresh supersedes the older ruler-only refresh. See word_line_box_refresh.",
   "toolchain": {
     "host_os": "linux",
     "flutter": "3.47.8",
@@ -26,28 +26,22 @@
     {
       "target_platform": "macOS",
       "file": "word_selection_macOS.png",
-      "reference_sha256": "128574cf7ddba0b860901a68a4485328e170a4b0d24a5a3b1c6b32b0f70ebaa5",
-      "previous_linux_reference_sha256": "543a0f9f663158a7027f3f4c2cc3095e539535c7ba6a66ce1ddceb4656fc34c3",
+      "reference_sha256": "549d9bf04ef7251f4520095dbb76f94ad048bd8a55385c78ee466a417fecb3fb",
+      "before_word_line_box_sha256": "128574cf7ddba0b860901a68a4485328e170a4b0d24a5a3b1c6b32b0f70ebaa5",
       "image_size": [
         820,
         560
-      ],
-      "changed_pixels_vs_previous_linux_reference": 1290,
-      "changed_pixels_outside_24px_rulers": 0,
-      "document_selection_and_table_pixels_identical": true
+      ]
     },
     {
       "target_platform": "windows",
       "file": "word_selection_windows.png",
-      "reference_sha256": "3d0adafc213e36d073a84e1e1d0b41e5eb1708443a118fffd055b41083994d22",
-      "previous_linux_reference_sha256": "db199f9171960e169ce59764948a891210166c03da3c3d2529923ab78bc99643",
+      "reference_sha256": "f7dfe6e1672e41e497685e02e556c90f587398d18d297887866b9fba82544122",
+      "before_word_line_box_sha256": "3d0adafc213e36d073a84e1e1d0b41e5eb1708443a118fffd055b41083994d22",
       "image_size": [
         820,
         560
-      ],
-      "changed_pixels_vs_previous_linux_reference": 1290,
-      "changed_pixels_outside_24px_rulers": 0,
-      "document_selection_and_table_pixels_identical": true
+      ]
     }
   ],
   "original_linux_reference_record": {
@@ -229,5 +223,45 @@
         }
       }
     ]
-  }
+  },
+  "word_line_box_refresh": {
+    "date": "2026-11-20",
+    "execution": "Native Ubuntu x64, SMS-created screen 362339.quds-word-layout-20261120",
+    "flutter": "3.47.8",
+    "framework": "737ba8f885dc774b53b442759999a312c9461e4e",
+    "engine": "cf636b1dfb818dd6a3ff16e390e93b1a036969c8",
+    "source": "Word line-box changes a3caf4ad; unchanged paint/selection production files after reconciliation",
+    "reason": "Native-qualified line metrics, greedy wrapping and max adjacent paragraph spacing replace the previous paragraph-wide size and summed gaps. Selection geometry tests assert unhighlighted paragraph spacing.",
+    "review": "Mac and native Linux images visually inspected. Text, selection bands and table flow reflect the intentional layout changes; exact comparison remains enabled.",
+    "editorTestsPassed": 56,
+    "evidence": "docs/validation/word-line-boxes-20261120/ubuntu-screen/"
+  },
+  "ruler_refresh_references": [
+    {
+      "target_platform": "macOS",
+      "file": "word_selection_macOS.png",
+      "reference_sha256": "128574cf7ddba0b860901a68a4485328e170a4b0d24a5a3b1c6b32b0f70ebaa5",
+      "previous_linux_reference_sha256": "543a0f9f663158a7027f3f4c2cc3095e539535c7ba6a66ce1ddceb4656fc34c3",
+      "image_size": [
+        820,
+        560
+      ],
+      "changed_pixels_vs_previous_linux_reference": 1290,
+      "changed_pixels_outside_24px_rulers": 0,
+      "document_selection_and_table_pixels_identical": true
+    },
+    {
+      "target_platform": "windows",
+      "file": "word_selection_windows.png",
+      "reference_sha256": "3d0adafc213e36d073a84e1e1d0b41e5eb1708443a118fffd055b41083994d22",
+      "previous_linux_reference_sha256": "db199f9171960e169ce59764948a891210166c03da3c3d2529923ab78bc99643",
+      "image_size": [
+        820,
+        560
+      ],
+      "changed_pixels_vs_previous_linux_reference": 1290,
+      "changed_pixels_outside_24px_rulers": 0,
+      "document_selection_and_table_pixels_identical": true
+    }
+  ]
 }

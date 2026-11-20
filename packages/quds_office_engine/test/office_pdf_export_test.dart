@@ -7,6 +7,74 @@ import 'package:test/test.dart';
 void main() {
   final SfntFont? font = _tryFont();
 
+  for (final bool cropped in <bool>[false, true]) {
+    test('PPT PDF draws the authored picture border after crop=$cropped', () {
+      final OfficeVisual picture = OfficeVisual(
+        kind: OfficeVisualKind.picture,
+        imageBytes: PngBytes.studioCard(width: 8, height: 8),
+      );
+      picture.picture
+        ..cropLeft = cropped ? 0.25 : 0
+        ..cropBottom = cropped ? 0.1 : 0
+        ..borderColor = 'CC3300'
+        ..borderWidth = 2.5;
+      final PmlPresentation deck = PmlPresentation(
+        slides: <PmlSlide>[
+          PmlSlide(
+            id: 256,
+            shapes: <PmlShape>[
+              PmlShape(
+                id: 2,
+                name: 'Bordered picture',
+                transform: const PmlTransform(
+                  x: 10 * 12700,
+                  y: 20 * 12700,
+                  cx: 100 * 12700,
+                  cy: 50 * 12700,
+                ),
+                visual: picture,
+              ),
+            ],
+          ),
+        ],
+      );
+      final String content = _inflated(
+        OfficePdfExport.presentation(deck),
+      ).join();
+      final int image = content.indexOf('/Im1 Do');
+      final List<RegExpMatch> borders = RegExp(r'([0-9.]+) w\n')
+          .allMatches(content)
+          .where((match) => double.parse(match.group(1)!) == 2.5)
+          .toList();
+      expect(image, greaterThanOrEqualTo(0));
+      expect(borders, hasLength(1));
+      final int border = borders.single.start;
+      expect(border, greaterThan(image));
+      expect(content.substring(border), contains('0.800 0.200 0 RG'));
+      expect(
+        content.substring(border),
+        matches(RegExp(r'10 20 100 50 re\s+S')),
+      );
+      if (cropped) {
+        // The border follows restoration of the crop clip, so it outlines
+        // the visible picture frame rather than the full expanded image.
+        expect(
+          RegExp(
+            r'^Q$',
+            multiLine: true,
+          ).allMatches(content.substring(image, border)),
+          hasLength(2),
+        );
+      }
+      picture.picture.borderWidth = 0;
+      final String borderless = _inflated(
+        OfficePdfExport.presentation(deck),
+      ).join();
+      expect(borderless, contains('/Im1 Do'));
+      expect(borderless, isNot(contains('0.800 0.200 0 RG')));
+    });
+  }
+
   test(
     'PPT PDF inherits the master background and honors a slide override',
     () {

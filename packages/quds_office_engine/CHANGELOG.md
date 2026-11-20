@@ -4,6 +4,13 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Resolve PPTX picture and gradient background ownership per slide, layout and
+  master, preserving authored overrides independently of hidden master shapes.
+  Retain authored background XML and image relationships through copying and
+  save/reopen; explicit solid edits replace the original fill without reviving it.
+  Draw authored picture borders after cropping in PDF export and retain the
+  existing numeric text, font fitting and connector regressions.
+
 - Add bounded VBA `Len`, `Left$`, `Right$`, and `Mid$` string intrinsics with
   explicit UTF-16 semantics, a versioned conformance corpus, and portable
   VM/JavaScript receipts. Refuse malformed UTF-16 at workbook-write boundaries

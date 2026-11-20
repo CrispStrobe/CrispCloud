@@ -58,7 +58,7 @@ void main() {
     );
   });
 
-  test('exact spacing changes pitch and places surplus above baseline', () {
+  test('exact spacing matches the native fixed-box baseline', () {
     final single = engine().layout(document(paragraph())).pages.single.lines;
     final exact = engine()
         .layout(
@@ -69,8 +69,9 @@ void main() {
         .lines;
     expect(exact[1].y - exact[0].y, 18);
     expect(
-      exact[0].glyphs.first.y - single[0].glyphs.first.y,
-      closeTo(18 - metrics.typographicLineHeight, 0.0001),
+      exact[0].glyphs.first.y,
+      // Word 16.111.1 exported 86.53pt for all four 12pt reference faces.
+      closeTo(86.53, 0.25),
     );
     expect(exact[0].glyphs.first.y, greaterThan(single[0].glyphs.first.y));
   });

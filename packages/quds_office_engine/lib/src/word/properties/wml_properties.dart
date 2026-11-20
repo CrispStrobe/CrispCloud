@@ -660,6 +660,7 @@ class WmlRunProps {
     this.color = '000000',
     this.highlight,
     this.fontSizeHalfPoints = 22,
+    this.kerningHalfPoints = 1,
     this.asciiFont = 'Arial',
     this.csFont = 'Arial',
     this.vertAlign = WmlVertAlign.baseline,
@@ -696,6 +697,12 @@ class WmlRunProps {
 
   /// fontSizeHalfPoints API.
   int fontSizeHalfPoints;
+
+  /// Native `w:kern` minimum size in half-points. Authored documents enable
+  /// kerning explicitly. Imported style defaults resolve independently: an
+  /// effective null or zero disables it. Styleless legacy packages use the
+  /// authoring fallback, matching Word's built-in document defaults.
+  int? kerningHalfPoints;
 
   /// asciiFont API.
   String asciiFont;
@@ -737,6 +744,7 @@ class WmlRunProps {
           color: color,
           highlight: highlight,
           fontSizeHalfPoints: fontSizeHalfPoints,
+          kerningHalfPoints: kerningHalfPoints,
           asciiFont: asciiFont,
           csFont: csFont,
           vertAlign: vertAlign,

@@ -14,6 +14,7 @@ abstract final class WordPropertyIo {
     'smallCaps': '${r.smallCaps}',
     'color': r.color,
     'sz': '${r.fontSizeHalfPoints}',
+    'kern': '${r.kerningHalfPoints}',
     'highlight': '${r.highlight}',
     'u': '${r.underline}',
     'vertAlign': '${r.vertAlign}',

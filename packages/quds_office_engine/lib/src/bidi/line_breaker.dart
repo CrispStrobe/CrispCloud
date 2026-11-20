@@ -96,7 +96,7 @@ typedef GlyphWidthAtFn = double Function(int codePoint, int logicalIndex);
 /// Per-run glyph lookup in the same face used by [GlyphWidthAtFn].
 typedef GlyphIdAtFn = int Function(int codePoint, int logicalIndex);
 
-/// UAX #14 opportunities + Knuth–Plass least-demerits wrapping.
+/// UAX #14 opportunities with balanced or Word-style greedy wrapping.
 abstract final class LineBreaker {
   /// Shape once, then choose each line's width as its layout position changes.
   ///
@@ -113,6 +113,9 @@ abstract final class LineBreaker {
     double spaceShrink = 1,
     bool justify = true,
     bool breakLongWords = false,
+    // False uses the longest fitting legal prefix, as Word does. The default
+    // retains balanced paragraph breaking for PDF/report consumers.
+    bool balanceLines = true,
     MarkAttachFn? markAttachOf,
     List<ShapedGlyph> Function(List<ShapedGlyph> glyphs)? ligate,
 
@@ -150,6 +153,7 @@ abstract final class LineBreaker {
       {for (final cluster in GraphemeClusters.segment(text)) cluster.start},
       measureLine,
       breakLongWords,
+      balanceLines,
     );
   }
 
@@ -173,6 +177,9 @@ abstract final class LineBreaker {
     /// cells and textboxes cannot expand to accommodate a long word. Normal
     /// word breaks still take priority; a single wider grapheme stays intact.
     bool breakLongWords = false,
+    // False uses the longest fitting legal prefix, as Word does. The default
+    // retains balanced paragraph breaking for PDF/report consumers.
+    bool balanceLines = true,
     MarkAttachFn? markAttachOf,
     List<ShapedGlyph> Function(List<ShapedGlyph> glyphs)? ligate,
 
@@ -245,6 +252,7 @@ abstract final class LineBreaker {
             hyphens: hyphens,
             controls: controls,
             breakLongWords: breakLongWords,
+            balanceLines: balanceLines,
             measureLine: measureLine,
           ),
         );
@@ -283,17 +291,36 @@ abstract final class LineBreaker {
     Map<int, ShapedGlyph> hyphens = const {},
     _BreakControls controls = _BreakControls.empty,
     bool breakLongWords = false,
+    // False uses the longest fitting legal prefix, as Word does. The default
+    // retains balanced paragraph breaking for PDF/report consumers.
+    bool balanceLines = true,
     List<ShapedGlyph> Function(List<ShapedGlyph> glyphs)? measureLine,
   }) {
-    final List<int> planned = _knuthPlass(
+    final measurements = _LineMeasurements(
       logical,
-      maxWidth,
-      spaceStretch,
-      spaceShrink,
       hyphens,
       clusterStarts,
-      controls,
+      markAttachOf,
+      measureLine,
     );
+    final List<int> planned = balanceLines
+        ? _knuthPlass(
+            logical,
+            maxWidth,
+            spaceStretch,
+            spaceShrink,
+            hyphens,
+            clusterStarts,
+            controls,
+          )
+        : _greedyBreaks(
+            logical,
+            maxWidth,
+            hyphens,
+            clusterStarts,
+            controls,
+            measurements.at,
+          );
     var breaks = !breakLongWords
         ? planned
         : _constrainBreaks(
@@ -304,13 +331,6 @@ abstract final class LineBreaker {
             hyphens,
             controls,
           );
-    final measurements = _LineMeasurements(
-      logical,
-      hyphens,
-      clusterStarts,
-      markAttachOf,
-      measureLine,
-    );
     if (measureLine != null) {
       breaks = _refineBreaks(
         logical,
@@ -791,6 +811,92 @@ abstract final class LineBreaker {
     );
   }
 
+  // Word consumes the longest fitting word prefix, rather than balancing the
+  // raggedness of the whole paragraph. Prefix advances narrow the search;
+  // actual line shaping and selected hyphens decide the final fit.
+  static List<int> _greedyBreaks(
+    List<ShapedGlyph> glyphs,
+    double maxWidth,
+    Map<int, ShapedGlyph> hyphens,
+    Set<int> clusterStarts,
+    _BreakControls controls,
+    _MeasuredLine Function(int, int) measure,
+  ) {
+    final n = glyphs.length;
+    final widths = List<double>.filled(n + 1, 0);
+    final legal = <int>[];
+    for (var i = 0; i < n; i++) {
+      widths[i + 1] = widths[i] + glyphs[i].advance;
+      if (_canBreakAfter(glyphs, i, hyphens, clusterStarts, controls)) {
+        legal.add(i + 1);
+      }
+    }
+    if (legal.isEmpty || legal.last != n) legal.add(n);
+    final points = <int>[0];
+    var start = 0;
+    var first = 0;
+    while (start < n) {
+      while (legal[first] <= start) {
+        first++;
+      }
+      double baseWidth(int to) {
+        var end = to;
+        while (end > start && _isSoftTrailingSpace(glyphs[end - 1])) {
+          end--;
+        }
+        return widths[end] - widths[start];
+      }
+
+      var low = first;
+      var high = legal.length;
+      while (low < high) {
+        final mid = (low + high) ~/ 2;
+        if (baseWidth(legal[mid]) <= maxWidth + .000001) {
+          low = mid + 1;
+        } else {
+          high = mid;
+        }
+      }
+      int? chosen;
+      var chosenIndex = first - 1;
+      for (
+        var at = low - 1, tested = 0;
+        at >= first && tested < 32;
+        at--, tested++
+      ) {
+        if (measure(start, legal[at]).width <= maxWidth + .000001) {
+          chosen = legal[at];
+          chosenIndex = at;
+          break;
+        }
+      }
+      // Contextual shaping can make the next prefix fit. A non-fitting
+      // discretionary hyphen must not hide a fitting complete word.
+      for (
+        var at = math.max(first, chosenIndex + 1), tested = 0;
+        at < legal.length && tested < 32;
+        at++, tested++
+      ) {
+        if (measure(start, legal[at]).width <= maxWidth + .000001) {
+          chosen = legal[at];
+          chosenIndex = at;
+        } else if (_hyphenForBreak(glyphs, legal[at], hyphens) == null) {
+          break;
+        }
+      }
+      if (chosen == null) {
+        var at = first;
+        while (_hyphenForBreak(glyphs, legal[at], hyphens) != null) {
+          at++;
+        }
+        chosen = legal[at]; // Retain a whole oversized word for the caller.
+      }
+      points.add(chosen);
+      start = chosen;
+    }
+    return points;
+  }
+
   static List<int> _knuthPlass(
     List<ShapedGlyph> glyphs,
     double maxWidth,
@@ -1168,6 +1274,7 @@ class PreparedLineBreaker {
     this._clusterStarts,
     this._measureLine,
     this._breakLongWords,
+    this._balanceLines,
   );
 
   final String _text;
@@ -1181,6 +1288,7 @@ class PreparedLineBreaker {
   final Set<int> _clusterStarts;
   final List<ShapedGlyph> Function(List<ShapedGlyph> glyphs)? _measureLine;
   final bool _breakLongWords;
+  final bool _balanceLines;
   late final _measurements = _LineMeasurements(
     _logical,
     _hyphens,
@@ -1245,15 +1353,24 @@ class PreparedLineBreaker {
       _plannedBreaks.clear();
     }
     if (!_plannedBreaks.containsKey(from)) {
-      var points = LineBreaker._knuthPlass(
-        chunk,
-        maxWidth,
-        _stretch,
-        _shrink,
-        _hyphens,
-        _clusterStarts,
-        _controls,
-      );
+      var points = _balanceLines
+          ? LineBreaker._knuthPlass(
+              chunk,
+              maxWidth,
+              _stretch,
+              _shrink,
+              _hyphens,
+              _clusterStarts,
+              _controls,
+            )
+          : LineBreaker._greedyBreaks(
+              chunk,
+              maxWidth,
+              _hyphens,
+              _clusterStarts,
+              _controls,
+              (a, b) => _measurements.at(from + a, from + b),
+            );
       if (_breakLongWords) {
         points = LineBreaker._constrainBreaks(
           chunk,

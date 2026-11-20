@@ -139,7 +139,12 @@ void main() {
             .map((style) => style.getAttribute('styleId')),
         <String>['Heading1'],
       );
-      expect(styles.firstChild('docDefaults'), isNull);
+      final defaults = styles
+          .firstChild('docDefaults')!
+          .firstChild('rPrDefault')!
+          .firstChild('rPr')!;
+      expect(defaults.childElements.map((e) => e.localName), ['kern']);
+      expect(defaults.firstChild('kern')!.getAttribute('val'), '1');
       _expectNoDirectFormatting(_body(saved).childrenNamed('p').last);
     },
   );

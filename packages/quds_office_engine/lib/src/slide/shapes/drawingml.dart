@@ -712,6 +712,39 @@ String slideToXml(PmlSlide slide, {Map<PmlShape, String>? embedIds}) {
   /// writeStartElement API.
   w.writeStartElement('cSld', prefix: 'p');
 
+  final XmlElement? sourceBackground = slide.sourceBackground?.copy();
+  if (sourceBackground != null) {
+    final PmlShape? picture = slide.backgroundPicture;
+    final String? embed = picture == null
+        ? null
+        : embedIds?[picture] ?? picture.embedRelId;
+    if (embed != null) {
+      sourceBackground
+          .firstChild('bgPr', namespaceUri: OfficeNamespaces.p)
+          ?.firstChild('blipFill', namespaceUri: OfficeNamespaces.a)
+          ?.firstChild('blip', namespaceUri: OfficeNamespaces.a)
+          ?.setAttribute(
+            'embed',
+            embed,
+            prefix: 'r',
+            namespaceUri: OfficeNamespaces.r,
+          );
+    }
+    sourceBackground.writeTo(w);
+  } else if (slide.writesSolidBackground) {
+    w.writeStartElement('bg', prefix: 'p');
+    w.writeStartElement('bgPr', prefix: 'p');
+    w.writeStartElement('solidFill', prefix: 'a');
+    w.writeEmptyElement(
+      'srgbClr',
+      prefix: 'a',
+      attributes: <String, String>{'val': slide.background},
+    );
+    w.writeEndElement();
+    w.writeEndElement();
+    w.writeEndElement();
+  }
+
   /// writeStartElement API.
   w.writeStartElement('spTree', prefix: 'p');
 

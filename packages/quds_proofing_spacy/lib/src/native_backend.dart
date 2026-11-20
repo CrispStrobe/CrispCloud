@@ -217,7 +217,8 @@ final class SpacyNativeBackendFactory implements SpacyBackendFactory {
     if (!_loadableAbis.contains(Abi.current())) {
       throw const SpacyUnavailableException(
         'Native spaCy analysis is available only for Linux (x86-64, arm64), '
-        'macOS arm64 and Windows x86-64 libraries.',
+        'macOS arm64, Windows x86-64, iOS arm64 and Android (arm64, x86-64) '
+        'libraries.',
       );
     }
     if (nerPath != null && bundle.formatVersion != 1) {
@@ -347,6 +348,11 @@ const _loadableAbis = {
   Abi.linuxArm64,
   Abi.macosArm64,
   Abi.windowsX64,
+  // Mobile apps ship the library inside the signed app only (hostBundled);
+  // each exact mobile binary still needs its own recorded qualification.
+  Abi.iosArm64,
+  Abi.androidArm64,
+  Abi.androidX64,
 };
 
 /// Enables the opened library for this process after the host's explicit

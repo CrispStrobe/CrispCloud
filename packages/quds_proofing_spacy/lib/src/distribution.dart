@@ -357,7 +357,9 @@ SpacyPlatformStatus spacyPlatformStatus(SpacyPlatform platform) {
     SpacyPlatform.macosX64 => 'Intel macOS is not built or qualified.',
     SpacyPlatform.iosArm64 || SpacyPlatform.androidArm64 =>
       'Mobile apps must ship the native library inside the signed app; only '
-          'the model bundle may be downloaded. No mobile build is qualified.',
+          'the model bundle may be downloaded. No mobile build is qualified '
+          'for grammar; the Android arm64 library in the Studio app has '
+          'recorded analysis parity.',
     SpacyPlatform.web => 'Native analysis is unavailable in the browser.',
     SpacyPlatform.linuxX64 ||
     SpacyPlatform.macosArm64 => 'No package is configured.',
@@ -387,6 +389,13 @@ const spacyGrammarMacosBundledCodeSha256 =
 /// digest is the identity everywhere.
 const spacyGrammarMacosBundledUnsignedSha256 =
     'f62d2a0cf457a0ac577f45eceba93d8d5f2f450d4fd5a191f0cec61d88886ed2';
+
+/// The arm64-v8a library the Studio Android app ships byte-exact in its
+/// jniLibs (`tool/build.py --android`: CrispEmbed v2 runtime 45b05770, static
+/// PCRE2, NDK 28.2, API 24, static libc++, stripped by the build; the app
+/// keeps it from being stripped again). Analysis only.
+const spacyAndroidArm64BundledSha256 =
+    'ed730f629ce4eafe139885e9b1029a41fe05f3d5032fb992fb61eb834950f7ad';
 
 /// Exact builds with recorded claims that are not offered as downloadable
 /// packages (for example development candidates or host-bundled libraries).
@@ -426,6 +435,26 @@ const spacyRecordedBuilds = <SpacyBuildQualification>[
       'Grammar uses the parser without named entities (capability mask 15).',
       'Qualified on the ad hoc signed bytes; re-signing changes only the '
           'signature, not the qualified code.',
+    ],
+  ),
+  // The Android arm64-v8a library inside the Studio APK (exact bytes; the
+  // host keeps it unstripped and extracted, see the Studio build.gradle.kts).
+  SpacyBuildQualification(
+    librarySha256: spacyAndroidArm64BundledSha256,
+    analysis:
+        'Android arm64-v8a library built reproducibly from CrispEmbed v2 '
+        'runtime 45b05770 with static PCRE2 (NDK 28.2, API 24, static '
+        'libc++), loaded from the Studio APK on an Android 16 (API 36) arm64 '
+        'emulator: the frozen 16-case development panel (113 tokens, 22 '
+        'sentences, 2,571 token/sentence fields) exact on these bytes '
+        '(integration_test/mobile_native_proofing_test.dart). Component '
+        'evidence only.',
+    limitations: [
+      'No grammar qualification for this build; the planner refuses it.',
+      'Emulator, not a physical device. Numerical stage traces, ctest and '
+          'the C text-API controls were not run on Android.',
+      'Valid only for these exact bytes: an APK build that strips or '
+          'rewrites the library again produces an unrecorded build.',
     ],
   ),
   SpacyBuildQualification(

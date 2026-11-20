@@ -150,6 +150,7 @@ abstract final class PaintRunText {
         a.fontSize == b.fontSize &&
         a.bold == b.bold &&
         a.italic == b.italic &&
+        a.kerning == b.kerning &&
         a.strike == b.strike &&
         a.underline == b.underline &&
         a.highlight == b.highlight &&
@@ -296,6 +297,9 @@ abstract final class PaintRunText {
           fontFamilyFallback: fallbacksFor(text, runFamily: first.fontFamily),
           fontWeight: first.bold ? FontWeight.bold : FontWeight.normal,
           fontStyle: first.italic ? FontStyle.italic : FontStyle.normal,
+          fontFeatures: first.kerning
+              ? null
+              : const [ui.FontFeature.disable('kern')],
           color: foreground == null ? color : null,
           foreground: foreground,
           decoration: decoration,

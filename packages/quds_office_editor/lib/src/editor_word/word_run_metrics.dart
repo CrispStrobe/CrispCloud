@@ -15,6 +15,7 @@ typedef _RunMetricsKey = ({
   String? themeFamily,
   bool bold,
   bool italic,
+  bool kerning,
   int bidiLevel,
   int fontRevision,
 });
@@ -60,6 +61,9 @@ abstract final class WordRunMetrics {
     WmlRunProps props,
     int bidiLevel, {
     String? themeFamily,
+    // Word uses unkerned line-fit widths unless w:kern enables them at this
+    // size. Keep the general shaping API contextual for non-Word consumers.
+    bool respectKerningThreshold = false,
   }) {
     if (!sizePoints.isFinite || sizePoints <= 0 || bidiLevel < 0) return null;
     if (text.isEmpty) return const <WordMeasuredCluster>[];
@@ -79,6 +83,10 @@ abstract final class WordRunMetrics {
       runFamily: requestedFamily,
       themeFamily: themeFamily,
     );
+    final threshold = props.kerningHalfPoints;
+    final kerning =
+        !respectKerningThreshold ||
+        threshold != null && threshold > 0 && sizePoints * 2 >= threshold;
     final _RunMetricsKey key = (
       text: text,
       sizePoints: sizePoints,
@@ -87,6 +95,7 @@ abstract final class WordRunMetrics {
       themeFamily: themeFamily,
       bold: props.bold,
       italic: props.italic,
+      kerning: kerning,
       bidiLevel: bidiLevel,
       fontRevision: revision,
     );
@@ -108,6 +117,7 @@ abstract final class WordRunMetrics {
           ),
           fontWeight: props.bold ? FontWeight.bold : FontWeight.normal,
           fontStyle: props.italic ? FontStyle.italic : FontStyle.normal,
+          fontFeatures: kerning ? null : const [ui.FontFeature.disable('kern')],
           height: 1.0,
         ),
       ),

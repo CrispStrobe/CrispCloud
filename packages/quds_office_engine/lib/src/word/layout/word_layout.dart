@@ -42,6 +42,7 @@ class LaidOutGlyph {
     required this.bold,
     required this.underline,
     this.italic = false,
+    this.kerning = true,
     this.strike = false,
     this.highlight,
     this.fontFamily,
@@ -83,6 +84,9 @@ class LaidOutGlyph {
 
   /// italic API.
   final bool italic;
+
+  /// Pair kerning selected by the effective native run threshold.
+  final bool kerning;
 
   /// strike API.
   final bool strike;
@@ -764,7 +768,7 @@ typedef WordGlyphMeasure =
 typedef WordFontMeasure =
     FontMetrics? Function(int codePoint, double sizePoints, WmlRunProps props);
 
-/// Flowable pagination: Knuth-Plass lines accumulated into physical pages.
+/// Word-style greedy wrapping with shaped line measurements and pagination.
 class WordLayoutEngine {
   /// WordLayoutEngine API.
   WordLayoutEngine({
@@ -1115,6 +1119,7 @@ class WordLayoutEngine {
       flow.y = _contentBottom(last, fallback: _bodyTopClearingLogo(section));
       flow.columnTop = flow.y;
     }
+    double? adjacentParagraphAfter;
     for (final WmlBlock block in WordTree.visibleBlocks(section.blocks)) {
       switch (block) {
         case WmlContentControlBlock():
@@ -1123,11 +1128,23 @@ class WordLayoutEngine {
         case WmlParagraph():
           if (block.properties.pageBreakBefore) {
             flow.breakPage();
+            adjacentParagraphAfter = null;
           } else if (block.properties.columnBreakBefore ||
               _hasBreak(block, WmlBreakType.column)) {
             flow.nextColumn();
+            adjacentParagraphAfter = null;
           } else if (_hasBreak(block, WmlBreakType.page)) {
             flow.breakPage();
+            adjacentParagraphAfter = null;
+          }
+          if (adjacentParagraphAfter != null) {
+            // Word uses the greater of adjacent before/after spacing. The
+            // preceding paragraph has already advanced by its after-space;
+            // remove only the overlap, without changing either source value.
+            flow.y -= math.min(
+              math.max(0, adjacentParagraphAfter),
+              math.max(0, block.properties.spacingBefore),
+            );
           }
           final ({double y, int pageIndex}) para = _layoutParagraph(
             block,
@@ -1145,10 +1162,13 @@ class WordLayoutEngine {
           flow.y = para.y;
           flow.pageIndex = para.pageIndex;
           paragraphIndex++;
+          adjacentParagraphAfter = block.properties.spacingAfter;
           if (flow.y > flow.bottom) {
             flow.nextColumn();
+            adjacentParagraphAfter = null;
           }
         case WmlTable():
+          adjacentParagraphAfter = null;
           final ({double y, int pageIndex}) table = _layoutTable(
             block,
             section,
@@ -1166,6 +1186,7 @@ class WordLayoutEngine {
           flow.pageIndex = table.pageIndex;
           paragraphIndex += _tableParagraphCount(block);
         case WmlVisual():
+          adjacentParagraphAfter = null;
           final ({double y, int pageIndex}) visual = _layoutVisual(
             block.visual,
             section,
@@ -1181,8 +1202,10 @@ class WordLayoutEngine {
           flow.y = visual.y;
           flow.pageIndex = visual.pageIndex;
         case WmlFrame():
+          adjacentParagraphAfter = null;
           paragraphIndex = _layoutFrame(block, section, flow, paragraphIndex);
         case WmlEquation():
+          adjacentParagraphAfter = null;
           final ({double y, int pageIndex}) equation = _layoutEquation(
             block,
             section,
@@ -1195,6 +1218,7 @@ class WordLayoutEngine {
           flow.y = equation.y;
           flow.pageIndex = equation.pageIndex;
         case WmlToc():
+          adjacentParagraphAfter = null;
           WordToc.ensureBody(block);
           final ({double y, int pageIndex}) toc = _layoutToc(
             block,
@@ -1455,9 +1479,62 @@ class WordLayoutEngine {
     // host metrics so a declined fragment does not reuse a different context.
     // Repeated display-label scalars share this source/style and scalar width.
     final fallbackAdvances = <(int, int, int), double>{};
+    final hasMeasuredTabs =
+        text.contains('\t') && paragraph.properties.bidiBaseLevel != 1;
+    final tabStops = [...paragraph.properties.tabs]
+      ..sort((a, b) => a.position.compareTo(b.position));
+    List<ShapedGlyph> measureTabs(List<ShapedGlyph> glyphs) {
+      if (!hasMeasuredTabs) return glyphs;
+      final result = [...glyphs];
+      var pen =
+          textLeft +
+          (glyphs.firstOrNull?.logicalIndex == 0 ? firstLineShift : 0);
+      for (var i = 0; i < glyphs.length; i++) {
+        final glyph = glyphs[i];
+        if (glyph.codePoint == 0x0a || glyph.codePoint == 0x0d) {
+          pen = textLeft;
+          continue;
+        }
+        if (glyph.codePoint != 0x09) {
+          pen += glyph.advance;
+          continue;
+        }
+        var fieldWidth = 0.0;
+        var decimalWidth = 0.0;
+        var foundDecimal = false;
+        for (var j = i + 1; j < glyphs.length; j++) {
+          final next = glyphs[j];
+          if (next.codePoint == 0x09 ||
+              next.codePoint == 0x0a ||
+              next.codePoint == 0x0d) {
+            break;
+          }
+          if (next.codePoint == 0x2e) foundDecimal = true;
+          if (!foundDecimal) decimalWidth += next.advance;
+          fieldWidth += next.advance;
+        }
+        final stop = tabStops
+            .where((stop) => stop.position > pen + .001)
+            .firstOrNull;
+        final target =
+            stop?.position ??
+            ((pen / kDefaultTabWidth).floor() + 1) * kDefaultTabWidth;
+        final inset = switch (stop?.alignment ?? WmlTabAlignment.left) {
+          WmlTabAlignment.left => 0.0,
+          WmlTabAlignment.center => fieldWidth / 2,
+          WmlTabAlignment.right => fieldWidth,
+          WmlTabAlignment.decimal => decimalWidth,
+        };
+        final advance = math.max(0.0, target - inset - pen);
+        result[i] = _withMeasuredAdvance(glyph, advance);
+        pen += advance;
+      }
+      return result;
+    }
+
     List<ShapedGlyph> measuredLine(List<ShapedGlyph> presented) {
       final host = measureRun;
-      if (host == null) return presented;
+      if (host == null) return measureTabs(presented);
       final fallback = <ShapedGlyph>[
         for (final glyph in presented)
           if (fallbackAdvances[(
@@ -1474,14 +1551,16 @@ class WordLayoutEngine {
             // retain their independent scalar metrics and source ownership.
             glyph,
       ];
-      return _measureWordRuns(
-        glyphs: fallback,
-        text: text,
-        paragraph: paragraph,
-        propsAt: propsAt,
-        labels: displayLabels,
-        pictures: inlinePictures.keys.toSet(),
-        measure: host,
+      return measureTabs(
+        _measureWordRuns(
+          glyphs: fallback,
+          text: text,
+          paragraph: paragraph,
+          propsAt: propsAt,
+          labels: displayLabels,
+          pictures: inlinePictures.keys.toSet(),
+          measure: host,
+        ),
       );
     }
 
@@ -1489,7 +1568,7 @@ class WordLayoutEngine {
       final presented = displayLabels.isEmpty
           ? source
           : displayReplacements(source);
-      if (measureRun == null) return presented;
+      if (measureRun == null) return measureTabs(presented);
       for (final glyph in presented) {
         fallbackAdvances[(glyph.logicalIndex, glyph.codePoint, glyph.glyphId)] =
             glyph.advance;
@@ -1552,6 +1631,7 @@ class WordLayoutEngine {
     final PreparedLineBreaker? wrapBreaker = wrapsFrames
         ? LineBreaker.prepare(
             text: text,
+            balanceLines: false,
             hyphenationOffsets: hyphenationOffsets,
             widthOf: (cp) => widthAt(cp, 0),
             widthAt: widthAt,
@@ -1559,8 +1639,11 @@ class WordLayoutEngine {
             markAttachOf: markAttach,
             baseLevel: paragraph.properties.bidiBaseLevel,
             justify: justify,
-            measureLine: measureRun == null ? null : measuredLine,
-            ligate: displayLabels.isEmpty && measureRun == null
+            measureLine: measureRun == null && !hasMeasuredTabs
+                ? null
+                : measuredLine,
+            ligate:
+                displayLabels.isEmpty && measureRun == null && !hasMeasuredTabs
                 ? null
                 : measuredRuns,
           )
@@ -1569,6 +1652,7 @@ class WordLayoutEngine {
         ? const []
         : LineBreaker.breakLines(
             text: text,
+            balanceLines: false,
             hyphenationOffsets: hyphenationOffsets,
             maxWidth: maxWidth,
             widthOf: (cp) => widthAt(cp, 0),
@@ -1577,9 +1661,12 @@ class WordLayoutEngine {
             markAttachOf: markAttach,
             baseLevel: paragraph.properties.bidiBaseLevel,
             justify: justify,
-            measureLine: measureRun == null ? null : measuredLine,
+            measureLine: measureRun == null && !hasMeasuredTabs
+                ? null
+                : measuredLine,
             breakLongWords: !allowBreak,
-            ligate: displayLabels.isEmpty && measureRun == null
+            ligate:
+                displayLabels.isEmpty && measureRun == null && !hasMeasuredTabs
                 ? null
                 : measuredRuns,
           );
@@ -1590,37 +1677,60 @@ class WordLayoutEngine {
     final double dropWidth = dropLines > 0 ? fontSize * 2.4 : 0;
     final int lineStart = current.length;
     final double paraTop = cursorY;
-    // Word grows a line for its tallest run: a 20 pt word inside 11 pt text
-    // makes that line taller and moves its baseline down. Lines whose runs
-    // are no larger than the paragraph's first run keep [lineHeight].
-    double largestSizeOn(BrokenLine line) {
-      var largest = fontSize;
-      for (final ShapedGlyph g in line.glyphs) {
-        final double size = propsAt(sourceStyleOffset(g)).fontSizePoints;
-        if (size > largest) largest = size;
-      }
-      return largest;
-    }
+    // Each line owns its strut. A large opening run must not enlarge all
+    // subsequent lines, nor may one family's metrics stand in for another.
+    final faceMetrics = <(WmlRunProps, int), FontMetrics?>{};
+    final lineMetrics = <BrokenLine, ({double ascent, double height})>{};
+    final lastTextOffset = text.trimRight().length;
+    ({double ascent, double height}) metricsOn(BrokenLine line) =>
+        lineMetrics.putIfAbsent(line, () {
+          var ascent = 0.0;
+          var descent = 0.0;
+          var count = 0;
+          void include(WmlRunProps props, int cp) {
+            final size = props.fontSizePoints;
+            final metric = faceMetrics.putIfAbsent((props, cp), () {
+              final host = measureFont?.call(cp, size, props);
+              if (host != null) return host;
+              final face = _faceFor(cp, props);
+              return face == null
+                  ? null
+                  : _metricsCache.putIfAbsent((
+                      face,
+                      size,
+                    ), () => FontMetrics(font: face, fontSizePoints: size));
+            });
+            final runAscent = metric?.typographicAscender ?? size * 0.8;
+            final height = metric?.typographicLineHeight ?? size * 1.32;
+            ascent = math.max(ascent, runAscent);
+            descent = math.max(descent, height - runAscent);
+            count++;
+          }
 
-    double ascentFor(double size) => metrics == null || fontSize <= 0
-        ? size * 0.8
-        : metrics.typographicAscender * size / fontSize;
+          for (final glyph in line.glyphs) {
+            if (inlinePictures.containsKey(glyph.logicalIndex)) continue;
+            include(propsAt(sourceStyleOffset(glyph)), glyph.codePoint);
+          }
+          // The paragraph mark is an unpainted final-line participant. Its
+          // effective font comes from defaults/styles/direct mark properties.
+          final marker = paragraph.properties.importedParagraphMark;
+          if (marker != null && line.logicalEnd >= lastTextOffset) {
+            include(marker, firstCodePoint);
+          }
+          if (count == 0) include(runProps, 0x20);
+          return (ascent: ascent, height: ascent + descent);
+        });
+
     double textHeightOfLine(BrokenLine line) {
-      if (paragraph.properties.lineSpacingRule == WmlLineSpacingRule.exact) {
-        return lineHeight;
-      }
-      final double largest = largestSizeOn(line);
-      if (largest <= fontSize + 0.01) return lineHeight;
-      return math.max(
-        lineHeight,
-        _lineHeight(
-          paragraph.properties,
-          metrics == null
-              ? null
-              : FontMetrics(font: metrics.font, fontSizePoints: largest),
-          largest,
+      final height = metricsOn(line).height;
+      return switch (paragraph.properties.lineSpacingRule) {
+        WmlLineSpacingRule.exact => paragraph.properties.lineSpacing,
+        WmlLineSpacingRule.atLeast => math.max(
+          height,
+          paragraph.properties.lineSpacing,
         ),
-      );
+        WmlLineSpacingRule.auto => height * paragraph.properties.lineSpacing,
+      };
     }
 
     double pictureHeightOn(BrokenLine line) {
@@ -1632,12 +1742,7 @@ class WordLayoutEngine {
       return tallest;
     }
 
-    double textAscentOn(BrokenLine line) {
-      final double largest = largestSizeOn(line);
-      return largest > fontSize + 0.01
-          ? ascentFor(largest)
-          : (metrics?.typographicAscender ?? fontSize * 0.8);
-    }
+    double textAscentOn(BrokenLine line) => metricsOn(line).ascent;
 
     // An inline picture sits on the baseline: a picture taller than the
     // text ascent raises the baseline and the line (exact spacing clips).
@@ -1793,26 +1898,21 @@ class WordLayoutEngine {
         x += lineWidth - line.width;
       }
       var gx = x;
-      final double largest = largestSizeOn(line);
-      final bool grown = largest > fontSize + 0.01;
-      final double lineAscent = ascentFor(largest);
       final double pictureAscent =
           paragraph.properties.lineSpacingRule == WmlLineSpacingRule.exact
           ? 0.0
           : pictureHeightOn(line);
-      // A line without a picture keeps the established per-run baseline
-      // fallback; a picture line aligns every run with the picture's base.
-      final bool lineHasPicture = pictureAscent > 0;
       final double baselineAscent = math.max(textAscentOn(line), pictureAscent);
-      final naturalHeight = metrics == null
-          ? largest * 1.32
-          : metrics.typographicLineHeight * largest / fontSize;
-      // Word puts extra exact/minimum spacing above the text baseline;
-      // multiple spacing leaves the baseline at its normal top position.
-      final baselineLeading =
-          paragraph.properties.lineSpacingRule == WmlLineSpacingRule.auto
-          ? 0.0
-          : heightOfLine(line) - naturalHeight;
+      final naturalHeight = metricsOn(line).height;
+      // With default paragraph text alignment Word positions fixed-spacing
+      // text at 80% of the line box, independent of run font/size. Native Word
+      // probes cover 8–24pt text in four families and 10–120pt fixed spacing.
+      // Do not derive this baseline by subtracting one face's descender.
+      final baselineLeading = switch (paragraph.properties.lineSpacingRule) {
+        WmlLineSpacingRule.exact => lineHeight * 0.8 - baselineAscent,
+        WmlLineSpacingRule.atLeast => heightOfLine(line) - naturalHeight,
+        WmlLineSpacingRule.auto => 0.0,
+      };
       final List<LaidOutGlyph> glyphs = <LaidOutGlyph>[];
       // Mark attachment can replace a shaped glyph object. Track display
       // offsets by source ownership rather than that transient identity.
@@ -1843,11 +1943,7 @@ class WordLayoutEngine {
             y:
                 cursorY +
                 baselineLeading +
-                (lineHasPicture
-                    ? baselineAscent
-                    : (grown
-                          ? lineAscent
-                          : (metrics?.typographicAscender ?? baseSize * 0.8))) +
+                baselineAscent +
                 props.vertAlign.baselineShift(baseSize) -
                 g.paintDy,
             color: props.color,
@@ -1855,6 +1951,9 @@ class WordLayoutEngine {
             bold: props.bold,
             underline: props.underline,
             italic: props.italic,
+            kerning:
+                (props.kerningHalfPoints ?? 0) > 0 &&
+                size * 2 >= props.kerningHalfPoints!,
             strike: props.strike,
             highlight: WmlHighlight.toRgb(props.highlight) ?? props.highlight,
             fontFamily: OfficeTypeface.familyForRun(

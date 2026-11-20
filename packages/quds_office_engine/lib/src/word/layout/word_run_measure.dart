@@ -133,6 +133,7 @@ List<ShapedGlyph> _measureWordRuns({
             : glyph.codePoint,
       ),
       props.fontSizeHalfPoints,
+      props.kerningHalfPoints,
       props.bold,
       props.italic,
       props.color,

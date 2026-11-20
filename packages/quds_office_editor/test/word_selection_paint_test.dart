@@ -4,6 +4,7 @@ import 'support/office_golden.dart';
 // The original goldens were generated on macOS. Linux references preserve
 // its rasterization of the same document; see goldens/linux/provenance.json.
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
@@ -263,9 +264,10 @@ void main() {
       final endOfFirst = _band(caret, layout, first.last).single;
       final second = _band(caret, layout, _linesOf(layout, 1).single).single;
       final props = doc.paragraphs.first.properties;
-      final gap =
-          props.spacingAfter +
-          doc.paragraphs.elementAt(1).properties.spacingBefore;
+      final gap = math.max(
+        props.spacingAfter,
+        doc.paragraphs.elementAt(1).properties.spacingBefore,
+      );
       expect(gap, greaterThan(0));
       expect(second.top - endOfFirst.bottom, closeTo(gap, .001));
     });

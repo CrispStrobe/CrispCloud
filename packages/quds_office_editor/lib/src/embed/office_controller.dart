@@ -922,6 +922,7 @@ class WordEditorController extends OfficeController {
               sizePoints,
               props,
               bidiLevel,
+              respectKerningThreshold: true,
               themeFamily: config.theme.fontFamily,
             ),
         measure: (int codePoint, double sizePoints, WmlRunProps props) =>

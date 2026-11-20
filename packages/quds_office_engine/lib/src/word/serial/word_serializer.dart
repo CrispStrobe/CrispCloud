@@ -1471,6 +1471,13 @@ class WordSerializer {
       prefix: 'w',
       attributes: <String, String>{'w:val': r.color},
     );
+    if (r.kerningHalfPoints != null) {
+      w.writeEmptyElement(
+        'kern',
+        prefix: 'w',
+        attributes: {'w:val': '${r.kerningHalfPoints}'},
+      );
+    }
     w.writeEmptyElement(
       'sz',
       prefix: 'w',
@@ -2226,7 +2233,18 @@ class WordSerializer {
     w.writeStartDocument();
     w.writeStartElement('styles', prefix: 'w');
     w.writeNamespace('w', OfficeNamespaces.w);
-    if (!importedWithoutStyles) {
+    if (importedWithoutStyles) {
+      // Creating a styles part (for a language/style edit) replaces Word's
+      // built-in styleless fallback. Preserve its kerning without introducing
+      // new font/size defaults or stamping inherited values onto each run.
+      w.writeStartElement('docDefaults', prefix: 'w');
+      w.writeStartElement('rPrDefault', prefix: 'w');
+      w.writeStartElement('rPr', prefix: 'w');
+      w.writeEmptyElement('kern', prefix: 'w', attributes: {'w:val': '1'});
+      w.writeEndElement();
+      w.writeEndElement();
+      w.writeEndElement();
+    } else {
       w.writeStartElement('docDefaults', prefix: 'w');
       w.writeStartElement('rPrDefault', prefix: 'w');
       w.writeStartElement('rPr', prefix: 'w');

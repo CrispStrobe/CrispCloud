@@ -12,6 +12,23 @@ spec.loader.exec_module(layout)
 
 
 class NativeWordMetricTest(unittest.TestCase):
+    def test_tab_fields_and_native_trailing_spaces_form_the_same_visual_row(self):
+        native = [{'text': 'Right ', 'x': 140, 'y': 72},
+                  {'text': 'Left ', 'x': 20, 'y': 72},
+                  {'text': 'Next line ', 'x': 20, 'y': 90}]
+        candidate = [{'text': 'Left\tRight', 'x': 20, 'y': 72},
+                     {'text': 'Next line', 'x': 20, 'y': 90}]
+        self.assertEqual(layout.visual_rows(native), layout.visual_rows(candidate))
+
+    def test_row_normalization_does_not_hide_wrong_wraps_or_lost_words(self):
+        native = [{'text': 'First word', 'x': 20, 'y': 72},
+                  {'text': 'Second word', 'x': 20, 'y': 90}]
+        for wrong in [[{'text': 'First word Second word', 'x': 20, 'y': 72}],
+                      [{'text': 'First', 'x': 20, 'y': 72},
+                       {'text': 'word Second word', 'x': 20, 'y': 90}],
+                      [{'text': 'First word', 'x': 20, 'y': 72}]]:
+            self.assertNotEqual(layout.visual_rows(native), layout.visual_rows(wrong))
+
     def page(self, shift=0, extra=False):
         page = Image.new('RGB', (200, 200), 'white')
         draw = ImageDraw.Draw(page)

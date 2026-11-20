@@ -540,7 +540,7 @@ class _StyleCascade {
       pp.firstChild('rPr'),
     ], toggleLayers: markerStyles.whereType<XmlElement>().toSet());
     if (markerXml.childElements.isNotEmpty) {
-      final marker = WmlRunProps();
+      final marker = WmlRunProps(kerningHalfPoints: _missingStyles ? 1 : null);
       reader._parseRPr(
         XmlPullReader(
           XmlDocument(root: markerXml).toXmlString(declaration: false),
@@ -566,7 +566,9 @@ class _StyleCascade {
         ...styleRuns,
         direct,
       ], toggleLayers: styleRuns.whereType<XmlElement>().toSet());
-      final resolved = WmlRunProps();
+      final resolved = WmlRunProps(
+        kerningHalfPoints: _missingStyles ? 1 : null,
+      );
       final inner = XmlPullReader(
         XmlDocument(root: rp).toXmlString(declaration: false),
       )..next();

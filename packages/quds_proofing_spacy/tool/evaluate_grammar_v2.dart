@@ -553,8 +553,9 @@ Object? _normalizeLibrary(Object? value, String library) {
             : _normalizeLibrary(entry.value, library),
     };
   }
-  if (value is List)
+  if (value is List) {
     return [for (final v in value) _normalizeLibrary(v, library)];
+  }
   return value;
 }
 

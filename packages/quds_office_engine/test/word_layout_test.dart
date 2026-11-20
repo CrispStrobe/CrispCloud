@@ -364,9 +364,7 @@ void main() {
     // Soft justify: never blow past the content box, and keep word gaps tame.
     expect(right, lessThanOrEqualTo(first.x + first.boxWidth + 1.5));
     final List<LaidOutGlyph> spaces = first.glyphs
-        .where(
-          (LaidOutGlyph g) => g.glyph.isSpace && g.glyph.codePoint != 0x09,
-        )
+        .where((LaidOutGlyph g) => g.glyph.isSpace && g.glyph.codePoint != 0x09)
         .toList();
     if (spaces.isNotEmpty) {
       final double em = spaces.first.fontSize;
@@ -378,7 +376,7 @@ void main() {
     expect(laid.pages.first.lines.last.justificationRatio, 0);
   });
 
-  test('tab occupies the default half-inch stop', () {
+  test('tab advances to the next default half-inch stop', () {
     final WmlDocument doc = WmlDocument(
       sections: <WmlSection>[
         WmlSection(
@@ -392,11 +390,11 @@ void main() {
     final List<LaidOutGlyph> glyphs = laid.pages.first.lines.first.glyphs;
     expect(glyphs, hasLength(3));
     expect(glyphs[1].glyph.codePoint, 0x09);
-    expect(glyphs[1].advance, closeTo(kDefaultTabWidth, 0.01));
     expect(
-      glyphs[2].x,
-      closeTo(glyphs[0].x + glyphs[0].advance + kDefaultTabWidth, 0.5),
+      glyphs[0].advance + glyphs[1].advance,
+      closeTo(kDefaultTabWidth, 0.01),
     );
+    expect(glyphs[2].x, closeTo(glyphs[0].x + kDefaultTabWidth, 0.5));
   });
 
   test('tab-only paragraph still lays out a tab glyph', () {
@@ -441,9 +439,7 @@ void main() {
                     ),
                     WmlTableCell(
                       blocks: <WmlBlock>[
-                        WmlParagraph(
-                          inlines: <WmlInline>[WmlRun(text: '1')],
-                        ),
+                        WmlParagraph(inlines: <WmlInline>[WmlRun(text: '1')]),
                       ],
                     ),
                   ],
@@ -507,95 +503,104 @@ void main() {
     );
   });
 
-  test('paragraph content box matches table cell, column, and frame origins', () {
-    final WmlDocument doc = WmlDocument(
-      sections: <WmlSection>[
-        WmlSection(
-          margins: const WmlPageMargins(left: 54, right: 54),
-          columnCount: 2,
-          columnSpace: 18,
-          blocks: <WmlBlock>[
-            WmlParagraph(inlines: <WmlInline>[WmlRun(text: 'Col A')]),
-            WmlParagraph(
-              properties: WmlParagraphProps(columnBreakBefore: true),
-              inlines: <WmlInline>[WmlRun(text: 'Col B')],
-            ),
-          ],
-        ),
-        WmlSection(
-          margins: const WmlPageMargins(left: 54, right: 54),
-          blocks: <WmlBlock>[
-            WmlTable(
-              grid: <double>[160, 160],
-              rows: <WmlTableRow>[
-                WmlTableRow(
-                  cells: <WmlTableCell>[
-                    WmlTableCell(
-                      blocks: <WmlBlock>[
-                        WmlParagraph(
-                          inlines: <WmlInline>[WmlRun(text: 'Cell L')],
-                        ),
-                      ],
-                    ),
-                    WmlTableCell(
-                      blocks: <WmlBlock>[
-                        WmlParagraph(
-                          inlines: <WmlInline>[WmlRun(text: 'Cell R')],
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            WmlFrame(
-              x: 122,
-              y: 64,
-              width: 200,
-              height: 40,
-              blocks: <WmlBlock>[
-                WmlParagraph(inlines: <WmlInline>[WmlRun(text: 'Framed')]),
-              ],
-            ),
-          ],
-        ),
-      ],
-    );
-    final LaidOutDocument laid = WordLayoutEngine(font: null).layout(doc);
-    final WmlSection cols = doc.sections.first;
-    final List<LaidOutLine> colLines = laid.pages
-        .where((LaidOutPage page) => page.sectionIndex == 0)
-        .expand((LaidOutPage page) => page.lines)
-        .toList();
-    expect(colLines[0].boxX, closeTo(cols.columnOriginX(0), 0.01));
-    expect(colLines[0].boxWidth, closeTo(cols.columnWidth, 1));
-    expect(colLines[1].boxX, closeTo(cols.columnOriginX(1), 0.01));
-
-    final LaidOutPage tablePage = laid.pages.firstWhere(
-      (LaidOutPage page) => page.sectionIndex == 1,
-    );
-    final List<LaidOutBox> cells = tablePage.frames
-        .where((LaidOutBox box) => box.table != null)
-        .toList();
-    expect(cells.length, greaterThanOrEqualTo(2));
-    LaidOutLine cellLineAt(LaidOutBox cell) {
-      return tablePage.lines.firstWhere(
-        (LaidOutLine line) =>
-            (line.boxX - (cell.x + LaidOutLine.tableCellPad)).abs() < 0.5,
+  test(
+    'paragraph content box matches table cell, column, and frame origins',
+    () {
+      final WmlDocument doc = WmlDocument(
+        sections: <WmlSection>[
+          WmlSection(
+            margins: const WmlPageMargins(left: 54, right: 54),
+            columnCount: 2,
+            columnSpace: 18,
+            blocks: <WmlBlock>[
+              WmlParagraph(inlines: <WmlInline>[WmlRun(text: 'Col A')]),
+              WmlParagraph(
+                properties: WmlParagraphProps(columnBreakBefore: true),
+                inlines: <WmlInline>[WmlRun(text: 'Col B')],
+              ),
+            ],
+          ),
+          WmlSection(
+            margins: const WmlPageMargins(left: 54, right: 54),
+            blocks: <WmlBlock>[
+              WmlTable(
+                grid: <double>[160, 160],
+                rows: <WmlTableRow>[
+                  WmlTableRow(
+                    cells: <WmlTableCell>[
+                      WmlTableCell(
+                        blocks: <WmlBlock>[
+                          WmlParagraph(
+                            inlines: <WmlInline>[WmlRun(text: 'Cell L')],
+                          ),
+                        ],
+                      ),
+                      WmlTableCell(
+                        blocks: <WmlBlock>[
+                          WmlParagraph(
+                            inlines: <WmlInline>[WmlRun(text: 'Cell R')],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              WmlFrame(
+                x: 122,
+                y: 64,
+                width: 200,
+                height: 40,
+                blocks: <WmlBlock>[
+                  WmlParagraph(inlines: <WmlInline>[WmlRun(text: 'Framed')]),
+                ],
+              ),
+            ],
+          ),
+        ],
       );
-    }
+      final LaidOutDocument laid = WordLayoutEngine(font: null).layout(doc);
+      final WmlSection cols = doc.sections.first;
+      final List<LaidOutLine> colLines = laid.pages
+          .where((LaidOutPage page) => page.sectionIndex == 0)
+          .expand((LaidOutPage page) => page.lines)
+          .toList();
+      expect(colLines[0].boxX, closeTo(cols.columnOriginX(0), 0.01));
+      expect(colLines[0].boxWidth, closeTo(cols.columnWidth, 1));
+      expect(colLines[1].boxX, closeTo(cols.columnOriginX(1), 0.01));
 
-    expect(cellLineAt(cells[0]).boxX, closeTo(cells[0].x + LaidOutLine.tableCellPad, 0.01));
-    expect(cellLineAt(cells[1]).boxX, closeTo(cells[1].x + LaidOutLine.tableCellPad, 0.01));
-    final LaidOutLine framed = laid.pages
-        .expand((LaidOutPage page) => page.lines)
-        .firstWhere(
+      final LaidOutPage tablePage = laid.pages.firstWhere(
+        (LaidOutPage page) => page.sectionIndex == 1,
+      );
+      final List<LaidOutBox> cells = tablePage.frames
+          .where((LaidOutBox box) => box.table != null)
+          .toList();
+      expect(cells.length, greaterThanOrEqualTo(2));
+      LaidOutLine cellLineAt(LaidOutBox cell) {
+        return tablePage.lines.firstWhere(
           (LaidOutLine line) =>
-              (line.boxX - (122 + LaidOutLine.framePad)).abs() < 0.5,
+              (line.boxX - (cell.x + LaidOutLine.tableCellPad)).abs() < 0.5,
         );
-    expect(framed.boxX, closeTo(122 + LaidOutLine.framePad, 0.01));
-    expect(framed.boxWidth, closeTo(200 - LaidOutLine.framePad * 2, 0.01));
-  });
+      }
+
+      expect(
+        cellLineAt(cells[0]).boxX,
+        closeTo(cells[0].x + LaidOutLine.tableCellPad, 0.01),
+      );
+      expect(
+        cellLineAt(cells[1]).boxX,
+        closeTo(cells[1].x + LaidOutLine.tableCellPad, 0.01),
+      );
+      final LaidOutLine framed = laid.pages
+          .expand((LaidOutPage page) => page.lines)
+          .firstWhere(
+            (LaidOutLine line) =>
+                (line.boxX - (122 + LaidOutLine.framePad)).abs() < 0.5,
+          );
+      expect(framed.boxX, closeTo(122 + LaidOutLine.framePad, 0.01));
+      expect(framed.boxWidth, closeTo(200 - LaidOutLine.framePad * 2, 0.01));
+    },
+  );
 
   test('continuous two-column section starts below a full-width heading', () {
     const WmlPageMargins margins = WmlPageMargins(
@@ -617,9 +622,7 @@ void main() {
                     WmlTableCell(
                       fillColor: 'A8D69F',
                       blocks: <WmlBlock>[
-                        WmlParagraph(
-                          inlines: <WmlInline>[WmlRun(text: '1.1')],
-                        ),
+                        WmlParagraph(inlines: <WmlInline>[WmlRun(text: '1.1')]),
                       ],
                     ),
                     WmlTableCell(

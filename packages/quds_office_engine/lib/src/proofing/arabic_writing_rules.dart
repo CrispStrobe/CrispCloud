@@ -31,9 +31,15 @@ class ArabicWritingRulesProvider extends OfficeProofingProvider {
   /// [morphology] feeds the morphology-based grammar rules
   /// (`arabic_grammar_rules.dart`); with the default
   /// [UnavailableArabicMorphology] those rules stay silent.
+  ///
+  /// [grammarReading] selects how those rules read a word (see
+  /// [ArabicGrammarReading]); [contextMinMargin] is the lead the best
+  /// context reading needs before a rule relies on it alone.
   ArabicWritingRulesProvider({
     Set<String> enabledOptionalRuleIds = const <String>{},
     this.morphology = const UnavailableArabicMorphology(),
+    this.grammarReading = ArabicGrammarReading.contextual,
+    this.contextMinMargin = arabicContextMinMargin,
   }) : enabledOptionalRuleIds = Set<String>.unmodifiable(
          enabledOptionalRuleIds.intersection(_optionalRuleIds),
        );
@@ -42,6 +48,12 @@ class ArabicWritingRulesProvider extends OfficeProofingProvider {
 
   /// Morphological analyzer for the grammar rules.
   final ArabicMorphology morphology;
+
+  /// How the grammar rules read a word's analyses.
+  final ArabicGrammarReading grammarReading;
+
+  /// Minimum lead of the best context reading over the second.
+  final double contextMinMargin;
 
   static const Set<String> _optionalRuleIds = <String>{
     ...arabicExtendedOptionalRuleIds,
@@ -1058,6 +1070,8 @@ class ArabicWritingRulesProvider extends OfficeProofingProvider {
               f.start - request.startOffset < end &&
               start < f.end - request.startOffset,
         ),
+        contextual: grammarReading == ArabicGrammarReading.contextual,
+        contextMinMargin: contextMinMargin,
       ).run();
       if (_disposed) {
         return OfficeProofingResult(

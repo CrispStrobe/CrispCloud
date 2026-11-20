@@ -230,6 +230,7 @@ LaidOutLine _noteLine(
         bold: g.bold,
         underline: g.underline,
         italic: g.italic,
+        kerning: g.kerning,
         strike: g.strike,
         highlight: g.highlight,
         fontFamily: g.fontFamily,

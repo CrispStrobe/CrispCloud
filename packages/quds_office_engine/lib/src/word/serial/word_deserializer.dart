@@ -1963,6 +1963,13 @@ class WordDeserializer {
           'leader',
           namespaceUri: OfficeNamespaces.w,
         );
+        if (val == 'clear') {
+          final position = pos == null ? 0.0 : _measurePoints(pos);
+          props.tabs.removeWhere((tab) => tab.position == position);
+          continue;
+        }
+        // A bar stop is a decoration, not a text-positioning tab stop.
+        if (val == 'bar') continue;
         props.tabs.add(
           WmlTabStop(
             position: pos == null ? 0 : _measurePoints(pos),
@@ -2476,6 +2483,10 @@ class WordDeserializer {
         case 'highlight':
           props.highlight = WmlHighlight.toRgb(
             reader.getAttribute('val', namespaceUri: OfficeNamespaces.w),
+          );
+        case 'kern':
+          props.kerningHalfPoints = int.tryParse(
+            reader.getAttribute('val', namespaceUri: OfficeNamespaces.w) ?? '',
           );
         case 'sz':
         case 'szCs':

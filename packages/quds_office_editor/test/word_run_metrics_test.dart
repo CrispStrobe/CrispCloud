@@ -9,6 +9,32 @@ void main() {
   setUpAll(OfficeHostFonts.ensureRegistered);
   setUp(WordRunMetrics.clearCache);
 
+  test('Word line-fit kerning honors the half-point threshold and cache', () {
+    const text = 'AVATAR To';
+    final props = WmlRunProps(asciiFont: 'Liberation Serif');
+    double width(int? threshold) {
+      props.kerningHalfPoints = threshold;
+      return _width(
+        WordRunMetrics.measure(
+          text,
+          12,
+          props,
+          0,
+          respectKerningThreshold: true,
+        )!,
+      );
+    }
+
+    final disabled = width(null);
+    expect(width(0), closeTo(disabled, .001));
+    expect(width(28), closeTo(disabled, .001));
+    final enabled = width(1);
+    expect(enabled, lessThan(disabled - .1));
+    expect(width(24), closeTo(enabled, .001));
+    expect(width(25), closeTo(disabled, .001));
+    expect(width(null), closeTo(disabled, .001));
+  });
+
   test('run advances retain kerning instead of adding isolated characters', () {
     final props = WmlRunProps(asciiFont: 'Liberation Serif');
     const text = 'AVATAR To';

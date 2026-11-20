@@ -145,6 +145,17 @@ void main() {
     expect(claimed, spacyGrammarNativeSha256s);
   });
 
+  test('the Android app library is recorded for analysis only', () {
+    final build = spacyQualificationForHostBundled(
+      librarySha256: spacyAndroidArm64BundledSha256,
+    )!;
+    expect(build.analysis, contains('16-case development panel'));
+    expect(build.grammarQualified, isFalse);
+    expect(spacyGrammarNativeSha256s, isNot(contains(build.librarySha256)));
+    // A different (for example stripped) copy is unrecorded.
+    expect(spacyQualificationFor('0' * 64), isNull);
+  });
+
   test('unpublished platforms are unavailable with a stated reason', () {
     for (final platform in SpacyPlatform.values) {
       final status = spacyPlatformStatus(platform);

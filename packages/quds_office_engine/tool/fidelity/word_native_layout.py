@@ -124,7 +124,7 @@ def freeze_reference(directory):
             lines = []
             for line in page.findall('.//{*}line'):
                 lines.append({'text': ' '.join(w.text or '' for w in line.findall('{*}word')),
-                              'y': float(line.attrib['yMin'])})
+                              'y': float(line.attrib['yMin']), 'x': float(line.attrib['xMin'])})
             if not lines:
                 raise ValueError(f'This text corpus must not have blank reference pages: {name}')
             pages.append({'width': float(page.attrib['width']), 'height': float(page.attrib['height']), 'lines': lines})
@@ -154,6 +154,25 @@ def ink_score(reference, candidate):
     recall = count(ImageChops.multiply(a, b.filter(ImageFilter.MaxFilter(3)))) / na
     return {'precision': precision, 'recall': recall,
             'f1': 2 * precision * recall / (precision + recall) if precision + recall else 0}
+
+
+def visual_rows(lines):
+    """Canonical visible words per row, without changing the raster score.
+
+    Poppler may emit tab-separated fields as separate flow lines, and attach
+    a trailing blank to the final word of an automatically wrapped line.
+    Preserve row boundaries and word order; only whitespace is canonicalized.
+    """
+    rows = []
+    for line in sorted(lines, key=lambda item: (item['y'], item.get('x', 0))):
+        text = ' '.join(line['text'].split())
+        if not text:
+            continue
+        if rows and abs(rows[-1]['y'] - line['y']) <= .25:
+            rows[-1]['parts'].append((line.get('x', 0), text))
+        else:
+            rows.append({'y': line['y'], 'parts': [(line.get('x', 0), text)]})
+    return [' '.join(text for _, text in sorted(row['parts'])) for row in rows]
 
 
 def compare(directory):
@@ -188,7 +207,7 @@ def compare(directory):
                 if a.size != expected_pixels:
                     raise ValueError(f'Wrong reference raster size: {name}')
             cp = candidate['pages'][i] if i < len(candidate['pages']) else None
-            text_matches = cp is not None and [l['text'].strip() for l in cp['lines']] == [l['text'] for l in page['lines']]
+            text_matches = cp is not None and visual_rows(cp['lines']) == visual_rows(page['lines'])
             geometry_matches = cp is not None and cp['width'] == page['width'] and cp['height'] == page['height']
             pages.append({'page': i + 1, **score, 'textMatches': text_matches,
                           'geometryMatches': geometry_matches,

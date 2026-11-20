@@ -32,6 +32,8 @@ import subprocess
 import sys
 
 PACKAGE = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(PACKAGE.parents[1] / "tools" / "proofing"))
+import mobile_native  # noqa: E402  (monorepo helper: iOS frameworks, Android ABIs)
 LICENSES = PACKAGE / "licenses"
 CRISPEMBED = {
     "repository": "https://github.com/CrispStrobe/CrispEmbed",
@@ -146,6 +148,58 @@ def build(crispembed: Path, pcre2: Path, output: Path, jobs: int) -> Path:
     return target
 
 
+MOBILE_RECEIPT = "build-receipt-mobile.json"
+MOBILE_NAME = "crispembed-spacy"
+# iOS framework (and bundle) name: CocoaPods cannot link a vendored
+# framework whose name contains "-".
+IOS_FRAMEWORK = "crispembed_spacy"
+
+
+def build_mobile(crispembed: Path, pcre2: Path, output: Path, jobs: int, kind: str, abis=()) -> list[Path]:
+    """Android .so per ABI / iOS XCFramework from the same pinned sources and
+    flags as the macOS library (static PCRE2, CPU only, mapped source paths).
+
+    Every mobile binary is a new build: it carries no qualification until
+    it is replayed on a device and recorded in lib/src/distribution.dart."""
+    prefix_map = f"-ffile-prefix-map={output}={BUILD_PATH_PREFIX}"
+    flags = [f"-DCMAKE_C_FLAGS={prefix_map}", f"-DCMAKE_CXX_FLAGS={prefix_map}"]
+    slices = ([(abi, abi, mobile_native.android_cmake_args(abi)) for abi in abis] if kind == "android"
+              else [(f"{name}-{arch}", name, mobile_native.ios_cmake_args(name, arch))
+                    for name, arch in mobile_native.ios_slice_archs()])
+    outputs, dylibs = [], {}
+    for name, group, platform_args in slices:
+        pcre_build, prefix = output / f"cmake-pcre2-{name}", output / f"pcre2-install-{name}"
+        run(["cmake", "-S", pcre2, "-B", pcre_build, "-DCMAKE_BUILD_TYPE=Release", *platform_args, *flags,
+             "-DBUILD_SHARED_LIBS=OFF", "-DPCRE2_STATIC_PIC=ON", "-DPCRE2_BUILD_PCRE2_8=ON",
+             "-DPCRE2_BUILD_PCRE2_16=OFF", "-DPCRE2_BUILD_PCRE2_32=OFF", "-DPCRE2_BUILD_PCRE2GREP=OFF",
+             "-DPCRE2_BUILD_TESTS=OFF", f"-DCMAKE_INSTALL_PREFIX={prefix}",
+             # The NDK/iOS toolchains restrict find_* to the sysroot; install
+             # into the prefix and name the files explicitly below.
+             "-DCMAKE_FIND_ROOT_PATH_MODE_PACKAGE=BOTH"])
+        run(["cmake", "--build", pcre_build, "--parallel", str(jobs)])
+        run(["cmake", "--install", pcre_build])
+        native_build = output / f"cmake-native-{name}"
+        run(["cmake", "-S", crispembed / "tools/spacy", "-B", native_build, "-DCMAKE_BUILD_TYPE=Release",
+             *platform_args, *flags, "-DBUILD_TESTING=OFF",
+             f"-DSPACY_PCRE2_INCLUDE_DIR={prefix / 'include'}",
+             f"-DSPACY_PCRE2_LIBRARY={prefix / 'lib/libpcre2-8.a'}"])
+        run(["cmake", "--build", native_build, "--parallel", str(jobs), "--target", "crispembed-spacy"])
+        if kind == "android":
+            built = native_build / f"lib{MOBILE_NAME}.so"
+            target = output / "android" / name / f"lib{MOBILE_NAME}.so"
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(built, target)
+            mobile_native.android_strip(target)
+            outputs.append(target)
+        else:
+            dylibs.setdefault(group, []).append(native_build / f"lib{MOBILE_NAME}.dylib")
+    if kind == "ios":
+        frameworks = [mobile_native.make_framework(paths, IOS_FRAMEWORK, output / "frameworks" / group, group)
+                      for group, paths in dylibs.items()]
+        outputs += mobile_native.make_xcframework(frameworks, output / "ios" / f"{IOS_FRAMEWORK}.xcframework")
+    return outputs
+
+
 def license_bundle(crispembed: Path) -> None:
     """Copy the runtime notices from the pinned source into licenses/."""
     if LICENSES.exists():
@@ -217,12 +271,14 @@ def main() -> int:
                         help="Copy the built library into this host directory (e.g. <App>.app/Contents/Frameworks)")
     parser.add_argument("--install-licenses", type=Path,
                         help="Copy the runtime notices and licence manifest into this directory")
+    mobile_native.add_arguments(parser)
     parser.add_argument("--keep-source", action="store_true",
                         help="Keep the source checkouts and CMake trees (removed by default: they are "
                              "large and the CrispEmbed checkout contains unrelated Dart files)")
     args = parser.parse_args()
     if args.install_native and not args.native:
         parser.error("--install-native requires --native")
+    mobile_native.check_arguments(parser, args)
     output = args.output.resolve()
     try:
         build_outputs(args, output)
@@ -230,8 +286,14 @@ def main() -> int:
         if not args.keep_source:
             for name in ("source", "cmake-pcre2", "cmake-native", "pcre2-install", "native-install"):
                 shutil.rmtree(output / name, ignore_errors=True)
+            for pattern in ("cmake-pcre2-*", "cmake-native-*", "pcre2-install-*", "frameworks"):
+                for path in output.glob(pattern):
+                    shutil.rmtree(path, ignore_errors=True)
     if args.install_native:
         print(json.dumps(install_native(output, args.install_native.resolve())))
+    for installed in mobile_native.install_from_arguments(output, args, MOBILE_NAME, MOBILE_RECEIPT,
+                                                      IOS_FRAMEWORK):
+        print(json.dumps(installed))
     if args.install_licenses:
         install_licenses(output, args.install_licenses.resolve())
         print(json.dumps({"licenses": str(args.install_licenses.resolve())}))
@@ -264,6 +326,24 @@ def build_outputs(args, output: Path) -> None:
             receipt_path.write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n",
                                     encoding="utf-8", newline="\n")
         print(json.dumps({f"native/{LIBRARY}": (sha(library.read_bytes()), library.stat().st_size)}))
+    if args.android or args.ios:
+        verify_licenses()
+        sources = sources or fetch_source(output / "source", args.crispembed_repo)
+        outputs = []
+        if args.android:
+            outputs += build_mobile(*sources, output, args.jobs, "android", mobile_native.abis(args))
+        if args.ios:
+            outputs += build_mobile(*sources, output, args.jobs, "ios")
+        receipt = {"crispembed": CRISPEMBED, "pcre2": PCRE2, "platform": platform.platform(),
+                   "file_prefix_map": BUILD_PATH_PREFIX,
+                   "android_platform": mobile_native.ANDROID_PLATFORM,
+                   "ios_deployment_target": mobile_native.IOS_DEPLOYMENT_TARGET,
+                   "qualification": "none: a new binary until replayed on a device and recorded",
+                   "license_manifest_sha256": sha((LICENSES / "manifest.json").read_bytes()),
+                   "files": {p.relative_to(output).as_posix(): sha(p.read_bytes()) for p in outputs}}
+        (output / MOBILE_RECEIPT).write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n",
+                                             encoding="utf-8", newline="\n")
+        print(json.dumps(receipt["files"], indent=2))
 
 
 if __name__ == "__main__":
