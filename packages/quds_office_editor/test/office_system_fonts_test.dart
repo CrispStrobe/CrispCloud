@@ -84,6 +84,28 @@ void main() {
     },
   );
 
+  test(
+    'installed Franklin Gothic Book regular and italic are discovered',
+    () async {
+      final regular = await installedFontFixture('Franklin Gothic Book');
+      final italic = await installedFontFixture(
+        'Franklin Gothic Book',
+        file: 'LiberationMono-Italic.ttf',
+      );
+      await File(
+        '${primary.path}/Franklin Gothic Book.ttf',
+      ).writeAsBytes(regular);
+      await File(
+        '${primary.path}/Franklin Gothic Book Italic.ttf',
+      ).writeAsBytes(italic);
+      final faces = await installed.load(searchDirectories: [primary.path]);
+      expect(faces.map((face) => (face.family, face.weight, face.italic)), [
+        ('Franklin Gothic Book', 400, false),
+        ('Franklin Gothic Book', 400, true),
+      ]);
+    },
+  );
+
   test('first valid family and style wins with real style metadata', () async {
     final arial = await installedFontFixture('Arial');
     final differentArial = await installedFontFixture(

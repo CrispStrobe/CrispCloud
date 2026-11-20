@@ -10,10 +10,49 @@ Future<Uint8List> installedFontFixture(
   final asset = await rootBundle.load(
     'packages/quds_office_editor/fonts/$file',
   );
-  final bytes = Uint8List.fromList(
+  var bytes = Uint8List.fromList(
     asset.buffer.asUint8List(asset.offsetInBytes, asset.lengthInBytes),
   );
-  final font = SfntFont.parse(bytes);
+  var font = SfntFont.parse(bytes);
+  // Append fresh table storage so long synthetic names are never truncated.
+  final original = font.tables['name']!;
+  final originalData = ByteData.sublistView(bytes);
+  final raw = bytes.sublist(original.offset, original.offset + original.length);
+  final nameData = ByteData.sublistView(raw);
+  final stringBase = nameData.getUint16(4);
+  final extra = <int>[];
+  for (var i = 0; i < nameData.getUint16(2); i++) {
+    final at = 6 + i * 12;
+    final name = nameData.getUint16(at + 6);
+    if (name != 1 && name != 16) continue;
+    final platform = nameData.getUint16(at);
+    final encoded = <int>[
+      for (final unit in family.codeUnits)
+        if (platform == 0 || platform == 3) ...[
+          unit >> 8,
+          unit & 255,
+        ] else
+          unit,
+    ];
+    nameData.setUint16(at + 8, encoded.length);
+    nameData.setUint16(at + 10, raw.length + extra.length - stringBase);
+    extra.addAll(encoded);
+  }
+  final offset = (bytes.length + 3) & ~3;
+  final nameBytes = <int>[...raw, ...extra];
+  final expanded = Uint8List((offset + nameBytes.length + 3) & ~3)
+    ..setRange(0, bytes.length, bytes)
+    ..setRange(offset, offset + nameBytes.length, nameBytes);
+  final expandedData = ByteData.sublistView(expanded);
+  for (var i = 0; i < originalData.getUint16(4); i++) {
+    final at = 12 + i * 16;
+    if (String.fromCharCodes(bytes.sublist(at, at + 4)) == 'name') {
+      expandedData.setUint32(at + 8, offset);
+      expandedData.setUint32(at + 12, nameBytes.length);
+    }
+  }
+  bytes = expanded;
+  font = SfntFont.parse(bytes);
   final table = font.tables['name']!;
   final data = ByteData.sublistView(bytes);
   final count = data.getUint16(table.offset + 2);

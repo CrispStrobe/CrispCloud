@@ -1,0 +1,9 @@
+# Direct Office page viewing
+
+DOCX and PPTX Pages in F3 now use the full CrispOffice Word/slide canvases in viewing mode. They do not serialize an intermediate PDF. The existing simplified Slides, Formatted, Text and platform Quick Look routes remain available. Other supported Office formats retain their existing preview routes; explicit PDF export is unchanged. Controllers belong to the viewer and are disposed when its document changes/closes. Late asynchronous results are discarded and disposed.
+
+On the user-requested local DOCX (2,383,698 bytes), the earlier Debug PDF step took 13,319 ms after a 138 ms Word import. The direct route loaded the read-only Word controller in 1,784 ms and produced its first canvas frame in 2,617 ms, including a 300 ms real-time image decode allowance. It laid out three pages and resolved Franklin Gothic Book to its installed face. These are single local Debug measurements, not an averaged performance guarantee or a complete document fidelity qualification. The document and its contents are not included.
+
+Installed font discovery now searches Word, PowerPoint and Excel resources plus ordinary Mac font folders, within the existing bounded validator. Franklin Gothic Book, Medium, Demi and Heavy regular/italic names are recognized using their actual style metadata. No proprietary font bytes are bundled or downloaded. Seven installed-font controls pass using licensed synthetic metadata fixtures, including long family names.
+
+Three focused preview controls cover the native Word layout, viewing-mode mutation guard, full slide controller, disabled editing handles and the existing unsupported-format fallback. The separate 52-page Word canvas corpus still passed after the incoming Office integration; that bounded Latin-text benchmark does not claim fidelity for arbitrary documents.

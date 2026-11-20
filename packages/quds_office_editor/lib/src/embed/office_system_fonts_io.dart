@@ -29,6 +29,19 @@ const List<(String file, String family, int weight, bool italic)> _faces =
       ('Tahoma Bold.ttf', 'Tahoma', 700, false),
       ('tahoma.ttf', 'Tahoma', 400, false),
       ('tahomabd.ttf', 'Tahoma', 700, false),
+      ('Franklin Gothic Book.ttf', 'Franklin Gothic Book', 400, false),
+      ('Franklin Gothic Book Italic.ttf', 'Franklin Gothic Book', 400, true),
+      ('Franklin Gothic Medium.ttf', 'Franklin Gothic Medium', 400, false),
+      (
+        'Franklin Gothic Medium Italic.ttf',
+        'Franklin Gothic Medium',
+        400,
+        true,
+      ),
+      ('Franklin Gothic Demi.ttf', 'Franklin Gothic Demi', 400, false),
+      ('Franklin Gothic Demi Italic.ttf', 'Franklin Gothic Demi', 400, true),
+      ('Franklin Gothic Heavy.ttf', 'Franklin Gothic Heavy', 400, false),
+      ('Franklin Gothic Heavy Italic.ttf', 'Franklin Gothic Heavy', 400, true),
       ('Calibri.ttf', 'Calibri', 400, false),
       ('Calibrib.ttf', 'Calibri', 700, false),
       ('Calibrii.ttf', 'Calibri', 400, true),
@@ -54,7 +67,15 @@ Future<List<OfficeSystemFontFace>> load({
   final List<String> dirs =
       searchDirectories?.take(8).toList() ??
       switch (Platform.operatingSystem) {
-        'macos' => <String>[_officeFonts, _systemFonts],
+        'macos' => <String>[
+          '/Applications/Microsoft Word.app/Contents/Resources/DFonts',
+          _officeFonts,
+          '/Applications/Microsoft Excel.app/Contents/Resources/DFonts',
+          _systemFonts,
+          '/Library/Fonts',
+          if (Platform.environment['HOME'] case final home?)
+            '$home/Library/Fonts',
+        ],
         'windows' => <String>[
           r'C:\Program Files\Microsoft Office\root\vfs\Fonts\private',
           r'C:\Program Files (x86)\Microsoft Office\root\vfs\Fonts\private',

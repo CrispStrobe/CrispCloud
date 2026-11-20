@@ -1,0 +1,5 @@
+00:00 +0: loading /private/tmp/crispcloud-german-syntax-20261117/test/local_docx_profile_test.dart
+00:00 +0: local user-requested DOCX preview profile
+PROFILE_IMPORT_MS=138
+{"pdfMs":13319,"inputBytes":2383698,"outputBytes":5386682,"substitutions":["Franklin Gothic Book -> Liberation Sans"]}
+00:13 +1: All tests passed!

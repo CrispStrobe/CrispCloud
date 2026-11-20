@@ -1,0 +1,4 @@
+00:00 +0: loading /private/tmp/crispcloud-german-syntax-20261117/test/local_docx_profile_test.dart
+00:00 +0: profile and paint requested DOCX directly
+{"directLoadMs":1784,"firstPaintMs":2617,"pages":3,"franklinFamily":"Franklin Gothic Book"}
+00:03 +1: All tests passed!

@@ -103,6 +103,7 @@ import '../l10n/document_viewer_strings.dart';
 import 'email_message_view.dart';
 import 'mbox_message_view.dart';
 import '../services/office_pdf_service.dart';
+import '../services/office_page_preview.dart';
 import '../services/pdf_text_service.dart';
 import '../services/system_preview_service.dart';
 import '../utils/file_editability.dart';
@@ -418,6 +419,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     showFormulaBar: true,
     adaptiveChrome: false,
   );
+  OfficeController? _officePageController;
   PdfController? _officePdfController;
   PdfDocument? _officePdfDoc;
   bool _officePdfLoading = false;
@@ -880,9 +882,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           'can use a local file or a streamed temporary copy.';
     }
     if (error is FileBytesTooLargeException) {
-      final detail = InternalViewerStrings(
-        context,
-      ).withNumber('remoteLimit', formatBytes(kViewerFullDataCap));
+      final detail = InternalViewerStrings(context)
+          .withNumber('remoteLimit', formatBytes(kViewerFullDataCap));
       return '${localizedFileBytesError(context, error)}\n\n$detail';
     }
     return localizedFileBytesError(context, error);
@@ -1014,9 +1015,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
             var cut = text.lastIndexOf('\n', _kRichRenderCap);
             if (cut <= 0) cut = _kRichRenderCap;
             text = text.substring(0, cut);
-            note = InternalViewerStrings(
-              context,
-            ).withNumber('truncated', formatBytes(_kRichRenderCap));
+            note = InternalViewerStrings(context)
+                .withNumber('truncated', formatBytes(_kRichRenderCap));
           }
           _richText = text;
           setState(() {
@@ -1384,9 +1384,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     } catch (error) {
       if (!mounted) return;
       setState(() => _preparing = false);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('$error')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('$error')));
     }
   }
 
@@ -1437,6 +1436,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     _archiveMembers = null;
     _archivePassword = null;
     _archiveVolumeFingerprint = null;
+    final officePages = _officePageController;
+    _officePageController = null;
     final officePdf = _officePdfController;
     _officePdfController = null;
     final officePdfDoc = _officePdfDoc;
@@ -1481,6 +1482,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         } catch (_) {}
       }
       if (blobUrl != null && kIsWeb) html.Url.revokeObjectUrl(blobUrl);
+      officePages?.dispose();
       officePdf?.dispose();
       if (officePdfDoc != null) {
         unawaited(officePdfDoc.close().catchError((Object _) {}));
@@ -2462,9 +2464,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                 total,
               ])
             : previewMode && _mode == ViewerMode.office
-            ? OfficePreviewStrings(
-                Localizations.localeOf(context),
-              ).searchedPreview
+            ? OfficePreviewStrings(Localizations.localeOf(context))
+                  .searchedPreview
             : context.commanderTr("Searched entire file ({0})", [
                 formatBytes(source.size),
               ]);
@@ -3155,9 +3156,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     } on ArchivePasswordRequiredException catch (e) {
       if (!mounted || !current()) return null;
       _showSnack(
-        InternalViewerStrings(
-          context,
-        ).text(e.wrongPassword ? 'incorrectPassword' : 'passwordRequired'),
+        InternalViewerStrings(context)
+            .text(e.wrongPassword ? 'incorrectPassword' : 'passwordRequired'),
       );
       return null;
     } on ArchiveViewException catch (e) {
@@ -3247,9 +3247,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         if (source == null) throw StateError('Text is unavailable.');
         text = _encodingOverride == null
             ? EditorDocument.decode(source).text
-            : ViewerTextDecoder(
-                _encodingOverride!,
-              ).add(source, 0, last: true).text;
+            : ViewerTextDecoder(_encodingOverride!)
+                  .add(source, 0, last: true)
+                  .text;
       } else if (mode == ViewerMode.email) {
         text = _emailMessage?.searchText;
       } else if (mode == ViewerMode.office) {
@@ -3379,14 +3379,13 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                           IconButton(
                             tooltip: context.commanderTr("Edit (F4)"),
                             icon: const Icon(Icons.edit_outlined),
-                            onPressed: () => Navigator.of(
-                              context,
-                            ).pop(InternalViewerAction.edit),
+                            onPressed: () =>
+                                Navigator.of(context)
+                                    .pop(InternalViewerAction.edit),
                           ),
                         IconButton(
-                          tooltip: InternalViewerStrings(
-                            context,
-                          ).text('search'),
+                          tooltip: InternalViewerStrings(context)
+                              .text('search'),
                           icon: const Icon(Icons.search),
                           onPressed: _toggleSearch,
                         ),
@@ -3397,9 +3396,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                         ),
                         if (_canChangeEncoding)
                           PopupMenuButton<String>(
-                            tooltip: InternalViewerStrings(
-                              context,
-                            ).text('encoding'),
+                            tooltip: InternalViewerStrings(context)
+                                .text('encoding'),
                             icon: const Icon(Icons.text_fields),
                             onSelected: (value) =>
                                 _setEncoding(value == 'auto' ? null : value),
@@ -3471,25 +3469,22 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                             PopupMenuItem(
                               value: 'bpl8',
                               child: Text(
-                                InternalViewerStrings(
-                                  context,
-                                ).withNumber('hexRows', 8),
+                                InternalViewerStrings(context)
+                                    .withNumber('hexRows', 8),
                               ),
                             ),
                             PopupMenuItem(
                               value: 'bpl16',
                               child: Text(
-                                InternalViewerStrings(
-                                  context,
-                                ).withNumber('hexRows', 16),
+                                InternalViewerStrings(context)
+                                    .withNumber('hexRows', 16),
                               ),
                             ),
                             PopupMenuItem(
                               value: 'bpl32',
                               child: Text(
-                                InternalViewerStrings(
-                                  context,
-                                ).withNumber('hexRows', 32),
+                                InternalViewerStrings(context)
+                                    .withNumber('hexRows', 32),
                               ),
                             ),
                             const PopupMenuDivider(),
@@ -3915,7 +3910,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         lowerName.endsWith('.odp');
     final options = <_OfficeView>[
       if (document.deck != null) _OfficeView.slides,
-      if (!legacyOffice) _OfficeView.pdf,
+      if (!legacyOffice) _OfficeView.pages,
       if (document.kind == OfficeDocumentKind.spreadsheet &&
           (document.csv?.isNotEmpty ?? false))
         _OfficeView.table,
@@ -3938,7 +3933,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         onSelectionChanged: (selection) {
           final view = selection.first;
           setState(() => _officeView = view);
-          if (view == _OfficeView.pdf) unawaited(_loadOfficePdf());
+          if (view == _OfficeView.pages) unawaited(_loadOfficePages());
         },
       ),
     );
@@ -4456,8 +4451,12 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     }
   }
 
-  Future<void> _loadOfficePdf() async {
-    if (_officePdfLoading || _officePdfController != null) return;
+  Future<void> _loadOfficePages() async {
+    if (_officePdfLoading ||
+        _officePdfController != null ||
+        _officePageController != null) {
+      return;
+    }
     final token = _prepareToken;
     final loadToken = _loadToken;
     bool current() =>
@@ -4469,6 +4468,21 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     try {
       final data = await _ensureFullData();
       if (!current()) return;
+      final pages = await loadOfficePagePreview(
+        data,
+        filename: _expansionName ?? _viewName,
+      );
+      if (!current()) {
+        pages?.dispose();
+        return;
+      }
+      if (pages != null) {
+        setState(() {
+          _officePageController = pages;
+          _officePdfLoading = false;
+        });
+        return;
+      }
       final result = await convertOfficeToPdfResult(data);
       if (!current()) return;
       final document = await PdfDocument.openData(result.bytes);
@@ -4527,9 +4541,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         Padding(
           padding: const EdgeInsets.all(8),
           child: Text(
-            OfficePdfFontNoticeStrings(
-              Localizations.localeOf(context),
-            ).text('previewFallback'),
+            OfficePdfFontNoticeStrings(Localizations.localeOf(context))
+                .text('previewFallback'),
           ),
         ),
         Expanded(child: content),
@@ -4540,7 +4553,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   String _officeViewLabel(_OfficeView view) => switch (view) {
     _OfficeView.grid => 'Grid',
     _OfficeView.slides => 'Slides',
-    _OfficeView.pdf => 'Pages',
+    _OfficeView.pages => 'Pages',
     _OfficeView.formatted => 'Formatted',
     _OfficeView.table => 'Table',
     _OfficeView.text => 'Text',
@@ -4569,7 +4582,19 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           return _buildOfficeText(document, theme);
         }
         return PptxSlideViewer(deck: deck, fontScale: _zoom);
-      case _OfficeView.pdf:
+      case _OfficeView.pages:
+        final pages = _officePageController;
+        if (pages is WordEditorController) {
+          return QudsWordEditor(
+            controller: pages,
+            config: pages.config,
+            enableLiveProofing: false,
+            showReviewStatus: false,
+          );
+        }
+        if (pages is SlideEditorController) {
+          return QudsSlideEditor(controller: pages, config: pages.config);
+        }
         if (_officePdfLoading) {
           return Center(
             child: Text(
@@ -4593,7 +4618,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                   ),
                   const SizedBox(height: 12),
                   OutlinedButton(
-                    onPressed: () => unawaited(_loadOfficePdf()),
+                    onPressed: () => unawaited(_loadOfficePages()),
                     child: Text(context.commanderTr("Retry")),
                   ),
                 ],
@@ -4621,16 +4646,14 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         final csv = document.csv;
         if (csv != null && csv.isNotEmpty) {
           final locale = Localizations.localeOf(context);
-          final localized = OfficePreviewStrings(
-            locale,
-          ).headings(csv, document.csvHeadings, locale);
+          final localized = OfficePreviewStrings(locale)
+              .headings(csv, document.csvHeadings, locale);
           return CsvTableView(content: localized, filename: _viewName);
         }
         return _buildOfficeText(document, theme);
       case _OfficeView.formatted:
-        final safeHtml = OfficePreviewStrings(
-          Localizations.localeOf(context),
-        ).safeHtml(document);
+        final safeHtml = OfficePreviewStrings(Localizations.localeOf(context))
+            .safeHtml(document);
         if (safeHtml != null && safeHtml.length <= _kRichRenderCap) {
           return SelectionArea(
             child: SingleChildScrollView(
@@ -4652,9 +4675,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         }
         if (safeHtml != null) return _buildOfficeText(document, theme);
         final locale = Localizations.localeOf(context);
-        final markdown = OfficePreviewStrings(
-          locale,
-        ).headings(document.markdown, document.markdownHeadings, locale).trim();
+        final markdown = OfficePreviewStrings(locale)
+            .headings(document.markdown, document.markdownHeadings, locale)
+            .trim();
         if (markdown.isEmpty) {
           if (document.plainText.trim().isNotEmpty) {
             return _buildOfficeText(document, theme);
@@ -4832,9 +4855,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       if (!mounted) return;
       setState(() {
         _pdfTextLoading = false;
-        _pdfTextError = InternalViewerStrings(
-          context,
-        ).withNumber('pdfError', localizedNativePreviewError(context, e));
+        _pdfTextError = InternalViewerStrings(context)
+            .withNumber('pdfError', localizedNativePreviewError(context, e));
       });
     }
   }
@@ -5116,9 +5138,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
 
   Widget _buildStatusBar(ThemeData theme) {
     final note = _mode == ViewerMode.office && _officeDoc != null
-        ? OfficePreviewStrings(
-                Localizations.localeOf(context),
-              ).note(_officeDoc!) ??
+        ? OfficePreviewStrings(Localizations.localeOf(context))
+                  .note(_officeDoc!) ??
               _viewNote
         : _viewNote;
     final style = TextStyle(
@@ -5363,4 +5384,4 @@ class _TextPromptDialogState extends State<_TextPromptDialog> {
   }
 }
 
-enum _OfficeView { grid, slides, pdf, formatted, table, text, raw }
+enum _OfficeView { grid, slides, pages, formatted, table, text, raw }
