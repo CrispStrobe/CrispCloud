@@ -210,7 +210,7 @@ jobs:
           # bare xcodebuild would otherwise miss in the SPM/CocoaPods hybrid.
           PATH="/usr/bin:$PATH" flutter build ios --release --no-pub --config-only --no-codesign \
             --dart-define=CRISP_DISTRIBUTION=appstore --dart-define=CRISP_ENABLE_FUSE=false \
-            --dart-define=APP_VERSION="$VER" \
+            --dart-define=APP_VERSION="$VER+$BUILD" \
             --dart-define=GIT_HASH="$(git rev-parse --short HEAD)"
           PATH="/usr/bin:$PATH" env -u GEM_HOME -u GEM_PATH -u RUBYOPT \
             pod install --project-directory=ios

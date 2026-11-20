@@ -240,7 +240,66 @@ def main_app_plist(name: str, platform: str, ipa: bool = False) -> bool:
     return False
 
 
-def plist_from_zip(artifact: Path, platform: str) -> tuple[bytes, str]:
+MAX_RUNTIME_BYTES = 512 * 1024 * 1024
+
+
+def checkout_commit(root: Path) -> str:
+    try:
+        value = subprocess.check_output(
+            ["git", "-C", str(root), "rev-parse", "--verify", "HEAD"],
+            stderr=subprocess.DEVNULL, timeout=10,
+        ).decode().strip()
+    except (OSError, subprocess.SubprocessError, UnicodeError) as error:
+        raise PreflightError("Cannot establish the compiled artifact's source checkout") from error
+    if not re.fullmatch(r"[0-9a-f]{40,64}", value):
+        raise PreflightError("Invalid source checkout identity")
+    return value
+
+
+def inspect_runtime(source, size: int, member: str, version: str, commit: str) -> dict:
+    """Check compiled Dart identity, independently of editable bundle plists.
+
+    These are consistency checks, not a cryptographic source attestation.
+    Retagging an old package must never qualify as rebuilding the application.
+    """
+    if not 0 < size <= MAX_RUNTIME_BYTES:
+        raise PreflightError("Missing or oversized compiled Flutter runtime")
+    version_pattern = re.compile(rb"(?<![0-9.+])" + re.escape(version.encode()) + rb"(?=[^0-9.+])")
+    commit_pattern = re.compile(rb"(?<![0-9a-f])" + commit[:7].encode() + rb"[0-9a-f]{0,57}(?=[^0-9a-f])")
+    digest, tail, consumed = hashlib.sha256(), b"", 0
+    found_version, found_commit = False, None
+    while True:
+        chunk = source.read(1024 * 1024)
+        consumed += len(chunk)
+        if consumed > MAX_RUNTIME_BYTES or consumed > size:
+            raise PreflightError("Compiled runtime exceeds its declared size")
+        digest.update(chunk)
+        window = tail + (chunk if chunk else b"\0")
+        found_version |= version_pattern.search(window) is not None
+        for match in commit_pattern.finditer(window):
+            candidate = match[0].decode()
+            if commit.startswith(candidate):
+                found_commit = candidate
+        tail = window[-128:]
+        if not chunk:
+            break
+    if consumed != size:
+        raise PreflightError("Compiled runtime is truncated")
+    if not found_version or found_commit is None:
+        raise PreflightError(
+            "Compiled Dart runtime does not match this checkout's version/source. "
+            "Rebuild from the frozen checkout; changing Info.plist alone is insufficient."
+        )
+    return {"member": member, "sha256": digest.hexdigest(), "version": version,
+            "checkout_commit": commit, "embedded_commit": found_commit}
+
+
+def runtime_members(plist_member: str, platform: str) -> list[str]:
+    parent = PurePosixPath(plist_member).parent / "Frameworks/App.framework"
+    return [str(parent / "App")] + ([str(parent / "Versions/A/App")] if platform == "macos" else [])
+
+
+def plist_from_zip(artifact: Path, platform: str, version: str, commit: str) -> tuple[bytes, str, dict]:
     try:
         with zipfile.ZipFile(artifact) as archive:
             entries = archive.infolist()
@@ -259,12 +318,21 @@ def plist_from_zip(artifact: Path, platform: str) -> tuple[bytes, str]:
             if stat.S_ISLNK(member.external_attr >> 16) or member.is_dir() or member.file_size > MAX_PLIST_BYTES:
                 raise PreflightError("Apple archive Info.plist must be a bounded regular file")
             with archive.open(member) as source:
-                return source.read(MAX_PLIST_BYTES + 1), member.filename
+                plist = source.read(MAX_PLIST_BYTES + 1)
+            runtime_names = runtime_members(member.filename, platform)
+            runtimes = [entry for entry in entries if entry.filename in runtime_names
+                        and not entry.is_dir() and not stat.S_ISLNK(entry.external_attr >> 16)]
+            if len(runtimes) != 1:
+                raise PreflightError("Apple archive must contain exactly one compiled Flutter runtime")
+            runtime = runtimes[0]
+            with archive.open(runtime) as source:
+                identity = inspect_runtime(source, runtime.file_size, runtime.filename, version, commit)
+            return plist, member.filename, identity
     except (zipfile.BadZipFile, RuntimeError) as error:
         raise PreflightError("Cannot read the built Apple ZIP/IPA artifact") from error
 
 
-def plist_from_pkg(artifact: Path) -> tuple[bytes, str]:
+def plist_from_pkg(artifact: Path, version: str, commit: str) -> tuple[bytes, str, dict]:
     # pkgutil expands the installer; it does not install it or execute its scripts.
     with tempfile.TemporaryDirectory(prefix="crispcloud-export-pkg-") as directory:
         expanded = Path(directory) / "expanded"
@@ -284,7 +352,22 @@ def plist_from_pkg(artifact: Path) -> tuple[bytes, str]:
                        for end in range(1, len(relative.parts) + 1))
                 or not path.is_file() or path.stat().st_size > MAX_PLIST_BYTES):
             raise PreflightError("Package Info.plist must be a bounded regular file inside the package")
-        return path.read_bytes(), relative.as_posix()
+        runtimes = []
+        for name in runtime_members(relative.as_posix(), "macos"):
+            candidate = expanded / name
+            if candidate.is_file() and not candidate.is_symlink():
+                if (not candidate.resolve().is_relative_to(expanded.resolve())
+                        or any(expanded.joinpath(*candidate.relative_to(expanded).parts[:end]).is_symlink()
+                               for end in range(1, len(candidate.relative_to(expanded).parts) + 1))):
+                    raise PreflightError("Compiled runtime must stay inside the expanded package")
+                runtimes.append(candidate)
+        if len(runtimes) != 1:
+            raise PreflightError("Package must contain exactly one compiled Flutter runtime")
+        runtime = runtimes[0]
+        with runtime.open("rb") as source:
+            identity = inspect_runtime(source, runtime.stat().st_size,
+                                       runtime.relative_to(expanded).as_posix(), version, commit)
+        return path.read_bytes(), relative.as_posix(), identity
 
 
 def release_version(root: Path) -> tuple[str, str]:
@@ -302,16 +385,17 @@ def verify_artifact(root: Path, platform: str, artifact: Path, policy: dict | No
     validate_source_plist(root, SOURCE_PLISTS[platform], policy)
     if artifact.is_symlink() or not artifact.is_file() or artifact.stat().st_size == 0:
         raise PreflightError("Expected a nonempty regular Apple artifact")
+    version, build = release_version(root)
+    compiled_version, commit = f"{version}+{build}", checkout_commit(root)
     digest = sha256(artifact)
     if artifact.suffix.lower() == ".pkg" and platform == "macos":
-        data, member = plist_from_pkg(artifact)
+        data, member, runtime = plist_from_pkg(artifact, compiled_version, commit)
     elif artifact.suffix.lower() == ".zip" or (artifact.suffix.lower() == ".ipa" and platform == "ios"):
-        data, member = plist_from_zip(artifact, platform)
+        data, member, runtime = plist_from_zip(artifact, platform, compiled_version, commit)
     else:
         raise PreflightError("Expected an iOS .ipa, macOS .pkg, or an application .zip")
     plist = load_plist(data, member)
     validate_encryption_plist(plist, policy, member)
-    version, build = release_version(root)
     expected = {"CFBundleIdentifier": policy["bundle_id"], "CFBundleShortVersionString": version,
                 "CFBundleVersion": build, "CFBundlePackageType": "APPL"}
     for key, value in expected.items():
@@ -325,7 +409,7 @@ def verify_artifact(root: Path, platform: str, artifact: Path, policy: dict | No
             "info_plist_member": member, "info_plist_sha256": hashlib.sha256(data).hexdigest(),
             "bundle_id": policy["bundle_id"], "version": version, "build": build,
             "platform": platform, "uses_non_exempt_encryption": policy["uses_non_exempt_encryption"],
-            "compliance_code": plist.get("ITSEncryptionExportComplianceCode")}
+            "compliance_code": plist.get("ITSEncryptionExportComplianceCode"), "compiled_runtime": runtime}
 
 
 def api_url(value: str, expected_path: str | None = None) -> str:

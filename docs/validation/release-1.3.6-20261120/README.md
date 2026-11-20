@@ -20,3 +20,13 @@ The authenticated GitHub by-tag endpoint returned 404 for the existing v1.3.5 dr
 - The earlier JavaScript Web release build passed in 667 seconds and passed the distribution-component guard. This is supporting evidence for the Web CI optimization, not a build receipt for the final 1.3.6 source.
 
 The full Linux gate, all-platform binaries, notarization, and new TestFlight processing are tracked separately. This checkpoint does not claim those later jobs have completed. The v1.3.5 tag is preserved; it is not moved to the repaired application source.
+
+## Compiled identity audit after the parallel delivery
+
+Apple processing status alone did not establish iOS source qualification. The IPA recorded in `testflight-46.json` contains bundle metadata `1.3.6 (46)`, but its compiled Dart runtime embeds `1.3.5+45` and `bb0d8ef6`. The original package checksum was verified before this finding was recorded. The macOS package independently embeds the correct `1.3.6+46` runtime at `498b7357`; its bundle and compiled identities agree.
+
+The delivery receipt now distinguishes the originally declared release checkout from the identities actually found in the compiled frameworks. The iOS source qualification is explicitly false; `VALID` remains Apple's processing state, not evidence that the new runtime was compiled.
+
+Apple artifact preflight now reads the compiled App framework inside the submitted IPA/ZIP/PKG, bounds its size, and requires the full version/build and source identity to match the frozen checkout. Both Store workflows now embed `marketing+build` in APP_VERSION. The check rejects the actual stale IPA and accepts the newly compiled tagged Mac runtime. This is a consistency guard, not a cryptographic source attestation.
+
+The guard's 43 tests pass, including mislabeled plists, stale compiled source, absent frameworks, bounded reads, and identity tokens split across stream reads. New Office main `c954d00d` was reconciled by the parallel intake; 356 independent engine paragraph-control/layout checks passed after the exact upstream BAS input was added to the guarded mirror. Controller and host qualification for that newer source is recorded separately from the earlier 315-test run.

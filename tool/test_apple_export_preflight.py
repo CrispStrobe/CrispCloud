@@ -55,6 +55,10 @@ class ExportFixture(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
+        self.commit = "abcdef0123456789abcdef0123456789abcdef0123"
+        source_identity = patch.object(preflight, "checkout_commit", return_value=self.commit)
+        source_identity.start()
+        self.addCleanup(source_identity.stop)
         self.write("pubspec.yaml", "name: fixture\nversion: 1.2.3+7\n")
         self.write("pubspec.lock", "packages: {}\n")
         self.write("lib/reviewed_crypto.dart", "// reviewed test fixture\n")
@@ -97,7 +101,10 @@ class ExportFixture(unittest.TestCase):
             data["ITSEncryptionExportComplianceCode"] = self.policy["documentation"]["compliance_code"]
         return {**data, **changes}
 
-    def artifact(self, plist=None, platform="ios", extra=None):
+    def runtime_bytes(self, version="1.2.3+7", commit=None):
+        return b"fixture runtime\0" + version.encode() + b"\0" + (commit or self.commit)[:12].encode() + b"\0"
+
+    def artifact(self, plist=None, platform="ios", extra=None, runtime=None):
         data = self.built_plist(platform) if plist is None else plist
         path = self.root / ("build/app.ipa" if platform == "ios" else "build/app.zip")
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -105,6 +112,9 @@ class ExportFixture(unittest.TestCase):
         with zipfile.ZipFile(path, "w") as archive:
             archive.writestr(member, plistlib.dumps(data, fmt=plistlib.FMT_BINARY))
             archive.writestr("metadata.txt", "fixture")
+            if runtime is not False:
+                archive.writestr(preflight.runtime_members(member, platform)[0],
+                                 self.runtime_bytes() if runtime is None else runtime)
             for name, content in (extra or {}).items():
                 archive.writestr(name, content)
         return path
@@ -260,12 +270,51 @@ class PolicyAndArtifactTests(ExportFixture):
             path = Path(args[-1]) / "component.pkg/Payload/CrispCloud.app/Contents/Info.plist"
             path.parent.mkdir(parents=True)
             path.write_bytes(plistlib.dumps(self.built_plist("macos")))
+            runtime = path.parent / "Frameworks/App.framework/App"
+            runtime.parent.mkdir(parents=True)
+            runtime.write_bytes(self.runtime_bytes())
             return subprocess.CompletedProcess(args, 0, b"", b"")
 
         with patch.object(preflight.subprocess, "run", side_effect=expand):
             record = preflight.verify_artifact(self.root, "macos", artifact)
         self.assertIn("component.pkg/Payload", record["info_plist_member"])
         self.assertEqual(record["sha256"], hashlib.sha256(b"package fixture").hexdigest())
+
+    def test_relabelled_bundle_cannot_hide_an_older_compiled_version(self):
+        for platform in ("ios", "macos"):
+            with self.subTest(platform=platform):
+                artifact = self.artifact(platform=platform, runtime=self.runtime_bytes("1.2.2+6"))
+                with self.assertRaisesRegex(preflight.PreflightError, "Compiled Dart runtime"):
+                    preflight.verify_artifact(self.root, platform, artifact)
+
+    def test_matching_version_still_requires_the_compiled_checkout(self):
+        artifact = self.artifact(runtime=self.runtime_bytes(commit="123456789abcdef0123456789abcdef0123456789"))
+        with self.assertRaisesRegex(preflight.PreflightError, "Compiled Dart runtime"):
+            preflight.verify_artifact(self.root, "ios", artifact)
+
+    def test_missing_compiled_runtime_never_qualifies_from_plist_alone(self):
+        artifact = self.artifact(runtime=False)
+        with self.assertRaisesRegex(preflight.PreflightError, "compiled Flutter runtime"):
+            preflight.verify_artifact(self.root, "ios", artifact)
+
+    def test_compiled_identity_crossing_read_boundaries_is_checked_completely(self):
+        prefix = b"runtime\0" + b"1.2.3+7\0"
+        padding = b" " * (1024 * 1024 - len(prefix) - 7)
+        wrong = self.commit[:7] + "f" + self.commit[8:]
+        for commit in (self.commit, wrong):
+            payload = prefix + padding + commit.encode() + b"\0"
+            if commit == self.commit:
+                identity = preflight.inspect_runtime(io.BytesIO(payload), len(payload), "App", "1.2.3+7", self.commit)
+                self.assertEqual(identity["embedded_commit"], self.commit)
+            else:
+                with self.assertRaisesRegex(preflight.PreflightError, "Compiled Dart runtime"):
+                    preflight.inspect_runtime(io.BytesIO(payload), len(payload), "App", "1.2.3+7", self.commit)
+
+    def test_runtime_limit_is_checked_before_reading_untrusted_bytes(self):
+        stream = io.BytesIO(b"do not read")
+        with self.assertRaisesRegex(preflight.PreflightError, "oversized"):
+            preflight.inspect_runtime(stream, preflight.MAX_RUNTIME_BYTES + 1, "App", "1.2.3+7", self.commit)
+        self.assertEqual(stream.tell(), 0)
 
     def test_pkg_expansion_failure_does_not_fall_back_to_source_plist(self):
         artifact = self.write("build/app.pkg", b"package fixture")
