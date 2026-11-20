@@ -5,6 +5,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quds_office_editor/quds_office_editor.dart';
 
+/// The typing pause before a background pass, plus a frame of margin.
+final _debounce = WordProofingTiming.idle + const Duration(milliseconds: 50);
+
 const _menuKey = Key('office-context-menu');
 
 final class _KeyboardProvider extends OfficeProofingProvider {
@@ -112,7 +115,7 @@ final class _Harness {
       ),
     );
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 450));
+    await tester.pump(_debounce);
     await _frames(tester);
   }
 

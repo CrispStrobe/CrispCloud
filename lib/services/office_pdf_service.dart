@@ -16,6 +16,7 @@ import 'package:quds_office_editor/quds_office_editor.dart'
 
 import 'document_font_catalog.dart';
 import 'document_fonts.dart';
+import 'office_font_packs.dart';
 
 const int kOfficePdfInputCap = 64 * 1024 * 1024;
 
@@ -78,6 +79,12 @@ Future<OfficePdfResult> convertOfficeToPdfResult(
   try {
     final fontBytes = await DocumentFonts.loadExportFaces();
     final systemFaces = await OfficeSystemFonts.load();
+    List<OfficeSystemFontFace> packFaces = const <OfficeSystemFontFace>[];
+    try {
+      packFaces = await OfficeFontPacks.loadInstalled();
+    } on Object {
+      // Optional packs are unavailable on web and unsupported test hosts.
+    }
     OfficePdfResult render() {
       final diagnostics = OfficeFontDiagnostics();
       final fonts = OfficeFontSet(
@@ -93,6 +100,14 @@ Future<OfficePdfResult> convertOfficeToPdfResult(
               italic: documentFontAssets[index].italic,
             ),
           for (final OfficeSystemFontFace face in systemFaces)
+            OfficeFontFace(
+              font: SfntFont.parse(face.bytes),
+              family: face.family,
+              aliases: face.aliases,
+              weight: face.weight,
+              italic: face.italic,
+            ),
+          for (final OfficeSystemFontFace face in packFaces)
             OfficeFontFace(
               font: SfntFont.parse(face.bytes),
               family: face.family,

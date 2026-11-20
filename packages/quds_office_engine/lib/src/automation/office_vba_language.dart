@@ -85,6 +85,31 @@ class OfficeVbaWordMacroLanguage implements OfficeMacroLanguage {
   }
 }
 
+/// Compiles explicit slide and shape writes from the bounded PowerPoint dialect.
+///
+/// `ActivePresentation` in source denotes the presentation supplied to the
+/// native session, never an ambient application or an embedded VBA project.
+/// The language, diagnostics and aggregate limits are shared with Excel/Word.
+class OfficeVbaPowerPointMacroLanguage implements OfficeMacroLanguage {
+  const OfficeVbaPowerPointMacroLanguage();
+
+  @override
+  String get id => 'vba-powerpoint';
+
+  @override
+  OfficeMacro compile(OfficeMacroSource source) {
+    final context = _Context(source, isPowerPoint: true);
+    if (source.format != OfficeMacroFormat.pptx) {
+      context.fail(
+        const _Token(_TokenKind.end, '', 1, 1),
+        'vba_unsupported',
+        'vba-powerpoint only targets presentation documents.',
+      );
+    }
+    return _compileVba(context);
+  }
+}
+
 OfficeMacro _compileVba(_Context context) {
   final module = _Parser(context, _Lexer(context).scan()).parse();
   final checked = _Checker(context, module)..check();
@@ -121,6 +146,44 @@ const _wordConstants = <String, int>{
   'wdalignparagraphcenter': 1,
   'wdalignparagraphright': 2,
   'wdalignparagraphjustify': 3,
+  'wdunderlinenone': 0,
+  'wdunderlinesingle': 1,
+  'wdunderlinewords': 2,
+  'wdunderlinedouble': 3,
+  'wdunderlinedotted': 4,
+  'wdunderlinethick': 6,
+  'wdunderlinedash': 7,
+  'wdunderlinedotdash': 9,
+  'wdunderlinedotdotdash': 10,
+  'wdunderlinewavy': 11,
+  'wdunderlinedottedheavy': 20,
+  'wdunderlinedashheavy': 23,
+  'wdunderlinedotdashheavy': 25,
+  'wdunderlinedotdotdashheavy': 26,
+  'wdunderlinewavyheavy': 27,
+  'wdunderlinedashlong': 39,
+  'wdunderlinewavydouble': 43,
+  'wdunderlinedashlongheavy': 55,
+};
+const _wordUnderlines = <int, String>{
+  0: 'none',
+  1: 'single',
+  2: 'words',
+  3: 'double',
+  4: 'dotted',
+  6: 'thick',
+  7: 'dash',
+  9: 'dotDash',
+  10: 'dotDotDash',
+  11: 'wave',
+  20: 'dottedHeavy',
+  23: 'dashedHeavy',
+  25: 'dashDotHeavy',
+  26: 'dashDotDotHeavy',
+  27: 'wavyHeavy',
+  39: 'dashLong',
+  43: 'wavyDouble',
+  55: 'dashLongHeavy',
 };
 const _wordReserved = <String>{
   'thisdocument',
@@ -133,18 +196,57 @@ const _wordReserved = <String>{
   'wdalignparagraphright',
   'wdalignparagraphjustify',
 };
+const _powerPointConstants = <String, int>{
+  'msofalse': 0,
+  'msotrue': -1,
+  'msoctrue': 1,
+  'msotristatemixed': -2,
+  'msotristatetoggle': -3,
+  'ppalignleft': 1,
+  'ppaligncenter': 2,
+  'ppalignright': 3,
+  'ppalignjustify': 4,
+  'ppaligndistribute': 5,
+  'ppalignthaidistribute': 6,
+  'ppalignjustifylow': 7,
+  'ppalignmentmixed': -2,
+};
+const _powerPointReserved = <String>{
+  'application',
+  'activepresentation',
+  'presentation',
+  'slides',
+  'slide',
+  'shapes',
+  'shape',
+  'textframe',
+  'textrange',
+};
 
 class _Context {
-  const _Context(this.source, {this.isWord = false});
+  const _Context(this.source, {this.isWord = false, this.isPowerPoint = false});
   final OfficeMacroSource source;
   final bool isWord;
+  final bool isPowerPoint;
+  bool get isExcel => !isWord && !isPowerPoint;
 
-  OfficeMacroFormat get format =>
-      isWord ? OfficeMacroFormat.docx : OfficeMacroFormat.xlsx;
+  OfficeMacroFormat get format => isWord
+      ? OfficeMacroFormat.docx
+      : isPowerPoint
+      ? OfficeMacroFormat.pptx
+      : OfficeMacroFormat.xlsx;
+
+  Map<String, int> get constants => isWord
+      ? _wordConstants
+      : isPowerPoint
+      ? _powerPointConstants
+      : const <String, int>{};
 
   bool reserved(String name) =>
       _Checker._reserved.contains(name) ||
-      (isWord && _wordReserved.contains(name));
+      constants.containsKey(name) ||
+      (isWord && _wordReserved.contains(name)) ||
+      (isPowerPoint && _powerPointReserved.contains(name));
 
   Never fail(
     _Token token,
@@ -424,6 +526,18 @@ enum _Kind {
   document,
   paragraph,
   paragraphFormat,
+  powerPointApplication,
+  presentation,
+  slides,
+  slide,
+  shapes,
+  shape,
+  textFrame,
+  textRange,
+  powerPointFont,
+  powerPointColor,
+  powerPointParagraphFormat,
+  triState,
 }
 
 enum _Declared {
@@ -436,13 +550,35 @@ enum _Declared {
   range,
   document,
   paragraph,
+  presentation,
+  slide,
+  shape,
+  textRange,
 }
 
 bool _objectType(_Declared type) =>
     type == _Declared.worksheet ||
     type == _Declared.range ||
     type == _Declared.document ||
-    type == _Declared.paragraph;
+    type == _Declared.paragraph ||
+    type == _Declared.presentation ||
+    type == _Declared.slide ||
+    type == _Declared.shape ||
+    type == _Declared.textRange;
+
+const _powerPointObjectKinds = <_Kind>{
+  _Kind.powerPointApplication,
+  _Kind.presentation,
+  _Kind.slides,
+  _Kind.slide,
+  _Kind.shapes,
+  _Kind.shape,
+  _Kind.textFrame,
+  _Kind.textRange,
+  _Kind.powerPointFont,
+  _Kind.powerPointColor,
+  _Kind.powerPointParagraphFormat,
+};
 
 // These are source values, never native JSON null or unbound object bindings.
 enum _VariantState { empty, nullValue }
@@ -456,6 +592,10 @@ _Kind _kindOf(_Declared type) => switch (type) {
   _Declared.range => _Kind.range,
   _Declared.document => _Kind.document,
   _Declared.paragraph => _Kind.paragraph,
+  _Declared.presentation => _Kind.presentation,
+  _Declared.slide => _Kind.slide,
+  _Declared.shape => _Kind.shape,
+  _Declared.textRange => _Kind.textRange,
 };
 
 sealed class _Expr {
@@ -1281,13 +1421,19 @@ class _Parser {
       'string' => _Declared.string,
       'boolean' => _Declared.boolean,
       'variant' => _Declared.variant,
-      'worksheet' when !context.isWord => _Declared.worksheet,
-      'range' => _Declared.range,
+      'worksheet' when context.isExcel => _Declared.worksheet,
+      'range' when !context.isPowerPoint => _Declared.range,
       'document' when context.isWord => _Declared.document,
       'paragraph' when context.isWord => _Declared.paragraph,
+      'presentation' when context.isPowerPoint => _Declared.presentation,
+      'slide' when context.isPowerPoint => _Declared.slide,
+      'shape' when context.isPowerPoint => _Declared.shape,
+      'textrange' when context.isPowerPoint => _Declared.textRange,
       _ => context.unsupported(
         token,
-        context.isWord
+        context.isPowerPoint
+            ? 'Supported declarations are Long, Double, String, Boolean, Variant, Presentation, Slide, Shape, and TextRange.'
+            : context.isWord
             ? 'Supported declarations are Long, Double, String, Boolean, Variant, Document, Paragraph, and Range.'
             : 'Supported declarations are Long, Double, String, Boolean, Variant, Worksheet, and Range.',
       ),
@@ -1756,8 +1902,7 @@ class _Checker {
       final current = pending.removeLast();
       switch (current) {
         case _Name():
-          if (context.isWord &&
-              _wordConstants.containsKey(current.token.lower)) {
+          if (context.constants.containsKey(current.token.lower)) {
             break;
           }
           final symbol = _symbol(current.token);
@@ -1813,8 +1958,7 @@ class _Checker {
         break;
       case _Name():
         if (!(symbols[expression.token.lower]?.isConst ?? false) &&
-            !(context.isWord &&
-                _wordConstants.containsKey(expression.token.lower))) {
+            !context.constants.containsKey(expression.token.lower)) {
           context.unsupported(
             expression.token,
             'Const expressions may only refer to previously declared constants.',
@@ -1937,9 +2081,7 @@ class _Checker {
             if (statement.isSet != object) {
               context.type(
                 target.token,
-                context.isWord
-                    ? 'Set is required only for declared Document, Paragraph, and Range variables.'
-                    : 'Set is required only for declared Worksheet and Range variables.',
+                'Set is required exactly for supported declared object variables.',
               );
             }
             _assignable(symbol.type, valueKind, statement.value.token);
@@ -1975,7 +2117,7 @@ class _Checker {
             );
           }
         case _Clear():
-          if (context.isWord) {
+          if (!context.isExcel) {
             context.unsupported(
               statement.target.token,
               'ClearContents belongs to the Excel object model.',
@@ -2033,10 +2175,10 @@ class _Checker {
           final isArray =
               collection is _Name &&
               (symbols[collection.token.lower]?.isArray ?? false);
-          if (context.isWord && !isArray) {
+          if (!context.isExcel && !isArray) {
             context.unsupported(
               collection.token,
-              'Word document collections cannot be enumerated without live reads.',
+              'Document collections cannot be enumerated without live reads.',
             );
           }
           if (!isArray && _expression(collection) != _Kind.range) {
@@ -2099,10 +2241,17 @@ class _Checker {
                   kind == _Kind.paragraph ||
                   kind == _Kind.font ||
                   kind == _Kind.paragraphFormat);
-          if (kind != _Kind.worksheet && kind != _Kind.range && !wordObject) {
+          final powerPointObject =
+              context.isPowerPoint && _powerPointObjectKinds.contains(kind);
+          if (kind != _Kind.worksheet &&
+              kind != _Kind.range &&
+              !wordObject &&
+              !powerPointObject) {
             context.type(
               statement.token,
-              context.isWord
+              context.isPowerPoint
+                  ? 'With requires an explicitly bound PowerPoint object.'
+                  : context.isWord
                   ? 'With requires a Document, Paragraph, Range, Font, or ParagraphFormat.'
                   : 'With requires a Worksheet or Range.',
             );
@@ -2174,16 +2323,68 @@ class _Checker {
     _arguments(target, 0, allowProperty: true);
     final receiver = _expression(target.receiver);
     final property = target.token.lower;
+    if (context.isPowerPoint) {
+      if (receiver == _Kind.textRange && property == 'text') {
+        return _Kind.string;
+      }
+      if (receiver == _Kind.powerPointFont) {
+        if (property == 'bold' ||
+            property == 'italic' ||
+            property == 'underline') {
+          return _Kind.triState;
+        }
+        if (property == 'name') return _Kind.string;
+        if (property == 'size') return _Kind.number;
+      }
+      if (receiver == _Kind.powerPointColor && property == 'rgb') {
+        return _Kind.number;
+      }
+      if (receiver == _Kind.powerPointParagraphFormat &&
+          property == 'alignment') {
+        return _Kind.number;
+      }
+      if (receiver == _Kind.shape &&
+          const <String>{
+            'left',
+            'top',
+            'width',
+            'height',
+            'rotation',
+          }.contains(property)) {
+        return _Kind.number;
+      }
+      context.unsupported(
+        target.token,
+        'Unsupported writable PowerPoint property ${target.token.text}.',
+      );
+    }
     if (context.isWord) {
       if (receiver == _Kind.font) {
-        if (property == 'bold' || property == 'italic') return _Kind.boolean;
-        if (property == 'size' || property == 'color') return _Kind.number;
+        if (property == 'bold' ||
+            property == 'italic' ||
+            property == 'strikethrough') {
+          return _Kind.boolean;
+        }
+        if (property == 'size' ||
+            property == 'color' ||
+            property == 'underline') {
+          return _Kind.number;
+        }
         if (property == 'name') return _Kind.string;
-      } else if (receiver == _Kind.paragraphFormat &&
-          (property == 'alignment' ||
-              property == 'spacebefore' ||
-              property == 'spaceafter')) {
-        return _Kind.number;
+      } else if (receiver == _Kind.paragraphFormat) {
+        if (property == 'keeptogether' || property == 'pagebreakbefore') {
+          return _Kind.boolean;
+        }
+        if (const <String>{
+          'alignment',
+          'spacebefore',
+          'spaceafter',
+          'leftindent',
+          'rightindent',
+          'firstlineindent',
+        }.contains(property)) {
+          return _Kind.number;
+        }
       }
       context.unsupported(
         target.token,
@@ -2216,6 +2417,24 @@ class _Checker {
             ? _Kind.boolean
             : _Kind.string;
       case _Name():
+        if (context.constants.containsKey(expression.token.lower)) {
+          return _Kind.number;
+        }
+        if (context.isPowerPoint) {
+          if (expression.token.lower == 'activepresentation') {
+            return _Kind.presentation;
+          }
+          if (expression.token.lower == 'application') {
+            return _Kind.powerPointApplication;
+          }
+          if (expression.token.lower == 'thisworkbook' ||
+              expression.token.lower == 'thisdocument') {
+            context.unsupported(
+              expression.token,
+              'The selected object belongs to another Office application.',
+            );
+          }
+        }
         if (context.isWord) {
           if (expression.token.lower == 'thisdocument') return _Kind.document;
           if (_wordConstants.containsKey(expression.token.lower)) {
@@ -2227,7 +2446,8 @@ class _Checker {
               'ThisWorkbook belongs to the Excel object model.',
             );
           }
-        } else if (expression.token.lower == 'thisworkbook') {
+        } else if (context.isExcel &&
+            expression.token.lower == 'thisworkbook') {
           return _Kind.workbook;
         }
         final symbol = _symbol(expression.token);
@@ -2280,7 +2500,7 @@ class _Checker {
           return _Kind.number;
         }
         if (expression.token.lower == 'worksheets') {
-          if (context.isWord) {
+          if (!context.isExcel) {
             context.unsupported(
               expression.token,
               'Worksheets belongs to the Excel object model.',
@@ -2315,6 +2535,9 @@ class _Checker {
       case _Member():
         final receiver = _expression(expression.receiver);
         final name = expression.token.lower;
+        if (context.isPowerPoint) {
+          return _powerPointMember(expression, receiver);
+        }
         if (context.isWord) {
           if (receiver == _Kind.document && name == 'paragraphs') {
             final argument = _arguments(expression, 1).single;
@@ -2406,6 +2629,71 @@ class _Checker {
     }
   }
 
+  _Kind _powerPointMember(_Member expression, _Kind receiver) {
+    final name = expression.token.lower;
+    if (receiver == _Kind.powerPointApplication &&
+        name == 'activepresentation') {
+      _arguments(expression, 0, allowProperty: true);
+      return _Kind.presentation;
+    }
+    if (receiver == _Kind.presentation && name == 'slides') {
+      if (expression.arguments == null) return _Kind.slides;
+      _powerPointSelector(expression, shape: false);
+      return _Kind.slide;
+    }
+    if (receiver == _Kind.slides && name == 'item') {
+      _powerPointSelector(expression, shape: false);
+      return _Kind.slide;
+    }
+    if (receiver == _Kind.slide && name == 'shapes') {
+      if (expression.arguments == null) return _Kind.shapes;
+      _powerPointSelector(expression, shape: true);
+      return _Kind.shape;
+    }
+    if (receiver == _Kind.shapes && name == 'item') {
+      _powerPointSelector(expression, shape: true);
+      return _Kind.shape;
+    }
+    if (receiver == _Kind.shape && name == 'textframe') {
+      _arguments(expression, 0, allowProperty: true);
+      return _Kind.textFrame;
+    }
+    if (receiver == _Kind.textFrame && name == 'textrange') {
+      _arguments(expression, 0, allowProperty: true);
+      return _Kind.textRange;
+    }
+    if (receiver == _Kind.textRange &&
+        (name == 'font' || name == 'paragraphformat')) {
+      _arguments(expression, 0, allowProperty: true);
+      return name == 'font'
+          ? _Kind.powerPointFont
+          : _Kind.powerPointParagraphFormat;
+    }
+    if (receiver == _Kind.powerPointFont && name == 'color') {
+      _arguments(expression, 0, allowProperty: true);
+      return _Kind.powerPointColor;
+    }
+    context.unsupported(
+      expression.token,
+      'Unsupported PowerPoint object member or document read: ${expression.token.text}.',
+    );
+  }
+
+  void _powerPointSelector(_Member expression, {required bool shape}) {
+    final argument = _arguments(expression, 1).single;
+    final kind = _expression(argument);
+    if (kind != _Kind.number &&
+        kind != _Kind.variant &&
+        !(shape && kind == _Kind.string)) {
+      context.type(
+        argument.token,
+        shape
+            ? 'Shapes requires a one-based index or an exact shape name.'
+            : 'Slides requires a one-based index.',
+      );
+    }
+  }
+
   _Symbol _symbol(_Token token) =>
       symbols[token.lower] ??
       context.fail(
@@ -2488,6 +2776,17 @@ class _Checker {
       _compatible(_kindOf(type), value, token);
 
   void _compatible(_Kind expected, _Kind value, _Token token) {
+    if (expected == _Kind.triState) {
+      if (value == _Kind.boolean ||
+          value == _Kind.number ||
+          value == _Kind.variant) {
+        return;
+      }
+      context.type(
+        token,
+        'A Boolean or exact msoTrue/msoFalse value is required.',
+      );
+    }
     if (expected == _Kind.variant) {
       _scalar(value, token);
     } else if (expected != value &&
@@ -2495,7 +2794,8 @@ class _Checker {
             expected == _Kind.worksheet ||
             expected == _Kind.range ||
             expected == _Kind.document ||
-            expected == _Kind.paragraph)) {
+            expected == _Kind.paragraph ||
+            _powerPointObjectKinds.contains(expected))) {
       // Scalar Variant values may defer scalar checks until evaluation, but
       // cannot ever carry object bindings, including in unexecuted code.
       context.type(
@@ -2602,6 +2902,59 @@ class _WordFont {
 class _WordParagraphFormat {
   const _WordParagraphFormat(this.range);
   final _WordRange range;
+}
+
+class _PowerPointApplication {
+  const _PowerPointApplication();
+}
+
+class _Presentation {
+  const _Presentation();
+}
+
+class _Slides {
+  const _Slides();
+}
+
+class _Slide {
+  const _Slide(this.index);
+  final int index;
+}
+
+class _Shapes {
+  const _Shapes(this.slide);
+  final _Slide slide;
+}
+
+class _Shape {
+  const _Shape(this.slide, this.selector);
+  final _Slide slide;
+  final Object selector;
+}
+
+class _TextFrame {
+  const _TextFrame(this.shape);
+  final _Shape shape;
+}
+
+class _TextRange {
+  const _TextRange(this.shape);
+  final _Shape shape;
+}
+
+class _PowerPointFont {
+  const _PowerPointFont(this.range);
+  final _TextRange range;
+}
+
+class _PowerPointColor {
+  const _PowerPointColor(this.range);
+  final _TextRange range;
+}
+
+class _PowerPointParagraphFormat {
+  const _PowerPointParagraphFormat(this.range);
+  final _TextRange range;
 }
 
 sealed class _ExecutionFrame {}
@@ -3085,13 +3438,22 @@ class _Evaluator {
       case _Literal():
         return expression.value;
       case _Name():
+        final constant = context.constants[expression.token.lower];
+        if (constant != null) return constant;
+        if (context.isPowerPoint) {
+          if (expression.token.lower == 'activepresentation') {
+            return const _Presentation();
+          }
+          if (expression.token.lower == 'application') {
+            return const _PowerPointApplication();
+          }
+        }
         if (context.isWord) {
           if (expression.token.lower == 'thisdocument') {
             return const _WordDocument();
           }
-          final constant = _wordConstants[expression.token.lower];
-          if (constant != null) return constant;
-        } else if (expression.token.lower == 'thisworkbook') {
+        } else if (context.isExcel &&
+            expression.token.lower == 'thisworkbook') {
           return const _Workbook();
         }
         final value = values[expression.token.lower]!;
@@ -3150,6 +3512,9 @@ class _Evaluator {
           for (final argument in expression.arguments ?? const <_Expr>[])
             _evaluate(argument),
         ];
+        if (context.isPowerPoint) {
+          return _evaluatePowerPointMember(expression, receiver, arguments);
+        }
         if (context.isWord) {
           if (receiver is _WordDocument) {
             final index = _integer(arguments.single, expression.token);
@@ -3253,6 +3618,47 @@ class _Evaluator {
         }, expression.token);
         return result == result.truncateToDouble() ? result.toInt() : result;
     }
+  }
+
+  Object _evaluatePowerPointMember(
+    _Member expression,
+    Object receiver,
+    List<Object> arguments,
+  ) {
+    if (receiver is _PowerPointApplication) return const _Presentation();
+    if (receiver is _Presentation || receiver is _Slides) {
+      if (expression.arguments == null) return const _Slides();
+      return _Slide(_powerPointIndex(arguments.single, expression.token));
+    }
+    if (receiver is _Slide || receiver is _Shapes) {
+      final slide = receiver is _Slide ? receiver : (receiver as _Shapes).slide;
+      if (expression.arguments == null) return _Shapes(slide);
+      final value = arguments.single;
+      final Object selector = value is String
+          ? _powerPointText(value, expression.token, name: true)
+          : _powerPointIndex(value, expression.token);
+      return _Shape(slide, selector);
+    }
+    if (receiver is _Shape) return _TextFrame(receiver);
+    if (receiver is _TextFrame) return _TextRange(receiver.shape);
+    if (receiver is _TextRange) {
+      return expression.token.lower == 'font'
+          ? _PowerPointFont(receiver)
+          : _PowerPointParagraphFormat(receiver);
+    }
+    if (receiver is _PowerPointFont) return _PowerPointColor(receiver.range);
+    context.unsupported(expression.token, 'Unsupported PowerPoint binding.');
+  }
+
+  int _powerPointIndex(Object value, _Token token) {
+    final index = _integer(value, token);
+    if (index < 1 || index > 2147483647) {
+      context.type(
+        token,
+        'A positive one-based signed Long index is required.',
+      );
+    }
+    return index - 1;
   }
 
   Object _compare(String operator, Object left, Object right, _Token token) {
@@ -3503,6 +3909,26 @@ class _Evaluator {
       case _Declared.paragraph:
         if (value is! _WordParagraph) {
           context.type(token, 'Set requires a Paragraph.');
+        }
+        return value;
+      case _Declared.presentation:
+        if (value is! _Presentation) {
+          context.type(token, 'Set requires a Presentation.');
+        }
+        return value;
+      case _Declared.slide:
+        if (value is! _Slide) {
+          context.type(token, 'Set requires a Slide.');
+        }
+        return value;
+      case _Declared.shape:
+        if (value is! _Shape) {
+          context.type(token, 'Set requires a Shape.');
+        }
+        return value;
+      case _Declared.textRange:
+        if (value is! _TextRange) {
+          context.type(token, 'Set requires a TextRange.');
         }
         return value;
     }
@@ -3854,6 +4280,10 @@ class _Evaluator {
   void _write(_Member target, Object value) {
     final receiver = _evaluate(target.receiver);
     final property = target.token.lower;
+    if (context.isPowerPoint) {
+      _writePowerPoint(receiver, property, value, target.token);
+      return;
+    }
     if (context.isWord) {
       _writeWord(receiver, property, value, target.token);
       return;
@@ -3920,6 +4350,160 @@ class _Evaluator {
     }
   }
 
+  void _writePowerPoint(
+    Object receiver,
+    String property,
+    Object value,
+    _Token token,
+  ) {
+    if (receiver is _TextRange) {
+      _emitPowerPoint(receiver.shape, 'shapeText', <String, Object?>{
+        'text': _powerPointText(value, token),
+      }, token);
+      return;
+    }
+    if (receiver is _Shape) {
+      final number = _number(value, token);
+      final field = switch (property) {
+        'left' => 'x',
+        'top' => 'y',
+        _ => property,
+      };
+      final scale = property == 'rotation' ? 60000 : 12700;
+      // DrawingML coordinates and rotations must remain representable after
+      // native unit conversion on both the VM and JavaScript. Bound the XML
+      // integer to a signed Long before the native operation rounds it.
+      if ((number.toDouble() * scale).abs() > 2147483647 ||
+          ((property == 'width' || property == 'height') && number < 0.01)) {
+        context.type(
+          token,
+          'Geometry requires finite points/degrees within signed Long native units; dimensions must be at least 0.01 points.',
+        );
+      }
+      _emitPowerPoint(receiver, 'shapeGeometry', <String, Object?>{
+        field: number,
+      }, token);
+      return;
+    }
+    if (receiver is _PowerPointFont) {
+      final String field;
+      final Object normalized;
+      if (property == 'bold' ||
+          property == 'italic' ||
+          property == 'underline') {
+        field = property;
+        normalized = _powerPointTriState(value, token);
+      } else if (property == 'name') {
+        field = 'font';
+        final family = _powerPointText(value, token, name: true);
+        if (family.trim().isEmpty ||
+            family.length > 255 ||
+            family.contains('\u007f')) {
+          context.type(
+            token,
+            'PowerPoint Font.Name requires a non-whitespace typeface name of at most 255 UTF-16 units, without control characters.',
+          );
+        }
+        normalized = family;
+      } else {
+        field = 'size';
+        final points = _number(value, token);
+        final hundredths = points * 100;
+        if (points < 1 || points > 4000 || hundredths.round() / 100 != points) {
+          context.type(
+            token,
+            'PowerPoint Font.Size requires exact hundredth-points in 1..4000.',
+          );
+        }
+        normalized = points;
+      }
+      _emitPowerPoint(receiver.range.shape, 'shapeFormat', <String, Object?>{
+        field: normalized,
+      }, token);
+      return;
+    }
+    if (receiver is _PowerPointColor) {
+      _emitPowerPoint(receiver.range.shape, 'shapeFormat', <String, Object?>{
+        'color': _color(value, token),
+      }, token);
+      return;
+    }
+    final format = receiver as _PowerPointParagraphFormat;
+    final alignment = _integer(value, token);
+    if (alignment < 1 || alignment > 4) {
+      context.unsupported(
+        token,
+        'Only ppAlignLeft, ppAlignCenter, ppAlignRight and ppAlignJustify are supported.',
+      );
+    }
+    _emitPowerPoint(format.range.shape, 'shapeFormat', <String, Object?>{
+      'alignment': const <String>[
+        'left',
+        'center',
+        'right',
+        'justify',
+      ][alignment - 1],
+    }, token);
+  }
+
+  bool _powerPointTriState(Object value, _Token token) {
+    if (value is bool) return value;
+    final state = _integer(value, token);
+    if (state != 0 && state != -1) {
+      context.type(
+        token,
+        'Only Boolean values or msoTrue (-1) and msoFalse (0) are supported; mixed and toggle states require live reads.',
+      );
+    }
+    return state == -1;
+  }
+
+  String _powerPointText(Object value, _Token token, {bool name = false}) {
+    final text = _string(value, token);
+    _charge(text.length, token);
+    _nativeString(text, token);
+    if (name && text.isEmpty) {
+      context.type(token, 'Font and shape names require a nonempty String.');
+    }
+    for (var index = 0; index < text.length; index++) {
+      final unit = text.codeUnitAt(index);
+      if ((unit < 0x20 && (unit != 9 || name)) ||
+          unit == 0xfffe ||
+          unit == 0xffff) {
+        context.type(
+          token,
+          name
+              ? 'Font and shape names require XML-safe text without tabs or line breaks.'
+              : 'TextRange.Text requires XML-safe single-paragraph text; tabs are allowed but line breaks are unsupported.',
+        );
+      }
+    }
+    return text;
+  }
+
+  void _emitPowerPoint(
+    _Shape shape,
+    String operation,
+    Map<String, Object?> fields,
+    _Token token,
+  ) {
+    if (steps.length >= _maxSteps) {
+      context.limit(
+        token,
+        'PowerPoint writes exceed $_maxSteps emitted operations.',
+      );
+    }
+    _emitNative('pptx.$operation', <String, Object?>{
+      'topLevel': true,
+      'slide': shape.slide.index,
+      if (shape.selector is String)
+        'shapeName': shape.selector
+      else
+        'shape': shape.selector,
+      ...fields,
+    }, token);
+  }
+
   void _writeWord(
     Object receiver,
     String property,
@@ -3929,9 +4513,18 @@ class _Evaluator {
     if (receiver is _WordFont) {
       final String field;
       final Object normalized;
-      if (property == 'bold' || property == 'italic') {
-        field = property;
+      if (property == 'bold' ||
+          property == 'italic' ||
+          property == 'strikethrough') {
+        field = property == 'strikethrough' ? 'strike' : property;
         normalized = _boolean(value, token);
+      } else if (property == 'underline') {
+        field = 'underline';
+        final underline = _wordUnderlines[_integer(value, token)];
+        if (underline == null) {
+          context.unsupported(token, 'Unsupported WdUnderline value.');
+        }
+        normalized = underline;
       } else if (property == 'name') {
         field = 'font';
         normalized = _wordText(value, token, fontName: true);
@@ -3958,6 +4551,33 @@ class _Evaluator {
       return;
     }
     final format = receiver as _WordParagraphFormat;
+    if (property == 'keeptogether' || property == 'pagebreakbefore') {
+      _emitWord(format.range, 'paragraphFormat', <String, Object?>{
+        property == 'keeptogether' ? 'keepTogether' : 'pageBreakBefore':
+            _boolean(value, token),
+      }, token);
+      return;
+    }
+    if (property == 'leftindent' ||
+        property == 'rightindent' ||
+        property == 'firstlineindent') {
+      final points = _number(value, token);
+      final twips = points * 20;
+      if (twips.abs() > 2147483647 || twips.round() / 20 != points) {
+        context.type(
+          token,
+          'Paragraph indents require exact twentieth-points within signed Long twips.',
+        );
+      }
+      _emitWord(format.range, 'paragraphFormat', <String, Object?>{
+        if (property == 'firstlineindent') ...<String, Object?>{
+          'firstLine': points < 0 ? 0 : points,
+          'hanging': points < 0 ? -points : 0,
+        } else
+          property == 'leftindent' ? 'left' : 'right': points,
+      }, token);
+      return;
+    }
     final String field;
     final Object normalized;
     if (property == 'alignment') {
@@ -4060,7 +4680,9 @@ class _Evaluator {
       if (!paired) {
         context.type(
           token,
-          context.isWord
+          context.isPowerPoint
+              ? 'Native PowerPoint writes require well-formed UTF-16; isolated surrogates cannot be published losslessly.'
+              : context.isWord
               ? 'Native Word writes require well-formed UTF-16; isolated surrogates cannot be published losslessly.'
               : 'Native spreadsheet writes require well-formed UTF-16; isolated surrogates cannot be published losslessly.',
         );

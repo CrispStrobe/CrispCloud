@@ -45,6 +45,7 @@ import '../l10n/workspace_ux_strings.dart';
 import '../l10n/external_terminal_strings.dart';
 import 'external_terminal_dialog.dart';
 import 'transfer_bandwidth_dialog.dart';
+import 'office_font_downloads.dart';
 import 'office_spacy_settings.dart';
 
 // ---------------------------------------------------------------------------
@@ -85,6 +86,7 @@ class SettingsDialog extends ConsumerWidget {
             const Divider(height: 1),
             _LanguageSection(),
             const OfficeSpacySettings(),
+            const OfficeFontDownloadsSettings(),
             const Divider(height: 1),
             _AppearanceSection(),
             const Divider(height: 1),
@@ -704,9 +706,9 @@ class _CredentialStorageSettingsSectionState
           ),
           if (activePath != null)
             KeychainLockSettings(
-              storage: ref.watch(
-                secureStorageProvider,
-              ) as MacOsCustomKeychainStorage,
+              storage:
+                  ref.watch(secureStorageProvider)
+                      as MacOsCustomKeychainStorage,
             ),
         ],
       ),
@@ -879,8 +881,9 @@ class _PrivacySection extends ConsumerWidget {
             child: Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest
-                    .withValues(alpha: 0.5),
+                color: Theme.of(
+                  context,
+                ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(

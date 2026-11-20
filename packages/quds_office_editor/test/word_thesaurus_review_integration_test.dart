@@ -5,6 +5,9 @@ import 'package:quds_office_editor/quds_office_editor.dart';
 
 import 'support/thesaurus_fixture.dart';
 
+/// The typing pause before a background pass, plus a frame of margin.
+final _debounce = WordProofingTiming.idle + const Duration(milliseconds: 50);
+
 final class _ReviewProvider extends OfficeProofingProvider {
   _ReviewProvider(this.id);
 
@@ -145,7 +148,7 @@ Future<void> _frames(WidgetTester tester) async {
 Future<void> _flush(WidgetTester tester) async {
   // A Word canvas keeps a caret ticker alive, so pumpAndSettle is unsuitable.
   await tester.pump();
-  await tester.pump(const Duration(milliseconds: 450));
+  await tester.pump(_debounce);
   await _frames(tester);
 }
 

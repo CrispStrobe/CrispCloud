@@ -401,9 +401,13 @@ class SlideDeserializer {
     int? propertiesDepth;
     int? gradientDepth;
     int? stopDepth;
+    int? pathDepth;
     double? position;
     double angle = 0;
     var radial = false;
+    var centered = false;
+    var defaultTile = true;
+    var linear = true;
     final List<PmlGradientStop> stops = <PmlGradientStop>[];
     while (reader.next()) {
       if (reader.eventType == XmlEventType.endElement) {
@@ -411,7 +415,10 @@ class SlideDeserializer {
         if (gradientDepth != null &&
             reader.depth == gradientDepth - 1 &&
             reader.localName == 'gradFill') {
-          if (stops.length < 2) return null;
+          if (stops.length < 2 ||
+              !linear && !(radial && centered && defaultTile)) {
+            return null;
+          }
           stops.sort((a, b) => a.position.compareTo(b.position));
           return PmlShape(
             id: 1,
@@ -436,6 +443,11 @@ class SlideDeserializer {
             reader.localName == 'gs') {
           stopDepth = null;
           position = null;
+        }
+        if (pathDepth != null &&
+            reader.depth == pathDepth - 1 &&
+            reader.localName == 'path') {
+          pathDepth = null;
         }
         continue;
       }
@@ -465,7 +477,16 @@ class SlideDeserializer {
           angle = (int.tryParse(reader.getAttribute('ang') ?? '') ?? 0) / 60000;
         } else if (reader.localName == 'path' &&
             reader.depth == gradientDepth + 1) {
-          radial = true;
+          pathDepth = reader.depth;
+          linear = false;
+          radial = reader.getAttribute('path') == 'circle';
+        } else if (reader.localName == 'fillToRect' &&
+            pathDepth != null &&
+            reader.depth == pathDepth + 1) {
+          centered = isCenteredRadialFillToRect(reader);
+        } else if (reader.localName == 'tileRect' &&
+            reader.depth == gradientDepth + 1) {
+          defaultTile = isDefaultGradientTileRect(reader);
         } else if (position != null &&
             stopDepth != null &&
             reader.depth == stopDepth + 1 &&

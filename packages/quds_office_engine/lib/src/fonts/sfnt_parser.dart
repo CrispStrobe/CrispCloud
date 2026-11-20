@@ -257,6 +257,50 @@ class SfntFont {
     );
   }
 
+  Map<int, int>? _kerningPairs;
+
+  /// Legacy `kern` pair adjustment in font units.
+  int kerningForGlyphs(int leftGlyph, int rightGlyph) {
+    final Map<int, int>? pairs = _kerningPairs ??= _parseKerning();
+    return pairs?[(leftGlyph << 16) | (rightGlyph & 0xFFFF)] ?? 0;
+  }
+
+  Map<int, int>? _parseKerning() {
+    if (!hasTable('kern')) return null;
+    final Uint8List bytes = tableBytes('kern');
+    if (bytes.length < 4) return null;
+    int u16(int at) => (bytes[at] << 8) | bytes[at + 1];
+    int s16(int at) {
+      final int n = u16(at);
+      return n >= 0x8000 ? n - 0x10000 : n;
+    }
+
+    final int version = u16(0);
+    if (version != 0) return null;
+    final int tables = u16(2);
+    final Map<int, int> pairs = <int, int>{};
+    var offset = 4;
+    for (var t = 0; t < tables && offset + 6 <= bytes.length; t++) {
+      final int length = u16(offset + 2);
+      final int coverage = u16(offset + 4);
+      final int format = coverage >> 8;
+      if (format == 0 && offset + 14 <= bytes.length) {
+        final int count = u16(offset + 6);
+        var pairAt = offset + 14;
+        for (var i = 0; i < count && pairAt + 6 <= bytes.length; i++) {
+          final int left = u16(pairAt);
+          final int right = u16(pairAt + 2);
+          final int value = s16(pairAt + 4);
+          pairs[(left << 16) | right] = value;
+          pairAt += 6;
+        }
+      }
+      if (length <= 0) break;
+      offset += length;
+    }
+    return pairs.isEmpty ? null : pairs;
+  }
+
   /// tableBytes API.
   Uint8List tableBytes(String tag) {
     final SfntTableRecord? rec = tables[tag];

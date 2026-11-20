@@ -5,6 +5,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quds_office_editor/quds_office_editor.dart';
 
+/// The typing pause before a background pass, plus a frame of margin.
+final _debounce = WordProofingTiming.idle + const Duration(milliseconds: 50);
+
 class _Provider extends OfficeProofingProvider {
   _Provider({this.providerId = 'live-changes-test', this.gate});
 
@@ -107,7 +110,7 @@ Future<void> _drain(WidgetTester tester) async {
   // Start newly scheduled expansion/menu animations before advancing their
   // elapsed time. A single long first pump starts them at elapsed zero.
   await tester.pump();
-  await tester.pump(const Duration(milliseconds: 450));
+  await tester.pump(_debounce);
   for (var index = 0; index < 8; index++) {
     await tester.pump(const Duration(milliseconds: 1));
   }

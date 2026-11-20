@@ -164,10 +164,20 @@ class OfficeFontSet {
 
     OfficeFontFace? selected;
     if (family != null && family.length <= 256) {
-      selected = choose(faces.where((face) => face.matches(family)));
+      final requested = family.trim().toLowerCase();
+      // Exact installed families outrank compatibility aliases. This keeps a
+      // local Calibri/Arial/Times face authoritative over Carlito/Liberation.
+      selected = choose(
+        faces.where((face) => face.family.trim().toLowerCase() == requested),
+      );
+      selected ??= choose(faces.where((face) => face.matches(family)));
     }
     if (selected == null && defaultFamily != null) {
-      selected = choose(faces.where((face) => face.matches(defaultFamily!)));
+      final fallback = defaultFamily!.trim().toLowerCase();
+      selected = choose(
+        faces.where((face) => face.family.trim().toLowerCase() == fallback),
+      );
+      selected ??= choose(faces.where((face) => face.matches(defaultFamily!)));
     }
     if (selected == null) {
       for (final font in <SfntFont>[?primary, ...fallbacks]) {

@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quds_office_editor/quds_office_editor.dart';
 
+/// The typing pause before a background pass, plus a frame of margin.
+final _debounce = WordProofingTiming.idle + const Duration(milliseconds: 50);
+
 class _PaneProvider extends OfficeProofingProvider {
   _PaneProvider({
     this.providerId = 'pane-test',
@@ -140,7 +143,7 @@ Future<void> _mount(
 Future<void> _drain(WidgetTester tester) async {
   // An actual document canvas has an active caret ticker. Advance a bounded
   // number of frames rather than waiting for every animation to settle.
-  await tester.pump(const Duration(milliseconds: 450));
+  await tester.pump(_debounce);
   for (var frame = 0; frame < 8; frame++) {
     await tester.pump(const Duration(milliseconds: 1));
   }

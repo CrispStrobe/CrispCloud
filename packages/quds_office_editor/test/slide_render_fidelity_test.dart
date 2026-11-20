@@ -199,6 +199,72 @@ void _captureRichRuns(PmlShape shape) {
 }
 
 void main() {
+  testWidgets(
+    'radial fills shade the center and equal radii in shapes and backgrounds',
+    (tester) async {
+      for (final bool background in [false, true]) {
+        final shape = PmlShape(
+          id: 2,
+          name: 'Radial',
+          fillColor: 'FF0000',
+          gradient: PmlGradientFill(
+            radial: true,
+            stops: [
+              PmlGradientStop(position: 0, color: 'FF0000'),
+              PmlGradientStop(position: 0.5, color: '00FF00'),
+              PmlGradientStop(position: 1, color: '0000FF'),
+            ],
+          ),
+          transform: const PmlTransform(
+            x: 40 * 12700,
+            y: 40 * 12700,
+            cx: 100 * 12700,
+            cy: 100 * 12700,
+          ),
+        );
+        await _present(
+          tester,
+          PmlSlide(
+            id: 256,
+            shapes: background ? [] : [shape],
+            backgroundShapes: background ? [shape] : [],
+          ),
+        );
+        final RenderRepaintBoundary boundary = tester.renderObject(
+          find.byKey(_boundaryKey),
+        );
+        await tester.runAsync(() async {
+          final image = await boundary.toImage(pixelRatio: 1);
+          try {
+            final pixels = (await image.toByteData(
+              format: ui.ImageByteFormat.rawRgba,
+            ))!.buffer.asUint8List();
+            List<int> pixel(int x, int y) => pixels.sublist(
+              (y * image.width + x) * 4,
+              (y * image.width + x) * 4 + 3,
+            );
+            expect(pixel(90, 90)[0], greaterThan(245));
+            for (final offset in [
+              const Offset(55, 90),
+              const Offset(125, 90),
+              const Offset(90, 55),
+              const Offset(90, 125),
+            ]) {
+              final rgb = pixel(offset.dx.toInt(), offset.dy.toInt());
+              expect(rgb[1], greaterThan(240));
+              expect(rgb[0], lessThan(15));
+              expect(rgb[2], lessThan(15));
+            }
+            expect(pixel(44, 44)[2], greaterThan(200));
+            expect(pixel(30, 30), [255, 255, 255]);
+          } finally {
+            image.dispose();
+          }
+        });
+      }
+    },
+  );
+
   testWidgets('autofit scales all rich lines and their paragraph terminators', (
     tester,
   ) async {

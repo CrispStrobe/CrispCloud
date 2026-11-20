@@ -1762,10 +1762,10 @@ abstract final class OfficePdfExport {
     const int steps = 72;
     if (gradient.radial) {
       canvas.fillRect(x, y, w, h, gradient.stops.last.color);
-      final double radius = math.min(w, h) / 2;
+      final double radius = math.sqrt(w * w + h * h) / 2;
       for (var i = steps; i > 0; i--) {
         final double r = radius * i / steps;
-        canvas.setFillColor(_gradientColor(gradient, (i - .5) / steps));
+        canvas.setFillColor(_gradientColor(gradient, i / steps));
         canvas.ellipse(cx - r, cy - r, r * 2, r * 2);
         canvas.fill();
       }
@@ -2304,21 +2304,15 @@ abstract final class OfficePdfExport {
     final String color = (run?.color ?? '').isNotEmpty
         ? run!.color
         : fallbackColor;
-    final double spacingFactor = math.max(
-      0,
-      paragraph.lineSpacing - shape.lineSpacingReduction,
+    final double lineAdvance = _slideLineAdvance(
+      sink,
+      paragraph,
+      shape,
+      size,
+      bold: bold,
+      italic: italic,
+      family: family,
     );
-    final double lineAdvance =
-        paragraph.lineSpacingPt ??
-        (shape.textScale == 1 && shape.lineSpacingReduction == 0
-                ? size * 1.25
-                : sink.lineHeight(
-                    size,
-                    bold: bold,
-                    italic: italic,
-                    family: family,
-                  )) *
-            spacingFactor;
     final double cy = y + paragraph.spaceBeforePt;
     final double px = x + paragraph.marginLeftPt;
     final double maxWidth = math.max(8, width - paragraph.marginLeftPt);
@@ -2393,90 +2387,37 @@ abstract final class OfficePdfExport {
         size,
         fallbackColor,
         sizeScale,
-        spacingFactor: spacingFactor,
-        naturalLeading: shape.textScale != 1 || shape.lineSpacingReduction != 0,
-        fixedLeading: paragraph.lineSpacingPt,
+        shape,
         paint: paint,
       );
     } else {
-      final List<String>? plainLtrLines =
-          !paragraph.rightToLeft &&
-              !text.contains('\r') &&
-              !RegExp(r'\p{L}', unicode: true).hasMatch(text)
-          ? text.split('\n')
-          : null;
-      final bool plainLtrFits =
-          plainLtrLines?.every(
-            (line) =>
-                sink.plainWidth(
-                  line,
-                  size,
-                  bold: bold,
-                  italic: italic,
-                  family: family,
-                ) <=
-                maxWidth,
-          ) ??
-          false;
-      if (plainLtrLines != null && plainLtrFits) {
-        var baseline = cy + size;
-        for (final String line in plainLtrLines) {
-          if (paint) {
-            final double textWidth = sink.plainWidth(
-              line,
-              size,
-              bold: bold,
-              italic: italic,
-              family: family,
-            );
-            final double dx = switch (align) {
-              _TextAlign.center => (maxWidth - textWidth) / 2,
-              _TextAlign.right => maxWidth - textWidth,
-              _TextAlign.left || _TextAlign.auto => 0,
-            };
-            sink.drawPlainLtr(
-              line,
-              px + dx,
-              baseline,
-              size,
-              color,
-              bold: bold,
-              italic: italic,
-              family: family,
-            );
-          }
-          baseline += lineAdvance;
-        }
-        height = plainLtrLines.length * lineAdvance;
-      } else {
-        final int lines = sink.lineCount(
+      final int lines = sink.lineCount(
+        text,
+        size,
+        maxWidth: maxWidth,
+        bold: bold,
+        italic: italic,
+        family: family,
+        baseLevel: paragraph.rightToLeft ? 1 : 0,
+        forceLayout: true,
+      );
+      if (paint) {
+        sink.drawText(
           text,
+          px,
+          cy + size,
           size,
+          color,
           maxWidth: maxWidth,
+          align: align,
           bold: bold,
           italic: italic,
           family: family,
           baseLevel: paragraph.rightToLeft ? 1 : 0,
-          forceLayout: true,
+          lineAdvance: lineAdvance,
         );
-        if (paint) {
-          sink.drawText(
-            text,
-            px,
-            cy + size,
-            size,
-            color,
-            maxWidth: maxWidth,
-            align: align,
-            bold: bold,
-            italic: italic,
-            family: family,
-            baseLevel: paragraph.rightToLeft ? 1 : 0,
-            lineAdvance: lineAdvance,
-          );
-        }
-        height = lines * lineAdvance;
       }
+      height = lines * lineAdvance;
     }
     return paragraph.spaceBeforePt + height + paragraph.spaceAfterPt;
   }
@@ -2505,10 +2446,8 @@ abstract final class OfficePdfExport {
     _TextAlign align,
     double fallbackSize,
     String fallbackColor,
-    double sizeScale, {
-    double spacingFactor = 1,
-    bool naturalLeading = true,
-    double? fixedLeading,
+    double sizeScale,
+    PmlShape shape, {
     bool paint = true,
   }) {
     final List<_RichWord> words = <_RichWord>[];
@@ -2521,7 +2460,6 @@ abstract final class OfficePdfExport {
       final double size = run.fontSizePt > 0
           ? run.fontSizePt * sizeScale
           : fallbackSize;
-
       final String color = run.color.isEmpty ? fallbackColor : run.color;
       final bool bold =
           run.bold &&
@@ -2633,15 +2571,18 @@ abstract final class OfficePdfExport {
         }
         width += word.width(sink);
         for (final _RichSegment segment in word.segments) {
-          final double natural = !naturalLeading
-              ? segment.size * 1.25
-              : sink.lineHeight(
-                  segment.size,
-                  bold: segment.bold,
-                  italic: segment.italic,
-                  family: segment.family.isEmpty ? null : segment.family,
-                );
-          height = math.max(height, natural);
+          height = math.max(
+            height,
+            _slideLineAdvance(
+              sink,
+              paragraph,
+              shape,
+              segment.size,
+              bold: segment.bold,
+              italic: segment.italic,
+              family: segment.family.isEmpty ? null : segment.family,
+            ),
+          );
         }
       }
       var cx = x;
@@ -2686,10 +2627,7 @@ abstract final class OfficePdfExport {
           );
         }
       }
-      cy +=
-          fixedLeading ??
-          (height <= 0 ? sink.lineHeight(fallbackSize) : height) *
-              spacingFactor;
+      cy += height;
     }
     return cy - y;
   }
@@ -2862,14 +2800,6 @@ class _RichWord {
 
   double get size => segments.isEmpty ? 0 : segments.first.size;
 
-  double get height {
-    var result = 0.0;
-    for (final _RichSegment segment in segments) {
-      if (segment.size > result) result = segment.size;
-    }
-    return result;
-  }
-
   double width(_PageSink sink) {
     var result = 0.0;
     for (final _RichSegment segment in segments) {
@@ -3001,6 +2931,15 @@ class _FontPack {
   final SfntFont? layoutFont;
   final List<PdfEmbeddedFace> faces = <PdfEmbeddedFace>[];
   final Map<(SfntFont, double), FontMetrics> _metrics = {};
+
+  double kerningOf(int leftCp, int rightCp, double size) {
+    final SfntFont? font = fontFor(leftCp);
+    if (font == null || font.unitsPerEm <= 0) return 0;
+    final int left = font.glyphIdFor(leftCp);
+    final int right = font.glyphIdFor(rightCp);
+    if (left == 0 || right == 0) return 0;
+    return font.kerningForGlyphs(left, right) * size / font.unitsPerEm;
+  }
 
   SfntFont? fontFor(
     int cp, {
@@ -3518,63 +3457,6 @@ class _PageSink {
   }
 
   /// Number of laid-out lines for [text] at [size].
-  double plainWidth(
-    String text,
-    double size, {
-    bool bold = false,
-    bool italic = false,
-    String? family,
-  }) {
-    var width = 0.0;
-    for (final int cp in text.runes) {
-      if (cp < 32) continue;
-      width += pack.widthOf(
-        cp,
-        size,
-        family: family,
-        weight: bold ? 700 : 400,
-        italic: italic,
-      );
-    }
-    return width;
-  }
-
-  void drawPlainLtr(
-    String text,
-    double x,
-    double baseline,
-    double size,
-    String color, {
-    bool bold = false,
-    bool italic = false,
-    String? family,
-  }) {
-    var cx = x;
-    for (final int cp in text.runes) {
-      if (cp < 32) continue;
-      final double advance = pack.widthOf(
-        cp,
-        size,
-        family: family,
-        weight: bold ? 700 : 400,
-        italic: italic,
-      );
-      _emit(
-        oldGid: 0,
-        codePoint: cp,
-        x: cx,
-        y: baseline,
-        size: size,
-        color: color,
-        bold: bold,
-        italic: italic,
-        family: family,
-        advance: advance,
-      );
-      cx += advance;
-    }
-  }
-
   int lineCount(
     String text,
     double size, {
@@ -3585,7 +3467,9 @@ class _PageSink {
     int? baseLevel,
     bool forceLayout = false,
   }) {
-    if (pack.layoutFont == null && !_needsAuthoredLtr(text, baseLevel)) {
+    if (!forceLayout &&
+        pack.layoutFont == null &&
+        !_needsAuthoredLtr(text, baseLevel)) {
       return math.max(1, text.split('\n').length);
     }
     return math.max(

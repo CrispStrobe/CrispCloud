@@ -166,6 +166,8 @@ abstract final class OfficePdfVisuals {
       canvas.drawImage(name, x, y, w, h);
     }
     if (adj.transparency > 0.001) {
+      // Picture transparency affects its pixels, not the authored border.
+      // Restore the caller's state rather than assuming it was fully opaque.
       canvas.restore();
     }
     if (adj.borderWidth > 0 && adj.borderColor.isNotEmpty) {

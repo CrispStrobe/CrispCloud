@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import '../../test/support/vba_conformance.dart';
 
-/// Run the exact canonical Excel or Word JSON corpus on VM or JavaScript.
+/// Run the exact canonical Excel, Word or PowerPoint corpus on VM or JavaScript.
 ///
 /// Supply base64-encoded fixture bytes with -DVBA_CONFORMANCE_BASE64=... to
 /// `dart run` or `dart compile js`. This runner has no dart:io dependency and

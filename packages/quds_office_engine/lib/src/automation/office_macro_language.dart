@@ -65,7 +65,7 @@ class OfficeMacroSource {
 /// plans undergo the same validation, permissions, and limits at execution.
 /// Registering Dart code is a host extension, not a sandbox for untrusted code.
 /// Each dialect explicitly defines its supported language and object model.
-/// The bundled `vba-excel` and `vba-word` compilers lower bounded,
+/// The bundled `vba-excel`, `vba-word` and `vba-powerpoint` compilers lower bounded,
 /// document-independent subsets; this interface does not load or execute
 /// `vbaProject.bin`.
 abstract interface class OfficeMacroLanguage {
@@ -84,12 +84,13 @@ class OfficeJsonMacroLanguage implements OfficeMacroLanguage {
       OfficeMacro.parse(source.source);
 }
 
-/// Explicit dialect registry with native JSON and bounded Excel/Word VBA.
+/// Explicit dialect registry with native JSON and bounded Office VBA dialects.
 class OfficeMacroLanguages {
   OfficeMacroLanguages() {
     register(const OfficeJsonMacroLanguage());
     register(const OfficeVbaMacroLanguage());
     register(const OfficeVbaWordMacroLanguage());
+    register(const OfficeVbaPowerPointMacroLanguage());
   }
 
   final Map<String, OfficeMacroLanguage> _languages =
