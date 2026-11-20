@@ -156,6 +156,13 @@ def notarize(artifact, receipt):
         raise ValueError(f'Notarization not accepted: {data.get("status")}')
 
 
+def app_requirement(team):
+    """Keep the app's trusted identity stable across Apple signing families."""
+    if not re.fullmatch(r'[A-Z0-9]{10}', team):
+        raise ValueError('Expected an exact Apple team identifier')
+    return f'=designated => anchor apple generic and identifier "{BUNDLE}" and certificate leaf[subject.OU] = "{team}"'
+
+
 def sign(app, output):
     import macos_distribution
     fingerprint = required('DEVELOPER_ID_SHA1')
@@ -183,6 +190,8 @@ def sign(app, output):
                 args += ['--entitlements', str(entitlement)]
             else:
                 args += ['--preserve-metadata=entitlements']
+            if target == app:
+                args += ['--requirements', app_requirement(team)]
             run(*args, target)
         # Preserve scoped helper/extension entitlements while signing all native leaves.
         # Scan the actual code, including native Dart assets, rather than guessing dylib names.

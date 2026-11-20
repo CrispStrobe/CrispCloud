@@ -19,6 +19,25 @@ class DeveloperIDTests(unittest.TestCase):
                         'ExpirationDate': dt.datetime.now(dt.timezone.utc) + dt.timedelta(days=1),
                         'Entitlements': {'com.apple.application-identifier': self.team + '.' + signing.BUNDLE}}
 
+    def test_app_requirement_accepts_only_the_exact_team_and_bundle(self):
+        requirement = signing.app_requirement(self.team)
+        self.assertIn(f'identifier "{signing.BUNDLE}"', requirement)
+        self.assertIn(f'certificate leaf[subject.OU] = "{self.team}"', requirement)
+        self.assertIn('anchor apple generic', requirement)
+        for team in ('', self.team + ' or true', '" or true', 'another-team'):
+            with self.subTest(team=team), self.assertRaises(ValueError):
+                signing.app_requirement(team)
+
+    def test_local_and_appstore_shell_requirements_match_public_signing(self):
+        for relative in ('tool/sign_macos_local.sh', '.github/workflows/macos-release.yml'):
+            with self.subTest(source=relative):
+                source = (signing.ROOT / relative).read_text()
+                assignment = next(line.strip() for line in source.splitlines() if line.strip().startswith('APP_REQUIREMENT='))
+                assignment = assignment.replace('${{ env.BUNDLE_ID }}', signing.BUNDLE)
+                script = f'TEAM={self.team}\nBUNDLE_ID={signing.BUNDLE}\n' + assignment + '\nprintf "%s" "$APP_REQUIREMENT"'
+                actual = subprocess.check_output(['bash', '-c', script], text=True)
+                self.assertEqual(actual, signing.app_requirement(self.team))
+
     def test_existing_developer_id_profile_is_accepted(self):
         signing.validate_profile(self.payload, signing.BUNDLE, self.fingerprint, self.team)
 

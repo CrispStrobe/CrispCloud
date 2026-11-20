@@ -242,8 +242,9 @@ jobs:
           fi
           APP_ENT=$(mkents macos/Runner/Release.entitlements "${{ env.BUNDLE_ID }}")
           echo "--- app entitlements ---"; cat "$APP_ENT"
+          APP_REQUIREMENT="=designated => anchor apple generic and identifier \"${{ env.BUNDLE_ID }}\" and certificate leaf[subject.OU] = \"$TEAM\""
           codesign --force --timestamp --options runtime --sign "$IDENT" \
-            --entitlements "$APP_ENT" "$APP"
+            --entitlements "$APP_ENT" --requirements "$APP_REQUIREMENT" "$APP"
           # Fail loud if the application-identifier didn't make it in (90886).
           codesign -d --entitlements - --xml "$APP" 2>/dev/null \
             | grep -q "com.apple.application-identifier" \
