@@ -197,7 +197,7 @@ jobs:
           # empty (ITMS-90360/90056 on the iOS side). Inject globally.
           PATH="/usr/bin:$PATH" python3 tool/with_ci_apple_sqlite.py -- python3 tool/macos_distribution.py build --profile appstore -- --no-pub \
             --build-name="$VER" --build-number="$BUILD" \
-            --dart-define=APP_VERSION="$VER" \
+            --dart-define=APP_VERSION="$VER+$BUILD" \
             --dart-define=GIT_HASH="$(git rev-parse --short HEAD)"
           APP=$(ls -d build/macos/Build/Products/Release/*.app | head -1)
           echo "APP=$APP" >> "$GITHUB_ENV"

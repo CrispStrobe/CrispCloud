@@ -2173,6 +2173,7 @@
     "packages/quds_office_editor/tool/zotero/research_target_acceptance.dart": "f8c15339a76a0786fab3d383b8b33548050fbefab6e676833ddf31242cf44b6e",
     "packages/quds_office_engine/CHANGELOG.md": "71938ce1297ce49365d03286f83422359cd48ec2948cb0c0913590b30106459a",
     "packages/quds_office_engine/example/macros/word_line_spacing.bas": "ea112b9e3b3f9e8eb71540c0d98e0a9a1849d229d11ebc9d1ef8df71d0d5b3f9",
+    "packages/quds_office_engine/example/macros/word_paragraph_controls.bas": "522ed4e3c1c9d6868cfefe979e9dadfda7a0e03a5030b655a1617782909d7f18",
     "packages/quds_office_engine/lib/quds_office_automation.dart": "940628a11ea9f750de4351736654b4489730a1f2e0b71d1c1853487d9fc058c2",
     "packages/quds_office_engine/lib/quds_office_engine.dart": "264792cfb5ad955e2b847cb386a20bd9e8d876dfaa9fa9bc4121597a573df318",
     "packages/quds_office_engine/lib/src/automation/office_macro_language.dart": "62dc76fbc627fdb9e26e6cad9b4c6509cd1d737c71cd0b0ff3304542174084e3",
