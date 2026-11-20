@@ -4,6 +4,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quds_office_editor/quds_office_editor.dart';
 
+/// The typing pause before a background pass, plus a frame of margin.
+final _debounce = WordProofingTiming.idle + const Duration(milliseconds: 50);
+
 final class _LanguageProvider extends OfficeProofingProvider {
   _LanguageProvider(this.id, this.language);
 
@@ -353,7 +356,7 @@ void main() {
         ..configure(OfficeProofingService(providers: [german, english]))
         ..configureManual(OfficeProofingService(providers: [manual]))
         ..enabled = true;
-      await tester.pump(const Duration(milliseconds: 450));
+      await tester.pump(_debounce);
       await tester.pump();
       expect(controller.proofing.summary.issues.single.language, 'de-DE');
       final obsolete = controller.proofing.summary.issues.single;
@@ -367,7 +370,7 @@ void main() {
       );
       expect(controller.proofing.isCurrent(obsolete), isFalse);
       expect(controller.proofing.summary.issues, isEmpty);
-      await tester.pump(const Duration(milliseconds: 450));
+      await tester.pump(_debounce);
       expect(english.requests.single.language, 'en-US');
       expect(
         controller.setTextProofingEnabled(
@@ -378,12 +381,12 @@ void main() {
       );
       english.gate!.complete();
       await tester.pump();
-      await tester.pump(const Duration(milliseconds: 450));
+      await tester.pump(_debounce);
       expect(controller.proofing.summary.issues, isEmpty);
       expect(manual.requests, isEmpty);
       controller.undo();
       english.gate = null;
-      await tester.pump(const Duration(milliseconds: 450));
+      await tester.pump(_debounce);
       await tester.pump();
       expect(controller.proofing.summary.issues.single.language, 'en-US');
       expect(manual.requests, isEmpty);

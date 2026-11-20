@@ -162,17 +162,82 @@ final class WordProofingSummary {
   }
 }
 
+/// Scheduling constants of as-you-type proofing. Measured with the Studio
+/// typing benchmark (docs/performance/typing-proofing-20261120.md).
+abstract final class WordProofingTiming {
+  /// A background pass starts after this pause since the last edit.
+  static const Duration idle = Duration(milliseconds: 600);
+
+  /// Continuous typing is still checked at least this often: the first edit
+  /// after a pass starts a deadline that later keystrokes do not postpone.
+  static const Duration maxDelay = Duration(milliseconds: 2500);
+
+  /// Status chrome shows "Checking…" only for passes that run this long.
+  static const Duration checkingIndicatorDelay = Duration(milliseconds: 300);
+
+  /// Main-isolate time a pass may use before yielding to input and frames.
+  static const Duration sliceBudget = Duration(milliseconds: 4);
+}
+
+/// Coarse, coalesced proofing state for status chrome. It changes only on
+/// real transitions: a settled result stays visible while the next background
+/// pass waits for a typing pause, and a pass shows [checking] only once it
+/// has run for [WordProofingTiming.checkingIndicatorDelay].
+enum WordProofingPhase {
+  paused,
+  notChecked,
+  waiting,
+  checking,
+  partial,
+  complete,
+}
+
+final class WordProofingStatus {
+  const WordProofingStatus({
+    required this.phase,
+    this.issueCount = 0,
+    this.message = '',
+  });
+
+  final WordProofingPhase phase;
+  final int issueCount;
+
+  /// The [WordProofingSummary.statusMessage] of the state shown.
+  final String message;
+
+  @override
+  bool operator ==(Object other) =>
+      other is WordProofingStatus &&
+      other.phase == phase &&
+      other.issueCount == issueCount &&
+      other.message == message;
+
+  @override
+  int get hashCode => Object.hash(phase, issueCount, message);
+
+  @override
+  String toString() => 'WordProofingStatus($phase, $issueCount)';
+}
+
 /// Ephemeral document proofing. The host owns vocabulary persistence; the
 /// session owns and disposes its service. Unchanged paragraphs reuse checked
 /// results while every published finding is rebound to the current revision.
+///
+/// Typing only marks the published results stale: the document is captured
+/// and republished lazily, when a reader asks for the [summary] or a check
+/// starts, never once per keystroke. Painting uses [findingsByParagraph],
+/// which drops findings of edited paragraphs without a capture.
 final class WordProofingSession extends ChangeNotifier {
   WordProofingSession({
     required this._document,
     required this._revision,
     this._priorityParagraph,
+    this._caretPosition,
     OfficeProofingService? service,
     OfficeProofingVocabulary? vocabulary,
-    this.debounce = const Duration(milliseconds: 400),
+    this.debounce = WordProofingTiming.idle,
+    this.maxDelay = WordProofingTiming.maxDelay,
+    this.checkingIndicatorDelay = WordProofingTiming.checkingIndicatorDelay,
   }) : vocabulary = vocabulary ?? OfficeProofingVocabulary() {
     _service =
         service ??
@@ -189,6 +254,10 @@ final class WordProofingSession extends ChangeNotifier {
   final WmlDocument Function() _document;
   final int Function() _revision;
   final WmlParagraph? Function()? _priorityParagraph;
+
+  /// The collapsed caret, used to defer the word being typed during passes
+  /// that run while typing continues (see [maxDelay]).
+  final ({WmlParagraph paragraph, int offset})? Function()? _caretPosition;
   final OfficeProofingVocabulary vocabulary;
 
   /// Live draft checks are bounded independently of the document's paragraphs.
@@ -196,7 +265,15 @@ final class WordProofingSession extends ChangeNotifier {
 
   /// Hosts may persist this owner-scoped snapshot in their own storage.
   void Function(Map<String, Object?> snapshot)? onVocabularyChanged;
+
+  /// Pause since the last edit before a background pass starts.
   final Duration debounce;
+
+  /// Longest wait for a background pass while edits keep arriving.
+  final Duration maxDelay;
+
+  /// Delay before [status] reports a running pass as checking.
+  final Duration checkingIndicatorDelay;
   late OfficeProofingService _service;
   OfficeProofingService? _manualService;
   ParagraphLanguageDetector? _languageDetector;
@@ -226,13 +303,71 @@ final class WordProofingSession extends ChangeNotifier {
   bool _draftCheckRunning = false;
   _DraftProofingRequest? _pendingDraftCheck;
   Timer? _timer;
+  Timer? _maxTimer;
+  Timer? _checkingIndicatorTimer;
   WmlDocument? _observedDocument;
   int? _observedRevision;
   String? _observedConfiguration;
-  WordProofingSummary _summary = WordProofingSummary();
+  WordProofingSummary _published = WordProofingSummary();
+
+  /// A republish requested by an edit, performed on first read.
+  ({bool scheduled})? _pendingPublish;
+  Map<WmlParagraph, List<OfficeProofingFinding>>? _provisionalFindings;
+  final Map<WmlParagraph, String> _findingTexts = HashMap.identity();
+
+  /// The caret word hidden by the latest publication, if any.
+  ({WmlParagraph paragraph, int offset})? _deferredCaret;
+  bool _deferCaretWord = false;
+  final ValueNotifier<WordProofingStatus> _status = ValueNotifier(
+    const WordProofingStatus(phase: WordProofingPhase.paused),
+  );
+
+  /// Instrumentation: background/explicit passes started and paragraphs
+  /// sent to providers since the session was created.
+  int passCount = 0;
+  int checkedParagraphCount = 0;
+
+  WordProofingSummary get _summary {
+    final pending = _pendingPublish;
+    if (pending != null) {
+      _pendingPublish = null;
+      _provisionalFindings = null;
+      final document = _document();
+      // Readers can be widgets in build: never notify listeners from here.
+      _flushing = true;
+      try {
+        _publishCached(
+          _capture(document),
+          documentId: _documentIds[document] ??= 'document-${++_nextId}',
+          revision: _revision(),
+          useManual: false,
+          scheduled: pending.scheduled,
+        );
+      } finally {
+        _flushing = false;
+      }
+    }
+    return _published;
+  }
+
+  bool _flushing = false;
+
+  set _summary(WordProofingSummary value) {
+    _pendingPublish = null;
+    _provisionalFindings = null;
+    _published = value;
+    if (_flushing) {
+      scheduleMicrotask(_updateStatus);
+    } else {
+      _updateStatus();
+    }
+  }
 
   WordProofingSummary get summary => _summary;
-  bool get checking => _summary.checking;
+  bool get checking => _pendingPublish == null && _published.checking;
+
+  /// Coalesced state for status chrome; see [WordProofingStatus].
+  ValueListenable<WordProofingStatus> get status => _status;
 
   /// Changes when a check starts or its input is invalidated, never for progress.
   /// Hosts can use this token to share requests for the same active check.
@@ -254,8 +389,20 @@ final class WordProofingSession extends ChangeNotifier {
       normalizeProofingLanguage(_document().proofingLanguage ?? 'de-DE');
   Set<String> get ignoredRuleIds => Set.unmodifiable(_ignoredRules);
   bool get hasIgnoredOccurrences => _ignoredOnce.isNotEmpty;
-  Map<WmlParagraph, List<OfficeProofingFinding>> get findingsByParagraph =>
-      UnmodifiableMapView(_findings);
+
+  /// Findings to paint. While an edit's republish is pending, findings of
+  /// paragraphs whose text changed are dropped without capturing the
+  /// document; unchanged paragraphs keep their underlines.
+  Map<WmlParagraph, List<OfficeProofingFinding>> get findingsByParagraph {
+    if (_pendingPublish == null) return UnmodifiableMapView(_findings);
+    return _provisionalFindings ??= UnmodifiableMapView(
+      HashMap<WmlParagraph, List<OfficeProofingFinding>>.identity()..addAll({
+        for (final entry in _findings.entries)
+          if (_findingTexts[entry.key] == entry.key.text)
+            entry.key: entry.value,
+      }),
+    );
+  }
 
   set enabled(bool value) {
     if (_disposed) return;
@@ -548,12 +695,42 @@ final class WordProofingSession extends ChangeNotifier {
     if (identical(document, _observedDocument) &&
         revision == _observedRevision &&
         configuration == _observedConfiguration) {
+      _releaseDeferredCaretWord();
       return;
     }
     _observedDocument = document;
     _observedRevision = revision;
     _observedConfiguration = configuration;
     _invalidate();
+  }
+
+  /// A caret move away from a deferred word publishes its finding without
+  /// a provider call. The host notifies its own listeners afterwards.
+  void _releaseDeferredCaretWord() {
+    final deferred = _deferredCaret;
+    if (deferred == null) return;
+    final caret = _caretPosition?.call();
+    if (caret != null &&
+        identical(caret.paragraph, deferred.paragraph) &&
+        caret.offset == deferred.offset) {
+      return;
+    }
+    _deferCaretWord = false;
+    _deferredCaret = null;
+    if (_pendingPublish != null) return;
+    final summary = _published;
+    if (summary.checking) return;
+    final document = _document();
+    final documentId = _documentIds[document];
+    if (documentId == null) return;
+    _publishCached(
+      _capture(document),
+      documentId: documentId,
+      revision: _revision(),
+      useManual: false,
+      scheduled: summary.scheduled,
+      finished: summary.hasResults,
+    );
   }
 
   /// Hosts call this after direct model edits or changes to host-owned words.
@@ -574,29 +751,137 @@ final class WordProofingSession extends ChangeNotifier {
     _generation++;
     _timer?.cancel();
     _timer = null;
+    _checkingIndicatorTimer?.cancel();
+    _checkingIndicatorTimer = null;
+    _checkingVisible = false;
     if (_cache.isEmpty) {
       // No verified findings exist yet. Leave the first full capture behind
       // the typing debounce instead of scanning a document on every keystroke.
       _summary = WordProofingSummary(scheduled: _enabled);
       _findings = HashMap.identity();
+      _findingTexts.clear();
     } else {
-      final document = _document();
-      final captured = _capture(document);
-      _publishCached(
-        captured,
-        documentId: _documentIds[document] ??= 'document-${++_nextId}',
-        revision: _revision(),
-        useManual: false,
-        scheduled: _enabled,
-      );
+      // Rebinding cached results to the new revision needs a full capture.
+      // Defer it to the first reader or the next pass, so a keystroke costs
+      // no document-wide work; consecutive edits coalesce into one capture.
+      _pendingPublish = (scheduled: _enabled);
+      _provisionalFindings = null;
+      _updateStatus();
     }
     if (_enabled) {
       _timer = Timer(
         debounce,
-        () => unawaited(checkNow(includeManualProviders: false)),
+        () => _startBackgroundPass(deferCaretWord: false),
       );
+      // The first edit after a pass sets a deadline later edits keep.
+      _maxTimer ??= Timer(
+        maxDelay,
+        () => _startBackgroundPass(deferCaretWord: true),
+      );
+    } else {
+      _maxTimer?.cancel();
+      _maxTimer = null;
     }
   }
+
+  /// [deferCaretWord] is true when the deadline fired while typing goes on:
+  /// a spelling finding ending at the caret is then an unfinished word and
+  /// waits for the idle pass, which still follows the next typing pause.
+  void _startBackgroundPass({required bool deferCaretWord}) {
+    _maxTimer?.cancel();
+    _maxTimer = null;
+    _timer?.cancel();
+    _timer = null;
+    unawaited(
+      checkNow(
+        includeManualProviders: false,
+        deferCaretWord: deferCaretWord,
+      ).whenComplete(() {
+        // A word deferred at the deadline is published by an idle pass that
+        // reuses the cache, unless a newer edit already scheduled one.
+        if (deferCaretWord &&
+            !_disposed &&
+            _enabled &&
+            _timer == null &&
+            _deferredCaret != null) {
+          _timer = Timer(
+            debounce,
+            () => _startBackgroundPass(deferCaretWord: false),
+          );
+        }
+      }),
+    );
+  }
+
+  /// Derives the coalesced [status] from the published summary.
+  void _updateStatus() {
+    if (_disposed) return;
+    final previous = _status.value;
+    final pending = _pendingPublish;
+    final summary = _published;
+    final checking = pending == null && summary.checking;
+    final scheduled = pending?.scheduled ?? summary.scheduled;
+    final settled =
+        previous.phase == WordProofingPhase.partial ||
+        previous.phase == WordProofingPhase.complete;
+    WordProofingStatus next;
+    if (checking || scheduled) {
+      if (checking && _checkingVisible) {
+        next = WordProofingStatus(
+          phase: WordProofingPhase.checking,
+          issueCount: previous.issueCount,
+          message: 'Checking document…',
+        );
+      } else if (settled && summary.hasResults) {
+        // Settled results stay on screen while typing and short passes run.
+        next = previous;
+      } else if (scheduled) {
+        next = const WordProofingStatus(
+          phase: WordProofingPhase.waiting,
+          message: 'Waiting for a pause in typing…',
+        );
+      } else {
+        next = previous;
+      }
+      if (checking && !_checkingVisible && _checkingIndicatorTimer == null) {
+        final generation = _generation;
+        _checkingIndicatorTimer = Timer(checkingIndicatorDelay, () {
+          _checkingIndicatorTimer = null;
+          if (_disposed || generation != _generation || !this.checking) {
+            return;
+          }
+          _checkingVisible = true;
+          _updateStatus();
+        });
+      }
+    } else {
+      _checkingIndicatorTimer?.cancel();
+      _checkingIndicatorTimer = null;
+      _checkingVisible = false;
+      final count = summary.issues.length;
+      final message = summary.statusMessage;
+      next = !_enabled
+          ? WordProofingStatus(
+              phase: WordProofingPhase.paused,
+              message: message,
+            )
+          : !summary.hasResults
+          ? WordProofingStatus(
+              phase: WordProofingPhase.notChecked,
+              message: message,
+            )
+          : WordProofingStatus(
+              phase: summary.complete
+                  ? WordProofingPhase.complete
+                  : WordProofingPhase.partial,
+              issueCount: count,
+              message: message,
+            );
+    }
+    _status.value = next;
+  }
+
+  bool _checkingVisible = false;
 
   void ignoreWord(WordProofingIssue issue) {
     if (!isCurrent(issue) ||
@@ -737,7 +1022,8 @@ final class WordProofingSession extends ChangeNotifier {
         previous.checking ||
         previous.scheduled ||
         previous.manualProvidersSkipped ||
-        _timer != null) {
+        _timer != null ||
+        _maxTimer != null) {
       recordHistory();
       return;
     }
@@ -768,13 +1054,15 @@ final class WordProofingSession extends ChangeNotifier {
         revision + 1 != _revision() ||
         generation + 1 != _generation ||
         configuration != _configurationKey ||
-        captured.key != _capture(document).key) {
+        !captured.sameAs(_capture(document))) {
       return;
     }
     // The settled capture had no timer. The single invalidation above is the
     // only owner of this redundant debounce; no new provider work is needed.
     _timer?.cancel();
     _timer = null;
+    _maxTimer?.cancel();
+    _maxTimer = null;
     _publishCached(
       captured,
       documentId: documentId,
@@ -1075,12 +1363,25 @@ final class WordProofingSession extends ChangeNotifier {
   /// Explicit checks include manually configured providers. Background callers
   /// omit them and report that coverage separately. Verified ordinary findings
   /// remain available while other paragraphs or manual providers are checked.
+  ///
+  /// Only paragraphs without a reusable cached result reach the providers,
+  /// the edited paragraph first. The pass yields to input and frames after
+  /// each [WordProofingTiming.sliceBudget] of main-isolate work and publishes
+  /// partial results about twenty times per pass over the changed paragraphs.
+  /// [deferCaretWord] is used by the session's typing deadline only.
   Future<WordProofingSummary> checkNow({
     bool includeManualProviders = true,
+    bool deferCaretWord = false,
   }) async {
     if (_disposed) return _summary;
     _timer?.cancel();
     _timer = null;
+    _maxTimer?.cancel();
+    _maxTimer = null;
+    _pendingPublish = null;
+    _provisionalFindings = null;
+    _deferCaretWord = deferCaretWord;
+    passCount++;
     final generation = ++_generation;
     final document = _document();
     final revision = _revision();
@@ -1130,28 +1431,49 @@ final class WordProofingSession extends ChangeNotifier {
         revision == _revision() &&
         configuration == _configurationKey;
 
-    // About twenty progress publications, plus early active-paragraph feedback,
-    // avoid rebuilding every paragraph for each short result in long documents.
-    final progressStride = (captured.paragraphs.length + 19) ~/ 20;
     // Visit the text being edited first without changing navigation/report
     // order. A caret move affects the next pass, never cancels the current one.
+    // Paragraphs with reusable results need no provider work: publication
+    // retargets them, so the pass only visits the paragraphs that changed.
     final priorityParagraph = _priorityParagraph?.call();
-    final priority = captured.paragraphs
-        .where((snapshot) => identical(snapshot.paragraph, priorityParagraph))
-        .firstOrNull;
-    final checkOrder = [
-      ?priority,
-      for (final snapshot in captured.paragraphs)
-        if (!identical(snapshot, priority)) snapshot,
-    ];
-    var processed = 0;
-    for (final snapshot in checkOrder) {
-      // Yield even when a cached/provider Future completes synchronously.
-      await Future<void>.delayed(Duration.zero);
-      if (!current()) return _summary;
+    _ParagraphSnapshot? priority;
+    final dirty = <_ParagraphSnapshot>[];
+    for (final snapshot in captured.paragraphs) {
       final cached = _cachedReports(snapshot, useManual: useManual);
-      final reusable =
-          cached != null && cached.every((report) => report.complete);
+      if (cached != null && cached.every((report) => report.complete)) {
+        // A background pass never carries manual results forward: the next
+        // explicit check runs the manual providers again.
+        if (!useManual && _cache[snapshot.paragraph]!.includesManual) {
+          _cache[snapshot.paragraph] = _CachedParagraph(
+            snapshot.key,
+            cached,
+            false,
+          );
+        }
+        continue;
+      }
+      if (identical(snapshot.paragraph, priorityParagraph)) {
+        priority = snapshot;
+      } else {
+        dirty.add(snapshot);
+      }
+    }
+    final checkOrder = [?priority, ...dirty];
+    // About twenty progress publications per pass, plus early feedback for
+    // the edited paragraph; each one republishes the whole document.
+    final progressStride = (checkOrder.length + 19) ~/ 20;
+    final slice = Stopwatch()..start();
+    for (var position = 0; position < checkOrder.length; position++) {
+      final snapshot = checkOrder[position];
+      // Yield even when a provider Future completes synchronously, but only
+      // once the slice budget is spent, so short work does not cost frames.
+      if (position == 0 || slice.elapsed >= WordProofingTiming.sliceBudget) {
+        await Future<void>.delayed(Duration.zero);
+        slice
+          ..reset()
+          ..start();
+      }
+      if (!current()) return _summary;
       final paragraphReports = <OfficeProofingReport>[];
       for (var index = 0; index < snapshot.segments.length; index++) {
         final request = _request(
@@ -1160,33 +1482,30 @@ final class WordProofingSession extends ChangeNotifier {
           documentId: documentId,
           revision: revision,
         );
-        final OfficeProofingReport report;
-        if (reusable) {
-          report = _retarget(cached[index], request);
-        } else {
-          final ordinary = await _service.check(request);
-          if (!current()) return _summary;
-          report = useManual
-              ? mergeOfficeProofingReports(
-                  primary: ordinary,
-                  secondary: await manual!.check(request),
-                )
-              : ordinary;
-        }
+        final ordinary = await _service.check(request);
+        if (!current()) return _summary;
+        final report = useManual
+            ? mergeOfficeProofingReports(
+                primary: ordinary,
+                secondary: await manual!.check(request),
+              )
+            : ordinary;
         if (!current()) return _summary;
         paragraphReports.add(report);
       }
+      checkedParagraphCount++;
       _cache[snapshot.paragraph] = _CachedParagraph(
         snapshot.key,
         paragraphReports,
         useManual,
       );
-      processed++;
-      if (processed < captured.paragraphs.length &&
-          (identical(snapshot, priority) || processed % progressStride == 0)) {
+      final remaining = position + 1 < checkOrder.length;
+      if (remaining &&
+          (identical(snapshot, priority) ||
+              (position + 1) % progressStride == 0)) {
         // Direct host edits can bypass the revision counter. Validate the
         // complete story/field/guard snapshot before exposing partial results.
-        if (captured.key != _capture(document).key) {
+        if (!captured.sameAs(_capture(document))) {
           refresh();
           return _summary;
         }
@@ -1201,7 +1520,7 @@ final class WordProofingSession extends ChangeNotifier {
       }
     }
     if (!current()) return _summary;
-    if (captured.key != _capture(document).key) {
+    if (!captured.sameAs(_capture(document))) {
       refresh();
       return _summary;
     }
@@ -1279,13 +1598,21 @@ final class WordProofingSession extends ChangeNotifier {
     final attached = HashSet<WmlParagraph>.identity()
       ..addAll(captured.paragraphs.map((snapshot) => snapshot.paragraph));
     _cache.removeWhere((paragraph, _) => !attached.contains(paragraph));
+    _pendingPublish = null;
+    _provisionalFindings = null;
     final previous = HashMap<WmlParagraph, List<WordProofingIssue>>.identity();
-    for (final issue in _summary.issues) {
+    for (final issue in _published.issues) {
       previous.putIfAbsent(issue.paragraph, () => []).add(issue);
     }
     final reports = <OfficeProofingReport>[];
     final issues = <WordProofingIssue>[];
     var checked = 0;
+    // While typing continues, a spelling finding that ends at the collapsed
+    // caret is most likely an unfinished word: keep it in the cache but do
+    // not flag it until the idle pass or a caret move.
+    final caret = _deferCaretWord && !useManual ? _caretPosition?.call() : null;
+    _deferredCaret = null;
+    _findingTexts.clear();
     for (final snapshot in captured.paragraphs) {
       final cached = _cachedReports(
         snapshot,
@@ -1311,6 +1638,14 @@ final class WordProofingSession extends ChangeNotifier {
         );
         reports.add(report);
         for (final finding in report.findings) {
+          if (caret != null &&
+              identical(caret.paragraph, snapshot.paragraph) &&
+              finding.category == OfficeProofingCategory.spelling &&
+              finding.start < caret.offset &&
+              finding.end == caret.offset) {
+            _deferredCaret = caret;
+            continue;
+          }
           if (_ignoredOnce.contains(_issueKey(finding, snapshot))) continue;
           if (finding.category == OfficeProofingCategory.spelling &&
               vocabulary.contains(
@@ -1344,6 +1679,9 @@ final class WordProofingSession extends ChangeNotifier {
     _findings = HashMap<WmlParagraph, List<OfficeProofingFinding>>.identity();
     for (final entry in findings.entries) {
       _findings[entry.key] = List.unmodifiable(entry.value);
+    }
+    for (final issue in issues) {
+      _findingTexts[issue.paragraph] = issue.sourceText;
     }
     _summary = WordProofingSummary(
       paragraphCount: captured.paragraphs.length,
@@ -1838,6 +2176,9 @@ final class WordProofingSession extends ChangeNotifier {
     _disposed = true;
     _generation++;
     _timer?.cancel();
+    _maxTimer?.cancel();
+    _checkingIndicatorTimer?.cancel();
+    _pendingPublish = null;
     _pendingDraftCheck?.completer.complete();
     _pendingDraftCheck = null;
     _cache.clear();
@@ -1850,6 +2191,7 @@ final class WordProofingSession extends ChangeNotifier {
     final manual = _manualService;
     if (manual != null) unawaited(manual.dispose());
     super.dispose();
+    _status.dispose();
   }
 }
 
@@ -1904,6 +2246,23 @@ final class _DocumentSnapshot {
     skipped,
     for (final p in paragraphs) [identityHashCode(p.paragraph), p.key],
   ]);
+
+  /// [key] equality without encoding the whole document.
+  bool sameAs(_DocumentSnapshot other) {
+    if (skipped != other.skipped ||
+        paragraphs.length != other.paragraphs.length) {
+      return false;
+    }
+    for (var index = 0; index < paragraphs.length; index++) {
+      final left = paragraphs[index];
+      final right = other.paragraphs[index];
+      if (!identical(left.paragraph, right.paragraph) ||
+          left.key != right.key) {
+        return false;
+      }
+    }
+    return true;
+  }
 }
 
 final class _CachedParagraph {

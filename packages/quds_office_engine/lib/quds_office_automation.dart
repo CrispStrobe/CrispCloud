@@ -20,4 +20,5 @@ export 'src/automation/office_vba_language.dart'
     show
         OfficeVbaCompileException,
         OfficeVbaMacroLanguage,
-        OfficeVbaWordMacroLanguage;
+        OfficeVbaWordMacroLanguage,
+        OfficeVbaPowerPointMacroLanguage;

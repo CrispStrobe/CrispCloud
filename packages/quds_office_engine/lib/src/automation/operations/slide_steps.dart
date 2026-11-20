@@ -2,17 +2,33 @@ import 'package:quds_office_engine/quds_office_engine.dart';
 import 'step_input.dart';
 
 const slideOperations = <String, List<String>>{
-  'shapeText': ['slide', 'shape', 'text'],
+  'shapeText': ['slide', 'shape', 'shapeName', 'topLevel', 'text'],
   'shapeFormat': [
     'slide',
     'shape',
+    'shapeName',
+    'topLevel',
     'size',
+    'font',
+    'bold',
+    'italic',
+    'underline',
     'color',
     'fill',
     'alignment',
     'rtl',
   ],
-  'shapeGeometry': ['slide', 'shape', 'x', 'y', 'width', 'height', 'rotation'],
+  'shapeGeometry': [
+    'slide',
+    'shape',
+    'shapeName',
+    'topLevel',
+    'x',
+    'y',
+    'width',
+    'height',
+    'rotation',
+  ],
   'slideNotes': ['slide', 'text'],
   'slideHidden': ['slide', 'hidden'],
   'slideOrder': ['slide', 'to'],
@@ -23,7 +39,7 @@ const slideOperations = <String, List<String>>{
     'durationMs',
     'advanceOnClick',
   ],
-  'slideImageReplace': ['slide', 'shape', 'file'],
+  'slideImageReplace': ['slide', 'shape', 'shapeName', 'topLevel', 'file'],
 };
 
 void applySlideStep(
@@ -37,7 +53,27 @@ void applySlideStep(
   if (fields == null) throw ArgumentError('Unknown PPTX operation: $op');
   s.fields(fields);
   final slide = s.item('slide', deck.slides, fallback: 0);
-  PmlShape shape() => s.item('shape', slide.shapes);
+  PmlShape shape() {
+    if (s.has('shape') == s.has('shapeName')) {
+      throw ArgumentError('Provide exactly one of shape or shapeName');
+    }
+    if (s.boolean('topLevel', fallback: false)) {
+      _requireTopLevelShapes(deck, slide);
+    }
+    if (s.has('shape')) return s.item('shape', slide.shapes);
+    final name = s.string('shapeName');
+    if (name.isEmpty) throw ArgumentError('shapeName must not be empty');
+    final matches = slide.shapes.where((shape) => shape.name == name).toList();
+    if (matches.length != 1) {
+      throw ArgumentError(
+        matches.isEmpty
+            ? 'No shape named $name'
+            : 'Ambiguous shape name: $name',
+      );
+    }
+    return matches.single;
+  }
+
   switch (op) {
     case 'shapeText':
       final target = shape();
@@ -45,18 +81,43 @@ void applySlideStep(
         throw ArgumentError('shapeText requires a text shape');
       }
       target.text = s.string('text');
+      target.textReplacementRequested = true;
     case 'shapeFormat':
       final target = shape();
       if (target.visual != null || target.table != null) {
         throw ArgumentError('shapeFormat requires a text shape');
       }
-      if (s.has('size')) target.fontSizePt = s.number('size', min: 1);
-      if (s.has('color')) target.textColor = s.color('color');
+      if (s.has('size')) {
+        target.fontSizePt = s.number('size', min: 1);
+        target.textSizeOverride = true;
+      }
+      if (s.has('color')) {
+        target.textColor = s.color('color');
+        target.textColorOverride = true;
+      }
+      if (s.has('bold')) target.textBold = s.boolean('bold');
+      if (s.has('italic')) target.textItalic = s.boolean('italic');
+      if (s.has('underline')) target.textUnderline = s.boolean('underline');
+      if (s.has('font')) {
+        final font = s.string('font');
+        if (font.trim().isEmpty ||
+            font.length > 255 ||
+            RegExp(r'[\x00-\x1f\x7f]').hasMatch(font)) {
+          throw ArgumentError(
+            'font must be a nonempty typeface name of at most 255 characters',
+          );
+        }
+        target.textFontFamily = font;
+      }
       if (s.has('fill')) target.fillColor = s.color('fill');
       if (s.has('alignment')) {
         target.textAlign = PmlTextAlign.values.byName(s.string('alignment'));
+        target.textAlignOverride = true;
       }
-      if (s.has('rtl')) target.rightToLeft = s.boolean('rtl');
+      if (s.has('rtl')) {
+        target.rightToLeft = s.boolean('rtl');
+        target.textDirectionOverride = true;
+      }
     case 'shapeGeometry':
       final target = shape();
       final before = target.transform;
@@ -109,6 +170,80 @@ void applySlideStep(
         throw ArgumentError('Shape is not a picture');
       }
       visual.imageBytes = readPicture(s, resolveAsset);
+  }
+}
+
+// The native model exposes flattened group children. VBA Shapes is instead
+// the top-level Office collection, so admit it only when source provenance
+// proves the same complete object order. Keep the existing native selector
+// contract for callers that do not request this stricter scope.
+void _requireTopLevelShapes(PmlPresentation deck, PmlSlide slide) {
+  if (slide.shapes.any((shape) => shape.groupId != null)) {
+    throw UnsupportedError(
+      'Top-level Shapes selectors do not support grouped slides',
+    );
+  }
+  final uri = slide.sourcePartUri;
+  if (uri == null) return;
+  final part = deck.package?.getPart(uri);
+  if (part == null) {
+    throw UnsupportedError(
+      'Top-level Shapes collection has no source provenance',
+    );
+  }
+  final tree = XmlDocument.parse(part.readText()).root
+      ?.firstChild('cSld', namespaceUri: OfficeNamespaces.p)
+      ?.firstChild('spTree', namespaceUri: OfficeNamespaces.p);
+  if (tree == null) {
+    throw UnsupportedError(
+      'Top-level Shapes collection has no native shape tree',
+    );
+  }
+  final objects = <XmlElement>[];
+  for (final child in tree.childElements) {
+    if (child.namespaceUri == OfficeNamespaces.p &&
+        const {'nvGrpSpPr', 'grpSpPr', 'extLst'}.contains(child.localName)) {
+      continue;
+    }
+    if (child.namespaceUri != OfficeNamespaces.p ||
+        !const {
+          'sp',
+          'pic',
+          'graphicFrame',
+          'cxnSp',
+        }.contains(child.localName)) {
+      throw UnsupportedError(
+        'Top-level Shapes collection contains an unsupported object',
+      );
+    }
+    objects.add(child);
+  }
+  if (objects.length != slide.shapes.length) {
+    throw UnsupportedError('Native and modeled Shapes collections differ');
+  }
+  final ids = <int>{};
+  for (var index = 0; index < objects.length; index++) {
+    final object = objects[index];
+    final properties = object
+        .firstChild(switch (object.localName) {
+          'sp' => 'nvSpPr',
+          'pic' => 'nvPicPr',
+          'graphicFrame' => 'nvGraphicFramePr',
+          _ => 'nvCxnSpPr',
+        }, namespaceUri: OfficeNamespaces.p)
+        ?.firstChild('cNvPr', namespaceUri: OfficeNamespaces.p);
+    final id = int.tryParse(properties?.getAttribute('id') ?? '');
+    final shape = slide.shapes[index];
+    if (id == null ||
+        !ids.add(id) ||
+        id != shape.id ||
+        (object.localName == 'graphicFrame' &&
+            shape.table == null &&
+            shape.visual == null)) {
+      throw UnsupportedError(
+        'Native and modeled Shapes identities or order differ',
+      );
+    }
   }
 }
 

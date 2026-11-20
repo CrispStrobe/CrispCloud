@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quds_office_editor/quds_office_editor.dart';
 
+/// The typing pause before a background pass, plus a frame of margin.
+final _debounce = WordProofingTiming.idle + const Duration(milliseconds: 50);
+
 final class _Provider extends OfficeProofingProvider {
   _Provider(this.id);
 
@@ -139,7 +142,7 @@ Finder _key(String value) => find.byKey(ValueKey<String>(value));
 
 Future<void> _flush(WidgetTester tester) async {
   await tester.pump();
-  await tester.pump(const Duration(milliseconds: 450));
+  await tester.pump(_debounce);
   for (var index = 0; index < 12; index++) {
     await tester.pump(const Duration(milliseconds: 1));
   }

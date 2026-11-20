@@ -1,0 +1,595 @@
+{
+  "schemaVersion": 1,
+  "suite": "vba-powerpoint-shapes",
+  "dialect": "vba-powerpoint",
+  "cases": [
+    {
+      "id": "indexed-shape-text",
+      "feature": "One-based slide and shape selection",
+      "source": "Sub Main()\n  ActivePresentation.Slides(2).Shapes(3).TextFrame.TextRange.Text = \"Report\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "pptx.shapeText",
+            "arguments": {
+              "topLevel": true,
+              "slide": 1,
+              "shape": 2,
+              "text": "Report"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/powerpoint.shapes",
+          "https://learn.microsoft.com/en-us/office/vba/api/powerpoint.textrange.text",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_POWERPOINT_MACROS.md"
+        ],
+        "note": "The explicit second slide and third top-level shape lower to native indices 1 and 2. The topLevel guard is a dialect runtime admission requirement. No Office host was executed."
+      }
+    },
+    {
+      "id": "application-item-exact-shape-name",
+      "feature": "Application, Item and exact name selection",
+      "source": "Sub Main()\n  Application.ActivePresentation.Slides.Item(1).Shapes.Item(\" Title 😀 \").TextFrame.TextRange.Text = \"Named target\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "pptx.shapeText",
+            "arguments": {
+              "topLevel": true,
+              "slide": 0,
+              "shapeName": " Title 😀 ",
+              "text": "Named target"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/powerpoint.shapes",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_POWERPOINT_MACROS.md"
+        ],
+        "note": "Item forms preserve the exact shape-name String, including spaces and Unicode. Case-sensitive uniqueness and missing-name refusal are explicit runtime restrictions. No Office host was executed."
+      }
+    },
+    {
+      "id": "byval-shape-rebinding",
+      "feature": "Object aliases and ByVal identity",
+      "source": "Option Explicit\nSub Main()\n  Dim target As Shape\n  Set target = ActivePresentation.Slides(2).Shapes(3)\n  Call Stamp(target)\n  target.TextFrame.TextRange.Text = \"Caller\"\nEnd Sub\nSub Stamp(ByVal local As Shape)\n  Set local = ActivePresentation.Slides(1).Shapes(\"Other\")\n  local.TextFrame.TextRange.Text = \"Helper\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "pptx.shapeText",
+            "arguments": {
+              "topLevel": true,
+              "slide": 0,
+              "shapeName": "Other",
+              "text": "Helper"
+            }
+          },
+          {
+            "tool": "pptx.shapeText",
+            "arguments": {
+              "topLevel": true,
+              "slide": 1,
+              "shape": 2,
+              "text": "Caller"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/sub-statement",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_POWERPOINT_MACROS.md"
+        ],
+        "note": "Rebinding a ByVal shape parameter changes the helper selector without rebinding the caller; writes remain ordered in a shared immutable plan. No Office host was executed."
+      }
+    },
+    {
+      "id": "nested-font-tristate-and-rgb",
+      "feature": "Nested font formatting and packed RGB",
+      "source": "Sub Main()\n  With ActivePresentation.Slides(1).Shapes(1).TextFrame.TextRange.Font\n    .Name = \"Aptos\"\n    .Size = 1.1\n    .Bold = msoTrue\n    .Italic = False\n    .Underline = msoFalse\n    .Color.RGB = RGB(17, 34, 51)\n  End With\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "pptx.shapeFormat",
+            "arguments": {
+              "topLevel": true,
+              "slide": 0,
+              "shape": 0,
+              "font": "Aptos"
+            }
+          },
+          {
+            "tool": "pptx.shapeFormat",
+            "arguments": {
+              "topLevel": true,
+              "slide": 0,
+              "shape": 0,
+              "size": 1.1
+            }
+          },
+          {
+            "tool": "pptx.shapeFormat",
+            "arguments": {
+              "topLevel": true,
+              "slide": 0,
+              "shape": 0,
+              "bold": true
+            }
+          },
+          {
+            "tool": "pptx.shapeFormat",
+            "arguments": {
+              "topLevel": true,
+              "slide": 0,
+              "shape": 0,
+              "italic": false
+            }
+          },
+          {
+            "tool": "pptx.shapeFormat",
+            "arguments": {
+              "topLevel": true,
+              "slide": 0,
+              "shape": 0,
+              "underline": false
+            }
+          },
+          {
+            "tool": "pptx.shapeFormat",
+            "arguments": {
+              "topLevel": true,
+              "slide": 0,
+              "shape": 0,
+              "color": "112233"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/powerpoint.font",
+          "https://learn.microsoft.com/en-us/office/vba/api/powerpoint.font.bold",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/rgb-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_POWERPOINT_MACROS.md"
+        ],
+        "note": "True/msoTrue and False/msoFalse writes have explicit Boolean meaning; packed RGB bytes retain red, green, blue order. The 1.1-point value is exactly representable in hundredth-point output units. No Office host was executed."
+      }
+    },
+    {
+      "id": "shape-geometry-points-degrees",
+      "feature": "Geometry units and signed positions",
+      "source": "Sub Main()\n  With ActivePresentation.Slides(1).Shapes(2)\n    .Left = -12.5\n    .Top = 36.25\n    .Width = 240\n    .Height = 80.5\n    .Rotation = -15\n  End With\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "pptx.shapeGeometry",
+            "arguments": {
+              "topLevel": true,
+              "slide": 0,
+              "shape": 1,
+              "x": -12.5
+            }
+          },
+          {
+            "tool": "pptx.shapeGeometry",
+            "arguments": {
+              "topLevel": true,
+              "slide": 0,
+              "shape": 1,
+              "y": 36.25
+            }
+          },
+          {
+            "tool": "pptx.shapeGeometry",
+            "arguments": {
+              "topLevel": true,
+              "slide": 0,
+              "shape": 1,
+              "width": 240
+            }
+          },
+          {
+            "tool": "pptx.shapeGeometry",
+            "arguments": {
+              "topLevel": true,
+              "slide": 0,
+              "shape": 1,
+              "height": 80.5
+            }
+          },
+          {
+            "tool": "pptx.shapeGeometry",
+            "arguments": {
+              "topLevel": true,
+              "slide": 0,
+              "shape": 1,
+              "rotation": -15
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/powerpoint.shape.left",
+          "https://learn.microsoft.com/en-us/office/vba/api/powerpoint.shape.rotation",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_POWERPOINT_MACROS.md"
+        ],
+        "note": "Position and size retain point units in native operations; rotation retains degrees, including negative counterclockwise rotation. Runtime performs the documented native-unit conversion. No Office host was executed."
+      }
+    },
+    {
+      "id": "powerpoint-alignment-values",
+      "feature": "PowerPoint paragraph alignment constants",
+      "source": "Sub Main()\n  With ActivePresentation.Slides(1).Shapes(1).TextFrame.TextRange.ParagraphFormat\n    .Alignment = ppAlignLeft\n    .Alignment = ppAlignCenter\n    .Alignment = ppAlignRight\n    .Alignment = ppAlignJustify\n  End With\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "pptx.shapeFormat",
+            "arguments": {
+              "topLevel": true,
+              "slide": 0,
+              "shape": 0,
+              "alignment": "left"
+            }
+          },
+          {
+            "tool": "pptx.shapeFormat",
+            "arguments": {
+              "topLevel": true,
+              "slide": 0,
+              "shape": 0,
+              "alignment": "center"
+            }
+          },
+          {
+            "tool": "pptx.shapeFormat",
+            "arguments": {
+              "topLevel": true,
+              "slide": 0,
+              "shape": 0,
+              "alignment": "right"
+            }
+          },
+          {
+            "tool": "pptx.shapeFormat",
+            "arguments": {
+              "topLevel": true,
+              "slide": 0,
+              "shape": 0,
+              "alignment": "justify"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/powerpoint.ppparagraphalignment",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_POWERPOINT_MACROS.md"
+        ],
+        "note": "The PowerPoint enumeration is 1, 2, 3, 4 for left, center, right, justify; Word alignment numbering must not leak into this adapter. No Office host was executed."
+      }
+    },
+    {
+      "id": "source-array-loop-and-helper",
+      "feature": "Shared bounded language across slides",
+      "source": "Option Explicit\nSub Main()\n  Dim labels(1 To 2) As String, index As Long\n  labels(1) = \"First\"\n  labels(2) = \"Second\"\n  For index = 1 To UBound(labels)\n    Call Caption(ActivePresentation.Slides(index).Shapes(\"Title\"), labels(index))\n  Next index\nEnd Sub\nSub Caption(ByVal target As Shape, ByVal value As String)\n  target.TextFrame.TextRange.Text = value\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "pptx.shapeText",
+            "arguments": {
+              "topLevel": true,
+              "slide": 0,
+              "shapeName": "Title",
+              "text": "First"
+            }
+          },
+          {
+            "tool": "pptx.shapeText",
+            "arguments": {
+              "topLevel": true,
+              "slide": 1,
+              "shapeName": "Title",
+              "text": "Second"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_POWERPOINT_MACROS.md"
+        ],
+        "note": "Source-data arrays, bounds, counted loops and ByVal helpers retain the existing shared language behavior without enumerating or reading presentation data. No Office host was executed."
+      }
+    },
+    {
+      "id": "variant-default-and-explicit-conversion",
+      "feature": "Variant defaults and ties-to-even conversion",
+      "source": "Sub Main()\n  Dim caption As Variant\n  If IsEmpty(caption) Then\n    caption = CStr(CLng(\"2.5\"))\n  End If\n  ActivePresentation.Slides(1).Shapes(1).TextFrame.TextRange.Text = \"Total \" & caption\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "pptx.shapeText",
+            "arguments": {
+              "topLevel": true,
+              "slide": 0,
+              "shape": 0,
+              "text": "Total 2"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/type-conversion-functions",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_POWERPOINT_MACROS.md"
+        ],
+        "note": "An unassigned Variant is Empty; the explicit invariant decimal conversion rounds 2.5 to the nearest even Long before formatting it. Locale-independent numeric text is the dialect contract. No Office host was executed."
+      }
+    },
+    {
+      "id": "empty-text-clears-range",
+      "feature": "Empty actual String assignment",
+      "source": "Sub Main()\n  ActivePresentation.Slides(1).Shapes(1).TextFrame.TextRange.Text = \"\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "pptx.shapeText",
+            "arguments": {
+              "topLevel": true,
+              "slide": 0,
+              "shape": 0,
+              "text": ""
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/powerpoint.textrange.text",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_POWERPOINT_MACROS.md"
+        ],
+        "note": "An actual empty String emits a whole-text replacement; this is separate from unsupported Null publication. No Office host was executed."
+      }
+    },
+    {
+      "id": "unicode-tab-and-case-insensitive-members",
+      "feature": "UTF-16 text and case-insensitive source names",
+      "source": "Sub Main()\n  activepresentation.slides(1).shapes(1).textframe.textrange.text = \"A\t\" & Mid$(\"😀\", 1, 2)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "pptx.shapeText",
+            "arguments": {
+              "topLevel": true,
+              "slide": 0,
+              "shape": 0,
+              "text": "A\t😀"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/powerpoint.textrange.text",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_POWERPOINT_MACROS.md"
+        ],
+        "note": "Source member names are case-insensitive; a literal tab and complete UTF-16 surrogate pair survive native JSON publication. No Office host was executed."
+      }
+    },
+    {
+      "id": "reject-zero-slide-index",
+      "feature": "One-based index refusal",
+      "source": "Sub Main()\n  ActivePresentation.Slides(0).Shapes(1).TextFrame.TextRange.Text = \"x\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 22
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/powerpoint.slides.item",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_POWERPOINT_MACROS.md"
+        ],
+        "note": "Zero cannot address a slide; this value-dependent refusal is attached to the Slides selector. No Office host was executed."
+      }
+    },
+    {
+      "id": "reject-boolean-shape-index",
+      "feature": "Selector static type restriction",
+      "source": "Sub Main()\n  ActivePresentation.Slides(1).Shapes(True).TextFrame.TextRange.Text = \"x\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 39
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_POWERPOINT_MACROS.md"
+        ],
+        "note": "Boolean selectors are refused statically rather than coerced to a number or a name; the argument token owns the diagnostic. No Office host was executed."
+      }
+    },
+    {
+      "id": "reject-mixed-tristate-write",
+      "feature": "Mixed TriState is not a Boolean write",
+      "source": "Sub Main()\n  ActivePresentation.Slides(1).Shapes(1).TextFrame.TextRange.Font.Bold = msoTriStateMixed\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 67
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/powerpoint.font.bold",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_POWERPOINT_MACROS.md"
+        ],
+        "note": "Mixed formatting is an inspection state, not a supported source write. Only Boolean, msoTrue and msoFalse writes are admitted. No Office host was executed."
+      }
+    },
+    {
+      "id": "reject-sub-hundredth-font-size",
+      "feature": "Native font precision restriction",
+      "source": "Sub Main()\n  ActivePresentation.Slides(1).Shapes(1).TextFrame.TextRange.Font.Size = 1.005\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 67
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/powerpoint.font.size",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_POWERPOINT_MACROS.md"
+        ],
+        "note": "The dialect refuses a size requiring rounding below a hundredth point before returning any native plan. No Office host was executed."
+      }
+    },
+    {
+      "id": "reject-distributed-alignment",
+      "feature": "Unsupported enum value refusal",
+      "source": "Sub Main()\n  ActivePresentation.Slides(1).Shapes(1).TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignDistribute\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 2,
+          "column": 78
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/powerpoint.ppparagraphalignment",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_POWERPOINT_MACROS.md"
+        ],
+        "note": "PowerPoint defines distributed alignment as 5, but the native adapter only supports left, center, right and justify; it must refuse rather than remap this value. No Office host was executed."
+      }
+    },
+    {
+      "id": "reject-dead-branch-collection-read",
+      "feature": "Whole-module checking and no live reads",
+      "source": "Sub Main()\n  Dim value As Variant\n  If False Then\n    value = ActivePresentation.Slides.Count\n  End If\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 4,
+          "column": 39
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_POWERPOINT_MACROS.md"
+        ],
+        "note": "Live presentation collection reads remain unsupported even in an inactive branch. No Office host was executed."
+      }
+    },
+    {
+      "id": "reject-word-host-object",
+      "feature": "Word object-model isolation",
+      "source": "Sub Main()\n  ThisDocument.Paragraphs(1).Range.Font.Bold = True\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 2,
+          "column": 3
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_POWERPOINT_MACROS.md"
+        ],
+        "note": "A Word host object cannot be silently interpreted as a PowerPoint presentation binding. No Office host was executed."
+      }
+    },
+    {
+      "id": "reject-group-child-path",
+      "feature": "Group child access requires a distinct model",
+      "source": "Sub Main()\n  ActivePresentation.Slides(1).Shapes(1).GroupItems(1).TextFrame.TextRange.Text = \"x\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 2,
+          "column": 42
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/powerpoint.shape.groupitems",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_POWERPOINT_MACROS.md"
+        ],
+        "note": "Top-level Shapes and GroupItems are separate collections. This compiler does not expose group traversal; runtime also validates top-level selector admission. No Office host was executed."
+      }
+    },
+    {
+      "id": "reject-isolated-surrogate-publication",
+      "feature": "Lossless native text boundary",
+      "source": "Sub Main()\n  ActivePresentation.Slides(1).Shapes(1).TextFrame.TextRange.Text = Left$(\"😀\", 1)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 62
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_POWERPOINT_MACROS.md"
+        ],
+        "note": "A valid internal UTF-16 substring may contain an isolated surrogate; native XML publication refuses it at the Text property rather than replacing it silently. No Office host was executed."
+      }
+    },
+    {
+      "id": "reject-excel-host-object",
+      "feature": "Excel object-model isolation",
+      "source": "Sub Main()\n  ThisWorkbook.Worksheets(1).Range(\"A1\").Value2 = 1\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 2,
+          "column": 3
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_POWERPOINT_MACROS.md"
+        ],
+        "note": "An Excel host object remains unavailable in the PowerPoint dialect. No Office host was executed."
+      }
+    }
+  ]
+}

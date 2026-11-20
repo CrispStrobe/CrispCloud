@@ -726,6 +726,14 @@ class WordEditorController extends OfficeController {
       document: () => document,
       revision: () => contentRevision,
       priorityParagraph: () => _proofingPriorityParagraph,
+      // Canvas typing only; never materializes a story paragraph.
+      caretPosition: () {
+        if (noteEditingTarget != null || !caret.isCollapsed) return null;
+        final paragraph = _proofingPriorityParagraph;
+        return paragraph == null
+            ? null
+            : (paragraph: paragraph, offset: caret.logicalIndex);
+      },
       vocabulary: _initialProofingVocabulary,
       service: _initialProofingService,
     )..addListener(_onProofingChanged);

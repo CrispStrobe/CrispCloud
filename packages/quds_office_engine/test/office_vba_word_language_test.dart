@@ -520,8 +520,6 @@ End If
       'target.Value2 = "spreadsheet"',
       'target.ClearContents',
       'target.Interior.Color = RGB(1,2,3)',
-      'target.Font.Underline = True',
-      'target.ParagraphFormat.LeftIndent = 12',
       'value = target.Text',
       'value = target.Start',
       'value = target.End',

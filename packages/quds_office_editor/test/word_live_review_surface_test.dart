@@ -9,6 +9,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quds_office_editor/quds_office_editor.dart';
 
+/// The typing pause before a background pass, plus a frame of margin.
+final _debounce = WordProofingTiming.idle + const Duration(milliseconds: 50);
+
 const _surfaceKey = ValueKey<String>('live-review-surface');
 const _screenshotKey = ValueKey<String>('live-review-screenshot');
 const _menuKey = Key('office-context-menu');
@@ -177,7 +180,7 @@ Future<void> _frames(WidgetTester tester, [int count = 10]) async {
 }
 
 Future<void> _flush(WidgetTester tester) async {
-  await tester.pump(const Duration(milliseconds: 450));
+  await tester.pump(_debounce);
   await _frames(tester);
 }
 
@@ -272,7 +275,7 @@ void main() {
   setUpAll(_loadSurfaceFonts);
 
   testWidgets(
-    'automatic checks show pending and checking status without dialogs',
+    'automatic checks show waiting, slow checking and settled status without dialogs',
     (tester) async {
       final gate = Completer<void>();
       final harness = _SurfaceHarness(
@@ -286,6 +289,8 @@ void main() {
         expect(find.byType(Dialog), findsNothing);
         await _flush(tester);
         expect(harness.provider.requests, hasLength(1));
+        // A pass shows "Checking…" only once it runs for a while.
+        await tester.pump(WordProofingTiming.checkingIndicatorDelay);
         expect(find.text('Checking…'), findsOneWidget);
         gate.complete();
         await _frames(tester);
@@ -297,7 +302,9 @@ void main() {
         tester.testTextInput.enterText('Ein Feler bleibt.');
         await tester.pump();
         expect(harness.controller.proofing.summary.scheduled, isTrue);
-        expect(find.text('Waiting to check…'), findsOneWidget);
+        // Typing keeps the settled result instead of flickering "waiting".
+        expect(find.text('Waiting to check…'), findsNothing);
+        expect(find.text('1 writing issue'), findsOneWidget);
         await _flush(tester);
         expect(harness.controller.proofing.summary.issues, hasLength(1));
         expect(find.byType(Dialog), findsNothing);

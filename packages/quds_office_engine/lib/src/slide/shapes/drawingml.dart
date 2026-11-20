@@ -34,10 +34,14 @@ List<PmlShape> parseSlideShapes(
   int? shapePropertiesDepth;
   int? gradientDepth;
   int? gradientStopDepth;
+  int? gradientPathDepth;
   final List<PmlGradientStop> gradientStops = <PmlGradientStop>[];
   double? gradientStopPosition;
   double gradientAngle = 0;
   var gradientRadial = false;
+  var gradientCentered = false;
+  var gradientDefaultTile = true;
+  var gradientIsLinear = true;
 
   /// textFillPending API.
   var textFillPending = false;
@@ -97,6 +101,10 @@ List<PmlShape> parseSlideShapes(
       } else if (reader.localName == 'style') {
         inStyle = false;
         styleRef = null;
+      } else if (reader.localName == 'path' &&
+          gradientPathDepth != null &&
+          reader.depth == gradientPathDepth - 1) {
+        gradientPathDepth = null;
       } else if (reader.localName == 'gradFill' &&
           inGradFill &&
           gradientDepth != null &&
@@ -105,16 +113,21 @@ List<PmlShape> parseSlideShapes(
           final List<PmlGradientStop> stops = <PmlGradientStop>[
             ...gradientStops,
           ]..sort((a, b) => a.position.compareTo(b.position));
-          current.gradient = PmlGradientFill(
-            stops: stops,
-            angleDegrees: gradientAngle,
-            radial: gradientRadial,
-          );
+          current.gradient =
+              gradientIsLinear ||
+                  gradientRadial && gradientCentered && gradientDefaultTile
+              ? PmlGradientFill(
+                  stops: stops,
+                  angleDegrees: gradientAngle,
+                  radial: gradientRadial,
+                )
+              : null;
           current.fillColor = stops.first.color;
         }
         inGradFill = false;
         gradientDepth = null;
         gradientStopDepth = null;
+        gradientPathDepth = null;
         gradientStops.clear();
         gradientStopPosition = null;
         fillPending = false;
@@ -126,6 +139,7 @@ List<PmlShape> parseSlideShapes(
         inGradFill = false;
         gradientDepth = null;
         gradientStopDepth = null;
+        gradientPathDepth = null;
         gradientStops.clear();
         gradientStopPosition = null;
       } else if (reader.localName == 'gs' &&
@@ -163,6 +177,7 @@ List<PmlShape> parseSlideShapes(
         inGradFill = false;
         gradientDepth = null;
         gradientStopDepth = null;
+        gradientPathDepth = null;
         gradientStops.clear();
         gradientStopPosition = null;
         inTxBody = false;
@@ -378,10 +393,14 @@ List<PmlShape> parseSlideShapes(
       inGradFill = true;
       gradientDepth = reader.depth;
       gradientStopDepth = null;
+      gradientPathDepth = null;
       gradientStops.clear();
       gradientStopPosition = null;
       gradientAngle = 0;
       gradientRadial = false;
+      gradientCentered = false;
+      gradientDefaultTile = true;
+      gradientIsLinear = true;
       fillPending = false;
       explicitFill = true;
     } else if ((reader.localName == 'solidFill' ||
@@ -427,7 +446,20 @@ List<PmlShape> parseSlideShapes(
         reader.namespaceUri == OfficeNamespaces.a &&
         inGradFill &&
         reader.depth == gradientDepth! + 1) {
-      gradientRadial = true;
+      gradientPathDepth = reader.depth;
+      gradientIsLinear = false;
+      gradientRadial = reader.getAttribute('path') == 'circle';
+    } else if (reader.localName == 'fillToRect' &&
+        reader.namespaceUri == OfficeNamespaces.a &&
+        inGradFill &&
+        gradientPathDepth != null &&
+        reader.depth == gradientPathDepth + 1) {
+      gradientCentered = isCenteredRadialFillToRect(reader);
+    } else if (reader.localName == 'tileRect' &&
+        reader.namespaceUri == OfficeNamespaces.a &&
+        inGradFill &&
+        reader.depth == gradientDepth! + 1) {
+      gradientDefaultTile = isDefaultGradientTileRect(reader);
     } else if (_colorElements.contains(reader.localName) && current != null) {
       // Color modifiers are consumed by the resolver, changing reader.depth.
       // Capture fill ownership while still positioned on the color start.
@@ -569,6 +601,32 @@ void _captureTextSources(
         lineSpacingReduction: current.lineSpacingReduction,
       );
       current.richText = parsePmlRichText(snapshot, colors);
+      final paragraphs = body.childrenNamed(
+        'p',
+        namespaceUri: OfficeNamespaces.a,
+      );
+      for (var index = 0; index < paragraphs.length; index++) {
+        // The parser intentionally skips empty visible runs. Capture the same
+        // replacement template as export, so fields, breaks or empty runs
+        // before the first ordinary run cannot change live formatting.
+        final replacementBody =
+            XmlElement(
+                localName: 'txBody',
+                prefix: 'p',
+                namespaceUri: OfficeNamespaces.p,
+                attributes: <XmlAttribute>[
+                  for (final attribute in body.attributes) attribute.copy(),
+                ],
+              )
+              ..setAttribute('p', OfficeNamespaces.p, prefix: 'xmlns')
+              ..setAttribute('a', OfficeNamespaces.a, prefix: 'xmlns')
+              ..addChild(_replacementTextParagraph(paragraphs[index], 'x'));
+        final replacement = parsePmlRichText(
+          XmlDocument(root: replacementBody).toXmlString(declaration: false),
+          colors,
+        ).single.runs.single..text = '';
+        current.richText[index].replacementRun = replacement;
+      }
     }
   }
 }
@@ -1131,7 +1189,10 @@ void _writeSlideShape(XmlWriter w, PmlShape shape) {
 
   /// writeEndElement API.
   w.writeEndElement();
-  if (shape.text.isNotEmpty || shape.textSource != null) {
+  if (shape.text.isNotEmpty ||
+      shape.textSource != null ||
+      shape.hasExplicitTextFormatting ||
+      shape.textReplacementRequested) {
     _writeShapeText(w, shape);
   }
 
@@ -1141,6 +1202,81 @@ void _writeSlideShape(XmlWriter w, PmlShape shape) {
 
 XmlElement _textElement(String name) =>
     XmlElement(localName: name, prefix: 'a', namespaceUri: OfficeNamespaces.a);
+
+/// Whether a DrawingML radial focus is the supported central point.
+bool isCenteredRadialFillToRect(XmlPullReader reader) => const <String>[
+  'l',
+  't',
+  'r',
+  'b',
+].every((name) => _fitPercent(reader.getAttribute(name), fallback: 0) == 0.5);
+
+/// Whether a gradient uses the unshifted shape bounds as its fill tile.
+bool isDefaultGradientTileRect(XmlPullReader reader) =>
+    const <String>['l', 't', 'r', 'b'].every((name) {
+      final String? value = reader.getAttribute(name);
+      return value == null || _fitPercent(value, fallback: double.nan) == 0;
+    });
+
+double _fitPercent(String? value, {required double fallback}) {
+  if (value == null) return fallback;
+  final String raw = value.trim();
+  final bool percent = raw.endsWith('%');
+  final double? number = double.tryParse(
+    percent ? raw.substring(0, raw.length - 1) : raw,
+  );
+  if (number == null || !number.isFinite) return fallback;
+  return number / (percent ? 100 : 100000);
+}
+
+// CT_TextCharacterProperties orders script fonts before hyperlinks and rtl.
+// Preserve every unrelated child while inserting only the requested font.
+int _textCharacterOrder(String name) => switch (name) {
+  'ln' => 0,
+  'noFill' ||
+  'solidFill' ||
+  'gradFill' ||
+  'blipFill' ||
+  'pattFill' ||
+  'grpFill' => 10,
+  'effectLst' || 'effectDag' => 20,
+  'highlight' => 30,
+  'uLnTx' || 'uLn' => 40,
+  'uFillTx' || 'uFill' => 50,
+  'latin' => 60,
+  'ea' => 61,
+  'cs' => 62,
+  'sym' => 63,
+  'hlinkClick' => 70,
+  'hlinkMouseOver' => 71,
+  'rtl' => 80,
+  'extLst' => 90,
+  _ => 100,
+};
+
+void _setTextTypeface(XmlElement properties, String script, String family) {
+  final font =
+      properties.firstChild(script, namespaceUri: OfficeNamespaces.a)?.copy() ??
+      _textElement(script);
+  font.setAttribute('typeface', family);
+  properties.children.removeWhere(
+    (node) =>
+        node is XmlElement &&
+        node.namespaceUri == OfficeNamespaces.a &&
+        node.localName == script,
+  );
+  final rank = _textCharacterOrder(script);
+  final next = properties.children.indexWhere(
+    (node) =>
+        node is XmlElement &&
+        node.namespaceUri == OfficeNamespaces.a &&
+        _textCharacterOrder(node.localName) > rank,
+  );
+  properties.children.insert(
+    next < 0 ? properties.children.length : next,
+    font..parent = properties,
+  );
+}
 
 double _readAutofitRatio(String? text, double fallback) {
   if (text == null) return fallback;
@@ -1234,6 +1370,32 @@ XmlElement _readTextSourceRoot(String xml) {
   throw const FormatException('Imported slide text body is empty');
 }
 
+XmlElement _replacementTextParagraph(XmlElement? template, String text) {
+  final paragraph = _textElement('p');
+  final pPr = template?.firstChild('pPr', namespaceUri: OfficeNamespaces.a);
+  if (pPr != null) paragraph.addChild(pPr.copy());
+  final templateRun = template?.firstChild(
+    'r',
+    namespaceUri: OfficeNamespaces.a,
+  );
+  final end = template?.firstChild(
+    'endParaRPr',
+    namespaceUri: OfficeNamespaces.a,
+  );
+  final rPr =
+      templateRun?.firstChild('rPr', namespaceUri: OfficeNamespaces.a) ??
+      end ??
+      pPr?.firstChild('defRPr', namespaceUri: OfficeNamespaces.a);
+  final run = _textElement('r');
+  if (rPr != null) {
+    run.addChild(rPr.copy()..localName = 'rPr');
+  }
+  run.addChild(_textElement('t')..addText(text));
+  paragraph.addChild(run);
+  if (end != null) paragraph.addChild(end.copy());
+  return paragraph;
+}
+
 void _writeShapeText(XmlWriter writer, PmlShape shape) {
   final PmlTextSource? source = shape.textSource;
   final XmlElement body = source == null
@@ -1248,7 +1410,10 @@ void _writeShapeText(XmlWriter writer, PmlShape shape) {
     body.addChild(_textElement('lstStyle'));
   }
   _writeAutofit(body, shape);
-  final bool replace = source == null || source.text != shape.text;
+  final bool replace =
+      shape.textReplacementRequested ||
+      source == null ||
+      source.text != shape.text;
   if (replace) {
     final List<XmlElement> original = body.childrenNamed(
       'p',
@@ -1265,45 +1430,37 @@ void _writeShapeText(XmlWriter writer, PmlShape shape) {
       final XmlElement? template = original.isEmpty
           ? null
           : original[i < original.length ? i : original.length - 1];
-      final XmlElement paragraph = _textElement('p');
-      final XmlElement? pPr = template?.firstChild(
-        'pPr',
-        namespaceUri: OfficeNamespaces.a,
-      );
-      if (pPr != null) paragraph.addChild(pPr.copy());
-      final XmlElement? templateRun = template?.firstChild(
-        'r',
-        namespaceUri: OfficeNamespaces.a,
-      );
-      final XmlElement? rPr = templateRun?.firstChild(
-        'rPr',
-        namespaceUri: OfficeNamespaces.a,
-      );
-      final XmlElement run = _textElement('r');
-      if (rPr != null) run.addChild(rPr.copy());
-      run.addChild(_textElement('t')..addText(lines[i]));
-      paragraph.addChild(run);
-      final XmlElement? end = template?.firstChild(
-        'endParaRPr',
-        namespaceUri: OfficeNamespaces.a,
-      );
-      if (end != null) paragraph.addChild(end.copy());
-      body.addChild(paragraph);
+      body.addChild(_replacementTextParagraph(template, lines[i]));
     }
   }
   final bool fontChanged =
-      source == null || source.fontSizePt != shape.fontSizePt;
+      shape.textSizeOverride ||
+      source == null ||
+      source.fontSizePt != shape.fontSizePt;
   final bool colorChanged =
-      source == null || source.textColor != shape.textColor;
+      shape.textColorOverride ||
+      source == null ||
+      source.textColor != shape.textColor;
   final bool alignChanged =
-      source == null || source.textAlign != shape.textAlign;
+      shape.textAlignOverride ||
+      source == null ||
+      source.textAlign != shape.textAlign;
   final bool directionChanged =
-      source == null || source.rightToLeft != shape.rightToLeft;
+      shape.textDirectionOverride ||
+      source == null ||
+      source.rightToLeft != shape.rightToLeft;
+  final bool characterChanged =
+      fontChanged ||
+      colorChanged ||
+      shape.textBold != null ||
+      shape.textItalic != null ||
+      shape.textUnderline != null ||
+      shape.textFontFamily != null;
   for (final XmlElement paragraph in body.childrenNamed(
     'p',
     namespaceUri: OfficeNamespaces.a,
   )) {
-    if (alignChanged || directionChanged) {
+    if (alignChanged || directionChanged || characterChanged) {
       XmlElement? props = paragraph.firstChild(
         'pPr',
         namespaceUri: OfficeNamespaces.a,
@@ -1327,12 +1484,32 @@ void _writeShapeText(XmlWriter writer, PmlShape shape) {
           props.setAttribute('rtl', shape.rightToLeft! ? '1' : '0');
         }
       }
+      if (characterChanged &&
+          props.firstChild('defRPr', namespaceUri: OfficeNamespaces.a) ==
+              null) {
+        final end = props.children.indexWhere(
+          (node) =>
+              node is XmlElement &&
+              node.namespaceUri == OfficeNamespaces.a &&
+              node.localName == 'extLst',
+        );
+        props.children.insert(
+          end < 0 ? props.children.length : end,
+          _textElement('defRPr')..parent = props,
+        );
+      }
+    }
+    if (characterChanged &&
+        paragraph.firstChild('endParaRPr', namespaceUri: OfficeNamespaces.a) ==
+            null) {
+      paragraph.addChild(_textElement('endParaRPr'));
     }
   }
-  if (fontChanged || colorChanged) {
+  if (characterChanged) {
     for (final XmlElement run in <XmlElement>[
       ..._textDescendants(body, 'r'),
       ..._textDescendants(body, 'fld'),
+      ..._textDescendants(body, 'br'),
     ]) {
       if (run.firstChild('rPr', namespaceUri: OfficeNamespaces.a) == null) {
         final XmlElement props = _textElement('rPr')..parent = run;
@@ -1349,6 +1526,20 @@ void _writeShapeText(XmlWriter writer, PmlShape shape) {
           props.setAttribute('sz', '${(shape.fontSizePt * 100).round()}');
         } else {
           props.removeAttribute('sz');
+        }
+      }
+      if (shape.textBold != null) {
+        props.setAttribute('b', shape.textBold! ? '1' : '0');
+      }
+      if (shape.textItalic != null) {
+        props.setAttribute('i', shape.textItalic! ? '1' : '0');
+      }
+      if (shape.textUnderline != null) {
+        props.setAttribute('u', shape.textUnderline! ? 'sng' : 'none');
+      }
+      if (shape.textFontFamily != null) {
+        for (final script in const ['latin', 'ea', 'cs']) {
+          _setTextTypeface(props, script, shape.textFontFamily!);
         }
       }
       if (colorChanged) {

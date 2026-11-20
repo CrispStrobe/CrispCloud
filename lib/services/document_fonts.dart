@@ -3,6 +3,7 @@ import 'package:quds_office_editor/quds_office_editor.dart'
     show OfficeHostFonts, OfficeSystemFonts, OfficeSystemFontFace;
 
 import 'document_font_catalog.dart';
+import 'office_font_packs.dart';
 
 /// Loads existing app assets on first document use, without increasing the
 /// font bundle or registering all document faces during app startup.
@@ -78,6 +79,12 @@ abstract final class DocumentFonts {
       } on Object {
         // A bundled compatibility alias already owns this family name.
       }
+    }
+    // Optional open packs fill remaining gaps after exact Office faces.
+    try {
+      await OfficeFontPacks.registerInstalled();
+    } on Object {
+      // Widget tests and unsupported hosts have no application-support path.
     }
   }
 

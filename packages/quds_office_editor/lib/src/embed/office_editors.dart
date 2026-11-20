@@ -302,6 +302,16 @@ class _QudsWordEditorState extends State<QudsWordEditor>
   /// controller API.
   WordEditorController get _c => widget.controller;
 
+  WordReviewStatusBar? _statusBar;
+
+  /// One instance per controller: editor rebuilds (every keystroke) skip the
+  /// status bar, which rebuilds only for its own state transitions.
+  WordReviewStatusBar _reviewStatusBar() {
+    final cached = _statusBar;
+    if (cached != null && identical(cached.controller, _c)) return cached;
+    return _statusBar = WordReviewStatusBar(controller: _c);
+  }
+
   @override
   /// initState API.
   void initState() {
@@ -1480,7 +1490,7 @@ class _QudsWordEditorState extends State<QudsWordEditor>
               },
             ),
           ),
-          if (widget.showReviewStatus) WordReviewStatusBar(controller: _c),
+          if (widget.showReviewStatus) _reviewStatusBar(),
           if (widget.statusBarBuilder != null)
             widget.statusBarBuilder!(context, _c),
         ],

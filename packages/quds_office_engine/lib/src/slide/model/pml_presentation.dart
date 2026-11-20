@@ -104,7 +104,7 @@ class PmlGradientStop {
   PmlGradientStop copy() => PmlGradientStop(position: position, color: color);
 }
 
-/// A linear DrawingML gradient fill.
+/// A linear or centered circular DrawingML gradient fill.
 class PmlGradientFill {
   PmlGradientFill({
     List<PmlGradientStop>? stops,
@@ -114,6 +114,9 @@ class PmlGradientFill {
 
   final List<PmlGradientStop> stops;
   double angleDegrees;
+
+  /// Circular shading from the center to the circumscribed shape bounds.
+  /// Other path types and noncentral focus rectangles are not modeled.
   bool radial;
 
   String get fallbackColor => stops.isEmpty ? '' : stops.first.color;
@@ -186,6 +189,7 @@ class PmlTextParagraph {
     this.defaultColor = '',
     this.defaultBold = false,
     this.defaultItalic = false,
+    this.replacementRun,
   }) : runs = runs ?? <PmlTextRun>[];
 
   List<PmlTextRun> runs;
@@ -206,6 +210,10 @@ class PmlTextParagraph {
   bool defaultBold;
   bool defaultItalic;
 
+  /// Imported ordinary-run formatting used when text is explicitly replaced.
+  /// It can differ from the first visible run when a field or break precedes it.
+  PmlTextRun? replacementRun;
+
   PmlTextParagraph copy() => PmlTextParagraph(
     runs: <PmlTextRun>[for (final PmlTextRun run in runs) run.copy()],
     align: align,
@@ -222,6 +230,7 @@ class PmlTextParagraph {
     defaultColor: defaultColor,
     defaultBold: defaultBold,
     defaultItalic: defaultItalic,
+    replacementRun: replacementRun?.copy(),
   );
 }
 
@@ -426,6 +435,15 @@ class PmlShape {
     this.gradient,
     this.textColor = '',
     this.fontSizePt = 0,
+    this.textBold,
+    this.textItalic,
+    this.textUnderline,
+    this.textFontFamily,
+    this.textSizeOverride = false,
+    this.textColorOverride = false,
+    this.textAlignOverride = false,
+    this.textDirectionOverride = false,
+    this.textReplacementRequested = false,
     this.textSource,
     this.embedRelId,
     List<PmlPathPoint>? path,
@@ -483,6 +501,34 @@ class PmlShape {
 
   /// fontSizePt API.
   double fontSizePt;
+
+  /// Explicit whole-text formatting. Null retains the imported run styles;
+  /// false explicitly removes the corresponding decoration.
+  bool? textBold;
+  bool? textItalic;
+  bool? textUnderline;
+  String? textFontFamily;
+
+  /// Retain the intent of a whole-text assignment even when its scalar value
+  /// equals the representative imported value but individual runs differ.
+  bool textSizeOverride;
+  bool textColorOverride;
+  bool textAlignOverride;
+  bool textDirectionOverride;
+
+  /// Explicit native text assignments replace imported runs even when the
+  /// scalar text is unchanged, using the same template for display and export.
+  bool textReplacementRequested;
+
+  bool get hasExplicitTextFormatting =>
+      textBold != null ||
+      textItalic != null ||
+      textUnderline != null ||
+      textFontFamily != null ||
+      textSizeOverride ||
+      textColorOverride ||
+      textAlignOverride ||
+      textDirectionOverride;
 
   /// Source rich text used to preserve unchanged imported formatting.
   PmlTextSource? textSource;
@@ -554,25 +600,82 @@ class PmlShape {
   /// Replacing imported text invalidates the old runs altogether.
   List<PmlTextParagraph> get resolvedRichText {
     final PmlTextSource? source = textSource;
-    if (source == null || richText.isEmpty) return richText;
-    if (source.text != text) return const <PmlTextParagraph>[];
-    final bool fontChanged = source.fontSizePt != fontSizePt;
-    final bool colorChanged = source.textColor != textColor;
-    final bool alignChanged = source.textAlign != textAlign;
-    final bool directionChanged = source.rightToLeft != rightToLeft;
-    if (!fontChanged && !colorChanged && !alignChanged && !directionChanged) {
+    final bool explicit = hasExplicitTextFormatting || textReplacementRequested;
+    if (!explicit && (source == null || richText.isEmpty)) return richText;
+    if (!explicit && source!.text != text) return const <PmlTextParagraph>[];
+    final bool replace =
+        textReplacementRequested ||
+        source == null ||
+        richText.isEmpty ||
+        source.text != text;
+    final bool fontChanged =
+        textSizeOverride ||
+        (source == null
+            ? replace && fontSizePt > 0
+            : source.fontSizePt != fontSizePt);
+    final bool colorChanged =
+        textColorOverride ||
+        (source == null
+            ? replace && textColor.isNotEmpty
+            : source.textColor != textColor);
+    final bool alignChanged =
+        textAlignOverride ||
+        (source == null ? replace : source.textAlign != textAlign);
+    final bool directionChanged =
+        textDirectionOverride ||
+        (source == null ? replace : source.rightToLeft != rightToLeft);
+    if (!explicit &&
+        !fontChanged &&
+        !colorChanged &&
+        !alignChanged &&
+        !directionChanged) {
       return richText;
     }
+    final List<PmlTextParagraph> originals;
+    if (replace) {
+      final lines = text.split('\n');
+      originals = <PmlTextParagraph>[];
+      for (var i = 0; i < lines.length; i++) {
+        // Without an imported XML source, export starts from the authored
+        // scalar text/style. Unsaved display runs are not its replacement
+        // template and must not leave stale text or styling in live output.
+        final template = source == null || richText.isEmpty
+            ? PmlTextParagraph()
+            : richText[i < richText.length ? i : richText.length - 1].copy();
+        final run =
+            template.replacementRun?.copy() ??
+            (template.runs.isEmpty
+                ? PmlTextRun(
+                    text: lines[i],
+                    fontSizePt: template.defaultFontSizePt,
+                    color: template.defaultColor,
+                    bold: template.defaultBold,
+                    italic: template.defaultItalic,
+                  )
+                : template.runs.first.copy());
+        run.text = lines[i];
+        template.runs = <PmlTextRun>[run];
+        originals.add(template);
+      }
+    } else {
+      originals = richText;
+    }
     final List<PmlTextParagraph> resolved = <PmlTextParagraph>[];
-    for (final PmlTextParagraph original in richText) {
+    for (final PmlTextParagraph original in originals) {
       final PmlTextParagraph paragraph = original.copy();
       if (alignChanged) paragraph.align = textAlign;
       if (directionChanged) paragraph.rightToLeft = rightToLeft ?? false;
       if (fontChanged) paragraph.defaultFontSizePt = fontSizePt;
       if (colorChanged) paragraph.defaultColor = textColor;
+      if (textBold != null) paragraph.defaultBold = textBold!;
+      if (textItalic != null) paragraph.defaultItalic = textItalic!;
       for (final PmlTextRun run in paragraph.runs) {
         if (fontChanged) run.fontSizePt = fontSizePt;
         if (colorChanged) run.color = textColor;
+        if (textBold != null) run.bold = textBold!;
+        if (textItalic != null) run.italic = textItalic!;
+        if (textUnderline != null) run.underline = textUnderline!;
+        if (textFontFamily != null) run.fontFamily = textFontFamily!;
       }
       resolved.add(paragraph);
     }
@@ -582,7 +685,11 @@ class PmlShape {
   /// Whether the unmodified imported runs still match scalar text formatting.
   /// Renderers use [resolvedRichText] to apply edits while retaining run styles.
   bool get hasCurrentRichText {
-    if (richText.isEmpty) return false;
+    if (richText.isEmpty ||
+        hasExplicitTextFormatting ||
+        textReplacementRequested) {
+      return false;
+    }
     final PmlTextSource? source = textSource;
     return source == null ||
         (source.text == text &&
@@ -635,6 +742,15 @@ class PmlShape {
       gradient: gradient?.copy(),
       textColor: textColor,
       fontSizePt: fontSizePt,
+      textBold: textBold,
+      textItalic: textItalic,
+      textUnderline: textUnderline,
+      textFontFamily: textFontFamily,
+      textSizeOverride: textSizeOverride,
+      textColorOverride: textColorOverride,
+      textAlignOverride: textAlignOverride,
+      textDirectionOverride: textDirectionOverride,
+      textReplacementRequested: textReplacementRequested,
       textSource: textSource,
       embedRelId: embedRelId,
       path: <PmlPathPoint>[...path],

@@ -37,22 +37,38 @@ void main() {
       );
       final result = await convertOfficeToPdfResult(package.save());
       final pdf = latin1.decode(result.bytes);
-      for (final family in [
-        'LiberationSans',
-        'LiberationSerif',
-        'Carlito',
-        'NotoNaskhArabic',
-      ]) {
-        expect(pdf, contains('/BaseFont /$family'));
-      }
+      expect(pdf, contains('/BaseFont /LiberationSans'));
+      // A locally installed Office Times New Roman is preferred over the
+      // metric-compatible Liberation Serif; both are valid on this host.
+      expect(
+        pdf,
+        anyOf(
+          contains('/BaseFont /LiberationSerif'),
+          contains('/BaseFont /TimesNewRoman'),
+        ),
+      );
+      // Exact installed Calibri can replace the compatibility Carlito face.
+      expect(
+        pdf,
+        anyOf(contains('/BaseFont /Carlito'), contains('/BaseFont /Calibri')),
+      );
+      // An installed Arial that covers Arabic is also an exact fallback.
+      expect(
+        pdf,
+        anyOf(
+          contains('/BaseFont /NotoNaskhArabic'),
+          contains('/BaseFont /Arial'),
+        ),
+      );
       expect(result.fonts.missingCodePoints, contains(0x4e2d));
       expect(result.fonts.missingCodePoints, isNot(contains(0x0639)));
       expect(
         result.fonts.substitutions.any(
-          (value) =>
-              value.requestedFamily == 'Calibri' &&
-              value.resolvedFamily == 'Carlito',
-        ),
+              (value) =>
+                  value.requestedFamily == 'Calibri' &&
+                  value.resolvedFamily == 'Carlito',
+            ) ||
+            pdf.contains('/BaseFont /Calibri'),
         isTrue,
       );
       expect(

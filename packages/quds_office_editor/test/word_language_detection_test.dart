@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quds_office_editor/quds_office_editor.dart';
 
+/// The typing pause before a background pass, plus a frame of margin.
+final _debounce = WordProofingTiming.idle + const Duration(milliseconds: 50);
+
 /// Answers from a fixed table keyed by the trimmed segment text.
 final class _FakeIdentifier implements LanguageIdentifier {
   _FakeIdentifier(this.answers);
@@ -428,7 +431,7 @@ void main() {
       );
       Future<void> flush() async {
         await tester.pump();
-        await tester.pump(const Duration(milliseconds: 450));
+        await tester.pump(_debounce);
         for (var i = 0; i < 12; i++) {
           await tester.pump(const Duration(milliseconds: 1));
         }

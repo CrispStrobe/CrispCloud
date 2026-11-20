@@ -23,8 +23,10 @@ class VbaConformanceSuite {
     }
     final id = _identifier(root['suite'], 'suite');
     final dialect = _text(root['dialect'], 'dialect');
-    if (dialect != 'vba-excel' && dialect != 'vba-word') {
-      _invalid('dialect', 'must be vba-excel or vba-word');
+    if (dialect != 'vba-excel' &&
+        dialect != 'vba-word' &&
+        dialect != 'vba-powerpoint') {
+      _invalid('dialect', 'must be vba-excel, vba-word, or vba-powerpoint');
     }
     final items = root['cases'];
     if (items is! List<Object?> || items.isEmpty) {
@@ -108,9 +110,11 @@ Map<String, Object?> _compileOutcome(VbaConformanceCase fixture) {
     final macro = OfficeMacroLanguages().compile(
       OfficeMacroSource(
         language: fixture.dialect,
-        format: fixture.dialect == 'vba-word'
-            ? OfficeMacroFormat.docx
-            : OfficeMacroFormat.xlsx,
+        format: switch (fixture.dialect) {
+          'vba-word' => OfficeMacroFormat.docx,
+          'vba-powerpoint' => OfficeMacroFormat.pptx,
+          _ => OfficeMacroFormat.xlsx,
+        },
         moduleName: 'Conformance',
         source: fixture.source,
       ),
@@ -191,7 +195,11 @@ Map<String, Object?> _expectation(
       _fields(step, const {'tool', 'arguments'}, stepPath);
       try {
         final native = OfficeMacroStep.fromJson(step);
-        final prefix = dialect == 'vba-word' ? 'docx.' : 'xlsx.';
+        final prefix = switch (dialect) {
+          'vba-word' => 'docx.',
+          'vba-powerpoint' => 'pptx.',
+          _ => 'xlsx.',
+        };
         if (!native.tool.startsWith(prefix)) {
           _invalid(stepPath, '$dialect expectations must target $prefix');
         }

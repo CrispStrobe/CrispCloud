@@ -447,9 +447,12 @@ class PdfDocument {
       final String gsRes = page.extGStates.isEmpty
           ? ''
           : '/ExtGState <<${page.extGStates.map((String name) {
-                  final int key = int.tryParse(name.replaceFirst('GS', '')) ?? 1000;
+                  final int? key = name.startsWith('GS') ? int.tryParse(name.substring(2)) : null;
+                  if (key == null || key < 0 || key > 1000 || name != 'GS$key') {
+                    throw ArgumentError.value(name, 'extGStates', 'Expected a PdfCanvas alpha state from GS0 to GS1000');
+                  }
                   final String alpha = _n(key / 1000);
-                  return '/$name <</ca $alpha/CA $alpha>>';
+                  return '/$name <</Type /ExtGState/ca $alpha/CA $alpha>>';
                 }).join()}'
                 '>>';
       final List<int> annotIds = <int>[...pageAnnotIds[i], ...pageFieldIds[i]];

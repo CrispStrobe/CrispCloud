@@ -1191,7 +1191,7 @@ class RenderSlideStage extends RenderBox implements MouseTrackerAnnotation {
         if (gradient.radial) {
           paint.shader = ui.Gradient.radial(
             r.center,
-            r.shortestSide / 2,
+            math.sqrt(r.width * r.width + r.height * r.height) / 2,
             colors,
             stops,
           );
