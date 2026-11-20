@@ -705,7 +705,7 @@ class _QudsWordEditorState extends State<QudsWordEditor>
       ],
       if (revision != null) ...[
         OfficeContextAction.caption(
-          '${revision.kind == WmlRevisionKind.insert ? 'Inserted' : 'Deleted'} by ${revision.author}',
+          '${revision.kind.label} by ${revision.author}',
           separatorBefore: issue != null,
         ),
         OfficeContextAction(

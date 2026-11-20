@@ -1,0 +1,31 @@
+{
+  "qudsSourceCommit": "f9128aba7ace7f981746b7282d463cc25a1e6d87",
+  "bundledOfficeFilesVerified": 2892,
+  "qudsUniqueRegressionCases": 140,
+  "hostInitialPassed": 111,
+  "hostInitialFailedStaleHeaderAssertion": 1,
+  "finalHeaderAndFidelityReplayPassed": 12,
+  "hostFinalUniquePassed": 129,
+  "unresolvedFailures": 0,
+  "headerAssertionCorrection": "Page one edits the separate first-page header; default header remains unchanged. Three async save/reopen cycles verify both stories.",
+  "nativeToolchain": "Homebrew Rust 1.100.0, version-pinned command wrapper; original temporary toolchain had been cleared.",
+  "dependenciesRestoredWithEnforceLockfile": true,
+  "ciQueriedOrAwaited": false,
+  "qudsEvidence": "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/validation/docx-review-extension-20261120/README.md",
+  "logSha256": {
+    "crispcloud-review-extension-host-green.log": "a6e373768e705609f29bbe62f053a8ba55df6becd77d6c499548f5cd4b10686b",
+    "crispcloud-word-review-final-host-replay.log": "1595020e0f6666e6d8cb42c2f2d6701138eb80a7d9884940a547d67352aedd18",
+    "crispcloud-review-dependencies-restored.log": "fc6bf0afe233f45070546c754bd582fadbbeba706e3d010d3899ff997b01cb6f",
+    "crispcloud-word-review-published-fidelity.log": "fd2a850011ec6c08c38ce206d6db7049e85a92a795ecd1b88f82f81ecd9f3c02",
+    "crispcloud-review-unified-host-replay.log": "1d723d128e52cb3ea847f218055928790282e07cc6da32a11e0916504ff8f813"
+  },
+  "preservedCrispCloudUpstreamCommit": "702114c8",
+  "preservedQudsSlideBranchCommit": "9e647ae5cfbd494b51fe0928b57ed10c9a7a986a",
+  "canonicalReconciliationEnginePassed": 88,
+  "canonicalReconciliationEditorPassed": 21,
+  "canonicalHostReplayPassed": 29,
+  "additionalFontCases": 17,
+  "hostBaseUniquePassed": 112,
+  "allVendorFilesVerified": true,
+  "unpublishedConflictCommitReplacedBeforePush": true
+}

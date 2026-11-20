@@ -237,6 +237,90 @@ class ZoteroClient {
     return _page(collections, response, uri, start, limit);
   }
 
+  /// Browses tag names in a library or collection before item filtering.
+  ///
+  /// [query] searches names with the tag-specific [searchMode]. It does not
+  /// execute a saved search, change tags, or alter the connected library.
+  /// Names are returned exactly as supplied, including names that cannot be
+  /// represented as literal item filters. Pagination counts API records, so
+  /// manual/automatic records with the same name can occur on different pages.
+  ///
+  /// Web routes and query modes:
+  /// https://www.zotero.org/support/dev/web_api/v3/basics#tags
+  /// Desktop uses the tags-within-items route: its plain /tags endpoint does
+  /// not apply q, and it does not register /collections/:key/tags. Verified in
+  /// Zotero's server_localAPI.js at b589b7ff2f9fa5f1fea2a69b61a9e583e50d8cb8:
+  /// https://github.com/zotero/zotero/blob/b589b7ff2f9fa5f1fea2a69b61a9e583e50d8cb8/chrome/content/zotero/xpcom/server/server_localAPI.js
+  Future<ZoteroPage<ZoteroTag>> tags(
+    ZoteroLibrary library, {
+    String? collectionKey,
+    String query = '',
+    ZoteroTagSearchMode searchMode = ZoteroTagSearchMode.contains,
+    int start = 0,
+    int limit = 50,
+  }) async {
+    if (collectionKey != null) validateZoteroKey(collectionKey);
+    if (query.length > 1024 ||
+        RegExp(r'[\x00-\x1f\x7f-\x9f\u2028\u2029]').hasMatch(query) ||
+        !_wellFormedUnicode(query)) {
+      throw ArgumentError(
+        'Use a Zotero tag search of at most 1024 characters without control characters.',
+      );
+    }
+    final libraryPath = _libraryPath(library);
+    final scope = collectionKey == null
+        ? libraryPath
+        : '$libraryPath/collections/$collectionKey';
+    final text = query.trim();
+    final uri = _uri(isLocal ? '$scope/items/tags' : '$scope/tags', {
+      ..._pagination(start, limit),
+      if (text.isNotEmpty) 'q': text,
+      if (text.isNotEmpty) 'qmode': searchMode.name,
+    });
+    final response = await _request(uri);
+    final records = _array(_decode(response));
+    if (records.length > limit) throw _invalidResponse();
+    final tags = records.map((value) {
+      final json = _object(value);
+      final name = json['tag'];
+      if (name is! String || name.isEmpty || !_wellFormedUnicode(name)) {
+        throw _invalidResponse();
+      }
+      final meta = json.containsKey('meta')
+          ? _object(json['meta'])
+          : <String, Object?>{};
+      return ZoteroTag(
+        name: name,
+        type: _tagMetadataInteger(meta, 'type'),
+        numItems: _tagMetadataInteger(meta, 'numItems'),
+      );
+    }).toList();
+    return _page(tags, response, uri, start, limit);
+  }
+
+  static int? _tagMetadataInteger(Map<String, Object?> meta, String key) {
+    if (!meta.containsKey(key)) return null;
+    final value = meta[key];
+    if (value is! int || value < 0) throw _invalidResponse();
+    return value;
+  }
+
+  static bool _wellFormedUnicode(String value) {
+    for (var index = 0; index < value.length; index++) {
+      final unit = value.codeUnitAt(index);
+      if (unit >= 0xd800 && unit <= 0xdbff) {
+        if (++index >= value.length ||
+            value.codeUnitAt(index) < 0xdc00 ||
+            value.codeUnitAt(index) > 0xdfff) {
+          return false;
+        }
+      } else if (unit >= 0xdc00 && unit <= 0xdfff) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   /// Lists saved searches from the connected desktop library. The online API
   /// cannot execute these searches, so this workflow is local-only.
   Future<ZoteroPage<ZoteroSavedSearch>> savedSearches(

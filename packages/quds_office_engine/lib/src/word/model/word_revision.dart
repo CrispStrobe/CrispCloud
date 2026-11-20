@@ -1,9 +1,39 @@
+import '../../xml/namespaces.dart';
+import '../serial/word_deserializer.dart';
 import 'wml_document.dart';
 import 'wml_run_edit.dart';
 import 'word_content_controls.dart';
+import 'word_tree.dart';
 
-/// Insert or delete tracked as a Word revision.
-enum WmlRevisionKind { insert, delete }
+/// Native Word text, move and direct-formatting revisions.
+enum WmlRevisionKind {
+  insert,
+  delete,
+  moveFrom,
+  moveTo,
+  runFormat,
+  paragraphFormat,
+}
+
+extension WmlRevisionKindSemantics on WmlRevisionKind {
+  bool get isFormatting =>
+      this == WmlRevisionKind.runFormat ||
+      this == WmlRevisionKind.paragraphFormat;
+  bool get isInsertion =>
+      this == WmlRevisionKind.insert || this == WmlRevisionKind.moveTo;
+  bool get isDeletion =>
+      this == WmlRevisionKind.delete || this == WmlRevisionKind.moveFrom;
+  bool get isMove =>
+      this == WmlRevisionKind.moveFrom || this == WmlRevisionKind.moveTo;
+  String get label => switch (this) {
+    WmlRevisionKind.insert => 'Inserted',
+    WmlRevisionKind.delete => 'Deleted',
+    WmlRevisionKind.moveFrom => 'Moved from',
+    WmlRevisionKind.moveTo => 'Moved to',
+    WmlRevisionKind.runFormat => 'Text formatting',
+    WmlRevisionKind.paragraphFormat => 'Paragraph formatting',
+  };
+}
 
 /// One tracked change that can be accepted or rejected.
 class WmlRevision {
@@ -20,6 +50,12 @@ class WmlRevision {
     this.accepted,
     this.targetParagraph,
     this.conflict,
+    this.previousPropertiesXml,
+    this.propertyChangeXml,
+    this.moveName,
+    this.moveStory,
+    this.moveStartXml,
+    this.moveEndXml,
   }) : _targetCaptured = targetParagraph != null;
 
   /// id API.
@@ -52,6 +88,17 @@ class WmlRevision {
   /// text API.
   String text;
 
+  /// Current affected text; formatting revisions do not own text attribution.
+  String get displayText {
+    final paragraph = targetParagraph;
+    if (paragraph == null || !kind.isFormatting) return text;
+    if (kind == WmlRevisionKind.paragraphFormat) return paragraph.text;
+    return paragraph.text.substring(
+      start.clamp(0, paragraph.text.length),
+      end.clamp(start.clamp(0, paragraph.text.length), paragraph.text.length),
+    );
+  }
+
   /// author API.
   String author;
 
@@ -60,6 +107,17 @@ class WmlRevision {
 
   /// `null` while pending.
   bool? accepted;
+
+  /// Complete native direct properties before a formatting revision. An empty
+  /// property set means inherit, not an explicit reset to editor defaults.
+  final String? previousPropertiesXml;
+  final String? propertyChangeXml;
+
+  /// Native paired move identity, scoped to the owning document part.
+  final String? moveName;
+  final String? moveStory;
+  String? moveStartXml;
+  String? moveEndXml;
 
   /// Why this pending span cannot safely be resolved or exported.
   ///
@@ -112,7 +170,9 @@ class _RevisionState {
       author = revision.author,
       dateIso = revision.dateIso,
       accepted = revision.accepted,
-      conflict = revision.conflict;
+      conflict = revision.conflict,
+      moveStartXml = revision.moveStartXml,
+      moveEndXml = revision.moveEndXml;
 
   final WmlRevision revision;
   final int paragraphIndex;
@@ -125,6 +185,8 @@ class _RevisionState {
   final String dateIso;
   final bool? accepted;
   final String? conflict;
+  final String? moveStartXml;
+  final String? moveEndXml;
 
   bool matches() =>
       revision.paragraphIndex == paragraphIndex &&
@@ -136,7 +198,9 @@ class _RevisionState {
       revision.author == author &&
       revision.dateIso == dateIso &&
       revision.accepted == accepted &&
-      revision.conflict == conflict;
+      revision.conflict == conflict &&
+      revision.moveStartXml == moveStartXml &&
+      revision.moveEndXml == moveEndXml;
 
   void restore() {
     revision
@@ -149,7 +213,9 @@ class _RevisionState {
       ..author = author
       ..dateIso = dateIso
       ..accepted = accepted
-      ..conflict = conflict;
+      ..conflict = conflict
+      ..moveStartXml = moveStartXml
+      ..moveEndXml = moveEndXml;
   }
 }
 
@@ -174,6 +240,10 @@ abstract final class WordRevisions {
     String author = 'CrispOffice',
     WmlParagraph? paragraph,
     bool preserveSourceRange = false,
+    String? previousPropertiesXml,
+    String? propertyChangeXml,
+    String? moveName,
+    String? moveStory,
   }) {
     document.trackRevisions = true;
     var id = 1;
@@ -207,6 +277,10 @@ abstract final class WordRevisions {
       author: author,
       dateIso: DateTime.now().toUtc().toIso8601String(),
       targetParagraph: target,
+      previousPropertiesXml: previousPropertiesXml,
+      propertyChangeXml: propertyChangeXml,
+      moveName: moveName,
+      moveStory: moveStory,
     );
     revision._targetCaptured = true;
     for (final other in document.revisions) {
@@ -216,17 +290,20 @@ abstract final class WordRevisions {
       // documents with many tracked changes quadratic (minutes for a few
       // hundred revisions). The result is unchanged: a different captured
       // target can never resolve to [target].
-      if (target != null &&
-          !(other._targetCaptured &&
-              !identical(other.targetParagraph, target)) &&
-          identical(resolveParagraph(document, other), target) &&
-          start < other.end &&
-          other.start < end) {
-        const problem =
-            'Tracked changes overlap. Undo the overlapping '
-            'edit before resolving or saving their attribution.';
-        revision.conflict = problem;
-        other.conflict ??= problem;
+      if (kind == other.kind && kind.isFormatting ||
+          !kind.isFormatting && !other.kind.isFormatting) {
+        if (target != null &&
+            !(other._targetCaptured &&
+                !identical(other.targetParagraph, target)) &&
+            identical(resolveParagraph(document, other), target) &&
+            start < other.end &&
+            other.start < end) {
+          const problem =
+              'Tracked changes overlap. Undo the overlapping '
+              'edit before resolving or saving their attribution.';
+          revision.conflict = problem;
+          other.conflict ??= problem;
+        }
       }
     }
     document.revisions.add(revision);
@@ -253,9 +330,31 @@ abstract final class WordRevisions {
     RangeError.checkNotNegative(insertedLength, 'insertedLength');
     final delta = insertedLength - (end - start);
     if (start == end && insertedLength == 0) return;
-    for (final revision in document.revisions) {
+    for (final revision in document.revisions.toList()) {
       if (identical(revision, excluding) ||
           !identical(resolveParagraph(document, revision), paragraph)) {
+        continue;
+      }
+      if (revision.kind == WmlRevisionKind.paragraphFormat) {
+        revision.start = 0;
+        revision.end = oldText.length + delta;
+        continue;
+      }
+      if (revision.kind == WmlRevisionKind.runFormat &&
+          revision.conflict == null) {
+        final from = revision.start;
+        final to = revision.end;
+        revision.start = from < start
+            ? from
+            : from >= end
+            ? from + delta
+            : start;
+        revision.end = to <= start
+            ? to
+            : to >= end
+            ? to + delta
+            : start + insertedLength;
+        if (revision.end <= revision.start) document.revisions.remove(revision);
         continue;
       }
       final problem = _textProblem(revision, oldText);
@@ -374,7 +473,8 @@ abstract final class WordRevisions {
         revision.end > text.length) {
       return 'Its recorded range no longer exists in the target paragraph.';
     }
-    if (text.substring(revision.start, revision.end) != revision.text) {
+    if (!revision.kind.isFormatting &&
+        text.substring(revision.start, revision.end) != revision.text) {
       return 'Its recorded text no longer matches the target paragraph.';
     }
     return null;
@@ -410,6 +510,24 @@ abstract final class WordRevisions {
   }) {
     WmlParagraph? targetOf(WmlRevision r) =>
         resolved != null ? resolved[r] : resolveParagraph(document, r);
+    if (revision.accepted != null) {
+      throw StateError('The tracked change is no longer pending.');
+    }
+    if (revision.kind.isFormatting && revision.previousPropertiesXml == null) {
+      throw StateError('The previous formatting is missing.');
+    }
+    if (revision.kind.isMove) {
+      final group = related(document, revision);
+      for (final kind in [WmlRevisionKind.moveFrom, WmlRevisionKind.moveTo]) {
+        final side = group.where((r) => r.kind == kind).toList();
+        if (revision.moveName == null ||
+            side.isEmpty ||
+            side.where((r) => r.moveStartXml != null).length != 1 ||
+            side.where((r) => r.moveEndXml != null).length != 1) {
+          throw StateError('The move source/destination range is incomplete.');
+        }
+      }
+    }
     final paragraph = targetOf(revision);
     final problem = paragraph == null
         ? 'Its target paragraph is no longer in the document.'
@@ -420,22 +538,86 @@ abstract final class WordRevisions {
         'saved: $problem',
       );
     }
+    if (revision.kind == WmlRevisionKind.runFormat &&
+        revision.start == revision.end) {
+      var offset = 0;
+      var emptyRuns = 0;
+      for (final run in paragraph!.inlines.whereType<WmlRun>()) {
+        if (offset == revision.start && run.text.isEmpty) {
+          emptyRuns++;
+        }
+        offset += run.text.length;
+      }
+      if (emptyRuns != 1) {
+        throw StateError(
+          'The empty formatting run no longer has an unambiguous target.',
+        );
+      }
+    }
     final range = WmlRunEdit.normalizeRange(
       paragraph!,
-      revision.start,
-      revision.end,
+      revision.kind == WmlRevisionKind.paragraphFormat ? 0 : revision.start,
+      revision.kind == WmlRevisionKind.paragraphFormat
+          ? paragraph.text.length
+          : revision.end,
       // Native tracked caches may legitimately have several independent
       // revision ranges inside one complex citation. Export preserves those
       // exact ranges; resolving a revision still uses whole-field edit bounds.
       protectZoteroCitations: !forExport,
     );
     WordContentControls.assertCanEdit(paragraph, range.start, range.end);
+    if (!forExport) {
+      void check(WmlContentControlData control) {
+        final lock = WordContentControls.template(control)
+            .firstChild('sdtPr', namespaceUri: OfficeNamespaces.w)
+            ?.firstChild('lock', namespaceUri: OfficeNamespaces.w)
+            ?.getAttribute('val', namespaceUri: OfficeNamespaces.w);
+        if (lock == 'contentLocked' || lock == 'sdtContentLocked') {
+          throw StateError(
+            'This tracked change is inside a locked content control.',
+          );
+        }
+      }
+
+      for (final control in paragraph.contentControlWrappers) {
+        check(control);
+      }
+      for (final span in WordContentControls.spans(paragraph)) {
+        if (range.start < span.end && span.start < range.end ||
+            range.start == range.end &&
+                span.start <= range.start &&
+                range.start <= span.end) {
+          check(span.control);
+        }
+      }
+      for (final blocks in [
+        for (final section in document.sections) section.blocks,
+        for (final note in [...document.footnotes, ...document.endnotes])
+          note.blocks,
+      ]) {
+        for (final block in WordTree.descendants(
+          blocks,
+        ).whereType<WmlContentControlBlock>()) {
+          if (WordTree.paragraphs(
+            block.blocks,
+          ).any((p) => identical(p, paragraph))) {
+            check(block.control);
+          }
+        }
+      }
+    }
     for (final other in document.revisions) {
       if (identical(revision, other) ||
+          (revision.kind.isFormatting != other.kind.isFormatting) ||
+          (revision.kind.isFormatting && revision.kind != other.kind) ||
           !identical(targetOf(other), paragraph)) {
         continue;
       }
-      if (range.start < other.end && other.start < range.end) {
+      if (range.start < other.end && other.start < range.end ||
+          revision.kind == WmlRevisionKind.runFormat &&
+              revision.start == revision.end &&
+              other.start == other.end &&
+              revision.start == other.start) {
         throw StateError(
           'Tracked changes ${revision.id} and ${other.id} '
           'overlap. Resolve their attribution before resolving or saving.',
@@ -526,27 +708,83 @@ abstract final class WordRevisions {
     WmlRevision revision, {
     required bool accept,
   }) {
-    validateRevision(document, revision);
-    if (accept == (revision.kind == WmlRevisionKind.delete)) {
-      final paragraph = resolveParagraph(document, revision)!;
-      final range = WmlRunEdit.normalizeRange(
-        paragraph,
-        revision.start,
-        revision.end,
-      );
-      rebaseEdit(
-        document,
-        paragraph,
-        start: range.start,
-        end: range.end,
-        insertedLength: 0,
-        excluding: revision,
-      );
-      WmlRunEdit.replaceRange(paragraph, range.start, range.end, '');
+    final group = related(document, revision);
+    // A paired move is one transaction. Preflight every source/destination
+    // (including locked controls) before removing either side.
+    for (final item in group) {
+      validateRevision(document, item);
     }
-    revision.accepted = accept;
-    document.revisions.remove(revision);
+    group.sort((a, b) => b.start.compareTo(a.start));
+    for (final item in group) {
+      if (!document.revisions.contains(item) && !identical(item, revision)) {
+        continue;
+      }
+      if (item.kind.isFormatting) {
+        if (!accept) {
+          WordDeserializer().restoreRevisionFormatting(document, item);
+        }
+      } else if (accept == item.kind.isDeletion) {
+        final paragraph = resolveParagraph(document, item)!;
+        final range = WmlRunEdit.normalizeRange(
+          paragraph,
+          item.start,
+          item.end,
+        );
+        // Formatting over removed text has no remaining subject. Formatting
+        // crossing a deletion keeps the surviving part and its attribution.
+        final formats = document.revisions
+            .where(
+              (other) =>
+                  other.kind == WmlRevisionKind.runFormat &&
+                  identical(resolveParagraph(document, other), paragraph),
+            )
+            .toList();
+        for (final other in formats) {
+          document.revisions.remove(other);
+        }
+        rebaseEdit(
+          document,
+          paragraph,
+          start: range.start,
+          end: range.end,
+          insertedLength: 0,
+          excluding: item,
+        );
+        WmlRunEdit.replaceRange(paragraph, range.start, range.end, '');
+        final removed = range.end - range.start;
+        for (final other in formats) {
+          int shifted(int at) => at <= range.start
+              ? at
+              : at >= range.end
+              ? at - removed
+              : range.start;
+          other.start = shifted(other.start);
+          other.end = shifted(other.end);
+          if (other.end > other.start) {
+            other.text = paragraph.text.substring(other.start, other.end);
+            document.revisions.add(other);
+          }
+        }
+      }
+      item.accepted = accept;
+      document.revisions.remove(item);
+    }
   }
+
+  /// Both sides (and every paragraph fragment) of a named native move.
+  static List<WmlRevision> related(
+    WmlDocument document,
+    WmlRevision revision,
+  ) => revision.kind.isMove && revision.moveName != null
+      ? document.revisions
+            .where(
+              (r) =>
+                  r.kind.isMove &&
+                  r.moveName == revision.moveName &&
+                  r.moveStory == revision.moveStory,
+            )
+            .toList()
+      : [revision];
 
   /// acceptAll API.
   static void acceptAll(WmlDocument document) {
@@ -554,7 +792,7 @@ abstract final class WordRevisions {
     for (final WmlRevision revision in List<WmlRevision>.from(
       document.revisions,
     )) {
-      accept(document, revision);
+      if (document.revisions.contains(revision)) accept(document, revision);
     }
   }
 
@@ -564,7 +802,7 @@ abstract final class WordRevisions {
     for (final WmlRevision revision in List<WmlRevision>.from(
       document.revisions,
     )) {
-      reject(document, revision);
+      if (document.revisions.contains(revision)) reject(document, revision);
     }
   }
 }

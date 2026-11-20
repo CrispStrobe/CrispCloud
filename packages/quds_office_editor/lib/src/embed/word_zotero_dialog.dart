@@ -14,6 +14,7 @@ import 'word_zotero_import.dart';
 import 'word_zotero_library.dart';
 import 'word_zotero_snapshot.dart';
 import 'word_zotero_sources.dart';
+import 'word_zotero_tags.dart';
 
 /// Connection preferences belong to the host session, never to a document.
 class ZoteroSession {
@@ -627,6 +628,44 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
     await _applyTag(tag, clearDraft: false, requireExact: true);
   }
 
+  Future<void> _browseTags() async {
+    if (_busy || (_savedSearchMode && _savedSearchKey == null)) return;
+    final client = _client;
+    final library = _session.library;
+    final generation = _catalogGeneration;
+    if (client == null || library == null) return;
+    final collectionKey = _savedSearchMode ? null : _collectionKey;
+    final collectionNames = _collections
+        .where((collection) => collection.key == collectionKey)
+        .map((collection) => collection.name);
+    final tags = await showDialog<List<String>>(
+      context: context,
+      builder: (_) => ZoteroTagBrowserDialog(
+        client: client,
+        library: library,
+        collectionKey: collectionKey,
+        activeTags: _tags,
+        scopeLabel: collectionKey != null
+            ? 'Collection tags: ${collectionNames.firstOrNull ?? collectionKey}'
+            : _savedSearchMode
+            ? 'Library tags (not limited to the saved search)'
+            : 'Library tags',
+      ),
+    );
+    if (tags == null || !_catalogIsCurrent(client, library, generation)) return;
+    if (_tags.length == tags.length &&
+        Iterable<int>.generate(
+          tags.length,
+        ).every((index) => _tags[index] == tags[index])) {
+      return;
+    }
+    setState(() {
+      _tags = normalizeZoteroTags(tags);
+      _tagError = null;
+    });
+    await _run(() => _loadItems(useSubmittedQuery: true));
+  }
+
   Future<void> _reviewSelection() async {
     if (_busy || _selected.isEmpty) return;
     final selection = Map<String, ZoteroCitationItem>.of(_selected);
@@ -652,10 +691,24 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
   Future<void> _showDocumentSources() => _run(() async {
     final target = _editTarget(_controller);
     final selection = Map<String, ZoteroCitationItem>.of(_selected);
-    final references = zoteroDocumentReferences(_documentItems);
+    final fields = _controller.zoteroFields;
+    final references = zoteroDocumentReferences([
+      for (final field in fields) ...?field.citation?.items,
+    ]);
+    final occurrences = zoteroDocumentCitationOccurrences(
+      _controller.document,
+      fields,
+    );
+    WmlZoteroField? destination;
     final keys = await _showReview<List<String>>(
       (_) => ZoteroDocumentSourcesDialog(
         references: references,
+        occurrences: occurrences,
+        canReveal: (field) =>
+            !_controller.isDisposed &&
+            target == _editTarget(_controller) &&
+            _controller.canRevealZoteroField(field),
+        onNavigate: (field) => destination = field,
         selectedKeys: {
           for (final reference in references)
             if (_selected.containsKey(reference.selectionKey))
@@ -666,8 +719,9 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
             .length,
       ),
     );
-    if (!mounted || keys == null) return;
-    if (target != _editTarget(_controller) ||
+    if (!mounted || (keys == null && destination == null)) return;
+    if (_controller.isDisposed ||
+        target != _editTarget(_controller) ||
         _selected.length != selection.length ||
         selection.entries.any(
           (entry) => !identical(_selected[entry.key], entry.value),
@@ -676,6 +730,18 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
         'The document or source selection changed. Open cited references again to continue.',
       );
     }
+    final field = destination;
+    if (field != null) {
+      if (!_controller.canRevealZoteroField(field)) {
+        throw StateError(
+          'This citation can no longer be shown. Open cited references again.',
+        );
+      }
+      // Navigation does not apply the source picker's draft selection.
+      Navigator.of(context).pop(field);
+      return;
+    }
+    if (keys == null) return;
     final sources = {
       for (final reference in references)
         reference.selectionKey: reference.item,
@@ -1835,7 +1901,7 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
     // while keeping the default catalog and its paging controls compact.
     return (base +
             (size.width < 380 ? 520 : (narrow ? 340 : 180)) +
-            140 +
+            188 +
             (_tags.isEmpty ? 0 : 220)) *
         textScale;
   }
@@ -2031,6 +2097,17 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
                 icon: const Icon(Icons.add),
               ),
             ],
+          ),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: TextButton.icon(
+              key: const ValueKey('zotero-browse-tags'),
+              onPressed: enabled && _client != null && _session.library != null
+                  ? _browseTags
+                  : null,
+              icon: const Icon(Icons.label_outline),
+              label: const Text('Browse tags…'),
+            ),
           ),
           const Padding(
             padding: EdgeInsets.only(top: 6, bottom: 8),

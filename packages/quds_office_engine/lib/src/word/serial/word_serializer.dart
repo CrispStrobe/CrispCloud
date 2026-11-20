@@ -685,7 +685,14 @@ class WordSerializer {
     final WmlParagraphProps properties = numberedInstance == null
         ? paragraph.properties
         : (paragraph.properties.copy()..numId = numberedInstance);
-    _writePPr(w, properties, sectionBreak: sectionBreak);
+    _writePPr(
+      w,
+      properties,
+      sectionBreak: sectionBreak,
+      revision: _revisionsFor(
+        paragraph,
+      ).where((r) => r.kind == WmlRevisionKind.paragraphFormat).firstOrNull,
+    );
     if (noteReference) {
       // Word displays the automatic note number from this marker in the note
       // body. Without it, Word shows the note text but no number.
@@ -924,9 +931,22 @@ class WordSerializer {
     WmlRun inline,
     int offset,
   ) {
-    final List<WmlRevision> revisions = _revisionsFor(paragraph).toList();
+    final List<WmlRevision> revisions = _revisionsFor(
+      paragraph,
+    ).where((r) => r.kind != WmlRevisionKind.paragraphFormat).toList();
     if (revisions.isEmpty || inline.text.isEmpty) {
-      _writeRun(w, inline);
+      _writeRun(
+        w,
+        inline,
+        formatting: revisions
+            .where(
+              (r) =>
+                  r.kind == WmlRevisionKind.runFormat &&
+                  r.start == offset &&
+                  r.end == offset,
+            )
+            .firstOrNull,
+      );
       return;
     }
     final int length = inline.text.length;
@@ -945,17 +965,27 @@ class WordSerializer {
       final int start = offset + cuts[i - 1];
       final int end = offset + cuts[i];
       WmlRevision? tracked;
-      for (final WmlRevision revision in revisions) {
+      WmlRevision? formatting;
+      for (final revision in revisions) {
         if (revision.start < end && revision.end > start) {
-          tracked = revision;
-          break;
+          if (revision.kind.isFormatting) {
+            formatting = revision;
+          } else {
+            tracked = revision;
+          }
         }
       }
       final WmlRun run = cuts.length == 2
           ? inline
           : (WmlClone.inlines(<WmlInline>[inline]).single as WmlRun
               ..text = inline.text.substring(cuts[i - 1], cuts[i]));
-      _writeRun(w, run, revision: tracked);
+      if (tracked?.moveStartXml != null && start == tracked!.start) {
+        XmlDocument.parse(tracked.moveStartXml!).root!.writeTo(w);
+      }
+      _writeRun(w, run, revision: tracked, formatting: formatting);
+      if (tracked?.moveEndXml != null && end == tracked!.end) {
+        XmlDocument.parse(tracked.moveEndXml!).root!.writeTo(w);
+      }
     }
   }
 
@@ -982,7 +1012,12 @@ class WordSerializer {
     }
   }
 
-  void _writeRun(XmlWriter w, WmlRun inline, {WmlRevision? revision}) {
+  void _writeRun(
+    XmlWriter w,
+    WmlRun inline, {
+    WmlRevision? revision,
+    WmlRevision? formatting,
+  }) {
     final String? instruction = inline.fieldInstruction;
     final zotero = WordZotero.kindOfInstruction(instruction) != null;
     if (instruction != null && zotero) {
@@ -1017,7 +1052,14 @@ class WordSerializer {
     // is not a valid WordprocessingML run-content child.
     final bool deleted = revision?.kind == WmlRevisionKind.delete;
     if (revision != null) {
-      w.writeStartElement(deleted ? 'del' : 'ins', prefix: 'w');
+      w.writeStartElement(
+        revision.kind == WmlRevisionKind.insert
+            ? 'ins'
+            : revision.kind == WmlRevisionKind.delete
+            ? 'del'
+            : revision.kind.name,
+        prefix: 'w',
+      );
       w.writeAttribute('w:id', '${revision.id}');
       w.writeAttribute('w:author', revision.author);
       if (revision.dateIso.isNotEmpty) {
@@ -1025,7 +1067,7 @@ class WordSerializer {
       }
     }
     w.writeStartElement('r', prefix: 'w');
-    _writeRPr(w, inline.properties);
+    _writeRPr(w, inline.properties, revision: formatting);
     final WmlVisual? picture = inline.inlineVisual;
     final String? pictureId = picture == null
         ? null
@@ -1124,7 +1166,21 @@ class WordSerializer {
         .id;
   }
 
-  void _writePPr(XmlWriter w, WmlParagraphProps p, {WmlSection? sectionBreak}) {
+  void _writePPr(
+    XmlWriter w,
+    WmlParagraphProps p, {
+    WmlSection? sectionBreak,
+    WmlRevision? revision,
+  }) {
+    if (revision != null) {
+      final generated = XmlWriter();
+      _writePPr(generated, p, sectionBreak: sectionBreak);
+      final node = XmlDocument.parse(generated.toXml()).root!;
+      node.children.add(_propertyChange(revision, 'pPrChange'));
+      WordPropertyIo.orderChildren(node);
+      node.writeTo(w);
+      return;
+    }
     if (p.importedValues != null && p.sourcePropertiesXml != null) {
       final XmlWriter generated = XmlWriter();
       _writeFullPPr(generated, p, sectionBreak: sectionBreak);
@@ -1299,7 +1355,54 @@ class WordSerializer {
     w.writeEndElement();
   }
 
-  void _writeRPr(XmlWriter w, WmlRunProps r) {
+  XmlElement _propertyChange(WmlRevision revision, String name) {
+    final node = revision.propertyChangeXml == null
+        ? XmlElement(
+            localName: name,
+            prefix: 'w',
+            namespaceUri: OfficeNamespaces.w,
+            children: [
+              XmlDocument.parse(revision.previousPropertiesXml!).root!,
+            ],
+          )
+        : XmlDocument.parse(revision.propertyChangeXml!).root!;
+    node.setAttribute(
+      'id',
+      '${revision.id}',
+      prefix: 'w',
+      namespaceUri: OfficeNamespaces.w,
+    );
+    node.setAttribute(
+      'author',
+      revision.author,
+      prefix: 'w',
+      namespaceUri: OfficeNamespaces.w,
+    );
+    if (revision.dateIso.isNotEmpty) {
+      node.setAttribute(
+        'date',
+        revision.dateIso,
+        prefix: 'w',
+        namespaceUri: OfficeNamespaces.w,
+      );
+    } else {
+      node.attributes.removeWhere(
+        (a) => a.localName == 'date' && a.namespaceUri == OfficeNamespaces.w,
+      );
+    }
+    return node;
+  }
+
+  void _writeRPr(XmlWriter w, WmlRunProps r, {WmlRevision? revision}) {
+    if (revision != null) {
+      final generated = XmlWriter();
+      _writeRPr(generated, r);
+      final node = XmlDocument.parse(generated.toXml()).root!;
+      node.children.add(_propertyChange(revision, 'rPrChange'));
+      WordPropertyIo.orderChildren(node);
+      node.writeTo(w);
+      return;
+    }
     if (r.importedValues != null && r.sourcePropertiesXml != null) {
       final XmlWriter generated = XmlWriter();
       _writeFullRPr(generated, r);

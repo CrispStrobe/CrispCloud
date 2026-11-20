@@ -47,6 +47,9 @@ PCRE2 = {
 }
 LIBRARY = "libcrispembed-spacy.dylib"
 DEPLOYMENT_TARGET = "13.0"
+# Recorded in the receipt; a receipt without it predates reproducible builds
+# and is rebuilt rather than reused.
+BUILD_PATH_PREFIX = "/quds-spacy-build"
 
 
 def sha(data: bytes) -> str:
@@ -101,7 +104,15 @@ def fetch_source(work: Path, repository: str) -> tuple[Path, Path]:
 def build(crispembed: Path, pcre2: Path, output: Path, jobs: int) -> Path:
     if platform.system() != "Darwin" or platform.machine() != "arm64":
         raise SystemExit("This build is defined for macOS arm64 app bundles")
-    apple = ["-DCMAKE_OSX_ARCHITECTURES=arm64", f"-DCMAKE_OSX_DEPLOYMENT_TARGET={DEPLOYMENT_TARGET}"]
+    # Reproducible bytes: compiled-in source paths (__FILE__ in ggml/PCRE2
+    # assertions) would otherwise embed the checkout location, so every clone
+    # produced a different library and digest-bound qualification could not
+    # survive a rebuild. The linker's LC_UUID is a content hash and the
+    # linker/ad hoc signatures are deterministic, so with this map the same
+    # source and toolchain give the same bytes in any directory.
+    prefix_map = f"-ffile-prefix-map={output}={BUILD_PATH_PREFIX}"
+    apple = ["-DCMAKE_OSX_ARCHITECTURES=arm64", f"-DCMAKE_OSX_DEPLOYMENT_TARGET={DEPLOYMENT_TARGET}",
+             f"-DCMAKE_C_FLAGS={prefix_map}", f"-DCMAKE_CXX_FLAGS={prefix_map}"]
     pcre_build, prefix = output / "cmake-pcre2", output / "pcre2-install"
     run(["cmake", "-S", pcre2, "-B", pcre_build, "-DCMAKE_BUILD_TYPE=Release", *apple,
          "-DBUILD_SHARED_LIBS=OFF", "-DPCRE2_STATIC_PIC=ON", "-DPCRE2_BUILD_PCRE2_8=ON",
@@ -240,13 +251,14 @@ def build_outputs(args, output: Path) -> None:
         if receipt_path.exists() and library.exists():
             current = json.loads(receipt_path.read_text(encoding="utf-8"))
             if current.get("crispembed") != CRISPEMBED or current.get("pcre2") != PCRE2 or \
+                    current.get("file_prefix_map") != BUILD_PATH_PREFIX or \
                     current.get("files", {}).get(f"native/{LIBRARY}") != sha(library.read_bytes()):
                 current = None
         if current is None:
             sources = sources or fetch_source(output / "source", args.crispembed_repo)
             build(*sources, output, args.jobs)
             receipt = {"crispembed": CRISPEMBED, "pcre2": PCRE2, "platform": platform.platform(),
-                       "deployment_target": DEPLOYMENT_TARGET,
+                       "deployment_target": DEPLOYMENT_TARGET, "file_prefix_map": BUILD_PATH_PREFIX,
                        "license_manifest_sha256": sha((LICENSES / "manifest.json").read_bytes()),
                        "files": {f"native/{LIBRARY}": sha(library.read_bytes())}}
             receipt_path.write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n",

@@ -428,11 +428,32 @@ class _Declaration extends _Statement {
     this.isConst,
     this.initializer, {
     this.bounds,
+    this.isDynamicArray = false,
   });
   final _Declared type;
   final bool isConst;
   final _Expr? initializer;
   final (_Expr, _Expr)? bounds;
+  final bool isDynamicArray;
+  bool get isArray => bounds != null || isDynamicArray;
+}
+
+class _ResizeTarget {
+  const _ResizeTarget(this.name, this.bounds, this.type);
+  final _Token name;
+  final (_Expr, _Expr) bounds;
+  final _Declared? type;
+}
+
+class _Resize extends _Statement {
+  const _Resize(super.token, this.targets, this.preserve);
+  final List<_ResizeTarget> targets;
+  final bool preserve;
+}
+
+class _Erase extends _Statement {
+  const _Erase(super.token, this.targets);
+  final List<_Token> targets;
 }
 
 class _Assignment extends _Statement {
@@ -556,6 +577,7 @@ class _Parser {
   _Parser(this.context, this.tokens);
   final _Context context;
   final List<_Token> tokens;
+  int arrayBase = 0;
   int position = 0;
   int expressionDepth = 0;
   int statementCount = 0;
@@ -573,17 +595,34 @@ class _Parser {
 
   _Module parse() {
     var explicit = false;
+    var baseSpecified = false;
     var attribute = false;
     final constants = <_Declaration>[];
     final procedures = <String, _Procedure>{};
     _separators();
     while (current.kind != _TokenKind.end) {
       if (_take('option')) {
-        if (procedures.isNotEmpty || explicit) {
-          _syntax('Option Explicit must occur once before procedures.');
+        if (procedures.isNotEmpty) {
+          _syntax('Option statements must precede procedures.');
         }
-        _expect('explicit');
-        explicit = true;
+        if (_take('explicit')) {
+          if (explicit) _syntax('Option Explicit may occur only once.');
+          explicit = true;
+        } else if (_take('base')) {
+          if (baseSpecified) _syntax('Option Base may occur only once.');
+          if (current.kind != _TokenKind.number ||
+              (current.text != '0' && current.text != '1')) {
+            _syntax('Option Base requires the literal 0 or 1.');
+          }
+          arrayBase = current.text == '1' ? 1 : 0;
+          baseSpecified = true;
+          position++;
+        } else {
+          context.unsupported(
+            current,
+            'Only Option Explicit and Option Base are supported.',
+          );
+        }
         _endStatement();
       } else if (_take('attribute')) {
         if (procedures.isNotEmpty || attribute) {
@@ -690,6 +729,35 @@ class _Parser {
       }
       if (_is('dim') || _is('const')) {
         result.addAll(_declarations(_is('const')));
+      } else if (_is('redim')) {
+        final token = current;
+        position++;
+        final preserve = _take('preserve');
+        final targets = <_ResizeTarget>[];
+        do {
+          if (targets.length >= _maxVariables) {
+            context.limit(current, 'Too many ReDim targets.');
+          }
+          final name = _identifier();
+          _expect('(');
+          final bounds = _arrayDimensions(name);
+          final type = _is('as') ? _declaredType() : null;
+          targets.add(_ResizeTarget(name, bounds, type));
+        } while (_take(','));
+        _endStatement();
+        result.add(_Resize(token, targets, preserve));
+      } else if (_is('erase')) {
+        final token = current;
+        position++;
+        final targets = <_Token>[];
+        do {
+          if (targets.length >= _maxVariables) {
+            context.limit(current, 'Too many Erase targets.');
+          }
+          targets.add(_identifier());
+        } while (_take(','));
+        _endStatement();
+        result.add(_Erase(token, targets));
       } else if (_is('exit')) {
         final token = current;
         position++;
@@ -1007,34 +1075,36 @@ class _Parser {
     do {
       final name = _identifier();
       (_Expr, _Expr)? bounds;
+      var isDynamicArray = false;
       if (_take('(')) {
-        if (isConst || _is(')')) {
+        if (isConst) {
           context.unsupported(
             name,
-            'Only fixed-size local Dim arrays are supported.',
+            'Only local Dim arrays are supported; constants must be scalar.',
           );
         }
-        final first = _expression();
-        bounds = _take('to')
-            ? (first, _expression())
-            : (_Literal(name, 0), first);
-        if (_is(',')) {
-          context.unsupported(
-            name,
-            'Only one-dimensional arrays are supported.',
-          );
+        if (_take(')')) {
+          isDynamicArray = true;
+        } else {
+          bounds = _arrayDimensions(name);
         }
-        _expect(')');
       }
       final type = _declaredType();
-      if (bounds != null) arrayNames.add(name.lower);
+      if (bounds != null || isDynamicArray) arrayNames.add(name.lower);
       _Expr? initializer;
       if (isConst) {
         _expect('=');
         initializer = _expression();
       }
       result.add(
-        _Declaration(name, type, isConst, initializer, bounds: bounds),
+        _Declaration(
+          name,
+          type,
+          isConst,
+          initializer,
+          bounds: bounds,
+          isDynamicArray: isDynamicArray,
+        ),
       );
       if (result.length > _maxVariables) {
         context.limit(name, 'Too many declarations.');
@@ -1042,6 +1112,18 @@ class _Parser {
     } while (_take(','));
     _endStatement();
     return result;
+  }
+
+  (_Expr, _Expr) _arrayDimensions(_Token name) {
+    final first = _expression();
+    final bounds = _take('to')
+        ? (first, _expression())
+        : (_Literal(name, arrayBase), first);
+    if (_is(',')) {
+      context.unsupported(name, 'Only one-dimensional arrays are supported.');
+    }
+    _expect(')');
+    return bounds;
   }
 
   _Declared _declaredType() {
@@ -1217,12 +1299,15 @@ class _Symbol {
     this.isConst,
     this.token, {
     this.array,
+    this.isDynamicArray = false,
     this.initializer,
   });
   final _Declared type;
   final bool isConst;
   final _Token token;
   final _ArrayBounds? array;
+  final bool isDynamicArray;
+  bool get isArray => array != null || isDynamicArray;
   final _Expr? initializer;
 }
 
@@ -1465,8 +1550,7 @@ class _Checker {
         initializer.token,
       );
     }
-    _ArrayBounds? array;
-    if (declaration.bounds case final bounds?) {
+    if (declaration.isArray) {
       if (declaration.type == _Declared.range ||
           declaration.type == _Declared.worksheet) {
         context.unsupported(
@@ -1474,6 +1558,9 @@ class _Checker {
           'Array elements must be scalar.',
         );
       }
+    }
+    _ArrayBounds? array;
+    if (declaration.bounds case final bounds?) {
       final lower = _arrayBound(bounds.$1);
       final upper = _arrayBound(bounds.$2);
       if (lower > upper) {
@@ -1495,6 +1582,7 @@ class _Checker {
       declaration.isConst,
       declaration.token,
       array: array,
+      isDynamicArray: declaration.isDynamicArray,
       initializer: declaration.initializer,
     );
   }
@@ -1633,11 +1721,36 @@ class _Checker {
               'Declarations inside control-flow blocks are unsupported.',
             );
           }
+        case _Resize():
+          for (final target in statement.targets) {
+            final symbol = _symbol(target.name);
+            if (!symbol.isDynamicArray) {
+              context.unsupported(
+                target.name,
+                'ReDim requires a local dynamic array declared with Dim name().',
+              );
+            }
+            if (target.type != null && target.type != symbol.type) {
+              context.type(
+                target.name,
+                'ReDim cannot change the declared element type.',
+              );
+            }
+            for (final bound in <_Expr>[target.bounds.$1, target.bounds.$2]) {
+              _compatible(_Kind.number, _expression(bound), bound.token);
+            }
+          }
+        case _Erase():
+          for (final target in statement.targets) {
+            if (!_symbol(target).isArray) {
+              context.type(target, 'Erase requires a declared local array.');
+            }
+          }
         case _Assignment():
           final valueKind = _expression(statement.value);
           if (statement.target case final _Name target) {
             final symbol = _symbol(target.token);
-            if (symbol.array != null) {
+            if (symbol.isArray) {
               context.unsupported(
                 target.token,
                 'Whole-array assignment is unsupported; use an element subscript.',
@@ -1669,7 +1782,7 @@ class _Checker {
               );
             }
             final symbol = _symbol(target.token);
-            if (symbol.array == null) {
+            if (!symbol.isArray) {
               context.unsupported(
                 target.token,
                 'Indexed assignments require a declared array.',
@@ -1703,7 +1816,7 @@ class _Checker {
         case _For():
           final counter = _symbol(statement.counter);
           if (counter.isConst ||
-              counter.array != null ||
+              counter.isArray ||
               (counter.type != _Declared.long &&
                   counter.type != _Declared.variant)) {
             context.type(
@@ -1731,7 +1844,7 @@ class _Checker {
           final collection = statement.collection;
           final isArray =
               collection is _Name &&
-              symbols[collection.token.lower]?.array != null;
+              (symbols[collection.token.lower]?.isArray ?? false);
           if (!isArray && _expression(collection) != _Kind.range) {
             context.type(
               collection.token,
@@ -1739,7 +1852,7 @@ class _Checker {
             );
           }
           if (counter.isConst ||
-              counter.array != null ||
+              counter.isArray ||
               counter.type != (isArray ? _Declared.variant : _Declared.range)) {
             context.type(
               statement.counter,
@@ -1885,7 +1998,7 @@ class _Checker {
       case _Name():
         if (expression.token.lower == 'thisworkbook') return _Kind.workbook;
         final symbol = _symbol(expression.token);
-        if (symbol.array != null) {
+        if (symbol.isArray) {
           context.type(
             expression.token,
             'An array needs an element subscript; whole-array values are unsupported.',
@@ -1901,7 +2014,7 @@ class _Checker {
         }
         return withKinds.last;
       case _Call():
-        if (symbols[expression.token.lower]?.array != null) {
+        if ((symbols[expression.token.lower]?.isArray ?? false)) {
           return _arrayIndex(expression);
         }
         if (expression.token.lower == 'lbound' ||
@@ -2036,7 +2149,7 @@ class _Checker {
       );
     }
     final symbol = _symbol(expression.token);
-    if (symbol.array == null) {
+    if (!symbol.isArray) {
       context.type(expression.token, 'A declared local array is required.');
     }
     return symbol;
@@ -2120,10 +2233,13 @@ class _Uninitialized {
 }
 
 class _Array {
-  const _Array(this.bounds, this.type, this.elements);
-  final _ArrayBounds bounds;
+  _Array(this.bounds, this.type, this.elements);
+  _Array.unallocated(this.type) : bounds = null, elements = <Object>[];
+  _ArrayBounds? bounds;
   final _Declared type;
-  final List<Object> elements;
+  List<Object> elements;
+  int stringUnits = 0;
+  int locks = 0;
 }
 
 class _Workbook {
@@ -2314,6 +2430,10 @@ class _Evaluator {
   };
 
   void _initialize(_Declaration declaration) {
+    if (declaration.isDynamicArray) {
+      values[declaration.token.lower] = _Array.unallocated(declaration.type);
+      return;
+    }
     if (symbols[declaration.token.lower]!.array case final bounds?) {
       final count = bounds.length;
       if (count > _maxActiveArrayElements - activeArrayElements) {
@@ -2389,6 +2509,7 @@ class _Evaluator {
         if (frame is _ForEachFrame) {
           if (frame.index == frame.length) {
             frames.removeLast();
+            _releaseArrayLock(frame);
             continue;
           }
           _tick(frame.loop.token);
@@ -2438,6 +2559,14 @@ class _Evaluator {
         switch (statement) {
           case _Declaration():
             _initialize(statement);
+          case _Resize():
+            for (final target in statement.targets) {
+              _resize(target, preserve: statement.preserve);
+            }
+          case _Erase():
+            for (final target in statement.targets) {
+              _erase(target);
+            }
           case _Assignment():
             if (statement.target case final _Call target) {
               final array = values[target.token.lower]! as _Array;
@@ -2513,6 +2642,9 @@ class _Evaluator {
     } finally {
       // Also restore context if expression evaluation or a budget check fails.
       withValues.length = initialWithDepth;
+      for (final frame in frames) {
+        _releaseArrayLock(frame);
+      }
     }
   }
 
@@ -2544,6 +2676,7 @@ class _Evaluator {
     final collection = _evaluate(loop.collection);
     final int length;
     if (collection is _Array) {
+      _allocatedBounds(collection, loop.collection.token);
       length = collection.elements.length;
     } else {
       final range = collection as _Range;
@@ -2557,7 +2690,14 @@ class _Evaluator {
         'For Each exceeds the remaining compilation work budget.',
       );
     }
+    if (collection is _Array) collection.locks++;
     return _ForEachFrame(loop, collection, length);
+  }
+
+  void _releaseArrayLock(_ExecutionFrame frame) {
+    if (frame is _ForEachFrame && frame.collection is _Array) {
+      (frame.collection as _Array).locks--;
+    }
   }
 
   bool _leaveLoop(List<_ExecutionFrame> frames, _ExitKind kind) {
@@ -2565,6 +2705,7 @@ class _Evaluator {
     while (frames.isNotEmpty) {
       final frame = frames.removeLast();
       if (frame is _WithFrame) withValues.removeLast();
+      _releaseArrayLock(frame);
       if (kind == _ExitKind.forLoop &&
           (frame is _ForFrame || frame is _ForEachFrame)) {
         return true;
@@ -2629,6 +2770,7 @@ class _Evaluator {
         if (expression.token.lower == 'lbound' ||
             expression.token.lower == 'ubound') {
           final array = _evaluate(expression.arguments.first) as _Array;
+          final bounds = _allocatedBounds(array, expression.token);
           if (expression.arguments.length == 2) {
             final dimension = expression.arguments[1];
             if (_integer(_evaluate(dimension), dimension.token) != 1) {
@@ -2640,8 +2782,8 @@ class _Evaluator {
             }
           }
           return expression.token.lower == 'lbound'
-              ? array.bounds.lower
-              : array.bounds.upper;
+              ? bounds.lower
+              : bounds.upper;
         }
         final arguments = <Object>[
           for (final argument in expression.arguments) _evaluate(argument),
@@ -2782,14 +2924,15 @@ class _Evaluator {
 
   int _arrayOffset(_Array array, _Expr expression) {
     final index = _integer(_evaluate(expression), expression.token);
-    if (index < array.bounds.lower || index > array.bounds.upper) {
+    final bounds = _allocatedBounds(array, expression.token);
+    if (index < bounds.lower || index > bounds.upper) {
       context.fail(
         expression.token,
         'vba_subscript_out_of_range',
-        'Array subscript $index is outside ${array.bounds.lower}..${array.bounds.upper}.',
+        'Array subscript $index is outside ${bounds.lower}..${bounds.upper}.',
       );
     }
-    return index - array.bounds.lower;
+    return index - bounds.lower;
   }
 
   void _writeArrayElement(_Array array, int index, Object value, _Token token) {
@@ -2807,7 +2950,107 @@ class _Evaluator {
     // Count occupied string units per slot, even when Dart shares a String
     // object. This portable bound is independent of host allocation details.
     activeArrayStringUnits += nextUnits - previousUnits;
+    array.stringUnits += nextUnits - previousUnits;
     array.elements[index] = converted;
+  }
+
+  _ArrayBounds _allocatedBounds(_Array array, _Token token) =>
+      array.bounds ??
+      context.fail(
+        token,
+        'vba_subscript_out_of_range',
+        'The dynamic array has no allocated bounds; use ReDim before accessing it.',
+      );
+
+  void _unlocked(_Array array, _Token token) {
+    if (array.locks != 0) {
+      context.fail(
+        token,
+        'vba_array_locked',
+        'An array being enumerated by For Each cannot be resized or erased.',
+      );
+    }
+  }
+
+  int _dynamicBound(_Expr expression) {
+    final bound = _integer(_evaluate(expression), expression.token);
+    if (bound < -2147483648 || bound > 2147483647) {
+      context.type(
+        expression.token,
+        'Array bounds must be signed 32-bit integers.',
+      );
+    }
+    return bound;
+  }
+
+  void _resize(_ResizeTarget target, {required bool preserve}) {
+    final array = values[target.name.lower]! as _Array;
+    _unlocked(array, target.name);
+    // Each bound is evaluated exactly once, left to right. Bound helpers use
+    // isolated locals and share the caller's compilation budget.
+    final lower = _dynamicBound(target.bounds.$1);
+    final upper = _dynamicBound(target.bounds.$2);
+    if (lower > upper) {
+      context.type(
+        target.name,
+        'An array lower bound exceeds its upper bound.',
+      );
+    }
+    final bounds = _ArrayBounds(lower, upper);
+    final count = bounds.length;
+    if (count > _maxArrayElements) {
+      context.limit(
+        target.name,
+        'An array may contain at most $_maxArrayElements elements.',
+      );
+    }
+    if (preserve && array.bounds != null && lower != array.bounds!.lower) {
+      context.fail(
+        target.name,
+        'vba_subscript_out_of_range',
+        'ReDim Preserve cannot change the lower bound.',
+      );
+    }
+    final oldCount = array.elements.length;
+    if (count > _maxActiveArrayElements - activeArrayElements + oldCount) {
+      context.limit(
+        target.name,
+        'Active procedures may contain at most $_maxActiveArrayElements array elements.',
+      );
+    }
+    final copied = preserve ? (oldCount < count ? oldCount : count) : 0;
+    // Charge allocation, retirement and preserved copies before allocating.
+    // Repeated small resizes cannot reset or escape the aggregate work limit.
+    _charge(count + oldCount + copied, target.name);
+    final elements = List<Object>.filled(count, _default(array.type));
+    var stringUnits = 0;
+    for (var index = 0; index < copied; index++) {
+      final value = array.elements[index];
+      elements[index] = value;
+      if (value is String) stringUnits += value.length;
+    }
+    activeArrayElements += count - oldCount;
+    activeArrayStringUnits += stringUnits - array.stringUnits;
+    array.bounds = bounds;
+    array.elements = elements;
+    array.stringUnits = stringUnits;
+  }
+
+  void _erase(_Token target) {
+    final array = values[target.lower]! as _Array;
+    _unlocked(array, target);
+    final count = array.elements.length;
+    // An unallocated target still consumes work, including in a target list.
+    _charge(count + 1, target);
+    activeArrayStringUnits -= array.stringUnits;
+    array.stringUnits = 0;
+    if (symbols[target.lower]!.isDynamicArray) {
+      activeArrayElements -= count;
+      array.bounds = null;
+      array.elements = <Object>[];
+    } else {
+      array.elements = List<Object>.filled(count, _default(array.type));
+    }
   }
 
   Object _convert(_Declared type, Object value, _Token token) {

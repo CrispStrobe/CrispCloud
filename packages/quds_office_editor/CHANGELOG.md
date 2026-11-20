@@ -4,6 +4,29 @@ All notable changes to `quds_office_editor` are documented here.
 
 ## Unreleased
 
+- Keep painting and caret hit testing aligned for anchored slide text, apply
+  current scalar formatting to imported rich text, and preserve inherited
+  backgrounds and the established 16-point fallback.
+
+- Add bounded multiple To recipients, Cc, Bcc and Reply all to native Studio
+  mail. Keep hidden recipients in the explicit envelope, preserve all groups
+  through uncertain retries, and reject unsupported decoded reply addresses.
+- Preserve explicit white slide and layout fills while adapting inherited
+  neutral paper to the display theme; retain the document-color opt-out.
+
+- Retain slide theme inheritance and the native 16-point text default when
+  rendering imported rich text. Honor scalar text formatting and paragraph
+  font fallbacks while preserving authored color contrast in dark displays.
+
+- Add a searchable Zotero tag browser with paginated results, staged filters,
+  exact-name validation and selection across searches. Applying filters retains
+  selected sources and unfinished input, and restarts the submitted reference
+  search; cancellation and stale connections preserve the existing filters.
+- Navigate from a cited source to its distinct citation fields, with cached
+  text and body/note location labels. Preserve source identity aliases and
+  read-only document state, retain source-picker drafts on Back, and reject
+  changed destinations before moving the caret.
+
 - Preserve validated reply-thread identifiers through native Studio composition
   and explicit uncertain-send retries. Emit bounded In-Reply-To/References
   headers, keep forwards independent, and omit unsupported or unsafe IDs.

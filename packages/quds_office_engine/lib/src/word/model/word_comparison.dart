@@ -1285,7 +1285,7 @@ class _Collector {
 
   List<(int, int)> _removedRanges(String text, List<WmlRevision> pending) {
     if (pending.isEmpty) return const <(int, int)>[];
-    final ordered = pending.toList()
+    final ordered = pending.where((r) => !r.kind.isFormatting).toList()
       ..sort((a, b) => a.start.compareTo(b.start));
     var end = -1;
     var invalid = false;
@@ -1322,7 +1322,10 @@ class _Collector {
         : WmlRevisionKind.insert;
     return <(int, int)>[
       for (final revision in ordered)
-        if (revision.kind == removedKind && revision.end > revision.start)
+        if ((removedKind == WmlRevisionKind.delete
+                ? revision.kind.isDeletion
+                : revision.kind.isInsertion) &&
+            revision.end > revision.start)
           (revision.start, revision.end),
     ];
   }

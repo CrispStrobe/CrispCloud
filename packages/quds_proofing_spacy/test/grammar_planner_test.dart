@@ -83,6 +83,7 @@ const _inversion = <_Spec>[
   int origin = 0,
   Set<String> ignored = const {},
   String nativeSha = spacyGrammarNativeSha256,
+  int capabilityMask = 15,
   Set<int> sentenceEnds = const {},
 }) {
   final buffer = StringBuffer();
@@ -143,7 +144,10 @@ const _inversion = <_Spec>[
         text: request.text,
         startOffset: origin,
       ),
-      identity: SpacyBackendIdentity(librarySha256: nativeSha),
+      identity: SpacyBackendIdentity(
+        librarySha256: nativeSha,
+        capabilityMask: capabilityMask,
+      ),
       tokens: tokens,
     ),
   );
@@ -164,6 +168,21 @@ Future<SpacyGrammarPlan> _plan(
 }
 
 void main() {
+  test('every qualified build gets the same proposal; others none', () async {
+    expect(spacyGrammarNativeSha256s, contains(spacyGrammarNativeSha256));
+    expect(spacyGrammarNativeSha256s, hasLength(2));
+    for (final sha in spacyGrammarNativeSha256s) {
+      final input = _input(_modifier, nativeSha: sha);
+      final plan = await const SpacyGermanGrammarPlanner().plan(
+        input.request,
+        input.analysis,
+      );
+      expect(plan.result.status, OfficeProofingStatus.success);
+      expect(plan.result.findings.single.originalText, 'schläft');
+      expect(plan.result.findings.single.replacements, ['schlafen']);
+    }
+  });
+
   test(
     'a quotation blocks its middle sentence even without local quote tokens',
     () async {
@@ -558,6 +577,18 @@ void main() {
         )).decisions.single.reason,
         'runtime-mismatch',
       );
+      // Grammar is qualified without named entities: a qualified build with
+      // NER attached (capability mask 31) is a different runtime profile.
+      for (final sha in spacyGrammarNativeSha256s) {
+        final withNer = _input(_modifier, nativeSha: sha, capabilityMask: 31);
+        expect(
+          (await const SpacyGermanGrammarPlanner().plan(
+            withNer.request,
+            withNer.analysis,
+          )).decisions.single.reason,
+          'runtime-mismatch',
+        );
+      }
     },
   );
 

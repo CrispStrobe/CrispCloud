@@ -302,8 +302,16 @@ void main() {
     );
 
     controller.beginHeaderFooterEdit(0, footer: false);
+    expect(
+      controller.editingHeaderFooterVariant,
+      WordHeaderFooterVariant.firstPage,
+    );
     controller.insertText('Header\tstart\nnext\n');
     controller.undo();
+    expect(
+      controller.document.sections.first.firstHeader.single.text,
+      'First page header retained',
+    );
     expect(
       controller.document.sections.first.header.single.text,
       'Selected header fallback',
@@ -340,8 +348,15 @@ void main() {
             .getAttribute('id', namespace: _w),
         '4',
       );
-      final header = _story(parts, _sections(parts).first, 'header', 'default');
-      expect(_tokens(header), 'Header\tstart\nnext\nSelected header fallback');
+      final header = _story(parts, _sections(parts).first, 'header', 'first');
+      expect(
+        _tokens(header),
+        'Header\tstart\nnext\nFirst page header retained',
+      );
+      expect(
+        _tokens(_story(parts, _sections(parts).first, 'header', 'default')),
+        'Selected header fallback',
+      );
       expect(header.findAllElements('br', namespace: _w), hasLength(2));
       final notes = _xml(parts, 'word/footnotes.xml');
       final note = notes

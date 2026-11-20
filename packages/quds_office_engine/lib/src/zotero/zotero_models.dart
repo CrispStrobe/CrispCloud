@@ -10,6 +10,9 @@ enum ZoteroLibraryType { user, group }
 /// Full-text matches depend on the connected library's indexed content.
 enum ZoteroSearchMode { titleCreatorYear, everything }
 
+/// Search modes accepted by Zotero's tag catalog endpoints.
+enum ZoteroTagSearchMode { contains, startsWith }
+
 /// Supported catalog ordering, applied by Zotero before pagination.
 enum ZoteroItemSort { dateModified, dateAdded, title, creator, date, itemType }
 
@@ -184,6 +187,26 @@ class ZoteroCollection {
   final String name;
   final String? parentKey;
   final int version;
+}
+
+/// One read-only tag catalog record, retaining its exact supplied name.
+///
+/// Zotero may return the same name separately for manual and automatic tags.
+/// Keep those records distinct: their item counts can overlap and must not be
+/// added together. A missing count is unknown, not zero. Names are metadata;
+/// [normalizeZoteroTags] determines whether they can be used as literal filters.
+class ZoteroTag {
+  const ZoteroTag({required this.name, this.type, this.numItems});
+
+  final String name;
+
+  /// Zotero uses 0 for manual tags and 1 for automatically assigned tags.
+  /// Other nonnegative values remain available as uninterpreted metadata.
+  final int? type;
+
+  /// Count supplied by Zotero for this record, when available. In desktop
+  /// responses this can be library-wide even when browsing a collection.
+  final int? numItems;
 }
 
 /// A saved query owned and evaluated by a Zotero desktop library.

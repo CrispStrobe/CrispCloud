@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:quds_office_engine/quds_office_engine.dart';
 
 import 'word_zotero_import.dart';
 import 'word_zotero_library.dart';
@@ -14,11 +15,20 @@ class ZoteroDocumentSourcesDialog extends StatefulWidget {
     required this.references,
     required this.selectedKeys,
     required this.otherSelectionCount,
+    this.occurrences = const {},
+    this.canReveal,
+    this.onNavigate,
   });
 
   final List<ZoteroDocumentReference> references;
   final Set<String> selectedKeys;
   final int otherSelectionCount;
+  final Map<String, List<ZoteroDocumentOccurrence>> occurrences;
+  final bool Function(WmlZoteroField field)? canReveal;
+
+  /// Called after this dialog closes without applying its staged selection.
+  /// The host must revalidate the document and field before navigating.
+  final ValueChanged<WmlZoteroField>? onNavigate;
 
   @override
   State<ZoteroDocumentSourcesDialog> createState() =>
@@ -65,6 +75,27 @@ class _ZoteroDocumentSourcesDialogState
         _error = null;
       }
     });
+  }
+
+  Future<void> _showOccurrences(
+    ZoteroDocumentReference reference,
+    String title,
+  ) async {
+    final occurrences = widget.occurrences[reference.selectionKey];
+    if (occurrences == null || occurrences.isEmpty) return;
+    final destination = await showDialog<WmlZoteroField>(
+      context: context,
+      builder: (_) => ZoteroSourceOccurrencesDialog(
+        title: title,
+        occurrences: occurrences,
+        canReveal: widget.onNavigate == null ? null : widget.canReveal,
+      ),
+    );
+    if (!mounted || destination == null || widget.onNavigate == null) return;
+    // Going back from the occurrence list leaves _selected untouched. Going
+    // to a citation explicitly leaves the staged source selection unapplied.
+    Navigator.pop(context);
+    widget.onNavigate!(destination);
   }
 
   @override
@@ -173,21 +204,36 @@ class _ZoteroDocumentSourcesDialogState
                       ].join('\n'),
                     ),
                   ),
-                  Align(
-                    alignment: AlignmentDirectional.centerEnd,
-                    child: TextButton.icon(
-                      key: ValueKey(
-                        'zotero-document-source-details-${display.index}',
-                      ),
-                      onPressed: () => showDialog<void>(
-                        context: context,
-                        builder: (_) => ZoteroStoredReferenceDetailsDialog(
-                          item: reference.item,
+                  Wrap(
+                    alignment: WrapAlignment.end,
+                    children: [
+                      if (widget
+                              .occurrences[reference.selectionKey]
+                              ?.isNotEmpty ==
+                          true)
+                        TextButton.icon(
+                          key: ValueKey(
+                            'zotero-document-source-occurrences-${display.index}',
+                          ),
+                          onPressed: () =>
+                              _showOccurrences(reference, display.title),
+                          icon: const Icon(Icons.find_in_page_outlined),
+                          label: const Text('Show citations'),
                         ),
+                      TextButton.icon(
+                        key: ValueKey(
+                          'zotero-document-source-details-${display.index}',
+                        ),
+                        onPressed: () => showDialog<void>(
+                          context: context,
+                          builder: (_) => ZoteroStoredReferenceDetailsDialog(
+                            item: reference.item,
+                          ),
+                        ),
+                        icon: const Icon(Icons.info_outline),
+                        label: const Text('Stored reference details'),
                       ),
-                      icon: const Icon(Icons.info_outline),
-                      label: const Text('Stored reference details'),
-                    ),
+                    ],
                   ),
                 ],
               ),
@@ -209,4 +255,143 @@ class _ZoteroDocumentSourcesDialogState
       ],
     );
   }
+}
+
+/// Inspects distinct citation fields for a source without touching document
+/// content or the parent dialog's pending source selection.
+class ZoteroSourceOccurrencesDialog extends StatefulWidget {
+  const ZoteroSourceOccurrencesDialog({
+    super.key,
+    required this.title,
+    required this.occurrences,
+    this.canReveal,
+  });
+
+  final String title;
+  final List<ZoteroDocumentOccurrence> occurrences;
+  final bool Function(WmlZoteroField field)? canReveal;
+
+  @override
+  State<ZoteroSourceOccurrencesDialog> createState() =>
+      _ZoteroSourceOccurrencesDialogState();
+}
+
+class _ZoteroSourceOccurrencesDialogState
+    extends State<ZoteroSourceOccurrencesDialog> {
+  String? _error;
+
+  void _go(WmlZoteroField field) {
+    // Recheck the availability hint at click time. The host still performs
+    // full handle/content validation after all dialogs have closed.
+    if (widget.canReveal?.call(field) != true) {
+      setState(() {
+        _error =
+            'This citation is no longer available. Close this list and open cited references again.';
+      });
+      return;
+    }
+    Navigator.pop(context, field);
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    key: const ValueKey('zotero-source-occurrences-dialog'),
+    insetPadding: const EdgeInsets.all(16),
+    scrollable: true,
+    title: const Text('Citation occurrences'),
+    content: SizedBox(
+      width: 650,
+      height: max(160, min(480, MediaQuery.sizeOf(context).height - 260)),
+      child: ListView.builder(
+        key: const ValueKey('zotero-source-occurrences-list'),
+        itemCount: widget.occurrences.length + 1,
+        itemBuilder: (context, row) {
+          if (row == 0) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  widget.title,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '${widget.occurrences.length} distinct citation field(s). A source repeated inside one citation appears once here.',
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Going to a citation closes the workspace without applying changes to selected sources.',
+                ),
+                if (_error != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    _error!,
+                    key: const ValueKey('zotero-source-occurrences-error'),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 8),
+              ],
+            );
+          }
+          final index = row - 1;
+          final occurrence = widget.occurrences[index];
+          final available = widget.canReveal?.call(occurrence.field) == true;
+          final preview = occurrence.field.cachedText.isEmpty
+              ? '(Empty citation text)'
+              : occurrence.field.cachedText;
+          return Card(
+            key: ValueKey('zotero-source-occurrence-$index'),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    occurrence.location,
+                    style: Theme.of(context).textTheme.labelLarge,
+                  ),
+                  const SizedBox(height: 6),
+                  Tooltip(
+                    message: preview,
+                    child: Text(
+                      preview,
+                      maxLines: 5,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  if (!available) ...[
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Navigation is unavailable for this citation or document mode.',
+                    ),
+                  ],
+                  Align(
+                    alignment: AlignmentDirectional.centerEnd,
+                    child: TextButton.icon(
+                      key: ValueKey('zotero-source-occurrence-go-$index'),
+                      onPressed: available ? () => _go(occurrence.field) : null,
+                      icon: const Icon(Icons.arrow_forward),
+                      label: const Text('Go to citation'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    ),
+    actions: [
+      TextButton(
+        key: const ValueKey('zotero-source-occurrences-back'),
+        onPressed: () => Navigator.pop(context),
+        child: const Text('Back to cited references'),
+      ),
+    ],
+  );
 }

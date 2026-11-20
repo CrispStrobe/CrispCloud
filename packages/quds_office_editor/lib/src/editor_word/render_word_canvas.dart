@@ -4278,11 +4278,14 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
         canvas.drawRect(
           Rect.fromLTWH(x, line.y, w, line.height),
           Paint()
-            ..color = revision.kind == WmlRevisionKind.insert
+            ..color = revision.kind.isFormatting
+                ? const Color(0x334A78CC)
+                : revision.kind.isInsertion
                 ? const Color(0x3327AE60)
                 : const Color(0x33C0392B),
         );
-        if (revision.kind == WmlRevisionKind.insert) {
+        if (revision.kind.isFormatting) continue;
+        if (revision.kind.isInsertion) {
           canvas.drawLine(
             Offset(x, line.y + line.height - 1),
             Offset(x + w, line.y + line.height - 1),

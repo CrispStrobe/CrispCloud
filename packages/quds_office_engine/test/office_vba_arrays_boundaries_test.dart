@@ -187,7 +187,7 @@ End Function
     );
 
     for (final declaration in <String>[
-      'Dim values() As Long',
+      'Dim values(,) As Long',
       'Dim values(1 To 2, 1 To 2) As Long',
       'Dim values(1 To 2) As Range',
       'Dim values(1 To 2) As Worksheet',
@@ -409,7 +409,7 @@ Next item
       'With values\nEnd With',
       'Set target = values',
       'ReDim values(4)',
-      'Erase values',
+      'Erase values(0)',
     ]) {
       test('array escape stays invalid in inactive code: $operation', () {
         expect(

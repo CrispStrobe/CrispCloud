@@ -334,13 +334,7 @@ abstract final class OfficePdfExport {
         sink.canvas.clipRect(ox, oy, slideW * scale, slideH * scale);
         sink.canvas.translateScale(ox, oy, scale);
       }
-      sink.canvas.fillRect(
-        0,
-        0,
-        slideW,
-        slideH,
-        slide.background.isEmpty ? 'FFFFFF' : slide.background,
-      );
+      sink.canvas.fillRect(0, 0, slideW, slideH, _slideBackground(deck, slide));
       for (final PmlShape shape
           in slide.backgroundShapes.isNotEmpty
               ? slide.backgroundShapes
@@ -469,7 +463,7 @@ abstract final class OfficePdfExport {
           0,
           slideW,
           slideH,
-          slide.background.isEmpty ? 'FFFFFF' : slide.background,
+          _slideBackground(deck, slide),
         );
         for (final PmlShape shape
             in slide.backgroundShapes.isNotEmpty
@@ -1682,11 +1676,9 @@ abstract final class OfficePdfExport {
       }
       final String text = deck.resolveText(shape, slide);
       if (text.isNotEmpty) {
-        final bool richCurrent =
-            shape.richText.isNotEmpty &&
-            (shape.textSource?.text ?? shape.text) == shape.text;
-        if (richCurrent) {
-          _paintRichText(sink, shape, x, y, w, h);
+        final List<PmlTextParagraph> paragraphs = shape.resolvedRichText;
+        if (paragraphs.isNotEmpty && text == shape.text) {
+          _paintRichText(sink, shape, paragraphs, x, y, w, h);
         } else {
           final String ink = shape.textColor.isNotEmpty
               ? shape.textColor
@@ -1932,9 +1924,14 @@ abstract final class OfficePdfExport {
     }
   }
 
+  static String _slideBackground(PmlPresentation deck, PmlSlide slide) {
+    return slide.resolveBackground(deck.master.background);
+  }
+
   static void _paintRichText(
     _PageSink sink,
     PmlShape shape,
+    List<PmlTextParagraph> paragraphs,
     double x,
     double y,
     double w,
@@ -1944,8 +1941,9 @@ abstract final class OfficePdfExport {
     const double topInset = 3.6;
     const double rightInset = 7.2;
     final double width = math.max(8, w - leftInset - rightInset);
-    final List<PmlTextParagraph> paragraphs = shape.richText;
-    const String fallbackColor = '000000';
+    final String fallbackColor = shape.textColor.isEmpty
+        ? '000000'
+        : shape.textColor;
     final double fallbackSize = shape.fontSizePt > 0 ? shape.fontSizePt : 12;
     double fitScale = 1;
     final List<PmlTextParagraph> visible = <PmlTextParagraph>[
@@ -1957,7 +1955,9 @@ abstract final class OfficePdfExport {
       final PmlTextRun? run = _firstRichRun(paragraph);
       final double size = (run?.fontSizePt ?? 0) > 0
           ? run!.fontSizePt
-          : fallbackSize;
+          : (paragraph.defaultFontSizePt > 0
+                ? paragraph.defaultFontSizePt
+                : fallbackSize);
       final String text = _paragraphText(paragraph);
       if (!text.contains('\t') && !text.contains('\n')) {
         final double natural = sink.measureStyled(
@@ -1984,15 +1984,12 @@ abstract final class OfficePdfExport {
       final PmlTextRun? run = _firstRichRun(paragraph);
       final String text = _paragraphText(paragraph);
       final bool blank = text.trim().isEmpty;
-      final double autoSize = (h * 0.22).clamp(10.0, 18.0);
       final double size =
           ((run?.fontSizePt ?? 0) > 0
               ? run!.fontSizePt
-              : (blank
-                    ? (paragraph.defaultFontSizePt > 0
-                          ? paragraph.defaultFontSizePt
-                          : fallbackSize)
-                    : autoSize)) *
+              : (paragraph.defaultFontSizePt > 0
+                    ? paragraph.defaultFontSizePt
+                    : fallbackSize)) *
           fitScale;
       final bool bold =
           (run?.bold ?? false) &&
@@ -2022,15 +2019,12 @@ abstract final class OfficePdfExport {
       final PmlTextRun? run = _firstRichRun(paragraph);
       final String text = _paragraphText(paragraph);
       final bool blank = text.trim().isEmpty;
-      final double autoSize = (h * 0.22).clamp(10.0, 18.0);
       final double size =
           ((run?.fontSizePt ?? 0) > 0
               ? run!.fontSizePt
-              : (blank
-                    ? (paragraph.defaultFontSizePt > 0
-                          ? paragraph.defaultFontSizePt
-                          : fallbackSize)
-                    : autoSize)) *
+              : (paragraph.defaultFontSizePt > 0
+                    ? paragraph.defaultFontSizePt
+                    : fallbackSize)) *
           fitScale;
       final String color = (run?.color ?? '').isNotEmpty
           ? run!.color
@@ -2046,7 +2040,7 @@ abstract final class OfficePdfExport {
           ? null
           : run!.fontFamily;
       cy += paragraph.spaceBeforePt;
-      if (text.trim().isEmpty) {
+      if (blank) {
         cy += size * 1.25;
         cy += paragraph.spaceAfterPt;
         continue;
@@ -2095,7 +2089,7 @@ abstract final class OfficePdfExport {
           cy,
           maxWidth,
           align,
-          size,
+          size / fitScale,
           fallbackColor,
           fitScale,
         );

@@ -6,6 +6,7 @@ import 'package:quds_office_engine/quds_office_engine.dart';
 
 import '../proofing/word_proofing.dart';
 import 'office_controller.dart';
+import 'word_review_labels.dart';
 import 'office_theme.dart';
 
 /// Chrome pane listing footnotes, endnotes, and tracked revisions.
@@ -693,10 +694,9 @@ class _WordNotesPaneState extends State<WordNotesPane> {
                   else
                     ..._c.document.revisions.map((WmlRevision revision) {
                       final bool on = identical(revision, _c.selectedRevision);
-                      final String kind =
-                          revision.kind == WmlRevisionKind.insert
-                          ? (widget.arabic ? 'إدراج' : 'Insert')
-                          : (widget.arabic ? 'حذف' : 'Delete');
+                      final String kind = revision.kind.reviewLabel(
+                        arabic: widget.arabic,
+                      );
                       return GestureDetector(
                         onTap: () => _c.revealRevision(revision),
                         child: Padding(
@@ -722,7 +722,7 @@ class _WordNotesPaneState extends State<WordNotesPane> {
                                     ),
                                   ),
                                   Text(
-                                    revision.text,
+                                    revision.displayText,
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(

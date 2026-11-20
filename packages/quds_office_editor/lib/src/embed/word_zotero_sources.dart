@@ -51,15 +51,119 @@ List<ZoteroDocumentReference> zoteroDocumentReferences(
   final resolver = ZoteroSourceResolver(items, local: false);
   final groups = <String, List<ZoteroCitationItem>>{};
   for (final item in items) {
-    final address = resolver.addressOf(item);
-    final key = address == null
-        ? 'stored:${jsonEncode(_orderedJson(zoteroReusableCitationItem(item).toJson()))}'
-        : 'linked:${address.canonicalUri}';
+    final key = _documentSourceKey(item, resolver);
     groups.putIfAbsent(key, () => []).add(item);
   }
   return List.unmodifiable([
     for (final entry in groups.entries) _documentReference(entry),
   ]);
+}
+
+String _documentSourceKey(
+  ZoteroCitationItem item,
+  ZoteroSourceResolver resolver,
+) {
+  final address = resolver.addressOf(item);
+  return address == null
+      ? 'stored:${jsonEncode(_orderedJson(zoteroReusableCitationItem(item).toJson()))}'
+      : 'linked:${address.canonicalUri}';
+}
+
+/// One distinct citation field using a stored source. The field is a live
+/// snapshot: hosts must revalidate it before moving the document selection.
+final class ZoteroDocumentOccurrence {
+  const ZoteroDocumentOccurrence({required this.field, required this.location});
+
+  final WmlZoteroField field;
+  final String location;
+}
+
+/// Indexes citation fields using the same full-document source aliases and
+/// offline snapshot identity as [zoteroDocumentReferences]. A source appearing
+/// more than once inside a citation contributes only one navigation entry.
+///
+/// The input field order is retained. Unsupported stories remain inspectable;
+/// navigation availability is decided by the host, never inferred here.
+Map<String, List<ZoteroDocumentOccurrence>> zoteroDocumentCitationOccurrences(
+  WmlDocument document,
+  Iterable<WmlZoteroField> fields,
+) {
+  final citations = fields
+      .where((field) => field.kind == ZoteroFieldKind.citation)
+      .toList(growable: false);
+  final items = [for (final field in citations) ...?field.citation?.items];
+  final resolver = ZoteroSourceResolver(items, local: false);
+  final groups = <String, List<ZoteroCitationItem>>{};
+  final members = <String, List<WmlZoteroField>>{};
+  final seenFields = <(WmlParagraph, WmlRun?, int, int, String)>{};
+  for (final field in citations) {
+    if (!seenFields.add((
+      field.paragraph,
+      field.run,
+      field.start,
+      field.end,
+      field.instruction,
+    ))) {
+      continue;
+    }
+    final fieldKeys = <String>{};
+    for (final item in field.citation?.items ?? <ZoteroCitationItem>[]) {
+      final key = _documentSourceKey(item, resolver);
+      groups.putIfAbsent(key, () => []).add(item);
+      if (fieldKeys.add(key)) {
+        members.putIfAbsent(key, () => []).add(field);
+      }
+    }
+  }
+  final locations = _documentParagraphLocations(document);
+  return Map.unmodifiable({
+    for (final group in groups.entries)
+      _documentReference(
+        group,
+      ).selectionKey: List<ZoteroDocumentOccurrence>.unmodifiable([
+        for (final field in members[group.key]!)
+          ZoteroDocumentOccurrence(
+            field: field,
+            location: locations[field.paragraph] ?? 'Unlocated story',
+          ),
+      ]),
+  });
+}
+
+Map<WmlParagraph, String> _documentParagraphLocations(WmlDocument document) {
+  final locations = Map<WmlParagraph, String>.identity();
+  void add(Iterable<WmlParagraph> paragraphs, String story) {
+    var index = 0;
+    for (final paragraph in paragraphs) {
+      locations[paragraph] = '$story · paragraph ${++index}';
+    }
+  }
+
+  for (final (index, section) in document.sections.indexed) {
+    final suffix = 'section ${index + 1}';
+    add(WordTree.paragraphs(section.blocks), 'Body · $suffix');
+    add(section.header, 'Header · $suffix');
+    add(section.footer, 'Footer · $suffix');
+    add(section.firstHeader, 'First-page header · $suffix');
+    add(section.firstFooter, 'First-page footer · $suffix');
+    add(section.evenHeader, 'Even-page header · $suffix');
+    add(section.evenFooter, 'Even-page footer · $suffix');
+  }
+  final numbering = WordNoteNumbering(document);
+  for (final note in [...document.footnotes, ...document.endnotes]) {
+    final kind = note.endnote ? 'Endnote' : 'Footnote';
+    final label = numbering.labelFor(note);
+    final story = !numbering.hasExactLabel(note)
+        ? '$kind (source ID ${note.id})'
+        : label.isEmpty
+        ? '$kind (custom mark)'
+        : '$kind $label';
+    add(WordTree.paragraphs(note.blocks), story);
+  }
+  for (final comment in document.comments) {
+    add(comment.paragraphs, 'Comment ${comment.id}');
+  }
+  return locations;
 }
 
 ZoteroDocumentReference _documentReference(

@@ -112,6 +112,28 @@ void main() {
         ..textColor = '112233'
         ..textAlign = PmlTextAlign.center
         ..rightToLeft = false;
+      final PmlShape edited = deck.slides.single.shapes.single;
+      final PmlTextParagraph rendered = edited.resolvedRichText.single;
+      expect(rendered.runs.map((PmlTextRun r) => r.fontSizePt), <double>[
+        30,
+        30,
+      ]);
+      expect(rendered.runs.map((PmlTextRun r) => r.color), <String>[
+        '112233',
+        '112233',
+      ]);
+      expect(rendered.runs.first.bold, isTrue);
+      expect(rendered.runs.last.italic, isTrue);
+      expect(rendered.align, PmlTextAlign.center);
+      expect(rendered.rightToLeft, isFalse);
+      expect(
+        edited.richText.single.runs.map((PmlTextRun r) => r.fontSizePt),
+        <double>[24, 18],
+      );
+      expect(
+        edited.richText.single.runs.map((PmlTextRun r) => r.color),
+        <String>['884422', '008844'],
+      );
       for (int cycle = 1; cycle <= 3; cycle++) {
         final bytes = await OfficeIsolateSave.presentation(deck);
         final XmlElement body = _body(OpcPackage.openBytes(bytes));
@@ -148,6 +170,7 @@ void main() {
     () async {
       PmlPresentation deck = _richDeck();
       deck.slides.single.shapes.single.text = 'Replacement\nSecond line';
+      expect(deck.slides.single.shapes.single.resolvedRichText, isEmpty);
       for (int cycle = 0; cycle < 3; cycle++) {
         final bytes = await OfficeIsolateSave.presentation(deck);
         final XmlElement body = _body(OpcPackage.openBytes(bytes));

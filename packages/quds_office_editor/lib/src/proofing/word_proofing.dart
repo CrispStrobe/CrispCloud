@@ -1406,7 +1406,7 @@ final class WordProofingSession extends ChangeNotifier {
     final pending =
         HashMap<WmlParagraph, List<({int start, int end})>>.identity();
     for (final revision in document.revisions) {
-      if (revision.accepted != null) continue;
+      if (revision.accepted != null || revision.kind.isFormatting) continue;
       final paragraph = WordRevisions.resolveParagraph(document, revision);
       if (paragraph != null &&
           revision.start >= 0 &&
@@ -1415,7 +1415,7 @@ final class WordProofingSession extends ChangeNotifier {
           start: revision.start,
           end: revision.end,
         ));
-        if (revision.kind == WmlRevisionKind.delete) {
+        if (revision.kind.isDeletion) {
           deletions.putIfAbsent(paragraph, () => []).add((
             start: revision.start,
             end: revision.end,

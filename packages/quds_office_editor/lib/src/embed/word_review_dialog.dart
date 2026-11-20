@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:quds_office_engine/quds_office_engine.dart';
 
 import 'office_controller.dart';
+import 'word_review_labels.dart';
 
 /// The two independent workflows in the document review workspace.
 enum WordReviewTab { changes, compare }
@@ -624,6 +625,16 @@ class _WordReviewDialogState extends State<WordReviewDialog> {
                   value: WmlRevisionKind.delete,
                   child: Text(_s('Deletions', 'حذف')),
                 ),
+                for (final kind in [
+                  WmlRevisionKind.moveFrom,
+                  WmlRevisionKind.moveTo,
+                  WmlRevisionKind.runFormat,
+                  WmlRevisionKind.paragraphFormat,
+                ])
+                  DropdownMenuItem(
+                    value: kind,
+                    child: Text(kind.reviewLabel(arabic: widget.arabic)),
+                  ),
               ],
               onChanged: (value) => setState(() {
                 _kindFilter = value;
@@ -712,22 +723,26 @@ class _WordReviewDialogState extends State<WordReviewDialog> {
                           key: ValueKey('review-change-${revision.id}'),
                           selected: identical(selected, revision),
                           leading: Icon(
-                            revision.kind == WmlRevisionKind.insert
+                            revision.kind.isFormatting
+                                ? Icons.format_paint
+                                : revision.kind.isMove
+                                ? Icons.drive_file_move_outline
+                                : revision.kind.isInsertion
                                 ? Icons.add
                                 : Icons.remove,
-                            color: revision.kind == WmlRevisionKind.insert
+                            color: revision.kind.isInsertion
                                 ? _insertColor(context)
                                 : _deleteColor(context),
                           ),
                           title: Text(
-                            '${revision.kind == WmlRevisionKind.insert ? _s('Inserted', 'إدراج') : _s('Deleted', 'حذف')} · ${revision.author}',
+                            '${revision.kind.reviewLabel(arabic: widget.arabic)} · ${revision.author}',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                           subtitle: Text(
                             revision.text.isEmpty
                                 ? _s('(empty text)', '(نص فارغ)')
-                                : revision.text,
+                                : revision.displayText,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -796,12 +811,12 @@ class _WordReviewDialogState extends State<WordReviewDialog> {
           Text(
             _s(
               'Change ${revision.id} · ${revision.kind.name}',
-              'التغيير ${revision.id} · ${revision.kind == WmlRevisionKind.insert ? 'إدراج' : 'حذف'}',
+              'التغيير ${revision.id} · ${revision.kind.reviewLabel(arabic: widget.arabic)}',
             ),
           ),
           const SizedBox(height: 8),
           SelectableText(
-            revision.text,
+            revision.displayText,
             key: const ValueKey('review-selected-text'),
           ),
           if (problem != null)
@@ -884,7 +899,11 @@ class _WordReviewDialogState extends State<WordReviewDialog> {
   ) {
     final revisions =
         targets.entries
-            .where((entry) => identical(entry.value, paragraph))
+            .where(
+              (entry) =>
+                  identical(entry.value, paragraph) &&
+                  !entry.key.kind.isFormatting,
+            )
             .map((entry) => entry.key)
             .toList()
           ..sort((a, b) => a.start.compareTo(b.start));
@@ -902,7 +921,7 @@ class _WordReviewDialogState extends State<WordReviewDialog> {
       if (revision.start > at) {
         spans.add(TextSpan(text: text.substring(at, revision.start)));
       }
-      final inserted = revision.kind == WmlRevisionKind.insert;
+      final inserted = revision.kind.isInsertion;
       final show =
           _preview == WordComparisonRevisionView.markup ||
           (_preview == WordComparisonRevisionView.finalText && inserted) ||
@@ -910,7 +929,7 @@ class _WordReviewDialogState extends State<WordReviewDialog> {
       if (show) {
         spans.add(
           TextSpan(
-            text: revision.text,
+            text: revision.displayText,
             style: _preview == WordComparisonRevisionView.markup
                 ? TextStyle(
                     color: inserted

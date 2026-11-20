@@ -12,15 +12,27 @@ import 'package:quds_office_engine/quds_office_engine.dart'
 
 import 'analysis.dart';
 import 'backend.dart';
+import 'distribution.dart' show spacyGrammarMacosBundledSha256;
 
 const spacyGrammarProviderId = 'spacy-german-grammar';
 const spacyNounVerbRuleId = 'de.spacy.noun-verb';
 
-/// This first grammar candidate is qualified against this one native build.
-/// Analysis may support a different authenticated build independently; grammar
-/// cannot silently inherit its qualification.
+/// The Linux x86-64/AVX2 build that first qualified this grammar candidate
+/// (sealed W6 panel and W7 extension panel).
 const spacyGrammarNativeSha256 =
     'ea89842ebf22c08508aff1cfbf18d78a107118af320523009616ff62b6e42977';
+
+/// Every exact native build with recorded manual grammar qualification: the
+/// Linux build above and the app-bundled macOS arm64 library
+/// ([spacyGrammarMacosBundledSha256], qualified by replaying both consumed
+/// panels with annotations and outcomes identical case by case).
+/// Analysis may support other authenticated builds independently; grammar
+/// never silently inherits a qualification. Each entry needs its own
+/// evidence record in `spacyQualificationFor`.
+const spacyGrammarNativeSha256s = <String>{
+  spacyGrammarNativeSha256,
+  spacyGrammarMacosBundledSha256,
+};
 
 final class SpacyGrammarDecision {
   SpacyGrammarDecision({
@@ -139,8 +151,11 @@ final class SpacyGermanGrammarPlanner {
         _ => OfficeProofingStatus.failed,
       }, 'analysis-${analysis.status.name}');
     }
-    if (analysis.identity !=
-        const SpacyBackendIdentity(librarySha256: spacyGrammarNativeSha256)) {
+    final identity = analysis.identity;
+    if (identity == null ||
+        !spacyGrammarNativeSha256s.contains(identity.librarySha256) ||
+        identity !=
+            SpacyBackendIdentity(librarySha256: identity.librarySha256)) {
       return unavailable(OfficeProofingStatus.failed, 'runtime-mismatch');
     }
     if (analysis.sentences.length > 1) {

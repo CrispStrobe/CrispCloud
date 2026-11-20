@@ -50,6 +50,43 @@ class WordDeserializer {
   final List<WmlVisual> _pendingVisuals = <WmlVisual>[];
   final List<WmlFrame> _pendingFrames = <WmlFrame>[];
   final List<int> _openCommentIds = <int>[];
+  final Map<WmlParagraphProps, XmlElement> _paragraphFormatChanges = {};
+  final Map<String, List<_NativeMoveRange>> _moveRanges = {};
+
+  bool _readMoveBoundary(XmlPullReader reader, String story) {
+    if (reader.namespaceUri != OfficeNamespaces.w ||
+        !const {
+          'moveFromRangeStart',
+          'moveFromRangeEnd',
+          'moveToRangeStart',
+          'moveToRangeEnd',
+        }.contains(reader.localName)) {
+      return false;
+    }
+    final node = XmlDocument.readElement(reader);
+    final from = node.localName.startsWith('moveFrom');
+    final key = '$story:${from ? 'moveFrom' : 'moveTo'}';
+    final ranges = _moveRanges.putIfAbsent(key, () => []);
+    if (node.localName.endsWith('Start')) {
+      ranges.add(_NativeMoveRange(node));
+    } else {
+      final id = node.getAttribute('id', namespaceUri: OfficeNamespaces.w);
+      final index = ranges.lastIndexWhere(
+        (r) =>
+            r.start.getAttribute('id', namespaceUri: OfficeNamespaces.w) == id,
+      );
+      if (index >= 0) {
+        final range = ranges.removeAt(index);
+        if (range.revisions.isNotEmpty) {
+          range.revisions.last.moveEndXml = XmlDocument(
+            root: node,
+          ).toXmlString(declaration: false);
+        }
+      }
+    }
+    return true;
+  }
+
   OpcPackage? _package;
   String? _docUri;
   WmlSection? _pendingParagraphSectPr;
@@ -83,6 +120,8 @@ class WordDeserializer {
     _pendingVisuals.clear();
     _pendingFrames.clear();
     _openCommentIds.clear();
+    _paragraphFormatChanges.clear();
+    _moveRanges.clear();
     _tablesWithOwnBorders.clear();
     _tableLooks.clear();
     _notBold.clear();
@@ -127,7 +166,9 @@ class WordDeserializer {
       if (reader.eventType != XmlEventType.startElement) {
         continue;
       }
-      if (WordBookmarkIo.isMarker(reader)) {
+      if (_readMoveBoundary(reader, docUri)) {
+        continue;
+      } else if (WordBookmarkIo.isMarker(reader)) {
         _blockMarker(reader);
       } else if (reader.localName == 'p' &&
           reader.namespaceUri == OfficeNamespaces.w) {
@@ -529,7 +570,9 @@ class WordDeserializer {
       if (reader.eventType != XmlEventType.startElement) {
         continue;
       }
-      if (WordBookmarkIo.isMarker(reader)) {
+      if (_readMoveBoundary(reader, docUri)) {
+        continue;
+      } else if (WordBookmarkIo.isMarker(reader)) {
         _blockMarker(reader);
       } else if (reader.localName == 'p' &&
           reader.namespaceUri == OfficeNamespaces.w) {
@@ -776,6 +819,16 @@ class WordDeserializer {
     _readParagraphContent(reader, package, docUri, paragraph);
     _settleFieldSpans(paragraph);
     _settleInlinePictures(paragraph);
+    final change = _paragraphFormatChanges.remove(paragraph.properties);
+    if (change != null) {
+      _recordFormatting(
+        paragraph,
+        change,
+        WmlRevisionKind.paragraphFormat,
+        0,
+        paragraph.text,
+      );
+    }
     for (final frame in _pendingFrames) {
       if (previousFrames.contains(frame)) continue;
       frame.anchorParagraphProperties ??= paragraph.properties.copy()
@@ -798,13 +851,21 @@ class WordDeserializer {
       if (reader.eventType != XmlEventType.startElement) {
         continue;
       }
-      if (reader.localName == 'pPr') {
+      if (_readMoveBoundary(reader, docUri)) {
+        continue;
+      } else if (reader.localName == 'pPr') {
         _readPPr(reader, paragraph.properties);
       } else if (reader.localName == 'r') {
         paragraph.inlines.addAll(
           _readRunInlines(reader, package, docUri, paragraph),
         );
-      } else if (reader.localName == 'ins' || reader.localName == 'del') {
+      } else if (reader.namespaceUri == OfficeNamespaces.w &&
+          const {
+            'ins',
+            'del',
+            'moveFrom',
+            'moveTo',
+          }.contains(reader.localName)) {
         _readTracked(reader, package, docUri, paragraph);
       } else if (reader.localName == 'hyperlink') {
         _readHyperlink(reader, package, docUri, paragraph);
@@ -1073,6 +1134,7 @@ class WordDeserializer {
     WmlParagraph paragraph,
   ) {
     final List<WmlInline> inlines = <WmlInline>[];
+    XmlElement? formattingChange;
     final WmlRun run = WmlRun()..properties.sourcePropertiesXml = '';
     if (reader.isEmptyElement) {
       return inlines;
@@ -1083,7 +1145,7 @@ class WordDeserializer {
         continue;
       }
       if (reader.localName == 'rPr') {
-        _readRPr(reader, run.properties);
+        formattingChange = _readRPr(reader, run.properties);
       } else if (reader.localName == 't' || reader.localName == 'delText') {
         final String text = _elementText(reader);
         // A PAGE instruction elsewhere in this paragraph must not consume a
@@ -1299,11 +1361,121 @@ class WordDeserializer {
         }
       }
     }
-    if (run.text.isNotEmpty || run.noteRefId != null) {
+    if (run.text.isNotEmpty ||
+        run.noteRefId != null ||
+        formattingChange != null && inlines.isEmpty) {
       run.commentIds.addAll(_openCommentIds);
       inlines.add(run);
     }
+    if (formattingChange != null) {
+      final text = inlines.whereType<WmlRun>().map((r) => r.text).join();
+      _recordFormatting(
+        paragraph,
+        formattingChange,
+        WmlRevisionKind.runFormat,
+        paragraph.text.length,
+        text,
+      );
+    }
     return inlines;
+  }
+
+  String _revisionXml(XmlElement element) {
+    final node = element.copy();
+    final namespaces = <String, String>{'w': OfficeNamespaces.w};
+    void collect(XmlElement item) {
+      if (item.prefix.isNotEmpty && item.namespaceUri.isNotEmpty) {
+        namespaces[item.prefix] = item.namespaceUri;
+      }
+      for (final attribute in item.attributes) {
+        if (attribute.prefix.isNotEmpty &&
+            attribute.prefix != 'xmlns' &&
+            attribute.prefix != 'xml' &&
+            attribute.namespaceUri.isNotEmpty) {
+          namespaces[attribute.prefix] = attribute.namespaceUri;
+        }
+      }
+      for (final child in item.childElements) {
+        collect(child);
+      }
+    }
+
+    collect(node);
+    for (final entry in namespaces.entries) {
+      node.setAttribute(entry.key, entry.value, prefix: 'xmlns');
+    }
+    return XmlDocument(root: node).toXmlString(declaration: false);
+  }
+
+  void _recordFormatting(
+    WmlParagraph paragraph,
+    XmlElement change,
+    WmlRevisionKind kind,
+    int start,
+    String text,
+  ) {
+    final document = _document;
+    if (document == null) return;
+    final name = kind == WmlRevisionKind.runFormat ? 'rPr' : 'pPr';
+    final previous = change.firstChild(name, namespaceUri: OfficeNamespaces.w);
+    final revision = WordRevisions.record(
+      document,
+      kind: kind,
+      paragraphIndex: -1,
+      paragraph: paragraph,
+      preserveSourceRange: true,
+      start: start,
+      end: start + text.length,
+      text: text,
+      author:
+          change.getAttribute('author', namespaceUri: OfficeNamespaces.w) ??
+          'CrispOffice',
+      previousPropertiesXml: previous == null ? null : _revisionXml(previous),
+      propertyChangeXml: _revisionXml(change),
+    );
+    revision.dateIso =
+        change.getAttribute('date', namespaceUri: OfficeNamespaces.w) ?? '';
+  }
+
+  /// Reuse the native sparse property parser/cascade when rejecting formatting.
+  /// The snapshot is the complete *direct* set, so omitted properties inherit.
+  void restoreRevisionFormatting(WmlDocument document, WmlRevision revision) {
+    final paragraph = WordRevisions.resolveParagraph(document, revision)!;
+    final xml = revision.previousPropertiesXml!;
+    if (revision.kind == WmlRevisionKind.paragraphFormat) {
+      final previous = WmlParagraphProps();
+      _readPPr(XmlPullReader(xml)..next(), previous);
+      // A formatting change does not replace fields/bookmark/story metadata.
+      final current = paragraph.properties;
+      previous
+        ..fieldInstruction = current.fieldInstruction
+        ..fieldBegin = current.fieldBegin
+        ..fieldSeparate = current.fieldSeparate
+        ..fieldEnd = current.fieldEnd
+        ..pageNumberField = current.pageNumberField
+        ..listLabel = current.listLabel
+        ..listRestart = current.listRestart
+        ..columnBreakBefore = current.columnBreakBefore
+        ..bookmarkName = current.bookmarkName
+        ..sourceBookmarkName = current.sourceBookmarkName
+        ..noteId = current.noteId
+        ..endnoteRef = current.endnoteRef;
+      paragraph.properties = previous;
+    } else {
+      WmlRunEdit.splitAt(paragraph, revision.end);
+      WmlRunEdit.splitAt(paragraph, revision.start);
+      var offset = 0;
+      for (final run in paragraph.inlines.whereType<WmlRun>()) {
+        final end = offset + run.text.length;
+        if (offset >= revision.start && end <= revision.end) {
+          final previous = WmlRunProps();
+          _readRPr(XmlPullReader(xml)..next(), previous);
+          run.properties = previous;
+        }
+        offset = end;
+      }
+    }
+    _applyDocumentStyles(document);
   }
 
   void _readTracked(
@@ -1312,7 +1484,16 @@ class WordDeserializer {
     String docUri,
     WmlParagraph paragraph,
   ) {
-    final bool deleted = reader.localName == 'del';
+    final kind = switch (reader.localName) {
+      'moveFrom' => WmlRevisionKind.moveFrom,
+      'moveTo' => WmlRevisionKind.moveTo,
+      'del' => WmlRevisionKind.delete,
+      _ => WmlRevisionKind.insert,
+    };
+    final ranges = _moveRanges['$docUri:${reader.localName}'];
+    final move = kind.isMove && ranges != null && ranges.isNotEmpty
+        ? ranges.last
+        : null;
     final String author =
         reader.getAttribute('author', namespaceUri: OfficeNamespaces.w) ??
         'CrispOffice';
@@ -1322,27 +1503,10 @@ class WordDeserializer {
     if (reader.isEmptyElement) {
       return;
     }
-    final int depth = reader.depth;
-    while (reader.next() && reader.depth >= depth) {
-      if (reader.eventType == XmlEventType.startElement &&
-          reader.localName == 'r') {
-        paragraph.inlines.addAll(
-          _readRunInlines(reader, package, docUri, paragraph),
-        );
-      } else if (reader.eventType == XmlEventType.startElement &&
-          reader.localName == 'hyperlink') {
-        _readHyperlink(reader, package, docUri, paragraph);
-      } else if (reader.eventType == XmlEventType.startElement &&
-          (reader.localName == 'bookmarkStart' ||
-              reader.localName == 'bookmarkEnd') &&
-          reader.namespaceUri == OfficeNamespaces.w) {
-        _readBookmark(reader, paragraph);
-      } else if (reader.eventType == XmlEventType.startElement &&
-          reader.localName == 'sdt' &&
-          reader.namespaceUri == OfficeNamespaces.w) {
-        _readInlineControl(reader, package, docUri, paragraph);
-      }
-    }
+    // A revision can contain fields, controls, links and range markers just
+    // like the surrounding paragraph. Reuse the same parser instead of
+    // flattening or losing the metadata of less common run content.
+    _readParagraphContent(reader, package, docUri, paragraph);
     final WmlDocument? document = _document;
     if (document == null) {
       return;
@@ -1353,7 +1517,7 @@ class WordDeserializer {
     }
     final WmlRevision revision = WordRevisions.record(
       document,
-      kind: deleted ? WmlRevisionKind.delete : WmlRevisionKind.insert,
+      kind: kind,
       paragraphIndex: -1,
       paragraph: paragraph,
       preserveSourceRange: true,
@@ -1361,7 +1525,20 @@ class WordDeserializer {
       end: start + text.length,
       text: text,
       author: author,
+      moveName: move?.start.getAttribute(
+        'name',
+        namespaceUri: OfficeNamespaces.w,
+      ),
+      moveStory: move == null ? null : docUri,
     );
+    if (move != null) {
+      if (move.revisions.isEmpty) {
+        revision.moveStartXml = XmlDocument(
+          root: move.start,
+        ).toXmlString(declaration: false);
+      }
+      move.revisions.add(revision);
+    }
     if (date.isNotEmpty) {
       revision.dateIso = date;
     }
@@ -1369,6 +1546,14 @@ class WordDeserializer {
 
   void _readPPr(XmlPullReader reader, WmlParagraphProps props) {
     final XmlElement node = XmlDocument.readElement(reader);
+    final change = node.firstChild(
+      'pPrChange',
+      namespaceUri: OfficeNamespaces.w,
+    );
+    if (change != null) {
+      node.children.remove(change);
+      _paragraphFormatChanges[props] = change;
+    }
     props.sourcePropertiesXml = XmlDocument(
       root: node,
     ).toXmlString(declaration: false);
@@ -1388,6 +1573,8 @@ class WordDeserializer {
         continue;
       }
       switch (reader.localName) {
+        case 'pPrChange':
+          XmlDocument.readElement(reader);
         case 'jc':
           props.explicitJustification = true;
           props.justification = _jc(
@@ -1571,7 +1758,13 @@ class WordDeserializer {
         paragraph.inlines.addAll(
           _readRunInlines(reader, package, docUri, paragraph),
         );
-      } else if (reader.localName == 'ins' || reader.localName == 'del') {
+      } else if (reader.namespaceUri == OfficeNamespaces.w &&
+          const {
+            'ins',
+            'del',
+            'moveFrom',
+            'moveTo',
+          }.contains(reader.localName)) {
         _readTracked(reader, package, docUri, paragraph);
       } else if (reader.localName == 'fldSimple' &&
           reader.namespaceUri == OfficeNamespaces.w) {
@@ -2197,8 +2390,13 @@ class WordDeserializer {
     );
   }
 
-  void _readRPr(XmlPullReader reader, WmlRunProps props) {
+  XmlElement? _readRPr(XmlPullReader reader, WmlRunProps props) {
     final XmlElement node = XmlDocument.readElement(reader);
+    final change = node.firstChild(
+      'rPrChange',
+      namespaceUri: OfficeNamespaces.w,
+    );
+    if (change != null) node.children.remove(change);
     props.sourcePropertiesXml = XmlDocument(
       root: node,
     ).toXmlString(declaration: false);
@@ -2206,6 +2404,7 @@ class WordDeserializer {
       props.sourcePropertiesXml!,
     )..next();
     _parseRPr(source, props);
+    return change;
   }
 
   void _parseRPr(XmlPullReader reader, WmlRunProps props) {
@@ -2215,6 +2414,11 @@ class WordDeserializer {
     final int depth = reader.depth;
     while (reader.next() && reader.depth >= depth) {
       if (reader.eventType != XmlEventType.startElement) {
+        continue;
+      }
+      if (reader.localName == 'rPrChange' &&
+          reader.namespaceUri == OfficeNamespaces.w) {
+        XmlDocument.readElement(reader);
         continue;
       }
       props.explicitProperties.add(reader.localName);
@@ -2330,6 +2534,8 @@ class WordDeserializer {
           namespaceUri: OfficeNamespaces.w,
         );
         table.grid.add(w == null ? 100 : _measurePoints(w));
+      } else if (_readMoveBoundary(reader, docUri)) {
+        continue;
       } else if (WordBookmarkIo.isMarker(reader)) {
         _blockMarker(reader);
       } else if (reader.localName == 'tr') {
@@ -2579,6 +2785,8 @@ class WordDeserializer {
         if (raw != null) {
           row.height = _measurePoints(raw);
         }
+      } else if (_readMoveBoundary(reader, docUri)) {
+        continue;
       } else if (WordBookmarkIo.isMarker(reader)) {
         _blockMarker(reader);
       } else if (reader.localName == 'tc') {
@@ -2650,6 +2858,8 @@ class WordDeserializer {
             fill.toUpperCase() != 'FFFFFF') {
           cell.fillColor = fill;
         }
+      } else if (_readMoveBoundary(reader, docUri)) {
+        continue;
       } else if (WordBookmarkIo.isMarker(reader)) {
         _blockMarker(reader);
       } else if (reader.localName == 'p') {
@@ -4282,4 +4492,10 @@ class _NumberingLevel {
     }
     return out.endsWith(' ') ? out : '$out ';
   }
+}
+
+class _NativeMoveRange {
+  _NativeMoveRange(this.start);
+  final XmlElement start;
+  final List<WmlRevision> revisions = [];
 }

@@ -434,7 +434,7 @@ Worksheets(1).Range("A4").Value2 = (-0.0 <> 0)
         'Sub Main()\nx = 1 _',
         'Sub Main()\nDim x As Long = 1\nEnd Sub',
         'Sub Main()\nEnd Sub\nOption Explicit',
-        'Option Base 1\nSub Main()\nEnd Sub',
+        'Option Base 2\nSub Main()\nEnd Sub',
         'Sub Main()\nx = #1/1/2020#\nEnd Sub',
       ]) {
         expect(

@@ -7,6 +7,7 @@ import 'package:quds_office_engine/quds_office_engine.dart';
 
 import '../proofing/word_proofing.dart';
 import 'office_controller.dart';
+import 'word_review_labels.dart';
 
 /// Non-modal writing and tracked-change review beside the document canvas.
 ///
@@ -1239,6 +1240,16 @@ class _WordReviewPaneState extends State<WordReviewPane> {
                 value: WmlRevisionKind.delete,
                 child: Text(_s('Deletions', 'حذف')),
               ),
+              for (final kind in [
+                WmlRevisionKind.moveFrom,
+                WmlRevisionKind.moveTo,
+                WmlRevisionKind.runFormat,
+                WmlRevisionKind.paragraphFormat,
+              ])
+                DropdownMenuItem(
+                  value: kind,
+                  child: Text(kind.reviewLabel(arabic: _arabic)),
+                ),
             ],
             onChanged: (value) => setState(() {
               _changeKind = value;
@@ -1359,7 +1370,11 @@ class _WordReviewPaneState extends State<WordReviewPane> {
                 contentPadding: EdgeInsets.zero,
                 selected: identical(selected, revision),
                 leading: Icon(
-                  revision.kind == WmlRevisionKind.insert
+                  revision.kind.isFormatting
+                      ? Icons.format_paint
+                      : revision.kind.isMove
+                      ? Icons.drive_file_move_outline
+                      : revision.kind.isInsertion
                       ? Icons.add
                       : Icons.remove,
                   size: 20,
@@ -1370,7 +1385,7 @@ class _WordReviewPaneState extends State<WordReviewPane> {
                   overflow: TextOverflow.ellipsis,
                 ),
                 subtitle: Text(
-                  revision.text,
+                  '${revision.kind.reviewLabel(arabic: _arabic)}: ${revision.displayText}',
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -1436,15 +1451,33 @@ class _WordReviewPaneState extends State<WordReviewPane> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
         Text(
-          '${revision.kind == WmlRevisionKind.insert ? _s('Inserted', 'إدراج') : _s('Deleted', 'حذف')} · ${revision.author}',
+          '${revision.kind.reviewLabel(arabic: _arabic)} · ${revision.author}',
           style: Theme.of(context).textTheme.titleSmall,
         ),
+        if (revision.kind.isMove || revision.kind.isFormatting)
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Text(
+              revision.kind.isMove
+                  ? _s(
+                      'Accept or reject applies to both locations of this move.',
+                      'يطبق القبول أو الرفض على موقعي هذا النقل.',
+                    )
+                  : _s(
+                      'Accept keeps current formatting. Reject restores previous formatting.',
+                      'يبقي القبول التنسيق الحالي ويستعيد الرفض التنسيق السابق.',
+                    ),
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ),
         const SizedBox(height: 8),
         Text(
-          revision.text,
+          revision.displayText,
           key: const ValueKey<String>('live-review-selected-text'),
           style: TextStyle(
-            decoration: revision.kind == WmlRevisionKind.insert
+            decoration: revision.kind.isFormatting
+                ? null
+                : revision.kind.isInsertion
                 ? TextDecoration.underline
                 : TextDecoration.lineThrough,
           ),
@@ -1548,7 +1581,11 @@ class _WordReviewPaneState extends State<WordReviewPane> {
   ) {
     final revisions =
         targets.entries
-            .where((entry) => identical(entry.value, paragraph))
+            .where(
+              (entry) =>
+                  identical(entry.value, paragraph) &&
+                  !entry.key.kind.isFormatting,
+            )
             .map((entry) => entry.key)
             .toList()
           ..sort((a, b) => a.start.compareTo(b.start));
@@ -1571,7 +1608,7 @@ class _WordReviewPaneState extends State<WordReviewPane> {
         if (revision.start > at) {
           spans.add(TextSpan(text: text.substring(at, revision.start)));
         }
-        final inserted = revision.kind == WmlRevisionKind.insert;
+        final inserted = revision.kind.isInsertion;
         final show =
             _preview == WordComparisonRevisionView.markup ||
             (_preview == WordComparisonRevisionView.finalText && inserted) ||
@@ -1579,7 +1616,7 @@ class _WordReviewPaneState extends State<WordReviewPane> {
         if (show) {
           spans.add(
             TextSpan(
-              text: revision.text,
+              text: revision.displayText,
               style: _preview == WordComparisonRevisionView.markup
                   ? TextStyle(
                       color: inserted

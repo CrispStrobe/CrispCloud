@@ -94,6 +94,16 @@ void main() {
     )!;
     expect(mac.grammarQualified, isFalse);
     expect(spacyQualificationFor('e' * 64), isNull);
+    // The app-bundled macOS library is a recorded build, not a download.
+    final bundled = spacyQualificationFor(spacyGrammarMacosBundledSha256)!;
+    expect(bundled.grammarQualified, isTrue);
+    expect(bundled.librarySha256, spacyGrammarMacosBundledSha256);
+    expect(
+      spacyCatalogPackages
+          .followedBy(spacyRuntimePackages)
+          .map((package) => package.librarySha256),
+      isNot(contains(spacyGrammarMacosBundledSha256)),
+    );
   });
 
   test('catalog grammar claims match the planner\'s enforced build pin', () {
@@ -103,7 +113,7 @@ void main() {
       for (final build in spacyRecordedBuilds)
         if (build.grammarQualified) build.librarySha256,
     };
-    expect(claimed, {spacyGrammarNativeSha256});
+    expect(claimed, spacyGrammarNativeSha256s);
   });
 
   test('unpublished platforms are unavailable with a stated reason', () {

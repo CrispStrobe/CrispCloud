@@ -7285,11 +7285,15 @@ class WordEditorController extends OfficeController {
     // independent paragraph targets, and keeps their offsets valid.
     final targets =
         (Set<WmlRevision>.identity()..addAll(
-              revisions.where(
-                (revision) =>
-                    revision.accepted == null &&
-                    document.revisions.contains(revision),
-              ),
+              revisions
+                  .where(
+                    (revision) =>
+                        revision.accepted == null &&
+                        document.revisions.contains(revision),
+                  )
+                  .expand(
+                    (revision) => WordRevisions.related(document, revision),
+                  ),
             ))
             .toList()
           ..sort((a, b) => b.start.compareTo(a.start));
@@ -7311,6 +7315,10 @@ class WordEditorController extends OfficeController {
         inlines.putIfAbsent(paragraph, () => _cloneInlines(paragraph));
       }
     }
+    final properties = {
+      for (final paragraph in inlines.keys)
+        paragraph: paragraph.properties.copy(),
+    };
     final WmlRevisionSnapshot before = WordRevisions.capture(document);
     final int? selected = selectedRevisionIndex;
     final pending = document.revisions
@@ -7341,6 +7349,7 @@ class WordEditorController extends OfficeController {
     }
     void restore() {
       for (final entry in inlines.entries) {
+        entry.key.properties = properties[entry.key]!.copy();
         entry.key.inlines
           ..clear()
           ..addAll(_cloneInlinesFrom(entry.value));
@@ -7355,6 +7364,7 @@ class WordEditorController extends OfficeController {
           restore();
           try {
             for (final revision in targets) {
+              if (!document.revisions.contains(revision)) continue;
               if (accept) {
                 WordRevisions.accept(document, revision);
               } else {
@@ -15525,6 +15535,9 @@ class SlideEditorController extends OfficeController {
       return;
     }
     presentation.master.background = rgb;
+    for (final PmlSlide slide in presentation.slides) {
+      slide.updateMasterBackground(rgb);
+    }
     notifyListeners();
   }
 }

@@ -352,10 +352,44 @@ SpacyPlatformStatus spacyPlatformStatus(SpacyPlatform platform) {
   return SpacyPlatformStatus._(platform, null, reason);
 }
 
+/// The ad hoc signed macOS arm64 library shipped inside the Studio app
+/// (CrispEmbed v2 runtime 45b05770, static PCRE2). Analysis and manual
+/// German grammar are recorded for exactly these bytes below.
+const spacyGrammarMacosBundledSha256 =
+    'ccc96620e01164d18e8d2e46b9a383677e4430c8889833bedab5b56c16a1b40f';
+
 /// Exact builds with recorded claims that are not offered as downloadable
 /// packages (for example development candidates or host-bundled libraries).
 /// Lookup is by exact library digest only.
 const spacyRecordedBuilds = <SpacyBuildQualification>[
+  // The ad hoc signed library inside the Studio macOS app. Its pinned bytes
+  // are published at Hub revision 2aa70083 (app-bundled/macos-arm64/<sha>/)
+  // and installed by build_macos_app.sh; `tool/build.py --native` reproduces
+  // them with the recorded toolchain.
+  SpacyBuildQualification(
+    librarySha256: spacyGrammarMacosBundledSha256,
+    analysis:
+        'macOS arm64 library built from CrispEmbed v2 runtime 45b05770 with '
+        'static PCRE2, ad hoc signed for the Studio app; checked on Apple '
+        'silicon on these exact signed bytes: ctest 4/4, 21 text-API '
+        'controls, enable-API controls, development parity (16 cases, 113 '
+        'tokens, 22 sentences, 1,201 numerical stages, 244 parser states '
+        'exact against the frozen original spaCy references).',
+    grammar:
+        'Manual de-DE only: cross-binary replay of the consumed sealed W6 '
+        'panel (22/30 exact corrections vs 5/30 deterministic; no findings on '
+        '42 valid/10 guard controls) and the W7 extension panel (24/40 exact '
+        'vs 14/40, 0 valid or guard findings) with annotations, planner '
+        'decisions, arms and corrected rechecks identical case by case to the '
+        'qualified Linux build; native editor gate 10/10. Not a general German '
+        'grammar quality claim.',
+    limitations: [
+      'Valid only for these exact signed bytes inside an app bundle; a '
+          'rebuild with another toolchain is a different, unqualified build.',
+      'Grammar uses the parser without named entities (capability mask 15).',
+      'Ad hoc signed; not notarized.',
+    ],
+  ),
   SpacyBuildQualification(
     librarySha256:
         '5cb67f0092f3659653773b8687fe7448dc3c235144b01c80a6fae54c103ca4e5',
@@ -388,7 +422,7 @@ SpacyBuildQualification? spacyQualificationFor(String librarySha256) {
 // main 45b05770 (after the v2 runtime, PR #244) hold the same German bundle as
 // before plus a library that also opens the English and French bundles.
 // They carry no grammar claim; the German manual grammar provider stays bound
-// to its qualified build ([spacyGrammarNativeSha256]).
+// to its qualified builds ([spacyGrammarNativeSha256s]).
 
 const _v2Source = '45b057700880e125d701d941a9e3123679960d35';
 

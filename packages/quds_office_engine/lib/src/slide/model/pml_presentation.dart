@@ -428,6 +428,51 @@ class PmlShape {
   /// Rich paragraph/run model when the source text has not been replaced.
   List<PmlTextParagraph> richText;
 
+  /// Rich text with the same scalar formatting overrides used by PPTX export.
+  ///
+  /// Moving a shape preserves its imported runs. Font, color, alignment and
+  /// direction edits apply to those runs without mutating the import snapshot.
+  /// Replacing imported text invalidates the old runs altogether.
+  List<PmlTextParagraph> get resolvedRichText {
+    final PmlTextSource? source = textSource;
+    if (source == null || richText.isEmpty) return richText;
+    if (source.text != text) return const <PmlTextParagraph>[];
+    final bool fontChanged = source.fontSizePt != fontSizePt;
+    final bool colorChanged = source.textColor != textColor;
+    final bool alignChanged = source.textAlign != textAlign;
+    final bool directionChanged = source.rightToLeft != rightToLeft;
+    if (!fontChanged && !colorChanged && !alignChanged && !directionChanged) {
+      return richText;
+    }
+    final List<PmlTextParagraph> resolved = <PmlTextParagraph>[];
+    for (final PmlTextParagraph original in richText) {
+      final PmlTextParagraph paragraph = original.copy();
+      if (alignChanged) paragraph.align = textAlign;
+      if (directionChanged) paragraph.rightToLeft = rightToLeft ?? false;
+      if (fontChanged) paragraph.defaultFontSizePt = fontSizePt;
+      if (colorChanged) paragraph.defaultColor = textColor;
+      for (final PmlTextRun run in paragraph.runs) {
+        if (fontChanged) run.fontSizePt = fontSizePt;
+        if (colorChanged) run.color = textColor;
+      }
+      resolved.add(paragraph);
+    }
+    return resolved;
+  }
+
+  /// Whether the unmodified imported runs still match scalar text formatting.
+  /// Renderers use [resolvedRichText] to apply edits while retaining run styles.
+  bool get hasCurrentRichText {
+    if (richText.isEmpty) return false;
+    final PmlTextSource? source = textSource;
+    return source == null ||
+        (source.text == text &&
+            source.fontSizePt == fontSizePt &&
+            source.textColor == textColor &&
+            source.textAlign == textAlign &&
+            source.rightToLeft == rightToLeft);
+  }
+
   /// Shapes that share a [groupId] move together.
   int? groupId;
 
@@ -514,14 +559,21 @@ class PmlSlide {
     List<PmlShape>? shapes,
     this.layoutName = 'Blank',
     this.masterName = 'Office Theme',
-    this.background = 'FFFFFF',
+    String background = '',
+    bool? inheritsMasterBackground,
     List<PmlShape>? backgroundShapes,
     this.notes = '',
     this.sourcePartUri,
     this.transition = const PmlSlideTransition(),
     List<PmlShapeAnimation>? animations,
     this.hidden = false,
-  }) : shapes = shapes ?? <PmlShape>[],
+  }) : _background = background,
+       _primaryMasterBackground = background.isEmpty
+           ? null
+           : background.toUpperCase(),
+       inheritsMasterBackground =
+           inheritsMasterBackground ?? background.isEmpty,
+       shapes = shapes ?? <PmlShape>[],
        backgroundShapes = backgroundShapes ?? <PmlShape>[],
        animations = animations ?? <PmlShapeAnimation>[];
 
@@ -540,8 +592,56 @@ class PmlSlide {
   /// masterName API.
   String masterName;
 
-  /// Resolved solid slide background (`RRGGBB`), inherited from layout/master.
-  String background;
+  String _background;
+  String? _primaryMasterBackground;
+
+  /// Resolved solid background (`RRGGBB`); empty uses the current master.
+  /// Assigning a nonempty color records an explicit slide override.
+  String get background => _background;
+
+  set background(String value) {
+    _background = value;
+    inheritsMasterBackground = value.isEmpty;
+    _primaryMasterBackground = null;
+  }
+
+  /// Whether a master-background edit should update this slide's paper.
+  /// Explicit slide/layout fills remain independent of master edits.
+  bool inheritsMasterBackground;
+
+  /// Retains an inherited color and the primary master at resolution time.
+  /// The resolved color can come from a secondary imported slide master.
+  void setInheritedBackground(
+    String value, {
+    required String masterBackground,
+  }) {
+    _background = value;
+    inheritsMasterBackground = true;
+    _primaryMasterBackground = masterBackground.isEmpty
+        ? 'FFFFFF'
+        : masterBackground.toUpperCase();
+  }
+
+  /// Resolves direct master edits without losing imported secondary colors.
+  String resolveBackground(String masterBackground) {
+    final String current = masterBackground.isEmpty
+        ? 'FFFFFF'
+        : masterBackground;
+    if (inheritsMasterBackground &&
+        (_background.isEmpty ||
+            (_primaryMasterBackground != null &&
+                _primaryMasterBackground != current.toUpperCase()))) {
+      return current;
+    }
+    return _background.isEmpty ? current : _background;
+  }
+
+  /// Refreshes inherited paper without detaching it from future master edits.
+  void updateMasterBackground(String value) {
+    if (inheritsMasterBackground) {
+      setInheritedBackground(value, masterBackground: value);
+    }
+  }
 
   /// Original owning part, retained when slides are reordered.
   String? sourcePartUri;
@@ -565,6 +665,7 @@ class PmlSlide {
       layoutName: layoutName,
       masterName: masterName,
       background: background,
+      inheritsMasterBackground: inheritsMasterBackground,
       notes: notes,
       backgroundShapes: <PmlShape>[
         for (final PmlShape shape in backgroundShapes) shape.copy(),
@@ -576,7 +677,7 @@ class PmlSlide {
         for (final PmlShapeAnimation anim in animations) anim.copyWith(),
       ],
       shapes: <PmlShape>[for (final PmlShape shape in shapes) shape.copy()],
-    );
+    ).._primaryMasterBackground = _primaryMasterBackground;
   }
 }
 

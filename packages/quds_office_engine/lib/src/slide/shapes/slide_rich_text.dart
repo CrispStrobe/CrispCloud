@@ -44,6 +44,17 @@ List<PmlTextParagraph> parsePmlRichText(
       out.spaceBeforePt = _spacing(pPr, 'spcBef');
       out.spaceAfterPt = _spacing(pPr, 'spcAft');
     }
+    final XmlElement? end = paragraph.firstChild(
+      'endParaRPr',
+      namespaceUri: OfficeNamespaces.a,
+    );
+    if (end != null) {
+      out.defaultFontSizePt =
+          (int.tryParse(end.getAttribute('sz') ?? '') ?? 0) / 100;
+      out.defaultColor = _runColor(end, colors);
+      out.defaultBold = end.getAttribute('b') == '1';
+      out.defaultItalic = end.getAttribute('i') == '1';
+    }
     for (final XmlElement child in paragraph.childElements) {
       if (child.localName == 'r' || child.localName == 'fld') {
         final XmlElement? rPr = child.firstChild(
@@ -60,8 +71,14 @@ List<PmlTextParagraph> parsePmlRichText(
             text: text,
             fontSizePt:
                 (int.tryParse(rPr?.getAttribute('sz') ?? '') ?? 0) / 100,
-            bold: rPr?.getAttribute('b') == '1',
-            italic: rPr?.getAttribute('i') == '1',
+            // An omitted attribute can use fallback styling; an explicit
+            // zero must continue to disable that style on this run.
+            bold: rPr?.getAttribute('b') == null
+                ? out.defaultBold
+                : rPr?.getAttribute('b') == '1',
+            italic: rPr?.getAttribute('i') == null
+                ? out.defaultItalic
+                : rPr?.getAttribute('i') == '1',
             underline: switch (rPr?.getAttribute('u')) {
               null || 'none' => false,
               _ => true,
@@ -82,23 +99,18 @@ List<PmlTextParagraph> parsePmlRichText(
           ),
         );
       } else if (child.localName == 'br') {
-        out.runs.add(PmlTextRun(text: '\n'));
+        out.runs.add(
+          PmlTextRun(
+            text: '\n',
+            bold: out.defaultBold,
+            italic: out.defaultItalic,
+          ),
+        );
       }
     }
-    final XmlElement? end = paragraph.firstChild(
-      'endParaRPr',
-      namespaceUri: OfficeNamespaces.a,
-    );
     if (end != null) {
-      out.defaultFontSizePt =
-          (int.tryParse(end.getAttribute('sz') ?? '') ?? 0) / 100;
-      out.defaultColor = _runColor(end, colors);
-      out.defaultBold = end.getAttribute('b') == '1';
-      out.defaultItalic = end.getAttribute('i') == '1';
       for (final PmlTextRun run in out.runs) {
         if (run.color.isEmpty) run.color = out.defaultColor;
-        if (out.defaultBold) run.bold = true;
-        if (out.defaultItalic) run.italic = true;
       }
     }
     paragraphs.add(out);
