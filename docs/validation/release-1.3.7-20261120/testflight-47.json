@@ -1,0 +1,35 @@
+{
+  "version": "1.3.7",
+  "build": "47",
+  "app_id": "6789570314",
+  "bundle_id": "com.CrispStrobe.cloud",
+  "source": {
+    "crispcloud": "22d6bc0d",
+    "quds_office": "c954d00d"
+  },
+  "macos": {
+    "delivery_uuid": "f921b4f2-f457-4eb0-8958-c46bdee716e2",
+    "build_id": "f921b4f2-f457-4eb0-8958-c46bdee716e2",
+    "package": "/tmp/crispcloud-release-1.3.7-47/CrispCloud-1.3.7-47.pkg",
+    "sha256": "94d9e7ace46ac92370de38485755cf2b06b83cdb5110f0c02ee2d027425b4024",
+    "processing_state": "VALID",
+    "internal_group_assigned": true,
+    "external_group_assigned": true,
+    "external_state": "WAITING_FOR_BETA_REVIEW"
+  },
+  "ios": {
+    "delivery_uuid": "c44a7bfe-fd54-4614-af7a-d09787ff5d3a",
+    "build_id": "c44a7bfe-fd54-4614-af7a-d09787ff5d3a",
+    "package": "/tmp/crispcloud-release-1.3.7-47/CrispCloud-1.3.7-47.ipa",
+    "sha256": "3df4b21e9926f2a93abc115f78815bbc64030c9d8b445f5d13746f15679df3d1",
+    "processing_state": "VALID",
+    "internal_group_assigned": true,
+    "external_group_assigned": true,
+    "external_state": "WAITING_FOR_BETA_REVIEW"
+  },
+  "signing": {
+    "identity": "Apple Distribution (N9XSJ4M3GT)",
+    "keychain": "brickwright-build.keychain-db",
+    "app_group": "group.com.crispcloud.shared"
+  }
+}
