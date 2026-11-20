@@ -1,6 +1,9 @@
 name: Experimental Rust Filen/Internxt
 on:
   push:
+    # GitHub ignores path filters for tags. Qualify source branch changes once;
+    # Apple/release tags use their dedicated binary workflows.
+    branches: ['**']
     paths: ['packages/crisp_storage/**', 'lib/services/*filen*', 'lib/services/*internxt*', 'lib/services/rust_cloud*', 'lib/widgets/cloud_engine_field.dart', 'lib/widgets/connection_dialog.dart', 'test/*rust_cloud*', 'test/cloud_engine*', '.github/workflows/rust-cloud.yml']
   pull_request:
     paths: ['packages/crisp_storage/**', 'lib/services/*filen*', 'lib/services/*internxt*', 'lib/services/rust_cloud*', 'lib/widgets/cloud_engine_field.dart', 'lib/widgets/connection_dialog.dart', 'test/*rust_cloud*', 'test/cloud_engine*', '.github/workflows/rust-cloud.yml']

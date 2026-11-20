@@ -1,6 +1,9 @@
 name: Rust SMB transport
 on:
   push:
+    # GitHub ignores path filters for tags. Qualify source branch changes once;
+    # Apple/release tags use their dedicated binary workflows.
+    branches: ['**']
     paths: ['.gitattributes', 'packages/crisp_storage/**', 'cli/**', 'lib/**smb**', 'lib/widgets/connection_dialog.dart', 'test/**smb**', '.github/workflows/smb-rust.yml']
   pull_request:
     paths: ['.gitattributes', 'packages/crisp_storage/**', 'cli/**', 'lib/**smb**', 'lib/widgets/connection_dialog.dart', 'test/**smb**', '.github/workflows/smb-rust.yml']

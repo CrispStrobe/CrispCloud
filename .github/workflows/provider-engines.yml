@@ -1,6 +1,9 @@
 name: Shared encrypted providers
 on:
   push:
+    # GitHub ignores path filters for tags. Qualify source branch changes once;
+    # Apple/release tags use their dedicated binary workflows.
+    branches: ['**']
     paths: ['packages/crisp_storage/**', 'packages/filen_client/**', 'lib/services/**', 'test/*filen*', 'test/*internxt*', 'cli/**', '.github/workflows/provider-engines.yml']
   pull_request:
     paths: ['packages/crisp_storage/**', 'packages/filen_client/**', 'lib/services/**', 'test/*filen*', 'test/*internxt*', 'cli/**', '.github/workflows/provider-engines.yml']
