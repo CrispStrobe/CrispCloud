@@ -54,6 +54,7 @@ void main() {
           'workflow:newDocument',
           'workflow:recentDocuments',
           'workflow:convertDocument',
+          'workflow:printFileList',
         ]),
       );
       expect(

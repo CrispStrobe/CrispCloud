@@ -277,6 +277,48 @@ class BrowserMenuLayout {
     return this; // Completely custom layouts retain their chosen top-level menus.
   }
 
+  /// One-time upgrade adding "Print file list…" to a saved layout: after
+  /// Properties when present, otherwise at the end of the File menu.
+  BrowserMenuLayout withPrintFileListCommand() {
+    const command = 'workflow:printFileList';
+    if (nodes.any((e) => e.commandId == command)) return this;
+    final used = nodes.map((e) => e.id).toSet();
+    var id = 'print-file-list';
+    for (var n = 1; used.contains(id); n++) {
+      id = 'print-file-list-$n';
+    }
+    final node = BrowserMenuNode(
+      id: id,
+      kind: BrowserMenuNodeKind.command,
+      commandId: command,
+    );
+    var inserted = false;
+    List<BrowserMenuNode> afterProperties(List<BrowserMenuNode> entries) {
+      final out = <BrowserMenuNode>[];
+      for (final entry in entries) {
+        out.add(
+          entry.kind == BrowserMenuNodeKind.submenu
+              ? entry.withChildren(afterProperties(entry.children))
+              : entry,
+        );
+        if (!inserted && entry.commandId == 'workflow:properties') {
+          out.add(node);
+          inserted = true;
+        }
+      }
+      return out;
+    }
+
+    final updated = afterProperties(menus);
+    if (inserted) return BrowserMenuLayout(updated);
+    final index = menus.indexWhere((e) => e.labelKey == 'file');
+    if (index < 0) return this;
+    return BrowserMenuLayout(
+      menus.toList()
+        ..[index] = menus[index].withChildren([...menus[index].children, node]),
+    );
+  }
+
   factory BrowserMenuLayout.defaults() {
     var serial = 0;
     BrowserMenuNode command(String id) => BrowserMenuNode(
@@ -316,6 +358,8 @@ class BrowserMenuLayout {
           'newFolder',
         ]),
         ...workflows(['properties']),
+        separator(),
+        ...workflows(['printFileList']),
         separator(),
         ...actions(['connect']),
       ]),
