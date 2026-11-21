@@ -527,7 +527,7 @@ void main() {
           WmlRun(text: 'ab'),
           WmlNoteMarker(
             endnote: false,
-          properties: WmlRunProps(italic: true, color: '123456'),
+            properties: WmlRunProps(italic: true, color: '123456'),
           ),
           WmlRun(
             text: 'XYZ',

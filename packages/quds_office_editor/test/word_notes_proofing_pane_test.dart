@@ -263,7 +263,8 @@ void main() {
         OfficeProofingService(providers: [manual]),
       );
       await tester.enterText(_field(note), 'Lead\nFeler note');
-      await _pump(tester, frames: 10);
+      // The pause before checking (WordProofingTiming.idle) plus frames.
+      await _pump(tester, frames: 20);
       expect(
         provider.requests.any((request) => request.text.contains('Feler')),
         isTrue,

@@ -23,7 +23,8 @@ void main() {
     expect(
       OfficeHostFonts.registeredFamily(PaintRunText.latinFallbacks.first),
       'Liberation Sans',
-      reason: 'List labels must start with a loaded face, not test/system fonts',
+      reason:
+          'List labels must start with a loaded face, not test/system fonts',
     );
     expect(
       PaintRunText.familyFor(text: 'Example', runFamily: 'Times New Roman'),

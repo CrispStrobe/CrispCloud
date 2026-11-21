@@ -4,6 +4,70 @@ All notable changes to `quds_office_editor` are documented here.
 
 ## Unreleased
 
+- Accept nested Zotero research-note/annotation tables through the existing
+  native commands, retaining active citations, rich content, body/authored-note
+  ownership and one undo/redo step. Table-containing payloads still require
+  a main-flow destination; Notes-pane table editing and installed-plugin
+  interoperability remain separate acceptance scopes.
+
+- Add explicit offline downloads in **Synchronized mail** for native IMAP,
+  EWS, Gmail and Microsoft 365. Download one message or the current header page,
+  retain original bytes and attachments, skip saved messages on resume, and
+  report bounded progress, cancellation and storage failures. Keep reads local
+  until an explicit download and preserve draft, Outbox and sync checkpoints.
+- Honor composer save guards during native Quit, drain closed routes before
+  closing their storage owner, and keep failed or pending draft saves open.
+- Keep long missing-message and error descriptions scrollable in compact
+  synchronized-mail readers, including translated text at enlarged text sizes.
+
+- Correct localized Mail list dates across daylight-saving changes and supplied
+  UTC clocks: compare local calendar dates so yesterday, recent weekdays and
+  future dates keep their intended labels.
+
+- Add native **Synchronized mail** for IMAP, EWS, Gmail and Microsoft 365:
+  explicit bounded Start/Continue/Check for changes, Stop, persistent page
+  checkpoints and offline synchronized-header browsing. Reuse existing cached
+  body identities across reconnects, keep account leases separate from stable
+  storage identity, and drain work before close. Include English/German/Arabic
+  controls; full-body retention and background synchronization remain separate.
+
+- Integrate configurable proofing modes for word/sentence completion, typing
+  pauses, background checking and explicit checks. Persist the Studio schedule,
+  distinguish spelling-only providers, prioritize visible paragraphs and retain
+  partial results for the same text. Replace the earlier continuous-typing
+  maximum-delay API with `WordProofingSchedule`; see
+  [scheduling](../../docs/proofing/scheduling.md) for defaults and host migration.
+
+- Add **Prepare document for transfer…** to the native Zotero workspace and
+  recognize incoming transfer documents through **Import transferred references…**
+  and Refresh. Preserve one undo/redo transaction, cancellation, source-identity
+  and stale-result guards; keep carriers inactive and prevent citation editing
+  until import completes. Explain the DOCX/Word and ODT/LibreOffice save-copy
+  workflow and retain original document preferences when undoing an import.
+  Installed Word/LibreOffice/Zotero interoperability remains a separate gate.
+
+- Add `WordProofingMode`, `WordProofingSchedule` and live session scheduling
+  controls for completed-word spelling, sentence/pause grammar and idle
+  document checks. Prioritize visible paragraphs in background passes, keep
+  incomplete words' findings hidden while typing, preserve independent
+  provider-group coverage and retain explicit checks in manual mode. Persist
+  Studio's mode, provider-group, pause, background and visibility preferences;
+  see the [scheduling contract](../../docs/proofing/scheduling.md).
+
+- Observe saved mailbox views from native IMAP, EWS, Gmail and Microsoft 365
+  sessions while preserving original provider action identities. Keep cached
+  folders, read/star flags and saved-view unread counts current with repository
+  transactions; retain selected readers on metadata changes, reject stale
+  folder/account events and drain subscriptions before releasing local storage.
+- Preserve retry state after a failed deferred Word document layout, so the
+  next layout read cannot silently return the previous document's pages.
+
+- Let Zotero Add Note and Add Annotation replace ordinary text spanning several
+  paragraphs in one body section, footnote or endnote. Map both Notes-pane
+  selection endpoints, retain one undo/redo step and original selection direction,
+  and preserve cancellation, composition and stale-document guards. Tables,
+  controls and protected ranges keep explicit selection limits.
+
 - Add explicit **Check current status** to native Mail activity for uncertain
   read/flag actions across IMAP, EWS, Gmail and Microsoft 365. Keep original
   outcomes alongside durable later observations; reject stale/cancelled results

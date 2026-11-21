@@ -8,6 +8,7 @@ import 'package:quds_office_engine/quds_office_engine.dart';
 import '../proofing/word_proofing.dart';
 import 'office_controller.dart';
 import 'word_review_labels.dart';
+import '../l10n/office_plural.dart';
 
 /// Non-modal writing and tracked-change review beside the document canvas.
 ///
@@ -571,10 +572,10 @@ class _WordReviewPaneState extends State<WordReviewPane> {
       const SizedBox(height: 4),
       _navigation(
         label: issues.isEmpty
-            ? _s('0 findings', 'لا توجد نتائج')
+            ? officeFindings(0, arabic: _arabic)
             : _s(
-                '${selectedIndex + 1} of ${issues.length} findings',
-                '${selectedIndex + 1} من ${issues.length} نتائج',
+                '${selectedIndex + 1} of ${officeFindings(issues.length)}',
+                'النتيجة ${selectedIndex + 1} من ${issues.length}',
               ),
         previousKey: 'live-proofing-previous',
         nextKey: 'live-proofing-next',
@@ -1265,8 +1266,8 @@ class _WordReviewPaneState extends State<WordReviewPane> {
         children: <Widget>[
           Text(
             _s(
-              '${shown.length} of ${pending.length} pending changes',
-              '${shown.length} من ${pending.length} تغييرات معلقة',
+              '${shown.length} of ${officeCount(pending.length, 'pending change')}',
+              'المعروض ${shown.length} من ${officeChanges(pending.length, arabic: true)} معلقة',
             ),
             key: const ValueKey<String>('live-review-filter-count'),
           ),
@@ -1282,8 +1283,8 @@ class _WordReviewPaneState extends State<WordReviewPane> {
         label: shown.isEmpty
             ? _s('0 shown changes', 'لا توجد تغييرات معروضة')
             : _s(
-                '${selectedIndex + 1} of ${shown.length} changes',
-                '${selectedIndex + 1} من ${shown.length} تغييرات',
+                '${selectedIndex + 1} of ${officeChanges(shown.length)}',
+                'التغيير ${selectedIndex + 1} من ${shown.length}',
               ),
         previousKey: 'live-review-previous',
         nextKey: 'live-review-next',

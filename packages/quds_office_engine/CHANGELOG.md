@@ -4,6 +4,74 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Preserve bounded nested tables in Zotero Add Note/Add Annotation content,
+  including recursive active-citation/list order, independent span/width
+  validation and supported pictures. Keep all resource budgets shared across
+  the note, cap table nesting at eight levels, and create native trailing cell
+  paragraphs before final index mapping for stable DOCX round trips. Retain
+  main-flow destination and unsupported-structure guards.
+
+- Extend bounded Word VBA with `Range.NoProofing`,
+  `ParagraphFormat.Hyphenation`, and `Font.Kerning`, including typed helpers
+  and explicit independent header/footer paragraphs. Add corresponding native
+  formatting fields with exact half-point validation, sparse attribute writes,
+  explicit inheritance overrides and preserved foreign XML. Include a runnable
+  BAS example and source, native, layout, CLI/MCP and portable qualification.
+  See the [proofing contract](../../docs/VBA_WORD_MACROS.md#proofing-and-kerning-controls).
+- Prevent incremental line translation from reusing stale page/column identity
+  when an inline page break becomes active after an earlier typing edit.
+
+- Extend Word VBA with section `Headers` / `Footers`, typed `HeadersFooters`
+  and `HeaderFooter` aliases, and primary/first-page/even-page paragraph
+  selection through `Range.Paragraphs`. Reuse insertion, font/paragraph
+  formatting, tabs and spacing with complete story identity and normal
+  transaction/policy boundaries. Guard native paragraph selection against
+  inherited, shared, ambiguous and opaque header/footer targets; reject
+  whole-story writes and nonbody list operations. Add a runnable BAS example
+  and compiler, native, CLI/MCP and portable regression coverage. See the
+  [header/footer contract](../../docs/VBA_WORD_MACROS.md#existing-header-and-footer-paragraphs).
+
+- Preserve adjacent equal-target ODT hyperlinks as one range with independently
+  styled spans, preventing lost Unicode transfer metadata in LibreOffice.
+  Define the generated `Bibliography` style through referenced-style export,
+  retaining imported custom definitions and sparse styleless documents.
+
+- Add detached `WordZoteroTransfer` / `WordZoteroTransferPlan` export and import,
+  `ZoteroCitingCommand.exportDocument` and the document import/export handshake.
+  Stage bounded hyperlink carriers separately from the source, retain raw
+  citation/bibliography metadata and document preferences, and require native
+  formatting of every imported field before publication. Support DOCX carriers,
+  ODT carrier export, the legacy marker and verified Google Docs link variants.
+  Preserve body/table/uniquely anchored note ownership, surrounding rich content
+  and paragraph identities; reject damaged, mixed, protected, stale or excessive
+  transfers. Direct native ODT reference-mark import remains separate. See the
+  [transfer work record](../../docs/validation/zotero-transfer-20261121/README.md)
+  for exact local and converter acceptance boundaries.
+
+- Add `OfficeProofingProvider.categories` and the optional
+  `OfficeProofingService.check(only: ...)` provider filter for category-aware
+  scheduling. Providers default to all categories; the bundled German spelling
+  provider declares spelling only. Existing timeout, result-validation and
+  provider-ownership behavior applies to filtered checks.
+
+- Extend section-scoped Word VBA `PageSetup` with `Orientation`, zero-argument
+  `TogglePortrait`, and four `SectionStart` modes. Add guarded native
+  `docx.pageOrientation` and `docx.sectionStart` operations, preserving aliases,
+  helper calls, source order, recording and whole-run rollback. Orientation
+  changes swap dimensions while retaining named margins, header/footer
+  distances and paper code; explicit square-page orientation survives reopen.
+  Section-start edits own only the native break attribute and preserve unrelated
+  geometry and revision metadata. Refuse ambiguous orientation/source identity
+  and unsupported new-column starts. Add an executable BAS example, source,
+  native, transaction and portable checks; see the
+  [section-controls contract](../../docs/VBA_WORD_MACROS.md#section-orientation-and-start-controls).
+
+- Replace Zotero research-content selections across consecutive ordinary
+  paragraphs in one body section or authored note. Preserve rich prefix/suffix
+  content, active citation order, native note separators and DOCX reopening;
+  reject ambiguous ownership and selected structural/protected content before
+  mutation. Add optional `insertionEndParagraph` to the staged native session.
+
 - Extend Word VBA with explicit `Sections(i)` / `Sections.Item(i)`, typed
   `Section` and `PageSetup` aliases, `With`, and required `ByVal` helpers. Add
   eight write-only page geometry setters for dimensions, margins and

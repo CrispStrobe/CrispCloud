@@ -575,16 +575,59 @@ void main() {
     );
 
     for (final scenario in [
-      'cross-paragraph selection',
+      'cross-section selection',
+      'cross-table selection',
+      'cross-field selection',
       'viewing',
       'selecting',
     ]) {
       test('${command.name} image flow keeps the $scenario guard', () {
         final controller = _controller();
-        final crossParagraph = scenario == 'cross-paragraph selection';
-        if (crossParagraph) {
+        final structuralRange = scenario.startsWith('cross-');
+        if (structuralRange) {
+          final document = controller.document;
+          final blocks = document.sections.single.blocks;
+          switch (scenario) {
+            case 'cross-section selection':
+              document.sections.add(WmlSection(blocks: [blocks.removeLast()]));
+            case 'cross-table selection':
+              blocks.insert(
+                1,
+                WmlTable(
+                  rows: [
+                    WmlTableRow(
+                      cells: [
+                        WmlTableCell(
+                          blocks: [
+                            WmlParagraph(
+                              inlines: [WmlRun(text: 'Preserve table')],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            case 'cross-field selection':
+              blocks.insert(
+                1,
+                WmlParagraph(
+                  inlines: [
+                    WmlFieldBoundary(kind: WmlFieldBoundaryKind.begin),
+                    WmlFieldBoundary(
+                      kind: WmlFieldBoundaryKind.instruction,
+                      text: ' DATE ',
+                    ),
+                    WmlFieldBoundary(kind: WmlFieldBoundaryKind.separate),
+                    WmlRun(text: '2026'),
+                    WmlFieldBoundary(kind: WmlFieldBoundaryKind.end),
+                  ],
+                ),
+              );
+          }
           controller.caret
-            ..paragraphIndex = 1
+            ..paragraphIndex = document.paragraphs.length - 1
             ..logicalIndex = 1
             ..selectionAnchor = 1
             ..selectionAnchorParagraph = 0;
@@ -599,7 +642,7 @@ void main() {
         final package = _packageState(controller.document);
         expect(
           () => _begin(controller, command),
-          crossParagraph ? throwsUnsupportedError : throwsStateError,
+          structuralRange ? throwsUnsupportedError : throwsStateError,
         );
         expect(_state(controller.document), before);
         expect(_packageState(controller.document), package);

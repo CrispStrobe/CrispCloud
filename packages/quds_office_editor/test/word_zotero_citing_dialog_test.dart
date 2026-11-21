@@ -296,7 +296,7 @@ void main() {
     final controller = await _open(tester, desktop: desktop);
     expect(
       find.byTooltip(
-        'Insert text, image and ink annotations at the body or Notes caret, or replace selected text within one paragraph. Requires Zotero 9 or later.',
+        'Insert text, image and ink annotations at the body or Notes caret, or replace selected ordinary text across paragraphs in the same body section or authored note. Requires Zotero 9 or later.',
       ),
       findsOneWidget,
     );

@@ -317,7 +317,7 @@ void main() {
         await _reveal(tester, _key('live-review-filter-count'));
         expect(
           _text(tester, 'live-review-filter-count'),
-          '0 of 1 pending changes',
+          '0 of 1 pending change',
         );
         expect(
           _text(tester, 'live-review-empty'),

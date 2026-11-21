@@ -124,12 +124,24 @@ Object _block(WmlBlock block) {
   if (block is WmlTable) {
     return [
       'table',
+      block.grid,
       for (final row in block.rows)
         [
+          row.height,
+          row.cantSplit,
           for (final cell in row.cells)
-            [for (final child in cell.blocks) _block(child)],
+            [
+              cell.gridSpan,
+              cell.vMerge.name,
+              cell.width,
+              cell.fillColor,
+              for (final child in cell.blocks) _block(child),
+            ],
         ],
     ];
+  }
+  if (block is WmlFrame) {
+    return ['frame', for (final child in block.blocks) _block(child)];
   }
   if (block is WmlContentControlBlock) {
     return ['control', for (final child in block.blocks) _block(child)];
@@ -265,6 +277,77 @@ WmlTable _table(List<WmlBlock> blocks) => WmlTable(
     ),
   ],
 );
+
+typedef _CellTarget = ({
+  _Target target,
+  WmlTable table,
+  WmlTable rootTable,
+  WmlTableCell cell,
+  WmlTableCell neighbor,
+});
+
+_CellTarget _cellTarget({String shape = 'plain', bool reverse = false}) {
+  final target = _target(0);
+  final merged = shape == 'merged';
+  final cell = WmlTableCell(
+    blocks: <WmlBlock>[...target.originals],
+    gridSpan: merged ? 2 : 1,
+    vMerge: merged ? WmlVMerge.restart : WmlVMerge.none,
+    width: 240,
+    fillColor: 'EEF2F7',
+  );
+  final neighbor = WmlTableCell(
+    blocks: [
+      WmlParagraph(inlines: [WmlRun(text: 'Neighbor')]),
+    ],
+    width: 120,
+  );
+  final table = WmlTable(
+    grid: merged ? [120, 120, 120] : [240, 120],
+    rows: [
+      WmlTableRow(cells: [cell, neighbor]),
+      if (merged)
+        WmlTableRow(
+          cells: [
+            WmlTableCell(
+              gridSpan: 2,
+              vMerge: WmlVMerge.cont,
+              width: 240,
+              blocks: [WmlParagraph()],
+            ),
+            WmlTableCell(
+              width: 120,
+              blocks: [
+                WmlParagraph(inlines: [WmlRun(text: 'Lower neighbor')]),
+              ],
+            ),
+          ],
+        ),
+    ],
+  );
+  final rootTable = shape == 'nested'
+      ? _table([
+          WmlParagraph(inlines: [WmlRun(text: 'Outer before')]),
+          table,
+          WmlParagraph(inlines: [WmlRun(text: 'Outer after')]),
+        ])
+      : table;
+  target.controller.document.sections.single.blocks
+    ..clear()
+    ..addAll([
+      WmlParagraph(inlines: [WmlRun(text: 'Outside before')]),
+      rootTable,
+      WmlParagraph(inlines: [WmlRun(text: 'Outside after')]),
+    ]);
+  _select(target, reverse: reverse);
+  return (
+    target: target,
+    table: table,
+    rootTable: rootTable,
+    cell: cell,
+    neighbor: neighbor,
+  );
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -816,7 +899,359 @@ void main() {
     },
   );
 
-  for (final unsafe in ['section boundary', 'same table cell']) {
+  for (final command in [
+    ZoteroCitingCommand.addNote,
+    ZoteroCitingCommand.addAnnotation,
+  ]) {
+    for (final shape in ['plain', 'merged', 'nested']) {
+      for (final reverse in [false, true]) {
+        test(
+          '${command.name} replaces $shape table-cell paragraphs with ${reverse ? 'backward' : 'forward'} selection history',
+          () {
+            final fixture = _cellTarget(shape: shape, reverse: reverse);
+            final target = fixture.target;
+            final controller = target.controller;
+            final document = controller.document;
+            final cell = fixture.cell;
+            final originalList = cell.blocks;
+            final before = _state(document);
+            final selection = _selection(controller);
+            final neighbor = _block(fixture.neighbor.blocks.single);
+            final transaction = _begin(target, command);
+            _stage(transaction, 0);
+            _complete(transaction);
+            expect(_state(document), before);
+            transaction.apply();
+            expect(cell.blocks, same(originalList));
+            expect(cell.blocks.first, same(target.originals.first));
+            expect(cell.blocks.last, same(target.originals.last));
+            expect(WordTree.paragraphs(cell.blocks).map((p) => p.text), [
+              'Before Quote $_citationText',
+              'Continuation After',
+              'Unrelated',
+            ]);
+            expect(_block(fixture.neighbor.blocks.single), neighbor);
+            expect(document.sections.single.blocks[1], same(fixture.rootTable));
+            expect(
+              (document.sections.single.blocks.first as WmlParagraph).text,
+              'Outside before',
+            );
+            expect(
+              (document.sections.single.blocks.last as WmlParagraph).text,
+              'Outside after',
+            );
+            expect(cell.gridSpan, shape == 'merged' ? 2 : 1);
+            expect(
+              cell.vMerge,
+              shape == 'merged' ? WmlVMerge.restart : WmlVMerge.none,
+            );
+            expect(cell.width, 240);
+            expect(cell.fillColor, 'EEF2F7');
+            final field = controller.zoteroFields.single;
+            expect(field.paragraph, same(cell.blocks.first));
+            expect(field.cachedText, _citationText);
+            expect(field.citation!.items.single.locator, '4');
+            expect(
+              controller.caret.paragraphIndex,
+              document.paragraphs.toList().indexOf(
+                cell.blocks[1] as WmlParagraph,
+              ),
+            );
+            expect(controller.caret.logicalIndex, 'Continuation'.length);
+            expect(controller.caret.isCollapsed, isTrue);
+            final after = _state(document);
+            controller.undo();
+            expect(_state(document), before);
+            expect(_selection(controller), selection);
+            expect(cell.blocks, same(originalList));
+            expect(cell.blocks, orderedEquals(target.originals));
+            expect(controller.canUndo, isFalse);
+            controller.redo();
+            expect(_state(document), after);
+            final reopened = WordDeserializer().readBytes(
+              WordSerializer().writeBytes(document),
+            );
+            final reopenedCell =
+                WordTree.descendants(reopened.sections.single.blocks)
+                    .whereType<WmlTable>()
+                    .expand((table) => table.rows)
+                    .expand((row) => row.cells)
+                    .singleWhere(
+                      (cell) => cell.blocks.whereType<WmlParagraph>().any(
+                        (paragraph) =>
+                            paragraph.text == 'Before Quote $_citationText',
+                      ),
+                    );
+            expect(reopenedCell.gridSpan, cell.gridSpan);
+            expect(reopenedCell.vMerge, cell.vMerge);
+            expect(reopenedCell.fillColor, cell.fillColor);
+            expect(
+              WordZotero.fields(reopened).single.paragraph,
+              same(reopenedCell.blocks.first),
+            );
+            expect(WordFieldSpans.unbalanced(reopened), isEmpty);
+          },
+        );
+      }
+    }
+  }
+
+  for (final payload in [
+    '<h2>Heading</h2><p>Paragraph</p>',
+    '<ol start="3"><li>First</li><li>Second</li></ol>',
+  ]) {
+    test(
+      'cell replacement retains heading or list structure and cell owners: $payload',
+      () {
+        final fixture = _cellTarget();
+        final transaction = _begin(fixture.target);
+        final before = _state(fixture.target.controller.document);
+        _stage(transaction, 0, html: payload);
+        _complete(transaction);
+        transaction.apply();
+        final paragraphs = fixture.cell.blocks.cast<WmlParagraph>();
+        if (payload.startsWith('<h2>')) {
+          expect(
+            paragraphs
+                .singleWhere((p) => p.text == 'Heading')
+                .properties
+                .headingLevel,
+            2,
+          );
+        } else {
+          expect(
+            paragraphs
+                .singleWhere((p) => p.text == 'First')
+                .properties
+                .listLabel
+                ?.trim(),
+            '3.',
+          );
+          expect(
+            paragraphs
+                .singleWhere((p) => p.text == 'Second')
+                .properties
+                .listLabel
+                ?.trim(),
+            '4.',
+          );
+        }
+        expect(fixture.neighbor.blocks.single, isA<WmlParagraph>());
+        final after = _state(fixture.target.controller.document);
+        fixture.target.controller.undo();
+        expect(_state(fixture.target.controller.document), before);
+        fixture.target.controller.redo();
+        expect(_state(fixture.target.controller.document), after);
+      },
+    );
+  }
+
+  test('cell paragraph-separator endpoints retain the unselected suffix', () {
+    final fixture = _cellTarget();
+    final target = fixture.target;
+    final controller = target.controller;
+    final paragraphs = controller.document.paragraphs.toList();
+    controller.caret
+      ..paragraphIndex = paragraphs.indexOf(target.originals[2])
+      ..logicalIndex = 0
+      ..selectionAnchorParagraph = paragraphs.indexOf(target.originals.first)
+      ..selectionAnchor = target.originals.first.text.length;
+    final before = _state(controller.document);
+    final selection = _selection(controller);
+    final transaction = _begin(target);
+    _stage(transaction, 0, html: '<p>Replacement</p>');
+    _complete(transaction);
+    transaction.apply();
+    expect(
+      (fixture.cell.blocks.first as WmlParagraph).text,
+      'Before chosen-firstReplacementchosen-last After',
+    );
+    expect(fixture.cell.blocks.last, same(target.originals.last));
+    controller.undo();
+    expect(_state(controller.document), before);
+    expect(_selection(controller), selection);
+  });
+
+  for (final html in [
+    '<h2>Heading</h2><p>Paragraph</p>',
+    '<ol><li>First</li><li>Second</li></ol>',
+  ]) {
+    test('a typed paragraph cell accepts rich paragraph blocks: $html', () {
+      final fixture = _cellTarget();
+      fixture.cell.blocks = List<WmlParagraph>.of(
+        fixture.cell.blocks.cast<WmlParagraph>(),
+      );
+      final typedList = fixture.cell.blocks;
+      final controller = fixture.target.controller;
+      final before = _state(controller.document);
+      final selection = _selection(controller);
+      final transaction = _begin(fixture.target);
+      _stage(transaction, 0, html: html);
+      _complete(transaction);
+      transaction.apply();
+      expect(fixture.cell.blocks, same(typedList));
+      expect(fixture.cell.blocks, isA<List<WmlParagraph>>());
+      final after = _state(controller.document);
+      controller.undo();
+      expect(_state(controller.document), before);
+      expect(_selection(controller), selection);
+      expect(fixture.cell.blocks, same(typedList));
+      expect(controller.canUndo, isFalse);
+      controller.redo();
+      expect(_state(controller.document), after);
+      final reopened = WordDeserializer().readBytes(
+        WordSerializer().writeBytes(controller.document),
+      );
+      expect(
+        reopened.paragraphs.map((p) => p.text),
+        controller.document.paragraphs.map((p) => p.text),
+      );
+    });
+  }
+
+  for (final change in ['cell', 'row', 'table', 'block list', 'continuation']) {
+    test(
+      'completed cell replacement rejects changed $change ownership without a revision',
+      () {
+        final fixture = _cellTarget();
+        final target = fixture.target;
+        final controller = target.controller;
+        final transaction = _begin(target);
+        _stage(transaction, 0);
+        _complete(transaction);
+        final revision = controller.contentRevision;
+        final visible = _visible(target);
+        switch (change) {
+          case 'cell':
+            fixture.table.rows.single.cells[0] = WmlTableCell(
+              blocks: fixture.cell.blocks,
+            );
+          case 'row':
+            fixture.table.rows[0] = WmlTableRow(
+              cells: fixture.table.rows.single.cells,
+            );
+          case 'table':
+            controller.document.sections.single.blocks[1] = WmlTable(
+              grid: fixture.table.grid,
+              rows: fixture.table.rows,
+            );
+          case 'block list':
+            fixture.cell.blocks = List<WmlBlock>.of(fixture.cell.blocks);
+          case 'continuation':
+            fixture.cell.vMerge = WmlVMerge.cont;
+        }
+        expect(controller.contentRevision, revision);
+        expect(_visible(target), visible);
+        final current = _state(controller.document);
+        expect(
+          transaction.apply,
+          throwsA(anyOf(isA<StateError>(), isA<UnsupportedError>())),
+        );
+        expect(_state(controller.document), current);
+        expect(controller.canUndo, isFalse);
+        expect(controller.zoteroFields, isEmpty);
+      },
+    );
+  }
+
+  for (final unsafe in [
+    'different cell',
+    'different row',
+    'body to cell',
+    'outer to inner cell',
+    'shared cell list',
+    'shared table',
+    'continuation',
+    'control ancestor',
+    'frame ancestor',
+    'selected table band',
+  ]) {
+    test('table-cell range refuses $unsafe before publishing changes', () {
+      final fixture = _cellTarget(
+        shape: unsafe == 'outer to inner cell' ? 'nested' : 'plain',
+      );
+      final target = fixture.target;
+      final controller = target.controller;
+      switch (unsafe) {
+        case 'different cell':
+          fixture.cell.blocks.removeRange(2, 4);
+          fixture.neighbor.blocks.insertAll(0, target.originals.skip(2));
+        case 'different row':
+          fixture.cell.blocks.removeRange(2, 4);
+          fixture.table.rows.add(
+            WmlTableRow(
+              cells: [
+                WmlTableCell(blocks: <WmlBlock>[...target.originals.skip(2)]),
+              ],
+            ),
+          );
+        case 'shared cell list':
+          fixture.neighbor.blocks = fixture.cell.blocks;
+        case 'shared table':
+          controller.document.sections.single.blocks.add(fixture.table);
+        case 'continuation':
+          fixture.cell.vMerge = WmlVMerge.cont;
+        case 'control ancestor':
+          controller
+              .document
+              .sections
+              .single
+              .blocks[1] = WmlContentControlBlock(
+            control: WmlContentControlData(
+              xml:
+                  '<w:sdt xmlns:w="${OfficeNamespaces.w}"><w:sdtPr/><w:sdtContent/></w:sdt>',
+              sourcePartUri: '/word/document.xml',
+              relationships: const [],
+            ),
+            blocks: [fixture.table],
+          );
+        case 'frame ancestor':
+          controller.document.sections.single.blocks[1] = WmlFrame(
+            blocks: [fixture.table],
+          );
+        case 'selected table band':
+          controller.selectedTableBand = (
+            table: fixture.table,
+            column: false,
+            from: 0,
+            to: 0,
+          );
+      }
+      _select(target);
+      if (unsafe == 'body to cell' || unsafe == 'outer to inner cell') {
+        controller.caret
+          ..selectionAnchorParagraph = unsafe == 'body to cell' ? 0 : 1
+          ..selectionAnchor = 0;
+      }
+      final before = _state(controller.document);
+      expect(() => _begin(target), throwsUnsupportedError);
+      expect(_state(controller.document), before);
+      expect(controller.canUndo, isFalse);
+    });
+  }
+
+  test(
+    'table-containing payload refuses inside a cell without leaking staged preferences',
+    () {
+      final fixture = _cellTarget();
+      final target = fixture.target;
+      final before = _state(target.controller.document);
+      final transaction = _begin(target);
+      expect(
+        () => _stage(
+          transaction,
+          0,
+          html: '<table><tr><td><p>Nested</p></td></tr></table>',
+        ),
+        throwsUnsupportedError,
+      );
+      expect(_state(target.controller.document), before);
+      expect(target.controller.canUndo, isFalse);
+      expect(target.controller.isDirty, isFalse);
+    },
+  );
+
+  for (final unsafe in ['section boundary', 'different table cells']) {
     test('body spanning selection refuses $unsafe', () {
       final target = _target(0);
       final document = target.controller.document;
@@ -828,7 +1263,22 @@ void main() {
       } else {
         document.sections.single.blocks
           ..clear()
-          ..add(_table(target.originals));
+          ..add(
+            WmlTable(
+              rows: [
+                WmlTableRow(
+                  cells: [
+                    WmlTableCell(
+                      blocks: <WmlBlock>[...target.originals.take(2)],
+                    ),
+                    WmlTableCell(
+                      blocks: <WmlBlock>[...target.originals.skip(2)],
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
       }
       _select(target);
       final before = _state(document);
@@ -836,6 +1286,70 @@ void main() {
       expect(_state(document), before);
       expect(target.controller.canUndo, isFalse);
     });
+  }
+
+  for (final command in [
+    ZoteroCitingCommand.addNote,
+    ZoteroCitingCommand.addAnnotation,
+  ]) {
+    for (final cancel in [false, true]) {
+      testWidgets(
+        'direct ${command.name} ${cancel ? 'cancels' : 'replaces'} a cell-local selection',
+        (tester) async {
+          final fixture = _cellTarget(reverse: true);
+          final target = fixture.target;
+          final controller = target.controller;
+          final before = _state(controller.document);
+          final selection = _selection(controller);
+          final desktop = _Desktop(0, cancel: cancel);
+          tester.view.devicePixelRatio = 1;
+          tester.view.physicalSize = const Size(1200, 900);
+          addTearDown(tester.view.resetDevicePixelRatio);
+          addTearDown(tester.view.resetPhysicalSize);
+          await tester.pumpWidget(
+            MaterialApp(
+              home: Scaffold(
+                body: Builder(
+                  builder: (context) => FilledButton(
+                    onPressed: () => showWordZoteroDialog(
+                      context,
+                      controller: controller,
+                      localTransport: desktop.send,
+                      initialCommand: command,
+                      closeAfterCommand: true,
+                    ),
+                    child: const Text('Insert cell research'),
+                  ),
+                ),
+              ),
+            ),
+          );
+          await tester.tap(find.text('Insert cell research'));
+          await tester.pumpAndSettle();
+          expect(desktop.command, command.name);
+          expect(desktop.requests, cancel ? 6 : 7);
+          expect(
+            find.byKey(const ValueKey<String>('zotero-direct-command')),
+            findsNothing,
+          );
+          if (cancel) {
+            expect(_state(controller.document), before);
+            expect(_selection(controller), selection);
+            expect(controller.canUndo, isFalse);
+            expect(controller.isDirty, isFalse);
+          } else {
+            expect(
+              WordTree.paragraphs(fixture.cell.blocks).map((p) => p.text),
+              ['Before Replacement After', 'Unrelated'],
+            );
+            controller.undo();
+            expect(_state(controller.document), before);
+            expect(_selection(controller), selection);
+            expect(controller.canUndo, isFalse);
+          }
+        },
+      );
+    }
   }
 
   for (final noteType in [0, 1, 2]) {

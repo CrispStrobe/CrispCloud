@@ -22,7 +22,7 @@ final class WordZoteroNoteText {
 
   /// The same paragraph objects as [blocks], flattened in row-major order.
   /// Citation and list indexes address this view, never disconnected copies.
-  /// It includes the mandatory empty paragraphs of vertical continuations.
+  /// It includes vertical continuations and trailing cell paragraphs.
   final List<WmlParagraph> paragraphs;
   final Map<String, WordZoteroNotePlaceholder> placeholders;
 
@@ -193,9 +193,21 @@ final class WordZoteroNoteText {
                       'html',
                       'body',
                       'div',
+                      'table',
+                      'tbody',
+                      'tr',
+                      'td',
+                      'th',
                     }.contains(element.tag),
-                  )) {
+                  ) ||
+                  (activeTable != null && parent?.cellFlow != true)) {
                 throw _unsupportedTable();
+              }
+              if (stack.where((element) => element.table != null).length >=
+                  _maximumTableDepth) {
+                throw const FormatException(
+                  'The Zotero note exceeds eight levels of nested tables.',
+                );
               }
               if (tables.length >= 64) {
                 throw const FormatException(
@@ -509,14 +521,21 @@ final class WordZoteroNoteText {
     _NoteLink? current;
     var currentStart = 0;
     var currentParagraph = 0;
-    WmlTable? currentTable;
-    WmlTableCell? currentCell;
+    final tableOwners = <_NoteTableOwner>[];
     var tableMarks = 0;
     var cellMarks = 0;
     final structure = RegExp(r'^\uE000(t[0-9]+|c[0-9]+|/c|/t)\uE001$');
     final marker = RegExp(
       '\uE000([0-9]+|h[1-6]|/h|l[0-9]+|i[0-9]+)\uE001|\uE002',
     );
+    void appendParagraph(WmlParagraph paragraph, List<WmlBlock> destination) {
+      if (paragraphs.length >= 10000) {
+        throw const FormatException('The Zotero note has too many paragraphs.');
+      }
+      destination.add(paragraph);
+      paragraphs.add(paragraph);
+    }
+
     for (final sourceRuns in formatted.toParagraphRuns(
       baseProperties: baseProperties,
     )) {
@@ -528,35 +547,48 @@ final class WordZoteroNoteText {
         final value = structural[1]!;
         if (value.startsWith('t')) {
           final index = int.parse(value.substring(1));
-          if (currentTable != null ||
-              currentCell != null ||
+          final parent = tableOwners.lastOrNull;
+          if ((parent != null && parent.cell == null) ||
+              tableOwners.length >= _maximumTableDepth ||
               index != tableMarks++) {
             throw _malformed();
           }
-          currentTable = tables[index];
-          blocks.add(currentTable);
+          final table = tables[index];
+          (parent?.cell?.blocks ?? blocks).add(table);
+          tableOwners.add(_NoteTableOwner(table));
         } else if (value.startsWith('c')) {
           final index = int.parse(value.substring(1));
-          if (currentCell != null ||
+          final owner = tableOwners.lastOrNull;
+          if (owner == null ||
+              owner.cell != null ||
               index != cellMarks++ ||
-              !identical(cells[index].table, currentTable)) {
+              !identical(cells[index].table, owner.table)) {
             throw _malformed();
           }
-          currentCell = cells[index].cell;
+          owner.cell = cells[index].cell;
         } else if (value == '/c') {
-          if (currentCell == null || currentCell.blocks.isEmpty) {
+          final owner = tableOwners.lastOrNull;
+          final cell = owner?.cell;
+          if (cell == null || cell.blocks.isEmpty) {
             throw _malformed();
           }
-          currentCell = null;
+          // DOCX cells end in a paragraph. Keep it in the native tree before
+          // citation/list indexing, rather than adding it only during saving.
+          if (cell.blocks.last is! WmlParagraph) {
+            appendParagraph(WmlParagraph(), cell.blocks);
+          }
+          owner!.cell = null;
         } else {
-          if (currentTable == null || currentCell != null) {
+          if (tableOwners.isEmpty || tableOwners.last.cell != null) {
             throw _malformed();
           }
-          currentTable = null;
+          tableOwners.removeLast();
         }
         continue;
       }
-      if (currentTable != null && currentCell == null) throw _malformed();
+      if (tableOwners.isNotEmpty && tableOwners.last.cell == null) {
+        throw _malformed();
+      }
       final paragraph = WmlParagraph();
       var offset = 0;
       for (final run in sourceRuns) {
@@ -646,14 +678,12 @@ final class WordZoteroNoteText {
       if (current != null) {
         throw const FormatException('A Zotero note link crosses paragraphs.');
       }
-      (currentCell?.blocks ?? blocks).add(paragraph);
-      paragraphs.add(paragraph);
-      if (paragraphs.length > 10000) {
-        throw const FormatException('The Zotero note has too many paragraphs.');
-      }
+      appendParagraph(
+        paragraph,
+        tableOwners.lastOrNull?.cell?.blocks ?? blocks,
+      );
     }
-    if (currentTable != null ||
-        currentCell != null ||
+    if (tableOwners.isNotEmpty ||
         tableMarks != tables.length ||
         cellMarks != cells.length) {
       throw _malformed();
@@ -896,13 +926,21 @@ final class WordZoteroNoteText {
   }
 
   static UnsupportedError _unsupportedTable() => UnsupportedError(
-    'This Zotero note needs rectangular tables with supported row and column spans, widths and background colors. Spans must stay within their row group. Nested tables and other table formatting are not supported. The document was kept unchanged.',
+    'This Zotero note needs rectangular tables with supported row and column spans, widths and background colors. Spans must stay within their row group. Tables may nest within cells up to eight levels; other table formatting is not supported. The document was kept unchanged.',
   );
 
+  static const _maximumTableDepth = 8;
   static const _tableContainers = <String>{'table', 'tbody', 'tr'};
   static const _cellTags = <String>{'td', 'th'};
   static const _tableTags = <String>{..._tableContainers, ..._cellTags};
-  static const _cellBlockTags = <String>{..._headings, 'p', 'div', 'ul', 'ol'};
+  static const _cellBlockTags = <String>{
+    ..._headings,
+    'p',
+    'div',
+    'ul',
+    'ol',
+    'table',
+  };
 
   static void _checkMarkers(String value) {
     if (value.contains(RegExp('[\uE000-\uE002]'))) throw _malformed();
@@ -1063,6 +1101,12 @@ final class WordZoteroNotePlaceholder {
   final int paragraphIndex;
   final int start;
   final int end;
+}
+
+final class _NoteTableOwner {
+  _NoteTableOwner(this.table);
+  final WmlTable table;
+  WmlTableCell? cell;
 }
 
 final class _NoteElement {

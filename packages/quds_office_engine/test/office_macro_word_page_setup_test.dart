@@ -320,6 +320,52 @@ void main() {
     },
   );
 
+  test(
+    'repeated page setup and section exports preserve namespace collisions',
+    () {
+      var document = _fixture(
+        margins:
+            '<pgMar xmlns="$_w" xmlns:w="$_x" '
+            'qudsWord0="opaque" w:token="keep"><w:metadata/></pgMar>',
+      );
+      for (var cycle = 0; cycle < 3; cycle++) {
+        native.applyStep(document, _step('left', 48));
+        native.applyStep(document, _step('left', 48));
+        native.applyStep(document, {
+          'op': 'sectionFormat',
+          'section': 0,
+          'width': 700,
+        });
+        final bytes = WordSerializer().writeBytes(document);
+        final section = _section(bytes);
+        final margins = section.firstChild('pgMar', namespaceUri: _w)!;
+        expect(margins.getAttribute('left', namespaceUri: _w), '960');
+        expect(margins.getAttribute('token', namespaceUri: _x), 'keep');
+        expect(margins.firstChild('metadata', namespaceUri: _x), isNotNull);
+        expect(
+          margins.attributes
+              .singleWhere(
+                (attribute) => attribute.qualifiedName == 'qudsWord0',
+              )
+              .value,
+          'opaque',
+        );
+        expect(
+          margins.attributes
+              .map((attribute) => attribute.qualifiedName)
+              .toSet(),
+          hasLength(margins.attributes.length),
+        );
+        final size = section.firstChild('pgSz', namespaceUri: _w)!;
+        expect(size.getAttribute('w', namespaceUri: _w), '14000');
+        expect(size.getAttribute('w', namespaceUri: _x), 'foreign-width');
+        document = WordDeserializer().readBytes(bytes);
+        expect(document.sections.single.pageSize.width, 700);
+        expect(document.sections.single.margins.left, 48);
+      }
+    },
+  );
+
   test('ProcessContent cannot hide active settings or section geometry', () {
     _refuses(
       _fixture(

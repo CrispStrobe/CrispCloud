@@ -688,6 +688,14 @@ abstract final class OdtDocumentWriter {
     );
     var partIndex = 0;
     var leadingColumnBreak = parts.leadingColumnBreak;
+    String? openLink;
+    void closeLink() {
+      if (openLink != null) {
+        w.writeEndElement();
+        openLink = null;
+      }
+    }
+
     void startParagraph() {
       final properties = parts.properties[partIndex];
       w.writeStartElement(tag, prefix: 'text');
@@ -708,6 +716,31 @@ abstract final class OdtDocumentWriter {
       String? textOverride,
       String? nativeField,
     }) {
+      // Writer can lose the tail of a second adjacent equal-target hyperlink
+      // at a script boundary when converting separate text:a elements to DOCX.
+      // One anchor with independently styled spans represents the same range
+      // and matches Writer's own ODT output. Keep structural and comment
+      // boundaries outside the group; annotation links use a separate format.
+      final groupLink =
+          inline is WmlRun &&
+              !inline.isAtomic &&
+              inline.commentIds.isEmpty &&
+              !layout.inCommentBody &&
+              !pageNumber &&
+              textOverride == null &&
+              nativeField == null
+          ? _hyperlinkTarget(inline.hyperlink)
+          : null;
+      final target = groupLink?.isNotEmpty == true ? groupLink : null;
+      if (target != openLink) {
+        closeLink();
+        if (target != null) {
+          w.writeStartElement('a', prefix: 'text');
+          w.writeAttribute('xlink:href', target);
+          w.writeAttribute('xlink:type', 'simple');
+          openLink = target;
+        }
+      }
       if (inline is WmlBreak && inline.type == WmlBreakType.column) {
         if (leadingColumnBreak) {
           leadingColumnBreak = false;
@@ -724,6 +757,7 @@ abstract final class OdtDocumentWriter {
           pageNumber: pageNumber,
           textOverride: textOverride,
           nativeField: nativeField,
+          hyperlinkAlreadyOpen: target != null,
         );
       }
     }
@@ -744,6 +778,7 @@ abstract final class OdtDocumentWriter {
       layout.fieldDepth = fieldPlan.depth;
       _writeParagraphInlines(paragraph.inlines, fieldPlan.fields, writeInline);
     }
+    closeLink();
     w.writeEndElement();
   }
 
@@ -1024,6 +1059,13 @@ abstract final class OdtDocumentWriter {
     if (!emitted) w.writeEmptyElement('page-number', prefix: 'text');
   }
 
+  static String? _hyperlinkTarget(WmlHyperlink? link) =>
+      link?.url ??
+      link?.file ??
+      (link?.anchor == null || link!.anchor!.isEmpty
+          ? null
+          : '#${link.anchor}');
+
   static void _writeInline(
     XmlWriter w,
     WmlInline inline,
@@ -1031,22 +1073,17 @@ abstract final class OdtDocumentWriter {
     bool pageNumber = false,
     String? textOverride,
     String? nativeField,
+    bool hyperlinkAlreadyOpen = false,
   }) {
     switch (inline) {
       case WmlRun():
         final style = layout.runStyle(inline.properties);
-        final href = switch (inline.hyperlink) {
-          final link? =>
-            link.url ??
-                link.file ??
-                (link.anchor == null || link.anchor!.isEmpty
-                    ? null
-                    : '#${link.anchor}'),
-          null => null,
-        };
+        final href = _hyperlinkTarget(inline.hyperlink);
         final commentLink =
             layout.inCommentBody && href != null && href.isNotEmpty;
-        if (href != null && href.isNotEmpty) {
+        final ownLink =
+            !hyperlinkAlreadyOpen && href != null && href.isNotEmpty;
+        if (ownLink) {
           w.writeStartElement('a', prefix: 'text');
           w.writeAttribute('xlink:href', href);
           w.writeAttribute('xlink:type', 'simple');
@@ -1100,7 +1137,7 @@ abstract final class OdtDocumentWriter {
         if (inline.inlineVisual case final visual?) {
           _writeVisual(w, visual.visual, layout, inline: true);
         }
-        if (href != null && href.isNotEmpty) w.writeEndElement();
+        if (ownLink) w.writeEndElement();
         if (layout.commentsAllowed) {
           for (final commentId in inline.commentIds) {
             final comment = layout.comments.definitions[commentId];

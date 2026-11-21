@@ -86,6 +86,17 @@ abstract final class WordPropertyIo {
         );
         continue;
       }
+      if ((generated.localName == 'rPr' &&
+              (key == 'kern' || key == 'noProof')) ||
+          (generated.localName == 'pPr' && key == 'suppressAutoHyphens')) {
+        final value = generated.firstChild(key)?.getAttribute('val');
+        if (value != null) {
+          // Scalar controls own only the native value, not extension
+          // metadata, foreign same-name properties, or their namespace aliases.
+          _mergeWordAttributes(result, key, const {'val'}, {'val': value});
+          continue;
+        }
+      }
       if (key == 'lang' || key == 'lang:bidi' || key == 'rPr') {
         // Each language value owns only its own attribute. Preserve East
         // Asian language and unrelated formatting from the native source.

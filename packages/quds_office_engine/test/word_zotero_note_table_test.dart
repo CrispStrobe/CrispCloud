@@ -783,7 +783,6 @@ void main() {
     '<table><div><tr><td>A</td></tr></div></table>',
     '<table>Loose<tr><td>A</td></tr></table>',
     '<table><tr>Loose<td>A</td></tr></table>',
-    '<table><tr><td><table><tr><td>Nested</td></tr></table></td></tr></table>',
     '<p><table><tr><td>Inside paragraph</td></tr></table></p>',
     '<span><table><tr><td>Inside inline</td></tr></table></span>',
     '<ul><li><table><tr><td>Inside item</td></tr></table></li></ul>',

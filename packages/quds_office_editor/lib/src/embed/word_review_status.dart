@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../proofing/word_proofing.dart';
 import 'office_controller.dart';
+import '../l10n/office_plural.dart';
 
 /// Always-visible entry points and honest live-check status for Word review.
 /// This is host chrome; it never edits the document or starts manual providers.
@@ -115,8 +116,8 @@ class _WordReviewStatusBarState extends State<WordReviewStatusBar> {
     final languageTooltip = arabic
         ? '$textScope · $languageLabel\nاللغة والتدقيق'
         : '$textScope · $languageLabel\nLanguage and checking';
-    final issuesLabel = issueCount == 1 ? '1 issue' : '$issueCount issues';
-    final changesLabel = pending == 1 ? '1 change' : '$pending changes';
+    final issuesLabel = officeIssues(issueCount, arabic: arabic);
+    final changesLabel = officeChanges(pending);
     final String label;
     final IconData icon;
     switch (status.phase) {
@@ -134,17 +135,13 @@ class _WordReviewStatusBarState extends State<WordReviewStatusBar> {
         icon = Icons.spellcheck;
       case WordProofingPhase.partial:
         label = arabic
-            ? '$issueCount ملاحظات · تدقيق جزئي'
+            ? '$issuesLabel · تدقيق جزئي'
             : '$issuesLabel · partial check';
         icon = Icons.info_outline;
       case WordProofingPhase.complete:
         label = issueCount == 0
             ? (arabic ? 'لا توجد ملاحظات' : 'No writing issues')
-            : (arabic
-                  ? '$issueCount ملاحظات'
-                  : issueCount == 1
-                  ? '1 writing issue'
-                  : '$issueCount writing issues');
+            : officeIssues(issueCount, arabic: arabic, writing: true);
         icon = issueCount == 0 ? Icons.check_circle_outline : Icons.spellcheck;
     }
     return Material(

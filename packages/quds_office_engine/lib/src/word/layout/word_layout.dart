@@ -37,7 +37,7 @@ class LaidOutGlyph {
   LaidOutGlyph({
     required this.glyph,
     required this.x,
-    required this.y,
+    required double y,
     required this.color,
     required this.fontSize,
     required this.bold,
@@ -57,7 +57,10 @@ class LaidOutGlyph {
     double? advance,
     double? paintDx,
     double? paintDy,
-  }) : commentIds = commentIds ?? const <int>[],
+  }) : // A named parameter cannot be private; y moves only in layout.
+       // ignore: prefer_initializing_formals
+       _y = y,
+       commentIds = commentIds ?? const <int>[],
        advance = advance ?? glyph.advance,
        paintDx = paintDx ?? glyph.paintDx,
        paintDy = paintDy ?? glyph.paintDy;
@@ -69,7 +72,13 @@ class LaidOutGlyph {
   double x;
 
   /// y API.
-  final double y;
+  double get y => _y;
+  double _y;
+
+  /// Vertical-alignment shift used for [y] by body paragraph layout, so an
+  /// incremental layout can place the same line at another height with the
+  /// same arithmetic (see `_translateParagraph`).
+  double _baselineShift = 0;
 
   /// color API.
   final String color;
@@ -141,7 +150,7 @@ class LaidOutLine {
   LaidOutLine({
     required this.glyphs,
     required this.x,
-    required this.y,
+    required double y,
     required this.width,
     required this.height,
     required this.pageIndex,
@@ -164,7 +173,9 @@ class LaidOutLine {
     this.justificationRatio = 0,
     this.boxX = 0,
     this.boxWidth = 0,
-  });
+    // A named parameter cannot be private; y moves only in layout.
+    // ignore: prefer_initializing_formals
+  }) : _y = y;
 
   /// Exact model paragraph for this layout story, independent of body indexes.
   final WmlParagraph? sourceParagraph;
@@ -173,6 +184,11 @@ class LaidOutLine {
   /// A null entry denotes such a label; otherwise each entry is the original
   /// source offset. Null list means the identity mapping.
   final List<int?>? proofingOffsets;
+
+  /// Baseline leading and ascent of a body paragraph line (null for other
+  /// lines): with them `_translateParagraph` recomputes glyph heights exactly
+  /// as paragraph layout does.
+  ({double leading, double ascent})? _baseline;
 
   int? proofingOffsetAt(int layoutOffset) => proofingOffsets == null
       ? layoutOffset
@@ -193,7 +209,8 @@ class LaidOutLine {
   double x;
 
   /// y API.
-  final double y;
+  double get y => _y;
+  double _y;
 
   /// width API.
   double width;
@@ -1127,6 +1144,65 @@ class WordLayoutEngine {
   _Recorder? _recorder;
   final Object _incrementalOwner = Object();
 
+  /// Incremental layout places an unchanged paragraph that only moved
+  /// vertically on the same page by copying its previous lines at the new
+  /// height (`_translateParagraph`) instead of laying it out again. Build
+  /// with `--dart-define=QUDS_TRANSLATE_PARAGRAPHS=false` to turn it off.
+  static bool translateParagraphs = const bool.fromEnvironment(
+    'QUDS_TRANSLATE_PARAGRAPHS',
+    defaultValue: true,
+  );
+
+  /// [lines] (the previous layout of unchanged [paragraph], all on the page
+  /// the flow is filling) moved to the flow's current height, with the
+  /// arithmetic of [_layoutParagraph]; null when that layout could differ
+  /// (a line would cross the page bottom, notes, no recorded baseline). The
+  /// line objects move from the previous layout, which this one replaces.
+  ({double y, int pageIndex})? _translateParagraph(
+    WmlParagraph paragraph,
+    WmlSection section,
+    _Flow flow,
+    List<LaidOutLine> lines,
+    int paragraphIndex,
+  ) {
+    if (lines.isEmpty) return null;
+    for (final WmlInline inline in paragraph.inlines) {
+      if (inline is WmlRun && inline.noteRefId != null) return null;
+    }
+    final int idx = flow.pageIndex;
+    final double bottom = _bodyBottom(section, idx);
+    final double top = flow.y + paragraph.properties.spacingBefore;
+    var cursorY = top;
+    for (final LaidOutLine line in lines) {
+      if (line._baseline == null || cursorY + line.height > bottom) {
+        return null;
+      }
+      cursorY += line.height;
+    }
+    // The previous layout is replaced by this one: its lines move.
+    cursorY = top;
+    for (final LaidOutLine line in lines) {
+      final ({double leading, double ascent}) baseline = line._baseline!;
+      final double lineTop = cursorY;
+      if (line._y != lineTop) {
+        line._y = lineTop;
+        for (final LaidOutGlyph g in line.glyphs) {
+          g._y =
+              lineTop +
+              baseline.leading +
+              baseline.ascent +
+              g._baselineShift -
+              g.glyph.paintDy;
+        }
+      }
+      line.paragraphIndex = paragraphIndex;
+      flow.current.add(line);
+      cursorY += line.height;
+    }
+    WordIncrementalLayoutStats.blocksTranslated++;
+    return (y: cursorY + paragraph.properties.spacingAfter, pageIndex: idx);
+  }
+
   /// Last line breaks per paragraph (see [_BreakCache]).
   final Expando<_BreakCache> _breakCache = Expando<_BreakCache>();
 
@@ -1169,7 +1245,9 @@ class WordLayoutEngine {
     _prepareLayout(document, updateFields: updateFields);
     final _IncrementalState? previousState = reuse?._incremental;
     if (previousState != null &&
-        !identical(previousState.owner, _incrementalOwner)) {
+        (!identical(previousState.owner, _incrementalOwner) ||
+            !identical(previousState.document, document))) {
+      // Pages of another engine or another document cannot be reused.
       // A rejected incremental attempt must not keep earlier sections from a
       // different engine's font or measurement environment in its fallback.
       reuse = null;
@@ -1745,6 +1823,7 @@ class WordLayoutEngine {
     ).toList();
     for (int bi = resume?.block ?? 0; bi < blocks.length; bi++) {
       final WmlBlock block = blocks[bi];
+      List<LaidOutLine>? translation;
       final _Recorder? recorder = _recorder;
       if (recorder != null) {
         if (recorder.converge(
@@ -1757,6 +1836,15 @@ class WordLayoutEngine {
         )) {
           return paragraphIndex;
         }
+        translation = translateParagraphs && block is WmlParagraph
+            ? recorder.translationSource(
+                sectionIndex,
+                bi,
+                block,
+                flow,
+                adjacentParagraphAfter,
+              )
+            : null;
         recorder.record(
           sectionIndex,
           block,
@@ -1798,19 +1886,29 @@ class WordLayoutEngine {
               math.max(0, block.properties.spacingBefore),
             );
           }
-          final ({double y, int pageIndex}) para = _layoutParagraph(
-            block,
-            section,
-            pages,
-            flow.current,
-            flow.currentFrames,
-            flow.pageIndex,
-            flow.y,
-            paragraphIndex,
-            originX: flow.originX,
-            maxWidthOverride: flow.colWidth,
-            flow: flow,
-          );
+          final ({double y, int pageIndex}) para =
+              (translation == null
+                  ? null
+                  : _translateParagraph(
+                      block,
+                      section,
+                      flow,
+                      translation,
+                      paragraphIndex,
+                    )) ??
+              _layoutParagraph(
+                block,
+                section,
+                pages,
+                flow.current,
+                flow.currentFrames,
+                flow.pageIndex,
+                flow.y,
+                paragraphIndex,
+                originX: flow.originX,
+                maxWidthOverride: flow.colWidth,
+                flow: flow,
+              );
           flow.y = para.y;
           flow.pageIndex = para.pageIndex;
           paragraphIndex++;
@@ -2662,7 +2760,7 @@ class WordLayoutEngine {
             advance: g.advance,
             paintDx: g.paintDx,
             paintDy: g.paintDy,
-          ),
+          ).._baselineShift = props.vertAlign.baselineShift(baseSize),
         );
         if (display != null) {
           displayOffsets[g.logicalIndex] =
@@ -2708,6 +2806,9 @@ class WordLayoutEngine {
         boxWidth: wrapBreaker == null ? contentBox : lineWidth,
       );
       laid.applyJustification(targetWidth: lineWidth);
+      if (wrapBreaker == null) {
+        laid._baseline = (leading: baselineLeading, ascent: baselineAscent);
+      }
       current.add(laid);
       if (inlinePictures.isNotEmpty) {
         for (final LaidOutGlyph placed in laid.glyphs) {

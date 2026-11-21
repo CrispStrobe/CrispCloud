@@ -63,7 +63,8 @@ class OfficeVbaMacroLanguage implements OfficeMacroLanguage {
 /// Compiles explicit paragraph and section writes from the bounded Word dialect.
 ///
 /// The language and resource limits are shared with [OfficeVbaMacroLanguage].
-/// Word bindings select main-story paragraphs or sections without reading them.
+/// Word bindings select body or explicit header/footer paragraphs and sections
+/// without reading them.
 /// Native plans retain the ordinary runtime policy and atomic save boundary.
 class OfficeVbaWordMacroLanguage implements OfficeMacroLanguage {
   const OfficeVbaWordMacroLanguage();
@@ -143,6 +144,16 @@ const _variantIntrinsics = <String>{
   'cvar',
 };
 const _wordConstants = <String, int>{
+  'wdheaderfooterprimary': 1,
+  'wdheaderfooterfirstpage': 2,
+  'wdheaderfooterevenpages': 3,
+  'wdorientportrait': 0,
+  'wdorientlandscape': 1,
+  'wdsectioncontinuous': 0,
+  'wdsectionnewcolumn': 1,
+  'wdsectionnewpage': 2,
+  'wdsectionevenpage': 3,
+  'wdsectionoddpage': 4,
   'wdalignparagraphleft': 0,
   'wdalignparagraphcenter': 1,
   'wdalignparagraphright': 2,
@@ -674,6 +685,9 @@ enum _Kind {
   wordSections,
   wordSection,
   wordPageSetup,
+  wordHeadersFooters,
+  wordHeaderFooter,
+  wordStoryRange,
   paragraphs,
   paragraph,
   paragraphFormat,
@@ -705,6 +719,8 @@ enum _Declared {
   document,
   wordSection,
   wordPageSetup,
+  wordHeadersFooters,
+  wordHeaderFooter,
   paragraph,
   wordFont,
   wordParagraphFormat,
@@ -726,6 +742,8 @@ bool _objectType(_Declared type) =>
     type == _Declared.document ||
     type == _Declared.wordSection ||
     type == _Declared.wordPageSetup ||
+    type == _Declared.wordHeadersFooters ||
+    type == _Declared.wordHeaderFooter ||
     type == _Declared.paragraph ||
     type == _Declared.wordFont ||
     type == _Declared.wordParagraphFormat ||
@@ -768,6 +786,8 @@ _Kind _kindOf(_Declared type) => switch (type) {
   _Declared.document => _Kind.document,
   _Declared.wordSection => _Kind.wordSection,
   _Declared.wordPageSetup => _Kind.wordPageSetup,
+  _Declared.wordHeadersFooters => _Kind.wordHeadersFooters,
+  _Declared.wordHeaderFooter => _Kind.wordHeaderFooter,
   _Declared.paragraph => _Kind.paragraph,
   _Declared.wordFont => _Kind.font,
   _Declared.wordParagraphFormat => _Kind.paragraphFormat,
@@ -922,6 +942,11 @@ class _WordSpacingOperation extends _Statement {
 
 class _WordParagraphControl extends _Statement {
   const _WordParagraphControl(super.token, this.target);
+  final _Member target;
+}
+
+class _WordPageSetupOperation extends _Statement {
+  const _WordPageSetupOperation(super.token, this.target);
   final _Member target;
 }
 
@@ -1307,6 +1332,9 @@ class _Parser {
           } else if (target is _Member &&
               _wordParagraphControls.contains(target.token.lower)) {
             result.add(_WordParagraphControl(target.token, target));
+          } else if (target is _Member &&
+              target.token.lower == 'toggleportrait') {
+            result.add(_WordPageSetupOperation(target.token, target));
           } else if (target is _Call) {
             result.add(_Invoke(target.token, target.arguments));
           } else if (target is _Name) {
@@ -1551,6 +1579,7 @@ class _Parser {
               ..._wordListMethods,
               ..._wordSpacingMethods,
               ..._wordParagraphControls,
+              'toggleportrait',
             }.contains(target.token.lower)) {
           final arguments = target.arguments ?? <_Expr>[];
           if (target.arguments == null &&
@@ -1579,6 +1608,8 @@ class _Parser {
                 ? _WordSpacingOperation(target.token, call)
                 : _wordParagraphControls.contains(target.token.lower)
                 ? _WordParagraphControl(target.token, call)
+                : target.token.lower == 'toggleportrait'
+                ? _WordPageSetupOperation(target.token, call)
                 : _WordTabOperation(target.token, call),
           );
         } else if (!isSet &&
@@ -1721,6 +1752,8 @@ class _Parser {
       'document' when context.isWord => _Declared.document,
       'section' when context.isWord => _Declared.wordSection,
       'pagesetup' when context.isWord => _Declared.wordPageSetup,
+      'headersfooters' when context.isWord => _Declared.wordHeadersFooters,
+      'headerfooter' when context.isWord => _Declared.wordHeaderFooter,
       'paragraph' when context.isWord => _Declared.paragraph,
       'font' when context.isWord => _Declared.wordFont,
       'paragraphformat' when context.isWord => _Declared.wordParagraphFormat,
@@ -1741,7 +1774,7 @@ class _Parser {
         context.isPowerPoint
             ? 'Supported declarations are Long, Double, String, Boolean, Variant, Presentation, Slide, Shape, TextFrame, TextRange, Font, ParagraphFormat, and SlideShowTransition.'
             : context.isWord
-            ? 'Supported declarations are Long, Double, String, Boolean, Variant, Document, Section, PageSetup, Paragraph, Range, Font, ParagraphFormat, TabStops, and ListFormat.'
+            ? 'Supported declarations are Long, Double, String, Boolean, Variant, Document, Section, PageSetup, HeadersFooters, HeaderFooter, Paragraph, Range, Font, ParagraphFormat, TabStops, and ListFormat.'
             : 'Supported declarations are Long, Double, String, Boolean, Variant, Worksheet, and Range.',
       ),
     };
@@ -2529,6 +2562,18 @@ class _Checker {
             statement.target.arguments ?? const <_Expr>[],
             0,
           );
+        case _WordPageSetupOperation():
+          if (_expression(statement.target.receiver) != _Kind.wordPageSetup) {
+            context.type(
+              statement.token,
+              'TogglePortrait requires an explicit Word section PageSetup.',
+            );
+          }
+          _count(
+            statement.target.token,
+            statement.target.arguments ?? const <_Expr>[],
+            0,
+          );
         case _For():
           final counter = _symbol(statement.counter);
           if (counter.isConst ||
@@ -2628,6 +2673,9 @@ class _Checker {
                   kind == _Kind.wordSections ||
                   kind == _Kind.wordSection ||
                   kind == _Kind.wordPageSetup ||
+                  kind == _Kind.wordHeadersFooters ||
+                  kind == _Kind.wordHeaderFooter ||
+                  kind == _Kind.wordStoryRange ||
                   kind == _Kind.paragraphs ||
                   kind == _Kind.paragraph ||
                   kind == _Kind.font ||
@@ -2645,7 +2693,7 @@ class _Checker {
               context.isPowerPoint
                   ? 'With requires an explicitly bound PowerPoint object.'
                   : context.isWord
-                  ? 'With requires a Document, Section, PageSetup, Paragraph, Range, Font, ParagraphFormat, TabStops, or ListFormat.'
+                  ? 'With requires a Document, Section, PageSetup, HeadersFooters, HeaderFooter, Paragraph, Range, Font, ParagraphFormat, TabStops, or ListFormat.'
                   : 'With requires a Worksheet or Range.',
             );
           }
@@ -2930,11 +2978,16 @@ class _Checker {
     }
     if (context.isWord) {
       if (receiver == _Kind.wordPageSetup &&
-          _wordPageSetupFields.containsKey(property)) {
+          (_wordPageSetupFields.containsKey(property) ||
+              property == 'orientation' ||
+              property == 'sectionstart')) {
         return _Kind.number;
       }
       if (receiver == _Kind.range && property == 'highlightcolorindex') {
         return _Kind.number;
+      }
+      if (receiver == _Kind.range && property == 'noproofing') {
+        return _Kind.boolean;
       }
       if (receiver == _Kind.wordListFormat && property == 'listlevelnumber') {
         return _Kind.number;
@@ -2949,13 +3002,16 @@ class _Checker {
           return _Kind.boolean;
         }
         if (property == 'size' ||
+            property == 'kerning' ||
             property == 'color' ||
             property == 'underline') {
           return _Kind.number;
         }
         if (property == 'name') return _Kind.string;
       } else if (receiver == _Kind.paragraphFormat) {
-        if (property == 'keeptogether' || property == 'pagebreakbefore') {
+        if (property == 'keeptogether' ||
+            property == 'pagebreakbefore' ||
+            property == 'hyphenation') {
           return _Kind.boolean;
         }
         if (const <String>{
@@ -3180,7 +3236,26 @@ class _Checker {
             _arguments(expression, 0, allowProperty: true);
             return _Kind.wordPageSetup;
           }
-          if (receiver == _Kind.document && name == 'paragraphs') {
+          if (receiver == _Kind.wordSection &&
+              (name == 'headers' || name == 'footers')) {
+            if (expression.arguments == null) return _Kind.wordHeadersFooters;
+            final argument = _arguments(expression, 1).single;
+            _compatible(_Kind.number, _expression(argument), argument.token);
+            return _Kind.wordHeaderFooter;
+          }
+          if (receiver == _Kind.wordHeadersFooters && name == 'item') {
+            final argument = _arguments(expression, 1).single;
+            _compatible(_Kind.number, _expression(argument), argument.token);
+            return _Kind.wordHeaderFooter;
+          }
+          if (receiver == _Kind.wordHeaderFooter && name == 'range') {
+            _arguments(expression, 0, allowProperty: true);
+            return _Kind.wordStoryRange;
+          }
+          if ((receiver == _Kind.document ||
+                  receiver == _Kind.wordStoryRange ||
+                  receiver == _Kind.range) &&
+              name == 'paragraphs') {
             if (expression.arguments == null) return _Kind.paragraphs;
             final argument = _arguments(expression, 1).single;
             _compatible(_Kind.number, _expression(argument), argument.token);
@@ -3471,6 +3546,11 @@ class _Checker {
       _compatible(_kindOf(type), value, token);
 
   void _compatible(_Kind expected, _Kind value, _Token token) {
+    if (context.isWord &&
+        expected == _Kind.range &&
+        value == _Kind.wordStoryRange) {
+      return;
+    }
     if (expected == _Kind.triState) {
       if (value == _Kind.boolean ||
           value == _Kind.number ||
@@ -3491,6 +3571,9 @@ class _Checker {
             expected == _Kind.document ||
             expected == _Kind.wordSection ||
             expected == _Kind.wordPageSetup ||
+            expected == _Kind.wordHeadersFooters ||
+            expected == _Kind.wordHeaderFooter ||
+            expected == _Kind.wordStoryRange ||
             expected == _Kind.paragraph ||
             expected == _Kind.font ||
             expected == _Kind.paragraphFormat ||
@@ -3609,13 +3692,40 @@ class _WordPageSetup {
   final _WordSection section;
 }
 
+class _WordHeadersFooters {
+  const _WordHeadersFooters(this.section, {required this.footer});
+  final _WordSection section;
+  final bool footer;
+}
+
+class _WordHeaderFooter {
+  const _WordHeaderFooter(this.section, this.story);
+  final _WordSection section;
+  final String story;
+}
+
+// A whole header/footer Range is a selector for its Paragraphs only. It never
+// stands in for a paragraph range during writes or exposes document contents.
+class _WordStoryRange {
+  const _WordStoryRange(this.headerFooter);
+  final _WordHeaderFooter headerFooter;
+}
+
 class _WordParagraphs {
-  const _WordParagraphs();
+  const _WordParagraphs({this.headerFooter, this.singleParagraph});
+  final _WordHeaderFooter? headerFooter;
+  final _WordParagraph? singleParagraph;
 }
 
 class _WordParagraph {
-  const _WordParagraph(this.index);
+  const _WordParagraph(this.index, {this.headerFooter});
   final int index;
+  final _WordHeaderFooter? headerFooter;
+
+  bool sameTarget(_WordParagraph other) =>
+      index == other.index &&
+      headerFooter?.section.index == other.headerFooter?.section.index &&
+      headerFooter?.story == other.headerFooter?.story;
 }
 
 class _WordRange {
@@ -4045,7 +4155,10 @@ class _Evaluator {
               'value': null,
             }, statement.token);
           case _InsertBefore():
-            final range = _evaluate(statement.target.receiver) as _WordRange;
+            final range = _wordParagraphRange(
+              _evaluate(statement.target.receiver),
+              statement.target.token,
+            );
             final value = _evaluate(statement.target.arguments!.single);
             final text = _wordText(value, statement.target.token);
             _emitWord(range, 'replaceText', <String, Object?>{
@@ -4080,6 +4193,11 @@ class _Evaluator {
                 _ => 'toggle',
               },
             }, statement.token);
+          case _WordPageSetupOperation():
+            final page = _evaluate(statement.target.receiver) as _WordPageSetup;
+            _emitWordSection(page, 'pageOrientation', <String, Object?>{
+              'orientation': 'toggle',
+            }, statement.target.token);
           case _With():
             withValues.add(_evaluate(statement.target));
             frames.add(_WithFrame());
@@ -4375,12 +4493,45 @@ class _Evaluator {
             return _WordSection(index - 1);
           }
           if (receiver is _WordSection) {
-            return _WordPageSetup(receiver);
+            if (expression.token.lower == 'pagesetup') {
+              return _WordPageSetup(receiver);
+            }
+            final collection = _WordHeadersFooters(
+              receiver,
+              footer: expression.token.lower == 'footers',
+            );
+            return expression.arguments == null
+                ? collection
+                : _wordHeaderFooter(
+                    collection,
+                    arguments.single,
+                    expression.token,
+                  );
           }
-          if (receiver is _WordDocument && expression.arguments == null) {
-            return const _WordParagraphs();
+          if (receiver is _WordHeadersFooters) {
+            return _wordHeaderFooter(
+              receiver,
+              arguments.single,
+              expression.token,
+            );
           }
-          if (receiver is _WordDocument || receiver is _WordParagraphs) {
+          if (receiver is _WordHeaderFooter) {
+            return _WordStoryRange(receiver);
+          }
+          if (receiver is _WordDocument ||
+              receiver is _WordParagraphs ||
+              expression.token.lower == 'paragraphs') {
+            final _WordParagraphs collection;
+            if (receiver is _WordParagraphs) {
+              collection = receiver;
+            } else if (receiver is _WordStoryRange) {
+              collection = _WordParagraphs(headerFooter: receiver.headerFooter);
+            } else if (receiver is _WordRange) {
+              collection = _WordParagraphs(singleParagraph: receiver.paragraph);
+            } else {
+              collection = const _WordParagraphs();
+            }
+            if (expression.arguments == null) return collection;
             final index = _integer(arguments.single, expression.token);
             if (index < 1) {
               context.type(
@@ -4388,7 +4539,19 @@ class _Evaluator {
                 'Paragraphs requires a positive one-based index.',
               );
             }
-            return _WordParagraph(index - 1);
+            if (collection.singleParagraph case final paragraph?) {
+              if (index != 1) {
+                context.unsupported(
+                  expression.token,
+                  'Paragraphs on a selected paragraph Range supports only Item(1).',
+                );
+              }
+              return paragraph;
+            }
+            return _WordParagraph(
+              index - 1,
+              headerFooter: collection.headerFooter,
+            );
           }
           if (receiver is _WordParagraph) {
             final range = _WordRange(receiver);
@@ -4401,7 +4564,14 @@ class _Evaluator {
           if (receiver is _WordParagraphFormat) {
             return _WordTabStops(receiver.range);
           }
-          final range = receiver as _WordRange;
+          final range = _wordParagraphRange(receiver, expression.token);
+          if (expression.token.lower == 'listformat' &&
+              range.paragraph.headerFooter != null) {
+            context.unsupported(
+              expression.token,
+              'ListFormat currently supports body paragraphs only.',
+            );
+          }
           return switch (expression.token.lower) {
             'font' => _WordFont(range),
             'listformat' => _WordListFormat(range),
@@ -4494,6 +4664,32 @@ class _Evaluator {
         }, expression.token);
         return result == result.truncateToDouble() ? result.toInt() : result;
     }
+  }
+
+  _WordHeaderFooter _wordHeaderFooter(
+    _WordHeadersFooters collection,
+    Object value,
+    _Token token,
+  ) {
+    final index = _integer(value, token);
+    if (index < 1 || index > 3) {
+      context.unsupported(
+        token,
+        'Headers and Footers require wdHeaderFooterPrimary (1), wdHeaderFooterFirstPage (2), or wdHeaderFooterEvenPages (3).',
+      );
+    }
+    final stories = collection.footer
+        ? const <String>['footer', 'firstFooter', 'evenFooter']
+        : const <String>['header', 'firstHeader', 'evenHeader'];
+    return _WordHeaderFooter(collection.section, stories[index - 1]);
+  }
+
+  _WordRange _wordParagraphRange(Object value, _Token token) {
+    if (value is _WordRange) return value;
+    context.unsupported(
+      token,
+      'A header/footer Range only exposes Paragraphs; select an existing paragraph before writing.',
+    );
   }
 
   Object _evaluatePowerPointMember(
@@ -4783,7 +4979,9 @@ class _Evaluator {
         }
         return value;
       case _Declared.range:
-        if (context.isWord ? value is! _WordRange : value is! _Range) {
+        if (context.isWord
+            ? value is! _WordRange && value is! _WordStoryRange
+            : value is! _Range) {
           context.type(token, 'Set requires a Range.');
         }
         return value;
@@ -4800,6 +4998,16 @@ class _Evaluator {
       case _Declared.wordPageSetup:
         if (value is! _WordPageSetup) {
           context.type(token, 'Set requires a Word PageSetup.');
+        }
+        return value;
+      case _Declared.wordHeadersFooters:
+        if (value is! _WordHeadersFooters) {
+          context.type(token, 'Set requires Word HeadersFooters.');
+        }
+        return value;
+      case _Declared.wordHeaderFooter:
+        if (value is! _WordHeaderFooter) {
+          context.type(token, 'Set requires a Word HeaderFooter.');
         }
         return value;
       case _Declared.paragraph:
@@ -5676,6 +5884,36 @@ class _Evaluator {
     _Token token,
   ) {
     if (receiver is _WordPageSetup) {
+      if (property == 'orientation') {
+        final orientation = _integer(value, token);
+        if (orientation != 0 && orientation != 1) {
+          context.unsupported(
+            token,
+            'Orientation supports only wdOrientPortrait and wdOrientLandscape.',
+          );
+        }
+        _emitWordSection(receiver, 'pageOrientation', <String, Object?>{
+          'orientation': orientation == 0 ? 'portrait' : 'landscape',
+        }, token);
+        return;
+      }
+      if (property == 'sectionstart') {
+        final start = _integer(value, token);
+        final kind = switch (start) {
+          0 => 'continuous',
+          2 => 'nextPage',
+          3 => 'evenPage',
+          4 => 'oddPage',
+          _ => context.unsupported(
+            token,
+            'SectionStart supports continuous, new-page, even-page and odd-page breaks; new-column breaks are unsupported.',
+          ),
+        };
+        _emitWordSection(receiver, 'sectionStart', <String, Object?>{
+          'kind': kind,
+        }, token);
+        return;
+      }
       final field = _wordPageSetupFields[property]!;
       final points = _number(value, token);
       final minimum = field == 'width' || field == 'height' ? 1 : 0;
@@ -5688,14 +5926,7 @@ class _Evaluator {
           'PageSetup geometry requires exact twentieth-points within signed Long twips; page dimensions must be at least 1 point and margins/distances nonnegative.',
         );
       }
-      if (steps.length >= _maxSteps) {
-        context.limit(
-          token,
-          'Word writes exceed $_maxSteps emitted operations.',
-        );
-      }
-      _emitNative('docx.pageSetup', <String, Object?>{
-        'section': receiver.section.index,
+      _emitWordSection(receiver, 'pageSetup', <String, Object?>{
         'property': field,
         'points': points,
       }, token);
@@ -5714,7 +5945,19 @@ class _Evaluator {
       }, token);
       return;
     }
+    if (receiver is _WordStoryRange) {
+      context.unsupported(
+        token,
+        'A header/footer Range only exposes Paragraphs; select an existing paragraph before writing.',
+      );
+    }
     if (receiver is _WordRange) {
+      if (property == 'noproofing') {
+        _emitWord(receiver, 'runFormat', <String, Object?>{
+          'noProof': _boolean(value, token),
+        }, token);
+        return;
+      }
       final index = _integer(value, token);
       if (index < 0 || index >= _wordHighlights.length) {
         context.unsupported(
@@ -5752,6 +5995,19 @@ class _Evaluator {
       } else if (property == 'name') {
         field = 'font';
         normalized = _wordText(value, token, fontName: true);
+      } else if (property == 'kerning') {
+        field = 'kerning';
+        final points = _number(value, token);
+        final halfPoints = points * 2;
+        if (points < 0 ||
+            points > 1638 ||
+            halfPoints != halfPoints.truncateToDouble()) {
+          context.type(
+            token,
+            'Word Font.Kerning requires exact half-points in 0..1638; zero disables kerning.',
+          );
+        }
+        normalized = points;
       } else if (property == 'size') {
         field = 'size';
         final size = _number(value, token);
@@ -5775,6 +6031,12 @@ class _Evaluator {
       return;
     }
     final format = receiver as _WordParagraphFormat;
+    if (property == 'hyphenation') {
+      _emitWord(format.range, 'paragraphFormat', <String, Object?>{
+        'suppressAutoHyphens': !_boolean(value, token),
+      }, token);
+      return;
+    }
     if (property == 'readingorder') {
       final order = _integer(value, token);
       if (order != 0 && order != 1) {
@@ -5814,7 +6076,7 @@ class _Evaluator {
     if (property == 'linespacing') {
       final pending = pendingWordLineSpacing;
       if (pending == null ||
-          pending.range.paragraph.index != format.range.paragraph.index) {
+          !pending.range.paragraph.sameTarget(format.range.paragraph)) {
         context.unsupported(
           token,
           'LineSpacing requires a preceding AtLeast, Exactly or Multiple rule for the same paragraph, with no intervening document write.',
@@ -5972,6 +6234,21 @@ class _Evaluator {
     );
   }
 
+  void _emitWordSection(
+    _WordPageSetup page,
+    String operation,
+    Map<String, Object?> fields,
+    _Token token,
+  ) {
+    if (steps.length >= _maxSteps) {
+      context.limit(token, 'Word writes exceed $_maxSteps emitted operations.');
+    }
+    _emitNative('docx.$operation', <String, Object?>{
+      'section': page.section.index,
+      ...fields,
+    }, token);
+  }
+
   void _emitWord(
     _WordRange range,
     String operation,
@@ -5983,6 +6260,10 @@ class _Evaluator {
     }
     _emitNative('docx.$operation', <String, Object?>{
       'paragraph': range.paragraph.index,
+      if (range.paragraph.headerFooter case final story?) ...{
+        'story': story.story,
+        'section': story.section.index,
+      },
       ...fields,
     }, token);
   }

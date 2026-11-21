@@ -1576,7 +1576,8 @@ class WordDeserializer {
       }
       if ((reader.localName == 'spacing' ||
               reader.localName == 'bidi' ||
-              reader.localName == 'tabs') &&
+              reader.localName == 'tabs' ||
+              reader.localName == 'suppressAutoHyphens') &&
           (reader.depth != depth + 1 ||
               (reader.namespaceUri != OfficeNamespaces.w &&
                   !(reader.namespaceUri.isEmpty && reader.prefix == 'w')))) {
@@ -2465,6 +2466,15 @@ class WordDeserializer {
     final int depth = reader.depth;
     while (reader.next() && reader.depth >= depth) {
       if (reader.eventType != XmlEventType.startElement) {
+        continue;
+      }
+      if ((reader.localName == 'kern' || reader.localName == 'noProof') &&
+          (reader.depth != depth + 1 ||
+              (reader.namespaceUri != OfficeNamespaces.w &&
+                  !(reader.namespaceUri.isEmpty && reader.prefix == 'w')))) {
+        // Opaque extensions and nested lookalikes do not define native run
+        // controls. Preserve their XML without projecting their values.
+        XmlDocument.readElement(reader);
         continue;
       }
       if (reader.localName == 'rPrChange' &&

@@ -236,6 +236,12 @@ class GermanSpellingProvider extends OfficeProofingProvider {
   );
   static const String _alphabet = 'abcdefghijklmnopqrstuvwxyzäöüß';
 
+  /// Spelling only: checked as soon as a word is completed.
+  @override
+  Set<OfficeProofingCategory> get categories => const {
+    OfficeProofingCategory.spelling,
+  };
+
   @override
   String get id => 'german-spelling';
   @override

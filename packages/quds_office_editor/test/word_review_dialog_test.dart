@@ -339,7 +339,7 @@ void main() {
       expect(picks, 2);
       await _compare(tester);
 
-      expect(_text(tester, 'compare-summary'), contains('1 changes'));
+      expect(_text(tester, 'compare-summary'), contains('1 change ·'));
       expect(
         tester.widget<ChoiceChip>(_key('compare-side-by-side')).selected,
         isTrue,

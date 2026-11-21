@@ -2,8 +2,10 @@ import 'package:quds_office_engine/quds_office_engine.dart';
 import 'package:quds_office_engine/src/word/serial/word_property_io.dart';
 
 import 'step_input.dart';
+import 'word_header_footer_guard.dart';
 import 'word_list_steps.dart';
 import 'word_page_setup_steps.dart';
+import 'word_section_start_steps.dart';
 import 'word_spacing_steps.dart';
 import 'word_structure_steps.dart';
 
@@ -21,6 +23,8 @@ const wordOperations = <String, List<String>>{
   'lineSpacing': ['paragraph', 'rule', 'points', ..._storyFields],
   'paragraphSpaceBefore': ['paragraph', 'action', ..._storyFields],
   'pageSetup': ['section', 'property', 'points'],
+  'pageOrientation': ['section', 'orientation'],
+  'sectionStart': ['section', 'kind'],
   'paragraphFormat': [
     'paragraph',
     'alignment',
@@ -29,6 +33,7 @@ const wordOperations = <String, List<String>>{
     'lineSpacing',
     'keepTogether',
     'pageBreakBefore',
+    'suppressAutoHyphens',
     'rtl',
     'lineSpacingRule',
     'left',
@@ -52,6 +57,8 @@ const wordOperations = <String, List<String>>{
     'highlight',
     'font',
     'size',
+    'kerning',
+    'noProof',
     'underline',
     'strike',
     'smallCaps',
@@ -210,6 +217,7 @@ void applyStep(
         'lineSpacing': 'spacing:line',
         'keepTogether': 'keepLines',
         'pageBreakBefore': 'pageBreakBefore',
+        'suppressAutoHyphens': 'suppressAutoHyphens',
         'rtl': 'bidi',
         'lineSpacingRule': 'spacing:line',
         'left': 'ind',
@@ -285,6 +293,14 @@ void applyStep(
       if (s.has('pageBreakBefore')) {
         p.pageBreakBefore = s.boolean('pageBreakBefore');
       }
+      if (s.has('suppressAutoHyphens')) {
+        _validateScalarPackageSource(doc, const {'suppressAutoHyphens'});
+        _validateScalarPropertySource(
+          target.properties.sourcePropertiesXml,
+          'suppressAutoHyphens',
+        );
+        p.suppressAutoHyphens = s.boolean('suppressAutoHyphens');
+      }
       if (s.has('rtl')) p.rightToLeft = s.boolean('rtl');
       if (replacementTabs != null) {
         // Replacing a legacy native tabs array owns the full effective custom
@@ -347,6 +363,41 @@ void applyStep(
       final size = s.has('size')
           ? (s.number('size', min: 0.5, max: 1638) * 2).round()
           : null;
+      final kerning = s.has('kerning')
+          ? s.number('kerning', min: 0, max: 1638) * 2
+          : null;
+      if (kerning != null && kerning != kerning.truncateToDouble()) {
+        throw ArgumentError('kerning must use exact 0.5-point increments');
+      }
+      final noProof = s.has('noProof') ? s.boolean('noProof') : null;
+      if (kerning != null || noProof != null) {
+        _validateScalarPackageSource(doc, {
+          if (kerning != null) 'kern',
+          if (noProof != null) 'noProof',
+        });
+        final affected = WmlRunEdit.normalizeRange(p, range.$1, range.$2);
+        // Validate every affected source run before applyRange can split any
+        // runs or publish earlier formatting fields on a later failure.
+        var offset = 0;
+        for (final run in p.inlines.whereType<WmlRun>()) {
+          final end = offset + run.text.length;
+          if (offset < affected.end && end > affected.start) {
+            if (kerning != null) {
+              _validateScalarPropertySource(
+                run.properties.sourcePropertiesXml,
+                'kern',
+              );
+            }
+            if (noProof != null) {
+              _validateScalarPropertySource(
+                run.properties.sourcePropertiesXml,
+                'noProof',
+              );
+            }
+          }
+          offset = end;
+        }
+      }
       WmlRunEdit.applyRange(p, range.$1, range.$2, (r) {
         if (smallCaps == true) {
           // Word SmallCaps=True explicitly turns AllCaps off. caps is an
@@ -406,6 +457,8 @@ void applyStep(
           'highlight': 'highlight',
           'font': 'rFonts',
           'size': 'sz',
+          'kerning': 'kern',
+          'noProof': 'noProof',
         }.entries) {
           if (s.has(entry.key)) {
             r.importedValues?.remove(entry.value);
@@ -435,6 +488,8 @@ void applyStep(
         if (s.has('highlight')) r.highlight = highlight;
         if (font != null) r.asciiFont = font;
         if (size != null) r.fontSizeHalfPoints = size;
+        if (kerning != null) r.kerningHalfPoints = kerning.toInt();
+        if (noProof != null) r.noProof = noProof;
       });
     case 'addNote':
       final p = paragraph();
@@ -624,6 +679,18 @@ void applyStep(
         property: s.string('property'),
         points: s.number('points'),
       );
+    case 'pageOrientation':
+      setWordPageOrientation(
+        doc,
+        s.item('section', doc.sections),
+        orientation: s.string('orientation'),
+      );
+    case 'sectionStart':
+      setWordSectionStart(
+        doc,
+        s.item('section', doc.sections),
+        kind: s.string('kind'),
+      );
     case 'sectionFormat':
       final sec = section();
       final width = s.number('width', fallback: sec.pageSize.width, min: 1);
@@ -713,6 +780,81 @@ WmlNote _note(WmlDocument doc, StepInput s, String story) {
   return result;
 }
 
+void _validateScalarPackageSource(WmlDocument document, Set<String> names) {
+  final package = document.package;
+  if (package == null) return;
+  for (final part in package.parts) {
+    if (!part.contentType.endsWith('+xml') ||
+        (!part.contentType.contains('wordprocessingml') &&
+            !part.contentType.contains('vnd.ms-word'))) {
+      continue;
+    }
+    // Import projects selected MC branches before retaining pPr/rPr snapshots.
+    // Inspect raw Word XML as well, so a projected value cannot conceal a
+    // competing branch that another consumer would select on reopening.
+    final source = package.getPart(part.uri)!.readText();
+    if (!source.contains('AlternateContent') &&
+        !source.contains('ProcessContent')) {
+      continue;
+    }
+    for (final name in names) {
+      if (source.contains(name)) _validateScalarPropertySource(source, name);
+    }
+  }
+}
+
+void _validateScalarPropertySource(String? source, String name) {
+  if (source == null || source.isEmpty) return;
+  final properties = XmlDocument.parse(source).root;
+  if (properties == null) return;
+  bool nativeName(String namespace, String prefix) =>
+      namespace == OfficeNamespaces.w || (namespace.isEmpty && prefix == 'w');
+  bool containsControl(XmlElement node) =>
+      (node.localName == name && nativeName(node.namespaceUri, node.prefix)) ||
+      node.childElements.any(containsControl);
+  void checkAlternatives(XmlElement node) {
+    final alternate =
+        node.localName == 'AlternateContent' &&
+        node.namespaceUri == OfficeNamespaces.mc;
+    final processContent = node.attributes.any(
+      (attribute) =>
+          attribute.localName == 'ProcessContent' &&
+          attribute.namespaceUri == OfficeNamespaces.mc,
+    );
+    if ((alternate || processContent) && containsControl(node)) {
+      throw UnsupportedError(
+        'Refuses $name in markup-compatibility alternatives or processed content',
+      );
+    }
+    for (final child in node.childElements) {
+      checkAlternatives(child);
+    }
+  }
+
+  checkAlternatives(properties);
+  final values = properties.childElements
+      .where(
+        (element) =>
+            element.localName == name &&
+            nativeName(element.namespaceUri, element.prefix),
+      )
+      .toList(growable: false);
+  if (values.length > 1) {
+    throw UnsupportedError('Refuses duplicate native $name properties');
+  }
+  if (values.isNotEmpty &&
+      values.single.attributes
+              .where(
+                (attribute) =>
+                    attribute.localName == 'val' &&
+                    nativeName(attribute.namespaceUri, attribute.prefix),
+              )
+              .length >
+          1) {
+    throw UnsupportedError('Refuses duplicate native $name values');
+  }
+}
+
 Iterable<WmlParagraph> _paragraphs(WmlDocument doc, StepInput s) {
   final story = s.string('story', fallback: 'body');
   if (story == 'body') return doc.paragraphs;
@@ -720,7 +862,11 @@ Iterable<WmlParagraph> _paragraphs(WmlDocument doc, StepInput s) {
   if (story == 'footnote' || story == 'endnote') {
     return _note(doc, s, story).allParagraphs;
   }
-  return _headerParagraphs(s.item('section', doc.sections, fallback: 0), story);
+  return editableWordHeaderFooterParagraphs(
+    doc,
+    s.item('section', doc.sections, fallback: 0),
+    story,
+  );
 }
 
 Iterable<WmlVisual> _visuals(WmlDocument doc, StepInput s) {

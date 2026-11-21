@@ -389,6 +389,69 @@ class _Recorder {
     return true;
   }
 
+  /// The previous layout's lines of unchanged paragraph [block] (new index
+  /// [blockIndex] of [sectionIndex]) when they can be translated to the
+  /// flow's current height: the block was laid out entirely on one page
+  /// without frames, and the flow is on that same page, column and column
+  /// top with the same adjacent spacing. Null otherwise.
+  List<LaidOutLine>? translationSource(
+    int sectionIndex,
+    int blockIndex,
+    WmlParagraph block,
+    _Flow flow,
+    double? adjacentAfter,
+  ) {
+    final _Convergence? target = convergence;
+    if (target == null ||
+        sectionIndex < target.lastDirtySection ||
+        dirtyBlocks.contains(block) ||
+        block.properties.pageBreakBefore ||
+        block.properties.columnBreakBefore ||
+        // Inline breaks are applied after this candidate is selected. A page
+        // break that was a no-op on an empty page can now move the paragraph,
+        // invalidating the old lines' page indexes and column positions.
+        WordLayoutEngine._hasBreak(block, WmlBreakType.page) ||
+        WordLayoutEngine._hasBreak(block, WmlBreakType.column)) {
+      return null;
+    }
+    int oldBlock = blockIndex;
+    if (sectionIndex == target.lastDirtySection) {
+      if (blockIndex < target.firstCandidateBlock) return null;
+      oldBlock = blockIndex - target.blockOffset;
+    }
+    final _SectionRecord? old = sectionIndex < target.old.sections.length
+        ? target.old.sections[sectionIndex]
+        : null;
+    if (old == null ||
+        oldBlock < 0 ||
+        oldBlock + 1 >= old.checkpoints.length ||
+        !identical(old.blocks[oldBlock], block)) {
+      return null;
+    }
+    final _Checkpoint cp = old.checkpoints[oldBlock];
+    final _Checkpoint next = old.checkpoints[oldBlock + 1];
+    if (next.pagesLength != cp.pagesLength ||
+        next.pageIndex != cp.pageIndex ||
+        next.columnIndex != cp.columnIndex ||
+        next.columnTop != cp.columnTop ||
+        next.frames != cp.frames ||
+        next.lines <= cp.lines ||
+        cp.wrapFrames ||
+        next.wrapFrames ||
+        flow.pages.length != cp.pagesLength ||
+        flow.pageIndex != cp.pageIndex ||
+        flow.columnIndex != cp.columnIndex ||
+        flow.columnTop != cp.columnTop ||
+        adjacentAfter != cp.adjacentAfter ||
+        _hasWrapFrames(flow.currentFrames) ||
+        cp.pagesLength >= target.oldPages.length) {
+      return null;
+    }
+    final List<LaidOutLine> lines = target.oldPages[cp.pagesLength].lines;
+    if (next.lines > lines.length) return null;
+    return lines.sublist(cp.lines, next.lines);
+  }
+
   static bool _hasWrapFrames(List<LaidOutBox> frames) => frames.any(
     (LaidOutBox box) =>
         box.frame != null && box.frame!.wrap != WmlFrameWrap.none,
@@ -490,12 +553,16 @@ class WordIncrementalLayoutStats {
   /// Paragraph line breaks reused from the previous layout.
   static int breaksReused = 0;
 
+  /// Unchanged paragraphs placed by translating their previous lines.
+  static int blocksTranslated = 0;
+
   static void reset() {
     incremental = 0;
     converged = 0;
     fallbacks = 0;
     blocksLaidOut = 0;
     breaksReused = 0;
+    blocksTranslated = 0;
   }
 }
 

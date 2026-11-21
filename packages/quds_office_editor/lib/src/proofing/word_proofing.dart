@@ -4,6 +4,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:quds_office_engine/quds_office_engine.dart';
+import '../l10n/office_plural.dart';
 
 /// A finding together with its exact paragraph, story and input snapshot.
 final class WordProofingIssue {
@@ -139,10 +140,10 @@ final class WordProofingSummary {
           result.message ?? '${result.providerId}: ${result.status.name}',
     };
     final coverage =
-        '$checkedParagraphCount of $paragraphCount paragraphs checked';
+        '$checkedParagraphCount of ${officeParagraphs(paragraphCount)} checked';
     final excluded = skippedContentCount == 0
         ? ''
-        : '; $skippedContentCount excluded or unsupported content ranges';
+        : '; ${officeCount(skippedContentCount, 'excluded or unsupported content range')}';
     if (reports.isEmpty) return '$coverage$excluded. No checkable text.';
     if (supported.isEmpty) {
       final language = reports.first.request.language;
@@ -150,34 +151,167 @@ final class WordProofingSummary {
     }
     if (problems.isNotEmpty) return '$coverage$excluded. ${problems.join(' ')}';
     if (manualProvidersSkipped) {
-      return '$coverage$excluded. ${issues.length} findings; '
+      return '$coverage$excluded. ${officeFindings(issues.length)}; '
           'choose Check document to include the manual grammar check.';
     }
     if (!complete) {
-      return '$coverage$excluded. ${issues.length} findings; coverage is incomplete.';
+      return '$coverage$excluded. ${officeFindings(issues.length)}; coverage is incomplete.';
     }
     return issues.isEmpty
         ? '$coverage. No issues found by the configured providers.'
-        : '$coverage. ${issues.length} findings to review.';
+        : '$coverage. ${officeCount(issues.length, 'finding')} to review.';
   }
 }
 
-/// Scheduling constants of as-you-type proofing. Measured with the Studio
-/// typing benchmark (docs/performance/typing-proofing-20261120.md).
+/// Default intervals of as-you-type proofing. The rationale and the
+/// comparison with other editors are in docs/proofing/scheduling.md; the
+/// measurements in docs/performance/typing-proofing-20261120.md.
 abstract final class WordProofingTiming {
-  /// A background pass starts after this pause since the last edit.
-  static const Duration idle = Duration(milliseconds: 600);
+  /// Pause since the last edit after which the edited text is checked
+  /// completely (spelling and grammar). The default of
+  /// [WordProofingSchedule.pause].
+  static const Duration idle = Duration(milliseconds: 1500);
 
-  /// Continuous typing is still checked at least this often: the first edit
-  /// after a pass starts a deadline that later keystrokes do not postpone.
-  static const Duration maxDelay = Duration(milliseconds: 2500);
+  /// Delay between completing a word (typing a space or punctuation) and the
+  /// spelling check of its paragraph. Later completions within this window
+  /// share the check: it is not postponed by further typing.
+  static const Duration wordCompletion = Duration(milliseconds: 150);
 
-  /// Status chrome shows "Checking…" only for passes that run this long.
-  static const Duration checkingIndicatorDelay = Duration(milliseconds: 300);
+  /// Input-free time after which the rest of the document is checked in the
+  /// background. The default of [WordProofingSchedule.backgroundIdle].
+  static const Duration backgroundIdle = Duration(seconds: 3);
+
+  /// Status chrome shows "Checking…" for background, initial document-wide
+  /// or explicit passes that run this long. Local typing checks never show it.
+  static const Duration checkingIndicatorDelay = Duration(milliseconds: 1000);
 
   /// Main-isolate time a pass may use before yielding to input and frames.
   static const Duration sliceBudget = Duration(milliseconds: 4);
 }
+
+/// When automatic checking runs.
+enum WordProofingMode {
+  /// Spelling when a word is completed, grammar when a sentence is completed
+  /// or typing pauses, the rest of the document in idle time.
+  whileTyping,
+
+  /// Everything waits for a pause in typing.
+  onPause,
+
+  /// No automatic checking; only explicit checks (Check document, F7).
+  manual,
+}
+
+/// The user-adjustable as-you-type proofing schedule. Changing
+/// [WordProofingSession.schedule] takes effect immediately.
+@immutable
+final class WordProofingSchedule {
+  const WordProofingSchedule({
+    this.mode = WordProofingMode.whileTyping,
+    this.checkSpelling = true,
+    this.checkGrammar = true,
+    this.pause = WordProofingTiming.idle,
+    this.backgroundCheck = true,
+    this.backgroundIdle = WordProofingTiming.backgroundIdle,
+    this.hideTypingErrors = true,
+  });
+
+  /// The supported range of [pause] in settings UIs.
+  static const Duration minPause = Duration(milliseconds: 300);
+  static const Duration maxPause = Duration(seconds: 5);
+
+  final WordProofingMode mode;
+
+  /// Spelling providers run automatically (otherwise only explicit checks).
+  final bool checkSpelling;
+
+  /// Grammar and style providers run automatically.
+  final bool checkGrammar;
+
+  /// Pause in typing after which the edited text is checked completely.
+  final Duration pause;
+
+  /// Unchecked parts of the document are checked in idle time and after
+  /// a document is loaded.
+  final bool backgroundCheck;
+
+  /// Input-free time before the background check starts.
+  final Duration backgroundIdle;
+
+  /// Findings that touch the caret where the user is typing stay hidden
+  /// until the caret leaves them or the word is completed.
+  final bool hideTypingErrors;
+
+  bool get automatic =>
+      mode != WordProofingMode.manual && (checkSpelling || checkGrammar);
+
+  WordProofingSchedule copyWith({
+    WordProofingMode? mode,
+    bool? checkSpelling,
+    bool? checkGrammar,
+    Duration? pause,
+    bool? backgroundCheck,
+    Duration? backgroundIdle,
+    bool? hideTypingErrors,
+  }) => WordProofingSchedule(
+    mode: mode ?? this.mode,
+    checkSpelling: checkSpelling ?? this.checkSpelling,
+    checkGrammar: checkGrammar ?? this.checkGrammar,
+    pause: pause ?? this.pause,
+    backgroundCheck: backgroundCheck ?? this.backgroundCheck,
+    backgroundIdle: backgroundIdle ?? this.backgroundIdle,
+    hideTypingErrors: hideTypingErrors ?? this.hideTypingErrors,
+  );
+
+  @override
+  bool operator ==(Object other) =>
+      other is WordProofingSchedule &&
+      other.mode == mode &&
+      other.checkSpelling == checkSpelling &&
+      other.checkGrammar == checkGrammar &&
+      other.pause == pause &&
+      other.backgroundCheck == backgroundCheck &&
+      other.backgroundIdle == backgroundIdle &&
+      other.hideTypingErrors == hideTypingErrors;
+
+  @override
+  int get hashCode => Object.hash(
+    mode,
+    checkSpelling,
+    checkGrammar,
+    pause,
+    backgroundCheck,
+    backgroundIdle,
+    hideTypingErrors,
+  );
+
+  @override
+  String toString() =>
+      'WordProofingSchedule(${mode.name}, spelling: $checkSpelling, '
+      'grammar: $checkGrammar, pause: ${pause.inMilliseconds} ms, '
+      'background: $backgroundCheck, hide typing: $hideTypingErrors)';
+}
+
+/// What started a pass; decides its providers, scope and visibility.
+enum _Trigger {
+  /// A word was completed: spelling of the typing paragraph only.
+  word,
+
+  /// A sentence or paragraph was completed: the edited text, all providers.
+  sentence,
+
+  /// Typing paused: the edited text, all providers.
+  pause,
+
+  /// Idle time: every unchecked paragraph, visible text first.
+  background,
+
+  /// Check document / F7: everything, including manual providers.
+  explicit,
+}
+
+/// Provider groups scheduled separately.
+enum _Kind { spelling, grammar }
 
 /// Coarse, coalesced proofing state for status chrome. It changes only on
 /// real transitions: a settled result stays visible while the next background
@@ -235,10 +369,14 @@ final class WordProofingSession extends ChangeNotifier {
     this._caretPosition,
     OfficeProofingService? service,
     OfficeProofingVocabulary? vocabulary,
-    this.debounce = WordProofingTiming.idle,
-    this.maxDelay = WordProofingTiming.maxDelay,
+    WordProofingSchedule schedule = const WordProofingSchedule(),
+    Duration? debounce,
+    this._visibleParagraphs,
     this.checkingIndicatorDelay = WordProofingTiming.checkingIndicatorDelay,
-  }) : vocabulary = vocabulary ?? OfficeProofingVocabulary() {
+  }) : vocabulary = vocabulary ?? OfficeProofingVocabulary(),
+       _schedule = debounce == null
+           ? schedule
+           : schedule.copyWith(pause: debounce) {
     _service =
         service ??
         OfficeProofingService(
@@ -255,9 +393,12 @@ final class WordProofingSession extends ChangeNotifier {
   final int Function() _revision;
   final WmlParagraph? Function()? _priorityParagraph;
 
-  /// The collapsed caret, used to defer the word being typed during passes
-  /// that run while typing continues (see [maxDelay]).
+  /// The collapsed caret where the user types. It decides word and sentence
+  /// completion and which findings stay hidden while typing.
   final ({WmlParagraph paragraph, int offset})? Function()? _caretPosition;
+
+  /// Paragraphs on screen, checked first by background passes.
+  final Iterable<WmlParagraph> Function()? _visibleParagraphs;
   final OfficeProofingVocabulary vocabulary;
 
   /// Live draft checks are bounded independently of the document's paragraphs.
@@ -266,11 +407,32 @@ final class WordProofingSession extends ChangeNotifier {
   /// Hosts may persist this owner-scoped snapshot in their own storage.
   void Function(Map<String, Object?> snapshot)? onVocabularyChanged;
 
-  /// Pause since the last edit before a background pass starts.
-  final Duration debounce;
+  WordProofingSchedule _schedule;
 
-  /// Longest wait for a background pass while edits keep arriving.
-  final Duration maxDelay;
+  /// When and what automatic checking runs. Takes effect immediately:
+  /// pending checks are rescheduled, results are kept.
+  WordProofingSchedule get schedule => _schedule;
+
+  set schedule(WordProofingSchedule value) {
+    if (_disposed || value == _schedule) return;
+    final previous = _schedule;
+    _schedule = value;
+    if (!value.hideTypingErrors && previous.hideTypingErrors) {
+      _typing = null;
+    }
+    _cancelAutomaticTimers();
+    if (_automatic) {
+      // Pick up whatever the new schedule now covers once typing pauses.
+      _timer = Timer(value.pause, () => _startAutomaticPass(_Trigger.pause));
+    }
+    if (_pendingPublish == null && !_published.checking) {
+      _republish(scheduled: _automatic && _timer != null);
+    }
+    notifyListeners();
+  }
+
+  /// Pause since the last edit before the edited text is fully checked.
+  Duration get debounce => _schedule.pause;
 
   /// Delay before [status] reports a running pass as checking.
   final Duration checkingIndicatorDelay;
@@ -302,9 +464,18 @@ final class WordProofingSession extends ChangeNotifier {
   int _draftEnabledRevision = 0;
   bool _draftCheckRunning = false;
   _DraftProofingRequest? _pendingDraftCheck;
+
+  /// The pause timer.
   Timer? _timer;
-  Timer? _maxTimer;
+
+  /// A pending word- or sentence-completion check and its trigger.
+  Timer? _completionTimer;
+  _Trigger? _completionTrigger;
+  Timer? _backgroundTimer;
   Timer? _checkingIndicatorTimer;
+
+  /// Whether the running pass may show "Checking…".
+  bool _passShowsProgress = false;
   WmlDocument? _observedDocument;
   int? _observedRevision;
   String? _observedConfiguration;
@@ -315,17 +486,39 @@ final class WordProofingSession extends ChangeNotifier {
   Map<WmlParagraph, List<OfficeProofingFinding>>? _provisionalFindings;
   final Map<WmlParagraph, String> _findingTexts = HashMap.identity();
 
-  /// The caret word hidden by the latest publication, if any.
-  ({WmlParagraph paragraph, int offset})? _deferredCaret;
-  bool _deferCaretWord = false;
+  /// Where the latest edit left the collapsed caret, until the caret moves
+  /// without an edit. Findings touching it stay hidden while typing.
+  ({WmlParagraph paragraph, int offset})? _typing;
+
+  /// Whether the latest publication hid a finding at [_typing].
+  bool _hidAtCaret = false;
+
+  /// Paragraphs edited at the caret since they were last checked.
+  final Set<WmlParagraph> _touched = HashSet.identity();
+
+  /// Paragraphs of the latest pass's capture, to recognize new paragraphs.
+  Set<WmlParagraph> _known = HashSet.identity();
+  WmlDocument? _knownDocument;
+
+  /// Last detected languages per paragraph, routing text whose new version
+  /// has not been detected yet (language detection waits for a completed
+  /// sentence or a pause).
+  final Expando<ParagraphLanguages> _lastDetection = Expando(
+    'proofing paragraph detection',
+  );
   final ValueNotifier<WordProofingStatus> _status = ValueNotifier(
     const WordProofingStatus(phase: WordProofingPhase.paused),
   );
 
-  /// Instrumentation: background/explicit passes started and paragraphs
-  /// sent to providers since the session was created.
+  /// Instrumentation: passes started and paragraphs sent to providers since
+  /// the session was created, and passes per trigger.
   int passCount = 0;
   int checkedParagraphCount = 0;
+  final Map<String, int> passCountsByTrigger = {};
+
+  /// Passes over the typed text whose results changed nothing on screen and
+  /// therefore did not notify listeners.
+  int silentPassCount = 0;
 
   WordProofingSummary get _summary {
     final pending = _pendingPublish;
@@ -390,18 +583,79 @@ final class WordProofingSession extends ChangeNotifier {
   Set<String> get ignoredRuleIds => Set.unmodifiable(_ignoredRules);
   bool get hasIgnoredOccurrences => _ignoredOnce.isNotEmpty;
 
-  /// Findings to paint. While an edit's republish is pending, findings of
-  /// paragraphs whose text changed are dropped without capturing the
-  /// document; unchanged paragraphs keep their underlines.
+  /// Findings to paint. While an edit's republish is pending, unchanged
+  /// paragraphs keep their underlines without capturing the document. In a
+  /// paragraph whose text changed, marks in the unchanged text before the
+  /// edit stay, marks in the unchanged text after it move with it, and marks
+  /// touching the edited range (including a word extended at either end)
+  /// are dropped until the next check, so typing
+  /// does not make the paragraph's other underlines blink.
   Map<WmlParagraph, List<OfficeProofingFinding>> get findingsByParagraph {
     if (_pendingPublish == null) return UnmodifiableMapView(_findings);
     return _provisionalFindings ??= UnmodifiableMapView(
       HashMap<WmlParagraph, List<OfficeProofingFinding>>.identity()..addAll({
         for (final entry in _findings.entries)
-          if (_findingTexts[entry.key] == entry.key.text)
-            entry.key: entry.value,
+          if (_provisionalMarks(
+                entry.value,
+                _findingTexts[entry.key],
+                entry.key.text,
+              )
+              case final kept? when kept.isNotEmpty)
+            entry.key: kept,
       }),
     );
+  }
+
+  static List<OfficeProofingFinding>? _provisionalMarks(
+    List<OfficeProofingFinding> findings,
+    String? before,
+    String now,
+  ) {
+    if (before == null) return null;
+    if (before == now) return findings;
+    return List.unmodifiable(_remapFindings(findings, before, now));
+  }
+
+  /// [findings] of [before] that lie in text [now] left unchanged, moved to
+  /// their offsets in [now]; findings touching the changed range are dropped.
+  static List<OfficeProofingFinding> _remapFindings(
+    Iterable<OfficeProofingFinding> findings,
+    String before,
+    String now,
+  ) {
+    final limit = before.length < now.length ? before.length : now.length;
+    var prefix = 0;
+    while (prefix < limit &&
+        before.codeUnitAt(prefix) == now.codeUnitAt(prefix)) {
+      prefix++;
+    }
+    var suffix = 0;
+    while (suffix < limit - prefix &&
+        before.codeUnitAt(before.length - 1 - suffix) ==
+            now.codeUnitAt(now.length - 1 - suffix)) {
+      suffix++;
+    }
+    final shift = now.length - before.length;
+    final changedEnd = before.length - suffix;
+    return [
+      for (final finding in findings)
+        if (finding.end < prefix)
+          finding
+        else if (finding.start > changedEnd)
+          OfficeProofingFinding(
+            documentId: finding.documentId,
+            blockId: finding.blockId,
+            revision: finding.revision,
+            providerId: finding.providerId,
+            start: finding.start + shift,
+            end: finding.end + shift,
+            originalText: finding.originalText,
+            ruleId: finding.ruleId,
+            message: finding.message,
+            category: finding.category,
+            replacements: finding.replacements,
+          ),
+    ];
   }
 
   set enabled(bool value) {
@@ -589,27 +843,63 @@ final class WordProofingSession extends ChangeNotifier {
     return results;
   }
 
-  ParagraphLanguages? _detectionForCapture(String text) {
+  ParagraphLanguages? _detectionForCapture(
+    WmlParagraph paragraph,
+    String text,
+  ) {
     if (!_detectionActive) return null;
     _capturedTexts.add(text);
-    final hit = _detections[text];
-    if (hit != null) return hit;
-    final cached = _languageDetector!.cached(text);
-    if (cached != null) return _detections[text] = cached;
-    if (scriptSegments(text).isNotEmpty) _missingDetections.add(text);
-    return null;
+    final hit = _detections[text] ?? _languageDetector!.cached(text);
+    if (hit != null) {
+      _detections[text] = hit;
+      return _lastDetection[paragraph] = hit;
+    }
+    if (scriptSegments(text).isEmpty) return null;
+    _missingDetections.add(text);
+    return _provisionalDetection(_lastDetection[paragraph], text);
   }
 
-  /// Runs detection for the paragraphs the last capture could not resolve.
-  /// Returns whether anything new was detected.
-  Future<bool> _detectMissing() async {
+  /// Routes edited text like its previous version until detection runs
+  /// again, when that version was in one language and one script. Mixed
+  /// paragraphs fall back to their Word language tags.
+  static ParagraphLanguages? _provisionalDetection(
+    ParagraphLanguages? previous,
+    String text,
+  ) {
+    if (previous == null || previous.segments.isEmpty) return null;
+    final first = previous.segments.first;
+    if (first.language == null ||
+        previous.segments.any(
+          (segment) =>
+              segment.language != first.language ||
+              segment.script != first.script,
+        )) {
+      return null;
+    }
+    return ParagraphLanguages(text, [
+      DetectedSegment(
+        start: 0,
+        end: text.length,
+        script: first.script,
+        language: first.language,
+        confidence: first.confidence,
+        byScript: first.byScript,
+      ),
+    ]);
+  }
+
+  /// Runs detection for the paragraphs the last capture could not resolve,
+  /// limited to the texts in [only]. Returns whether anything was detected.
+  Future<bool> _detectMissing({Set<String>? only}) async {
     final detector = _languageDetector;
-    if (!_detectionActive || detector == null || _missingDetections.isEmpty) {
-      _missingDetections.clear();
+    final texts = [
+      for (final text in _missingDetections)
+        if (only == null || only.contains(text)) text,
+    ];
+    _missingDetections.clear();
+    if (!_detectionActive || detector == null || texts.isEmpty) {
       return false;
     }
-    final texts = _missingDetections.toList();
-    _missingDetections.clear();
     final results = await detector.detectAll(texts);
     if (!_detectionActive || !identical(detector, _languageDetector)) {
       return false;
@@ -691,35 +981,139 @@ final class WordProofingSession extends ChangeNotifier {
     if (!identical(document, _observedDocument)) {
       _cache.clear();
       _ignoredOnce.clear();
+      _touched.clear();
+      _typing = null;
     }
     if (identical(document, _observedDocument) &&
         revision == _observedRevision &&
         configuration == _observedConfiguration) {
-      _releaseDeferredCaretWord();
+      _releaseTypingPosition();
       return;
     }
+    final contentEdit =
+        identical(document, _observedDocument) &&
+        configuration == _observedConfiguration;
     _observedDocument = document;
     _observedRevision = revision;
     _observedConfiguration = configuration;
     _invalidate();
+    if (contentEdit) _queueTypingEvaluation();
   }
 
-  /// A caret move away from a deferred word publishes its finding without
-  /// a provider call. The host notifies its own listeners afterwards.
-  void _releaseDeferredCaretWord() {
-    final deferred = _deferredCaret;
-    if (deferred == null) return;
+  bool _typingEvaluationQueued = false;
+
+  /// Hosts may notify while an edit is still in progress (for example from
+  /// a history batch, before the caret moves past the inserted text), so the
+  /// caret is read once the edit's synchronous work is done.
+  void _queueTypingEvaluation() {
+    if (_typingEvaluationQueued) return;
+    _typingEvaluationQueued = true;
+    scheduleMicrotask(() {
+      _typingEvaluationQueued = false;
+      if (_disposed) return;
+      final trigger = _typingTrigger();
+      if (trigger != null) _scheduleCompletion(trigger);
+    });
+  }
+
+  static final RegExp _wordCharacter = RegExp(
+    r"[\p{L}\p{M}\p{N}'\u2019_\-]",
+    unicode: true,
+  );
+  static const String _sentenceEnds = '.!?\u2026\u061F\u3002\uFF01\uFF1F';
+
+  /// The caret and its paragraph's length at the latest observation.
+  ({WmlParagraph paragraph, int offset, int length})? _caretSample;
+
+  ({WmlParagraph paragraph, int offset, int length})? _sampleCaret() {
     final caret = _caretPosition?.call();
-    if (caret != null &&
-        identical(caret.paragraph, deferred.paragraph) &&
-        caret.offset == deferred.offset) {
+    return caret == null
+        ? null
+        : (
+            paragraph: caret.paragraph,
+            offset: caret.offset,
+            length: caret.paragraph.text.length,
+          );
+  }
+
+  /// Records where typing happens and whether the edit completed a word
+  /// (space or punctuation typed) or a sentence (sentence-final punctuation,
+  /// or Enter, which completes the previous paragraph).
+  ///
+  /// An edit is typing when the caret moved by exactly the length change of
+  /// its paragraph (inserting or deleting at the caret). Undo, corrections,
+  /// replacements and edits elsewhere are not, and show findings at once.
+  _Trigger? _typingTrigger() {
+    final before = _caretSample;
+    final after = _caretSample = _sampleCaret();
+    final wasTyping = _typing;
+    _typing = null;
+    if (after == null || before == null) return null;
+    if (!identical(before.paragraph, after.paragraph)) {
+      // Enter after typing: the paragraph typed before is complete.
+      if (wasTyping != null &&
+          identical(wasTyping.paragraph, before.paragraph) &&
+          after.offset == 0) {
+        _touched.add(before.paragraph);
+        _touched.add(after.paragraph);
+        _typing = (paragraph: after.paragraph, offset: 0);
+        return _Trigger.sentence;
+      }
+      return null;
+    }
+    final delta = after.length - before.length;
+    if (delta == 0 || after.offset - before.offset != delta) return null;
+    _typing = (paragraph: after.paragraph, offset: after.offset);
+    _touched.add(after.paragraph);
+    // Deleting is not finishing anything.
+    if (delta < 0) return null;
+    final text = after.paragraph.text;
+    final typed = text[after.offset - 1];
+    if (_sentenceEnds.contains(typed)) return _Trigger.sentence;
+    if (_wordCharacter.hasMatch(typed)) return null;
+    return _Trigger.word;
+  }
+
+  void _scheduleCompletion(_Trigger trigger) {
+    if (!_automatic || _schedule.mode != WordProofingMode.whileTyping) return;
+    final kinds = _kindsFor(trigger);
+    if (kinds.isEmpty) return;
+    if (_completionTimer != null) {
+      // A pending word check becomes a sentence check; never postponed.
+      if (trigger == _Trigger.sentence) _completionTrigger = trigger;
       return;
     }
-    _deferCaretWord = false;
-    _deferredCaret = null;
-    if (_pendingPublish != null) return;
+    _completionTrigger = trigger;
+    _completionTimer = Timer(WordProofingTiming.wordCompletion, () {
+      final fired = _completionTrigger ?? _Trigger.word;
+      _completionTimer = null;
+      _completionTrigger = null;
+      _startAutomaticPass(fired);
+    });
+  }
+
+  /// A caret move away from where the user typed shows the findings hidden
+  /// there, without a provider call. The host notifies its own listeners.
+  void _releaseTypingPosition() {
+    if (_typingEvaluationQueued) return;
+    _caretSample = _sampleCaret();
+    final typing = _typing;
+    if (typing == null) return;
+    final caret = _caretPosition?.call();
+    if (caret != null &&
+        identical(caret.paragraph, typing.paragraph) &&
+        caret.offset == typing.offset) {
+      return;
+    }
+    _typing = null;
+    if (!_hidAtCaret || _pendingPublish != null) return;
     final summary = _published;
     if (summary.checking) return;
+    _republish(scheduled: summary.scheduled, finished: summary.hasResults);
+  }
+
+  /// Republishes cached results for the current revision, no provider call.
+  void _republish({bool scheduled = false, bool finished = false}) {
     final document = _document();
     final documentId = _documentIds[document];
     if (documentId == null) return;
@@ -728,8 +1122,8 @@ final class WordProofingSession extends ChangeNotifier {
       documentId: documentId,
       revision: _revision(),
       useManual: false,
-      scheduled: summary.scheduled,
-      finished: summary.hasResults,
+      scheduled: scheduled,
+      finished: finished,
     );
   }
 
@@ -739,6 +1133,8 @@ final class WordProofingSession extends ChangeNotifier {
     if (!identical(_observedDocument, _document())) {
       _cache.clear();
       _ignoredOnce.clear();
+      _touched.clear();
+      _typing = null;
     }
     _observedDocument = _document();
     _observedRevision = _revision();
@@ -747,69 +1143,93 @@ final class WordProofingSession extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool get _automatic => _enabled && _schedule.automatic;
+
+  /// The provider groups an automatic pass of [trigger] runs.
+  Set<_Kind> _kindsFor(_Trigger trigger) => switch (trigger) {
+    _Trigger.explicit => _Kind.values.toSet(),
+    _Trigger.word => {if (_schedule.checkSpelling) _Kind.spelling},
+    _ => {
+      if (_schedule.checkSpelling) _Kind.spelling,
+      if (_schedule.checkGrammar) _Kind.grammar,
+    },
+  };
+
+  void _cancelAutomaticTimers() {
+    _timer?.cancel();
+    _timer = null;
+    _completionTimer?.cancel();
+    _completionTimer = null;
+    _completionTrigger = null;
+    _backgroundTimer?.cancel();
+    _backgroundTimer = null;
+  }
+
   void _invalidate() {
     _generation++;
     _timer?.cancel();
     _timer = null;
+    // Input postpones idle-time work; the next pause pass re-arms it.
+    _backgroundTimer?.cancel();
+    _backgroundTimer = null;
     _checkingIndicatorTimer?.cancel();
     _checkingIndicatorTimer = null;
     _checkingVisible = false;
+    final automatic = _automatic;
     if (_cache.isEmpty) {
       // No verified findings exist yet. Leave the first full capture behind
       // the typing debounce instead of scanning a document on every keystroke.
-      _summary = WordProofingSummary(scheduled: _enabled);
+      _summary = WordProofingSummary(scheduled: automatic);
       _findings = HashMap.identity();
       _findingTexts.clear();
     } else {
       // Rebinding cached results to the new revision needs a full capture.
       // Defer it to the first reader or the next pass, so a keystroke costs
       // no document-wide work; consecutive edits coalesce into one capture.
-      _pendingPublish = (scheduled: _enabled);
+      _pendingPublish = (scheduled: automatic);
       _provisionalFindings = null;
       _updateStatus();
     }
-    if (_enabled) {
+    if (automatic) {
       _timer = Timer(
-        debounce,
-        () => _startBackgroundPass(deferCaretWord: false),
-      );
-      // The first edit after a pass sets a deadline later edits keep.
-      _maxTimer ??= Timer(
-        maxDelay,
-        () => _startBackgroundPass(deferCaretWord: true),
+        _schedule.pause,
+        () => _startAutomaticPass(_Trigger.pause),
       );
     } else {
-      _maxTimer?.cancel();
-      _maxTimer = null;
+      _cancelAutomaticTimers();
     }
   }
 
-  /// [deferCaretWord] is true when the deadline fired while typing goes on:
-  /// a spelling finding ending at the caret is then an unfinished word and
-  /// waits for the idle pass, which still follows the next typing pause.
-  void _startBackgroundPass({required bool deferCaretWord}) {
-    _maxTimer?.cancel();
-    _maxTimer = null;
-    _timer?.cancel();
-    _timer = null;
-    unawaited(
-      checkNow(
-        includeManualProviders: false,
-        deferCaretWord: deferCaretWord,
-      ).whenComplete(() {
-        // A word deferred at the deadline is published by an idle pass that
-        // reuses the cache, unless a newer edit already scheduled one.
-        if (deferCaretWord &&
-            !_disposed &&
-            _enabled &&
-            _timer == null &&
-            _deferredCaret != null) {
-          _timer = Timer(
-            debounce,
-            () => _startBackgroundPass(deferCaretWord: false),
-          );
-        }
-      }),
+  void _startAutomaticPass(_Trigger trigger) {
+    if (_disposed || !_automatic) return;
+    unawaited(_runPass(trigger));
+  }
+
+  /// Arms the idle-time check of the rest of the document after an
+  /// automatic pass, when unchecked text remains and no pause pass is due.
+  void _armBackground(_DocumentSnapshot captured) {
+    _backgroundTimer?.cancel();
+    _backgroundTimer = null;
+    if (!_automatic ||
+        !_schedule.backgroundCheck ||
+        _timer != null ||
+        _completionTimer != null) {
+      return;
+    }
+    final kinds = _kindsFor(_Trigger.background);
+    if (!captured.paragraphs.any(
+      (snapshot) => _needsWork(snapshot, kinds, useManual: false),
+    )) {
+      return;
+    }
+    // The pause pass already waited for the pause since the last input.
+    final remaining = _schedule.backgroundIdle - _schedule.pause;
+    _backgroundTimer = Timer(
+      remaining.isNegative ? Duration.zero : remaining,
+      () {
+        _backgroundTimer = null;
+        _startAutomaticPass(_Trigger.background);
+      },
     );
   }
 
@@ -843,7 +1263,10 @@ final class WordProofingSession extends ChangeNotifier {
       } else {
         next = previous;
       }
-      if (checking && !_checkingVisible && _checkingIndicatorTimer == null) {
+      if (checking &&
+          _passShowsProgress &&
+          !_checkingVisible &&
+          _checkingIndicatorTimer == null) {
         final generation = _generation;
         _checkingIndicatorTimer = Timer(checkingIndicatorDelay, () {
           _checkingIndicatorTimer = null;
@@ -1023,7 +1446,7 @@ final class WordProofingSession extends ChangeNotifier {
         previous.scheduled ||
         previous.manualProvidersSkipped ||
         _timer != null ||
-        _maxTimer != null) {
+        _completionTimer != null) {
       recordHistory();
       return;
     }
@@ -1059,10 +1482,7 @@ final class WordProofingSession extends ChangeNotifier {
     }
     // The settled capture had no timer. The single invalidation above is the
     // only owner of this redundant debounce; no new provider work is needed.
-    _timer?.cancel();
-    _timer = null;
-    _maxTimer?.cancel();
-    _maxTimer = null;
+    _cancelAutomaticTimers();
     _publishCached(
       captured,
       documentId: documentId,
@@ -1360,70 +1780,190 @@ final class WordProofingSession extends ChangeNotifier {
     }
   }
 
-  /// Explicit checks include manually configured providers. Background callers
-  /// omit them and report that coverage separately. Verified ordinary findings
-  /// remain available while other paragraphs or manual providers are checked.
+  /// Explicit checks include manually configured providers and check every
+  /// paragraph without a reusable result at once, the edited one first.
+  /// Verified ordinary findings remain available while other paragraphs or
+  /// manual providers are checked.
   ///
-  /// Only paragraphs without a reusable cached result reach the providers,
-  /// the edited paragraph first. The pass yields to input and frames after
-  /// each [WordProofingTiming.sliceBudget] of main-isolate work and publishes
+  /// The pass yields to input and frames after each
+  /// [WordProofingTiming.sliceBudget] of main-isolate work and publishes
   /// partial results about twenty times per pass over the changed paragraphs.
-  /// [deferCaretWord] is used by the session's typing deadline only.
-  Future<WordProofingSummary> checkNow({
-    bool includeManualProviders = true,
-    bool deferCaretWord = false,
+  Future<WordProofingSummary> checkNow({bool includeManualProviders = true}) =>
+      _runPass(_Trigger.explicit, includeManual: includeManualProviders);
+
+  /// The providers of [kinds], or null for all of them.
+  bool Function(OfficeProofingProvider)? _filter(Set<_Kind> kinds) =>
+      kinds.length == _Kind.values.length
+      ? null
+      : (provider) => kinds.contains(_kindOf(provider));
+
+  static _Kind _kindOf(OfficeProofingProvider provider) {
+    try {
+      final categories = provider.categories;
+      return categories.length == 1 &&
+              categories.contains(OfficeProofingCategory.spelling)
+          ? _Kind.spelling
+          : _Kind.grammar;
+    } on Object {
+      return _Kind.grammar;
+    }
+  }
+
+  /// [kinds] restricted to groups the ordinary service actually has.
+  Set<_Kind> _available(Set<_Kind> kinds) {
+    final present = {for (final p in _service.providers) _kindOf(p)};
+    // Without providers the service reports its own unavailability once.
+    if (present.isEmpty) return kinds;
+    return kinds.intersection(present);
+  }
+
+  /// Whether [snapshot] lacks a reusable, settled result for [kinds].
+  bool _needsWork(
+    _ParagraphSnapshot snapshot,
+    Set<_Kind> kinds, {
+    required bool useManual,
+  }) {
+    final cached = _cachedReports(snapshot, useManual: useManual);
+    if (cached == null || !cached.every(_settled)) return true;
+    return !_cache[snapshot.paragraph]!.kinds.containsAll(_available(kinds));
+  }
+
+  /// The paragraphs a pass of [trigger] checks, in checking order.
+  List<_ParagraphSnapshot> _scope(
+    _Trigger trigger,
+    _DocumentSnapshot captured,
+    Set<_Kind> kinds, {
+    required bool useManual,
+    required bool whole,
+    required WmlDocument document,
+  }) {
+    final typing = _typing?.paragraph;
+    final priorityParagraph = typing ?? _priorityParagraph?.call();
+    final knownDocument = identical(_knownDocument, document);
+    _ParagraphSnapshot? priority;
+    final rest = <_ParagraphSnapshot>[];
+    var priorityIndex = 0;
+    for (var index = 0; index < captured.paragraphs.length; index++) {
+      final snapshot = captured.paragraphs[index];
+      final paragraph = snapshot.paragraph;
+      if (identical(paragraph, priorityParagraph)) priorityIndex = index;
+      if (trigger == _Trigger.word && !identical(paragraph, typing)) continue;
+      if (!_needsWork(snapshot, kinds, useManual: useManual)) {
+        final cached = _cache[paragraph];
+        // A background pass never carries manual results forward: the next
+        // explicit check runs the manual providers again.
+        if (cached != null && !useManual && cached.includesManual) {
+          _cache[paragraph] = _CachedParagraph(
+            snapshot.key,
+            _cachedReports(snapshot, useManual: false)!,
+            false,
+            cached.kinds,
+          );
+        }
+        continue;
+      }
+      if (!whole &&
+          trigger != _Trigger.word &&
+          !_touched.contains(paragraph) &&
+          // Edited elsewhere (replace, paste, undo) or checked in part.
+          !_cache.containsKey(paragraph) &&
+          // Inserted since the last pass.
+          (!knownDocument || _known.contains(paragraph))) {
+        continue;
+      }
+      if (identical(paragraph, priorityParagraph)) {
+        priority = snapshot;
+      } else {
+        rest.add(snapshot);
+      }
+    }
+    if (trigger == _Trigger.background && rest.length > 1) {
+      // Visible text first, then outward from the caret.
+      final visible = HashSet<WmlParagraph>.identity();
+      try {
+        visible.addAll(_visibleParagraphs?.call() ?? const <WmlParagraph>[]);
+      } on Object {
+        // Layout may be unavailable; the caret distance still orders.
+      }
+      final position = HashMap<WmlParagraph, int>.identity();
+      for (var index = 0; index < captured.paragraphs.length; index++) {
+        position[captured.paragraphs[index].paragraph] = index;
+      }
+      int rank(_ParagraphSnapshot snapshot) {
+        final distance = (position[snapshot.paragraph]! - priorityIndex).abs();
+        return visible.contains(snapshot.paragraph)
+            ? distance
+            : distance + captured.paragraphs.length;
+      }
+
+      // Ties keep document order (List.sort is not stable).
+      rest.sort((a, b) {
+        final byRank = rank(a).compareTo(rank(b));
+        return byRank != 0
+            ? byRank
+            : position[a.paragraph]!.compareTo(position[b.paragraph]!);
+      });
+    }
+    return [?priority, ...rest];
+  }
+
+  /// Runs one pass. Each trigger has its own providers ([_kindsFor]),
+  /// scope ([_scope]) and visibility: background, initial document-wide and
+  /// explicit passes publish progress and may show "Checking…"; local typing
+  /// checks publish their results once, when they finish.
+  Future<WordProofingSummary> _runPass(
+    _Trigger trigger, {
+    bool includeManual = false,
   }) async {
     if (_disposed) return _summary;
-    _timer?.cancel();
-    _timer = null;
-    _maxTimer?.cancel();
-    _maxTimer = null;
-    _pendingPublish = null;
-    _provisionalFindings = null;
-    _deferCaretWord = deferCaretWord;
-    passCount++;
+    final explicit = trigger == _Trigger.explicit;
+    switch (trigger) {
+      case _Trigger.explicit:
+        _cancelAutomaticTimers();
+        // The user asked for every finding, including the one being typed.
+        _typing = null;
+      case _Trigger.pause:
+        _timer?.cancel();
+        _timer = null;
+        _completionTimer?.cancel();
+        _completionTimer = null;
+        _completionTrigger = null;
+      case _Trigger.sentence:
+      case _Trigger.word:
+        break;
+      case _Trigger.background:
+        _backgroundTimer?.cancel();
+        _backgroundTimer = null;
+    }
+    final kinds = _kindsFor(trigger);
+    // No configured provider belongs to the requested groups (for example
+    // no spelling-only provider for a word check): nothing to run.
+    if (kinds.isEmpty || (!explicit && _available(kinds).isEmpty)) {
+      return _summary;
+    }
+    // Nothing checked yet (a document was loaded or the configuration
+    // changed): the first pause checks the whole document, like idle time.
+    final loading =
+        (trigger == _Trigger.pause || trigger == _Trigger.sentence) &&
+        _schedule.backgroundCheck &&
+        _cache.isEmpty;
+    final whole = explicit || trigger == _Trigger.background || loading;
+    final showProgress = whole;
     final generation = ++_generation;
     final document = _document();
     final revision = _revision();
     final configuration = _configurationKey;
-    final manual = includeManualProviders ? _manualService : null;
+    final manual = includeManual ? _manualService : null;
     final useManual = manual?.providers.isNotEmpty ?? false;
     if (!identical(document, _observedDocument)) {
       _cache.clear();
       _ignoredOnce.clear();
+      _touched.clear();
     }
     _observedDocument = document;
     _observedRevision = revision;
     _observedConfiguration = configuration;
     final documentId = _documentIds[document] ??= 'document-${++_nextId}';
-    _capturedTexts.clear();
-    var captured = _capture(document);
-    if (_missingDetections.isNotEmpty) {
-      // Paragraph detection is fast (well under a millisecond each); route
-      // the whole pass with it rather than checking twice.
-      final detected = await _detectMissing();
-      // Even a discarded detection yielded control: the session, document
-      // or provider configuration may have changed while it was pending.
-      if (_disposed ||
-          generation != _generation ||
-          !identical(document, _document()) ||
-          revision != _revision() ||
-          configuration != _configurationKey) {
-        return _summary;
-      }
-      if (detected) {
-        captured = _capture(document);
-      }
-    }
-    _detections.removeWhere((text, _) => !_capturedTexts.contains(text));
-    _publishCached(
-      captured,
-      documentId: documentId,
-      revision: revision,
-      useManual: useManual,
-      checking: true,
-    );
-    notifyListeners();
     bool current() =>
         !_disposed &&
         generation == _generation &&
@@ -1431,34 +1971,68 @@ final class WordProofingSession extends ChangeNotifier {
         revision == _revision() &&
         configuration == _configurationKey;
 
-    // Visit the text being edited first without changing navigation/report
-    // order. A caret move affects the next pass, never cancels the current one.
-    // Paragraphs with reusable results need no provider work: publication
-    // retargets them, so the pass only visits the paragraphs that changed.
-    final priorityParagraph = _priorityParagraph?.call();
-    _ParagraphSnapshot? priority;
-    final dirty = <_ParagraphSnapshot>[];
-    for (final snapshot in captured.paragraphs) {
-      final cached = _cachedReports(snapshot, useManual: useManual);
-      if (cached != null && cached.every(_settled)) {
-        // A background pass never carries manual results forward: the next
-        // explicit check runs the manual providers again.
-        if (!useManual && _cache[snapshot.paragraph]!.includesManual) {
-          _cache[snapshot.paragraph] = _CachedParagraph(
-            snapshot.key,
-            cached,
-            false,
-          );
-        }
-        continue;
-      }
-      if (identical(snapshot.paragraph, priorityParagraph)) {
-        priority = snapshot;
-      } else {
-        dirty.add(snapshot);
+    _capturedTexts.clear();
+    var captured = _capture(document);
+    var checkOrder = _scope(
+      trigger,
+      captured,
+      kinds,
+      useManual: useManual,
+      whole: whole,
+      document: document,
+    );
+    // Language detection runs for the text about to be checked, when a
+    // sentence or paragraph is complete or typing pauses; never per word.
+    if (trigger != _Trigger.word && _missingDetections.isNotEmpty) {
+      final wanted = {for (final snapshot in checkOrder) snapshot.text};
+      final detected = await _detectMissing(only: wanted);
+      // Even a discarded detection yielded control: the session, document
+      // or provider configuration may have changed while it was pending.
+      if (!current()) return _summary;
+      if (detected) {
+        _capturedTexts.clear();
+        captured = _capture(document);
+        checkOrder = _scope(
+          trigger,
+          captured,
+          kinds,
+          useManual: useManual,
+          whole: whole,
+          document: document,
+        );
       }
     }
-    final checkOrder = [?priority, ...dirty];
+    _missingDetections.clear();
+    _detections.removeWhere((text, _) => !_capturedTexts.contains(text));
+    if (checkOrder.isEmpty && !explicit) {
+      // Nothing to check: settle a stale publication quietly.
+      if (_pendingPublish != null || _published.scheduled) {
+        _publishCached(
+          captured,
+          documentId: documentId,
+          revision: revision,
+          useManual: false,
+          finished: _published.hasResults || _cache.isNotEmpty,
+        );
+        notifyListeners();
+      }
+      _finishAutomatic(trigger, captured, document);
+      return _summary;
+    }
+    passCount++;
+    passCountsByTrigger.update(trigger.name, (n) => n + 1, ifAbsent: () => 1);
+    _passShowsProgress = showProgress;
+    if (showProgress) {
+      _publishCached(
+        captured,
+        documentId: documentId,
+        revision: revision,
+        useManual: useManual,
+        checking: true,
+      );
+      notifyListeners();
+    }
+
     // About twenty progress publications per pass, plus early feedback for
     // the edited paragraph; each one republishes the whole document.
     final progressStride = (checkOrder.length + 19) ~/ 20;
@@ -1474,7 +2048,21 @@ final class WordProofingSession extends ChangeNotifier {
           ..start();
       }
       if (!current()) return _summary;
+      // Reuse results for the same text and add the missing provider groups.
+      final previous = _cache[snapshot.paragraph];
+      final reusable =
+          !useManual &&
+          previous != null &&
+          !previous.includesManual &&
+          previous.key == snapshot.key &&
+          previous.reports.length == snapshot.segments.length &&
+          previous.reports.every(_settled);
+      final wanted = _available(kinds);
+      final missing = reusable ? wanted.difference(previous.kinds) : wanted;
       final paragraphReports = <OfficeProofingReport>[];
+      // Every available group already has settled results (an empty
+      // provider selection must never be sent or cached).
+      if (!useManual && missing.isEmpty) continue;
       for (var index = 0; index < snapshot.segments.length; index++) {
         final request = _request(
           snapshot,
@@ -1482,27 +2070,39 @@ final class WordProofingSession extends ChangeNotifier {
           documentId: documentId,
           revision: revision,
         );
-        final ordinary = await _service.check(request);
+        final ordinary = await _service.check(
+          request,
+          only: useManual ? null : _filter(missing),
+        );
         if (!current()) return _summary;
         final report = useManual
             ? mergeOfficeProofingReports(
                 primary: ordinary,
                 secondary: await manual!.check(request),
               )
-            : ordinary;
+            : reusable
+            ? _mergeKinds(previous.reports[index], ordinary)
+            : _carryOver(previous, snapshot, missing, ordinary) ?? ordinary;
         if (!current()) return _summary;
         paragraphReports.add(report);
       }
       checkedParagraphCount++;
+      final checkedKinds = useManual
+          ? _Kind.values.toSet()
+          : {...missing, if (reusable) ...previous.kinds};
       _cache[snapshot.paragraph] = _CachedParagraph(
         snapshot.key,
         paragraphReports,
         useManual,
+        checkedKinds,
       );
+      if (checkedKinds.containsAll(_available(_Kind.values.toSet()))) {
+        _touched.remove(snapshot.paragraph);
+      }
       final remaining = position + 1 < checkOrder.length;
-      if (remaining &&
-          (identical(snapshot, priority) ||
-              (position + 1) % progressStride == 0)) {
+      if (showProgress &&
+          remaining &&
+          (position == 0 || (position + 1) % progressStride == 0)) {
         // Direct host edits can bypass the revision counter. Validate the
         // complete story/field/guard snapshot before exposing partial results.
         if (!captured.sameAs(_capture(document))) {
@@ -1524,6 +2124,14 @@ final class WordProofingSession extends ChangeNotifier {
       refresh();
       return _summary;
     }
+    // What the canvas paints for the checked text right now.
+    final painted = showProgress
+        ? null
+        : [
+            for (final snapshot in checkOrder)
+              findingsByParagraph[snapshot.paragraph],
+          ];
+    final hadResults = _pendingPublish != null || _published.hasResults;
     _publishCached(
       captured,
       documentId: documentId,
@@ -1531,8 +2139,143 @@ final class WordProofingSession extends ChangeNotifier {
       useManual: useManual,
       finished: true,
     );
-    notifyListeners();
+    // A check of the text being typed that changes no mark on screen does
+    // not notify: listeners (and the host's whole chrome) would rebuild for
+    // nothing. Readers still get the new summary; status has its own notifier.
+    if (painted == null ||
+        !hadResults ||
+        !_sameMarks(painted, [
+          for (final snapshot in checkOrder) _findings[snapshot.paragraph],
+        ])) {
+      notifyListeners();
+    } else {
+      silentPassCount++;
+    }
+    _finishAutomatic(trigger, captured, document);
     return _summary;
+  }
+
+  static bool _sameMarks(
+    List<List<OfficeProofingFinding>?> before,
+    List<List<OfficeProofingFinding>?> after,
+  ) {
+    for (var index = 0; index < before.length; index++) {
+      final left = before[index] ?? const <OfficeProofingFinding>[];
+      final right = after[index] ?? const <OfficeProofingFinding>[];
+      if (left.length != right.length) return false;
+      for (var i = 0; i < left.length; i++) {
+        final a = left[i];
+        final b = right[i];
+        if (a.start != b.start ||
+            a.end != b.end ||
+            a.category != b.category ||
+            a.ruleId != b.ruleId ||
+            a.providerId != b.providerId ||
+            a.originalText != b.originalText) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  void _finishAutomatic(
+    _Trigger trigger,
+    _DocumentSnapshot captured,
+    WmlDocument document,
+  ) {
+    _known = HashSet<WmlParagraph>.identity()
+      ..addAll(captured.paragraphs.map((snapshot) => snapshot.paragraph));
+    _knownDocument = document;
+    if (trigger != _Trigger.explicit && trigger != _Trigger.background) {
+      _armBackground(captured);
+    }
+  }
+
+  /// While only some provider groups recheck an edited paragraph (spelling at
+  /// word completion), the other groups' results for its previous text stay
+  /// visible where that text is unchanged, so grammar marks do not vanish
+  /// until the pause. They do not count as checked: the cache entry keeps
+  /// only the groups that ran, and the pause pass replaces them.
+  OfficeProofingReport? _carryOver(
+    _CachedParagraph? previous,
+    _ParagraphSnapshot snapshot,
+    Set<_Kind> ran,
+    OfficeProofingReport fresh,
+  ) {
+    if (previous == null ||
+        previous.includesManual ||
+        ran.containsAll(_available(_Kind.values.toSet())) ||
+        previous.reports.length != 1 ||
+        snapshot.segments.length != 1) {
+      return null;
+    }
+    final old = previous.reports.single;
+    final segment = snapshot.segments.single;
+    if (old.request.startOffset != 0 ||
+        segment.start != 0 ||
+        old.request.language != segment.language) {
+      return null;
+    }
+    final ranIds = {for (final result in fresh.results) result.providerId};
+    final carried = [
+      for (final result in old.results)
+        if (!ranIds.contains(result.providerId) &&
+            result.status == OfficeProofingStatus.success &&
+            _service.providers.any(
+              (provider) =>
+                  provider.id == result.providerId &&
+                  !ran.contains(_kindOf(provider)),
+            ))
+          OfficeProofingResult(
+            request: fresh.request,
+            providerId: result.providerId,
+            status: result.status,
+            message: result.message,
+            findings: _remapFindings(
+              result.findings,
+              old.request.text,
+              segment.text,
+            ),
+          ),
+    ];
+    if (carried.isEmpty) return null;
+    return _mergeKinds(
+      OfficeProofingReport(request: fresh.request, results: carried),
+      fresh,
+    );
+  }
+
+  /// [addition]'s provider results added to [base] for the same text, in
+  /// the service's provider order (which decides merged-finding precedence).
+  OfficeProofingReport _mergeKinds(
+    OfficeProofingReport base,
+    OfficeProofingReport addition,
+  ) {
+    final byId = <String, OfficeProofingResult>{
+      for (final result in base.results) result.providerId: result,
+      for (final result in addition.results) result.providerId: result,
+    };
+    final ordered = <OfficeProofingResult>[
+      for (final provider in _service.providers) ?byId.remove(provider.id),
+      ...byId.values,
+    ];
+    final request = addition.request;
+    return OfficeProofingReport(
+      request: request,
+      results: [
+        for (final result in ordered)
+          identical(result.request, request)
+              ? result
+              : _retarget(
+                  OfficeProofingReport(
+                    request: result.request,
+                    results: [result],
+                  ),
+                  request,
+                ).results.single,
+      ],
+    );
   }
 
   /// A cached report that another pass cannot improve: every provider
@@ -1630,11 +2373,12 @@ final class WordProofingSession extends ChangeNotifier {
     final reports = <OfficeProofingReport>[];
     final issues = <WordProofingIssue>[];
     var checked = 0;
-    // While typing continues, a spelling finding that ends at the collapsed
-    // caret is most likely an unfinished word: keep it in the cache but do
-    // not flag it until the idle pass or a caret move.
-    final caret = _deferCaretWord && !useManual ? _caretPosition?.call() : null;
-    _deferredCaret = null;
+    // Where the user is typing, a finding touching the caret is most likely
+    // an unfinished word or sentence: keep it in the cache but do not flag
+    // it until the word is completed or the caret moves away.
+    final caret = _schedule.hideTypingErrors ? _typing : null;
+    final allKinds = _available(_Kind.values.toSet());
+    _hidAtCaret = false;
     _findingTexts.clear();
     for (final snapshot in captured.paragraphs) {
       final cached = _cachedReports(
@@ -1643,9 +2387,11 @@ final class WordProofingSession extends ChangeNotifier {
         allowOrdinaryPreview: true,
       );
       if (cached == null) continue;
-      if ((!useManual || _cache[snapshot.paragraph]!.includesManual) &&
+      final entry = _cache[snapshot.paragraph]!;
+      if ((!useManual || entry.includesManual) &&
           cached.isNotEmpty &&
-          cached.every((report) => report.complete)) {
+          cached.every((report) => report.complete) &&
+          entry.kinds.containsAll(allKinds)) {
         checked++;
       }
       for (var index = 0; index < snapshot.segments.length; index++) {
@@ -1661,12 +2407,13 @@ final class WordProofingSession extends ChangeNotifier {
         );
         reports.add(report);
         for (final finding in report.findings) {
+          // Inside or at the end of the finding (the word being typed);
+          // a finding that starts at the caret is the next word.
           if (caret != null &&
               identical(caret.paragraph, snapshot.paragraph) &&
-              finding.category == OfficeProofingCategory.spelling &&
-              finding.start < caret.offset &&
-              finding.end == caret.offset) {
-            _deferredCaret = caret;
+              finding.end >= caret.offset &&
+              (finding.start < caret.offset || finding.start == finding.end)) {
+            _hidAtCaret = true;
             continue;
           }
           if (_ignoredOnce.contains(_issueKey(finding, snapshot))) continue;
@@ -1809,7 +2556,7 @@ final class WordProofingSession extends ChangeNotifier {
                 ({String? language, bool isDefault}) complex,
               })
             >[];
-        final detection = _detectionForCapture(text);
+        final detection = _detectionForCapture(paragraph, text);
         var hasField = fieldDepth > 0;
         var offset = 0;
         var locked =
@@ -2198,10 +2945,11 @@ final class WordProofingSession extends ChangeNotifier {
     if (_disposed) return;
     _disposed = true;
     _generation++;
-    _timer?.cancel();
-    _maxTimer?.cancel();
+    _cancelAutomaticTimers();
     _checkingIndicatorTimer?.cancel();
     _pendingPublish = null;
+    _touched.clear();
+    _known = HashSet.identity();
     _pendingDraftCheck?.completer.complete();
     _pendingDraftCheck = null;
     _cache.clear();
@@ -2289,8 +3037,16 @@ final class _DocumentSnapshot {
 }
 
 final class _CachedParagraph {
-  const _CachedParagraph(this.key, this.reports, this.includesManual);
+  const _CachedParagraph(
+    this.key,
+    this.reports,
+    this.includesManual, [
+    this.kinds = const {_Kind.spelling, _Kind.grammar},
+  ]);
   final String key;
   final List<OfficeProofingReport> reports;
   final bool includesManual;
+
+  /// The provider groups whose results [reports] contain.
+  final Set<_Kind> kinds;
 }

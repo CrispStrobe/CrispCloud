@@ -1239,7 +1239,7 @@ void main() {
       );
       expect(
         () => _call(session, 'Document.exportDocument'),
-        throwsUnsupportedError,
+        throwsFormatException,
       );
       expect(
         () =>

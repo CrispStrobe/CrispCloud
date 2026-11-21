@@ -190,6 +190,10 @@ void main() {
         controller.undo();
         await tester.pump(controller.proofing.debounce);
         await _frames(tester);
+        // The third paragraph's check was interrupted by the correction; the
+        // rest of the document is checked in idle time.
+        await tester.pump(WordProofingTiming.backgroundIdle);
+        await _frames(tester);
         expect(
           controller.document.paragraphs.map((paragraph) => paragraph.text),
           [_firstText, _secondText, _thirdText],

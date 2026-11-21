@@ -189,6 +189,11 @@ abstract final class WordStyles {
       fontSizePoints: 10,
       color: '666666',
     ),
+    // Zotero's generated bibliography paragraphs reference this native ID.
+    // Define it through the normal referenced-style writer, without bringing
+    // Normal defaults into a previously styleless imported document. Zotero's
+    // chosen bibliography layout remains direct paragraph formatting.
+    WmlStyle(id: 'Bibliography', name: 'Bibliography', nameAr: 'قائمة المراجع'),
     WmlStyle(
       id: 'IntenseQuote',
       name: 'Intense Quote',

@@ -718,6 +718,29 @@ class _StyleCascade {
     return result;
   }
 
+  static XmlElement _scalarControlProjection(XmlElement source) {
+    // Effective controls use only their native value. Normalize its namespace
+    // before layers with different aliases are combined; foreign attributes
+    // and nested metadata remain untouched in the original source fragment.
+    final result = XmlElement(
+      localName: source.localName,
+      prefix: 'w',
+      namespaceUri: OfficeNamespaces.w,
+    );
+    final value =
+        _tabAttribute(source, 'val') ??
+        (source.localName == 'kern' ? null : '1');
+    if (value != null) {
+      result.setAttribute(
+        'val',
+        value,
+        prefix: 'w',
+        namespaceUri: OfficeNamespaces.w,
+      );
+    }
+    return result;
+  }
+
   XmlElement merged(
     String name,
     Iterable<XmlElement?> layers, {
@@ -728,7 +751,15 @@ class _StyleCascade {
     for (final layer in layers) {
       if (layer == null) continue;
       for (final incoming in layer.childElements) {
-        final child = name == 'pPr' && _word(incoming, 'numPr')
+        final scalarControl =
+            (name == 'rPr' &&
+                (incoming.localName == 'kern' ||
+                    incoming.localName == 'noProof')) ||
+            (name == 'pPr' && incoming.localName == 'suppressAutoHyphens');
+        if (scalarControl && !_word(incoming, incoming.localName)) continue;
+        final child = scalarControl
+            ? _scalarControlProjection(incoming)
+            : name == 'pPr' && _word(incoming, 'numPr')
             ? _numberingProjection(incoming)
             : name == 'pPr' &&
                   (_word(incoming, 'ind') || _word(incoming, 'spacing'))

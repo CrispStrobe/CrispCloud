@@ -8,6 +8,7 @@ import 'package:quds_office_engine/quds_office_engine.dart';
 
 import 'office_controller.dart';
 import 'word_review_labels.dart';
+import '../l10n/office_plural.dart';
 
 /// The two independent workflows in the document review workspace.
 enum WordReviewTab { changes, compare }
@@ -1213,8 +1214,8 @@ class _WordReviewDialogState extends State<WordReviewDialog> {
       children: <Widget>[
         Text(
           _s(
-            '${result.changeCount} changes · ${result.insertedCount} insertions · ${result.deletedCount} deletions · ${result.modifiedCount} edits · ${result.formattingCount} formatting · ${result.structureCount} structure',
-            '${result.changeCount} تغييرات · ${result.insertedCount} إدراج · ${result.deletedCount} حذف · ${result.modifiedCount} تعديل · ${result.formattingCount} تنسيق · ${result.structureCount} بنية',
+            '${officeChanges(result.changeCount)} · ${officeCount(result.insertedCount, 'insertion')} · ${officeCount(result.deletedCount, 'deletion')} · ${officeCount(result.modifiedCount, 'edit')} · ${result.formattingCount} formatting · ${result.structureCount} structure',
+            '${officeChanges(result.changeCount, arabic: true)} · ${result.insertedCount} إدراج · ${result.deletedCount} حذف · ${result.modifiedCount} تعديل · ${result.formattingCount} تنسيق · ${result.structureCount} بنية',
           ),
           key: const ValueKey('compare-summary'),
           style: Theme.of(context).textTheme.titleSmall,

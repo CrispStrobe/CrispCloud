@@ -1317,13 +1317,19 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
       _write(transaction.apply);
       if (items != null) _selected.clear();
       setState(
-        () => _notice =
-            'Zotero updated the document using its selected style. You can undo the complete operation.',
+        () => _notice = result.hasExportedDocument
+            ? 'The document is prepared for Zotero transfer. Save a copy as DOCX for Word or ODT for LibreOffice, open it in the destination word processor, and use Zotero Refresh to restore active citations. You can undo this operation.'
+            : result.hasImportedDocument
+            ? 'Zotero restored and formatted the transferred references. Save the document to keep the active fields. You can undo the complete import.'
+            : 'Zotero updated the document using its selected style. You can undo the complete operation.',
       );
     } finally {
       if (mounted) setState(() => _citingCancellation = null);
     }
   }, closeOnSuccess: widget.closeAfterCommand);
+
+  bool get _isTransferDocument =>
+      WordZoteroTransfer.isTransferDocument(_controller.document);
 
   Widget _desktopTools() => Card(
     key: const ValueKey('zotero-desktop-tools'),
@@ -1337,8 +1343,10 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 6),
-          const Text(
-            'Use Zotero’s source picker and installed citation styles. Refresh processes the whole document together, including numbering, disambiguation and style-dependent ibid. / Ebd. with page locators.',
+          Text(
+            _isTransferDocument
+                ? 'This document contains Zotero transfer data. Import the transferred references with Zotero before editing citations. The original document stays intact until the import finishes.'
+                : 'Use Zotero’s source picker and installed citation styles. Refresh processes the whole document together, including numbering, disambiguation and style-dependent ibid. / Ebd. with page locators.',
           ),
           const SizedBox(height: 8),
           _documentStyleSummary(),
@@ -1348,7 +1356,7 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
             runSpacing: 6,
             children: [
               FilledButton(
-                onPressed: _busy || !_canEdit
+                onPressed: _busy || !_canEdit || _isTransferDocument
                     ? null
                     : () =>
                           _citeWithDesktop(ZoteroCitingCommand.addEditCitation),
@@ -1359,7 +1367,7 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
                     'Insert research content at the body or Notes caret, or replace selected ordinary text across paragraphs in the same body section or authored note.',
                 child: OutlinedButton(
                   key: const ValueKey('zotero-add-note'),
-                  onPressed: _busy || !_canEdit
+                  onPressed: _busy || !_canEdit || _isTransferDocument
                       ? null
                       : () => _citeWithDesktop(ZoteroCitingCommand.addNote),
                   child: const Text('Add note from Zotero…'),
@@ -1370,7 +1378,7 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
                     'Insert text, image and ink annotations at the body or Notes caret, or replace selected ordinary text across paragraphs in the same body section or authored note. Requires Zotero 9 or later.',
                 child: OutlinedButton(
                   key: const ValueKey('zotero-add-annotation'),
-                  onPressed: _busy || !_canEdit
+                  onPressed: _busy || !_canEdit || _isTransferDocument
                       ? null
                       : () =>
                             _citeWithDesktop(ZoteroCitingCommand.addAnnotation),
@@ -1378,24 +1386,42 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
                 ),
               ),
               OutlinedButton(
-                onPressed: _busy || !_canEdit
+                onPressed: _busy || !_canEdit || _isTransferDocument
                     ? null
                     : () => _citeWithDesktop(ZoteroCitingCommand.setDocPrefs),
                 child: const Text('Document style…'),
               ),
               OutlinedButton(
+                key: const ValueKey('zotero-refresh-or-import'),
                 onPressed: _busy || !_canEdit
                     ? null
                     : () => _citeWithDesktop(ZoteroCitingCommand.refresh),
-                child: const Text('Refresh all with Zotero'),
+                child: Text(
+                  _isTransferDocument
+                      ? 'Import transferred references…'
+                      : 'Refresh all with Zotero',
+                ),
               ),
               OutlinedButton(
-                onPressed: _busy || !_canEdit
+                onPressed: _busy || !_canEdit || _isTransferDocument
                     ? null
                     : () => _citeWithDesktop(
                         ZoteroCitingCommand.addEditBibliography,
                       ),
                 child: const Text('Bibliography in Zotero…'),
+              ),
+              Tooltip(
+                message:
+                    'Convert active citations to Zotero transfer links, then save a DOCX copy for Word or an ODT copy for LibreOffice. Zotero Refresh restores the active fields in the destination.',
+                child: OutlinedButton(
+                  key: const ValueKey('zotero-export-document'),
+                  onPressed: _busy || !_canEdit || _isTransferDocument
+                      ? null
+                      : () => _citeWithDesktop(
+                          ZoteroCitingCommand.exportDocument,
+                        ),
+                  child: const Text('Prepare document for transfer…'),
+                ),
               ),
             ],
           ),
@@ -1410,6 +1436,12 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
   );
 
   Widget _documentStyleSummary() {
+    if (_isTransferDocument) {
+      return const Text(
+        'The transferred style and language will be restored during import.',
+        key: ValueKey('zotero-document-style-summary'),
+      );
+    }
     ({String id, String? locale, int noteType})? preferences;
     try {
       preferences = WordZoteroDocumentData.stylePreferences(
@@ -1845,6 +1877,7 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
       ZoteroCitingCommand.refresh => 'Refresh Zotero citations',
       ZoteroCitingCommand.setDocPrefs => 'Zotero document style',
       ZoteroCitingCommand.removeCodes => 'Unlink Zotero citations',
+      ZoteroCitingCommand.exportDocument => 'Prepare Zotero document transfer',
     };
     final cancellation = _citingCancellation;
     return PopScope(

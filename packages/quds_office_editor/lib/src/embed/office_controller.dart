@@ -604,7 +604,40 @@ abstract class OfficeController extends ChangeNotifier {
   void _onCommands() {
     _contentRevision++;
     _dirty = true;
+    if (_editNotifyDepth > 0 && coalesceEditNotifications) {
+      // The edit in progress notifies once when it is done.
+      _commandNotifyPending = true;
+      return;
+    }
     notifyListeners();
+  }
+
+  /// Typing edits commit undo commands before they lay out and notify.
+  /// While one runs, the command stack's notification is folded into the
+  /// edit's own, so listeners (chrome, proofing, the editor widget) run once
+  /// per keystroke instead of twice, and never see the model before the
+  /// relayout. `--dart-define=QUDS_COALESCE_EDIT_NOTIFY=false` turns it off.
+  static bool coalesceEditNotifications = const bool.fromEnvironment(
+    'QUDS_COALESCE_EDIT_NOTIFY',
+    defaultValue: true,
+  );
+
+  int _editNotifyDepth = 0;
+  bool _commandNotifyPending = false;
+
+  /// Runs [edit] with command notifications folded into one notification
+  /// (the edit's own, or one at the end when it did not notify).
+  T _coalescingNotifications<T>(T Function() edit) {
+    _editNotifyDepth++;
+    try {
+      return edit();
+    } finally {
+      _editNotifyDepth--;
+      if (_editNotifyDepth == 0 && _commandNotifyPending) {
+        _commandNotifyPending = false;
+        notifyListeners();
+      }
+    }
   }
 
   @override
@@ -613,6 +646,7 @@ abstract class OfficeController extends ChangeNotifier {
     if (_disposed) {
       return;
     }
+    _commandNotifyPending = false;
     super.notifyListeners();
   }
 
@@ -628,6 +662,52 @@ abstract class OfficeController extends ChangeNotifier {
 
 /// Word document controller: IME, caret, layout, load/save.
 class WordEditorController extends OfficeController {
+  /// Benchmark hook (null in normal use): receives the duration of each
+  /// phase of a typed keystroke (`model`, `undo`, `layout`, `notify`) and,
+  /// while [debugTimeListeners] was on when a listener was added, of each
+  /// listener (`listener <description>`).
+  static void Function(String phase, int microseconds)? debugEditPhase;
+
+  /// Benchmark switch: listeners added while it is true are timed through
+  /// [debugEditPhase].
+  static bool debugTimeListeners = false;
+
+  final Map<VoidCallback, List<VoidCallback>> _timedListeners =
+      <VoidCallback, List<VoidCallback>>{};
+
+  @override
+  void addListener(VoidCallback listener) {
+    if (!debugTimeListeners) {
+      super.addListener(listener);
+      return;
+    }
+    final String label = 'listener $listener';
+    void timed() {
+      final void Function(String, int)? sink = debugEditPhase;
+      if (sink == null) {
+        listener();
+        return;
+      }
+      final Stopwatch watch = Stopwatch()..start();
+      listener();
+      sink(label, watch.elapsedMicroseconds);
+    }
+
+    _timedListeners.putIfAbsent(listener, () => <VoidCallback>[]).add(timed);
+    super.addListener(timed);
+  }
+
+  @override
+  void removeListener(VoidCallback listener) {
+    final List<VoidCallback>? wrappers = _timedListeners[listener];
+    if (wrappers != null && wrappers.isNotEmpty) {
+      super.removeListener(wrappers.removeLast());
+      if (wrappers.isEmpty) _timedListeners.remove(listener);
+      return;
+    }
+    super.removeListener(listener);
+  }
+
   WordProofingSession? _proofing;
   final OfficeProofingVocabulary? _initialProofingVocabulary;
   final OfficeProofingService? _initialProofingService;
@@ -736,8 +816,24 @@ class WordEditorController extends OfficeController {
       },
       vocabulary: _initialProofingVocabulary,
       service: _initialProofingService,
+      visibleParagraphs: _proofingVisibleParagraphs,
     )..addListener(_onProofingChanged);
     return _proofing!;
+  }
+
+  /// Body paragraphs on the visible page and its neighbours, from the
+  /// current layout; background proofing checks them first.
+  Iterable<WmlParagraph> _proofingVisibleParagraphs() sync* {
+    final pages = documentLaidOut.pages;
+    if (pages.isEmpty) return;
+    final visible = visiblePageIndex.clamp(0, pages.length - 1);
+    final last = visible + 1 < pages.length ? visible + 1 : pages.length - 1;
+    for (var index = visible > 0 ? visible - 1 : 0; index <= last; index++) {
+      for (final line in pages[index].lines) {
+        final paragraph = line.sourceParagraph;
+        if (paragraph != null) yield paragraph;
+      }
+    }
   }
 
   // Inspect existing text only: checking must not materialize empty comment,
@@ -796,6 +892,7 @@ class WordEditorController extends OfficeController {
   void dispose() {
     _proofing?.removeListener(_onProofingChanged);
     _proofing?.dispose();
+    _timedListeners.clear();
     super.dispose();
   }
 
@@ -807,7 +904,7 @@ class WordEditorController extends OfficeController {
     OfficeProofingVocabulary? proofingVocabulary,
     OfficeProofingService? proofingService,
     String revisionAuthor = 'CrispOffice',
-  }) : document = document ?? WmlDocument.empty(),
+  }) : _document = document ?? WmlDocument.empty(),
        _initialProofingVocabulary = proofingVocabulary,
        _initialProofingService = proofingService,
        _revisionAuthor = _normalizeRevisionAuthor(revisionAuthor) {
@@ -815,7 +912,7 @@ class WordEditorController extends OfficeController {
     _config = _effectiveConfig(_config);
     relayout();
     input = OfficeInputBridge(
-      onValue: _onIme,
+      onValue: (value) => _coalescingNotifications(() => _onIme(value)),
       onAction: _onImeAction,
       onSelector: _onImeSelector,
     );
@@ -843,7 +940,34 @@ class WordEditorController extends OfficeController {
   }
 
   /// document API.
-  WmlDocument document;
+  ///
+  /// Assigning a different document marks the current layout as belonging to
+  /// the old one: the next read of [documentLaidOut] (the canvas's next
+  /// paint, or an explicit [relayout]) lays the new document out in full.
+  /// Without this, the layout stayed the old document's until the first
+  /// keystroke, which then paid a full layout (and an incremental attempt
+  /// could reuse pages of the old document). Switch:
+  /// [layoutReplacedDocumentOnRead].
+  WmlDocument get document => _document;
+  set document(WmlDocument value) {
+    if (identical(value, _document)) return;
+    _document = value;
+    _documentReplaced = true;
+  }
+
+  WmlDocument _document;
+
+  /// True while [documentLaidOut] still shows a previously assigned
+  /// [document].
+  bool _documentReplaced = false;
+
+  /// When false (`--dart-define=QUDS_LAZY_DOCUMENT_LAYOUT=false`), assigning
+  /// [document] leaves the old layout in place until the next [relayout],
+  /// as before.
+  static bool layoutReplacedDocumentOnRead = const bool.fromEnvironment(
+    'QUDS_LAZY_DOCUMENT_LAYOUT',
+    defaultValue: true,
+  );
 
   // Keep the host's requested interaction mode separate from document
   // restrictions so a rebuild cannot bypass protection or undo enable edits
@@ -902,7 +1026,16 @@ class WordEditorController extends OfficeController {
             commands.nextRedoCommand is _WordProtectionCommand;
 
   /// documentLaidOut API.
-  late LaidOutDocument documentLaidOut;
+  ///
+  /// Lays out a newly assigned [document] first (see [document]).
+  LaidOutDocument get documentLaidOut {
+    if (_documentReplaced && layoutReplacedDocumentOnRead) relayout();
+    return _documentLaidOut;
+  }
+
+  set documentLaidOut(LaidOutDocument value) => _documentLaidOut = value;
+
+  late LaidOutDocument _documentLaidOut;
 
   /// commentLaidOut API.
   LaidOutDocument? commentLaidOut;
@@ -1418,6 +1551,27 @@ class WordEditorController extends OfficeController {
   /// layout again ([WordLayoutEngine.incrementalLayout]); the result equals a
   /// full layout without field updates.
   void relayout({bool localEdit = false, Iterable<WmlParagraph>? dirty}) {
+    final bool replaced = _documentReplaced;
+    if (replaced) {
+      // The previous layout belongs to another document: nothing in it can
+      // be reused, so lay the new one out in full.
+      _documentReplaced = false;
+      localEdit = false;
+    }
+    try {
+      _relayoutCurrentDocument(localEdit: localEdit, dirty: dirty);
+    } catch (_) {
+      // A failed replacement must never make the old document's layout
+      // appear current. Keep both lazy reads and explicit relayouts retryable.
+      if (replaced) _documentReplaced = true;
+      rethrow;
+    }
+  }
+
+  void _relayoutCurrentDocument({
+    required bool localEdit,
+    Iterable<WmlParagraph>? dirty,
+  }) {
     _syncEmptyParagraphDirection();
     // Header/footer text is chrome, not section body content. The incremental
     // layout path reuses page chrome, so edits there would never reach the
@@ -4163,7 +4317,10 @@ class WordEditorController extends OfficeController {
   }
 
   /// insertText API.
-  void insertText(String text) {
+  void insertText(String text) =>
+      _coalescingNotifications(() => _insertText(text));
+
+  void _insertText(String text) {
     if (!config.allowsMutation || text.isEmpty) {
       return;
     }
@@ -4212,7 +4369,10 @@ class WordEditorController extends OfficeController {
   }
 
   /// deleteSelectionOr API.
-  void deleteSelectionOr({required bool backward}) {
+  void deleteSelectionOr({required bool backward}) =>
+      _coalescingNotifications(() => _deleteSelectionOr(backward: backward));
+
+  void _deleteSelectionOr({required bool backward}) {
     if (!config.allowsMutation) {
       return;
     }
@@ -4667,7 +4827,8 @@ class WordEditorController extends OfficeController {
   }
 
   /// insertParagraphBreak API.
-  void insertParagraphBreak() => _insertParagraphBreak();
+  void insertParagraphBreak() =>
+      _coalescingNotifications(() => _insertParagraphBreak());
 
   void _insertParagraphBreak({
     bool pageBreakBefore = false,
@@ -4850,13 +5011,24 @@ class WordEditorController extends OfficeController {
     }
     final WmlParagraph para = _activeParagraph;
     final String old = para.text;
+    final void Function(String, int)? phase = debugEditPhase;
+    final Stopwatch? watch = phase == null ? null : (Stopwatch()..start());
+    void lap(String name) {
+      if (watch == null) return;
+      phase!(name, watch.elapsedMicroseconds);
+      watch.reset();
+    }
+
     if (value.text != old) {
       _setParagraphText(WmlClone.paragraph(para), value.text);
       _applyingIme = true;
       _syncParagraphDirection(para, incoming: value.text);
+      lap('model');
       _commitParagraphInlines(para, () => _setParagraphText(para, value.text));
       _applyingIme = false;
+      lap('undo');
       relayout(localEdit: true);
+      lap('layout');
       caret.logicalIndex = value.selection.extentOffset.clamp(
         0,
         value.text.length,
@@ -4879,7 +5051,9 @@ class WordEditorController extends OfficeController {
     }
     caret.resetBlink();
     _imeValueTarget = _imeEditingTarget;
+    lap('caret');
     notifyListeners();
+    lap('notify');
   }
 
   void _onImeAction(TextInputAction action) {
@@ -7977,6 +8151,13 @@ class WordEditorController extends OfficeController {
         'Finish the current text composition before using Zotero.',
       );
     }
+    if (WordZoteroTransfer.isTransferDocument(document) &&
+        command != null &&
+        command != ZoteroCitingCommand.refresh) {
+      throw UnsupportedError(
+        'Use Refresh citations to import this Zotero transfer document before editing its references.',
+      );
+    }
     final noteTarget = noteEditingTarget;
     _assertNoteTargetReady(noteTarget);
     final insertsNoteText = command?.insertsNoteText == true;
@@ -8063,6 +8244,7 @@ class WordEditorController extends OfficeController {
     }
     if (!session.hasChanges) return;
     final before = _ZoteroDocumentSnapshot.capture(document);
+    before.assertRestorable(document);
     late final _ZoteroDocumentSnapshot after;
     try {
       session.apply();
@@ -16181,7 +16363,9 @@ final class _ZoteroDocumentSnapshot {
       blocks: blocks,
       footnotes: List<WmlNote>.of(document.footnotes),
       endnotes: List<WmlNote>.of(document.endnotes),
-      data: WordZoteroDocumentData.read(document),
+      data: WordZoteroTransfer.isTransferDocument(document)
+          ? document.zoteroDocumentData
+          : WordZoteroDocumentData.read(document),
       numbering: WordListNumberingSnapshot.capture(document),
     );
   }
@@ -16194,27 +16378,64 @@ final class _ZoteroDocumentSnapshot {
   final Map<List<WmlBlock>, List<WmlBlock>> blocks;
   final List<WmlNote> footnotes;
   final List<WmlNote> endnotes;
-  final String data;
+  final String? data;
   final WordListNumberingSnapshot numbering;
+
+  void assertRestorable(WmlDocument document) {
+    for (final entry in blocks.entries) {
+      _assertRestorableList(entry.key, entry.value);
+    }
+    for (final entry in paragraphs.entries) {
+      _assertRestorableList(entry.key.inlines, entry.value.inlines);
+    }
+    _assertRestorableList(document.footnotes, footnotes);
+    _assertRestorableList(document.endnotes, endnotes);
+  }
+
+  static void _assertRestorableList<T>(List<T> target, Iterable<T> values) {
+    try {
+      // No content changes: reject fixed/unmodifiable containers and retain
+      // the runtime element type when checking covariant owners.
+      target.length = target.length;
+      final probe = target.sublist(0, 0);
+      for (final value in values) {
+        probe.add(value);
+      }
+    } on UnsupportedError {
+      throw UnsupportedError(
+        'Zotero edits require mutable document containers.',
+      );
+    } on TypeError {
+      throw UnsupportedError(
+        'Zotero edits require compatible document containers.',
+      );
+    }
+  }
 
   void restore(WmlDocument document) {
     for (final entry in blocks.entries) {
-      entry.key
-        ..clear()
-        ..addAll(entry.value);
+      entry.key.clear();
+      // Owners may retain a covariant List<WmlParagraph>. Adding each saved
+      // value preserves that valid element type without an Iterable cast.
+      for (final block in entry.value) {
+        entry.key.add(block);
+      }
     }
     for (final entry in paragraphs.entries) {
       entry.key.properties = entry.value.properties.copy();
-      entry.key.inlines
-        ..clear()
-        ..addAll(WmlClone.inlines(entry.value.inlines));
+      entry.key.inlines.clear();
+      for (final inline in WmlClone.inlines(entry.value.inlines)) {
+        entry.key.inlines.add(inline);
+      }
     }
-    document.footnotes
-      ..clear()
-      ..addAll(footnotes);
-    document.endnotes
-      ..clear()
-      ..addAll(endnotes);
+    document.footnotes.clear();
+    for (final note in footnotes) {
+      document.footnotes.add(note);
+    }
+    document.endnotes.clear();
+    for (final note in endnotes) {
+      document.endnotes.add(note);
+    }
     document.zoteroDocumentData = data;
     numbering.restore(document);
   }

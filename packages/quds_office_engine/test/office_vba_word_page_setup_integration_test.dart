@@ -367,7 +367,7 @@ $_first.PageWidth = 162
   );
 
   test(
-    'MCP unsupported orientation returns no prefix plan or document edit',
+    'MCP unsupported paper size returns no prefix plan or document edit',
     () async {
       final input = portable.wordPageSetupInput();
       final session = OfficeMacroSession(input, format: OfficeMacroFormat.docx);
@@ -376,7 +376,7 @@ $_first.PageWidth = 162
         _sourceArguments('''
 Sub Main()
   $_first.LeftMargin = 54
-  $_first.Orientation = 0
+  $_first.PaperSize = 0
 End Sub
 '''),
       );

@@ -100,7 +100,13 @@ void main() {
     runOf(p).text = before;
     relayout(<WmlParagraph>[p]);
     expect(WordIncrementalLayoutStats.incremental, 2);
-    expect(WordIncrementalLayoutStats.breaksReused, greaterThan(100));
+    // Paragraphs that only moved on their page are translated; those that
+    // cross a page boundary reuse their line breaks.
+    expect(
+      WordIncrementalLayoutStats.breaksReused +
+          WordIncrementalLayoutStats.blocksTranslated,
+      greaterThan(100),
+    );
   });
 
   test('inserting and removing paragraphs renumbers reused lines', () {

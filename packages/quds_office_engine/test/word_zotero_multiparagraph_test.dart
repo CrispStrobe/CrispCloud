@@ -567,7 +567,7 @@ void main() {
     'table',
     'content control',
     'section',
-    'table cell',
+    'table cell boundary',
   ]) {
     test('refuses crossing $structure ownership', () {
       final first = _paragraph('First');
@@ -599,7 +599,7 @@ void main() {
         case 'section':
           document.sections.single.blocks.removeLast();
           document.sections.add(WmlSection(blocks: [last]));
-        case 'table cell':
+        case 'table cell boundary':
           document.sections.single.blocks
             ..clear()
             ..add(
@@ -607,7 +607,8 @@ void main() {
                 rows: [
                   WmlTableRow(
                     cells: [
-                      WmlTableCell(blocks: [first, last]),
+                      WmlTableCell(blocks: [first]),
+                      WmlTableCell(blocks: [last]),
                     ],
                   ),
                 ],

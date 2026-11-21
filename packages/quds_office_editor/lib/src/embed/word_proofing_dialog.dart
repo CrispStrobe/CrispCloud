@@ -6,6 +6,7 @@ import 'package:quds_office_engine/quds_office_engine.dart';
 
 import '../proofing/word_proofing.dart';
 import 'office_controller.dart';
+import '../l10n/office_plural.dart';
 
 /// Commits active editor drafts before starting a document-wide review.
 Future<void> showWordProofingDialog(
@@ -229,8 +230,8 @@ class _WordProofingDialogState extends State<WordProofingDialog> {
                                 const SizedBox(height: 4),
                                 Text(
                                   '${summary.checkedParagraphCount} of '
-                                  '${summary.paragraphCount} paragraphs checked'
-                                  '${summary.skippedContentCount == 0 ? '' : ' · ${summary.skippedContentCount} content item(s) skipped'}',
+                                  '${officeParagraphs(summary.paragraphCount)} checked'
+                                  '${summary.skippedContentCount == 0 ? '' : ' · ${officeCount(summary.skippedContentCount, 'content item')} skipped'}',
                                 ),
                               ],
                               _providerStatus(summary),

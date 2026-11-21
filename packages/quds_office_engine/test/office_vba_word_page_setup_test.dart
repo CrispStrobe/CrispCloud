@@ -380,7 +380,6 @@ End Sub
     'ThisDocument.PageSetup.TopMargin = 36',
     'ThisDocument.Sections.PageSetup.TopMargin = 36',
     'ThisDocument.Paragraphs(1).Range.PageSetup.TopMargin = 36',
-    '$_setup.Orientation = 1',
     '$_setup.PaperSize = 1',
     '$_setup.Gutter = 18',
     '$_setup.DifferentFirstPageHeaderFooter = True',

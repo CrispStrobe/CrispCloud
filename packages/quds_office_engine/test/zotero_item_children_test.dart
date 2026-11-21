@@ -314,7 +314,8 @@ void main() {
       _child(data: {'key': 'OTHER001'}),
       _child(data: {'key': 123}),
       _child(data: {'version': 13}),
-      _child(data: {'version': 12.0}),
+      // A fractional value stays non-integral after both VM and JS encoding.
+      _child(data: {'version': 12.5}),
       _child()..['key'] = 'bad',
       _child()..['version'] = -1,
       _child()..['version'] = '12',
