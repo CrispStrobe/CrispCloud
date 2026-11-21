@@ -55,19 +55,31 @@ class BrowserMenuStore extends ChangeNotifier {
       }
     } finally {
       try {
-        const marker = 'browser_menu_documents_migrated_v1';
-        if (!recovered && await _storage.read(marker) != '1') {
-          final updated = _layout.withDocumentCommands();
+        // One-time upgrades of saved layouts. All pending ones are applied in
+        // a single write so the backup keeps the user's own last layout.
+        final pending = <String, BrowserMenuLayout Function(BrowserMenuLayout)>{
+          'browser_menu_documents_migrated_v1': (l) => l.withDocumentCommands(),
+          'browser_menu_print_file_list_migrated_v1': (l) =>
+              l.withPrintFileListCommand(),
+        };
+        if (!recovered) {
+          final markers = <String>[];
+          var updated = _layout;
+          for (final entry in pending.entries) {
+            if (await _storage.read(entry.key) == '1') continue;
+            markers.add(entry.key);
+            updated = entry.value(updated);
+          }
           if (!identical(updated, _layout)) {
             if (!await _storage.write(backupKey, _layout.encode()) ||
                 !await _storage.write(currentKey, updated.encode())) {
-              throw StateError(
-                'Could not add document commands to the saved menu.',
-              );
+              throw StateError('Could not add new commands to the saved menu.');
             }
             _layout = updated;
           }
-          await _storage.write(marker, '1');
+          for (final marker in markers) {
+            await _storage.write(marker, '1');
+          }
         }
       } catch (_) {
         /* Custom menus remain usable if an upgrade cannot persist. */

@@ -9,6 +9,7 @@ import 'package:crisp_cloud/widgets/gallery_viewer_dialog.dart';
 import 'package:flutter/gestures.dart' show kDoubleTapTimeout;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as image;
 
@@ -54,7 +55,8 @@ Future<void> _open(
   addTearDown(tester.view.resetPhysicalSize);
   final images = files ?? [_file('one.png'), _file('two.png'), _file('three.png')];
   final data = _image();
-  await tester.pumpWidget(MaterialApp(
+  // The viewer registers its Print command with the app-wide provider.
+  await tester.pumpWidget(ProviderScope(child: MaterialApp(
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     home: Builder(builder: (context) => Scaffold(
@@ -86,7 +88,7 @@ Future<void> _open(
         child: const Text('Open gallery'),
       ),
     )),
-  ));
+  )));
   await tester.tap(find.text('Open gallery'));
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 250));

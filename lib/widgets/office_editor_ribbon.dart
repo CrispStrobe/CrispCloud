@@ -694,6 +694,16 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
                   )
                 : const Icon(Icons.save_outlined),
           ),
+          if (widget.onPrint != null)
+            IconButton(
+              key: const ValueKey('office-ribbon-print'),
+              tooltip: context.tr('Print…'),
+              iconSize: 18,
+              visualDensity: VisualDensity.compact,
+              constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
+              onPressed: widget.saving ? null : widget.onPrint,
+              icon: const Icon(Icons.print_outlined),
+            ),
           IconButton(
             tooltip: context.tr('Close'),
             iconSize: 18,

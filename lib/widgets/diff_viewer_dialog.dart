@@ -19,7 +19,43 @@ import '../services/file_operation_backend.dart';
 import '../services/file_operation_service.dart';
 import '../services/editor_document.dart';
 import '../l10n/diff_viewer_strings.dart';
+import '../services/document_printing.dart';
+import 'document_print_scope.dart';
 export '../services/file_comparison_service.dart' show DiffLine, DiffType;
+
+/// Unified-style text for printing a computed line diff: `-` left only,
+/// `+` right only, two spaces for shared lines.
+@visibleForTesting
+String diffPrintText(List<DiffLine> rows, String leftLabel, String rightLabel) {
+  final out = StringBuffer('--- $leftLabel\n+++ $rightLabel\n');
+  for (final row in rows) {
+    final marker = switch (row.type) {
+      DiffType.equal => '  ',
+      DiffType.removed => '- ',
+      DiffType.added => '+ ',
+    };
+    final text = row.type == DiffType.added
+        ? (row.rightText ?? row.text)
+        : row.text;
+    out.writeln('$marker$text');
+  }
+  return out.toString();
+}
+
+Future<void> _printDiff(
+  BuildContext context,
+  List<DiffLine> rows,
+  String leftLabel,
+  String rightLabel,
+) async {
+  final title = '$leftLabel ↔ $rightLabel';
+  final pdf = await textPrintPdf(
+    diffPrintText(rows, leftLabel, rightLabel),
+    title,
+  );
+  if (!context.mounted) return;
+  await printPdfSnapshot(context, pdf, title);
+}
 
 /// Show a diff dialog comparing two raw text strings.
 /// Used for version diff where content is already loaded.
@@ -469,7 +505,19 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
   }
 
   @override
-  Widget build(BuildContext context) => PopScope(
+  Widget build(BuildContext context) => DocumentPrintScope(
+    enabled:
+        !_binary &&
+        !_loading &&
+        !_binaryBusy &&
+        _error == null &&
+        _rows.isNotEmpty,
+    onPrint: () =>
+        _printDiff(context, _rows, _leftFile.name, _rightFile.name),
+    child: _buildDialog(context),
+  );
+
+  Widget _buildDialog(BuildContext context) => PopScope(
     canPop: !_loading && !_binaryBusy && !_dirty,
     child: Dialog(
       child: SizedBox(
@@ -511,6 +559,9 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
                   crossAxisAlignment: WrapCrossAlignment.center,
                   spacing: 8,
                   children: [
+                    // Wraps with the other controls; File → Print and
+                    // Cmd/Ctrl+P reach the same command.
+                    if (!_binary) const DocumentPrintButton(),
                     IconButton(
                       tooltip: context.commanderTr(
                         "Swap files and merge target",
@@ -1055,7 +1106,10 @@ class _ContentDiffDialog extends StatelessWidget {
     final addedColor = Colors.green.withValues(alpha: 0.15);
     final removedColor = Colors.red.withValues(alpha: 0.15);
 
-    return Dialog(
+    return DocumentPrintScope(
+      enabled: diffResult.isNotEmpty,
+      onPrint: () => _printDiff(context, diffResult, leftLabel, rightLabel),
+      child: Dialog(
       insetPadding: const EdgeInsets.all(16),
       child: SizedBox(
         width: MediaQuery.of(context).size.width * 0.9,
@@ -1069,9 +1123,12 @@ class _ContentDiffDialog extends StatelessWidget {
                 children: [
                   const Icon(Icons.compare, size: 20),
                   const SizedBox(width: 8),
-                  Text(
-                    context.commanderTr("Version Diff"),
-                    style: theme.textTheme.titleMedium,
+                  Flexible(
+                    child: Text(
+                      context.commanderTr("Version Diff"),
+                      style: theme.textTheme.titleMedium,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                   const Spacer(),
                   Text(
@@ -1089,7 +1146,8 @@ class _ContentDiffDialog extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: 8),
+                  const DocumentPrintButton(),
                   IconButton(
                     icon: const Icon(Icons.close, size: 20),
                     onPressed: () => Navigator.pop(context),
@@ -1127,6 +1185,7 @@ class _ContentDiffDialog extends StatelessWidget {
           ],
         ),
       ),
+    ),
     );
   }
 

@@ -1814,7 +1814,10 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
                   overflow: TextOverflow.ellipsis,
                 ),
                 actions: [
-                  if (_document != null) const DocumentPrintMenu(),
+                  if (_document != null) ...const [
+                    DocumentPrintMenu(),
+                    DocumentPrintButton(),
+                  ],
                   if (widget.positionLabel != null) Text(widget.positionLabel!),
                   if (widget.onPrevious != null)
                     IconButton(

@@ -1,4 +1,6 @@
 import '../widgets/document_print_scope.dart';
+import '../services/document_printing.dart' show printPdfSnapshot, textPrintPdf;
+import '../services/file_list_printing.dart';
 import '../widgets/new_document_dialog.dart';
 import '../services/document_workspace_session.dart';
 import '../widgets/document_conversion_dialog.dart';
@@ -383,6 +385,34 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         : [if (panel.cursorItem case final file?) file];
   }
 
+  /// Prints the active panel's visible listing (current filter and sort).
+  Future<void> _printFileList(BuildContext context, WidgetRef ref) async {
+    final panel = _activePanel(ref);
+    final files = panel.displayedFiles;
+    if (files == null) return;
+    final strings = BrowserMenuStrings(context);
+    final path = panel.currentPath;
+    try {
+      final pdf = await textPrintPdf(
+        fileListPrintText(path, files, (
+          name: strings.text('fileListName'),
+          size: strings.text('fileListSize'),
+          modified: strings.text('fileListModified'),
+        )),
+        path,
+      );
+      if (!context.mounted) return;
+      await printPdfSnapshot(context, pdf, path);
+    } catch (error, stack) {
+      _log.warn('Could not print the file list', error, stack);
+      if (context.mounted) {
+        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+          SnackBar(content: Text('${strings.text('printFileList')} $error')),
+        );
+      }
+    }
+  }
+
   Map<String, BrowserMenuCommandBinding> _browserMenuBindings(
     BuildContext context,
     WidgetRef ref,
@@ -473,6 +503,12 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         if (files.isNotEmpty) showPropertiesDialog(context, files.first);
       },
       available: () => _integritySelection(ref).isNotEmpty,
+    );
+    add(
+      'printFileList',
+      BrowserMenuStrings(context).text('printFileList'),
+      () => unawaited(_printFileList(context, ref)),
+      available: () => _activePanel(ref).displayedFiles != null,
     );
     add(
       'deselectPattern',

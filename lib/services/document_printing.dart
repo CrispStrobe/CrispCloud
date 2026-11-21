@@ -17,6 +17,11 @@ import 'office_pdf_service.dart';
 
 const printInputLimit = 64 * 1024 * 1024;
 
+/// Test seam: when set, [printPdfSnapshot] hands the prepared PDF here instead
+/// of opening the platform print dialog.
+@visibleForTesting
+Future<void> Function(Uint8List pdf, String title)? debugPrintPdfOverride;
+
 Future<void> printPdfSnapshot(
   BuildContext context,
   Uint8List bytes,
@@ -26,6 +31,9 @@ Future<void> printPdfSnapshot(
 }) async {
   if (bytes.length > printInputLimit) {
     throw const FormatException('Document exceeds the 64 MiB print limit.');
+  }
+  if (debugPrintPdfOverride case final override?) {
+    return override(bytes, title);
   }
   final document = pdf.PdfDocument.open(
     Uint8List.fromList(bytes),

@@ -3345,12 +3345,16 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
             title: Text(_title, overflow: TextOverflow.ellipsis),
             titleTextStyle: theme.textTheme.titleMedium,
             actions: [
-              if (_canPrintDocument) const DocumentPrintMenu(),
+              if (_canPrintDocument) ...const [
+                DocumentPrintMenu(),
+                DocumentPrintButton(),
+              ],
               ConstrainedBox(
                 constraints: BoxConstraints(
                   maxWidth: math.max(
                     64,
-                    MediaQuery.sizeOf(context).width - 220,
+                    MediaQuery.sizeOf(context).width -
+                        (_canPrintDocument ? 268 : 220),
                   ),
                 ),
                 child: SingleChildScrollView(
