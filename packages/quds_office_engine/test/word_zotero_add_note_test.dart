@@ -588,7 +588,7 @@ void main() {
     '<p><a href="javascript:alert(1)">Bad</a></p>',
     '<p><img src="https://example.org/image.png"/></p>',
     '<p><span data-citation="broken">Unconverted</span></p>',
-    '<table><tr><td colspan="2">Layout</td></tr></table>',
+    '<table><tr><td rowspan="2">Layout</td></tr></table>',
     '<p><span style="color:red">Color</span></p>',
     '<p><a href="https://example.org" title="tooltip">Extra attributes</a></p>',
     '<p>\uE0000\uE001</p>',

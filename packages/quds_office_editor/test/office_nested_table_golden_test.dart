@@ -21,6 +21,24 @@ WmlDocument _source() {
   final heading = _paragraph('Section heading');
   WordToc.applyHeading(heading, 1);
   final document = WmlDocument(
+    // The authored scene uses a 16pt heading. Give that paragraph's native
+    // style the same size, including its unpainted paragraph mark. Falling
+    // back to the catalog's 20pt Heading1 changed its baseline after export.
+    styles: const [
+      WmlStyle(
+        id: 'Heading1',
+        name: 'Heading 1',
+        nameAr: 'عنوان 1',
+        headingLevel: 1,
+        fontSizePoints: 16,
+        bold: true,
+        color: '1F4E79',
+        spacingBefore: 18,
+        spacingAfter: 8,
+        font: 'Arial',
+        csFont: 'Arial',
+      ),
+    ],
     sections: [
       WmlSection(
         pageSize: const WmlPageSize(width: 500, height: 520),
@@ -158,6 +176,30 @@ void main() {
     for (var cycle = 0; cycle < 4; cycle++) {
       final laid = WordLayoutEngine(font: null).layout(document);
       expect(laid.pages, hasLength(1));
+      final heading = document.paragraphs.singleWhere(
+        (paragraph) =>
+            paragraph.properties.styleId == 'Heading1' &&
+            paragraph.text == 'Section heading',
+      );
+      expect(heading.properties.styleId, 'Heading1');
+      expect(
+        heading.inlines.whereType<WmlRun>().single.properties.fontSizePoints,
+        16,
+      );
+      expect(
+        laid.pages.single.lines
+            .singleWhere((line) => identical(line.sourceParagraph, heading))
+            .height,
+        closeTo(21.12, .001),
+        reason: 'The authored 16pt heading keeps its line box after export',
+      );
+      if (cycle > 0) {
+        final marker = heading.properties.importedParagraphMark;
+        expect(marker, isNotNull);
+        expect(marker!.fontSizePoints, 16);
+        expect(marker.asciiFont, 'Arial');
+        expect(marker.bold, isTrue);
+      }
       expect(
         laid.pages.single.frames.where(
           (b) => b.kind == LaidOutBoxKind.tableCell,

@@ -37,6 +37,57 @@ const _tableResearchHtml =
     '<td data-colwidth="240"><p>Second $_secondPlaceholder</p></td>'
     '</tr></tbody></table>';
 
+// Unequal physical row shapes share three logical columns. Both citations
+// live in merged cells, with the second merge starting after an ordinary cell.
+const _mergedTableResearchHtml =
+    '<table><tbody><tr>'
+    '<td colspan="2" data-colwidth="120,160" '
+    'style="background-color: #ffeedd">'
+    '<ol start="3"><li>First $_firstPlaceholder</li></ol></td>'
+    '<td data-colwidth="240"><p>Top right</p></td></tr><tr>'
+    '<td data-colwidth="120"><p>Bottom left</p></td>'
+    '<td colspan="2" data-colwidth="160,240">'
+    '<p>Second $_secondPlaceholder</p></td>'
+    '</tr></tbody></table>';
+
+void _expectResearchTable(WmlTable table, {required bool merged}) {
+  expect(table.grid, merged ? [90.0, 120.0, 180.0] : [90.0, 180.0]);
+  expect(
+    table.rows.map((row) => row.cells.map((cell) => cell.gridSpan).toList()),
+    merged
+        ? [
+            [2, 1],
+            [1, 2],
+          ]
+        : [
+            [1, 1],
+          ],
+  );
+  expect(
+    table.rows.map((row) => row.cells.map((cell) => cell.width).toList()),
+    merged
+        ? [
+            [210.0, 180.0],
+            [90.0, 300.0],
+          ]
+        : [
+            [90.0, 180.0],
+          ],
+  );
+  expect(table.rows.first.cells.first.fillColor, 'FFEEDD');
+  expect(WordTable.supportsGridAddressing(table), isTrue);
+  if (merged) {
+    expect(
+      WordTable.cellAtGrid(table, 0, 1)!.cell,
+      same(table.rows.first.cells.first),
+    );
+    expect(
+      WordTable.cellAtGrid(table, 1, 2)!.cell,
+      same(table.rows.last.cells.last),
+    );
+  }
+}
+
 String _preferences([int noteType = 0]) => jsonEncode({
   'dataVersion': 4,
   'sessionID': 'add-note-session',
@@ -376,174 +427,254 @@ void main() {
     ZoteroCitingCommand.addAnnotation,
   ]) {
     final name = command.name;
-    for (final reverse in [false, true]) {
+    for (final (tableLabel, tableHtml, merged) in [
+      ('table', _tableResearchHtml, false),
+      ('horizontally merged table', _mergedTableResearchHtml, true),
+    ]) {
+      for (final reverse in [false, true]) {
+        test(
+          '$name $tableLabel replacement restores ${reverse ? 'backward' : 'forward'} selection and native owners on undo',
+          () {
+            final controller = _controller();
+            controller.caret
+              ..logicalIndex = reverse ? 1 : 6
+              ..selectionAnchor = reverse ? 6 : 1
+              ..selectionAnchorParagraph = 0;
+            final document = controller.document;
+            final before = _state(document);
+            final beforeNumbering = _numberingXml(document);
+            final transaction = _begin(controller, command: command);
+            _stageCitedNote(transaction, html: tableHtml);
+            _complete(transaction);
+            expect(_state(document), before);
+            expect(controller.canUndo, isFalse);
+            transaction.apply();
+
+            final blocks = document.sections.single.blocks;
+            final table = blocks.whereType<WmlTable>().single;
+            expect(blocks.first, isA<WmlParagraph>());
+            expect((blocks.first as WmlParagraph).text, 'B');
+            _expectResearchTable(table, merged: merged);
+            final cellParagraph =
+                table.rows.first.cells.first.blocks.single as WmlParagraph;
+            final lastCellParagraph =
+                table.rows.last.cells.last.blocks.single as WmlParagraph;
+            expect(cellParagraph.text, 'First (First, 2024)');
+            expect(cellParagraph.properties.listLabel, '3. ');
+            final suffix = blocks[blocks.indexOf(table) + 1] as WmlParagraph;
+            expect(suffix.text, 'After');
+            expect(
+              document.paragraphs.elementAt(controller.caret.paragraphIndex),
+              same(suffix),
+            );
+            expect(controller.caret.logicalIndex, 0);
+            expect(controller.zoteroFields.map((f) => f.citation!.citationId), [
+              'first',
+              'second',
+            ]);
+            expect(
+              controller.zoteroFields.first.paragraph,
+              same(cellParagraph),
+            );
+            expect(
+              controller.zoteroFields.last.paragraph,
+              same(lastCellParagraph),
+            );
+            expect(controller.zoteroFields.every((f) => f.canEdit), isTrue);
+            final after = _state(document);
+
+            controller.undo();
+            expect(_state(document), before);
+            expect(_numberingXml(document), beforeNumbering);
+            expect(
+              document.sections.single.blocks.whereType<WmlTable>(),
+              isEmpty,
+            );
+            expect(controller.caret.selectionAnchor, reverse ? 6 : 1);
+            expect(controller.caret.logicalIndex, reverse ? 1 : 6);
+            expect(controller.canUndo, isFalse);
+            controller.redo();
+            expect(_state(document), after);
+            expect(document.sections.single.blocks, contains(same(table)));
+            _expectResearchTable(table, merged: merged);
+            expect(
+              controller.zoteroFields.first.paragraph,
+              same(cellParagraph),
+            );
+            expect(
+              controller.zoteroFields.last.paragraph,
+              same(lastCellParagraph),
+            );
+            final reopened = WordDeserializer().readBytes(
+              WordSerializer().writeBytes(document),
+            );
+            _expectResearchTable(
+              reopened.sections.single.blocks.whereType<WmlTable>().single,
+              merged: merged,
+            );
+            expect(_citationsInReadingOrder(reopened), [
+              '(First, 2024)',
+              '(Second, 2025)',
+            ]);
+          },
+        );
+      }
+
+      for (final endnote in [false, true]) {
+        final label = endnote ? 'endnote' : 'footnote';
+        test(
+          '$name $tableLabel in an authored $label returns to the Notes pane',
+          () {
+            final document = _document();
+            final note = WordNotes.insert(
+              document,
+              document.paragraphs.last,
+              text: 'Left chosen Right',
+              endnote: endnote,
+            );
+            final controller = _controller(document: document);
+            const selection = TextSelection(baseOffset: 11, extentOffset: 5);
+            controller.setNoteEditingTarget(note, selection);
+            final before = _state(document);
+            final transaction = _begin(controller, command: command);
+            _stageCitedNote(
+              transaction,
+              html: tableHtml,
+              noteType: endnote ? 2 : 1,
+            );
+            _complete(transaction);
+            transaction.apply();
+            final table = note.blocks.whereType<WmlTable>().single;
+            expect(note.blocks, hasLength(3));
+            expect(controller.noteEditText(note), 'Left \n Right');
+            expect(controller.noteEditingTarget?.note, same(note));
+            expect(
+              controller.noteEditingTarget?.selection,
+              const TextSelection.collapsed(offset: 6),
+            );
+            expect(document.footnotes.length + document.endnotes.length, 1);
+            expect(
+              controller.zoteroFields.every(
+                (f) => note.allParagraphs.contains(f.paragraph),
+              ),
+              isTrue,
+            );
+            final reopened = WordDeserializer().readBytes(
+              WordSerializer().writeBytes(document),
+            );
+            final restored =
+                (endnote ? reopened.endnotes : reopened.footnotes).single;
+            _expectResearchTable(
+              restored.blocks.whereType<WmlTable>().single,
+              merged: merged,
+            );
+            expect(
+              WordZotero.fields(reopened).map((f) => f.citation!.citationId),
+              ['first', 'second'],
+            );
+            controller.undo();
+            expect(_state(document), before);
+            expect(controller.noteEditingTarget?.selection, selection);
+            expect(note.blocks.whereType<WmlTable>(), isEmpty);
+            expect(controller.canUndo, isFalse);
+            controller.redo();
+            expect(note.blocks, contains(same(table)));
+            _expectResearchTable(table, merged: merged);
+            expect(
+              controller.noteEditingTarget?.selection,
+              const TextSelection.collapsed(offset: 6),
+            );
+          },
+        );
+      }
+
       test(
-        '$name table replacement restores ${reverse ? 'backward' : 'forward'} selection and native owners on undo',
+        '$name abandoned $tableLabel staging leaves document and numbering unchanged',
         () {
           final controller = _controller();
-          controller.caret
-            ..logicalIndex = reverse ? 1 : 6
-            ..selectionAnchor = reverse ? 6 : 1
-            ..selectionAnchorParagraph = 0;
-          final document = controller.document;
-          final before = _state(document);
-          final beforeNumbering = _numberingXml(document);
+          final before = _state(controller.document);
+          final numbering = _numberingXml(controller.document);
           final transaction = _begin(controller, command: command);
-          _stageCitedNote(transaction, html: _tableResearchHtml);
-          _complete(transaction);
-          expect(_state(document), before);
-          expect(controller.canUndo, isFalse);
-          transaction.apply();
-
-          final blocks = document.sections.single.blocks;
-          final table = blocks.whereType<WmlTable>().single;
-          expect(blocks.first, isA<WmlParagraph>());
-          expect((blocks.first as WmlParagraph).text, 'B');
-          expect(table.grid, [90.0, 180.0]);
-          final cellParagraph =
-              table.rows.single.cells.first.blocks.single as WmlParagraph;
-          expect(cellParagraph.text, 'First (First, 2024)');
-          expect(cellParagraph.properties.listLabel, '3. ');
-          final suffix = blocks[blocks.indexOf(table) + 1] as WmlParagraph;
-          expect(suffix.text, 'After');
+          _stageCitedNote(transaction, html: tableHtml);
+          expect(transaction.apply, throwsStateError);
+          expect(_state(controller.document), before);
+          expect(_numberingXml(controller.document), numbering);
           expect(
-            document.paragraphs.elementAt(controller.caret.paragraphIndex),
-            same(suffix),
+            controller.document.sections.single.blocks.whereType<WmlTable>(),
+            isEmpty,
           );
-          expect(controller.caret.logicalIndex, 0);
+          expect(controller.canUndo, isFalse);
+          expect(controller.isDirty, isFalse);
+        },
+      );
+
+      test('$name stale $tableLabel result preserves the selected text', () {
+        final controller = _controller();
+        controller.caret
+          ..selectionAnchor = 1
+          ..selectionAnchorParagraph = 0;
+        final before = _state(controller.document);
+        final transaction = _begin(controller, command: command);
+        _stageCitedNote(transaction, html: tableHtml);
+        _complete(transaction);
+        controller.caret.logicalIndex = 5;
+        expect(transaction.apply, throwsStateError);
+        expect(_state(controller.document), before);
+        expect(controller.canUndo, isFalse);
+        expect(controller.isDirty, isFalse);
+      });
+
+      testWidgets(
+        '$name native dialog completes a cited $tableLabel as one undo step',
+        (tester) async {
+          final controller = _controller();
+          final before = _state(controller.document);
+          final desktop = _Desktop(_script(html: tableHtml));
+          await _openTextInsertion(
+            tester,
+            controller,
+            desktop,
+            command: command,
+          );
+          expect(desktop.command, name);
+          expect(
+            controller.document.sections.single.blocks.whereType<WmlTable>(),
+            hasLength(1),
+          );
           expect(controller.zoteroFields.map((f) => f.citation!.citationId), [
             'first',
             'second',
           ]);
-          expect(controller.zoteroFields.first.paragraph, same(cellParagraph));
-          final after = _state(document);
-
+          final table = controller.document.sections.single.blocks
+              .whereType<WmlTable>()
+              .single;
+          _expectResearchTable(table, merged: merged);
+          final after = _state(controller.document);
+          expect(desktop.requests, hasLength(12));
+          expect(controller.caret.logicalIndex, 0);
+          expect(tester.takeException(), isNull);
           controller.undo();
-          expect(_state(document), before);
-          expect(_numberingXml(document), beforeNumbering);
-          expect(
-            document.sections.single.blocks.whereType<WmlTable>(),
-            isEmpty,
-          );
-          expect(controller.caret.selectionAnchor, reverse ? 6 : 1);
-          expect(controller.caret.logicalIndex, reverse ? 1 : 6);
+          expect(_state(controller.document), before);
           expect(controller.canUndo, isFalse);
           controller.redo();
-          expect(_state(document), after);
-          expect(document.sections.single.blocks, contains(same(table)));
-          expect(controller.zoteroFields.first.paragraph, same(cellParagraph));
+          expect(_state(controller.document), after);
+          expect(
+            controller.document.sections.single.blocks,
+            contains(same(table)),
+          );
+          _expectResearchTable(table, merged: merged);
         },
       );
     }
 
-    for (final endnote in [false, true]) {
-      final label = endnote ? 'endnote' : 'footnote';
-      test('$name table in an authored $label returns to the Notes pane', () {
-        final document = _document();
-        final note = WordNotes.insert(
-          document,
-          document.paragraphs.last,
-          text: 'Left chosen Right',
-          endnote: endnote,
-        );
-        final controller = _controller(document: document);
-        const selection = TextSelection(baseOffset: 11, extentOffset: 5);
-        controller.setNoteEditingTarget(note, selection);
-        final before = _state(document);
-        final transaction = _begin(controller, command: command);
-        _stageCitedNote(
-          transaction,
-          html: _tableResearchHtml,
-          noteType: endnote ? 2 : 1,
-        );
-        _complete(transaction);
-        transaction.apply();
-        final table = note.blocks.whereType<WmlTable>().single;
-        expect(note.blocks, hasLength(3));
-        expect(controller.noteEditText(note), 'Left \n Right');
-        expect(controller.noteEditingTarget?.note, same(note));
-        expect(
-          controller.noteEditingTarget?.selection,
-          const TextSelection.collapsed(offset: 6),
-        );
-        expect(document.footnotes.length + document.endnotes.length, 1);
-        expect(
-          controller.zoteroFields.every(
-            (f) => note.allParagraphs.contains(f.paragraph),
-          ),
-          isTrue,
-        );
-        final reopened = WordDeserializer().readBytes(
-          WordSerializer().writeBytes(document),
-        );
-        final restored =
-            (endnote ? reopened.endnotes : reopened.footnotes).single;
-        expect(restored.blocks.whereType<WmlTable>().single.grid, [
-          90.0,
-          180.0,
-        ]);
-        expect(WordZotero.fields(reopened).map((f) => f.citation!.citationId), [
-          'first',
-          'second',
-        ]);
-        controller.undo();
-        expect(_state(document), before);
-        expect(controller.noteEditingTarget?.selection, selection);
-        expect(note.blocks.whereType<WmlTable>(), isEmpty);
-        expect(controller.canUndo, isFalse);
-        controller.redo();
-        expect(note.blocks, contains(same(table)));
-        expect(
-          controller.noteEditingTarget?.selection,
-          const TextSelection.collapsed(offset: 6),
-        );
-      });
-    }
-
-    test(
-      '$name abandoned table staging leaves document and numbering unchanged',
-      () {
-        final controller = _controller();
-        final before = _state(controller.document);
-        final numbering = _numberingXml(controller.document);
-        final transaction = _begin(controller, command: command);
-        _stageCitedNote(transaction, html: _tableResearchHtml);
-        expect(transaction.apply, throwsStateError);
-        expect(_state(controller.document), before);
-        expect(_numberingXml(controller.document), numbering);
-        expect(
-          controller.document.sections.single.blocks.whereType<WmlTable>(),
-          isEmpty,
-        );
-        expect(controller.canUndo, isFalse);
-        expect(controller.isDirty, isFalse);
-      },
-    );
-
-    test('$name stale table result preserves the selected text', () {
-      final controller = _controller();
-      controller.caret
-        ..selectionAnchor = 1
-        ..selectionAnchorParagraph = 0;
-      final before = _state(controller.document);
-      final transaction = _begin(controller, command: command);
-      _stageCitedNote(transaction, html: _tableResearchHtml);
-      _complete(transaction);
-      controller.caret.logicalIndex = 5;
-      expect(transaction.apply, throwsStateError);
-      expect(_state(controller.document), before);
-      expect(controller.canUndo, isFalse);
-      expect(controller.isDirty, isFalse);
-    });
-
-    test('$name rejects merged table content before any edit', () {
+    test('$name rejects row-spanning table content before any edit', () {
       final controller = _controller();
       final before = _state(controller.document);
       final transaction = _begin(controller, command: command);
       expect(
         () => _insertText(
           transaction,
-          '<table><tr><td colspan="2"><p>Unsupported</p></td></tr></table>',
+          '<table><tr><td rowspan="2"><p>Unsupported</p></td></tr></table>',
         ),
         throwsUnsupportedError,
       );
@@ -551,27 +682,58 @@ void main() {
       expect(controller.canUndo, isFalse);
     });
 
-    testWidgets(
-      '$name native dialog completes a cited table as one undo step',
-      (tester) async {
+    test(
+      '$name cancellation after merged-table staging drains without applying',
+      () async {
         final controller = _controller();
+        controller.caret
+          ..selectionAnchor = 1
+          ..selectionAnchorParagraph = 0;
         final before = _state(controller.document);
-        final desktop = _Desktop(_script(html: _tableResearchHtml));
-        await _openTextInsertion(tester, controller, desktop, command: command);
-        expect(desktop.command, name);
-        expect(
-          controller.document.sections.single.blocks.whereType<WmlTable>(),
-          hasLength(1),
-        );
-        expect(controller.zoteroFields.map((f) => f.citation!.citationId), [
-          'first',
-          'second',
+        final numbering = _numberingXml(controller.document);
+        final transaction = _begin(controller, command: command);
+        final cancellation = ZoteroCitingCancellation();
+        final desktop = _Desktop([
+          ..._script(html: _mergedTableResearchHtml).take(6),
+          (d) => d.message('Document.complete', [d.documentId]),
         ]);
-        expect(controller.caret.logicalIndex, 0);
-        expect(tester.takeException(), isNull);
-        controller.undo();
+        var stagedTable = false;
+        await expectLater(
+          ZoteroCitingClient(transport: desktop.send).execute(
+            command: command,
+            documentId: _id,
+            cancellation: cancellation,
+            guard: transaction.assertCurrent,
+            handler: (name, arguments) {
+              final result = transaction.session.handle(name, arguments);
+              if (name == 'Document.insertText') {
+                stagedTable = transaction.session.hasInsertedNoteText;
+                cancellation.cancel();
+              }
+              return result;
+            },
+          ),
+          throwsA(
+            isA<ZoteroCitingException>()
+                .having((e) => e.kind, 'kind', ZoteroCitingErrorKind.cancelled)
+                .having(
+                  (e) => e.desktopMayNeedRestart,
+                  'cleanup incomplete',
+                  isFalse,
+                ),
+          ),
+        );
+        expect(stagedTable, isTrue);
+        expect(desktop.requests, hasLength(7));
+        expect(jsonDecode(desktop.requests.last.body!), contains('error'));
+        expect(transaction.apply, throwsStateError);
         expect(_state(controller.document), before);
+        expect(_numberingXml(controller.document), numbering);
+        expect(controller.zoteroFields, isEmpty);
+        expect(controller.caret.selectionAnchor, 1);
+        expect(controller.caret.logicalIndex, 6);
         expect(controller.canUndo, isFalse);
+        expect(controller.isDirty, isFalse);
       },
     );
   }

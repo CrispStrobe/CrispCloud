@@ -570,6 +570,46 @@ void main() {
     },
   );
 
+  for (final supported in [false, true]) {
+    test(
+      'citation merging capability $supported travels through the client',
+      () async {
+        var requests = 0;
+        await _run(
+          (request) async {
+            requests++;
+            if (requests == 1) {
+              return _command('Application.getActiveDocument', []);
+            }
+            final result = jsonDecode(request.body!) as Map<String, Object?>;
+            expect(result['supportsCitationMerging'], supported);
+            return _complete();
+          },
+          handler: (name, _) => name == 'Application.getActiveDocument'
+              ? {..._active(), 'supportsCitationMerging': supported}
+              : null,
+        );
+        expect(requests, 2);
+      },
+    );
+  }
+
+  for (final value in <Object?>[null, 1, 'true', <Object?>[]]) {
+    test('nonboolean citation merging capability is refused: $value', () async {
+      var requests = 0;
+      await expectLater(
+        _run(
+          (_) async => ++requests == 1
+              ? _command('Application.getActiveDocument', [])
+              : _complete(),
+          handler: (_, _) => {..._active(), 'supportsCitationMerging': value},
+        ),
+        throwsA(_failure(ZoteroCitingErrorKind.invalidResponse)),
+      );
+      expect(requests, 2);
+    });
+  }
+
   test(
     'stale tuple field response is rejected instead of corrupting Zotero state',
     () async {

@@ -538,6 +538,83 @@ abstract final class WordZotero {
     }
   }
 
+  /// Citation packets that directly touch in the same paragraph.
+  ///
+  /// This is a conservative adjacency hint for Zotero's native Refresh, which
+  /// owns cluster merging and item de-duplication. It never treats equal text
+  /// offsets across bookmarks, controls or other structural markers as proof
+  /// of adjacency. Commented citations and paragraphs containing content
+  /// controls remain separate. Empty ordinary runs do not separate packets.
+  /// Reinspect field handles and recompute this map after document edits.
+  static Map<WmlZoteroField, WmlZoteroField> adjacentCitationPairs(
+    Iterable<WmlZoteroField> fields,
+  ) {
+    final paragraphs = Map<WmlParagraph, List<WmlZoteroField>>.identity();
+    for (final field in fields) {
+      if (field.kind != ZoteroFieldKind.citation ||
+          !field.canEdit ||
+          field.wholeParagraph ||
+          field.cachedText.isEmpty ||
+          field._contents.whereType<WmlRun>().any(
+            (run) => run.commentIds.isNotEmpty,
+          )) {
+        continue;
+      }
+      paragraphs.putIfAbsent(field.paragraph, () => []).add(field);
+    }
+    final pairs = Map<WmlZoteroField, WmlZoteroField>.identity();
+    for (final entry in paragraphs.entries) {
+      final paragraph = entry.key;
+      if (entry.value.length < 2 ||
+          WordContentControls.hasStructuralControls(paragraph) ||
+          paragraph.properties.fieldInstruction != null ||
+          paragraph.properties.pageNumberField) {
+        continue;
+      }
+      final starts = Map<WmlInline, WmlZoteroField>.identity();
+      final ends = Map<WmlInline, WmlZoteroField>.identity();
+      for (final field in entry.value) {
+        final run = field.run;
+        if (run != null) {
+          starts[run] = field;
+          ends[run] = field;
+        } else {
+          final boundaries = field._boundaries[paragraph];
+          if (boundaries == null ||
+              boundaries.isEmpty ||
+              boundaries.first.kind != WmlFieldBoundaryKind.begin ||
+              boundaries.last.kind != WmlFieldBoundaryKind.end) {
+            continue;
+          }
+          starts[boundaries.first] = field;
+          ends[boundaries.last] = field;
+        }
+      }
+      // One pass over each paragraph avoids quadratic scans for long runs of
+      // adjacent citations. Only actual packet endpoints can establish a pair.
+      WmlZoteroField? previous;
+      for (final inline in paragraph.inlines) {
+        final next = starts[inline];
+        if (previous != null &&
+            next != null &&
+            !identical(previous, next) &&
+            previous.end == next.start) {
+          pairs[previous] = next;
+        }
+        if (ends.containsKey(inline)) {
+          previous = ends[inline];
+        } else if (!(inline is WmlRun &&
+            inline.text.isEmpty &&
+            !inline.isAtomic &&
+            inline.hyperlink == null &&
+            inline.commentIds.isEmpty)) {
+          previous = null;
+        }
+      }
+    }
+    return Map<WmlZoteroField, WmlZoteroField>.unmodifiable(pairs);
+  }
+
   static int? _complexInsertionIndex(WmlParagraph paragraph, int at) {
     final spans = <({int first, int last, int start, int end})>[];
     var depth = 0;

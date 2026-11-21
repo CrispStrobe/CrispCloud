@@ -157,7 +157,7 @@ part of 'word_layout.dart';
       );
     }
     for (final frame in frames) {
-      if (frame.y + frame.height <= start || frame.y >= end) continue;
+      if (!_noteBoxOverlaps(frame, start, end)) continue;
       final copy = _noteBox(
         frame,
         x,
@@ -178,6 +178,14 @@ part of 'word_layout.dart';
       if (copy.table == rowTable) {
         copy.table = table;
         copy.tableRow = rowIndex;
+        final geometry = copy.tableRowGeometry;
+        if (geometry != null) {
+          copy.tableRowGeometry = (
+            row: rowIndex,
+            y: geometry.y,
+            height: geometry.height,
+          );
+        }
       }
       currentFrames.add(copy);
     }

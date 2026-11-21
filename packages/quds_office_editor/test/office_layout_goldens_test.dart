@@ -21,7 +21,10 @@ void main() {
           'rtl': 1,
           'columns_sections': 3,
           'continued_notes': 3,
-          'tall_table': 4,
+          // The 85-twip table padding introduced in e975cec1 fits the authored
+          // row into three pages. Verify every character below as well as the
+          // page count so a shorter result cannot hide dropped table content.
+          'tall_table': 3,
         }[entry.key]!;
         const exportCycles = 3;
         // Check the original and every reopened export, including the last one.
@@ -29,6 +32,49 @@ void main() {
           final laid = WordLayoutEngine(font: null).layout(doc);
           expect(laid.pages.length, pageCount);
           expect(laid.pages, isNotEmpty);
+          if (entry.key == 'tall_table') {
+            final paragraphs = doc.paragraphs.toList();
+            final tallIndex = paragraphs.indexWhere(
+              (paragraph) => paragraph.text.contains('T000'),
+            );
+            expect(tallIndex, greaterThanOrEqualTo(0));
+            final text = paragraphs[tallIndex].text;
+            expect(
+              RegExp(r'T\d{3}').allMatches(text).map((match) => match[0]),
+              [
+                for (var index = 0; index < 120; index++)
+                  'T${index.toString().padLeft(3, '0')}',
+              ],
+            );
+            final offsets =
+                laid.pages
+                    .expand((page) => page.lines)
+                    .where((line) => line.paragraphIndex == tallIndex)
+                    .expand((line) => line.glyphs)
+                    .where((glyph) => !glyph.glyph.isSpace)
+                    .map((glyph) => glyph.glyph.logicalIndex)
+                    .toList()
+                  ..sort();
+            expect(offsets, [
+              for (var offset = 0; offset < text.length; offset++)
+                if (text.codeUnitAt(offset) != 32) offset,
+            ], reason: 'Every tall-cell character appears exactly once');
+            expect(
+              laid.pages.last.lines.any(
+                (line) => line.sourceText == 'After the table',
+              ),
+              isTrue,
+            );
+            expect(
+              laid.pages
+                  .expand((page) => page.notes)
+                  .any(
+                    (line) =>
+                        line.sourceText?.contains('Late table note') ?? false,
+                  ),
+              isTrue,
+            );
+          }
           for (int page = 0; page < laid.pages.length; page++) {
             final selected = laid.pages[page];
             // A page-sized viewport makes every continuation and section visible.

@@ -201,6 +201,7 @@ final class WordZoteroCitingSession {
   final _bodyParagraphs = Set<WmlParagraph>.identity();
   final _fields = <_CitingField>[];
   final _fieldsById = <String, _CitingField>{};
+  final _reportedAdjacency = Map<WmlZoteroField, WmlZoteroField>.identity();
   final _originalFieldsPerNote = Map<WmlNote, int>.identity();
   final _notes = <_NoteAnchor>[];
   _NoteAnchor? _insertionNote;
@@ -301,7 +302,7 @@ final class WordZoteroCitingSession {
         'supportedNotes': <String>['footnotes', 'endnotes'],
         'supportsImportExport': false,
         'supportsTextInsertion': canInsertNoteText,
-        'supportsCitationMerging': false,
+        'supportsCitationMerging': true,
         'processorName': 'CrispOffice',
       };
     }
@@ -350,11 +351,37 @@ final class WordZoteroCitingSession {
         // command so inserted, deleted and converted notes cannot leave a
         // stale cached index behind.
         final noteIndexes = _noteIndexes();
-        return <Map<String, Object>>[
-          for (final field in _ordered())
-            if (!field.deleted && !field.unlinked)
-              _json(field, noteIndexes: noteIndexes),
-        ];
+        final fields = _ordered()
+            .where((field) => !field.deleted && !field.unlinked)
+            .toList();
+        final pairs = WordZotero.adjacentCitationPairs([
+          for (final field in fields)
+            if (field.original != null) field.original!,
+        ]);
+        final result = <Map<String, Object>>[];
+        for (var index = 0; index < fields.length; index++) {
+          final field = fields[index];
+          final next = index + 1 < fields.length ? fields[index + 1] : null;
+          // Zotero's flag means adjacent to the NEXT enumerated field. Never
+          // bridge a bibliography, a newly staged insertion or a note move.
+          final adjacent =
+              next != null &&
+              field.original != null &&
+              next.original != null &&
+              _kind(field) == ZoteroFieldKind.citation &&
+              _kind(next) == ZoteroFieldKind.citation &&
+              identical(field.note, next.note) &&
+              field.noteType == field.originalNoteType &&
+              next.noteType == next.originalNoteType &&
+              identical(pairs[field.original], next.original);
+          if (adjacent) {
+            _reportedAdjacency[field.original!] = next.original!;
+          }
+          result.add(
+            _json(field, noteIndexes: noteIndexes, adjacent: adjacent),
+          );
+        }
+        return result;
       case 'Document.insertField':
         _arity(args, 3);
         _httpType(args[1]);
@@ -581,6 +608,18 @@ final class WordZoteroCitingSession {
         throw StateError('A Zotero field changed while formatting.');
       }
       matches![identity] = count - 1;
+    }
+    if (_reportedAdjacency.isNotEmpty) {
+      final pairs = WordZotero.adjacentCitationPairs([
+        for (final field in original) field.original!,
+      ]);
+      if (_reportedAdjacency.entries.any(
+        (entry) => !identical(pairs[entry.key], entry.value),
+      )) {
+        throw StateError(
+          'Adjacent citation boundaries changed while Zotero was open.',
+        );
+      }
     }
   }
 
@@ -1618,12 +1657,13 @@ final class WordZoteroCitingSession {
   Map<String, Object> _json(
     _CitingField field, {
     Map<Object, int>? noteIndexes,
+    bool adjacent = false,
   }) => <String, Object>{
     'id': field.id,
     'code': field.code,
     'text': field.text,
     'noteIndex': _noteIndex(field, noteIndexes: noteIndexes),
-    'adjacent': false,
+    'adjacent': adjacent,
   };
 
   Map<Object, int> _noteIndexes() {

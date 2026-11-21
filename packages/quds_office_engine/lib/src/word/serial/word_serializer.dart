@@ -1607,6 +1607,33 @@ class WordSerializer {
                 : null,
           );
         }
+        final borders = <String, bool?>{
+          'top': cell.borderTop,
+          'left': cell.borderLeft,
+          'bottom': cell.borderBottom,
+          'right': cell.borderRight,
+        };
+        if (borders.values.any((edge) => edge != null)) {
+          w.writeStartElement('tcBorders', prefix: 'w');
+          for (final edge in borders.entries) {
+            final enabled = edge.value;
+            if (enabled == null) continue;
+            w.writeEmptyElement(
+              edge.key,
+              prefix: 'w',
+              attributes: <String, String>{
+                // Explicit off must survive inherited table-style borders.
+                'w:val': enabled ? 'single' : 'nil',
+                if (enabled) ...<String, String>{
+                  'w:sz': '${(table.properties.borderWidth * 8).round()}',
+                  'w:space': '0',
+                  'w:color': table.properties.borderColor ?? '000000',
+                },
+              },
+            );
+          }
+          w.writeEndElement();
+        }
         if (cell.fillColor != null && cell.fillColor!.isNotEmpty) {
           w.writeEmptyElement(
             'shd',

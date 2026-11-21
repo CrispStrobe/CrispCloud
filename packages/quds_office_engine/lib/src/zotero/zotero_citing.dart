@@ -468,19 +468,19 @@ class ZoteroCitingClient {
             !notes.every(const <String>{'footnotes', 'endnotes'}.contains)) {
           throw _invalid();
         }
+        if (result.containsKey('supportsImportExport') &&
+            result['supportsImportExport'] != false) {
+          // Document transfer commands remain outside this driver's contract.
+          throw _invalid();
+        }
         for (final key in <String>[
-          'supportsImportExport',
+          'supportsTextInsertion',
           'supportsCitationMerging',
         ]) {
-          if (result.containsKey(key) && result[key] != false) {
-            // Commands for these optional capabilities are deliberately not
-            // implemented by this driver yet.
+          // Merging uses the existing field result/update/delete commands.
+          if (result.containsKey(key) && result[key] is! bool) {
             throw _invalid();
           }
-        }
-        if (result.containsKey('supportsTextInsertion') &&
-            result['supportsTextInsertion'] is! bool) {
-          throw _invalid();
         }
       case 'Document.getDocumentData':
         if (result is! String) throw _invalid();

@@ -304,6 +304,456 @@ void main() {
     expect(table.rows.single.cells.map((cell) => cell.width), [120, 120]);
   });
 
+  test('horizontal merges reconcile widths by logical column', () {
+    final note = WordZoteroNoteText.fromHtml(
+      _table(
+        '<tr><td colspan="2" data-colwidth="100,200">Merged left</td>'
+        '<td data-colwidth="120">Right</td></tr>'
+        '<tr><td data-colwidth="100">Left</td>'
+        '<td colspan="2" data-colwidth="200,120">Merged right</td></tr>'
+        '<tr><td>A</td><td>B</td><td>C</td></tr>',
+      ),
+    );
+    final table = note.blocks.single as WmlTable;
+    expect(table.grid, [75, 150, 90]);
+    expect(table.rows.map((row) => row.cells.length), [2, 2, 3]);
+    expect(table.rows[0].cells.map((cell) => cell.gridSpan), [2, 1]);
+    expect(table.rows[1].cells.map((cell) => cell.gridSpan), [1, 2]);
+    expect(table.rows[0].cells.map((cell) => cell.width), [225, 90]);
+    expect(table.rows[1].cells.map((cell) => cell.width), [75, 240]);
+    expect(table.rows[2].cells.map((cell) => cell.width), [75, 150, 90]);
+    expect(WordTable.supportsGridAddressing(table), isTrue);
+    expect(WordTable.cellIndexAtGrid(table.rows[0], 1), 0);
+    expect(WordTable.cellIndexAtGrid(table.rows[1], 2), 1);
+    expect(
+      table.rows.expand((row) => row.cells).map((cell) => cell.vMerge),
+      everyElement(WmlVMerge.none),
+    );
+    _sameParagraphs(note);
+  });
+
+  for (final mergedFirst in [false, true]) {
+    test(
+      'zero widths remain unspecified across rows: merged first $mergedFirst',
+      () {
+        const merged =
+            '<tr><td colspan="3" data-colwidth="0,0,400">Merged</td></tr>';
+        const separate =
+            '<tr><td data-colwidth="100">A</td>'
+            '<td data-colwidth="0">B</td><td>C</td></tr>';
+        final note = WordZoteroNoteText.fromHtml(
+          _table(mergedFirst ? '$merged$separate' : '$separate$merged'),
+        );
+        final table = note.blocks.single as WmlTable;
+        expect(table.grid, [75, 120, 300]);
+        final mergedRow = table.rows[mergedFirst ? 0 : 1];
+        final separateRow = table.rows[mergedFirst ? 1 : 0];
+        expect(mergedRow.cells.single.width, 495);
+        expect(separateRow.cells.map((cell) => cell.width), [75, 120, 300]);
+        _sameParagraphs(note);
+      },
+    );
+  }
+
+  test('merged cells preserve source paragraphs, lists and citation indexes', () {
+    final note = WordZoteroNoteText.fromHtml(
+      '<p>Before</p>${_table('<tr><th colspan="2" style="background-color:#def">'
+      '<p>Merged $_one</p><ol start="4"><li>List $_two</li></ol></th>'
+      '<td>Right</td></tr>'
+      '<tr><td>A</td><td>B</td><td>C</td></tr>')}<p>After</p>',
+    );
+    final table = note.blocks[1] as WmlTable;
+    final merged = table.rows.first.cells.first;
+    expect(merged.gridSpan, 2);
+    expect(merged.width, 240);
+    expect(merged.fillColor, 'DDEEFF');
+    expect(merged.blocks, [same(note.paragraphs[1]), same(note.paragraphs[2])]);
+    expect(note.paragraphs.map((paragraph) => paragraph.text), [
+      'Before',
+      'Merged (First)',
+      'List (Second)',
+      'Right',
+      'A',
+      'B',
+      'C',
+      'After',
+    ]);
+    expect(
+      note.paragraphs[1].inlines.whereType<WmlRun>().first.properties.bold,
+      isTrue,
+    );
+    expect(note.listItems.keys, [2]);
+    expect(note.listItems[2]!.start, 4);
+    expect(note.placeholders['ABC123']!.paragraphIndex, 1);
+    expect(note.placeholders['DEF456']!.paragraphIndex, 2);
+    for (final placeholder in note.placeholders.values) {
+      expect(
+        note.paragraphs[placeholder.paragraphIndex].text.substring(
+          placeholder.start,
+          placeholder.end,
+        ),
+        placeholder.id == 'ABC123' ? '(First)' : '(Second)',
+      );
+    }
+    _sameParagraphs(note);
+  });
+
+  test('empty and picture-only merged cells retain their native owners', () {
+    final picture = image.encodePng(image.Image(width: 4, height: 2));
+    final note = WordZoteroNoteText.fromHtml(
+      _table(
+        '<tr><td colspan="2"></td><td>Tail</td></tr>'
+        '<tr><td>A</td><td colspan="2"><p>'
+        '<a href="https://example.org/figure"><img '
+        'src="data:image/png;base64,${base64Encode(picture)}" '
+        'width="40" height="20" alt="Merged figure"></a>'
+        '</p></td></tr>',
+      ),
+    );
+    final table = note.blocks.single as WmlTable;
+    expect(note.paragraphs.map((paragraph) => paragraph.text), [
+      '',
+      'Tail',
+      'A',
+      '\uFFFC',
+    ]);
+    expect(
+      table.rows.first.cells.first.blocks.single,
+      same(note.paragraphs[0]),
+    );
+    expect(table.rows.last.cells.last.blocks.single, same(note.paragraphs[3]));
+    final run = note.paragraphs[3].inlines.whereType<WmlRun>().single;
+    expect(run.inlineVisual!.visual.imageBytes, picture);
+    expect(run.inlineVisual!.visual.width, 30);
+    expect(run.hyperlink!.url, 'https://example.org/figure');
+    _sameParagraphs(note);
+  });
+
+  test('one cell can span the complete bounded 32-column grid', () {
+    final note = WordZoteroNoteText.fromHtml(
+      _table('<tr><td colspan="32">Wide</td></tr>'),
+    );
+    final table = note.blocks.single as WmlTable;
+    expect(table.grid, List.filled(32, 120.0));
+    expect(table.rows.single.cells.single.gridSpan, 32);
+    expect(table.rows.single.cells.single.width, 3840);
+    expect(table.rows.single.cells.single.blocks, hasLength(1));
+    expect(WordTable.supportsGridAddressing(table), isTrue);
+    _sameParagraphs(note);
+  });
+
+  test('explicit column-width bounds apply inside a merged width vector', () {
+    final note = WordZoteroNoteText.fromHtml(
+      _table('<tr><td colspan="2" data-colwidth="1,4000">Wide</td></tr>'),
+    );
+    final table = note.blocks.single as WmlTable;
+    expect(table.grid, [0.75, 3000]);
+    expect(table.rows.single.cells.single.width, 3000.75);
+  });
+
+  test('row spans create native continuations at their logical columns', () {
+    final note = WordZoteroNoteText.fromHtml(
+      _table(
+        '<tr><td rowspan="3" colspan="2" data-colwidth="120,0" '
+        'style="background-color:#def"><p>Origin</p></td>'
+        '<td data-colwidth="80">Top</td>'
+        '<td rowspan="2" data-colwidth="100">Outer</td></tr>'
+        '<tr><td data-colwidth="80">Middle</td></tr>'
+        '<tr><td colspan="2" data-colwidth="80,100">Bottom</td></tr>',
+      ),
+    );
+    final table = note.blocks.single as WmlTable;
+    expect(table.grid, [90, 120, 60, 75]);
+    expect(
+      table.rows.map((row) => row.cells.map((cell) => cell.gridSpan).toList()),
+      [
+        [2, 1, 1],
+        [2, 1, 1],
+        [2, 2],
+      ],
+    );
+    expect(
+      table.rows.map((row) => row.cells.map((cell) => cell.vMerge).toList()),
+      [
+        [WmlVMerge.restart, WmlVMerge.none, WmlVMerge.restart],
+        [WmlVMerge.cont, WmlVMerge.none, WmlVMerge.cont],
+        [WmlVMerge.cont, WmlVMerge.none],
+      ],
+    );
+    expect(note.paragraphs.map((paragraph) => paragraph.text), [
+      'Origin',
+      'Top',
+      'Outer',
+      '',
+      'Middle',
+      '',
+      '',
+      'Bottom',
+    ]);
+    for (final row in table.rows) {
+      expect(row.cells.first.width, 210);
+      expect(row.cells.first.fillColor, 'DDEEFF');
+    }
+    expect(WordTable.supportsGridAddressing(table), isTrue);
+    for (var row = 0; row < 3; row++) {
+      for (var column = 0; column < 2; column++) {
+        expect(
+          WordTable.cellAtGrid(table, row, column)!.cell,
+          same(table.rows.first.cells.first),
+        );
+      }
+    }
+    expect(
+      WordTable.cellAtGrid(table, 1, 3)!.cell,
+      same(table.rows.first.cells.last),
+    );
+    _sameParagraphs(note);
+  });
+
+  test(
+    'synthetic continuations preserve citation and list paragraph indexes',
+    () {
+      const middle = '<a href="https://www.zotero.org/?MIDDLE3">(Middle)</a>';
+      final picture = image.encodePng(image.Image(width: 4, height: 2));
+      final note = WordZoteroNoteText.fromHtml(
+        '<p>Before $_one</p>'
+        '${_table('<tr><td rowspan="2" colspan="2"><p>'
+        '<img src="data:image/png;base64,${base64Encode(picture)}" '
+        'alt="Origin picture"></p></td><td>Top</td></tr>'
+        '<tr><td><ol start="7"><li><p>First $middle</p><p>Continued</p>'
+        '<ul><li>Nested</li></ul></li><li>Next item</li></ol></td></tr>')}'
+        '<p>After $_two</p>',
+      );
+      expect(note.paragraphs.map((paragraph) => paragraph.text), [
+        'Before (First)',
+        '\uFFFC',
+        'Top',
+        '',
+        'First (Middle)',
+        'Continued',
+        'Nested',
+        'Next item',
+        'After (Second)',
+      ]);
+      expect(note.placeholders['ABC123']!.paragraphIndex, 0);
+      expect(note.placeholders['MIDDLE3']!.paragraphIndex, 4);
+      expect(note.placeholders['DEF456']!.paragraphIndex, 8);
+      expect(note.listItems.keys, [4, 5, 6, 7]);
+      expect(note.listItems[4]!.start, 7);
+      expect(note.listItems[4]!.index, 0);
+      expect(note.listItems[5]!.continuation, isTrue);
+      expect(note.listItems[6]!.level, 1);
+      expect(note.listItems[7]!.index, 1);
+      final table = note.blocks[1] as WmlTable;
+      expect(table.rows[1].cells.first.blocks.single, same(note.paragraphs[3]));
+      expect(table.rows[1].cells.last.blocks.first, same(note.paragraphs[4]));
+      expect(
+        note.paragraphs[1].inlines
+            .whereType<WmlRun>()
+            .single
+            .inlineVisual!
+            .visual
+            .imageBytes,
+        picture,
+      );
+      _sameParagraphs(note);
+    },
+  );
+
+  test(
+    'covered rows may have no authored cells and preserve empty origins',
+    () {
+      final note = WordZoteroNoteText.fromHtml(
+        _table('<tr><th rowspan=" 3 " colspan="2"></th></tr><tr/><tr></tr>'),
+      );
+      final table = note.blocks.single as WmlTable;
+      expect(table.rows, hasLength(3));
+      expect(table.rows.every((row) => row.cells.length == 1), isTrue);
+      expect(table.rows.first.cells.single.vMerge, WmlVMerge.restart);
+      expect(
+        table.rows
+            .skip(1)
+            .every((row) => row.cells.single.vMerge == WmlVMerge.cont),
+        isTrue,
+      );
+      expect(note.paragraphs.map((paragraph) => paragraph.text), ['', '', '']);
+      _sameParagraphs(note);
+    },
+  );
+
+  test('independent row groups retain their own vertical merge chains', () {
+    final note = WordZoteroNoteText.fromHtml(
+      '<table><tbody><tr><td rowspan="2">First</td></tr><tr/></tbody>'
+      '<tbody><tr><td rowspan="2">Second</td></tr><tr/></tbody></table>',
+    );
+    final table = note.blocks.single as WmlTable;
+    expect(table.rows.map((row) => row.cells.single.vMerge), [
+      WmlVMerge.restart,
+      WmlVMerge.cont,
+      WmlVMerge.restart,
+      WmlVMerge.cont,
+    ]);
+    expect(note.paragraphs.map((paragraph) => paragraph.text), [
+      'First',
+      '',
+      'Second',
+      '',
+    ]);
+    _sameParagraphs(note);
+  });
+
+  test('direct row groups stay separate across empty and populated bodies', () {
+    String pair(String text) => '<tr><td rowspan="2">$text</td></tr><tr/>';
+    final note = WordZoteroNoteText.fromHtml(
+      '<table><tbody>${pair('First')}</tbody>${pair('Second')}'
+      '<tbody>${pair('Third')}</tbody>${pair('Fourth')}'
+      '<tbody/>${pair('Fifth')}</table>',
+    );
+    final table = note.blocks.single as WmlTable;
+    expect(table.rows.map((row) => row.cells.single.vMerge), [
+      for (var group = 0; group < 5; group++) ...[
+        WmlVMerge.restart,
+        WmlVMerge.cont,
+      ],
+    ]);
+    expect(note.paragraphs.map((paragraph) => paragraph.text), [
+      for (final text in ['First', 'Second', 'Third', 'Fourth', 'Fifth']) ...[
+        text,
+        '',
+      ],
+    ]);
+    _sameParagraphs(note);
+  });
+
+  test('widths reconcile after skipping vertically covered columns', () {
+    final note = WordZoteroNoteText.fromHtml(
+      _table(
+        '<tr><td rowspan="2" data-colwidth="100">Left</td>'
+        '<td data-colwidth="0">Middle</td>'
+        '<td rowspan="2" data-colwidth="200">Right</td></tr>'
+        '<tr><td data-colwidth="80">Sized middle</td></tr>',
+      ),
+    );
+    final table = note.blocks.single as WmlTable;
+    expect(table.grid, [75, 60, 150]);
+    for (final row in table.rows) {
+      expect(row.cells.map((cell) => cell.width), [75, 60, 150]);
+    }
+    _sameParagraphs(note);
+  });
+
+  for (final span in [
+    '0',
+    '-1',
+    '1.5',
+    '01',
+    '1e2',
+    '+1',
+    '',
+    'NaN',
+    '257',
+    '999999999999999999999',
+  ]) {
+    test('invalid row span syntax or bound refuses: $span', () {
+      expect(
+        () => WordZoteroNoteText.fromHtml(
+          _table('<tr><td rowspan="$span">Origin</td></tr><tr/>'),
+        ),
+        throwsUnsupportedError,
+      );
+    });
+  }
+
+  for (final rows in [
+    '<tr><td rowspan="3">Past end</td></tr><tr/>',
+    '<tr><td rowspan="2">Left</td><td>Right</td></tr><tr/>',
+    '<tr><td>Left</td><td rowspan="2">Middle</td><td>Right</td></tr>'
+        '<tr><td colspan="2">Collision</td><td>Right</td></tr>',
+    '<tr><td rowspan="2" colspan="2">Covered</td></tr>'
+        '<tr><td>Overflow</td></tr>',
+    '<tr><td rowspan="2" data-colwidth="100">Left</td>'
+        '<td data-colwidth="80">Right</td></tr>'
+        '<tr><td data-colwidth="81">Conflicting right</td></tr>',
+  ]) {
+    test('invalid vertical coverage or column widths refuse: $rows', () {
+      expect(
+        () => WordZoteroNoteText.fromHtml(_table(rows)),
+        throwsUnsupportedError,
+      );
+    });
+  }
+
+  for (final html in [
+    '<table><tbody><tr><td rowspan="2">Cross group</td></tr></tbody>'
+        '<tbody><tr/></tbody></table>',
+    '<table><tr><td rowspan="2">Cross group</td></tr><tbody><tr/></tbody>'
+        '</table>',
+    '<table><tbody><tr><td rowspan="2">Cross group</td></tr></tbody><tr/>'
+        '</table>',
+    '<table><tr><td rowspan="2">Cross empty group</td></tr>'
+        '<tbody/><tr/></table>',
+    '<table><tr><td rowspan="2">Cross empty group</td></tr>'
+        '<tbody></tbody><tbody/><tr/></table>',
+  ]) {
+    test('a vertical merge cannot cross row-group ownership: $html', () {
+      expect(() => WordZoteroNoteText.fromHtml(html), throwsUnsupportedError);
+    });
+  }
+
+  test('256-row spans require exactly covered actual rows', () {
+    final rows =
+        '<tr><td rowspan="256">Origin</td></tr>'
+        '${List.filled(255, '<tr/>').join()}';
+    final note = WordZoteroNoteText.fromHtml(_table(rows));
+    expect(note.paragraphs, hasLength(256));
+    expect((note.blocks.single as WmlTable).rows, hasLength(256));
+    _sameParagraphs(note);
+    expect(
+      () => WordZoteroNoteText.fromHtml(
+        _table(
+          '<tr><td rowspan="256">Origin</td></tr>'
+          '${List.filled(254, '<tr/>').join()}',
+        ),
+      ),
+      throwsUnsupportedError,
+    );
+  });
+
+  test('the global native-cell budget includes every vertical continuation', () {
+    String tall(int columns) => _table(
+      '<tr>${List.filled(columns, '<td rowspan="256">Origin</td>').join()}</tr>'
+      '${List.filled(255, '<tr/>').join()}',
+    );
+    final full = tall(16);
+    final note = WordZoteroNoteText.fromHtml(full);
+    expect(note.paragraphs, hasLength(4096));
+    expect(
+      (note.blocks.single as WmlTable).rows.expand((row) => row.cells),
+      hasLength(4096),
+    );
+    _sameParagraphs(note);
+    for (final html in [
+      tall(17),
+      '$full${_table('<tr><td>One extra</td></tr>')}',
+    ]) {
+      expect(() => WordZoteroNoteText.fromHtml(html), throwsFormatException);
+    }
+  });
+
+  test('the paragraph budget includes synthetic continuation paragraphs', () {
+    String tall(int count) => _table(
+      '<tr><td rowspan="256">${List.filled(count, '<p>Text</p>').join()}</td></tr>'
+      '${List.filled(255, '<tr/>').join()}',
+    );
+    final note = WordZoteroNoteText.fromHtml(tall(9745));
+    expect(note.paragraphs, hasLength(10000));
+    _sameParagraphs(note);
+    expect(
+      () => WordZoteroNoteText.fromHtml(tall(9746)),
+      throwsFormatException,
+    );
+  });
+
   test('cell background colors map to native fills without coloring text', () {
     final note = WordZoteroNoteText.fromHtml(
       _table(
@@ -351,13 +801,30 @@ void main() {
     '<table><tbody style="color:red"><tr><td>A</td></tr></tbody></table>',
     '<table><tr style="height:20px"><td>A</td></tr></table>',
     '<table><tr><td class="custom">A</td></tr></table>',
-    '<table><tr><td colspan="2">Merged</td></tr></table>',
     '<table><tr><td rowspan="2">Merged</td></tr></table>',
     '<table><tr><td colspan="0">Invalid</td></tr></table>',
+    '<table><tr><td colspan="-1">Invalid</td></tr></table>',
+    '<table><tr><td colspan="1.5">Invalid</td></tr></table>',
+    '<table><tr><td colspan="33">Oversized</td></tr></table>',
+    '<table><tr><td colspan="999999999999999999999">Oversized</td></tr></table>',
     '<table><tr><td rowspan="-1">Invalid</td></tr></table>',
-    '<table><tr><td data-colwidth="0">Invalid</td></tr></table>',
+    '<table><tr><td colspan="2" rowspan="2">Vertical merge</td></tr></table>',
     '<table><tr><td data-colwidth="4001">Oversized</td></tr></table>',
     '<table><tr><td data-colwidth="96,96">Merged widths</td></tr></table>',
+    '<table><tr><td colspan="2" data-colwidth="96">Missing width</td></tr></table>',
+    '<table><tr><td colspan="2" data-colwidth="0,96,0">Extra width</td></tr></table>',
+    '<table><tr><td colspan="2" data-colwidth="96,">Missing width</td></tr></table>',
+    '<table><tr><td colspan="2" data-colwidth=",96">Missing width</td></tr></table>',
+    '<table><tr><td colspan="2" data-colwidth="-1,96">Negative</td></tr></table>',
+    '<table><tr><td colspan="2" data-colwidth="1,4001">Oversized</td></tr></table>',
+    '<table><tr><td colspan="2" data-colwidth="4000,4000">Too wide</td></tr></table>',
+    '<table><tr><td colspan="2" data-colwidth="100,200">Merged</td></tr>'
+        '<tr><td data-colwidth="100">A</td>'
+        '<td data-colwidth="201">Conflicting</td></tr></table>',
+    '<table><tr><td colspan="2">A</td><td>B</td></tr>'
+        '<tr><td>C</td><td>D</td></tr></table>',
+    '<table><tr><td>A</td><td>B</td></tr>'
+        '<tr><td colspan="2">C</td><td>D</td></tr></table>',
     '<table><tr><td data-colwidth="12.5">Fractional</td></tr></table>',
     '<table><tr><td data-colwidth="NaN">Invalid</td></tr></table>',
     '<table><tr><td data-colwidth="100">A</td></tr>'
@@ -408,6 +875,8 @@ void main() {
       List.filled(65, _table(row)).join(),
       _table(List.filled(257, row).join()),
       _table('<tr>${List.filled(33, cell).join()}</tr>'),
+      _table('<tr><td colspan="32">Wide</td><td>Overflow</td></tr>'),
+      _table('<tr><td colspan="17">A</td><td colspan="16">B</td></tr>'),
     ]) {
       expect(() => WordZoteroNoteText.fromHtml(html), throwsFormatException);
     }
@@ -423,6 +892,27 @@ void main() {
       ),
       throwsFormatException,
     );
+  });
+
+  test('horizontal merges retain the global authored-cell budget', () {
+    final row = '<tr>${List.filled(16, '<td colspan="2">A</td>').join()}</tr>';
+    final fullTable = _table(List.filled(16, row).join());
+    final fullNote = List.filled(16, fullTable).join();
+    final accepted = WordZoteroNoteText.fromHtml(fullNote);
+    expect(accepted.paragraphs, hasLength(4096));
+    expect(
+      accepted.blocks.whereType<WmlTable>().every(
+        (table) => table.grid.length == 32,
+      ),
+      isTrue,
+    );
+    expect(
+      () => WordZoteroNoteText.fromHtml(
+        '$fullNote${_table('<tr><td colspan="2">One cell too many</td></tr>')}',
+      ),
+      throwsFormatException,
+    );
+    _sameParagraphs(accepted);
   });
 
   test('the paragraph budget includes all cells in the entire note', () {

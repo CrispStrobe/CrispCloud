@@ -11,6 +11,27 @@ String _json({Object? style, Object? noteType = 0}) => jsonEncode({
 });
 
 void main() {
+  for (final (literal, expected) in <(String, int)>[
+    ('0', 0),
+    ('0.0', 0),
+    ('-0.0', 0),
+    ('1', 1),
+    ('1.0', 1),
+    ('1e0', 1),
+    ('2', 2),
+    ('2.0', 2),
+    ('20e-1', 2),
+  ]) {
+    test('JSON numeric placement $literal means enum value $expected', () {
+      // Literal JSON preserves the spelling under test on every runtime.
+      final data =
+          '{"style":{"styleID":"$_style"},'
+          '"prefs":{"fieldType":"Field","noteType":$literal}}';
+      expect(WordZoteroDocumentData.stylePreferences(data)?.noteType, expected);
+      expect(WordZoteroDocumentData.citationNoteType(data), expected);
+    });
+  }
+
   test(
     'truly unset style remains distinguishable from damaged preferences',
     () {
@@ -33,6 +54,8 @@ void main() {
     ('non-string style identity', _json(style: {'styleID': 17})),
     ('non-string locale', _json(style: {'styleID': _style, 'locale': true})),
     ('non-integer placement', _json(noteType: '1')),
+    ('fractional placement', _json(noteType: 1.5)),
+    ('boolean placement', _json(noteType: true)),
     ('negative placement', _json(noteType: -1)),
     ('unsupported placement', _json(noteType: 3)),
     (

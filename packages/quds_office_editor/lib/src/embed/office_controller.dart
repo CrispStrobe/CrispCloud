@@ -2288,24 +2288,34 @@ class WordEditorController extends OfficeController {
         if (remaining <= room) {
           caret.logicalIndex += remaining;
           remaining = 0;
-        } else if (caret.paragraphIndex >= paras.length - 1) {
-          caret.logicalIndex = text.length;
-          remaining = 0;
         } else {
-          remaining -= room + 1;
-          caret.paragraphIndex++;
-          caret.logicalIndex = 0;
+          final next = _nextNavigationParagraph(paras, caret.paragraphIndex, 1);
+          if (next == null) {
+            caret.logicalIndex = text.length;
+            remaining = 0;
+          } else {
+            remaining -= room + 1;
+            caret.paragraphIndex = next;
+            caret.logicalIndex = 0;
+          }
         }
       } else if (caret.logicalIndex + remaining >= 0) {
         caret.logicalIndex += remaining;
         remaining = 0;
-      } else if (caret.paragraphIndex <= 0) {
-        caret.logicalIndex = 0;
-        remaining = 0;
       } else {
-        remaining += caret.logicalIndex + 1;
-        caret.paragraphIndex--;
-        caret.logicalIndex = paras[caret.paragraphIndex].text.length;
+        final previous = _nextNavigationParagraph(
+          paras,
+          caret.paragraphIndex,
+          -1,
+        );
+        if (previous == null) {
+          caret.logicalIndex = 0;
+          remaining = 0;
+        } else {
+          remaining += caret.logicalIndex + 1;
+          caret.paragraphIndex = previous;
+          caret.logicalIndex = paras[previous].text.length;
+        }
       }
     }
     if (!extend) {
@@ -2430,10 +2440,16 @@ class WordEditorController extends OfficeController {
       return;
     }
     selectedVisual = null;
-    caret.paragraphIndex = (caret.paragraphIndex + delta).clamp(
-      0,
-      paras.length - 1,
-    );
+    caret.paragraphIndex = caret.paragraphIndex.clamp(0, paras.length - 1);
+    for (var remaining = delta.abs(); remaining > 0; remaining--) {
+      final next = _nextNavigationParagraph(
+        paras,
+        caret.paragraphIndex,
+        delta.sign,
+      );
+      if (next == null) break;
+      caret.paragraphIndex = next;
+    }
     caret.logicalIndex = caret.logicalIndex.clamp(
       0,
       paras[caret.paragraphIndex].text.length,
@@ -6909,6 +6925,61 @@ class WordEditorController extends OfficeController {
 
   List<WmlBlock>? _parentBlocksOfBlock(WmlBlock target) =>
       WordTree.locate(document, target)?.parent;
+
+  // Native vMerge continuations own structural empty paragraphs, but no
+  // independent editable text. Keep model indexes stable while bypassing only
+  // those placeholders during navigation. Imported content and zero-width
+  // fields/bookmarks remain reachable, even in malformed native cells.
+  bool _isEmptyVerticalContinuation(WmlParagraph paragraph) {
+    if (isEditingComment ||
+        isEditingHeaderFooter ||
+        paragraph.text.isNotEmpty ||
+        paragraph.contentControlWrappers.isNotEmpty ||
+        paragraph.properties.fieldInstruction != null ||
+        paragraph.properties.fieldBegin ||
+        paragraph.properties.fieldSeparate ||
+        paragraph.properties.fieldEnd ||
+        paragraph.properties.pageNumberField ||
+        paragraph.properties.bookmarkName != null ||
+        paragraph.properties.sourceBookmarkName != null ||
+        paragraph.properties.noteId != null ||
+        paragraph.properties.numId != null ||
+        paragraph.properties.listLabel != null ||
+        paragraph.inlines.any(
+          (inline) =>
+              inline is! WmlRun ||
+              inline.isAtomic ||
+              inline.hyperlink != null ||
+              inline.commentIds.isNotEmpty,
+        )) {
+      return false;
+    }
+    final location = WordTable.locationOfParagraph(document, paragraph);
+    if (location == null) return false;
+    final cell = location.table.rows[location.row].cells[location.col];
+    if (cell.vMerge != WmlVMerge.cont ||
+        cell.blocks.length != 1 ||
+        !identical(cell.blocks.single, paragraph) ||
+        !WordTable.supportsGridAddressing(location.table)) {
+      return false;
+    }
+    return true;
+  }
+
+  int? _nextNavigationParagraph(
+    List<WmlParagraph> paragraphs,
+    int index,
+    int direction,
+  ) {
+    for (
+      var next = index + direction;
+      next >= 0 && next < paragraphs.length;
+      next += direction
+    ) {
+      if (!_isEmptyVerticalContinuation(paragraphs[next])) return next;
+    }
+    return null;
+  }
 
   List<LaidOutLine> _contentLines() {
     return <LaidOutLine>[

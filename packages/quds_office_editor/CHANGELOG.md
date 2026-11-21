@@ -4,6 +4,49 @@ All notable changes to `quds_office_editor` are documented here.
 
 ## Unreleased
 
+- Journal native IMAP, EWS, Gmail and Microsoft 365 single/bulk read and flag
+  commands before dispatch, retain late acknowledgements under their original
+  store owner, and stop further work on persistence failure. Add connected and
+  offline **Mail activity** with paginated frozen receipts, interrupted status
+  and confirmed clean-history removal in English, German and Arabic.
+- Preserve inert reader whitespace and user-loaded images across body-mode
+  changes. Bound explicit image loading by request count, deadlines, streamed
+  bytes and decoded image budgets; reject stale request ownership and keep
+  failed or over-budget images visibly blocked.
+
+- Accept vertical and combined row/column spans through Zotero Add Note and
+  Add Annotation in body, footnote and endnote targets. Preserve rich content,
+  active citations, one undo/redo transaction and repeated DOCX reopening.
+- Resolve continued merged-cell pointer/keyboard navigation to the originating
+  cell while retaining physical row handles; keep authored native continuation
+  content reachable and skip only validated structural empty placeholders.
+
+- Accept horizontally merged Zotero research-note and annotation tables through
+  the existing native commands. Preserve cell-owned rich text, lists, pictures
+  and active citations in body, footnote and endnote targets; retain span widths,
+  surrounding prose, the final caret and one undo/redo step through DOCX reopening.
+- Let native Zotero Refresh combine directly touching citation fields in one
+  paragraph/story/note using Zotero's item order and formatting. Keep separated
+  fields distinct, recheck physical adjacency before applying, and leave
+  cancelled or stale results detached. A completed refresh is one undo/redo
+  step. See the
+  [continuation validation record](../../docs/validation/zotero-merged-cells-20261120/README.md)
+  for local checks; installed Zotero/Word/LibreOffice acceptance remains separate.
+
+- Recognize conventional lowercase Arial and Times New Roman font filenames
+  for regular, bold, italic and bold-italic faces, retaining metadata checks
+  and canonical candidate precedence.
+
+- Show localized foreground bulk progress and per-message receipts with frozen
+  subjects, cancellation after the current message and refresh-aware dismissal.
+
+- Add foreground bulk read/unread/flag/unflag actions to connected IMAP, EWS,
+  Gmail and Microsoft 365. Freeze checked visible identities, run sequentially,
+  report confirmed/failed/uncertain/unattempted counts and stop on uncertainty.
+  Let users stop after the current request, require explicit refresh for an
+  unconfirmed write, preserve nullable flags and reject stale scope callbacks.
+  Keep cached mail read-only and preserve discovery state on same-folder refresh.
+
 - Refuse an oversized Studio settings snapshot before replacing the last valid
   saved settings. Keep the existing load budget and expose a recoverable save
   error so accepted personal dictionaries cannot reset preferences on restart.

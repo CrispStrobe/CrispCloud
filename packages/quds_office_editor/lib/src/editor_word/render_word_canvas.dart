@@ -3285,13 +3285,13 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
 
   List<_TableInsertHit> _tableInsertHitsFor(_TableGeom table) {
     final List<_TableInsertHit> hits = <_TableInsertHit>[];
-    for (int i = 0; i <= table.rowCount; i++) {
-      final double y = table.rowBoundary(i);
+    for (final boundary in table.rowInsertionBoundaries) {
+      final double y = boundary.y;
       hits.add(
         _TableInsertHit(
           table: table.table,
           column: false,
-          index: i,
+          index: boundary.index,
           button: Rect.fromCircle(
             center: Offset(table.bounds.left - 12, y),
             radius: 7,
@@ -3355,7 +3355,7 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
     LaidOutBox? best;
     var bestArea = double.infinity;
     for (final LaidOutBox box in page.frames) {
-      if (box.kind != LaidOutBoxKind.tableCell) {
+      if (box.kind != LaidOutBoxKind.tableCell || box.height <= 0) {
         continue;
       }
       if (local.dx >= box.x &&
@@ -3391,7 +3391,9 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
     LaidOutBox? best;
     var bestArea = double.infinity;
     for (final LaidOutBox box in page.frames) {
-      if (box.kind != LaidOutBoxKind.tableCell || !_lineInCell(line, box)) {
+      if (box.kind != LaidOutBoxKind.tableCell ||
+          box.height <= 0 ||
+          !_lineInCell(line, box)) {
         continue;
       }
       if (containingFrame != null &&
@@ -5237,10 +5239,15 @@ class _TableGeom {
   void add(LaidOutBox box) {
     final Rect rect = Rect.fromLTWH(box.x, box.y, box.width, box.height);
     bounds = bounds == Rect.zero ? rect : bounds.expandToInclude(rect);
-    final int row = box.tableRow ?? 0;
+    final geometry = box.tableRowGeometry;
+    final int row = geometry?.row ?? box.tableRow ?? 0;
     final int col = box.tableGridCol ?? box.tableCol ?? 0;
-    _rowTop[row] = _minOr(_rowTop[row], rect.top);
-    _rowBottom[row] = _maxOr(_rowBottom[row], rect.bottom);
+    final rowTop = geometry?.y ?? rect.top;
+    final rowHeight = geometry?.height ?? rect.height;
+    if (rowHeight > 0) {
+      _rowTop[row] = _minOr(_rowTop[row], rowTop);
+      _rowBottom[row] = _maxOr(_rowBottom[row], rowTop + rowHeight);
+    }
     _colLeft[col] = _minOr(_colLeft[col], rect.left);
     _colRight[col] = _maxOr(_colRight[col], rect.right);
   }
@@ -5276,6 +5283,22 @@ class _TableGeom {
       return bounds.bottom;
     }
     return _rowTop[index] ?? _rowBottom[index - 1] ?? bounds.top;
+  }
+
+  /// Actual row edges visible on this page, without synthesizing absent rows.
+  ///
+  /// A continuation page may start at row two while the merged cell's source
+  /// owner is row zero. Its top insertion target must still be row two.
+  List<({int index, double y})> get rowInsertionBoundaries {
+    final rows = _rowTop.keys.toList()..sort();
+    final boundaries = <int, double>{};
+    for (final row in rows) {
+      if (row < 0 || row >= table.rows.length) continue;
+      boundaries[row] = _rowTop[row]!;
+      boundaries.putIfAbsent(row + 1, () => _rowBottom[row]!);
+    }
+    final indexes = boundaries.keys.toList()..sort();
+    return [for (final index in indexes) (index: index, y: boundaries[index]!)];
   }
 
   /// colBoundary API.

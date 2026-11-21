@@ -102,6 +102,16 @@ abstract final class WordZoteroDocumentData {
         locale = style['locale'];
       }
       noteType = (json['prefs'] as Map<String, dynamic>)['noteType'];
+      // JSON numbers describe the enum's value. Integral doubles and exponent
+      // forms must have the same meaning on the VM and JavaScript, whose
+      // number representation does not distinguish 1 from 1.0.
+      if (noteType is num &&
+          noteType.isFinite &&
+          noteType >= 0 &&
+          noteType <= 2 &&
+          noteType == noteType.truncateToDouble()) {
+        noteType = noteType.toInt();
+      }
     } else if (native.isNotEmpty) {
       final root = _parseXml(native);
       final styles = root.childrenNamed('style', namespaceUri: '');

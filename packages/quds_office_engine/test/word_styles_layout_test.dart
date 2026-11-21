@@ -192,6 +192,55 @@ void main() {
     WmlTable only(WmlDocument doc) =>
         doc.sections.first.blocks.whereType<WmlTable>().single;
 
+    List<WmlRun> headerRuns(String runs) =>
+        only(
+              _open(
+                '<w:tbl><w:tblPr><w:tblStyle w:val="ColoredHeader"/>'
+                '<w:tblLook w:val="04A0"/></w:tblPr>'
+                '<w:tblGrid><w:gridCol w:w="2000"/></w:tblGrid>'
+                '<w:tr><w:tc><w:p>$runs</w:p></w:tc></w:tr></w:tbl>',
+                styles:
+                    '<w:style w:type="table" w:styleId="ColoredHeader">'
+                    '<w:tblStylePr w:type="firstRow">'
+                    '<w:rPr><w:b/><w:color w:val="FFFFFF"/></w:rPr>'
+                    '<w:tcPr><w:shd w:val="clear" w:fill="112233"/></w:tcPr>'
+                    '</w:tblStylePr></w:style>',
+              ),
+            ).rows.first.cells.first.blocks
+            .whereType<WmlParagraph>()
+            .single
+            .inlines
+            .whereType<WmlRun>()
+            .toList();
+
+    test('first-row table style preserves direct run colors', () {
+      final runs = headerRuns(
+        '<w:r><w:t>Inherited</w:t></w:r>'
+        '<w:r><w:rPr><w:color w:val="C04020"/></w:rPr>'
+        '<w:t>Direct color</w:t></w:r>'
+        '<w:r><w:rPr><w:color w:val="000000"/></w:rPr>'
+        '<w:t>Explicit default color</w:t></w:r>',
+      );
+      expect(runs.map((run) => run.properties.color), [
+        'FFFFFF',
+        'C04020',
+        '000000',
+      ]);
+      expect(runs.map((run) => run.properties.bold), everyElement(isTrue));
+    });
+
+    test('first-row table style preserves directly disabled bold', () {
+      final runs = headerRuns(
+        '<w:r><w:t>Inherited</w:t></w:r>'
+        '<w:r><w:rPr><w:b w:val="0"/></w:rPr>'
+        '<w:t>Direct zero</w:t></w:r>'
+        '<w:r><w:rPr><w:b w:val="false"/></w:rPr>'
+        '<w:t>Direct false</w:t></w:r>',
+      );
+      expect(runs.map((run) => run.properties.bold), [true, false, false]);
+      expect(runs.map((run) => run.properties.color), everyElement('FFFFFF'));
+    });
+
     test('borders and region shading come from the style', () {
       final WmlTable t = only(
         _open(table('LightGrid-Accent1'), styles: tableStyles),

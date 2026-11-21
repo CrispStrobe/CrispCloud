@@ -275,7 +275,38 @@ const _wordListMethods = <String>{
 };
 const _wordSpacingMethods = <String>{'space1', 'space15', 'space2'};
 const _wordParagraphControls = <String>{'openup', 'closeup', 'openorcloseup'};
-const _wordUnitConversions = <String>{'linestopoints', 'pointstolines'};
+// Exact physical ratios, not the rounded metric examples in Word's API prose.
+// These functions retain this dialect's bounded Double arithmetic; they do not
+// introduce VBA Single subtype/coercion semantics or native-unit rounding.
+const _wordUnitConversions =
+    <String, ({String parameter, int numerator, int denominator})>{
+      'inchestopoints': (parameter: 'inches', numerator: 72, denominator: 1),
+      'centimeterstopoints': (
+        parameter: 'centimeters',
+        numerator: 3600,
+        denominator: 127,
+      ),
+      'millimeterstopoints': (
+        parameter: 'millimeters',
+        numerator: 360,
+        denominator: 127,
+      ),
+      'picastopoints': (parameter: 'picas', numerator: 12, denominator: 1),
+      'linestopoints': (parameter: 'lines', numerator: 12, denominator: 1),
+      'pointstoinches': (parameter: 'points', numerator: 1, denominator: 72),
+      'pointstocentimeters': (
+        parameter: 'points',
+        numerator: 127,
+        denominator: 3600,
+      ),
+      'pointstomillimeters': (
+        parameter: 'points',
+        numerator: 127,
+        denominator: 360,
+      ),
+      'pointstopicas': (parameter: 'points', numerator: 1, denominator: 12),
+      'pointstolines': (parameter: 'points', numerator: 1, denominator: 12),
+    };
 const _powerPointConstants = <String, int>{
   'msoanchortop': 1,
   'msoanchortopbaseline': 2,
@@ -345,7 +376,7 @@ class _Context {
       constants.containsKey(name) ||
       (isWord &&
           (_wordReserved.contains(name) ||
-              _wordUnitConversions.contains(name))) ||
+              _wordUnitConversions.containsKey(name))) ||
       (isPowerPoint && _powerPointReserved.contains(name));
 
   Never fail(
@@ -3012,10 +3043,8 @@ class _Checker {
           return _stringIntrinsic(expression);
         }
         if (context.isWord &&
-            _wordUnitConversions.contains(expression.token.lower)) {
-          _count(expression.token, expression.arguments, 1);
-          final argument = expression.arguments.single;
-          _compatible(_Kind.number, _expression(argument), argument.token);
+            _wordUnitConversions.containsKey(expression.token.lower)) {
+          _wordUnitCall(expression.token, expression.arguments);
           return _Kind.number;
         }
         if (_variantIntrinsics.contains(expression.token.lower)) {
@@ -3104,9 +3133,8 @@ class _Checker {
             return _Kind.document;
           }
           if (receiver == _Kind.wordApplication &&
-              _wordUnitConversions.contains(name)) {
-            final argument = _arguments(expression, 1).single;
-            _compatible(_Kind.number, _expression(argument), argument.token);
+              _wordUnitConversions.containsKey(name)) {
+            _wordUnitCall(expression.token, expression.arguments);
             return _Kind.number;
           }
           if (receiver == _Kind.document && name == 'paragraphs') {
@@ -3341,6 +3369,26 @@ class _Checker {
       );
     }
     return name == 'len' ? _Kind.number : _Kind.string;
+  }
+
+  void _wordUnitCall(_Token token, List<_Expr>? arguments) {
+    if (arguments == null || arguments.length != 1) {
+      context.type(token, '${token.text} requires one numeric argument.');
+    }
+    final argument = arguments.single;
+    if (argument is _OmittedArgument) {
+      context.type(argument.token, '${token.text} requires its argument.');
+    }
+    if (argument is _NamedArgument &&
+        argument.token.lower != _wordUnitConversions[token.lower]!.parameter) {
+      context.fail(
+        argument.token,
+        'vba_name_error',
+        'Unknown named argument ${argument.token.text} for ${token.text}.',
+      );
+    }
+    final value = argument is _NamedArgument ? argument.value : argument;
+    _compatible(_Kind.number, _expression(value), value.token);
   }
 
   List<_Expr> _arguments(
@@ -4207,6 +4255,10 @@ class _Evaluator {
               ? bounds.lower
               : bounds.upper;
         }
+        if (context.isWord &&
+            _wordUnitConversions.containsKey(expression.token.lower)) {
+          return _evaluateWordUnitCall(expression.token, expression.arguments);
+        }
         final arguments = <Object>[
           for (final argument in expression.arguments) _evaluate(argument),
         ];
@@ -4215,10 +4267,6 @@ class _Evaluator {
         }
         if (_variantIntrinsics.contains(expression.token.lower)) {
           return _variantIntrinsic(expression, arguments.single);
-        }
-        if (context.isWord &&
-            _wordUnitConversions.contains(expression.token.lower)) {
-          return _wordUnitConversion(expression.token, arguments.single);
         }
         if (expression.token.lower == 'worksheets') {
           return _sheet(arguments.single, expression.token);
@@ -4234,6 +4282,11 @@ class _Evaluator {
         );
       case _Member():
         final receiver = _evaluate(expression.receiver);
+        if (context.isWord &&
+            receiver is _WordApplication &&
+            _wordUnitConversions.containsKey(expression.token.lower)) {
+          return _evaluateWordUnitCall(expression.token, expression.arguments!);
+        }
         final arguments = <Object>[
           for (final argument in expression.arguments ?? const <_Expr>[])
             _evaluate(argument),
@@ -4243,9 +4296,6 @@ class _Evaluator {
         }
         if (context.isWord) {
           if (receiver is _WordApplication) {
-            if (_wordUnitConversions.contains(expression.token.lower)) {
-              return _wordUnitConversion(expression.token, arguments.single);
-            }
             return const _WordDocument();
           }
           if (receiver is _WordDocument && expression.arguments == null) {
@@ -5762,24 +5812,33 @@ class _Evaluator {
     return text;
   }
 
-  Object _wordUnitConversion(_Token token, Object value) {
-    final number = _number(value, token);
-    final toPoints = token.lower == 'linestopoints';
-    final unitsPerInput = toPoints ? 240 : 20;
-    final unitsPerOutput = toPoints ? 20 : 240;
-    final units = number * unitsPerInput;
-    // Use the exact native unit grid when the input round-trips on it. This
-    // keeps ordinary values such as 1.15 lines -> 13.8 points representable
-    // without snapping neighboring off-grid inputs or rounding all inputs.
-    final onGrid =
-        units.isFinite &&
-        units.abs() <= _maxExactInteger &&
-        units.round() / unitsPerInput == number;
-    final result = onGrid
-        ? units.round() / unitsPerOutput
-        : toPoints
-        ? number * 12
-        : number / 12;
+  Object _evaluateWordUnitCall(_Token token, List<_Expr> arguments) {
+    // The checker has validated the one required positional/named argument.
+    // Evaluate only its value, once, retaining ordinary expression work limits.
+    final argument = arguments.single;
+    final value = argument is _NamedArgument ? argument.value : argument;
+    final number = _number(_evaluate(value), token).toDouble();
+    final conversion = _wordUnitConversions[token.lower]!;
+    final numerator = conversion.numerator;
+    final denominator = conversion.denominator;
+    var result = number * numerator / denominator;
+
+    // Canonicalize an exact native-grid value only when converting it back
+    // reproduces the input double. No epsilon or tolerance snaps near misses.
+    // Bound integer products to the VM/JavaScript common exact-integer range.
+    final toPoints = token.lower.endsWith('topoints');
+    final units = (toPoints ? result : number) * 20;
+    final multiplier = toPoints ? denominator : numerator;
+    if (units.isFinite && units.abs() <= _maxExactInteger / multiplier) {
+      final twips = units.round();
+      if (toPoints) {
+        if (twips * denominator / (20 * numerator) == number) {
+          result = twips / 20;
+        }
+      } else if (twips / 20 == number) {
+        result = twips * numerator / (20 * denominator);
+      }
+    }
     if (!result.isFinite || result.abs() > _maxExactInteger) {
       context.type(
         token,

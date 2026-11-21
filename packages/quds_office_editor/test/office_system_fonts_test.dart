@@ -139,6 +139,112 @@ void main() {
   });
 
   test(
+    'lowercase Arial and Times aliases retain all four real styles',
+    () async {
+      const candidates = [
+        ('arial.ttf', 'Arial', 400, false, 'LiberationMono-Regular.ttf'),
+        ('arialbd.ttf', 'Arial', 700, false, 'LiberationMono-Bold.ttf'),
+        ('ariali.ttf', 'Arial', 400, true, 'LiberationMono-Italic.ttf'),
+        ('arialbi.ttf', 'Arial', 700, true, 'LiberationMono-BoldItalic.ttf'),
+        (
+          'times.ttf',
+          'Times New Roman',
+          400,
+          false,
+          'LiberationMono-Regular.ttf',
+        ),
+        (
+          'timesbd.ttf',
+          'Times New Roman',
+          700,
+          false,
+          'LiberationMono-Bold.ttf',
+        ),
+        (
+          'timesi.ttf',
+          'Times New Roman',
+          400,
+          true,
+          'LiberationMono-Italic.ttf',
+        ),
+        (
+          'timesbi.ttf',
+          'Times New Roman',
+          700,
+          true,
+          'LiberationMono-BoldItalic.ttf',
+        ),
+      ];
+      final expectedBytes = <Uint8List>[];
+      for (final candidate in candidates) {
+        final bytes = await installedFontFixture(
+          candidate.$2,
+          file: candidate.$5,
+        );
+        expectedBytes.add(bytes);
+        await File('${primary.path}/${candidate.$1}').writeAsBytes(bytes);
+      }
+
+      final faces = await installed.load(searchDirectories: [primary.path]);
+      expect(faces.map((face) => (face.family, face.weight, face.italic)), [
+        for (final candidate in candidates)
+          (candidate.$2, candidate.$3, candidate.$4),
+      ]);
+      for (var index = 0; index < faces.length; index++) {
+        expect(faces[index].bytes, orderedEquals(expectedBytes[index]));
+      }
+    },
+  );
+
+  test(
+    'canonical candidates precede aliases without duplicate faces',
+    () async {
+      // These names remain distinct on case-insensitive filesystems as well.
+      const candidates = [
+        (
+          'Arial Bold.ttf',
+          'arialbd.ttf',
+          'Arial',
+          700,
+          'LiberationMono-Bold.ttf',
+          'LiberationSerif-Bold.ttf',
+        ),
+        (
+          'Times New Roman.ttf',
+          'times.ttf',
+          'Times New Roman',
+          400,
+          'LiberationMono-Regular.ttf',
+          'LiberationSerif-Regular.ttf',
+        ),
+      ];
+      final expectedBytes = <Uint8List>[];
+      for (final candidate in candidates) {
+        final canonical = await installedFontFixture(
+          candidate.$3,
+          file: candidate.$5,
+        );
+        final alias = await installedFontFixture(
+          candidate.$3,
+          file: candidate.$6,
+        );
+        expect(alias, isNot(orderedEquals(canonical)));
+        expectedBytes.add(canonical);
+        await File('${primary.path}/${candidate.$1}').writeAsBytes(canonical);
+        await File('${primary.path}/${candidate.$2}').writeAsBytes(alias);
+      }
+
+      final faces = await installed.load(searchDirectories: [primary.path]);
+      expect(faces.map((face) => (face.family, face.weight, face.italic)), [
+        for (final candidate in candidates) (candidate.$3, candidate.$4, false),
+      ]);
+      for (var index = 0; index < faces.length; index++) {
+        expect(faces[index].bytes, orderedEquals(expectedBytes[index]));
+      }
+    },
+  );
+
+  test(
     'direct validation rejects wrong family, unsupported headers and truncated tables',
     () async {
       final valid = await installedFontFixture('Arial');

@@ -545,8 +545,7 @@
         "test/goldens/rtl_1.png",
         "test/goldens/tall_table_1.png",
         "test/goldens/tall_table_2.png",
-        "test/goldens/tall_table_3.png",
-        "test/goldens/tall_table_4.png"
+        "test/goldens/tall_table_3.png"
       ]
     },
     "structure": {

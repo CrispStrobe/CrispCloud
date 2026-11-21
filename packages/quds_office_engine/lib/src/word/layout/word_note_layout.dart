@@ -199,7 +199,7 @@ class _NoteSlice {
       page.notes.add(_noteLine(line, dx, dy, page.index, line.sourceText!));
     }
     for (final LaidOutBox frame in story.frames) {
-      if (frame.y + frame.height <= start || frame.y >= end) continue;
+      if (!_noteBoxOverlaps(frame, start, end)) continue;
       page.frames.add(_noteBox(frame, dx, dy, start, end));
     }
   }
@@ -268,6 +268,16 @@ LaidOutLine _noteLine(
   justificationRatio: line.justificationRatio,
 );
 
+bool _noteBoxOverlaps(LaidOutBox box, double start, double end) {
+  if (box.height > 0 && box.y + box.height > start && box.y < end) return true;
+  final row = box.tableRowGeometry;
+  // Hidden merge continuations retain physical rows for selection handles.
+  return row != null &&
+      row.height > 0 &&
+      row.y + row.height > start &&
+      row.y < end;
+}
+
 LaidOutBox _noteBox(
   LaidOutBox b,
   double dx,
@@ -278,11 +288,14 @@ LaidOutBox _noteBox(
 }) {
   final double top = math.max(start, b.y);
   final double bottom = math.min(end, b.y + b.height);
+  final row = b.tableRowGeometry;
+  final rowTop = row == null ? 0.0 : math.max(start, row.y);
+  final rowBottom = row == null ? 0.0 : math.min(end, row.y + row.height);
   return LaidOutBox(
     x: b.x + dx,
     y: top + dy,
     width: b.width,
-    height: bottom - top,
+    height: math.max(0, bottom - top),
     fillColor: b.fillColor,
     strokeColor: b.strokeColor,
     strokeWidth: b.strokeWidth,
@@ -294,6 +307,16 @@ LaidOutBox _noteBox(
     tableRow: b.tableRow,
     tableCol: b.tableCol,
     tableGridCol: b.tableGridCol,
+    // Keep a zero-height record when this visible merge fragment has no
+    // physical origin row in the slice. Falling back to its master tableRow
+    // would invent that earlier row on a later note or tall-row page.
+    tableRowGeometry: row == null
+        ? null
+        : (
+            row: row.row,
+            y: rowTop + dy,
+            height: math.max(0, rowBottom - rowTop),
+          ),
     frame: b.frame,
     strokeTop: b.strokeTop && b.y >= start,
     strokeBottom: b.strokeBottom && b.y + b.height <= end,

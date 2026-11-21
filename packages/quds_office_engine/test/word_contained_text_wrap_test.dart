@@ -204,13 +204,16 @@ void main() {
   test(
     'Indic cell clusters keep their owners through direct and isolate saves',
     () async {
+      // Keep the narrow text area independent of the default cell padding.
+      // The original 42pt cell with 5.4pt pads provided 31.2pt of content.
+      const contentWidth = 31.2;
       for (final isolate in [false, true]) {
         var document = WmlDocument(
           sections: [
             WmlSection(
               blocks: [
                 WmlTable(
-                  grid: [42],
+                  grid: [contentWidth + 2 * LaidOutLine.tableCellPad],
                   rows: [
                     WmlTableRow(
                       cells: [

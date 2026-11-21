@@ -4,6 +4,54 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Read Zotero JSON citation placement consistently on the VM and JavaScript:
+  numeric values 0, 1 and 2 include equivalent decimal/exponent spellings;
+  fractional, out-of-range, string and boolean values remain invalid. Preserve
+  native XML's strict placement spellings and add literal-JSON parity cases.
+
+- Preserve vertical and combined row/column merges in Zotero research tables.
+  Normalize a bounded logical grid into native restart/continuation cells and
+  remap citation/list indexes by paragraph identity. Count generated cells and
+  paragraphs against whole-note budgets and reject malformed or cross-group spans.
+- Keep native merged-table shading and borders on every occupied page, with
+  source paragraph ownership distinct from physical row geometry. Retain the
+  current conservative row-height allocation and reject invalid merge chains.
+- Preserve explicit per-cell border enable/disable overrides in DOCX export and
+  keep tall merged-cell page cuts open independently of inherited border style.
+
+- Preserve horizontal merged cells in Zotero Add Note/Add Annotation tables.
+  Map bounded `colspan` to native `gridSpan`, reconcile `data-colwidth` vectors
+  by logical column (including unspecified zero entries), and sum covered grid
+  widths for each cell. Retain rich text, lists, pictures and active citations
+  through body/note insertion, DOCX save/reopen and one undo/redo transaction.
+  Keep whole-note resource bounds and reject malformed logical grids, nested
+  tables and unsupported table groups/styles.
+- Advertise native Zotero citation merging and report adjacency to the next
+  enumerated field only for physically touching citation packets in the same
+  paragraph/story/note. Let Zotero own order, deduplication and formatting;
+  recheck packet adjacency before application and preserve atomic abort/stale
+  result handling. Structural boundaries and staged field changes do not bridge
+  a merge. See the
+  [continuation validation record](../../docs/validation/zotero-merged-cells-20261120/README.md)
+  for qualified local source checks and remaining installed-application acceptance.
+
+- Render inline header/footer pictures and retain distinct images when their
+  dimensions match. Keep continuous-section decoration separate from body
+  frames so incremental layout preserves the same pictures as full layout.
+  Resolve table-style header formatting through the existing cascade, preserving
+  direct run overrides and explicit border widths when style color fills an
+  automatic value. Keep imported compact spacing sparse on export so later style
+  changes remain effective. Retain the imported empty-paragraph border behavior.
+
+- Extend Word VBA with inches, centimeters, millimeters and picas conversions
+  to/from points, plus official named arguments for all ten measurement
+  functions. Preserve bounded Double arithmetic, exact native-unit checks,
+  document-independent compilation and atomic publication. Add a repeatable
+  Word layout example and source, saved-document, CLI/MCP and portable
+  JavaScript checks; retain the independent eight-, nine- and thirteen-operation
+  examples under distinct filenames. Document the Single-precision and native
+  ownership limits.
+
 - Fall back to full Word layout for changed footnote/endnote paragraphs,
   including nested note tables, so formatting edits cannot reuse stale note
   geometry. Keep incremental body edits when note content is unchanged and
@@ -88,8 +136,9 @@ All notable changes to `quds_office_engine` are documented here.
   and active citations in row order. Map consistent column widths and supported
   cell fills while sharing whole-note resource budgets. Preserve surrounding
   prose, authored-note markers and a main-flow caret after trailing tables.
-  Refuse merged/nested tables, unsupported styling and table-cell destinations
-  for table payloads before publication. See the
+  Initially refuse merged/nested tables, unsupported styling and table-cell
+  destinations for table payloads before publication; the continuation above
+  adds horizontal merged cells. See the
   [implementation and validation record](../../docs/validation/zotero-research-tables-20261120/README.md)
   for the tested source and remaining application acceptance.
 
