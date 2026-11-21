@@ -11,7 +11,11 @@ void main() {
         strings.serverAddress,
         strings.passwordOrAppPassword,
         strings.appPasswordHelp,
-        strings.authenticationFailed
+        strings.authenticationFailed,
+        strings.browserLogin,
+        strings.browserLoginHelp,
+        strings.waitingForBrowser,
+        strings.browserLoginExpired,
       ];
       expect(values.every((value) => value.isNotEmpty), isTrue);
       if (locale.languageCode != 'en') {
@@ -19,6 +23,10 @@ void main() {
         expect(values[1], isNot(english.passwordOrAppPassword));
         expect(values[2], isNot(english.appPasswordHelp));
         expect(values[3], isNot(english.authenticationFailed));
+        expect(values[4], isNot(english.browserLogin));
+        expect(values[5], isNot(english.browserLoginHelp));
+        expect(values[6], isNot(english.waitingForBrowser));
+        expect(values[7], isNot(english.browserLoginExpired));
       }
     }
   });

@@ -22,6 +22,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart' as path_provider;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'cloud_storage_interface.dart';
@@ -683,6 +684,23 @@ class FuseMountService {
 
   void _notify() => onChanged?.call();
 
+  /// The per-user temporary directory macOS assigns to this process.
+  ///
+  /// `Directory.systemTemp` reads `TMPDIR` and falls back to the shared `/tmp`
+  /// when an app is launched without it; a sandboxed app may not create
+  /// directories there (`Operation not permitted`). NSTemporaryDirectory, which
+  /// path_provider returns, is always the app's own writable location.
+  static Future<Directory> _ipcTemporaryDirectory() async {
+    try {
+      final dir = await path_provider.getTemporaryDirectory();
+      await dir.create(recursive: true);
+      return dir;
+    } catch (e) {
+      _log.warn('No platform temporary directory, using system temp: $e');
+      return Directory.systemTemp;
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // Bridge management
   // ---------------------------------------------------------------------------
@@ -692,7 +710,11 @@ class FuseMountService {
       throw StateError(bridgeMissing);
     }
     final runtime = macFuseRuntime(entry.macBackend);
-    final fs = FuseFilesystem(client: client, remotePath: entry.remotePath);
+    final fs = FuseFilesystem(
+      client: client,
+      remotePath: entry.remotePath,
+      temporaryDirectory: await _ipcTemporaryDirectory(),
+    );
     _filesystems[entry.mountPoint] = fs;
     unawaited(fs.serveRequests());
     Process? process;

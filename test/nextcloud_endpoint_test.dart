@@ -23,6 +23,35 @@ NextcloudConfigService _config() => NextcloudConfigService(
 );
 
 void main() {
+  group('installation URLs pasted from the browser', () {
+    for (final (input, expected) in const [
+      ('https://cloud.example/index.php/apps/files/?dir=/&fileid=5',
+          'https://cloud.example'),
+      ('https://cloud.example/nextcloud/index.php/apps/files',
+          'https://cloud.example/nextcloud'),
+      ('https://cloud.example/apps/files/files/12?dir=/Docs',
+          'https://cloud.example'),
+      ('https://cloud.example/login?redirect_url=/', 'https://cloud.example'),
+      ('https://cloud.example/nextcloud/', 'https://cloud.example/nextcloud'),
+      ('https://cloud.example:8443/', 'https://cloud.example:8443'),
+      ('https://cloud.example/remote.php/dav/files/a%40b.example/',
+          'https://cloud.example/remote.php/dav/files/a%40b.example'),
+    ]) {
+      test(input, () {
+        expect(NextcloudEndpoint.installationUrl(input), expected);
+      });
+    }
+
+    test('server root cuts a DAV suffix', () {
+      expect(
+        NextcloudEndpoint.serverRoot(
+          'https://cloud.example/sub/remote.php/dav/files/me/',
+        ).toString(),
+        'https://cloud.example/sub',
+      );
+    });
+  });
+
   for (final (input, expected) in [
     ('$_server/', '$_server/remote.php/dav/files/person%40example.test/'),
     (

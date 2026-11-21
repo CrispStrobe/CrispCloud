@@ -31,6 +31,21 @@ void main() {
     adapter = GDriveClientAdapter(config: configService);
   });
 
+  group('GDriveNameCodec', () {
+    test('maps Drive names with separators to path-safe look-alikes', () {
+      final shown = GDriveNameCodec.fromDrive(r'Budget 2025/26 \ draft');
+      expect(shown, 'Budget 2025\uFF0F26 \uFF3C draft');
+      expect(shown.contains('/'), isFalse);
+      expect(shown.contains(r'\'), isFalse);
+      expect(GDriveNameCodec.toDrive(shown), r'Budget 2025/26 \ draft');
+    });
+
+    test('leaves ordinary names unchanged', () {
+      expect(GDriveNameCodec.fromDrive('Report.docx'), 'Report.docx');
+      expect(GDriveNameCodec.toDrive('Report.docx'), 'Report.docx');
+    });
+  });
+
   group('GDriveClientAdapter basic properties', () {
     test('providerName returns Google Drive', () {
       expect(adapter.providerName, equals('Google Drive'));
