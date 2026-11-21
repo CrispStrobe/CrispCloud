@@ -9,6 +9,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'l10n/app_localizations.dart';
 import 'l10n/web_vault_strings.dart';
+import 'l10n/biometric_vault_strings.dart';
 import 'l10n/settings_strings.dart';
 import 'l10n/startup_failure_strings.dart';
 import 'l10n/provider_operation_strings.dart';
@@ -77,6 +78,7 @@ import 'services/office_proofing_licenses.dart';
 import 'services/office_spacy.dart';
 import 'services/secure_storage_service.dart';
 import 'services/secure_storage_web.dart';
+import 'services/biometric_vault_unlock.dart';
 import 'services/secure_storage_file.dart';
 import 'services/secure_storage_macos_keychain.dart';
 import 'services/credential_storage_bootstrap.dart';
@@ -441,6 +443,10 @@ Future<void> _startCrispCloud() async {
       secureStorage = selected.storage;
       effectiveMode = selected.mode;
       vaultRequired = selected.requiresUnlock;
+      if (effectiveMode != CredentialStorageMode.encryptedFile) {
+        // Storage mode changed away from the vault: drop its Touch ID key.
+        unawaited(BiometricVaultUnlock().removeIfEnabled());
+      }
     }
     crashReporting!.reportBreadcrumb('Secure storage ready', 'startup');
 
@@ -1302,11 +1308,105 @@ class WebMasterPasswordGateState extends ConsumerState<WebMasterPasswordGate> {
   CredentialStorageUnavailable? _inspectionFailure;
   bool _obscurePassword = true;
   bool _obscureConfirmation = true;
+  bool _biometricEnabled = false;
+  String? _biometricNotice;
 
   @override
   void initState() {
     super.initState();
     _checkIfGateNeeded();
+  }
+
+  /// Touch ID first; any non-success leaves the password prompt in place.
+  Future<void> _unlockWithBiometrics() async {
+    if (_loading || _inspectionFailed || _isNewVault || !_biometricEnabled) {
+      return;
+    }
+    final strings = BiometricVaultStrings(context);
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    final storage = ref.read(secureStorageProvider) as WebEncryptedStorage;
+    var outcome = BiometricUnlockOutcome.notAttempted;
+    try {
+      outcome = await ref
+          .read(biometricVaultUnlockProvider)
+          .tryUnlock(storage, strings.reason);
+    } catch (_) {
+      // Fall back to the master password.
+    }
+    if (outcome == BiometricUnlockOutcome.unlocked) {
+      try {
+        await _finishUnlock(storage, offerBiometric: false);
+      } catch (error, stack) {
+        _handleUnlockFailure(error, stack);
+      }
+      return;
+    }
+    if (!mounted) return;
+    setState(() {
+      _loading = false;
+      if (outcome == BiometricUnlockOutcome.invalidated) {
+        _biometricEnabled = false;
+        _biometricNotice = strings.invalidated;
+      }
+    });
+  }
+
+  /// After a password unlock, offer Touch ID (opt-in). Never blocks unlock.
+  Future<void> _offerBiometricUnlock(WebEncryptedStorage storage) async {
+    try {
+      final biometric = ref.read(biometricVaultUnlockProvider);
+      if (!await biometric.shouldOffer() || !mounted) return;
+      final strings = BiometricVaultStrings(context);
+      final accepted = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogContext) => AlertDialog(
+          key: const ValueKey('biometric-vault-offer'),
+          icon: const Icon(Icons.fingerprint),
+          title: Text(strings.offerTitle),
+          content: Text(strings.offerBody),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(strings.notNow),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: Text(strings.enable),
+            ),
+          ],
+        ),
+      );
+      if (accepted == true) {
+        final failure = await biometric.enable(storage);
+        if (failure != null && mounted) {
+          ScaffoldMessenger.maybeOf(context)
+              ?.showSnackBar(SnackBar(content: Text(strings.enableFailed)));
+        }
+      } else if (accepted == false) {
+        await biometric.declineOffer();
+      }
+    } catch (_) {
+      _log.warn('Touch ID vault unlock offer failed');
+    }
+  }
+
+  Future<void> _finishUnlock(
+    WebEncryptedStorage storage, {
+    required bool offerBiometric,
+  }) async {
+    if (!storage.isInitialized) throw const CredentialStorageUnavailable();
+    _isNewVault = false;
+    await CredentialMigration.migrateIfNeeded(storage);
+    if (offerBiometric) await _offerBiometricUnlock(storage);
+    if (mounted) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute<void>(builder: (_) => const AppLockGate()),
+      );
+    }
   }
 
   /// Decide whether to create or unlock a vault before the app saves secrets.
@@ -1320,10 +1420,24 @@ class WebMasterPasswordGateState extends ConsumerState<WebMasterPasswordGate> {
     try {
       final storage = ref.read(secureStorageProvider) as WebEncryptedStorage;
       _isNewVault = !await storage.hasVault();
+      final biometric = ref.read(biometricVaultUnlockProvider);
+      if (_isNewVault) {
+        // A missing or (re)created vault must not keep a key for a previous
+        // one: such a key can never open the vault that comes next.
+        await biometric.removeIfEnabled();
+        _biometricEnabled = false;
+      }
       if (_isNewVault && ref.read(credentialVaultCreationProvider) == null) {
         throw StateError(
           'Credential vault is missing; restore the existing vault or choose another store.',
         );
+      }
+      if (!_isNewVault) {
+        try {
+          _biometricEnabled = await biometric.isEnabled();
+        } catch (_) {
+          _biometricEnabled = false;
+        }
       }
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && !_inspectionFailed) {
@@ -1350,6 +1464,9 @@ class WebMasterPasswordGateState extends ConsumerState<WebMasterPasswordGate> {
       setState(() {
         _loading = false;
       });
+      if (_biometricEnabled && !_inspectionFailed && !_isNewVault) {
+        await _unlockWithBiometrics();
+      }
     }
   }
 
@@ -1389,40 +1506,37 @@ class WebMasterPasswordGateState extends ConsumerState<WebMasterPasswordGate> {
         await consumeCreation();
       }
       await storage.initialize(password, expectedExisting: !_isNewVault);
-      if (!storage.isInitialized) throw const CredentialStorageUnavailable();
-      _isNewVault = false;
-      await CredentialMigration.migrateIfNeeded(storage);
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute<void>(builder: (_) => const AppLockGate()),
-        );
-      }
+      await _finishUnlock(storage, offerBiometric: true);
     } catch (error, stack) {
-      final wrongPassword =
-          error is StateError &&
-          (error.message == 'Incorrect master password' ||
-              error.message == 'Incorrect master password or damaged vault' ||
-              error.message == 'Master password verification failed');
-      if (!wrongPassword) {
-        _inspectionFailure = CredentialStorageUnavailable(
-          diagnostics: CredentialStorageDiagnostics.capture(
-            error,
-            stack,
-            operation: 'Unlock credential vault and read stored profile',
-            storage: ref.read(secureStorageProvider),
-          ),
-        );
-        debugPrint(
-          '[Main] Credential vault inspection failed\n${_inspectionFailure!.diagnostics!.report}',
-        );
-      }
-      if (mounted) {
-        setState(() {
-          _inspectionFailed = !wrongPassword;
-          _error = wrongPassword ? WebVaultStrings(context).incorrect : null;
-          _loading = false;
-        });
-      }
+      _handleUnlockFailure(error, stack);
+    }
+  }
+
+  void _handleUnlockFailure(Object error, StackTrace stack) {
+    final wrongPassword =
+        error is StateError &&
+        (error.message == 'Incorrect master password' ||
+            error.message == 'Incorrect master password or damaged vault' ||
+            error.message == 'Master password verification failed');
+    if (!wrongPassword) {
+      _inspectionFailure = CredentialStorageUnavailable(
+        diagnostics: CredentialStorageDiagnostics.capture(
+          error,
+          stack,
+          operation: 'Unlock credential vault and read stored profile',
+          storage: ref.read(secureStorageProvider),
+        ),
+      );
+      debugPrint(
+        '[Main] Credential vault inspection failed\n${_inspectionFailure!.diagnostics!.report}',
+      );
+    }
+    if (mounted) {
+      setState(() {
+        _inspectionFailed = !wrongPassword;
+        _error = wrongPassword ? WebVaultStrings(context).incorrect : null;
+        _loading = false;
+      });
     }
   }
 
@@ -1465,6 +1579,17 @@ class WebMasterPasswordGateState extends ConsumerState<WebMasterPasswordGate> {
                           : strings.unlockDescription,
                       textAlign: TextAlign.center,
                     ),
+                    if (_biometricNotice != null) ...[
+                      const SizedBox(height: 12),
+                      Text(
+                        _biometricNotice!,
+                        key: const ValueKey('biometric-vault-notice'),
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 24),
                     TextField(
                       controller: _controller,
@@ -1540,6 +1665,20 @@ class WebMasterPasswordGateState extends ConsumerState<WebMasterPasswordGate> {
                               ),
                       ),
                     ),
+                    if (_biometricEnabled && !_isNewVault) ...[
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          key: const ValueKey('biometric-vault-unlock'),
+                          onPressed: _loading ? null : _unlockWithBiometrics,
+                          icon: const Icon(Icons.fingerprint),
+                          label: Text(
+                            BiometricVaultStrings(context).unlockButton,
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),

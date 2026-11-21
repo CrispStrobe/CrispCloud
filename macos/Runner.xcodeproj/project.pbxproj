@@ -43,6 +43,7 @@
 		CC002A012044A3C60003F001 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = CC002A002044A3C60003F001 /* PrivacyInfo.xcprivacy */; };
 		CC002A042044A3C60003F001 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = CC002A032044A3C60003F001 /* PrivacyInfo.xcprivacy */; };
 		CC003A012044A3C60003F001 /* CustomKeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC003A002044A3C60003F001 /* CustomKeychainStore.swift */; };
+		BB10A0012F00C1D20007A001 /* BiometricVaultKeychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB10A0002F00C1D20007A001 /* BiometricVaultKeychain.swift */; };
 		D68DAF18FBE593AAC7CD2202 /* FileProviderExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33D7742D552E592E026C1180 /* FileProviderExtension.swift */; };
 		E5878A68877F22CC64B0071F /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FA6CEBC4889E893ECB6B598D /* Pods_Runner.framework */; };
 		EA8167BDCBF518534C0A6299 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = E3A01F7C4978002D964789CF /* PrivacyInfo.xcprivacy */; };
@@ -155,6 +156,7 @@
 		CC002A002044A3C60003F001 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		CC002A032044A3C60003F001 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		CC003A002044A3C60003F001 /* CustomKeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomKeychainStore.swift; sourceTree = "<group>"; };
+		BB10A0002F00C1D20007A001 /* BiometricVaultKeychain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricVaultKeychain.swift; sourceTree = "<group>"; };
 		DCC7D61164E652A1F5A81AEF /* Pods_RunnerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RunnerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		E3A01F7C4978002D964789CF /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		E8FC9A66E6C713DDBF93D02D /* Pods-RunnerTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.debug.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.debug.xcconfig"; sourceTree = "<group>"; };
@@ -281,6 +283,7 @@
 			children = (
 				33CC10F02044A3C60003C045 /* AppDelegate.swift */,
 				CC003A002044A3C60003F001 /* CustomKeychainStore.swift */,
+				BB10A0002F00C1D20007A001 /* BiometricVaultKeychain.swift */,
 				33CC11122044BFA00003C045 /* MainFlutterWindow.swift */,
 				33E51913231747F40026EE4D /* DebugProfile.entitlements */,
 				33E51914231749380026EE4D /* Release.entitlements */,
@@ -735,6 +738,7 @@
 				33CC11132044BFA00003C045 /* MainFlutterWindow.swift in Sources */,
 				33CC10F12044A3C60003C045 /* AppDelegate.swift in Sources */,
 				CC003A012044A3C60003F001 /* CustomKeychainStore.swift in Sources */,
+				BB10A0012F00C1D20007A001 /* BiometricVaultKeychain.swift in Sources */,
 				335BBD1B22A9A15E00E9071D /* GeneratedPluginRegistrant.swift in Sources */,
 				5380BF974FF000C9BF19C2F0 /* FileProviderDomains.swift in Sources */,
 			);

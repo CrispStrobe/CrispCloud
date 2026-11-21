@@ -183,6 +183,46 @@ handle locked. The gate verifies that new/existing state still matches its
 inspection before initializing. Passwords are not trimmed or persisted; reveal
 controls affect display only. This backend has no password-recovery mechanism.
 
+### Touch ID unlock (macOS)
+
+After a master-password unlock, macOS offers an opt-in "Unlock with Touch ID
+next time" (also a toggle under Settings → Credentials). Enabling stores the
+vault's **derived 32-byte AES key** (PBKDF2 output), never the password, in the
+data protection keychain (`kSecUseDataProtectionKeychain`) as a generic password
+protected by `SecAccessControl(kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
+.biometryCurrentSet)`. The OS shows the Touch ID sheet when the item is read and
+makes it unreadable once enrolled fingers change; there is no app-side boolean
+gate (`macos/Runner/BiometricVaultKeychain.swift`,
+`lib/services/biometric_vault_unlock.dart`). The key suffices because
+`WebEncryptedStorage.initializeWithKey` verifies it against the vault's
+verification token, so the password itself never leaves the prompt and a key
+from a replaced or re-keyed vault fails like a wrong password.
+
+At startup Touch ID is tried first. Cancel/failure shows the password prompt
+(with a button to retry Touch ID). Changed fingers, a missing item or a key that
+no longer opens the vault remove the item, and the next password unlock offers
+enrolment again. The item is also removed when the user turns the option off,
+the vault is missing/recreated, or the storage mode changes away from the vault.
+
+The data protection keychain needs the restricted `keychain-access-groups`
+entitlement, which only a team-provisioned signature may carry (ad-hoc builds
+are killed at launch, see commit 2e823d73). It is therefore *not* in the
+committed `.entitlements` files. Release signing (`tool/sign_macos_local.sh`,
+`tool/macos_public_signing.py`, `.github/workflows/macos-release.yml`) adds
+`<TEAM>.com.CrispStrobe.cloud` only when the embedded provisioning profile
+authorizes it (`macos_public_signing.py keychain-group`). Builds without it
+probe `errSecMissingEntitlement` (-34018) and show the option disabled with an
+explanation. The probe is a test *write* (then delete): an unprovisioned build
+gets `errSecItemNotFound` on a read and -34018 only on a write. When the group
+was added, each signing path also checks that it is in the final signature.
+
+Profile requirements: the Mac App Store app profile
+(`ASC_PROFILE_MACOS_BASE64` in the release workflow) and the Developer ID app profile
+(`MACOS_DEVELOPER_ID_PROFILE_BASE64`) must list `keychain-access-groups`
+`<TEAM>.*` or `<TEAM>.com.CrispStrobe.cloud` (portal-generated macOS profiles
+normally include `<TEAM>.*`). If not, signing prints a warning and ships
+without the feature rather than producing an app macOS kills at launch.
+
 ### Native file transactions
 
 Each operation reloads committed state under an OS lock. Local serialization

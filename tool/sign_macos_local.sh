@@ -95,8 +95,8 @@ if ! security find-identity -v -p codesigning | grep -q "$IDENT"; then
 fi
 
 mkents() {  # mkents <source .entitlements> <bundle id> <out>
-  # Expand $(TeamIdentifierPrefix) (app group IDs) as Xcode would.
-  sed "s/\$(TeamIdentifierPrefix)/$TEAM./g" "$1" > "$3"
+  # Expand $(TeamIdentifierPrefix)/$(AppIdentifierPrefix) as Xcode would.
+  sed -e "s/\$(TeamIdentifierPrefix)/$TEAM./g" -e "s/\$(AppIdentifierPrefix)/$TEAM./g" "$1" > "$3"
   /usr/libexec/PlistBuddy -c "Delete :com.apple.application-identifier" "$3" 2>/dev/null || true
   /usr/libexec/PlistBuddy -c "Delete :com.apple.developer.team-identifier" "$3" 2>/dev/null || true
   /usr/libexec/PlistBuddy -c "Add :com.apple.application-identifier string $TEAM.$2" "$3"
@@ -151,6 +151,9 @@ if [ -d "$SHEXT" ]; then
   codesign ${KEYCHAIN_ARGS[@]+"${KEYCHAIN_ARGS[@]}"} --force --options runtime --sign "$IDENT" --entitlements "$WORK/share.plist" "$SHEXT"
 fi
 mkents "$APP_ENTITLEMENTS" "$BUNDLE_ID" "$WORK/app-ents.plist"
+# Touch ID vault unlock: restricted keychain group, added only when the
+# embedded profile authorizes it (never in the committed entitlements).
+python3 tool/macos_public_signing.py keychain-group --entitlements "$WORK/app-ents.plist" --profile "$APP_PROFILE" --team "$TEAM"
 case "$CONFIGURATION" in
   Debug|Profile)
     # The same persistent app identity is used for local debugging, with only
@@ -172,4 +175,8 @@ codesign ${KEYCHAIN_ARGS[@]+"${KEYCHAIN_ARGS[@]}"} --force --options runtime --s
 codesign --verify --deep --strict "$APP"
 codesign -d --entitlements - --xml "$APP" 2>/dev/null | grep -q "$TEAM.$BUNDLE_ID" \
   || { echo "application-identifier missing from the signed app" >&2; exit 1; }
+if /usr/libexec/PlistBuddy -c "Print :keychain-access-groups" "$WORK/app-ents.plist" >/dev/null 2>&1; then
+  codesign -d --entitlements - --xml "$APP" 2>/dev/null | grep -q "keychain-access-groups" \
+    || { echo "Touch ID vault keychain group missing from the signed app" >&2; exit 1; }
+fi
 echo "Signed $APP with identity $IDENT ${KEYCHAIN_ARGS[*]+"${KEYCHAIN_ARGS[*]}"}"

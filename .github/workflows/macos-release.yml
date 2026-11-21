@@ -262,7 +262,7 @@ jobs:
             local src="$1" bid="$2" out="$RUNNER_TEMP/$(basename "$1").signed.plist"
             # Xcode expands $(TeamIdentifierPrefix) (app group IDs); this
             # explicit re-sign must do the same.
-            sed "s/\$(TeamIdentifierPrefix)/$TEAM./g" "$src" > "$out"
+            sed -e "s/\$(TeamIdentifierPrefix)/$TEAM./g" -e "s/\$(AppIdentifierPrefix)/$TEAM./g" "$src" > "$out"
             /usr/libexec/PlistBuddy -c "Delete :com.apple.application-identifier" "$out" 2>/dev/null || true
             /usr/libexec/PlistBuddy -c "Delete :com.apple.developer.team-identifier" "$out" 2>/dev/null || true
             /usr/libexec/PlistBuddy -c "Add :com.apple.application-identifier string $TEAM.$bid" "$out"
@@ -310,10 +310,21 @@ jobs:
             fi
           fi
           APP_ENT=$(mkents macos/Runner/Release.entitlements "${{ env.BUNDLE_ID }}")
+          # Touch ID vault unlock: restricted keychain group, added only when
+          # the embedded profile authorizes it (never in committed entitlements).
+          python3 tool/macos_public_signing.py keychain-group --entitlements "$APP_ENT" \
+            --profile "$APP/Contents/embedded.provisionprofile" --team "$TEAM"
           echo "--- app entitlements ---"; cat "$APP_ENT"
           APP_REQUIREMENT="=designated => anchor apple generic and identifier \"${{ env.BUNDLE_ID }}\" and certificate leaf[subject.OU] = \"$TEAM\""
           codesign --force --timestamp --options runtime --sign "$IDENT" \
             --entitlements "$APP_ENT" --requirements "$APP_REQUIREMENT" "$APP"
+          # The Touch ID vault keychain group, when the profile allowed it, must
+          # be in the final signature (otherwise the feature silently vanishes).
+          if grep -q "keychain-access-groups" "$APP_ENT"; then
+            codesign -d --entitlements - --xml "$APP" 2>/dev/null \
+              | grep -q "$TEAM.${{ env.BUNDLE_ID }}</string>" \
+              || { echo "::error::keychain-access-groups missing from the signed .app"; exit 1; }
+          fi
           # Fail loud if the application-identifier didn't make it in (90886).
           codesign -d --entitlements - --xml "$APP" 2>/dev/null \
             | grep -q "com.apple.application-identifier" \

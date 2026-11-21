@@ -80,6 +80,7 @@ class MainFlutterWindow: NSWindow, NSDraggingSource {
     FileProviderDomains.register(binaryMessenger: flutterViewController.engine.binaryMessenger)
     (NSApplication.shared.delegate as? AppDelegate)?.registerExternalOpenChannel(
       binaryMessenger: flutterViewController.engine.binaryMessenger)
+    BiometricVaultKeychain.register(binaryMessenger: flutterViewController.engine.binaryMessenger)
 
     // PDF text layer extraction (PDFKit). Scanned PDFs return an empty string.
     let pdfTextChannel = FlutterMethodChannel(
