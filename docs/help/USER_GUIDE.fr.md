@@ -146,21 +146,49 @@ Les commandes respectent le composant qui détient la saisie. Les éditeurs et l
 
 **F1** ouvre la référence des raccourcis et donne accès à ce guide. Personnalisez les raccourcis dans leurs paramètres. La référence affiche les affectations actuelles. Sur macOS, la touche de modification principale suit la convention de la plateforme ; l’insertion dans la saisie de commande utilise la touche Control elle-même, comme indiqué.
 
-| Raccourci par défaut | Action |
+| Par défaut | Action |
 | --- | --- |
-| F2 / Shift+F6 | Renommer |
+| F2 / Maj+F6 | Renommer |
 | F3 / F4 | Afficher / modifier |
-| F5 / F6 | Vérifier la copie / le déplacement |
-| F7 | Nouveau dossier |
+| Maj+F4 | Nouveau fichier texte : le nommer, puis le modifier |
+| Ctrl+Maj+F4 | Choisir l’éditeur (texte, hexadécimal, système) |
+| F5 / F6 | Copier / déplacer avec vérification |
+| Maj+F5 | Copier dans le même dossier sous un nouveau nom |
+| Ctrl+Maj+F5 | Lien symbolique dans l’autre panneau (local, macOS/Linux) |
+| F7 / Ctrl+N | Nouveau dossier |
+| F8 / Suppr | Supprimer (vers la corbeille si disponible) |
+| Maj+F8 / Maj+Suppr | Supprimer définitivement, après confirmation |
+| Alt+F5 / Alt+F9 / Alt+Maj+F9 | Compresser / extraire / tester des archives |
 | Ctrl+R | Actualiser |
-| Ctrl+M | Renommage multiple |
+| Ctrl+M (macOS ⇧⌘M ou ⌃M) | Renommage multiple |
 | Ctrl+G / Ctrl+L | Aller au dossier |
-| Alt+F7 / Ctrl+F | Rechercher / filtrer |
-| Ctrl+T / Ctrl+W | Ouvrir / fermer un onglet |
-| Ctrl+Shift+P | Ouverture rapide |
-| Ctrl+Shift+O | Saisie de commande |
+| Ctrl+Page↑ / Ctrl+Page↓ | Dossier parent / ouvrir le dossier ou l’archive sous le curseur |
+| Ctrl+H / Alt+↓ | Historique des dossiers |
+| Ctrl+\ / Ctrl+Maj+Origine | Racine du stockage / dossier personnel |
+| Alt+F1 / Alt+F2 | Sélecteur d’emplacement du panneau gauche / droit |
+| Ctrl+D / Ctrl+Maj+D | Liste de dossiers favoris (favoris de chemin) / signet pour ce dossier |
+| Ctrl+B / Ctrl+Maj+B | Vue à plat / vue à plat des dossiers sélectionnés |
+| Ctrl+1 / Ctrl+2 / Ctrl+3 (Ctrl+F1 / F2 / F8) | Vue compacte / complète / arborescente |
+| Ctrl+= / Alt+Z | Afficher ce dossier dans l’autre panneau |
+| Ctrl+U | Échanger les panneaux |
+| Maj+F2 | Comparer les dossiers (marquer les différences) |
+| Alt+Maj+Entrée | Calculer la taille de tous les dossiers |
+| Ctrl+A ou Ctrl+Num+ / Ctrl+Num− | Tout sélectionner / tout désélectionner |
+| Alt+Num+ / Alt+Num− (Maj+Num±) | Sélectionner / désélectionner la même extension |
+| Alt+F7 / Ctrl+F ou Ctrl+S | Rechercher / filtrer |
+| Ctrl+Alt+P ou Ctrl+Q | Afficher l’aperçu (Ctrl+Q sauf sous macOS) |
+| Ctrl+T / Ctrl+W / Ctrl+Maj+W | Ouvrir / fermer un onglet / fermer tous les onglets non protégés |
+| Ctrl+Tab / Ctrl+Maj+Tab | Onglet suivant / précédent |
+| Ctrl+Maj+A / Alt+1…9 / Alt+0 | Liste des onglets / onglet N / dernier onglet |
+| Ctrl+↑ / Ctrl+Maj+↑ | Dossier sous le curseur dans un nouvel onglet / dans un nouvel onglet de l’autre panneau |
+| Ctrl+Maj+T / Ctrl+Z | Rouvrir l’onglet fermé / annuler |
+| Ctrl+Maj+P | Ouverture rapide |
+| Ctrl+Maj+O | Saisie de commande |
+| Ctrl+, | Réglages |
 
-Dans le navigateur de fichiers, **Ctrl+Enter** ouvre un élément dans l’autre volet. Dans la saisie de commande, **Ctrl+Enter** insère les noms des fichiers fixés au départ et **Ctrl+Shift+Enter** insère leurs chemins complets. Ces contextes sont distincts. Les champs de texte, les éditeurs et les terminaux conservent leurs touches d’édition et de saisie.
+Les raccourcis par défaut suivent les habitudes de Total Commander et de Double Commander. Sous macOS, Commande (⌘) remplace Ctrl pour ces raccourcis, sauf lorsque macOS réserve la touche : Cmd+H, Cmd+M et Cmd+Q restent au système. L’historique des dossiers utilise donc Contrôle+H, le renommage multiple Maj+Cmd+M, et Ctrl+Q n’est pas attribué. Les habitudes du Finder fonctionnent aussi sous macOS : Cmd+[ / Cmd+] précédent/suivant, Cmd+↑ dossier parent, Cmd+↓ ouvrir, Cmd+Retour arrière supprimer, Cmd+Maj+G aller au dossier et Cmd+Maj+N nouveau dossier. Ctrl+↑ garde la touche Contrôle physique sous macOS (le système peut la réserver à Mission Control). Anciens raccourcis modifiés : Ctrl+B (désormais vue à plat ; le signet passe à Ctrl+Maj+D), Ctrl+Maj+B (la liste de favoris passe à Ctrl+D), Ctrl+D (le téléchargement reste disponible avec F5 et les menus), Ctrl+Page↑/Page↓ (les onglets restent sur Ctrl+Tab), Ctrl+H (les fichiers cachés restent sur Ctrl+. et Ctrl+Maj+.), Maj+F4 et Maj+F5. Les raccourcis que vous avez enregistrés vous-même sont conservés.
+
+Dans le navigateur, **Ctrl+Entrée** ouvre un élément dans l’autre panneau. Dans la saisie de commande, **Ctrl+Entrée** insère les noms de fichiers capturés, **Ctrl+Maj+Entrée** les chemins complets et **Ctrl+P** le chemin du dossier actuel. Ces portées sont distinctes. Les champs de texte, les éditeurs et les terminaux conservent leurs touches d’édition et de saisie.
 
 <a id="bookmarks-and-recent-locations"></a>
 ## Favoris et emplacements récents

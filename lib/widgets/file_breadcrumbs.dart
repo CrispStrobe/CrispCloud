@@ -157,7 +157,7 @@ class FileBreadcrumbs extends ConsumerWidget {
               ),
             ),
           ),
-          // Bookmark star (Ctrl+B to toggle)
+          // Bookmark star (Ctrl+Shift+D to toggle)
           ConstrainedBox(
             constraints: BoxConstraints(minWidth: minTap, minHeight: minTap),
             child: InkWell(

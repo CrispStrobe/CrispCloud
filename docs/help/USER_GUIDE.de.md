@@ -146,21 +146,49 @@ Befehle beachten, welche Oberfläche gerade die Eingabe übernimmt. Editoren und
 
 **F1** öffnet die Tastenkürzelübersicht und verweist auf dieses Handbuch. Passen Sie Tastenkürzel in den entsprechenden Einstellungen an. Die Übersicht zeigt die aktuellen Belegungen. Unter macOS folgt die primäre Modifikatortaste der Plattformkonvention; zum Einfügen in der Befehlseingabe wird wie angegeben ausdrücklich Control verwendet.
 
-| Voreinstellung | Aktion |
+| Standard | Aktion |
 | --- | --- |
 | F2 / Umschalt+F6 | Umbenennen |
-| F3 / F4 | Anzeigen / Bearbeiten |
-| F5 / F6 | Kopier- / Verschiebeprüfung |
-| F7 | Neuer Ordner |
+| F3 / F4 | Anzeigen / bearbeiten |
+| Umschalt+F4 | Neue Textdatei: benennen, dann bearbeiten |
+| Strg+Umschalt+F4 | Editor wählen (Text, Hex, System) |
+| F5 / F6 | Kopieren / verschieben mit Prüfung |
+| Umschalt+F5 | Im selben Ordner unter neuem Namen kopieren |
+| Strg+Umschalt+F5 | Symbolischer Link im anderen Bereich (lokal, macOS/Linux) |
+| F7 / Strg+N | Neuer Ordner |
+| F8 / Entf | Löschen (in den Papierkorb, wenn verfügbar) |
+| Umschalt+F8 / Umschalt+Entf | Endgültig löschen, nach Bestätigung |
+| Alt+F5 / Alt+F9 / Alt+Umschalt+F9 | Archiv packen / entpacken / testen |
 | Strg+R | Aktualisieren |
-| Strg+M | Mehrfachumbenennung |
+| Strg+M (macOS ⇧⌘M oder ⌃M) | Mehrfachumbenennung |
 | Strg+G / Strg+L | Zu Ordner wechseln |
-| Alt+F7 / Strg+F | Suchen / Filtern |
-| Strg+T / Strg+W | Tab öffnen / schließen |
+| Strg+Bild↑ / Strg+Bild↓ | Übergeordneter Ordner / Ordner oder Archiv unter dem Cursor öffnen |
+| Strg+H / Alt+↓ | Ordnerverlauf |
+| Strg+\ / Strg+Umschalt+Pos1 | Stammverzeichnis des Speichers / Benutzerordner |
+| Alt+F1 / Alt+F2 | Speicherortauswahl des linken / rechten Bereichs |
+| Strg+D / Strg+Umschalt+D | Ordner-Hotlist (Pfadfavoriten) / Lesezeichen für diesen Ordner |
+| Strg+B / Strg+Umschalt+B | Flache Ansicht / flache Ansicht der ausgewählten Ordner |
+| Strg+1 / Strg+2 / Strg+3 (Strg+F1 / F2 / F8) | Kurz- / Voll- / Baumansicht |
+| Strg+= / Alt+Z | Diesen Ordner im anderen Bereich anzeigen |
+| Strg+U | Bereiche tauschen |
+| Umschalt+F2 | Verzeichnisse vergleichen (Unterschiede markieren) |
+| Alt+Umschalt+Eingabe | Größe aller Ordner berechnen |
+| Strg+A oder Strg+Num+ / Strg+Num− | Alles auswählen / Auswahl aufheben |
+| Alt+Num+ / Alt+Num− (Umschalt+Num±) | Gleiche Erweiterung auswählen / abwählen |
+| Alt+F7 / Strg+F oder Strg+S | Suchen / Filtern |
+| Strg+Alt+P oder Strg+Q | Vorschau umschalten (Strg+Q nicht unter macOS) |
+| Strg+T / Strg+W / Strg+Umschalt+W | Tab öffnen / schließen / alle ungeschützten Tabs schließen |
+| Strg+Tab / Strg+Umschalt+Tab | Nächster / vorheriger Tab |
+| Strg+Umschalt+A / Alt+1…9 / Alt+0 | Tab-Liste / Tab N / letzter Tab |
+| Strg+↑ / Strg+Umschalt+↑ | Ordner unter dem Cursor in neuem Tab / in neuem Tab des anderen Bereichs |
+| Strg+Umschalt+T / Strg+Z | Geschlossenen Tab wieder öffnen / rückgängig |
 | Strg+Umschalt+P | Schnellzugriff |
 | Strg+Umschalt+O | Befehlseingabe |
+| Strg+, | Einstellungen |
 
-Im Dateibrowser öffnet **Strg+Eingabe** ein Element im anderen Bereich. Innerhalb der Befehlseingabe fügt **Strg+Eingabe** erfasste Dateinamen und **Strg+Umschalt+Eingabe** vollständige Pfade ein. Diese Geltungsbereiche sind getrennt. Textfelder, Editoren und Terminals behalten ihre Bearbeitungs- und Eingabetasten.
+Die Standardbelegung folgt den Gewohnheiten von Total Commander und Double Commander. Unter macOS ersetzt Befehl (⌘) bei diesen Tasten Strg, außer wenn macOS die Taste selbst belegt: Befehl+H, Befehl+M und Befehl+Q bleiben beim System. Der Ordnerverlauf verwendet daher Control+H, die Mehrfachumbenennung Umschalt+Befehl+M, und Strg+Q ist nicht belegt. Unter macOS funktionieren auch Finder-Gewohnheiten: Befehl+[ / Befehl+] zurück/vorwärts, Befehl+↑ übergeordneter Ordner, Befehl+↓ öffnen, Befehl+Rückschritt löschen, Befehl+Umschalt+G zu Ordner wechseln und Befehl+Umschalt+N neuer Ordner. Strg+↑ verwendet unter macOS die physische Control-Taste (das System kann sie für Mission Control beanspruchen). Geänderte frühere Standardtasten: Strg+B (jetzt flache Ansicht; Lesezeichen auf Strg+Umschalt+D), Strg+Umschalt+B (Hotlist auf Strg+D), Strg+D (Herunterladen bleibt über F5 und die Menüs erreichbar), Strg+Bild↑/Bild↓ (Tabs bleiben auf Strg+Tab), Strg+H (versteckte Dateien bleiben auf Strg+. und Strg+Umschalt+.), Umschalt+F4 und Umschalt+F5. Selbst aufgezeichnete Tastenkürzel bleiben erhalten.
+
+Im Dateibrowser öffnet **Strg+Eingabe** ein Element im anderen Bereich. Innerhalb der Befehlseingabe fügt **Strg+Eingabe** erfasste Dateinamen, **Strg+Umschalt+Eingabe** vollständige Pfade und **Strg+P** den Pfad des aktuellen Ordners ein. Diese Geltungsbereiche sind getrennt. Textfelder, Editoren und Terminals behalten ihre Bearbeitungs- und Eingabetasten.
 
 <a id="bookmarks-and-recent-locations"></a>
 ## Favoriten und zuletzt verwendete Speicherorte

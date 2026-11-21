@@ -2417,9 +2417,20 @@ void _showCreateLinkDialog(
   PanelSide side,
   FileItem file,
   PanelFileOrigin origin,
-) {
+) => showCreateLinkDialog(context, ref, side, file, origin);
+
+/// [linkPath] pre-fills the link location (Ctrl+Shift+F5 uses the other pane).
+void showCreateLinkDialog(
+  BuildContext context,
+  WidgetRef ref,
+  PanelSide side,
+  FileItem file,
+  PanelFileOrigin origin, {
+  String? linkPath,
+  VoidCallback? onCreated,
+}) {
   final controller = TextEditingController(
-    text: file.path != null ? '${file.path!}_link' : '',
+    text: linkPath ?? (file.path != null ? '${file.path!}_link' : ''),
   );
   bool isSymlink = true;
 
@@ -2484,6 +2495,7 @@ void _showCreateLinkDialog(
                   },
                 );
                 ref.read(panelProvider(side)).refresh();
+                onCreated?.call();
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(

@@ -448,6 +448,8 @@ class _FileGridViewState extends ConsumerState<FileGridView> {
         key == LogicalKeyboardKey.f6;
     if (([
               ShortcutAction.delete,
+              ShortcutAction.deletePermanently,
+              ShortcutAction.copySameFolder,
               ShortcutAction.rename,
               ShortcutAction.copy,
               ShortcutAction.cut,
