@@ -5,6 +5,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:cryptography/cryptography.dart' show SecretKey;
 import 'package:universal_html/html.dart' as html;
 
 import '../utils/async_lock.dart';
@@ -148,6 +149,67 @@ class WebEncryptedStorage extends SecureStorage
       rethrow;
     }
   });
+
+  /// Unlock with the raw 32-byte key derived from the master password (the
+  /// Touch ID unlock secret). The key is verified against the vault's current
+  /// verification token, so a key from a replaced or re-keyed vault fails like
+  /// a wrong password. Never creates a vault. [rawKey] is copied, not retained,
+  /// so the caller can zero it afterwards.
+  Future<void> initializeWithKey(Uint8List rawKey) =>
+      _operations.synchronized(() async {
+        _cryptoKey = null;
+        _metadata = null;
+        try {
+          final unlocked = await _withBackend((backend) async {
+            final metadata = await _readMetadata(backend);
+            if (metadata == null) {
+              throw StateError('Credential vault is missing');
+            }
+            if (rawKey.length != 32) {
+              throw StateError('Incorrect master password or damaged vault');
+            }
+            final key = await _crypto.importKey(Uint8List.fromList(rawKey));
+            try {
+              final verified = await _crypto.decrypt(
+                key,
+                base64.decode(metadata.verify),
+              );
+              if (utf8.decode(verified) != _verifyPlaintext) {
+                throw StateError('Master password verification failed');
+              }
+            } catch (_) {
+              throw StateError('Incorrect master password or damaged vault');
+            }
+            return (key: key, metadata: metadata);
+          });
+          _cryptoKey = unlocked.key;
+          _metadata = unlocked.metadata;
+          _log.info('Encrypted credential storage unlocked with stored key');
+        } catch (_) {
+          _cryptoKey = null;
+          _metadata = null;
+          rethrow;
+        }
+      });
+
+  /// A copy of the unlocked vault's raw AES key, for Touch ID enrolment, or
+  /// null when the crypto backend keeps keys non-extractable (WebCrypto).
+  /// Throws when locked or when the vault changed since unlocking. The caller
+  /// owns the returned buffer and should zero it after use.
+  Future<Uint8List?> exportUnlockKey() => _operations.synchronized(
+    () => _withBackend((backend) async {
+      final key = await _currentKey(backend);
+      if (key is Uint8List) return Uint8List.fromList(key);
+      if (key is SecretKey) {
+        try {
+          return Uint8List.fromList(await key.extractBytes());
+        } on UnsupportedError {
+          return null;
+        }
+      }
+      return null;
+    }),
+  );
 
   static void _validateIterations(int iterations) {
     if (iterations < 1 || iterations > _maxPbkdf2Iterations) {

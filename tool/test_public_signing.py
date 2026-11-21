@@ -57,6 +57,54 @@ class DeveloperIDTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'expired'):
             signing.validate_profile(self.payload, signing.BUNDLE, self.fingerprint, self.team)
 
+    def test_vault_keychain_group_requires_profile_authorization(self):
+        group = signing.vault_keychain_group(self.team)
+        self.assertEqual(group, self.team + '.' + signing.BUNDLE)
+        self.assertFalse(signing.profile_allows_keychain_group(self.payload, group))
+        for allowed in ([self.team + '.*'], [group]):
+            payload = dict(self.payload, Entitlements={'keychain-access-groups': allowed})
+            self.assertTrue(signing.profile_allows_keychain_group(payload, group))
+        for allowed in (['OTHERTEAM.*'], [self.team + '.other.app'], 'not-a-list'):
+            payload = dict(self.payload, Entitlements={'keychain-access-groups': allowed})
+            self.assertFalse(signing.profile_allows_keychain_group(payload, group))
+
+    def test_signing_entitlements_expand_prefixes_and_add_keychain_group(self):
+        import plistlib
+        import tempfile
+        with tempfile.TemporaryDirectory() as folder:
+            source = Path(folder) / 'source.plist'
+            source.write_bytes(plistlib.dumps({
+                'com.apple.security.application-groups': ['$(TeamIdentifierPrefix)crispcloud'],
+                'example': '$(AppIdentifierPrefix)x'}))
+            target = Path(folder) / 'target.plist'
+            signing.entitlements(source, signing.BUNDLE, self.team, target,
+                                 keychain_group=signing.vault_keychain_group(self.team))
+            values = plistlib.loads(target.read_bytes())
+            self.assertEqual(values['com.apple.security.application-groups'], [self.team + '.crispcloud'])
+            self.assertEqual(values['example'], self.team + '.x')
+            self.assertEqual(values['keychain-access-groups'], [self.team + '.' + signing.BUNDLE])
+            signing.entitlements(source, signing.BUNDLE, self.team, target)
+            self.assertNotIn('keychain-access-groups', plistlib.loads(target.read_bytes()))
+            with mock.patch.object(signing, 'profile_payload', return_value=self.payload):
+                self.assertFalse(signing.add_keychain_group(target, Path('unused'), self.team))
+            self.assertNotIn('keychain-access-groups', plistlib.loads(target.read_bytes()))
+            allowed = dict(self.payload, Entitlements={'keychain-access-groups': [self.team + '.*']})
+            with mock.patch.object(signing, 'profile_payload', return_value=allowed):
+                self.assertTrue(signing.add_keychain_group(target, Path('unused'), self.team))
+            self.assertEqual(plistlib.loads(target.read_bytes())['keychain-access-groups'],
+                             [self.team + '.' + signing.BUNDLE])
+
+    def test_restricted_keychain_group_stays_out_of_committed_entitlements(self):
+        # Unsigned/ad-hoc launches (CI smoke test, local builds) are killed if
+        # the committed entitlements carry keychain-access-groups (2e823d73).
+        for name in ('Release', 'Direct', 'DebugProfile'):
+            text = (signing.ROOT / 'macos/Runner' / f'{name}.entitlements').read_text()
+            self.assertNotIn('keychain-access-groups', text, name)
+        for relative in ('tool/sign_macos_local.sh', '.github/workflows/macos-release.yml'):
+            source = (signing.ROOT / relative).read_text()
+            self.assertIn('macos_public_signing.py keychain-group', source, relative)
+            self.assertIn('$(AppIdentifierPrefix)', source, relative)
+
     def test_native_tool_error_does_not_echo_password_arguments(self):
         command = ['security', 'import', '-P', 'fixture-secret-must-not-be-shown']
         with mock.patch.object(subprocess, 'run', side_effect=subprocess.CalledProcessError(1, command)):
