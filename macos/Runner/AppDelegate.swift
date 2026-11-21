@@ -20,10 +20,66 @@ class AppDelegate: FlutterAppDelegate {
   // so that FinderExtensionService can parse it and trigger uploads.
 
   override func application(_ application: NSApplication, open urls: [URL]) {
+    // "Open With" / double-click on a registered type: files arrive as file
+    // URLs, already readable through the sandbox extension macOS grants.
+    let files = urls.filter(\.isFileURL).map(\.path)
+    if !files.isEmpty { deliverExternalOpen(["paths": files, "shared": false]) }
     for url in urls {
       guard url.scheme?.lowercased() == "crispcloud" else { continue }
       NSLog("[AppDelegate] Received crispcloud URL: %@", url.absoluteString)
-      sendUrlToFlutter(url)
+      if url.host?.lowercased() == "received" {
+        deliverReceived(url)
+      } else if url.host?.lowercased() == "upload" {
+        // Finder Sync "Upload to CrispCloud": show the files selected.
+        let paths = URLComponents(url: url, resolvingAgainstBaseURL: false)?
+          .percentEncodedQueryItems?.first(where: { $0.name == "paths" })?.value?
+          .split(separator: ",").compactMap { $0.removingPercentEncoding } ?? []
+        if !paths.isEmpty { deliverExternalOpen(["paths": paths, "reveal": true]) }
+      } else {
+        sendUrlToFlutter(url)
+      }
+    }
+  }
+
+  // MARK: - External open channel (lib/services/external_open_service.dart)
+
+  private var externalOpenChannel: FlutterMethodChannel?
+  private var externalOpenQueue: [[String: Any]] = []
+  private var externalOpenReady = false
+
+  func registerExternalOpenChannel(binaryMessenger: FlutterBinaryMessenger) {
+    guard externalOpenChannel == nil else { return }
+    let channel = FlutterMethodChannel(
+      name: "com.crispcloud/external_open", binaryMessenger: binaryMessenger)
+    channel.setMethodCallHandler { [weak self] call, result in
+      guard let self, call.method == "ready" else { return result(FlutterMethodNotImplemented) }
+      self.externalOpenReady = true
+      result(self.externalOpenQueue)
+      self.externalOpenQueue.removeAll()
+    }
+    externalOpenChannel = channel
+  }
+
+  private func deliverExternalOpen(_ payload: [String: Any]) {
+    if externalOpenReady, let channel = externalOpenChannel {
+      channel.invokeMethod("open", arguments: payload)
+    } else {
+      externalOpenQueue.append(payload)
+    }
+  }
+
+  /// crispcloud://received?id=<uuid> — files the Share extension placed in
+  /// <App Group>/inbox/<uuid>/. Dart copies them to its Received folder.
+  private func deliverReceived(_ url: URL) {
+    guard let id = URLComponents(url: url, resolvingAgainstBaseURL: false)?
+            .queryItems?.first(where: { $0.name == "id" })?.value,
+          id.range(of: "^[0-9A-Fa-f-]{36}$", options: .regularExpression) != nil,
+          let container = FileProviderDomains.groupContainer() else { return }
+    let inbox = container.appendingPathComponent("inbox/\(id)", isDirectory: true)
+    let files = (try? FileManager.default.contentsOfDirectory(
+      at: inbox, includingPropertiesForKeys: nil))?.map(\.path) ?? []
+    if !files.isEmpty {
+      deliverExternalOpen(["paths": files, "shared": true, "cleanup": inbox.path])
     }
   }
 

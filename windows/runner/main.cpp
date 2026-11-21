@@ -71,6 +71,39 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
     return exit_code;
   }
 
+  // "Open with" while CrispCloud already runs: hand the files to the running
+  // window instead of starting a second app.
+  if (!command_line_arguments.empty()) {
+    HANDLE instance_mutex =
+        ::CreateMutexW(nullptr, FALSE, L"Local\\CrispCloud.SingleInstance");
+    if (instance_mutex && ::GetLastError() == ERROR_ALREADY_EXISTS) {
+      HWND running = ::FindWindowW(L"FLUTTER_RUNNER_WIN32_WINDOW", L"CrispCloud");
+      if (running) {
+        std::string joined;
+        for (const auto& argument : command_line_arguments) {
+          joined.append(argument);
+          joined.push_back('\0');
+        }
+        COPYDATASTRUCT data{};
+        data.dwData = kForwardArgumentsTag;
+        data.cbData = static_cast<DWORD>(joined.size());
+        data.lpData = joined.data();
+        DWORD_PTR ignored = 0;
+        ::AllowSetForegroundWindow(ASFW_ANY);
+        if (::SendMessageTimeoutW(running, WM_COPYDATA, 0,
+                                  reinterpret_cast<LPARAM>(&data),
+                                  SMTO_ABORTIFHUNG, 5000, &ignored)) {
+          ::CoUninitialize();
+          return EXIT_SUCCESS;
+        }
+      }
+    }
+    // Otherwise this process becomes the running instance (the mutex handle
+    // stays open for its lifetime).
+  } else {
+    ::CreateMutexW(nullptr, FALSE, L"Local\\CrispCloud.SingleInstance");
+  }
+
   project.set_dart_entrypoint_arguments(std::move(command_line_arguments));
 
   FlutterWindow window(project);

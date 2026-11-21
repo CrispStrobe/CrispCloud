@@ -1,3 +1,4 @@
+import '../widgets/external_open_handler.dart';
 import '../widgets/document_print_scope.dart';
 import '../widgets/new_document_dialog.dart';
 import '../services/document_workspace_session.dart';
@@ -151,11 +152,18 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
   late final MacBrowserToolbar _nativeToolbar;
   bool _nativeToolbarReady = false;
 
+  ExternalOpenListener? _externalOpen;
+
   @override
   void initState() {
     super.initState();
     _nativeToolbar = MacBrowserToolbar(_onNativeToolbarAction);
     FocusManager.instance.addListener(_updateMenuFocus);
+    // Files from other apps ("Open with", share sheet).
+    _externalOpen = ExternalOpenListener(() => context, ref);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _externalOpen!.start();
+    });
     // Serve configured Finder locations (macOS File Provider) for this session.
     if (FinderLocationService.isSupported) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -176,6 +184,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
   @override
   void dispose() {
     FocusManager.instance.removeListener(_updateMenuFocus);
+    _externalOpen?.dispose();
     unawaited(_nativeToolbar.dispose());
     super.dispose();
   }
@@ -473,15 +482,10 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       () => compareDirectories(ref),
       available: () => canCompareDirectories(ref),
     );
-    add(
-      'properties',
-      context.commanderTr('Properties'),
-      () {
-        final files = _integritySelection(ref);
-        if (files.isNotEmpty) showPropertiesDialog(context, files.first);
-      },
-      available: () => _integritySelection(ref).isNotEmpty,
-    );
+    add('properties', context.commanderTr('Properties'), () {
+      final files = _integritySelection(ref);
+      if (files.isNotEmpty) showPropertiesDialog(context, files.first);
+    }, available: () => _integritySelection(ref).isNotEmpty);
     add(
       'deselectPattern',
       context.commanderTr('Deselect by Wildcard or Regex...'),
@@ -594,9 +598,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                 : origin.storageReference.root;
             panel.navigateToPath(path, origin: origin);
           } catch (error) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text('$error')));
+            ScaffoldMessenger.of(context)
+                .showSnackBar(SnackBar(content: Text('$error')));
           }
         },
       );
