@@ -8064,16 +8064,17 @@ const commanderTranslations = <String, List<String>>{
     "예정 작업 {0}개",
     "{0} إجراءات مخططة",
   ],
-  "{0} received file(s) are in the Received folder. Copy them to any storage with F5.": [
-    "{0} empfangene Datei(en) liegen im Ordner „Received“. Kopieren Sie sie mit F5 in einen beliebigen Speicher.",
-    "{0} fichier(s) reçu(s) se trouvent dans le dossier Received. Copiez-les vers n’importe quel stockage avec F5.",
-    "{0} archivo(s) recibido(s) están en la carpeta Received. Cópielos a cualquier almacenamiento con F5.",
-    "{0} ficheiro(s) recebido(s) estão na pasta Received. Copie-os para qualquer armazenamento com F5.",
-    "{0} 个接收的文件位于 Received 文件夹中。可用 F5 复制到任意存储。",
-    "受信した {0} 個のファイルは Received フォルダーにあります。F5 で任意のストレージにコピーできます。",
-    "받은 파일 {0}개가 Received 폴더에 있습니다. F5로 원하는 저장소에 복사하세요.",
-    "{0} ملف/ملفات مستلمة في مجلد Received. انسخها إلى أي تخزين باستخدام F5.",
-  ],
+  "{0} received file(s) are in the Received folder. Copy them to any storage with F5.":
+      [
+        "{0} empfangene Datei(en) liegen im Ordner „Received“. Kopieren Sie sie mit F5 in einen beliebigen Speicher.",
+        "{0} fichier(s) reçu(s) se trouvent dans le dossier Received. Copiez-les vers n’importe quel stockage avec F5.",
+        "{0} archivo(s) recibido(s) están en la carpeta Received. Cópielos a cualquier almacenamiento con F5.",
+        "{0} ficheiro(s) recebido(s) estão na pasta Received. Copie-os para qualquer armazenamento com F5.",
+        "{0} 个接收的文件位于 Received 文件夹中。可用 F5 复制到任意存储。",
+        "受信した {0} 個のファイルは Received フォルダーにあります。F5 で任意のストレージにコピーできます。",
+        "받은 파일 {0}개가 Received 폴더에 있습니다. F5로 원하는 저장소에 복사하세요.",
+        "{0} ملف/ملفات مستلمة في مجلد Received. انسخها إلى أي تخزين باستخدام F5.",
+      ],
   "{0} rows · {1} source(s){2}": [
     "{0} Zeilen · {1} Quellen{2}",
     "{0} lignes · {1} sources{2}",

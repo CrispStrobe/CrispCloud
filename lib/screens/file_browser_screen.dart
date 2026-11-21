@@ -482,15 +482,10 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       () => compareDirectories(ref),
       available: () => canCompareDirectories(ref),
     );
-    add(
-      'properties',
-      context.commanderTr('Properties'),
-      () {
-        final files = _integritySelection(ref);
-        if (files.isNotEmpty) showPropertiesDialog(context, files.first);
-      },
-      available: () => _integritySelection(ref).isNotEmpty,
-    );
+    add('properties', context.commanderTr('Properties'), () {
+      final files = _integritySelection(ref);
+      if (files.isNotEmpty) showPropertiesDialog(context, files.first);
+    }, available: () => _integritySelection(ref).isNotEmpty);
     add(
       'deselectPattern',
       context.commanderTr('Deselect by Wildcard or Regex...'),
@@ -603,9 +598,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                 : origin.storageReference.root;
             panel.navigateToPath(path, origin: origin);
           } catch (error) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text('$error')));
+            ScaffoldMessenger.of(context)
+                .showSnackBar(SnackBar(content: Text('$error')));
           }
         },
       );
