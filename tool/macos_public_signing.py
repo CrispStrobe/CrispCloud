@@ -274,6 +274,11 @@ def sign(app, output):
         entitlements(ROOT / 'macos/Runner/Direct.entitlements', BUNDLE, team, target, keychain_group=group)
         codesign(app, target)
         macos_distribution.verify('github', app)
+        if group:
+            signed = plistlib.loads(subprocess.check_output(
+                ['codesign', '-d', '--entitlements', '-', '--xml', str(app)], stderr=subprocess.DEVNULL))
+            if signed.get('keychain-access-groups') != [group]:
+                raise ValueError('Touch ID vault keychain group missing from the signed app')
         details = subprocess.check_output(['codesign', '-dv', '--verbose=4', str(app)], stderr=subprocess.STDOUT, text=True)
         if not all(part in details for part in ('Authority=Developer ID Application:', f'TeamIdentifier={team}', 'Timestamp=', 'runtime')):
             raise ValueError('Final signature lacks Developer ID, team, secure timestamp or hardened runtime')

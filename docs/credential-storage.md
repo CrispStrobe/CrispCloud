@@ -212,7 +212,16 @@ committed `.entitlements` files. Release signing (`tool/sign_macos_local.sh`,
 `<TEAM>.com.CrispStrobe.cloud` only when the embedded provisioning profile
 authorizes it (`macos_public_signing.py keychain-group`). Builds without it
 probe `errSecMissingEntitlement` (-34018) and show the option disabled with an
-explanation.
+explanation. The probe is a test *write* (then delete): an unprovisioned build
+gets `errSecItemNotFound` on a read and -34018 only on a write. When the group
+was added, each signing path also checks that it is in the final signature.
+
+Profile requirements: the Mac App Store app profile
+(`ASC_PROFILE_MACOS_BASE64` in the release workflow) and the Developer ID app profile
+(`MACOS_DEVELOPER_ID_PROFILE_BASE64`) must list `keychain-access-groups`
+`<TEAM>.*` or `<TEAM>.com.CrispStrobe.cloud` (portal-generated macOS profiles
+normally include `<TEAM>.*`). If not, signing prints a warning and ships
+without the feature rather than producing an app macOS kills at launch.
 
 ### Native file transactions
 

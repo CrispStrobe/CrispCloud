@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:crisp_cloud/l10n/app_localizations.dart';
 import 'package:crisp_cloud/l10n/biometric_vault_strings.dart';
 import 'package:crisp_cloud/main.dart';
@@ -41,8 +39,9 @@ class FakeBiometricStore implements BiometricSecretStore {
   @override
   Future<BiometricReadResult> read(String reason) async {
     reasons.add(reason);
-    if (nextRead != BiometricReadStatus.ok)
+    if (nextRead != BiometricReadStatus.ok) {
       return BiometricReadResult(nextRead);
+    }
     final value = stored;
     if (value == null) {
       return const BiometricReadResult(BiometricReadStatus.notFound);

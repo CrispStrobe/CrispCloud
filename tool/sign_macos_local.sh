@@ -169,4 +169,8 @@ codesign ${KEYCHAIN_ARGS[@]+"${KEYCHAIN_ARGS[@]}"} --force --options runtime --s
 codesign --verify --deep --strict "$APP"
 codesign -d --entitlements - --xml "$APP" 2>/dev/null | grep -q "$TEAM.$BUNDLE_ID" \
   || { echo "application-identifier missing from the signed app" >&2; exit 1; }
+if /usr/libexec/PlistBuddy -c "Print :keychain-access-groups" "$WORK/app-ents.plist" >/dev/null 2>&1; then
+  codesign -d --entitlements - --xml "$APP" 2>/dev/null | grep -q "keychain-access-groups" \
+    || { echo "Touch ID vault keychain group missing from the signed app" >&2; exit 1; }
+fi
 echo "Signed $APP with identity $IDENT ${KEYCHAIN_ARGS[*]+"${KEYCHAIN_ARGS[*]}"}"
