@@ -370,7 +370,11 @@ class KeyboardShortcutService {
     ShortcutAction.prevTab: [
       ShortcutBinding(key: LogicalKeyboardKey.pageUp.keyLabel, ctrl: true),
     ],
-    ShortcutAction.toggleHidden: [const ShortcutBinding(key: 'H', ctrl: true)],
+    // Cmd+Shift+. is Finder's own toggle for hidden files.
+    ShortcutAction.toggleHidden: [
+      const ShortcutBinding(key: 'H', ctrl: true),
+      const ShortcutBinding(key: '.', ctrl: true, shift: true),
+    ],
     ShortcutAction.delete: [const ShortcutBinding(key: 'Delete')],
     ShortcutAction.copyWithOptions: [
       const ShortcutBinding(key: 'F5', shift: true),

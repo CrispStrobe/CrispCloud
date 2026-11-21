@@ -15,6 +15,7 @@ import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
+import 'show_hidden_files_provider.dart';
 import '../models/file_item.dart';
 import '../services/macos_application_launcher.dart';
 import '../models/folder_size_measurement.dart';
@@ -326,14 +327,20 @@ class PanelNotifier extends ChangeNotifier {
   bool _renameKeepExtension = false;
   bool get renameKeepExtension => _renameKeepExtension;
 
-  // Whether to show hidden (dot-prefixed) files — toggle via Ctrl+.
+  // Whether to show hidden (dot-prefixed) files. One app-wide setting
+  // (showHiddenFilesProvider) shared by both panes and all tabs.
   bool _showHiddenFiles = false;
   bool get showHiddenFiles => _showHiddenFiles;
 
   void toggleShowHiddenFiles() {
-    _showHiddenFiles = !_showHiddenFiles;
+    unawaited(_ref.read(showHiddenFilesProvider.notifier).toggle());
+  }
+
+  void _followShowHiddenFiles(bool value) {
+    if (_isDisposed || value == _showHiddenFiles) return;
+    _showHiddenFiles = value;
     _rememberTabView();
-    refresh();
+    unawaited(refresh());
   }
 
   // Free space for the current local path (populated after _loadLocalFiles)
@@ -357,6 +364,11 @@ class PanelNotifier extends ChangeNotifier {
   PanelNotifier(this._ref, this.side)
     : _localFileService = _ref.read(localFileServiceProvider) {
     listFocusNode = FocusNode(debugLabel: 'panel-${side.name}');
+    _showHiddenFiles = _ref.read(showHiddenFilesProvider);
+    _ref.listen<bool>(
+      showHiddenFilesProvider,
+      (_, next) => _followShowHiddenFiles(next),
+    );
     // ChangeNotifier listeners cannot compare prev/next objects: both can be
     // the same mutated notifier. Retain a value snapshot for account changes.
     final initialAuth = _ref.read(authProvider);
@@ -7027,7 +7039,7 @@ class PanelNotifier extends ChangeNotifier {
       _secondarySortOrder = view.secondarySortOrder;
       _sortColumnId = view.sortColumnId;
       _secondarySortColumnId = view.secondarySortColumnId;
-      _showHiddenFiles = view.showHidden;
+      _showHiddenFiles = _ref.read(showHiddenFilesProvider);
       _filterQuery = view.filter;
       _isTypeahead = false;
       _typeaheadResetTimer?.cancel();
@@ -7062,7 +7074,14 @@ class PanelNotifier extends ChangeNotifier {
     FileViewConfiguration view, {
     String? profileId,
   }) async {
-    final reload = _showHiddenFiles != view.showHidden;
+    // A view profile that sets hidden files changes the app-wide setting.
+    // This pane updates (and reloads) itself here; the other pane follows
+    // through the provider listener.
+    final reload = view.showHidden != _showHiddenFiles;
+    _showHiddenFiles = view.showHidden;
+    if (view.showHidden != _ref.read(showHiddenFilesProvider)) {
+      await _ref.read(showHiddenFilesProvider.notifier).set(view.showHidden);
+    }
     _applyTabView(view);
     activeTab?.viewProfileId = profileId;
     _captureTabView();
