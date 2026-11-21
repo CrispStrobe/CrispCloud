@@ -1092,6 +1092,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
           ),
           actions: [
             const DocumentPrintMenu(),
+            const DocumentPrintButton(),
             if (_language != null)
               IconButton(
                 icon: Icon(

@@ -1248,6 +1248,7 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
                   ),
                   actions: [
                     const DocumentPrintMenu(),
+                    const DocumentPrintButton(),
                     if (controller != null) ...[
                       IconButton(
                         key: const ValueKey('pdf-save'),

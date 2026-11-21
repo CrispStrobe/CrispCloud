@@ -1,5 +1,6 @@
 import 'viewer_escape_scope.dart';
 import 'app_scaffold_messenger.dart';
+import 'document_print_scope.dart';
 
 import 'dart:async';
 import 'dart:math' as math;
@@ -19,6 +20,7 @@ import '../providers/gallery_provider.dart';
 import '../providers/panel_source_provider.dart';
 import '../providers/providers.dart';
 import '../services/gallery_device_export.dart';
+import '../services/document_printing.dart';
 import '../services/gallery_media_service.dart';
 import '../services/image_edit_session.dart';
 import '../services/log_service.dart';
@@ -272,6 +274,27 @@ class _GalleryViewerDialogState extends State<GalleryViewerDialog>
       _active!.data!.frameCount == 1 &&
       !_active!.data!.isConverted &&
       (widget.canEdit?.call(_file!) ?? false);
+
+  bool get _canPrint =>
+      _isSourceCurrent &&
+      _file != null &&
+      _active?.data != null &&
+      !_active!.data!.isSvg;
+
+  /// Prints the image currently in focus (the active one in compare mode),
+  /// fitted to an A4 page. Viewer-only rotation/zoom is not applied.
+  Future<void> _printImage() async {
+    final file = _file, data = _active?.data;
+    if (!_canPrint || file == null || data == null) return;
+    _slideshowTimer?.cancel();
+    try {
+      final pdf = imagePrintPdf(data.bytes, file.name);
+      if (!mounted) return;
+      await printPdfSnapshot(context, pdf, file.name);
+    } finally {
+      if (mounted) _armSlideshow();
+    }
+  }
 
   @override
   void initState() {
@@ -683,6 +706,14 @@ class _GalleryViewerDialogState extends State<GalleryViewerDialog>
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    return DocumentPrintScope(
+      enabled: _canPrint,
+      onPrint: _printImage,
+      child: _buildViewer(scheme),
+    );
+  }
+
+  Widget _buildViewer(ColorScheme scheme) {
     return ViewerEscapeScope(
       onEscape: _close,
       child: PopScope<GalleryViewerResult>(
@@ -802,6 +833,8 @@ class _GalleryViewerDialogState extends State<GalleryViewerDialog>
               ],
             ),
           ),
+          const DocumentPrintMenu(),
+          const DocumentPrintButton(iconSize: 21),
           _button(
             Icons.info_outline,
             'Metadata',

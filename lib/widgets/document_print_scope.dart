@@ -218,3 +218,22 @@ class DocumentPrintMenu extends StatelessWidget {
     );
   }
 }
+
+/// Direct Print command for a viewer/editor toolbar or ribbon. Shares the same
+/// guarded action as File → Print and Cmd/Ctrl+P.
+class DocumentPrintButton extends StatelessWidget {
+  const DocumentPrintButton({super.key, this.iconSize});
+  final double? iconSize;
+  @override
+  Widget build(BuildContext context) {
+    final state = context.dependOnInheritedWidgetOfExactType<_PrintState>();
+    final enabled = state != null && !state.busy && state.action.isEnabled();
+    return IconButton(
+      key: const ValueKey('document-print-button'),
+      tooltip: printLabel(context),
+      iconSize: iconSize,
+      onPressed: enabled ? () => unawaited(state.action.run()) : null,
+      icon: const Icon(Icons.print_outlined),
+    );
+  }
+}

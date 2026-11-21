@@ -668,9 +668,8 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
             ),
           ),
           IconButton(
-            tooltip: OfficeRibbonControlStrings(
-              context,
-            ).text(_collapsed ? 'Expand ribbon' : 'Collapse ribbon'),
+            tooltip: OfficeRibbonControlStrings(context)
+                .text(_collapsed ? 'Expand ribbon' : 'Collapse ribbon'),
             iconSize: 17,
             visualDensity: VisualDensity.compact,
             padding: EdgeInsets.zero,
@@ -694,6 +693,16 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
                   )
                 : const Icon(Icons.save_outlined),
           ),
+          if (widget.onPrint != null)
+            IconButton(
+              key: const ValueKey('office-ribbon-print'),
+              tooltip: context.tr('Print…'),
+              iconSize: 18,
+              visualDensity: VisualDensity.compact,
+              constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
+              onPressed: widget.saving ? null : widget.onPrint,
+              icon: const Icon(Icons.print_outlined),
+            ),
           IconButton(
             tooltip: context.tr('Close'),
             iconSize: 18,
@@ -2330,9 +2339,8 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
 
   Widget _vertAlignControl() {
     return PopupMenuButton<WmlVertAlign>(
-      tooltip: OfficeRibbonControlStrings(
-        context,
-      ).text('Superscript / subscript'),
+      tooltip: OfficeRibbonControlStrings(context)
+          .text('Superscript / subscript'),
       icon: const Icon(Icons.superscript, size: 17),
       iconSize: 17,
       padding: EdgeInsets.zero,

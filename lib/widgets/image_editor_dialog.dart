@@ -991,6 +991,7 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
                 ),
                 const SizedBox(width: 6),
                 const DocumentPrintMenu(),
+                const DocumentPrintButton(),
                 Expanded(
                   child: Text(
                     widget.file.name,
