@@ -709,9 +709,9 @@ class _CredentialStorageSettingsSectionState
           ),
           if (activePath != null)
             KeychainLockSettings(
-              storage:
-                  ref.watch(secureStorageProvider)
-                      as MacOsCustomKeychainStorage,
+              storage: ref.watch(
+                secureStorageProvider,
+              ) as MacOsCustomKeychainStorage,
             ),
           if (active == CredentialStorageMode.encryptedFile &&
               ref.watch(secureStorageProvider) is WebEncryptedStorage &&
@@ -894,9 +894,8 @@ class _PrivacySection extends ConsumerWidget {
             child: Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Theme.of(
-                  context,
-                ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                color: Theme.of(context).colorScheme.surfaceContainerHighest
+                    .withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(

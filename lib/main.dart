@@ -1370,9 +1370,8 @@ class WebMasterPasswordGateState extends ConsumerState<WebMasterPasswordGate> {
       if (accepted == true) {
         final failure = await biometric.enable(storage);
         if (failure != null && mounted) {
-          ScaffoldMessenger.maybeOf(
-            context,
-          )?.showSnackBar(SnackBar(content: Text(strings.enableFailed)));
+          ScaffoldMessenger.maybeOf(context)
+              ?.showSnackBar(SnackBar(content: Text(strings.enableFailed)));
         }
       } else if (accepted == false) {
         await biometric.declineOffer();
@@ -1464,9 +1463,9 @@ class WebMasterPasswordGateState extends ConsumerState<WebMasterPasswordGate> {
     if (password.isEmpty) return;
     if (_isNewVault && password.length < 8) {
       setState(
-        () => _error = SettingsStrings(
-          context,
-        ).text('Use at least 8 characters for the master password.'),
+        () =>
+            _error = SettingsStrings(context)
+                .text('Use at least 8 characters for the master password.'),
       );
       return;
     }
