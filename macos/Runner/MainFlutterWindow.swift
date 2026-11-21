@@ -77,6 +77,7 @@ class MainFlutterWindow: NSWindow, NSDraggingSource {
     installBrowserToolbar(binaryMessenger: flutterViewController.engine.binaryMessenger)
     (NSApplication.shared.delegate as? AppDelegate)?.registerCustomKeychainChannel(
       binaryMessenger: flutterViewController.engine.binaryMessenger)
+    FileProviderDomains.register(binaryMessenger: flutterViewController.engine.binaryMessenger)
 
     // PDF text layer extraction (PDFKit). Scanned PDFs return an empty string.
     let pdfTextChannel = FlutterMethodChannel(

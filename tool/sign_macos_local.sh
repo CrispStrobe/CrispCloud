@@ -95,7 +95,8 @@ if ! security find-identity -v -p codesigning | grep -q "$IDENT"; then
 fi
 
 mkents() {  # mkents <source .entitlements> <bundle id> <out>
-  cp "$1" "$3"
+  # Expand $(TeamIdentifierPrefix) (app group IDs) as Xcode would.
+  sed "s/\$(TeamIdentifierPrefix)/$TEAM./g" "$1" > "$3"
   /usr/libexec/PlistBuddy -c "Delete :com.apple.application-identifier" "$3" 2>/dev/null || true
   /usr/libexec/PlistBuddy -c "Delete :com.apple.developer.team-identifier" "$3" 2>/dev/null || true
   /usr/libexec/PlistBuddy -c "Add :com.apple.application-identifier string $TEAM.$2" "$3"
@@ -134,6 +135,14 @@ find "$APP/Contents/Frameworks" -maxdepth 1 -name '*.framework' -print0 2>/dev/n
 if [ -d "$EXT" ]; then
   mkents macos/FinderExtension/FinderExtension.entitlements "$EXT_BUNDLE_ID" "$WORK/ext.plist"
   codesign ${KEYCHAIN_ARGS[@]+"${KEYCHAIN_ARGS[@]}"} --force --options runtime --sign "$IDENT" --entitlements "$WORK/ext.plist" "$EXT"
+fi
+# File Provider extension (Finder locations). Its team-prefixed App Group
+# needs no extra profile; FP_PROFILE embeds one when the account requires it.
+FPEXT="$APP/Contents/PlugIns/CrispCloudFileProvider.appex"
+if [ -d "$FPEXT" ]; then
+  [ -n "${FP_PROFILE:-}" ] && cp "$FP_PROFILE" "$FPEXT/Contents/embedded.provisionprofile"
+  mkents macos/CrispCloudFileProvider/CrispCloudFileProvider.entitlements "$BUNDLE_ID.FileProvider" "$WORK/fp.plist"
+  codesign ${KEYCHAIN_ARGS[@]+"${KEYCHAIN_ARGS[@]}"} --force --options runtime --sign "$IDENT" --entitlements "$WORK/fp.plist" "$FPEXT"
 fi
 mkents "$APP_ENTITLEMENTS" "$BUNDLE_ID" "$WORK/app-ents.plist"
 case "$CONFIGURATION" in

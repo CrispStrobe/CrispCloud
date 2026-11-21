@@ -17,6 +17,8 @@ import '../l10n/access_and_fkey_strings.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../providers/finder_location_provider.dart';
+import '../providers/auth_provider.dart';
 import '../providers/mount_provider.dart';
 import '../services/fuse_mount_service.dart';
 import '../l10n/app_localizations.dart';
@@ -124,6 +126,10 @@ class _MountManagerDialog extends ConsumerWidget {
                       _MountTile(entry: mount.mounts[i]),
                 ),
               ),
+            if (ref.watch(finderLocationProvider).isSupported) ...[
+              const Divider(height: 24),
+              const _FinderLocationsSection(),
+            ],
           ],
         ),
       ),
@@ -643,6 +649,129 @@ class _Banner extends StatelessWidget {
           Expanded(child: Text(message, style: const TextStyle(fontSize: 12))),
         ],
       ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Finder locations (File Provider) — App Store compatible, no FUSE runtime
+// ---------------------------------------------------------------------------
+
+class _FinderLocationsSection extends ConsumerStatefulWidget {
+  const _FinderLocationsSection();
+
+  @override
+  ConsumerState<_FinderLocationsSection> createState() =>
+      _FinderLocationsSectionState();
+}
+
+class _FinderLocationsSectionState
+    extends ConsumerState<_FinderLocationsSection> {
+  bool _busy = false;
+  String? _error;
+
+  Future<void> _addCurrent() async {
+    final strings = MountDialogStrings(context);
+    final auth = ref.read(authProvider);
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      final client = auth.client;
+      final user = client.userId;
+      await ref
+          .read(finderLocationProvider)
+          .addCurrent(
+            label: user == null || user.isEmpty
+                ? client.providerName
+                : '${client.providerName} – $user',
+          );
+    } catch (e) {
+      if (mounted) {
+        setState(
+          () => _error = strings.text('finderFailed', {
+            'error': e.toString().replaceFirst('Bad state: ', ''),
+          }),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final strings = MountDialogStrings(context);
+    final finder = ref.watch(finderLocationProvider);
+    final connected = ref.watch(authProvider).isConnected;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          children: [
+            const Icon(Icons.folder_special_outlined, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              strings.text('finderTitle'),
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          strings.text('finderHelp'),
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+        for (final location in finder.locations)
+          ListTile(
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+            leading: Icon(
+              finder.isServing(location.id)
+                  ? Icons.check_circle
+                  : Icons.cloud_off_outlined,
+              color: finder.isServing(location.id) ? Colors.green : null,
+              size: 20,
+            ),
+            title: Text(location.label),
+            subtitle: Text(
+              finder.isServing(location.id)
+                  ? strings.text('finderActive')
+                  : strings.text('finderWaiting'),
+            ),
+            trailing: IconButton(
+              tooltip: strings.text('remove'),
+              icon: const Icon(Icons.delete_outline, size: 20),
+              onPressed: _busy
+                  ? null
+                  : () => ref.read(finderLocationProvider).remove(location.id),
+            ),
+          ),
+        if (_error != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              _error!,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          ),
+        const SizedBox(height: 8),
+        OutlinedButton.icon(
+          onPressed: _busy || !connected || !finder.isLoaded
+              ? null
+              : _addCurrent,
+          icon: _busy
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.add_to_drive_outlined, size: 18),
+          label: Text(strings.text('finderAdd')),
+        ),
+      ],
     );
   }
 }

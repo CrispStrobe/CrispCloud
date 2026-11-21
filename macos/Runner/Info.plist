@@ -59,6 +59,9 @@
 	<!-- URL scheme used by the Finder Sync extension to open the app
 	     with a list of paths to upload:
 	     crispcloud://upload?paths=<percent-encoded,comma-joined paths> -->
+	<!-- App Group shared with the File Provider extension. -->
+	<key>CrispAppGroup</key>
+	<string>$(TeamIdentifierPrefix)crispcloud</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

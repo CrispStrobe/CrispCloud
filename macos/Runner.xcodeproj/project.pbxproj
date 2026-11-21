@@ -21,19 +21,28 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		21E5A7E387CB45EC7784AEDF /* FileProviderItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 016A1D048C4266570F09429E /* FileProviderItem.swift */; };
+		2B48601184C08ADC6E44D22A /* CrispCloudFileProvider.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 4E8881712844C070CA246152 /* CrispCloudFileProvider.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		331C80D8294CF71000263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C80D7294CF71000263BE5 /* RunnerTests.swift */; };
 		335BBD1B22A9A15E00E9071D /* GeneratedPluginRegistrant.swift in Sources */ = {isa = PBXBuildFile; fileRef = 335BBD1A22A9A15E00E9071D /* GeneratedPluginRegistrant.swift */; };
 		33CC10F12044A3C60003C045 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33CC10F02044A3C60003C045 /* AppDelegate.swift */; };
 		33CC10F32044A3C60003C045 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 33CC10F22044A3C60003C045 /* Assets.xcassets */; };
 		33CC10F62044A3C60003C045 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 33CC10F42044A3C60003C045 /* MainMenu.xib */; };
 		33CC11132044BFA00003C045 /* MainFlutterWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33CC11122044BFA00003C045 /* MainFlutterWindow.swift */; };
+		3664D94CD0E7F0603BD306B5 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F3B3120CC8556AF977EF8D4E /* Cocoa.framework */; };
 		4DE472FAD5CB7BFB34B8D10B /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DCC7D61164E652A1F5A81AEF /* Pods_RunnerTests.framework */; };
+		5380BF974FF000C9BF19C2F0 /* FileProviderDomains.swift in Sources */ = {isa = PBXBuildFile; fileRef = 825293E605056A286D7291E5 /* FileProviderDomains.swift */; };
+		5E4CFF7CAADBF837ED72D736 /* FileProviderEnumerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F75401A17C8C7BFB311F149 /* FileProviderEnumerator.swift */; };
+		A9E0031416C5758E5EDEB4B0 /* ItemIndex.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB4841BE5AB406595053B68E /* ItemIndex.swift */; };
 		CC001A012044A3C60003F001 /* FinderSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC001A002044A3C60003F001 /* FinderSync.swift */; };
 		CC001A032044A3C60003F001 /* FinderExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = CC001A042044A3C60003F001 /* FinderExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		CC002A012044A3C60003F001 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = CC002A002044A3C60003F001 /* PrivacyInfo.xcprivacy */; };
 		CC002A042044A3C60003F001 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = CC002A032044A3C60003F001 /* PrivacyInfo.xcprivacy */; };
 		CC003A012044A3C60003F001 /* CustomKeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC003A002044A3C60003F001 /* CustomKeychainStore.swift */; };
+		D68DAF18FBE593AAC7CD2202 /* FileProviderExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33D7742D552E592E026C1180 /* FileProviderExtension.swift */; };
 		E5878A68877F22CC64B0071F /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FA6CEBC4889E893ECB6B598D /* Pods_Runner.framework */; };
+		EA8167BDCBF518534C0A6299 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = E3A01F7C4978002D964789CF /* PrivacyInfo.xcprivacy */; };
+		EC3E1159ED8985DBC9E8CBB3 /* IPCClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A8DF466B4F01E55095F3586 /* IPCClient.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -50,6 +59,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 33CC111A2044C6BA0003C045;
 			remoteInfo = FLX;
+		};
+		90D301233F3495B90197AC3B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 33CC10E52044A3C60003C045 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C88FF04F07861C44EE607D7C;
+			remoteInfo = CrispCloudFileProvider;
 		};
 		CC001A052044A3C60003F001 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -78,6 +94,7 @@
 			dstSubfolderSpec = 13;
 			files = (
 				CC001A032044A3C60003F001 /* FinderExtension.appex in Embed App Extensions */,
+				2B48601184C08ADC6E44D22A /* CrispCloudFileProvider.appex in Embed App Extensions */,
 			);
 			name = "Embed App Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -85,7 +102,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		016A1D048C4266570F09429E /* FileProviderItem.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FileProviderItem.swift; sourceTree = "<group>"; };
 		0AA41E3D8B559D05810C53B3 /* Pods-RunnerTests.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.profile.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.profile.xcconfig"; sourceTree = "<group>"; };
+		21E4FE5D6596C9FFE1F6CC5F /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		331C80D5294CF71000263BE5 /* RunnerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RunnerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		331C80D7294CF71000263BE5 /* RunnerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunnerTests.swift; sourceTree = "<group>"; };
 		333000ED22D3DE5D00554162 /* Warnings.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Warnings.xcconfig; sourceTree = "<group>"; };
@@ -99,11 +118,16 @@
 		33CEB47222A05771004F2AC0 /* Flutter-Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Flutter-Debug.xcconfig"; sourceTree = "<group>"; };
 		33CEB47422A05771004F2AC0 /* Flutter-Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Flutter-Release.xcconfig"; sourceTree = "<group>"; };
 		33CEB47722A0578A004F2AC0 /* Flutter-Generated.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "Flutter-Generated.xcconfig"; path = "ephemeral/Flutter-Generated.xcconfig"; sourceTree = "<group>"; };
+		33D7742D552E592E026C1180 /* FileProviderExtension.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FileProviderExtension.swift; sourceTree = "<group>"; };
 		33E51913231747F40026EE4D /* DebugProfile.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = DebugProfile.entitlements; sourceTree = "<group>"; };
 		33E51914231749380026EE4D /* Release.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.entitlements; path = Release.entitlements; sourceTree = "<group>"; };
 		33E5194F232828860026EE4D /* AppInfo.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = AppInfo.xcconfig; sourceTree = "<group>"; };
+		3A8DF466B4F01E55095F3586 /* IPCClient.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = IPCClient.swift; sourceTree = "<group>"; };
 		4A9781014251991796D39206 /* Pods-RunnerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release.xcconfig"; sourceTree = "<group>"; };
+		4E8881712844C070CA246152 /* CrispCloudFileProvider.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = CrispCloudFileProvider.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		6F75401A17C8C7BFB311F149 /* FileProviderEnumerator.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FileProviderEnumerator.swift; sourceTree = "<group>"; };
 		7AFA3C8E1D35360C0083082E /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
+		825293E605056A286D7291E5 /* FileProviderDomains.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FileProviderDomains.swift; sourceTree = "<group>"; };
 		9740EEB21CF90195004384FC /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
 		A19621FAD9FA7854E09682CF /* Pods-Runner.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.profile.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"; sourceTree = "<group>"; };
 		B5C94480CE7C7AB3E353A60E /* Pods-Runner.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.debug.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"; sourceTree = "<group>"; };
@@ -116,8 +140,12 @@
 		CC002A032044A3C60003F001 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		CC003A002044A3C60003F001 /* CustomKeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomKeychainStore.swift; sourceTree = "<group>"; };
 		DCC7D61164E652A1F5A81AEF /* Pods_RunnerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RunnerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		E3A01F7C4978002D964789CF /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		E8FC9A66E6C713DDBF93D02D /* Pods-RunnerTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.debug.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.debug.xcconfig"; sourceTree = "<group>"; };
+		EF3972B29FB981A6E7CE4AC6 /* CrispCloudFileProvider.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = CrispCloudFileProvider.entitlements; sourceTree = "<group>"; };
+		F3B3120CC8556AF977EF8D4E /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/System/Library/Frameworks/Cocoa.framework; sourceTree = DEVELOPER_DIR; };
 		FA6CEBC4889E893ECB6B598D /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		FB4841BE5AB406595053B68E /* ItemIndex.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ItemIndex.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -141,6 +169,14 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D80407DFA3611EA992090C52 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3664D94CD0E7F0603BD306B5 /* Cocoa.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -176,6 +212,7 @@
 				33CC10EE2044A3C60003C045 /* Products */,
 				D73912EC22F37F3D000D13A0 /* Frameworks */,
 				D61CED569636B398DC5DD9A5 /* Pods */,
+				770C6C4ECAF37069313D04BF /* CrispCloudFileProvider */,
 			);
 			sourceTree = "<group>";
 		};
@@ -185,6 +222,7 @@
 				33CC10ED2044A3C60003C045 /* CrispCloud.app */,
 				331C80D5294CF71000263BE5 /* RunnerTests.xctest */,
 				CC001A042044A3C60003F001 /* FinderExtension.appex */,
+				4E8881712844C070CA246152 /* CrispCloudFileProvider.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -222,8 +260,33 @@
 				CC002A002044A3C60003F001 /* PrivacyInfo.xcprivacy */,
 				33CC11242044D66E0003C045 /* Resources */,
 				33BA886A226E78AF003329D5 /* Configs */,
+				825293E605056A286D7291E5 /* FileProviderDomains.swift */,
 			);
 			path = Runner;
+			sourceTree = "<group>";
+		};
+		770C6C4ECAF37069313D04BF /* CrispCloudFileProvider */ = {
+			isa = PBXGroup;
+			children = (
+				33D7742D552E592E026C1180 /* FileProviderExtension.swift */,
+				6F75401A17C8C7BFB311F149 /* FileProviderEnumerator.swift */,
+				016A1D048C4266570F09429E /* FileProviderItem.swift */,
+				3A8DF466B4F01E55095F3586 /* IPCClient.swift */,
+				FB4841BE5AB406595053B68E /* ItemIndex.swift */,
+				21E4FE5D6596C9FFE1F6CC5F /* Info.plist */,
+				EF3972B29FB981A6E7CE4AC6 /* CrispCloudFileProvider.entitlements */,
+				E3A01F7C4978002D964789CF /* PrivacyInfo.xcprivacy */,
+			);
+			name = CrispCloudFileProvider;
+			path = CrispCloudFileProvider;
+			sourceTree = "<group>";
+		};
+		7CCD7C837F1C288C070F1C11 /* OS X */ = {
+			isa = PBXGroup;
+			children = (
+				F3B3120CC8556AF977EF8D4E /* Cocoa.framework */,
+			);
+			name = "OS X";
 			sourceTree = "<group>";
 		};
 		CC001A0A2044A3C60003F001 /* FinderExtension */ = {
@@ -256,6 +319,7 @@
 			children = (
 				FA6CEBC4889E893ECB6B598D /* Pods_Runner.framework */,
 				DCC7D61164E652A1F5A81AEF /* Pods_RunnerTests.framework */,
+				7CCD7C837F1C288C070F1C11 /* OS X */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -302,11 +366,29 @@
 			dependencies = (
 				33CC11202044C79F0003C045 /* PBXTargetDependency */,
 				CC001A0F2044A3C60003F001 /* PBXTargetDependency */,
+				F884A27836446772330BA63C /* PBXTargetDependency */,
 			);
 			name = Runner;
 			productName = Runner;
 			productReference = 33CC10ED2044A3C60003C045 /* CrispCloud.app */;
 			productType = "com.apple.product-type.application";
+		};
+		C88FF04F07861C44EE607D7C /* CrispCloudFileProvider */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 78811B16CEE798B2ED5F83BE /* Build configuration list for PBXNativeTarget "CrispCloudFileProvider" */;
+			buildPhases = (
+				144C8378D0AD16A562539DF9 /* Sources */,
+				D80407DFA3611EA992090C52 /* Frameworks */,
+				E37F7667A776154ECDB73360 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = CrispCloudFileProvider;
+			productName = CrispCloudFileProvider;
+			productReference = 4E8881712844C070CA246152 /* CrispCloudFileProvider.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 		CC001A062044A3C60003F001 /* FinderExtension */ = {
 			isa = PBXNativeTarget;
@@ -382,6 +464,7 @@
 				331C80D4294CF70F00263BE5 /* RunnerTests */,
 				33CC111A2044C6BA0003C045 /* Flutter Assemble */,
 				CC001A062044A3C60003F001 /* FinderExtension */,
+				C88FF04F07861C44EE607D7C /* CrispCloudFileProvider */,
 			);
 		};
 /* End PBXProject section */
@@ -409,6 +492,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				CC002A042044A3C60003F001 /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E37F7667A776154ECDB73360 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EA8167BDCBF518534C0A6299 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -514,23 +605,6 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		E988A10215DEF3B6BB142CB6 /* [CP] Copy Pods Resources */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-resources-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			name = "[CP] Copy Pods Resources";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-resources-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-resources.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
 		C0F05E2B2AC4051800F05E2B /* Build FUSE bridge */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
@@ -548,9 +622,38 @@
 			shellPath = /bin/sh;
 			shellScript = "\"$SRCROOT/build_fuse_bridge.sh\"\n";
 		};
+		E988A10215DEF3B6BB142CB6 /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-resources-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Copy Pods Resources";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		144C8378D0AD16A562539DF9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D68DAF18FBE593AAC7CD2202 /* FileProviderExtension.swift in Sources */,
+				5E4CFF7CAADBF837ED72D736 /* FileProviderEnumerator.swift in Sources */,
+				21E5A7E387CB45EC7784AEDF /* FileProviderItem.swift in Sources */,
+				EC3E1159ED8985DBC9E8CBB3 /* IPCClient.swift in Sources */,
+				A9E0031416C5758E5EDEB4B0 /* ItemIndex.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		331C80D1294CF70F00263BE5 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -567,6 +670,7 @@
 				33CC10F12044A3C60003C045 /* AppDelegate.swift in Sources */,
 				CC003A012044A3C60003F001 /* CustomKeychainStore.swift in Sources */,
 				335BBD1B22A9A15E00E9071D /* GeneratedPluginRegistrant.swift in Sources */,
+				5380BF974FF000C9BF19C2F0 /* FileProviderDomains.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -595,6 +699,12 @@
 			isa = PBXTargetDependency;
 			target = CC001A062044A3C60003F001 /* FinderExtension */;
 			targetProxy = CC001A052044A3C60003F001 /* PBXContainerItemProxy */;
+		};
+		F884A27836446772330BA63C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = CrispCloudFileProvider;
+			target = C88FF04F07861C44EE607D7C /* CrispCloudFileProvider */;
+			targetProxy = 90D301233F3495B90197AC3B /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -864,9 +974,9 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "$(CRISP_APP_ENTITLEMENTS)";
-				ENABLE_HARDENED_RUNTIME = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = Runner/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -893,13 +1003,55 @@
 			};
 			name = Release;
 		};
+		52F9270FA7B490596623571D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = CrispCloudFileProvider/CrispCloudFileProvider.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				INFOPLIST_FILE = CrispCloudFileProvider/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				OTHER_LDFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = com.CrispStrobe.cloud.FileProvider;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		A74C67C1FB4F0CDEBCDE4D36 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = CrispCloudFileProvider/CrispCloudFileProvider.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				INFOPLIST_FILE = CrispCloudFileProvider/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				OTHER_LDFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = com.CrispStrobe.cloud.FileProvider;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
 		CC001A102044A3C60003F001 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = FinderExtension/FinderExtension.entitlements;
-				/* The native Finder extension must not inherit Runner CocoaPods linker flags. */
-				OTHER_LDFLAGS = "";
 				CODE_SIGN_STYLE = Automatic;
 				INFOPLIST_FILE = FinderExtension/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -908,6 +1060,7 @@
 					"@executable_path/../../../../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				OTHER_LDFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.CrispStrobe.cloud.FinderExtension;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -920,8 +1073,6 @@
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = FinderExtension/FinderExtension.entitlements;
-				/* The native Finder extension must not inherit Runner CocoaPods linker flags. */
-				OTHER_LDFLAGS = "";
 				CODE_SIGN_STYLE = Automatic;
 				INFOPLIST_FILE = FinderExtension/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -930,6 +1081,7 @@
 					"@executable_path/../../../../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				OTHER_LDFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.CrispStrobe.cloud.FinderExtension;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -944,8 +1096,6 @@
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = FinderExtension/FinderExtension.entitlements;
-				/* The native Finder extension must not inherit Runner CocoaPods linker flags. */
-				OTHER_LDFLAGS = "";
 				CODE_SIGN_STYLE = Automatic;
 				INFOPLIST_FILE = FinderExtension/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -954,7 +1104,31 @@
 					"@executable_path/../../../../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				OTHER_LDFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.CrispStrobe.cloud.FinderExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Profile;
+		};
+		EB78925D116D0D1662FE9BAA /* Profile */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = CrispCloudFileProvider/CrispCloudFileProvider.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				INFOPLIST_FILE = CrispCloudFileProvider/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				OTHER_LDFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = com.CrispStrobe.cloud.FileProvider;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
@@ -1002,6 +1176,16 @@
 				33CC111C2044C6BA0003C045 /* Debug */,
 				33CC111D2044C6BA0003C045 /* Release */,
 				338D0CEB231458BD00FA5F75 /* Profile */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		78811B16CEE798B2ED5F83BE /* Build configuration list for PBXNativeTarget "CrispCloudFileProvider" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A74C67C1FB4F0CDEBCDE4D36 /* Release */,
+				52F9270FA7B490596623571D /* Debug */,
+				EB78925D116D0D1662FE9BAA /* Profile */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

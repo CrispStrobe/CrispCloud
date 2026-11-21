@@ -22,6 +22,7 @@ import tempfile
 ROOT = Path(__file__).resolve().parents[1]
 BUNDLE = 'com.CrispStrobe.cloud'
 EXTENSION = BUNDLE + '.FinderExtension'
+FILE_PROVIDER = BUNDLE + '.FileProvider'
 
 
 def run(*args, **kwargs):
@@ -137,7 +138,8 @@ def cleanup():
 
 
 def entitlements(source, identifier, team, target):
-    values = plistlib.loads(source.read_bytes())
+    # Xcode expands $(TeamIdentifierPrefix) (App Group IDs); so must re-signing.
+    values = plistlib.loads(source.read_bytes().replace(b'$(TeamIdentifierPrefix)', team.encode() + b'.'))
     values['com.apple.application-identifier'] = team + '.' + identifier
     values['com.apple.developer.team-identifier'] = team
     target.write_bytes(plistlib.dumps(values))
@@ -181,6 +183,15 @@ def sign(app, output):
         raise ValueError('Unexpected Finder extension bundle identifier')
     shutil.copyfile(required('APP_DEVID_PROFILE'), app / 'Contents/embedded.provisionprofile')
     shutil.copyfile(required('EXT_DEVID_PROFILE'), extension / 'Contents/embedded.provisionprofile')
+    # Finder locations (File Provider). Its team-prefixed App Group needs no
+    # profile for Developer ID; FP_DEVID_PROFILE embeds one when provided.
+    file_provider = app / 'Contents/PlugIns/CrispCloudFileProvider.appex'
+    if file_provider.is_dir():
+        if plistlib.loads((file_provider / 'Contents/Info.plist').read_bytes()).get('CFBundleIdentifier') != FILE_PROVIDER:
+            raise ValueError('Unexpected File Provider extension bundle identifier')
+        if os.environ.get('FP_DEVID_PROFILE'):
+            validate_profile(profile_payload(Path(os.environ['FP_DEVID_PROFILE'])), FILE_PROVIDER, fingerprint, team)
+            shutil.copyfile(os.environ['FP_DEVID_PROFILE'], file_provider / 'Contents/embedded.provisionprofile')
     output.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix='crispcloud-notary-', dir=required('RUNNER_TEMP')) as temporary:
         work = Path(temporary)
@@ -206,6 +217,11 @@ def sign(app, output):
             if bundle == extension:
                 target = work / 'extension-entitlements.plist'
                 entitlements(ROOT / 'macos/FinderExtension/FinderExtension.entitlements', EXTENSION, team, target)
+                codesign(bundle, target)
+            elif bundle == file_provider:
+                target = work / 'file-provider-entitlements.plist'
+                entitlements(ROOT / 'macos/CrispCloudFileProvider/CrispCloudFileProvider.entitlements',
+                             FILE_PROVIDER, team, target)
                 codesign(bundle, target)
             else:
                 codesign(bundle)

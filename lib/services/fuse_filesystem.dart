@@ -121,6 +121,10 @@ abstract class FuseOpcode {
   static const truncate = 11;
   static const statfs = 12;
   static const open = 13;
+
+  /// Drops a handle without uploading buffered writes (File Provider client
+  /// aborting a failed upload). The FUSE bridge does not use it.
+  static const discard = 14;
 }
 
 // ---------------------------------------------------------------------------
@@ -145,6 +149,12 @@ class FuseFilesystem {
 
   /// Root path on the cloud provider exposed through this mount.
   final String remotePath;
+
+  /// Fixed Unix socket path, e.g. inside an App Group container that a
+  /// sandboxed File Provider extension can reach. Its parent directory is
+  /// created private (0700); a stale socket left by a crashed run is replaced.
+  /// When null, a private random directory under [temporaryDirectory] is used.
+  final String? socketPath;
 
   // Directory listing cache: remote path → _DirCache
   final _dirCache = <String, _DirCache>{};
@@ -171,6 +181,7 @@ class FuseFilesystem {
     required this.remotePath,
     this.readOnly = true,
     this.temporaryDirectory,
+    this.socketPath,
   });
 
   Future<String> get ready => _ready.future;
@@ -208,6 +219,26 @@ class FuseFilesystem {
     _ensureActive();
     if (Platform.isWindows) {
       _socketPath = r'\\.\pipe\crispcloud_fuse_' + _uniqueSuffix();
+    } else if (socketPath case final fixed?) {
+      if (utf8.encode(fixed).length >= 104) {
+        throw StateError('FUSE IPC socket path exceeds the Unix socket limit');
+      }
+      final parent = Directory(p.dirname(fixed));
+      await parent.create(recursive: true);
+      if (!setFileMode(parent.path, 0x1c0 /* 0700 */)) {
+        throw FileSystemException(
+          'Could not restrict FUSE IPC directory permissions',
+          parent.path,
+        );
+      }
+      final stale = await FileSystemEntity.type(fixed, followLinks: false);
+      if (stale == FileSystemEntityType.unixDomainSock) {
+        await File(fixed).delete();
+      } else if (stale != FileSystemEntityType.notFound) {
+        throw FileSystemException('IPC socket path is in use', fixed);
+      }
+      _ensureActive();
+      _socketPath = fixed;
     } else {
       final tempRoot = temporaryDirectory ?? Directory.systemTemp;
       // Short names leave room for macOS container paths under sockaddr_un's
@@ -372,6 +403,12 @@ class FuseFilesystem {
           break;
         case FuseOpcode.open:
           responsePayload = await _opOpen(payload);
+          break;
+        case FuseOpcode.discard:
+          final handleId = _readUint32(payload, 0);
+          _readBuffers.remove(handleId);
+          _writeBuffers.remove(handleId);
+          responsePayload = Uint8List(0);
           break;
         default:
           _sendError(socket, reqId, errno: 38); // ENOSYS

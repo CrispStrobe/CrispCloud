@@ -4,5 +4,10 @@
 <dict>
 	<key>com.apple.security.cs.disable-library-validation</key>
 	<true/>
+	<!-- Shared with the CrispCloud File Provider extension (Finder locations). -->
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>$(TeamIdentifierPrefix)crispcloud</string>
+	</array>
 </dict>
 </plist>
