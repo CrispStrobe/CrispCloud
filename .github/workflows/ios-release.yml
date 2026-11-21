@@ -266,8 +266,11 @@ jobs:
           # backing entitlement and Apple rejects the upload (ITMS-90362).
           # Re-sign the .appex and the app with their CURRENT entitlements PLUS
           # the app group (the installed profiles now authorize it).
+          # Select by SHA-1: codesign on the xcode-27 image cannot match the
+          # name "...Ströbele..." even under a UTF-8 locale ("no identity found").
           IDENT=$(security find-identity -v -p codesigning \
-            | grep -oE 'Apple Distribution: [^"]+' | head -1)
+            | awk '/Apple Distribution: / {print $2; exit}')
+          [ -n "$IDENT" ] || { echo "::error::Apple Distribution identity missing"; exit 1; }
           echo "signing identity: $IDENT"
           GROUP=group.com.crispcloud.shared
           WORK="$RUNNER_TEMP/resign"; rm -rf "$WORK"; mkdir -p "$WORK"

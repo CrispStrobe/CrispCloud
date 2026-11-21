@@ -218,7 +218,10 @@ jobs:
       - name: Sign .app + extension with their real entitlements
         run: |
           set -euo pipefail
-          IDENT=$(security find-identity -v "$KC" | grep -oE 'Apple Distribution: [^"]+' | head -1)
+          # Select by SHA-1: codesign on the xcode-27 image cannot match the
+          # name "...Ströbele..." even under a UTF-8 locale ("no identity found").
+          IDENT=$(security find-identity -v "$KC" | awk '/Apple Distribution: / {print $2; exit}')
+          [ -n "$IDENT" ] || { echo "::error::Apple Distribution identity missing"; exit 1; }
           echo "signing identity: $IDENT"
           EXT="$APP/Contents/PlugIns/FinderExtension.appex"
           # Embed the profiles — a Mac App Store binary must carry
@@ -287,10 +290,11 @@ jobs:
         run: |
           set -euo pipefail
           INST=$(security find-identity -v "$KC" \
-            | grep -oE '3rd Party Mac Developer Installer: [^"]+' | head -1)
+            | awk '/3rd Party Mac Developer Installer: / {print $2; exit}')
+          [ -n "$INST" ] || { echo "::error::Mac Installer identity missing"; exit 1; }
           echo "installer identity: $INST"
           PKG="$RUNNER_TEMP/CrispCloud-${VER}-${BUILD}.pkg"
-          productbuild --component "$APP" /Applications --sign "$INST" "$PKG"
+          productbuild --component "$APP" /Applications --keychain "$KC" --sign "$INST" "$PKG"
           echo "PKG=$PKG" >> "$GITHUB_ENV"
           pkgutil --check-signature "$PKG" | head -5
 
