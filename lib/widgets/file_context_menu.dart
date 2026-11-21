@@ -1047,8 +1047,8 @@ void showFileContextMenu(
     );
   }
 
-  // Share (mobile platforms only — local files)
-  if (!kIsWeb && (Platform.isAndroid || Platform.isIOS) && native) {
+  // Share through the system share sheet (local files)
+  if (ShareService.isFileSharingSupported && native) {
     items.add(
       PopupMenuItem(
         child: Row(
@@ -1077,16 +1077,17 @@ void showFileContextMenu(
     );
   }
 
-  // Share (mobile platforms only — remote files)
-  if (!kIsWeb &&
-      (Platform.isAndroid || Platform.isIOS) &&
+  // Share through the system share sheet (remote files, downloaded first)
+  if (ShareService.isFileSharingSupported &&
       remote != null &&
       !isMultiSelect &&
       !isSingleFolder) {
     final client = remote.client;
 
-    // "Share Link" — only for providers with native share APIs
-    if (client.capabilities.nativeShare) {
+    // "Share Link" — only for providers with native share APIs, on mobile
+    // (desktop shows its Share Link entry further down).
+    if (client.capabilities.nativeShare &&
+        (Platform.isAndroid || Platform.isIOS)) {
       items.add(
         PopupMenuItem(
           child: Row(
@@ -1119,14 +1120,14 @@ void showFileContextMenu(
       );
     }
 
-    // "Share File" — download to temp then share binary
+    // "Share" — download to temp then share the file itself
     items.add(
       PopupMenuItem(
         child: Row(
           children: [
             const Icon(Icons.share),
             const SizedBox(width: 8),
-            Expanded(child: Text(AppLocalizations.of(context)!.shareLink)),
+            Expanded(child: Text(context.commanderTr("Share{0}", ['']))),
           ],
         ),
         onTap: () => Future.delayed(Duration.zero, () async {
@@ -1171,7 +1172,7 @@ void showFileContextMenu(
                 return;
               }
               ScaffoldMessenger.of(context).hideCurrentSnackBar();
-              await Share.shareXFiles([XFile(spool.path)], text: file.name);
+              await Share.shareXFiles([XFile(spool.path)]);
             } finally {
               await spool.close();
             }

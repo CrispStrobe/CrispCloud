@@ -152,6 +152,7 @@ void main() {
       'file_list_dialog',
       'file_operation_dialog',
       'file_operation_quick_start',
+      'external_open_handler',
       'file_operation_conflict_dialog',
       'transfer_history_dialog',
       'operations_panel',

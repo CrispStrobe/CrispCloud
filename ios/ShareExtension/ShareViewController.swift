@@ -104,7 +104,7 @@ class ShareViewController: SLComposeServiceViewController {
             ]
         } else {
             preferredTypes = [
-                kUTTypeFileURL as String,
+                UTType.fileURL.identifier,
                 kUTTypeURL as String,
                 kUTTypeImage as String,
                 kUTTypeMovie as String,
@@ -120,9 +120,9 @@ class ShareViewController: SLComposeServiceViewController {
         }
 
         // For file URLs we copy the actual file; for other types we save the data.
-        if typeId == (kUTTypeFileURL as String) ||
-           (attachment.hasItemConformingToTypeIdentifier(kUTTypeFileURL as String)) {
-            loadFileURL(attachment, typeId: kUTTypeFileURL as String, completion: completion)
+        if typeId == (UTType.fileURL.identifier) ||
+           (attachment.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier)) {
+            loadFileURL(attachment, typeId: UTType.fileURL.identifier, completion: completion)
         } else {
             loadData(attachment, typeId: typeId, completion: completion)
         }
@@ -254,16 +254,9 @@ class ShareViewController: SLComposeServiceViewController {
         return mimeTypeFromUTI(url.pathExtension)
     }
 
-    private func mimeTypeFromUTI(_ uti: String) -> String {
-        switch uti {
-        case kUTTypeJPEG as String: return "image/jpeg"
-        case kUTTypePNG  as String: return "image/png"
-        case kUTTypeGIF  as String: return "image/gif"
-        case kUTTypeMovie as String: return "video/quicktime"
-        case kUTTypeAudio as String: return "audio/mpeg"
-        case kUTTypePDF   as String: return "application/pdf"
-        default:                     return "application/octet-stream"
-        }
+    private func mimeTypeFromUTI(_ value: String) -> String {
+        (UTType(value) ?? UTType(filenameExtension: value))?.preferredMIMEType
+            ?? "application/octet-stream"
     }
 
     private func fileExtension(for uti: String) -> String {

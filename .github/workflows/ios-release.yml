@@ -47,6 +47,10 @@ env:
   # .appex without entitlements (ITMS-90166) and Apple rejects the upload.
   FILEPROVIDER_BUNDLE_ID: com.CrispStrobe.cloud.FileProvider
   FILEPROVIDER_PROFILE_NAME: CrispCloud FileProvider AppStore CI
+  # "Share → CrispCloud". Shipped only when its own App Store profile secret
+  # (ASC_PROFILE_SHAREEXT_BASE64) exists; otherwise removed before export.
+  SHAREEXT_BUNDLE_ID: com.CrispStrobe.cloud.ShareExtension
+  SHAREEXT_PROFILE_NAME: CrispCloud ShareExtension AppStore CI
   FLUTTER_VERSION: '3.47.8'
 
 jobs:
@@ -150,6 +154,7 @@ jobs:
         env:
           PROFILE_B64: ${{ secrets.ASC_PROFILE_BASE64 }}
           FILEPROVIDER_PROFILE_B64: ${{ secrets.ASC_PROFILE_FILEPROVIDER_BASE64 }}
+          SHAREEXT_PROFILE_B64: ${{ secrets.ASC_PROFILE_SHAREEXT_BASE64 }}
         run: |
           set -euo pipefail
           install_profile() {
@@ -170,6 +175,12 @@ jobs:
           }
           install_profile "$PROFILE_B64"
           install_profile "$FILEPROVIDER_PROFILE_B64"
+          if [ -n "$SHAREEXT_PROFILE_B64" ]; then
+            install_profile "$SHAREEXT_PROFILE_B64"
+            echo "SHIP_SHAREEXT=1" >> "$GITHUB_ENV"
+          else
+            echo "::warning::ASC_PROFILE_SHAREEXT_BASE64 is not set; shipping without the Share extension"
+          fi
 
       - name: Write App Store Connect API key
         env:
@@ -195,6 +206,7 @@ jobs:
             <dict>
               <key>${{ env.BUNDLE_ID }}</key><string>${{ env.PROFILE_NAME }}</string>
               <key>${{ env.FILEPROVIDER_BUNDLE_ID }}</key><string>${{ env.FILEPROVIDER_PROFILE_NAME }}</string>
+          $( [ -n "${SHIP_SHAREEXT:-}" ] && echo "    <key>${{ env.SHAREEXT_BUNDLE_ID }}</key><string>${{ env.SHAREEXT_PROFILE_NAME }}</string>" )
             </dict>
             <key>destination</key><string>export</string>
             <key>manageAppVersionAndBuildNumber</key><false/>
@@ -245,6 +257,9 @@ jobs:
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO \
             FLUTTER_BUILD_NAME="$VER" FLUTTER_BUILD_NUMBER="$BUILD" \
             clean archive
+          if [ -z "${SHIP_SHAREEXT:-}" ]; then
+            rm -rf build/ios/archive/Runner.xcarchive/Products/Applications/Runner.app/PlugIns/ShareExtension.appex
+          fi
           PATH="/usr/bin:$PATH" xcodebuild -exportArchive \
             -archivePath build/ios/archive/Runner.xcarchive \
             -exportPath build/ios/ipa \
@@ -288,6 +303,8 @@ jobs:
             codesign --force --sign "$IDENT" --entitlements "$ent" "$target"
           }
           resign "$EXT"          # nested first, then the containing app
+          SHEXT="$APP/PlugIns/ShareExtension.appex"
+          if [ -d "$SHEXT" ]; then resign "$SHEXT"; fi
           resign "$APP"
           # Fail loud if the group didn't make it into the signed .appex.
           codesign -d --entitlements - --xml "$EXT" 2>/dev/null | grep -q "$GROUP" \

@@ -32,8 +32,12 @@
 		3664D94CD0E7F0603BD306B5 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F3B3120CC8556AF977EF8D4E /* Cocoa.framework */; };
 		4DE472FAD5CB7BFB34B8D10B /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DCC7D61164E652A1F5A81AEF /* Pods_RunnerTests.framework */; };
 		5380BF974FF000C9BF19C2F0 /* FileProviderDomains.swift in Sources */ = {isa = PBXBuildFile; fileRef = 825293E605056A286D7291E5 /* FileProviderDomains.swift */; };
+		5A71D767CBD1363367289EF0 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 01F9D4FC35A7499B18C2CFE4 /* PrivacyInfo.xcprivacy */; };
 		5E4CFF7CAADBF837ED72D736 /* FileProviderEnumerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F75401A17C8C7BFB311F149 /* FileProviderEnumerator.swift */; };
+		92967D0621B7A6D386E74636 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F3B3120CC8556AF977EF8D4E /* Cocoa.framework */; };
+		A7D0D2075BE2554C03A25706 /* ShareExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 556278B2BE1B89EC707DFDAF /* ShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		A9E0031416C5758E5EDEB4B0 /* ItemIndex.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB4841BE5AB406595053B68E /* ItemIndex.swift */; };
+		BA8D01CCFE6060F79211F3CC /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF621FC5133EEE0E1A52BBEF /* ShareViewController.swift */; };
 		CC001A012044A3C60003F001 /* FinderSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC001A002044A3C60003F001 /* FinderSync.swift */; };
 		CC001A032044A3C60003F001 /* FinderExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = CC001A042044A3C60003F001 /* FinderExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		CC002A012044A3C60003F001 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = CC002A002044A3C60003F001 /* PrivacyInfo.xcprivacy */; };
@@ -67,6 +71,13 @@
 			remoteGlobalIDString = C88FF04F07861C44EE607D7C;
 			remoteInfo = CrispCloudFileProvider;
 		};
+		9FADBB67D80BA5159A089965 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 33CC10E52044A3C60003C045 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 9159591752A6A6BA89E9A9DC;
+			remoteInfo = ShareExtension;
+		};
 		CC001A052044A3C60003F001 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 33CC10E52044A3C60003C045 /* Project object */;
@@ -95,6 +106,7 @@
 			files = (
 				CC001A032044A3C60003F001 /* FinderExtension.appex in Embed App Extensions */,
 				2B48601184C08ADC6E44D22A /* CrispCloudFileProvider.appex in Embed App Extensions */,
+				A7D0D2075BE2554C03A25706 /* ShareExtension.appex in Embed App Extensions */,
 			);
 			name = "Embed App Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -103,8 +115,10 @@
 
 /* Begin PBXFileReference section */
 		016A1D048C4266570F09429E /* FileProviderItem.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FileProviderItem.swift; sourceTree = "<group>"; };
+		01F9D4FC35A7499B18C2CFE4 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		0AA41E3D8B559D05810C53B3 /* Pods-RunnerTests.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.profile.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.profile.xcconfig"; sourceTree = "<group>"; };
 		21E4FE5D6596C9FFE1F6CC5F /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		28FB77F2F0DC45F894CF76F9 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		331C80D5294CF71000263BE5 /* RunnerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RunnerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		331C80D7294CF71000263BE5 /* RunnerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunnerTests.swift; sourceTree = "<group>"; };
 		333000ED22D3DE5D00554162 /* Warnings.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Warnings.xcconfig; sourceTree = "<group>"; };
@@ -124,7 +138,9 @@
 		33E5194F232828860026EE4D /* AppInfo.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = AppInfo.xcconfig; sourceTree = "<group>"; };
 		3A8DF466B4F01E55095F3586 /* IPCClient.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = IPCClient.swift; sourceTree = "<group>"; };
 		4A9781014251991796D39206 /* Pods-RunnerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release.xcconfig"; sourceTree = "<group>"; };
+		4C01878D64C8F56F0397AC2B /* ShareExtension.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = ShareExtension.entitlements; sourceTree = "<group>"; };
 		4E8881712844C070CA246152 /* CrispCloudFileProvider.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = CrispCloudFileProvider.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		556278B2BE1B89EC707DFDAF /* ShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		6F75401A17C8C7BFB311F149 /* FileProviderEnumerator.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FileProviderEnumerator.swift; sourceTree = "<group>"; };
 		7AFA3C8E1D35360C0083082E /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
 		825293E605056A286D7291E5 /* FileProviderDomains.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FileProviderDomains.swift; sourceTree = "<group>"; };
@@ -143,6 +159,7 @@
 		E3A01F7C4978002D964789CF /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		E8FC9A66E6C713DDBF93D02D /* Pods-RunnerTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.debug.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.debug.xcconfig"; sourceTree = "<group>"; };
 		EF3972B29FB981A6E7CE4AC6 /* CrispCloudFileProvider.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = CrispCloudFileProvider.entitlements; sourceTree = "<group>"; };
+		EF621FC5133EEE0E1A52BBEF /* ShareViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
 		F3B3120CC8556AF977EF8D4E /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/System/Library/Frameworks/Cocoa.framework; sourceTree = DEVELOPER_DIR; };
 		FA6CEBC4889E893ECB6B598D /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		FB4841BE5AB406595053B68E /* ItemIndex.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ItemIndex.swift; sourceTree = "<group>"; };
@@ -162,6 +179,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				E5878A68877F22CC64B0071F /* Pods_Runner.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6C7A93CC440D65FF16605AA9 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				92967D0621B7A6D386E74636 /* Cocoa.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -213,6 +238,7 @@
 				D73912EC22F37F3D000D13A0 /* Frameworks */,
 				D61CED569636B398DC5DD9A5 /* Pods */,
 				770C6C4ECAF37069313D04BF /* CrispCloudFileProvider */,
+				48CEEC0B8BC5DEED87830A43 /* ShareExtension */,
 			);
 			sourceTree = "<group>";
 		};
@@ -223,6 +249,7 @@
 				331C80D5294CF71000263BE5 /* RunnerTests.xctest */,
 				CC001A042044A3C60003F001 /* FinderExtension.appex */,
 				4E8881712844C070CA246152 /* CrispCloudFileProvider.appex */,
+				556278B2BE1B89EC707DFDAF /* ShareExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -263,6 +290,18 @@
 				825293E605056A286D7291E5 /* FileProviderDomains.swift */,
 			);
 			path = Runner;
+			sourceTree = "<group>";
+		};
+		48CEEC0B8BC5DEED87830A43 /* ShareExtension */ = {
+			isa = PBXGroup;
+			children = (
+				EF621FC5133EEE0E1A52BBEF /* ShareViewController.swift */,
+				28FB77F2F0DC45F894CF76F9 /* Info.plist */,
+				4C01878D64C8F56F0397AC2B /* ShareExtension.entitlements */,
+				01F9D4FC35A7499B18C2CFE4 /* PrivacyInfo.xcprivacy */,
+			);
+			name = ShareExtension;
+			path = ShareExtension;
 			sourceTree = "<group>";
 		};
 		770C6C4ECAF37069313D04BF /* CrispCloudFileProvider */ = {
@@ -367,11 +406,29 @@
 				33CC11202044C79F0003C045 /* PBXTargetDependency */,
 				CC001A0F2044A3C60003F001 /* PBXTargetDependency */,
 				F884A27836446772330BA63C /* PBXTargetDependency */,
+				4E8BBE178A93C39C18D756D9 /* PBXTargetDependency */,
 			);
 			name = Runner;
 			productName = Runner;
 			productReference = 33CC10ED2044A3C60003C045 /* CrispCloud.app */;
 			productType = "com.apple.product-type.application";
+		};
+		9159591752A6A6BA89E9A9DC /* ShareExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CC38410AD6E277AC9EFA8436 /* Build configuration list for PBXNativeTarget "ShareExtension" */;
+			buildPhases = (
+				8D9DB6652B3F4DC60C6CF5EB /* Sources */,
+				6C7A93CC440D65FF16605AA9 /* Frameworks */,
+				35F2B0D0433A8989F76F0CA7 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ShareExtension;
+			productName = ShareExtension;
+			productReference = 556278B2BE1B89EC707DFDAF /* ShareExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 		C88FF04F07861C44EE607D7C /* CrispCloudFileProvider */ = {
 			isa = PBXNativeTarget;
@@ -465,6 +522,7 @@
 				33CC111A2044C6BA0003C045 /* Flutter Assemble */,
 				CC001A062044A3C60003F001 /* FinderExtension */,
 				C88FF04F07861C44EE607D7C /* CrispCloudFileProvider */,
+				9159591752A6A6BA89E9A9DC /* ShareExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -484,6 +542,14 @@
 				33CC10F32044A3C60003C045 /* Assets.xcassets in Resources */,
 				33CC10F62044A3C60003C045 /* MainMenu.xib in Resources */,
 				CC002A012044A3C60003F001 /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		35F2B0D0433A8989F76F0CA7 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5A71D767CBD1363367289EF0 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -674,6 +740,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		8D9DB6652B3F4DC60C6CF5EB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BA8D01CCFE6060F79211F3CC /* ShareViewController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		CC001A0C2044A3C60003F001 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -694,6 +768,12 @@
 			isa = PBXTargetDependency;
 			target = 33CC111A2044C6BA0003C045 /* Flutter Assemble */;
 			targetProxy = 33CC111F2044C79F0003C045 /* PBXContainerItemProxy */;
+		};
+		4E8BBE178A93C39C18D756D9 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = ShareExtension;
+			target = 9159591752A6A6BA89E9A9DC /* ShareExtension */;
+			targetProxy = 9FADBB67D80BA5159A089965 /* PBXContainerItemProxy */;
 		};
 		CC001A0F2044A3C60003F001 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -721,6 +801,29 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		0651554C1635F95F2C087F00 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = ShareExtension/ShareExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				INFOPLIST_FILE = ShareExtension/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				OTHER_LDFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = com.CrispStrobe.cloud.ShareExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
 		331C80DB294CF71000263BE5 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = E8FC9A66E6C713DDBF93D02D /* Pods-RunnerTests.debug.xcconfig */;
@@ -1027,6 +1130,50 @@
 			};
 			name = Debug;
 		};
+		635D8CC15AED496F0B11E73C /* Profile */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = ShareExtension/ShareExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				INFOPLIST_FILE = ShareExtension/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				OTHER_LDFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = com.CrispStrobe.cloud.ShareExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Profile;
+		};
+		A6B9D569ED8DA5F0FD160882 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = ShareExtension/ShareExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				INFOPLIST_FILE = ShareExtension/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				OTHER_LDFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = com.CrispStrobe.cloud.ShareExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
 		A74C67C1FB4F0CDEBCDE4D36 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1199,6 +1346,16 @@
 				CC001A102044A3C60003F001 /* Debug */,
 				CC001A112044A3C60003F001 /* Release */,
 				CC001A122044A3C60003F001 /* Profile */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CC38410AD6E277AC9EFA8436 /* Build configuration list for PBXNativeTarget "ShareExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0651554C1635F95F2C087F00 /* Release */,
+				A6B9D569ED8DA5F0FD160882 /* Debug */,
+				635D8CC15AED496F0B11E73C /* Profile */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
