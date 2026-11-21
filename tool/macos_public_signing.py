@@ -137,12 +137,51 @@ def cleanup():
         shutil.rmtree(folder)
 
 
-def entitlements(source, identifier, team, target):
-    # Xcode expands $(TeamIdentifierPrefix) (App Group IDs); so must re-signing.
-    values = plistlib.loads(source.read_bytes().replace(b'$(TeamIdentifierPrefix)', team.encode() + b'.'))
+def entitlements(source, identifier, team, target, keychain_group=None):
+    # Xcode expands $(TeamIdentifierPrefix)/$(AppIdentifierPrefix) (App Group
+    # and keychain group IDs); so must re-signing.
+    prefix = team.encode() + b'.'
+    raw = source.read_bytes().replace(b'$(TeamIdentifierPrefix)', prefix).replace(b'$(AppIdentifierPrefix)', prefix)
+    values = plistlib.loads(raw)
     values['com.apple.application-identifier'] = team + '.' + identifier
     values['com.apple.developer.team-identifier'] = team
+    if keychain_group:
+        values['keychain-access-groups'] = [keychain_group]
     target.write_bytes(plistlib.dumps(values))
+
+
+def vault_keychain_group(team):
+    """Data-protection keychain group for the Touch ID vault-unlock item."""
+    return team + '.' + BUNDLE
+
+
+def profile_allows_keychain_group(payload, group):
+    # keychain-access-groups is restricted on macOS: an ad-hoc or unprovisioned
+    # signature carrying it is killed at launch (see 2e823d73). It is therefore
+    # never in the committed .entitlements files (the unsigned pre-signing smoke
+    # launch would fail), only added here when the embedded profile allows it.
+    allowed = payload.get('Entitlements', {}).get('keychain-access-groups', [])
+    if not isinstance(allowed, list):
+        return False
+    team = group.split('.', 1)[0]
+    return group in allowed or team + '.*' in allowed
+
+
+def add_keychain_group(entitlements_file, profile, team):
+    """Add the vault keychain group to signing entitlements if the profile allows it.
+
+    Returns True when added. Without it, Touch ID vault unlock stays hidden
+    (the app probes errSecMissingEntitlement) rather than the app being killed.
+    """
+    group = vault_keychain_group(team)
+    if not profile_allows_keychain_group(profile_payload(profile), group):
+        print(f'warning: provisioning profile does not authorize keychain group {group}; '
+              'Touch ID vault unlock will be unavailable', file=sys.stderr)
+        return False
+    values = plistlib.loads(entitlements_file.read_bytes())
+    values['keychain-access-groups'] = [group]
+    entitlements_file.write_bytes(plistlib.dumps(values))
+    return True
 
 
 def notarize(artifact, receipt):
@@ -226,7 +265,13 @@ def sign(app, output):
             else:
                 codesign(bundle)
         target = work / 'app-entitlements.plist'
-        entitlements(ROOT / 'macos/Runner/Direct.entitlements', BUNDLE, team, target)
+        app_profile = profile_payload(Path(required('APP_DEVID_PROFILE')))
+        group = vault_keychain_group(team)
+        if not profile_allows_keychain_group(app_profile, group):
+            print(f'warning: Developer ID profile does not authorize keychain group {group}; '
+                  'Touch ID vault unlock will be unavailable', file=sys.stderr)
+            group = None
+        entitlements(ROOT / 'macos/Runner/Direct.entitlements', BUNDLE, team, target, keychain_group=group)
         codesign(app, target)
         macos_distribution.verify('github', app)
         details = subprocess.check_output(['codesign', '-dv', '--verbose=4', str(app)], stderr=subprocess.STDOUT, text=True)
@@ -296,9 +341,14 @@ def main():
     cli = commands.add_parser('sign-cli')
     cli.add_argument('--bundle', type=Path, required=True)
     cli.add_argument('--archive', type=Path, required=True)
+    group = commands.add_parser('keychain-group', help='add the vault keychain group if the profile allows it')
+    group.add_argument('--entitlements', type=Path, required=True)
+    group.add_argument('--profile', type=Path, required=True)
+    group.add_argument('--team', required=True)
     args = parser.parse_args()
     try:
         if args.command == 'prepare': prepare()
+        elif args.command == 'keychain-group': add_keychain_group(args.entitlements, args.profile, args.team)
         elif args.command == 'cleanup': cleanup()
         elif args.command == 'sign-cli': sign_cli(args.bundle.resolve(), args.archive.resolve())
         else: sign(args.app.resolve(), args.output.resolve())

@@ -31,6 +31,9 @@ import '../services/app_lock_service.dart';
 import '../services/secure_storage_macos_keychain.dart';
 import 'credential_storage_setup.dart';
 import 'keychain_lock_settings.dart';
+import 'biometric_vault_settings_tile.dart';
+import '../services/biometric_vault_unlock.dart';
+import '../services/secure_storage_web.dart';
 import '../providers/quick_search_provider.dart';
 import 'cache_settings_dialog.dart';
 import 'provider_settings_dialog.dart';
@@ -710,6 +713,12 @@ class _CredentialStorageSettingsSectionState
                   ref.watch(secureStorageProvider)
                       as MacOsCustomKeychainStorage,
             ),
+          if (active == CredentialStorageMode.encryptedFile &&
+              ref.watch(secureStorageProvider) is WebEncryptedStorage &&
+              ref.watch(biometricVaultUnlockProvider).isSupported)
+            BiometricVaultSettingsTile(
+              storage: ref.watch(secureStorageProvider) as WebEncryptedStorage,
+            ),
         ],
       ),
     );
@@ -760,6 +769,10 @@ class _CredentialStorageSettingsSectionState
             (previous.mode != CredentialStorageMode.encryptedFile ||
                 previous.createFileVault),
       );
+      if (result.mode != CredentialStorageMode.encryptedFile) {
+        // The vault's Touch ID key must not outlive a switch to another store.
+        await ref.read(biometricVaultUnlockProvider).removeIfEnabled();
+      }
       if (!mounted) return;
       ref.read(credentialStoragePendingModeProvider.notifier).state =
           result.mode == active ? null : result.mode;
