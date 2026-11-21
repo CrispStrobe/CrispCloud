@@ -23,6 +23,14 @@ ROOT = Path(__file__).resolve().parents[1]
 BUNDLE = 'com.CrispStrobe.cloud'
 EXTENSION = BUNDLE + '.FinderExtension'
 FILE_PROVIDER = BUNDLE + '.FileProvider'
+SHARE_EXTENSION = BUNDLE + '.ShareExtension'
+# Optional app extensions: (bundle dir, identifier, entitlements, profile env)
+OPTIONAL_EXTENSIONS = [
+    ('CrispCloudFileProvider.appex', FILE_PROVIDER,
+     'macos/CrispCloudFileProvider/CrispCloudFileProvider.entitlements', 'FP_DEVID_PROFILE'),
+    ('ShareExtension.appex', SHARE_EXTENSION,
+     'macos/ShareExtension/ShareExtension.entitlements', 'SHARE_DEVID_PROFILE'),
+]
 
 
 def run(*args, **kwargs):
@@ -185,13 +193,17 @@ def sign(app, output):
     shutil.copyfile(required('EXT_DEVID_PROFILE'), extension / 'Contents/embedded.provisionprofile')
     # Finder locations (File Provider). Its team-prefixed App Group needs no
     # profile for Developer ID; FP_DEVID_PROFILE embeds one when provided.
-    file_provider = app / 'Contents/PlugIns/CrispCloudFileProvider.appex'
-    if file_provider.is_dir():
-        if plistlib.loads((file_provider / 'Contents/Info.plist').read_bytes()).get('CFBundleIdentifier') != FILE_PROVIDER:
-            raise ValueError('Unexpected File Provider extension bundle identifier')
-        if os.environ.get('FP_DEVID_PROFILE'):
-            validate_profile(profile_payload(Path(os.environ['FP_DEVID_PROFILE'])), FILE_PROVIDER, fingerprint, team)
-            shutil.copyfile(os.environ['FP_DEVID_PROFILE'], file_provider / 'Contents/embedded.provisionprofile')
+    optional = {}
+    for bundle_name, identifier, source, profile_env in OPTIONAL_EXTENSIONS:
+        bundle = app / 'Contents/PlugIns' / bundle_name
+        if not bundle.is_dir():
+            continue
+        if plistlib.loads((bundle / 'Contents/Info.plist').read_bytes()).get('CFBundleIdentifier') != identifier:
+            raise ValueError(f'Unexpected {bundle_name} bundle identifier')
+        if os.environ.get(profile_env):
+            validate_profile(profile_payload(Path(os.environ[profile_env])), identifier, fingerprint, team)
+            shutil.copyfile(os.environ[profile_env], bundle / 'Contents/embedded.provisionprofile')
+        optional[bundle] = (identifier, source)
     output.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix='crispcloud-notary-', dir=required('RUNNER_TEMP')) as temporary:
         work = Path(temporary)
@@ -218,10 +230,10 @@ def sign(app, output):
                 target = work / 'extension-entitlements.plist'
                 entitlements(ROOT / 'macos/FinderExtension/FinderExtension.entitlements', EXTENSION, team, target)
                 codesign(bundle, target)
-            elif bundle == file_provider:
-                target = work / 'file-provider-entitlements.plist'
-                entitlements(ROOT / 'macos/CrispCloudFileProvider/CrispCloudFileProvider.entitlements',
-                             FILE_PROVIDER, team, target)
+            elif bundle in optional:
+                identifier, source = optional[bundle]
+                target = work / f'{bundle.stem}-entitlements.plist'
+                entitlements(ROOT / source, identifier, team, target)
                 codesign(bundle, target)
             else:
                 codesign(bundle)

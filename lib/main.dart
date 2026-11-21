@@ -29,6 +29,8 @@ import 'dart:async';
 
 import 'providers/providers.dart';
 import 'screens/file_browser_screen.dart';
+import 'services/windows_integration_service.dart';
+import 'services/external_open_service.dart';
 import 'services/cloud_storage_interface.dart';
 import 'services/dropbox_config_service.dart';
 import 'services/filen_config_service.dart';
@@ -293,7 +295,18 @@ const _appVersion = String.fromEnvironment(
   defaultValue: '1.0.0',
 );
 
-Future<void> main() async {
+Future<void> main([List<String> arguments = const []]) async {
+  // Files passed on the command line (Windows/Linux "Open with", double-click
+  // on a registered type) open once the file browser is shown.
+  if (!kIsWeb && (Platform.isWindows || Platform.isLinux)) {
+    ExternalOpenService.instance.addArguments(arguments);
+  }
+  if (!kIsWeb && Platform.isWindows) {
+    // Appear under "Open with" (HKCU, no default changes, no admin rights).
+    unawaited(
+      WindowsIntegrationService().registerFileTypes(externalOpenExtensions),
+    );
+  }
   if (const bool.fromEnvironment(
         'CRISP_W7_INCLUDE_NATIVE_PROBE',
         defaultValue: false,

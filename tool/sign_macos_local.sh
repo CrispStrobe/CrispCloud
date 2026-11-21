@@ -144,6 +144,12 @@ if [ -d "$FPEXT" ]; then
   mkents macos/CrispCloudFileProvider/CrispCloudFileProvider.entitlements "$BUNDLE_ID.FileProvider" "$WORK/fp.plist"
   codesign ${KEYCHAIN_ARGS[@]+"${KEYCHAIN_ARGS[@]}"} --force --options runtime --sign "$IDENT" --entitlements "$WORK/fp.plist" "$FPEXT"
 fi
+SHEXT="$APP/Contents/PlugIns/ShareExtension.appex"
+if [ -d "$SHEXT" ]; then
+  [ -n "${SHARE_PROFILE:-}" ] && cp "$SHARE_PROFILE" "$SHEXT/Contents/embedded.provisionprofile"
+  mkents macos/ShareExtension/ShareExtension.entitlements "$BUNDLE_ID.ShareExtension" "$WORK/share.plist"
+  codesign ${KEYCHAIN_ARGS[@]+"${KEYCHAIN_ARGS[@]}"} --force --options runtime --sign "$IDENT" --entitlements "$WORK/share.plist" "$SHEXT"
+fi
 mkents "$APP_ENTITLEMENTS" "$BUNDLE_ID" "$WORK/app-ents.plist"
 case "$CONFIGURATION" in
   Debug|Profile)

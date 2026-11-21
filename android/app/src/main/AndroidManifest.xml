@@ -53,10 +53,14 @@
                 <data android:mimeType="*/*" />
             </intent-filter>
 
-            <!-- Open-with: other apps can open files in CrispCloud -->
+            <!-- Open-with: other apps can open local files in CrispCloud.
+                 content:// and file:// only, so web links stay with the
+                 browser. -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="content" />
+                <data android:scheme="file" />
                 <data android:mimeType="*/*" />
             </intent-filter>
 

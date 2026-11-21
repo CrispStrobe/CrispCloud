@@ -401,6 +401,16 @@ Future<void> showRenameDialog(BuildContext context, WidgetRef ref) async {
   }
 }
 
+/// Like [viewSelectedFile], but completes when the viewer (and an editor it
+/// handed over to) has closed. Used for files opened from other apps.
+Future<void> viewSelectedFileAndWait(BuildContext context, WidgetRef ref) {
+  final activePanel = ref.read(activePanelProvider);
+  final panel = ref.read(panelProvider(activePanel));
+  final target = panel.cursorItem;
+  if (target == null || target.isFolder) return Future.value();
+  return _viewFile(context, ref, panel, activePanel, target);
+}
+
 /// F3: Open cursor item in a full-screen internal viewer dialog.
 void viewSelectedFile(
   BuildContext context,

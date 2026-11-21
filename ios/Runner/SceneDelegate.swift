@@ -73,6 +73,8 @@ class SceneDelegate: FlutterSceneDelegate {
         if let activity = connectionOptions.userActivities.first {
             handleUserActivity(activity)
         }
+        // A document opened from another app ("Open in CrispCloud").
+        receiveDocuments(connectionOptions.urlContexts)
 
         NSLog("[CrispCloud] Scene connected: \(session.persistentIdentifier)")
     }
@@ -83,8 +85,14 @@ class SceneDelegate: FlutterSceneDelegate {
         notifyWindowStateChanged()
     }
 
+    override func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
+        super.scene(scene, openURLContexts: URLContexts)
+        receiveDocuments(URLContexts)
+    }
+
     override func sceneDidBecomeActive(_ scene: UIScene) {
         super.sceneDidBecomeActive(scene)
+        deliverShareExtensionInbox()
         NSLog("[CrispCloud] Scene became active")
         notifyWindowStateChanged()
     }
@@ -174,6 +182,18 @@ class SceneDelegate: FlutterSceneDelegate {
             }
         }
 
+        // Files from other apps (lib/services/external_open_service.dart).
+        externalOpenChannel = FlutterMethodChannel(
+            name: "com.crispcloud/external_open",
+            binaryMessenger: messenger
+        )
+        externalOpenChannel?.setMethodCallHandler { [weak self] call, result in
+            guard let self, call.method == "ready" else { return result(FlutterMethodNotImplemented) }
+            self.externalOpenReady = true
+            result(self.externalOpenQueue)
+            self.externalOpenQueue.removeAll()
+        }
+
         // Share extension channel
         shareExtChannel = FlutterMethodChannel(
             name: "com.crispcloud/share_extension",
@@ -255,6 +275,54 @@ class SceneDelegate: FlutterSceneDelegate {
 
         default:
             result(FlutterMethodNotImplemented)
+        }
+    }
+
+    // MARK: - External open (documents and share extension inbox)
+
+    private var externalOpenChannel: FlutterMethodChannel?
+    private var externalOpenQueue: [[String: Any]] = []
+    private var externalOpenReady = false
+
+    private func deliverExternalOpen(_ payload: [String: Any]) {
+        if externalOpenReady, let channel = externalOpenChannel {
+            channel.invokeMethod("open", arguments: payload)
+        } else {
+            externalOpenQueue.append(payload)
+        }
+    }
+
+    /// Copies each opened document into tmp/Opened/ (it may be a security-
+    /// scoped file owned by another app) and hands the copies to Dart.
+    private func receiveDocuments(_ contexts: Set<UIOpenURLContext>) {
+        let files = contexts.map(\.url).filter(\.isFileURL)
+        guard !files.isEmpty else { return }
+        let folder = FileManager.default.temporaryDirectory
+            .appendingPathComponent("Opened/\(UUID().uuidString)", isDirectory: true)
+        try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        var paths: [String] = []
+        for url in files {
+            let scoped = url.startAccessingSecurityScopedResource()
+            defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+            let target = folder.appendingPathComponent(url.lastPathComponent)
+            if (try? FileManager.default.copyItem(at: url, to: target)) != nil {
+                paths.append(target.path)
+            }
+        }
+        if !paths.isEmpty { deliverExternalOpen(["paths": paths, "shared": false]) }
+    }
+
+    /// Files the Share extension queued in the App Group (cc_pending_uploads).
+    private func deliverShareExtensionInbox() {
+        let defaults = UserDefaults(suiteName: SharedDefaults.appGroupIdentifier)
+        guard let data = defaults?.data(forKey: "cc_pending_uploads"),
+              let items = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]],
+              !items.isEmpty else { return }
+        defaults?.removeObject(forKey: "cc_pending_uploads")
+        let paths = items.compactMap { $0["localPath"] as? String }
+            .filter { FileManager.default.fileExists(atPath: $0) }
+        if !paths.isEmpty {
+            deliverExternalOpen(["paths": paths, "shared": true, "deleteSources": true])
         }
     }
 

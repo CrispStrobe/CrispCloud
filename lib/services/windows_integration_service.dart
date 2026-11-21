@@ -115,6 +115,52 @@ class WindowsIntegrationService {
   // ---------------------------------------------------------------------------
 
   /// Writes a REG_SZ value. A null [valueName] writes the default value.
+  // ---------------------------------------------------------------------------
+  // "Open with" file types
+  // ---------------------------------------------------------------------------
+
+  static const _progId = 'CrispCloud.Document';
+
+  /// Lists CrispCloud under "Open with" for [extensions] without changing any
+  /// default app: a ProgID, the application's SupportedTypes and each
+  /// extension's OpenWithProgids. Rewritten at every start so a moved
+  /// portable copy keeps working. HKCU only; no admin rights needed.
+  Future<bool> registerFileTypes(List<String> extensions) async {
+    if (!isSupported) return false;
+    final exePath = Platform.resolvedExecutable;
+    final exeName = exePath.split(r'\').last;
+    final open = '"$exePath" "%1"';
+    var ok = true;
+    ok &= await _regAdd(
+      'Software\\Classes\\$_progId',
+      null,
+      'CrispCloud document',
+    );
+    ok &= await _regAdd(
+      'Software\\Classes\\$_progId\\DefaultIcon',
+      null,
+      '$exePath,0',
+    );
+    ok &= await _regAdd(
+      'Software\\Classes\\$_progId\\shell\\open\\command',
+      null,
+      open,
+    );
+    final app = 'Software\\Classes\\Applications\\$exeName';
+    ok &= await _regAdd(app, 'FriendlyAppName', 'CrispCloud');
+    ok &= await _regAdd('$app\\shell\\open\\command', null, open);
+    for (final extension in extensions) {
+      ok &= await _regAdd('$app\\SupportedTypes', '.$extension', '');
+      ok &= await _regAdd(
+        'Software\\Classes\\.$extension\\OpenWithProgids',
+        _progId,
+        '',
+      );
+    }
+    if (!ok) _log.warn('Some "Open with" file types could not be registered');
+    return ok;
+  }
+
   Future<bool> _regAdd(
     String registryKey,
     String? valueName,
