@@ -28,6 +28,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/panel_side.dart';
 import '../models/file_item.dart';
+import '../providers/finder_location_provider.dart';
+import '../services/finder_location_service.dart';
 import '../providers/providers.dart';
 import '../providers/panel_source_provider.dart'
     show fkeyBarVisibleProvider, swapPanelSources;
@@ -154,6 +156,12 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     super.initState();
     _nativeToolbar = MacBrowserToolbar(_onNativeToolbarAction);
     FocusManager.instance.addListener(_updateMenuFocus);
+    // Serve configured Finder locations (macOS File Provider) for this session.
+    if (FinderLocationService.isSupported) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) ref.read(finderLocationProvider);
+      });
+    }
   }
 
   void _updateMenuFocus() {
