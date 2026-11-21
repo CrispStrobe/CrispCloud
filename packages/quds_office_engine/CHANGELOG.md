@@ -4,6 +4,13 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Add `OdfZotero.inspect`, a bounded read-only native ODT Zotero inventory.
+  Retain canonical citation ReferenceMarks, bibliography TextSections, exact
+  paragraph/story/cell ownership, UTF-16 offsets, cached results and original
+  document preferences. Report malformed, duplicate, overlapping, protected,
+  linked and unsupported structures explicitly. Include a JSON diagnostic CLI;
+  this does not enable rich ODT loading or change ordinary cached-result export.
+
 - Preserve bounded nested tables in Zotero Add Note/Add Annotation content,
   including recursive active-citation/list order, independent span/width
   validation and supported pictures. Keep all resource budgets shared across

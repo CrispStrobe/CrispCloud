@@ -1,3 +1,6 @@
+@Timeout(Duration(minutes: 5))
+library;
+
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -7,6 +10,7 @@ import 'package:quds_office_engine/quds_office_engine.dart';
 import 'package:test/test.dart';
 
 import '../tool/macros/web_vba_word_line_spacing_smoke.dart' as portable;
+import 'support/office_macro_cli.dart';
 
 const _target = 'ActiveDocument.Paragraphs(1).Format';
 const _example = 'example/macros/word_line_spacing.bas';
@@ -28,14 +32,10 @@ Map<String, Object?> _sourceArguments(String source) => {
 };
 
 Future<ProcessResult> _cli(List<String> arguments) =>
-    Process.run(Platform.resolvedExecutable, [
-      if (Platform.packageConfig case final String packages)
-        '--packages=$packages',
-      'tool/macros/office_macro.dart',
-      ...arguments,
-    ]);
+    runOfficeMacroCli(arguments);
 
 void main() {
+  registerOfficeMacroCliCleanup();
   test(
     'actual spacing BAS publishes once and preserves DOCM through reopens',
     () async {

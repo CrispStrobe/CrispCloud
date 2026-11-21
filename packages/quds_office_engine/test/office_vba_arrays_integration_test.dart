@@ -1,3 +1,6 @@
+@Timeout(Duration(minutes: 5))
+library;
+
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -5,6 +8,8 @@ import 'dart:typed_data';
 import 'package:quds_office_engine/quds_office_automation.dart';
 import 'package:quds_office_engine/quds_office_engine.dart';
 import 'package:test/test.dart';
+
+import 'support/office_macro_cli.dart';
 
 const _example = 'example/macros/array_report.bas';
 const _reportSteps = 24;
@@ -67,12 +72,7 @@ TypeMatcher<OfficeMacroException> _error(String code) =>
     isA<OfficeMacroException>().having((error) => error.code, 'code', code);
 
 Future<ProcessResult> _run(List<String> arguments) =>
-    Process.run(Platform.resolvedExecutable, <String>[
-      if (Platform.packageConfig case final String packages)
-        '--packages=$packages',
-      'tool/macros/office_macro.dart',
-      ...arguments,
-    ]);
+    runOfficeMacroCli(arguments);
 
 void _expectReport(Uint8List bytes) {
   final sheet = SheetDeserializer().readBytes(bytes).sheets.single;
@@ -103,6 +103,7 @@ void _expectReport(Uint8List bytes) {
 }
 
 void main() {
+  registerOfficeMacroCliCleanup();
   group('array and For Each plans through the atomic runtime', () {
     test('committed report round trips, validates, and runs', () async {
       final macro = _compile(File(_example).readAsStringSync());

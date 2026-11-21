@@ -1,0 +1,2865 @@
+{
+ "schemaVersion": 1,
+ "suite": "vba-text-intrinsics",
+ "dialect": "vba-excel",
+ "cases": [
+  {
+   "id": "instr-binary-and-explicit-start",
+   "feature": "InStr",
+   "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = InStr(\"abABab\",\"ab\")\n  Worksheets(1).Range(\"A2\").Value2 = InStr(\"abABab\",\"AB\")\n  Worksheets(1).Range(\"A3\").Value2 = InStr(\"abABab\",\"aB\")\n  Worksheets(1).Range(\"A4\").Value2 = InStr(2,\"abABab\",\"ab\")\n  Worksheets(1).Range(\"A5\").Value2 = InStr(1,\"abABab\",\"AB\",0)\n  Worksheets(1).Range(\"A6\").Value2 = InStr(1,\"abABab\",\"AB\",vbBinaryCompare)\nEnd Sub\n",
+   "expected": {
+    "steps": [
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A1",
+       "value": 1
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A2",
+       "value": 3
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A3",
+       "value": 0
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A4",
+       "value": 5
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A5",
+       "value": 3
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A6",
+       "value": 3
+      }
+     }
+    ]
+   },
+   "provenance": {
+    "kind": "spec-derived",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/instr-function"
+    ],
+    "note": "Hand-authored expected values derived from Microsoft's published function contract; no Office host was executed."
+   }
+  },
+  {
+   "id": "instr-one-based-limits",
+   "feature": "InStr",
+   "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = InStr(1,\"abc\",\"a\")\n  Worksheets(1).Range(\"A2\").Value2 = InStr(3,\"abc\",\"c\")\n  Worksheets(1).Range(\"A3\").Value2 = InStr(4,\"abc\",\"a\")\n  Worksheets(1).Range(\"A4\").Value2 = InStr(2147483647,\"abc\",\"c\")\n  Worksheets(1).Range(\"A5\").Value2 = InStr(2,\"abc\",\"ab\")\nEnd Sub\n",
+   "expected": {
+    "steps": [
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A1",
+       "value": 1
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A2",
+       "value": 3
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A3",
+       "value": 0
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A4",
+       "value": 0
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A5",
+       "value": 0
+      }
+     }
+    ]
+   },
+   "provenance": {
+    "kind": "spec-derived",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/instr-function"
+    ],
+    "note": "Hand-authored expected values derived from Microsoft's published function contract; no Office host was executed."
+   }
+  },
+  {
+   "id": "instr-empty-haystack-and-needle",
+   "feature": "InStr",
+   "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = InStr(\"\",\"\")\n  Worksheets(1).Range(\"A2\").Value2 = InStr(\"\",\"x\")\n  Worksheets(1).Range(\"A3\").Value2 = InStr(\"abc\",\"\")\n  Worksheets(1).Range(\"A4\").Value2 = InStr(2,\"abc\",\"\")\n  Worksheets(1).Range(\"A5\").Value2 = InStr(4,\"abc\",\"\")\n  Worksheets(1).Range(\"A6\").Value2 = InStr(2147483647,\"abc\",\"\")\nEnd Sub\n",
+   "expected": {
+    "steps": [
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A1",
+       "value": 0
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A2",
+       "value": 0
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A3",
+       "value": 1
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A4",
+       "value": 2
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A5",
+       "value": 4
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A6",
+       "value": 2147483647
+      }
+     }
+    ]
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/instr-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds resolves combined empty-haystack, empty-needle and out-of-range Start conditions explicitly: an empty haystack yields zero; otherwise an empty needle yields Start. Microsoft lists these returns without unambiguously ordering all combined conditions. This bounded contract is not an Office-host observation."
+   }
+  },
+  {
+   "id": "instr-overlapping-candidates",
+   "feature": "InStr",
+   "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = InStr(\"ababa\",\"aba\")\n  Worksheets(1).Range(\"A2\").Value2 = InStr(2,\"ababa\",\"aba\")\n  Worksheets(1).Range(\"A3\").Value2 = InStr(3,\"ababa\",\"aba\")\n  Worksheets(1).Range(\"A4\").Value2 = InStr(4,\"ababa\",\"aba\")\n  Worksheets(1).Range(\"A5\").Value2 = InStr(2,\"aaaa\",\"aa\")\nEnd Sub\n",
+   "expected": {
+    "steps": [
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A1",
+       "value": 1
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A2",
+       "value": 3
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A3",
+       "value": 3
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A4",
+       "value": 0
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A5",
+       "value": 2
+      }
+     }
+    ]
+   },
+   "provenance": {
+    "kind": "spec-derived",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/instr-function"
+    ],
+    "note": "Hand-authored expected values derived from Microsoft's published function contract; no Office host was executed."
+   }
+  },
+  {
+   "id": "instr-utf16-code-unit-offsets",
+   "feature": "InStr",
+   "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = InStr(\"A\ud83d\ude00B\ud83d\ude00C\",\"\ud83d\ude00\")\n  Worksheets(1).Range(\"A2\").Value2 = InStr(3,\"A\ud83d\ude00B\ud83d\ude00C\",\"\ud83d\ude00\")\n  Worksheets(1).Range(\"A3\").Value2 = InStr(5,\"A\ud83d\ude00B\ud83d\ude00C\",\"\ud83d\ude00\")\n  Worksheets(1).Range(\"A4\").Value2 = InStr(\"A\ud83d\ude00B\ud83d\ude00C\",\"B\")\n  Worksheets(1).Range(\"A5\").Value2 = InStr(\"A\ud83d\ude00B\ud83d\ude00C\",\"C\")\n  Worksheets(1).Range(\"A6\").Value2 = InStr(\"A\ud83d\ude00B\",Mid$(\"\ud83d\ude00\",2,1))\nEnd Sub\n",
+   "expected": {
+    "steps": [
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A1",
+       "value": 2
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A2",
+       "value": 5
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A3",
+       "value": 5
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A4",
+       "value": 4
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A5",
+       "value": 7
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A6",
+       "value": 3
+      }
+     }
+    ]
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/instr-function",
+     "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/c86480b2-aef2-4488-b177-f55e13cc51f2",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds uses UTF-16 code-unit indexing on both runtimes, including temporary surrogate halves. The published VBA string model provides 16-bit representation context; no Office host was executed."
+   }
+  },
+  {
+   "id": "instr-binary-no-case-or-normalization-folding",
+   "feature": "InStr",
+   "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = iNsTr(\"Aa\",\"a\")\n  Worksheets(1).Range(\"A2\").Value2 = InStr(\"\u00e9\",\"e\u0301\")\n  Worksheets(1).Range(\"A3\").Value2 = InStr(\"A\",\"a\")\n  Worksheets(1).Range(\"A4\").Value2 = InStr(\"a\",\"A\")\nEnd Sub\n",
+   "expected": {
+    "steps": [
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A1",
+       "value": 2
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A2",
+       "value": 0
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A3",
+       "value": 0
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A4",
+       "value": 0
+      }
+     }
+    ]
+   },
+   "provenance": {
+    "kind": "spec-derived",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/instr-function"
+    ],
+    "note": "Hand-authored expected values derived from Microsoft's published function contract; no Office host was executed."
+   }
+  },
+  {
+   "id": "instrrev-rightmost-and-match-end-bound",
+   "feature": "InStrRev",
+   "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = InStrRev(\"ababa\",\"aba\")\n  Worksheets(1).Range(\"A2\").Value2 = InStrRev(\"ababa\",\"aba\",4)\n  Worksheets(1).Range(\"A3\").Value2 = InStrRev(\"ababa\",\"aba\",3)\n  Worksheets(1).Range(\"A4\").Value2 = InStrRev(\"ababa\",\"aba\",2)\n  Worksheets(1).Range(\"A5\").Value2 = InStrRev(\"abcabc\",\"bc\")\n  Worksheets(1).Range(\"A6\").Value2 = InStrRev(\"abcabc\",\"bc\",5)\nEnd Sub\n",
+   "expected": {
+    "steps": [
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A1",
+       "value": 3
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A2",
+       "value": 1
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A3",
+       "value": 1
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A4",
+       "value": 0
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A5",
+       "value": 5
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A6",
+       "value": 2
+      }
+     }
+    ]
+   },
+   "provenance": {
+    "kind": "spec-derived",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/instrrev-function"
+    ],
+    "note": "The full match must end at or before Start; a start-position-only lastIndexOf implementation would give incorrect results. Derived from the published InStrRev remarks, without an Office host."
+   }
+  },
+  {
+   "id": "instrrev-explicit-start-and-default-end",
+   "feature": "InStrRev",
+   "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = InStrRev(\"abcabc\",\"a\",-1)\n  Worksheets(1).Range(\"A2\").Value2 = InStrRev(\"abcabc\",\"a\",6)\n  Worksheets(1).Range(\"A3\").Value2 = InStrRev(\"abc\",\"a\",1)\n  Worksheets(1).Range(\"A4\").Value2 = InStrRev(\"abc\",\"b\",1)\n  Worksheets(1).Range(\"A5\").Value2 = InStrRev(\"abc\",\"a\",4)\n  Worksheets(1).Range(\"A6\").Value2 = InStrRev(\"abc\",\"a\",2147483647)\nEnd Sub\n",
+   "expected": {
+    "steps": [
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A1",
+       "value": 4
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A2",
+       "value": 4
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A3",
+       "value": 1
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A4",
+       "value": 0
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A5",
+       "value": 0
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A6",
+       "value": 0
+      }
+     }
+    ]
+   },
+   "provenance": {
+    "kind": "spec-derived",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/instrrev-function"
+    ],
+    "note": "Hand-authored expected values derived from Microsoft's published function contract; no Office host was executed."
+   }
+  },
+  {
+   "id": "instrrev-empty-haystack-and-needle",
+   "feature": "InStrRev",
+   "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = InStrRev(\"\",\"a\")\n  Worksheets(1).Range(\"A2\").Value2 = InStrRev(\"\",\"\")\n  Worksheets(1).Range(\"A3\").Value2 = InStrRev(\"abc\",\"\")\n  Worksheets(1).Range(\"A4\").Value2 = InStrRev(\"abc\",\"\",-1)\n  Worksheets(1).Range(\"A5\").Value2 = InStrRev(\"abc\",\"\",2)\n  Worksheets(1).Range(\"A6\").Value2 = InStrRev(\"abc\",\"\",4)\n  Worksheets(1).Range(\"A7\").Value2 = InStrRev(\"abc\",\"\",2147483647)\nEnd Sub\n",
+   "expected": {
+    "steps": [
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A1",
+       "value": 0
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A2",
+       "value": 0
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A3",
+       "value": 3
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A4",
+       "value": 3
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A5",
+       "value": 2
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A6",
+       "value": 0
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A7",
+       "value": 0
+      }
+     }
+    ]
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/instrrev-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds resolves combined empty strings and Start boundaries explicitly: an empty haystack or Start beyond its end yields zero; otherwise an empty needle yields the resolved Start. Microsoft lists these boundary returns without completely specifying their combined precedence. No Office differential observation is claimed."
+   }
+  },
+  {
+   "id": "instrrev-overlapping-candidates",
+   "feature": "InStrRev",
+   "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = InStrRev(\"aaaa\",\"aa\")\n  Worksheets(1).Range(\"A2\").Value2 = InStrRev(\"aaaa\",\"aa\",3)\n  Worksheets(1).Range(\"A3\").Value2 = InStrRev(\"aaaa\",\"aa\",2)\n  Worksheets(1).Range(\"A4\").Value2 = InStrRev(\"aaaa\",\"aa\",1)\nEnd Sub\n",
+   "expected": {
+    "steps": [
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A1",
+       "value": 3
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A2",
+       "value": 2
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A3",
+       "value": 1
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A4",
+       "value": 0
+      }
+     }
+    ]
+   },
+   "provenance": {
+    "kind": "spec-derived",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/instrrev-function"
+    ],
+    "note": "Hand-authored expected values derived from Microsoft's published function contract; no Office host was executed."
+   }
+  },
+  {
+   "id": "instrrev-utf16-full-match-bounds",
+   "feature": "InStrRev",
+   "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = InStrRev(\"A\ud83d\ude00B\ud83d\ude00C\",\"\ud83d\ude00\")\n  Worksheets(1).Range(\"A2\").Value2 = InStrRev(\"A\ud83d\ude00B\ud83d\ude00C\",\"\ud83d\ude00\",5)\n  Worksheets(1).Range(\"A3\").Value2 = InStrRev(\"A\ud83d\ude00B\ud83d\ude00C\",\"\ud83d\ude00\",6)\n  Worksheets(1).Range(\"A4\").Value2 = InStrRev(\"A\ud83d\ude00B\ud83d\ude00C\",Mid$(\"\ud83d\ude00\",2,1),5)\n  Worksheets(1).Range(\"A5\").Value2 = InStrRev(\"A\ud83d\ude00B\ud83d\ude00C\",\"C\")\nEnd Sub\n",
+   "expected": {
+    "steps": [
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A1",
+       "value": 5
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A2",
+       "value": 2
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A3",
+       "value": 5
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A4",
+       "value": 3
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A5",
+       "value": 7
+      }
+     }
+    ]
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/instrrev-function",
+     "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/c86480b2-aef2-4488-b177-f55e13cc51f2",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds uses UTF-16 code-unit indexing on both runtimes, including temporary surrogate halves. The published VBA string model provides 16-bit representation context; no Office host was executed."
+   }
+  },
+  {
+   "id": "instrrev-explicit-binary-mode",
+   "feature": "InStrRev",
+   "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = InStrRev(\"aAaA\",\"a\",-1,0)\n  Worksheets(1).Range(\"A2\").Value2 = InStrRev(\"aAaA\",\"A\",-1,vbBinaryCompare)\n  Worksheets(1).Range(\"A3\").Value2 = InStrRev(\"aAaA\",\"aA\",3,0)\nEnd Sub\n",
+   "expected": {
+    "steps": [
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A1",
+       "value": 3
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A2",
+       "value": 4
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A3",
+       "value": 1
+      }
+     }
+    ]
+   },
+   "provenance": {
+    "kind": "spec-derived",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/instrrev-function"
+    ],
+    "note": "Hand-authored expected values derived from Microsoft's published function contract; no Office host was executed."
+   }
+  },
+  {
+   "id": "replace-all-and-limited-counts",
+   "feature": "Replace",
+   "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = Replace(\"a-a-a\",\"a\",\"b\")\n  Worksheets(1).Range(\"A2\").Value2 = Replace(\"a-a-a\",\"a\",\"b\",1,1)\n  Worksheets(1).Range(\"A3\").Value2 = Replace(\"a-a-a\",\"a\",\"b\",1,2)\n  Worksheets(1).Range(\"A4\").Value2 = Replace(\"a-a-a\",\"a\",\"b\",1,-1)\n  Worksheets(1).Range(\"A5\").Value2 = Replace(\"a-a-a\",\"a\",\"b\",1,2147483647)\nEnd Sub\n",
+   "expected": {
+    "steps": [
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A1",
+       "value": "b-b-b"
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A2",
+       "value": "b-a-a"
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A3",
+       "value": "b-b-a"
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A4",
+       "value": "b-b-b"
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A5",
+       "value": "b-b-b"
+      }
+     }
+    ]
+   },
+   "provenance": {
+    "kind": "spec-derived",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/replace-function"
+    ],
+    "note": "Hand-authored expected values derived from Microsoft's published function contract; no Office host was executed."
+   }
+  },
+  {
+   "id": "replace-returns-start-suffix",
+   "feature": "Replace",
+   "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = Replace(\"abcabc\",\"a\",\"X\",4)\n  Worksheets(1).Range(\"A2\").Value2 = Replace(\"abcabc\",\"a\",\"X\",3)\n  Worksheets(1).Range(\"A3\").Value2 = Replace(\"abcabc\",\"z\",\"X\",2)\n  Worksheets(1).Range(\"A4\").Value2 = Replace(\"abcabc\",\"a\",\"X\",4,0)\n  Worksheets(1).Range(\"A5\").Value2 = Replace(\"abcabc\",\"\",\"X\",4)\nEnd Sub\n",
+   "expected": {
+    "steps": [
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A1",
+       "value": "Xbc"
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A2",
+       "value": "cXbc"
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A3",
+       "value": "bcabc"
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A4",
+       "value": "abc"
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A5",
+       "value": "abc"
+      }
+     }
+    ]
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/replace-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds follows the published Start parameter and suffix-return remarks even when Find is empty or Count is zero. The return table also says copy of Expression for those no-op conditions, so their combination with Start is recorded as an explicit bounded dialect contract pending Office differential observation."
+   }
+  },
+  {
+   "id": "replace-consumes-nonoverlapping-matches",
+   "feature": "Replace",
+   "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = Replace(\"aaaa\",\"aa\",\"X\")\n  Worksheets(1).Range(\"A2\").Value2 = Replace(\"aaaaa\",\"aa\",\"X\")\n  Worksheets(1).Range(\"A3\").Value2 = Replace(\"aaaaa\",\"aa\",\"X\",1,1)\n  Worksheets(1).Range(\"A4\").Value2 = Replace(\"aaaaa\",\"aa\",\"X\",2)\n  Worksheets(1).Range(\"A5\").Value2 = Replace(\"ababa\",\"aba\",\"X\")\nEnd Sub\n",
+   "expected": {
+    "steps": [
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A1",
+       "value": "XX"
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A2",
+       "value": "XXa"
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A3",
+       "value": "Xaaa"
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A4",
+       "value": "XX"
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A5",
+       "value": "Xba"
+      }
+     }
+    ]
+   },
+   "provenance": {
+    "kind": "spec-derived",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/replace-function"
+    ],
+    "note": "Hand-authored expected values derived from Microsoft's published function contract; no Office host was executed."
+   }
+  },
+  {
+   "id": "replace-does-not-rescan-replacement",
+   "feature": "Replace",
+   "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = Replace(\"a\",\"a\",\"aa\")\n  Worksheets(1).Range(\"A2\").Value2 = Replace(\"aaa\",\"a\",\"aa\")\n  Worksheets(1).Range(\"A3\").Value2 = Replace(\"ab\",\"a\",\"aba\")\n  Worksheets(1).Range(\"A4\").Value2 = Replace(\"a-a\",\"a\",\"a-a\",1,1)\nEnd Sub\n",
+   "expected": {
+    "steps": [
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A1",
+       "value": "aa"
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A2",
+       "value": "aaaaaa"
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A3",
+       "value": "abab"
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A4",
+       "value": "a-a-a"
+      }
+     }
+    ]
+   },
+   "provenance": {
+    "kind": "spec-derived",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/replace-function"
+    ],
+    "note": "Hand-authored expected values derived from Microsoft's published function contract; no Office host was executed."
+   }
+  },
+  {
+   "id": "replace-empty-values-and-end-bounds",
+   "feature": "Replace",
+   "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = Replace(\"\",\"a\",\"b\")\n  Worksheets(1).Range(\"A2\").Value2 = Replace(\"abc\",\"\",\"X\")\n  Worksheets(1).Range(\"A3\").Value2 = Replace(\"abcabc\",\"b\",\"\")\n  Worksheets(1).Range(\"A4\").Value2 = Replace(\"aaaa\",\"aa\",\"\")\n  Worksheets(1).Range(\"A5\").Value2 = Replace(\"abc\",\"a\",\"X\",4)\n  Worksheets(1).Range(\"A6\").Value2 = Replace(\"abc\",\"a\",\"X\",2147483647)\n  Worksheets(1).Range(\"A7\").Value2 = Replace(\"abc\",\"a\",\"X\",1,0)\n  Worksheets(1).Range(\"A8\").Value2 = Replace(\"\",\"\",\"\",1,0)\nEnd Sub\n",
+   "expected": {
+    "steps": [
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A1",
+       "value": ""
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A2",
+       "value": "abc"
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A3",
+       "value": "acac"
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A4",
+       "value": ""
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A5",
+       "value": ""
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A6",
+       "value": ""
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A7",
+       "value": "abc"
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A8",
+       "value": ""
+      }
+     }
+    ]
+   },
+   "provenance": {
+    "kind": "spec-derived",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/replace-function"
+    ],
+    "note": "Hand-authored expected values derived from Microsoft's published function contract; no Office host was executed."
+   }
+  },
+  {
+   "id": "replace-binary-and-literal-characters",
+   "feature": "Replace",
+   "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = Replace(\"AaA\",\"a\",\"x\",1,-1,vbBinaryCompare)\n  Worksheets(1).Range(\"A2\").Value2 = Replace(\"AaA\",\"A\",\"x\",1,-1,0)\n  Worksheets(1).Range(\"A3\").Value2 = Replace(\"a.a\",\".\",\"X\")\n  Worksheets(1).Range(\"A4\").Value2 = Replace(\"a*a\",\"*\",\"?\")\n  Worksheets(1).Range(\"A5\").Value2 = Replace(\"a$a\",\"$\",\"\\\")\nEnd Sub\n",
+   "expected": {
+    "steps": [
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A1",
+       "value": "AxA"
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A2",
+       "value": "xax"
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A3",
+       "value": "aXa"
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A4",
+       "value": "a?a"
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A5",
+       "value": "a\\a"
+      }
+     }
+    ]
+   },
+   "provenance": {
+    "kind": "spec-derived",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/replace-function"
+    ],
+    "note": "Hand-authored expected values derived from Microsoft's published function contract; no Office host was executed."
+   }
+  },
+  {
+   "id": "replace-utf16-preserves-complete-pairs",
+   "feature": "Replace",
+   "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = Replace(\"A\ud83d\ude00B\ud83d\ude00C\",\"\ud83d\ude00\",\"z\")\n  Worksheets(1).Range(\"A2\").Value2 = Replace(\"A\ud83d\ude00B\ud83d\ude00C\",\"\ud83d\ude00\",\"X\",4)\n  Worksheets(1).Range(\"A3\").Value2 = Replace(\"\ud83d\ude00\",\"x\",\"y\")\n  Worksheets(1).Range(\"A4\").Value2 = Len(Replace(\"\ud83d\ude00\",Mid$(\"\ud83d\ude00\",1,1),\"\"))\nEnd Sub\n",
+   "expected": {
+    "steps": [
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A1",
+       "value": "AzBzC"
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A2",
+       "value": "BXC"
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A3",
+       "value": "\ud83d\ude00"
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A4",
+       "value": 1
+      }
+     }
+    ]
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/replace-function",
+     "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/c86480b2-aef2-4488-b177-f55e13cc51f2",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds uses UTF-16 code-unit indexing on both runtimes, including temporary surrogate halves. The published VBA string model provides 16-bit representation context; no Office host was executed."
+   }
+  },
+  {
+   "id": "trim-family-plain-space-behavior",
+   "feature": "Trim",
+   "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = Trim(\"  a  \")\n  Worksheets(1).Range(\"A2\").Value2 = LTrim(\"  a  \")\n  Worksheets(1).Range(\"A3\").Value2 = RTrim(\"  a  \")\n  Worksheets(1).Range(\"A4\").Value2 = Trim(\"\")\n  Worksheets(1).Range(\"A5\").Value2 = LTrim(\"   \")\n  Worksheets(1).Range(\"A6\").Value2 = RTrim(\"   \")\n  Worksheets(1).Range(\"A7\").Value2 = Trim(\"a  b\")\nEnd Sub\n",
+   "expected": {
+    "steps": [
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A1",
+       "value": "a"
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A2",
+       "value": "a  "
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A3",
+       "value": "  a"
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A4",
+       "value": ""
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A5",
+       "value": ""
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A6",
+       "value": ""
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A7",
+       "value": "a  b"
+      }
+     }
+    ]
+   },
+   "provenance": {
+    "kind": "spec-derived",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/ltrim-rtrim-and-trim-functions"
+    ],
+    "note": "Hand-authored expected values derived from Microsoft's published function contract; no Office host was executed."
+   }
+  },
+  {
+   "id": "trim-family-string-aliases",
+   "feature": "Trim",
+   "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = Trim$(\"  a  \")\n  Worksheets(1).Range(\"A2\").Value2 = LTrim$(\"  a  \")\n  Worksheets(1).Range(\"A3\").Value2 = RTrim$(\"  a  \")\n  Worksheets(1).Range(\"A4\").Value2 = tRiM$(\" x \")\n  Worksheets(1).Range(\"A5\").Value2 = LTrim(RTrim(\"  x  \"))\nEnd Sub\n",
+   "expected": {
+    "steps": [
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A1",
+       "value": "a"
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A2",
+       "value": "a  "
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A3",
+       "value": "  a"
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A4",
+       "value": "x"
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A5",
+       "value": "x"
+      }
+     }
+    ]
+   },
+   "provenance": {
+    "kind": "spec-derived",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/ltrim-rtrim-and-trim-functions",
+     "https://learn.microsoft.com/en-us/office/vba/language/concepts/getting-started/returning-strings-from-functions"
+    ],
+    "note": "Hand-authored expected values derived from Microsoft's published function contract; no Office host was executed."
+   }
+  },
+  {
+   "id": "trim-preserves-tab-and-unicode-whitespace",
+   "feature": "Trim",
+   "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = Trim$(\" \t x \t \")\n  Worksheets(1).Range(\"A2\").Value2 = LTrim$(\"  \t x  \")\n  Worksheets(1).Range(\"A3\").Value2 = RTrim$(\"  x \t  \")\n  Worksheets(1).Range(\"A4\").Value2 = Trim$(\" \u00a0x\u00a0 \")\n  Worksheets(1).Range(\"A5\").Value2 = Trim$(\" \u2003x\u2003 \")\nEnd Sub\n",
+   "expected": {
+    "steps": [
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A1",
+       "value": "\t x \t"
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A2",
+       "value": "\t x  "
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A3",
+       "value": "  x \t"
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A4",
+       "value": "\u00a0x\u00a0"
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A5",
+       "value": "\u2003x\u2003"
+      }
+     }
+    ]
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/ltrim-rtrim-and-trim-functions",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "The bounded portable dialect trims U+0020 only. Tabs, nonbreaking spaces and em spaces remain unchanged. No platform-dependent Unicode trim helper or Office-host observation is assumed."
+   }
+  },
+  {
+   "id": "trim-keeps-utf16-content",
+   "feature": "Trim",
+   "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = Trim$(\" \ud83d\ude00 \")\n  Worksheets(1).Range(\"A2\").Value2 = LTrim$(\" \ud83d\ude00 \")\n  Worksheets(1).Range(\"A3\").Value2 = RTrim$(\" \ud83d\ude00 \")\n  Worksheets(1).Range(\"A4\").Value2 = Len(Trim$(Mid$(\"\ud83d\ude00\",1,1)))\nEnd Sub\n",
+   "expected": {
+    "steps": [
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A1",
+       "value": "\ud83d\ude00"
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A2",
+       "value": "\ud83d\ude00 "
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A3",
+       "value": " \ud83d\ude00"
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A4",
+       "value": 1
+      }
+     }
+    ]
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/ltrim-rtrim-and-trim-functions",
+     "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/c86480b2-aef2-4488-b177-f55e13cc51f2",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds uses UTF-16 code-unit indexing on both runtimes, including temporary surrogate halves. The published VBA string model provides 16-bit representation context; no Office host was executed."
+   }
+  },
+  {
+   "id": "composed-search-replace-trim",
+   "feature": "Replace",
+   "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = Replace(Trim$(\"  Quarterly report  \"),\"Quarterly\",\"Annual\")\n  Worksheets(1).Range(\"A2\").Value2 = InStr(Trim$(\"  Quarterly report  \"),\"report\")\n  Worksheets(1).Range(\"A3\").Value2 = Trim$(Replace(\"  report--draft  \",\"--\",\" \"))\nEnd Sub\n",
+   "expected": {
+    "steps": [
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A1",
+       "value": "Annual report"
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A2",
+       "value": 11
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A3",
+       "value": "report draft"
+      }
+     }
+    ]
+   },
+   "provenance": {
+    "kind": "spec-derived",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/replace-function",
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/ltrim-rtrim-and-trim-functions",
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/instr-function"
+    ],
+    "note": "Hand-authored expected values derived from Microsoft's published function contract; no Office host was executed."
+   }
+  },
+  {
+   "id": "replace-evaluates-all-arguments-once-in-source-order",
+   "feature": "Replace",
+   "source": "Sub Main()\n  Worksheets(1).Range(\"A7\").Value2 = Replace(Note(\"A1\",\"aba\"),Note(\"A2\",\"a\"),Note(\"A3\",\"z\"),Note(\"A4\",1),Note(\"A5\",-1),Note(\"A6\",0))\nEnd Sub\nFunction Note(ByVal address As String, ByVal value As Variant) As Variant\n  Worksheets(1).Range(address).Value2 = value\n  Note = value\nEnd Function\n",
+   "expected": {
+    "steps": [
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A1",
+       "value": "aba"
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A2",
+       "value": "a"
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A3",
+       "value": "z"
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A4",
+       "value": 1
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A5",
+       "value": -1
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A6",
+       "value": 0
+      }
+     },
+     {
+      "tool": "xlsx.cellValue",
+      "arguments": {
+       "sheet": 0,
+       "cell": "A7",
+       "value": "zbz"
+      }
+     }
+    ]
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/replace-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Observable helper calls must run exactly once in source order before the intrinsic. This guards the Quds source-to-plan evaluation contract, not an installed Office observation."
+   }
+  },
+  {
+   "id": "instr-refuses-numeric-haystack",
+   "feature": "InStr",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = InStr(42,\"x\")\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_type_error",
+     "line": 3,
+     "column": 18
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/instr-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "instr-refuses-boolean-needle",
+   "feature": "InStr",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = InStr(\"x\",True)\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_type_error",
+     "line": 3,
+     "column": 22
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/instr-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "instr-refuses-null-haystack",
+   "feature": "InStr",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = InStr(Null,\"x\")\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_type_error",
+     "line": 3,
+     "column": 18
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/instr-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "instr-refuses-empty-needle-state",
+   "feature": "InStr",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = InStr(\"x\",Empty)\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_type_error",
+     "line": 3,
+     "column": 22
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/instr-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "instr-refuses-string-start",
+   "feature": "InStr",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = InStr(\"2\",\"abc\",\"a\")\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_type_error",
+     "line": 3,
+     "column": 18
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/instr-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "instr-refuses-zero-start",
+   "feature": "InStr",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = InStr(0,\"abc\",\"a\")\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_type_error",
+     "line": 3,
+     "column": 18
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/instr-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "instr-refuses-negative-start",
+   "feature": "InStr",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = InStr(-1,\"abc\",\"a\")\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_type_error",
+     "line": 3,
+     "column": 18
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/instr-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "instr-refuses-fractional-start",
+   "feature": "InStr",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = InStr(1.5,\"abc\",\"a\")\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_type_error",
+     "line": 3,
+     "column": 18
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/instr-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "instr-refuses-start-overflow",
+   "feature": "InStr",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = InStr(2147483648,\"abc\",\"a\")\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_type_error",
+     "line": 3,
+     "column": 18
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/instr-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "instr-validates-start-with-empty-haystack",
+   "feature": "InStr",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = InStr(0,\"\",\"\")\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_type_error",
+     "line": 3,
+     "column": 18
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/instr-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "instrrev-refuses-numeric-haystack",
+   "feature": "InStrRev",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = InStrRev(42,\"x\")\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_type_error",
+     "line": 3,
+     "column": 21
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/instrrev-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "instrrev-refuses-null-needle",
+   "feature": "InStrRev",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = InStrRev(\"x\",Null)\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_type_error",
+     "line": 3,
+     "column": 25
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/instrrev-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "instrrev-refuses-zero-start",
+   "feature": "InStrRev",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = InStrRev(\"abc\",\"a\",0)\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_type_error",
+     "line": 3,
+     "column": 31
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/instrrev-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "instrrev-refuses-negative-start-other-than-minus-one",
+   "feature": "InStrRev",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = InStrRev(\"abc\",\"a\",-2)\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_type_error",
+     "line": 3,
+     "column": 31
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/instrrev-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "instrrev-refuses-fractional-start",
+   "feature": "InStrRev",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = InStrRev(\"abc\",\"a\",1.5)\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_type_error",
+     "line": 3,
+     "column": 31
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/instrrev-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "instrrev-refuses-start-overflow",
+   "feature": "InStrRev",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = InStrRev(\"abc\",\"a\",2147483648)\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_type_error",
+     "line": 3,
+     "column": 31
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/instrrev-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "instrrev-validates-start-with-empty-haystack",
+   "feature": "InStrRev",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = InStrRev(\"\",\"\",0)\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_type_error",
+     "line": 3,
+     "column": 27
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/instrrev-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "replace-refuses-numeric-expression",
+   "feature": "Replace",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = Replace(42,\"x\",\"y\")\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_type_error",
+     "line": 3,
+     "column": 20
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/replace-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "replace-refuses-boolean-find",
+   "feature": "Replace",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = Replace(\"x\",True,\"y\")\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_type_error",
+     "line": 3,
+     "column": 24
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/replace-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "replace-refuses-numeric-replacement",
+   "feature": "Replace",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = Replace(\"x\",\"x\",42)\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_type_error",
+     "line": 3,
+     "column": 28
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/replace-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "replace-refuses-null-replacement",
+   "feature": "Replace",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = Replace(\"x\",\"x\",Null)\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_type_error",
+     "line": 3,
+     "column": 28
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/replace-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "replace-refuses-zero-start",
+   "feature": "Replace",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = Replace(\"abc\",\"a\",\"x\",0)\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_type_error",
+     "line": 3,
+     "column": 34
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/replace-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "replace-refuses-negative-count",
+   "feature": "Replace",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = Replace(\"abc\",\"a\",\"x\",1,-2)\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_type_error",
+     "line": 3,
+     "column": 36
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/replace-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "replace-refuses-count-overflow",
+   "feature": "Replace",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = Replace(\"abc\",\"a\",\"x\",1,2147483648)\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_type_error",
+     "line": 3,
+     "column": 36
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/replace-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "replace-refuses-string-count",
+   "feature": "Replace",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = Replace(\"abc\",\"a\",\"x\",1,\"2\")\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_type_error",
+     "line": 3,
+     "column": 36
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/replace-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "replace-refuses-fractional-count",
+   "feature": "Replace",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = Replace(\"abc\",\"a\",\"x\",1,1.5)\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_type_error",
+     "line": 3,
+     "column": 36
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/replace-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "replace-validates-count-after-end",
+   "feature": "Replace",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = Replace(\"abc\",\"a\",\"x\",4,-2)\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_type_error",
+     "line": 3,
+     "column": 36
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/replace-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "replace-validates-start-with-empty-expression",
+   "feature": "Replace",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = Replace(\"\",\"\",\"\",0)\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_type_error",
+     "line": 3,
+     "column": 29
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/replace-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "trim-refuses-numeric-source",
+   "feature": "Trim",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = Trim(42)\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_type_error",
+     "line": 3,
+     "column": 17
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/ltrim-rtrim-and-trim-functions",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "trim-alias-refuses-null-source",
+   "feature": "Trim",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = Trim$(Null)\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_type_error",
+     "line": 3,
+     "column": 18
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/ltrim-rtrim-and-trim-functions",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "ltrim-refuses-boolean-source",
+   "feature": "Trim",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = LTrim(True)\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_type_error",
+     "line": 3,
+     "column": 18
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/ltrim-rtrim-and-trim-functions",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "rtrim-alias-refuses-empty-state",
+   "feature": "Trim",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = RTrim$(Empty)\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_type_error",
+     "line": 3,
+     "column": 19
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/ltrim-rtrim-and-trim-functions",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "instr-refuses-boolean-compare",
+   "feature": "InStr",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = InStr(1,\"a\",\"a\",False)\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_type_error",
+     "line": 3,
+     "column": 28
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/instr-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "instrrev-refuses-fractional-compare",
+   "feature": "InStrRev",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = InStrRev(\"a\",\"a\",-1,0.5)\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_type_error",
+     "line": 3,
+     "column": 32
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/instrrev-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "replace-refuses-string-compare",
+   "feature": "Replace",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = Replace(\"a\",\"a\",\"b\",1,-1,\"0\")\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_type_error",
+     "line": 3,
+     "column": 37
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/replace-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "instr-refuses-text-compare",
+   "feature": "InStr",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = InStr(1,\"A\",\"a\",vbTextCompare)\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_unsupported",
+     "line": 3,
+     "column": 28
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/instr-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "instrrev-refuses-database-compare",
+   "feature": "InStrRev",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = InStrRev(\"a\",\"a\",-1,vbDatabaseCompare)\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_unsupported",
+     "line": 3,
+     "column": 32
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/instrrev-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "replace-refuses-use-compare-option",
+   "feature": "Replace",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = Replace(\"a\",\"a\",\"b\",1,-1,vbUseCompareOption)\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_unsupported",
+     "line": 3,
+     "column": 37
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/replace-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "instr-refuses-locale-identifier",
+   "feature": "InStr",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = InStr(1,\"A\",\"a\",1033)\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_unsupported",
+     "line": 3,
+     "column": 28
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/instr-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "instr-validates-compare-for-empty-haystack",
+   "feature": "InStr",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = InStr(1,\"\",\"\",1)\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_unsupported",
+     "line": 3,
+     "column": 26
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/instr-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "instrrev-validates-compare-after-end",
+   "feature": "InStrRev",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = InStrRev(\"abc\",\"a\",9,1)\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_unsupported",
+     "line": 3,
+     "column": 33
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/instrrev-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "replace-validates-compare-with-count-zero",
+   "feature": "Replace",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = Replace(\"a\",\"a\",\"b\",1,0,1)\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_unsupported",
+     "line": 3,
+     "column": 36
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/replace-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "replace-validates-compare-with-empty-expression",
+   "feature": "Replace",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = Replace(\"\",\"\",\"\",1,-1,2)\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_unsupported",
+     "line": 3,
+     "column": 34
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/replace-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "instr-requires-two-arguments",
+   "feature": "InStr",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = InStr(\"a\")\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_type_error",
+     "line": 3,
+     "column": 12
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/instr-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "instr-refuses-fifth-argument",
+   "feature": "InStr",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = InStr(1,\"a\",\"a\",0,0)\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_type_error",
+     "line": 3,
+     "column": 12
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/instr-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "instrrev-requires-two-arguments",
+   "feature": "InStrRev",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = InStrRev(\"a\")\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_type_error",
+     "line": 3,
+     "column": 12
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/instrrev-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "instrrev-refuses-fifth-argument",
+   "feature": "InStrRev",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = InStrRev(\"a\",\"a\",1,0,0)\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_type_error",
+     "line": 3,
+     "column": 12
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/instrrev-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "replace-requires-three-arguments",
+   "feature": "Replace",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = Replace(\"a\",\"a\")\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_type_error",
+     "line": 3,
+     "column": 12
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/replace-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "replace-refuses-seventh-argument",
+   "feature": "Replace",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = Replace(\"a\",\"a\",\"b\",1,-1,0,0)\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_type_error",
+     "line": 3,
+     "column": 12
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/replace-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "trim-requires-one-argument",
+   "feature": "Trim",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = Trim()\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_type_error",
+     "line": 3,
+     "column": 12
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/ltrim-rtrim-and-trim-functions",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "ltrim-refuses-second-argument",
+   "feature": "Trim",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = LTrim$(\"a\",1)\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_type_error",
+     "line": 3,
+     "column": 12
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/ltrim-rtrim-and-trim-functions",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "instr-refuses-named-arguments",
+   "feature": "InStr",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = InStr(string1:=\"a\",string2:=\"a\")\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_unsupported",
+     "line": 3,
+     "column": 18
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/instr-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "instr-refuses-interior-omission",
+   "feature": "InStr",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = InStr(,\"a\",\"a\")\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_unsupported",
+     "line": 3,
+     "column": 18
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/instr-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "instrrev-refuses-interior-omission",
+   "feature": "InStrRev",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = InStrRev(\"a\",\"a\",,0)\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_unsupported",
+     "line": 3,
+     "column": 29
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/instrrev-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "replace-refuses-interior-omission",
+   "feature": "Replace",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = Replace(\"a\",\"a\",\"b\",,1)\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_unsupported",
+     "line": 3,
+     "column": 32
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/replace-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "trim-refuses-named-argument",
+   "feature": "Trim",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = Trim(string:=\"a\")\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_unsupported",
+     "line": 3,
+     "column": 17
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/ltrim-rtrim-and-trim-functions",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "instr-refuses-dollar-alias",
+   "feature": "InStr",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = InStr$(\"a\",\"a\")\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_unsupported",
+     "line": 3,
+     "column": 17
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/instr-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "instrrev-refuses-dollar-alias",
+   "feature": "InStrRev",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = InStrRev$(\"a\",\"a\")\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_unsupported",
+     "line": 3,
+     "column": 20
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/instrrev-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "replace-refuses-dollar-alias",
+   "feature": "Replace",
+   "source": "Sub Main()\n  Dim result As Variant\n  result = Replace$(\"a\",\"a\",\"b\")\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_unsupported",
+     "line": 3,
+     "column": 19
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/replace-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "trim-checks-inactive-branch-type",
+   "feature": "Trim",
+   "source": "Sub Main()\n  If False Then\n    result = Trim$(42)\n  End If\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_type_error",
+     "line": 3,
+     "column": 20
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/ltrim-rtrim-and-trim-functions",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "instr-checks-unused-helper-shape",
+   "feature": "InStr",
+   "source": "Sub Main()\nEnd Sub\nFunction Unused() As Long\n  Unused = InStr(\"a\")\nEnd Function\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_type_error",
+     "line": 4,
+     "column": 12
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/instr-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "refuses-option-compare-binary",
+   "feature": "InStr",
+   "source": "Option Compare Binary\nSub Main()\n  result = InStr(\"A\",\"a\")\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_unsupported",
+     "line": 1,
+     "column": 8
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/instr-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "refuses-option-compare-text",
+   "feature": "InStr",
+   "source": "Option Compare Text\nSub Main()\n  result = InStr(\"A\",\"a\")\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_unsupported",
+     "line": 1,
+     "column": 8
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/instr-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "replace-refuses-emitted-surrogate-half",
+   "feature": "Replace",
+   "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = Replace(\"\ud83d\ude00\",\"\ud83d\ude00\",Mid$(\"\ud83d\ude00\",1,1))\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_type_error",
+     "line": 2,
+     "column": 29
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/replace-function",
+     "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/c86480b2-aef2-4488-b177-f55e13cc51f2",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "trim-refuses-emitted-surrogate-half",
+   "feature": "Trim",
+   "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = Trim$(Mid$(\"\ud83d\ude00\",1,1))\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_type_error",
+     "line": 2,
+     "column": 29
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/ltrim-rtrim-and-trim-functions",
+     "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/c86480b2-aef2-4488-b177-f55e13cc51f2",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "instr-meters-discarded-no-match-scans",
+   "feature": "InStr",
+   "source": "Sub Main()\n  Dim text As String, index As Long, result As Variant\n  text = \"a\"\n  For index = 1 To 14\n    text = text & text\n  Next index\n  For index = 1 To 50\n    result = InStr(text,\"z\")\n  Next index\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_limit_exceeded",
+     "line": 8,
+     "column": 14
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/instr-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "instrrev-meters-discarded-no-match-scans",
+   "feature": "InStrRev",
+   "source": "Sub Main()\n  Dim text As String, index As Long, result As Variant\n  text = \"a\"\n  For index = 1 To 14\n    text = text & text\n  Next index\n  For index = 1 To 50\n    result = InStrRev(text,\"z\")\n  Next index\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_limit_exceeded",
+     "line": 8,
+     "column": 14
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/instrrev-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "replace-meters-discarded-no-match-copies",
+   "feature": "Replace",
+   "source": "Sub Main()\n  Dim text As String, index As Long, result As Variant\n  text = \"a\"\n  For index = 1 To 14\n    text = text & text\n  Next index\n  For index = 1 To 50\n    result = Replace(text,\"z\",\"q\")\n  Next index\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_limit_exceeded",
+     "line": 8,
+     "column": 14
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/replace-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "trim-meters-discarded-unchanged-copies",
+   "feature": "Trim",
+   "source": "Sub Main()\n  Dim text As String, index As Long, result As Variant\n  text = \"a\"\n  For index = 1 To 14\n    text = text & text\n  Next index\n  For index = 1 To 50\n    result = Trim$(text)\n  Next index\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_limit_exceeded",
+     "line": 8,
+     "column": 14
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/ltrim-rtrim-and-trim-functions",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  },
+  {
+   "id": "replace-refuses-expanded-result-over-32767",
+   "feature": "Replace",
+   "source": "Sub Main()\n  Dim text As String, index As Long, result As Variant\n  text = \"a\"\n  For index = 1 To 14\n    text = text & text\n  Next index\n  result = Replace(text,\"a\",\"aa\")\nEnd Sub\n",
+   "expected": {
+    "diagnostic": {
+     "code": "vba_limit_exceeded",
+     "line": 7,
+     "column": 12
+    }
+   },
+   "provenance": {
+    "kind": "dialect-contract",
+    "references": [
+     "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/replace-function",
+     "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+    ],
+    "note": "Quds bounded dialect requirement, not a claim that full VBA rejects the source; no Office host was executed."
+   }
+  }
+ ]
+}

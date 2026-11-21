@@ -132,7 +132,27 @@ const _maxActiveArrayElements = 16384;
 const _maxActiveArrayStringUnits = 1048576;
 const _maxExactInteger = 9007199254740991;
 const _comparisonOperators = <String>{'=', '<>', '<', '>', '<=', '>='};
-const _stringIntrinsics = <String>{'len', r'left$', r'right$', r'mid$'};
+const _stringIntrinsics = <String>{
+  'len',
+  r'left$',
+  r'right$',
+  r'mid$',
+  'instr',
+  'instrrev',
+  'replace',
+  'trim',
+  r'trim$',
+  'ltrim',
+  r'ltrim$',
+  'rtrim',
+  r'rtrim$',
+};
+const _stringComparisonConstants = <String, int>{
+  'vbbinarycompare': 0,
+  'vbtextcompare': 1,
+  'vbdatabasecompare': 2,
+  'vbusecompareoption': -1,
+};
 const _variantIntrinsics = <String>{
   'isempty',
   'isnull',
@@ -144,6 +164,7 @@ const _variantIntrinsics = <String>{
   'cvar',
 };
 const _wordConstants = <String, int>{
+  ..._stringComparisonConstants,
   'wdheaderfooterprimary': 1,
   'wdheaderfooterfirstpage': 2,
   'wdheaderfooterevenpages': 3,
@@ -329,6 +350,7 @@ const _wordUnitConversions =
       'pointstolines': (parameter: 'points', numerator: 1, denominator: 12),
     };
 const _powerPointConstants = <String, int>{
+  ..._stringComparisonConstants,
   'msoanchortop': 1,
   'msoanchortopbaseline': 2,
   'msoanchormiddle': 3,
@@ -390,7 +412,7 @@ class _Context {
       ? _wordConstants
       : isPowerPoint
       ? _powerPointConstants
-      : const <String, int>{};
+      : _stringComparisonConstants;
 
   bool reserved(String name) =>
       _Checker._reserved.contains(name) ||
@@ -3468,6 +3490,41 @@ class _Checker {
   _Kind _stringIntrinsic(_Call expression) {
     final name = expression.token.lower;
     final arguments = expression.arguments;
+    if (name == 'instr' || name == 'instrrev' || name == 'replace') {
+      final minimum = name == 'replace' ? 3 : 2;
+      final maximum = name == 'replace' ? 6 : 4;
+      if (arguments.length < minimum || arguments.length > maximum) {
+        context.type(
+          expression.token,
+          '${expression.token.text} requires $minimum..$maximum positional arguments.',
+        );
+      }
+      for (var index = 0; index < arguments.length; index++) {
+        final argument = arguments[index];
+        final stringArgument = switch (name) {
+          'instr' => arguments.length == 2 ? true : index == 1 || index == 2,
+          'instrrev' => index < 2,
+          _ => index < 3,
+        };
+        _compatible(
+          stringArgument ? _Kind.string : _Kind.number,
+          _expression(argument),
+          argument.token,
+        );
+      }
+      return name == 'replace' ? _Kind.string : _Kind.number;
+    }
+    if (name == 'trim' ||
+        name == r'trim$' ||
+        name == 'ltrim' ||
+        name == r'ltrim$' ||
+        name == 'rtrim' ||
+        name == r'rtrim$') {
+      _count(expression.token, arguments, 1);
+      final argument = arguments.single;
+      _compatible(_Kind.string, _expression(argument), argument.token);
+      return _Kind.string;
+    }
     if (name == r'mid$') {
       if (arguments.length < 2 || arguments.length > 3) {
         context.type(
@@ -4032,7 +4089,7 @@ class _Evaluator {
     if (amount > _maxWork - work) {
       context.limit(
         token,
-        'Compilation exceeds $_maxWork work units (evaluation, statements, array elements, and copied string units).',
+        'Compilation exceeds $_maxWork work units (evaluation, statements, array elements, and inspected/copied string units).',
       );
     }
     work += amount;
@@ -5289,9 +5346,39 @@ class _Evaluator {
   }
 
   Object _stringIntrinsic(_Call expression, List<Object> arguments) {
-    final text = _string(arguments.first, expression.arguments.first.token);
     final name = expression.token.lower;
+    if (name == 'instr' || name == 'instrrev') {
+      return _stringSearch(expression, arguments);
+    }
+    if (name == 'replace') return _stringReplace(expression, arguments);
+    final text = _string(arguments.first, expression.arguments.first.token);
     if (name == 'len') return text.length;
+    if (name == 'trim' ||
+        name == r'trim$' ||
+        name == 'ltrim' ||
+        name == r'ltrim$' ||
+        name == 'rtrim' ||
+        name == r'rtrim$') {
+      var start = 0;
+      var end = text.length;
+      // VBA trims spaces, not Dart's wider set of Unicode whitespace. Charge
+      // each inspected unit, even when the result is empty or unchanged.
+      if (name != 'rtrim' && name != r'rtrim$') {
+        while (start < end) {
+          _tick(expression.token);
+          if (text.codeUnitAt(start) != 32) break;
+          start++;
+        }
+      }
+      if (name != 'ltrim' && name != r'ltrim$') {
+        while (end > start) {
+          _tick(expression.token);
+          if (text.codeUnitAt(end - 1) != 32) break;
+          end--;
+        }
+      }
+      return _stringCopy(text, start, end, expression.token);
+    }
 
     final second = _stringIndex(
       arguments[1],
@@ -5314,6 +5401,199 @@ class _Evaluator {
     if (count == 0) return '';
     final offset = name == r'right$' ? text.length - count : start;
     return text.substring(offset, offset + count);
+  }
+
+  int _stringSearch(_Call expression, List<Object> arguments) {
+    final reverse = expression.token.lower == 'instrrev';
+    final withStart = !reverse && arguments.length >= 3;
+    final textIndex = withStart ? 1 : 0;
+    final text = _string(
+      arguments[textIndex],
+      expression.arguments[textIndex].token,
+    );
+    final find = _string(
+      arguments[textIndex + 1],
+      expression.arguments[textIndex + 1].token,
+    );
+    var start = reverse
+        ? arguments.length >= 3
+              ? _stringReverseStart(arguments[2], expression.arguments[2].token)
+              : -1
+        : withStart
+        ? _stringIndex(
+            arguments.first,
+            expression.arguments.first.token,
+            isStart: true,
+          )
+        : 1;
+    if (arguments.length == 4) {
+      _stringBinaryCompare(arguments[3], expression.arguments[3].token);
+    }
+    // Validate every supplied argument before any empty-input shortcut.
+    if (reverse && start == -1) start = text.length;
+    if (text.isEmpty || reverse && start > text.length) return 0;
+    if (find.isEmpty) return start;
+    if (start > text.length) return 0;
+    final matches = _binaryStringMatches(
+      text,
+      find,
+      reverse ? 0 : start - 1,
+      reverse ? start : text.length,
+      expression.token,
+      maximum: reverse ? null : 1,
+      keepLast: reverse,
+    );
+    return matches.isEmpty ? 0 : matches.last + 1;
+  }
+
+  String _stringReplace(_Call expression, List<Object> arguments) {
+    final text = _string(arguments[0], expression.arguments[0].token);
+    final find = _string(arguments[1], expression.arguments[1].token);
+    final replacement = _string(arguments[2], expression.arguments[2].token);
+    final start = arguments.length >= 4
+        ? _stringIndex(
+            arguments[3],
+            expression.arguments[3].token,
+            isStart: true,
+          )
+        : 1;
+    final count = arguments.length >= 5
+        ? _stringReplacementCount(arguments[4], expression.arguments[4].token)
+        : -1;
+    if (arguments.length == 6) {
+      _stringBinaryCompare(arguments[5], expression.arguments[5].token);
+    }
+    if (start > text.length) return '';
+    final offset = start - 1;
+    // Replace returns the suffix beginning at Start, including no-op cases.
+    if (find.isEmpty || count == 0) {
+      return _stringCopy(text, offset, text.length, expression.token);
+    }
+    final matches = _binaryStringMatches(
+      text,
+      find,
+      offset,
+      text.length,
+      expression.token,
+      maximum: count == -1 ? null : count,
+      overlap: false,
+    );
+    final length =
+        text.length -
+        offset +
+        matches.length * (replacement.length - find.length);
+    if (length > _maxString) {
+      context.limit(
+        expression.token,
+        'Replace results exceed $_maxString UTF-16 code units.',
+      );
+    }
+    // Scan/match storage has already been metered. Check all output work
+    // before allocating substrings, buffer chunks, or an expanded result.
+    _charge(length, expression.token);
+    if (matches.isEmpty) return text.substring(offset);
+    final result = StringBuffer();
+    var copied = offset;
+    for (final match in matches) {
+      result
+        ..write(text.substring(copied, match))
+        ..write(replacement);
+      copied = match + find.length;
+    }
+    result.write(text.substring(copied));
+    return result.toString();
+  }
+
+  String _stringCopy(String text, int start, int end, _Token token) {
+    _charge(end - start, token);
+    return text.substring(start, end);
+  }
+
+  void _stringBinaryCompare(Object value, _Token token) {
+    if (_integer(value, token) != 0) {
+      context.unsupported(
+        token,
+        'String search and replacement require vbBinaryCompare (0); locale, database and Option Compare modes are unsupported.',
+      );
+    }
+  }
+
+  int _stringReverseStart(Object value, _Token token) {
+    final start = _integer(value, token);
+    if (start == 0 || start < -1 || start > 2147483647) {
+      context.type(
+        token,
+        'InStrRev start must be -1 or a positive signed 32-bit integer.',
+      );
+    }
+    return start;
+  }
+
+  int _stringReplacementCount(Object value, _Token token) {
+    final count = _integer(value, token);
+    if (count < -1 || count > 2147483647) {
+      context.type(
+        token,
+        'Replace count must be -1 or a nonnegative signed 32-bit integer.',
+      );
+    }
+    return count;
+  }
+
+  /// Metered linear UTF-16 matching. A prefix table avoids quadratic work on
+  /// repetitive patterns. Every comparison and stored match is charged before
+  /// execution; the table allocation is charged in full before it is made.
+  /// [end] is exclusive, so reverse search cannot match across its Start.
+  List<int> _binaryStringMatches(
+    String text,
+    String find,
+    int start,
+    int end,
+    _Token token, {
+    int? maximum,
+    bool overlap = true,
+    bool keepLast = false,
+  }) {
+    final matches = <int>[];
+    if (find.length > end - start) return matches;
+    _charge(find.length, token);
+    final prefix = List<int>.filled(find.length, 0);
+    var matched = 0;
+    for (var index = 1; index < find.length; index++) {
+      while (true) {
+        _tick(token);
+        if (find.codeUnitAt(index) == find.codeUnitAt(matched)) {
+          matched++;
+          break;
+        }
+        if (matched == 0) break;
+        matched = prefix[matched - 1];
+      }
+      prefix[index] = matched;
+    }
+    matched = 0;
+    for (var index = start; index < end; index++) {
+      while (true) {
+        _tick(token);
+        if (text.codeUnitAt(index) == find.codeUnitAt(matched)) {
+          matched++;
+          break;
+        }
+        if (matched == 0) break;
+        matched = prefix[matched - 1];
+      }
+      if (matched != find.length) continue;
+      _tick(token);
+      final position = index - find.length + 1;
+      if (keepLast && matches.isNotEmpty) {
+        matches[0] = position;
+      } else {
+        matches.add(position);
+      }
+      if (maximum != null && matches.length >= maximum) break;
+      matched = overlap ? prefix[matched - 1] : 0;
+    }
+    return matches;
   }
 
   int _stringIndex(Object value, _Token token, {bool isStart = false}) {

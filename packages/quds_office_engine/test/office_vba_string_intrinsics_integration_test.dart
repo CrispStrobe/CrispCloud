@@ -1,3 +1,6 @@
+@Timeout(Duration(minutes: 5))
+library;
+
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -5,6 +8,8 @@ import 'dart:typed_data';
 import 'package:quds_office_engine/quds_office_automation.dart';
 import 'package:quds_office_engine/quds_office_engine.dart';
 import 'package:test/test.dart';
+
+import 'support/office_macro_cli.dart';
 
 const _example = 'example/macros/string_report.bas';
 const _reportSteps = 28;
@@ -52,12 +57,7 @@ TypeMatcher<OfficeMacroException> _error(String code) =>
     isA<OfficeMacroException>().having((error) => error.code, 'code', code);
 
 Future<ProcessResult> _run(List<String> arguments) =>
-    Process.run(Platform.resolvedExecutable, <String>[
-      if (Platform.packageConfig case final String packages)
-        '--packages=$packages',
-      'tool/macros/office_macro.dart',
-      ...arguments,
-    ]);
+    runOfficeMacroCli(arguments);
 
 Map<String, Object?> _source(String text, {String module = 'StringReport'}) =>
     <String, Object?>{
@@ -107,6 +107,7 @@ void _expectReport(Uint8List bytes) {
 }
 
 void main() {
+  registerOfficeMacroCliCleanup();
   group('string intrinsic plans through the document runtime', () {
     test(
       'internal surrogate halves recombine without workbook data loss',

@@ -1,3 +1,6 @@
+@Timeout(Duration(minutes: 5))
+library;
+
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -5,6 +8,8 @@ import 'dart:typed_data';
 import 'package:quds_office_engine/quds_office_automation.dart';
 import 'package:quds_office_engine/quds_office_engine.dart';
 import 'package:test/test.dart';
+
+import 'support/office_macro_cli.dart';
 
 const _summarySource = '''
 Option Explicit
@@ -67,15 +72,10 @@ Map<String, Object?> _structured(Map<String, Object?> result) =>
 Map<String, Object?> _json(Object? value) =>
     jsonDecode(value! as String) as Map<String, Object?>;
 
-Future<ProcessResult> _run(List<String> args) =>
-    Process.run(Platform.resolvedExecutable, <String>[
-      if (Platform.packageConfig case final String packages)
-        '--packages=$packages',
-      'tool/macros/office_macro.dart',
-      ...args,
-    ]);
+Future<ProcessResult> _run(List<String> args) => runOfficeMacroCli(args);
 
 void main() {
+  registerOfficeMacroCliCleanup();
   group('compiled Excel VBA transactions', () {
     test(
       'validate and run use real named sheets, formulas, styles, and clearing',

@@ -32,6 +32,7 @@ export 'src/fonts/office_font_set.dart';
 export 'src/fonts/office_typeface.dart';
 export 'src/fonts/sfnt_parser.dart';
 export 'src/io/byte_source.dart';
+export 'src/odf/odf_zotero.dart';
 export 'src/office/office_document_properties.dart';
 export 'src/office/office_find.dart';
 export 'src/office/office_print.dart';

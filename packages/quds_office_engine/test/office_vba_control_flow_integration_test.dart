@@ -1,3 +1,6 @@
+@Timeout(Duration(minutes: 5))
+library;
+
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -5,6 +8,8 @@ import 'dart:typed_data';
 import 'package:quds_office_engine/quds_office_automation.dart';
 import 'package:quds_office_engine/quds_office_engine.dart';
 import 'package:test/test.dart';
+
+import 'support/office_macro_cli.dart';
 
 const _example = 'example/macros/control_flow_report.bas';
 
@@ -55,14 +60,10 @@ TypeMatcher<OfficeMacroException> _error(String code) =>
     isA<OfficeMacroException>().having((error) => error.code, 'code', code);
 
 Future<ProcessResult> _run(List<String> arguments) =>
-    Process.run(Platform.resolvedExecutable, <String>[
-      if (Platform.packageConfig case final String packages)
-        '--packages=$packages',
-      'tool/macros/office_macro.dart',
-      ...arguments,
-    ]);
+    runOfficeMacroCli(arguments);
 
 void main() {
+  registerOfficeMacroCliCleanup();
   group('conditional control flow through the atomic runtime', () {
     test(
       'committed report compiles, round trips, validates, and runs',

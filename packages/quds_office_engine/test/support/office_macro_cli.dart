@@ -11,8 +11,9 @@ import 'package:test/test.dart';
 // Every child has a hard deadline and is killed on timeout and on test
 // teardown (including a test-level timeout), so no orphan survives its test.
 //
-// Call [registerOfficeMacroCliCleanup] from `main` to remove the compiled
-// kernel after the file's tests.
+// Call [registerOfficeMacroCliCleanup] from `main`: it compiles the kernel in
+// `setUpAll` (outside any single test's timeout, so a test that times out
+// cannot kill the shared compile) and removes it after the file's tests.
 
 /// Per-invocation deadline. Generous for slow CI runners; a hang still fails.
 const Duration officeMacroCliTimeout = Duration(minutes: 2);
@@ -24,8 +25,10 @@ final Set<Process> _live = <Process>{};
 Future<String>? _entry;
 Directory? _kernelDirectory;
 
-/// Registers removal of the compiled kernel and of any leftover process.
+/// Compiles the CLI once for this file and registers cleanup of the kernel
+/// and of any leftover process.
 void registerOfficeMacroCliCleanup() {
+  setUpAll(() => _entry ??= _compile());
   tearDownAll(() {
     _killAll();
     final directory = _kernelDirectory;
@@ -64,7 +67,9 @@ Future<String> _compile() async {
   final result = await _run(_dartExecutable(), <String>[
     'compile',
     'kernel',
-    ..._packagesArgument(),
+    // The compiler accepts a file path; the VM's package config is a URI.
+    if (Platform.packageConfig case final String config)
+      '--packages=${Uri.parse(config).toFilePath()}',
     _script,
     '-o',
     kernel,

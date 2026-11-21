@@ -1,3 +1,6 @@
+@Timeout(Duration(minutes: 5))
+library;
+
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -7,6 +10,7 @@ import 'package:quds_office_engine/quds_office_engine.dart';
 import 'package:test/test.dart';
 
 import '../tool/macros/web_vba_arguments_smoke.dart' as portable;
+import 'support/office_macro_cli.dart';
 
 String _language(OfficeMacroFormat format) => switch (format) {
   OfficeMacroFormat.docx => 'vba-word',
@@ -52,13 +56,10 @@ TypeMatcher<OfficeMacroException> _error(String code) =>
     isA<OfficeMacroException>().having((error) => error.code, 'code', code);
 
 Future<ProcessResult> _run(List<String> arguments) =>
-    Process.run(Platform.resolvedExecutable, <String>[
-      if (Platform.packageConfig case final String config) '--packages=$config',
-      'tool/macros/office_macro.dart',
-      ...arguments,
-    ]);
+    runOfficeMacroCli(arguments);
 
 void main() {
+  registerOfficeMacroCliCleanup();
   test(
     'actual Word and PowerPoint BAS examples survive two native reopens',
     () async {

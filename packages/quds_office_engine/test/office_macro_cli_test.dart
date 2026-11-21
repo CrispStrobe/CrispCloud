@@ -1,16 +1,15 @@
+@Timeout(Duration(minutes: 5))
+library;
+
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:quds_office_engine/quds_office_engine.dart';
 import 'package:test/test.dart';
 
-Future<ProcessResult> _run(List<String> args) =>
-    Process.run(Platform.resolvedExecutable, <String>[
-      if (Platform.packageConfig case final String packages)
-        '--packages=$packages',
-      'tool/macros/office_macro.dart',
-      ...args,
-    ]);
+import 'support/office_macro_cli.dart';
+
+Future<ProcessResult> _run(List<String> args) => runOfficeMacroCli(args);
 
 Map<String, Object?> _json(Object? value) {
   final Object? decoded = jsonDecode(value! as String);
@@ -18,6 +17,7 @@ Map<String, Object?> _json(Object? value) {
 }
 
 void main() {
+  registerOfficeMacroCliCleanup();
   late Directory temporary;
   setUp(() {
     temporary = Directory.current.createTempSync('macro-cli-test-');
