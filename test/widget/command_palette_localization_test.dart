@@ -164,7 +164,8 @@ void main() {
       (tester) async {
         locale.value = Locale(language);
         await open(tester);
-        for (var i = 0; i < 80; i++) {
+        // Selection stops at the last row, so overshooting is safe.
+        for (var i = 0; i < 160; i++) {
           await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
           await tester.pump();
         }

@@ -818,6 +818,33 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       );
       commands[binding.id] = binding;
     }
+    // Workflow entries that now own a keyboard shortcut show its accelerator.
+    final bindings = ref.read(keyboardShortcutServiceProvider);
+    for (final (id, action) in const <(String, ShortcutAction)>[
+      ('flat', ShortcutAction.flatView),
+      ('home', ShortcutAction.goHome),
+      ('root', ShortcutAction.goToRoot),
+      ('brief', ShortcutAction.viewBrief),
+      ('full', ShortcutAction.viewFull),
+      ('tree', ShortcutAction.viewTree),
+      ('editWith', ShortcutAction.chooseEditor),
+      ('archiveTest', ShortcutAction.testArchives),
+      ('archiveExtract', ShortcutAction.unpackFiles),
+      ('compareDirectories', ShortcutAction.compareDirectories),
+    ]) {
+      final command = commands['workflow:$id'];
+      if (command == null) continue;
+      commands[command.id] = BrowserMenuCommandBinding(
+        id: command.id,
+        label: command.label,
+        onSelected: command.onSelected,
+        shortcut: browserMenuShortcut(
+          bindings,
+          action,
+          macOS: !kIsWeb && defaultTargetPlatform == TargetPlatform.macOS,
+        ),
+      );
+    }
     return commands;
   }
 
@@ -1178,23 +1205,23 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       if (editor == null)
         PlatformMenuItemGroup(
           members: <PlatformMenuItem>[
-            PlatformMenuItem(
-              label: context.commanderTr("Brief Rows"),
-              onSelected: () => ref
-                  .read(panelViewModeProvider(activeSide).notifier)
-                  .setMode(PanelViewMode.brief),
+            _browserMenuCommand(
+              context,
+              ref,
+              ShortcutAction.viewBrief,
+              context.commanderTr("Brief Rows"),
             ),
-            PlatformMenuItem(
-              label: context.commanderTr("Full Rows"),
-              onSelected: () => ref
-                  .read(panelViewModeProvider(activeSide).notifier)
-                  .setMode(PanelViewMode.full),
+            _browserMenuCommand(
+              context,
+              ref,
+              ShortcutAction.viewFull,
+              context.commanderTr("Full Rows"),
             ),
-            PlatformMenuItem(
-              label: context.commanderTr("Tree View"),
-              onSelected: () => ref
-                  .read(panelViewModeProvider(activeSide).notifier)
-                  .setMode(PanelViewMode.tree),
+            _browserMenuCommand(
+              context,
+              ref,
+              ShortcutAction.viewTree,
+              context.commanderTr("Tree View"),
             ),
           ],
         ),
@@ -1265,9 +1292,11 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
               ShortcutAction.toggleHidden,
               context.commanderTr("Show Hidden Files"),
             ),
-            PlatformMenuItem(
-              label: context.commanderTr("Flat View"),
-              onSelected: () => _activePanel(ref).toggleFlatView(),
+            _browserMenuCommand(
+              context,
+              ref,
+              ShortcutAction.flatView,
+              context.commanderTr("Flat View"),
             ),
             _browserMenuCommand(
               context,

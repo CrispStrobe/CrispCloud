@@ -155,21 +155,41 @@ void showKeyboardShortcutsHelp(BuildContext context) {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                context.commanderTr(
+                  'Defaults follow Total Commander and Double Commander. On macOS, ⌘ replaces Ctrl except for keys macOS reserves (⌘H, ⌘M, ⌘Q).',
+                ),
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ),
             // File action keys.
             _shortcutRow('F1', 'This help dialog'),
             _shortcutRow('F2 / Shift+F6', 'Rename (in-place)'),
             _shortcutRow('F3', 'View file (full-screen)'),
             _shortcutRow('F4', 'Edit file (built-in)'),
-            _shortcutRow('Shift+F4', 'Choose editor (text, hex, system)'),
+            _actionRow(ShortcutAction.newTextFile),
+            _actionRow(ShortcutAction.chooseEditor),
             _shortcutRow('F5', 'Copy with options…'),
-            _shortcutRow('Ctrl+R', 'Refresh'),
+            _actionRow(ShortcutAction.copySameFolder),
+            _actionRow(ShortcutAction.linkToOtherPanel),
             _shortcutRow('F6', 'Move with options…'),
             _shortcutRow('F7 / Ctrl+N', 'New folder'),
             _shortcutRow('F8 / Delete', 'Delete selected'),
+            _actionRow(ShortcutAction.deletePermanently),
+            _actionRow(ShortcutAction.packFiles),
+            _actionRow(ShortcutAction.unpackFiles),
+            _actionRow(ShortcutAction.testArchives),
+            _shortcutRow('Ctrl+R', 'Refresh'),
             const Divider(),
             // Navigation
             _shortcutRow('Alt+← / Alt+→', 'Back / Forward (history)'),
             _shortcutRow('Backspace', 'Navigate up / leave archive'),
+            _actionRow(ShortcutAction.openUnderCursor),
+            _actionRow(ShortcutAction.directoryHistory),
+            _actionRow(ShortcutAction.goToRoot),
+            _actionRow(ShortcutAction.goHome),
             _shortcutRow(
               'Esc (${ShortcutStrings(context).extra('archive')})',
               'Exit archive',
@@ -178,6 +198,8 @@ void showKeyboardShortcutsHelp(BuildContext context) {
             _shortcutRow('Ctrl+Enter', 'Open item in the other panel'),
             _shortcutRow('Ctrl+← / Ctrl+→', 'Open item in left / right panel'),
             _shortcutRow('Tab', 'Switch panels'),
+            _actionRow(ShortcutAction.leftSourcePicker),
+            _actionRow(ShortcutAction.rightSourcePicker),
             _shortcutRow('Ctrl+G / Ctrl+L', 'Go to path'),
             _shortcutRow('Alt+F7', 'Search all files'),
             _shortcutRow('Ctrl+F', 'Filter files'),
@@ -192,9 +214,18 @@ void showKeyboardShortcutsHelp(BuildContext context) {
             const Divider(),
             // Selection
             _shortcutRow('Ctrl+A', 'Select all'),
+            _actionRow(ShortcutAction.deselectAll),
             _shortcutRow('Numpad *', 'Invert selection'),
             _shortcutRow('Numpad +', 'Select by wildcard or regex'),
             _shortcutRow('Numpad -', 'Deselect by wildcard or regex'),
+            _actionRow(
+              ShortcutAction.selectSameExtension,
+              alias: 'Shift+Num +',
+            ),
+            _actionRow(
+              ShortcutAction.deselectSameExtension,
+              alias: 'Shift+Num -',
+            ),
             _shortcutRow('Space / Insert', 'Mark + advance'),
             _shortcutRow('Numpad 5', 'Select all'),
             _shortcutRow('Shift+↑/↓', 'Extend selection'),
@@ -208,18 +239,26 @@ void showKeyboardShortcutsHelp(BuildContext context) {
             _shortcutRow('Ctrl+Z', 'Undo last action'),
             _shortcutRow('Ctrl+Shift+C', 'Copy paths to clipboard'),
             _shortcutRow('Ctrl+Shift+N', 'Copy names to clipboard'),
-            _shortcutRow('Ctrl+=', 'Sync opposite panel to here'),
+            _actionRow(ShortcutAction.mirrorToOtherPanel),
+            _actionRow(ShortcutAction.compareDirectories),
+            _actionRow(ShortcutAction.calculateFolderSizes),
             const Divider(),
             // Sort
             _shortcutRow('Ctrl+F3', ShortcutStrings(context).description(30)),
             _shortcutRow('Ctrl+F4', ShortcutStrings(context).description(31)),
             _shortcutRow('Ctrl+F5', ShortcutStrings(context).description(32)),
             _shortcutRow('Ctrl+F6', ShortcutStrings(context).description(33)),
-            _shortcutRow(
-              'Ctrl+. / Ctrl+H',
-              ShortcutStrings(context).description(34),
+            _actionRow(
+              ShortcutAction.toggleHidden,
+              description: ShortcutStrings(context).description(34),
             ),
-            _shortcutRow('Ctrl+B', ShortcutStrings(context).description(35)),
+            _actionRow(ShortcutAction.flatView),
+            _actionRow(ShortcutAction.flatViewSelected),
+            _actionRow(ShortcutAction.pathFavorites),
+            _actionRow(
+              ShortcutAction.bookmark,
+              description: ShortcutStrings(context).description(35),
+            ),
             _shortcutRow(
               'Ctrl+I / Alt+Enter',
               ShortcutStrings(context).description(36),
@@ -230,16 +269,26 @@ void showKeyboardShortcutsHelp(BuildContext context) {
             ),
             const Divider(),
             // View / Tabs
-            _shortcutRow('Ctrl+1', ShortcutStrings(context).description(37)),
-            _shortcutRow('Ctrl+2', ShortcutStrings(context).description(38)),
-            _shortcutRow('Ctrl+3', ShortcutStrings(context).description(39)),
+            _actionRow(ShortcutAction.viewBrief),
+            _actionRow(ShortcutAction.viewFull),
+            _actionRow(ShortcutAction.viewTree),
             _shortcutRow('Ctrl+T', ShortcutStrings(context).description(40)),
             _shortcutRow('Ctrl+W', ShortcutStrings(context).description(41)),
+            _actionRow(ShortcutAction.closeAllTabs),
             _shortcutRow('Ctrl+Tab', ShortcutStrings(context).description(42)),
             _shortcutRow(
               'Ctrl+Shift+Tab',
               ShortcutStrings(context).description(43),
             ),
+            _actionRow(ShortcutAction.tabList),
+            _actionRow(
+              ShortcutAction.activateTab1,
+              keys: 'Alt+1…9 / Alt+0',
+              description:
+                  '${WorkspaceUxStrings(context).action(ShortcutAction.activateTab1)} … / ${WorkspaceUxStrings(context).action(ShortcutAction.activateLastTab)}',
+            ),
+            _actionRow(ShortcutAction.openInNewTab),
+            _actionRow(ShortcutAction.openInOtherNewTab),
             _shortcutRow(
               'Ctrl+Shift+P',
               ShortcutStrings(context).description(44),
@@ -247,12 +296,15 @@ void showKeyboardShortcutsHelp(BuildContext context) {
             const Divider(),
             // Transfer
             _shortcutRow('Ctrl+U', context.commanderTr('Swap Panels')),
-            _shortcutRow('Ctrl+D', ShortcutStrings(context).description(46)),
             _shortcutRow(
               'Ctrl+Shift+T',
               WorkspaceUxStrings(context).text('reopen'),
             ),
-            _shortcutRow('Ctrl+Alt+P', context.commanderTr('Toggle Preview')),
+            _actionRow(
+              ShortcutAction.togglePreview,
+              description: context.commanderTr('Toggle Preview'),
+            ),
+            _actionRow(ShortcutAction.openSettings),
           ],
         ),
       ),
@@ -281,44 +333,40 @@ Widget _shortcutRow(String keys, String description) => Consumer(
     ref.watch(shortcutBindingsProvider);
     final service = ref.watch(keyboardShortcutServiceProvider);
     String key(ShortcutAction action) => service.browserDisplay(action);
-    String withAlias(ShortcutAction action, String alias) =>
-        service.isCustomized(action) ? key(action) : '${key(action)} / $alias';
+    String all(ShortcutAction action) => service.browserDisplayAll(action);
     final liveKeys = switch (keys) {
       'F2 / Shift+F6' => '${key(ShortcutAction.rename)} / Shift+F6',
       'F3' => key(ShortcutAction.preview),
       'F4' => key(ShortcutAction.edit),
       'F5' => key(ShortcutAction.copyWithOptions),
       'F6' => key(ShortcutAction.moveWithOptions),
-      'F7 / Ctrl+N' => withAlias(ShortcutAction.newFolder, 'Ctrl+N'),
-      'F8 / Delete' => withAlias(ShortcutAction.delete, 'F8'),
+      'F7 / Ctrl+N' => all(ShortcutAction.newFolder),
+      'F8 / Delete' => all(ShortcutAction.delete),
       'Alt+← / Alt+→' =>
-        '${key(ShortcutAction.back)} / ${key(ShortcutAction.forward)}',
-      'Backspace' => key(ShortcutAction.up),
+        '${all(ShortcutAction.back)} / ${all(ShortcutAction.forward)}',
+      'Backspace' => all(ShortcutAction.up),
       'Tab' => key(ShortcutAction.switchPanel),
-      'Ctrl+G / Ctrl+L' => withAlias(ShortcutAction.goToFolder, 'Ctrl+L'),
+      'Ctrl+G / Ctrl+L' => all(ShortcutAction.goToFolder),
       'Alt+F7' => key(ShortcutAction.search),
-      'Ctrl+F' => key(ShortcutAction.filter),
-      'Ctrl+A' => key(ShortcutAction.selectAll),
+      'Ctrl+F' => all(ShortcutAction.filter),
+      'Ctrl+A' => all(ShortcutAction.selectAll),
       'Numpad +' => key(ShortcutAction.findPattern),
       'Ctrl+C / Ctrl+X' =>
         '${key(ShortcutAction.copy)} / ${key(ShortcutAction.cut)}',
       'Ctrl+V' => key(ShortcutAction.paste),
-      'Ctrl+M' => key(ShortcutAction.multiRename),
+      'Ctrl+M' => all(ShortcutAction.multiRename),
       'Ctrl+Z' => key(ShortcutAction.undo),
       'Ctrl+R' => key(ShortcutAction.refresh),
       'Ctrl+F3' => key(ShortcutAction.sortByName),
       'Ctrl+F4' => key(ShortcutAction.sortByExtension),
       'Ctrl+F5' => key(ShortcutAction.sortByDate),
       'Ctrl+F6' => key(ShortcutAction.sortBySize),
-      'Ctrl+. / Ctrl+H' => withAlias(ShortcutAction.toggleHidden, 'Ctrl+H'),
-      'Ctrl+B' => key(ShortcutAction.bookmark),
       'Ctrl+T' => key(ShortcutAction.newTab),
       'Ctrl+W' => key(ShortcutAction.closeTab),
       'Ctrl+Tab' => key(ShortcutAction.nextTab),
       'Ctrl+Shift+Tab' => key(ShortcutAction.prevTab),
       'Ctrl+Shift+P' => key(ShortcutAction.commandPalette),
       'Ctrl+Shift+T' => key(ShortcutAction.reopenClosedTab),
-      'Ctrl+Alt+P' => key(ShortcutAction.togglePreview),
       _ => keys,
     };
     return Padding(
@@ -337,6 +385,45 @@ Widget _shortcutRow(String keys, String description) => Consumer(
           ),
           Expanded(
             child: Text(ShortcutStrings(context).descriptionFor(description)),
+          ),
+        ],
+      ),
+    );
+  },
+);
+
+/// A help row for a service-owned action: its live bindings (all default
+/// aliases, or the user's own binding) and its localized name.
+Widget _actionRow(
+  ShortcutAction action, {
+  String? alias,
+  String? keys,
+  String? description,
+}) => Consumer(
+  builder: (context, ref, _) {
+    ref.watch(shortcutBindingsProvider);
+    final service = ref.watch(keyboardShortcutServiceProvider);
+    final live = keys ?? service.browserDisplayAll(action);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 120,
+            child: Text(
+              alias == null ? live : '$live / $alias',
+              key: ValueKey('help-keys-${action.name}'),
+              textDirection: TextDirection.ltr,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontFamily: 'monospace',
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              description ?? WorkspaceUxStrings(context).action(action),
+            ),
           ),
         ],
       ),
@@ -368,10 +455,20 @@ void downloadSelected(BuildContext context, WidgetRef ref) {
   );
 }
 
-void confirmDeleteSelected(BuildContext context, WidgetRef ref) {
+void confirmDeleteSelected(
+  BuildContext context,
+  WidgetRef ref, {
+  bool permanent = false,
+}) {
   final side = ref.read(activePanelProvider);
   final panel = ref.read(panelProvider(side));
-  showFileDeleteDialog(context, ref, side, _selectedOrCursor(panel));
+  showFileDeleteDialog(
+    context,
+    ref,
+    side,
+    _selectedOrCursor(panel),
+    permanent: permanent,
+  );
 }
 
 Future<void> showRenameDialog(BuildContext context, WidgetRef ref) async {
@@ -488,7 +585,7 @@ Future<void> _viewFile(
   }
 }
 
-/// Shift+F4: choose the text/code editor, hex editor or system editor.
+/// Ctrl+Shift+F4: choose the text/code editor, hex editor or system editor.
 void chooseEditorForSelection(
   BuildContext context,
   WidgetRef ref, {

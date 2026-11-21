@@ -224,16 +224,24 @@ class _CommandEntryDialogState extends State<CommandEntryDialog> {
     _error = null;
   });
 
-  void _insert(bool fullPaths) {
+  void _insert(ShortcutAction action) {
     final captured = widget.captured;
-    if (_busy || captured == null || captured.selection.isEmpty) return;
+    final directory = action == ShortcutAction.insertCommandDirectory;
+    if (_busy ||
+        captured == null ||
+        (!directory && captured.selection.isEmpty)) {
+      return;
+    }
+    final fullPaths = action == ShortcutAction.insertCommandPath;
     try {
       if (captured.isDisposed || !captured.invocation.isCurrent()) {
         throw const CommandEntryException(CommandEntryFailure.changed);
       }
       _arguments.value = insertCommandEntryArguments(
         _arguments.value,
-        captured.selection.map((row) => fullPaths ? row.path : row.name),
+        directory
+            ? [captured.invocation.currentPath]
+            : captured.selection.map((row) => fullPaths ? row.path : row.name),
       );
       _changed();
       _argumentFocus.requestFocus();
@@ -252,9 +260,7 @@ class _CommandEntryDialogState extends State<CommandEntryDialog> {
       isAlt: keyboard.isAltPressed,
     );
     if (action != null) {
-      if (event is KeyDownEvent) {
-        _insert(action == ShortcutAction.insertCommandPath);
-      }
+      if (event is KeyDownEvent) _insert(action);
       return KeyEventResult.handled;
     }
     return widget.shortcuts.suppressesCommandEntryDefault(
@@ -475,21 +481,26 @@ class _CommandEntryDialogState extends State<CommandEntryDialog> {
                       width: double.infinity,
                       child: OutlinedButton(
                         key: ValueKey('command-entry-${action.name}'),
-                        onPressed: canInsert
-                            ? () => _insert(
-                                action == ShortcutAction.insertCommandPath,
-                              )
+                        onPressed:
+                            canInsert ||
+                                (action ==
+                                        ShortcutAction.insertCommandDirectory &&
+                                    available &&
+                                    !_busy)
+                            ? () => _insert(action)
                             : null,
                         child: Padding(
                           padding: const EdgeInsets.symmetric(vertical: 6),
                           child: Column(
                             children: [
                               Text(
-                                s.text(
-                                  action == ShortcutAction.insertCommandPath
-                                      ? 'insertPaths'
-                                      : 'insertNames',
-                                ),
+                                s.text(switch (action) {
+                                  ShortcutAction.insertCommandPath =>
+                                    'insertPaths',
+                                  ShortcutAction.insertCommandDirectory =>
+                                    'insertDirectory',
+                                  _ => 'insertNames',
+                                }),
                                 textAlign: TextAlign.center,
                               ),
                               Text(

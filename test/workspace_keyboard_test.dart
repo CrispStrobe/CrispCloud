@@ -6,6 +6,10 @@ import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/providers/focus_area_provider.dart';
 import 'package:crisp_cloud/providers/providers.dart';
 import 'package:crisp_cloud/screens/keyboard_shortcuts.dart';
+import 'package:crisp_cloud/providers/toolbar_provider.dart'
+    show panelViewModeProvider;
+import 'package:crisp_cloud/services/panel_view_mode_service.dart'
+    show PanelViewMode;
 import 'package:crisp_cloud/services/keyboard_shortcut_service.dart';
 import 'package:crisp_cloud/services/local_file_service.dart';
 import 'package:crisp_cloud/services/secure_storage_service.dart';
@@ -271,8 +275,9 @@ void main() {
     await tester.pumpAndSettle();
     final tabs = panel.tabs.length;
     for (final chord in <(List<LogicalKeyboardKey>, LogicalKeyboardKey)>[
-      ([LogicalKeyboardKey.altLeft], LogicalKeyboardKey.f2),
-      ([LogicalKeyboardKey.altLeft], LogicalKeyboardKey.f5),
+      // Alt+F1/F2/F5/F9 are commander commands now; these stay unbound.
+      ([LogicalKeyboardKey.altLeft], LogicalKeyboardKey.f6),
+      ([LogicalKeyboardKey.altLeft], LogicalKeyboardKey.f4),
       (
         [LogicalKeyboardKey.controlLeft, LogicalKeyboardKey.altLeft],
         LogicalKeyboardKey.keyT,
@@ -384,7 +389,10 @@ void main() {
           ShortcutAction.toggleHidden,
           const ShortcutBinding(key: 'F9'),
         );
-    await chord(tester, LogicalKeyboardKey.keyH);
+    // Ctrl+Shift+. is the default alias (Ctrl+H is directory history now).
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+    await chord(tester, LogicalKeyboardKey.period);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
     expect(panel.showHiddenFiles, before);
     await tester.sendKeyEvent(LogicalKeyboardKey.f9);
     await tester.pump();
@@ -444,4 +452,217 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
     },
   );
+
+  group('Total Commander / Double Commander keys', () {
+    Future<PanelNotifier> remote(
+      WidgetTester tester,
+      Map<String, List<int>> files, {
+      String path = '/',
+    }) async {
+      final auth = container.read(authProvider) as _Auth;
+      for (final entry in files.entries) {
+        auth.client.put(entry.key, entry.value);
+      }
+      auth.connect();
+      final panel = container.read(panelProvider(PanelSide.remote));
+      await panel.navigateToPath(path);
+      await mount(tester);
+      container.read(activePanelProvider.notifier).state = PanelSide.remote;
+      container.read(focusAreaProvider.notifier).state = FocusArea.remote;
+      return panel;
+    }
+
+    Future<void> keys(
+      WidgetTester tester,
+      List<LogicalKeyboardKey> modifiers,
+      LogicalKeyboardKey key,
+    ) async {
+      for (final modifier in modifiers) {
+        await tester.sendKeyDownEvent(modifier);
+      }
+      await tester.sendKeyEvent(key);
+      for (final modifier in modifiers.reversed) {
+        await tester.sendKeyUpEvent(modifier);
+      }
+      await tester.pumpAndSettle();
+    }
+
+    FileItem row(PanelNotifier panel, String name) =>
+        panel.files!.singleWhere((file) => file.name == name);
+
+    testWidgets('Shift+F5 copies the cursor file in its folder under a new '
+        'name', (tester) async {
+      final panel = await remote(tester, {
+        '/docs/report.txt': [1, 2, 3],
+      }, path: '/docs');
+      panel.setCursorToItem(row(panel, 'report.txt'));
+      await keys(tester, [LogicalKeyboardKey.shiftLeft], LogicalKeyboardKey.f5);
+      expect(find.text('Copy in this folder'), findsOneWidget);
+      expect(find.text('report copy.txt'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('file-name-submit')));
+      await tester.pumpAndSettle();
+      final auth = container.read(authProvider) as _Auth;
+      expect(auth.client.files['/docs/report copy.txt'], [1, 2, 3]);
+      expect(auth.client.files['/docs/report.txt'], [1, 2, 3]);
+      expect(panel.cursorItem?.name, 'report copy.txt');
+      // Shift+F5 is no longer the copy-to-other-panel dialog.
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('Shift+F4 asks for a name and creates the new file', (
+      tester,
+    ) async {
+      final panel = await remote(tester, {
+        '/docs/keep.bin': [9],
+      }, path: '/docs');
+      panel.setCursorToItem(panel.files!.firstWhere((f) => f.isFolder));
+      await keys(tester, [LogicalKeyboardKey.shiftLeft], LogicalKeyboardKey.f4);
+      expect(find.text('New text file'), findsOneWidget);
+      await tester.enterText(
+        find.byKey(const ValueKey('file-name-input')),
+        'notes.txt',
+      );
+      await tester.tap(find.byKey(const ValueKey('file-name-submit')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+      final auth = container.read(authProvider) as _Auth;
+      expect(auth.client.files['/docs/notes.txt'], isEmpty);
+      expect(panel.cursorItem?.name, 'notes.txt');
+      // An existing name is returned for editing, not overwritten.
+      final existing = await panel.createEmptyFile('keep.bin');
+      expect(existing?.name, 'keep.bin');
+      expect(auth.client.files['/docs/keep.bin'], [9]);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+
+    testWidgets('Ctrl+PgUp opens the parent and Ctrl+PgDn the cursor folder', (
+      tester,
+    ) async {
+      final panel = await remote(tester, {
+        '/pictures/2025/a.jpg': [1],
+      }, path: '/pictures');
+      await keys(tester, [
+        LogicalKeyboardKey.controlLeft,
+      ], LogicalKeyboardKey.pageUp);
+      expect(panel.currentPath, '/');
+      panel.setCursorToItem(row(panel, 'pictures'));
+      await keys(tester, [
+        LogicalKeyboardKey.controlLeft,
+      ], LogicalKeyboardKey.pageDown);
+      expect(panel.currentPath, '/pictures');
+      expect(panel.tabs, hasLength(1));
+    });
+
+    testWidgets('Ctrl+H and Alt+Down list visited folders to jump to', (
+      tester,
+    ) async {
+      final panel = await remote(tester, {
+        '/alpha/one.txt': [1],
+        '/beta/two.txt': [2],
+      }, path: '/alpha');
+      await panel.navigateToPath('/beta');
+      await tester.pumpAndSettle();
+      await keys(tester, [
+        LogicalKeyboardKey.controlLeft,
+      ], LogicalKeyboardKey.keyH);
+      expect(find.text('Directory history'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('directory-history-0')));
+      await tester.pumpAndSettle();
+      expect(panel.currentPath, '/alpha');
+      await keys(tester, [
+        LogicalKeyboardKey.altLeft,
+      ], LogicalKeyboardKey.arrowDown);
+      expect(find.text('Directory history'), findsOneWidget);
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
+      // Hidden files are no longer toggled by Ctrl+H.
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('Alt+N activates tab N, Alt+0 the last tab, Ctrl+Shift+A '
+        'lists tabs and Ctrl+Shift+W keeps protected tabs', (tester) async {
+      final panel = await remote(tester, {
+        '/a/1.txt': [1],
+        '/b/2.txt': [2],
+        '/c/3.txt': [3],
+      }, path: '/a');
+      panel.addTab(path: '/b');
+      await tester.pumpAndSettle();
+      panel.addTab(path: '/c');
+      await tester.pumpAndSettle();
+      expect(panel.tabs, hasLength(3));
+      await keys(tester, [
+        LogicalKeyboardKey.altLeft,
+      ], LogicalKeyboardKey.digit1);
+      expect(panel.activeTabId, panel.tabs.first.id);
+      await keys(tester, [
+        LogicalKeyboardKey.altLeft,
+      ], LogicalKeyboardKey.digit0);
+      expect(panel.activeTabId, panel.tabs.last.id);
+      await keys(tester, [
+        LogicalKeyboardKey.controlLeft,
+        LogicalKeyboardKey.shiftLeft,
+      ], LogicalKeyboardKey.keyA);
+      expect(find.text('Open tabs'), findsOneWidget);
+      await tester.tap(find.byKey(ValueKey('open-tab-${panel.tabs[1].id}')));
+      await tester.pumpAndSettle();
+      expect(panel.activeTabId, panel.tabs[1].id);
+      panel.toggleTabPin(panel.tabs.first.id);
+      await keys(tester, [
+        LogicalKeyboardKey.controlLeft,
+        LogicalKeyboardKey.shiftLeft,
+      ], LogicalKeyboardKey.keyW);
+      expect(panel.tabs, hasLength(2));
+      expect(panel.tabs.first.isPinned, isTrue);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('Ctrl+Num± and Alt+Num± change the selection', (tester) async {
+      final panel = await remote(tester, {
+        '/m/a.txt': [1],
+        '/m/b.txt': [2],
+        '/m/c.jpg': [3],
+      }, path: '/m');
+      await keys(tester, [
+        LogicalKeyboardKey.controlLeft,
+      ], LogicalKeyboardKey.numpadAdd);
+      expect(panel.selection, hasLength(3));
+      await keys(tester, [
+        LogicalKeyboardKey.controlLeft,
+      ], LogicalKeyboardKey.numpadSubtract);
+      expect(panel.selection, isEmpty);
+      panel.setCursorToItem(row(panel, 'a.txt'));
+      await keys(tester, [
+        LogicalKeyboardKey.altLeft,
+      ], LogicalKeyboardKey.numpadAdd);
+      expect(panel.selection.map((f) => f.name).toSet(), {'a.txt', 'b.txt'});
+      await keys(tester, [
+        LogicalKeyboardKey.altLeft,
+      ], LogicalKeyboardKey.numpadSubtract);
+      expect(panel.selection, isEmpty);
+    });
+
+    testWidgets('Ctrl+1/2/3 and Ctrl+F1/F2/F8 switch the view mode', (
+      tester,
+    ) async {
+      await mount(tester);
+      for (final (key, mode) in <(LogicalKeyboardKey, PanelViewMode)>[
+        (LogicalKeyboardKey.f8, PanelViewMode.tree),
+        (LogicalKeyboardKey.f1, PanelViewMode.brief),
+        (LogicalKeyboardKey.digit2, PanelViewMode.full),
+        (LogicalKeyboardKey.f2, PanelViewMode.full),
+        (LogicalKeyboardKey.digit3, PanelViewMode.tree),
+        (LogicalKeyboardKey.digit1, PanelViewMode.brief),
+      ]) {
+        await chord(tester, key);
+        await tester.pumpAndSettle();
+        expect(
+          container.read(panelViewModeProvider(PanelSide.local)),
+          mode,
+          reason: key.keyLabel,
+        );
+      }
+    });
+  });
 }

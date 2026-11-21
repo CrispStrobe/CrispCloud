@@ -85,9 +85,9 @@ void main() {
     for (final key in ['F9', 'F10', 'F11', 'F12']) {
       expect(find.text(key), findsOneWidget);
     }
-    expect(find.textContaining(' / Ctrl+N'), findsNothing);
-    expect(find.textContaining(' / Ctrl+L'), findsNothing);
-    expect(find.textContaining(' / Ctrl+H'), findsNothing);
+    expect(find.textContaining(RegExp(r' / Ctrl\+N$')), findsNothing);
+    expect(find.textContaining(RegExp(r' / Ctrl\+L$')), findsNothing);
+    expect(find.textContaining(RegExp(r' / Ctrl\+H$')), findsNothing);
     expect(find.textContaining(' / F8'), findsNothing);
     expect(tester.takeException(), isNull);
   });

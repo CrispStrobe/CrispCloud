@@ -232,6 +232,35 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
         ShortcutAction.toggleTreeView,
         ShortcutAction.cycleLayout,
         ShortcutAction.terminal,
+        // Total Commander / Double Commander parity commands.
+        ShortcutAction.newTextFile,
+        ShortcutAction.chooseEditor,
+        ShortcutAction.copySameFolder,
+        ShortcutAction.deletePermanently,
+        ShortcutAction.packFiles,
+        ShortcutAction.linkToOtherPanel,
+        ShortcutAction.flatView,
+        ShortcutAction.flatViewSelected,
+        ShortcutAction.openUnderCursor,
+        ShortcutAction.directoryHistory,
+        ShortcutAction.goToRoot,
+        ShortcutAction.goHome,
+        ShortcutAction.leftSourcePicker,
+        ShortcutAction.rightSourcePicker,
+        ShortcutAction.mirrorToOtherPanel,
+        ShortcutAction.openInNewTab,
+        ShortcutAction.openInOtherNewTab,
+        ShortcutAction.closeAllTabs,
+        ShortcutAction.tabList,
+        ShortcutAction.deselectAll,
+        ShortcutAction.selectSameExtension,
+        ShortcutAction.deselectSameExtension,
+        ShortcutAction.compareDirectories,
+        ShortcutAction.calculateFolderSizes,
+        ShortcutAction.bookmark,
+        ShortcutAction.viewBrief,
+        ShortcutAction.viewFull,
+        ShortcutAction.viewTree,
       ])
         _Command(
           name: WorkspaceUxStrings(context).action(action),
@@ -242,6 +271,11 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
                 ShortcutAction.preview,
                 ShortcutAction.edit,
                 ShortcutAction.delete,
+                ShortcutAction.chooseEditor,
+                ShortcutAction.copySameFolder,
+                ShortcutAction.deletePermanently,
+                ShortcutAction.packFiles,
+                ShortcutAction.linkToOtherPanel,
               ].contains(action) ||
               hasTargets,
           icon: switch (action) {
@@ -255,6 +289,23 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
             ShortcutAction.toggleHidden => Icons.visibility_outlined,
             ShortcutAction.toggleTreeView => Icons.account_tree_outlined,
             ShortcutAction.terminal => Icons.terminal,
+            ShortcutAction.newTextFile => Icons.note_add_outlined,
+            ShortcutAction.chooseEditor => Icons.edit_note,
+            ShortcutAction.copySameFolder => Icons.file_copy_outlined,
+            ShortcutAction.deletePermanently => Icons.delete_forever_outlined,
+            ShortcutAction.packFiles => Icons.archive_outlined,
+            ShortcutAction.linkToOtherPanel => Icons.link,
+            ShortcutAction.flatView ||
+            ShortcutAction.flatViewSelected => Icons.layers_outlined,
+            ShortcutAction.directoryHistory => Icons.history,
+            ShortcutAction.goToRoot || ShortcutAction.goHome => Icons.home,
+            ShortcutAction.openInNewTab ||
+            ShortcutAction.openInOtherNewTab ||
+            ShortcutAction.tabList ||
+            ShortcutAction.closeAllTabs => Icons.tab_outlined,
+            ShortcutAction.compareDirectories => Icons.compare_arrows,
+            ShortcutAction.calculateFolderSizes => Icons.data_usage,
+            ShortcutAction.bookmark => Icons.star_border,
             _ => Icons.view_list_outlined,
           },
           action: () =>
@@ -494,6 +545,7 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
       _Command(
         id: 'archive-test-selected',
         name: archiveBatchIntegrityText(context, 'Test selected archives'),
+        binding: ShortcutAction.testArchives,
         icon: Icons.fact_check_outlined,
         keywords: 'archive integrity test zip rar 7z check verify',
         enabled: canTestArchiveSelection(ref),
@@ -507,6 +559,7 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
             context,
             'Extract selected archives',
           ),
+          binding: ShortcutAction.unpackFiles,
           icon: Icons.drive_folder_upload_outlined,
           keywords: 'archive extract unpack zip rar 7z mask flatten batch',
           enabled: canExtractArchiveSelection(ref),
@@ -618,7 +671,6 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
       if (ref.read(panelProvider(PanelSide.remote)).selection.isNotEmpty)
         _Command(
           name: context.commanderTr("Download Selected"),
-          shortcut: 'Ctrl+D',
           icon: Icons.download,
           action: () => downloadSelected(widget.parentContext, ref),
         ),

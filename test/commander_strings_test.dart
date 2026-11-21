@@ -4,6 +4,7 @@ import 'package:crisp_cloud/l10n/app_localizations.dart';
 import 'package:crisp_cloud/l10n/commander_strings.dart';
 import 'package:crisp_cloud/l10n/commander_translations.dart';
 import 'package:crisp_cloud/l10n/commander_completion_translations.dart';
+import 'package:crisp_cloud/l10n/commander_hotkey_translations.dart';
 import 'package:crisp_cloud/l10n/transfer_queue_translations.dart';
 import 'package:crisp_cloud/models/rename_batch.dart';
 import 'package:crisp_cloud/models/transfer_job.dart';
@@ -49,6 +50,7 @@ void main() {
       ...commanderTranslations,
       ...commanderCompletionTranslations,
       ...transferQueueTranslations,
+      ...commanderHotkeyTranslations,
     }.entries) {
       expect(entry.value, hasLength(8), reason: entry.key);
       final expected = parameters
@@ -176,6 +178,9 @@ void main() {
       'share_link_dialog',
       'version_history_dialog',
       'permissions_dialog',
+      'commander_hotkey_dialogs',
+      '../screens/keyboard_shortcuts',
+      '../l10n/workspace_ux_strings',
       '../screens/file_browser_screen',
     ]) {
       final source = File('lib/widgets/$name.dart').readAsStringSync();

@@ -4,12 +4,16 @@
 // Extracted from file_browser_screen.dart for maintainability.
 
 import 'dart:async';
+import 'dart:io' show Platform;
+
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../l10n/command_strings.dart';
+import '../l10n/commander_strings.dart';
 import '../l10n/undo_presentation.dart';
 import '../l10n/viewer_action_strings.dart';
 import '../models/file_item.dart';
@@ -28,6 +32,17 @@ import 'package:path/path.dart' as p;
 
 import '../services/archive_service.dart';
 
+import '../models/panel_tab.dart';
+import '../services/link_service.dart';
+import '../services/panel_source_service.dart' show LocalPanelSource;
+import '../widgets/archive_batch_actions.dart';
+import '../widgets/archive_creation_dialog.dart';
+import '../widgets/commander_hotkey_dialogs.dart';
+import '../widgets/directory_selection_actions.dart';
+import '../widgets/file_name_dialog.dart';
+import '../widgets/file_origin_actions.dart' show withNativeFileAction;
+import '../widgets/settings_dialog.dart' show showSettingsDialog;
+import '../widgets/panel_source_selector.dart' show openPanelSourcePicker;
 import '../widgets/command_palette.dart';
 import '../widgets/command_entry_dialog.dart';
 import '../widgets/bookmark_actions.dart';
@@ -36,7 +51,7 @@ import '../widgets/pattern_selection_dialog.dart';
 import '../widgets/file_list_dialog.dart';
 import '../widgets/file_clipboard_actions.dart';
 import '../widgets/file_context_menu.dart'
-    show showPropertiesDialog, showFileContextMenu;
+    show showPropertiesDialog, showFileContextMenu, showCreateLinkDialog;
 import '../widgets/file_toolbar.dart' show showPanelFilterDialog;
 import '../widgets/search_dialogs.dart' show showSearchDialog;
 import 'screen_dialogs.dart';
@@ -128,13 +143,6 @@ KeyEventResult handleKeyEvent(
   // Alternate accelerators are explicit aliases. Service-owned defaults are
   // dispatched above, never through a permissive legacy modifier check.
   if (primary && !alt && !shift) {
-    if (key == LogicalKeyboardKey.equal) {
-      final opposite = activePanel == PanelSide.local
-          ? PanelSide.remote
-          : PanelSide.local;
-      unawaited(_mirrorLocation(ref, panel, opposite));
-      return KeyEventResult.handled;
-    }
     if (key == LogicalKeyboardKey.keyU) {
       unawaited(
         swapPanelSources(ref).then((_) {
@@ -142,24 +150,6 @@ KeyEventResult handleKeyEvent(
             onPanelSwitch?.call(ref.read(activePanelProvider));
         }),
       );
-      return KeyEventResult.handled;
-    }
-    if (key == LogicalKeyboardKey.keyD && ref.read(authProvider).isConnected) {
-      downloadSelected(context, ref);
-      return KeyEventResult.handled;
-    }
-    if (key == LogicalKeyboardKey.digit1 ||
-        key == LogicalKeyboardKey.digit2 ||
-        key == LogicalKeyboardKey.digit3) {
-      ref
-          .read(panelViewModeProvider(activePanel).notifier)
-          .setMode(
-            key == LogicalKeyboardKey.digit1
-                ? PanelViewMode.brief
-                : key == LogicalKeyboardKey.digit2
-                ? PanelViewMode.full
-                : PanelViewMode.tree,
-          );
       return KeyEventResult.handled;
     }
     if (key == LogicalKeyboardKey.enter ||
@@ -218,10 +208,6 @@ KeyEventResult handleKeyEvent(
     }
     if (shift && key == LogicalKeyboardKey.f3) {
       viewSelectedFile(context, ref, secondaryPdfViewer: true);
-      return KeyEventResult.handled;
-    }
-    if (shift && key == LogicalKeyboardKey.f4) {
-      chooseEditorForSelection(context, ref, alternateShortcut: true);
       return KeyEventResult.handled;
     }
     if (shift && key == LogicalKeyboardKey.f6) {
@@ -384,6 +370,7 @@ KeyEventResult executeBrowserShortcut(
       unawaited(showCommandEntryDialog(context, ref));
     case ShortcutAction.insertCommandFilename:
     case ShortcutAction.insertCommandPath:
+    case ShortcutAction.insertCommandDirectory:
       return KeyEventResult.ignored;
     case ShortcutAction.connect:
       showConnectionDialogScreen(context);
@@ -484,8 +471,356 @@ KeyEventResult executeBrowserShortcut(
       unawaited(showPathFavoritesMenu(context, side));
     case ShortcutAction.multiRename:
       showMultiRenameFromSelection(context, ref);
+    case ShortcutAction.newTextFile:
+      unawaited(_newTextFile(context, ref, panel, side));
+    case ShortcutAction.chooseEditor:
+      // Keeps the PDF "secondary editor" preference of the old Shift+F4.
+      chooseEditorForSelection(context, ref, alternateShortcut: true);
+    case ShortcutAction.copySameFolder:
+      unawaited(_copyWithinFolder(context, ref, panel, side));
+    case ShortcutAction.flatView:
+      unawaited(panel.toggleFlatView());
+    case ShortcutAction.flatViewSelected:
+      unawaited(panel.toggleFlatView(folders: panel.selection.toList()));
+    case ShortcutAction.openUnderCursor:
+      final item = panel.cursorItem;
+      if (item != null && item.name != '..') {
+        if (item.isFolder || ArchiveService.isArchive(item.name)) {
+          panel.navigateInto(item);
+        }
+      }
+    case ShortcutAction.directoryHistory:
+      unawaited(showDirectoryHistoryMenu(context, panel));
+    case ShortcutAction.viewBrief:
+    case ShortcutAction.viewFull:
+    case ShortcutAction.viewTree:
+      unawaited(
+        ref.read(panelViewModeProvider(side).notifier).setMode(switch (action) {
+          ShortcutAction.viewBrief => PanelViewMode.brief,
+          ShortcutAction.viewFull => PanelViewMode.full,
+          _ => PanelViewMode.tree,
+        }),
+      );
+    case ShortcutAction.mirrorToOtherPanel:
+      unawaited(_mirrorLocation(ref, panel, oppositePanelSide(side)));
+    case ShortcutAction.packFiles:
+      unawaited(_packSelection(context, ref, panel, side));
+    case ShortcutAction.unpackFiles:
+      if (canExtractArchiveSelection(ref)) {
+        unawaited(showArchiveBatchExtractionForSelection(context, ref));
+      } else {
+        _notAvailable(context);
+      }
+    case ShortcutAction.testArchives:
+      if (canTestArchiveSelection(ref)) {
+        unawaited(showArchiveBatchIntegrityForSelection(context, ref));
+      } else {
+        _notAvailable(context);
+      }
+    case ShortcutAction.deletePermanently:
+      confirmDeleteSelected(context, ref, permanent: true);
+    case ShortcutAction.leftSourcePicker:
+    case ShortcutAction.rightSourcePicker:
+      final target = action == ShortcutAction.leftSourcePicker
+          ? PanelSide.local
+          : PanelSide.remote;
+      ref.read(activePanelProvider.notifier).state = target;
+      ref.read(focusAreaProvider.notifier).state = target == PanelSide.local
+          ? FocusArea.local
+          : FocusArea.remote;
+      onPanelSwitch?.call(target);
+      // The picker belongs to the visible pane header; narrow layouts show
+      // only the active pane, so open it after the switch has been built.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!openPanelSourcePicker(target) && context.mounted) {
+          _notAvailable(context);
+        }
+      });
+    case ShortcutAction.goToRoot:
+    case ShortcutAction.goHome:
+      unawaited(
+        _guarded(
+          context,
+          ref,
+          () => panel.navigateToStorageRoot(
+            home: action == ShortcutAction.goHome,
+          ),
+        ),
+      );
+    case ShortcutAction.openInNewTab:
+    case ShortcutAction.openInOtherNewTab:
+      unawaited(
+        _openCursorInNewTab(
+          context,
+          ref,
+          panel,
+          action == ShortcutAction.openInNewTab
+              ? side
+              : oppositePanelSide(side),
+        ),
+      );
+    case ShortcutAction.closeAllTabs:
+      for (final tab in List.of(panel.tabs)) {
+        // Pinned or locked tabs survive, and so does the active tab.
+        if (tab.id != panel.activeTabId && !tab.isProtected) {
+          panel.closeTab(tab.id);
+        }
+      }
+    case ShortcutAction.tabList:
+      unawaited(showOpenTabsMenu(context, panel));
+    case ShortcutAction.activateTab1:
+    case ShortcutAction.activateTab2:
+    case ShortcutAction.activateTab3:
+    case ShortcutAction.activateTab4:
+    case ShortcutAction.activateTab5:
+    case ShortcutAction.activateTab6:
+    case ShortcutAction.activateTab7:
+    case ShortcutAction.activateTab8:
+    case ShortcutAction.activateTab9:
+    case ShortcutAction.activateLastTab:
+      final tabs = panel.tabs;
+      final index = action == ShortcutAction.activateLastTab
+          ? tabs.length - 1
+          : activateTabShortcutActions.indexOf(action);
+      if (index >= 0 && index < tabs.length) {
+        unawaited(panel.selectTab(tabs[index].id));
+      }
+    case ShortcutAction.deselectAll:
+      panel.clearSelection();
+    case ShortcutAction.selectSameExtension:
+    case ShortcutAction.deselectSameExtension:
+      panel.selectSameExtension(
+        action: action == ShortcutAction.selectSameExtension
+            ? SelectionAction.select
+            : SelectionAction.deselect,
+      );
+    case ShortcutAction.compareDirectories:
+      if (canCompareDirectories(ref)) {
+        compareDirectories(ref);
+      } else {
+        _notAvailable(context);
+      }
+    case ShortcutAction.linkToOtherPanel:
+      unawaited(_linkToOtherPanel(context, ref, panel, side));
+    case ShortcutAction.calculateFolderSizes:
+      panel.calculateAllFolderSizes();
+    case ShortcutAction.openSettings:
+      unawaited(showSettingsDialog(context));
   }
   return KeyEventResult.handled;
+}
+
+PanelSide oppositePanelSide(PanelSide side) =>
+    side == PanelSide.local ? PanelSide.remote : PanelSide.local;
+
+void _notAvailable(BuildContext context) {
+  ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+    SnackBar(
+      content: Text(context.commanderTr('Not available for this selection')),
+      duration: const Duration(seconds: 2),
+    ),
+  );
+}
+
+Future<void> _guarded(
+  BuildContext context,
+  WidgetRef ref,
+  Future<void> Function() action,
+) async {
+  try {
+    await action();
+  } catch (error) {
+    if (context.mounted) {
+      ref.read(errorProvider).addError(error.toString(), cause: error);
+    }
+  }
+}
+
+/// Shift+F4: name a new file in the active folder and open it in the editor.
+Future<void> _newTextFile(
+  BuildContext context,
+  WidgetRef ref,
+  PanelNotifier panel,
+  PanelSide side,
+) async {
+  if (panel.isInArchive || panel.showingSearchResults) {
+    _notAvailable(context);
+    return;
+  }
+  final file = await showCapturedNewTextFileDialog(context, panel);
+  if (file == null || !context.mounted) return;
+  if (ref.read(activePanelProvider) != side) return;
+  if (!identical(panel.cursorItem, file)) panel.setCursorToItem(file);
+  editSelectedFile(context, ref);
+}
+
+/// Shift+F5: copy the cursor item (or the single selected item) in place.
+Future<void> _copyWithinFolder(
+  BuildContext context,
+  WidgetRef ref,
+  PanelNotifier panel,
+  PanelSide side,
+) async {
+  final selection = panel.selection;
+  final file = selection.length == 1
+      ? selection.single
+      : selection.isEmpty
+      ? panel.cursorItem
+      : null;
+  if (file == null ||
+      file.name == '..' ||
+      panel.isInArchive ||
+      file.path == null) {
+    _notAvailable(context);
+    return;
+  }
+  final name = await showCapturedCopyWithinFolderDialog(context, panel, file);
+  if (name != null && context.mounted) {
+    ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+      SnackBar(
+        content: Text(
+          context.commanderTr('Copied "{0}" to "{1}"', [file.name, name]),
+        ),
+      ),
+    );
+  }
+}
+
+List<FileItem> _selectionOrCursor(PanelNotifier panel) =>
+    panel.selection.isNotEmpty
+    ? panel.selection.toList()
+    : [if (panel.cursorItem case final item? when item.name != '..') item];
+
+/// Alt+F5: create an archive from the selection (local files).
+Future<void> _packSelection(
+  BuildContext context,
+  WidgetRef ref,
+  PanelNotifier panel,
+  PanelSide side,
+) async {
+  final files = _selectionOrCursor(panel);
+  if (files.isEmpty || panel.isInArchive) {
+    _notAvailable(context);
+    return;
+  }
+  try {
+    final origin = panel.captureOperationOrigin(files);
+    if (origin.source is! LocalPanelSource) {
+      _notAvailable(context);
+      return;
+    }
+    await showArchiveCreationDialog(
+      context,
+      ref,
+      side,
+      files,
+      sourceOrigin: origin,
+    );
+  } catch (error) {
+    if (context.mounted) {
+      ref.read(errorProvider).addError(error.toString(), cause: error);
+    }
+  }
+}
+
+/// Ctrl+Up / Ctrl+Shift+Up: open the folder under the cursor in a new tab of
+/// [targetSide]. The tab keeps the folder's original storage account.
+Future<void> _openCursorInNewTab(
+  BuildContext context,
+  WidgetRef ref,
+  PanelNotifier panel,
+  PanelSide targetSide,
+) async {
+  final item = panel.cursorItem;
+  if (item == null ||
+      item.name == '..' ||
+      !item.isFolder ||
+      item.path == null ||
+      panel.isInArchive) {
+    _notAvailable(context);
+    return;
+  }
+  await _guarded(context, ref, () async {
+    final origin = panel.captureOperationOrigin([item]);
+    final tab = PanelTab(
+      id: 'new',
+      path: item.path!,
+      storage: origin.storageReference,
+    );
+    await ref.read(panelProvider(targetSide)).restoreTabs([
+      tab.toJson(),
+    ], capturedOrigin: origin);
+  });
+}
+
+/// Ctrl+Shift+F5: symbolic links to the selection in the other pane's folder.
+/// Local storage on macOS and Linux only; Windows needs elevated rights.
+Future<void> _linkToOtherPanel(
+  BuildContext context,
+  WidgetRef ref,
+  PanelNotifier panel,
+  PanelSide side,
+) async {
+  final files = _selectionOrCursor(panel);
+  final other = ref.read(panelProvider(oppositePanelSide(side)));
+  if (kIsWeb ||
+      !(Platform.isMacOS || Platform.isLinux) ||
+      files.isEmpty ||
+      panel.isInArchive ||
+      other.isInArchive ||
+      other.showingSearchResults ||
+      files.any((file) => file.path == null)) {
+    _notAvailable(context);
+    return;
+  }
+  late final PanelFileOrigin origin;
+  late final PanelFileOrigin destination;
+  try {
+    origin = panel.captureOperationOrigin(files);
+    destination = other.captureCurrentOrigin();
+  } catch (_) {
+    _notAvailable(context);
+    return;
+  }
+  if (origin.source is! LocalPanelSource ||
+      destination.source is! LocalPanelSource) {
+    _notAvailable(context);
+    return;
+  }
+  final directory = destination.source.currentPath;
+  if (files.length == 1) {
+    final file = files.single;
+    showCreateLinkDialog(
+      context,
+      ref,
+      side,
+      file,
+      origin,
+      linkPath: p.join(directory, file.name),
+      onCreated: () => unawaited(other.refresh()),
+    );
+    return;
+  }
+  if (!await confirmSymbolicLinks(context, files.length, directory) ||
+      !context.mounted) {
+    return;
+  }
+  await _guarded(context, ref, () async {
+    await withNativeFileAction(
+      ref,
+      origin,
+      [directory, for (final file in files) file.path!],
+      () async {
+        for (final file in files) {
+          await LinkService.createSymlink(
+            file.path!,
+            p.join(directory, file.name),
+          );
+        }
+      },
+    );
+    await other.refresh();
+  });
 }
 
 /// Open the cursor item (folder, archive, or file) in [targetSide]. Archives

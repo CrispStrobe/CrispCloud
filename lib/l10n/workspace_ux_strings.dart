@@ -5,6 +5,11 @@ import 'commander_strings.dart';
 import 'command_entry_strings.dart';
 import 'shortcut_strings.dart';
 import 'path_favorites_strings.dart';
+import 'app_localizations.dart';
+import 'archive_batch_extraction_strings.dart';
+import 'archive_batch_integrity_strings.dart';
+import 'archive_creation_strings.dart';
+import 'browser_menu_strings.dart';
 
 class WorkspaceUxStrings {
   WorkspaceUxStrings(this.context);
@@ -87,6 +92,97 @@ class WorkspaceUxStrings {
       ).text('title'),
       ShortcutAction.multiRename => s.extra('multiRename'),
       ShortcutAction.terminal => context.commanderTr('Toggle Terminal'),
+      ShortcutAction.newTextFile => context.commanderTr('New text file'),
+      ShortcutAction.chooseEditor => s.extra('chooseEditor'),
+      ShortcutAction.copySameFolder => context.commanderTr(
+        'Copy in this folder',
+      ),
+      ShortcutAction.flatView => context.commanderTr('Flat view'),
+      ShortcutAction.flatViewSelected => context.commanderTr(
+        'Flat view of selected folders',
+      ),
+      ShortcutAction.openUnderCursor => context.commanderTr(
+        'Open folder or archive under cursor',
+      ),
+      ShortcutAction.directoryHistory => context.commanderTr(
+        'Directory history',
+      ),
+      ShortcutAction.viewBrief => s.description(37),
+      ShortcutAction.viewFull => s.description(38),
+      ShortcutAction.viewTree => s.description(39),
+      ShortcutAction.mirrorToOtherPanel => context.commanderTr(
+        'Show this folder in the other panel',
+      ),
+      ShortcutAction.packFiles => archiveCreationText(
+        context,
+        'Create archive…',
+      ),
+      ShortcutAction.unpackFiles => archiveBatchExtractionText(
+        context,
+        'Extract selected archives',
+      ),
+      ShortcutAction.testArchives => archiveBatchIntegrityText(
+        context,
+        'Test selected archives',
+      ),
+      ShortcutAction.deletePermanently => context.commanderTr(
+        'Delete permanently',
+      ),
+      ShortcutAction.leftSourcePicker => context.commanderTr(
+        'Choose left panel location',
+      ),
+      ShortcutAction.rightSourcePicker => context.commanderTr(
+        'Choose right panel location',
+      ),
+      ShortcutAction.goToRoot => context.commanderTr('Go to storage root'),
+      ShortcutAction.goHome => context.commanderTr('Go to home folder'),
+      ShortcutAction.openInNewTab => context.commanderTr(
+        'Open folder in new tab',
+      ),
+      ShortcutAction.openInOtherNewTab => context.commanderTr(
+        'Open folder in new tab of other panel',
+      ),
+      ShortcutAction.closeAllTabs => context.commanderTr(
+        'Close all unprotected tabs',
+      ),
+      ShortcutAction.tabList => context.commanderTr('List open tabs'),
+      ShortcutAction.activateTab1 ||
+      ShortcutAction.activateTab2 ||
+      ShortcutAction.activateTab3 ||
+      ShortcutAction.activateTab4 ||
+      ShortcutAction.activateTab5 ||
+      ShortcutAction.activateTab6 ||
+      ShortcutAction.activateTab7 ||
+      ShortcutAction.activateTab8 ||
+      ShortcutAction.activateTab9 => context.commanderTr('Switch to tab {0}', [
+        activateTabShortcutActions.indexOf(action) + 1,
+      ]),
+      ShortcutAction.activateLastTab => context.commanderTr(
+        'Switch to last tab',
+      ),
+      ShortcutAction.deselectAll => context.commanderTr('Deselect all'),
+      ShortcutAction.selectSameExtension => context.commanderTr(
+        'Select same extension',
+      ),
+      ShortcutAction.deselectSameExtension => context.commanderTr(
+        'Deselect same extension',
+      ),
+      ShortcutAction.compareDirectories => BrowserMenuStrings(
+        context,
+      ).text('compareDirectories'),
+      ShortcutAction.linkToOtherPanel => context.commanderTr(
+        'Create symbolic link in other panel',
+      ),
+      ShortcutAction.calculateFolderSizes => context.commanderTr(
+        'Calculate all folder sizes',
+      ),
+      ShortcutAction.openSettings =>
+        (AppLocalizations.of(context) ??
+                lookupAppLocalizations(const Locale('en')))
+            .settings,
+      ShortcutAction.insertCommandDirectory => CommandEntryStrings(
+        context,
+      ).text('insertDirectory'),
     };
   }
 

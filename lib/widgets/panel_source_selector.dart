@@ -14,6 +14,18 @@ import '../providers/panel_source_provider.dart';
 import '../services/panel_source_service.dart';
 import '../services/storage_identity.dart';
 
+final _sourcePickers = <PanelSide, FocusNode>{};
+
+/// Alt+F1 / Alt+F2 (Total Commander): open the left or right pane's location
+/// picker from the keyboard. Returns false when that picker is not shown.
+bool openPanelSourcePicker(PanelSide side) {
+  final context = _sourcePickers[side]?.context;
+  if (context == null || !context.mounted) return false;
+  _sourcePickers[side]!.requestFocus();
+  Actions.maybeInvoke(context, const ActivateIntent());
+  return true;
+}
+
 // ---------------------------------------------------------------------------
 // PanelSourceSelector widget
 // ---------------------------------------------------------------------------
@@ -64,6 +76,7 @@ class PanelSourceSelector extends ConsumerWidget {
         : currentSource;
 
     return _SourceDropdown(
+      side: side,
       current: source,
       currentLabel:
           currentLabel ??
@@ -156,6 +169,7 @@ class _SourceOption {
 // ---------------------------------------------------------------------------
 
 class _SourceDropdown extends StatefulWidget {
+  final PanelSide side;
   final PanelSource? current;
   final String currentLabel;
   final bool currentIsLocal;
@@ -165,6 +179,7 @@ class _SourceDropdown extends StatefulWidget {
   final void Function(_SourceOption entry) onSelect;
 
   const _SourceDropdown({
+    required this.side,
     required this.current,
     required this.currentLabel,
     required this.currentIsLocal,
@@ -181,6 +196,33 @@ class _SourceDropdown extends StatefulWidget {
 class _SourceDropdownState extends State<_SourceDropdown> {
   List<_SourceOption>? _menuEntries;
   void Function(_SourceOption)? _menuSelect;
+  final _focus = FocusNode(debugLabel: 'panel-source-picker');
+
+  @override
+  void initState() {
+    super.initState();
+    _sourcePickers[widget.side] = _focus;
+  }
+
+  @override
+  void didUpdateWidget(covariant _SourceDropdown oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.side != widget.side) {
+      if (_sourcePickers[oldWidget.side] == _focus) {
+        _sourcePickers.remove(oldWidget.side);
+      }
+      _sourcePickers[widget.side] = _focus;
+    }
+  }
+
+  @override
+  void dispose() {
+    if (_sourcePickers[widget.side] == _focus) {
+      _sourcePickers.remove(widget.side);
+    }
+    _focus.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -322,6 +364,7 @@ class _SourceDropdownState extends State<_SourceDropdown> {
           child: SizedBox(
             width: width,
             child: DropdownButton<String>(
+              focusNode: _focus,
               value: currentEntry.key,
               underline: const SizedBox.shrink(),
               icon: const Icon(Icons.arrow_drop_down, size: 18),

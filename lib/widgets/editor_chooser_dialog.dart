@@ -13,7 +13,7 @@ import 'file_context_menu.dart' show openListedFileWithSystemEditor;
 import 'file_editor_dialog.dart' show showFileEditorDialog;
 import 'hex_editor_dialog.dart' show showHexEditorDialog;
 
-/// F4 opens the default editor. Shift+F4 (or the context menu) opens this
+/// F4 opens the default editor. Ctrl+Shift+F4 (or the context menu) opens this
 /// chooser so the same file can be inspected in text/code or raw hex.
 Future<void> showEditorChooser(
   BuildContext context,

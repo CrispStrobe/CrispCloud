@@ -68,7 +68,7 @@ class _KeyboardShortcutDialogState
     final l = AppLocalizations.of(context)!;
     final actions = shortcutSettingsActions
         .where(
-          (action) => '${s.action(action)} ${service.browserDisplay(action)}'
+          (action) => '${s.action(action)} ${service.browserDisplayAll(action)}'
               .toLowerCase()
               .contains(_query.toLowerCase()),
         )
@@ -100,7 +100,7 @@ class _KeyboardShortcutDialogState
                     subtitle: Text(
                       commandEntryShortcutActions.contains(action)
                           ? '${service.browserDisplay(action)} · ${CommandEntryStrings(context).text('shortcutScope')}'
-                          : service.browserDisplay(action),
+                          : service.browserDisplayAll(action),
                       textDirection: TextDirection.ltr,
                     ),
                     onTap: () => _record(action),

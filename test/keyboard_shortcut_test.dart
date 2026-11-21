@@ -4,6 +4,8 @@
 
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, debugDefaultTargetPlatformOverride;
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -900,6 +902,628 @@ void main() {
       await service.load();
       expect(service.getBinding(ShortcutAction.refresh).key, 'F9');
       expect(service.isCustomized(ShortcutAction.rename), isFalse);
+    });
+  });
+
+  // =========================================================================
+  // Total Commander / Double Commander parity (2026-11)
+  // =========================================================================
+
+  group('Total Commander / Double Commander defaults', () {
+    tearDown(() => debugDefaultTargetPlatformOverride = null);
+
+    ShortcutAction? press(
+      KeyboardShortcutService service,
+      LogicalKeyboardKey key, {
+      bool ctrl = false,
+      bool shift = false,
+      bool alt = false,
+      bool meta = false,
+    }) => service.resolveBrowser(
+      _keyDown(key),
+      isCtrl: ctrl,
+      isShift: shift,
+      isAlt: alt,
+      isMeta: meta,
+    );
+
+    test('changed and added chords resolve to their new actions', () {
+      debugDefaultTargetPlatformOverride = TargetPlatform.windows;
+      final s = _freshService();
+      final expectations =
+          <(LogicalKeyboardKey, bool, bool, bool, ShortcutAction)>[
+            // key, ctrl, shift, alt → action
+            (
+              LogicalKeyboardKey.f4,
+              false,
+              true,
+              false,
+              ShortcutAction.newTextFile,
+            ),
+            (
+              LogicalKeyboardKey.f4,
+              true,
+              true,
+              false,
+              ShortcutAction.chooseEditor,
+            ),
+            (
+              LogicalKeyboardKey.f5,
+              false,
+              true,
+              false,
+              ShortcutAction.copySameFolder,
+            ),
+            (
+              LogicalKeyboardKey.keyB,
+              true,
+              false,
+              false,
+              ShortcutAction.flatView,
+            ),
+            (
+              LogicalKeyboardKey.keyB,
+              true,
+              true,
+              false,
+              ShortcutAction.flatViewSelected,
+            ),
+            (
+              LogicalKeyboardKey.keyD,
+              true,
+              false,
+              false,
+              ShortcutAction.pathFavorites,
+            ),
+            (
+              LogicalKeyboardKey.keyD,
+              true,
+              true,
+              false,
+              ShortcutAction.bookmark,
+            ),
+            (LogicalKeyboardKey.pageUp, true, false, false, ShortcutAction.up),
+            (
+              LogicalKeyboardKey.pageDown,
+              true,
+              false,
+              false,
+              ShortcutAction.openUnderCursor,
+            ),
+            (
+              LogicalKeyboardKey.keyH,
+              true,
+              false,
+              false,
+              ShortcutAction.directoryHistory,
+            ),
+            (
+              LogicalKeyboardKey.arrowDown,
+              false,
+              false,
+              true,
+              ShortcutAction.directoryHistory,
+            ),
+            (
+              LogicalKeyboardKey.keyM,
+              true,
+              false,
+              false,
+              ShortcutAction.multiRename,
+            ),
+            (
+              LogicalKeyboardKey.digit1,
+              true,
+              false,
+              false,
+              ShortcutAction.viewBrief,
+            ),
+            (
+              LogicalKeyboardKey.f1,
+              true,
+              false,
+              false,
+              ShortcutAction.viewBrief,
+            ),
+            (
+              LogicalKeyboardKey.digit2,
+              true,
+              false,
+              false,
+              ShortcutAction.viewFull,
+            ),
+            (
+              LogicalKeyboardKey.f2,
+              true,
+              false,
+              false,
+              ShortcutAction.viewFull,
+            ),
+            (
+              LogicalKeyboardKey.digit3,
+              true,
+              false,
+              false,
+              ShortcutAction.viewTree,
+            ),
+            (
+              LogicalKeyboardKey.f8,
+              true,
+              false,
+              false,
+              ShortcutAction.viewTree,
+            ),
+            (
+              LogicalKeyboardKey.equal,
+              true,
+              false,
+              false,
+              ShortcutAction.mirrorToOtherPanel,
+            ),
+            (
+              LogicalKeyboardKey.keyZ,
+              false,
+              false,
+              true,
+              ShortcutAction.mirrorToOtherPanel,
+            ),
+            (
+              LogicalKeyboardKey.f5,
+              false,
+              false,
+              true,
+              ShortcutAction.packFiles,
+            ),
+            (
+              LogicalKeyboardKey.f9,
+              false,
+              false,
+              true,
+              ShortcutAction.unpackFiles,
+            ),
+            (
+              LogicalKeyboardKey.f9,
+              false,
+              true,
+              true,
+              ShortcutAction.testArchives,
+            ),
+            (
+              LogicalKeyboardKey.f8,
+              false,
+              true,
+              false,
+              ShortcutAction.deletePermanently,
+            ),
+            (
+              LogicalKeyboardKey.delete,
+              false,
+              true,
+              false,
+              ShortcutAction.deletePermanently,
+            ),
+            (LogicalKeyboardKey.f8, false, false, false, ShortcutAction.delete),
+            (
+              LogicalKeyboardKey.delete,
+              false,
+              false,
+              false,
+              ShortcutAction.delete,
+            ),
+            (
+              LogicalKeyboardKey.f1,
+              false,
+              false,
+              true,
+              ShortcutAction.leftSourcePicker,
+            ),
+            (
+              LogicalKeyboardKey.f2,
+              false,
+              false,
+              true,
+              ShortcutAction.rightSourcePicker,
+            ),
+            (
+              LogicalKeyboardKey.backslash,
+              true,
+              false,
+              false,
+              ShortcutAction.goToRoot,
+            ),
+            (LogicalKeyboardKey.home, true, true, false, ShortcutAction.goHome),
+            (
+              LogicalKeyboardKey.arrowUp,
+              true,
+              false,
+              false,
+              ShortcutAction.openInNewTab,
+            ),
+            (
+              LogicalKeyboardKey.arrowUp,
+              true,
+              true,
+              false,
+              ShortcutAction.openInOtherNewTab,
+            ),
+            (
+              LogicalKeyboardKey.keyW,
+              true,
+              true,
+              false,
+              ShortcutAction.closeAllTabs,
+            ),
+            (
+              LogicalKeyboardKey.keyA,
+              true,
+              true,
+              false,
+              ShortcutAction.tabList,
+            ),
+            (
+              LogicalKeyboardKey.digit1,
+              false,
+              false,
+              true,
+              ShortcutAction.activateTab1,
+            ),
+            (
+              LogicalKeyboardKey.digit9,
+              false,
+              false,
+              true,
+              ShortcutAction.activateTab9,
+            ),
+            (
+              LogicalKeyboardKey.digit0,
+              false,
+              false,
+              true,
+              ShortcutAction.activateLastTab,
+            ),
+            (
+              LogicalKeyboardKey.numpadAdd,
+              true,
+              false,
+              false,
+              ShortcutAction.selectAll,
+            ),
+            (
+              LogicalKeyboardKey.numpadSubtract,
+              true,
+              false,
+              false,
+              ShortcutAction.deselectAll,
+            ),
+            (
+              LogicalKeyboardKey.numpadAdd,
+              false,
+              false,
+              true,
+              ShortcutAction.selectSameExtension,
+            ),
+            (
+              LogicalKeyboardKey.numpadSubtract,
+              false,
+              false,
+              true,
+              ShortcutAction.deselectSameExtension,
+            ),
+            (
+              LogicalKeyboardKey.keyQ,
+              true,
+              false,
+              false,
+              ShortcutAction.togglePreview,
+            ),
+            (
+              LogicalKeyboardKey.keyP,
+              true,
+              false,
+              true,
+              ShortcutAction.togglePreview,
+            ),
+            (
+              LogicalKeyboardKey.keyS,
+              true,
+              false,
+              false,
+              ShortcutAction.filter,
+            ),
+            (
+              LogicalKeyboardKey.keyF,
+              true,
+              false,
+              false,
+              ShortcutAction.filter,
+            ),
+            (
+              LogicalKeyboardKey.f2,
+              false,
+              true,
+              false,
+              ShortcutAction.compareDirectories,
+            ),
+            (
+              LogicalKeyboardKey.f5,
+              true,
+              true,
+              false,
+              ShortcutAction.linkToOtherPanel,
+            ),
+            (
+              LogicalKeyboardKey.enter,
+              false,
+              true,
+              true,
+              ShortcutAction.calculateFolderSizes,
+            ),
+            (
+              LogicalKeyboardKey.comma,
+              true,
+              false,
+              false,
+              ShortcutAction.openSettings,
+            ),
+            (
+              LogicalKeyboardKey.keyT,
+              true,
+              true,
+              false,
+              ShortcutAction.reopenClosedTab,
+            ),
+            (
+              LogicalKeyboardKey.keyL,
+              true,
+              false,
+              false,
+              ShortcutAction.goToFolder,
+            ),
+            (LogicalKeyboardKey.keyZ, true, false, false, ShortcutAction.undo),
+            (
+              LogicalKeyboardKey.tab,
+              true,
+              false,
+              false,
+              ShortcutAction.nextTab,
+            ),
+            (LogicalKeyboardKey.tab, true, true, false, ShortcutAction.prevTab),
+            (
+              LogicalKeyboardKey.period,
+              true,
+              false,
+              false,
+              ShortcutAction.toggleHidden,
+            ),
+            (
+              LogicalKeyboardKey.period,
+              true,
+              true,
+              false,
+              ShortcutAction.toggleHidden,
+            ),
+          ];
+      for (final (key, ctrl, shift, alt, action) in expectations) {
+        expect(
+          press(s, key, ctrl: ctrl, shift: shift, alt: alt),
+          action,
+          reason:
+              '${ctrl ? 'Ctrl+' : ''}${alt ? 'Alt+' : ''}'
+              '${shift ? 'Shift+' : ''}${key.keyLabel}',
+        );
+      }
+      // Ctrl+P belongs to command entry, never to the file browser.
+      expect(press(s, LogicalKeyboardKey.keyP, ctrl: true), isNull);
+      expect(
+        s.resolveCommandEntry(
+          _keyDown(LogicalKeyboardKey.keyP),
+          isCtrl: true,
+          isShift: false,
+          isAlt: false,
+          isMeta: false,
+        ),
+        ShortcutAction.insertCommandDirectory,
+      );
+    });
+
+    test('removed defaults no longer reach their former actions', () {
+      final s = _freshService();
+      expect(
+        press(s, LogicalKeyboardKey.pageDown, ctrl: true),
+        isNot(ShortcutAction.nextTab),
+      );
+      expect(
+        press(s, LogicalKeyboardKey.pageUp, ctrl: true),
+        isNot(ShortcutAction.prevTab),
+      );
+      expect(
+        press(s, LogicalKeyboardKey.keyH, ctrl: true),
+        isNot(ShortcutAction.toggleHidden),
+      );
+      expect(
+        press(s, LogicalKeyboardKey.f5, shift: true),
+        isNot(ShortcutAction.copyWithOptions),
+      );
+      expect(
+        press(s, LogicalKeyboardKey.f4, shift: true),
+        isNot(ShortcutAction.edit),
+      );
+    });
+
+    test('a saved custom binding for a changed action keeps working', () async {
+      SharedPreferences.setMockInitialValues({
+        'keyboard_shortcuts': '{"bookmark":{"key":"B","ctrl":true},"nextTab":{"key":"Page Down","ctrl":true}}',
+      });
+      final s = _freshService();
+      await s.load();
+      expect(
+        press(s, LogicalKeyboardKey.keyB, ctrl: true),
+        ShortcutAction.bookmark,
+      );
+      expect(
+        press(s, LogicalKeyboardKey.pageDown, ctrl: true),
+        ShortcutAction.nextTab,
+      );
+    });
+
+    for (final platform in [
+      TargetPlatform.macOS,
+      TargetPlatform.windows,
+      TargetPlatform.linux,
+    ]) {
+      test(
+        'no two browser actions share a default chord on ${platform.name}',
+        () {
+          debugDefaultTargetPlatformOverride = platform;
+          final s = _freshService();
+          final owners = <String, ShortcutAction>{};
+          String chord(ShortcutBinding b) =>
+              '${b.ctrl}|${b.meta}|${b.shift}|${b.alt}|${b.key.toLowerCase()}';
+          for (final action in browserShortcutActions) {
+            final chords = <String>{};
+            for (final binding in s.defaultBindings(action)) {
+              chords.add(chord(binding));
+              if (KeyboardShortcutService.acceptsCommand(binding)) {
+                chords.add(
+                  chord(
+                    ShortcutBinding(
+                      key: binding.key,
+                      meta: true,
+                      shift: binding.shift,
+                      alt: binding.alt,
+                    ),
+                  ),
+                );
+              }
+            }
+            for (final value in chords) {
+              expect(
+                owners[value],
+                isNull,
+                reason:
+                    '$value is bound to ${owners[value]} and ${action.name}',
+              );
+              owners[value] = action;
+            }
+          }
+        },
+      );
+    }
+
+    test('macOS keeps Cmd+H, Cmd+M and Cmd+Q for the system', () {
+      debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+      final s = _freshService();
+      for (final key in [
+        LogicalKeyboardKey.keyH,
+        LogicalKeyboardKey.keyM,
+        LogicalKeyboardKey.keyQ,
+      ]) {
+        expect(press(s, key, meta: true), isNull, reason: key.keyLabel);
+      }
+      // The physical Control chords still work.
+      expect(
+        press(s, LogicalKeyboardKey.keyH, ctrl: true),
+        ShortcutAction.directoryHistory,
+      );
+      expect(
+        press(s, LogicalKeyboardKey.keyM, ctrl: true),
+        ShortcutAction.multiRename,
+      );
+      expect(
+        press(s, LogicalKeyboardKey.keyM, meta: true, shift: true),
+        ShortcutAction.multiRename,
+      );
+      // Ctrl+Q quick view is Windows/Linux only.
+      expect(press(s, LogicalKeyboardKey.keyQ, ctrl: true), isNull);
+      // Ctrl+Up does not shadow Finder's Cmd+Up.
+      expect(
+        press(s, LogicalKeyboardKey.arrowUp, meta: true),
+        ShortcutAction.up,
+      );
+      expect(
+        press(s, LogicalKeyboardKey.arrowUp, ctrl: true),
+        ShortcutAction.openInNewTab,
+      );
+    });
+
+    test('macOS Finder-style Command extras', () {
+      debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+      final s = _freshService();
+      for (final (key, shift, action)
+          in <(LogicalKeyboardKey, bool, ShortcutAction)>[
+            (LogicalKeyboardKey.bracketLeft, false, ShortcutAction.back),
+            (LogicalKeyboardKey.bracketRight, false, ShortcutAction.forward),
+            (LogicalKeyboardKey.arrowUp, false, ShortcutAction.up),
+            (
+              LogicalKeyboardKey.arrowDown,
+              false,
+              ShortcutAction.openUnderCursor,
+            ),
+            (LogicalKeyboardKey.comma, false, ShortcutAction.openSettings),
+            (LogicalKeyboardKey.backspace, false, ShortcutAction.delete),
+            (LogicalKeyboardKey.keyG, true, ShortcutAction.goToFolder),
+            (LogicalKeyboardKey.keyN, true, ShortcutAction.newFolder),
+            (LogicalKeyboardKey.keyB, false, ShortcutAction.flatView),
+            (LogicalKeyboardKey.keyD, false, ShortcutAction.pathFavorites),
+            (LogicalKeyboardKey.keyD, true, ShortcutAction.bookmark),
+          ]) {
+        expect(
+          press(s, key, meta: true, shift: shift),
+          action,
+          reason: key.keyLabel,
+        );
+      }
+      // The Finder extras are macOS only.
+      debugDefaultTargetPlatformOverride = TargetPlatform.windows;
+      expect(press(s, LogicalKeyboardKey.bracketLeft, meta: true), isNull);
+      expect(
+        press(s, LogicalKeyboardKey.keyG, meta: true, shift: true),
+        isNull,
+      );
+    });
+
+    test('macOS displays the working chord', () {
+      debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+      final s = _freshService();
+      expect(s.browserDisplay(ShortcutAction.multiRename), '⇧⌘M');
+      expect(s.browserDisplayAll(ShortcutAction.multiRename), '⇧⌘M / ⌃M');
+      expect(s.browserDisplay(ShortcutAction.directoryHistory), '⌃H');
+      expect(s.browserDisplay(ShortcutAction.openInNewTab), '⌃↑');
+      expect(s.browserDisplay(ShortcutAction.pathFavorites), '⌘D');
+      expect(s.browserDisplayAll(ShortcutAction.up), '⌫ / ⌘PgUp / ⌘↑');
+      expect(
+        s.browserDisplayAll(ShortcutAction.togglePreview),
+        isNot(contains('Q')),
+      );
+      debugDefaultTargetPlatformOverride = TargetPlatform.windows;
+      expect(s.browserDisplay(ShortcutAction.multiRename), 'Ctrl+M');
+      expect(
+        s.browserDisplayAll(ShortcutAction.togglePreview),
+        'Ctrl+Alt+P / Ctrl+Q',
+      );
+      expect(
+        s.browserDisplayAll(ShortcutAction.deletePermanently),
+        'Shift+F8 / Shift+Del',
+      );
+    });
+
+    test('recording Cmd+H on macOS does not report Ctrl+H as a conflict', () {
+      debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+      final s = _freshService();
+      expect(
+        s.browserConflicts(
+          ShortcutAction.refresh,
+          const ShortcutBinding(key: 'H', meta: true),
+        ),
+        isEmpty,
+      );
+      expect(
+        s.browserConflicts(
+          ShortcutAction.refresh,
+          const ShortcutBinding(key: 'B', meta: true),
+        ),
+        [ShortcutAction.flatView],
+      );
     });
   });
 }
