@@ -148,6 +148,17 @@ const _values = <String, List<String>>{
     '선택한 전체 경로 삽입',
     'إدراج المسارات الكاملة المحددة',
   ],
+  'insertDirectory': [
+    'Insert current folder path',
+    'Aktuellen Ordnerpfad einfügen',
+    'Insérer le chemin du dossier actuel',
+    'Insertar la ruta de la carpeta actual',
+    'Inserir o caminho da pasta atual',
+    '插入当前文件夹路径',
+    '現在のフォルダーのパスを挿入',
+    '현재 폴더 경로 삽입',
+    'إدراج مسار المجلد الحالي',
+  ],
   'shortcutScope': [
     'Command entry only',
     'Nur in der Befehlseingabe',

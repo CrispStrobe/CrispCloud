@@ -63,13 +63,70 @@ enum ShortcutAction {
   pathFavorites,
   multiRename,
   terminal,
+  // Total Commander / Double Commander parity (2026-11). Appended so saved
+  // bindings, which are keyed by action name, keep their meaning.
+  newTextFile,
+  chooseEditor,
+  copySameFolder,
+  flatView,
+  flatViewSelected,
+  openUnderCursor,
+  directoryHistory,
+  viewBrief,
+  viewFull,
+  viewTree,
+  mirrorToOtherPanel,
+  packFiles,
+  unpackFiles,
+  testArchives,
+  deletePermanently,
+  leftSourcePicker,
+  rightSourcePicker,
+  goToRoot,
+  goHome,
+  openInNewTab,
+  openInOtherNewTab,
+  closeAllTabs,
+  tabList,
+  activateTab1,
+  activateTab2,
+  activateTab3,
+  activateTab4,
+  activateTab5,
+  activateTab6,
+  activateTab7,
+  activateTab8,
+  activateTab9,
+  activateLastTab,
+  deselectAll,
+  selectSameExtension,
+  deselectSameExtension,
+  compareDirectories,
+  linkToOtherPanel,
+  calculateFolderSizes,
+  openSettings,
+  insertCommandDirectory,
 }
+
+/// Alt+1…Alt+9 activate tab N (Total Commander); Alt+0 the last tab.
+const activateTabShortcutActions = [
+  ShortcutAction.activateTab1,
+  ShortcutAction.activateTab2,
+  ShortcutAction.activateTab3,
+  ShortcutAction.activateTab4,
+  ShortcutAction.activateTab5,
+  ShortcutAction.activateTab6,
+  ShortcutAction.activateTab7,
+  ShortcutAction.activateTab8,
+  ShortcutAction.activateTab9,
+];
 
 /// Redo is owned by individual editors. File operations only advertise actions
 /// for which the browser has an actual implementation.
 const commandEntryShortcutActions = [
   ShortcutAction.insertCommandFilename,
   ShortcutAction.insertCommandPath,
+  ShortcutAction.insertCommandDirectory,
 ];
 
 final browserShortcutActions = ShortcutAction.values
@@ -202,6 +259,26 @@ class ShortcutBinding {
         return 'Tab';
       case 'enter':
         return '↵';
+      case 'arrow up':
+        return '↑';
+      case 'arrow down':
+        return '↓';
+      case 'arrow left':
+        return '←';
+      case 'arrow right':
+        return '→';
+      case 'page up':
+        return 'PgUp';
+      case 'page down':
+        return 'PgDn';
+      case 'numpad add':
+        return 'Num +';
+      case 'numpad subtract':
+        return 'Num -';
+      case 'numpad multiply':
+        return 'Num *';
+      case 'numpad divide':
+        return 'Num /';
       default:
         // F-keys and single letters: capitalise first letter only.
         return raw.length == 1 ? raw.toUpperCase() : raw;
@@ -350,32 +427,244 @@ class KeyboardShortcutService {
     ),
     ShortcutAction.sortByDate: const ShortcutBinding(key: 'F5', ctrl: true),
     ShortcutAction.sortBySize: const ShortcutBinding(key: 'F6', ctrl: true),
-    ShortcutAction.bookmark: const ShortcutBinding(key: 'B', ctrl: true),
-    ShortcutAction.pathFavorites: const ShortcutBinding(
+    // Changed for TC/DC parity: bookmark was Ctrl+B (now flat view) and the
+    // directory hotlist was Ctrl+Shift+B. Saved custom bindings still win.
+    ShortcutAction.bookmark: const ShortcutBinding(
+      key: 'D',
+      ctrl: true,
+      shift: true,
+    ),
+    ShortcutAction.pathFavorites: const ShortcutBinding(key: 'D', ctrl: true),
+    // Control-only: Cmd+M is the macOS Minimize command (see _macDefaults).
+    ShortcutAction.multiRename: const ShortcutBinding(key: 'M', ctrl: true),
+    // Shift+F4 used to choose an editor; it now creates a file as in TC/DC.
+    ShortcutAction.newTextFile: const ShortcutBinding(key: 'F4', shift: true),
+    ShortcutAction.chooseEditor: const ShortcutBinding(
+      key: 'F4',
+      ctrl: true,
+      shift: true,
+    ),
+    // Shift+F5 used to be an alias of F5; it now copies in the same folder.
+    ShortcutAction.copySameFolder: const ShortcutBinding(
+      key: 'F5',
+      shift: true,
+    ),
+    ShortcutAction.flatView: const ShortcutBinding(key: 'B', ctrl: true),
+    ShortcutAction.flatViewSelected: const ShortcutBinding(
       key: 'B',
       ctrl: true,
       shift: true,
     ),
-    ShortcutAction.multiRename: const ShortcutBinding(key: 'M', ctrl: true),
+    // Ctrl+PgUp / Ctrl+PgDn used to switch tabs; tabs keep Ctrl+(Shift+)Tab.
+    ShortcutAction.openUnderCursor: ShortcutBinding(
+      key: LogicalKeyboardKey.pageDown.keyLabel,
+      ctrl: true,
+    ),
+    // Control-only on every platform: Cmd+H hides the app on macOS. Ctrl+H
+    // used to toggle hidden files, which keep Ctrl+. and Ctrl+Shift+.
+    ShortcutAction.directoryHistory: const ShortcutBinding(
+      key: 'H',
+      ctrl: true,
+    ),
+    ShortcutAction.viewBrief: const ShortcutBinding(key: '1', ctrl: true),
+    ShortcutAction.viewFull: const ShortcutBinding(key: '2', ctrl: true),
+    ShortcutAction.viewTree: const ShortcutBinding(key: '3', ctrl: true),
+    ShortcutAction.mirrorToOtherPanel: const ShortcutBinding(
+      key: '=',
+      ctrl: true,
+    ),
+    ShortcutAction.packFiles: const ShortcutBinding(key: 'F5', alt: true),
+    ShortcutAction.unpackFiles: const ShortcutBinding(key: 'F9', alt: true),
+    ShortcutAction.testArchives: const ShortcutBinding(
+      key: 'F9',
+      alt: true,
+      shift: true,
+    ),
+    ShortcutAction.deletePermanently: const ShortcutBinding(
+      key: 'F8',
+      shift: true,
+    ),
+    ShortcutAction.leftSourcePicker: const ShortcutBinding(
+      key: 'F1',
+      alt: true,
+    ),
+    ShortcutAction.rightSourcePicker: const ShortcutBinding(
+      key: 'F2',
+      alt: true,
+    ),
+    ShortcutAction.goToRoot: ShortcutBinding(
+      key: LogicalKeyboardKey.backslash.keyLabel,
+      ctrl: true,
+    ),
+    ShortcutAction.goHome: ShortcutBinding(
+      key: LogicalKeyboardKey.home.keyLabel,
+      ctrl: true,
+      shift: true,
+    ),
+    // Control-only: Cmd+Up is "enclosing folder" on macOS.
+    ShortcutAction.openInNewTab: ShortcutBinding(
+      key: LogicalKeyboardKey.arrowUp.keyLabel,
+      ctrl: true,
+    ),
+    ShortcutAction.openInOtherNewTab: ShortcutBinding(
+      key: LogicalKeyboardKey.arrowUp.keyLabel,
+      ctrl: true,
+      shift: true,
+    ),
+    ShortcutAction.closeAllTabs: const ShortcutBinding(
+      key: 'W',
+      ctrl: true,
+      shift: true,
+    ),
+    ShortcutAction.tabList: const ShortcutBinding(
+      key: 'A',
+      ctrl: true,
+      shift: true,
+    ),
+    for (var i = 0; i < activateTabShortcutActions.length; i++)
+      activateTabShortcutActions[i]: ShortcutBinding(
+        key: '${i + 1}',
+        alt: true,
+      ),
+    ShortcutAction.activateLastTab: const ShortcutBinding(key: '0', alt: true),
+    ShortcutAction.deselectAll: ShortcutBinding(
+      key: LogicalKeyboardKey.numpadSubtract.keyLabel,
+      ctrl: true,
+    ),
+    ShortcutAction.selectSameExtension: ShortcutBinding(
+      key: LogicalKeyboardKey.numpadAdd.keyLabel,
+      alt: true,
+    ),
+    ShortcutAction.deselectSameExtension: ShortcutBinding(
+      key: LogicalKeyboardKey.numpadSubtract.keyLabel,
+      alt: true,
+    ),
+    ShortcutAction.compareDirectories: const ShortcutBinding(
+      key: 'F2',
+      shift: true,
+    ),
+    ShortcutAction.linkToOtherPanel: const ShortcutBinding(
+      key: 'F5',
+      ctrl: true,
+      shift: true,
+    ),
+    ShortcutAction.calculateFolderSizes: const ShortcutBinding(
+      key: 'Enter',
+      alt: true,
+      shift: true,
+    ),
+    ShortcutAction.openSettings: const ShortcutBinding(key: ',', ctrl: true),
+    // Command-entry scope (like Ctrl+Enter): literal Control on every system.
+    ShortcutAction.insertCommandDirectory: const ShortcutBinding(
+      key: 'P',
+      ctrl: true,
+    ),
   };
+
+  static bool get _isMac =>
+      defaultTargetPlatform == TargetPlatform.macOS ||
+      defaultTargetPlatform == TargetPlatform.iOS;
+
+  /// macOS replacements for defaults whose Command form belongs to the system.
+  static final Map<ShortcutAction, ShortcutBinding> _macDefaults = {
+    // Cmd+M minimizes; Cmd+Shift+M is the working default, Ctrl+M an alias.
+    ShortcutAction.multiRename: const ShortcutBinding(
+      key: 'M',
+      meta: true,
+      shift: true,
+    ),
+  };
+
+  /// Default Control bindings that never also accept Command. Cmd+H, Cmd+M and
+  /// Cmd+Q stay with macOS; Ctrl+Up must not shadow Finder's Cmd+Up.
+  static final Set<ShortcutBinding> _controlOnly = {
+    const ShortcutBinding(key: 'H', ctrl: true),
+    const ShortcutBinding(key: 'M', ctrl: true),
+    const ShortcutBinding(key: 'Q', ctrl: true),
+    ShortcutBinding(key: LogicalKeyboardKey.arrowUp.keyLabel, ctrl: true),
+    ShortcutBinding(
+      key: LogicalKeyboardKey.arrowUp.keyLabel,
+      ctrl: true,
+      shift: true,
+    ),
+  };
+
+  /// Whether a default Control binding also accepts Command (and displays as
+  /// Command on macOS).
+  static bool acceptsCommand(ShortcutBinding binding) =>
+      binding.ctrl && !binding.meta && !_controlOnly.contains(binding);
+
+  static ShortcutBinding _default(ShortcutAction action) =>
+      (_isMac ? _macDefaults[action] : null) ?? _defaults[action]!;
 
   /// Alternate bindings for the same command share conflict detection and
   /// customization rules. A custom binding replaces all defaults for its action.
-  static final Map<ShortcutAction, List<ShortcutBinding>> _browserAliases = {
-    ShortcutAction.newFolder: [const ShortcutBinding(key: 'N', ctrl: true)],
-    ShortcutAction.goToFolder: [const ShortcutBinding(key: 'L', ctrl: true)],
-    ShortcutAction.nextTab: [
-      ShortcutBinding(key: LogicalKeyboardKey.pageDown.keyLabel, ctrl: true),
+  ///
+  /// Removed defaults (2026-11, TC/DC parity): Ctrl+PgDn/PgUp for next/previous
+  /// tab, Ctrl+H for hidden files and Shift+F5 for copy. Bindings that users
+  /// recorded themselves are persisted separately and are unaffected.
+  static Map<ShortcutAction, List<ShortcutBinding>> get _browserAliases => {
+    ShortcutAction.newFolder: [
+      const ShortcutBinding(key: 'N', ctrl: true),
+      if (_isMac) const ShortcutBinding(key: 'N', meta: true, shift: true),
     ],
-    ShortcutAction.prevTab: [
+    ShortcutAction.goToFolder: [
+      const ShortcutBinding(key: 'L', ctrl: true),
+      if (_isMac) const ShortcutBinding(key: 'G', meta: true, shift: true),
+    ],
+    // Cmd+Shift+. is Finder's own toggle for hidden files.
+    ShortcutAction.toggleHidden: [
+      const ShortcutBinding(key: '.', ctrl: true, shift: true),
+    ],
+    ShortcutAction.delete: [
+      const ShortcutBinding(key: 'Delete'),
+      if (_isMac) const ShortcutBinding(key: 'Backspace', meta: true),
+    ],
+    ShortcutAction.deletePermanently: [
+      const ShortcutBinding(key: 'Delete', shift: true),
+    ],
+    ShortcutAction.up: [
       ShortcutBinding(key: LogicalKeyboardKey.pageUp.keyLabel, ctrl: true),
+      if (_isMac)
+        ShortcutBinding(key: LogicalKeyboardKey.arrowUp.keyLabel, meta: true),
     ],
-    ShortcutAction.toggleHidden: [const ShortcutBinding(key: 'H', ctrl: true)],
-    ShortcutAction.delete: [const ShortcutBinding(key: 'Delete')],
-    ShortcutAction.copyWithOptions: [
-      const ShortcutBinding(key: 'F5', shift: true),
+    ShortcutAction.openUnderCursor: [
+      if (_isMac)
+        ShortcutBinding(key: LogicalKeyboardKey.arrowDown.keyLabel, meta: true),
+    ],
+    ShortcutAction.back: [
+      if (_isMac) const ShortcutBinding(key: '[', meta: true),
+    ],
+    ShortcutAction.forward: [
+      if (_isMac) const ShortcutBinding(key: ']', meta: true),
+    ],
+    ShortcutAction.directoryHistory: [
+      ShortcutBinding(key: LogicalKeyboardKey.arrowDown.keyLabel, alt: true),
+    ],
+    ShortcutAction.viewBrief: [const ShortcutBinding(key: 'F1', ctrl: true)],
+    ShortcutAction.viewFull: [const ShortcutBinding(key: 'F2', ctrl: true)],
+    ShortcutAction.viewTree: [const ShortcutBinding(key: 'F8', ctrl: true)],
+    ShortcutAction.mirrorToOtherPanel: [
+      const ShortcutBinding(key: 'Z', alt: true),
+    ],
+    ShortcutAction.selectAll: [
+      ShortcutBinding(key: LogicalKeyboardKey.numpadAdd.keyLabel, ctrl: true),
+    ],
+    // Cmd+Q quits on macOS; Ctrl+Q quick view is a Windows/Linux habit.
+    ShortcutAction.togglePreview: [
+      if (!_isMac) const ShortcutBinding(key: 'Q', ctrl: true),
+    ],
+    ShortcutAction.filter: [const ShortcutBinding(key: 'S', ctrl: true)],
+    ShortcutAction.multiRename: [
+      if (_isMac) const ShortcutBinding(key: 'M', ctrl: true),
     ],
   };
+
+  /// Every default binding of [action] (primary first), ignoring custom ones.
+  List<ShortcutBinding> defaultBindings(ShortcutAction action) => [
+    _default(action),
+    ...?_browserAliases[action],
+  ];
 
   /// Custom bindings loaded from / persisted to SharedPreferences.
   final Map<ShortcutAction, ShortcutBinding> _custom = {};
@@ -422,12 +711,12 @@ class KeyboardShortcutService {
 
   /// Returns all current bindings (custom overrides merged over defaults).
   Map<ShortcutAction, ShortcutBinding> getBindings() {
-    return {..._defaults, ..._custom};
+    return {..._defaults, if (_isMac) ..._macDefaults, ..._custom};
   }
 
   /// Returns the current binding for [action].
   ShortcutBinding getBinding(ShortcutAction action) =>
-      _custom[action] ?? _defaults[action]!;
+      _custom[action] ?? _default(action);
 
   /// Persists [binding] for [action].
   /// Throws [ArgumentError] when [binding] is invalid (empty key).
@@ -577,8 +866,7 @@ class KeyboardShortcutService {
             if (existing == binding) return true;
             // Default Control accelerators also accept Command.
             return !isCustomized(other) &&
-                existing.ctrl &&
-                !existing.meta &&
+                acceptsCommand(existing) &&
                 binding ==
                     ShortcutBinding(
                       key: existing.key,
@@ -637,7 +925,7 @@ class KeyboardShortcutService {
       .any(
         (action) => _browserMatches(
           action,
-          _defaults[action]!,
+          _default(action),
           event,
           isCtrl: isCtrl,
           isShift: isShift,
@@ -658,7 +946,7 @@ class KeyboardShortcutService {
     required bool isMeta,
     bool defaultBinding = false,
   }) {
-    final primary = defaultBinding && binding.ctrl && !binding.meta;
+    final primary = defaultBinding && acceptsCommand(binding);
     if (primary && isCtrl == isMeta) return false;
     // Recognize a held binding so child views can forward it and the command
     // host can suppress repeats instead of turning it into quick search.
@@ -718,7 +1006,7 @@ class KeyboardShortcutService {
     return _custom.keys
         .where(browserShortcutActions.contains)
         .any(
-          (action) => [_defaults[action]!, ...?_browserAliases[action]].any(
+          (action) => defaultBindings(action).any(
             (binding) => _browserMatches(
               action,
               binding,
@@ -733,16 +1021,19 @@ class KeyboardShortcutService {
         );
   }
 
-  String browserDisplay(ShortcutAction action) {
-    var binding = getBinding(action);
-    final mac =
-        defaultTargetPlatform == TargetPlatform.macOS ||
-        defaultTargetPlatform == TargetPlatform.iOS;
-    if (mac &&
+  String browserDisplay(ShortcutAction action) =>
+      _display(action, getBinding(action));
+
+  /// The primary binding followed by its default aliases, e.g. "F8 / Del".
+  String browserDisplayAll(ShortcutAction action) => {
+    for (final binding in _browserBindings(action)) _display(action, binding),
+  }.join(' / ');
+
+  String _display(ShortcutAction action, ShortcutBinding binding) {
+    if (_isMac &&
         !commandEntryShortcutActions.contains(action) &&
         !isCustomized(action) &&
-        binding.ctrl &&
-        !binding.meta) {
+        acceptsCommand(binding)) {
       binding = ShortcutBinding(
         key: binding.key,
         meta: true,

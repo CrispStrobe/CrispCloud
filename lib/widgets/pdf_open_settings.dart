@@ -109,7 +109,7 @@ class _PdfOpenSettingsState extends State<PdfOpenSettings> {
           (x) => _save(secondaryEditor: x),
         ),
         _choice(
-          'Shift+F4',
+          'Ctrl+Shift+F4',
           v.shiftF4,
           PdfAlternateEditAction.values,
           (x) => x == PdfAlternateEditAction.chooser

@@ -210,3 +210,88 @@ Future<String?> showCapturedCreateFolderDialog(
     ),
   );
 }
+
+/// Shift+F4 (Total Commander / Double Commander): ask for a file name in the
+/// active folder, create the empty file and return its row for the editor.
+/// The cursor file's name is suggested, so an existing file can be opened.
+Future<FileItem?> showCapturedNewTextFileDialog(
+  BuildContext context,
+  PanelNotifier panel,
+) async {
+  late final PanelFileOrigin origin;
+  try {
+    origin = panel.captureCurrentOrigin();
+  } catch (error) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text('$error')));
+    return null;
+  }
+  final cursor = panel.cursorItem;
+  FileItem? created;
+  final name = await showDialog<String>(
+    context: context,
+    barrierDismissible: false,
+    builder: (dialogContext) => FileNameDialog(
+      title: dialogContext.commanderTr('New text file'),
+      label: dialogContext.commanderTr('File name'),
+      confirmLabel: dialogContext.commanderTr('Create and edit'),
+      initialName: cursor != null && !cursor.isFolder && cursor.name != '..'
+          ? cursor.name
+          : 'new.txt',
+      selectStem: true,
+      target: '${origin.source.displayName}: ${origin.source.currentPath}',
+      submit: (name) async {
+        created = await panel.createEmptyFile(name, operationOrigin: origin);
+      },
+    ),
+  );
+  return name == null ? null : created;
+}
+
+/// Default name for Shift+F5: "report copy.txt", "report copy 2.txt", ...
+String copyWithinFolderName(String name, Iterable<String> existing) {
+  final taken = existing.map((value) => value.toLowerCase()).toSet();
+  final dot = name.lastIndexOf('.');
+  final stem = dot > 0 ? name.substring(0, dot) : name;
+  final extension = dot > 0 ? name.substring(dot) : '';
+  for (var index = 1; ; index++) {
+    final candidate = index == 1
+        ? '$stem copy$extension'
+        : '$stem copy $index$extension';
+    if (!taken.contains(candidate.toLowerCase())) return candidate;
+  }
+}
+
+/// Shift+F5 (Total Commander / Double Commander): copy the cursor item into the
+/// same folder under a new name.
+Future<String?> showCapturedCopyWithinFolderDialog(
+  BuildContext context,
+  PanelNotifier panel,
+  FileItem file,
+) async {
+  late final PanelFileOrigin origin;
+  try {
+    origin = panel.captureOperationOrigin([file]);
+  } catch (error) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text('$error')));
+    return null;
+  }
+  return showDialog<String>(
+    context: context,
+    barrierDismissible: false,
+    builder: (dialogContext) => FileNameDialog(
+      title: dialogContext.commanderTr('Copy in this folder'),
+      label: dialogContext.commanderTr('Name of the copy'),
+      confirmLabel: dialogContext.commanderTr('Copy'),
+      initialName: copyWithinFolderName(
+        file.name,
+        (panel.files ?? const <FileItem>[]).map((row) => row.name),
+      ),
+      selectStem: !file.isFolder,
+      target: '${origin.source.displayName}: ${file.path ?? file.name}',
+      submit: (name) =>
+          panel.copyWithinFolder(file, name, operationOrigin: origin),
+    ),
+  );
+}

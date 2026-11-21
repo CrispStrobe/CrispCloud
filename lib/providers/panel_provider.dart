@@ -15,6 +15,7 @@ import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
+import 'show_hidden_files_provider.dart';
 import '../models/file_item.dart';
 import '../services/macos_application_launcher.dart';
 import '../models/folder_size_measurement.dart';
@@ -326,14 +327,20 @@ class PanelNotifier extends ChangeNotifier {
   bool _renameKeepExtension = false;
   bool get renameKeepExtension => _renameKeepExtension;
 
-  // Whether to show hidden (dot-prefixed) files — toggle via Ctrl+.
+  // Whether to show hidden (dot-prefixed) files. One app-wide setting
+  // (showHiddenFilesProvider) shared by both panes and all tabs.
   bool _showHiddenFiles = false;
   bool get showHiddenFiles => _showHiddenFiles;
 
   void toggleShowHiddenFiles() {
-    _showHiddenFiles = !_showHiddenFiles;
+    unawaited(_ref.read(showHiddenFilesProvider.notifier).toggle());
+  }
+
+  void _followShowHiddenFiles(bool value) {
+    if (_isDisposed || value == _showHiddenFiles) return;
+    _showHiddenFiles = value;
     _rememberTabView();
-    refresh();
+    unawaited(refresh());
   }
 
   // Free space for the current local path (populated after _loadLocalFiles)
@@ -357,6 +364,11 @@ class PanelNotifier extends ChangeNotifier {
   PanelNotifier(this._ref, this.side)
     : _localFileService = _ref.read(localFileServiceProvider) {
     listFocusNode = FocusNode(debugLabel: 'panel-${side.name}');
+    _showHiddenFiles = _ref.read(showHiddenFilesProvider);
+    _ref.listen<bool>(
+      showHiddenFilesProvider,
+      (_, next) => _followShowHiddenFiles(next),
+    );
     // ChangeNotifier listeners cannot compare prev/next objects: both can be
     // the same mutated notifier. Retain a value snapshot for account changes.
     final initialAuth = _ref.read(authProvider);
@@ -3838,17 +3850,32 @@ class PanelNotifier extends ChangeNotifier {
 
   // --- Flat view ---
 
-  Future<void> toggleFlatView() async {
+  /// Folders whose branches the current flat view lists; null lists the
+  /// current folder (Ctrl+B). Ctrl+Shift+B passes the selected folders.
+  List<String>? _flatRoots;
+
+  Future<void> toggleFlatView({List<FileItem>? folders}) async {
     if (_isFlatView) {
       _isFlatView = false;
+      _flatRoots = null;
       await clearSearchResults();
     } else {
+      final roots = [
+        for (final folder in folders ?? const <FileItem>[])
+          if (folder.isFolder &&
+              folder.name != '..' &&
+              folder.isSymlink != true &&
+              folder.path != null)
+            folder.path!,
+      ];
+      _flatRoots = roots.isEmpty ? null : roots;
       await _loadFlatFiles();
     }
     notifyListeners();
   }
 
   Future<void> _loadFlatFiles() async {
+    final roots = _flatRoots;
     final origin = captureCurrentOrigin();
     final backend = fileOperationBackend(
       source: origin.source,
@@ -3872,30 +3899,38 @@ class PanelNotifier extends ChangeNotifier {
         tab != _activeTabId ||
         !origin.isCurrent;
     try {
-      final result = await RecursiveSearchService().search(
-        backend,
-        query,
-        currentDirectory: origin.source.currentPath,
-        isCancelled: cancelled,
-        onProgress: (count, path) {
-          if (!cancelled() && count % 100 == 0) {
-            _collectionProgress = '$count items scanned';
-            notifyListeners();
-          }
-        },
-      );
-      if (cancelled() || result.cancelled) return;
-      if (result.errors.isNotEmpty) {
+      final files = <FileItem>[];
+      final errors = <String>[];
+      for (final root in roots ?? [origin.source.currentPath]) {
+        final result = await RecursiveSearchService().search(
+          backend,
+          query,
+          currentDirectory: root,
+          isCancelled: cancelled,
+          onProgress: (count, path) {
+            if (!cancelled() && count % 100 == 0) {
+              _collectionProgress = '$count items scanned';
+              notifyListeners();
+            }
+          },
+        );
+        if (cancelled() || result.cancelled) return;
+        files.addAll(result.matches.map((match) => match.file));
+        errors.addAll(result.errors);
+      }
+      if (errors.isNotEmpty) {
         _ref
             .read(errorProvider)
             .addError(
-              'Branch view has ${result.errors.length} unreadable location(s): ${result.errors.take(3).join('; ')}',
+              'Branch view has ${errors.length} unreadable location(s): ${errors.take(3).join('; ')}',
             );
       }
       showSearchResults(
-        result.matches.map((match) => match.file).toList(),
+        files,
         origin: origin,
-        title: 'Branch: ${origin.source.currentPath}',
+        title: roots == null
+            ? 'Branch: ${origin.source.currentPath}'
+            : 'Branch: ${roots.map((root) => backend.paths.basename(root)).join(', ')}',
         search: CollectionSearch(
           storage: origin.storageReference,
           directory: origin.source.currentPath,
@@ -6890,6 +6925,163 @@ class PanelNotifier extends ChangeNotifier {
     }
   }
 
+  static void _requirePlainName(String name) {
+    if (name.isEmpty ||
+        name == '.' ||
+        name == '..' ||
+        name.contains('/') ||
+        name.contains(r'\') ||
+        name.contains('\u0000')) {
+      throw const FormatException('Enter a name without path separators.');
+    }
+  }
+
+  /// Shift+F4 (TC/DC): create an empty file in the captured folder and return
+  /// its listed row. An existing file of that name is returned unchanged so
+  /// the caller opens it, as Total Commander does.
+  Future<FileItem?> createEmptyFile(
+    String name, {
+    PanelFileOrigin? operationOrigin,
+  }) async {
+    if (operationOrigin == null && (_showingSearchResults || isInArchive)) {
+      throw StateError('Open a real directory before creating a file.');
+    }
+    _requirePlainName(name);
+    final origin = operationOrigin ?? captureCurrentOrigin();
+    if (!origin.isCurrent)
+      throw StateError('The original storage disconnected.');
+    final backend = fileOperationBackend(
+      source: origin.source,
+      local: _localFileService,
+      isCurrent: () => origin.isCurrent,
+    );
+    final path = backend.paths.join(origin.source.currentPath, name);
+    final existing = await backend.stat(path);
+    if (existing != null && existing.isFolder) {
+      throw StateError('A folder already exists with that name.');
+    }
+    if (existing == null) {
+      await backend.writeFile(
+        path,
+        const Stream<List<int>>.empty(),
+        0,
+        replace: false,
+      );
+      await _ref
+          .read(auditServiceProvider)
+          .logSuccess(
+            operation: AuditOperation.upload,
+            sourcePath: path,
+            provider: backend.label,
+          );
+    }
+    if (!origin.isCurrent) {
+      throw StateError('The original storage changed while creating the file.');
+    }
+    await refresh();
+    if (_isDisposed) return null;
+    _placeCursorOnPath(path, name);
+    final cursor = cursorItem;
+    return cursor != null && cursor.name == name ? cursor : null;
+  }
+
+  /// Shift+F5 (TC/DC): copy [file] into its own folder under [name]. Folders
+  /// are copied recursively; symbolic links inside them are skipped.
+  Future<void> copyWithinFolder(
+    FileItem file,
+    String name, {
+    PanelFileOrigin? operationOrigin,
+  }) async {
+    _requirePlainName(name);
+    if (name == file.name) {
+      throw StateError('Choose a different name for the copy.');
+    }
+    final origin = operationOrigin ?? captureOperationOrigin([file]);
+    if (!origin.isCurrent)
+      throw StateError('The original storage disconnected.');
+    final source = file.path;
+    if (source == null) throw StateError('This item has no storage path.');
+    final backend = fileOperationBackend(
+      source: origin.source,
+      local: _localFileService,
+      isCurrent: () => origin.isCurrent,
+    );
+    final target = backend.paths.join(backend.paths.dirname(source), name);
+    if (await backend.stat(target) != null) {
+      throw StateError('An item already exists with that name.');
+    }
+    Future<void> copy(FileItem item, String destination) async {
+      if (!origin.isCurrent) {
+        throw StateError('The original storage changed during the copy.');
+      }
+      if (item.isFolder) {
+        await backend.createDirectory(destination);
+        for (final child in await backend.list(item.path!)) {
+          if (child.name == '..' || child.isSymlink == true) continue;
+          await copy(child, backend.paths.join(destination, child.name));
+        }
+      } else {
+        await backend.writeFile(
+          destination,
+          backend.readFile(item),
+          item.size,
+          replace: false,
+        );
+      }
+    }
+
+    await copy(file, target);
+    await _ref
+        .read(auditServiceProvider)
+        .logSuccess(
+          operation: AuditOperation.copy,
+          sourcePath: source,
+          targetPath: target,
+          provider: backend.label,
+        );
+    await refresh();
+    if (!_isDisposed && origin.isCurrent) _placeCursorOnPath(target, name);
+  }
+
+  /// Ctrl+\ (root of the current storage) and Ctrl+Shift+Home (home folder
+  /// for local storage, the root elsewhere).
+  Future<void> navigateToStorageRoot({bool home = false}) async {
+    final origin = isInArchive
+        ? captureArchiveOrigin()
+        : captureCurrentOrigin();
+    var path = origin.storageReference.root;
+    if (origin.source.isLocal && !kIsWeb) {
+      final paths = p.context;
+      if (home) {
+        path =
+            Platform.environment['HOME'] ??
+            Platform.environment['USERPROFILE'] ??
+            await _localFileService.getSafeFallbackDirectory();
+      } else if (!paths.isAbsolute(path)) {
+        path = paths.rootPrefix(origin.source.currentPath);
+      } else if (Platform.isWindows) {
+        path = paths.rootPrefix(origin.source.currentPath);
+      }
+    }
+    await navigateToPath(path, origin: origin);
+  }
+
+  /// Alt+Shift+Enter: queue size scans for every folder in the listing.
+  int calculateAllFolderSizes() {
+    var queued = 0;
+    for (final file in filteredFiles ?? const <FileItem>[]) {
+      if (file.name == '..' ||
+          !file.isFolder ||
+          file.isSymlink == true ||
+          file.path == null) {
+        continue;
+      }
+      unawaited(calculateFolderSize(file));
+      queued++;
+    }
+    return queued;
+  }
+
   /// Non-interactive compatibility entry points share the same captured-source
   /// planner, staged writes and durable queue as the foreground operation dialog.
   /// Existing targets are skipped; callers needing a decision use the dialog.
@@ -7027,7 +7219,7 @@ class PanelNotifier extends ChangeNotifier {
       _secondarySortOrder = view.secondarySortOrder;
       _sortColumnId = view.sortColumnId;
       _secondarySortColumnId = view.secondarySortColumnId;
-      _showHiddenFiles = view.showHidden;
+      _showHiddenFiles = _ref.read(showHiddenFilesProvider);
       _filterQuery = view.filter;
       _isTypeahead = false;
       _typeaheadResetTimer?.cancel();
@@ -7062,7 +7254,14 @@ class PanelNotifier extends ChangeNotifier {
     FileViewConfiguration view, {
     String? profileId,
   }) async {
-    final reload = _showHiddenFiles != view.showHidden;
+    // A view profile that sets hidden files changes the app-wide setting.
+    // This pane updates (and reloads) itself here; the other pane follows
+    // through the provider listener.
+    final reload = view.showHidden != _showHiddenFiles;
+    _showHiddenFiles = view.showHidden;
+    if (view.showHidden != _ref.read(showHiddenFilesProvider)) {
+      await _ref.read(showHiddenFilesProvider.notifier).set(view.showHidden);
+    }
     _applyTabView(view);
     activeTab?.viewProfileId = profileId;
     _captureTabView();

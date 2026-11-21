@@ -13,8 +13,9 @@ Future<void> showFileDeleteDialog(
   BuildContext context,
   WidgetRef ref,
   PanelSide side,
-  List<FileItem> files,
-) async {
+  List<FileItem> files, {
+  bool permanent = false,
+}) async {
   if (files.isEmpty) return;
   final panel = ref.read(panelProvider(side));
   try {
@@ -29,7 +30,8 @@ Future<void> showFileDeleteDialog(
   }
   if (!context.mounted) return;
   final canTrash = panel.canTrashFiles(files);
-  var permanent = !canTrash;
+  // Shift+F8 / Shift+Delete start with the trash bypass already chosen.
+  permanent = permanent || !canTrash;
   var busy = false;
   var deletedCount = 0;
   String? deletionId;

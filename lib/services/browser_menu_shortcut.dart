@@ -33,7 +33,9 @@ SingleActivator? browserMenuShortcut(
       }.contains(key))
     return null;
   final primary =
-      macOS && !service.isCustomized(action) && binding.ctrl && !binding.meta;
+      macOS &&
+      !service.isCustomized(action) &&
+      KeyboardShortcutService.acceptsCommand(binding);
   final control = primary ? false : binding.ctrl;
   final meta = primary ? true : binding.meta;
   // Imported collisions must follow the same custom-binding priority as

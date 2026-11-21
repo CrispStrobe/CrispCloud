@@ -150,17 +150,45 @@ Commands respect the active input owner. Editors and terminals keep their keyboa
 | --- | --- |
 | F2 / Shift+F6 | Rename |
 | F3 / F4 | View / edit |
+| Shift+F4 | New text file: name it, then edit it |
+| Ctrl+Shift+F4 | Choose editor (text, hex, system) |
 | F5 / F6 | Copy / move review |
-| F7 | New folder |
+| Shift+F5 | Copy in the same folder under a new name |
+| Ctrl+Shift+F5 | Symbolic link in the other pane (local, macOS/Linux) |
+| F7 / Ctrl+N | New folder |
+| F8 / Delete | Delete (trash when available) |
+| Shift+F8 / Shift+Delete | Delete permanently, after confirmation |
+| Alt+F5 / Alt+F9 / Alt+Shift+F9 | Pack / unpack / test archives |
 | Ctrl+R | Refresh |
-| Ctrl+M | Multi-rename |
+| Ctrl+M (macOS ⇧⌘M or ⌃M) | Multi-rename |
 | Ctrl+G / Ctrl+L | Go to folder |
-| Alt+F7 / Ctrl+F | Search / filter |
-| Ctrl+T / Ctrl+W | Open / close tab |
+| Ctrl+PgUp / Ctrl+PgDn | Parent folder / open folder or archive under the cursor |
+| Ctrl+H / Alt+↓ | Directory history |
+| Ctrl+\ / Ctrl+Shift+Home | Storage root / home folder |
+| Alt+F1 / Alt+F2 | Left / right pane location picker |
+| Ctrl+D / Ctrl+Shift+D | Directory hotlist (path favorites) / bookmark this folder |
+| Ctrl+B / Ctrl+Shift+B | Flat view / flat view of the selected folders |
+| Ctrl+1 / Ctrl+2 / Ctrl+3 (Ctrl+F1 / F2 / F8) | Brief / full / tree view |
+| Ctrl+= / Alt+Z | Show this folder in the other pane |
+| Ctrl+U | Swap panes |
+| Shift+F2 | Compare directories (mark differences) |
+| Alt+Shift+Enter | Calculate all folder sizes |
+| Ctrl+A or Ctrl+Num+ / Ctrl+Num− | Select all / deselect all |
+| Alt+Num+ / Alt+Num− (Shift+Num±) | Select / deselect the same extension |
+| Alt+F7 / Ctrl+F or Ctrl+S | Search / filter |
+| Ctrl+Alt+P or Ctrl+Q | Toggle preview (Ctrl+Q not on macOS) |
+| Ctrl+T / Ctrl+W / Ctrl+Shift+W | Open / close tab / close all unprotected tabs |
+| Ctrl+Tab / Ctrl+Shift+Tab | Next / previous tab |
+| Ctrl+Shift+A / Alt+1…9 / Alt+0 | Tab list / tab N / last tab |
+| Ctrl+↑ / Ctrl+Shift+↑ | Folder under the cursor in a new tab / in a new tab of the other pane |
+| Ctrl+Shift+T / Ctrl+Z | Reopen closed tab / undo |
 | Ctrl+Shift+P | Quick Open |
 | Ctrl+Shift+O | Command entry |
+| Ctrl+, | Settings |
 
-In the browser, **Ctrl+Enter** opens an item in the other pane. Inside command entry, **Ctrl+Enter** inserts captured filenames and **Ctrl+Shift+Enter** inserts full paths. These scopes are separate. Text fields, editors and terminals retain their editing/input keys.
+The defaults follow Total Commander and Double Commander habits. On macOS, Command replaces Ctrl for these defaults except where macOS reserves the key: Cmd+H, Cmd+M and Cmd+Q stay with the system, so directory history uses Control+H, multi-rename uses Shift+Command+M and Ctrl+Q is not bound. Finder habits also work on macOS: Cmd+[ / Cmd+] back/forward, Cmd+↑ parent, Cmd+↓ open, Cmd+Backspace delete, Cmd+Shift+G go to folder and Cmd+Shift+N new folder. Ctrl+↑ keeps physical Control on macOS (where the system may claim it for Mission Control). Earlier defaults that changed: Ctrl+B (now flat view; bookmark moved to Ctrl+Shift+D), Ctrl+Shift+B (hotlist moved to Ctrl+D), Ctrl+D (download remains in F5 and the menus), Ctrl+PgUp/PgDn (tabs stay on Ctrl+Tab), Ctrl+H (hidden files stay on Ctrl+. and Ctrl+Shift+.), Shift+F4 and Shift+F5. Shortcuts you recorded yourself are kept.
+
+In the browser, **Ctrl+Enter** opens an item in the other pane. Inside command entry, **Ctrl+Enter** inserts captured filenames, **Ctrl+Shift+Enter** inserts full paths and **Ctrl+P** inserts the current folder path. These scopes are separate. Text fields, editors and terminals retain their editing/input keys.
 
 <a id="bookmarks-and-recent-locations"></a>
 ## Favorites and recent locations
