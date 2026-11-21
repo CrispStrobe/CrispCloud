@@ -31,7 +31,9 @@ List<XmlElement> _sections(OpcPackage package) {
 }
 
 String? _attribute(XmlElement section, String child, String attribute) =>
-    section.firstChild(child)?.getAttribute(attribute);
+    section
+        .firstChild(child, namespaceUri: OfficeNamespaces.w)
+        ?.getAttribute(attribute, namespaceUri: OfficeNamespaces.w);
 
 void _assertSourceProperties(OpcPackage package, {required bool edited}) {
   final List<XmlElement> sections = _sections(package);

@@ -3,6 +3,7 @@ import 'package:quds_office_engine/src/word/serial/word_property_io.dart';
 
 import 'step_input.dart';
 import 'word_list_steps.dart';
+import 'word_page_setup_steps.dart';
 import 'word_spacing_steps.dart';
 import 'word_structure_steps.dart';
 
@@ -19,6 +20,7 @@ const wordOperations = <String, List<String>>{
   'clearTabStops': ['paragraph', ..._storyFields],
   'lineSpacing': ['paragraph', 'rule', 'points', ..._storyFields],
   'paragraphSpaceBefore': ['paragraph', 'action', ..._storyFields],
+  'pageSetup': ['section', 'property', 'points'],
   'paragraphFormat': [
     'paragraph',
     'alignment',
@@ -615,6 +617,13 @@ void applyStep(
       if (at == paragraphs.length) paragraphs.add(WmlParagraph());
       final p = paragraphs[at];
       WmlRunEdit.replaceRange(p, 0, p.text.length, text);
+    case 'pageSetup':
+      setWordPageSetup(
+        doc,
+        s.item('section', doc.sections),
+        property: s.string('property'),
+        points: s.number('points'),
+      );
     case 'sectionFormat':
       final sec = section();
       final width = s.number('width', fallback: sec.pageSize.width, min: 1);

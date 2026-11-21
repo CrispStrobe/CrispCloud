@@ -138,9 +138,29 @@ abstract final class WordSectionIo {
     return result;
   }
 
-  static XmlElement _selfContained(XmlElement element) => element.copy()
-    ..setAttribute('w', OfficeNamespaces.w, prefix: 'xmlns')
-    ..setAttribute('r', OfficeNamespaces.r, prefix: 'xmlns');
+  static XmlElement _selfContained(XmlElement element) {
+    final result = element.copy();
+    _declarePrefix(result, 'w', OfficeNamespaces.w);
+    _declarePrefix(result, 'r', OfficeNamespaces.r);
+    return result;
+  }
+
+  static void _declarePrefix(XmlElement element, String prefix, String uri) {
+    for (final attribute in element.attributes) {
+      if (attribute.prefix == 'xmlns' && attribute.localName == prefix) {
+        attribute.value = uri;
+        return;
+      }
+    }
+    element.attributes.add(
+      XmlAttribute(
+        localName: prefix,
+        prefix: 'xmlns',
+        namespaceUri: 'http://www.w3.org/2000/xmlns/',
+        value: uri,
+      ),
+    );
+  }
 
   static void _mergeModeledAttributes(
     XmlElement original,
@@ -164,9 +184,31 @@ abstract final class WordSectionIo {
               .map((XmlAttribute a) => a.prefix)
               .where((String p) => p.isNotEmpty)
               .firstOrNull ??
-          'w';
+          '';
+      if (prefix.isEmpty) {
+        // A default-namespace native group may already use w for an extension.
+        // Reserve a fresh prefix across the subtree before adding declarations,
+        // so untouched extension attributes and children keep their identity.
+        final used = <String>{};
+        void collect(XmlElement node) {
+          used.add(node.prefix);
+          for (final attribute in node.attributes) {
+            used.add(attribute.prefix);
+            if (attribute.prefix == 'xmlns') used.add(attribute.localName);
+          }
+          for (final child in node.childElements) {
+            collect(child);
+          }
+        }
+
+        collect(original);
+        var index = 0;
+        do {
+          prefix = 'qudsWord${index++}';
+        } while (used.contains(prefix));
+      }
     }
-    original.setAttribute(prefix, OfficeNamespaces.w, prefix: 'xmlns');
+    _declarePrefix(original, prefix, OfficeNamespaces.w);
     for (final String attribute in attributes) {
       original.removeAttribute(attribute, namespaceUri: OfficeNamespaces.w);
       final String? value = replacement.getAttribute(attribute);

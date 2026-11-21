@@ -60,10 +60,10 @@ class OfficeVbaMacroLanguage implements OfficeMacroLanguage {
   }
 }
 
-/// Compiles explicit paragraph writes from the bounded Word VBA dialect.
+/// Compiles explicit paragraph and section writes from the bounded Word dialect.
 ///
 /// The language and resource limits are shared with [OfficeVbaMacroLanguage].
-/// Word bindings select main-story paragraphs without reading document content.
+/// Word bindings select main-story paragraphs or sections without reading them.
 /// Native plans retain the ordinary runtime policy and atomic save boundary.
 class OfficeVbaWordMacroLanguage implements OfficeMacroLanguage {
   const OfficeVbaWordMacroLanguage();
@@ -275,6 +275,16 @@ const _wordListMethods = <String>{
 };
 const _wordSpacingMethods = <String>{'space1', 'space15', 'space2'};
 const _wordParagraphControls = <String>{'openup', 'closeup', 'openorcloseup'};
+const _wordPageSetupFields = <String, String>{
+  'pagewidth': 'width',
+  'pageheight': 'height',
+  'topmargin': 'top',
+  'bottommargin': 'bottom',
+  'leftmargin': 'left',
+  'rightmargin': 'right',
+  'headerdistance': 'header',
+  'footerdistance': 'footer',
+};
 // Exact physical ratios, not the rounded metric examples in Word's API prose.
 // These functions retain this dialect's bounded Double arithmetic; they do not
 // introduce VBA Single subtype/coercion semantics or native-unit rounding.
@@ -661,6 +671,9 @@ enum _Kind {
   interior,
   wordApplication,
   document,
+  wordSections,
+  wordSection,
+  wordPageSetup,
   paragraphs,
   paragraph,
   paragraphFormat,
@@ -690,6 +703,8 @@ enum _Declared {
   worksheet,
   range,
   document,
+  wordSection,
+  wordPageSetup,
   paragraph,
   wordFont,
   wordParagraphFormat,
@@ -709,6 +724,8 @@ bool _objectType(_Declared type) =>
     type == _Declared.worksheet ||
     type == _Declared.range ||
     type == _Declared.document ||
+    type == _Declared.wordSection ||
+    type == _Declared.wordPageSetup ||
     type == _Declared.paragraph ||
     type == _Declared.wordFont ||
     type == _Declared.wordParagraphFormat ||
@@ -749,6 +766,8 @@ _Kind _kindOf(_Declared type) => switch (type) {
   _Declared.worksheet => _Kind.worksheet,
   _Declared.range => _Kind.range,
   _Declared.document => _Kind.document,
+  _Declared.wordSection => _Kind.wordSection,
+  _Declared.wordPageSetup => _Kind.wordPageSetup,
   _Declared.paragraph => _Kind.paragraph,
   _Declared.wordFont => _Kind.font,
   _Declared.wordParagraphFormat => _Kind.paragraphFormat,
@@ -1700,6 +1719,8 @@ class _Parser {
       'worksheet' when context.isExcel => _Declared.worksheet,
       'range' when !context.isPowerPoint => _Declared.range,
       'document' when context.isWord => _Declared.document,
+      'section' when context.isWord => _Declared.wordSection,
+      'pagesetup' when context.isWord => _Declared.wordPageSetup,
       'paragraph' when context.isWord => _Declared.paragraph,
       'font' when context.isWord => _Declared.wordFont,
       'paragraphformat' when context.isWord => _Declared.wordParagraphFormat,
@@ -1720,7 +1741,7 @@ class _Parser {
         context.isPowerPoint
             ? 'Supported declarations are Long, Double, String, Boolean, Variant, Presentation, Slide, Shape, TextFrame, TextRange, Font, ParagraphFormat, and SlideShowTransition.'
             : context.isWord
-            ? 'Supported declarations are Long, Double, String, Boolean, Variant, Document, Paragraph, Range, Font, ParagraphFormat, TabStops, and ListFormat.'
+            ? 'Supported declarations are Long, Double, String, Boolean, Variant, Document, Section, PageSetup, Paragraph, Range, Font, ParagraphFormat, TabStops, and ListFormat.'
             : 'Supported declarations are Long, Double, String, Boolean, Variant, Worksheet, and Range.',
       ),
     };
@@ -2604,6 +2625,9 @@ class _Checker {
               context.isWord &&
               (kind == _Kind.wordApplication ||
                   kind == _Kind.document ||
+                  kind == _Kind.wordSections ||
+                  kind == _Kind.wordSection ||
+                  kind == _Kind.wordPageSetup ||
                   kind == _Kind.paragraphs ||
                   kind == _Kind.paragraph ||
                   kind == _Kind.font ||
@@ -2621,7 +2645,7 @@ class _Checker {
               context.isPowerPoint
                   ? 'With requires an explicitly bound PowerPoint object.'
                   : context.isWord
-                  ? 'With requires a Document, Paragraph, Range, Font, ParagraphFormat, TabStops, or ListFormat.'
+                  ? 'With requires a Document, Section, PageSetup, Paragraph, Range, Font, ParagraphFormat, TabStops, or ListFormat.'
                   : 'With requires a Worksheet or Range.',
             );
           }
@@ -2905,6 +2929,10 @@ class _Checker {
       );
     }
     if (context.isWord) {
+      if (receiver == _Kind.wordPageSetup &&
+          _wordPageSetupFields.containsKey(property)) {
+        return _Kind.number;
+      }
       if (receiver == _Kind.range && property == 'highlightcolorindex') {
         return _Kind.number;
       }
@@ -3136,6 +3164,21 @@ class _Checker {
               _wordUnitConversions.containsKey(name)) {
             _wordUnitCall(expression.token, expression.arguments);
             return _Kind.number;
+          }
+          if (receiver == _Kind.document && name == 'sections') {
+            if (expression.arguments == null) return _Kind.wordSections;
+            final argument = _arguments(expression, 1).single;
+            _compatible(_Kind.number, _expression(argument), argument.token);
+            return _Kind.wordSection;
+          }
+          if (receiver == _Kind.wordSections && name == 'item') {
+            final argument = _arguments(expression, 1).single;
+            _compatible(_Kind.number, _expression(argument), argument.token);
+            return _Kind.wordSection;
+          }
+          if (receiver == _Kind.wordSection && name == 'pagesetup') {
+            _arguments(expression, 0, allowProperty: true);
+            return _Kind.wordPageSetup;
           }
           if (receiver == _Kind.document && name == 'paragraphs') {
             if (expression.arguments == null) return _Kind.paragraphs;
@@ -3446,6 +3489,8 @@ class _Checker {
             expected == _Kind.worksheet ||
             expected == _Kind.range ||
             expected == _Kind.document ||
+            expected == _Kind.wordSection ||
+            expected == _Kind.wordPageSetup ||
             expected == _Kind.paragraph ||
             expected == _Kind.font ||
             expected == _Kind.paragraphFormat ||
@@ -3548,6 +3593,20 @@ class _WordDocument {
 
 class _WordApplication {
   const _WordApplication();
+}
+
+class _WordSections {
+  const _WordSections();
+}
+
+class _WordSection {
+  const _WordSection(this.index);
+  final int index;
+}
+
+class _WordPageSetup {
+  const _WordPageSetup(this.section);
+  final _WordSection section;
 }
 
 class _WordParagraphs {
@@ -4298,6 +4357,26 @@ class _Evaluator {
           if (receiver is _WordApplication) {
             return const _WordDocument();
           }
+          if (receiver is _WordDocument &&
+              expression.token.lower == 'sections' &&
+              expression.arguments == null) {
+            return const _WordSections();
+          }
+          if (receiver is _WordSections ||
+              receiver is _WordDocument &&
+                  expression.token.lower == 'sections') {
+            final index = _integer(arguments.single, expression.token);
+            if (index < 1) {
+              context.type(
+                expression.token,
+                'Sections requires a positive one-based index.',
+              );
+            }
+            return _WordSection(index - 1);
+          }
+          if (receiver is _WordSection) {
+            return _WordPageSetup(receiver);
+          }
           if (receiver is _WordDocument && expression.arguments == null) {
             return const _WordParagraphs();
           }
@@ -4711,6 +4790,16 @@ class _Evaluator {
       case _Declared.document:
         if (value is! _WordDocument) {
           context.type(token, 'Set requires a Document.');
+        }
+        return value;
+      case _Declared.wordSection:
+        if (value is! _WordSection) {
+          context.type(token, 'Set requires a Word Section.');
+        }
+        return value;
+      case _Declared.wordPageSetup:
+        if (value is! _WordPageSetup) {
+          context.type(token, 'Set requires a Word PageSetup.');
         }
         return value;
       case _Declared.paragraph:
@@ -5586,6 +5675,32 @@ class _Evaluator {
     Object value,
     _Token token,
   ) {
+    if (receiver is _WordPageSetup) {
+      final field = _wordPageSetupFields[property]!;
+      final points = _number(value, token);
+      final minimum = field == 'width' || field == 'height' ? 1 : 0;
+      final twips = points * 20;
+      if (points < minimum ||
+          twips > 2147483647 ||
+          twips.round() / 20 != points) {
+        context.type(
+          token,
+          'PageSetup geometry requires exact twentieth-points within signed Long twips; page dimensions must be at least 1 point and margins/distances nonnegative.',
+        );
+      }
+      if (steps.length >= _maxSteps) {
+        context.limit(
+          token,
+          'Word writes exceed $_maxSteps emitted operations.',
+        );
+      }
+      _emitNative('docx.pageSetup', <String, Object?>{
+        'section': receiver.section.index,
+        'property': field,
+        'points': points,
+      }, token);
+      return;
+    }
     if (receiver is _WordListFormat) {
       final level = _integer(value, token);
       if (level < 1 || level > 9) {

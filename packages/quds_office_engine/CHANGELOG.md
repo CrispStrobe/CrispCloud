@@ -4,6 +4,21 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Extend Word VBA with explicit `Sections(i)` / `Sections.Item(i)`, typed
+  `Section` and `PageSetup` aliases, `With`, and required `ByVal` helpers. Add
+  eight write-only page geometry setters for dimensions, margins and
+  header/footer distances, using exact twentieth-points and the existing
+  measurement conversions. Lower each setter to guarded `docx.pageSetup`.
+  Preserve unedited sparse section XML, namespace aliases and opaque DOCM
+  parts; select custom paper on width/height writes, including same-value
+  assignments. Validate each detached intermediate page body and column width,
+  reject unsupported source geometry/settings, and retain whole-run rollback,
+  recording and ordinary host policy. Keep reads, broadcast page setup,
+  orientation and paper-size selection outside the documented source slice.
+  Add compiler, native, transaction and portable examples; see the
+  [source-bound qualification record](../../docs/validation/word-vba-paragraph-pagination-20261121/README.md)
+  for executed checks and remaining Office/Flutter host acceptance.
+
 - Read Zotero JSON citation placement consistently on the VM and JavaScript:
   numeric values 0, 1 and 2 include equivalent decimal/exponent spellings;
   fractional, out-of-range, string and boolean values remain invalid. Preserve

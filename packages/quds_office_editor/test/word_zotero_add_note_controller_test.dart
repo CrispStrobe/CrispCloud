@@ -1684,9 +1684,22 @@ void main() {
 
     for (final inNote in [false, true]) {
       test(
-        '${command.name} refuses a selection across ${inNote ? 'note' : 'body'} paragraphs',
+        '${command.name} refuses a selection across an intervening ${inNote ? 'note' : 'body'} table',
         () {
           final controller = _controller();
+          final table = WmlTable(
+            rows: [
+              WmlTableRow(
+                cells: [
+                  WmlTableCell(
+                    blocks: [
+                      WmlParagraph(inlines: [WmlRun(text: 'Preserve table')]),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          );
           if (inNote) {
             final note = WordNotes.insert(
               controller.document,
@@ -1694,14 +1707,18 @@ void main() {
               text: 'First',
               endnote: false,
             );
-            note.blocks.add(WmlParagraph(inlines: [WmlRun(text: 'Second')]));
+            note.blocks.addAll([
+              table,
+              WmlParagraph(inlines: [WmlRun(text: 'Second')]),
+            ]);
             controller.setNoteEditingTarget(
               note,
               const TextSelection(baseOffset: 2, extentOffset: 9),
             );
           } else {
+            controller.document.sections.single.blocks.insert(1, table);
             controller.caret
-              ..paragraphIndex = 1
+              ..paragraphIndex = 2
               ..logicalIndex = 2
               ..selectionAnchor = 1
               ..selectionAnchorParagraph = 0;

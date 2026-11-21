@@ -1356,7 +1356,7 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
               ),
               Tooltip(
                 message:
-                    'Insert research content at the body or Notes caret, or replace selected text within one paragraph.',
+                    'Insert research content at the body or Notes caret, or replace selected ordinary text across paragraphs in the same body section or authored note.',
                 child: OutlinedButton(
                   key: const ValueKey('zotero-add-note'),
                   onPressed: _busy || !_canEdit
@@ -1367,7 +1367,7 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
               ),
               Tooltip(
                 message:
-                    'Insert text, image and ink annotations at the body or Notes caret, or replace selected text within one paragraph. Requires Zotero 9 or later.',
+                    'Insert text, image and ink annotations at the body or Notes caret, or replace selected ordinary text across paragraphs in the same body section or authored note. Requires Zotero 9 or later.',
                 child: OutlinedButton(
                   key: const ValueKey('zotero-add-annotation'),
                   onPressed: _busy || !_canEdit

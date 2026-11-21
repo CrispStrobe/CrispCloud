@@ -4,6 +4,12 @@ All notable changes to `quds_office_editor` are documented here.
 
 ## Unreleased
 
+- Add explicit **Check current status** to native Mail activity for uncertain
+  read/flag actions across IMAP, EWS, Gmail and Microsoft 365. Keep original
+  outcomes alongside durable later observations; reject stale/cancelled results
+  and never replay commands. Show saved observations offline, release resolved
+  history quota and localize recovery in English, German and Arabic.
+
 - Journal native IMAP, EWS, Gmail and Microsoft 365 single/bulk read and flag
   commands before dispatch, retain late acknowledgements under their original
   store owner, and stop further work on persistence failure. Add connected and

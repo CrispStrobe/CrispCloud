@@ -7985,7 +7985,7 @@ class WordEditorController extends OfficeController {
             selectedEquation != null ||
             selectedTableBand != null)) {
       throw UnsupportedError(
-        'Place the caret or select text within one paragraph before inserting a Zotero note or annotation.',
+        'Place the caret or select ordinary text before inserting a Zotero note or annotation.',
       );
     }
     commitNoteEdits();
@@ -8002,16 +8002,19 @@ class WordEditorController extends OfficeController {
     final noteRange = noteTarget == null
         ? null
         : _noteSelectionRange(noteTarget);
+    final researchNoteRange = noteTarget == null || !insertsNoteText
+        ? null
+        : _noteResearchSelectionRange(noteTarget);
     final bodyRange = caret.normalizedRange;
     final bodyParagraphs = document.paragraphs.toList();
-    final singleBodyParagraph =
-        bodyRange.startPara == bodyRange.endPara &&
+    final validBodyRange =
         bodyRange.startPara >= 0 &&
-        bodyRange.startPara < bodyParagraphs.length;
+        bodyRange.endPara >= bodyRange.startPara &&
+        bodyRange.endPara < bodyParagraphs.length;
     if (insertsNoteText &&
-        (noteTarget != null ? noteRange == null : !singleBodyParagraph)) {
+        (noteTarget != null ? researchNoteRange == null : !validBodyRange)) {
       throw UnsupportedError(
-        'Select text within one paragraph to replace it with a Zotero note or annotation.',
+        'Select ordinary text in the document body or an authored note to replace it with a Zotero note or annotation.',
       );
     }
     final resolvedField =
@@ -8020,17 +8023,26 @@ class WordEditorController extends OfficeController {
       document: document,
       documentId: documentId,
       insertionParagraph: noteTarget != null
-          ? (noteTarget.selection.isCollapsed || insertsNoteText
-                ? noteRange?.paragraph
-                : null)
+          ? (insertsNoteText
+                ? researchNoteRange!.paragraph
+                : (noteTarget.selection.isCollapsed
+                      ? noteRange?.paragraph
+                      : null))
           : (insertsNoteText
                 ? bodyParagraphs[bodyRange.startPara]
                 : (caret.isCollapsed ? _activeParagraph : null)),
+      insertionEndParagraph: insertsNoteText
+          ? (noteTarget != null
+                ? researchNoteRange!.endParagraph
+                : bodyParagraphs[bodyRange.endPara])
+          : null,
       insertionOffset: noteTarget != null
-          ? (noteRange?.start ?? 0)
+          ? (insertsNoteText
+                ? researchNoteRange!.start
+                : (noteRange?.start ?? 0))
           : (insertsNoteText ? bodyRange.startIdx : caret.logicalIndex),
       insertionEndOffset: insertsNoteText
-          ? (noteTarget != null ? noteRange?.end : bodyRange.endIdx)
+          ? (noteTarget != null ? researchNoteRange!.end : bodyRange.endIdx)
           : null,
       selectedField: resolvedField,
       seedCitation: seedCitation,
@@ -9202,6 +9214,44 @@ class WordEditorController extends OfficeController {
         return (
           paragraph: segment.paragraph,
           start: target.selection.start - segment.start + segment.hidden,
+          end: target.selection.end - segment.start + segment.hidden,
+        );
+      }
+    }
+    return null;
+  }
+
+  /// Research-content replacement may cross paragraph separators exposed by
+  /// the Notes pane. Resolve each endpoint independently, including the hidden
+  /// automatic-reference separator. The engine qualifies the actual block
+  /// range; adjacent visible paragraphs can still be separated by a table or
+  /// belong to different content controls in the native note story.
+  ({WmlParagraph paragraph, WmlParagraph endParagraph, int start, int end})?
+  _noteResearchSelectionRange(WordNoteEditingTarget target) {
+    if (!_ownsNote(target.note) ||
+        !target.selection.isValid ||
+        target.selection.end > noteEditText(target.note).length) {
+      return null;
+    }
+    ({WmlParagraph paragraph, int offset})? start;
+    for (final segment in _noteTextSegments(target.note)) {
+      final end =
+          segment.start + segment.paragraph.text.length - segment.hidden;
+      if (start == null &&
+          target.selection.start >= segment.start &&
+          target.selection.start <= end) {
+        start = (
+          paragraph: segment.paragraph,
+          offset: target.selection.start - segment.start + segment.hidden,
+        );
+      }
+      if (start != null &&
+          target.selection.end >= segment.start &&
+          target.selection.end <= end) {
+        return (
+          paragraph: start.paragraph,
+          endParagraph: segment.paragraph,
+          start: start.offset,
           end: target.selection.end - segment.start + segment.hidden,
         );
       }
