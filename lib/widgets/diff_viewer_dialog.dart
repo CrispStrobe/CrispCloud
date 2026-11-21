@@ -512,8 +512,7 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
         !_binaryBusy &&
         _error == null &&
         _rows.isNotEmpty,
-    onPrint: () =>
-        _printDiff(context, _rows, _leftFile.name, _rightFile.name),
+    onPrint: () => _printDiff(context, _rows, _leftFile.name, _rightFile.name),
     child: _buildDialog(context),
   );
 
@@ -1110,82 +1109,85 @@ class _ContentDiffDialog extends StatelessWidget {
       enabled: diffResult.isNotEmpty,
       onPrint: () => _printDiff(context, diffResult, leftLabel, rightLabel),
       child: Dialog(
-      insetPadding: const EdgeInsets.all(16),
-      child: SizedBox(
-        width: MediaQuery.of(context).size.width * 0.9,
-        height: MediaQuery.of(context).size.height * 0.8,
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              color: theme.colorScheme.surfaceContainerHighest,
-              child: Row(
-                children: [
-                  const Icon(Icons.compare, size: 20),
-                  const SizedBox(width: 8),
-                  Flexible(
-                    child: Text(
-                      context.commanderTr("Version Diff"),
-                      style: theme.textTheme.titleMedium,
-                      overflow: TextOverflow.ellipsis,
+        insetPadding: const EdgeInsets.all(16),
+        child: SizedBox(
+          width: MediaQuery.of(context).size.width * 0.9,
+          height: MediaQuery.of(context).size.height * 0.8,
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
+                color: theme.colorScheme.surfaceContainerHighest,
+                child: Row(
+                  children: [
+                    const Icon(Icons.compare, size: 20),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        context.commanderTr("Version Diff"),
+                        style: theme.textTheme.titleMedium,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                  ),
-                  const Spacer(),
-                  Text(
-                    '+$added',
-                    style: const TextStyle(
-                      color: Colors.green,
-                      fontWeight: FontWeight.bold,
+                    const Spacer(),
+                    Text(
+                      '+$added',
+                      style: const TextStyle(
+                        color: Colors.green,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    '-$removed',
-                    style: const TextStyle(
-                      color: Colors.red,
-                      fontWeight: FontWeight.bold,
+                    const SizedBox(width: 8),
+                    Text(
+                      '-$removed',
+                      style: const TextStyle(
+                        color: Colors.red,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  const DocumentPrintButton(),
-                  IconButton(
-                    icon: const Icon(Icons.close, size: 20),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
+                    const SizedBox(width: 8),
+                    const DocumentPrintButton(),
+                    IconButton(
+                      icon: const Icon(Icons.close, size: 20),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            Expanded(
-              child: diffResult.isEmpty
-                  ? Center(
-                      child: Text(context.commanderTr("Files are identical")),
-                    )
-                  : Row(
-                      children: [
-                        _buildPane(
-                          theme,
-                          leftLabel,
-                          diffResult,
-                          true,
-                          addedColor,
-                          removedColor,
-                        ),
-                        Container(width: 1, color: theme.dividerColor),
-                        _buildPane(
-                          theme,
-                          rightLabel,
-                          diffResult,
-                          false,
-                          addedColor,
-                          removedColor,
-                        ),
-                      ],
-                    ),
-            ),
-          ],
+              Expanded(
+                child: diffResult.isEmpty
+                    ? Center(
+                        child: Text(context.commanderTr("Files are identical")),
+                      )
+                    : Row(
+                        children: [
+                          _buildPane(
+                            theme,
+                            leftLabel,
+                            diffResult,
+                            true,
+                            addedColor,
+                            removedColor,
+                          ),
+                          Container(width: 1, color: theme.dividerColor),
+                          _buildPane(
+                            theme,
+                            rightLabel,
+                            diffResult,
+                            false,
+                            addedColor,
+                            removedColor,
+                          ),
+                        ],
+                      ),
+              ),
+            ],
+          ),
         ),
       ),
-    ),
     );
   }
 
