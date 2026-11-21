@@ -662,3 +662,14 @@ dependencies and reviewed Apple distribution declarations remain unchanged.
 The three new RAR source files and qualification workflow are included in the
 reviewed-source binding. Source fingerprints were refreshed after this review;
 actual binary and live Store checks remain required for the next upload.
+
+### Xcode 27 store-signing identity selection, 2026-11-21
+
+`ios-release.yml` and `macos-release.yml` now pass the Apple Distribution and
+Mac Installer identities to `codesign`/`productbuild` by SHA-1 instead of by
+display name, because codesign on the `xcode-27` image cannot match the
+certificate name containing "ö". This changes only which keychain entry is
+named on the command line; the certificates, entitlements, encryption,
+dependencies and Apple distribution declarations are unchanged. The
+reviewed-source fingerprint was refreshed after inspecting this signing-only
+change.
