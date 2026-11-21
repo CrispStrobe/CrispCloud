@@ -1,0 +1,38 @@
+{
+  "version": "1.3.8",
+  "build": "50",
+  "app_id": "6789570314",
+  "bundle_id": "com.CrispStrobe.cloud",
+  "source": {
+    "crispcloud": "05322ef1",
+    "quds_office": "c10416d3",
+    "packaging_fix": "750d2b57"
+  },
+  "macos": {
+    "delivery_uuid": "0b243411-bd6c-4789-b163-cfc0dd4bc8ed",
+    "build_id": "0b243411-bd6c-4789-b163-cfc0dd4bc8ed",
+    "package": "/tmp/crispcloud-release-1.3.8-50/CrispCloud-1.3.8-50.pkg",
+    "sha256": "fc4d85d296b155ba8ab8e9e94205c3800d83c0d2fe4b84e7dacb5aac39e0dce4",
+    "processing_state": "VALID",
+    "internal_group_assigned": true,
+    "external_group_assigned": true,
+    "external_review": "assigned; submission blocked while build 48 remains in review",
+    "finder_extension": "included and signed with com.CrispStrobe.cloud.FileProvider App Store profile"
+  },
+  "ios": {
+    "delivery_uuid": "2eb74101-a41e-478f-836d-e5d2c041f9e3",
+    "build_id": "2eb74101-a41e-478f-836d-e5d2c041f9e3",
+    "package": "/tmp/crispcloud-release-1.3.8-50/CrispCloud-1.3.8-50.ipa",
+    "sha256": "ac82e9a67ad38fc09bf8dc3ecae6b12dd3a5b564ad93646c106b8ce49d35f169",
+    "processing_state": "VALID",
+    "internal_group_assigned": true,
+    "external_group_assigned": true,
+    "external_review": "assigned; submission blocked while build 48 remains in review"
+  },
+  "signing": {
+    "identity": "Apple Distribution (N9XSJ4M3GT)",
+    "keychain": "brickwright-build.keychain-db",
+    "app_group": "N9XSJ4M3GT.crispcloud",
+    "fileprovider_profile": "CrispCloud FileProvider macOS AppStore CI"
+  }
+}
