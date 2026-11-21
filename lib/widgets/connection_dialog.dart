@@ -51,6 +51,9 @@ import '../l10n/provider_operation_strings.dart';
 import '../l10n/sftp_key_strings.dart';
 import '../l10n/key_management_strings.dart';
 import '../services/nextcloud_client_adapter.dart';
+import '../services/nextcloud_endpoint.dart';
+import '../services/nextcloud_login_flow.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ConnectionDialog extends ConsumerStatefulWidget {
   const ConnectionDialog({super.key});
@@ -125,6 +128,8 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
 
   bool _isLoading = false;
   bool _needs2fa = false;
+  bool _browserLoginActive = false;
+  bool _browserLoginCancelled = false;
   String? _error;
 
   // Connection profiles
@@ -1224,6 +1229,30 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                 ),
                 enabled: !_isLoading,
               ),
+              if (!kIsWeb) ...[
+                const SizedBox(height: 12),
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: OutlinedButton.icon(
+                    onPressed: _isLoading ? null : _loginWithBrowser,
+                    icon: _browserLoginActive
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.open_in_browser),
+                    label: Text(ConnectionStrings.of(context).browserLogin),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  _browserLoginActive
+                      ? ConnectionStrings.of(context).waitingForBrowser
+                      : ConnectionStrings.of(context).browserLoginHelp,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
             ] else ...[
               // Standard: Email
               TextField(
@@ -1351,7 +1380,11 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
       ),
       actions: [
         TextButton(
-          onPressed: _isLoading ? null : () => Navigator.pop(context),
+          onPressed: _browserLoginActive
+              ? () => setState(() => _browserLoginCancelled = true)
+              : _isLoading
+              ? null
+              : () => Navigator.pop(context),
           child: Text(AppLocalizations.of(context)!.cancel),
         ),
         ElevatedButton(
@@ -1401,6 +1434,69 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
           _error = SftpKeyStrings(context).readFailed;
         });
       }
+    }
+  }
+
+  /// Nextcloud Login Flow v2: sign in on the server's own page (SSO, 2FA,
+  /// email aliases), approve CrispCloud, and receive an app password.
+  Future<void> _loginWithBrowser() async {
+    final strings = ConnectionStrings.of(context);
+    final t = ConnectionDialogExtraStrings(context);
+    final raw = _nextcloudServerUrlController.text.trim();
+    if (!raw.startsWith('http://') && !raw.startsWith('https://')) {
+      setState(() => _error = t.text('urlScheme'));
+      return;
+    }
+    final Uri server;
+    try {
+      server = NextcloudEndpoint.serverRoot(raw);
+      if (server.host.isEmpty) throw const FormatException();
+    } catch (_) {
+      setState(() => _error = t.text('invalidUrl'));
+      return;
+    }
+    setState(() {
+      _isLoading = true;
+      _browserLoginActive = true;
+      _browserLoginCancelled = false;
+      _error = null;
+    });
+    void finish([String? error]) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _browserLoginActive = false;
+        _error = error;
+      });
+    }
+
+    try {
+      final flow = await NextcloudLoginFlow.start(server);
+      if (!mounted || _browserLoginCancelled) {
+        flow.close();
+        finish();
+        return;
+      }
+      await launchUrl(flow.loginUrl, mode: LaunchMode.externalApplication);
+      final result = await flow.waitForApproval(
+        cancelled: () => !mounted || _browserLoginCancelled,
+      );
+      if (!mounted) return;
+      if (result == null) {
+        finish(_browserLoginCancelled ? null : strings.browserLoginExpired);
+        return;
+      }
+      _nextcloudServerUrlController.text = result.server.toString();
+      _nextcloudUsernameController.text = result.loginName;
+      _passwordController.text = result.appPassword;
+      finish();
+      await _handleLogin();
+    } catch (e) {
+      if (!mounted) return;
+      finish(
+        localizedConnectionFailure(context, e) ??
+            e.toString().replaceAll('Exception:', '').trim(),
+      );
     }
   }
 
@@ -1602,7 +1698,10 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
             _nextcloudServerUrlController.text.isEmpty) {
           throw Exception(t.text('urlUserRequired'));
         }
-        final url = _nextcloudServerUrlController.text.trim();
+        // Accept an address copied from the browser (…/index.php/apps/files).
+        final url = NextcloudEndpoint.installationUrl(
+          _nextcloudServerUrlController.text,
+        );
         if (!url.startsWith('http://') && !url.startsWith('https://')) {
           throw Exception(t.text('urlScheme'));
         }

@@ -259,7 +259,7 @@ class GDriveClientAdapter extends CloudStorageClient
 
       // Query for folder with this name under parent
       final query =
-          "name='${_escapeQuery(segment)}' and '$parentId' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false";
+          "name='${_nameQuery(segment)}' and '$parentId' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false";
       final resp = await _apiGet(
         '/files',
         queryParams: {'q': query, 'fields': 'files(id,name)', 'pageSize': '2'},
@@ -324,7 +324,7 @@ class GDriveClientAdapter extends CloudStorageClient
         final map = item as Map<String, dynamic>;
         final isFolder =
             map['mimeType'] == 'application/vnd.google-apps.folder';
-        final name = map['name'] as String? ?? 'Unknown';
+        final name = GDriveNameCodec.fromDrive(map['name'] as String? ?? 'Unknown');
         final id = map['id'] as String;
 
         // Cache folder ID
@@ -420,7 +420,7 @@ class GDriveClientAdapter extends CloudStorageClient
         final map = item as Map<String, dynamic>;
         final isFolder =
             map['mimeType'] == 'application/vnd.google-apps.folder';
-        final name = map['name'] as String? ?? 'Unknown';
+        final name = GDriveNameCodec.fromDrive(map['name'] as String? ?? 'Unknown');
         final id = map['id'] as String;
 
         final entry = <String, dynamic>{
@@ -456,7 +456,7 @@ class GDriveClientAdapter extends CloudStorageClient
 
     for (final segment in segments) {
       final query =
-          "name='${_escapeQuery(segment)}' and '$parentId' in parents "
+          "name='${_nameQuery(segment)}' and '$parentId' in parents "
           "and mimeType='application/vnd.google-apps.folder' and trashed=false";
       final resp = await _apiGet(
         '/files',
@@ -501,7 +501,9 @@ class GDriveClientAdapter extends CloudStorageClient
       for (final item in (resp['files'] as List?) ?? []) {
         final map = item as Map<String, dynamic>;
         results.add({
-          'name': map['name'] as String? ?? 'Unknown',
+          'name': GDriveNameCodec.fromDrive(
+            map['name'] as String? ?? 'Unknown',
+          ),
           'uuid': map['id'] as String,
           'type': map['mimeType'] == 'application/vnd.google-apps.folder'
               ? 'folder'
@@ -569,7 +571,7 @@ class GDriveClientAdapter extends CloudStorageClient
             'X-Upload-Content-Length': '$length',
           })
           ..body = json.encode({
-            if (existingId == null) 'name': fileName,
+            if (existingId == null) 'name': GDriveNameCodec.toDrive(fileName),
             if (existingId == null) 'parents': [parentId],
           });
     final client = http.Client();
@@ -680,7 +682,7 @@ class GDriveClientAdapter extends CloudStorageClient
     } else {
       // Multipart upload: metadata + file content
       final metadata = json.encode({
-        'name': fileName,
+        'name': GDriveNameCodec.toDrive(fileName),
         'parents': [parentId],
       });
 
@@ -1036,6 +1038,8 @@ class GDriveClientAdapter extends CloudStorageClient
     );
     return {
       ...value,
+      if (value['name'] case final String name)
+        'name': GDriveNameCodec.fromDrive(name),
       if (_exportExtensions[value['mimeType']] case final extension?)
         'downloadExtension': extension.startsWith('.')
             ? extension.substring(1)
@@ -1065,6 +1069,8 @@ class GDriveClientAdapter extends CloudStorageClient
           final value = Map<String, dynamic>.from(raw as Map);
           return {
             ...value,
+            if (value['name'] case final String name)
+              'name': GDriveNameCodec.fromDrive(name),
             if (_exportExtensions[value['mimeType']] case final extension?)
               'downloadExtension': extension.startsWith('.')
                   ? extension.substring(1)
@@ -1136,7 +1142,7 @@ class GDriveClientAdapter extends CloudStorageClient
 
       // Create folder
       final metadata = json.encode({
-        'name': segment,
+        'name': GDriveNameCodec.toDrive(segment),
         'mimeType': 'application/vnd.google-apps.folder',
         'parents': [parentId],
       });
@@ -1168,7 +1174,7 @@ class GDriveClientAdapter extends CloudStorageClient
     final fileName = p.posix.basename(sourcePath);
     _log.info('Server-side copy (GDrive): $sourcePath → $targetPath');
     final body = json.encode({
-      'name': fileName,
+      'name': GDriveNameCodec.toDrive(fileName),
       'parents': [parentId],
     });
     final uri = Uri.parse('$_apiBase/files/$fileId/copy');
@@ -1226,7 +1232,7 @@ class GDriveClientAdapter extends CloudStorageClient
     if (parent == null) {
       throw StateError('The original parent folder is unavailable.');
     }
-    final name = _escapeQuery(p.posix.basename(path));
+    final name = _nameQuery(p.posix.basename(path));
     final result = await _apiGet(
       '/files',
       queryParams: {
@@ -1334,7 +1340,7 @@ class GDriveClientAdapter extends CloudStorageClient
         {'path': path},
       );
 
-    final body = json.encode({'name': newName});
+    final body = json.encode({'name': GDriveNameCodec.toDrive(newName)});
     final uri = Uri.parse('$_apiBase/files/$fileId');
     final resp = await http.patch(
       uri,
@@ -1387,7 +1393,7 @@ class GDriveClientAdapter extends CloudStorageClient
             map['mimeType'] == 'application/vnd.google-apps.folder';
         if (isFolder) continue; // Skip folders for content search
 
-        final name = map['name'] as String? ?? 'Unknown';
+        final name = GDriveNameCodec.fromDrive(map['name'] as String? ?? 'Unknown');
         final id = map['id'] as String;
 
         results.add({
@@ -1579,7 +1585,7 @@ class GDriveClientAdapter extends CloudStorageClient
 
   Future<String?> _findFileInFolder(String parentId, String name) async {
     final query =
-        "name='${_escapeQuery(name)}' and '$parentId' in parents and trashed=false";
+        "name='${_nameQuery(name)}' and '$parentId' in parents and trashed=false";
     final resp = await _apiGet(
       '/files',
       queryParams: {'q': query, 'fields': 'files(id)', 'pageSize': '2'},
@@ -1594,7 +1600,7 @@ class GDriveClientAdapter extends CloudStorageClient
 
   Future<String?> _findFolderInParent(String parentId, String name) async {
     final query =
-        "name='${_escapeQuery(name)}' and '$parentId' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false";
+        "name='${_nameQuery(name)}' and '$parentId' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false";
     final resp = await _apiGet(
       '/files',
       queryParams: {'q': query, 'fields': 'files(id)', 'pageSize': '1'},
@@ -1604,7 +1610,13 @@ class GDriveClientAdapter extends CloudStorageClient
     return files[0]['id'] as String;
   }
 
-  String _escapeQuery(String s) => s.replaceAll("'", "\\'");
+  /// Escapes a value for a Drive `q` string literal: backslash first, then
+  /// the single quote, as the Drive query grammar requires.
+  String _escapeQuery(String s) =>
+      s.replaceAll('\\', '\\\\').replaceAll("'", "\\'");
+
+  String _nameQuery(String displayName) =>
+      _escapeQuery(GDriveNameCodec.toDrive(displayName));
 
   // --- HTTP helpers ---
 
@@ -1670,4 +1682,20 @@ class GDriveClientAdapter extends CloudStorageClient
 
     return json.decode(resp.body) as Map<String, dynamic>;
   }
+}
+
+/// Google Drive allows `/` and `\` inside item names, but CrispCloud addresses
+/// items by path. Like rclone, names are shown with the full-width look-alikes
+/// U+FF0F and U+FF3C, and mapped back whenever a name goes to Drive.
+class GDriveNameCodec {
+  const GDriveNameCodec._();
+
+  static const _slash = '\uFF0F';
+  static const _backslash = '\uFF3C';
+
+  static String fromDrive(String name) =>
+      name.replaceAll('/', _slash).replaceAll('\\', _backslash);
+
+  static String toDrive(String name) =>
+      name.replaceAll(_slash, '/').replaceAll(_backslash, '\\');
 }

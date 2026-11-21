@@ -44,6 +44,39 @@ class NextcloudEndpoint {
     return _home(_withoutTrailingSlash(_path(uri, parts)), username);
   }
 
+  /// Accepts an address copied from the browser's address bar, such as
+  /// `https://host/sub/index.php/apps/files/?dir=/` or `https://host/apps/files`,
+  /// and returns the installation root (`https://host/sub`). DAV URLs
+  /// (`remote.php/...`) keep their path; only query and fragment are dropped.
+  static String installationUrl(String value) {
+    final uri = Uri.tryParse(value.trim());
+    if (uri == null || !uri.hasAuthority) return value.trim();
+    final parts = uri.pathSegments.where((part) => part.isNotEmpty).toList();
+    var keep = parts.length;
+    if (!parts.contains('remote.php')) {
+      for (final marker in const ['index.php', 'apps', 'login']) {
+        final at = parts.indexOf(marker);
+        if (at >= 0 && at < keep) keep = at;
+      }
+    }
+    // DAV paths are kept byte-for-byte; web UI paths are cut and re-encoded.
+    final path = keep == parts.length
+        ? uri.path
+        : '/${parts.take(keep).map(Uri.encodeComponent).join('/')}';
+    return '${uri.scheme}://${uri.authority}$path'
+        .replaceFirst(RegExp(r'/+$'), '');
+  }
+
+  /// The installation root of [value], cutting any `remote.php/...` suffix.
+  static Uri serverRoot(String value) {
+    final uri = Uri.parse(installationUrl(value));
+    final parts = uri.pathSegments.where((part) => part.isNotEmpty).toList();
+    final remote = parts.indexOf('remote.php');
+    return _withoutTrailingSlash(
+      _path(uri, remote < 0 ? parts : parts.take(remote)),
+    );
+  }
+
   static Uri _withoutTrailingSlash(Uri uri) =>
       Uri.parse(uri.toString().replaceFirst(RegExp(r'/+$'), ''));
 
