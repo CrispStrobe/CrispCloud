@@ -10,9 +10,6 @@ import FileProvider
 import Foundation
 
 final class FileProviderExtension: NSObject, NSFileProviderReplicatedExtension {
-    /// The app buffers uploads in memory before sending them to the provider.
-    static let uploadLimit: UInt64 = 512 * 1024 * 1024
-
     let domain: NSFileProviderDomain
     let client: IPCClient?
     let index: ItemIndex
@@ -55,7 +52,7 @@ final class FileProviderExtension: NSObject, NSFileProviderReplicatedExtension {
 
     static func translate(_ error: Error) -> Error {
         switch error {
-        case IPCFailure.unavailable:
+        case IPCFailure.unavailable, IPCFailure.interrupted:
             return NSFileProviderError(.serverUnreachable)
         case IPCFailure.posix(let code):
             switch code {
@@ -174,12 +171,12 @@ final class FileProviderExtension: NSObject, NSFileProviderReplicatedExtension {
             if isFolder {
                 try client.makeDirectory(path)
             } else if let url {
-                try client.upload(url, to: path, limit: FileProviderExtension.uploadLimit)
+                try client.upload(url, to: path)
             } else {
                 let empty = try self.temporaryFile()
                 FileManager.default.createFile(atPath: empty.path, contents: Data())
                 defer { try? FileManager.default.removeItem(at: empty) }
-                try client.upload(empty, to: path, limit: FileProviderExtension.uploadLimit)
+                try client.upload(empty, to: path)
             }
             let item = self.makeItem(path: path, attributes: try client.attributes(path))
             self.index.save()
@@ -215,7 +212,7 @@ final class FileProviderExtension: NSObject, NSFileProviderReplicatedExtension {
                 }
             }
             if changedFields.contains(.contents), let newContents {
-                try client.upload(newContents, to: path, limit: FileProviderExtension.uploadLimit)
+                try client.upload(newContents, to: path)
             }
             let updated = self.makeItem(path: path, attributes: try client.attributes(path))
             self.index.save()

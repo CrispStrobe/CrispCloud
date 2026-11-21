@@ -13,13 +13,16 @@ enum IPCFailure: Error {
     /// The app is not running, not connected to this account, or the socket
     /// broke. Finder shows the location as temporarily unreachable.
     case unavailable
+    /// The request was sent but no complete answer arrived. Never retried:
+    /// the app may already have performed it.
+    case interrupted
     /// The app answered with a POSIX error number.
     case posix(Int32)
 }
 
 enum IPCOpcode: UInt32 {
     case getattr = 1, readdir, read, write, create, mkdir, unlink, rmdir,
-         rename, release, truncate, statfs, open, discard
+         rename, release, truncate, statfs, open, discard, uploadStaged
 }
 
 struct IPCAttributes {
@@ -100,30 +103,21 @@ final class IPCClient {
         if let expectedSize, expectedSize != offset { throw IPCFailure.posix(EIO) }
     }
 
-    /// Uploads [source] to [path], replacing an existing file. The app buffers
-    /// the file in memory before uploading, so very large files are refused.
-    func upload(_ source: URL, to path: String, limit: UInt64) throws {
-        let size = (try? FileManager.default.attributesOfItem(atPath: source.path)[.size] as? NSNumber)?
-            .uint64Value ?? 0
-        guard size <= limit else { throw IPCFailure.posix(EFBIG) }
-        let handle = try call(.create, .string(path)).readUInt32(at: 0)
-        var released = false
-        // Never let a failed copy upload a truncated file.
-        defer { if !released { _ = try? call(.discard, Data.uint32(handle)) } }
-        let input = try FileHandle(forReadingFrom: source)
-        defer { try? input.close() }
-        var offset: UInt64 = 0
-        while let chunk = try input.read(upToCount: IPCClient.maxReadBytes), !chunk.isEmpty {
-            var request = Data.uint32(handle)
-            request.appendUInt64(offset)
-            request.appendUInt32(UInt32(chunk.count))
-            request.append(chunk)
-            _ = try call(.write, request)
-            offset += UInt64(chunk.count)
-        }
-        released = true
-        // The upload happens when the handle is released; report its failure.
-        _ = try call(.release, Data.uint32(handle))
+    /// Uploads [source] to [path], replacing an existing file. The file is
+    /// placed in the stage folder shared with the app (an APFS clone where
+    /// possible); the app streams it from disk, so size is not memory-bound.
+    func upload(_ source: URL, to path: String) throws {
+        let stage = URL(fileURLWithPath: socketPath).deletingLastPathComponent()
+            .appendingPathComponent("stage", isDirectory: true)
+        try FileManager.default.createDirectory(at: stage, withIntermediateDirectories: true,
+                                                attributes: [.posixPermissions: 0o700])
+        let staged = stage.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.copyItem(at: source, to: staged)
+        defer { try? FileManager.default.removeItem(at: staged) }
+        var payload = Data.string(path)
+        payload.append(Data.string(staged.path))
+        // The app answers once the provider upload finishes.
+        _ = try call(.uploadStaged, payload, timeout: 24 * 60 * 60)
     }
 
     func makeDirectory(_ path: String) throws { _ = try call(.mkdir, .string(path)) }
@@ -140,19 +134,24 @@ final class IPCClient {
 
     // MARK: - Transport
 
-    func call(_ opcode: IPCOpcode, _ payload: Data) throws -> Data {
+    func call(_ opcode: IPCOpcode, _ payload: Data, timeout: Int = 300) throws -> Data {
         lock.lock()
         defer { lock.unlock() }
         // One retry covers an app restart between two requests.
         for attempt in 0..<2 {
             do {
                 if fd < 0 { try connect() }
+                var limit = timeval(tv_sec: timeout, tv_usec: 0)
+                setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &limit, socklen_t(MemoryLayout<timeval>.size))
                 return try exchange(opcode, payload)
             } catch IPCFailure.unavailable where attempt == 0 {
                 disconnect()
             } catch IPCFailure.unavailable {
                 disconnect()
                 throw IPCFailure.unavailable
+            } catch IPCFailure.interrupted {
+                disconnect()
+                throw IPCFailure.interrupted
             }
         }
         throw IPCFailure.unavailable
@@ -174,8 +173,6 @@ final class IPCClient {
         }
         var on: Int32 = 1
         setsockopt(socket, SOL_SOCKET, SO_NOSIGPIPE, &on, socklen_t(MemoryLayout<Int32>.size))
-        var timeout = timeval(tv_sec: 300, tv_usec: 0) // uploads finish on release
-        setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO, &timeout, socklen_t(MemoryLayout<timeval>.size))
         let result = withUnsafePointer(to: &address) {
             $0.withMemoryRebound(to: sockaddr.self, capacity: 1) {
                 Darwin.connect(socket, $0, socklen_t(MemoryLayout<sockaddr_un>.size))
@@ -201,12 +198,22 @@ final class IPCClient {
         frame.appendUInt32(UInt32(payload.count))
         frame.append(payload)
         try writeAll(frame)
-        let header = try readExactly(12)
-        guard header.readUInt32(at: 0) == id else { throw IPCFailure.unavailable }
+        let header: Data
+        do {
+            header = try readExactly(12)
+        } catch {
+            throw IPCFailure.interrupted
+        }
+        guard header.readUInt32(at: 0) == id else { throw IPCFailure.interrupted }
         let errno = Int32(bitPattern: header.readUInt32(at: 4))
         let length = Int(header.readUInt32(at: 8))
-        guard length <= 64 * 1024 * 1024 else { throw IPCFailure.unavailable }
-        let body = length == 0 ? Data() : try readExactly(length)
+        guard length <= 64 * 1024 * 1024 else { throw IPCFailure.interrupted }
+        let body: Data
+        do {
+            body = length == 0 ? Data() : try readExactly(length)
+        } catch {
+            throw IPCFailure.interrupted
+        }
         if errno != 0 { throw IPCFailure.posix(errno) }
         return body
     }

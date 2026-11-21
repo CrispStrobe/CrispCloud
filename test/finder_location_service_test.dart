@@ -37,14 +37,19 @@ class _Client implements CloudStorageClient {
   Future<Map<String, dynamic>?> resolvePath(String path) async => null;
 
   @override
-  Future<void> uploadFile(
-    List<int> fileData,
+  Future<void> uploadStream(
+    Stream<List<int>> dataStream,
+    int length,
     String fileName,
     String targetPath, {
     Function(int, int)? onProgress,
   }) async {
-    uploads[targetPath == '/' ? '/$fileName' : '$targetPath/$fileName'] =
-        fileData;
+    final bytes = <int>[];
+    await for (final chunk in dataStream) {
+      bytes.addAll(chunk);
+    }
+    expect(bytes.length, length);
+    uploads[targetPath == '/' ? '/$fileName' : '$targetPath/$fileName'] = bytes;
   }
 
   @override
@@ -165,6 +170,27 @@ void main() {
     expect(client.uploads, {
       '/y.bin': [7],
     });
+
+    // Staged uploads stream from the shared stage folder and are removed;
+    // paths outside it are refused.
+    final stage = Directory('${container.path}/fp/stage')..createSync();
+    final staged = File('${stage.path}/one')
+      ..writeAsBytesSync(List.filled(70000, 3));
+    var (errno2, _) = await ipc.call(FuseOpcode.uploadStaged, [
+      ..._Ipc.str('/big.bin'),
+      ..._Ipc.str(staged.path),
+    ]);
+    expect(errno2, 0);
+    expect(client.uploads['/big.bin']!.length, 70000);
+    expect(staged.existsSync(), isFalse);
+    final outside = File('${container.path}/outside')..writeAsStringSync('x');
+    (errno2, _) = await ipc.call(FuseOpcode.uploadStaged, [
+      ..._Ipc.str('/evil.bin'),
+      ..._Ipc.str('${stage.path}/../../outside'),
+    ]);
+    expect(errno2, 13);
+    expect(outside.existsSync(), isTrue);
+    expect(client.uploads.containsKey('/evil.bin'), isFalse);
     await socket.close();
 
     // Persisted, and served again by a later session for the same account.

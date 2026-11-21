@@ -67,33 +67,67 @@ class _ReadBuffer {
   _ReadBuffer(this.remotePath);
 }
 
-/// Write-back buffer for a dirty (written) file handle.
+/// Write-back buffer for a dirty (written) file handle, spooled to a private
+/// temporary file so file size is bounded by disk space, not memory. Writes
+/// arrive concurrently from the IPC dispatcher; they are serialized here.
 class _WriteBuffer {
   final String remotePath;
   final String fileName;
   final String remoteDir;
+  final File spool;
 
-  // Sparse map: offset → data chunk
-  final Map<int, Uint8List> chunks = {};
+  RandomAccessFile? _file;
+  Future<void> _tail = Future.value();
   int fileSize = 0; // tracked logical size
 
   _WriteBuffer({
     required this.remotePath,
     required this.fileName,
     required this.remoteDir,
+    required this.spool,
   });
 
-  /// Merge all chunks into a contiguous byte array.
-  Uint8List assemble() {
-    if (chunks.isEmpty) return Uint8List(0);
-    final buf = Uint8List(fileSize);
-    for (final entry in chunks.entries) {
-      final start = entry.key;
-      final src = entry.value;
-      final end = (start + src.length).clamp(0, fileSize);
-      buf.setRange(start, end, src);
-    }
-    return buf;
+  Future<void> _serial(Future<void> Function(RandomAccessFile file) body) {
+    final next = _tail.then((_) async {
+      await body(_file ??= await spool.open(mode: FileMode.write));
+    });
+    // Keep the chain alive after a failure; the caller still sees the error.
+    _tail = next.catchError((Object _) {});
+    return next;
+  }
+
+  Future<void> write(int offset, List<int> data) => _serial((file) async {
+    await file.setPosition(offset);
+    await file.writeFrom(data);
+    if (offset + data.length > fileSize) fileSize = offset + data.length;
+  });
+
+  Future<void> truncate(int size) => _serial((file) async {
+    await file.truncate(size);
+    fileSize = size;
+  });
+
+  /// Closes the spool at its logical size, ready to be streamed.
+  Future<void> finish() => _serial((file) async {
+    await file.truncate(fileSize);
+    await file.flush();
+  });
+
+  Future<void> discard() async {
+    try {
+      await _tail;
+      await _file?.close();
+    } catch (_) {}
+    _file = null;
+    try {
+      await spool.delete();
+    } catch (_) {}
+  }
+
+  Future<void> close() async {
+    await _tail;
+    await _file?.close();
+    _file = null;
   }
 }
 
@@ -125,6 +159,11 @@ abstract class FuseOpcode {
   /// Drops a handle without uploading buffered writes (File Provider client
   /// aborting a failed upload). The FUSE bridge does not use it.
   static const discard = 14;
+
+  /// Uploads a file staged next to the IPC socket (File Provider client):
+  /// payload = [remote path][staged local path]. The app streams it from
+  /// disk to the provider and deletes the staged copy.
+  static const uploadStaged = 15;
 }
 
 // ---------------------------------------------------------------------------
@@ -290,7 +329,13 @@ class FuseFilesystem {
     await _server?.close();
     await _flushAllWrites();
     _readBuffers.clear();
+    for (final buffer in _writeBuffers.values) {
+      await buffer.discard();
+    }
     _writeBuffers.clear();
+    try {
+      await _spool?.delete(recursive: true);
+    } catch (_) {}
     _dirCache.clear();
     // Remove the socket file.
     try {
@@ -359,6 +404,7 @@ class FuseFilesystem {
             FuseOpcode.rmdir,
             FuseOpcode.rename,
             FuseOpcode.truncate,
+            FuseOpcode.uploadStaged,
           }.contains(opcode)) {
         _sendError(socket, reqId, errno: 30); // EROFS
         return;
@@ -407,8 +453,11 @@ class FuseFilesystem {
         case FuseOpcode.discard:
           final handleId = _readUint32(payload, 0);
           _readBuffers.remove(handleId);
-          _writeBuffers.remove(handleId);
+          await _writeBuffers.remove(handleId)?.discard();
           responsePayload = Uint8List(0);
+          break;
+        case FuseOpcode.uploadStaged:
+          responsePayload = await _opUploadStaged(payload);
           break;
         default:
           _sendError(socket, reqId, errno: 38); // ENOSYS
@@ -525,9 +574,7 @@ class FuseFilesystem {
     final buf = _writeBuffers[handleId];
     if (buf == null) throw const _FuseError(9); // EBADF
 
-    buf.chunks[writeOffset] = data;
-    final end = writeOffset + dataLen;
-    if (end > buf.fileSize) buf.fileSize = end;
+    await buf.write(writeOffset, data);
 
     return _encodeUint32(dataLen); // return bytes written
   }
@@ -542,6 +589,7 @@ class FuseFilesystem {
       remotePath: remoteFull,
       fileName: p.basename(path),
       remoteDir: p.dirname(remoteFull),
+      spool: File(p.join((await _spoolDirectory()).path, 'w$handleId')),
     );
 
     _invalidateDirCache(p.dirname(remoteFull));
@@ -601,9 +649,12 @@ class FuseFilesystem {
   /// release → flush write-back buffer on file close.
   Future<Uint8List> _opRelease(Uint8List payload) async {
     final handleId = _readUint32(payload, 0);
-    await _flushHandle(handleId);
-    _readBuffers.remove(handleId);
-    _writeBuffers.remove(handleId);
+    try {
+      await _flushHandle(handleId);
+    } finally {
+      _readBuffers.remove(handleId);
+      await _writeBuffers.remove(handleId)?.discard();
+    }
     return Uint8List(0);
   }
 
@@ -614,10 +665,7 @@ class FuseFilesystem {
     off += 4;
     final newSize = _readUint64(payload, off);
 
-    final wbuf = _writeBuffers[handleId];
-    if (wbuf != null) {
-      wbuf.fileSize = newSize;
-    }
+    await _writeBuffers[handleId]?.truncate(newSize);
     return Uint8List(0);
   }
 
@@ -719,14 +767,87 @@ class FuseFilesystem {
     if (wbuf == null) return;
 
     try {
-      final assembled = wbuf.assemble();
-      await client.uploadFile(assembled, wbuf.fileName, wbuf.remoteDir);
+      await wbuf.finish();
+      await wbuf.close();
+      await _uploadFromDisk(
+        wbuf.spool,
+        wbuf.fileSize,
+        wbuf.fileName,
+        wbuf.remoteDir,
+      );
       _invalidateDirCache(wbuf.remoteDir);
-      _log.debug('Flushed ${wbuf.fileName} (${assembled.length} bytes)');
+      _log.debug('Flushed ${wbuf.fileName} (${wbuf.fileSize} bytes)');
     } catch (e) {
       _log.error('Write-back flush failed for ${wbuf.remotePath}', e);
       rethrow;
     }
+  }
+
+  /// Streams [source] to the provider. Providers without a streaming upload
+  /// implementation keep the buffered path up to [maxBufferedFallbackBytes].
+  Future<void> _uploadFromDisk(
+    File source,
+    int length,
+    String fileName,
+    String remoteDir,
+  ) async {
+    try {
+      await client.uploadStream(
+        source.openRead(0, length),
+        length,
+        fileName,
+        remoteDir,
+      );
+    } on UnsupportedError {
+      if (length > maxBufferedFallbackBytes) rethrow;
+      await client.uploadFile(await source.readAsBytes(), fileName, remoteDir);
+    }
+  }
+
+  /// Largest upload sent through a provider's whole-file API when it has no
+  /// streaming implementation.
+  static const maxBufferedFallbackBytes = 512 * 1024 * 1024;
+
+  Directory? _spool;
+
+  Future<Directory> _spoolDirectory() async {
+    final existing = _spool;
+    if (existing != null) return existing;
+    final created = await (temporaryDirectory ?? Directory.systemTemp)
+        .createTemp('cfw');
+    setFileMode(created.path, 0x1c0 /* 0700 */);
+    return _spool = created;
+  }
+
+  /// Staged uploads must come from `<socket directory>/stage/`, the folder the
+  /// File Provider extension shares with the app. Anything else is refused.
+  Future<Uint8List> _opUploadStaged(Uint8List payload) async {
+    final path = _decodeString(payload, 0);
+    final staged = _decodeString(payload, 4 + utf8.encode(path).length);
+    final fixed = socketPath;
+    if (fixed == null) throw const _FuseError(38); // ENOSYS
+    final stage = p.join(p.dirname(fixed), 'stage');
+    if (!p.isWithin(stage, p.normalize(staged)) ||
+        await FileSystemEntity.type(staged, followLinks: false) !=
+            FileSystemEntityType.file) {
+      throw const _FuseError(13); // EACCES
+    }
+    final source = File(staged);
+    try {
+      final remoteFull = _fullRemotePath(path);
+      await _uploadFromDisk(
+        source,
+        await source.length(),
+        p.basename(remoteFull),
+        p.dirname(remoteFull),
+      );
+      _invalidateDirCache(p.dirname(remoteFull));
+    } finally {
+      try {
+        await source.delete();
+      } catch (_) {}
+    }
+    return Uint8List(0);
   }
 
   Future<void> _flushAllWrites() async {

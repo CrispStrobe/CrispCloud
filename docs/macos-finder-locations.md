@@ -21,15 +21,19 @@ remain GitHub-only: see [FUSE audit](fuse_and_license_audit.md).)
 - Identifiers are opaque and kept stable across renames by a per-location
   index in the extension's container. Remote changes are found by comparing
   folder listings; the app signals Finder every minute while serving.
-- Uploads go through `create`/`write`/`release`; a failed copy is dropped with
-  the `discard` opcode so a partial file is never uploaded.
+- Uploads are staged: the extension clones the file into
+  `<App Group container>/fp/stage/` and sends `uploadStaged`; the app streams
+  it from disk to the provider (`uploadStream`) and deletes the staged copy.
+  Only files inside that stage folder are accepted. Size is bounded by disk
+  space, not memory. FUSE writes likewise spool to a private temporary file.
 
 ## Limits
 
 - Files open only while CrispCloud is running and connected to that account;
   otherwise Finder reports the location as unreachable. Locations are restored
   automatically when the account reconnects.
-- Uploads are buffered by the app in memory and limited to 512 MiB per file.
+- Providers without a streaming upload implementation fall back to their
+  whole-file API, limited to 512 MiB.
 - Dates, tags and other Finder metadata are kept locally, not on the provider.
 - Remote changes appear after the next refresh (about a minute), or when a
   folder is reopened.
