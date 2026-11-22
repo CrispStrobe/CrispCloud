@@ -2377,6 +2377,7 @@ class _Checker {
     'rgb',
     'lbound',
     'ubound',
+    'split',
     'empty',
     'null',
     'nothing',
@@ -2995,6 +2996,11 @@ class _Checker {
         case _MidAssignment():
           _midAssignment(statement);
         case _Assignment():
+          if (statement.value case final _Call call
+              when call.token.lower == 'split') {
+            _splitAssignment(statement, call);
+            break;
+          }
           final valueKind = _expression(statement.value);
           if (statement.target case final _Name target) {
             final symbol = _symbol(target.token);
@@ -3275,6 +3281,37 @@ class _Checker {
             );
           }
       }
+    }
+  }
+
+  void _splitAssignment(_Assignment statement, _Call call) {
+    final target = statement.target;
+    if (statement.isSet || target is! _Name) {
+      context.unsupported(
+        target.token,
+        'Split requires direct Let assignment to a local dynamic String array.',
+      );
+    }
+    final symbol = _symbol(target.token);
+    if (!symbol.isDynamicArray || symbol.type != _Declared.string) {
+      context.unsupported(
+        target.token,
+        'Split assignment requires a local array declared with Dim name() As String.',
+      );
+    }
+    if (call.arguments.isEmpty || call.arguments.length > 4) {
+      context.type(
+        call.token,
+        'Split requires a String and optional delimiter, limit and binary comparison mode.',
+      );
+    }
+    for (var index = 0; index < call.arguments.length; index++) {
+      final argument = call.arguments[index];
+      _compatible(
+        index < 2 ? _Kind.string : _Kind.number,
+        _expression(argument),
+        argument.token,
+      );
     }
   }
 
@@ -3846,6 +3883,12 @@ class _Checker {
       case _Call():
         if ((symbols[expression.token.lower]?.isArray ?? false)) {
           return _arrayIndex(expression);
+        }
+        if (expression.token.lower == 'split') {
+          context.unsupported(
+            expression.token,
+            'Split requires direct assignment to a local dynamic String array; inline and whole-array values are unsupported.',
+          );
         }
         if (_numericIntrinsics.contains(expression.token.lower)) {
           _count(expression.token, expression.arguments, 1);
@@ -5190,6 +5233,11 @@ class _Evaluator {
           case _MidAssignment():
             _midAssignment(statement);
           case _Assignment():
+            if (statement.value case final _Call call
+                when call.token.lower == 'split') {
+              _splitAssignment(statement.target as _Name, call);
+              break;
+            }
             if (statement.target case final _Call target) {
               final array = values[target.token.lower]! as _Array;
               final index = _arrayOffset(array, target.arguments.single);
@@ -6181,7 +6229,7 @@ class _Evaluator {
       context.fail(
         token,
         'vba_array_locked',
-        'An array being enumerated by For Each cannot be resized or erased.',
+        'An array being enumerated by For Each cannot be replaced, resized or erased.',
       );
     }
   }
@@ -6195,6 +6243,109 @@ class _Evaluator {
       );
     }
     return bound;
+  }
+
+  void _splitAssignment(_Name target, _Call call) {
+    final array = values[target.token.lower]! as _Array;
+    _unlocked(array, target.token);
+    _tick(call.token);
+    // Evaluate every argument once in written order, with the old descriptor
+    // still readable. No temporary array value can escape this assignment.
+    final arguments = <Object>[
+      for (final argument in call.arguments) _evaluate(argument),
+    ];
+    String textArgument(int index) {
+      final value = arguments[index];
+      final token = call.arguments[index].token;
+      if (value == _VariantState.nullValue) _invalidNull(token);
+      return value == _VariantState.empty ? '' : _string(value, token);
+    }
+
+    final text = textArgument(0);
+    final delimiter = arguments.length > 1 ? textArgument(1) : ' ';
+    var limit = -1;
+    if (arguments.length > 2) {
+      final value = arguments[2];
+      final token = call.arguments[2].token;
+      if (value == _VariantState.nullValue) _invalidNull(token);
+      limit = _integer(value, token);
+      if (limit < -1 || limit > 2147483647) {
+        context.type(
+          token,
+          'Split limit must be -1 or a nonnegative signed 32-bit integer.',
+        );
+      }
+    }
+    if (arguments.length > 3) {
+      final value = arguments[3];
+      final token = call.arguments[3].token;
+      if (value == _VariantState.nullValue) _invalidNull(token);
+      _stringBinaryCompare(value, token);
+    }
+    // Validate supplied values even when the result is empty or unsplit. Stop
+    // at the first match proving that the output would exceed the slot limit;
+    // smaller limits retain the entire remaining suffix in the final element.
+    final empty = text.isEmpty || limit == 0;
+    final maximum = limit > 0 && limit <= _maxArrayElements
+        ? limit - 1
+        : _maxArrayElements;
+    final matches = empty || delimiter.isEmpty || limit == 1
+        ? const <int>[]
+        : _binaryStringMatches(
+            text,
+            delimiter,
+            0,
+            text.length,
+            call.token,
+            maximum: maximum,
+            overlap: false,
+          );
+    final count = empty ? 0 : matches.length + 1;
+    if (count > _maxArrayElements) {
+      context.limit(
+        call.token,
+        'An array may contain at most $_maxArrayElements elements.',
+      );
+    }
+    final oldCount = array.elements.length;
+    if (count > _maxActiveArrayElements - activeArrayElements + oldCount) {
+      context.limit(
+        call.token,
+        'Active procedures may contain at most $_maxActiveArrayElements array elements.',
+      );
+    }
+    final stringUnits = empty
+        ? 0
+        : text.length - matches.length * delimiter.length;
+    if (stringUnits >
+        _maxActiveArrayStringUnits -
+            activeArrayStringUnits +
+            array.stringUnits) {
+      context.limit(
+        call.token,
+        'Strings in active array elements exceed $_maxActiveArrayStringUnits UTF-16 code units.',
+      );
+    }
+    // Charge allocation, retirement and every copied UTF-16 unit before
+    // constructing any result slots or substrings, including no-match input.
+    _charge(count + oldCount + stringUnits, call.token);
+    final elements = List<Object>.filled(count, '');
+    if (!empty) {
+      var start = 0;
+      for (var index = 0; index < matches.length; index++) {
+        final end = matches[index];
+        elements[index] = text.substring(start, end);
+        start = end + delimiter.length;
+      }
+      elements[count - 1] = text.substring(start);
+    }
+    // Keep descriptor identity (and its For Each lock), but publish the new
+    // owned storage only after all validation and bounded construction succeed.
+    activeArrayElements += count - oldCount;
+    activeArrayStringUnits += stringUnits - array.stringUnits;
+    array.bounds = _ArrayBounds(0, count - 1);
+    array.elements = elements;
+    array.stringUnits = stringUnits;
   }
 
   void _resize(_ResizeTarget target, {required bool preserve}) {

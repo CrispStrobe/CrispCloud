@@ -98,7 +98,12 @@ abstract final class WordFieldSpans {
             );
         }
       } else {
-        if (stack.isNotEmpty && !stack.last.separated) {
+        // Native inspection validates empty code-run formatting and ownership.
+        // An empty run alone does not make a balanced packet structurally bad;
+        // unsupported properties still make packet.canEdit false above.
+        if (stack.isNotEmpty &&
+            !stack.last.separated &&
+            (inline is! WmlRun || inline.text.isNotEmpty)) {
           stack.last.valid = false;
         }
         if (inline is WmlRun) offset += inline.text.length;

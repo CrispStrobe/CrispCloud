@@ -651,6 +651,13 @@ class WmlRunProps {
   String? sourcePropertiesXml;
   Map<String, String>? importedValues;
 
+  /// A pending native formatting revision on an imported empty run.
+  ///
+  /// Its complete history remains in the document revision model. This
+  /// provenance lets paragraph-only field guards distinguish that run after
+  /// the importer lifts `rPrChange` out of its ordinary direct properties.
+  bool hasEmptyFormattingRevision = false;
+
   /// Direct source properties, including explicit values equal to defaults.
   final Set<String> explicitProperties = <String>{};
 
@@ -778,6 +785,7 @@ class WmlRunProps {
         )
         ..explicitProperties.addAll(explicitProperties)
         ..sourcePropertiesXml = sourcePropertiesXml
+        ..hasEmptyFormattingRevision = hasEmptyFormattingRevision
         ..importedValues = importedValues == null
             ? null
             : Map.of(importedValues!);

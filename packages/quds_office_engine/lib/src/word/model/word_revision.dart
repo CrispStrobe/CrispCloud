@@ -722,6 +722,19 @@ abstract final class WordRevisions {
       if (item.kind.isFormatting) {
         if (!accept) {
           WordDeserializer().restoreRevisionFormatting(document, item);
+        } else if (item.kind == WmlRevisionKind.runFormat &&
+            item.start == item.end) {
+          // validateRevision proved this zero-width revision has exactly one
+          // empty run. Its paragraph-only source guard ends with acceptance;
+          // the full revision history remains solely in the revision model.
+          final paragraph = resolveParagraph(document, item)!;
+          var offset = 0;
+          for (final run in paragraph.inlines.whereType<WmlRun>()) {
+            if (offset == item.start && run.text.isEmpty) {
+              run.properties.hasEmptyFormattingRevision = false;
+            }
+            offset += run.text.length;
+          }
         }
       } else if (accept == item.kind.isDeletion) {
         final paragraph = resolveParagraph(document, item)!;

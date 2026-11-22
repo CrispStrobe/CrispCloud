@@ -1,0 +1,2109 @@
+{
+  "schemaVersion": 1,
+  "suite": "vba-split",
+  "dialect": "vba-word",
+  "cases": [
+    {
+      "id": "default-space",
+      "feature": "Split source String arrays",
+      "source": "Sub Main()\nDim parts() As String, i As Long\n\nparts = Split(\"alpha beta gamma\")\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(LBound(parts)) & \":\" & CStr(UBound(parts))\nFor i = LBound(parts) To UBound(parts)\n    ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(i) & \"=\" & parts(i)\nNext i\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0:2"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0=alpha"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "1=beta"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "2=gamma"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Independently authored source-array result from the published Split contract; output uses the Quds native Word sink. No Office host was executed."
+      }
+    },
+    {
+      "id": "default-is-only-ascii-space",
+      "feature": "Split source String arrays",
+      "source": "Sub Main()\nDim parts() As String, i As Long\n\nparts = Split(\"alpha\" & vbTab & \"beta gamma\")\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(LBound(parts)) & \":\" & CStr(UBound(parts))\nFor i = LBound(parts) To UBound(parts)\n    ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(i) & \"=\" & parts(i)\nNext i\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0:1"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0=alpha\tbeta"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "1=gamma"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Independently authored source-array result from the published Split contract; output uses the Quds native Word sink. No Office host was executed."
+      }
+    },
+    {
+      "id": "multicharacter-delimiter",
+      "feature": "Split source String arrays",
+      "source": "Sub Main()\nDim parts() As String, i As Long\n\nparts = Split(\"alpha::beta::gamma\", \"::\")\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(LBound(parts)) & \":\" & CStr(UBound(parts))\nFor i = LBound(parts) To UBound(parts)\n    ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(i) & \"=\" & parts(i)\nNext i\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0:2"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0=alpha"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "1=beta"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "2=gamma"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Independently authored source-array result from the published Split contract; output uses the Quds native Word sink. No Office host was executed."
+      }
+    },
+    {
+      "id": "delimiter-not-found",
+      "feature": "Split source String arrays",
+      "source": "Sub Main()\nDim parts() As String, i As Long\n\nparts = Split(\"alpha|beta\", \",\")\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(LBound(parts)) & \":\" & CStr(UBound(parts))\nFor i = LBound(parts) To UBound(parts)\n    ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(i) & \"=\" & parts(i)\nNext i\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0:0"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0=alpha|beta"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Independently authored source-array result from the published Split contract; output uses the Quds native Word sink. No Office host was executed."
+      }
+    },
+    {
+      "id": "delimiter-longer-than-input",
+      "feature": "Split source String arrays",
+      "source": "Sub Main()\nDim parts() As String, i As Long\n\nparts = Split(\"abc\", \"abcdef\")\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(LBound(parts)) & \":\" & CStr(UBound(parts))\nFor i = LBound(parts) To UBound(parts)\n    ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(i) & \"=\" & parts(i)\nNext i\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0:0"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0=abc"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Independently authored source-array result from the published Split contract; output uses the Quds native Word sink. No Office host was executed."
+      }
+    },
+    {
+      "id": "leading-adjacent-trailing",
+      "feature": "Split source String arrays",
+      "source": "Sub Main()\nDim parts() As String, i As Long\n\nparts = Split(\"|a||b|\", \"|\")\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(LBound(parts)) & \":\" & CStr(UBound(parts))\nFor i = LBound(parts) To UBound(parts)\n    ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(i) & \"=\" & parts(i)\nNext i\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0:4"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0="
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "1=a"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "2="
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "3=b"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "4="
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Independently authored source-array result from the published Split contract; output uses the Quds native Word sink. No Office host was executed."
+      }
+    },
+    {
+      "id": "nonoverlapping-delimiters",
+      "feature": "Split source String arrays",
+      "source": "Sub Main()\nDim parts() As String, i As Long\n\nparts = Split(\"aaaaa\", \"aa\")\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(LBound(parts)) & \":\" & CStr(UBound(parts))\nFor i = LBound(parts) To UBound(parts)\n    ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(i) & \"=\" & parts(i)\nNext i\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0:2"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0="
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "1="
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "2=a"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Independently authored source-array result from the published Split contract; output uses the Quds native Word sink. No Office host was executed."
+      }
+    },
+    {
+      "id": "binary-case-sensitive",
+      "feature": "Split source String arrays",
+      "source": "Sub Main()\nDim parts() As String, i As Long\n\nparts = Split(\"xAxax\", \"a\")\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(LBound(parts)) & \":\" & CStr(UBound(parts))\nFor i = LBound(parts) To UBound(parts)\n    ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(i) & \"=\" & parts(i)\nNext i\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0:1"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0=xAx"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "1=x"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Independently authored source-array result from the published Split contract; output uses the Quds native Word sink. No Office host was executed."
+      }
+    },
+    {
+      "id": "empty-delimiter",
+      "feature": "Split source String arrays",
+      "source": "Sub Main()\nDim parts() As String, i As Long\n\nparts = Split(\"a|b\", \"\")\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(LBound(parts)) & \":\" & CStr(UBound(parts))\nFor i = LBound(parts) To UBound(parts)\n    ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(i) & \"=\" & parts(i)\nNext i\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0:0"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0=a|b"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Independently authored source-array result from the published Split contract; output uses the Quds native Word sink. No Office host was executed."
+      }
+    },
+    {
+      "id": "nonascii-delimiter",
+      "feature": "Split source String arrays",
+      "source": "Sub Main()\nDim parts() As String, i As Long\n\nparts = Split(\"eins§zwei§drei\", \"§\")\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(LBound(parts)) & \":\" & CStr(UBound(parts))\nFor i = LBound(parts) To UBound(parts)\n    ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(i) & \"=\" & parts(i)\nNext i\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0:2"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0=eins"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "1=zwei"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "2=drei"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Independently authored source-array result from the published Split contract; output uses the Quds native Word sink. No Office host was executed."
+      }
+    },
+    {
+      "id": "surrogate-pair-delimiter",
+      "feature": "Split source String arrays",
+      "source": "Sub Main()\nDim parts() As String, i As Long\n\nparts = Split(\"A😀B😀\", \"😀\")\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(LBound(parts)) & \":\" & CStr(UBound(parts))\nFor i = LBound(parts) To UBound(parts)\n    ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(i) & \"=\" & parts(i)\nNext i\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0:2"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0=A"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "1=B"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "2="
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Explicit bounded Quds array ownership, UTF-16, coercion or empty-descriptor contract; this case is not a claim of installed Office-host observation."
+      }
+    },
+    {
+      "id": "combining-sequence-delimiter",
+      "feature": "Split source String arrays",
+      "source": "Sub Main()\nDim parts() As String, i As Long\n\nparts = Split(\"café|cafe\" & ChrW$(769) & \"|fin\", \"e\" & ChrW$(769))\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(LBound(parts)) & \":\" & CStr(UBound(parts))\nFor i = LBound(parts) To UBound(parts)\n    ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(i) & \"=\" & parts(i)\nNext i\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0:1"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0=café|caf"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "1=|fin"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Explicit bounded Quds array ownership, UTF-16, coercion or empty-descriptor contract; this case is not a claim of installed Office-host observation."
+      }
+    },
+    {
+      "id": "crlf-delimiter",
+      "feature": "Split source String arrays",
+      "source": "Sub Main()\nDim parts() As String, i As Long\n\nparts = Split(\"one\" & vbCrLf & \"two\", vbCrLf)\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(LBound(parts)) & \":\" & CStr(UBound(parts))\nFor i = LBound(parts) To UBound(parts)\n    ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(i) & \"=\" & parts(i)\nNext i\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0:1"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0=one"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "1=two"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Independently authored source-array result from the published Split contract; output uses the Quds native Word sink. No Office host was executed."
+      }
+    },
+    {
+      "id": "nul-code-unit-delimiter",
+      "feature": "Split source String arrays",
+      "source": "Sub Main()\nDim parts() As String, i As Long\n\nparts = Split(\"a\" & vbNullChar & \"b\", vbNullChar)\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(LBound(parts)) & \":\" & CStr(UBound(parts))\nFor i = LBound(parts) To UBound(parts)\n    ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(i) & \"=\" & parts(i)\nNext i\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0:1"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0=a"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "1=b"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Explicit bounded Quds array ownership, UTF-16, coercion or empty-descriptor contract; this case is not a claim of installed Office-host observation."
+      }
+    },
+    {
+      "id": "explicit-all-limit",
+      "feature": "Split source String arrays",
+      "source": "Sub Main()\nDim parts() As String, i As Long\n\nparts = Split(\"a|b|c\", \"|\", -1)\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(LBound(parts)) & \":\" & CStr(UBound(parts))\nFor i = LBound(parts) To UBound(parts)\n    ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(i) & \"=\" & parts(i)\nNext i\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0:2"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0=a"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "1=b"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "2=c"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Independently authored source-array result from the published Split contract; output uses the Quds native Word sink. No Office host was executed."
+      }
+    },
+    {
+      "id": "one-keeps-whole-input",
+      "feature": "Split source String arrays",
+      "source": "Sub Main()\nDim parts() As String, i As Long\n\nparts = Split(\"a|b|c\", \"|\", 1)\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(LBound(parts)) & \":\" & CStr(UBound(parts))\nFor i = LBound(parts) To UBound(parts)\n    ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(i) & \"=\" & parts(i)\nNext i\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0:0"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0=a|b|c"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Independently authored source-array result from the published Split contract; output uses the Quds native Word sink. No Office host was executed."
+      }
+    },
+    {
+      "id": "two-keeps-unsplit-remainder",
+      "feature": "Split source String arrays",
+      "source": "Sub Main()\nDim parts() As String, i As Long\n\nparts = Split(\"a|b|c\", \"|\", 2)\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(LBound(parts)) & \":\" & CStr(UBound(parts))\nFor i = LBound(parts) To UBound(parts)\n    ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(i) & \"=\" & parts(i)\nNext i\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0:1"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0=a"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "1=b|c"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Independently authored source-array result from the published Split contract; output uses the Quds native Word sink. No Office host was executed."
+      }
+    },
+    {
+      "id": "limit-larger-than-parts",
+      "feature": "Split source String arrays",
+      "source": "Sub Main()\nDim parts() As String, i As Long\n\nparts = Split(\"a|b\", \"|\", 99)\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(LBound(parts)) & \":\" & CStr(UBound(parts))\nFor i = LBound(parts) To UBound(parts)\n    ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(i) & \"=\" & parts(i)\nNext i\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0:1"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0=a"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "1=b"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Independently authored source-array result from the published Split contract; output uses the Quds native Word sink. No Office host was executed."
+      }
+    },
+    {
+      "id": "max-signed32-limit",
+      "feature": "Split source String arrays",
+      "source": "Sub Main()\nDim parts() As String, i As Long\n\nparts = Split(\"a|b\", \"|\", 2147483647)\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(LBound(parts)) & \":\" & CStr(UBound(parts))\nFor i = LBound(parts) To UBound(parts)\n    ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(i) & \"=\" & parts(i)\nNext i\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0:1"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0=a"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "1=b"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Explicit bounded Quds array ownership, UTF-16, coercion or empty-descriptor contract; this case is not a claim of installed Office-host observation."
+      }
+    },
+    {
+      "id": "limit-counts-leading-empty-slot",
+      "feature": "Split source String arrays",
+      "source": "Sub Main()\nDim parts() As String, i As Long\n\nparts = Split(\"|a|b\", \"|\", 2)\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(LBound(parts)) & \":\" & CStr(UBound(parts))\nFor i = LBound(parts) To UBound(parts)\n    ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(i) & \"=\" & parts(i)\nNext i\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0:1"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0="
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "1=a|b"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Independently authored source-array result from the published Split contract; output uses the Quds native Word sink. No Office host was executed."
+      }
+    },
+    {
+      "id": "limit-preserves-trailing-empty-slot",
+      "feature": "Split source String arrays",
+      "source": "Sub Main()\nDim parts() As String, i As Long\n\nparts = Split(\"a|\", \"|\", 2)\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(LBound(parts)) & \":\" & CStr(UBound(parts))\nFor i = LBound(parts) To UBound(parts)\n    ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(i) & \"=\" & parts(i)\nNext i\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0:1"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0=a"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "1="
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Independently authored source-array result from the published Split contract; output uses the Quds native Word sink. No Office host was executed."
+      }
+    },
+    {
+      "id": "binary-comparison-explicit",
+      "feature": "Split source String arrays",
+      "source": "Sub Main()\nDim parts() As String, i As Long\n\nparts = Split(\"aAa\", \"A\", -1, vbBinaryCompare)\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(LBound(parts)) & \":\" & CStr(UBound(parts))\nFor i = LBound(parts) To UBound(parts)\n    ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(i) & \"=\" & parts(i)\nNext i\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0:1"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0=a"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "1=a"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Independently authored source-array result from the published Split contract; output uses the Quds native Word sink. No Office host was executed."
+      }
+    },
+    {
+      "id": "zero-limit-is-allocated-empty",
+      "feature": "Split source String arrays",
+      "source": "Sub Main()\nDim parts() As String, i As Long\n\nparts = Split(\"a|b\", \"|\", 0)\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(LBound(parts)) & \":\" & CStr(UBound(parts))\nFor i = LBound(parts) To UBound(parts)\n    ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(i) & \"=\" & parts(i)\nNext i\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0:-1"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Explicit bounded Quds array ownership, UTF-16, coercion or empty-descriptor contract; this case is not a claim of installed Office-host observation."
+      }
+    },
+    {
+      "id": "empty-source-has-no-elements",
+      "feature": "Split source String arrays",
+      "source": "Sub Main()\nDim parts() As String, i As Long\n\nparts = Split(\"\")\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(LBound(parts)) & \":\" & CStr(UBound(parts))\nFor i = LBound(parts) To UBound(parts)\n    ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(i) & \"=\" & parts(i)\nNext i\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0:-1"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Explicit bounded Quds array ownership, UTF-16, coercion or empty-descriptor contract; this case is not a claim of installed Office-host observation."
+      }
+    },
+    {
+      "id": "empty-source-empty-delimiter",
+      "feature": "Split source String arrays",
+      "source": "Sub Main()\nDim parts() As String, i As Long\n\nparts = Split(\"\", \"\")\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(LBound(parts)) & \":\" & CStr(UBound(parts))\nFor i = LBound(parts) To UBound(parts)\n    ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(i) & \"=\" & parts(i)\nNext i\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0:-1"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Explicit bounded Quds array ownership, UTF-16, coercion or empty-descriptor contract; this case is not a claim of installed Office-host observation."
+      }
+    },
+    {
+      "id": "empty-source-positive-limit",
+      "feature": "Split source String arrays",
+      "source": "Sub Main()\nDim parts() As String, i As Long\n\nparts = Split(\"\", \"|\", 1)\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(LBound(parts)) & \":\" & CStr(UBound(parts))\nFor i = LBound(parts) To UBound(parts)\n    ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(i) & \"=\" & parts(i)\nNext i\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0:-1"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Explicit bounded Quds array ownership, UTF-16, coercion or empty-descriptor contract; this case is not a claim of installed Office-host observation."
+      }
+    },
+    {
+      "id": "empty-source-state",
+      "feature": "Split source String arrays",
+      "source": "Sub Main()\nDim parts() As String, i As Long\n\nparts = Split(Empty, \"|\")\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(LBound(parts)) & \":\" & CStr(UBound(parts))\nFor i = LBound(parts) To UBound(parts)\n    ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(i) & \"=\" & parts(i)\nNext i\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0:-1"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Explicit bounded Quds array ownership, UTF-16, coercion or empty-descriptor contract; this case is not a claim of installed Office-host observation."
+      }
+    },
+    {
+      "id": "empty-delimiter-state",
+      "feature": "Split source String arrays",
+      "source": "Sub Main()\nDim parts() As String, i As Long\n\nparts = Split(\"a|b\", Empty)\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(LBound(parts)) & \":\" & CStr(UBound(parts))\nFor i = LBound(parts) To UBound(parts)\n    ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(i) & \"=\" & parts(i)\nNext i\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0:0"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0=a|b"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Explicit bounded Quds array ownership, UTF-16, coercion or empty-descriptor contract; this case is not a claim of installed Office-host observation."
+      }
+    },
+    {
+      "id": "variant-string-arguments",
+      "feature": "Split source String arrays",
+      "source": "Sub Main()\nDim parts() As String, i As Long\nDim text As Variant, separator As Variant, count As Variant, mode As Variant\ntext = \"a|b|c\"\nseparator = \"|\"\ncount = 2\nmode = 0\nparts = Split(text, separator, count, mode)\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(LBound(parts)) & \":\" & CStr(UBound(parts))\nFor i = LBound(parts) To UBound(parts)\n    ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(i) & \"=\" & parts(i)\nNext i\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0:1"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0=a"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "1=b|c"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Explicit bounded Quds array ownership, UTF-16, coercion or empty-descriptor contract; this case is not a claim of installed Office-host observation."
+      }
+    },
+    {
+      "id": "explicit-string-conversion",
+      "feature": "Split source String arrays",
+      "source": "Sub Main()\nDim parts() As String, i As Long\n\nparts = Split(CStr(42), \"-\")\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(LBound(parts)) & \":\" & CStr(UBound(parts))\nFor i = LBound(parts) To UBound(parts)\n    ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(i) & \"=\" & parts(i)\nNext i\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0:0"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0=42"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Explicit bounded Quds array ownership, UTF-16, coercion or empty-descriptor contract; this case is not a claim of installed Office-host observation."
+      }
+    },
+    {
+      "id": "option-base-one-does-not-change-result",
+      "feature": "Split source String arrays",
+      "source": "Option Explicit\nOption Base 1\nSub Main()\nDim parts() As String, i As Long\n\nparts = Split(\"a|b\", \"|\")\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(LBound(parts)) & \":\" & CStr(UBound(parts))\nFor i = LBound(parts) To UBound(parts)\n    ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(i) & \"=\" & parts(i)\nNext i\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0:1"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0=a"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "1=b"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Independently authored source-array result from the published Split contract; output uses the Quds native Word sink. No Office host was executed."
+      }
+    },
+    {
+      "id": "option-base-zero",
+      "feature": "Split source String arrays",
+      "source": "Option Base 0\nSub Main()\nDim parts() As String, i As Long\n\nparts = Split(\"a|b\", \"|\")\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(LBound(parts)) & \":\" & CStr(UBound(parts))\nFor i = LBound(parts) To UBound(parts)\n    ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(i) & \"=\" & parts(i)\nNext i\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0:1"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0=a"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "1=b"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Independently authored source-array result from the published Split contract; output uses the Quds native Word sink. No Office host was executed."
+      }
+    },
+    {
+      "id": "constant-arguments",
+      "feature": "Split source String arrays",
+      "source": "Const DataText As String = \"a|b|c\"\nConst Separator As String = \"|\"\nSub Main()\nDim parts() As String, i As Long\n\nparts = Split(DataText, Separator, 2)\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(LBound(parts)) & \":\" & CStr(UBound(parts))\nFor i = LBound(parts) To UBound(parts)\n    ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(i) & \"=\" & parts(i)\nNext i\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0:1"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0=a"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "1=b|c"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Independently authored source-array result from the published Split contract; output uses the Quds native Word sink. No Office host was executed."
+      }
+    },
+    {
+      "id": "replaces-negative-lower-bound",
+      "feature": "Split source String arrays",
+      "source": "Sub Main()\nDim parts() As String, i As Long\nReDim parts(-2 To -1)\nparts(-2) = \"discard\"\nparts(-1) = \"discard too\"\nparts = Split(\"a|b\", \"|\")\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(LBound(parts)) & \":\" & CStr(UBound(parts))\nFor i = LBound(parts) To UBound(parts)\n    ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(i) & \"=\" & parts(i)\nNext i\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0:1"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0=a"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "1=b"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Explicit bounded Quds array ownership, UTF-16, coercion or empty-descriptor contract; this case is not a claim of installed Office-host observation."
+      }
+    },
+    {
+      "id": "reads-old-element-before-replacement",
+      "feature": "Split source String arrays",
+      "source": "Sub Main()\nDim parts() As String, i As Long\nparts = Split(\"a|b,c|d\", \",\")\nparts = Split(parts(1), \"|\")\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(LBound(parts)) & \":\" & CStr(UBound(parts))\nFor i = LBound(parts) To UBound(parts)\n    ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(i) & \"=\" & parts(i)\nNext i\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0:1"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0=c"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "1=d"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Explicit bounded Quds array ownership, UTF-16, coercion or empty-descriptor contract; this case is not a claim of installed Office-host observation."
+      }
+    },
+    {
+      "id": "reads-old-join-before-replacement",
+      "feature": "Split source String arrays",
+      "source": "Sub Main()\nDim parts() As String, i As Long\nparts = Split(\"a|b\", \"|\")\nparts = Split(Join(parts, \":\"), \":\")\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(LBound(parts)) & \":\" & CStr(UBound(parts))\nFor i = LBound(parts) To UBound(parts)\n    ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(i) & \"=\" & parts(i)\nNext i\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0:1"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0=a"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "1=b"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Explicit bounded Quds array ownership, UTF-16, coercion or empty-descriptor contract; this case is not a claim of installed Office-host observation."
+      }
+    },
+    {
+      "id": "let-and-case-insensitive",
+      "feature": "Split source String arrays",
+      "source": "Sub Main()\nDim parts() As String\nLet PARTS = sPlIt(\"red|green\", \"|\")\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = Join(parts, \"/\")\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "red/green"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Independently authored source-array result from the published Split contract; output uses the Quds native Word sink. No Office host was executed."
+      }
+    },
+    {
+      "id": "foreach-ascending-and-scalar-isolation",
+      "feature": "Split source String arrays",
+      "source": "Sub Main()\nDim parts() As String, item As Variant\nparts = Split(\"a|b|c\", \"|\")\nFor Each item In parts\n    ActiveDocument.Tables(1).Cell(1, 1).Range.Text = item\n    item = \"local\"\nNext item\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = Join(parts, \",\")\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "a"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "b"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "c"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "a,b,c"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Explicit bounded Quds array ownership, UTF-16, coercion or empty-descriptor contract; this case is not a claim of installed Office-host observation."
+      }
+    },
+    {
+      "id": "empty-foreach-and-join",
+      "feature": "Split source String arrays",
+      "source": "Sub Main()\nDim parts() As String, item As Variant\nparts = Split(\"a|b\", \"|\", 0)\nitem = \"unchanged\"\nFor Each item In parts\n    item = \"wrong\"\nNext item\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(LBound(parts)) & \":\" & CStr(UBound(parts)) & \":\" & item & \":\" & Join(parts, \"|\")\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0:-1:unchanged:"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Explicit bounded Quds array ownership, UTF-16, coercion or empty-descriptor contract; this case is not a claim of installed Office-host observation."
+      }
+    },
+    {
+      "id": "preserve-after-empty-split",
+      "feature": "Split source String arrays",
+      "source": "Sub Main()\nDim parts() As String\nparts = Split(\"\")\nReDim Preserve parts(1)\nparts(1) = \"after\"\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(LBound(parts)) & \":\" & CStr(UBound(parts)) & \":\" & Join(parts, \"|\")\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0:1:|after"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Explicit bounded Quds array ownership, UTF-16, coercion or empty-descriptor contract; this case is not a claim of installed Office-host observation."
+      }
+    },
+    {
+      "id": "erase-and-reallocate",
+      "feature": "Split source String arrays",
+      "source": "Sub Main()\nDim parts() As String\nparts = Split(\"one|two\", \"|\")\nErase parts\nReDim parts(-1 To 0)\nparts(-1) = \"new\"\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(LBound(parts)) & \":\" & CStr(UBound(parts)) & \":\" & Join(parts, \"|\")\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "-1:0:new|"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Explicit bounded Quds array ownership, UTF-16, coercion or empty-descriptor contract; this case is not a claim of installed Office-host observation."
+      }
+    },
+    {
+      "id": "helper-local-descriptor-isolation",
+      "feature": "Split source String arrays",
+      "source": "Sub Main()\nDim parts() As String\nparts = Split(\"caller|retained\", \"|\")\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = BuildText(\"helper:local\")\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = Join(parts, \"/\")\nEnd Sub\n\nFunction BuildText(ByVal text As String) As String\n    Dim parts() As String\n    parts = Split(text, \":\")\n    BuildText = Join(parts, \"/\")\nEnd Function\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "helper/local"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "caller/retained"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Explicit bounded Quds array ownership, UTF-16, coercion or empty-descriptor contract; this case is not a claim of installed Office-host observation."
+      }
+    },
+    {
+      "id": "argument-evaluation-order-once",
+      "feature": "Split source String arrays",
+      "source": "Sub Main()\nDim parts() As String\nparts = Split(SourceText(), SeparatorText(), LimitValue(), ComparisonValue())\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = Join(parts, \"/\")\nEnd Sub\n\nFunction SourceText() As String\n    ActiveDocument.Tables(1).Cell(1, 1).Range.Text = \"source\"\n    SourceText = \"a|b|c\"\nEnd Function\nFunction SeparatorText() As String\n    ActiveDocument.Tables(1).Cell(1, 1).Range.Text = \"delimiter\"\n    SeparatorText = \"|\"\nEnd Function\nFunction LimitValue() As Long\n    ActiveDocument.Tables(1).Cell(1, 1).Range.Text = \"limit\"\n    LimitValue = 2\nEnd Function\nFunction ComparisonValue() As Long\n    ActiveDocument.Tables(1).Cell(1, 1).Range.Text = \"compare\"\n    ComparisonValue = 0\nEnd Function\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "source"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "delimiter"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "limit"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "compare"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "a/b|c"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Explicit bounded Quds array ownership, UTF-16, coercion or empty-descriptor contract; this case is not a claim of installed Office-host observation."
+      }
+    },
+    {
+      "id": "utf16-unit-delimiter",
+      "feature": "Split source String arrays",
+      "source": "Sub Main()\nDim parts() As String\nparts = Split(\"A😀B\", ChrW$(-10179))\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = parts(0) & \":\" & CStr(AscW(parts(1))) & \":\" & Right$(parts(1), 1)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "A:-8704:B"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Explicit bounded Quds array ownership, UTF-16, coercion or empty-descriptor contract; this case is not a claim of installed Office-host observation."
+      }
+    },
+    {
+      "id": "utf16-slices-can-be-recombined",
+      "feature": "Split source String arrays",
+      "source": "Sub Main()\nDim parts() As String\nparts = Split(\"A😀B\", ChrW$(-10179))\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = parts(0) & ChrW$(-10179) & parts(1)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "A😀B"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Explicit bounded Quds array ownership, UTF-16, coercion or empty-descriptor contract; this case is not a claim of installed Office-host observation."
+      }
+    },
+    {
+      "id": "independent-source-arrays",
+      "feature": "Split source String arrays",
+      "source": "Sub Main()\nDim parts() As String, other() As String\nparts = Split(\"a|b\", \"|\")\nother = Split(Join(parts, \":\"), \":\")\nparts(0) = \"changed\"\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = Join(other, \"/\")\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = Join(parts, \"/\")\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "a/b"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "changed/b"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Explicit bounded Quds array ownership, UTF-16, coercion or empty-descriptor contract; this case is not a claim of installed Office-host observation."
+      }
+    },
+    {
+      "id": "arity-no-source",
+      "feature": "Split strict source refusals",
+      "source": "Sub Main()\nDim parts() As String\nparts = Split()\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 9
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Independently authored bounded-dialect refusal and token location. This is not an Office-host diagnostic observation."
+      }
+    },
+    {
+      "id": "arity-too-many",
+      "feature": "Split strict source refusals",
+      "source": "Sub Main()\nDim parts() As String\nparts = Split(\"a\", \"|\", -1, 0, 0)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 9
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Independently authored bounded-dialect refusal and token location. This is not an Office-host diagnostic observation."
+      }
+    },
+    {
+      "id": "fixed-array-target",
+      "feature": "Split strict source refusals",
+      "source": "Sub Main()\nDim parts(1) As String\nparts = Split(\"a\", \"|\")\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 3,
+          "column": 1
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Independently authored bounded-dialect refusal and token location. This is not an Office-host diagnostic observation."
+      }
+    },
+    {
+      "id": "variant-array-target",
+      "feature": "Split strict source refusals",
+      "source": "Sub Main()\nDim parts() As Variant\nparts = Split(\"a\", \"|\")\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 3,
+          "column": 1
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Independently authored bounded-dialect refusal and token location. This is not an Office-host diagnostic observation."
+      }
+    },
+    {
+      "id": "set-target",
+      "feature": "Split strict source refusals",
+      "source": "Sub Main()\nDim parts() As String\nSet parts = Split(\"a\", \"|\")\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 3,
+          "column": 5
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Independently authored bounded-dialect refusal and token location. This is not an Office-host diagnostic observation."
+      }
+    },
+    {
+      "id": "named-source-argument",
+      "feature": "Split strict source refusals",
+      "source": "Sub Main()\nDim parts() As String\nparts = Split(Expression:=\"a\")\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 3,
+          "column": 15
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Independently authored bounded-dialect refusal and token location. This is not an Office-host diagnostic observation."
+      }
+    },
+    {
+      "id": "omitted-delimiter-argument",
+      "feature": "Split strict source refusals",
+      "source": "Sub Main()\nDim parts() As String\nparts = Split(\"a\", , 2)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 3,
+          "column": 20
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Independently authored bounded-dialect refusal and token location. This is not an Office-host diagnostic observation."
+      }
+    },
+    {
+      "id": "numeric-source",
+      "feature": "Split strict source refusals",
+      "source": "Sub Main()\nDim parts() As String\nparts = Split(42, \"|\")\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 15
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Independently authored bounded-dialect refusal and token location. This is not an Office-host diagnostic observation."
+      }
+    },
+    {
+      "id": "null-source",
+      "feature": "Split strict source refusals",
+      "source": "Sub Main()\nDim parts() As String\nparts = Split(Null, \"|\")\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_invalid_use_of_null",
+          "line": 3,
+          "column": 15
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Independently authored bounded-dialect refusal and token location. This is not an Office-host diagnostic observation."
+      }
+    },
+    {
+      "id": "negative-limit",
+      "feature": "Split strict source refusals",
+      "source": "Sub Main()\nDim parts() As String\nparts = Split(\"\", \"|\", -2)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 24
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Independently authored bounded-dialect refusal and token location. This is not an Office-host diagnostic observation."
+      }
+    },
+    {
+      "id": "text-comparison",
+      "feature": "Split strict source refusals",
+      "source": "Sub Main()\nDim parts() As String\nparts = Split(\"\", \"|\", 0, vbTextCompare)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 3,
+          "column": 27
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Independently authored bounded-dialect refusal and token location. This is not an Office-host diagnostic observation."
+      }
+    },
+    {
+      "id": "null-limit",
+      "feature": "Split strict source refusals",
+      "source": "Sub Main()\nDim parts() As String\nparts = Split(\"a\", \"|\", Null)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_invalid_use_of_null",
+          "line": 3,
+          "column": 25
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/d9c2417c-2d36-45b1-b3d7-1876064e6085"
+        ],
+        "note": "Independently authored bounded-dialect refusal and token location. This is not an Office-host diagnostic observation."
+      }
+    }
+  ]
+}

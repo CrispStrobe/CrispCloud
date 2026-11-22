@@ -617,13 +617,13 @@ void main() {
       ]);
       return _document([paragraph]);
     },
-    'opaque instruction properties': () {
+    'revision instruction properties': () {
       final paragraph = _richPacket();
       paragraph.inlines[2] = WmlFieldBoundary(
         kind: WmlFieldBoundaryKind.instruction,
         text: _badCitation,
         runPropertiesXml:
-            '<w:rPr xmlns:w="${OfficeNamespaces.w}"><w:b/></w:rPr>',
+            '<w:rPr xmlns:w="${OfficeNamespaces.w}"><w:rPrChange/></w:rPr>',
       );
       return _document([paragraph]);
     },

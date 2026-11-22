@@ -541,6 +541,7 @@ abstract final class WmlRunEdit {
     // Import baselines and explicit defaults also affect subsequent export.
     return a.styleId == b.styleId &&
         a.sourcePropertiesXml == b.sourcePropertiesXml &&
+        a.hasEmptyFormattingRevision == b.hasEmptyFormattingRevision &&
         _sameValues(a.importedValues, b.importedValues) &&
         a.explicitProperties.length == b.explicitProperties.length &&
         a.explicitProperties.containsAll(b.explicitProperties) &&

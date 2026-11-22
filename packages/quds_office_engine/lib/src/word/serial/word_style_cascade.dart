@@ -1144,6 +1144,7 @@ class _StyleCascade {
       if (run.noteRefId != null) resolved.vertAlign = WmlVertAlign.superscript;
       resolved.styleId = props.styleId;
       resolved.sourcePropertiesXml = props.sourcePropertiesXml ?? '';
+      resolved.hasEmptyFormattingRevision = props.hasEmptyFormattingRevision;
       final shadingBackground = resolved.explicitProperties.contains(
         'shd:highlight',
       );

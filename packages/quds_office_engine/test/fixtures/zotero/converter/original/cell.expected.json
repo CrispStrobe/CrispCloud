@@ -1,0 +1,144 @@
+{
+  "kind": "cell",
+  "paragraphs": {
+    "HEADING": {
+      "text": "HEADING",
+      "rtl": false,
+      "alignment": "center",
+      "left": 30.0,
+      "right": 0.0,
+      "heading": 2
+    },
+    "RTL_COLOUR": {
+      "text": "نص عربي RTL_COLOUR (FIRST1)",
+      "rtl": true,
+      "alignment": "justify",
+      "left": 0.0,
+      "right": 60.0,
+      "heading": null
+    },
+    "LTR_COLOUR": {
+      "text": "Latin LTR_COLOUR (SECOND2)",
+      "rtl": false,
+      "alignment": "left",
+      "left": 30.0,
+      "right": 0.0,
+      "heading": null
+    },
+    "TAIL": {
+      "text": "TAIL",
+      "rtl": true,
+      "alignment": "center",
+      "left": 0.0,
+      "right": 30.0,
+      "heading": null
+    }
+  },
+  "text": [
+    "Before",
+    "HEADING",
+    "نص عربي RTL_COLOUR (FIRST1)",
+    "Latin LTR_COLOUR (SECOND2)",
+    "",
+    "TAIL",
+    "After"
+  ],
+  "empty": [
+    {
+      "rtl": false,
+      "alignment": "right",
+      "left": 90.0,
+      "right": 0.0
+    }
+  ],
+  "colors": {
+    "HEADING": {
+      "color": "123456",
+      "highlight": null
+    },
+    "RTL_COLOUR": {
+      "color": "123456",
+      "highlight": "FAE696"
+    },
+    "LTR_COLOUR": {
+      "color": "224466",
+      "highlight": "CCDDEE"
+    }
+  },
+  "fields": [
+    {
+      "metadata": {
+        "citationID": "FIRST1",
+        "properties": {
+          "formattedCitation": "(FIRST1)",
+          "plainCitation": "(FIRST1)",
+          "noteIndex": 0,
+          "qudsFormat": "zotero-desktop"
+        },
+        "citationItems": [
+          {
+            "id": "http://zotero.org/users/42/items/ABCD1234",
+            "uris": [
+              "http://zotero.org/users/42/items/ABCD1234"
+            ],
+            "itemData": {
+              "id": "http://zotero.org/users/42/items/ABCD1234",
+              "type": "book",
+              "title": "Source FIRST1"
+            },
+            "locator": "12–14",
+            "label": "page"
+          }
+        ],
+        "schema": "https://github.com/citation-style-language/schema/raw/master/csl-citation.json"
+      },
+      "text": "(FIRST1)",
+      "editable": true,
+      "in_target_story": true
+    },
+    {
+      "metadata": {
+        "citationID": "SECOND2",
+        "properties": {
+          "formattedCitation": "(SECOND2)",
+          "plainCitation": "(SECOND2)",
+          "noteIndex": 0,
+          "qudsFormat": "zotero-desktop"
+        },
+        "citationItems": [
+          {
+            "id": "http://zotero.org/users/42/items/EFGH5678",
+            "uris": [
+              "http://zotero.org/users/42/items/EFGH5678"
+            ],
+            "itemData": {
+              "id": "http://zotero.org/users/42/items/EFGH5678",
+              "type": "book",
+              "title": "Source SECOND2"
+            },
+            "locator": "12–14",
+            "label": "page"
+          }
+        ],
+        "schema": "https://github.com/citation-style-language/schema/raw/master/csl-citation.json"
+      },
+      "text": "(SECOND2)",
+      "editable": true,
+      "in_target_story": true
+    }
+  ],
+  "preferences": {
+    "dataVersion": 4,
+    "sessionID": "note-format-converter",
+    "zoteroVersion": "10.0",
+    "style": {
+      "styleID": "http://www.zotero.org/styles/apa",
+      "locale": "ar"
+    },
+    "prefs": {
+      "fieldType": "Field",
+      "noteType": 0
+    }
+  },
+  "balanced": true
+}

@@ -221,8 +221,10 @@ final class WmlZoteroField {
     this.nested = false,
     this.opaqueMetadata = false,
     List<WmlInline> contents = const <WmlInline>[],
+    List<WmlRun> codeRuns = const <WmlRun>[],
     Map<WmlParagraph, List<WmlFieldBoundary>>? boundaries,
   }) : _contents = List<WmlInline>.unmodifiable(contents),
+       _codeRuns = List<WmlRun>.unmodifiable(codeRuns),
        _boundaries = boundaries ?? <WmlParagraph, List<WmlFieldBoundary>>{};
 
   final ZoteroFieldKind kind;
@@ -240,6 +242,7 @@ final class WmlZoteroField {
   final bool nested;
   final bool opaqueMetadata;
   final List<WmlInline> _contents;
+  final List<WmlRun> _codeRuns;
   final Map<WmlParagraph, List<WmlFieldBoundary>> _boundaries;
 
   bool get isValid =>
@@ -398,6 +401,7 @@ abstract final class WordZotero {
     for (final field in fields) {
       targets.addAll(field.paragraphs);
       inlines.addAll(field._contents);
+      inlines.addAll(field._codeRuns);
       inlines.addAll(field._boundaries.values.expand((value) => value));
     }
     final owners = Map<WmlParagraph, List<Object>>.identity();
@@ -600,6 +604,31 @@ abstract final class WordZotero {
     _validateNativeInstruction(instruction, field.kind);
     _assertFormattedText(text, formattedText);
     final base = WmlRunEdit.propsAt(field.paragraph, field.start).copy();
+    if (field.kind == ZoteroFieldKind.citation &&
+        _hasBoundaryFormatting(field)) {
+      if (!field.canEditNativeResult) {
+        throw UnsupportedError(
+          'This citation has unsupported field content that cannot be replaced safely.',
+        );
+      }
+      _assertCurrent(field);
+      WordContentControls.assertCanEdit(
+        field.paragraph,
+        field.start,
+        field.end,
+      );
+      if (formattedText == null && text == field.cachedText) {
+        _replaceInstruction(field, instruction);
+      } else {
+        _replaceBoundaryResult(
+          field,
+          instruction,
+          formattedText?.toRuns(baseProperties: base) ??
+              [WmlRun(text: text, properties: base)],
+        );
+      }
+      return;
+    }
     if (field.kind == ZoteroFieldKind.citation &&
         formattedText != null &&
         !formattedText.hasUniformCharacterFormatting) {
@@ -1162,6 +1191,7 @@ abstract final class WordZotero {
     }
     final owned = Set<WmlInline>.identity()
       ..addAll(field._contents)
+      ..addAll(field._codeRuns)
       ..addAll(boundaries);
     final inlines = field.paragraphs.expand((paragraph) => paragraph.inlines);
     return owned.length == inlines.length && inlines.every(owned.contains);
@@ -1281,6 +1311,14 @@ abstract final class WordZotero {
       paragraphProperties: field.paragraph.properties,
       runProperties: WmlRunEdit.propsAt(field.paragraph, 0),
     );
+    if (_hasBoundaryFormatting(field)) {
+      final boundaries = _replacementBoundaries(field, instruction);
+      // Preserve the imported code-run formatting even when the processor
+      // changes the number of bibliography entry paragraphs.
+      replacements.first.inlines.replaceRange(0, 3, boundaries.prefix);
+      replacements.last.inlines.removeLast();
+      replacements.last.inlines.addAll(boundaries.suffix);
+    }
     final slot = WordTree.locate(document, field.paragraph)!;
     for (
       var i = 0;
@@ -1352,6 +1390,21 @@ abstract final class WordZotero {
     WordContentControls.assertCanEdit(field.paragraph, field.start, field.end);
     if (preserveSameText && text == field.cachedText) {
       _replaceInstruction(field, instruction);
+      return;
+    }
+    if (_hasBoundaryFormatting(field)) {
+      if (formattedText != null && !_standaloneComplexField(field)) {
+        throw UnsupportedError(
+          'This bibliography uses an inline field. Use plain text for this update, or insert a new formatted bibliography in its own paragraph.',
+        );
+      }
+      final base = WmlRunEdit.propsAt(field.paragraph, field.start).copy();
+      _replaceBoundaryResult(
+        field,
+        instruction,
+        formattedText?.toRuns(baseProperties: base) ??
+            [WmlRun(text: text, properties: base)],
+      );
       return;
     }
     if (formattedText != null) {
@@ -1427,6 +1480,7 @@ abstract final class WordZotero {
     }
     final owned = Set<WmlInline>.identity()
       ..addAll(boundaries)
+      ..addAll(field._codeRuns)
       ..addAll(field._contents);
     return owned.length == paragraph.inlines.length &&
         paragraph.inlines.every(owned.contains);
@@ -1444,6 +1498,26 @@ abstract final class WordZotero {
     }
     if (field.wholeParagraph) {
       field.paragraph.properties.fieldInstruction = instruction;
+      return;
+    }
+    if (_hasBoundaryFormatting(field)) {
+      final replacements = _replacementBoundaries(field, instruction);
+      final original = field._boundaries.values.expand((value) => value);
+      final changed = <WmlFieldBoundary, WmlFieldBoundary>{};
+      final updated = [
+        ...replacements.prefix.whereType<WmlFieldBoundary>(),
+        ...replacements.suffix,
+      ];
+      var index = 0;
+      for (final boundary in original) {
+        changed[boundary] = updated[index++];
+      }
+      for (final paragraph in field.paragraphs) {
+        for (var i = 0; i < paragraph.inlines.length; i++) {
+          final replacement = changed[paragraph.inlines[i]];
+          if (replacement != null) paragraph.inlines[i] = replacement;
+        }
+      }
       return;
     }
     final boundaries = field._boundaries[field.paragraph]!;
@@ -1483,6 +1557,78 @@ abstract final class WordZotero {
     field.paragraph.inlines
       ..clear()
       ..addAll(inlines);
+  }
+
+  static bool _hasBoundaryFormatting(WmlZoteroField field) =>
+      field._codeRuns.isNotEmpty ||
+      field._boundaries.values
+          .expand((value) => value)
+          .any(
+            (boundary) => boundary.runPropertiesXml?.trim().isNotEmpty == true,
+          );
+
+  // These are complete, validated native packets. Formatting on non-visible
+  // code/boundary runs does not become result formatting and is never silently
+  // discarded when Zotero supplies a new cache or instruction.
+  static ({List<WmlInline> prefix, List<WmlFieldBoundary> suffix})
+  _replacementBoundaries(WmlZoteroField field, String instruction) {
+    final replacements = <WmlFieldBoundary, WmlFieldBoundary>{};
+    final suffix = <WmlFieldBoundary>[];
+    var instructionWritten = false;
+    final sameInstruction = instruction == field.instruction;
+    for (final boundary in field._boundaries.values.expand((value) => value)) {
+      var text = boundary.text;
+      var source = boundary.sourceXml;
+      if (boundary.kind == WmlFieldBoundaryKind.instruction) {
+        if (!sameInstruction) text = instructionWritten ? '' : instruction;
+        instructionWritten = true;
+      } else if (boundary.kind == WmlFieldBoundaryKind.begin &&
+          source != null) {
+        final document = XmlDocument.parse(source);
+        document.root!.removeAttribute(
+          'dirty',
+          namespaceUri: OfficeNamespaces.w,
+        );
+        source = document.toXmlString(declaration: false);
+      }
+      final replacement = WmlFieldBoundary(
+        kind: boundary.kind,
+        text: text,
+        sourceXml: source,
+        runPropertiesXml: boundary.runPropertiesXml,
+      );
+      replacements[boundary] = replacement;
+      if (boundary.kind == WmlFieldBoundaryKind.end) suffix.add(replacement);
+    }
+    final boundaries = field._boundaries[field.paragraph]!;
+    final first = field.paragraph.inlines.indexOf(boundaries.first);
+    final separate = field.paragraph.inlines.indexOf(
+      boundaries.firstWhere(
+        (boundary) => boundary.kind == WmlFieldBoundaryKind.separate,
+      ),
+    );
+    final prefix = <WmlInline>[
+      for (final inline in field.paragraph.inlines.sublist(first, separate + 1))
+        inline is WmlFieldBoundary ? replacements[inline]! : inline,
+    ];
+    return (prefix: prefix, suffix: suffix);
+  }
+
+  static void _replaceBoundaryResult(
+    WmlZoteroField field,
+    String instruction,
+    List<WmlRun> runs,
+  ) {
+    final paragraph = field.paragraph;
+    final original = field._boundaries[paragraph]!;
+    final first = paragraph.inlines.indexOf(original.first);
+    final last = paragraph.inlines.indexOf(original.last);
+    final boundaries = _replacementBoundaries(field, instruction);
+    paragraph.inlines.replaceRange(first, last + 1, <WmlInline>[
+      ...boundaries.prefix,
+      ...runs,
+      ...boundaries.suffix,
+    ]);
   }
 
   /// Removes only this field's instructions while preserving its visible runs.
@@ -1621,7 +1767,10 @@ abstract final class WordZotero {
       _clearParagraphField(field.paragraph);
     } else {
       for (final entry in field._boundaries.entries) {
-        entry.key.inlines.removeWhere(entry.value.contains);
+        entry.key.inlines.removeWhere(
+          (inline) =>
+              entry.value.contains(inline) || field._codeRuns.contains(inline),
+        );
       }
     }
   }
@@ -1643,7 +1792,24 @@ abstract final class WordZotero {
                 identical(current.paragraph, field.paragraph)
           : current._boundaries[field.paragraph]?.first ==
                 field._boundaries[field.paragraph]?.first;
+      final sameBoundaries =
+          current._boundaries.length == field._boundaries.length &&
+          field._boundaries.entries.every((entry) {
+            final actual = current._boundaries[entry.key];
+            return actual != null &&
+                actual.length == entry.value.length &&
+                entry.value.indexed.every(
+                  (pair) => identical(pair.$2, actual[pair.$1]),
+                );
+          });
+      final sameCodeRuns =
+          current._codeRuns.length == field._codeRuns.length &&
+          field._codeRuns.indexed.every(
+            (pair) => identical(pair.$2, current._codeRuns[pair.$1]),
+          );
       if (sameIdentity &&
+          sameBoundaries &&
+          sameCodeRuns &&
           current.instruction == field.instruction &&
           current.cachedText == field.cachedText &&
           current.start == field.start &&
@@ -1741,6 +1907,7 @@ abstract final class WordZotero {
                       end: offset,
                       text: field.cache.toString(),
                       contents: field.contents,
+                      codeRuns: field.codeRuns,
                       boundaries: field.boundaries,
                       nested: field.nested,
                       locked: field.locked,
@@ -1755,6 +1922,8 @@ abstract final class WordZotero {
             if (field.separated) {
               field.contents.add(inline);
               if (inline is WmlRun) field.cache.write(inline.text);
+            } else if (_benignEmptyCodeRun(inline)) {
+              field.codeRuns.add(inline as WmlRun);
             } else {
               field.opaqueMetadata = true;
             }
@@ -1792,6 +1961,7 @@ abstract final class WordZotero {
     required int end,
     required String text,
     required List<WmlInline> contents,
+    List<WmlRun> codeRuns = const <WmlRun>[],
     Map<WmlParagraph, List<WmlFieldBoundary>>? boundaries,
     WmlRun? run,
     bool wholeParagraph = false,
@@ -1825,6 +1995,7 @@ abstract final class WordZotero {
       locked: locked,
       opaqueMetadata: opaqueMetadata,
       contents: contents,
+      codeRuns: codeRuns,
       boundaries: boundaries,
     );
   }
@@ -1838,6 +2009,7 @@ final class _OpenField {
   final instruction = StringBuffer();
   final cache = StringBuffer();
   final contents = <WmlInline>[];
+  final codeRuns = <WmlRun>[];
   final boundaries = <WmlParagraph, List<WmlFieldBoundary>>{};
   bool separated = false;
   bool nested = false;
@@ -1853,36 +2025,211 @@ final class _OpenField {
 
   void addBoundary(WmlParagraph paragraph, WmlFieldBoundary boundary) {
     boundaries.putIfAbsent(paragraph, () => <WmlFieldBoundary>[]).add(boundary);
-    if (boundary.kind == WmlFieldBoundaryKind.begin) {
-      locked = RegExp(
-        r'fldLock\s*=\s*["\x27](?:1|true|on)["\x27]',
-      ).hasMatch(boundary.sourceXml ?? '');
-    }
-    if (boundary.runPropertiesXml?.trim().isNotEmpty == true) {
+    if (!_benignBoundaryRunProperties(boundary.runPropertiesXml)) {
       opaqueMetadata = true;
     }
     if (boundary.sourceXml != null) {
       try {
-        final source = XmlDocument.parse(boundary.sourceXml!).root;
-        if (source != null &&
-            (source.children.isNotEmpty ||
-                source.attributes.any(
-                  (attribute) =>
-                      attribute.prefix != 'xmlns' &&
-                      attribute.qualifiedName != 'xmlns' &&
-                      (attribute.namespaceUri != OfficeNamespaces.w ||
-                          !<String>{
-                            'fldCharType',
-                            'fldLock',
-                            'dirty',
-                          }.contains(attribute.localName)),
-                ))) {
+        if (!_completeBoundaryElement(boundary.sourceXml!)) {
           opaqueMetadata = true;
+          return;
+        }
+        final source = XmlDocument.parse(boundary.sourceXml!).root;
+        if (source == null ||
+            boundary.kind == WmlFieldBoundaryKind.instruction ||
+            source.localName != 'fldChar' ||
+            source.namespaceUri != OfficeNamespaces.w ||
+            source.children.isNotEmpty ||
+            source.getAttribute(
+                  'fldCharType',
+                  namespaceUri: OfficeNamespaces.w,
+                ) !=
+                boundary.kind.name) {
+          opaqueMetadata = true;
+          return;
+        }
+        final names = <String>{};
+        for (final attribute in source.attributes) {
+          if (_namespaceDeclaration(attribute)) continue;
+          final name = attribute.localName;
+          if (attribute.namespaceUri != OfficeNamespaces.w ||
+              !names.add(name) ||
+              !{'fldCharType', 'fldLock', 'dirty'}.contains(name)) {
+            opaqueMetadata = true;
+          } else if (name == 'fldLock' || name == 'dirty') {
+            if (!_boundaryBoolean.contains(attribute.value)) {
+              opaqueMetadata = true;
+            }
+            if (name == 'fldLock' &&
+                {'1', 'true', 'on'}.contains(attribute.value)) {
+              locked = true;
+            }
+          }
         }
       } on XmlParseException {
         opaqueMetadata = true;
+      } on RangeError {
+        // A truncated attribute can exhaust the fragment reader at '='.
+        opaqueMetadata = true;
       }
     }
+  }
+}
+
+const _boundaryBoolean = {'0', '1', 'false', 'true', 'off', 'on'};
+
+bool _namespaceDeclaration(XmlAttribute attribute) =>
+    attribute.prefix == 'xmlns' || attribute.qualifiedName == 'xmlns';
+
+// XmlDocument accepts fragments for other preservation callers. Editing needs
+// one complete element, with no discarded prefix, second root, PI or DTD.
+bool _completeBoundaryElement(String xml) {
+  if (xml.length > 16384) return false;
+  final reader = XmlPullReader(xml);
+  var roots = 0;
+  var depth = 0;
+  while (reader.next()) {
+    switch (reader.eventType) {
+      case XmlEventType.startElement:
+        depth = reader.depth;
+        if (depth > 64 || (depth == 1 && ++roots > 1)) return false;
+        final attributes = <String>{};
+        for (var i = 0; i < reader.attributeCount; i++) {
+          if (!attributes.add(reader.attributeQualifiedName(i))) return false;
+        }
+      case XmlEventType.endElement:
+        depth = reader.depth;
+      case XmlEventType.characters:
+        if (!reader.isWhitespace) return false;
+      case XmlEventType.endDocument:
+        return roots == 1 && depth == 0;
+      default:
+        return false;
+    }
+  }
+  return false;
+}
+
+bool _benignEmptyCodeRun(WmlInline inline) =>
+    inline is WmlRun &&
+    inline.text.isEmpty &&
+    !inline.isAtomic &&
+    inline.hyperlink == null &&
+    inline.commentIds.isEmpty &&
+    !inline.fieldLocked &&
+    inline.fieldDirty == null &&
+    inline.properties.styleId == null &&
+    !inline.properties.hasEmptyFormattingRevision &&
+    _benignBoundaryRunProperties(inline.properties.sourcePropertiesXml);
+
+// LibreOffice writes ordinary character formatting on instrText and fldChar
+// runs. It is non-visible field metadata, and retaining its exact XML makes
+// in-place native citation updates safe. This deliberately excludes style
+// references, revision/form state, hidden text and unrecognized extensions.
+bool _benignBoundaryRunProperties(String? xml) {
+  if (xml == null || xml.trim().isEmpty) return true;
+  if (xml.length > 16384) return false;
+  try {
+    if (!_completeBoundaryElement(xml)) return false;
+    final root = XmlDocument.parse(xml).root;
+    if (root == null ||
+        root.localName != 'rPr' ||
+        root.namespaceUri != OfficeNamespaces.w ||
+        root.attributes.any((attribute) => !_namespaceDeclaration(attribute)) ||
+        root.children.length > 64) {
+      return false;
+    }
+    final seen = <String, String>{};
+    for (final child in root.children) {
+      if (child is XmlText && child.text.trim().isEmpty) continue;
+      if (child is! XmlElement ||
+          child.namespaceUri != OfficeNamespaces.w ||
+          child.children.isNotEmpty) {
+        return false;
+      }
+      final attributes = <String, String>{};
+      for (final attribute in child.attributes) {
+        if (_namespaceDeclaration(attribute)) continue;
+        if (attribute.namespaceUri != OfficeNamespaces.w ||
+            attributes.containsKey(attribute.localName)) {
+          return false;
+        }
+        attributes[attribute.localName] = attribute.value;
+      }
+      final name = child.localName;
+      final value = attributes['val'];
+      switch (name) {
+        case 'b':
+        case 'bCs':
+        case 'i':
+        case 'iCs':
+        case 'caps':
+        case 'smallCaps':
+        case 'rtl':
+          if (attributes.keys.any((key) => key != 'val') ||
+              (value != null && !_boundaryBoolean.contains(value))) {
+            return false;
+          }
+        case 'color':
+          if (attributes.length != 1 ||
+              value == null ||
+              (value != 'auto' &&
+                  !RegExp(r'^[0-9a-fA-F]{6}$').hasMatch(value))) {
+            return false;
+          }
+        case 'kern':
+        case 'sz':
+        case 'szCs':
+          if (attributes.length != 1 ||
+              value == null ||
+              !RegExp(r'^[0-9]{1,5}$').hasMatch(value)) {
+            return false;
+          }
+          final halfPoints = int.parse(value);
+          if (halfPoints > 32767 || (name != 'kern' && halfPoints == 0)) {
+            return false;
+          }
+        case 'rFonts':
+          if (attributes.isEmpty ||
+              attributes.entries.any(
+                (entry) =>
+                    !{'ascii', 'hAnsi', 'eastAsia', 'cs'}.contains(entry.key) ||
+                    entry.value.trim().isEmpty ||
+                    entry.value.length > 256 ||
+                    RegExp(r'[\x00-\x1f\x7f]').hasMatch(entry.value),
+              )) {
+            return false;
+          }
+        case 'lang':
+          if (attributes.isEmpty ||
+              attributes.entries.any(
+                (entry) =>
+                    !{'val', 'eastAsia', 'bidi'}.contains(entry.key) ||
+                    entry.value.length > 63 ||
+                    !RegExp(
+                      r'^[A-Za-z]{2,8}(?:-[A-Za-z0-9]{1,8})*$',
+                    ).hasMatch(entry.value),
+              )) {
+            return false;
+          }
+        default:
+          return false;
+      }
+      // Observed LibreOffice output repeats identical toggle properties.
+      // Preserve those raw nodes, but reject contradictory duplicate values.
+      final keys = attributes.keys.toList()..sort();
+      final signature = jsonEncode({
+        for (final key in keys) key: attributes[key],
+      });
+      if (seen.containsKey(name) && seen[name] != signature) return false;
+      seen[name] = signature;
+    }
+    return true;
+  } on XmlParseException {
+    return false;
+  } on RangeError {
+    // A truncated attribute can exhaust the fragment reader at '='.
+    return false;
   }
 }
 

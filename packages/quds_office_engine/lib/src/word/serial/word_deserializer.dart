@@ -1246,7 +1246,10 @@ class WordDeserializer {
         final boundary = WmlFieldBoundary(
           kind: WmlFieldBoundaryKind.instruction,
           text: instr,
-          runPropertiesXml: run.properties.sourcePropertiesXml,
+          runPropertiesXml: _fieldRunProperties(
+            run.properties,
+            formattingChange,
+          ),
         );
         inlines.add(boundary);
         _noteFieldInstruction(boundary);
@@ -1269,7 +1272,10 @@ class WordDeserializer {
             sourceXml: XmlDocument(
               root: fldChar,
             ).toXmlString(declaration: false),
-            runPropertiesXml: run.properties.sourcePropertiesXml,
+            runPropertiesXml: _fieldRunProperties(
+              run.properties,
+              formattingChange,
+            ),
           );
           inlines.add(boundary);
           _noteFieldChar(boundary);
@@ -1391,6 +1397,9 @@ class WordDeserializer {
       inlines.add(run);
     }
     if (formattingChange != null) {
+      if (run.text.isEmpty && inlines.contains(run)) {
+        run.properties.hasEmptyFormattingRevision = true;
+      }
       final text = inlines.whereType<WmlRun>().map((r) => r.text).join();
       _recordFormatting(
         paragraph,
@@ -2139,6 +2148,23 @@ class WordDeserializer {
       ),
     );
     run.text = '';
+  }
+
+  // Formatting revisions still belong to the document's existing revision
+  // model. Keep their original XML on field boundaries too: a field-code run
+  // is not an ordinary visible cache run that Zotero may replace or normalize.
+  // Incomplete/ambiguous revision targets retain the existing save guards.
+  static String? _fieldRunProperties(
+    WmlRunProps properties,
+    XmlElement? formattingChange,
+  ) {
+    final source = properties.sourcePropertiesXml;
+    if (formattingChange == null || source == null || source.isEmpty) {
+      return source;
+    }
+    final document = XmlDocument.parse(source);
+    document.root!.addChild(formattingChange.copy());
+    return document.toXmlString(declaration: false);
   }
 
   bool get _insideToc => _openFields.any((entry) => entry.$2);

@@ -1,0 +1,134 @@
+{
+  "source_commit": "b91fba039e123d3db767bc5178de59922a163e74",
+  "source_archive": "docs/validation/zotero-note-formatting-20261122/evidence/converter-after-fix.tar.xz",
+  "source_archive_sha256": "5892777fc9ce6d25378b7abcc0a8504db0e44ea639e401c95fb9299e14986578",
+  "converter": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+  "files": [
+    {
+      "path": "docx-cycle-1/body.docx",
+      "sha256": "5b7e9dea3bf89478b4ec4719af07c9c973811a5eacda7fa9b074b471c57be944",
+      "size": 6708,
+      "archive_member": "after-fix/docx-cycle-1/body.docx"
+    },
+    {
+      "path": "docx-cycle-1/cell.docx",
+      "sha256": "a91012793ddfd2d83fea7ee1754496fe9d4c0996f1fcce2701f001aa7286d5ef",
+      "size": 6912,
+      "archive_member": "after-fix/docx-cycle-1/cell.docx"
+    },
+    {
+      "path": "docx-cycle-1/footnote.docx",
+      "sha256": "da04906203d3148b14acaef95cbc5113e698e655c498745dbcc928202e2108b9",
+      "size": 7681,
+      "archive_member": "after-fix/docx-cycle-1/footnote.docx"
+    },
+    {
+      "path": "docx-cycle-2/body.docx",
+      "sha256": "e0bcd8b87142ea9603c0bab15f90eaa4170978939672b1c1cd3a565859f9d6a3",
+      "size": 6699,
+      "archive_member": "after-fix/docx-cycle-2/body.docx"
+    },
+    {
+      "path": "docx-cycle-2/cell.docx",
+      "sha256": "3bdbabef1f18e656fe717a81d56d00024cf0b58743fa342af018d0ebeb354c76",
+      "size": 6905,
+      "archive_member": "after-fix/docx-cycle-2/cell.docx"
+    },
+    {
+      "path": "docx-cycle-2/footnote.docx",
+      "sha256": "cf3e4b7d68b5e6a0549d21214635aefa599776c880bd9927577a6821307a06e1",
+      "size": 7700,
+      "archive_member": "after-fix/docx-cycle-2/footnote.docx"
+    },
+    {
+      "path": "odt-cycle-1/body.odt",
+      "sha256": "ab43e7fc1e9f77e0f69286a67a8770fe6e95202be8c12cd4187fb304fb588ae4",
+      "size": 12350,
+      "archive_member": "after-fix/odt-cycle-1/body.odt"
+    },
+    {
+      "path": "odt-cycle-1/cell.odt",
+      "sha256": "37194bcbfba52b3c56c78fb77fd3be5923bff2969a4dd0e9d088b027b7ebb69b",
+      "size": 12917,
+      "archive_member": "after-fix/odt-cycle-1/cell.odt"
+    },
+    {
+      "path": "odt-cycle-1/footnote.odt",
+      "sha256": "8759d1b1c9efff6dbba84f25fa90813ba081dbf800220ac4723ca7525dc4a0dc",
+      "size": 12931,
+      "archive_member": "after-fix/odt-cycle-1/footnote.odt"
+    },
+    {
+      "path": "odt-cycle-2/body.odt",
+      "sha256": "04eba9e9ef00cc11fa661bbd365e1b7b32bf3da6e80a6979f84f63efab9647eb",
+      "size": 12355,
+      "archive_member": "after-fix/odt-cycle-2/body.odt"
+    },
+    {
+      "path": "odt-cycle-2/cell.odt",
+      "sha256": "8ab9332683e61c812715c1f933e754d3d200b07438c01d98a5de20a967f60eeb",
+      "size": 12919,
+      "archive_member": "after-fix/odt-cycle-2/cell.odt"
+    },
+    {
+      "path": "odt-cycle-2/footnote.odt",
+      "sha256": "42338703209db286da38908dd18f4a2d6c0f39b0cc437cf35e39610e790f8d21",
+      "size": 12931,
+      "archive_member": "after-fix/odt-cycle-2/footnote.odt"
+    },
+    {
+      "path": "original/body.docx",
+      "sha256": "2a73ead4948f9216288f22d6a6a2c28f0ee41c4bad6c21b94284c742082cc3ac",
+      "size": 6549,
+      "archive_member": "after-fix/original/body.docx"
+    },
+    {
+      "path": "original/body.expected.json",
+      "sha256": "58562b63c9bcf64d23cfaf4411a605482aed8a2e5e1e9c8991677acdfece11cf",
+      "size": 3378,
+      "archive_member": "after-fix/original/body.expected.json"
+    },
+    {
+      "path": "original/body.odt",
+      "sha256": "b0e0447c4852a64a383e28b2139fbb113931d25b12567a96ea036479cb282362",
+      "size": 4058,
+      "archive_member": "after-fix/original/body.odt"
+    },
+    {
+      "path": "original/cell.docx",
+      "sha256": "ef57e1ae482f4ab296c6c1c282305641fcf5b56de5ca5275f2b7fea794bab1c0",
+      "size": 6787,
+      "archive_member": "after-fix/original/cell.docx"
+    },
+    {
+      "path": "original/cell.expected.json",
+      "sha256": "7de0286884da97b33d455685af08ef070d24594f60b8961134e33995cdf7c5c9",
+      "size": 3356,
+      "archive_member": "after-fix/original/cell.expected.json"
+    },
+    {
+      "path": "original/cell.odt",
+      "sha256": "77ec32f2318b2217bf3e06e30ae9879f95b62b808e351429c1e233ddfe68e49a",
+      "size": 4259,
+      "archive_member": "after-fix/original/cell.odt"
+    },
+    {
+      "path": "original/footnote.docx",
+      "sha256": "9d8563897b5786c0f692c13f34103b60c872b6203520d3cd3ec811c44117410e",
+      "size": 6826,
+      "archive_member": "after-fix/original/footnote.docx"
+    },
+    {
+      "path": "original/footnote.expected.json",
+      "sha256": "086abbe7230059f46f661da2e19df02f0a174d8bbb29505c24378669f6104227",
+      "size": 3382,
+      "archive_member": "after-fix/original/footnote.expected.json"
+    },
+    {
+      "path": "original/footnote.odt",
+      "sha256": "37551d6810ecfc375023eef14243b951b0f47a23ea87452f4a00dc423b997496",
+      "size": 4355,
+      "archive_member": "after-fix/original/footnote.odt"
+    }
+  ]
+}
