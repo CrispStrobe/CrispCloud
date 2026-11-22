@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """Open DOCX files in Microsoft Word, save copies/PDFs, and verify structure.
 
-This uses Word's own sandbox container for staging, so macOS does not ask for
-folder access on every run. Word then performs the independent reopen, save,
-and render. The script compares the result with python-docx, Pandoc and
-pdftotext.
+The verifier stages disposable files in Word's sandbox container and opens
+them through macOS Launch Services before sending AppleScript commands. Word
+performs the save and rendering. The script compares the result with
+python-docx and pdftotext.
 
-Requirements: Microsoft Word, python-docx, lxml, pandoc, pdftotext.
+Requirements: Microsoft Word, python-docx, lxml, pdftotext.
 
 Usage:
     python tool/verify_word_roundtrip.py build/quds_roundtrip/minimal.docx
@@ -18,7 +18,6 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import os
 import shutil
 import subprocess
 import uuid
@@ -71,7 +70,10 @@ def footnotes(path: Path) -> list[dict[str, object]]:
     for note in root.findall(f"{{{W_NS}}}footnote"):
         note_id = note.get(f"{{{W_NS}}}id")
         note_type = note.get(f"{{{W_NS}}}type")
-        text = "".join(note.itertext()).strip()
+        text = " ".join(
+            "".join(paragraph.itertext(f"{{{W_NS}}}t"))
+            for paragraph in note.findall(f"{{{W_NS}}}p")
+        ).strip()
         has_ref = note.find(f".//{{{W_NS}}}footnoteRef") is not None
         result.append(
             {
@@ -82,6 +84,10 @@ def footnotes(path: Path) -> list[dict[str, object]]:
             }
         )
     return result
+
+
+class WordCleanupError(RuntimeError):
+    """Word may still have a fixture open."""
 
 
 def word_roundtrip(source: Path, work: Path) -> dict[str, object]:
@@ -100,39 +106,72 @@ def word_roundtrip(source: Path, work: Path) -> dict[str, object]:
         old.unlink(missing_ok=True)
     shutil.copy2(source, staged)
 
-    script = f"""
-set wdir to {apple_string(str(work))}
-set inPath to {apple_string(str(staged))}
-set outPath to {apple_string(str(output))}
-set pdfPath to {apple_string(str(pdf))}
-set inputName to {apple_string(input_name)}
-set outputName to {apple_string(output_name)}
-tell application "Microsoft Word"
-  set display alerts to alerts none
-  activate
-  set d to open file name inPath
-  delay 1
-  set fnCount to count of footnotes of d
-  set pCount to count of paragraphs of d
-  save as d file name outPath file format format document
-  delay 1
-  try
-    close (first document whose name is outputName) saving no
-  end try
-  set d2 to open file name outPath
-  delay 1
-  save as d2 file name pdfPath file format format PDF
-  delay 1
-  try
-    close (first document whose name is outputName) saving no
-  end try
-  return (fnCount as string) & "|" & (pCount as string)
-end tell
+    def open_fixture(path: Path) -> None:
+        result = run(["open", "-a", "Microsoft Word", str(path)], timeout=30)
+        if result.returncode:
+            raise RuntimeError(f"Word could not open staged fixture: {result.stderr.strip()}")
+
+    def tell_word(body: str) -> str:
+        script = f"""
+on waitForFixture(docName)
+  tell application "Microsoft Word"
+    repeat 60 times
+      if exists document docName then return document docName
+      delay 0.5
+    end repeat
+  end tell
+  error "Word did not open the staged document"
+end waitForFixture
+
+with timeout of 45 seconds
+  tell application "Microsoft Word"
+{body}
+  end tell
+end timeout
 """
-    proc = run(["osascript", "-e", script], timeout=180)
-    if proc.returncode != 0:
-        raise RuntimeError(f"Word failed: {proc.stderr.strip()}")
-    pieces = proc.stdout.strip().split("|")
+        try:
+            result = run(["osascript", "-e", script], timeout=55)
+        except subprocess.TimeoutExpired as exc:
+            raise RuntimeError(
+                "Word automation did not finish. Check Word for a file access or document dialog."
+            ) from exc
+        if result.returncode:
+            raise RuntimeError(f"Word automation failed: {result.stderr.strip()}")
+        return result.stdout.strip()
+
+    def close_fixtures(*names: str) -> None:
+        body = "\n".join(
+            f"    if exists document {apple_string(name)} then "
+            f"close document {apple_string(name)} saving no"
+            for name in names
+        )
+        try:
+            tell_word(body)
+        except RuntimeError as exc:
+            raise WordCleanupError(
+                f"Could not close the staged Word documents ({', '.join(names)}): {exc}"
+            ) from exc
+
+    try:
+        open_fixture(staged)
+        counts = tell_word(f"""
+    set d to my waitForFixture({apple_string(input_name)})
+    set fnCount to count of footnotes of d
+    set pCount to count of paragraphs of d
+    save as d file name {apple_string(str(output))} file format format document default add to recent files false
+    return (fnCount as string) & "|" & (pCount as string)
+""")
+        # Save As changes Word's document identity. Close by the new name,
+        # then reopen through Launch Services to test the saved bytes.
+        close_fixtures(output_name)
+        open_fixture(output)
+        tell_word(f"""
+    set d to my waitForFixture({apple_string(output_name)})
+    save as d file name {apple_string(str(pdf))} file format format PDF add to recent files false
+""")
+    finally:
+        close_fixtures(input_name, output_name, pdf_name)
+    pieces = counts.split("|")
     return {
         "word_footnote_count": int(pieces[0]) if pieces and pieces[0] else 0,
         "word_paragraph_count": int(pieces[1]) if len(pieces) > 1 else 0,
@@ -174,9 +213,13 @@ def check_case(source: Path, out_dir: Path) -> dict[str, object]:
         "footnote_text_preserved": [n["text"] for n in source_real]
         == [n["text"] for n in word_real],
         "footnote_refs_present": all(n["has_footnote_ref"] for n in word_real),
-        "separator_present": any(n["type"] == "separator" for n in word_notes),
-        "continuation_separator_present": any(
-            n["type"] == "continuationSeparator" for n in word_notes
+        "separator_preserved": (
+            not any(n["type"] == "separator" for n in source_notes)
+            or any(n["type"] == "separator" for n in word_notes)
+        ),
+        "continuation_separator_preserved": (
+            not any(n["type"] == "continuationSeparator" for n in source_notes)
+            or any(n["type"] == "continuationSeparator" for n in word_notes)
         ),
         "pdf_has_body_text": all(
             " ".join(text.split()) in rendered_norm for text in source_paras[:1]
@@ -215,7 +258,7 @@ def main() -> int:
     if sys.platform != "darwin":
         print("This verifier requires macOS and Microsoft Word.", file=sys.stderr)
         return 2
-    for tool in ("osascript", "pandoc", "pdftotext"):
+    for tool in ("open", "osascript", "pdftotext"):
         if shutil.which(tool) is None:
             print(f"Missing required tool: {tool}", file=sys.stderr)
             return 2
@@ -231,6 +274,8 @@ def main() -> int:
         except Exception as exc:  # Word/permission failures should be loud.
             print(f"FAIL  {source}: {exc}")
             results.append({"source": str(source), "ok": False, "error": str(exc)})
+            if isinstance(exc, WordCleanupError):
+                break
             continue
         results.append(result)
         print(f"{'PASS' if result['ok'] else 'FAIL'}  {source}")

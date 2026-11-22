@@ -86,3 +86,35 @@ kernel compiled from the pinned source, avoiding repeated CLI compilation.
 The four timeout reruns changed the test runner budget. They did not change
 the macro execution deadline. The sync unit tests passed all ten cases and
 the manifest verified 3,367 tracked Office files against their pinned bytes.
+
+## Microsoft Word follow-up
+
+The original AppleScript timeout was caused by a Word file access dialog.
+The native oracle now opens disposable fixture copies with macOS Open With
+(`open -a "Microsoft Word"`) and stages every destination inside Word's
+sandbox. AppleScript handles document operations after the file is open.
+This works in a logged-in macOS session without clicking through file access
+prompts. It closes its fixtures in a cleanup step, including after failures.
+Use a dedicated logged-in user session for unattended batches.
+
+```sh
+~/miniconda3/bin/python tool/verify_word_roundtrip.py \
+  --out build/word_verification /path/to/fixtures/*.docx
+```
+
+Microsoft Word 16.111.1 opened, saved, reopened and rendered four files:
+the two native Zotero DOCX fixtures, the active transfer fixture, and the
+larger user-supplied DOCX. The independent DOCX and PDF checks passed on
+all four. The Zotero field comparison retained exact cached results and
+metadata across 4, 4, and 6 active fields respectively in the three Zotero
+fixtures. A separate Word object-model edit set first-paragraph spacing to
+12 points and retained all four Zotero fields. The Word test documents were
+closed and a final check found zero open fixtures.
+
+Broader coverage can use the same inputs with Word and LibreOffice as
+independent producers. Keep content/field comparisons separate from PDF
+layout and from macro results. For a true native VBA oracle, add disposable
+trusted DOCM files containing our own BAS modules and run their named entry
+points in Word. Compare the resulting DOCX/DOCM semantics and preserved
+package parts with CrispOffice's output. The spacing check above exercised
+Word's object model through AppleScript.
