@@ -823,7 +823,7 @@ class _Lexer {
         statementStart = false;
         continue;
       }
-      if ('().,+-*/&=<>:'.contains(String.fromCharCode(code))) {
+      if (r'().,+-*/\&=<>:'.contains(String.fromCharCode(code))) {
         _advance();
         if (code == 58 &&
             offset < source.length &&
@@ -1153,8 +1153,8 @@ class _Clear extends _Statement {
   final _Member target;
 }
 
-class _InsertBefore extends _Statement {
-  const _InsertBefore(super.token, this.target);
+class _WordRangeInsertion extends _Statement {
+  const _WordRangeInsertion(super.token, this.target);
   final _Member target;
 }
 
@@ -1543,14 +1543,16 @@ class _Parser {
         position++;
         if (context.isWord) {
           final target = _postfix();
-          if (target is _Member && target.token.lower == 'insertbefore') {
+          if (target is _Member &&
+              (target.token.lower == 'insertbefore' ||
+                  target.token.lower == 'insertafter')) {
             if (target.arguments == null) {
               context.unsupported(
                 target.token,
-                'Call InsertBefore requires parenthesized arguments.',
+                'Call ${target.token.text} requires parenthesized arguments.',
               );
             }
-            result.add(_InsertBefore(target.token, target));
+            result.add(_WordRangeInsertion(target.token, target));
           } else if (target is _Member &&
               (target.token.lower == 'add' ||
                   target.token.lower == 'clearall')) {
@@ -1820,6 +1822,7 @@ class _Parser {
             target is _Member &&
             const {
               'insertbefore',
+              'insertafter',
               'add',
               'clearall',
               ..._wordListMethods,
@@ -1847,8 +1850,9 @@ class _Parser {
             _Member(target.token, target.receiver, arguments),
           );
           result.add(
-            target.token.lower == 'insertbefore'
-                ? _InsertBefore(target.token, call)
+            (target.token.lower == 'insertbefore' ||
+                    target.token.lower == 'insertafter')
+                ? _WordRangeInsertion(target.token, call)
                 : _wordListMethods.contains(target.token.lower)
                 ? _WordListOperation(target.token, call)
                 : _wordSpacingMethods.contains(target.token.lower)
@@ -2047,8 +2051,10 @@ class _Parser {
     '&': 5,
     '+': 6,
     '-': 6,
-    '*': 7,
-    '/': 7,
+    'mod': 7,
+    r'\': 8,
+    '*': 9,
+    '/': 9,
   };
 
   _Expr _expression([int minimum = 1]) {
@@ -2059,7 +2065,9 @@ class _Parser {
     if (_is('+') || _is('-') || _is('not')) {
       final token = current;
       position++;
-      left = _bounded(_Unary(token, _expression(token.lower == 'not' ? 4 : 8)));
+      left = _bounded(
+        _Unary(token, _expression(token.lower == 'not' ? 4 : 10)),
+      );
     } else {
       left = _postfix();
     }
@@ -2248,7 +2256,6 @@ class _Checker {
   // not admit mark replacement/insertion in unexecuted source paths.
   final Map<String, List<(_Expr, List<_Expr>)>> wordSelectorBindings =
       <String, List<(_Expr, List<_Expr>)>>{};
-  final Map<String, bool> wordCellRangeBindings = <String, bool>{};
   final Map<String, bool> wordCellSelectorBindings = <String, bool>{};
   final Set<String> counters = <String>{};
   final Set<String> eachCounters = <String>{};
@@ -2285,6 +2292,7 @@ class _Checker {
     'and',
     'or',
     'xor',
+    'mod',
     'option',
     'explicit',
     'attribute',
@@ -2386,7 +2394,6 @@ class _Checker {
       withKinds.clear();
       withTargets.clear();
       wordSelectorBindings.clear();
-      wordCellRangeBindings.clear();
       wordCellSelectorBindings.clear();
       counters.clear();
       eachCounters.clear();
@@ -2724,45 +2731,52 @@ class _Checker {
     }
   }
 
-  bool _isWordCellRangeSource(
-    _Expr expression,
-    List<_Expr> scopes,
-    Set<String> visiting,
-  ) {
-    if (expression is _WithValue) {
-      return scopes.isNotEmpty &&
-          _isWordCellRangeSource(
-            scopes.last,
-            scopes.sublist(0, scopes.length - 1),
-            visiting,
-          );
+  bool _isWordCellRangeSource(_Expr expression, List<_Expr> scopes) {
+    // Inspect the complete local binding graph. A visited alias is an edge,
+    // not an unsupported origin: Set a = cell.Range / Set b = a / Set a = b
+    // still denotes a direct cell. Every reachable terminal must nevertheless
+    // be a direct cell or generic Range parameter, and a rootless cycle cannot
+    // invent a selector. Avoid caching partial results inside a cycle, which
+    // could hide a later paragraph binding from another alias in that cycle.
+    final pending = <(_Expr, List<_Expr>)>[(expression, scopes)];
+    final visited = <String>{};
+    var hasOrigin = false;
+    while (pending.isNotEmpty) {
+      final (current, contexts) = pending.removeLast();
+      if (current is _WithValue) {
+        if (contexts.isEmpty) return false;
+        pending.add((contexts.last, contexts.sublist(0, contexts.length - 1)));
+        continue;
+      }
+      if (current is _Member) {
+        if (current.token.lower != 'range' ||
+            !_isWordCellSource(current.receiver, contexts)) {
+          return false;
+        }
+        hasOrigin = true;
+        continue;
+      }
+      if (current is! _Name ||
+          symbols[current.token.lower]?.type != _Declared.range) {
+        return false;
+      }
+      final name = current.token.lower;
+      if (!visited.add(name)) continue;
+      final parameter = currentProcedure.parameters.any(
+        (parameter) => parameter.name.lower == name,
+      );
+      // Incoming helper parameters remain origins even when local assignments
+      // form a cycle through them. Their additional bindings are checked too.
+      // The evaluator checks their actual selector before each cell-only use.
+      if (parameter) hasOrigin = true;
+      final bindings = wordSelectorBindings[name];
+      if (bindings != null) {
+        pending.addAll(bindings);
+      } else if (!parameter) {
+        return false;
+      }
     }
-    if (expression is _Member) {
-      return expression.token.lower == 'range' &&
-          _isWordCellSource(expression.receiver, scopes);
-    }
-    if (expression is! _Name ||
-        symbols[expression.token.lower]?.type != _Declared.range) {
-      return false;
-    }
-    final name = expression.token.lower;
-    if (wordCellRangeBindings[name] case final cached?) return cached;
-    if (!visiting.add(name)) return false;
-    final bindings = wordSelectorBindings[name];
-    // A generic ByVal Range helper is checked again against its actual selector
-    // during source evaluation. Locals known to receive paragraph/story ranges
-    // never gain the cell-only Text property, even in dead branches.
-    final result = bindings == null
-        ? currentProcedure.parameters.any(
-            (parameter) => parameter.name.lower == name,
-          )
-        : bindings.every(
-            (binding) =>
-                _isWordCellRangeSource(binding.$1, binding.$2, visiting),
-          );
-    visiting.remove(name);
-    wordCellRangeBindings[name] = result;
-    return result;
+    return hasOrigin;
   }
 
   // True only for selectors whose local origins are all explicitly cells.
@@ -2934,8 +2948,8 @@ class _Checker {
               'ClearContents requires an explicit Range.',
             );
           }
-        case _InsertBefore():
-          _wordInsertBeforeCall(statement.target);
+        case _WordRangeInsertion():
+          _wordRangeInsertionCall(statement.target);
         case _WordTabOperation():
           _wordTabCall(statement.target);
         case _WordListOperation():
@@ -3142,24 +3156,38 @@ class _Checker {
     }
   }
 
-  void _wordInsertBeforeCall(_Member member) {
+  void _wordRangeInsertionCall(_Member member) {
     final receiver = _expression(member.receiver);
     if (receiver != _Kind.range && receiver != _Kind.wordCellRange) {
       context.type(
         member.token,
-        'InsertBefore requires an explicit Word Range.',
+        '${member.token.text} requires an explicit Word Range.',
+      );
+    }
+    if (member.token.lower == 'insertafter' &&
+        receiver != _Kind.wordCellRange &&
+        !_isWordCellRangeSource(member.receiver, withTargets)) {
+      // A whole paragraph range ends after its structural paragraph mark in
+      // Word. Only the direct Cell.Range contract appends inside the cell.
+      // Resolve generic ByVal Range parameters again during evaluation.
+      context.unsupported(
+        member.token,
+        'InsertAfter requires a direct Cell.Range; paragraph and story ranges are unsupported.',
       );
     }
     final arguments = member.arguments ?? const <_Expr>[];
     if (arguments.length != 1) {
-      context.type(member.token, 'InsertBefore requires one Text argument.');
+      context.type(
+        member.token,
+        '${member.token.text} requires one Text argument.',
+      );
     }
     final argument = arguments.single;
     if (argument is _NamedArgument && argument.token.lower != 'text') {
       context.fail(
         argument.token,
         'vba_name_error',
-        'Unknown named argument ${argument.token.text} for Range.InsertBefore.',
+        'Unknown named argument ${argument.token.text} for Range.${member.token.text}.',
       );
     }
     final value = argument is _NamedArgument ? argument.value : argument;
@@ -3446,7 +3474,7 @@ class _Checker {
       if (property == 'text' &&
           (receiver == _Kind.wordCellRange ||
               receiver == _Kind.range &&
-                  _isWordCellRangeSource(target.receiver, withTargets, {}))) {
+                  _isWordCellRangeSource(target.receiver, withTargets))) {
         return _Kind.string;
       }
       if (receiver == _Kind.wordShading &&
@@ -4860,8 +4888,15 @@ class _Evaluator {
             _emitRange(range, 'cellValue', <String, Object?>{
               'value': null,
             }, statement.token);
-          case _InsertBefore():
+          case _WordRangeInsertion():
             final receiver = _evaluate(statement.target.receiver);
+            final insertAfter = statement.target.token.lower == 'insertafter';
+            if (insertAfter && receiver is! _WordCellRange) {
+              context.unsupported(
+                statement.target.token,
+                'InsertAfter requires a direct Cell.Range; paragraph and story ranges are unsupported.',
+              );
+            }
             final range = receiver is _WordCellRange
                 ? _WordRange(_WordParagraph(0, cell: receiver.cell))
                 : _wordParagraphRange(receiver, statement.target.token);
@@ -4871,7 +4906,7 @@ class _Evaluator {
                 : argument;
             final text = _wordText(_evaluate(value), statement.target.token);
             if (range.paragraph.cell case final cell?) {
-              // Prefixing a cell uses its own guarded operation. Generic
+              // Cell insertions use dedicated guarded operations. Generic
               // replacement offsets and paragraph/cell marks remain outside
               // the ordinary paragraph-formatting selector contract.
               if (steps.length >= _maxSteps) {
@@ -4880,12 +4915,18 @@ class _Evaluator {
                   'Word writes exceed $_maxSteps emitted operations.',
                 );
               }
-              _emitNative('docx.tableCellRangeInsertBefore', <String, Object?>{
-                'table': cell.table.index,
-                'row': cell.row,
-                'column': cell.column,
-                'text': text,
-              }, statement.target.token);
+              _emitNative(
+                insertAfter
+                    ? 'docx.tableCellRangeInsertAfter'
+                    : 'docx.tableCellRangeInsertBefore',
+                <String, Object?>{
+                  'table': cell.table.index,
+                  'row': cell.row,
+                  'column': cell.column,
+                  'text': text,
+                },
+                statement.target.token,
+              );
             } else {
               _emitWord(range, 'replaceText', <String, Object?>{
                 'start': 0,
@@ -5443,6 +5484,32 @@ class _Evaluator {
             ? null
             : _arithmeticNumber(right, expression.token).toDouble();
         if (a == null || b == null) return _VariantState.nullValue;
+        if (operator == r'\' || operator == 'mod') {
+          final name = operator == 'mod' ? 'Mod' : 'Integer division';
+          final dividend = _roundedLong(a, expression.token, '$name operand');
+          final divisor = _roundedLong(b, expression.token, '$name operand');
+          if (divisor == 0) {
+            context.fail(
+              expression.token,
+              'vba_arithmetic_error',
+              '$name by zero after rounding.',
+            );
+          }
+          // With signed Long operands, the truncated quotient and its product
+          // stay within the shared VM/JavaScript exact-integer range.
+          // Remainder follows the dividend's sign; Dart's % is Euclidean and
+          // would silently turn a negative remainder positive. The temporary
+          // quotient may be 2147483648 for Long-min / -1: Mod still yields 0.
+          final quotient = (dividend / divisor).truncate();
+          if (operator == 'mod') return dividend - quotient * divisor;
+          if (quotient < -2147483648 || quotient > 2147483647) {
+            context.type(
+              expression.token,
+              'Integer division overflows its signed 32-bit result.',
+            );
+          }
+          return quotient;
+        }
         if (operator == '/' && b == 0) {
           context.fail(
             expression.token,
@@ -5985,6 +6052,10 @@ class _Evaluator {
     if (name == 'cdbl') return number.toDouble();
     // Explicit CLng follows ties-to-even. Ordinary Long assignment still
     // requires an exact integer and does not acquire this coercion.
+    return _roundedLong(number, token, 'CLng');
+  }
+
+  int _roundedLong(num number, _Token token, String operation) {
     final lower = number.floor();
     final fraction = number - lower;
     final rounded = fraction < 0.5
@@ -5997,7 +6068,7 @@ class _Evaluator {
     if (rounded < -2147483648 || rounded > 2147483647) {
       context.type(
         token,
-        'CLng overflows its signed 32-bit range after rounding.',
+        '$operation overflows its signed 32-bit range after rounding.',
       );
     }
     return rounded;

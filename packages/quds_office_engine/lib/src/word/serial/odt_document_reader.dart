@@ -14,6 +14,7 @@ import '../model/word_notes.dart';
 import '../model/word_zotero.dart';
 import '../model/word_zotero_data.dart';
 import '../properties/wml_properties.dart';
+import 'odt_note_start_convention.dart';
 import 'odt_reader_images.dart';
 import 'odt_reader_styles.dart';
 import 'odt_reader_text_style.dart';
@@ -96,13 +97,26 @@ abstract final class OdtDocumentReader {
     final content = (await parts.xml('content.xml'))!.root!;
     final styles = (await parts.xml('styles.xml'))?.root;
     final metadata = (await parts.xml('meta.xml'))?.root;
+    final generator = _generator(metadata);
+    final libreOfficeNoteOffsets = _usesLibreOfficeNoteOffsets(generator);
+    final crispOfficeNoteOffsets = generator == odtZoteroNoteOffsetGenerator;
+    if (!libreOfficeNoteOffsets &&
+        !crispOfficeNoteOffsets &&
+        _declaresNoteOffsets(metadata)) {
+      // A malformed declaration of a known offset convention cannot become a
+      // generic start-one document just because its cached labels are empty.
+      throw UnsupportedError(
+        'Ambiguous or unsupported note-offset producer declaration.',
+      );
+    }
     final reader = _OdtReader(
       content,
       styles,
       inventory,
       limits,
       zip,
-      libreOfficeNoteOffsets: _usesLibreOfficeNoteOffsets(metadata),
+      libreOfficeNoteOffsets: libreOfficeNoteOffsets,
+      crispOfficeNoteOffsets: crispOfficeNoteOffsets,
     );
     final document = reader.read();
     reader.readMetadata(metadata);
@@ -159,35 +173,74 @@ abstract final class OdtDocumentReader {
             'application/vnd.oasis.opendocument.text';
   }
 
-  /// LibreOffice's ODF exporter stores a zero-based note offset where ODF
-  /// describes an initial number. Use that convention only for an unambiguous
-  /// stock producer declaration; note import still verifies the visible labels.
-  static bool _usesLibreOfficeNoteOffsets(XmlElement? root) {
+  /// Only one unwrapped, attribute-free producer declaration may select an
+  /// offset convention. Ambiguous metadata retains generic ODF semantics.
+  static String? _generator(XmlElement? root) {
     if (root == null || !_is(root, odfOfficeNamespace, 'document-meta')) {
-      return false;
+      return null;
     }
     final containers = root
         .childrenNamed('meta', namespaceUri: odfOfficeNamespace)
         .toList();
-    if (containers.length != 1) return false;
+    if (containers.length != 1) return null;
     final generators = containers.single
         .childrenNamed('generator', namespaceUri: _meta)
         .toList();
-    if (generators.length != 1) return false;
+    if (generators.length != 1) return null;
+    // A second declaration inside a wrapper cannot silently lend a meaning
+    // to the direct declaration. The inventory has already bounded this DOM.
+    var containerCount = 0;
+    var generatorCount = 0;
+    final pending = <XmlElement>[root];
+    while (pending.isNotEmpty) {
+      final element = pending.removeLast();
+      if (_is(element, odfOfficeNamespace, 'meta')) containerCount++;
+      if (_is(element, _meta, 'generator')) generatorCount++;
+      if (containerCount > 1 || generatorCount > 1) return null;
+      pending.addAll(element.childElements);
+    }
     final generator = generators.single;
     if (generator.childElements.isNotEmpty ||
         generator.attributes.any(
           (attribute) =>
               attribute.prefix != 'xmlns' && attribute.qualifiedName != 'xmlns',
         )) {
-      return false;
+      return null;
     }
+    return generator.text;
+  }
+
+  static bool _declaresNoteOffsets(XmlElement? root) {
+    if (root == null) return false;
+    final pending = <XmlElement>[root];
+    while (pending.isNotEmpty) {
+      final element = pending.removeLast();
+      // A recognizable but wrongly namespaced declaration is malformed too;
+      // its offset cannot safely fall back to literal generic numbering.
+      if (element.localName == 'generator') {
+        final value = element.text;
+        if (value.contains('CrispOffice Zotero ODT note-offsets') ||
+            value.contains('LibreOffice/') ||
+            value.contains('LibreOfficeDev/')) {
+          return true;
+        }
+      }
+      pending.addAll(element.childElements);
+    }
+    return false;
+  }
+
+  /// LibreOffice's ODF exporter stores a zero-based note offset where ODF
+  /// describes an initial number. Use that convention only for an unambiguous
+  /// stock producer declaration; note import still verifies the visible labels.
+  static bool _usesLibreOfficeNoteOffsets(String? generator) {
+    if (generator == null) return false;
     final match = RegExp(
       r'^LibreOffice(?:Dev)?/[0-9]+(?:\.[0-9]+){1,3}'
       r'(?:\.(?:alpha|beta|rc)[0-9]+)?\$[A-Za-z0-9_]+'
       r' LibreOffice_project/[0-9a-f]{40}$',
-    ).firstMatch(generator.text);
-    return match != null && match.end == generator.text.length;
+    ).firstMatch(generator);
+    return match != null && match.end == generator.length;
   }
 }
 
@@ -199,6 +252,7 @@ final class _OdtReader {
     this.limits,
     ZipReader zip, {
     required this.libreOfficeNoteOffsets,
+    required this.crispOfficeNoteOffsets,
   }) : styles = OdtReaderStyles(content, styles: styleRoot),
        textBudget = OdfTextBudget(limits.maxTextBytes) {
     images = OdtReaderImages(zip, styles);
@@ -209,6 +263,7 @@ final class _OdtReader {
   final OdfZoteroInventory inventory;
   final OdfZoteroLimits limits;
   final bool libreOfficeNoteOffsets;
+  final bool crispOfficeNoteOffsets;
   final OdtReaderStyles styles;
   late final OdtReaderImages images;
   final OdfTextBudget textBudget;
@@ -308,7 +363,7 @@ final class _OdtReader {
       libreOfficeZeroSeparatorLengths: libreOfficeNoteOffsets,
     );
     if (_noteConfigurations.isNotEmpty) {
-      // Automatic numbering has one exact, continuous start-one sequence per
+      // Automatic numbering has one exact, continuous sequence per
       // note class. Store both classes explicitly: Word defaults endnotes to
       // lower Roman and cannot infer the ODT format from cached labels.
       final noteProperties = StringBuffer();
@@ -318,7 +373,8 @@ final class _OdtReader {
         final tag = endnote ? 'endnotePr' : 'footnotePr';
         noteProperties.write(
           '<w:$tag><w:numFmt w:val="${configuration.nativeFormat}"/>'
-          '<w:numStart w:val="1"/><w:numRestart w:val="continuous"/>'
+          '<w:numStart w:val="${configuration.start}"/>'
+          '<w:numRestart w:val="continuous"/>'
           '</w:$tag>',
         );
       }
@@ -654,6 +710,7 @@ final class _OdtReader {
       () => styles.validateNoteConfiguration(
         kind == 'endnote',
         libreOfficeNoteOffsets: libreOfficeNoteOffsets,
+        crispOfficeNoteOffsets: crispOfficeNoteOffsets,
       ),
     );
     final children = element.childElements.toList();

@@ -198,7 +198,7 @@ void main() {
     }
   });
 
-  for (final invalid in ['locked', 'malformed', 'nested']) {
+  for (final invalid in ['locked', 'nested']) {
     test(
       '$invalid field leaves other fields, revisions and redo untouched',
       () {
@@ -211,9 +211,6 @@ void main() {
         final last = controller.zoteroFields.last;
         if (invalid == 'locked') {
           last.run!.fieldLocked = true;
-        } else if (invalid == 'malformed') {
-          last.run!.fieldInstruction =
-              ' ADDIN ZOTERO_ITEM CSL_CITATION broken ';
         } else {
           last.paragraph.inlines
             ..insert(0, WmlFieldBoundary(kind: WmlFieldBoundaryKind.begin))

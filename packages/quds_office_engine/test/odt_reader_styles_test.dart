@@ -462,6 +462,19 @@ ${_paragraphStyle('Child', '', parent: 'Parent', text: 'fo:font-style="italic"')
       }
     }
 
+    test('non-one note starts preserve physical ordinal validation', () {
+      final configuration = configured(
+        '<text:notes-configuration text:note-class="footnote" '
+        'style:num-format="i" text:start-value="8"/>',
+      ).validateNoteConfiguration(false);
+      expect(configuration.start, 8);
+      expect(configuration.labelFor(1), 'viii');
+      expect(configuration.labelFor(2), 'ix');
+      expect(configuration.labelFor(0), isNull);
+      expect(configuration.labelFor(-1), isNull);
+      expect(configuration.verifyCachedOrdinal, isTrue);
+    });
+
     test(
       'rejects active note numbering or positioning outside canonical scope',
       () {

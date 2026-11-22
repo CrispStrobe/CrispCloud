@@ -252,6 +252,8 @@ final class WordNoteNumbering {
     if (source == null || source.isEmpty) return null;
     try {
       return XmlDocument.parse(source).root;
+    } on XmlParseException {
+      return null;
     } on FormatException {
       return null;
     }
@@ -339,6 +341,8 @@ final class WordNoteNumbering {
         }
       }
       return roots == 1 && stack.isEmpty;
+    } on XmlParseException {
+      return false;
     } on FormatException {
       return false;
     }

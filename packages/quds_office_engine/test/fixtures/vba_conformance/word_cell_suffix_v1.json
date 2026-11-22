@@ -1,0 +1,1883 @@
+{
+  "schemaVersion": 1,
+  "suite": "vba-word-cell-suffix",
+  "dialect": "vba-word",
+  "cases": [
+    {
+      "id": "first-cell-positional",
+      "feature": "Direct cell suffix",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.InsertAfter \"First cell\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertAfter",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "First cell"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "Microsoft documents direct Cell.Range.InsertAfter and the required String Text argument; Range expands to include inserted text. These native plans are independently authored for Quds' bounded existing-cell contract. No installed Microsoft Office host was executed."
+      }
+    },
+    {
+      "id": "application-item-named",
+      "feature": "Direct cell suffix",
+      "source": "Option Explicit\nSub Main()\n  Application.ActiveDocument.Tables.Item(3).Cell(2, 4).Range.InsertAfter Text:=\" [approved]\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertAfter",
+            "arguments": {
+              "table": 2,
+              "row": 1,
+              "column": 3,
+              "text": " [approved]"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "Microsoft documents direct Cell.Range.InsertAfter and the required String Text argument; Range expands to include inserted text. These native plans are independently authored for Quds' bounded existing-cell contract. No installed Microsoft Office host was executed."
+      }
+    },
+    {
+      "id": "thisdocument-mixed-case",
+      "feature": "Direct cell suffix",
+      "source": "Option Explicit\nSub Main()\n  ThisDocument.Tables(2).Cell(3, 4).Range.iNsErTaFtEr tExT:=\" / final\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertAfter",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": " / final"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "Microsoft documents direct Cell.Range.InsertAfter and the required String Text argument; Range expands to include inserted text. These native plans are independently authored for Quds' bounded existing-cell contract. No installed Microsoft Office host was executed."
+      }
+    },
+    {
+      "id": "parenthesized-call",
+      "feature": "Direct cell suffix",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertAfter(\"tail\")\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertAfter",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "tail"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "Microsoft documents direct Cell.Range.InsertAfter and the required String Text argument; Range expands to include inserted text. These native plans are independently authored for Quds' bounded existing-cell contract. No installed Microsoft Office host was executed."
+      }
+    },
+    {
+      "id": "explicit-call-named",
+      "feature": "Direct cell suffix",
+      "source": "Option Explicit\nSub Main()\n  Call ActiveDocument.Tables(2).Cell(3, 4).Range.InsertAfter(Text:=\"tail\")\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertAfter",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "tail"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "Microsoft documents direct Cell.Range.InsertAfter and the required String Text argument; Range expands to include inserted text. These native plans are independently authored for Quds' bounded existing-cell contract. No installed Microsoft Office host was executed."
+      }
+    },
+    {
+      "id": "text-expression",
+      "feature": "Direct cell suffix",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertAfter Text:=\" / \" & CStr(6 * 7)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertAfter",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": " / 42"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "Microsoft documents direct Cell.Range.InsertAfter and the required String Text argument; Range expands to include inserted text. These native plans are independently authored for Quds' bounded existing-cell contract. No installed Microsoft Office host was executed."
+      }
+    },
+    {
+      "id": "continuation-and-tab",
+      "feature": "Direct cell suffix",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertAfter _\n    Text:=\"Ready\" & vbTab & \"42\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertAfter",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "Ready\t42"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "Microsoft documents direct Cell.Range.InsertAfter and the required String Text argument; Range expands to include inserted text. These native plans are independently authored for Quds' bounded existing-cell contract. No installed Microsoft Office host was executed."
+      }
+    },
+    {
+      "id": "unicode-preserved",
+      "feature": "Direct cell suffix",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertAfter Text:=\" — Résumé 😀 مرحبا\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertAfter",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": " — Résumé 😀 مرحبا"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "Microsoft documents direct Cell.Range.InsertAfter and the required String Text argument; Range expands to include inserted text. These native plans are independently authored for Quds' bounded existing-cell contract. No installed Microsoft Office host was executed."
+      }
+    },
+    {
+      "id": "xml-sensitive-text",
+      "feature": "Direct cell suffix",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertAfter Text:=\" & <ok> \"\"quoted\"\"\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertAfter",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": " & <ok> \"quoted\""
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "Microsoft documents direct Cell.Range.InsertAfter and the required String Text argument; Range expands to include inserted text. These native plans are independently authored for Quds' bounded existing-cell contract. No installed Microsoft Office host was executed."
+      }
+    },
+    {
+      "id": "empty-suffix-explicit-operation",
+      "feature": "Suffix composition",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertAfter \"\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertAfter",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": ""
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "exact-long-selector-boundary",
+      "feature": "Cell selector bounds",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2147483647).Cell(2147483647, 2147483647).Range.InsertAfter \"x\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertAfter",
+            "arguments": {
+              "table": 2147483646,
+              "row": 2147483646,
+              "column": 2147483646,
+              "text": "x"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "typed-aliases-capture-cell",
+      "feature": "Selector identity",
+      "source": "Option Explicit\nSub Main()\n  Dim doc As Document, report As Table, selected As Cell, target As Range\n  Set doc = ThisDocument\n  Set report = doc.Tables(2)\n  Set selected = report.Cell(3, 4)\n  Set target = selected.Range\n  Set selected = doc.Tables(1).Cell(1, 1)\n  target.InsertAfter \"original\"\n  selected.Range.InsertAfter \"other\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertAfter",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "original"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeInsertAfter",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "other"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "range-alias-rebinding",
+      "feature": "Selector identity",
+      "source": "Option Explicit\nSub Main()\n  Dim first As Range, second As Range\n  Set first = ActiveDocument.Tables(2).Cell(3, 4).Range\n  Set second = first\n  Set first = ActiveDocument.Tables(1).Cell(1, 2).Range\n  second.InsertAfter \"retained\"\n  first.InsertAfter \"rebound\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertAfter",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "retained"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeInsertAfter",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 1,
+              "text": "rebound"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "range-alias-cycle",
+      "feature": "Selector identity",
+      "source": "Option Explicit\nSub Main()\n  Dim first As Range, second As Range\n  Set first = ActiveDocument.Tables(2).Cell(3, 4).Range\n  Set second = first\n  Set first = second\n  first.InsertAfter \"cycle\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertAfter",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "cycle"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "nested-with",
+      "feature": "Direct cell suffix",
+      "source": "Option Explicit\nSub Main()\n  With ActiveDocument.Tables(2)\n    With .Cell(3, 4)\n      With .Range\n        .InsertAfter Text:=\"nested\"\n      End With\n    End With\n  End With\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertAfter",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "nested"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "Microsoft documents direct Cell.Range.InsertAfter and the required String Text argument; Range expands to include inserted text. These native plans are independently authored for Quds' bounded existing-cell contract. No installed Microsoft Office host was executed."
+      }
+    },
+    {
+      "id": "byval-range-named-rebinding",
+      "feature": "ByVal binding",
+      "source": "Option Explicit\nSub Suffix(ByVal target As Range, Optional ByVal label As String = \" default\")\n  target.InsertAfter Text:=label\n  Set target = ActiveDocument.Tables(1).Cell(1, 2).Range\n  target.InsertAfter \" local\"\nEnd Sub\nSub Main()\n  Dim saved As Range\n  Set saved = ActiveDocument.Tables(2).Cell(3, 4).Range\n  Suffix label:=\" supplied\", target:=saved\n  Suffix target:=saved\n  saved.InsertAfter \" caller\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertAfter",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": " supplied"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeInsertAfter",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 1,
+              "text": " local"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeInsertAfter",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": " default"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeInsertAfter",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 1,
+              "text": " local"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeInsertAfter",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": " caller"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "byval-cell-helper",
+      "feature": "ByVal binding",
+      "source": "Option Explicit\nSub Suffix(ByVal selected As Cell, ByVal label As String)\n  selected.Range.InsertAfter label\nEnd Sub\nSub Main()\n  Call Suffix(ActiveDocument.Tables(2).Cell(3, 4), \"cell helper\")\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertAfter",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "cell helper"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "byval-table-helper",
+      "feature": "ByVal binding",
+      "source": "Option Explicit\nSub Suffix(ByVal selected As Table)\n  selected.Cell(3, 4).Range.InsertAfter \"table helper\"\nEnd Sub\nSub Main()\n  Suffix ActiveDocument.Tables(2)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertAfter",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "table helper"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "receiver-before-one-text-evaluation",
+      "feature": "Evaluation order",
+      "source": "Option Explicit\nFunction PickTable() As Long\n  ActiveDocument.Paragraphs(1).Range.InsertBefore \"receiver\"\n  PickTable = 2\nEnd Function\nFunction MakeSuffix() As String\n  ActiveDocument.Paragraphs(1).Range.InsertBefore \"argument\"\n  MakeSuffix = \"evaluated once\"\nEnd Function\nSub Main()\n  ActiveDocument.Tables(PickTable()).Cell(3, 4).Range.InsertAfter Text:=MakeSuffix()\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "receiver"
+            }
+          },
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "argument"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeInsertAfter",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "evaluated once"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "suffix-prefix-replace-distinct",
+      "feature": "Suffix composition",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.Text = \"base\"\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertAfter \" tail\"\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertBefore \"head \"\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertAfter \" end\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "base"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeInsertAfter",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": " tail"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeInsertBefore",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "head "
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeInsertAfter",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": " end"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "suffix-then-range-font",
+      "feature": "Suffix composition",
+      "source": "Option Explicit\nSub Main()\n  Dim target As Range\n  Set target = ActiveDocument.Tables(2).Cell(3, 4).Range\n  target.InsertAfter \" / complete\"\n  target.Font.Bold = True\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertAfter",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": " / complete"
+            }
+          },
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 0,
+              "story": "tableCell",
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "bold": true
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "Microsoft documents direct Cell.Range.InsertAfter and the required String Text argument; Range expands to include inserted text. These native plans are independently authored for Quds' bounded existing-cell contract. No installed Microsoft Office host was executed."
+      }
+    },
+    {
+      "id": "source-array-join",
+      "feature": "Suffix composition",
+      "source": "Option Explicit\nSub Main()\n  Dim parts(1 To 2) As String\n  parts(1) = \"42\"\n  parts(2) = \"kg\"\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertAfter Text:=Join(parts, \" \")\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertAfter",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "42 kg"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "variant-string-explicit",
+      "feature": "Text typing",
+      "source": "Option Explicit\nSub Main()\n  Dim value As Variant\n  value = \"variant text\"\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertAfter Text:=value\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertAfter",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "variant text"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "inactive-direct-cell-admitted",
+      "feature": "Static receiver validation",
+      "source": "Option Explicit\nSub Main()\n  If False Then\n    ActiveDocument.Tables(2).Cell(3, 4).Range.InsertAfter Text:=\"unused\"\n  End If\nEnd Sub\n",
+      "expected": {
+        "steps": []
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "unused-unknown-range-helper-admitted",
+      "feature": "Static receiver validation",
+      "source": "Option Explicit\nSub Main()\nEnd Sub\nSub Suffix(ByVal target As Range)\n  target.InsertAfter Text:=\"unused\"\nEnd Sub\n",
+      "expected": {
+        "steps": []
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "sanitize-source-line-separators",
+      "feature": "Text validity",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertAfter Text:=Replace(\"one\" & vbCrLf & \"two\", vbCrLf, vbTab)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertAfter",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "one\ttwo"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "finite-loop-retains-order",
+      "feature": "Bounded source loops",
+      "source": "Option Explicit\nSub Main()\n  Dim row As Long\n  For row = 1 To 3\n    ActiveDocument.Tables(2).Cell(row, 4).Range.InsertAfter CStr(row)\n  Next row\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertAfter",
+            "arguments": {
+              "table": 1,
+              "row": 0,
+              "column": 3,
+              "text": "1"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeInsertAfter",
+            "arguments": {
+              "table": 1,
+              "row": 1,
+              "column": 3,
+              "text": "2"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeInsertAfter",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "3"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "number-text-refused",
+      "feature": "Text validity",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertAfter Text:=42\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 63
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "boolean-text-refused",
+      "feature": "Text validity",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertAfter Text:=True\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 63
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "empty-text-refused",
+      "feature": "Text validity",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertAfter Text:=Empty\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 45
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "null-text-refused",
+      "feature": "Text validity",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertAfter Text:=Null\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 45
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "paragraph-mark-text-refused",
+      "feature": "Text validity",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertAfter Text:=vbCr\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 45
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "line-feed-text-refused",
+      "feature": "Text validity",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertAfter Text:=vbLf\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 45
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "crlf-text-refused",
+      "feature": "Text validity",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertAfter Text:=vbCrLf\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 45
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "end-cell-mark-text-refused",
+      "feature": "Text validity",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertAfter Text:=ChrW(7)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 45
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "nul-text-refused",
+      "feature": "Text validity",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertAfter Text:=ChrW(0)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 45
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "unpaired-high-surrogate-text-refused",
+      "feature": "Text validity",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertAfter Text:=ChrW(55296)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 45
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "unpaired-low-surrogate-text-refused",
+      "feature": "Text validity",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertAfter Text:=ChrW(56320)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 45
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "variant-number-refused",
+      "feature": "Text typing",
+      "source": "Option Explicit\nSub Main()\n  Dim value As Variant\n  value = 42\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertAfter Text:=value\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 5,
+          "column": 45
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "missing-bare-argument-refused",
+      "feature": "Required Text argument",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertAfter\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 45
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "missing-parenthesized-argument-refused",
+      "feature": "Required Text argument",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertAfter()\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 45
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "two-positional-argument-refused",
+      "feature": "Required Text argument",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertAfter \"x\", \"y\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 45
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "duplicate-text-argument-refused",
+      "feature": "Required Text argument",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertAfter Text:=\"x\", Text:=\"y\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 45
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "positional-after-named-argument-refused",
+      "feature": "Required Text argument",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertAfter Text:=\"x\", \"y\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 45
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "unknown-named-argument-refused",
+      "feature": "Required Text argument",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertAfter Value:=\"x\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_name_error",
+          "line": 3,
+          "column": 57
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "omitted-argument-refused",
+      "feature": "Required Text argument",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertAfter(, \"x\")\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 45
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "body-paragraph-refused",
+      "feature": "Paragraph-mark semantics",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Paragraphs(1).Range.InsertAfter Text:=\"x\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 3,
+          "column": 38
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "inactive-body-paragraph-refused",
+      "feature": "Static receiver validation",
+      "source": "Option Explicit\nSub Main()\n  If False Then\n    ActiveDocument.Paragraphs(1).Range.InsertAfter \"x\"\n  End If\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 4,
+          "column": 40
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "projected-cell-refused",
+      "feature": "Paragraph-mark semantics",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs(1).Range.InsertAfter Text:=\"x\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 3,
+          "column": 65
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "inactive-projected-cell-refused",
+      "feature": "Static receiver validation",
+      "source": "Option Explicit\nSub Main()\n  If False Then\n    ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs(1).Range.InsertAfter \"x\"\n  End If\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 4,
+          "column": 67
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "projected-cell-item-refused",
+      "feature": "Paragraph-mark semantics",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs.Item(1).Range.InsertAfter Text:=\"x\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 3,
+          "column": 70
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "inactive-projected-cell-item-refused",
+      "feature": "Static receiver validation",
+      "source": "Option Explicit\nSub Main()\n  If False Then\n    ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs.Item(1).Range.InsertAfter \"x\"\n  End If\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 4,
+          "column": 72
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "nested-projected-cell-refused",
+      "feature": "Paragraph-mark semantics",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs(1).Range.Paragraphs(1).Range.InsertAfter Text:=\"x\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 3,
+          "column": 85
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "inactive-nested-projected-cell-refused",
+      "feature": "Static receiver validation",
+      "source": "Option Explicit\nSub Main()\n  If False Then\n    ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs(1).Range.Paragraphs(1).Range.InsertAfter \"x\"\n  End If\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 4,
+          "column": 87
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "header-paragraph-refused",
+      "feature": "Paragraph-mark semantics",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Sections(1).Headers(1).Range.Paragraphs(1).Range.InsertAfter Text:=\"x\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 3,
+          "column": 67
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "inactive-header-paragraph-refused",
+      "feature": "Static receiver validation",
+      "source": "Option Explicit\nSub Main()\n  If False Then\n    ActiveDocument.Sections(1).Headers(1).Range.Paragraphs(1).Range.InsertAfter \"x\"\n  End If\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 4,
+          "column": 69
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "footer-paragraph-refused",
+      "feature": "Paragraph-mark semantics",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Sections(1).Footers(1).Range.Paragraphs(1).Range.InsertAfter Text:=\"x\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 3,
+          "column": 67
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "inactive-footer-paragraph-refused",
+      "feature": "Static receiver validation",
+      "source": "Option Explicit\nSub Main()\n  If False Then\n    ActiveDocument.Sections(1).Footers(1).Range.Paragraphs(1).Range.InsertAfter \"x\"\n  End If\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 4,
+          "column": 69
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "whole-header-story-refused",
+      "feature": "Paragraph-mark semantics",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Sections(1).Headers(1).Range.InsertAfter \"x\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 47
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "whole-footer-story-refused",
+      "feature": "Paragraph-mark semantics",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Sections(1).Footers(1).Range.InsertAfter \"x\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 47
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "font-receiver-refused",
+      "feature": "Receiver types",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.Font.InsertAfter \"x\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 50
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "inactive-projected-alias-refused",
+      "feature": "Static receiver validation",
+      "source": "Option Explicit\nSub Main()\n  Dim target As Range\n  Set target = ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs(1).Range\n  If False Then\n    target.InsertAfter \"x\"\n  End If\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 6,
+          "column": 12
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "unused-known-body-helper-refused",
+      "feature": "Static receiver validation",
+      "source": "Option Explicit\nSub Main()\nEnd Sub\nSub Unused()\n  Dim target As Range\n  Set target = ActiveDocument.Paragraphs(1).Range\n  target.InsertAfter \"x\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 7,
+          "column": 10
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "unused-projection-helper-refused",
+      "feature": "Static receiver validation",
+      "source": "Option Explicit\nSub Main()\nEnd Sub\nSub Unused(ByVal target As Range)\n  target.Paragraphs(1).Range.InsertAfter \"x\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 5,
+          "column": 30
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "helper-body-range-refused",
+      "feature": "ByVal boundaries",
+      "source": "Option Explicit\nSub Suffix(ByVal target As Range)\n  target.InsertAfter \"x\"\nEnd Sub\nSub Main()\n  Suffix ActiveDocument.Paragraphs(1).Range\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 3,
+          "column": 10
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "helper-projected-range-refused",
+      "feature": "ByVal boundaries",
+      "source": "Option Explicit\nSub Suffix(ByVal target As Range)\n  target.InsertAfter \"x\"\nEnd Sub\nSub Main()\n  Suffix ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs(1).Range\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 3,
+          "column": 10
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "inactive-unknown-name-refused",
+      "feature": "Required Text argument",
+      "source": "Option Explicit\nSub Main()\n  If False Then\n    ActiveDocument.Tables(2).Cell(3, 4).Range.InsertAfter Content:=\"x\"\n  End If\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_name_error",
+          "line": 4,
+          "column": 59
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "inactive-numeric-text-refused",
+      "feature": "Text typing",
+      "source": "Option Explicit\nSub Main()\n  If False Then\n    ActiveDocument.Tables(2).Cell(3, 4).Range.InsertAfter Text:=42\n  End If\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 4,
+          "column": 65
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "zero-table-refused",
+      "feature": "Cell selector bounds",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(0).Cell(3, 4).Range.InsertAfter \"x\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 18
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "negative-row-refused",
+      "feature": "Cell selector bounds",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(-1, 4).Range.InsertAfter \"x\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 28
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "fractional-column-refused",
+      "feature": "Cell selector bounds",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 1.5).Range.InsertAfter \"x\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 28
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "long-table-overflow-refused",
+      "feature": "Cell selector bounds",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2147483648).Cell(3, 4).Range.InsertAfter \"x\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 18
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "uninitialized-range-refused",
+      "feature": "Receiver types",
+      "source": "Option Explicit\nSub Main()\n  Dim target As Range\n  target.InsertAfter \"x\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 4,
+          "column": 10
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertafter",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.cells",
+          "https://learn.microsoft.com/en-us/office/vba/word/concepts/working-with-word/working-with-tables"
+        ],
+        "note": "This expectation specifies Quds' bounded cell-selector, argument, Unicode or resource contract. Whole-paragraph InsertAfter has paragraph-mark semantics and is deliberately excluded. These plans and positioned diagnostics are independently authored; no installed Office host was executed."
+      }
+    }
+  ]
+}

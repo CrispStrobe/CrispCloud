@@ -292,7 +292,7 @@ End Sub
       });
     }
     for (final statement in [
-      '$_cell.InsertAfter "x"',
+      '$_cell.Paragraphs(1).Range.InsertAfter "x"',
       '$_cell.Paragraphs(1).Range.Text = "x"',
       '$_cell.Paragraphs(1).Range.ListFormat.ApplyBulletDefault',
       '$_cell.Paragraphs(2).Range.InsertBefore "x"',

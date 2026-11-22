@@ -13,5 +13,6 @@
   {"op":"listLevel","paragraph":4,"delta":1},
   {"op":"removeNumbers","paragraph":4,"numberType":"all"},
   {"op":"tableCellRangeText","table":0,"row":0,"column":0,"text":"Range"},
-  {"op":"tableCellRangeInsertBefore","table":0,"row":0,"column":0,"text":"Prefix "}
+  {"op":"tableCellRangeInsertBefore","table":0,"row":0,"column":0,"text":"Prefix "},
+  {"op":"tableCellRangeInsertAfter","table":0,"row":0,"column":0,"text":" Suffix"}
 ]

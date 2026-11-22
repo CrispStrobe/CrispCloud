@@ -8765,6 +8765,8 @@ class WordEditorController extends OfficeController {
   /// text in one undo step. Cached character/paragraph formatting, notes,
   /// other fields and document style preferences stay intact. A single unsafe
   /// field prevents the entire operation; no partial conversion is committed.
+  /// Damaged metadata is allowed only for complete, exclusively owned native
+  /// results, using the same structural checks as individual conversion.
   /// Returns the number of converted fields, or zero for an uneditable or
   /// citation-free document.
   int unlinkZoteroFields() {
@@ -8779,15 +8781,21 @@ class WordEditorController extends OfficeController {
       );
     }
     if (fields.any(
-      (field) =>
-          field.locked ||
-          field.nested ||
-          field.opaqueMetadata ||
-          !field.isValid,
+      (field) => field.locked || field.nested || field.opaqueMetadata,
     )) {
       throw UnsupportedError(
-        'Resolve locked, nested, malformed or unsupported Zotero fields before unlinking citations. No fields were changed.',
+        'Resolve locked, nested or unsupported Zotero fields before unlinking citations. No fields were changed.',
       );
+    }
+    final damaged = fields.where((field) => !field.isValid).toList();
+    if (damaged.isNotEmpty) {
+      if (damaged.any((field) => !canEditZoteroFieldNatively(field))) {
+        throw UnsupportedError(
+          'A damaged Zotero reference does not have a complete, safely owned field result. No fields were changed.',
+        );
+      }
+      WordZotero.assertCompleteNativeFields(document);
+      WordZotero.nativeFieldOwners(document, damaged);
     }
     final paragraphs = Set<WmlParagraph>.identity()
       ..addAll(fields.expand((field) => field.paragraphs));
@@ -8796,7 +8804,11 @@ class WordEditorController extends OfficeController {
     }
     _commitZoteroChange(paragraphs.toList(), () {
       for (final field in fields.reversed) {
-        WordZotero.unlink(field);
+        if (field.isValid) {
+          WordZotero.unlink(field);
+        } else {
+          WordZotero.unlinkNative(field, document: document);
+        }
       }
     }, commitNoteDrafts: true);
     return fields.length;

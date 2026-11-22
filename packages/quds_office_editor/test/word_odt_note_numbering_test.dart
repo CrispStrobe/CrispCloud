@@ -11,16 +11,26 @@ const _namespaces =
     'xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0" '
     'xmlns:meta="urn:oasis:names:tc:opendocument:xmlns:meta:1.0"';
 
+List<String> _labels(bool uppercase, int start) {
+  final labels = switch (start) {
+    1 => ['i', 'ii', 'iii', 'iv'],
+    9 => ['ix', 'x', 'xi', 'xii'],
+    _ => throw ArgumentError.value(start),
+  };
+  return uppercase
+      ? labels.map((label) => label.toUpperCase()).toList()
+      : labels;
+}
+
 // Independently authored ODF; this does not use the writer under test.
 Uint8List _numberedOdt({
   bool endnote = true,
   bool uppercase = false,
   bool mismatchedLabel = false,
+  int start = 1,
 }) {
   final kind = endnote ? 'endnote' : 'footnote';
-  final labels = uppercase
-      ? ['I', 'II', 'III', 'IV']
-      : ['i', 'ii', 'iii', 'iv'];
+  final labels = _labels(uppercase, start);
   final body = StringBuffer();
   for (var index = 0; index < labels.length; index++) {
     final number = index + 1;
@@ -79,7 +89,7 @@ Uint8List _numberedOdt({
           utf8.encode(
             '<office:document-styles $_namespaces><office:styles>'
             '<text:notes-configuration text:note-class="$kind" '
-            'style:num-format="${uppercase ? 'I' : 'i'}" text:start-value="1" '
+            'style:num-format="${uppercase ? 'I' : 'i'}" text:start-value="$start" '
             '${endnote ? '' : 'text:start-numbering-at="document"'} />'
             '</office:styles></office:document-styles>',
           ),
@@ -111,13 +121,11 @@ void _expectNotes(
   WmlDocument document, {
   bool endnote = true,
   bool upper = false,
+  int start = 1,
 }) {
   final notes = endnote ? document.endnotes : document.footnotes;
   final numbering = WordNoteNumbering(document);
-  expect(
-    notes.map(numbering.labelFor),
-    upper ? ['I', 'II', 'III', 'IV'] : ['i', 'ii', 'iii', 'iv'],
-  );
+  expect(notes.map(numbering.labelFor), _labels(upper, start));
   expect(notes.every(numbering.hasExactLabel), isTrue);
   final fields = WordZotero.fields(document);
   expect(fields.map((field) => field.citation!.citationId), [
@@ -139,102 +147,123 @@ void _expectNotes(
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  for (final endnote in [false, true]) {
-    for (final upper in [false, true]) {
-      final name =
-          '${upper ? 'upper' : 'lower'} Roman ${endnote ? 'endnotes' : 'footnotes'}';
-      test(
-        '$name import and normal DOCX save preserve active ownership',
-        () async {
-          final bytes = _numberedOdt(endnote: endnote, uppercase: upper);
-          final original = Uint8List.fromList(bytes);
-          final word = _controller()..insertText('Unsaved ');
-          final previous = word.document;
-          await word.loadBytesAsync(
-            bytes,
-            onProgress: (_) {
-              expect(word.document, same(previous));
-            },
-          );
-          expect(word.isDirty, isFalse);
-          expect(word.canUndo, isFalse);
-          _expectNotes(word.document, endnote: endnote, upper: upper);
-          final saved = word.saveBytes();
-          expect(OdtDocumentReader.isOdt(saved), isFalse);
-          final reopened = _controller();
-          await reopened.loadBytesAsync(saved);
-          _expectNotes(reopened.document, endnote: endnote, upper: upper);
-          expect(bytes, original);
-        },
-      );
+  for (final start in [1, 9]) {
+    for (final endnote in [false, true]) {
+      for (final upper in [false, true]) {
+        final name =
+            '${upper ? 'upper' : 'lower'} Roman ${endnote ? 'endnotes' : 'footnotes'} starting at $start';
+        test(
+          '$name import and normal DOCX save preserve active ownership',
+          () async {
+            final bytes = _numberedOdt(
+              endnote: endnote,
+              uppercase: upper,
+              start: start,
+            );
+            final original = Uint8List.fromList(bytes);
+            final word = _controller()..insertText('Unsaved ');
+            final previous = word.document;
+            await word.loadBytesAsync(
+              bytes,
+              onProgress: (_) {
+                expect(word.document, same(previous));
+              },
+            );
+            expect(word.isDirty, isFalse);
+            expect(word.canUndo, isFalse);
+            _expectNotes(
+              word.document,
+              endnote: endnote,
+              upper: upper,
+              start: start,
+            );
+            final saved = word.saveBytes();
+            expect(OdtDocumentReader.isOdt(saved), isFalse);
+            final reopened = _controller();
+            await reopened.loadBytesAsync(saved);
+            _expectNotes(
+              reopened.document,
+              endnote: endnote,
+              upper: upper,
+              start: start,
+            );
+            expect(bytes, original);
+          },
+        );
+      }
     }
   }
 
-  test(
-    'native Refresh after Roman ODT import retains numbering and undo',
-    () async {
-      final word = _controller();
-      await word.loadBytesAsync(_numberedOdt());
-      final note = word.document.endnotes[1];
-      const selection = TextSelection.collapsed(offset: 2);
-      word.setNoteEditingTarget(note, selection);
-      final original = word.noteEditText(note);
-      const id = 'roman-import-refresh';
-      final operation = word.beginZoteroTransaction(
-        documentId: id,
-        command: ZoteroCitingCommand.refresh,
-      );
-      final fields =
-          (operation.handle('Document.getFields', [id, 'Http'])
-                  as List<Object?>)
-              .cast<Map<String, Object>>();
-      expect(fields.map((field) => field['noteIndex']), [2, 3, 4]);
-      operation.handle('Field.select', [id, fields.first['id']]);
-      expect(operation.presentedFieldContext?.sourceNote, same(note));
-      final citation = Map<String, Object?>.from(
-        word.zoteroFields.first.citation!.toJson(),
-      );
-      final properties = Map<String, Object?>.from(
-        citation['properties']! as Map<String, Object?>,
-      );
-      properties['plainCitation'] = '(Updated source, p. 2)';
-      properties['formattedCitation'] = '(Updated source, p. 2)';
-      citation['properties'] = properties;
-      operation.handle('Field.setCode', [
-        id,
-        fields.first['id'],
-        'ITEM CSL_CITATION ${jsonEncode(citation)}',
-      ]);
-      operation.handle('Field.setText', [
-        id,
-        fields.first['id'],
-        '(Updated source, p. 2)',
-        false,
-      ]);
-      operation.handle('Document.complete', [id]);
-      operation.session.prepareReview();
-      expect(word.noteEditText(note), original);
-      operation.apply();
-      expect(word.noteEditText(note), contains('(Updated source, p. 2)'));
-      expect(word.noteEditingTarget?.selection, selection);
-      _expectNotes(word.document);
-      expect(word.canUndo, isTrue);
-      word.undo();
-      expect(word.noteEditText(note), original);
-      expect(word.noteEditingTarget?.selection, selection);
-      _expectNotes(word.document);
-      expect(word.canUndo, isFalse);
-      word.redo();
-      _expectNotes(WordDeserializer().readBytes(word.saveBytes()));
-      final odt = OdtDocumentWriter.writeEditableZoteroBytes(word.document);
-      final imported = await OdtDocumentReader.readBytes(odt);
-      _expectNotes(imported);
-      expect(
-        WordZotero.fields(imported).first.cachedText,
-        '(Updated source, p. 2)',
-      );
-    },
-  );
+  for (final start in [1, 9]) {
+    test(
+      'native Refresh after Roman ODT import starting at $start retains numbering and undo',
+      () async {
+        final word = _controller();
+        await word.loadBytesAsync(_numberedOdt(start: start));
+        final note = word.document.endnotes[1];
+        const selection = TextSelection.collapsed(offset: 2);
+        word.setNoteEditingTarget(note, selection);
+        final original = word.noteEditText(note);
+        const id = 'roman-import-refresh';
+        final operation = word.beginZoteroTransaction(
+          documentId: id,
+          command: ZoteroCitingCommand.refresh,
+        );
+        final fields =
+            (operation.handle('Document.getFields', [id, 'Http'])
+                    as List<Object?>)
+                .cast<Map<String, Object>>();
+        expect(fields.map((field) => field['noteIndex']), [2, 3, 4]);
+        operation.handle('Field.select', [id, fields.first['id']]);
+        expect(operation.presentedFieldContext?.sourceNote, same(note));
+        final citation = Map<String, Object?>.from(
+          word.zoteroFields.first.citation!.toJson(),
+        );
+        final properties = Map<String, Object?>.from(
+          citation['properties']! as Map<String, Object?>,
+        );
+        properties['plainCitation'] = '(Updated source, p. 2)';
+        properties['formattedCitation'] = '(Updated source, p. 2)';
+        citation['properties'] = properties;
+        operation.handle('Field.setCode', [
+          id,
+          fields.first['id'],
+          'ITEM CSL_CITATION ${jsonEncode(citation)}',
+        ]);
+        operation.handle('Field.setText', [
+          id,
+          fields.first['id'],
+          '(Updated source, p. 2)',
+          false,
+        ]);
+        operation.handle('Document.complete', [id]);
+        operation.session.prepareReview();
+        expect(word.noteEditText(note), original);
+        operation.apply();
+        expect(word.noteEditText(note), contains('(Updated source, p. 2)'));
+        expect(word.noteEditingTarget?.selection, selection);
+        _expectNotes(word.document, start: start);
+        expect(word.canUndo, isTrue);
+        word.undo();
+        expect(word.noteEditText(note), original);
+        expect(word.noteEditingTarget?.selection, selection);
+        _expectNotes(word.document, start: start);
+        expect(word.canUndo, isFalse);
+        word.redo();
+        _expectNotes(
+          WordDeserializer().readBytes(word.saveBytes()),
+          start: start,
+        );
+        final odt = OdtDocumentWriter.writeEditableZoteroBytes(word.document);
+        final imported = await OdtDocumentReader.readBytes(odt);
+        _expectNotes(imported, start: start);
+        expect(
+          WordZotero.fields(imported).first.cachedText,
+          '(Updated source, p. 2)',
+        );
+      },
+    );
+  }
 
   test(
     'mismatched Roman label refuses without publishing over a dirty draft',
@@ -244,7 +273,7 @@ void main() {
       final revision = word.contentRevision;
       final caret = word.caret.logicalIndex;
       await expectLater(
-        word.loadBytesAsync(_numberedOdt(mismatchedLabel: true)),
+        word.loadBytesAsync(_numberedOdt(mismatchedLabel: true, start: 9)),
         throwsA(isA<StateError>()),
       );
       expect(word.document, same(original));
@@ -265,7 +294,7 @@ void main() {
       var edited = false;
       await expectLater(
         word.loadBytesAsync(
-          _numberedOdt(),
+          _numberedOdt(start: 9),
           onProgress: (_) {
             if (edited) return;
             edited = true;

@@ -4,13 +4,36 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Add shared VBA integer division (`\`) and signed remainder (`Mod`), with
+  ties-to-even Long operands, VBA precedence, strict Empty/Null/conversion
+  rules, positioned errors and existing compilation budgets. Include a
+  complete grouped Word table report, a 54-case conformance corpus and
+  document/CLI/MCP/portable regression coverage. The
+  [contract](../../docs/vba-macros-details.md#integer-division-and-remainder)
+  records exact bounds and the signed-Mod specification discrepancy;
+  [local qualification](../../docs/validation/word-vba-integer-arithmetic-20261122/README.md)
+  is separate from installed Office compatibility.
+
+- Append to current Word table-cell text through direct VBA
+  `Cell.Range.InsertAfter`, including named `Text:=`, typed aliases, nested
+  `With` and `ByVal` helpers. Preserve original runs, sparse and zero-width
+  metadata, table ownership and opaque DOCM parts; inherit the current text's
+  end formatting and retain whole-run validation, rollback, policy and
+  recording boundaries. Keep paragraph Range projections and structural text
+  insertion refused. Include a complete BAS, independent conformance corpus,
+  native preservation and CLI/MCP checks, with portable VM/JavaScript drivers.
+  See the [append contract](../../docs/vba-word-macros-details.md#appending-existing-cell-text)
+  and [qualification](../../docs/validation/word-vba-cell-suffix-20261122/README.md).
+
 - Preserve continuous automatic decimal and lower/upper Roman footnote/endnote
   numbering in editable Zotero ODT export/import, including Word's default
   Roman endnotes. Verify exact native settings and every ordinal in a cited
   note class, count uncited notes, retain independent class formats, and persist
   them through DOCX reopening. Keep custom/mixed/restarted/ambiguous numbering
   guarded and ordinary ODT export unchanged. Expose read-only automatic-note
-  metadata separately from cached labels. See the
+  metadata separately from cached labels. Malformed native XML retains cached
+  label fallback and causes controlled editable-export refusal, including the
+  native parser's mismatched-tag and unterminated-tag exceptions. See the
   [numbering qualification](../../docs/validation/zotero-note-numbering-20261122/README.md).
 
 - Prefix existing Word table-cell text through VBA `Cell.Range.InsertBefore`

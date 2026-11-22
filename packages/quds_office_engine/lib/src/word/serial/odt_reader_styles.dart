@@ -4,6 +4,7 @@ import '../model/wml_document.dart';
 import '../model/word_notes.dart';
 import '../model/word_proofing_language.dart';
 import '../properties/wml_properties.dart';
+import 'odt_note_start_convention.dart';
 import 'odt_reader_text_style.dart';
 
 const _style = 'urn:oasis:names:tc:opendocument:xmlns:style:1.0';
@@ -14,18 +15,21 @@ const _draw = 'urn:oasis:names:tc:opendocument:xmlns:drawing:1.0';
 const _loext =
     'urn:org:documentfoundation:names:experimental:office:xmlns:loext:1.0';
 
-/// A validated, continuous, start-one ODT automatic note sequence.
+/// A validated, continuous ODT automatic note sequence.
 final class OdtReaderNoteConfiguration {
   const OdtReaderNoteConfiguration({
     this.nativeFormat = 'decimal',
+    this.start = 1,
     this.verifyCachedOrdinal = false,
   });
 
   final String nativeFormat;
+  final int start;
   final bool verifyCachedOrdinal;
 
-  String? labelFor(int ordinal) =>
-      WordNoteNumbering.formatLabel(ordinal, nativeFormat);
+  String? labelFor(int ordinal) => ordinal < 1
+      ? null
+      : WordNoteNumbering.formatLabel(start + ordinal - 1, nativeFormat);
 }
 
 /// Resolves the bounded style subset supported by the rich ODT reader.
@@ -123,7 +127,9 @@ final class OdtReaderStyles {
   OdtReaderNoteConfiguration validateNoteConfiguration(
     bool endnote, {
     bool libreOfficeNoteOffsets = false,
+    bool crispOfficeNoteOffsets = false,
   }) {
+    final offsetStarts = libreOfficeNoteOffsets || crispOfficeNoteOffsets;
     final kind = endnote ? 'endnote' : 'footnote';
     final matching = <XmlElement>[];
     for (final configuration in _noteConfigurations) {
@@ -141,6 +147,11 @@ final class OdtReaderStyles {
       throw const FormatException('Duplicate ODT note configuration.');
     }
     if (matching.isEmpty) {
+      if (crispOfficeNoteOffsets) {
+        throw UnsupportedError(
+          'The declared Quds note-offset convention requires explicit note configurations.',
+        );
+      }
       // ODF leaves the absent-configuration defaults implementation-defined.
       // Qualified LibreOffice producers use Roman endnotes and decimal
       // footnotes. Keep the existing generic decimal default, never infer a
@@ -192,10 +203,28 @@ final class OdtReaderStyles {
         'ODT synchronized note lettering is not supported.',
       );
     }
-    final start = _attr(configuration, odfTextNamespace, 'start-value');
-    if (start != null && start != (libreOfficeNoteOffsets ? '0' : '1')) {
+    final declaredStart = _attr(configuration, odfTextNamespace, 'start-value');
+    if (crispOfficeNoteOffsets && declaredStart == null) {
       throw UnsupportedError(
-        'Noncanonical ODT $kind start values are not supported.',
+        'The declared Quds note-offset convention requires explicit start values.',
+      );
+    }
+    final startMatch = declaredStart == null
+        ? null
+        : RegExp(r'^(0|[1-9][0-9]{0,4})$').firstMatch(declaredStart);
+    final canonicalStart =
+        declaredStart == null ||
+        (startMatch != null && startMatch.end == declaredStart.length);
+    final rawStart = declaredStart == null
+        ? (offsetStarts ? 0 : 1)
+        : int.tryParse(declaredStart);
+    final start = rawStart == null ? null : rawStart + (offsetStarts ? 1 : 0);
+    if (!canonicalStart ||
+        start == null ||
+        start < 1 ||
+        start > odtNoteStartMaximum) {
+      throw UnsupportedError(
+        'ODT $kind start values must describe an initial number from 1 to 32768.',
       );
     }
     final restart = _attr(
@@ -260,7 +289,8 @@ final class OdtReaderStyles {
     }
     return OdtReaderNoteConfiguration(
       nativeFormat: nativeFormat,
-      verifyCachedOrdinal: libreOfficeNoteOffsets,
+      start: start,
+      verifyCachedOrdinal: offsetStarts || start != 1,
     );
   }
 

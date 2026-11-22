@@ -506,6 +506,7 @@ abstract final class OfficeOperationCatalog {
     if (document is WmlDocument &&
         (values['op'] == 'tableCellRangeText' ||
             values['op'] == 'tableCellRangeInsertBefore' ||
+            values['op'] == 'tableCellRangeInsertAfter' ||
             values['story'] == 'tableCell')) {
       checkWordTableCellRangeOwnership(document);
     }

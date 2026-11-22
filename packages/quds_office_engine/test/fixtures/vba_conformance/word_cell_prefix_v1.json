@@ -1341,14 +1341,14 @@
       }
     },
     {
-      "id": "insertafter-refused",
+      "id": "projected-insertafter-refused",
       "feature": "Unchanged unsupported members",
-      "source": "Option Explicit\nSub Main()\n  Call ActiveDocument.Tables(2).Cell(3, 4).Range.InsertAfter(\"x\")\nEnd Sub\n",
+      "source": "Option Explicit\nSub Main()\n  Call ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs(1).Range.InsertAfter(\"x\")\nEnd Sub\n",
       "expected": {
         "diagnostic": {
           "code": "vba_unsupported",
           "line": 3,
-          "column": 50
+          "column": 70
         }
       },
       "provenance": {

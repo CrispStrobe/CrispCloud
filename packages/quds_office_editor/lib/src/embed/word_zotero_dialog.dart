@@ -367,6 +367,7 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
         .where((field) => field.kind == ZoteroFieldKind.citation)
         .length;
     final bibliographies = fields.length - citations;
+    final damaged = fields.where((field) => !field.isValid).length;
     final confirmed = await _showReview<bool>(
       (dialogContext) => AlertDialog(
         title: const Text('Unlink all Zotero citations?'),
@@ -375,6 +376,7 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
           width: 480,
           child: Text(
             'Convert $citations citation field(s) and $bibliographies bibliography field(s) throughout this document to ordinary text.\n\n'
+            '${damaged == 0 ? '' : '$damaged field(s) have damaged reference data. Their displayed text will be kept when the field can be converted safely.\n\n'}'
             'The visible text, formatting and notes will stay in place. Zotero will no longer be able to update these references. Save a linked copy first if you will need citation updates later.\n\n'
             'You can undo the complete conversion while this document remains open. If any field cannot be converted safely, the whole document will be kept unchanged.',
           ),

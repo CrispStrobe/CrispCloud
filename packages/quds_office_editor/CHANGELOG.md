@@ -4,6 +4,11 @@ All notable changes to `quds_office_editor` are documented here.
 
 ## Unreleased
 
+- Preserve authoritative IMAP and EWS move identities through Studio's durable
+  journal, including stable-account and local-cache ID translation. Optional
+  receipt-aware adapters retain older host compatibility; membership changes
+  continue to require an explicit connected-folder refresh.
+
 - Add explicit current-location checks to uncertain Move/Delete activity for
   connected IMAP, EWS, Gmail and Microsoft 365 accounts. Show timestamped saved
   evidence in English, German and Arabic while preserving original uncertainty;

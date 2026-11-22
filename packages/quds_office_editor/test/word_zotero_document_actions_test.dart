@@ -38,6 +38,16 @@ WmlDocument _document({bool locked = false}) {
   return document;
 }
 
+WmlDocument _damagedDocument({bool locked = false}) {
+  final document = _document(locked: locked);
+  final fields = WordZotero.fields(document);
+  fields.first.run!.fieldInstruction =
+      ' ADDIN ZOTERO_ITEM CSL_CITATION {broken} ';
+  fields.last.run!.fieldInstruction =
+      ' ADDIN ZOTERO_BIBL {broken} CSL_BIBLIOGRAPHY ';
+  return document;
+}
+
 Finder _key(String value) => find.byKey(ValueKey(value));
 
 Future<void> _tap(WidgetTester tester, Finder finder) async {
@@ -183,6 +193,107 @@ void main() {
     expect(find.textContaining('locked'), findsWidgets);
   });
 
+  testWidgets(
+    'unlink all discloses damaged counts and preserves text on cancel',
+    (tester) async {
+      final controller = await _open(tester, document: _damagedDocument());
+      final original = controller.zoteroFields
+          .map((field) => field.instruction)
+          .toList();
+      final text = controller.document.paragraphs.map((p) => p.text).toList();
+      final revision = controller.contentRevision;
+      await _tap(tester, _key('zotero-unlink-all'));
+      expect(
+        find.textContaining('2 field(s) have damaged reference data'),
+        findsOneWidget,
+      );
+      expect(
+        find.textContaining('1 citation field(s) and 1 bibliography'),
+        findsOneWidget,
+      );
+      await _tap(tester, find.text('Cancel'));
+      expect(
+        controller.zoteroFields.map((field) => field.instruction),
+        original,
+      );
+      expect(controller.contentRevision, revision);
+      expect(controller.canUndo, isFalse);
+
+      await _tap(tester, _key('zotero-unlink-all'));
+      await _tap(tester, _key('zotero-confirm-unlink-all'));
+      expect(controller.zoteroFields, isEmpty);
+      expect(controller.document.paragraphs.map((p) => p.text), text);
+      expect(
+        find.textContaining('2 Zotero field(s) converted'),
+        findsOneWidget,
+      );
+      final reopened = WordDeserializer().readBytes(controller.saveBytes());
+      expect(WordZotero.fields(reopened), isEmpty);
+      expect(reopened.paragraphs.map((p) => p.text), text);
+      controller.undo();
+      expect(
+        controller.zoteroFields.map((field) => field.instruction),
+        original,
+      );
+      expect(controller.zoteroFields.every((field) => !field.isValid), isTrue);
+      expect(controller.zoteroFields.first.run!.properties.italic, isTrue);
+      expect(controller.canUndo, isFalse);
+      controller.redo();
+      expect(controller.zoteroFields, isEmpty);
+    },
+  );
+
+  testWidgets('damaged-field confirmation cannot remove a locked result', (
+    tester,
+  ) async {
+    final controller = await _open(
+      tester,
+      document: _damagedDocument(locked: true),
+    );
+    final original = controller.zoteroFields
+        .map((field) => field.instruction)
+        .toList();
+    final revision = controller.contentRevision;
+    await _tap(tester, _key('zotero-unlink-all'));
+    expect(
+      find.textContaining('2 field(s) have damaged reference data'),
+      findsOneWidget,
+    );
+    await _tap(tester, _key('zotero-confirm-unlink-all'));
+    expect(controller.zoteroFields.map((field) => field.instruction), original);
+    expect(controller.contentRevision, revision);
+    expect(controller.canUndo, isFalse);
+    expect(find.textContaining('locked'), findsWidgets);
+  });
+
+  testWidgets('a stale damaged-field confirmation keeps the whole document', (
+    tester,
+  ) async {
+    final document = _damagedDocument();
+    document.sections.single.blocks.insert(
+      0,
+      WmlParagraph(inlines: [WmlRun(text: 'Introduction ')]),
+    );
+    final controller = await _open(
+      tester,
+      document: document,
+      offset: 0,
+      initialTab: WordZoteroTab.document,
+    );
+    final original = controller.zoteroFields
+        .map((field) => field.instruction)
+        .toList();
+    await _tap(tester, _key('zotero-unlink-all'));
+    controller.insertText('New ');
+    final revision = controller.contentRevision;
+    await _tap(tester, _key('zotero-confirm-unlink-all'));
+    expect(controller.zoteroFields.map((field) => field.instruction), original);
+    expect(controller.contentRevision, revision);
+    expect(find.textContaining('insertion point changed'), findsOneWidget);
+    controller.undo();
+    expect(controller.canUndo, isFalse);
+  });
+
   testWidgets('a changed document cannot accept an old unlink confirmation', (
     tester,
   ) async {
@@ -221,18 +332,20 @@ void main() {
     );
   }
 
-  testWidgets('unlink review remains usable at narrow RTL with doubled text', (
-    tester,
-  ) async {
-    final controller = await _open(
-      tester,
-      size: const Size(320, 480),
-      scale: 2,
-      direction: TextDirection.rtl,
-    );
-    await _tap(tester, _key('zotero-unlink-all'));
-    await _tap(tester, find.text('Cancel'));
-    expect(controller.zoteroFields, hasLength(2));
-    expect(controller.canUndo, isFalse);
-  });
+  testWidgets(
+    'damaged unlink review remains usable at narrow RTL with doubled text',
+    (tester) async {
+      final controller = await _open(
+        tester,
+        document: _damagedDocument(),
+        size: const Size(320, 480),
+        scale: 2,
+        direction: TextDirection.rtl,
+      );
+      await _tap(tester, _key('zotero-unlink-all'));
+      await _tap(tester, find.text('Cancel'));
+      expect(controller.zoteroFields, hasLength(2));
+      expect(controller.canUndo, isFalse);
+    },
+  );
 }

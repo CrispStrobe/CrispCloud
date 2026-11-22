@@ -115,6 +115,7 @@ const wordOperations = <String, List<String>>{
   'tableCellText': ['table', 'row', 'column', 'gridColumn', 'text'],
   'tableCellRangeText': ['table', 'row', 'column', 'text'],
   'tableCellRangeInsertBefore': ['table', 'row', 'column', 'text'],
+  'tableCellRangeInsertAfter': ['table', 'row', 'column', 'text'],
   'headerFooterText': ['section', 'story', 'paragraph', 'text'],
   'sectionFormat': [
     'section',
@@ -793,6 +794,8 @@ void applyStep(
       setWordTableCellRangeText(doc, s);
     case 'tableCellRangeInsertBefore':
       insertBeforeWordTableCellRange(doc, s);
+    case 'tableCellRangeInsertAfter':
+      insertAfterWordTableCellRange(doc, s);
     case 'headerFooterText':
       final story = s.string('story');
       if (!_headerStories.contains(story)) {

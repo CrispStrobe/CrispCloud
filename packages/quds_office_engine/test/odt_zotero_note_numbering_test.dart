@@ -13,6 +13,10 @@ const _ns =
     'xmlns:office="$_office" xmlns:text="$_text" '
     'xmlns:style="$_style" xmlns:meta="$_meta"';
 const _lower = ['i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii', 'viii', 'ix', 'x'];
+const _offsetGenerator = 'CrispOffice Zotero ODT note-offsets/1';
+const _libreOfficeGenerator =
+    'LibreOfficeDev/26.8.0.0.alpha0\$Linux_X86_64 '
+    'LibreOffice_project/2c87e51eeaa2b413ff4ae097b2705eea1995d8e5';
 
 ZoteroCitation _citation(String id) => ZoteroCitation.fromJson({
   'citationID': id,
@@ -53,6 +57,7 @@ WmlDocument _native({
   String? format,
   int count = 10,
   int? citedIndex,
+  int? start,
   String extraProperties = '',
 }) {
   final anchors = <WmlBlock>[];
@@ -84,11 +89,13 @@ WmlDocument _native({
     sections: [
       WmlSection(
         blocks: anchors,
-        sourceProperties: format == null && extraProperties.isEmpty
+        sourceProperties:
+            format == null && start == null && extraProperties.isEmpty
             ? null
             : _options(
                 endnote,
                 '${format == null ? '' : '<w:numFmt w:val="$format"/>'}'
+                '${start == null ? '' : '<w:numStart w:val="$start"/>'}'
                 '$extraProperties',
               ),
       ),
@@ -178,6 +185,7 @@ Uint8List _odf({
   bool endnote = true,
   String extraConfiguration = '',
   String? generator,
+  String? generatorMarkup,
   String? configurations,
 }) {
   final kind = endnote ? 'endnote' : 'footnote';
@@ -226,7 +234,7 @@ Uint8List _odf({
     'meta.xml',
     utf8.encode(
       '<office:document-meta $_ns><office:meta>'
-      '${generator == null ? '' : '<meta:generator>${encodeXmlText(generator)}</meta:generator>'}'
+      '${generatorMarkup ?? (generator == null ? '' : '<meta:generator>${encodeXmlText(generator)}</meta:generator>')}'
       '<meta:user-defined meta:name="ZOTERO_PREF_1">'
       '${encodeXmlText(_preferences(fieldType: 'ReferenceMark'))}'
       '</meta:user-defined></office:meta></office:document-meta>',
@@ -309,6 +317,527 @@ void main() {
       );
     }
   }
+
+  for (final endnote in [false, true]) {
+    for (final sample in [
+      ('decimal', ['8', '9', '10', '11']),
+      ('lowerRoman', ['viii', 'ix', 'x', 'xi']),
+      ('upperRoman', ['VIII', 'IX', 'X', 'XI']),
+    ]) {
+      test(
+        '${sample.$1} ${endnote ? 'endnotes' : 'footnotes'} starting at eight survive native exchange',
+        () async {
+          final source = _native(
+            endnote: endnote,
+            format: sample.$1,
+            start: 8,
+            count: 4,
+          );
+          final before = _state(source);
+          var document = source;
+          for (var cycle = 0; cycle < 2; cycle++) {
+            final bytes = OdtDocumentWriter.writeEditableZoteroBytes(document);
+            expect(
+              _elements(
+                _xml(bytes, 'meta.xml'),
+                'generator',
+                _meta,
+              ).single.text,
+              _offsetGenerator,
+            );
+            final configuration = _elements(
+              _xml(bytes, 'styles.xml'),
+              'notes-configuration',
+              _text,
+            ).single;
+            expect(
+              configuration.getAttribute('start-value', namespaceUri: _text),
+              '7',
+            );
+            final labels = _elements(
+              _xml(bytes, 'content.xml'),
+              'note-citation',
+              _text,
+            ).toList();
+            expect(labels.map((label) => label.text), sample.$2);
+            expect(
+              labels.every(
+                (label) =>
+                    label.getAttribute('label', namespaceUri: _text) == null,
+              ),
+              isTrue,
+            );
+            document = _docx(await OdtDocumentReader.readBytes(bytes));
+            final notes = endnote ? document.endnotes : document.footnotes;
+            final numbering = WordNoteNumbering(document);
+            expect(notes.map(numbering.labelFor), sample.$2);
+            expect(
+              notes.map((note) => numbering.automaticNumberFor(note)?.start),
+              everyElement(8),
+            );
+            expect(
+              notes.map((note) => numbering.automaticNumberFor(note)?.number),
+              [8, 9, 10, 11],
+            );
+            final session = WordZoteroCitingSession(
+              document: document,
+              documentId: 'started-notes',
+            );
+            final fields =
+                session.handle('Document.getFields', ['started-notes', 'Http'])!
+                    as List<Object?>;
+            expect((fields.single! as Map<String, Object>)['noteIndex'], 4);
+            expect(
+              WordZotero.fields(document).single.citation!.toJson(),
+              _citation('citation-3').toJson(),
+            );
+            session.assertUnchanged();
+          }
+          expect(_state(source), before);
+        },
+      );
+    }
+  }
+
+  for (final source in [
+    (null, '8'),
+    ('CrispOffice', '8'),
+    (_libreOfficeGenerator, '7'),
+    (_offsetGenerator, '7'),
+  ]) {
+    test(
+      'independent ODF honors the exact start convention of ${source.$1}',
+      () async {
+        final bytes = _odf(
+          generator: source.$1,
+          labels: ['viii', 'ix', 'x'],
+          extraConfiguration: 'text:start-value="${source.$2}"',
+        );
+        final original = Uint8List.fromList(bytes);
+        final document = _docx(await OdtDocumentReader.readBytes(bytes));
+        final numbering = WordNoteNumbering(document);
+        expect(document.endnotes.map(numbering.labelFor), ['viii', 'ix', 'x']);
+        expect(
+          document.endnotes.map(
+            (note) => numbering.automaticNumberFor(note)?.start,
+          ),
+          everyElement(8),
+        );
+        expect(
+          WordZotero.fields(document).single.citation!.citationId,
+          'odf-note',
+        );
+        expect(bytes, original);
+        final preserved = document.package!.getPart(
+          '/customXml/qudsOdtMetadata.xml',
+        )!;
+        expect(
+          preserved.readBytes(),
+          ZipReader.fromBytes(bytes).read('meta.xml'),
+        );
+      },
+    );
+  }
+
+  for (final endStart in [1, 99]) {
+    test(
+      'interleaved foot/endnote starts eight and $endStart stay independent',
+      () async {
+        final foot = _native(
+          endnote: false,
+          format: 'upperRoman',
+          start: 8,
+          count: 2,
+        );
+        final end = _native(format: 'decimal', start: endStart, count: 2);
+        final document = WmlDocument(
+          zoteroDocumentData: _preferences(),
+          footnotes: foot.footnotes,
+          endnotes: end.endnotes,
+          sections: [
+            WmlSection(
+              sourceProperties: WmlSectionSource(
+                xml:
+                    '<w:sectPr xmlns:w="${OfficeNamespaces.w}">'
+                    '<w:footnotePr><w:numFmt w:val="upperRoman"/><w:numStart w:val="8"/></w:footnotePr>'
+                    '<w:endnotePr><w:numFmt w:val="decimal"/><w:numStart w:val="$endStart"/></w:endnotePr>'
+                    '</w:sectPr>',
+                values: const {},
+              ),
+              blocks: [
+                foot.sections.single.blocks[0],
+                end.sections.single.blocks[0],
+                foot.sections.single.blocks[1],
+                end.sections.single.blocks[1],
+              ],
+            ),
+          ],
+        );
+        final bytes = OdtDocumentWriter.writeEditableZoteroBytes(document);
+        final configurations = _elements(
+          _xml(bytes, 'styles.xml'),
+          'notes-configuration',
+          _text,
+        );
+        expect(
+          {
+            for (final configuration in configurations)
+              configuration.getAttribute(
+                'note-class',
+                namespaceUri: _text,
+              ): configuration.getAttribute(
+                'start-value',
+                namespaceUri: _text,
+              ),
+          },
+          {'footnote': '7', 'endnote': '${endStart - 1}'},
+        );
+        final restored = _docx(await OdtDocumentReader.readBytes(bytes));
+        final numbering = WordNoteNumbering(restored);
+        expect(numbering.notes.map(numbering.labelFor), [
+          'VIII',
+          '$endStart',
+          'IX',
+          '${endStart + 1}',
+        ]);
+        final session = WordZoteroCitingSession(
+          document: restored,
+          documentId: 'mixed',
+        );
+        final fields =
+            session.handle('Document.getFields', ['mixed', 'Http'])! as List;
+        expect(fields.map((field) => (field as Map)['noteIndex']), [2, 2]);
+      },
+    );
+  }
+
+  test(
+    'equal explicit starts remain continuous across native sections',
+    () async {
+      final source = _native(format: 'lowerRoman', start: 8, count: 2);
+      final second = source.sections.single.blocks.removeLast();
+      source.sections.add(
+        WmlSection(
+          blocks: [second],
+          sourceProperties: _options(
+            true,
+            '<w:numFmt w:val="lowerRoman"/><w:numStart w:val="8"/>',
+          ),
+        ),
+      );
+      final bytes = OdtDocumentWriter.writeEditableZoteroBytes(source);
+      expect(
+        _elements(
+          _xml(bytes, 'content.xml'),
+          'note-citation',
+          _text,
+        ).map((note) => note.text),
+        ['viii', 'ix'],
+      );
+      final restored = _docx(await OdtDocumentReader.readBytes(bytes));
+      expect(restored.endnotes.map(WordNoteNumbering(restored).labelFor), [
+        'viii',
+        'ix',
+      ]);
+    },
+  );
+
+  test(
+    'different dormant section starts keep the existing mixed-settings guard',
+    () {
+      final source = _native(format: 'lowerRoman', start: 8, count: 2);
+      final second = source.sections.single.blocks.removeLast();
+      source.sections.add(
+        WmlSection(
+          blocks: [second],
+          sourceProperties: _options(
+            true,
+            '<w:numFmt w:val="lowerRoman"/><w:numStart w:val="9"/>',
+          ),
+        ),
+      );
+      _unchangedAfterRefusal(source);
+    },
+  );
+
+  for (final sample in [
+    ('decimal', 32768, ['32768', '32769']),
+    ('lowerRoman', 3998, ['mmmcmxcviii', 'mmmcmxcix']),
+    ('upperRoman', 3999, ['MMMCMXCIX']),
+  ]) {
+    test(
+      '${sample.$1} maximum supported start/ordinal survives exchange',
+      () async {
+        final source = _native(
+          format: sample.$1,
+          start: sample.$2,
+          count: sample.$3.length,
+        );
+        final restored = _docx(
+          await OdtDocumentReader.readBytes(
+            OdtDocumentWriter.writeEditableZoteroBytes(source),
+          ),
+        );
+        final numbering = WordNoteNumbering(restored);
+        expect(restored.endnotes.map(numbering.labelFor), sample.$3);
+        expect(
+          numbering.automaticNumberFor(restored.endnotes.first)?.start,
+          sample.$2,
+        );
+      },
+    );
+  }
+
+  for (final start in [0, -1, 32769, 1000000000]) {
+    test('native start $start cannot exceed the exchange envelope', () {
+      _unchangedAfterRefusal(
+        _native(format: 'decimal', start: start, count: 1),
+      );
+    });
+  }
+
+  test('a valid Roman start cannot hide a later out-of-range note', () {
+    _unchangedAfterRefusal(
+      _native(format: 'lowerRoman', start: 3999, count: 2),
+    );
+  });
+
+  for (final generator in [null, _libreOfficeGenerator, _offsetGenerator]) {
+    for (final raw in [
+      '-1',
+      '+7',
+      '07',
+      '7 ',
+      ' 7',
+      '7.0',
+      '7e0',
+      '32769',
+      '1000000000000000000',
+    ]) {
+      test(
+        'invalid start $raw for $generator refuses before publishing',
+        () async {
+          await expectLater(
+            OdtDocumentReader.readBytes(
+              _odf(
+                generator: generator,
+                labels: ['viii'],
+                extraConfiguration: 'text:start-value="$raw"',
+              ),
+            ),
+            throwsUnsupportedError,
+          );
+        },
+      );
+    }
+  }
+
+  for (final generator in [_libreOfficeGenerator, _offsetGenerator]) {
+    test(
+      'offset 32768 is beyond the supported producer range for $generator',
+      () async {
+        await expectLater(
+          OdtDocumentReader.readBytes(
+            _odf(
+              generator: generator,
+              format: '1',
+              labels: ['32769'],
+              extraConfiguration: 'text:start-value="32768"',
+            ),
+          ),
+          throwsUnsupportedError,
+        );
+      },
+    );
+  }
+
+  for (final label in ['', 'vii', 'viii ', ' viii', 'VIII']) {
+    test('non-one starts require their exact cached label $label', () async {
+      for (final source in [
+        (null, '8'),
+        (_libreOfficeGenerator, '7'),
+        (_offsetGenerator, '7'),
+      ]) {
+        await expectLater(
+          OdtDocumentReader.readBytes(
+            _odf(
+              generator: source.$1,
+              labels: [label],
+              extraConfiguration: 'text:start-value="${source.$2}"',
+            ),
+          ),
+          throwsUnsupportedError,
+        );
+      }
+    });
+  }
+
+  for (final configuration in [
+    '',
+    '<text:notes-configuration text:note-class="endnote" style:num-format="i"/>',
+    '<text:notes-configuration text:note-class="endnote" text:start-value="0"/>',
+  ]) {
+    test(
+      'Quds offset producer requires explicit configuration $configuration',
+      () async {
+        await expectLater(
+          OdtDocumentReader.readBytes(
+            _odf(
+              generator: _offsetGenerator,
+              labels: ['i'],
+              configurations: configuration,
+            ),
+          ),
+          throwsUnsupportedError,
+        );
+      },
+    );
+  }
+
+  for (final generator in [
+    '$_offsetGenerator ',
+    ' $_offsetGenerator',
+    'CrispOffice Zotero ODT note-offsets/2',
+    'CrispOffice Zotero ODT note-offsets/10',
+    '$_offsetGenerator extra',
+  ]) {
+    test(
+      'approximate producer identity cannot enable offset semantics: $generator',
+      () async {
+        await expectLater(
+          OdtDocumentReader.readBytes(
+            _odf(
+              generator: generator,
+              labels: ['viii'],
+              extraConfiguration: 'text:start-value="7"',
+            ),
+          ),
+          throwsUnsupportedError,
+        );
+      },
+    );
+  }
+
+  for (final markup in [
+    '<meta:generator>$_offsetGenerator</meta:generator><meta:generator>$_offsetGenerator</meta:generator>',
+    '<meta:generator meta:name="qualified">$_offsetGenerator</meta:generator>',
+    '<meta:generator><meta:span>$_offsetGenerator</meta:span></meta:generator>',
+    '<meta:generator xmlns:meta="urn:unrelated">$_offsetGenerator</meta:generator>',
+    '<meta:wrapper><meta:generator>$_offsetGenerator</meta:generator></meta:wrapper>',
+    '<meta:generator>$_offsetGenerator</meta:generator><meta:wrapper><meta:generator>$_offsetGenerator</meta:generator></meta:wrapper>',
+  ]) {
+    test(
+      'ambiguous or wrapped producer metadata cannot enable offsets: $markup',
+      () async {
+        for (final sample in [('7', 'viii'), ('1', '')]) {
+          await expectLater(
+            OdtDocumentReader.readBytes(
+              _odf(
+                generatorMarkup: markup,
+                labels: [sample.$2],
+                extraConfiguration: 'text:start-value="${sample.$1}"',
+              ),
+            ),
+            throwsUnsupportedError,
+          );
+        }
+      },
+    );
+  }
+
+  for (final markup in [
+    '<meta:generator>$_libreOfficeGenerator</meta:generator>',
+    '<meta:generator>$_libreOfficeGenerator</meta:generator><meta:generator>$_libreOfficeGenerator</meta:generator>',
+    '<meta:generator meta:name="qualified">$_libreOfficeGenerator</meta:generator>',
+    '<meta:generator><meta:span>$_libreOfficeGenerator</meta:span></meta:generator>',
+    '<meta:generator xmlns:meta="urn:unrelated">$_libreOfficeGenerator</meta:generator>',
+    '<meta:wrapper><meta:generator>$_libreOfficeGenerator</meta:generator></meta:wrapper>',
+    '<meta:generator>$_libreOfficeGenerator</meta:generator><meta:wrapper><meta:generator>$_libreOfficeGenerator</meta:generator></meta:wrapper>',
+  ]) {
+    test(
+      'LibreOffice producer metadata cannot fall back through an empty cache: $markup',
+      () async {
+        await expectLater(
+          OdtDocumentReader.readBytes(
+            _odf(
+              generatorMarkup: markup,
+              labels: [''],
+              extraConfiguration: 'text:start-value="1"',
+            ),
+          ),
+          throwsUnsupportedError,
+        );
+      },
+    );
+  }
+
+  test(
+    'an unknown normative producer still uses a literal initial number',
+    () async {
+      final restored = await OdtDocumentReader.readBytes(
+        _odf(
+          generator: 'Independent ODF producer/1.0',
+          labels: [''],
+          extraConfiguration: 'text:start-value="1"',
+        ),
+      );
+      expect(
+        WordNoteNumbering(restored).labelFor(restored.endnotes.single),
+        'i',
+      );
+    },
+  );
+
+  test(
+    'ordinary uncited notes cannot push the exchange counter past 65535',
+    () {
+      final source = _native(format: 'decimal', start: 32768, count: 32769);
+      final last = source.endnotes.last;
+      final originalText = last.text;
+      final originalReference = source.paragraphs.last.inlines
+          .whereType<WmlRun>()
+          .singleWhere((run) => run.noteRefId != null);
+      final originalCached = originalReference.text;
+      expect(
+        () => OdtDocumentWriter.writeEditableZoteroBytes(source),
+        throwsUnsupportedError,
+      );
+      expect(last.text, originalText);
+      expect(originalReference.text, originalCached);
+      expect(
+        WordZotero.fields(source).single.citation!.citationId,
+        'citation-32768',
+      );
+    },
+  );
+
+  test(
+    'start-one editable and ordinary cached exports retain their existing generator',
+    () async {
+      for (final bytes in [
+        OdtDocumentWriter.writeEditableZoteroBytes(_native(count: 1)),
+        OdtDocumentWriter.writeBytes(
+          _native(format: 'lowerRoman', start: 8, count: 1),
+        ),
+      ]) {
+        expect(
+          _elements(_xml(bytes, 'meta.xml'), 'generator', _meta).single.text,
+          'CrispOffice',
+        );
+        expect(
+          _elements(
+            _xml(bytes, 'styles.xml'),
+            'notes-configuration',
+            _text,
+          ).map(
+            (configuration) =>
+                configuration.getAttribute('start-value', namespaceUri: _text),
+          ),
+          everyElement(isNull),
+        );
+      }
+    },
+  );
 
   test(
     'Word default Roman endnotes need no fabricated native preference',
@@ -428,7 +957,6 @@ void main() {
   );
 
   for (final configuration in [
-    '<w:numStart w:val="2"/>',
     '<w:numRestart w:val="eachSect"/>',
     '<w:numRestart w:val="eachPage"/>',
     '<w:numStart w:val="invalid"/>',
@@ -674,6 +1202,9 @@ void main() {
     'authored configuration text':
         '<w:settings xmlns:w="${OfficeNamespaces.w}"><w:endnotePr><w:numFmt w:val="lowerRoman">authored</w:numFmt></w:endnotePr></w:settings>',
     'unclosed root': '<w:settings xmlns:w="${OfficeNamespaces.w}">',
+    'mismatched closing tag':
+        '<w:settings xmlns:w="${OfficeNamespaces.w}"><w:endnotePr></w:settings>',
+    'unterminated child tag': '<w:settings xmlns:w="${OfficeNamespaces.w}"><',
     'wrong root': '<w:wrong xmlns:w="${OfficeNamespaces.w}"/>',
     'multiple roots':
         '<w:settings xmlns:w="${OfficeNamespaces.w}"/><w:settings xmlns:w="${OfficeNamespaces.w}"/>',
@@ -698,10 +1229,9 @@ void main() {
             [],
           );
       settings.writeText(settingsXml);
-      expect(
-        WordNoteNumbering(source).automaticNumberFor(source.endnotes.single),
-        isNull,
-      );
+      final numbering = WordNoteNumbering(source);
+      expect(numbering.labelFor(source.endnotes.single), 'i');
+      expect(numbering.automaticNumberFor(source.endnotes.single), isNull);
       _unchangedAfterRefusal(source);
     });
   }

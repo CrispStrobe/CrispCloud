@@ -15,6 +15,7 @@ import '../model/word_bookmarks.dart';
 import '../model/word_fields.dart';
 import '../model/word_notes.dart';
 import '../properties/wml_properties.dart';
+import 'odt_note_start_convention.dart';
 import 'odt_writer_zotero.dart';
 
 /// Bounded new-document ODT writer for the shared Word model.
@@ -53,7 +54,11 @@ abstract final class OdtDocumentWriter {
     final content = _contentXml(body, layout);
     final manifest = _manifestXml(layout.media);
     zotero?.verifyComplete();
-    final meta = _metaXml(document, zotero: zotero);
+    final meta = _metaXml(
+      document,
+      zotero: zotero,
+      noteStartOffsets: layout.notes.usesNoteStartOffsets,
+    );
     final zip = ZipWriter();
     zip.addFile(
       'mimetype',
@@ -275,6 +280,12 @@ abstract final class OdtDocumentWriter {
           attributes: {
             'text:note-class': endnote ? 'endnote' : 'footnote',
             'style:num-format': layout.notes.automaticFormats[endnote] ?? '1',
+            // LibreOffice reads this as its zero-based StartAt offset. Only
+            // the explicitly declared producer convention enables that
+            // interpretation on Quds import. Write both classes explicitly.
+            if (layout.notes.usesNoteStartOffsets)
+              'text:start-value':
+                  '${(layout.notes.automaticStarts[endnote] ?? 1) - 1}',
             'text:citation-style-name': '${prefix}Symbol',
             'text:citation-body-style-name': '${prefix}Anchor',
             // Native endnotes use the final section's regular page geometry,
@@ -1854,7 +1865,11 @@ abstract final class OdtDocumentWriter {
     return w.toXml();
   }
 
-  static String _metaXml(WmlDocument document, {OdtWriterZoteroPlan? zotero}) {
+  static String _metaXml(
+    WmlDocument document, {
+    OdtWriterZoteroPlan? zotero,
+    bool noteStartOffsets = false,
+  }) {
     final w = XmlWriter();
     w.writeStartDocument();
     w.writeStartElement('document-meta', prefix: 'office');
@@ -1876,7 +1891,11 @@ abstract final class OdtDocumentWriter {
     value('initial-creator', 'meta', document.properties.creator);
     value('creation-date', 'meta', document.properties.createdIso);
     value('date', 'dc', document.properties.modifiedIso);
-    value('generator', 'meta', 'CrispOffice');
+    value(
+      'generator',
+      'meta',
+      noteStartOffsets ? odtZoteroNoteOffsetGenerator : 'CrispOffice',
+    );
     zotero?.writePreferences(w);
     w.writeEndElement();
     w.writeEndElement();
@@ -2064,7 +2083,11 @@ class _OdtNotes {
   final emitted = <(bool, int), _OdtNoteRecord>{};
   final automaticCounts = <bool, int>{};
   final automaticFormats = <bool, String>{};
+  final automaticStarts = <bool, int>{};
   final _activeClasses = <bool>{};
+
+  bool get usesNoteStartOffsets => automaticStarts.values.any((v) => v != 1);
+
   late final numbering = WordNoteNumbering(
     document,
     emptyReferencesAreAutomatic: true,
@@ -2093,20 +2116,25 @@ class _OdtNotes {
       _ => null,
     };
     final previousFormat = automaticFormats[note.endnote];
+    final previousStart = automaticStarts[note.endnote];
     if (reference.noteRefCustomMark ||
         native == null ||
         format == null ||
-        native.start != 1 ||
+        native.start < 1 ||
+        native.start > odtNoteStartMaximum ||
         native.restart != 'continuous' ||
-        native.number != expectedOrdinal ||
+        native.number > 65535 ||
+        native.number != native.start + expectedOrdinal - 1 ||
         numbering.referenceLabel(reference) != label ||
         WordNoteNumbering.formatLabel(native.number, native.format) != label ||
-        (previousFormat != null && previousFormat != format)) {
+        (previousFormat != null && previousFormat != format) ||
+        (previousStart != null && previousStart != native.start)) {
       throw UnsupportedError(
-        'Editable Zotero ODT requires one continuous decimal or Roman note sequence starting at one per cited note class, with exact automatic labels.',
+        'Editable Zotero ODT requires one continuous decimal or Roman note sequence with a start from 1 to 32768 per cited note class, with exact automatic labels.',
       );
     }
     automaticFormats[note.endnote] = format;
+    automaticStarts[note.endnote] = native.start;
     return true;
   }
 

@@ -793,7 +793,7 @@
         "diagnostic": {
           "code": "vba_unsupported",
           "line": 3,
-          "column": 3
+          "column": 65
         }
       },
       "provenance": {
@@ -925,7 +925,7 @@
         "diagnostic": {
           "code": "vba_unsupported",
           "line": 4,
-          "column": 5
+          "column": 67
         }
       },
       "provenance": {

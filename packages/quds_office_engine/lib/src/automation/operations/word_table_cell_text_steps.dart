@@ -68,6 +68,34 @@ void insertBeforeWordTableCellRange(WmlDocument document, StepInput step) {
   paragraph.inlines = replacement.inlines;
 }
 
+/// Appends to one ordinary cell while leaving its delimiters structural.
+///
+/// Unlike an ordinary paragraph Range, an explicit Cell.Range supports text
+/// insertion at its content end. This operation admits only that bounded
+/// selector and preserves every existing run, including trailing empty runs.
+/// The inserted run inherits the last text character's formatting, the last
+/// retained empty run when there is no text, or the retained paragraph mark
+/// when the cell has no runs.
+void insertAfterWordTableCellRange(WmlDocument document, StepInput step) {
+  final text = step.string('text');
+  _text(text);
+  final paragraph = editableWordTableCellRangeParagraph(document, step);
+  // A no-op must still check selector, structure, protection and ownership.
+  if (text.isEmpty) return;
+
+  final replacement = WmlClone.paragraph(paragraph);
+  final length = replacement.text.length;
+  final properties = replacement.inlines.isEmpty
+      ? paragraph.properties.importedParagraphMark?.copy() ?? WmlRunProps()
+      : length == 0
+      ? (replacement.inlines.last as WmlRun).properties.copy()
+      : WmlRunEdit.propsAt(replacement, length - 1).copy();
+  // Do not use generic replacement: its run coalescing can erase distinct
+  // sparse formatting and zero-width source packets in the retained text.
+  replacement.inlines.add(WmlRun(text: text, properties: properties));
+  paragraph.inlines = replacement.inlines;
+}
+
 /// Resolves the one ordinary paragraph of an explicitly selected table cell.
 ///
 /// Cell text and formatting share the same ownership, source-fidelity and

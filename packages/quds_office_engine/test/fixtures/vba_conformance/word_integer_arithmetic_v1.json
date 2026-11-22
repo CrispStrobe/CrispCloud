@@ -1,0 +1,1405 @@
+{
+  "schemaVersion": 1,
+  "suite": "vba-word-integer-arithmetic",
+  "dialect": "vba-word",
+  "cases": [
+    {
+      "id": "quotient-example-11",
+      "feature": "integer division and remainder",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(11 \\ 4)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "2"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Expectations are authored from published arithmetic and precedence contracts; the selected-cell plan is the Quds mapping. No Office host was executed."
+      }
+    },
+    {
+      "id": "quotient-example-9",
+      "feature": "integer division and remainder",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(9 \\ 3)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "3"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Expectations are authored from published arithmetic and precedence contracts; the selected-cell plan is the Quds mapping. No Office host was executed."
+      }
+    },
+    {
+      "id": "quotient-example-100",
+      "feature": "integer division and remainder",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(100 \\ 3)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "33"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Expectations are authored from published arithmetic and precedence contracts; the selected-cell plan is the Quds mapping. No Office host was executed."
+      }
+    },
+    {
+      "id": "mod-example-zero",
+      "feature": "integer division and remainder",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(10 Mod 5)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Expectations are authored from published arithmetic and precedence contracts; the selected-cell plan is the Quds mapping. No Office host was executed."
+      }
+    },
+    {
+      "id": "mod-example-one",
+      "feature": "integer division and remainder",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(10 Mod 3)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "1"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Expectations are authored from published arithmetic and precedence contracts; the selected-cell plan is the Quds mapping. No Office host was executed."
+      }
+    },
+    {
+      "id": "mod-rounded-divisor",
+      "feature": "integer division and remainder",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(12 Mod 4.3)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Expectations are authored from published arithmetic and precedence contracts; the selected-cell plan is the Quds mapping. No Office host was executed."
+      }
+    },
+    {
+      "id": "mod-rounded-dividend",
+      "feature": "integer division and remainder",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(12.6 Mod 5)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "3"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Expectations are authored from published arithmetic and precedence contracts; the selected-cell plan is the Quds mapping. No Office host was executed."
+      }
+    },
+    {
+      "id": "mod-rounded-seven",
+      "feature": "integer division and remainder",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(19 Mod 6.7)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "5"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Expectations are authored from published arithmetic and precedence contracts; the selected-cell plan is the Quds mapping. No Office host was executed."
+      }
+    },
+    {
+      "id": "quotient-negative-left",
+      "feature": "integer division and remainder",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(-11 \\ 4)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "-2"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Expectations are authored from published arithmetic and precedence contracts; the selected-cell plan is the Quds mapping. No Office host was executed."
+      }
+    },
+    {
+      "id": "quotient-negative-right",
+      "feature": "integer division and remainder",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(11 \\ -4)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "-2"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Expectations are authored from published arithmetic and precedence contracts; the selected-cell plan is the Quds mapping. No Office host was executed."
+      }
+    },
+    {
+      "id": "quotient-both-negative",
+      "feature": "integer division and remainder",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(-11 \\ -4)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "2"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Expectations are authored from published arithmetic and precedence contracts; the selected-cell plan is the Quds mapping. No Office host was executed."
+      }
+    },
+    {
+      "id": "multiply-before-divide",
+      "feature": "integer division and remainder",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(20 \\ 3 * 2)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "3"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Expectations are authored from published arithmetic and precedence contracts; the selected-cell plan is the Quds mapping. No Office host was executed."
+      }
+    },
+    {
+      "id": "slash-before-backslash",
+      "feature": "integer division and remainder",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(25 \\ 4 / 2)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "12"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Expectations are authored from published arithmetic and precedence contracts; the selected-cell plan is the Quds mapping. No Office host was executed."
+      }
+    },
+    {
+      "id": "divide-before-mod",
+      "feature": "integer division and remainder",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(20 Mod 6 \\ 2)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "2"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Expectations are authored from published arithmetic and precedence contracts; the selected-cell plan is the Quds mapping. No Office host was executed."
+      }
+    },
+    {
+      "id": "mod-after-divide",
+      "feature": "integer division and remainder",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(20 \\ 3 Mod 4)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "2"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Expectations are authored from published arithmetic and precedence contracts; the selected-cell plan is the Quds mapping. No Office host was executed."
+      }
+    },
+    {
+      "id": "mod-before-add",
+      "feature": "integer division and remainder",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(2 + 17 Mod 5 * 2)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "9"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Expectations are authored from published arithmetic and precedence contracts; the selected-cell plan is the Quds mapping. No Office host was executed."
+      }
+    },
+    {
+      "id": "division-associativity",
+      "feature": "integer division and remainder",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(48 \\ 4 \\ 3)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "4"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Expectations are authored from published arithmetic and precedence contracts; the selected-cell plan is the Quds mapping. No Office host was executed."
+      }
+    },
+    {
+      "id": "mod-associativity",
+      "feature": "integer division and remainder",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(20 Mod 6 Mod 3)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "2"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Expectations are authored from published arithmetic and precedence contracts; the selected-cell plan is the Quds mapping. No Office host was executed."
+      }
+    },
+    {
+      "id": "parenthesized-division",
+      "feature": "integer division and remainder",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr((20 \\ 3) * 2)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "12"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Expectations are authored from published arithmetic and precedence contracts; the selected-cell plan is the Quds mapping. No Office host was executed."
+      }
+    },
+    {
+      "id": "parenthesized-mod",
+      "feature": "integer division and remainder",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr((20 Mod 6) \\ 2)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "1"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Expectations are authored from published arithmetic and precedence contracts; the selected-cell plan is the Quds mapping. No Office host was executed."
+      }
+    },
+    {
+      "id": "not-precedence",
+      "feature": "integer division and remainder",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(Not 5 Mod 2 = 1)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "False"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Expectations are authored from published arithmetic and precedence contracts; the selected-cell plan is the Quds mapping. No Office host was executed."
+      }
+    },
+    {
+      "id": "boolean-composition",
+      "feature": "integer division and remainder",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(8 \\ 3 = 2 And 9 Mod 4 = 1)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "True"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Expectations are authored from published arithmetic and precedence contracts; the selected-cell plan is the Quds mapping. No Office host was executed."
+      }
+    },
+    {
+      "id": "ties-even-up",
+      "feature": "integer division and remainder",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(5.5 \\ 2)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "3"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Explicit bounded Quds contract: strict numeric/Variant operands, signed 32-bit rounding, and dividend-signed remainder. MS-VBAL absolute-remainder wording conflicts with this sign choice; installed Office differential qualification is pending."
+      }
+    },
+    {
+      "id": "ties-even-down",
+      "feature": "integer division and remainder",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(4.5 \\ 2)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "2"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Explicit bounded Quds contract: strict numeric/Variant operands, signed 32-bit rounding, and dividend-signed remainder. MS-VBAL absolute-remainder wording conflicts with this sign choice; installed Office differential qualification is pending."
+      }
+    },
+    {
+      "id": "ties-even-negative",
+      "feature": "integer division and remainder",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(-5.5 \\ 2)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "-3"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Explicit bounded Quds contract: strict numeric/Variant operands, signed 32-bit rounding, and dividend-signed remainder. MS-VBAL absolute-remainder wording conflicts with this sign choice; installed Office differential qualification is pending."
+      }
+    },
+    {
+      "id": "ties-even-negative-down",
+      "feature": "integer division and remainder",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(-4.5 \\ 2)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "-2"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Explicit bounded Quds contract: strict numeric/Variant operands, signed 32-bit rounding, and dividend-signed remainder. MS-VBAL absolute-remainder wording conflicts with this sign choice; installed Office differential qualification is pending."
+      }
+    },
+    {
+      "id": "rounded-both-operands",
+      "feature": "integer division and remainder",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(7.5 \\ 3.5)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "2"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Explicit bounded Quds contract: strict numeric/Variant operands, signed 32-bit rounding, and dividend-signed remainder. MS-VBAL absolute-remainder wording conflicts with this sign choice; installed Office differential qualification is pending."
+      }
+    },
+    {
+      "id": "signed-mod-negative-left",
+      "feature": "integer division and remainder",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(-11 Mod 4)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "-3"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Explicit bounded Quds contract: strict numeric/Variant operands, signed 32-bit rounding, and dividend-signed remainder. MS-VBAL absolute-remainder wording conflicts with this sign choice; installed Office differential qualification is pending."
+      }
+    },
+    {
+      "id": "signed-mod-negative-right",
+      "feature": "integer division and remainder",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(11 Mod -4)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "3"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Explicit bounded Quds contract: strict numeric/Variant operands, signed 32-bit rounding, and dividend-signed remainder. MS-VBAL absolute-remainder wording conflicts with this sign choice; installed Office differential qualification is pending."
+      }
+    },
+    {
+      "id": "signed-mod-both-negative",
+      "feature": "integer division and remainder",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(-11 Mod -4)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "-3"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Explicit bounded Quds contract: strict numeric/Variant operands, signed 32-bit rounding, and dividend-signed remainder. MS-VBAL absolute-remainder wording conflicts with this sign choice; installed Office differential qualification is pending."
+      }
+    },
+    {
+      "id": "negative-fraction-mod",
+      "feature": "integer division and remainder",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(-12.6 Mod 5)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "-3"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Explicit bounded Quds contract: strict numeric/Variant operands, signed 32-bit rounding, and dividend-signed remainder. MS-VBAL absolute-remainder wording conflicts with this sign choice; installed Office differential qualification is pending."
+      }
+    },
+    {
+      "id": "minimum-mod-minus-one",
+      "feature": "integer division and remainder",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(-2147483648 Mod -1)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Explicit bounded Quds contract: strict numeric/Variant operands, signed 32-bit rounding, and dividend-signed remainder. MS-VBAL absolute-remainder wording conflicts with this sign choice; installed Office differential qualification is pending."
+      }
+    },
+    {
+      "id": "maximum-operand",
+      "feature": "integer division and remainder",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(2147483647 \\ 1)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "2147483647"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Explicit bounded Quds contract: strict numeric/Variant operands, signed 32-bit rounding, and dividend-signed remainder. MS-VBAL absolute-remainder wording conflicts with this sign choice; installed Office differential qualification is pending."
+      }
+    },
+    {
+      "id": "minimum-operand",
+      "feature": "integer division and remainder",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(-2147483648 \\ 1)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "-2147483648"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Explicit bounded Quds contract: strict numeric/Variant operands, signed 32-bit rounding, and dividend-signed remainder. MS-VBAL absolute-remainder wording conflicts with this sign choice; installed Office differential qualification is pending."
+      }
+    },
+    {
+      "id": "minimum-rounding-tie",
+      "feature": "integer division and remainder",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(-2147483648.5 \\ 1)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "-2147483648"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Explicit bounded Quds contract: strict numeric/Variant operands, signed 32-bit rounding, and dividend-signed remainder. MS-VBAL absolute-remainder wording conflicts with this sign choice; installed Office differential qualification is pending."
+      }
+    },
+    {
+      "id": "minimum-remainder",
+      "feature": "integer division and remainder",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(-2147483648 Mod 3)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "-2"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Explicit bounded Quds contract: strict numeric/Variant operands, signed 32-bit rounding, and dividend-signed remainder. MS-VBAL absolute-remainder wording conflicts with this sign choice; installed Office differential qualification is pending."
+      }
+    },
+    {
+      "id": "maximum-negative-divisor",
+      "feature": "integer division and remainder",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(2147483647 Mod -2147483648)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "2147483647"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Explicit bounded Quds contract: strict numeric/Variant operands, signed 32-bit rounding, and dividend-signed remainder. MS-VBAL absolute-remainder wording conflicts with this sign choice; installed Office differential qualification is pending."
+      }
+    },
+    {
+      "id": "empty-dividend",
+      "feature": "integer division and remainder",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(Empty \\ 3)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Explicit bounded Quds contract: strict numeric/Variant operands, signed 32-bit rounding, and dividend-signed remainder. MS-VBAL absolute-remainder wording conflicts with this sign choice; installed Office differential qualification is pending."
+      }
+    },
+    {
+      "id": "empty-mod",
+      "feature": "integer division and remainder",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(Empty Mod 3)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Explicit bounded Quds contract: strict numeric/Variant operands, signed 32-bit rounding, and dividend-signed remainder. MS-VBAL absolute-remainder wording conflicts with this sign choice; installed Office differential qualification is pending."
+      }
+    },
+    {
+      "id": "null-dividend",
+      "feature": "integer division and remainder",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(IsNull(Null \\ 0))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "True"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Explicit bounded Quds contract: strict numeric/Variant operands, signed 32-bit rounding, and dividend-signed remainder. MS-VBAL absolute-remainder wording conflicts with this sign choice; installed Office differential qualification is pending."
+      }
+    },
+    {
+      "id": "null-divisor",
+      "feature": "integer division and remainder",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(IsNull(10 Mod Null))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "True"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Explicit bounded Quds contract: strict numeric/Variant operands, signed 32-bit rounding, and dividend-signed remainder. MS-VBAL absolute-remainder wording conflicts with this sign choice; installed Office differential qualification is pending."
+      }
+    },
+    {
+      "id": "explicit-numeric-string",
+      "feature": "integer division and remainder",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(CDbl(\"12.6\") \\ 5)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "2"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Explicit bounded Quds contract: strict numeric/Variant operands, signed 32-bit rounding, and dividend-signed remainder. MS-VBAL absolute-remainder wording conflicts with this sign choice; installed Office differential qualification is pending."
+      }
+    },
+    {
+      "id": "case-insensitive",
+      "feature": "integer division and remainder",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(17 mOd 3)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "2"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Explicit bounded Quds contract: strict numeric/Variant operands, signed 32-bit rounding, and dividend-signed remainder. MS-VBAL absolute-remainder wording conflicts with this sign choice; installed Office differential qualification is pending."
+      }
+    },
+    {
+      "id": "negative-zero",
+      "feature": "integer division and remainder",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(-0.0 \\ 2)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "0"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Explicit bounded Quds contract: strict numeric/Variant operands, signed 32-bit rounding, and dividend-signed remainder. MS-VBAL absolute-remainder wording conflicts with this sign choice; installed Office differential qualification is pending."
+      }
+    },
+    {
+      "id": "division-zero",
+      "feature": "strict arithmetic refusal",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(1 \\ 0)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_arithmetic_error",
+          "line": 2,
+          "column": 59
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Explicit positioned Quds refusal before native-plan publication. Expected location is the arithmetic operator in source; no Office host was executed."
+      }
+    },
+    {
+      "id": "mod-zero",
+      "feature": "strict arithmetic refusal",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(1 Mod 0)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_arithmetic_error",
+          "line": 2,
+          "column": 59
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Explicit positioned Quds refusal before native-plan publication. Expected location is the arithmetic operator in source; no Office host was executed."
+      }
+    },
+    {
+      "id": "rounded-division-zero",
+      "feature": "strict arithmetic refusal",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(7 \\ 0.5)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_arithmetic_error",
+          "line": 2,
+          "column": 59
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Explicit positioned Quds refusal before native-plan publication. Expected location is the arithmetic operator in source; no Office host was executed."
+      }
+    },
+    {
+      "id": "rounded-mod-zero",
+      "feature": "strict arithmetic refusal",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(7 Mod -0.5)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_arithmetic_error",
+          "line": 2,
+          "column": 59
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Explicit positioned Quds refusal before native-plan publication. Expected location is the arithmetic operator in source; no Office host was executed."
+      }
+    },
+    {
+      "id": "empty-divisor",
+      "feature": "strict arithmetic refusal",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(1 \\ Empty)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_arithmetic_error",
+          "line": 2,
+          "column": 59
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Explicit positioned Quds refusal before native-plan publication. Expected location is the arithmetic operator in source; no Office host was executed."
+      }
+    },
+    {
+      "id": "quotient-overflow",
+      "feature": "strict arithmetic refusal",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(-2147483648 \\ -1)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 69
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Explicit positioned Quds refusal before native-plan publication. Expected location is the arithmetic operator in source; no Office host was executed."
+      }
+    },
+    {
+      "id": "rounded-positive-overflow",
+      "feature": "strict arithmetic refusal",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(2147483647.5 \\ 1)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 70
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Explicit positioned Quds refusal before native-plan publication. Expected location is the arithmetic operator in source; no Office host was executed."
+      }
+    },
+    {
+      "id": "negative-overflow",
+      "feature": "strict arithmetic refusal",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(-2147483649 Mod 3)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 69
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Explicit positioned Quds refusal before native-plan publication. Expected location is the arithmetic operator in source; no Office host was executed."
+      }
+    },
+    {
+      "id": "implicit-string",
+      "feature": "strict arithmetic refusal",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(\"7\" \\ 2)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 57
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Explicit positioned Quds static refusal at the incompatible operand before native-plan publication; no Office host was executed."
+      }
+    },
+    {
+      "id": "implicit-boolean",
+      "feature": "strict arithmetic refusal",
+      "source": "Sub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(True Mod 2)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 57
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/backslash-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mod-operator",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/operator-precedence"
+        ],
+        "note": "Explicit positioned Quds static refusal at the incompatible operand before native-plan publication; no Office host was executed."
+      }
+    }
+  ]
+}

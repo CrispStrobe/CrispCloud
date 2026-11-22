@@ -485,7 +485,6 @@ target.Text = "x"
 
     for (final statement in <String>[
       'selected.ListFormat.ApplyBulletDefault',
-      'selected.InsertAfter "x"',
       'selected.Paragraphs(1).Range.InsertAfter "x"',
     ]) {
       test('a generic Range cannot escape its cell target: $statement', () {
