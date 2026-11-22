@@ -118,3 +118,13 @@ trusted DOCM files containing our own BAS modules and run their named entry
 points in Word. Compare the resulting DOCX/DOCM semantics and preserved
 package parts with CrispOffice's output. The spacing check above exercised
 Word's object model through AppleScript.
+
+The cleanup also passed an injected save failure after Word opened a fixture.
+A subsequent Word query confirmed the failed fixture and all batch fixtures
+were closed.
+
+The newer Office intake at `a9bfc961a7efdf2c8da198108bd71174b91f89fd`
+passed 415 cases in seven focused VBA suites, including its actual BAS
+CLI compile/validate/run/replay test. The guarded mirror verifies all
+3,401 tracked files. The Word roundtrip results above are independent of
+this engine-only VBA gate.
