@@ -96,6 +96,41 @@ List<Map<String, Object?>> _presentation(WmlDocument document, String story) =>
         },
     ];
 
+List<Map<String, Object?>> _tableBorders(WmlDocument document) => [
+  for (final table in document.sections.expand(
+    (section) => section.blocks.whereType<WmlTable>(),
+  ))
+    {
+      'color': (table.properties.borderColor ?? '000000').toUpperCase(),
+      'width': table.properties.borderWidth,
+      'sides': [
+        for (final row in table.rows)
+          [
+            for (final cell in row.cells)
+              [
+                cell.borderTop ?? table.properties.borders,
+                cell.borderBottom ?? table.properties.borders,
+                cell.borderLeft ?? table.properties.borders,
+                cell.borderRight ?? table.properties.borders,
+              ],
+          ],
+      ],
+    },
+];
+
+void _expectTableBorders(
+  WmlDocument document,
+  List<Map<String, Object?>> expected,
+) {
+  final actual = _tableBorders(document);
+  expect(actual, hasLength(expected.length));
+  for (var i = 0; i < expected.length; i++) {
+    expect(actual[i]['color'], expected[i]['color']);
+    expect(actual[i]['width'], closeTo(expected[i]['width']! as num, .02));
+    expect(actual[i]['sides'], expected[i]['sides']);
+  }
+}
+
 String _outsideStory(WmlDocument document, String story) {
   final target = _story(document, story).toSet();
   return jsonEncode({
@@ -280,6 +315,7 @@ void main() {
           final beforeRevision = controller.contentRevision;
           final preferences = WordZoteroDocumentData.read(document);
           final presentation = _presentation(document, story);
+          final borders = _tableBorders(document);
           final outsideStory = _outsideStory(document, story);
           final selection = _selection(controller);
           final expectedText = paragraphs
@@ -307,6 +343,7 @@ void main() {
             outsideStory,
           );
           expect(_story(document, story), orderedEquals(paragraphs));
+          _expectTableBorders(document, borders);
           expect(WordZoteroDocumentData.read(document), preferences);
           expect(_selection(controller), selection);
           expect(controller.canUndo, isTrue);
@@ -316,11 +353,13 @@ void main() {
 
           controller.undo();
           expect(_state(document), before);
+          _expectTableBorders(document, borders);
           expect(controller.canUndo, isFalse);
           expect(controller.canRedo, isTrue);
           expect(_selection(controller), selection);
           controller.redo();
           expect(_state(document), after);
+          _expectTableBorders(document, borders);
           _expectRefreshed(
             document,
             story,
@@ -331,6 +370,7 @@ void main() {
           );
 
           final docx = WordDeserializer().readBytes(controller.saveBytes());
+          _expectTableBorders(docx, borders);
           _expectRefreshed(
             docx,
             story,
@@ -339,8 +379,8 @@ void main() {
             presentation,
             outsideStory,
           );
-          if (format == 'odt') {
-            final odt = await OdtDocumentReader.readBytes(
+          if (format == 'odt' || story == 'cell') {
+            var odt = await OdtDocumentReader.readBytes(
               OdtDocumentWriter.writeEditableZoteroBytes(document),
             );
             _expectRefreshed(
@@ -351,22 +391,26 @@ void main() {
               presentation,
               outsideStory,
             );
-          } else if (story == 'cell') {
-            // The retained DOCX has visible cell borders. Its native DOCX
-            // save is editable above; arbitrary DOCX-to-ODT border fidelity
-            // remains outside the bounded ODT reader, with an explicit guard.
-            await expectLater(
-              OdtDocumentReader.readBytes(
-                OdtDocumentWriter.writeEditableZoteroBytes(document),
-              ),
-              throwsA(
-                isA<UnsupportedError>().having(
-                  (error) => error.message,
-                  'message',
-                  'Visible ODT cell borders are not supported.',
-                ),
-              ),
+            _expectTableBorders(odt, borders);
+            // The retained DOCX cell fixture has visible borders. Keep its
+            // original stroke and active fields through both portable formats,
+            // including a second editable ODT save after native DOCX reopening.
+            final exchanged = WordDeserializer().readBytes(
+              WordSerializer().writeBytes(odt),
             );
+            _expectTableBorders(exchanged, borders);
+            odt = await OdtDocumentReader.readBytes(
+              OdtDocumentWriter.writeEditableZoteroBytes(exchanged),
+            );
+            _expectRefreshed(
+              odt,
+              story,
+              expected,
+              expectedText,
+              presentation,
+              outsideStory,
+            );
+            _expectTableBorders(odt, borders);
           }
           expect(_state(document), after);
         },

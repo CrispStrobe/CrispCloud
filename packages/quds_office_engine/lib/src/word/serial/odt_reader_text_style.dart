@@ -105,6 +105,55 @@ final class OdtReaderTextStyle extends WmlRunProps {
     }
   }
 
+  /// Whether link states have the same supported formatting and inheritance.
+  ///
+  /// Equal current projections alone are insufficient: an explicit complex
+  /// script value and a Western fallback may diverge inside a child span.
+  /// Require the same nullable slots and explicit-property state first, then
+  /// compare every native script projection and its retained source properties.
+  bool hasSameResolvedFormattingAs(OdtReaderTextStyle other) {
+    Object scriptValues(OdtReaderScriptStyle value) => (
+      value.font,
+      value.size,
+      value.bold,
+      value.italic,
+      value.language,
+      value.languageSpecified,
+      value.noProof,
+    );
+    if (scriptValues(complex) != scriptValues(other.complex) ||
+        scriptValues(asian) != scriptValues(other.asian) ||
+        opacity != other.opacity ||
+        automaticColor != other.automaticColor ||
+        hyphenate != other.hyphenate ||
+        explicitProperties.length != other.explicitProperties.length ||
+        !explicitProperties.every(other.explicitProperties.contains)) {
+      return false;
+    }
+    for (final script in OdtTextScript.values) {
+      final current = nativeProperties(script: script, projectedText: true);
+      final candidate = other.nativeProperties(
+        script: script,
+        projectedText: true,
+      );
+      final currentValues = WordPropertyIo.runValues(current);
+      final candidateValues = WordPropertyIo.runValues(candidate);
+      if (current.styleId != candidate.styleId ||
+          current.proofingLanguage != candidate.proofingLanguage ||
+          current.complexScriptLanguage != candidate.complexScriptLanguage ||
+          current.highlight != candidate.highlight ||
+          current.complexScript != candidate.complexScript ||
+          current.sourcePropertiesXml != candidate.sourcePropertiesXml ||
+          currentValues.length != candidateValues.length ||
+          currentValues.entries.any(
+            (entry) => candidateValues[entry.key] != entry.value,
+          )) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   bool get _distinctComplexFormatting =>
       csFont != asciiFont ||
       (complexScriptLanguage ?? proofingLanguage) != proofingLanguage ||

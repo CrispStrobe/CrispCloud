@@ -16,6 +16,7 @@ import '../model/word_fields.dart';
 import '../model/word_notes.dart';
 import '../properties/wml_properties.dart';
 import 'odt_note_start_convention.dart';
+import 'odt_table_borders.dart';
 import 'odt_writer_zotero.dart';
 
 /// Bounded new-document ODT writer for the shared Word model.
@@ -1530,6 +1531,11 @@ abstract final class OdtDocumentWriter {
     _OdtLayout layout, {
     _OdtSectionStart? sectionStart,
   }) {
+    if (layout.zotero != null && table.properties.rightToLeft) {
+      throw UnsupportedError(
+        'Editable Zotero ODT cannot preserve right-to-left table order.',
+      );
+    }
     final cells = _OdtTableCells(table);
     final cellPadding = layout.zotero == null
         ? null
@@ -1547,6 +1553,9 @@ abstract final class OdtDocumentWriter {
     if (cellPadding != null) {
       _validateEditableTablePadding(table, cells, cellPadding);
     }
+    final borders = cellPadding == null
+        ? null
+        : _OdtEditableTableBorders(table, cells);
     final inferredColumns = cells.columnCount - BigInt.from(table.grid.length);
     // The explicit Zotero path retains the native grid's absolute geometry.
     // Using the ordinary 100%-width export fallback would rescale its columns
@@ -1566,6 +1575,7 @@ abstract final class OdtDocumentWriter {
         sectionStart: sectionStart,
         width: zoteroWidth,
         alignment: layout.zotero == null ? null : table.properties.alignment,
+        collapsingBorders: borders?.stroke != null,
       ),
     );
     for (final width in table.grid) {
@@ -1619,7 +1629,13 @@ abstract final class OdtDocumentWriter {
             w.writeAttribute('table:number-rows-spanned', '${placement.rows}');
           }
         }
-        if (layout.cellStyle(cell, padding: cellPadding) case final style?) {
+        if (layout.cellStyle(
+              cell,
+              padding: cellPadding,
+              borderStyle: borders?.styles[cell],
+              stroke: borders?.stroke,
+            )
+            case final style?) {
           w.writeAttribute('table:style-name', style);
         }
         final notesAllowed = layout.noteBodiesAllowed;
@@ -1934,7 +1950,7 @@ class _OdtTableCells {
       var column = BigInt.from(row.gridBefore > 0 ? row.gridBefore : 0);
       for (final cell in row.cells) {
         final span = cell.gridSpan > 0 ? cell.gridSpan : 1;
-        final placement = _OdtTableCell(span);
+        final placement = _OdtTableCell(span, cell);
         placements.add(placement);
         final key = (column, span);
         if (valid) {
@@ -1944,6 +1960,7 @@ class _OdtTableCells {
             final anchor = previous[key];
             if (anchor != null) {
               placement.covered = true;
+              placement.owner = anchor;
               anchor.rows++;
               current[key] = anchor;
             }
@@ -1964,11 +1981,55 @@ class _OdtTableCells {
 }
 
 class _OdtTableCell {
-  _OdtTableCell(this.columns);
+  _OdtTableCell(this.columns, this.cell);
 
   final int columns;
+  final WmlTableCell cell;
+  _OdtTableCell? owner;
   int rows = 1;
   bool covered = false;
+}
+
+/// Preserve the native common stroke and physical side masks. Covered-cell
+/// overrides must agree with their visible merged owner. Each nested table
+/// creates its own plan; unknown colors or nonportable widths refuse before
+/// the export returns any bytes.
+final class _OdtEditableTableBorders {
+  _OdtEditableTableBorders(WmlTable table, _OdtTableCells placements) {
+    List<bool> sides(WmlTableCell cell) => [
+      cell.borderTop ?? table.properties.borders,
+      cell.borderRight ?? table.properties.borders,
+      cell.borderBottom ?? table.properties.borders,
+      cell.borderLeft ?? table.properties.borders,
+    ];
+    var visible = false;
+    for (final row in placements.rows) {
+      for (final placement in row) {
+        final flags = sides(placement.cell);
+        if (placement.owner case final owner?) {
+          final ownerFlags = sides(owner.cell);
+          for (var edge = 0; edge < 4; edge++) {
+            if (flags[edge] != ownerFlags[edge]) {
+              throw UnsupportedError(
+                'Editable ODT covered-cell borders differ from their owner.',
+              );
+            }
+          }
+        }
+        visible |= flags.any((flag) => flag);
+        styles[placement.cell] = flags;
+      }
+    }
+    if (visible) {
+      stroke = OdtTableBorder(
+        table.properties.borderWidth,
+        table.properties.borderColor ?? '000000',
+      );
+    }
+  }
+
+  OdtTableBorder? stroke;
+  final styles = Map<WmlTableCell, List<bool>>.identity();
 }
 
 class _OdtNoteRecord {
@@ -2619,6 +2680,7 @@ class _OdtLayout {
     _OdtSectionStart? sectionStart,
     double? width,
     WmlJustification? alignment,
+    bool collapsingBorders = false,
   }) {
     final name = 'Tab${tableCount + 1}';
     String styleXml() {
@@ -2651,6 +2713,9 @@ class _OdtLayout {
         ),
       };
       buffer.write(' table:align="$align"');
+      if (collapsingBorders) {
+        buffer.write(' table:border-model="collapsing"');
+      }
       if (sectionStart?.breakBefore == true) {
         buffer.write(' fo:break-before="page"');
       }
@@ -2885,21 +2950,40 @@ class _OdtLayout {
     );
   }
 
-  String? cellStyle(WmlTableCell cell, {double? padding}) {
+  String? cellStyle(
+    WmlTableCell cell, {
+    double? padding,
+    List<bool>? borderStyle,
+    OdtTableBorder? stroke,
+  }) {
     final fill = _rgbColor(cell.fillColor);
-    final borders = [
-      cell.borderTop == true,
-      cell.borderBottom == true,
-      cell.borderLeft == true,
-      cell.borderRight == true,
+    final rawBorders = [
+      cell.borderTop,
+      cell.borderRight,
+      cell.borderBottom,
+      cell.borderLeft,
     ];
+    final borders =
+        borderStyle ??
+        [
+          cell.borderTop == true,
+          cell.borderRight == true,
+          cell.borderBottom == true,
+          cell.borderLeft == true,
+        ];
     if (fill == null && padding == null && !borders.any((enabled) => enabled)) {
       return null;
     }
     final paddingText = padding == null
         ? null
         : _paragraphDecimal(padding == 0 ? 0 : padding);
-    final key = jsonEncode([fill, paddingText, ...borders]);
+    final key = jsonEncode([
+      fill,
+      paddingText,
+      ...borders,
+      stroke?.odf,
+      if (borderStyle != null && stroke == null) rawBorders,
+    ]);
     return _cellStyles.putIfAbsent(key, () {
       final name = 'Ce${_cellStyles.length + 1}';
       final buffer = StringBuffer(
@@ -2912,17 +2996,17 @@ class _OdtLayout {
       if (paddingText != null) {
         buffer.write(' fo:padding="${paddingText}pt"');
       }
-      if (cell.borderTop == true) {
-        buffer.write(' fo:border-top="0.5pt solid #000000"');
-      }
-      if (cell.borderBottom == true) {
-        buffer.write(' fo:border-bottom="0.5pt solid #000000"');
-      }
-      if (cell.borderLeft == true) {
-        buffer.write(' fo:border-left="0.5pt solid #000000"');
-      }
-      if (cell.borderRight == true) {
-        buffer.write(' fo:border-right="0.5pt solid #000000"');
+      const names = ['top', 'right', 'bottom', 'left'];
+      for (var side = 0; side < 4; side++) {
+        if (borderStyle != null && stroke != null) {
+          buffer.write(
+            ' fo:border-${names[side]}="${borders[side] ? stroke.odf : 'none'}"',
+          );
+        } else if (borders[side]) {
+          buffer.write(' fo:border-${names[side]}="0.5pt solid #000000"');
+        } else if (borderStyle != null && rawBorders[side] == false) {
+          buffer.write(' fo:border-${names[side]}="none"');
+        }
       }
       buffer.write('/></style:style>');
       _styleBuffers.add(buffer.toString());

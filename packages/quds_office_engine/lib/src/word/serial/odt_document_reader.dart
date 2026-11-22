@@ -18,6 +18,7 @@ import 'odt_note_start_convention.dart';
 import 'odt_reader_images.dart';
 import 'odt_reader_styles.dart';
 import 'odt_reader_text_style.dart';
+import 'odt_table_borders.dart';
 
 const _style = 'urn:oasis:names:tc:opendocument:xmlns:style:1.0';
 const _fo = 'urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0';
@@ -629,26 +630,32 @@ final class _OdtReader {
           final link = WmlHyperlink(url: target);
           final styleName = _attr(node, 'style-name', odfTextNamespace);
           final visited = _attr(node, 'visited-style-name', odfTextNamespace);
-          if (visited != null && visited.isNotEmpty && visited != styleName) {
-            if (!OdtReaderImages.isImageOnlyLink(node)) {
-              throw UnsupportedError(
-                'Distinct visited ODT hyperlink styles are not supported.',
-              );
-            }
-            // No authored glyphs or text boxes use the visited character
-            // style. Writer can reference an undefined built-in visited style
-            // for such an image link. Validate a supplied definition, but do
-            // not invent one or widen the ordinary text-link contract.
-            if (styles.hasTextStyle(visited)) {
-              styles
-                  .runProperties(visited, inherited: properties)
-                  .validateEffective();
-            }
-          }
           final resolved = styles.runProperties(
             styleName,
             inherited: properties,
           );
+          if (visited != null && visited.isNotEmpty && visited != styleName) {
+            if (OdtReaderImages.isImageOnlyLink(node)) {
+              // No authored glyphs use this state. Writer can reference an
+              // undefined built-in visited style for a picture-only link.
+              // Validate supplied definitions without inventing missing ones.
+              if (styles.hasTextStyle(visited)) {
+                styles
+                    .runProperties(visited, inherited: properties)
+                    .validateEffective();
+              }
+            } else {
+              final visitedProperties = styles.runProperties(
+                visited,
+                inherited: properties,
+              );
+              if (!resolved.hasSameResolvedFormattingAs(visitedProperties)) {
+                throw UnsupportedError(
+                  'ODT hyperlink visited and unvisited text formatting differ.',
+                );
+              }
+            }
+          }
           _inlines(node, buffer, resolved, link, inNote: inNote);
         case 's':
           _attributes(node, {
@@ -785,6 +792,7 @@ final class _OdtReader {
       properties: WmlTableProps(borders: false, cellMargin: 0),
     );
     double? tableWidth;
+    String? borderModel;
     final explicitWidths = <bool>[];
     final tableStyle = _attr(element, 'style-name', odfTableNamespace);
     for (final style in styles.styleChain('table', tableStyle)) {
@@ -796,16 +804,13 @@ final class _OdtReader {
           _style: {'width'},
         });
         _empty(props);
-        final borderModel = _attr(props, 'border-model', odfTableNamespace);
-        if (borderModel != null &&
-            borderModel != 'separating' &&
-            borderModel != 'collapsing') {
+        final model = _attr(props, 'border-model', odfTableNamespace);
+        if (model != null && model != 'separating' && model != 'collapsing') {
           _unsupported(props);
         }
-        // Both ODF border models are inert in this bounded borderless reader.
-        // Used borders remain rejected. Cell padding is resolved separately
-        // and admitted only when the effective four sides and all visible
-        // owners in this table have one representable native margin.
+        borderModel = model ?? borderModel;
+        // Borderless tables retain both models. Visible borders require an
+        // explicit collapsing model and one native solid stroke below.
         final width = _attr(props, 'width', _style);
         if (width != null) tableWidth = _length(width);
         final align = _attr(props, 'align', odfTableNamespace);
@@ -888,7 +893,8 @@ final class _OdtReader {
     final coverage = [
       for (final _ in sourceRows) List<_OdtTableCell?>.filled(columns, null),
     ];
-    double? tablePadding;
+    final owners = <_OdtTableCell>[];
+    final coveredStyles = <(_OdtTableCell, _OdtCellStyle)>[];
     // ODF 1.3 section 9.1.5 requires an explicit covered cell at every
     // occupied position. Validate this source grid before parsing rich content
     // or creating native continuation cells. Covered cells may legally store
@@ -913,12 +919,7 @@ final class _OdtReader {
           if (style.hasFill && style.fill != origin.fill) {
             _unsupported(sourceCell);
           }
-          if (style.hasPadding &&
-              (style.padding - origin.padding).abs() > 0.000001) {
-            throw UnsupportedError(
-              'ODT covered-cell padding differs from its merged owner.',
-            );
-          }
+          coveredStyles.add((origin, style));
           continue;
         }
         if (!_is(sourceCell, odfTableNamespace, 'table-cell') ||
@@ -951,19 +952,15 @@ final class _OdtReader {
           throw const OdfZoteroLimitException('table cells');
         }
         final cellStyle = _tableCellStyle(sourceCell);
-        if (tablePadding != null &&
-            (tablePadding - cellStyle.padding).abs() > 0.000001) {
-          throw UnsupportedError('ODT per-cell padding is not uniform.');
-        }
-        tablePadding ??= cellStyle.padding;
         final cell = _OdtTableCell(
           source: sourceCell,
           row: rowIndex,
           columnSpan: columnSpan,
           rowSpan: rowSpan,
           fill: cellStyle.fill,
-          padding: cellStyle.padding,
+          style: cellStyle,
         );
+        owners.add(cell);
         for (var row = rowIndex; row < rowIndex + rowSpan; row++) {
           for (var col = column; col < column + columnSpan; col++) {
             if (coverage[row][col] != null) _unsupported(sourceCell);
@@ -998,7 +995,65 @@ final class _OdtReader {
     if (table.grid.fold<double>(0, (sum, width) => sum + width) > 4000) {
       _unsupported(element);
     }
-    table.properties.cellMargin = tablePadding ?? 0;
+    OdtTableBorder? border;
+    for (final owner in owners) {
+      for (final side in owner.style.borders) {
+        if (side == null) continue;
+        if (border != null && border != side) {
+          throw UnsupportedError(
+            'ODT table borders need one solid color and width per table.',
+          );
+        }
+        border = side;
+      }
+    }
+    if (border != null && borderModel != 'collapsing') {
+      throw UnsupportedError(
+        'Visible ODT borders require the collapsing border model.',
+      );
+    }
+    double? tablePadding;
+    for (final owner in owners) {
+      final margins = owner.style.padding;
+      final margin = margins.first;
+      if (margins.any((side) => (side - margin).abs() > 0.000001)) {
+        throw UnsupportedError('Asymmetric ODT cell padding is not supported.');
+      }
+      if (margin * 20 > 32767) {
+        throw UnsupportedError('ODT cell padding exceeds native Word margins.');
+      }
+      if (tablePadding != null && (tablePadding - margin).abs() > 0.000001) {
+        throw UnsupportedError('ODT per-cell padding is not uniform.');
+      }
+      tablePadding ??= margin;
+    }
+    for (final (owner, style) in coveredStyles) {
+      for (var side = 0; side < 4; side++) {
+        if (style.hasPadding[side] &&
+            (style.padding[side] - owner.style.padding[side]).abs() >
+                0.000001) {
+          throw UnsupportedError(
+            'ODT covered-cell padding differs from its merged owner.',
+          );
+        }
+        if (style.hasBorders[side] &&
+            style.borders[side] != owner.style.borders[side]) {
+          throw UnsupportedError(
+            'ODT covered-cell borders differ from their merged owner.',
+          );
+        }
+      }
+    }
+    table.properties
+      ..cellMargin = tablePadding ?? 0
+      // Store the common stroke on tblBorders during DOCX saving. Explicit
+      // cell flags below keep absent and disabled edges from inheriting it.
+      ..borders = border != null;
+    if (border != null) {
+      table.properties
+        ..borderColor = border.color
+        ..borderWidth = border.width;
+    }
     for (var rowIndex = 0; rowIndex < sourceRows.length; rowIndex++) {
       final row = _tableRow(sourceRows[rowIndex].source);
       var column = 0;
@@ -1018,7 +1073,7 @@ final class _OdtReader {
         for (var offset = 0; offset < owner.columnSpan; offset++) {
           width += table.grid[column + offset];
         }
-        if (2 * owner.padding >= width) {
+        if (2 * table.properties.cellMargin >= width) {
           throw UnsupportedError(
             'ODT cell padding consumes its content width.',
           );
@@ -1033,6 +1088,10 @@ final class _OdtReader {
                 ? WmlVMerge.restart
                 : WmlVMerge.cont,
             fillColor: owner.fill,
+            borderTop: _nativeBorder(owner.style, 0, border != null),
+            borderRight: _nativeBorder(owner.style, 1, border != null),
+            borderBottom: _nativeBorder(owner.style, 2, border != null),
+            borderLeft: _nativeBorder(owner.style, 3, border != null),
             width: width,
           ),
         );
@@ -1068,12 +1127,20 @@ final class _OdtReader {
     return row;
   }
 
-  ({String? fill, bool hasFill, double padding, bool hasPadding})
-  _tableCellStyle(XmlElement element) {
+  bool? _nativeBorder(_OdtCellStyle style, int side, bool hasStroke) =>
+      style.borders[side] != null
+      ? true
+      : hasStroke || style.hasBorders[side]
+      ? false
+      : null;
+
+  _OdtCellStyle _tableCellStyle(XmlElement element) {
     String? fill;
     var hasFill = false;
-    var hasPadding = false;
+    final hasPadding = List<bool>.filled(4, false);
     final padding = List<double>.filled(4, 0);
+    final hasBorders = List<bool>.filled(4, false);
+    final borders = List<OdtTableBorder?>.filled(4, null);
     for (final style in styles.styleChain(
       'table-cell',
       _attr(element, 'style-name', odfTableNamespace),
@@ -1096,21 +1163,17 @@ final class _OdtReader {
           },
         });
         _empty(props);
-        // Writer adds explicit border="none" when saving padded cells. These
-        // declarations retain the borderless model; visible borders still
-        // require a separate style/layout mapping rather than being dropped.
-        for (final border in const [
-          'border',
-          'border-top',
-          'border-right',
-          'border-bottom',
-          'border-left',
-        ]) {
-          final value = _attr(props, border, _fo);
-          if (value != null && value != 'none') {
-            throw UnsupportedError(
-              'Visible ODT cell borders are not supported.',
-            );
+        const sides = ['top', 'right', 'bottom', 'left'];
+        final commonBorder = _attr(props, 'border', _fo);
+        if (commonBorder != null) {
+          borders.fillRange(0, 4, _tableBorder(commonBorder));
+          hasBorders.fillRange(0, 4, true);
+        }
+        for (var side = 0; side < 4; side++) {
+          final value = _attr(props, 'border-${sides[side]}', _fo);
+          if (value != null) {
+            borders[side] = _tableBorder(value);
+            hasBorders[side] = true;
           }
         }
         // Resolve shorthands within each inheritance layer. A child shorthand
@@ -1120,14 +1183,13 @@ final class _OdtReader {
         if (common != null) {
           final length = _length(common);
           padding.fillRange(0, padding.length, length);
-          hasPadding = true;
+          hasPadding.fillRange(0, 4, true);
         }
-        const sides = ['top', 'right', 'bottom', 'left'];
         for (var side = 0; side < sides.length; side++) {
           final value = _attr(props, 'padding-${sides[side]}', _fo);
           if (value != null) {
             padding[side] = _length(value);
-            hasPadding = true;
+            hasPadding[side] = true;
           }
         }
         final value = _attr(props, 'background-color', _fo);
@@ -1143,19 +1205,25 @@ final class _OdtReader {
         }
       }
     }
-    final margin = padding.first;
-    if (padding.any((side) => (side - margin).abs() > 0.000001)) {
-      throw UnsupportedError('Asymmetric ODT cell padding is not supported.');
-    }
-    if (margin * 20 > 32767) {
-      throw UnsupportedError('ODT cell padding exceeds native Word margins.');
-    }
-    return (
+    return _OdtCellStyle(
       fill: fill,
       hasFill: hasFill,
-      padding: margin,
+      padding: padding,
       hasPadding: hasPadding,
+      borders: borders,
+      hasBorders: hasBorders,
     );
+  }
+
+  OdtTableBorder? _tableBorder(String value) {
+    if (value == 'none') return null;
+    final parts = value.split(RegExp(r'[ \t\r\n]+'));
+    if (parts.length != 3 ||
+        parts[1] != 'solid' ||
+        !RegExp(r'^#[0-9a-fA-F]{6}$').hasMatch(parts[2])) {
+      throw UnsupportedError('Unsupported visible ODT cell border.');
+    }
+    return OdtTableBorder(_length(parts[0]), parts[2].substring(1));
   }
 
   int _tableSpan(XmlElement element, String name, int maximum) {
@@ -1560,7 +1628,7 @@ final class _OdtTableCell {
     required this.columnSpan,
     required this.rowSpan,
     required this.fill,
-    required this.padding,
+    required this.style,
   });
 
   final XmlElement source;
@@ -1568,7 +1636,25 @@ final class _OdtTableCell {
   final int columnSpan;
   final int rowSpan;
   final String? fill;
-  final double padding;
+  final _OdtCellStyle style;
+}
+
+final class _OdtCellStyle {
+  const _OdtCellStyle({
+    required this.fill,
+    required this.hasFill,
+    required this.padding,
+    required this.hasPadding,
+    required this.borders,
+    required this.hasBorders,
+  });
+
+  final String? fill;
+  final bool hasFill;
+  final List<double> padding;
+  final List<bool> hasPadding;
+  final List<OdtTableBorder?> borders;
+  final List<bool> hasBorders;
 }
 
 final class _RichText {

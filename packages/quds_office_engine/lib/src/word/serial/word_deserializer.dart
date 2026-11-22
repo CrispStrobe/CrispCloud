@@ -112,6 +112,9 @@ class WordDeserializer {
   final Set<WmlTable> _tablesWithOwnBorders = Set<WmlTable>.identity();
   final Set<WmlTable> _tablesWithOwnBorderWidths = Set<WmlTable>.identity();
   final Set<WmlTable> _tablesWithOwnCellMargins = Set<WmlTable>.identity();
+  final Set<WmlTable> _tablesWithOwnDirection = Set<WmlTable>.identity();
+  final Map<WmlTableCell, Map<String, bool?>> _cellBorderValues =
+      Map<WmlTableCell, Map<String, bool?>>.identity();
   final Set<WmlRunProps> _notBold = Set<WmlRunProps>.identity();
   final Set<WmlRunProps> _notItalic = Set<WmlRunProps>.identity();
   final Map<WmlTable, _TableLook> _tableLooks =
@@ -130,6 +133,8 @@ class WordDeserializer {
     _tablesWithOwnBorders.clear();
     _tablesWithOwnBorderWidths.clear();
     _tablesWithOwnCellMargins.clear();
+    _tablesWithOwnDirection.clear();
+    _cellBorderValues.clear();
     _tableLooks.clear();
     _notBold.clear();
     _notItalic.clear();
@@ -1142,6 +1147,7 @@ class WordDeserializer {
   ) {
     final List<WmlInline> inlines = <WmlInline>[];
     XmlElement? formattingChange;
+    String? boundaryRunPropertiesXml;
     var hasOrdinaryRunIdentity = false;
     var hasNonTextContent = false;
     final WmlRun run = WmlRun()..properties.sourcePropertiesXml = '';
@@ -1161,7 +1167,9 @@ class WordDeserializer {
         hasNonTextContent |= !ordinary;
       }
       if (reader.localName == 'rPr') {
-        formattingChange = _readRPr(reader, run.properties);
+        final properties = _readRPr(reader, run.properties);
+        formattingChange = properties.change;
+        boundaryRunPropertiesXml = properties.sourceXml;
       } else if (reader.localName == 't' || reader.localName == 'delText') {
         final String text = _elementText(reader);
         // A PAGE instruction elsewhere in this paragraph must not consume a
@@ -1246,10 +1254,8 @@ class WordDeserializer {
         final boundary = WmlFieldBoundary(
           kind: WmlFieldBoundaryKind.instruction,
           text: instr,
-          runPropertiesXml: _fieldRunProperties(
-            run.properties,
-            formattingChange,
-          ),
+          runPropertiesXml:
+              boundaryRunPropertiesXml ?? run.properties.sourcePropertiesXml,
         );
         inlines.add(boundary);
         _noteFieldInstruction(boundary);
@@ -1272,10 +1278,8 @@ class WordDeserializer {
             sourceXml: XmlDocument(
               root: fldChar,
             ).toXmlString(declaration: false),
-            runPropertiesXml: _fieldRunProperties(
-              run.properties,
-              formattingChange,
-            ),
+            runPropertiesXml:
+                boundaryRunPropertiesXml ?? run.properties.sourcePropertiesXml,
           );
           inlines.add(boundary);
           _noteFieldChar(boundary);
@@ -1396,7 +1400,13 @@ class WordDeserializer {
       run.commentIds.addAll(_openCommentIds);
       inlines.add(run);
     }
-    if (formattingChange != null) {
+    // Field markers have no ordinary text range to own a formatting revision.
+    // Their complete rPr stays on the boundary, keeping unsupported history
+    // opaque through saves instead of turning it into an empty text revision.
+    final onlyFieldBoundaries =
+        inlines.isNotEmpty &&
+        inlines.every((inline) => inline is WmlFieldBoundary);
+    if (formattingChange != null && !onlyFieldBoundaries) {
       if (run.text.isEmpty && inlines.contains(run)) {
         run.properties.hasEmptyFormattingRevision = true;
       }
@@ -2150,23 +2160,6 @@ class WordDeserializer {
     run.text = '';
   }
 
-  // Formatting revisions still belong to the document's existing revision
-  // model. Keep their original XML on field boundaries too: a field-code run
-  // is not an ordinary visible cache run that Zotero may replace or normalize.
-  // Incomplete/ambiguous revision targets retain the existing save guards.
-  static String? _fieldRunProperties(
-    WmlRunProps properties,
-    XmlElement? formattingChange,
-  ) {
-    final source = properties.sourcePropertiesXml;
-    if (formattingChange == null || source == null || source.isEmpty) {
-      return source;
-    }
-    final document = XmlDocument.parse(source);
-    document.root!.addChild(formattingChange.copy());
-    return document.toXmlString(declaration: false);
-  }
-
   bool get _insideToc => _openFields.any((entry) => entry.$2);
 
   void _noteFieldChar(WmlFieldBoundary boundary) {
@@ -2509,8 +2502,12 @@ class WordDeserializer {
     );
   }
 
-  XmlElement? _readRPr(XmlPullReader reader, WmlRunProps props) {
+  ({XmlElement? change, String sourceXml}) _readRPr(
+    XmlPullReader reader,
+    WmlRunProps props,
+  ) {
     final XmlElement node = XmlDocument.readElement(reader);
+    final sourceXml = XmlDocument(root: node).toXmlString(declaration: false);
     final change = node.firstChild(
       'rPrChange',
       namespaceUri: OfficeNamespaces.w,
@@ -2523,7 +2520,7 @@ class WordDeserializer {
       props.sourcePropertiesXml!,
     )..next();
     _parseRPr(source, props);
-    return change;
+    return (change: change, sourceXml: sourceXml);
   }
 
   void _parseRPr(XmlPullReader reader, WmlRunProps props) {
@@ -2749,7 +2746,9 @@ class WordDeserializer {
       if (reader.eventType != XmlEventType.startElement) {
         continue;
       }
-      if (reader.localName == 'tblPr') {
+      if (reader.localName == 'tblPr' &&
+          reader.namespaceUri == OfficeNamespaces.w &&
+          reader.depth == depth + 1) {
         final XmlElement source = XmlDocument.readElement(reader);
         final String xml = XmlDocument(
           root: source,
@@ -2790,7 +2789,9 @@ class WordDeserializer {
           reader.depth != depth + 1) {
         continue;
       }
-      if (reader.localName == 'tblStyle') {
+      if (reader.localName == 'tblStyle' &&
+          nativeContainer &&
+          reader.namespaceUri == OfficeNamespaces.w) {
         table.properties.styleId = reader.getAttribute(
           'val',
           namespaceUri: OfficeNamespaces.w,
@@ -2802,7 +2803,10 @@ class WordDeserializer {
         }
       } else if (reader.localName == 'tblLook') {
         _tableLooks[table] = _TableLook.read(reader);
-      } else if (reader.localName == 'bidiVisual') {
+      } else if (reader.localName == 'bidiVisual' &&
+          nativeContainer &&
+          reader.namespaceUri == OfficeNamespaces.w) {
+        _tablesWithOwnDirection.add(table);
         table.properties.rightToLeft = _onOff(
           reader.getAttribute('val', namespaceUri: OfficeNamespaces.w),
         );
@@ -2891,6 +2895,29 @@ class WordDeserializer {
           ? null
           : _TableStyle.resolve(styleId, styles);
       final marginStyle = styleId == null ? defaultMarginStyle : style;
+      if (!_tablesWithOwnDirection.contains(table)) {
+        table.properties.rightToLeft = marginStyle?.rightToLeft ?? false;
+      }
+      // Word's left/start and right/end declarations describe leading and
+      // trailing edges. Resolve them only after effective table direction is
+      // known; native cells and the renderer store physical left/right sides.
+      for (final row in table.rows) {
+        for (final cell in row.cells) {
+          final borders = _cellBorderValues.remove(cell);
+          if (borders == null) continue;
+          final leading = borders.containsKey('start')
+              ? borders['start']
+              : borders['left'];
+          final trailing = borders.containsKey('end')
+              ? borders['end']
+              : borders['right'];
+          cell
+            ..borderTop = borders['top']
+            ..borderBottom = borders['bottom']
+            ..borderLeft = table.properties.rightToLeft ? trailing : leading
+            ..borderRight = table.properties.rightToLeft ? leading : trailing;
+        }
+      }
       if (!_tablesWithOwnCellMargins.contains(table)) {
         if (marginStyle?.cellMargin case final margin?) {
           table.properties.cellMargin = margin;
@@ -2997,6 +3024,8 @@ class WordDeserializer {
     _tablesWithOwnBorders.clear();
     _tablesWithOwnBorderWidths.clear();
     _tablesWithOwnCellMargins.clear();
+    _tablesWithOwnDirection.clear();
+    _cellBorderValues.clear();
     _tableLooks.clear();
   }
 
@@ -3116,9 +3145,21 @@ class WordDeserializer {
       return cell;
     }
     final int depth = reader.depth;
+    int? nativePropertiesDepth;
     while (reader.next() && reader.depth >= depth) {
+      if (reader.eventType == XmlEventType.endElement &&
+          nativePropertiesDepth != null &&
+          reader.depth == nativePropertiesDepth - 1) {
+        nativePropertiesDepth = null;
+      }
       if (reader.eventType != XmlEventType.startElement) {
         continue;
+      }
+      if (reader.localName == 'tcPr' &&
+          reader.namespaceUri == OfficeNamespaces.w &&
+          reader.depth == depth + 1 &&
+          !reader.isEmptyElement) {
+        nativePropertiesDepth = reader.depth;
       }
       if (reader.localName == 'tcW' &&
           reader.namespaceUri == OfficeNamespaces.w &&
@@ -3152,7 +3193,10 @@ class WordDeserializer {
           namespaceUri: OfficeNamespaces.w,
         );
         cell.vMerge = val == 'restart' ? WmlVMerge.restart : WmlVMerge.cont;
-      } else if (reader.localName == 'tcBorders') {
+      } else if (reader.localName == 'tcBorders' &&
+          reader.namespaceUri == OfficeNamespaces.w &&
+          nativePropertiesDepth != null &&
+          reader.depth == nativePropertiesDepth + 1) {
         _readTcBorders(reader, cell);
       } else if (reader.localName == 'shd') {
         final String? fill = reader.getAttribute(
@@ -3191,34 +3235,43 @@ class WordDeserializer {
   }
 
   void _readTcBorders(XmlPullReader reader, WmlTableCell cell) {
-    if (reader.isEmptyElement) {
-      return;
+    if (_cellBorderValues.containsKey(cell)) {
+      throw const FormatException('Duplicate native cell border container.');
     }
-    final int depth = reader.depth;
-    while (reader.next() && reader.depth >= depth) {
-      if (reader.eventType != XmlEventType.startElement) {
+    final source = XmlDocument.readElement(reader);
+    final values = <String, bool?>{};
+    for (final border in source.childElements) {
+      if (border.namespaceUri != OfficeNamespaces.w ||
+          !const {
+            'top',
+            'bottom',
+            'left',
+            'right',
+            'start',
+            'end',
+          }.contains(border.localName)) {
         continue;
       }
-      final String? val = reader.getAttribute(
+      if (values.containsKey(border.localName) ||
+          border.childElements.isNotEmpty) {
+        throw const FormatException(
+          'Ambiguous native cell border declaration.',
+        );
+      }
+      final value = border.getAttribute(
         'val',
         namespaceUri: OfficeNamespaces.w,
       );
-      final bool? edge = switch (val) {
+      values[border.localName] = switch (value) {
         'nil' || 'none' => false,
         null => null,
         _ => true,
       };
-      switch (reader.localName) {
-        case 'top':
-          cell.borderTop = edge;
-        case 'bottom':
-          cell.borderBottom = edge;
-        case 'left':
-          cell.borderLeft = edge;
-        case 'right':
-          cell.borderRight = edge;
-      }
     }
+    // MS-OI29500 14.4.1/14.4.5: modern start/end win over their legacy
+    // left/right siblings independent of XML order. Physical mapping waits
+    // for the table's direct/inherited bidiVisual value in _applyTableStyles.
+    _cellBorderValues[cell] = values;
   }
 
   void _readSectPr(
@@ -4626,6 +4679,9 @@ class _TableStyle {
   bool cellMarginsDeclared = false;
   double? cellMargin;
 
+  /// Null inherits; explicit false overrides a right-to-left parent.
+  bool? rightToLeft;
+
   /// The style has its own `w:tblPr/w:tblBorders`.
   bool bordersDeclared = false;
 
@@ -4659,6 +4715,7 @@ class _TableStyle {
       ..cellMargin = style.cellMarginsDeclared
           ? style.cellMargin
           : parent.cellMargin
+      ..rightToLeft = style.rightToLeft ?? parent.rightToLeft
       ..bordersDeclared = style.bordersDeclared || parent.bordersDeclared
       ..borderColor = style.bordersDeclared
           ? style.borderColor
@@ -4758,6 +4815,11 @@ class _TableStyle {
           reader.depth == styleDepth + 1 &&
           !reader.isEmptyElement) {
         tablePropertiesDepth = reader.depth;
+      } else if (name == 'bidiVisual' &&
+          reader.namespaceUri == OfficeNamespaces.w &&
+          tablePropertiesDepth != null &&
+          reader.depth == tablePropertiesDepth + 1) {
+        current.rightToLeft = WordDeserializer._onOff(val);
       } else if (name == 'tblCellMar' &&
           reader.namespaceUri == OfficeNamespaces.w &&
           tablePropertiesDepth != null &&

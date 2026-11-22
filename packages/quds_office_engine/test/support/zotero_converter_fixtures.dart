@@ -89,17 +89,17 @@ void expectConverterSnapshot(
               '$zoteroConverterFixtureRoot/original/$kind.expected.json',
             ).readAsStringSync(),
           )
-          as Map<String, dynamic>;
+          as Map<String, Object?>;
   if (refreshedCitations.isNotEmpty) {
     final fields = (expected['fields'] as List<Object?>)
-        .cast<Map<String, dynamic>>();
+        .cast<Map<String, Object?>>();
     final text = (expected['text'] as List<Object?>).cast<String>();
     final replacements = <String, String>{};
     for (final entry in refreshedCitations.entries) {
       final matches = fields
           .where(
             (field) =>
-                (field['metadata'] as Map<String, dynamic>)['citationID'] ==
+                (field['metadata'] as Map<String, Object?>)['citationID'] ==
                 entry.key,
           )
           .toList();
@@ -131,8 +131,8 @@ void expectConverterSnapshot(
       );
       replacements[oldText] = entry.value;
       field['text'] = entry.value;
-      final metadata = field['metadata'] as Map<String, dynamic>;
-      final properties = metadata['properties'] as Map<String, dynamic>;
+      final metadata = field['metadata'] as Map<String, Object?>;
+      final properties = metadata['properties'] as Map<String, Object?>;
       properties['plainCitation'] = entry.value;
       properties['formattedCitation'] = entry.value;
     }
@@ -143,8 +143,8 @@ void expectConverterSnapshot(
       literal,
       (match) => replacements[match.group(0)]!,
     );
-    final paragraphs = expected['paragraphs'] as Map<String, dynamic>;
-    for (final paragraph in paragraphs.values.cast<Map<String, dynamic>>()) {
+    final paragraphs = expected['paragraphs'] as Map<String, Object?>;
+    for (final paragraph in paragraphs.values.cast<Map<String, Object?>>()) {
       paragraph['text'] = refreshed(paragraph['text'] as String);
     }
     expected['text'] = text.map(refreshed).toList();

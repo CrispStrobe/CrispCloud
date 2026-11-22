@@ -1,0 +1,617 @@
+{
+  "schemaVersion": 1,
+  "suite": "vba-strreverse",
+  "dialect": "vba-word",
+  "cases": [
+    {
+      "id": "empty",
+      "feature": "StrReverse",
+      "source": "Sub Main()\n  ThisDocument.Tables(1).Cell(1, 1).Range.Text = StrReverse(\"\")\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": ""
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/strreverse-function"
+        ],
+        "note": "Hand-authored values derived from the VBA character-order, empty-input and Null contract. No installed Office host was executed."
+      }
+    },
+    {
+      "id": "single",
+      "feature": "StrReverse",
+      "source": "Sub Main()\n  ThisDocument.Tables(1).Cell(1, 1).Range.Text = StrReverse(\"Q\")\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "Q"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/strreverse-function"
+        ],
+        "note": "Hand-authored values derived from the VBA character-order, empty-input and Null contract. No installed Office host was executed."
+      }
+    },
+    {
+      "id": "ascii",
+      "feature": "StrReverse",
+      "source": "Sub Main()\n  ThisDocument.Tables(1).Cell(1, 1).Range.Text = StrReverse(\"ABCDE\")\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "EDCBA"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/strreverse-function"
+        ],
+        "note": "Hand-authored values derived from the VBA character-order, empty-input and Null contract. No installed Office host was executed."
+      }
+    },
+    {
+      "id": "case-insensitive-name",
+      "feature": "StrReverse",
+      "source": "Sub Main()\n  ThisDocument.Tables(1).Cell(1, 1).Range.Text = sTrReVeRsE(\"Report 42\")\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "24 tropeR"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/strreverse-function"
+        ],
+        "note": "Hand-authored values derived from the VBA character-order, empty-input and Null contract. No installed Office host was executed."
+      }
+    },
+    {
+      "id": "spaces",
+      "feature": "StrReverse",
+      "source": "Sub Main()\n  ThisDocument.Tables(1).Cell(1, 1).Range.Text = StrReverse(\" ab \")\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": " ba "
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/strreverse-function"
+        ],
+        "note": "Hand-authored values derived from the VBA character-order, empty-input and Null contract. No installed Office host was executed."
+      }
+    },
+    {
+      "id": "doubled-quote",
+      "feature": "StrReverse",
+      "source": "Sub Main()\n  ThisDocument.Tables(1).Cell(1, 1).Range.Text = StrReverse(\"a\"\"b\")\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "b\"a"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/strreverse-function"
+        ],
+        "note": "Hand-authored values derived from the VBA character-order, empty-input and Null contract. No installed Office host was executed."
+      }
+    },
+    {
+      "id": "bmp",
+      "feature": "StrReverse",
+      "source": "Sub Main()\n  ThisDocument.Tables(1).Cell(1, 1).Range.Text = StrReverse(\"éø\")\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "øé"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/strreverse-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-macros-details.md#reversing-source-strings"
+        ],
+        "note": "Quds UTF-16 units, strict typing, diagnostics and callable restrictions are explicit dialect expectations, not observed Office-host equivalence."
+      }
+    },
+    {
+      "id": "arabic-code-units",
+      "feature": "StrReverse",
+      "source": "Sub Main()\n  ThisDocument.Tables(1).Cell(1, 1).Range.Text = StrReverse(\"مرحبا\")\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "ابحرم"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/strreverse-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-macros-details.md#reversing-source-strings"
+        ],
+        "note": "Quds UTF-16 units, strict typing, diagnostics and callable restrictions are explicit dialect expectations, not observed Office-host equivalence."
+      }
+    },
+    {
+      "id": "combining-code-units",
+      "feature": "StrReverse",
+      "source": "Sub Main()\n  ThisDocument.Tables(1).Cell(1, 1).Range.Text = StrReverse(\"a\" & ChrW(769) & \"b\")\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "b́a"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/strreverse-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-macros-details.md#reversing-source-strings"
+        ],
+        "note": "Quds UTF-16 units, strict typing, diagnostics and callable restrictions are explicit dialect expectations, not observed Office-host equivalence."
+      }
+    },
+    {
+      "id": "string-variant",
+      "feature": "StrReverse",
+      "source": "Sub Main()\n  ThisDocument.Tables(1).Cell(1, 1).Range.Text = StrReverse(CVar(\"ABC\"))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "CBA"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/strreverse-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-macros-details.md#reversing-source-strings"
+        ],
+        "note": "Quds UTF-16 units, strict typing, diagnostics and callable restrictions are explicit dialect expectations, not observed Office-host equivalence."
+      }
+    },
+    {
+      "id": "empty-variant",
+      "feature": "StrReverse",
+      "source": "Sub Main()\n  ThisDocument.Tables(1).Cell(1, 1).Range.Text = StrReverse(Empty)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": ""
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/strreverse-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-macros-details.md#reversing-source-strings"
+        ],
+        "note": "Quds UTF-16 units, strict typing, diagnostics and callable restrictions are explicit dialect expectations, not observed Office-host equivalence."
+      }
+    },
+    {
+      "id": "explicit-numeric-conversion",
+      "feature": "StrReverse",
+      "source": "Sub Main()\n  ThisDocument.Tables(1).Cell(1, 1).Range.Text = StrReverse(CStr(123))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "321"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/strreverse-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-macros-details.md#reversing-source-strings"
+        ],
+        "note": "Quds UTF-16 units, strict typing, diagnostics and callable restrictions are explicit dialect expectations, not observed Office-host equivalence."
+      }
+    },
+    {
+      "id": "surrogate-length",
+      "feature": "StrReverse",
+      "source": "Sub Main()\n  ThisDocument.Tables(1).Cell(1, 1).Range.Text = CStr(Len(StrReverse(\"A😀B\")))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "4"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/strreverse-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-macros-details.md#reversing-source-strings"
+        ],
+        "note": "Quds UTF-16 units, strict typing, diagnostics and callable restrictions are explicit dialect expectations, not observed Office-host equivalence."
+      }
+    },
+    {
+      "id": "low-surrogate-first",
+      "feature": "StrReverse",
+      "source": "Sub Main()\n  ThisDocument.Tables(1).Cell(1, 1).Range.Text = CStr(AscW(Mid$(StrReverse(\"A😀B\"), 2, 1)))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "-8704"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/strreverse-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-macros-details.md#reversing-source-strings"
+        ],
+        "note": "Quds UTF-16 units, strict typing, diagnostics and callable restrictions are explicit dialect expectations, not observed Office-host equivalence."
+      }
+    },
+    {
+      "id": "high-surrogate-second",
+      "feature": "StrReverse",
+      "source": "Sub Main()\n  ThisDocument.Tables(1).Cell(1, 1).Range.Text = CStr(AscW(Mid$(StrReverse(\"A😀B\"), 3, 1)))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "-10179"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/strreverse-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-macros-details.md#reversing-source-strings"
+        ],
+        "note": "Quds UTF-16 units, strict typing, diagnostics and callable restrictions are explicit dialect expectations, not observed Office-host equivalence."
+      }
+    },
+    {
+      "id": "double-reverse",
+      "feature": "StrReverse",
+      "source": "Sub Main()\n  ThisDocument.Tables(1).Cell(1, 1).Range.Text = StrReverse(StrReverse(\"A😀B\"))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "A😀B"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/strreverse-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-macros-details.md#reversing-source-strings"
+        ],
+        "note": "Quds UTF-16 units, strict typing, diagnostics and callable restrictions are explicit dialect expectations, not observed Office-host equivalence."
+      }
+    },
+    {
+      "id": "missing-argument",
+      "feature": "StrReverse refusal",
+      "source": "Sub Main()\n  ThisDocument.Tables(1).Cell(1, 1).Range.Text = StrReverse()\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 50
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/strreverse-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-macros-details.md#reversing-source-strings"
+        ],
+        "note": "Quds UTF-16 units, strict typing, diagnostics and callable restrictions are explicit dialect expectations, not observed Office-host equivalence."
+      }
+    },
+    {
+      "id": "too-many-arguments",
+      "feature": "StrReverse refusal",
+      "source": "Sub Main()\n  ThisDocument.Tables(1).Cell(1, 1).Range.Text = StrReverse(\"a\", \"b\")\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 50
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/strreverse-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-macros-details.md#reversing-source-strings"
+        ],
+        "note": "Quds UTF-16 units, strict typing, diagnostics and callable restrictions are explicit dialect expectations, not observed Office-host equivalence."
+      }
+    },
+    {
+      "id": "number",
+      "feature": "StrReverse refusal",
+      "source": "Sub Main()\n  ThisDocument.Tables(1).Cell(1, 1).Range.Text = StrReverse(1)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 61
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/strreverse-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-macros-details.md#reversing-source-strings"
+        ],
+        "note": "Quds UTF-16 units, strict typing, diagnostics and callable restrictions are explicit dialect expectations, not observed Office-host equivalence."
+      }
+    },
+    {
+      "id": "boolean",
+      "feature": "StrReverse refusal",
+      "source": "Sub Main()\n  ThisDocument.Tables(1).Cell(1, 1).Range.Text = StrReverse(True)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 61
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/strreverse-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-macros-details.md#reversing-source-strings"
+        ],
+        "note": "Quds UTF-16 units, strict typing, diagnostics and callable restrictions are explicit dialect expectations, not observed Office-host equivalence."
+      }
+    },
+    {
+      "id": "numeric-variant",
+      "feature": "StrReverse refusal",
+      "source": "Sub Main()\n  ThisDocument.Tables(1).Cell(1, 1).Range.Text = StrReverse(CVar(1))\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 61
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/strreverse-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-macros-details.md#reversing-source-strings"
+        ],
+        "note": "Quds UTF-16 units, strict typing, diagnostics and callable restrictions are explicit dialect expectations, not observed Office-host equivalence."
+      }
+    },
+    {
+      "id": "null",
+      "feature": "StrReverse refusal",
+      "source": "Sub Main()\n  ThisDocument.Tables(1).Cell(1, 1).Range.Text = StrReverse(Null)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_invalid_use_of_null",
+          "line": 2,
+          "column": 61
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/strreverse-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-macros-details.md#reversing-source-strings"
+        ],
+        "note": "Quds UTF-16 units, strict typing, diagnostics and callable restrictions are explicit dialect expectations, not observed Office-host equivalence."
+      }
+    },
+    {
+      "id": "null-variant",
+      "feature": "StrReverse refusal",
+      "source": "Sub Main()\n  ThisDocument.Tables(1).Cell(1, 1).Range.Text = StrReverse(CVar(Null))\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_invalid_use_of_null",
+          "line": 2,
+          "column": 61
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/strreverse-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-macros-details.md#reversing-source-strings"
+        ],
+        "note": "Quds UTF-16 units, strict typing, diagnostics and callable restrictions are explicit dialect expectations, not observed Office-host equivalence."
+      }
+    },
+    {
+      "id": "named-argument",
+      "feature": "StrReverse refusal",
+      "source": "Sub Main()\n  ThisDocument.Tables(1).Cell(1, 1).Range.Text = StrReverse(Expression:=\"abc\")\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 2,
+          "column": 61
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/strreverse-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-macros-details.md#reversing-source-strings"
+        ],
+        "note": "Quds UTF-16 units, strict typing, diagnostics and callable restrictions are explicit dialect expectations, not observed Office-host equivalence."
+      }
+    },
+    {
+      "id": "omitted-arguments",
+      "feature": "StrReverse refusal",
+      "source": "Sub Main()\n  ThisDocument.Tables(1).Cell(1, 1).Range.Text = StrReverse(,)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 2,
+          "column": 61
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/strreverse-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-macros-details.md#reversing-source-strings"
+        ],
+        "note": "Quds UTF-16 units, strict typing, diagnostics and callable restrictions are explicit dialect expectations, not observed Office-host equivalence."
+      }
+    },
+    {
+      "id": "unsupported-string-suffix",
+      "feature": "StrReverse refusal",
+      "source": "Sub Main()\n  ThisDocument.Tables(1).Cell(1, 1).Range.Text = StrReverse$(\"abc\")\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 2,
+          "column": 60
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/strreverse-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-macros-details.md#reversing-source-strings"
+        ],
+        "note": "Quds UTF-16 units, strict typing, diagnostics and callable restrictions are explicit dialect expectations, not observed Office-host equivalence."
+      }
+    }
+  ]
+}

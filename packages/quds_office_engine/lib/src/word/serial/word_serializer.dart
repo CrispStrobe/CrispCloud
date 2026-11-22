@@ -1645,9 +1645,15 @@ class WordSerializer {
         }
         final borders = <String, bool?>{
           'top': cell.borderTop,
-          'left': cell.borderLeft,
+          // Transitional left/right have the same leading/trailing meaning
+          // as start/end. Invert the physical native sides for RTL tables.
+          'left': table.properties.rightToLeft
+              ? cell.borderRight
+              : cell.borderLeft,
           'bottom': cell.borderBottom,
-          'right': cell.borderRight,
+          'right': table.properties.rightToLeft
+              ? cell.borderLeft
+              : cell.borderRight,
         };
         if (borders.values.any((edge) => edge != null)) {
           w.writeStartElement('tcBorders', prefix: 'w');

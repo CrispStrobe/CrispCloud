@@ -145,6 +145,7 @@ const _stringIntrinsics = <String>{
   'instr',
   'instrrev',
   'strcomp',
+  'strreverse',
   'replace',
   'trim',
   r'trim$',
@@ -4325,6 +4326,12 @@ class _Checker {
       }
       return _Kind.string;
     }
+    if (name == 'strreverse') {
+      _count(expression.token, arguments, 1);
+      final argument = arguments.single;
+      _compatible(_Kind.string, _expression(argument), argument.token);
+      return _Kind.string;
+    }
     if (name == 'strcomp') {
       if (arguments.length < 2 || arguments.length > 3) {
         context.type(
@@ -6863,6 +6870,17 @@ class _Evaluator {
     final name = expression.token.lower;
     if (name == 'join') return _stringJoin(expression, arguments);
     if (name == 'strcomp') return _stringCompare(expression, arguments);
+    if (name == 'strreverse') {
+      final token = expression.arguments.single.token;
+      final value = arguments.single;
+      if (value == _VariantState.nullValue) _invalidNull(token);
+      final text = value == _VariantState.empty ? '' : _string(value, token);
+      // Reverse the shared source language's UTF-16 units, not graphemes.
+      // Charge before constructing storage, even for unchanged/empty output.
+      // Unpaired surrogates remain source-only under native text validation.
+      _charge(text.length, expression.token);
+      return String.fromCharCodes(text.codeUnits.reversed);
+    }
     if (name == 'space' ||
         name == r'space$' ||
         name == 'string' ||

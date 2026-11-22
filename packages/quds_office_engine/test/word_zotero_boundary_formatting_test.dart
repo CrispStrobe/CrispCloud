@@ -228,6 +228,7 @@ void main() {
 
       test('$story actual DOCX save $cycle supports transactional Refresh', () {
         var document = _converted(story, cycle);
+        expectConverterSnapshot(document, story);
         final before = _snapshot(document);
         final properties = _boundaryProperties(document);
         final codeProperties = _codeProperties(document);
@@ -794,11 +795,88 @@ void main() {
         throwsUnsupportedError,
       );
       expect(_snapshot(document), before);
-      final reopened = _reopen(document);
-      expect(_boundaryProperties(reopened), _boundaryProperties(document));
-      expect(WordZotero.fields(reopened).single.canEdit, isFalse);
+      var reopened = document;
+      for (var cycle = 0; cycle < 3; cycle++) {
+        reopened = _reopen(reopened);
+        expect(_boundaryProperties(reopened), _boundaryProperties(document));
+        expect(WordZotero.fields(reopened).single.canEdit, isFalse);
+      }
     });
   }
+
+  const revisionProperties =
+      '<w:rPr xmlns:w="${OfficeNamespaces.w}"><w:b/>'
+      '<w:rPrChange w:id="13" w:author="Original reviewer" '
+      'w:date="2026-11-19T10:00:00Z"><w:rPr><w:i/></w:rPr>'
+      '</w:rPrChange></w:rPr>';
+  for (final kind in WmlFieldBoundaryKind.values) {
+    test(
+      '${kind.name} formatting history remains opaque after repeated saves',
+      () {
+        var document = _synthetic();
+        final paragraph = document.paragraphs.single;
+        for (var i = 0; i < paragraph.inlines.length; i++) {
+          final inline = paragraph.inlines[i];
+          if (inline is! WmlFieldBoundary || inline.kind != kind) continue;
+          paragraph.inlines[i] = WmlFieldBoundary(
+            kind: inline.kind,
+            text: inline.text,
+            sourceXml: inline.sourceXml,
+            runPropertiesXml: revisionProperties,
+          );
+        }
+        final properties = _boundaryProperties(document);
+        for (var cycle = 0; cycle < 3; cycle++) {
+          document = _reopen(document);
+          expect(_boundaryProperties(document), properties);
+          expect(document.revisions, isEmpty);
+          expect(WordFieldSpans.unbalanced(document), isEmpty);
+          expect(WordZotero.fields(document).single.opaqueMetadata, isTrue);
+          expect(WordZotero.fields(document).single.canEdit, isFalse);
+          expect(() => _session(document), throwsUnsupportedError);
+        }
+      },
+    );
+  }
+
+  test('a mixed text and marker run retains both formatting histories', () {
+    final package = OpcPackage.create(OpcPackageKind.word);
+    package
+        .getPart('/word/document.xml')!
+        .writeText(
+          '<w:document xmlns:w="${OfficeNamespaces.w}"><w:body><w:p>'
+          '<w:r>$revisionProperties<w:t xml:space="preserve">Before </w:t>'
+          '<w:fldChar w:fldCharType="begin"/></w:r>'
+          '<w:r><w:instrText xml:space="preserve">${_citation().fieldInstruction}'
+          '</w:instrText></w:r><w:r><w:fldChar w:fldCharType="separate"/></w:r>'
+          '<w:r><w:t>(Original)</w:t></w:r>'
+          '<w:r><w:fldChar w:fldCharType="end"/></w:r>'
+          '<w:r><w:t xml:space="preserve"> After</w:t></w:r>'
+          '</w:p><w:sectPr/></w:body></w:document>',
+        );
+    var document = WordDeserializer().read(package);
+    final properties = _boundaryProperties(document);
+    for (var cycle = 0; cycle < 3; cycle++) {
+      final revision = document.revisions.single;
+      expect(revision.kind, WmlRevisionKind.runFormat);
+      expect(revision.author, 'Original reviewer');
+      expect(revision.displayText, 'Before ');
+      expect(_boundaryProperties(document), properties);
+      expect(document.paragraphs.single.text, 'Before (Original) After');
+      expect(WordZotero.fields(document).single.canEdit, isFalse);
+      document = _reopen(document);
+    }
+    WordRevisions.reject(document, document.revisions.single);
+    final firstRun = document.paragraphs.single.inlines
+        .whereType<WmlRun>()
+        .first;
+    expect(firstRun.properties.bold, isFalse);
+    expect(firstRun.properties.italic, isTrue);
+    document = _reopen(document);
+    expect(document.revisions, isEmpty);
+    expect(_boundaryProperties(document), properties);
+    expect(WordZotero.fields(document).single.canEdit, isFalse);
+  });
 
   for (final kind in [
     WmlFieldBoundaryKind.begin,

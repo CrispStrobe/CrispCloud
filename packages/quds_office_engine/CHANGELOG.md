@@ -4,6 +4,53 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Accept separately named visited/unvisited ODT hyperlink styles when resolved
+  supported formatting and inheritance state match across all script slots.
+  Preserve nullable fallback and explicit-property distinctions so child spans
+  cannot reveal a hidden difference. Keep actual visited-state differences,
+  missing styles and unsupported formatting guarded. Add 20 focused regression
+  cases for multilingual links, adjacent active Zotero fields, DOCX persistence
+  and refusal boundaries. This increment is source-reviewed; executable
+  qualification remains pending after workspace exhaustion. See the
+  [continuation record](../../docs/validation/zotero-link-equivalence-20261122/README.md).
+
+- Add bounded VBA `StrReverse` for source-known text in Word, Excel and
+  PowerPoint. Reverse UTF-16 code units with once-only argument evaluation,
+  explicit Empty/Null handling, strict String payloads and preallocation work
+  accounting. Existing native text guards reject malformed UTF-16 at publication.
+  Regression tests are authored; this increment's execution status and exact
+  compatibility boundary are recorded in
+  [the source-text record](../../docs/validation/word-vba-source-text-20261122/README.md).
+
+- Preserve supported visible table borders in native Zotero ODT import and
+  explicit editable export: one solid RGB stroke per table, exact eighth-point
+  widths from 0.25 to 12 pt, and independent cell sides. Resolve inherited
+  shorthands, explicit off edges, merged ownership and nested tables without
+  changing uniform padding. Retain active citations through native Refresh and
+  repeated DOCX/ODT saves. The bounded ODT reader guards mixed strokes, visible
+  separating borders and conflicting covered-cell overrides; editable output
+  checks the native modeled stroke and refuses right-to-left table column order
+  without changing the source or active fields. Supported right-to-left
+  paragraphs inside left-to-right tables remain distinct. Three cases pass six
+  actual LibreOffice saves and twelve paired native DOCX/ODT cycles with all 376
+  captured engine inputs unchanged. See the
+  [border interoperability record](../../docs/validation/zotero-table-borders-20261122/README.md).
+
+- Preserve Word cell borders stored as logical `start`/`end`, giving those names
+  precedence over legacy `left`/`right` independently of XML order. Resolve
+  effective table direction from default/named styles and direct overrides
+  before mapping to physical sides, and apply the inverse mapping on DOCX save.
+  Keep absent edges distinct from explicit off (`nil`/`none`); guard namespace and
+  direct-child ownership. The retained Writer DOCX cell now independently
+  retains all four source borders. Arbitrary external DOCX per-cell strokes and
+  styles remain outside this native common-stroke qualification.
+
+- Preserve complete run-property XML, including opaque formatting revisions,
+  on native Word field boundaries through repeated DOCX saves. Keep those
+  fields guarded instead of discarding their history or creating empty text
+  revisions. Ordinary text retains its existing formatting review behavior,
+  including text that originally shared a run with a field marker.
+
 - Keep bounded LibreOffice-formatted Zotero DOCX fields editable while
   preserving their raw instruction/boundary formatting and empty code runs.
   Refresh or unlink empty results using cached-result or surrounding text
