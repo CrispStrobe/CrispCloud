@@ -212,7 +212,8 @@ def check_case(source: Path, out_dir: Path) -> dict[str, object]:
         "footnote_count_matches": len(source_real) == len(word_real),
         "footnote_text_preserved": [n["text"] for n in source_real]
         == [n["text"] for n in word_real],
-        "footnote_refs_present": all(n["has_footnote_ref"] for n in word_real),
+        "footnote_ref_forms_preserved": [n["has_footnote_ref"] for n in source_real]
+        == [n["has_footnote_ref"] for n in word_real],
         "separator_preserved": (
             not any(n["type"] == "separator" for n in source_notes)
             or any(n["type"] == "separator" for n in word_notes)

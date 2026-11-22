@@ -128,3 +128,35 @@ passed 415 cases in seven focused VBA suites, including its actual BAS
 CLI compile/validate/run/replay test. The guarded mirror verifies all
 3,401 tracked files. The Word roundtrip results above are independent of
 this engine-only VBA gate.
+
+## Broader converter and VBA recheck
+
+CrispCloud's guarded mirror advanced to CrispOffice
+`4cc604810fb2f41ac7ba04cbed65cb76300bff59`, the merge of PR #382. The
+mirror verifies 3,435 tracked files. This intake includes the editable Zotero
+converter paths and VBA `Split`. PR #383 still conflicts with that upstream
+main in Mail account navigation and related tests. Its `Split` implementation
+is already present through the accepted converter merge.
+
+The Mac passed 1,231 engine cases and 125 editor cases. These include the
+`Split` BAS CLI, conformance, editor citation controls, import and refresh,
+and the long adjacent citation chain. A separate run verified the 15 external
+app scenarios individually:
+
+- Installed LibreOffice performed two saves each from native DOCX and native
+  ODT for body, table-cell, and footnote citations. All 12 fresh files matched
+  the retained semantic snapshot, including colors, note ownership, editable
+  fields, and preferences. They also matched after a CrispOffice DOCX reopen.
+- Installed Word saved three matching story fixtures. Both citations in each
+  file retained exact metadata and cached text, remained editable, and stayed
+  in their original story with balanced fields.
+
+The Word verifier saved, reopened, and rendered all 15 staged documents.
+Six of 12 general corpus files passed every strict comparison after replaying
+the corrected note marker check on the saved output. The other six exposed
+dynamic reference caches, markup compatibility choices, content control
+text extraction differences, note text extraction, or removed separator
+stubs. The separate citation story set preserved its six editable fields even
+though it also triggered strict PDF text or separator comparisons. These
+comparisons distinguish an external app or verifier difference from a lost
+citation. Word showed zero open test fixtures after both batches.
