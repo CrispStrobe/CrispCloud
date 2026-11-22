@@ -1,0 +1,1675 @@
+{
+  "schemaVersion": 1,
+  "suite": "vba-word-text-selectors",
+  "dialect": "vba-word",
+  "cases": [
+    {
+      "id": "left-named-body",
+      "feature": "Word text and named selectors",
+      "source": "Sub Main()\n  ThisDocument.Paragraphs(Index:=2).Range.InsertBefore Left(\"Report\", 3)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 1,
+              "start": 0,
+              "end": 0,
+              "text": "Rep"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/left-function",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item"
+        ],
+        "note": "Independently authored substring and one-based selector expectations from the cited Microsoft contracts. Native plan translation is the bounded Quds mapping; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "right-named-body-item",
+      "feature": "Word text and named selectors",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs.Item(Index:=3).Range.InsertBefore Right(\"Report\", 4)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 2,
+              "start": 0,
+              "end": 0,
+              "text": "port"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/right-function",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item"
+        ],
+        "note": "Independently authored substring and one-based selector expectations from the cited Microsoft contracts. Native plan translation is the bounded Quds mapping; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "mid-explicit-length",
+      "feature": "Word text and named selectors",
+      "source": "Sub Main()\n  ThisDocument.Paragraphs(Index:=1).Range.InsertBefore Mid(\"Report\", 2, 3)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "epo"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-function",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item"
+        ],
+        "note": "Independently authored substring and one-based selector expectations from the cited Microsoft contracts. Native plan translation is the bounded Quds mapping; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "mid-omitted-length",
+      "feature": "Word text and named selectors",
+      "source": "Sub Main()\n  ThisDocument.Paragraphs.Item(Index:=1).Range.InsertBefore Mid(\"Report\", 4)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "ort"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-function",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item"
+        ],
+        "note": "Independently authored substring and one-based selector expectations from the cited Microsoft contracts. Native plan translation is the bounded Quds mapping; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "zero-and-clamped-lengths",
+      "feature": "Word text and named selectors",
+      "source": "Sub Main()\n  ThisDocument.Paragraphs(Index:=1).Range.InsertBefore \"[\" & Left(\"abc\", 0) & \"]\"\n  ThisDocument.Paragraphs(Index:=1).Range.InsertBefore \"[\" & Right(\"abc\", 0) & \"]\"\n  ThisDocument.Paragraphs(Index:=1).Range.InsertBefore Left(\"abc\", 2147483647)\n  ThisDocument.Paragraphs(Index:=1).Range.InsertBefore Right(\"abc\", 2147483647)\n  ThisDocument.Paragraphs(Index:=1).Range.InsertBefore Mid(\"abc\", 2, 2147483647)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "[]"
+            }
+          },
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "[]"
+            }
+          },
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "abc"
+            }
+          },
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "abc"
+            }
+          },
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "bc"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/left-function",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/right-function",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-function"
+        ],
+        "note": "Independently authored substring and one-based selector expectations from the cited Microsoft contracts. Native plan translation is the bounded Quds mapping; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "mid-past-end-and-zero-length",
+      "feature": "Word text and named selectors",
+      "source": "Sub Main()\n  ThisDocument.Paragraphs(Index:=1).Range.InsertBefore \"[\" & Mid(\"abc\", 2147483647) & \"]\"\n  ThisDocument.Paragraphs(Index:=1).Range.InsertBefore \"[\" & Mid(\"abc\", 1, 0) & \"]\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "[]"
+            }
+          },
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "[]"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-function"
+        ],
+        "note": "Independently authored substring and one-based selector expectations from the cited Microsoft contracts. Native plan translation is the bounded Quds mapping; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "empty-inputs-produce-strings",
+      "feature": "Word text and named selectors",
+      "source": "Sub Main()\n  Dim value As Variant\n  ThisDocument.Paragraphs(Index:=1).Range.InsertBefore \"[\" & Left(value, 3) & \"]\"\n  ThisDocument.Paragraphs(Index:=1).Range.InsertBefore \"[\" & Right(Empty, 2) & \"]\"\n  ThisDocument.Paragraphs(Index:=1).Range.InsertBefore \"[\" & Mid(Empty, 1, 2) & \"]\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "[]"
+            }
+          },
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "[]"
+            }
+          },
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "[]"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md"
+        ],
+        "note": "Explicit bounded Quds behavior, including strict types, UTF-16 positions, evaluation order or publication boundaries; this is not a claim of unrestricted VBA coercion or installed Office-host parity."
+      }
+    },
+    {
+      "id": "null-results-remain-null",
+      "feature": "Word text and named selectors",
+      "source": "Sub Main()\n  ThisDocument.Paragraphs(Index:=1).Range.InsertBefore CStr(IsNull(Left(Null, 0)))\n  ThisDocument.Paragraphs(Index:=1).Range.InsertBefore CStr(IsNull(Right(Null, 5)))\n  ThisDocument.Paragraphs(Index:=1).Range.InsertBefore CStr(IsNull(Mid(Null, 2147483647, 0)))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "True"
+            }
+          },
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "True"
+            }
+          },
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "True"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/left-function",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/right-function",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-function"
+        ],
+        "note": "Independently authored substring and one-based selector expectations from the cited Microsoft contracts. Native plan translation is the bounded Quds mapping; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "null-evaluates-each-argument-in-source-order",
+      "feature": "Word text and named selectors",
+      "source": "Function MakeText() As Variant\n  ThisDocument.Paragraphs(1).Range.InsertBefore \"text\"\n  MakeText = Null\nEnd Function\nFunction ChooseStart() As Long\n  ThisDocument.Paragraphs(1).Range.InsertBefore \"start\"\n  ChooseStart = 2\nEnd Function\nFunction ChooseLength() As Long\n  ThisDocument.Paragraphs(1).Range.InsertBefore \"length\"\n  ChooseLength = 3\nEnd Function\nSub Main()\n  ThisDocument.Paragraphs(Index:=1).Range.InsertBefore CStr(IsNull(Mid(MakeText(), ChooseStart(), ChooseLength())))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "text"
+            }
+          },
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "start"
+            }
+          },
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "length"
+            }
+          },
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "True"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md"
+        ],
+        "note": "Explicit bounded Quds behavior, including strict types, UTF-16 positions, evaluation order or publication boundaries; this is not a claim of unrestricted VBA coercion or installed Office-host parity."
+      }
+    },
+    {
+      "id": "variant-string-and-numeric-index",
+      "feature": "Word text and named selectors",
+      "source": "Sub Main()\n  Dim value As Variant, count As Variant, result As String\n  value = \"Report\"\n  count = 2\n  result = Left(value, count) & Right(value, count) & Mid(value, count, count)\n  ThisDocument.Paragraphs(Index:=1).Range.InsertBefore result\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "Rertep"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/left-function",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/right-function",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-function"
+        ],
+        "note": "Independently authored substring and one-based selector expectations from the cited Microsoft contracts. Native plan translation is the bounded Quds mapping; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "variant-result-in-typed-byval-helper",
+      "feature": "Word text and named selectors",
+      "source": "Function Label(ByVal value As String) As Variant\n  Label = Right(value, 3)\nEnd Function\nSub Stamp(ByVal target As Range, ByVal text As String)\n  target.InsertBefore text\nEnd Sub\nSub Main()\n  Call Stamp(ThisDocument.Paragraphs(Index:=2).Range, Label(\"Report\"))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 1,
+              "start": 0,
+              "end": 0,
+              "text": "ort"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/right-function",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item"
+        ],
+        "note": "Independently authored substring and one-based selector expectations from the cited Microsoft contracts. Native plan translation is the bounded Quds mapping; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "variant-array-elements",
+      "feature": "Word text and named selectors",
+      "source": "Sub Main()\n  Dim values(0 To 2) As Variant\n  values(0) = \"Alpha\"\n  values(1) = Empty\n  values(2) = Null\n  ThisDocument.Paragraphs(Index:=1).Range.InsertBefore Left(values(0), 2) & \":\" & Mid(values(1), 1) & \":\" & CStr(IsNull(Right(values(2), 2)))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "Al::True"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md"
+        ],
+        "note": "Explicit bounded Quds behavior, including strict types, UTF-16 positions, evaluation order or publication boundaries; this is not a claim of unrestricted VBA coercion or installed Office-host parity."
+      }
+    },
+    {
+      "id": "utf16-pair-boundaries",
+      "feature": "Word text and named selectors",
+      "source": "Sub Main()\n  ThisDocument.Paragraphs(Index:=1).Range.InsertBefore Left(\"A\ud83d\ude00B\", 3)\n  ThisDocument.Paragraphs(Index:=1).Range.InsertBefore Right(\"A\ud83d\ude00B\", 3)\n  ThisDocument.Paragraphs(Index:=1).Range.InsertBefore Mid(\"A\ud83d\ude00B\", 2, 2)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "A\ud83d\ude00"
+            }
+          },
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "\ud83d\ude00B"
+            }
+          },
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "\ud83d\ude00"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md"
+        ],
+        "note": "Explicit bounded Quds behavior, including strict types, UTF-16 positions, evaluation order or publication boundaries; this is not a claim of unrestricted VBA coercion or installed Office-host parity."
+      }
+    },
+    {
+      "id": "utf16-fragments-rejoin-before-publication",
+      "feature": "Word text and named selectors",
+      "source": "Sub Main()\n  Dim high As Variant, low As Variant\n  high = Left(\"\ud83d\ude00\", 1)\n  low = Right(\"\ud83d\ude00\", 1)\n  ThisDocument.Paragraphs(Index:=1).Range.InsertBefore high & low\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "\ud83d\ude00"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md"
+        ],
+        "note": "Explicit bounded Quds behavior, including strict types, UTF-16 positions, evaluation order or publication boundaries; this is not a claim of unrestricted VBA coercion or installed Office-host parity."
+      }
+    },
+    {
+      "id": "case-insensitive-functions-and-index",
+      "feature": "Word text and named selectors",
+      "source": "Sub Main()\n  aPpLiCaTiOn.aCtIvEdOcUmEnT.pArAgRaPhS.iTeM(iNdEx:=2).rAnGe.iNsErTbEfOrE lEfT(\"Word\", 1) & rIgHt(\"Word\", 1) & mId(\"Word\", 2, 2)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 1,
+              "start": 0,
+              "end": 0,
+              "text": "Wdor"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/left-function",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/right-function",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-function",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item"
+        ],
+        "note": "Independently authored substring and one-based selector expectations from the cited Microsoft contracts. Native plan translation is the bounded Quds mapping; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "null-conditional-guards-native-output",
+      "feature": "Word text and named selectors",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Mid(Null, 2)\n  If IsNull(result) Then\n    ThisDocument.Paragraphs(Index:=1).Range.InsertBefore \"missing\"\n  Else\n    ThisDocument.Paragraphs(Index:=1).Range.InsertBefore result\n  End If\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "missing"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-function"
+        ],
+        "note": "Independently authored substring and one-based selector expectations from the cited Microsoft contracts. Native plan translation is the bounded Quds mapping; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "mid-expression-coexists-with-mid-statement",
+      "feature": "Word text and named selectors",
+      "source": "Sub Main()\n  Dim label As String\n  label = \"ID----\"\n  Mid(label, 3, 2) = Left(\"ABC\", 2)\n  ThisDocument.Paragraphs(Index:=1).Range.InsertBefore Mid(label, 1)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "IDAB--"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-function",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/left-function"
+        ],
+        "note": "Independently authored substring and one-based selector expectations from the cited Microsoft contracts. Native plan translation is the bounded Quds mapping; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "named-paragraph-alias-captures-original-selector",
+      "feature": "Word text and named selectors",
+      "source": "Sub Main()\n  Dim items As Paragraphs, target As Paragraph\n  Set items = ThisDocument.Paragraphs\n  Set target = items.Item(Index:=2)\n  Set items = ThisDocument.Paragraphs(4).Range.Paragraphs\n  target.Range.InsertBefore Left(\"Original\", 4)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 1,
+              "start": 0,
+              "end": 0,
+              "text": "Orig"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/left-function"
+        ],
+        "note": "Independently authored substring and one-based selector expectations from the cited Microsoft contracts. Native plan translation is the bounded Quds mapping; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "named-selector-through-typed-collection-helper",
+      "feature": "Word text and named selectors",
+      "source": "Sub Prefix(ByVal items As Paragraphs, ByVal index As Long, ByVal value As String)\n  items.Item(Index:=index).Range.InsertBefore Right(value, 2)\nEnd Sub\nSub Main()\n  Call Prefix(ThisDocument.Paragraphs, 3, \"Word\")\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 2,
+              "start": 0,
+              "end": 0,
+              "text": "rd"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/right-function"
+        ],
+        "note": "Independently authored substring and one-based selector expectations from the cited Microsoft contracts. Native plan translation is the bounded Quds mapping; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "named-section-direct-page-setup",
+      "feature": "Word text and named selectors",
+      "source": "Sub Main()\n  ThisDocument.Sections(Index:=2).PageSetup.Orientation = wdOrientLandscape\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.pageOrientation",
+            "arguments": {
+              "section": 1,
+              "orientation": "landscape"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.sections.item"
+        ],
+        "note": "Independently authored substring and one-based selector expectations from the cited Microsoft contracts. Native plan translation is the bounded Quds mapping; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "named-section-item-page-setup",
+      "feature": "Word text and named selectors",
+      "source": "Sub Main()\n  Application.ActiveDocument.Sections.Item(Index:=3).PageSetup.Orientation = wdOrientPortrait\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.pageOrientation",
+            "arguments": {
+              "section": 2,
+              "orientation": "portrait"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.sections.item"
+        ],
+        "note": "Independently authored substring and one-based selector expectations from the cited Microsoft contracts. Native plan translation is the bounded Quds mapping; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "named-header-collection-alias-captures-section",
+      "feature": "Word text and named selectors",
+      "source": "Sub Main()\n  Dim section As Section, headers As HeadersFooters, header As HeaderFooter, target As Paragraph\n  Set section = ThisDocument.Sections(Index:=2)\n  Set headers = section.Headers\n  Set header = headers.Item(Index:=wdHeaderFooterEvenPages)\n  Set target = header.Range.Paragraphs.Item(Index:=3)\n  Set section = ThisDocument.Sections(Index:=5)\n  target.Range.InsertBefore Mid(\"Prefix\", 4)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 2,
+              "start": 0,
+              "end": 0,
+              "text": "fix",
+              "story": "evenHeader",
+              "section": 1
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.sections.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.headersfooters.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-function"
+        ],
+        "note": "Independently authored substring and one-based selector expectations from the cited Microsoft contracts. Native plan translation is the bounded Quds mapping; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "nested-with-named-footer-paragraph",
+      "feature": "Word text and named selectors",
+      "source": "Sub Main()\n  With ThisDocument.Sections.Item(Index:=2)\n    With .Footers(Index:=wdHeaderFooterFirstPage).Range\n      With .Paragraphs.Item(Index:=3).Range\n        .InsertBefore Right(\"Draft\", 3)\n        .Font.Bold = True\n      End With\n    End With\n  End With\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 2,
+              "start": 0,
+              "end": 0,
+              "text": "aft",
+              "story": "firstFooter",
+              "section": 1
+            }
+          },
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 2,
+              "story": "firstFooter",
+              "section": 1,
+              "bold": true
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.sections.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.headersfooters.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/right-function"
+        ],
+        "note": "Independently authored substring and one-based selector expectations from the cited Microsoft contracts. Native plan translation is the bounded Quds mapping; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "named-receiver-and-text-evaluate-once-in-order",
+      "feature": "Word text and named selectors",
+      "source": "Function Mark(ByVal value As Long) As Long\n  ThisDocument.Paragraphs(1).Range.InsertBefore CStr(value)\n  Mark = value\nEnd Function\nFunction BuildText() As String\n  ThisDocument.Paragraphs(1).Range.InsertBefore \"text\"\n  BuildText = \"Target\"\nEnd Function\nSub Main()\n  ThisDocument.Sections(Index:=Mark(2)).Headers.Item(Index:=Mark(3)).Range.Paragraphs(Index:=Mark(4)).Range.InsertBefore Left(BuildText(), Mark(3))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "2"
+            }
+          },
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "3"
+            }
+          },
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "4"
+            }
+          },
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "text"
+            }
+          },
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "3"
+            }
+          },
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 3,
+              "start": 0,
+              "end": 0,
+              "text": "Tar",
+              "story": "evenHeader",
+              "section": 1
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md"
+        ],
+        "note": "Explicit bounded Quds behavior, including strict types, UTF-16 positions, evaluation order or publication boundaries; this is not a claim of unrestricted VBA coercion or installed Office-host parity."
+      }
+    },
+    {
+      "id": "projected-body-paragraph-keeps-owner",
+      "feature": "Word text and named selectors",
+      "source": "Sub Main()\n  ThisDocument.Paragraphs(Index:=4).Range.Paragraphs.Item(Index:=1).Range.InsertBefore Mid(\"Reused\", 3)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 3,
+              "start": 0,
+              "end": 0,
+              "text": "used"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-function"
+        ],
+        "note": "Independently authored substring and one-based selector expectations from the cited Microsoft contracts. Native plan translation is the bounded Quds mapping; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "projected-cell-paragraph-keeps-owner",
+      "feature": "Word text and named selectors",
+      "source": "Sub Main()\n  ThisDocument.Tables(Index:=2).Cell(Row:=3, Column:=4).Range.Paragraphs(Index:=1).Range.InsertBefore Right(\"Prefix\", 3)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertBefore",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "fix"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/right-function"
+        ],
+        "note": "Independently authored substring and one-based selector expectations from the cited Microsoft contracts. Native plan translation is the bounded Quds mapping; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "named-header",
+      "feature": "Word text and named selectors",
+      "source": "Sub Main()\n  ThisDocument.Sections(Index:=2).Headers(Index:=wdHeaderFooterPrimary).Range.Paragraphs.Item(Index:=3).Range.InsertBefore \"header\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 2,
+              "start": 0,
+              "end": 0,
+              "text": "header",
+              "story": "header",
+              "section": 1
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.sections.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.headersfooters.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.wdheaderfooterindex",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item"
+        ],
+        "note": "Independently authored substring and one-based selector expectations from the cited Microsoft contracts. Native plan translation is the bounded Quds mapping; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "named-firstheader",
+      "feature": "Word text and named selectors",
+      "source": "Sub Main()\n  ThisDocument.Sections(Index:=2).Headers(Index:=wdHeaderFooterFirstPage).Range.Paragraphs.Item(Index:=3).Range.InsertBefore \"firstHeader\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 2,
+              "start": 0,
+              "end": 0,
+              "text": "firstHeader",
+              "story": "firstHeader",
+              "section": 1
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.sections.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.headersfooters.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.wdheaderfooterindex",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item"
+        ],
+        "note": "Independently authored substring and one-based selector expectations from the cited Microsoft contracts. Native plan translation is the bounded Quds mapping; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "named-evenheader",
+      "feature": "Word text and named selectors",
+      "source": "Sub Main()\n  ThisDocument.Sections(Index:=2).Headers(Index:=wdHeaderFooterEvenPages).Range.Paragraphs.Item(Index:=3).Range.InsertBefore \"evenHeader\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 2,
+              "start": 0,
+              "end": 0,
+              "text": "evenHeader",
+              "story": "evenHeader",
+              "section": 1
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.sections.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.headersfooters.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.wdheaderfooterindex",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item"
+        ],
+        "note": "Independently authored substring and one-based selector expectations from the cited Microsoft contracts. Native plan translation is the bounded Quds mapping; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "named-footer",
+      "feature": "Word text and named selectors",
+      "source": "Sub Main()\n  ThisDocument.Sections(Index:=2).Footers.Item(Index:=wdHeaderFooterPrimary).Range.Paragraphs.Item(Index:=3).Range.InsertBefore \"footer\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 2,
+              "start": 0,
+              "end": 0,
+              "text": "footer",
+              "story": "footer",
+              "section": 1
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.sections.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.headersfooters.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.wdheaderfooterindex",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item"
+        ],
+        "note": "Independently authored substring and one-based selector expectations from the cited Microsoft contracts. Native plan translation is the bounded Quds mapping; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "named-firstfooter",
+      "feature": "Word text and named selectors",
+      "source": "Sub Main()\n  ThisDocument.Sections(Index:=2).Footers.Item(Index:=wdHeaderFooterFirstPage).Range.Paragraphs.Item(Index:=3).Range.InsertBefore \"firstFooter\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 2,
+              "start": 0,
+              "end": 0,
+              "text": "firstFooter",
+              "story": "firstFooter",
+              "section": 1
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.sections.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.headersfooters.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.wdheaderfooterindex",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item"
+        ],
+        "note": "Independently authored substring and one-based selector expectations from the cited Microsoft contracts. Native plan translation is the bounded Quds mapping; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "named-evenfooter",
+      "feature": "Word text and named selectors",
+      "source": "Sub Main()\n  ThisDocument.Sections(Index:=2).Footers.Item(Index:=wdHeaderFooterEvenPages).Range.Paragraphs.Item(Index:=3).Range.InsertBefore \"evenFooter\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 2,
+              "start": 0,
+              "end": 0,
+              "text": "evenFooter",
+              "story": "evenFooter",
+              "section": 1
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.sections.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.headersfooters.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.wdheaderfooterindex",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item"
+        ],
+        "note": "Independently authored substring and one-based selector expectations from the cited Microsoft contracts. Native plan translation is the bounded Quds mapping; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "refuse-numeric-string-source",
+      "feature": "Word text and named selector boundaries",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Left(42, 1)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 17
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md"
+        ],
+        "note": "Explicit bounded Quds behavior, including strict types, UTF-16 positions, evaluation order or publication boundaries; this is not a claim of unrestricted VBA coercion or installed Office-host parity."
+      }
+    },
+    {
+      "id": "refuse-boolean-string-source",
+      "feature": "Word text and named selector boundaries",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Right(True, 1)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 18
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md"
+        ],
+        "note": "Explicit bounded Quds behavior, including strict types, UTF-16 positions, evaluation order or publication boundaries; this is not a claim of unrestricted VBA coercion or installed Office-host parity."
+      }
+    },
+    {
+      "id": "refuse-numeric-variant-source",
+      "feature": "Word text and named selector boundaries",
+      "source": "Sub Main()\n  Dim result As Variant, value As Variant\n  value = 42\n  result = Mid(value, 1)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 4,
+          "column": 16
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md"
+        ],
+        "note": "Explicit bounded Quds behavior, including strict types, UTF-16 positions, evaluation order or publication boundaries; this is not a claim of unrestricted VBA coercion or installed Office-host parity."
+      }
+    },
+    {
+      "id": "null-does-not-mask-negative-length",
+      "feature": "Word text and named selector boundaries",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Left(Null, -1)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 23
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md"
+        ],
+        "note": "Explicit bounded Quds behavior, including strict types, UTF-16 positions, evaluation order or publication boundaries; this is not a claim of unrestricted VBA coercion or installed Office-host parity."
+      }
+    },
+    {
+      "id": "null-does-not-mask-fractional-length",
+      "feature": "Word text and named selector boundaries",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Right(Null, 1.5)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 24
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md"
+        ],
+        "note": "Explicit bounded Quds behavior, including strict types, UTF-16 positions, evaluation order or publication boundaries; this is not a claim of unrestricted VBA coercion or installed Office-host parity."
+      }
+    },
+    {
+      "id": "null-does-not-mask-null-length",
+      "feature": "Word text and named selector boundaries",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Left(Null, Null)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 23
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md"
+        ],
+        "note": "Explicit bounded Quds behavior, including strict types, UTF-16 positions, evaluation order or publication boundaries; this is not a claim of unrestricted VBA coercion or installed Office-host parity."
+      }
+    },
+    {
+      "id": "null-does-not-mask-zero-mid-start",
+      "feature": "Word text and named selector boundaries",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Mid(Null, 0)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 22
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md"
+        ],
+        "note": "Explicit bounded Quds behavior, including strict types, UTF-16 positions, evaluation order or publication boundaries; this is not a claim of unrestricted VBA coercion or installed Office-host parity."
+      }
+    },
+    {
+      "id": "null-does-not-mask-negative-mid-length",
+      "feature": "Word text and named selector boundaries",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Mid(Null, 2147483647, -1)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 34
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md"
+        ],
+        "note": "Explicit bounded Quds behavior, including strict types, UTF-16 positions, evaluation order or publication boundaries; this is not a claim of unrestricted VBA coercion or installed Office-host parity."
+      }
+    },
+    {
+      "id": "empty-does-not-mask-invalid-start",
+      "feature": "Word text and named selector boundaries",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Mid(Empty, 0)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 23
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md"
+        ],
+        "note": "Explicit bounded Quds behavior, including strict types, UTF-16 positions, evaluation order or publication boundaries; this is not a claim of unrestricted VBA coercion or installed Office-host parity."
+      }
+    },
+    {
+      "id": "refuse-length-long-overflow",
+      "feature": "Word text and named selector boundaries",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Right(\"abc\", 2147483648)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 25
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md"
+        ],
+        "note": "Explicit bounded Quds behavior, including strict types, UTF-16 positions, evaluation order or publication boundaries; this is not a claim of unrestricted VBA coercion or installed Office-host parity."
+      }
+    },
+    {
+      "id": "left-requires-length",
+      "feature": "Word text and named selector boundaries",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Left(\"abc\")\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 12
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md"
+        ],
+        "note": "Explicit bounded Quds behavior, including strict types, UTF-16 positions, evaluation order or publication boundaries; this is not a claim of unrestricted VBA coercion or installed Office-host parity."
+      }
+    },
+    {
+      "id": "intrinsic-named-arguments-remain-unsupported",
+      "feature": "Word text and named selector boundaries",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Mid(string:=\"abc\", start:=1)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 3,
+          "column": 16
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md"
+        ],
+        "note": "Explicit bounded Quds behavior, including strict types, UTF-16 positions, evaluation order or publication boundaries; this is not a claim of unrestricted VBA coercion or installed Office-host parity."
+      }
+    },
+    {
+      "id": "byte-slice-remains-unsupported",
+      "feature": "Word text and named selector boundaries",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = LeftB(\"abc\", 1)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 3,
+          "column": 12
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md"
+        ],
+        "note": "Explicit bounded Quds behavior, including strict types, UTF-16 positions, evaluation order or publication boundaries; this is not a claim of unrestricted VBA coercion or installed Office-host parity."
+      }
+    },
+    {
+      "id": "dollar-null-remains-strict",
+      "feature": "Word text and named selector boundaries",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Left$(Null, 1)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 18
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md"
+        ],
+        "note": "Explicit bounded Quds behavior, including strict types, UTF-16 positions, evaluation order or publication boundaries; this is not a claim of unrestricted VBA coercion or installed Office-host parity."
+      }
+    },
+    {
+      "id": "dollar-empty-remains-strict",
+      "feature": "Word text and named selector boundaries",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Right$(Empty, 1)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 19
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md"
+        ],
+        "note": "Explicit bounded Quds behavior, including strict types, UTF-16 positions, evaluation order or publication boundaries; this is not a claim of unrestricted VBA coercion or installed Office-host parity."
+      }
+    },
+    {
+      "id": "inactive-invalid-text-source-is-checked",
+      "feature": "Word text and named selector boundaries",
+      "source": "Sub Main()\n  If False Then\n    result = Mid(42, 1)\n  End If\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 18
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md"
+        ],
+        "note": "Explicit bounded Quds behavior, including strict types, UTF-16 positions, evaluation order or publication boundaries; this is not a claim of unrestricted VBA coercion or installed Office-host parity."
+      }
+    },
+    {
+      "id": "unpaired-surrogate-cannot-be-published",
+      "feature": "Word text and named selector boundaries",
+      "source": "Sub Main()\n  ThisDocument.Paragraphs(Index:=1).Range.InsertBefore Left(\"\ud83d\ude00\", 1)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 43
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md"
+        ],
+        "note": "Explicit bounded Quds behavior, including strict types, UTF-16 positions, evaluation order or publication boundaries; this is not a claim of unrestricted VBA coercion or installed Office-host parity."
+      }
+    },
+    {
+      "id": "unknown-paragraph-selector-name",
+      "feature": "Word text and named selector boundaries",
+      "source": "Sub Main()\n  ThisDocument.Paragraphs(Offset:=1).Range.InsertBefore \"x\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_name_error",
+          "line": 2,
+          "column": 27
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md"
+        ],
+        "note": "Explicit bounded Quds behavior, including strict types, UTF-16 positions, evaluation order or publication boundaries; this is not a claim of unrestricted VBA coercion or installed Office-host parity."
+      }
+    },
+    {
+      "id": "duplicate-section-index-is-refused",
+      "feature": "Word text and named selector boundaries",
+      "source": "Sub Main()\n  ThisDocument.Sections(Index:=1, INDEX:=2).PageSetup.Orientation = wdOrientLandscape\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 16
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md"
+        ],
+        "note": "Explicit bounded Quds behavior, including strict types, UTF-16 positions, evaluation order or publication boundaries; this is not a claim of unrestricted VBA coercion or installed Office-host parity."
+      }
+    },
+    {
+      "id": "extra-header-index-is-refused",
+      "feature": "Word text and named selector boundaries",
+      "source": "Sub Main()\n  ThisDocument.Sections(1).Headers(Index:=1, 2).Range.Paragraphs(1).Range.InsertBefore \"x\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 28
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md"
+        ],
+        "note": "Explicit bounded Quds behavior, including strict types, UTF-16 positions, evaluation order or publication boundaries; this is not a claim of unrestricted VBA coercion or installed Office-host parity."
+      }
+    },
+    {
+      "id": "footer-item-requires-index",
+      "feature": "Word text and named selector boundaries",
+      "source": "Sub Main()\n  ThisDocument.Sections(1).Footers.Item().Range.Paragraphs(1).Range.InsertBefore \"x\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 36
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md"
+        ],
+        "note": "Explicit bounded Quds behavior, including strict types, UTF-16 positions, evaluation order or publication boundaries; this is not a claim of unrestricted VBA coercion or installed Office-host parity."
+      }
+    },
+    {
+      "id": "named-paragraph-zero-is-refused",
+      "feature": "Word text and named selector boundaries",
+      "source": "Sub Main()\n  ThisDocument.Paragraphs(Index:=0).Range.InsertBefore \"x\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 16
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md"
+        ],
+        "note": "Explicit bounded Quds behavior, including strict types, UTF-16 positions, evaluation order or publication boundaries; this is not a claim of unrestricted VBA coercion or installed Office-host parity."
+      }
+    },
+    {
+      "id": "named-section-fraction-is-refused",
+      "feature": "Word text and named selector boundaries",
+      "source": "Sub Main()\n  ThisDocument.Sections(Index:=1.5).PageSetup.Orientation = wdOrientLandscape\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 16
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md"
+        ],
+        "note": "Explicit bounded Quds behavior, including strict types, UTF-16 positions, evaluation order or publication boundaries; this is not a claim of unrestricted VBA coercion or installed Office-host parity."
+      }
+    },
+    {
+      "id": "header-zero-is-not-enum-member",
+      "feature": "Word text and named selector boundaries",
+      "source": "Sub Main()\n  ThisDocument.Sections(1).Headers(Index:=0).Range.Paragraphs(1).Range.InsertBefore \"x\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 2,
+          "column": 28
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md"
+        ],
+        "note": "Explicit bounded Quds behavior, including strict types, UTF-16 positions, evaluation order or publication boundaries; this is not a claim of unrestricted VBA coercion or installed Office-host parity."
+      }
+    },
+    {
+      "id": "footer-four-is-not-enum-member",
+      "feature": "Word text and named selector boundaries",
+      "source": "Sub Main()\n  ThisDocument.Sections(1).Footers.Item(Index:=4).Range.Paragraphs(1).Range.InsertBefore \"x\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 2,
+          "column": 36
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md"
+        ],
+        "note": "Explicit bounded Quds behavior, including strict types, UTF-16 positions, evaluation order or publication boundaries; this is not a claim of unrestricted VBA coercion or installed Office-host parity."
+      }
+    },
+    {
+      "id": "named-selector-string-is-not-coerced",
+      "feature": "Word text and named selector boundaries",
+      "source": "Sub Main()\n  ThisDocument.Paragraphs(Index:=\"1\").Range.InsertBefore \"x\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 34
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md"
+        ],
+        "note": "Explicit bounded Quds behavior, including strict types, UTF-16 positions, evaluation order or publication boundaries; this is not a claim of unrestricted VBA coercion or installed Office-host parity."
+      }
+    },
+    {
+      "id": "named-selector-does-not-enable-live-text-read",
+      "feature": "Word text and named selector boundaries",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Left(ThisDocument.Paragraphs(Index:=1).Range.Text, 1)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 3,
+          "column": 57
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md"
+        ],
+        "note": "Explicit bounded Quds behavior, including strict types, UTF-16 positions, evaluation order or publication boundaries; this is not a claim of unrestricted VBA coercion or installed Office-host parity."
+      }
+    },
+    {
+      "id": "projected-paragraph-only-supports-index-one",
+      "feature": "Word text and named selector boundaries",
+      "source": "Sub Main()\n  ThisDocument.Paragraphs(Index:=4).Range.Paragraphs(Index:=2).Range.InsertBefore \"x\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 2,
+          "column": 43
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md"
+        ],
+        "note": "Explicit bounded Quds behavior, including strict types, UTF-16 positions, evaluation order or publication boundaries; this is not a claim of unrestricted VBA coercion or installed Office-host parity."
+      }
+    },
+    {
+      "id": "named-sections-collection-alias-and-with",
+      "feature": "Word typed selector collections",
+      "source": "Sub Main()\n  Dim sections As Sections, selected As Section\n  Set sections = ThisDocument.Sections\n  Set selected = sections.Item(Index:=2)\n  With sections\n    .Item(Index:=3).PageSetup.Orientation = wdOrientLandscape\n  End With\n  selected.PageSetup.Orientation = wdOrientPortrait\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.pageOrientation",
+            "arguments": {
+              "section": 2,
+              "orientation": "landscape"
+            }
+          },
+          {
+            "tool": "docx.pageOrientation",
+            "arguments": {
+              "section": 1,
+              "orientation": "portrait"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.sections.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md"
+        ],
+        "note": "Bounded typed collection bindings retain source-known selectors and allow required ByVal helpers; collection reads and implicit First/Last navigation remain unsupported. These expectations were authored independently of compiler output."
+      }
+    },
+    {
+      "id": "named-sections-collection-byval-helper",
+      "feature": "Word typed selector collections",
+      "source": "Sub Configure(ByVal sections As Sections, ByVal selected As Long)\n  sections.Item(Index:=selected).PageSetup.Orientation = wdOrientLandscape\nEnd Sub\nSub Main()\n  Call Configure(ThisDocument.Sections, 2)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.pageOrientation",
+            "arguments": {
+              "section": 1,
+              "orientation": "landscape"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.sections.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md"
+        ],
+        "note": "Bounded typed collection bindings retain source-known selectors and allow required ByVal helpers; collection reads and implicit First/Last navigation remain unsupported. These expectations were authored independently of compiler output."
+      }
+    },
+    {
+      "id": "typed-paragraphs-count-remains-unsupported",
+      "feature": "Word typed selector collection boundaries",
+      "source": "Sub Main()\n  Dim items As Paragraphs, total As Variant\n  Set items = ThisDocument.Paragraphs\n  If False Then\n    total = items.Count\n  End If\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 5,
+          "column": 19
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.sections.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md"
+        ],
+        "note": "Bounded typed collection bindings retain source-known selectors and allow required ByVal helpers; collection reads and implicit First/Last navigation remain unsupported. These expectations were authored independently of compiler output."
+      }
+    },
+    {
+      "id": "typed-sections-first-remains-unsupported",
+      "feature": "Word typed selector collection boundaries",
+      "source": "Sub Main()\n  Dim sections As Sections, selected As Section\n  Set sections = ThisDocument.Sections\n  If False Then\n    Set selected = sections.First\n  End If\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 5,
+          "column": 29
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.sections.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md"
+        ],
+        "note": "Bounded typed collection bindings retain source-known selectors and allow required ByVal helpers; collection reads and implicit First/Last navigation remain unsupported. These expectations were authored independently of compiler output."
+      }
+    }
+  ]
+}

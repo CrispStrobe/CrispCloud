@@ -312,9 +312,9 @@ End Function
 
     test('refuses unsupported neighboring functions and variable suffixes', () {
       for (final expression in <String>[
-        'Left("abc", 1)',
-        'Right("abc", 1)',
-        'Mid("abc", 1)',
+        'LeftB("abc", 1)',
+        'RightB("abc", 1)',
+        'MidB("abc", 1)',
         'LenB("abc")',
         r'LeftB$("abc", 1)',
         r'RightB$("abc", 1)',

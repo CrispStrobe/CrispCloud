@@ -1265,60 +1265,75 @@
       }
     },
     {
-      "id": "refuses-unsuffixed-left",
-      "feature": "Left$",
-      "source": "Sub Main()\n  Dim result As Variant\n  result = Left(\"abc\",1)\nEnd Sub\n",
+      "id": "unsuffixed-left",
+      "feature": "Left",
+      "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = Left(\"abc\",1)\nEnd Sub\n",
       "expected": {
-        "diagnostic": {
-          "code": "vba_unsupported",
-          "line": 3,
-          "column": 12
-        }
+        "steps": [
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A1",
+              "value": "a"
+            }
+          }
+        ]
       },
       "provenance": {
-        "kind": "dialect-contract",
+        "kind": "spec-derived",
         "references": [
-          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/left-function"
         ],
-        "note": "Deliberate bounded dialect rule or diagnostic location, not a claim of complete VBA coercion or Office-host parity."
+        "note": "Expected values derived from the published Variant-returning function contract; no Office host was executed."
       }
     },
     {
-      "id": "refuses-unsuffixed-right",
-      "feature": "Right$",
-      "source": "Sub Main()\n  Dim result As Variant\n  result = Right(\"abc\",1)\nEnd Sub\n",
+      "id": "unsuffixed-right",
+      "feature": "Right",
+      "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = Right(\"abc\",1)\nEnd Sub\n",
       "expected": {
-        "diagnostic": {
-          "code": "vba_unsupported",
-          "line": 3,
-          "column": 12
-        }
+        "steps": [
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A1",
+              "value": "c"
+            }
+          }
+        ]
       },
       "provenance": {
-        "kind": "dialect-contract",
+        "kind": "spec-derived",
         "references": [
-          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/right-function"
         ],
-        "note": "Deliberate bounded dialect rule or diagnostic location, not a claim of complete VBA coercion or Office-host parity."
+        "note": "Expected values derived from the published Variant-returning function contract; no Office host was executed."
       }
     },
     {
-      "id": "refuses-unsuffixed-mid",
-      "feature": "Mid$",
-      "source": "Sub Main()\n  Dim result As Variant\n  result = Mid(\"abc\",1)\nEnd Sub\n",
+      "id": "unsuffixed-mid",
+      "feature": "Mid",
+      "source": "Sub Main()\n  Worksheets(1).Range(\"A1\").Value2 = Mid(\"abc\",1)\nEnd Sub\n",
       "expected": {
-        "diagnostic": {
-          "code": "vba_unsupported",
-          "line": 3,
-          "column": 12
-        }
+        "steps": [
+          {
+            "tool": "xlsx.cellValue",
+            "arguments": {
+              "sheet": 0,
+              "cell": "A1",
+              "value": "abc"
+            }
+          }
+        ]
       },
       "provenance": {
-        "kind": "dialect-contract",
+        "kind": "spec-derived",
         "references": [
-          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-function"
         ],
-        "note": "Deliberate bounded dialect rule or diagnostic location, not a claim of complete VBA coercion or Office-host parity."
+        "note": "Expected values derived from the published Variant-returning function contract; no Office host was executed."
       }
     },
     {

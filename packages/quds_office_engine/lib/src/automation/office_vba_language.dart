@@ -136,8 +136,11 @@ const _numericIntrinsics = <String>{'abs', 'int', 'fix', 'sgn'};
 const _stringIntrinsics = <String>{
   'len',
   'join',
+  'left',
   r'left$',
+  'right',
   r'right$',
+  'mid',
   r'mid$',
   'instr',
   'instrrev',
@@ -940,6 +943,7 @@ enum _Declared {
   worksheet,
   range,
   document,
+  wordSections,
   wordSection,
   wordPageSetup,
   wordTextColumns,
@@ -953,6 +957,7 @@ enum _Declared {
   wordColumn,
   wordCells,
   wordCell,
+  paragraphs,
   paragraph,
   wordFont,
   wordParagraphFormat,
@@ -973,6 +978,7 @@ bool _objectType(_Declared type) =>
     type == _Declared.worksheet ||
     type == _Declared.range ||
     type == _Declared.document ||
+    type == _Declared.wordSections ||
     type == _Declared.wordSection ||
     type == _Declared.wordPageSetup ||
     type == _Declared.wordTextColumns ||
@@ -986,6 +992,7 @@ bool _objectType(_Declared type) =>
     type == _Declared.wordColumn ||
     type == _Declared.wordCells ||
     type == _Declared.wordCell ||
+    type == _Declared.paragraphs ||
     type == _Declared.paragraph ||
     type == _Declared.wordFont ||
     type == _Declared.wordParagraphFormat ||
@@ -1027,6 +1034,7 @@ _Kind _kindOf(_Declared type) => switch (type) {
   _Declared.worksheet => _Kind.worksheet,
   _Declared.range => _Kind.range,
   _Declared.document => _Kind.document,
+  _Declared.wordSections => _Kind.wordSections,
   _Declared.wordSection => _Kind.wordSection,
   _Declared.wordPageSetup => _Kind.wordPageSetup,
   _Declared.wordTextColumns => _Kind.wordTextColumns,
@@ -1040,6 +1048,7 @@ _Kind _kindOf(_Declared type) => switch (type) {
   _Declared.wordColumn => _Kind.wordColumn,
   _Declared.wordCells => _Kind.wordCells,
   _Declared.wordCell => _Kind.wordCell,
+  _Declared.paragraphs => _Kind.paragraphs,
   _Declared.paragraph => _Kind.paragraph,
   _Declared.wordFont => _Kind.font,
   _Declared.wordParagraphFormat => _Kind.paragraphFormat,
@@ -2058,6 +2067,7 @@ class _Parser {
       'worksheet' when context.isExcel => _Declared.worksheet,
       'range' when !context.isPowerPoint => _Declared.range,
       'document' when context.isWord => _Declared.document,
+      'sections' when context.isWord => _Declared.wordSections,
       'section' when context.isWord => _Declared.wordSection,
       'pagesetup' when context.isWord => _Declared.wordPageSetup,
       'textcolumns' when context.isWord => _Declared.wordTextColumns,
@@ -2071,6 +2081,7 @@ class _Parser {
       'column' when context.isWord => _Declared.wordColumn,
       'cells' when context.isWord => _Declared.wordCells,
       'cell' when context.isWord => _Declared.wordCell,
+      'paragraphs' when context.isWord => _Declared.paragraphs,
       'paragraph' when context.isWord => _Declared.paragraph,
       'font' when context.isWord => _Declared.wordFont,
       'paragraphformat' when context.isWord => _Declared.wordParagraphFormat,
@@ -2092,7 +2103,7 @@ class _Parser {
         context.isPowerPoint
             ? 'Supported declarations are Long, Double, String, Boolean, Variant, Presentation, Slide, Shape, TextFrame, TextRange, Font, ParagraphFormat, and SlideShowTransition.'
             : context.isWord
-            ? 'Supported declarations are Long, Double, String, Boolean, Variant, Document, Section, PageSetup, TextColumns, HeadersFooters, HeaderFooter, Tables, Table, Rows, Row, Columns, Column, Cells, Cell, Paragraph, Range, Font, ParagraphFormat, TabStops, ListFormat, and Shading.'
+            ? 'Supported declarations are Long, Double, String, Boolean, Variant, Document, Sections, Section, PageSetup, TextColumns, HeadersFooters, HeaderFooter, Tables, Table, Rows, Row, Columns, Column, Cells, Cell, Paragraphs, Paragraph, Range, Font, ParagraphFormat, TabStops, ListFormat, and Shading.'
             : 'Supported declarations are Long, Double, String, Boolean, Variant, Worksheet, and Range.',
       ),
     };
@@ -2316,7 +2327,6 @@ class _Checker {
   // not admit mark replacement/insertion in unexecuted source paths.
   final Map<String, List<(_Expr, List<_Expr>)>> wordSelectorBindings =
       <String, List<(_Expr, List<_Expr>)>>{};
-  final Map<String, bool> wordCellSelectorBindings = <String, bool>{};
   final Set<String> counters = <String>{};
   final Set<String> eachCounters = <String>{};
   final Map<_Symbol, Object> constantValues = <_Symbol, Object>{};
@@ -2355,7 +2365,6 @@ class _Checker {
     'or',
     'xor',
     'mod',
-    'mid',
     'option',
     'explicit',
     'attribute',
@@ -2457,7 +2466,6 @@ class _Checker {
       withKinds.clear();
       withTargets.clear();
       wordSelectorBindings.clear();
-      wordCellSelectorBindings.clear();
       counters.clear();
       eachCounters.clear();
       doDepth = 0;
@@ -2765,7 +2773,9 @@ class _Checker {
       switch (statement) {
         case _Assignment(target: final _Name target, isSet: true):
           final type = symbols[target.token.lower]?.type;
-          if (type == _Declared.range || type == _Declared.paragraph) {
+          if (type == _Declared.range ||
+              type == _Declared.paragraph ||
+              type == _Declared.paragraphs) {
             (wordSelectorBindings[target.token.lower] ??= []).add((
               statement.value,
               scopes,
@@ -2849,51 +2859,55 @@ class _Checker {
   // True only for selectors whose local origins are all explicitly cells.
   // Generic helper parameters and mixed body/cell aliases are checked against
   // their actual selector during evaluation, preserving shared helpers.
-  bool _knownWordCellSelector(
-    _Expr expression,
-    List<_Expr> scopes,
-    Set<String> visiting,
-  ) {
-    if (expression is _WithValue) {
-      return scopes.isNotEmpty &&
-          _knownWordCellSelector(
-            scopes.last,
-            scopes.sublist(0, scopes.length - 1),
-            visiting,
-          );
-    }
-    if (expression is _Member) {
-      if (expression.token.lower == 'range' &&
-          _isWordCellSource(expression.receiver, scopes)) {
-        return true;
+  bool _knownWordCellSelector(_Expr expression, List<_Expr> scopes) {
+    // Follow the whole binding graph, including collection aliases. An alias
+    // cycle is an edge, not a new noncell origin; every reachable terminal
+    // must be an explicit cell, and a rootless cycle cannot prove ownership.
+    final pending = <(_Expr, List<_Expr>)>[(expression, scopes)];
+    final visited = <String>{};
+    var hasOrigin = false;
+    while (pending.isNotEmpty) {
+      final (current, contexts) = pending.removeLast();
+      if (current is _WithValue) {
+        if (contexts.isEmpty) return false;
+        pending.add((contexts.last, contexts.sublist(0, contexts.length - 1)));
+        continue;
       }
-      return const {
-            'range',
-            'paragraphs',
-            'item',
-          }.contains(expression.token.lower) &&
-          _knownWordCellSelector(expression.receiver, scopes, visiting);
+      if (current is _Member) {
+        if (current.token.lower == 'range' &&
+            _isWordCellSource(current.receiver, contexts)) {
+          hasOrigin = true;
+          continue;
+        }
+        if (!const {
+          'range',
+          'paragraphs',
+          'item',
+        }.contains(current.token.lower)) {
+          return false;
+        }
+        pending.add((current.receiver, contexts));
+        continue;
+      }
+      if (current is! _Name) return false;
+      final name = current.token.lower;
+      final type = symbols[name]?.type;
+      if (type != _Declared.range &&
+          type != _Declared.paragraph &&
+          type != _Declared.paragraphs) {
+        return false;
+      }
+      if (currentProcedure.parameters.any(
+        (parameter) => parameter.name.lower == name,
+      )) {
+        return false;
+      }
+      if (!visited.add(name)) continue;
+      final bindings = wordSelectorBindings[name];
+      if (bindings == null || bindings.isEmpty) return false;
+      pending.addAll(bindings);
     }
-    if (expression is! _Name) return false;
-    final name = expression.token.lower;
-    final type = symbols[name]?.type;
-    if (type != _Declared.range && type != _Declared.paragraph) return false;
-    if (currentProcedure.parameters.any(
-      (parameter) => parameter.name.lower == name,
-    )) {
-      return false;
-    }
-    if (wordCellSelectorBindings[name] case final cached?) return cached;
-    if (!visiting.add(name)) return false;
-    final bindings = wordSelectorBindings[name];
-    final result =
-        bindings != null &&
-        bindings.every(
-          (binding) => _knownWordCellSelector(binding.$1, binding.$2, visiting),
-        );
-    visiting.remove(name);
-    wordCellSelectorBindings[name] = result;
-    return result;
+    return hasOrigin;
   }
 
   bool _isWordCellSource(_Expr expression, List<_Expr> scopes) =>
@@ -3989,13 +4003,11 @@ class _Checker {
           }
           if (receiver == _Kind.document && name == 'sections') {
             if (expression.arguments == null) return _Kind.wordSections;
-            final argument = _arguments(expression, 1).single;
-            _compatible(_Kind.number, _expression(argument), argument.token);
+            _wordSelectorCall(expression, const ['index']);
             return _Kind.wordSection;
           }
           if (receiver == _Kind.wordSections && name == 'item') {
-            final argument = _arguments(expression, 1).single;
-            _compatible(_Kind.number, _expression(argument), argument.token);
+            _wordSelectorCall(expression, const ['index']);
             return _Kind.wordSection;
           }
           if (receiver == _Kind.wordSection && name == 'pagesetup') {
@@ -4009,13 +4021,11 @@ class _Checker {
           if (receiver == _Kind.wordSection &&
               (name == 'headers' || name == 'footers')) {
             if (expression.arguments == null) return _Kind.wordHeadersFooters;
-            final argument = _arguments(expression, 1).single;
-            _compatible(_Kind.number, _expression(argument), argument.token);
+            _wordSelectorCall(expression, const ['index']);
             return _Kind.wordHeaderFooter;
           }
           if (receiver == _Kind.wordHeadersFooters && name == 'item') {
-            final argument = _arguments(expression, 1).single;
-            _compatible(_Kind.number, _expression(argument), argument.token);
+            _wordSelectorCall(expression, const ['index']);
             return _Kind.wordHeaderFooter;
           }
           if (receiver == _Kind.wordHeaderFooter && name == 'range') {
@@ -4028,13 +4038,11 @@ class _Checker {
                   receiver == _Kind.wordCellRange) &&
               name == 'paragraphs') {
             if (expression.arguments == null) return _Kind.paragraphs;
-            final argument = _arguments(expression, 1).single;
-            _compatible(_Kind.number, _expression(argument), argument.token);
+            _wordSelectorCall(expression, const ['index']);
             return _Kind.paragraph;
           }
           if (receiver == _Kind.paragraphs && name == 'item') {
-            final argument = _arguments(expression, 1).single;
-            _compatible(_Kind.number, _expression(argument), argument.token);
+            _wordSelectorCall(expression, const ['index']);
             return _Kind.paragraph;
           }
           if (receiver == _Kind.paragraph && name == 'range') {
@@ -4062,7 +4070,7 @@ class _Checker {
                   name == 'listformat')) {
             _arguments(expression, 0, allowProperty: true);
             if (name == 'listformat' &&
-                _knownWordCellSelector(expression.receiver, withTargets, {})) {
+                _knownWordCellSelector(expression.receiver, withTargets)) {
               context.unsupported(
                 expression.token,
                 'ListFormat is unsupported on explicitly selected cell paragraphs.',
@@ -4356,7 +4364,7 @@ class _Checker {
       _compatible(_Kind.string, _expression(argument), argument.token);
       return _Kind.string;
     }
-    if (name == r'mid$') {
+    if (name == 'mid' || name == r'mid$') {
       if (arguments.length < 2 || arguments.length > 3) {
         context.type(
           expression.token,
@@ -4373,6 +4381,11 @@ class _Checker {
         _expression(argument),
         argument.token,
       );
+    }
+    if (name == 'left' || name == 'right' || name == 'mid') {
+      // The unsuffixed forms return Variants so a Null source can propagate
+      // through nested expressions without becoming an ordinary String.
+      return _Kind.variant;
     }
     return name == 'len' ? _Kind.number : _Kind.string;
   }
@@ -4397,8 +4410,8 @@ class _Checker {
     _compatible(_Kind.number, _expression(value), value.token);
   }
 
-  // Table selectors have required numeric arguments. Keep an actual-to-formal
-  // map so named arguments may be reordered without reordering evaluation.
+  // Word collection selectors have required numeric arguments. Keep an
+  // actual-to-formal map so names never change source evaluation order.
   void _wordSelectorCall(_Member member, List<String> parameters) {
     final arguments = member.arguments;
     if (arguments == null) {
@@ -4535,6 +4548,7 @@ class _Checker {
             expected == _Kind.worksheet ||
             expected == _Kind.range ||
             expected == _Kind.document ||
+            expected == _Kind.wordSections ||
             expected == _Kind.wordSection ||
             expected == _Kind.wordPageSetup ||
             expected == _Kind.wordTextColumns ||
@@ -4550,6 +4564,7 @@ class _Checker {
             expected == _Kind.wordCells ||
             expected == _Kind.wordCell ||
             expected == _Kind.wordCellRange ||
+            expected == _Kind.paragraphs ||
             expected == _Kind.paragraph ||
             expected == _Kind.font ||
             expected == _Kind.paragraphFormat ||
@@ -6345,6 +6360,11 @@ class _Evaluator {
           context.type(token, 'Set requires a Word Cell.');
         }
         return value;
+      case _Declared.wordSections:
+        if (value is! _WordSections) {
+          context.type(token, 'Set requires Word Sections.');
+        }
+        return value;
       case _Declared.wordSection:
         if (value is! _WordSection) {
           context.type(token, 'Set requires a Word Section.');
@@ -6368,6 +6388,11 @@ class _Evaluator {
       case _Declared.wordHeaderFooter:
         if (value is! _WordHeaderFooter) {
           context.type(token, 'Set requires a Word HeaderFooter.');
+        }
+        return value;
+      case _Declared.paragraphs:
+        if (value is! _WordParagraphs) {
+          context.type(token, 'Set requires Word Paragraphs.');
         }
         return value;
       case _Declared.paragraph:
@@ -6752,7 +6777,13 @@ class _Evaluator {
       return _stringSearch(expression, arguments);
     }
     if (name == 'replace') return _stringReplace(expression, arguments);
-    final text = _string(arguments.first, expression.arguments.first.token);
+    final nullableSlice = name == 'left' || name == 'right' || name == 'mid';
+    final input = arguments.first;
+    final text =
+        nullableSlice &&
+            (input == _VariantState.empty || input == _VariantState.nullValue)
+        ? ''
+        : _string(input, expression.arguments.first.token);
     if (name == 'len') return text.length;
     if (name == 'trim' ||
         name == r'trim$' ||
@@ -6781,26 +6812,35 @@ class _Evaluator {
       return _stringCopy(text, start, end, expression.token);
     }
 
+    final middle = name == 'mid' || name == r'mid$';
     final second = _stringIndex(
       arguments[1],
       expression.arguments[1].token,
-      isStart: name == r'mid$',
+      isStart: middle,
     );
     // Validate an explicit length even when start is beyond the input. All
     // argument expressions have already been evaluated once, in source order.
-    final requested = name == r'mid$'
+    final requested = middle
         ? arguments.length == 3
               ? _stringIndex(arguments[2], expression.arguments[2].token)
               : text.length
         : second;
-    final start = name == r'mid$' ? second - 1 : 0;
+    // This bounded dialect validates every supplied numeric argument before
+    // propagating a Null String, including a length after a past-end start.
+    // That precedence is deliberate, not an installed Office observation.
+    if (nullableSlice && input == _VariantState.nullValue) {
+      return _VariantState.nullValue;
+    }
+    final start = middle ? second - 1 : 0;
     final available = start < text.length ? text.length - start : 0;
     final count = requested < available ? requested : available;
     // Charge the actual result, including full-input slices, before allocating.
     // Dart String indices are UTF-16 units on both the VM and JavaScript.
     _charge(count, expression.token);
     if (count == 0) return '';
-    final offset = name == r'right$' ? text.length - count : start;
+    final offset = name == 'right' || name == r'right$'
+        ? text.length - count
+        : start;
     return text.substring(offset, offset + count);
   }
 

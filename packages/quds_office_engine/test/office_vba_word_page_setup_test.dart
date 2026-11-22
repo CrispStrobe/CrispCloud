@@ -392,7 +392,7 @@ End Sub
     'ThisDocument.Sections(1).Headers(1).Range.InsertBefore "header"',
     'ThisDocument.Sections()',
     'ThisDocument.Sections(1, 2).PageSetup.TopMargin = 36',
-    'ThisDocument.Sections(Index:=1).PageSetup.TopMargin = 36',
+    'ThisDocument.Sections(Position:=1).PageSetup.TopMargin = 36',
     'ThisDocument.Sections.Item().PageSetup.TopMargin = 36',
     'ThisDocument.Sections(1).PageSetup(1).TopMargin = 36',
     '$_setup.TopMargin(1) = 36',

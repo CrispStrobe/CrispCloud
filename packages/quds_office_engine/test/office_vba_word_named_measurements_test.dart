@@ -433,7 +433,7 @@ End Sub
     for (final expression in [
       'RGB(Red:=1, Green:=2, Blue:=3)',
       'Len(String:="text")',
-      'ActiveDocument.Paragraphs(Index:=1)',
+      'ActiveDocument.Paragraphs(1).Range.Characters(Index:=1)',
     ]) {
       expect(
         () => _compile('Dim value As Variant\nvalue = $expression'),

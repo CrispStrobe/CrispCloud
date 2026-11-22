@@ -4,6 +4,18 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Add ordinary VBA `Left`, `Right` and expression `Mid` across Word, Excel
+  and PowerPoint, with Variant String/Empty/Null behavior, bounded UTF-16
+  slicing and unchanged strict `$` forms. Extend Word `Paragraphs`, `Sections`,
+  `Headers`, `Footers` and their `Item` methods with required named `Index`;
+  add typed `Sections`/`Paragraphs` aliases and required `ByVal` helpers.
+  Preserve evaluation order, selector identity, inactive-source object/cell
+  guards, native rollback and opaque DOCM parts. Include a complete five-step
+  reference-label BAS, 64 independent conformance cases and native/CLI/MCP
+  and VM/JavaScript checks. See the
+  [contracts](../../docs/vba-word-macros-details.md#named-document-and-story-selectors)
+  and [qualification](../../docs/validation/word-vba-text-selectors-20261122/README.md).
+
 - Import Zotero research-note blockquotes as distinct native paragraphs, with
   up to eight quote levels and 18 pt of additional left indentation per level.
   Preserve supported headings, lists, links, pictures and active citations;

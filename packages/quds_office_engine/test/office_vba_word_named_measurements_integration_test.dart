@@ -36,7 +36,8 @@ void main() {
       expect(result['revisionAfterReplay'], 2);
       expect(result['additionalReopens'], 2);
       expect(result['opaqueVbaPreserved'], isTrue);
-      expect(result['nativeIndentGroupReplaced'], isTrue);
+      expect(result['nativeIndentGeometryReplaced'], isTrue);
+      expect(result['nativeIndentExtensionsPreserved'], isTrue);
     },
   );
 

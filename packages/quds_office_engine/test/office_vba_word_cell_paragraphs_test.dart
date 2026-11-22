@@ -280,25 +280,28 @@ target.InsertBefore "Prefix: "
       ]);
     });
 
-    test('cyclic alias origins retain the active list-operation guard', () {
-      const bindings =
-          '''
+    test(
+      'cyclic cell aliases retain static and active list-operation guards',
+      () {
+        const bindings =
+            '''
 Dim original As Range, retained As Range
 Set original = $_paragraph.Range
 Set retained = original
 Set original = retained
 ''';
-      expect(
-        _compile(
-          '${bindings}If False Then\noriginal.ListFormat.ApplyBulletDefault\nEnd If',
-        ).steps,
-        isEmpty,
-      );
-      expect(
-        () => _compile('${bindings}original.ListFormat.ApplyBulletDefault'),
-        throwsA(_error('vba_unsupported')),
-      );
-    });
+        expect(
+          () => _compile(
+            '${bindings}If False Then\noriginal.ListFormat.ApplyBulletDefault\nEnd If',
+          ),
+          throwsA(_error('vba_unsupported')),
+        );
+        expect(
+          () => _compile('${bindings}original.ListFormat.ApplyBulletDefault'),
+          throwsA(_error('vba_unsupported')),
+        );
+      },
+    );
 
     for (final index in ['0', '-1', '1.5', 'True', '"1"', 'Empty', 'Null']) {
       for (final item in ['', '.Item']) {

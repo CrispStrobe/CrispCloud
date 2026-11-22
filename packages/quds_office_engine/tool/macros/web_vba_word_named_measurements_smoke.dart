@@ -30,8 +30,8 @@ OfficeMacro wordMeasurementPlan(String body) =>
 
 /// Imported DOCM: rich text, native styles, an empty paragraph, extension data
 /// and opaque VBA/signature parts exercise the existing native write contract.
-/// Native indentation writes replace the entire w:ind group, so its adversarial
-/// x:token is deliberately outside the unrelated-property preservation checks.
+/// Native indentation writes update their owned geometry while retaining
+/// unrelated extension attributes, including the adversarial x:token.
 Uint8List wordMeasurementInput() {
   final package = OpcPackage.openBytes(
     (DocxDocumentBuilder()..paragraph('Template')).build(),
@@ -241,11 +241,11 @@ void checkWordMeasurementExample(Uint8List bytes, Uint8List original) {
     );
   }
   final document = WordDeserializer().readBytes(bytes);
-  // Existing docx.paragraphFormat owns/replaces the complete indent group.
-  // Conversion support does not change that native fidelity limitation.
+  // Explicit formatting owns the modeled indent geometry. The sparse native
+  // writer preserves unrelated extension attributes in the same property.
   _check(
-    indent.getAttribute('token', namespaceUri: _extension) == null,
-    'The existing native indentation group replacement contract changed',
+    indent.getAttribute('token', namespaceUri: _extension) == 'indent',
+    'Measurement writes changed unrelated indentation extension metadata',
   );
   _check(
     spacing.getAttribute('token', namespaceUri: _extension) == 'spacing' &&
@@ -337,7 +337,8 @@ Future<Map<String, Object?>> runWordMeasurementExample(String source) async {
     'revisionAfterReplay': session.revision,
     'additionalReopens': 2,
     'opaqueVbaPreserved': true,
-    'nativeIndentGroupReplaced': true,
+    'nativeIndentGeometryReplaced': true,
+    'nativeIndentExtensionsPreserved': true,
     'paragraphs': wordMeasurementState(saved),
   };
 }

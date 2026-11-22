@@ -568,8 +568,8 @@ End Function
     'ThisDocument.Paragraphs(1).Headers(1).Range.Paragraphs(1).Range.Font.Bold = True',
     'ThisDocument.Sections(1).Headers.Range.Paragraphs(1).Range.Font.Bold = True',
     'ThisDocument.Sections(1).Headers(1).Paragraphs(1).Range.Font.Bold = True',
-    'ThisDocument.Sections(1).Headers(Index:=1).Range.Paragraphs(1).Range.Font.Bold = True',
-    'ThisDocument.Sections(1).Headers.Item(Index:=1).Range.Paragraphs(1).Range.Font.Bold = True',
+    'ThisDocument.Sections(1).Headers(Kind:=1).Range.Paragraphs(1).Range.Font.Bold = True',
+    'ThisDocument.Sections(1).Headers.Item(Kind:=1).Range.Paragraphs(1).Range.Font.Bold = True',
     'ThisDocument.Sections(1).Headers().Range.Paragraphs(1).Range.Font.Bold = True',
     'ThisDocument.Sections(1).Headers(1, 2).Range.Paragraphs(1).Range.Font.Bold = True',
   ]) {
