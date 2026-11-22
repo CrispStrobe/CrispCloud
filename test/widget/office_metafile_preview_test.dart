@@ -12,6 +12,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
 import 'package:legacy_doc_parser/legacy_doc_parser.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../packages/legacy_doc_parser/test/support/media_word_fixture.dart';
 import '../../packages/legacy_doc_parser/test/support/metafile_fixture.dart';
@@ -40,6 +41,7 @@ void main() {
       testWidgets(
         '${pane ? 'Preview pane' : 'F3'} paints referenced $format from binary DOC',
         (tester) async {
+          SharedPreferences.setMockInitialValues(<String, Object>{});
           // Font asset reads use real I/O; fake-clock pumpAndSettle cannot
           // finish them, particularly on a cold Linux runner.
           await tester.runAsync(DocumentFonts.ensureRegistered);

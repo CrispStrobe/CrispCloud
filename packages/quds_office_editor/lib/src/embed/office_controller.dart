@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -14,12 +15,14 @@ import '../editor_sheet/sheet_scroll_extent.dart';
 import '../editor_word/caret_engine.dart';
 import '../editor_word/office_ruler.dart';
 import '../editor_word/paint_run_text.dart';
+import '../editor_word/proofing_geometry.dart';
 import '../editor_word/table_history.dart';
 import '../editor_word/word_run_metrics.dart';
 import '../proofing/word_proofing.dart';
 import 'office_clipboard.dart';
 import 'office_host_fonts.dart';
 import 'office_theme.dart';
+import 'word_autocorrect.dart';
 import 'word_page_layout.dart';
 
 /// The persistent review workspace shown beside (or below) a Word document.
@@ -259,6 +262,12 @@ abstract class OfficeController extends ChangeNotifier {
 
   /// Host chrome: F7.
   VoidCallback? onSpellCheckRequested;
+
+  /// Gives a host's configured shortcuts priority over the surface defaults.
+  /// Return true after dispatching a command or retiring a default binding.
+  /// Only focused document surfaces call this hook; native text fields keep
+  /// their own editing actions. Null preserves standalone editor shortcuts.
+  bool Function(KeyEvent event)? onShortcutKeyEvent;
 
   /// Fired after [find] / [findNext] updates [findSession].
   void Function(OfficeFindHit? hit)? onFindResult;
@@ -874,6 +883,14 @@ class WordEditorController extends OfficeController {
       _thesaurusTarget = null;
       _thesaurusLookup = null;
     }
+    // An active composition is not committed text. Do not schedule proofing
+    // against the intermediate IME value; the commit notification observes
+    // the final text and schedules the normal check.
+    if (input.composing.isValid && !input.composing.isCollapsed) {
+      _proofing?.suspendForComposition();
+      super.notifyListeners();
+      return;
+    }
     _proofing?.observeDocument();
     super.notifyListeners();
   }
@@ -951,11 +968,13 @@ class WordEditorController extends OfficeController {
   WmlDocument get document => _document;
   set document(WmlDocument value) {
     if (identical(value, _document)) return;
+    _openGeneration++;
     _document = value;
     _documentReplaced = true;
   }
 
   WmlDocument _document;
+  int _openGeneration = 0;
 
   /// True while [documentLaidOut] still shows a previously assigned
   /// [document].
@@ -1466,22 +1485,46 @@ class WordEditorController extends OfficeController {
 
   /// loadBytes API.
   void loadBytes(Uint8List bytes, {String? password}) {
+    if (isDisposed) {
+      throw StateError('Cannot open a file in a disposed editor.');
+    }
+    _openGeneration++;
+    if (OdtDocumentReader.isOdt(bytes)) {
+      throw UnsupportedError(
+        'Use loadBytesAsync to import a native ODT document.',
+      );
+    }
     _acceptOpenedWord(
       WordDeserializer().read(OfficeRepair.open(bytes, password: password)),
     );
   }
 
-  /// loadBytesAsync API.
+  /// Opens DOCX or a supported native ODT without replacing newer work.
+  ///
+  /// Failed imports and results made stale by an edit, document replacement,
+  /// another open request or disposal leave the active document untouched.
   Future<void> loadBytesAsync(
     Uint8List bytes, {
     String? password,
     void Function(OfficeOpenProgress progress)? onProgress,
   }) async {
+    if (isDisposed) {
+      throw StateError('Cannot open a file in a disposed editor.');
+    }
+    final int generation = ++_openGeneration;
+    final WmlDocument original = document;
+    final int revision = contentRevision;
     final WordOpenPayload opened = await OfficeIsolateOpen.word(
       bytes,
       password: password,
       onProgress: onProgress,
     );
+    if (isDisposed ||
+        generation != _openGeneration ||
+        !identical(document, original) ||
+        contentRevision != revision) {
+      throw StateError('The document changed while the file was opening.');
+    }
     _acceptOpenedWord(opened.document);
   }
 
@@ -4316,6 +4359,42 @@ class WordEditorController extends OfficeController {
     );
   }
 
+  /// Inserts literal plain text at the text caret as one undoable operation.
+  ///
+  /// Replaces a same-paragraph text selection or the complete document using
+  /// plain-paste preflight and story ownership. CRLF, CR and LF become paragraph
+  /// boundaries, including empty and trailing lines. Destination formatting is
+  /// retained; HTML is not interpreted and the clipboard is not accessed.
+  ///
+  /// Returns false without changes for empty input, read-only surfaces,
+  /// active Notes-pane targets, non-text object selections or partial selections
+  /// spanning paragraphs. Notes retain a separate selection, so this operation
+  /// must not fall through to the inactive body caret.
+  /// Returns true after insertion. Unsupported content-control edits throw
+  /// before any text is changed.
+  bool insertPlainText(String text) {
+    if (!config.allowsMutation ||
+        text.isEmpty ||
+        noteEditingTarget != null ||
+        selectedVisual != null ||
+        selectedEquation != null ||
+        (selectedFrame != null && !editingFrame) ||
+        selectedTable != null ||
+        selectedTableBand != null) {
+      return false;
+    }
+    final range = caret.normalizedRange;
+    // Structural paste can retain boundary blocks or relocate the caret when
+    // a partial selection crosses paragraphs. Do not expose that behavior as
+    // text replacement at the selected target.
+    if (range.startPara != range.endPara &&
+        (isEditingHeaderFooter || !_isEntireDocumentSelected())) {
+      return false;
+    }
+    _coalescingNotifications(() => _pasteWordPlain(text));
+    return true;
+  }
+
   /// insertText API.
   void insertText(String text) =>
       _coalescingNotifications(() => _insertText(text));
@@ -4996,6 +5075,49 @@ class WordEditorController extends OfficeController {
     return text.length;
   }
 
+  TextEditingValue _autocorrectImeValue(TextEditingValue value, String old) {
+    if (!value.selection.isCollapsed ||
+        value.composing.isValid && !value.composing.isCollapsed ||
+        value.text == old) {
+      return value;
+    }
+    final insertion = _singleInsertion(old, value.text);
+    if (insertion == null) return value;
+    final corrected = wordAutocorrectInsertion(
+      text: value.text,
+      offset: insertion.offset,
+      inserted: insertion.text,
+      language: _autocorrectLanguage,
+    );
+    if (corrected.text == value.text) return value;
+    final extent = (value.selection.extentOffset + corrected.caretDelta).clamp(
+      0,
+      corrected.text.length,
+    );
+    return value.copyWith(
+      text: corrected.text,
+      selection: TextSelection.collapsed(offset: extent),
+      composing: TextRange.empty,
+    );
+  }
+
+  ({int offset, String text})? _singleInsertion(String old, String next) {
+    if (next.length != old.length + 1) return null;
+    var prefix = 0;
+    while (prefix < old.length &&
+        old.codeUnitAt(prefix) == next.codeUnitAt(prefix)) {
+      prefix++;
+    }
+    if (prefix == old.length) return (offset: prefix, text: next[prefix]);
+    if (old.substring(prefix) != next.substring(prefix + 1)) return null;
+    return (offset: prefix, text: next[prefix]);
+  }
+
+  String get _autocorrectLanguage =>
+      _activeParagraph.properties.proofingLanguage ??
+      document.proofingLanguage ??
+      'de-DE';
+
   void _onIme(TextEditingValue value) {
     if (_applyingIme ||
         !config.allowsMutation ||
@@ -5011,6 +5133,9 @@ class WordEditorController extends OfficeController {
     }
     final WmlParagraph para = _activeParagraph;
     final String old = para.text;
+    final corrected = _autocorrectImeValue(value, old);
+    final autocorrected = corrected.text != value.text;
+    value = corrected;
     final void Function(String, int)? phase = debugEditPhase;
     final Stopwatch? watch = phase == null ? null : (Stopwatch()..start());
     void lap(String name) {
@@ -5052,6 +5177,7 @@ class WordEditorController extends OfficeController {
     caret.resetBlink();
     _imeValueTarget = _imeEditingTarget;
     lap('caret');
+    if (autocorrected) input.setValue(value);
     notifyListeners();
     lap('notify');
   }
@@ -7894,6 +8020,54 @@ class WordEditorController extends OfficeController {
   /// Reinspect after mutations or undo/redo: field handles are short-lived.
   List<WmlZoteroField> get zoteroFields => WordZotero.fields(document);
 
+  /// Whether a field has a complete result packet the native Zotero processor
+  /// can replace, even when its stored citation metadata is damaged. This is
+  /// an availability hint; the transaction rechecks document ownership,
+  /// protection and the complete field inventory before any change applies.
+  bool canEditZoteroFieldNatively(WmlZoteroField field) =>
+      field.canEditNativeResult ||
+      WordZotero.canRecoverNativeBibliography(document, field);
+
+  WordZoteroTransaction? _zoteroContextOwner;
+
+  /// Temporary context requested by Zotero while a detached operation runs.
+  /// This never replaces the writing selection or the active Notes target.
+  /// A changed document/selection or a finished operation has no live context.
+  WordZoteroFieldSelectionContext? get zoteroFieldContext {
+    final owner = _zoteroContextOwner;
+    if (owner == null || _disposed || !config.allowsSelection) return null;
+    try {
+      return owner.selectedFieldContext;
+    } on StateError {
+      return null;
+    }
+  }
+
+  void _presentZoteroFieldContext(WordZoteroTransaction owner) {
+    final context = owner.selectedFieldContext;
+    if (context == null) {
+      _clearZoteroFieldContext(owner);
+      return;
+    }
+    final previous = _zoteroContextOwner;
+    if (previous != null && !identical(previous, owner)) {
+      previous.clearFieldContext();
+    }
+    _zoteroContextOwner = owner;
+    owner._revealFieldContext(context);
+    notifyListeners();
+  }
+
+  void _clearZoteroFieldContext(
+    WordZoteroTransaction owner, {
+    bool notify = true,
+  }) {
+    if (!identical(_zoteroContextOwner, owner)) return;
+    _zoteroContextOwner = null;
+    owner._restoreContextViewport();
+    if (notify && !_disposed) notifyListeners();
+  }
+
   /// A fresh field handle at the body or Notes caret, enclosing a selection
   /// in one paragraph, or exactly matching a selected multi-paragraph
   /// bibliography. A collapsed caret at a field's end belongs to the following
@@ -8142,6 +8316,7 @@ class WordEditorController extends OfficeController {
     ZoteroCitingCommand? command,
     WmlZoteroField? selectedField,
     ZoteroCitation? seedCitation,
+    bool Function()? isCurrent,
   }) {
     if (_disposed || !config.allowsMutation) {
       throw StateError('This document is not editable.');
@@ -8231,7 +8406,7 @@ class WordEditorController extends OfficeController {
     if (insertsNoteText) {
       session.assertCanInsertNoteText();
     }
-    return WordZoteroTransaction._(this, session);
+    return WordZoteroTransaction._(this, session, isCurrent: isCurrent);
   }
 
   void _applyZoteroTransaction(WordZoteroCitingSession session) {
@@ -8243,45 +8418,164 @@ class WordEditorController extends OfficeController {
       throw StateError('Zotero has not completed the operation.');
     }
     if (!session.hasChanges) return;
-    final before = _ZoteroDocumentSnapshot.capture(document);
-    before.assertRestorable(document);
-    late final _ZoteroDocumentSnapshot after;
-    try {
-      session.apply();
-      after = _ZoteroDocumentSnapshot.capture(document);
-    } finally {
-      before.restore(document);
-    }
+    // Reject stale host state before capturing endpoints from its live
+    // paragraphs, preserving the transaction's StateError contract.
+    session.assertUnchanged();
     final beforeCaret = caret.logicalIndex;
     final beforeParagraph = caret.paragraphIndex;
     final beforeAnchor = caret.selectionAnchor;
     final beforeAnchorParagraph = caret.selectionAnchorParagraph;
     final beforeNoteTarget = noteEditingTarget;
+    final sourceParagraphs = _paragraphs;
+    WordZoteroCitingPosition? captureBody(int paragraph, int offset) =>
+        paragraph >= 0 && paragraph < sourceParagraphs.length
+        ? session.capturePosition(
+            sourceParagraphs[paragraph],
+            offset.clamp(0, sourceParagraphs[paragraph].text.length),
+          )
+        : null;
+    WordZoteroCitingPosition? captureNote(int offset) {
+      if (beforeNoteTarget == null) return null;
+      final range = _noteSelectionRange((
+        note: beforeNoteTarget.note,
+        selection: TextSelection.collapsed(offset: offset),
+        composing: TextRange.empty,
+      ));
+      return range == null
+          ? null
+          : session.capturePosition(range.paragraph, range.start);
+    }
+
+    // Body and Notes selections have independent endpoints. Retain their
+    // native paragraph identities before bibliography reflow changes indexes.
+    final bodyExtent = captureBody(beforeParagraph, beforeCaret);
+    final bodyAnchor = captureBody(beforeAnchorParagraph, beforeAnchor);
+    final noteExtent = beforeNoteTarget == null
+        ? null
+        : captureNote(beforeNoteTarget.selection.extentOffset);
+    final noteAnchor = beforeNoteTarget == null
+        ? null
+        : captureNote(beforeNoteTarget.selection.baseOffset);
+    final before = _ZoteroDocumentSnapshot.capture(document);
+    before.assertRestorable(document);
+    late final _ZoteroDocumentSnapshot after;
+    late ({int paragraph, int offset}) afterExtent;
+    late ({int paragraph, int offset}) afterAnchor;
+    WordNoteEditingTarget? afterNoteTarget;
+    try {
+      session.apply();
+      final paragraphs = _paragraphs;
+      ({WmlParagraph paragraph, int offset})? resolve(
+        WordZoteroCitingPosition? position,
+      ) => position == null ? null : session.resolvePosition(position);
+      ({int paragraph, int offset}) bodyPosition(
+        ({WmlParagraph paragraph, int offset})? position, {
+        required int fallbackParagraph,
+        required int fallbackOffset,
+      }) {
+        final index = position == null
+            ? -1
+            : paragraphs.indexOf(position.paragraph);
+        final paragraph = (index < 0 ? fallbackParagraph : index).clamp(
+          0,
+          paragraphs.length - 1,
+        );
+        return (
+          paragraph: paragraph,
+          offset: (index < 0 ? fallbackOffset : position!.offset).clamp(
+            0,
+            paragraphs[paragraph].text.length,
+          ),
+        );
+      }
+
+      final mappedExtent = resolve(bodyExtent);
+      final mappedAnchor = resolve(bodyAnchor);
+      afterExtent = bodyPosition(
+        mappedExtent,
+        fallbackParagraph: beforeParagraph,
+        fallbackOffset: beforeCaret,
+      );
+      afterAnchor = mappedExtent == null || mappedAnchor == null
+          ? afterExtent
+          : bodyPosition(
+              mappedAnchor,
+              fallbackParagraph: beforeAnchorParagraph,
+              fallbackOffset: beforeAnchor,
+            );
+      final destination = session.caretAfter;
+      if (destination != null) {
+        // New citations and research content retain their explicit insertion
+        // destination; Refresh and style changes use the transformed source.
+        afterExtent = bodyPosition(
+          destination,
+          fallbackParagraph: afterExtent.paragraph,
+          fallbackOffset: afterExtent.offset,
+        );
+        afterAnchor = afterExtent;
+        afterNoteTarget = _noteTargetAt(
+          destination.paragraph,
+          destination.offset,
+        );
+      } else if (beforeNoteTarget != null) {
+        final extent = resolve(noteExtent);
+        final anchor = resolve(noteAnchor);
+        final extentTarget = extent == null
+            ? null
+            : _noteTargetAt(extent.paragraph, extent.offset);
+        final anchorTarget = anchor == null
+            ? null
+            : _noteTargetAt(anchor.paragraph, anchor.offset);
+        if (extentTarget != null) {
+          final sameNote =
+              anchorTarget != null &&
+              identical(anchorTarget.note, extentTarget.note);
+          afterNoteTarget = (
+            note: extentTarget.note,
+            selection: beforeNoteTarget.selection.copyWith(
+              baseOffset: sameNote
+                  ? anchorTarget.selection.extentOffset
+                  : extentTarget.selection.extentOffset,
+              extentOffset: extentTarget.selection.extentOffset,
+            ),
+            composing: TextRange.empty,
+          );
+        } else if (extent != null && paragraphs.contains(extent.paragraph)) {
+          // A removed or converted sole citation note returns to its body
+          // anchor. Never retain a Notes selection into a detached note.
+          afterExtent = bodyPosition(
+            extent,
+            fallbackParagraph: afterExtent.paragraph,
+            fallbackOffset: afterExtent.offset,
+          );
+          afterAnchor = anchor != null && paragraphs.contains(anchor.paragraph)
+              ? bodyPosition(
+                  anchor,
+                  fallbackParagraph: afterExtent.paragraph,
+                  fallbackOffset: afterExtent.offset,
+                )
+              : afterExtent;
+        } else {
+          afterNoteTarget = _clampNoteEditingTarget(beforeNoteTarget);
+        }
+      }
+      after = _ZoteroDocumentSnapshot.capture(document);
+    } finally {
+      before.restore(document);
+    }
     commands.commit(
       _CallbackCommand(
         executeFn: () {
           after.restore(document);
-          final paragraphs = _paragraphs;
-          final destination = session.caretAfter;
-          final destinationIndex = destination == null
-              ? -1
-              : paragraphs.indexOf(destination.paragraph);
-          caret.paragraphIndex =
-              (destinationIndex < 0 ? beforeParagraph : destinationIndex).clamp(
-                0,
-                paragraphs.length - 1,
-              );
-          caret.logicalIndex =
-              (destinationIndex < 0 ? beforeCaret : destination!.offset).clamp(
-                0,
-                paragraphs[caret.paragraphIndex].text.length,
-              );
-          caret.collapseSelection();
-          _restoreNoteEditingTarget(
-            destination == null
-                ? _clampNoteEditingTarget(beforeNoteTarget)
-                : _noteTargetAt(destination.paragraph, destination.offset),
-          );
+          caret
+            ..paragraphIndex = afterExtent.paragraph
+            ..logicalIndex = afterExtent.offset
+            ..selectionAnchorParagraph = afterAnchor.paragraph
+            ..selectionAnchor = afterAnchor.offset
+            ..resetBlink();
+          _restoreNoteEditingTarget(afterNoteTarget);
+          // Redo must retain the transformed selection, including direction.
+          _historyRestoredSelection = true;
         },
         undoFn: () {
           before.restore(document);
@@ -8290,8 +8584,6 @@ class WordEditorController extends OfficeController {
           caret.selectionAnchor = beforeAnchor;
           caret.selectionAnchorParagraph = beforeAnchorParagraph;
           _restoreNoteEditingTarget(beforeNoteTarget);
-          // The generic history hook normally collapses a selection. This
-          // command restores an exact selection snapshot instead.
           _historyRestoredSelection = true;
         },
       ),
@@ -8447,10 +8739,26 @@ class WordEditorController extends OfficeController {
   }
 
   /// Explicitly converts a citation/bibliography to ordinary text, with undo.
+  /// Damaged metadata is allowed only when its complete native result packet
+  /// has an unambiguous structural owner; its cached text stays unchanged.
   void unlinkZoteroField(WmlZoteroField field) {
     if (_disposed || !config.allowsMutation) return;
     _assertZoteroFieldOwner(field);
-    _commitZoteroChange(field.paragraphs, () => WordZotero.unlink(field));
+    if (!field.isValid) {
+      if (document.restrictEditing || !canEditZoteroFieldNatively(field)) {
+        throw UnsupportedError(
+          'This damaged Zotero reference does not have an editable, complete field result. Its text and metadata were kept unchanged.',
+        );
+      }
+      WordZotero.assertCompleteNativeFields(document);
+      WordZotero.nativeFieldOwners(document, [field]);
+      _commitZoteroChange(
+        field.paragraphs,
+        () => WordZotero.unlinkNative(field, document: document),
+      );
+    } else {
+      _commitZoteroChange(field.paragraphs, () => WordZotero.unlink(field));
+    }
   }
 
   /// Converts all modeled Zotero citations and bibliographies to ordinary
@@ -8662,16 +8970,17 @@ class WordEditorController extends OfficeController {
   }
 
   void _assertZoteroFieldOwner(WmlZoteroField field) {
-    if (!zoteroFields.any(
+    final owners = zoteroFields.where(
       (current) =>
           identical(current.paragraph, field.paragraph) &&
           current.start == field.start &&
           current.end == field.end &&
           current.instruction == field.instruction &&
           current.cachedText == field.cachedText,
-    )) {
+    );
+    if (owners.take(2).length != 1) {
       throw StateError(
-        'This Zotero field no longer belongs to the current document.',
+        'This Zotero field no longer has one owner in the current document.',
       );
     }
   }
@@ -10310,12 +10619,14 @@ class WordEditorController extends OfficeController {
         run.properties.underline.name,
         run.properties.strike,
         run.properties.smallCaps,
+        run.properties.allCaps,
         run.properties.color,
         run.properties.highlight,
         run.properties.fontSizeHalfPoints,
         run.properties.asciiFont,
         run.properties.csFont,
         run.properties.vertAlign.name,
+        run.properties.positionHalfPoints,
         run.properties.sourcePropertiesXml,
         run.properties.importedValues,
         run.properties.explicitProperties.toList(),
@@ -16264,13 +16575,303 @@ class _SheetGridSnap {
 /// A native Zotero operation pinned to one editor document and selection.
 /// Commands operate on [session] until [apply] commits the complete result.
 final class WordZoteroTransaction {
-  WordZoteroTransaction._(this._controller, this.session)
-    : _target = _capture(_controller);
+  WordZoteroTransaction._(
+    this._controller,
+    this.session, {
+    bool Function()? isCurrent,
+  }) : _hostIsCurrent = isCurrent,
+       _target = _capture(_controller);
 
   final WordEditorController _controller;
   final WordZoteroCitingSession session;
+  final bool Function()? _hostIsCurrent;
   final Object _target;
   bool _applied = false;
+  Offset? _contextOrigin;
+  Offset? _revealedOrigin;
+  double? _contextScale;
+
+  /// Context for an explicit Field.select callback, checked against the
+  /// original document and host target. No staged content is published.
+  WordZoteroFieldSelectionContext? get selectedFieldContext {
+    assertCurrent();
+    return session.selectedFieldContext;
+  }
+
+  /// Only this operation's currently presented context. An older prompt must
+  /// not adopt the selected field of a newer operation in the same editor.
+  WordZoteroFieldSelectionContext? get presentedFieldContext =>
+      identical(_controller._zoteroContextOwner, this)
+      ? _controller.zoteroFieldContext
+      : null;
+
+  /// Drives a native callback and presents its selected source field without
+  /// moving the user's caret, selection, Notes target, focus or undo history.
+  /// Hosts still handle Document.displayAlert themselves. Always call
+  /// [clearFieldContext] in the host's finally/disposal path as well.
+  Object? handle(String command, List<Object?> arguments) {
+    try {
+      assertCurrent();
+      final response = session.handle(command, arguments);
+      if (command == 'Field.select') {
+        _controller._presentZoteroFieldContext(this);
+      } else if (identical(_controller._zoteroContextOwner, this) &&
+          (command == 'Field.delete' ||
+              command == 'Field.removeCode' ||
+              command == 'Document.insertField' ||
+              command == 'Document.insertText' ||
+              command == 'Document.importDocument' ||
+              command == 'Document.exportDocument' ||
+              command == 'Document.complete')) {
+        if (session.selectedFieldContext == null) clearFieldContext();
+      }
+      return response;
+    } on Object {
+      clearFieldContext();
+      rethrow;
+    }
+  }
+
+  /// Discards only this operation's presentation. A newer operation's context
+  /// and a viewport subsequently moved by the user are left alone.
+  void clearFieldContext({bool notify = true}) =>
+      _controller._clearZoteroFieldContext(this, notify: notify);
+
+  void _revealFieldContext(WordZoteroFieldSelectionContext context) {
+    final ranges = context.sourceRanges;
+    if (ranges.isEmpty) return;
+    final viewport = _controller.viewport;
+    final extent = viewport.extent;
+    final scale = viewport.scale * 96 / 72;
+    if (extent.isEmpty ||
+        !extent.width.isFinite ||
+        !extent.height.isFinite ||
+        !scale.isFinite ||
+        scale <= 0) {
+      return;
+    }
+    final layout = _controller.documentLaidOut;
+    if (layout.pages.isEmpty) return;
+    // Match RenderWordCanvas's paged content and page-left geometry. A reveal
+    // changes only the viewport; no layout pass is guaranteed to clamp it.
+    const sideGutter = 64.0;
+    const scrollBar = 14.0;
+    const pageGap = 24.0;
+    final pageWidth =
+        layout.pages.fold<double>(
+          layout.pageSize.width,
+          (width, page) => math.max(width, page.width),
+        ) *
+        scale;
+    final viewWidth = math.max(0.0, extent.width - scrollBar);
+    if (viewWidth <= 0) return;
+    final pageLeft = viewWidth > pageWidth + sideGutter * 2
+        ? (viewWidth - pageWidth) / 2
+        : sideGutter;
+    final content = Size(
+      pageWidth + sideGutter * 2 + scrollBar,
+      layout.pages.fold<double>(
+        pageGap,
+        (height, page) => height + page.height * scale + pageGap,
+      ),
+    );
+    // A later select may follow deliberate scrolling or zooming while the
+    // prompt was open. Return to that newer view, not the first reveal's view.
+    if (_contextOrigin != null &&
+        (viewport.origin != _revealedOrigin ||
+            viewport.scale != _contextScale)) {
+      _contextOrigin = viewport.origin;
+      _contextScale = viewport.scale;
+    }
+    for (final range in ranges) {
+      for (final page in layout.pages) {
+        for (final line in [...page.lines, ...page.notes]) {
+          if (!identical(line.sourceParagraph, range.paragraph)) continue;
+          final bounds = _fieldContextBounds(page, line, range);
+          if (bounds == null) continue;
+          final left = pageLeft + bounds.left * scale;
+          final right = pageLeft + bounds.right * scale;
+          final top =
+              layout.pageStackTop(page.index, scale) + bounds.top * scale;
+          final padding = math.min(24.0, viewWidth / 4);
+          var nextX = viewport.origin.dx;
+          if (right - left > viewWidth) {
+            // An oversized result cannot fit at this zoom. Show its leading
+            // edge, respecting the original paragraph's writing direction.
+            nextX = range.paragraph.properties.bidiBaseLevel == 1
+                ? right - viewWidth + padding
+                : left - padding;
+          } else if (left < nextX) {
+            nextX = left - padding;
+          } else if (right > nextX + viewWidth) {
+            nextX = right - viewWidth + padding;
+          }
+          _contextOrigin ??= viewport.origin;
+          _contextScale ??= viewport.scale;
+          viewport.origin = Offset(nextX, top - 48);
+          viewport.clampTo(content: content, view: extent);
+          // Remember the actual legal origin so a later layout clamp cannot
+          // be mistaken for deliberate user scrolling during cleanup.
+          _revealedOrigin = viewport.origin;
+          return;
+        }
+      }
+    }
+  }
+
+  Rect? _fieldContextBounds(
+    LaidOutPage page,
+    LaidOutLine line,
+    WordZoteroFieldSelectionRange range,
+  ) {
+    final displayRanges = WordProofingGeometry.displayRanges(
+      line,
+      range.start,
+      range.end,
+    );
+    if (displayRanges.isEmpty) return null;
+    final boxes = <Rect>[];
+    if (line.glyphs.isNotEmpty) {
+      // Offscreen pages may not have their Flutter metrics yet. Measure as
+      // the canvas will paint, then restore every fitted value so the reveal
+      // cannot alter incremental layout or an existing renderer fit cache.
+      final originalX = line.x;
+      final originalWidth = line.width;
+      final positions = [
+        for (final glyph in line.glyphs) (x: glyph.x, advance: glyph.advance),
+      ];
+      try {
+        PaintRunText.fitLine(
+          line,
+          line.sourceText ?? range.paragraph.text,
+          themeFamily: _controller.config.theme.fontFamily,
+        );
+        for (final display in displayRanges) {
+          if (display.isCollapsed) {
+            final span = CaretEngine.logicalSpan(line);
+            if (display.start < span.min || display.start > span.max) continue;
+            final x = PaintRunText.caretXOnLine(
+              line,
+              display.start,
+              paragraph: line.sourceText ?? range.paragraph.text,
+              themeFamily: _controller.config.theme.fontFamily,
+              paragraphRtl: range.paragraph.properties.bidiBaseLevel == 1,
+            );
+            boxes.add(Rect.fromLTWH(x, line.y, 1, line.height));
+          } else {
+            boxes.addAll(
+              CaretEngine.rangeRectsOnLine(
+                line,
+                line.y,
+                line.height,
+                display.start,
+                display.end,
+              ),
+            );
+          }
+        }
+      } finally {
+        line
+          ..x = originalX
+          ..width = originalWidth;
+        for (var i = 0; i < line.glyphs.length; i++) {
+          line.glyphs[i]
+            ..x = positions[i].x
+            ..advance = positions[i].advance;
+        }
+      }
+    } else if (line.overlayText?.isNotEmpty == true) {
+      final text = line.overlayText!;
+      final painter = PaintRunText.plain(
+        text: text,
+        fontSize: line.overlaySize,
+        color: _controller.config.theme.documentText,
+        themeFamily: _controller.config.theme.fontFamily,
+        bold: line.overlayBold,
+      )..layout();
+      try {
+        var x = line.x;
+        if (line.tocLeader) {
+          final sections = _controller.document.sections;
+          final marginRight =
+              page.sectionIndex >= 0 && page.sectionIndex < sections.length
+              ? sections[page.sectionIndex].margins.right
+              : 72.0;
+          x = line.boxWidth > 0
+              ? line.boxX + line.boxWidth - painter.width
+              : WordToc.pageNumberX(
+                  pageWidth: page.width,
+                  marginRight: marginRight,
+                  numberWidth: painter.width,
+                );
+        } else if (line.justification == WmlJustification.right) {
+          x =
+              (line.width > 1 ? line.x + line.width : page.width) -
+              painter.width;
+        } else if (line.justification == WmlJustification.center) {
+          x += (line.width - painter.width) / 2;
+        }
+        for (final display in displayRanges) {
+          if (display.start > text.length) continue;
+          if (display.isCollapsed) {
+            final caret = painter.getOffsetForCaret(
+              TextPosition(offset: display.start),
+              Rect.zero,
+            );
+            boxes.add(Rect.fromLTWH(x + caret.dx, line.y, 1, painter.height));
+          } else {
+            boxes.addAll(
+              painter
+                  .getBoxesForSelection(
+                    TextSelection(
+                      baseOffset: display.start,
+                      extentOffset: display.end.clamp(0, text.length),
+                    ),
+                  )
+                  .map((box) => box.toRect().shift(Offset(x, line.y))),
+            );
+          }
+        }
+      } finally {
+        painter.dispose();
+      }
+    } else if (range.start == range.end && range.paragraph.text.isEmpty) {
+      boxes.add(Rect.fromLTWH(line.x, line.y, 1, line.height));
+    }
+    if (boxes.isEmpty) return null;
+    var bounds = boxes.first;
+    for (final box in boxes.skip(1)) {
+      bounds = bounds.expandToInclude(box);
+    }
+    if (line.paragraphIndex < 0 && line.boxWidth > 0) {
+      bounds = bounds.intersect(
+        Rect.fromLTWH(line.boxX, line.y, line.boxWidth, line.height),
+      );
+    }
+    return bounds.isEmpty ? null : bounds;
+  }
+
+  void _restoreContextViewport() {
+    if (!_controller.isDisposed &&
+        !_applied &&
+        (_hostIsCurrent?.call() ?? true) &&
+        _target == _capture(_controller) &&
+        identical(_controller.document, session.document) &&
+        _contextOrigin != null &&
+        _controller.viewport.origin == _revealedOrigin &&
+        _controller.viewport.scale == _contextScale) {
+      try {
+        session.assertUnchanged();
+        _controller.viewport.origin = _contextOrigin!;
+      } on StateError {
+        // A direct host model edit can bypass the editor's revision counter.
+        // It must not cause this stale operation to move the new document view.
+      }
+    }
+    _contextOrigin = null;
+    _revealedOrigin = null;
+    _contextScale = null;
+  }
 
   static Object _capture(WordEditorController controller) => (
     document: controller.document,
@@ -16301,6 +16902,7 @@ final class WordZoteroTransaction {
   void assertCurrent() {
     if (_applied ||
         _controller.isDisposed ||
+        !(_hostIsCurrent?.call() ?? true) ||
         !_controller.config.allowsMutation ||
         _controller.document.trackRevisions ||
         _controller.document.restrictEditing ||
@@ -16313,6 +16915,7 @@ final class WordZoteroTransaction {
 
   void apply() {
     assertCurrent();
+    clearFieldContext();
     _controller._applyZoteroTransaction(session);
     _applied = true;
   }

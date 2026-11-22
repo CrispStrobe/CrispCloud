@@ -859,6 +859,16 @@ void main() {
         isNull,
       );
       expect(_elements(result.styles, 'image'), hasLength(2));
+      final pictureNames = _elements(result.styles, 'frame')
+          .map(
+            (frame) => frame.getAttribute(
+              'name',
+              namespaceUri: 'urn:oasis:names:tc:opendocument:xmlns:drawing:1.0',
+            ),
+          )
+          .toList();
+      expect(pictureNames, hasLength(2));
+      expect(pictureNames.toSet(), hasLength(2));
     },
   );
 

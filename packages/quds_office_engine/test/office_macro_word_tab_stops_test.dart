@@ -359,6 +359,131 @@ void main() {
     );
   });
 
+  test(
+    'a locally shadowed Word prefix retains native tabs and opaque metadata',
+    () async {
+      final input = _fixture(
+        '<n:tabs xmlns:n="$_w" xmlns:w="$_x" w:metadata="keep">'
+        '<n:tab n:pos="720" n:val="right" w:val="opaque"/></n:tabs>',
+      );
+      final session = OfficeMacroSession(input, format: OfficeMacroFormat.docx);
+      final plan = _plan([
+        OfficeMacroStep(
+          tool: 'docx.replaceText',
+          arguments: {'paragraph': 0, 'start': 0, 'end': 0, 'text': 'Before: '},
+        ),
+        _add(72),
+      ]);
+      expect(_tabs(_read(input).paragraphs.single), [(36.0, 'right', 'none')]);
+      final dryRun = await session.validate(plan);
+      expect(dryRun.validatedOnly, isTrue);
+      expect(dryRun.completedSteps, 2);
+      expect(session.bytes, input);
+      expect(session.revision, 0);
+      expect((await session.run(plan)).completedSteps, 2);
+      expect(session.revision, 1);
+
+      var bytes = session.bytes;
+      for (var cycle = 0; cycle < 3; cycle++) {
+        final document = _read(bytes);
+        expect(document.paragraphs.single.text, 'Before: Original');
+        expect(_tabs(document.paragraphs.single), [
+          (36.0, 'right', 'none'),
+          (72.0, 'left', 'none'),
+        ]);
+        final properties = _properties(bytes);
+        expect(properties.namespaceUri, _w);
+        final tabs = _nativeTabs(bytes);
+        expect(tabs.prefix, 'n');
+        expect(tabs.getAttribute('metadata', namespaceUri: _x), 'keep');
+        final stops = _stops(bytes);
+        expect(stops.map((stop) => _attr(stop, 'pos')).toSet(), {
+          '720',
+          '1440',
+        });
+        final original = stops.singleWhere(
+          (stop) => _attr(stop, 'pos') == '720',
+        );
+        expect(_attr(original, 'val'), 'right');
+        expect(original.getAttribute('val', namespaceUri: _x), 'opaque');
+        expect(
+          stops
+              .singleWhere((stop) => _attr(stop, 'pos') == '1440')
+              .getAttribute('val', namespaceUri: _x),
+          isNull,
+        );
+        final settings = OpcPackage.openBytes(
+          bytes,
+        ).getPart('/word/settings.xml')!.readText();
+        expect(settings, contains('<w:defaultTabStop w:val="960"/>'));
+        expect(settings, contains('<x:keep x:value="settings"/>'));
+        bytes = WordSerializer().writeBytes(document);
+      }
+
+      // Valid namespace shadows do not bypass the existing transaction. A
+      // later invalid target must discard an earlier successful tab insertion.
+      final published = session.bytes;
+      final invalid = _plan([
+        _add(108),
+        OfficeMacroStep(
+          tool: 'docx.tabStop',
+          arguments: {'paragraph': 99, 'position': 144},
+        ),
+      ]);
+      session.startRecording('Preserve the accepted tab revision');
+      for (final action in [session.validate, session.run]) {
+        await expectLater(
+          action(invalid),
+          throwsA(
+            isA<OfficeMacroException>().having(
+              (error) => error.stepIndex,
+              'failed step',
+              1,
+            ),
+          ),
+        );
+        expect(session.bytes, published);
+        expect(session.revision, 1);
+      }
+      expect(session.stopRecording().steps, isEmpty);
+    },
+  );
+
+  test('a genuinely foreign paragraph-properties snapshot is refused', () {
+    for (final tool in ['docx.tabStop', 'docx.clearTabStops']) {
+      final document = _read(_fixture(''));
+      final paragraph = document.paragraphs.single;
+      final source =
+          '<x:pPr xmlns:x="$_x" xmlns:n="$_w"><n:tabs>'
+          '<n:tab n:pos="720" n:val="right"/></n:tabs></x:pPr>';
+      paragraph.properties.sourcePropertiesXml = source;
+      final properties = paragraph.properties;
+      final tabs = _tabs(paragraph);
+      final parts = {
+        for (final part in document.package!.parts) part.uri: part.readBytes(),
+      };
+      expect(
+        () => OfficeOperationCatalog.apply(document, tool, {
+          'paragraph': 0,
+          if (tool == 'docx.tabStop') 'position': 72,
+        }),
+        throwsA(
+          isA<UnsupportedError>().having(
+            (error) => error.toString(),
+            'reason',
+            contains('unambiguous native paragraph-properties namespace'),
+          ),
+        ),
+      );
+      expect(paragraph.properties, same(properties));
+      expect(paragraph.properties.sourcePropertiesXml, source);
+      expect(_tabs(paragraph), tabs);
+      expect({
+        for (final part in document.package!.parts) part.uri: part.readBytes(),
+      }, parts);
+    }
+  });
+
   for (final position in [-1584.0, -72.15, 0.0, 72.15, 1584.0]) {
     test('exact signed twip position $position survives save/reopen', () async {
       final session = OfficeMacroSession(
@@ -410,11 +535,6 @@ void main() {
           '<w:tab w:pos="720" w:val="left"/>'
           '</mc:Fallback></mc:AlternateContent></w:tabs>',
       'markup-compatibility alternatives',
-    ),
-    (
-      '<n:tabs xmlns:n="$_w" xmlns:w="$_x" w:metadata="keep">'
-          '<n:tab n:pos="720" n:val="right" w:val="opaque"/></n:tabs>',
-      'unambiguous native paragraph-properties namespace',
     ),
     ('<w:tabs/><w:tabs/>', 'one direct native tabs'),
     (

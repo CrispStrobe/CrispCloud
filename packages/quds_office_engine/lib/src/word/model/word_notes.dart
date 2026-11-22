@@ -4,6 +4,7 @@ import '../../opc/package_part.dart';
 import '../../opc/relationships.dart';
 import '../../xml/namespaces.dart';
 import '../../xml/xml_node.dart';
+import '../../xml/xml_reader.dart';
 import '../properties/wml_properties.dart';
 import 'wml_clone.dart';
 import 'wml_document.dart';
@@ -13,6 +14,89 @@ import 'word_content_controls.dart';
 import 'word_tree.dart';
 
 part 'word_note_numbering.dart';
+
+/// Physical alignment of a footnote rule, independent of paragraph direction.
+enum WmlFootnoteSeparatorAlignment { left, center, right }
+
+/// The bounded separator line styles understood by native layout.
+enum WmlFootnoteSeparatorLineStyle { none, solid }
+
+/// Native geometry between body text and the first footnote on a page.
+///
+/// A separator belongs to the document, not to an editable note story. Both
+/// gaps and nominal thickness remain meaningful when the line is hidden.
+/// [relativeWidth] is a
+/// fraction of the available body width; [color] is an unsigned RGB value.
+/// All lengths are in points. Consumers validate before layout or persistence
+/// because const construction must also support isolate-safe model snapshots.
+final class WmlFootnoteSeparator {
+  const WmlFootnoteSeparator({
+    this.beforeSpacing = 0,
+    this.thickness = 0.5,
+    this.afterSpacing = 6,
+    this.relativeWidth = 0.25,
+    this.alignment = WmlFootnoteSeparatorAlignment.left,
+    this.color = 0x000000,
+    this.lineStyle = WmlFootnoteSeparatorLineStyle.solid,
+  });
+
+  final double beforeSpacing;
+  final double thickness;
+  final double afterSpacing;
+  final double relativeWidth;
+  final WmlFootnoteSeparatorAlignment alignment;
+  final int color;
+  final WmlFootnoteSeparatorLineStyle lineStyle;
+
+  bool get visible =>
+      lineStyle == WmlFootnoteSeparatorLineStyle.solid &&
+      thickness > 0 &&
+      relativeWidth > 0;
+
+  /// Vertical space reserved once for each page containing footnotes.
+  /// The ODF rule box retains its thickness even when no line is painted.
+  double get reservedHeight => beforeSpacing + thickness + afterSpacing;
+
+  void validate() {
+    for (final value in [beforeSpacing, thickness, afterSpacing]) {
+      if (!value.isFinite || value < 0) {
+        throw const FormatException(
+          'Footnote separator lengths must be finite and nonnegative.',
+        );
+      }
+    }
+    if (!relativeWidth.isFinite ||
+        relativeWidth < 0 ||
+        relativeWidth > 1 ||
+        !reservedHeight.isFinite ||
+        color < 0 ||
+        color > 0xffffff) {
+      throw const FormatException('Invalid native footnote separator.');
+    }
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      other is WmlFootnoteSeparator &&
+      beforeSpacing == other.beforeSpacing &&
+      thickness == other.thickness &&
+      afterSpacing == other.afterSpacing &&
+      relativeWidth == other.relativeWidth &&
+      alignment == other.alignment &&
+      color == other.color &&
+      lineStyle == other.lineStyle;
+
+  @override
+  int get hashCode => Object.hash(
+    beforeSpacing,
+    thickness,
+    afterSpacing,
+    relativeWidth,
+    alignment,
+    color,
+    lineStyle,
+  );
+}
 
 /// Footnote or endnote body.
 class WmlNote {

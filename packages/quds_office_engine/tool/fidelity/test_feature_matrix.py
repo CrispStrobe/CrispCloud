@@ -323,7 +323,7 @@ class FeatureMatrixControls(unittest.TestCase):
         self.assertTrue(matrix.REQUIRED_FEATURES <= set(data['features']))
         plan = matrix.plan(sorted(matrix.REQUIRED_FEATURES))
         self.assertGreater(len(plan['expected_outputs']), 100)
-        self.assertEqual(len(plan['editor_goldens']['files']), 27)
+        self.assertEqual(len(plan['editor_goldens']['files']), 26)
         self.assertTrue(all('--update-goldens' not in item['argv'] for item in plan['commands']))
 
 

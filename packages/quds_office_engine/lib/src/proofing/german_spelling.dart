@@ -254,8 +254,26 @@ class GermanSpellingProvider extends OfficeProofingProvider {
   }.contains(normalizeProofingLanguage(language));
 
   /// Loads the actual shipped dictionary without checking or changing text.
+  /// [OfficeProofingService] calls this before a request's deadline starts.
+  @override
   Future<void> warmUp() async {
-    await (_sharedLexicon ??= _GermanLexicon.load());
+    await _lexicon();
+  }
+
+  /// The isolate-wide dictionary, loaded once. A failed load is forgotten so
+  /// that one error does not poison every later provider in the isolate.
+  static Future<_GermanLexicon> _lexicon() {
+    final Future<_GermanLexicon>? shared = _sharedLexicon;
+    if (shared != null) return shared;
+    final Future<_GermanLexicon> load = _GermanLexicon.load();
+    _sharedLexicon = load;
+    load.then<void>(
+      (_) {},
+      onError: (Object _) {
+        if (identical(_sharedLexicon, load)) _sharedLexicon = null;
+      },
+    );
+    return load;
   }
 
   /// Read-only word knowledge for optional grammar guards. This checks one
@@ -276,7 +294,7 @@ class GermanSpellingProvider extends OfficeProofingProvider {
     if (token == null || token.start != 0 || token.end != normalized.length) {
       return false;
     }
-    final lexicon = await (_sharedLexicon ??= _GermanLexicon.load());
+    final lexicon = await _lexicon();
     if (_disposed) {
       throw StateError('The German spelling provider is disposed.');
     }
@@ -316,8 +334,7 @@ class GermanSpellingProvider extends OfficeProofingProvider {
     final int vocabularyRevision = vocabulary.revision;
     final Set<String> personal = vocabulary.wordsFor(request.language);
     final Set<String> ignored = vocabulary.ignoredWordsFor(request.language);
-    final _GermanLexicon lexicon = await (_sharedLexicon ??=
-        _GermanLexicon.load());
+    final _GermanLexicon lexicon = await _lexicon();
     final bool swiss = request.language == 'de-CH';
     final List<OfficeProofingFinding> findings = <OfficeProofingFinding>[];
     final source = _GermanSpellingText(request.text);

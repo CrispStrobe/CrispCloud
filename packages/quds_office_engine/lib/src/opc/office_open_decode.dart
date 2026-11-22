@@ -9,19 +9,20 @@ import '../slide/serial/slide_serial.dart';
 import '../visual/sheet_chart_data.dart';
 import '../word/layout/word_layout.dart';
 import '../word/model/wml_document.dart';
+import '../word/serial/odt_document_reader.dart';
 import '../word/serial/word_deserializer.dart';
 import 'office_open_types.dart';
 import 'repair/office_repair.dart';
 
 /// Decodes an Office package on the current isolate.
-Object decodeOfficeOpen(
+Future<Object> decodeOfficeOpen(
   Uint8List bytes,
   String? password,
   String kind,
 
   /// Function API.
   void Function(OfficeOpenProgress progress) emit,
-) {
+) async {
   /// emit API.
   emit(const OfficeOpenProgress(value: 0.16, stage: 'archive'));
   if (kind == 'pdf') {
@@ -34,6 +35,17 @@ Object decodeOfficeOpen(
     );
     emit(const OfficeOpenProgress(value: 0.92, stage: 'apply'));
     return payload;
+  }
+
+  if (kind == 'word' && OdtDocumentReader.isOdt(bytes)) {
+    emit(const OfficeOpenProgress(value: 0.42, stage: 'document'));
+    final WmlDocument document = await OdtDocumentReader.readBytes(bytes);
+    emit(const OfficeOpenProgress(value: 0.72, stage: 'layout'));
+    final LaidOutDocument laidOut = WordLayoutEngine(
+      font: null,
+    ).layout(document);
+    emit(const OfficeOpenProgress(value: 0.92, stage: 'apply'));
+    return WordOpenPayload(document: document, laidOut: laidOut);
   }
 
   /// package API.

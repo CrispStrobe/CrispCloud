@@ -80,15 +80,31 @@ final class ZoteroFormattedText {
     for (final span in spans)
       WmlRun(
         text: span.text,
-        properties: (baseProperties?.copy() ?? WmlRunProps())
-          ..bold = span.bold
-          ..italic = span.italic
-          ..underline = span.underline ? WmlUnderline.single : WmlUnderline.none
-          ..strike = span.strike
-          ..smallCaps = span.smallCaps
-          ..vertAlign = span.verticalAlign,
+        properties: _spanProperties(span, baseProperties),
       ),
   ];
+
+  static WmlRunProps _spanProperties(
+    ZoteroTextSpan span,
+    WmlRunProps? baseProperties,
+  ) {
+    final props = (baseProperties?.copy() ?? WmlRunProps())
+      ..bold = span.bold
+      ..italic = span.italic
+      ..underline = span.underline ? WmlUnderline.single : WmlUnderline.none
+      ..strike = span.strike
+      ..smallCaps = span.smallCaps
+      ..vertAlign = span.verticalAlign;
+    if (span.smallCaps) {
+      // Existing CSL small capitals own that appearance even when insertion
+      // inherits all capitals from its host. Keep an explicit native reset so
+      // a same-value false or a later style change cannot revive all capitals.
+      props.allCaps = false;
+      props.importedValues?.remove('caps');
+      props.explicitProperties.add('caps');
+    }
+    return props;
+  }
 
   /// Independent paragraph runs split only at structural block boundaries.
   /// The delimiter becomes a paragraph boundary; soft line breaks and all

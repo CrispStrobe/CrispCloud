@@ -395,7 +395,14 @@ void main() {
       for (var cycle = 0; cycle < 3; cycle++) {
         final paragraph = reopened.paragraphs.single;
         expect(paragraph.text, '\uFFFC', reason: 'cycle $cycle');
-        final run = paragraph.inlines.whereType<WmlRun>().single;
+        final runs = paragraph.inlines.whereType<WmlRun>().toList();
+        final run = runs.singleWhere((run) => run.inlineVisual != null);
+        // An explicitly serialized empty text packet retains its insertion
+        // formatting beside the single linked picture after reopening.
+        final empty = runs.where((run) => run.inlineVisual == null).single;
+        expect(empty.text, isEmpty);
+        expect(empty.isAtomic, isFalse);
+        expect(empty.hyperlink, isNull);
         expect(run.hyperlink!.url, 'https://example.org/figure');
         expect(run.inlineVisual!.visual.imageBytes, png);
         expect(reopened.sections.single.blocks.whereType<WmlVisual>(), isEmpty);

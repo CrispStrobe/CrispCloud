@@ -8,6 +8,8 @@ import '../proofing/word_proofing.dart';
 import 'office_controller.dart';
 import 'word_review_labels.dart';
 import 'office_theme.dart';
+import '../l10n/office_language.dart';
+import '../l10n/office_plural.dart';
 
 /// Chrome pane listing footnotes, endnotes, and tracked revisions.
 class WordNotesPane extends StatefulWidget {
@@ -16,6 +18,7 @@ class WordNotesPane extends StatefulWidget {
     super.key,
     required this.controller,
     this.arabic = false,
+    this.german,
   });
 
   /// controller API.
@@ -23,6 +26,10 @@ class WordNotesPane extends StatefulWidget {
 
   /// arabic API.
   final bool arabic;
+
+  /// German labels; when null, German follows [OfficeStrings.german] in the
+  /// controller's surface configuration. [arabic] takes precedence.
+  final bool? german;
 
   @override
   State<WordNotesPane> createState() => _WordNotesPaneState();
@@ -184,7 +191,11 @@ class _WordNotesPaneState extends State<WordNotesPane> {
     return edit;
   }
 
-  String _s(String english, String arabic) => widget.arabic ? arabic : english;
+  OfficeUiLanguage get _language => OfficeUiLanguage.from(
+    arabic: widget.arabic,
+    german: widget.german ?? OfficeUiLanguage.of(_c.config).isGerman,
+  );
+  String _s(String english, String arabic) => _language.label(english, arabic);
 
   bool get _canInspect =>
       mounted &&
@@ -377,8 +388,17 @@ class _WordNotesPaneState extends State<WordNotesPane> {
           children: [
             Expanded(
               child: Text(
-                _s(
+                _language.phrase(
                   '${issues.length} writing suggestions',
+                  officePlural(
+                    issues.length,
+                    arabic: false,
+                    german: true,
+                    one: (n) => '$n writing suggestion',
+                    other: (n) => '$n writing suggestions',
+                    germanOne: (_) => '1 Schreibvorschlag',
+                    germanOther: (n) => '$n Schreibvorschläge',
+                  ),
                   '${issues.length} اقتراحات للكتابة',
                 ),
                 style: TextStyle(color: theme.headerText, fontSize: 11),
@@ -509,7 +529,7 @@ class _WordNotesPaneState extends State<WordNotesPane> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
                   Text(
-                    widget.arabic ? 'ملاحظات' : 'Notes',
+                    _s('Notes', 'ملاحظات'),
                     style: TextStyle(
                       color: theme.chromeText,
                       fontWeight: FontWeight.w600,
@@ -526,7 +546,7 @@ class _WordNotesPaneState extends State<WordNotesPane> {
                           key: const ValueKey<String>('notes-add-footnote'),
                           onTap: () => _c.insertFootnote(),
                           child: Text(
-                            widget.arabic ? '+ حاشية سفلية' : '+ Footnote',
+                            _s('+ Footnote', '+ حاشية سفلية'),
                             style: TextStyle(
                               color: theme.focusRing,
                               fontSize: 11,
@@ -537,7 +557,7 @@ class _WordNotesPaneState extends State<WordNotesPane> {
                           key: const ValueKey<String>('notes-add-endnote'),
                           onTap: () => _c.insertFootnote(endnote: true),
                           child: Text(
-                            widget.arabic ? '+ حاشية ختامية' : '+ Endnote',
+                            _s('+ Endnote', '+ حاشية ختامية'),
                             style: TextStyle(
                               color: theme.focusRing,
                               fontSize: 11,
@@ -550,14 +570,14 @@ class _WordNotesPaneState extends State<WordNotesPane> {
                   const SizedBox(height: 8),
                   if (notes.isEmpty)
                     Text(
-                      widget.arabic ? 'لا توجد حواشٍ' : 'No notes',
+                      _s('No notes', 'لا توجد حواشٍ'),
                       style: TextStyle(color: theme.headerText, fontSize: 11),
                     )
                   else
                     ...notes.map((WmlNote note) {
                       final String label = numbering.labelFor(note);
                       final String mark = label.isEmpty
-                          ? (widget.arabic ? 'مخصصة' : 'custom')
+                          ? _s('custom', 'مخصصة')
                           : (note.endnote ? 'E$label' : label);
                       // Widget identity follows the native link, not its changing
                       // visible number, so edits and focus survive renumbering.
@@ -565,10 +585,16 @@ class _WordNotesPaneState extends State<WordNotesPane> {
                           ? 'E${note.id}'
                           : '${note.id}';
                       final String title = numbering.hasExactLabel(note)
-                          ? (widget.arabic ? 'حاشية $mark' : 'Note $mark')
-                          : (widget.arabic
-                                ? 'حاشية (معرّف المصدر $identity)'
-                                : 'Note (source ID $identity)');
+                          ? _language.phrase(
+                              'Note $mark',
+                              '${note.endnote ? 'Endnote' : 'Fußnote'} $mark',
+                              'حاشية $mark',
+                            )
+                          : _language.phrase(
+                              'Note (source ID $identity)',
+                              '${note.endnote ? 'Endnote' : 'Fußnote'} (Quell-ID $identity)',
+                              'حاشية (معرّف المصدر $identity)',
+                            );
                       final issues = _c.proofingIssuesForNote(note);
                       final edit = _editFor(note)
                         ..checkedText = _c.noteEditText(note)
@@ -602,7 +628,7 @@ class _WordNotesPaneState extends State<WordNotesPane> {
                                     ),
                                     onTap: () => _c.deleteNote(note),
                                     child: Text(
-                                      widget.arabic ? 'حذف' : 'Delete',
+                                      _s('Delete', 'حذف'),
                                       style: TextStyle(
                                         color: theme.headerText,
                                         fontSize: 10,
@@ -672,13 +698,11 @@ class _WordNotesPaneState extends State<WordNotesPane> {
                       key: const ValueKey<String>('notes-review-changes'),
                       onPressed: () =>
                           _c.openReviewPane(tab: WordReviewPaneTab.changes),
-                      child: Text(
-                        widget.arabic ? 'مراجعة التغييرات' : 'Review changes',
-                      ),
+                      child: Text(_s('Review changes', 'مراجعة التغييرات')),
                     ),
                   ),
                   Text(
-                    widget.arabic ? 'التغييرات' : 'Revisions',
+                    _s('Revisions', 'التغييرات'),
                     style: TextStyle(
                       color: theme.chromeText,
                       fontWeight: FontWeight.w600,
@@ -688,14 +712,15 @@ class _WordNotesPaneState extends State<WordNotesPane> {
                   const SizedBox(height: 8),
                   if (_c.document.revisions.isEmpty)
                     Text(
-                      widget.arabic ? 'لا توجد تغييرات' : 'No revisions',
+                      _s('No revisions', 'لا توجد تغييرات'),
                       style: TextStyle(color: theme.headerText, fontSize: 11),
                     )
                   else
                     ..._c.document.revisions.map((WmlRevision revision) {
                       final bool on = identical(revision, _c.selectedRevision);
                       final String kind = revision.kind.reviewLabel(
-                        arabic: widget.arabic,
+                        arabic: _language.isArabic,
+                        german: _language.isGerman,
                       );
                       return GestureDetector(
                         onTap: () => _c.revealRevision(revision),
@@ -739,7 +764,7 @@ class _WordNotesPaneState extends State<WordNotesPane> {
                                             ? () => _c.acceptRevision(revision)
                                             : null,
                                         child: Text(
-                                          widget.arabic ? 'قبول' : 'Accept',
+                                          _s('Accept', 'قبول'),
                                           style: TextStyle(
                                             color: theme.focusRing,
                                             fontSize: 10,
@@ -754,7 +779,7 @@ class _WordNotesPaneState extends State<WordNotesPane> {
                                             ? () => _c.rejectRevision(revision)
                                             : null,
                                         child: Text(
-                                          widget.arabic ? 'رفض' : 'Reject',
+                                          _s('Reject', 'رفض'),
                                           style: TextStyle(
                                             color: theme.focusRing,
                                             fontSize: 10,

@@ -69,6 +69,36 @@ class _Raster {
     return coverage;
   }
 
+  /// Fractional coverage of grey [ink] over grey [background]: each pixel
+  /// counts by how far its darkest channel moved from the background towards
+  /// the ink. Antialiased small text has few exactly-ink pixels, and how many
+  /// depends on the host's rasterizer (macOS renders fewer than Linux).
+  double lightCoverageOn(ui.Rect area, int background, int ink) {
+    final from = background & 255;
+    final to = ink & 255;
+    var coverage = 0.0;
+    for (
+      var y = area.top.floor().clamp(0, height);
+      y < area.bottom.ceil().clamp(0, height);
+      y++
+    ) {
+      for (
+        var x = area.left.floor().clamp(0, width);
+        x < area.right.ceil().clamp(0, width);
+        x++
+      ) {
+        final offset = (y * width + x) * 4;
+        final darkest = <int>[
+          bytes[offset],
+          bytes[offset + 1],
+          bytes[offset + 2],
+        ].reduce((a, b) => a < b ? a : b);
+        coverage += ((darkest - from) / (to - from)).clamp(0.0, 1.0);
+      }
+    }
+    return coverage;
+  }
+
   bool samePixelsIn(ui.Rect area, _Raster other) {
     if (width != other.width || height != other.height) return false;
     for (
@@ -585,8 +615,9 @@ void main() {
       const darkCell = ui.Rect.fromLTWH(384, 93, 290, 25);
       expect(dark.contrastPixels(whiteCell, 0xFFFFFF), greaterThan(25));
       expect(dark.contrastPixels(darkCell, 0x303030), greaterThan(25));
+      // Like the white cell: measure light ink coverage, not exact pixels.
       expect(
-        dark.count(const ui.Rect.fromLTWH(384, 93, 290, 25), 0xF2F2F2),
+        dark.lightCoverageOn(darkCell, 0x303030, 0xF2F2F2),
         greaterThan(15),
       );
       expect(
@@ -614,6 +645,11 @@ void main() {
         reason: 'The dark-cell assertion must distinguish adapted ink.',
       );
       expect(unadapted.contrastPixels(darkCell, 0x303030), 0);
+      expect(
+        unadapted.lightCoverageOn(darkCell, 0x303030, 0xF2F2F2),
+        lessThanOrEqualTo(1),
+        reason: 'Unadapted black ink on the dark cell must fail the gate.',
+      );
 
       final wrongLightInk = slide.copy();
       wrongLightInk.shapes

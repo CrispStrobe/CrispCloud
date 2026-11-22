@@ -23,6 +23,7 @@ import 'operations/slide_steps.dart';
 import 'operations/step_input.dart';
 import 'operations/word_steps.dart';
 import 'operations/word_structure_steps.dart';
+import 'operations/word_table_cell_text_steps.dart';
 
 export 'operations/step_input.dart' show OfficeMacroAssetResolver;
 
@@ -499,6 +500,15 @@ abstract final class OfficeOperationCatalog {
     OfficeMacroAssetResolver? resolveAsset,
   }) {
     final values = _operationValues(document, tool, arguments);
+    // Cell operations accept public in-memory models as well as detached
+    // package sessions. Reject shared/cyclic ownership before the ordinary
+    // document admission walks the tree. Other tools keep their contracts.
+    if (document is WmlDocument &&
+        (values['op'] == 'tableCellRangeText' ||
+            values['op'] == 'tableCellRangeInsertBefore' ||
+            values['story'] == 'tableCell')) {
+      checkWordTableCellRangeOwnership(document);
+    }
     assertEditable(document);
     _dispatchOperation(document, values, resolveAsset: resolveAsset);
   }

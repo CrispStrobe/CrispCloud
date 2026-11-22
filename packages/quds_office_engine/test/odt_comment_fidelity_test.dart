@@ -7,6 +7,7 @@ import 'package:test/test.dart';
 const _officeNs = 'urn:oasis:names:tc:opendocument:xmlns:office:1.0';
 const _textNs = 'urn:oasis:names:tc:opendocument:xmlns:text:1.0';
 const _styleNs = 'urn:oasis:names:tc:opendocument:xmlns:style:1.0';
+const _drawNs = 'urn:oasis:names:tc:opendocument:xmlns:drawing:1.0';
 const _metaNs = 'urn:oasis:names:tc:opendocument:xmlns:meta:1.0';
 const _dcNs = 'http://purl.org/dc/elements/1.1/';
 const _linkNs = 'http://www.w3.org/1999/xlink';
@@ -552,7 +553,10 @@ void main() {
               text: 'HIDDEN INSTRUCTION',
             ),
             WmlRun(text: 'Cached result '),
-            WmlRun(inlineVisual: picture('Inline picture')),
+            WmlRun(
+              inlineVisual: picture('Inline picture'),
+              properties: WmlRunProps(bold: true, fontSizeHalfPoints: 36),
+            ),
           ],
         ),
         WmlParagraph(
@@ -599,8 +603,38 @@ void main() {
       final path = image.getAttribute('href', namespaceUri: _linkNs)!;
       expect(package.getPart('/$path')!.readBytes(), _png);
       expect(image.getAttribute('type', namespaceUri: _linkNs), 'simple');
-      expect(image.parent!.parent!.localName, 'p');
+      expect(image.parent!.localName, 'frame');
+      expect(image.parent!.namespaceUri, _drawNs);
     }
+    final inlineFrame = images.first.parent!;
+    expect(
+      inlineFrame.getAttribute('name', namespaceUri: _drawNs),
+      'Inline picture',
+    );
+    final inlineSpan = inlineFrame.parent!;
+    expect(inlineSpan.localName, 'span');
+    expect(inlineSpan.namespaceUri, _textNs);
+    expect(inlineSpan.parent!.localName, 'p');
+    expect(inlineSpan.parent!.namespaceUri, _textNs);
+    final pictureProps = _style(
+      root,
+      inlineSpan,
+    ).firstChild('text-properties')!;
+    expect(
+      pictureProps.getAttribute('font-weight', namespaceUri: _foNs),
+      'bold',
+    );
+    expect(
+      pictureProps.getAttribute('font-size', namespaceUri: _foNs),
+      '18.0pt',
+    );
+    final detachedFrame = images.last.parent!;
+    expect(
+      detachedFrame.getAttribute('name', namespaceUri: _drawNs),
+      'Comment picture',
+    );
+    expect(detachedFrame.parent!.localName, 'p');
+    expect(detachedFrame.parent!.namespaceUri, _textNs);
     expect(
       OfficeTextExtractor.extract(
         OdtDocumentWriter.writeBytes(document),

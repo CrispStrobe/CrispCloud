@@ -180,7 +180,7 @@ End With
       'vba_unsupported',
     ),
     (
-      'ActiveDocument.Paragraphs(1).Range.Font.AllCaps = True',
+      'ActiveDocument.Paragraphs(1).Range.Font.Hidden = True',
       'vba_unsupported',
     ),
   ]) {

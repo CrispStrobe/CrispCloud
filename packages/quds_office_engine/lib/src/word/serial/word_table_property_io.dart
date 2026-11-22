@@ -14,7 +14,64 @@ abstract final class WordTablePropertyIo {
     'jc': '${properties.alignment}',
     'tblBorders':
         '${properties.borders}|${properties.borderColor}|${properties.borderWidth}',
+    'tblCellMar': '${properties.cellMargin}',
   };
+
+  /// Projects only a complete uniform physical-edge margin into the scalar
+  /// model. Partial, logical-edge, asymmetric and extension-bearing containers
+  /// remain in their original XML instead of becoming a guessed uniform value.
+  static double? uniformCellMargin(XmlElement element) {
+    if (element.namespaceUri != OfficeNamespaces.w ||
+        element.localName != 'tblCellMar' ||
+        element.attributes.any((attribute) => !_namespace(attribute)) ||
+        !_whitespaceOnly(element)) {
+      return null;
+    }
+    final sides = <String>{};
+    int? uniform;
+    for (final edge in element.childElements) {
+      if (edge.namespaceUri != OfficeNamespaces.w ||
+          !const {'top', 'left', 'bottom', 'right'}.contains(edge.localName) ||
+          !sides.add(edge.localName) ||
+          edge.childElements.isNotEmpty ||
+          !_whitespaceOnly(edge)) {
+        return null;
+      }
+      final attributes = <String>{};
+      for (final attribute in edge.attributes) {
+        if (_namespace(attribute)) continue;
+        if (attribute.namespaceUri != OfficeNamespaces.w ||
+            !const {'w', 'type'}.contains(attribute.localName) ||
+            !attributes.add(attribute.localName)) {
+          return null;
+        }
+      }
+      final raw = edge.getAttribute('w', namespaceUri: OfficeNamespaces.w);
+      if (edge.getAttribute('type', namespaceUri: OfficeNamespaces.w) !=
+              'dxa' ||
+          raw == null ||
+          !RegExp(r'^[ \t\r\n]*\+?[0-9]+[ \t\r\n]*$').hasMatch(raw)) {
+        return null;
+      }
+      final twips = int.tryParse(raw.trim());
+      // The physical left/right margin type uses a signed 16-bit width.
+      if (twips == null || twips < 0 || twips > 32767) return null;
+      if (uniform != null && uniform != twips) return null;
+      uniform = twips;
+    }
+    return sides.length == 4 && uniform != null ? uniform / 20 : null;
+  }
+
+  static bool _namespace(XmlAttribute attribute) =>
+      attribute.prefix == 'xmlns' || attribute.qualifiedName == 'xmlns';
+
+  static bool _whitespaceOnly(XmlElement element) => element.children.every(
+    (node) => switch (node) {
+      XmlText() => RegExp(r'^[ \t\r\n]*$').hasMatch(node.text),
+      XmlCdata() => RegExp(r'^[ \t\r\n]*$').hasMatch(node.text),
+      _ => true,
+    },
+  );
 
   static void write(XmlWriter writer, WmlTableProps properties) {
     final XmlElement generated = _generated(properties);
@@ -131,6 +188,25 @@ abstract final class WordTablePropertyIo {
       }
       writer.writeEndElement();
     }
+    final marginTwips = properties.cellMargin * 20;
+    if (!marginTwips.isFinite || marginTwips < 0 || marginTwips > 32767) {
+      throw ArgumentError.value(
+        properties.cellMargin,
+        'cellMargin',
+        'Table cell margins must be finite, nonnegative and at most 32767 twips.',
+      );
+    }
+    // Fresh native tables own their scalar value, including zero. Imported
+    // values are emitted only when changed by the sparse merge in write().
+    writer.writeStartElement('tblCellMar', prefix: 'w');
+    for (final edge in const ['top', 'left', 'bottom', 'right']) {
+      writer.writeEmptyElement(
+        edge,
+        prefix: 'w',
+        attributes: {'w:w': '${marginTwips.round()}', 'w:type': 'dxa'},
+      );
+    }
+    writer.writeEndElement();
     writer.writeEndElement();
     return XmlDocument.parse(writer.toXml()).root!;
   }

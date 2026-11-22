@@ -1,0 +1,454 @@
+{
+  "schemaVersion": 1,
+  "suite": "vba-word-table-cells",
+  "dialect": "vba-word",
+  "cases": [
+    {
+      "id": "first-cell",
+      "feature": "Table selection",
+      "source": "Option Explicit\nSub Main()\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = \"hello\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "hello"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.document.tables",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.text"
+        ],
+        "note": "One-based selectors and cell text assignment are specified by Microsoft. Expected native steps are independently authored for the bounded Quds table-cell contract; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "table-item",
+      "feature": "Table selection",
+      "source": "Option Explicit\nSub Main()\nThisDocument.Tables.Item(3).Cell(2, 4).Range.Text = \"third table\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 2,
+              "row": 1,
+              "column": 3,
+              "text": "third table"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.document.tables",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.text"
+        ],
+        "note": "One-based selectors and cell text assignment are specified by Microsoft. Expected native steps are independently authored for the bounded Quds table-cell contract; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "application-document",
+      "feature": "Table selection",
+      "source": "Option Explicit\nSub Main()\nApplication.ActiveDocument.Tables(2).Cell(4, 3).Range.Text = \"selected\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 1,
+              "row": 3,
+              "column": 2,
+              "text": "selected"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.document.tables",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.text"
+        ],
+        "note": "One-based selectors and cell text assignment are specified by Microsoft. Expected native steps are independently authored for the bounded Quds table-cell contract; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "empty-cell",
+      "feature": "Cell text",
+      "source": "Option Explicit\nSub Main()\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = \"\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": ""
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.document.tables",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.text"
+        ],
+        "note": "One-based selectors and cell text assignment are specified by Microsoft. Expected native steps are independently authored for the bounded Quds table-cell contract; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "unicode-tab-xml",
+      "feature": "Cell text",
+      "source": "Option Explicit\nSub Main()\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = \"A\" & ChrW(9) & \"😀 & <B>\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "A\t😀 & <B>"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.document.tables",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.text"
+        ],
+        "note": "One-based selectors and cell text assignment are specified by Microsoft. Expected native steps are independently authored for the bounded Quds table-cell contract; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "source-calculation",
+      "feature": "Cell text",
+      "source": "Option Explicit\nSub Main()\nActiveDocument.Tables(1).Cell(1, 1).Range.Text = Trim$(\"  Total  \") & \": \" & CStr(Abs(-42))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "Total: 42"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.document.tables",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.text"
+        ],
+        "note": "One-based selectors and cell text assignment are specified by Microsoft. Expected native steps are independently authored for the bounded Quds table-cell contract; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "with-table",
+      "feature": "Object aliases",
+      "source": "Option Explicit\nSub Main()\nWith ActiveDocument.Tables(2)\n  .Cell(2, 3).Range.Text = \"with\"\nEnd With\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 1,
+              "row": 1,
+              "column": 2,
+              "text": "with"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.document.tables",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.text"
+        ],
+        "note": "One-based selectors and cell text assignment are specified by Microsoft. Expected native steps are independently authored for the bounded Quds table-cell contract; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "with-cell-range",
+      "feature": "Object aliases",
+      "source": "Option Explicit\nSub Main()\nWith ActiveDocument.Tables(1).Cell(2, 2).Range\n  .Text = \"cell range\"\nEnd With\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 1,
+              "column": 1,
+              "text": "cell range"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.document.tables",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.text"
+        ],
+        "note": "One-based selectors and cell text assignment are specified by Microsoft. Expected native steps are independently authored for the bounded Quds table-cell contract; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "typed-objects",
+      "feature": "Object aliases",
+      "source": "Option Explicit\nSub Main()\nDim report As Table, selected As Cell, text As Range\nSet report = ActiveDocument.Tables(2)\nSet selected = report.Cell(3, 4)\nSet text = selected.Range\ntext.Text = \"aliases\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "aliases"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.document.tables",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.text"
+        ],
+        "note": "One-based selectors and cell text assignment are specified by Microsoft. Expected native steps are independently authored for the bounded Quds table-cell contract; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "range-alias-retention",
+      "feature": "Object aliases",
+      "source": "Option Explicit\nSub Main()\nDim report As Table, selected As Cell, text As Range\nSet report = ActiveDocument.Tables(1)\nSet selected = report.Cell(1, 2)\nSet text = selected.Range\nSet selected = report.Cell(2, 1)\ntext.Text = \"first\"\nselected.Range.Text = \"second\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 1,
+              "text": "first"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 1,
+              "column": 0,
+              "text": "second"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.document.tables",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.text"
+        ],
+        "note": "One-based selectors and cell text assignment are specified by Microsoft. Expected native steps are independently authored for the bounded Quds table-cell contract; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "finite-loop",
+      "feature": "Source composition",
+      "source": "Option Explicit\nSub Main()\nDim row As Long\nFor row = 1 To 3\n  ActiveDocument.Tables(1).Cell(row, 2).Range.Text = CStr(row * 10)\nNext row\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 1,
+              "text": "10"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 1,
+              "column": 1,
+              "text": "20"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 2,
+              "column": 1,
+              "text": "30"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.document.tables",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.text"
+        ],
+        "note": "One-based selectors and cell text assignment are specified by Microsoft. Expected native steps are independently authored for the bounded Quds table-cell contract; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "named-helper",
+      "feature": "Source composition",
+      "source": "Option Explicit\nSub Main()\nFill value:=\"named\", target:=ActiveDocument.Tables(2).Cell(3, 1)\n\nEnd Sub\nSub Fill(ByVal target As Cell, ByVal value As String)\n  target.Range.Text = value\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 0,
+              "text": "named"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.document.tables",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.text"
+        ],
+        "note": "One-based selectors and cell text assignment are specified by Microsoft. Expected native steps are independently authored for the bounded Quds table-cell contract; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "range-helper",
+      "feature": "Source composition",
+      "source": "Option Explicit\nSub Main()\nFill ActiveDocument.Tables(1).Cell(2, 1).Range\nEnd Sub\nSub Fill(ByVal target As Range)\n  target.Text = \"range helper\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 1,
+              "column": 0,
+              "text": "range helper"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.document.tables",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.text"
+        ],
+        "note": "One-based selectors and cell text assignment are specified by Microsoft. Expected native steps are independently authored for the bounded Quds table-cell contract; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "computed-selectors",
+      "feature": "Source composition",
+      "source": "Option Explicit\nSub Main()\nDim tableIndex As Long, row As Long, column As Long\ntableIndex = 1 + 1\nrow = Fix(3.9)\ncolumn = Abs(-4)\nActiveDocument.Tables(tableIndex).Cell(row, column).Range.Text = \"computed\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "computed"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.document.tables",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.text"
+        ],
+        "note": "One-based selectors and cell text assignment are specified by Microsoft. Expected native steps are independently authored for the bounded Quds table-cell contract; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "large-selector-compiles",
+      "feature": "Table selection",
+      "source": "Option Explicit\nSub Main()\nActiveDocument.Tables(2147483647).Cell(2147483647, 2147483647).Range.Text = \"bounded\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 2147483646,
+              "row": 2147483646,
+              "column": 2147483646,
+              "text": "bounded"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.document.tables",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.text"
+        ],
+        "note": "One-based selectors and cell text assignment are specified by Microsoft. Expected native steps are independently authored for the bounded Quds table-cell contract; no installed Office host was executed."
+      }
+    }
+  ]
+}

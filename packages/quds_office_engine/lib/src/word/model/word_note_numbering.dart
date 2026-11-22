@@ -1,5 +1,24 @@
 part of 'word_notes.dart';
 
+/// The effective native settings for one exactly resolved automatic note.
+///
+/// Formats and restart values retain their native Word names. Exporters must
+/// explicitly accept the values they can represent; a display label alone
+/// cannot distinguish a Roman numeral from an alphabetic sequence.
+final class WordNoteAutomaticNumber {
+  const WordNoteAutomaticNumber({
+    required this.number,
+    required this.format,
+    required this.start,
+    required this.restart,
+  });
+
+  final int number;
+  final String format;
+  final int start;
+  final String restart;
+}
+
 /// A read-only snapshot of note labels in body reference order.
 ///
 /// Native note IDs identify links; they are never display numbers. Rebuilding
@@ -26,13 +45,20 @@ final class WordNoteNumbering {
     final unknownCounters = <bool>{};
     final seen = <(bool, int)>{};
     for (final section in document.sections) {
-      final sectionRoot = _xml(section.sourceProperties?.xml);
+      final sectionXml = section.sourceProperties?.xml;
+      final sectionRoot = _xml(sectionXml);
       final options = <bool, _NoteNumberOptions>{
         for (final endnote in [false, true])
           endnote: defaults[endnote]!.overlaid(
             sectionRoot?.firstChild(
               endnote ? 'endnotePr' : 'footnotePr',
               namespaceUri: OfficeNamespaces.w,
+            ),
+            unambiguous: _unambiguousProperties(
+              sectionXml,
+              sectionRoot,
+              'sectPr',
+              endnote,
             ),
           ),
       };
@@ -86,13 +112,21 @@ final class WordNoteNumbering {
           // an explicit section restart restores a known start.
           final label = unknownCounters.contains(note.endnote)
               ? null
-              : _format(number, setting.format);
+              : formatLabel(number, setting.format);
           if (label == null) {
             _labels[note] = '$id';
             _limited.add(note);
           } else {
             _labels[note] = label;
             _referenceLabels[key] = label;
+            if (setting.unambiguous) {
+              _automatic[note] = WordNoteAutomaticNumber(
+                number: number,
+                format: setting.format,
+                start: setting.start,
+                restart: setting.restart,
+              );
+            }
           }
         }
       }
@@ -115,6 +149,7 @@ final class WordNoteNumbering {
   final _labels = <WmlNote, String>{};
   final _referenceLabels = <(bool, int), String>{};
   final _limited = <WmlNote>{};
+  final _automatic = <WmlNote, WordNoteAutomaticNumber>{};
 
   /// Anchored notes in body order followed by unanchored definitions.
   List<WmlNote> get notes => List<WmlNote>.unmodifiable(_ordered);
@@ -125,6 +160,12 @@ final class WordNoteNumbering {
   /// definitions. Their native settings remain intact for the word processor.
   bool hasExactLabel(WmlNote note) =>
       _labels.containsKey(note) && !_limited.contains(note);
+
+  /// Effective numbering for an automatic reference with an exact label and
+  /// unambiguous native settings. Custom/orphaned references, unsupported
+  /// numbering and malformed/duplicate configuration return null. This does
+  /// not change the editor's existing cached-label fallback behavior.
+  WordNoteAutomaticNumber? automaticNumberFor(WmlNote note) => _automatic[note];
 
   /// Replacement for a modeled automatic reference only. A host may paint this
   /// with different length while retaining the original source-offset range.
@@ -162,6 +203,7 @@ final class WordNoteNumbering {
 
   static Map<bool, _NoteNumberOptions> _documentOptions(WmlDocument document) {
     XmlElement? settings;
+    String? settingsXml;
     final package = document.package;
     if (package != null) {
       final office = package.packageRelationships.firstByType(
@@ -174,15 +216,14 @@ final class WordNoteNumbering {
         final relationships = package.relationshipsFor(main);
         final rel = relationships.firstByType(RelationshipTypes.settings);
         if (rel?.targetMode != RelationshipTargetMode.external) {
-          settings = _xml(
-            package
-                .getPart(
-                  rel == null
-                      ? OpcUris.resolve(main, 'settings.xml')
-                      : relationships.resolve(rel),
-                )
-                ?.readText(),
-          );
+          settingsXml = package
+              .getPart(
+                rel == null
+                    ? OpcUris.resolve(main, 'settings.xml')
+                    : relationships.resolve(rel),
+              )
+              ?.readText();
+          settings = _xml(settingsXml);
         }
       }
     }
@@ -197,6 +238,12 @@ final class WordNoteNumbering {
                 endnote ? 'endnotePr' : 'footnotePr',
                 namespaceUri: OfficeNamespaces.w,
               ),
+              unambiguous: _unambiguousProperties(
+                settingsXml,
+                settings,
+                'settings',
+                endnote,
+              ),
             ),
     };
   }
@@ -210,7 +257,96 @@ final class WordNoteNumbering {
     }
   }
 
-  static String? _format(int number, String format) {
+  static bool _unambiguousProperties(
+    String? source,
+    XmlElement? root,
+    String rootName,
+    bool endnote,
+  ) {
+    if (source == null || source.isEmpty) return true;
+    if (root == null ||
+        root.localName != rootName ||
+        root.namespaceUri != OfficeNamespaces.w ||
+        !_completeNumberingXml(source)) {
+      return false;
+    }
+    final name = endnote ? 'endnotePr' : 'footnotePr';
+    if (root.childrenNamed(name, namespaceUri: OfficeNamespaces.w).length > 1) {
+      return false;
+    }
+    bool containsProperties(XmlElement element) =>
+        (element.localName == name &&
+            element.namespaceUri == OfficeNamespaces.w) ||
+        element.childElements.any(containsProperties);
+    // This reader does not project markup-compatibility alternatives. A
+    // wrapped native configuration must not masquerade as an absent one.
+    return root.childElements.every(
+      (child) =>
+          child.localName == name && child.namespaceUri == OfficeNamespaces.w ||
+          !containsProperties(child),
+    );
+  }
+
+  // The shared DOM reader intentionally tolerates incomplete native source
+  // for preservation. Exportable numbering needs a stronger proof without
+  // changing that reader or the editor's existing label fallback.
+  static bool _completeNumberingXml(String source) {
+    if (source.length > 8 * 1024 * 1024) return false;
+    final stack = <String>[];
+    var roots = 0;
+    var elements = 0;
+    try {
+      final reader = XmlPullReader(source);
+      while (reader.next()) {
+        switch (reader.eventType) {
+          case XmlEventType.startElement:
+            if (++elements > 50000 ||
+                stack.length >= 128 ||
+                reader.attributeCount > 128) {
+              return false;
+            }
+            if (stack.isEmpty && ++roots != 1) return false;
+            final qualifiedAttributes = <String>{};
+            final expandedAttributes = <(String, String)>{};
+            for (var index = 0; index < reader.attributeCount; index++) {
+              if (!qualifiedAttributes.add(
+                    reader.attributeQualifiedName(index),
+                  ) ||
+                  !expandedAttributes.add((
+                    reader.attributeNamespace(index),
+                    reader.attributeLocalName(index),
+                  ))) {
+                return false;
+              }
+            }
+            stack.add(reader.qualifiedName);
+          case XmlEventType.endElement:
+            if (stack.isEmpty || stack.removeLast() != reader.qualifiedName) {
+              return false;
+            }
+          case XmlEventType.characters:
+            if (stack.isEmpty && !reader.isWhitespace) return false;
+          case XmlEventType.cdata:
+            if (stack.isEmpty) return false;
+          case XmlEventType.dtd:
+            return false;
+          case XmlEventType.none:
+          case XmlEventType.xmlDeclaration:
+          case XmlEventType.processingInstruction:
+          case XmlEventType.comment:
+          case XmlEventType.endDocument:
+            break;
+        }
+      }
+      return roots == 1 && stack.isEmpty;
+    } on FormatException {
+      return false;
+    }
+  }
+
+  /// Formats an exact positive ordinal using a supported native Word format.
+  /// Returns null outside the native implementation's supported range.
+  static String? formatLabel(int number, String format) {
     if (number < 1 || number > 1000000) return null;
     switch (format) {
       case 'none':
@@ -270,20 +406,62 @@ final class _NoteNumberOptions {
     required this.format,
     this.start = 1,
     this.restart = 'continuous',
+    this.unambiguous = true,
   });
 
   final String format;
   final int start;
   final String restart;
+  final bool unambiguous;
 
-  _NoteNumberOptions overlaid(XmlElement? properties) {
+  _NoteNumberOptions overlaid(
+    XmlElement? properties, {
+    bool unambiguous = true,
+  }) {
     String? value(String name) => properties
         ?.firstChild(name, namespaceUri: OfficeNamespaces.w)
         ?.getAttribute('val', namespaceUri: OfficeNamespaces.w);
+    var exact = this.unambiguous && unambiguous;
+    if (properties != null &&
+        (properties.childElements.any(
+              (child) =>
+                  child.namespaceUri != OfficeNamespaces.w ||
+                  !const {
+                    'pos',
+                    'numFmt',
+                    'numStart',
+                    'numRestart',
+                    'footnote',
+                    'endnote',
+                  }.contains(child.localName) ||
+                  child.childElements.isNotEmpty ||
+                  !RegExp(r'^[ \t\r\n]*$').hasMatch(child.text),
+            ) ||
+            !RegExp(r'^[ \t\r\n]*$').hasMatch(properties.text))) {
+      exact = false;
+    }
+    for (final name in ['numFmt', 'numStart', 'numRestart']) {
+      final matches = properties
+          ?.childrenNamed(name, namespaceUri: OfficeNamespaces.w)
+          .toList();
+      if (matches == null || matches.isEmpty) continue;
+      final raw = value(name);
+      if (matches.length != 1 ||
+          raw == null ||
+          raw.isEmpty ||
+          matches.single.childElements.isNotEmpty ||
+          !RegExp(r'^[ \t\r\n]*$').hasMatch(matches.single.text) ||
+          (name == 'numStart' &&
+              (!RegExp(r'^[0-9]+$').hasMatch(raw) ||
+                  int.tryParse(raw) == null))) {
+        exact = false;
+      }
+    }
     return _NoteNumberOptions(
       format: value('numFmt') ?? format,
       start: int.tryParse(value('numStart') ?? '') ?? start,
       restart: value('numRestart') ?? restart,
+      unambiguous: exact,
     );
   }
 }

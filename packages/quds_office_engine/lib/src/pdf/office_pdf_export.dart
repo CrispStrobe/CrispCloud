@@ -2872,7 +2872,13 @@ String? _wordLineActualText(LaidOutLine line) {
         .where((glyph) => glyph.glyph.codePoint >= 32)
         .map((glyph) => glyph.glyph.codePoint),
   );
-  return text == painted ? null : text;
+  // A positioned run can sit on a different visible baseline from its
+  // neighbors while retaining its place in the same logical source line.
+  // Preserve that order for extraction instead of letting geometry reorder it.
+  return text == painted &&
+          line.glyphs.every((glyph) => glyph.positionHalfPoints == 0)
+      ? null
+      : text;
 }
 
 String? _brokenLineActualText(

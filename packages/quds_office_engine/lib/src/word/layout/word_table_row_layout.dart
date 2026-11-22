@@ -28,6 +28,7 @@ part of 'word_layout.dart';
   final storyDocument = WmlDocument(
     proofingLanguage: owner._layoutDoc?.proofingLanguage,
     autoHyphenation: owner._layoutDoc?.autoHyphenation ?? false,
+    sourceNoSpaceRaiseLower: owner._layoutDoc?.sourceNoSpaceRaiseLower ?? false,
     sections: [
       WmlSection(
         blocks: [rowTable],
@@ -58,7 +59,11 @@ part of 'word_layout.dart';
         .._deferredContainedVisuals = deferredVisuals
         .._inheritedNoteNumbering = owner._noteNumbering
         .._containedPhysicalSection = owner._containedPhysicalSection ?? section
-        .._containedTableDepth = math.max(0, owner._containedTableDepth - 1);
+        .._containedTableDepth = math.max(0, owner._containedTableDepth - 1)
+        // The temporary table adds its own margin while shaping. Retain only
+        // its ancestors here, just as for the inherited nesting depth.
+        .._containedCellMargin =
+            owner._containedCellMargin - table.properties.cellMargin;
   final laid = rowEngine.layout(storyDocument, updateFields: false);
   final paragraphs = storyDocument.paragraphs.toList();
   final lines = laid.pages.single.lines;

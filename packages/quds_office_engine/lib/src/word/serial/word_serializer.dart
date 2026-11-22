@@ -28,6 +28,7 @@ import 'word_bookmark_io.dart';
 import 'word_comment_io.dart';
 import 'word_content_control_io.dart';
 import 'word_drawing_io.dart';
+import 'word_footnote_separator_io.dart';
 import 'word_frame_io.dart';
 import 'word_numbering_io.dart';
 import 'word_opaque_io.dart';
@@ -62,6 +63,7 @@ class WordSerializer {
   Map<WmlSection, _HeaderFooterIds> _headerFooterIds =
       <WmlSection, _HeaderFooterIds>{};
   WmlDocument? _document;
+  WordFootnoteSeparatorPlan? _footnoteSeparator;
   late WordSectionRevisionIds _sectionRevisionIds;
   final Map<WmlParagraph, int> _restartNumberingIds =
       Map<WmlParagraph, int>.identity();
@@ -74,6 +76,7 @@ class WordSerializer {
 
   /// write API.
   OpcPackage write(WmlDocument document) {
+    _footnoteSeparator = WordFootnoteSeparatorIo.prepare(document);
     _generatedBookmarkIds = WordBookmarks.generatedIds(document);
     WordRevisions.validate(document);
     WordContentControls.validate(document);
@@ -1426,7 +1429,8 @@ class WordSerializer {
         attributes: {'w:val': r.styleId!},
       );
     }
-    // OOXML CT_RPr order is strict: rFonts, b, i, smallCaps, strike, color, sz,
+    // OOXML CT_RPr order is strict: rFonts, b, i, caps, smallCaps, strike, color,
+    // kern, position, sz,
     // highlight, u, vertAlign. Word reports the package as corrupt when these
     // appear in a different order.
     if (r.asciiFont.isNotEmpty || r.csFont.isNotEmpty) {
@@ -1450,6 +1454,11 @@ class WordSerializer {
       'i',
       prefix: 'w',
       attributes: <String, String>{'w:val': r.italic ? '1' : '0'},
+    );
+    w.writeEmptyElement(
+      'caps',
+      prefix: 'w',
+      attributes: <String, String>{'w:val': r.allCaps ? '1' : '0'},
     );
     w.writeEmptyElement(
       'smallCaps',
@@ -1476,6 +1485,14 @@ class WordSerializer {
         'kern',
         prefix: 'w',
         attributes: {'w:val': '${r.kerningHalfPoints}'},
+      );
+    }
+    if (r.positionHalfPoints != 0 ||
+        r.explicitProperties.contains('position')) {
+      w.writeEmptyElement(
+        'position',
+        prefix: 'w',
+        attributes: {'w:val': '${r.positionHalfPoints}'},
       );
     }
     w.writeEmptyElement(
@@ -2010,6 +2027,7 @@ class WordSerializer {
       restrictMode: document.restrictMode,
       oddEven: document.sections.any((s) => s.differentOddEven),
       autoHyphenation: document.autoHyphenation,
+      footnoteSpecialIds: _footnoteSeparator?.ids,
     );
     if (xml == null) return;
     _putPart(
@@ -2596,7 +2614,11 @@ class WordSerializer {
     _activePartUri = uri;
     // Separators are not editable note bodies. Preserve their native metadata;
     // only a newly created note part receives the conventional standard pair.
-    _writeNoteChrome(w, item, source);
+    if (item == 'footnote' && _footnoteSeparator != null) {
+      _footnoteSeparator!.write(w);
+    } else {
+      _writeNoteChrome(w, item, source);
+    }
     for (final WmlNote note in notes) {
       w.writeStartElement(item, prefix: 'w');
       w.writeAttribute('w:id', '${note.id}');

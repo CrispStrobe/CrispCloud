@@ -549,12 +549,14 @@ abstract final class WmlRunEdit {
         a.underline == b.underline &&
         a.strike == b.strike &&
         a.smallCaps == b.smallCaps &&
+        a.allCaps == b.allCaps &&
         a.color == b.color &&
         a.highlight == b.highlight &&
         a.fontSizeHalfPoints == b.fontSizeHalfPoints &&
         a.asciiFont == b.asciiFont &&
         a.csFont == b.csFont &&
         a.vertAlign == b.vertAlign &&
+        a.positionHalfPoints == b.positionHalfPoints &&
         a.proofingLanguage == b.proofingLanguage &&
         a.complexScriptLanguage == b.complexScriptLanguage &&
         a.complexScript == b.complexScript &&

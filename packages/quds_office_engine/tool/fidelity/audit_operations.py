@@ -47,6 +47,7 @@ def audit(catalog):
     # coverage just because its filename matches a wildcard.
     scenarios['docx'].extend(FIXTURES/f'word-structure-{phase}.json'
                              for phase in ('create', 'edit', 'remove'))
+    scenarios['docx'].append(FIXTURES/'word-operations.json')
     rows=[]
     for extension, operations in catalog.items():
         evidence={name:[] for name in operations}

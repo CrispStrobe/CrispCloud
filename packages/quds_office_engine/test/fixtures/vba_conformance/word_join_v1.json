@@ -1,0 +1,596 @@
+{
+  "schemaVersion": 1,
+  "suite": "vba-word-join",
+  "dialect": "vba-word",
+  "cases": [
+    {
+      "id": "omitted-delimiter",
+      "feature": "Join default separator",
+      "source": "Option Explicit\nSub Main()\n  Dim words(0 To 2) As String\n  words(0) = \"red\"\n  words(1) = \"green\"\n  words(2) = \"blue\"\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = Join(words)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "red green blue"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/join-function"
+        ],
+        "note": "Published Join behavior; independently authored plan, no Office-host execution."
+      }
+    },
+    {
+      "id": "empty-delimiter",
+      "feature": "Join empty separator",
+      "source": "Option Explicit\nSub Main()\n  Dim words(0 To 2) As String\n  words(0) = \"red\"\n  words(1) = \"green\"\n  words(2) = \"blue\"\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = Join(words, \"\")\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "redgreenblue"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/join-function"
+        ],
+        "note": "Published Join behavior; independently authored plan, no Office-host execution."
+      }
+    },
+    {
+      "id": "multichar-delimiter",
+      "feature": "Join multi-character separator",
+      "source": "Option Explicit\nSub Main()\n  Dim words(0 To 2) As String\n  words(0) = \"red\"\n  words(1) = \"green\"\n  words(2) = \"blue\"\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = Join(words, \" / \")\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "red / green / blue"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/join-function"
+        ],
+        "note": "Published Join behavior; independently authored plan, no Office-host execution."
+      }
+    },
+    {
+      "id": "single-element",
+      "feature": "Join singleton",
+      "source": "Option Explicit\nSub Main()\n  Dim words(5 To 5) As String\n  words(5) = \"alone\"\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = Join(words, \"never inserted\")\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "alone"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/join-function"
+        ],
+        "note": "Published Join behavior; independently authored plan, no Office-host execution."
+      }
+    },
+    {
+      "id": "empty-elements",
+      "feature": "Join empty substrings",
+      "source": "Option Explicit\nSub Main()\n  Dim words(0 To 2) As String\n  words(1) = \"middle\"\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = Join(words)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": " middle "
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/join-function"
+        ],
+        "note": "Published Join behavior; independently authored plan, no Office-host execution."
+      }
+    },
+    {
+      "id": "negative-lower-bound",
+      "feature": "Join physical element order",
+      "source": "Option Explicit\nSub Main()\n  Dim words(-3 To -1) As String\n  words(-3) = \"left\"\n  words(-2) = \"center\"\n  words(-1) = \"right\"\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = Join(words, \"|\")\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "left|center|right"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/join-function"
+        ],
+        "note": "Published Join behavior; independently authored plan, no Office-host execution."
+      }
+    },
+    {
+      "id": "option-base-one",
+      "feature": "Join Option Base",
+      "source": "Option Base 1\nOption Explicit\nSub Main()\n  Dim words(3) As String\n  words(1) = \"one\"\n  words(2) = \"two\"\n  words(3) = \"three\"\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = Join(words, \"-\")\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "one-two-three"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/join-function"
+        ],
+        "note": "Published Join behavior; independently authored plan, no Office-host execution."
+      }
+    },
+    {
+      "id": "dynamic-preserve-grow",
+      "feature": "Join dynamic lifecycle",
+      "source": "Option Explicit\nSub Main()\n  Dim words() As String\n  ReDim words(0 To 1)\n  words(0) = \"north\"\n  words(1) = \"south\"\n  ReDim Preserve words(0 To 3)\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = Join(words, \"/\")\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "north/south//"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/join-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-macros-details.md"
+        ],
+        "note": "Existing bounded array lifecycle composes with Join without changing bounds."
+      }
+    },
+    {
+      "id": "dynamic-preserve-shrink",
+      "feature": "Join dynamic lifecycle",
+      "source": "Option Explicit\nSub Main()\n  Dim words() As String\n  ReDim words(4 To 6)\n  words(4) = \"kept\"\n  words(5) = \"also kept\"\n  words(6) = \"removed\"\n  ReDim Preserve words(4 To 5)\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = Join(words, \";\")\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "kept;also kept"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/join-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-macros-details.md"
+        ],
+        "note": "Existing bounded Preserve shrink removes trailing elements before joining."
+      }
+    },
+    {
+      "id": "fixed-erase",
+      "feature": "Join fixed-array defaults",
+      "source": "Option Explicit\nSub Main()\n  Dim words(0 To 2) As String\n  words(0) = \"red\"\n  words(1) = \"green\"\n  words(2) = \"blue\"\n  Erase words\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = Join(words, \";\")\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": ";;"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/join-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-macros-details.md"
+        ],
+        "note": "Fixed String-array Erase retains shape and resets elements to empty strings."
+      }
+    },
+    {
+      "id": "empty-variant-delimiter",
+      "feature": "Join Empty delimiter",
+      "source": "Option Explicit\nSub Main()\n  Dim words(0 To 2) As String\n  words(0) = \"red\"\n  words(1) = \"green\"\n  words(2) = \"blue\"\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = Join(words, Empty)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "redgreenblue"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/join-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-macros-details.md"
+        ],
+        "note": "The bounded delimiter contract explicitly converts Empty to an empty string."
+      }
+    },
+    {
+      "id": "string-variant-delimiter",
+      "feature": "Join Variant delimiter",
+      "source": "Option Explicit\nSub Main()\n  Dim separator As Variant\n  Dim words(0 To 2) As String\n  words(0) = \"red\"\n  words(1) = \"green\"\n  words(2) = \"blue\"\n  separator = \" + \"\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = Join(words, separator)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "red + green + blue"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/join-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-macros-details.md"
+        ],
+        "note": "A Variant containing a String is accepted without implicit numeric coercion."
+      }
+    },
+    {
+      "id": "unicode-preserved",
+      "feature": "Join UTF-16 content",
+      "source": "Option Explicit\nSub Main()\n  Dim words(0 To 2) As String\n  words(0) = \"A😀\"\n  words(1) = \"é\"\n  words(2) = \"العربية\"\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = Join(words, \"🟦\")\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "A😀🟦é🟦العربية"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/join-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-macros-details.md"
+        ],
+        "note": "Bounded UTF-16 strings retain astral pairs, combining marks and Arabic text."
+      }
+    },
+    {
+      "id": "retained-array-elements",
+      "feature": "Join read-only source",
+      "source": "Option Explicit\nSub Main()\n  Dim words(0 To 2) As String\n  words(0) = \"red\"\n  words(1) = \"green\"\n  words(2) = \"blue\"\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = Join(words, \"-\") & \"|\" & words(0) & \"|\" & words(2)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "red-green-blue|red|blue"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/join-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-macros-details.md"
+        ],
+        "note": "Joining does not mutate array element values, shape or ownership."
+      }
+    },
+    {
+      "id": "exact-output-boundary",
+      "feature": "Join string budget",
+      "source": "Option Explicit\nSub Main()\n  Dim words(0 To 1) As String\n  words(0) = String(16383, \"a\")\n  words(1) = String(16383, \"b\")\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(Len(Join(words)))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "32767"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/join-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-macros-details.md"
+        ],
+        "note": "The native-plan string budget accepts exactly 32767 UTF-16 output units."
+      }
+    },
+    {
+      "id": "source-loop-filled-array",
+      "feature": "Join loop composition",
+      "source": "Option Explicit\nSub Main()\n  Dim words(2 To 4) As String\n  Dim i As Long\n  For i = 2 To 4\n    words(i) = \"Row \" & CStr(i)\n  Next i\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = Join(words, \", \")\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "Row 2, Row 3, Row 4"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/join-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-macros-details.md"
+        ],
+        "note": "Existing bounded source-data loops populate the array in ascending index order."
+      }
+    },
+    {
+      "id": "unallocated-array",
+      "feature": "Join allocation guard",
+      "source": "Option Explicit\nSub Main()\n  Dim words() As String\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = Join(words)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_subscript_out_of_range",
+          "line": 4,
+          "column": 57
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/join-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-macros-details.md"
+        ],
+        "note": "Bounded Quds contract; no Office-host execution."
+      }
+    },
+    {
+      "id": "erased-dynamic-array",
+      "feature": "Join allocation guard",
+      "source": "Option Explicit\nSub Main()\n  Dim words() As String\n  ReDim words(1 To 2)\n  words(1) = \"discarded\"\n  Erase words\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = Join(words)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_subscript_out_of_range",
+          "line": 7,
+          "column": 57
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/join-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-macros-details.md"
+        ],
+        "note": "Bounded Quds contract; no Office-host execution."
+      }
+    },
+    {
+      "id": "numeric-array-refused",
+      "feature": "Join element type",
+      "source": "Option Explicit\nSub Main()\n  Dim words(0 To 1) As Long\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = Join(words)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 4,
+          "column": 57
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/join-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-macros-details.md"
+        ],
+        "note": "Numeric array element conversion is outside the bounded Join contract."
+      }
+    },
+    {
+      "id": "variant-array-refused",
+      "feature": "Join element type",
+      "source": "Option Explicit\nSub Main()\n  Dim words(0 To 1) As Variant\n  words(0) = \"text\"\n  words(1) = \"also text\"\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = Join(words)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 6,
+          "column": 57
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/join-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-macros-details.md"
+        ],
+        "note": "The bounded Join source must be declared As String even when all Variant elements hold strings."
+      }
+    },
+    {
+      "id": "scalar-source-refused",
+      "feature": "Join source shape",
+      "source": "Option Explicit\nSub Main()\n  Dim words As String\n  words = \"scalar\"\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = Join(words)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 5,
+          "column": 57
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/join-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-macros-details.md"
+        ],
+        "note": "Bounded Quds contract; no Office-host execution."
+      }
+    },
+    {
+      "id": "null-delimiter-refused",
+      "feature": "Join Null delimiter",
+      "source": "Option Explicit\nSub Main()\n  Dim words(0 To 1) As String\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = Join(words, Null)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_invalid_use_of_null",
+          "line": 4,
+          "column": 64
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/join-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-macros-details.md"
+        ],
+        "note": "Bounded Quds contract; no Office-host execution."
+      }
+    },
+    {
+      "id": "numeric-delimiter-refused",
+      "feature": "Join delimiter type",
+      "source": "Option Explicit\nSub Main()\n  Dim words(0 To 1) As String\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = Join(words, 7)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 4,
+          "column": 64
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/join-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-macros-details.md"
+        ],
+        "note": "The bounded delimiter contract requires String or Empty, without numeric coercion."
+      }
+    },
+    {
+      "id": "boolean-delimiter-refused",
+      "feature": "Join delimiter type",
+      "source": "Option Explicit\nSub Main()\n  Dim words(0 To 1) As String\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = Join(words, True)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 4,
+          "column": 64
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/join-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-macros-details.md"
+        ],
+        "note": "The bounded delimiter contract requires String or Empty, without Boolean coercion."
+      }
+    },
+    {
+      "id": "output-overflow-refused",
+      "feature": "Join string budget",
+      "source": "Option Explicit\nSub Main()\n  Dim words(0 To 1) As String\n  words(0) = String(16384, \"a\")\n  words(1) = String(16383, \"b\")\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = Join(words)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_limit_exceeded",
+          "line": 6,
+          "column": 52
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/join-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-macros-details.md"
+        ],
+        "note": "32768 output units exceed the bounded 32767-unit string limit before allocation."
+      }
+    }
+  ]
+}

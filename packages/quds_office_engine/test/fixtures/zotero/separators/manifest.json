@@ -1,0 +1,50 @@
+{
+  "producer": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+  "source": "tool/zotero/footnote_separator_acceptance.dart",
+  "route": "Quds editable ODT -> LibreOffice ODT save 1 -> controlled native refresh and two DOCX/ODT cycles -> LibreOffice ODT save 2",
+  "installed_zotero": false,
+  "files": [
+    {
+      "file": "custom-libreoffice-1.odt",
+      "preset": "custom",
+      "save": 1,
+      "sha256": "f730882c0f81e26a78687864a615b99b1e4c0e53828d8f99bf6fb9ce6e89a782",
+      "bytes": 10651
+    },
+    {
+      "file": "custom-libreoffice-2.odt",
+      "preset": "custom",
+      "save": 2,
+      "sha256": "d03275e11e32dea23ed568bbcf7008988baacc5ee861db4f19f27482c00db25b",
+      "bytes": 11069
+    },
+    {
+      "file": "zero-libreoffice-1.odt",
+      "preset": "zero",
+      "save": 1,
+      "sha256": "d8f05c68a7b047ed90fe3e899f6d35a036152244206c8882bf018f255f172716",
+      "bytes": 10645
+    },
+    {
+      "file": "zero-libreoffice-2.odt",
+      "preset": "zero",
+      "save": 2,
+      "sha256": "e34ff7d5814ab6e8a20fa1132137d4eee08f99ed06b910261d1a78829add2df7",
+      "bytes": 11083
+    },
+    {
+      "file": "hidden-libreoffice-1.odt",
+      "preset": "hidden",
+      "save": 1,
+      "sha256": "401502b8c7a7daefbc861ba78ae3492049ed4611c6131664271ef55cb4439c16",
+      "bytes": 10595
+    },
+    {
+      "file": "hidden-libreoffice-2.odt",
+      "preset": "hidden",
+      "save": 2,
+      "sha256": "fef8a45455fed4efc5202604953175368f53af1f31f9b870d4afdd98f157353c",
+      "bytes": 11007
+    }
+  ]
+}

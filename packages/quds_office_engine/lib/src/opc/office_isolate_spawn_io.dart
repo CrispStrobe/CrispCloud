@@ -88,7 +88,7 @@ Future<Object?> officeTrySpawnOpen({
   }
 }
 
-void _openIsolateWorker(List<Object?> args) {
+void _openIsolateWorker(List<Object?> args) async {
   /// port API.
   final SendPort port = args[0] as SendPort;
 
@@ -101,7 +101,7 @@ void _openIsolateWorker(List<Object?> args) {
   /// kind API.
   final String kind = args[3] as String;
   try {
-    final Object result = decodeOfficeOpen(bytes, password, kind, (
+    final Object result = await decodeOfficeOpen(bytes, password, kind, (
       OfficeOpenProgress p,
     ) {
       port.send(<Object>['progress', p.value, p.stage]);

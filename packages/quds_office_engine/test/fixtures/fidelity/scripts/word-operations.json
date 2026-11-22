@@ -1,0 +1,17 @@
+[
+  {"op":"paragraphShading","paragraph":4,"color":"DDEEFF"},
+  {"op":"tabStop","paragraph":4,"position":12.35,"alignment":"decimal","leader":"dot"},
+  {"op":"clearTabStops","paragraph":4},
+  {"op":"lineSpacing","paragraph":4,"rule":"exact","points":18},
+  {"op":"paragraphSpaceBefore","paragraph":4,"action":"toggle"},
+  {"op":"pageSetup","section":0,"property":"top","points":36},
+  {"op":"pageOrientation","section":0,"orientation":"landscape"},
+  {"op":"sectionStart","section":0,"kind":"oddPage"},
+  {"op":"textColumns","section":0,"count":2},
+  {"op":"listDefault","paragraph":4,"numbered":true},
+  {"op":"listOutlineDefault","paragraph":4},
+  {"op":"listLevel","paragraph":4,"delta":1},
+  {"op":"removeNumbers","paragraph":4,"numberType":"all"},
+  {"op":"tableCellRangeText","table":0,"row":0,"column":0,"text":"Range"},
+  {"op":"tableCellRangeInsertBefore","table":0,"row":0,"column":0,"text":"Prefix "}
+]

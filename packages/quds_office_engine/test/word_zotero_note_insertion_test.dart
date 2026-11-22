@@ -594,9 +594,11 @@ void main() {
     expect(WordZotero.fields(document), isEmpty);
   });
 
-  for (final kind in ['locked', 'malformed']) {
+  for (final kind in ['locked', 'malformed repair', 'malformed unlink']) {
     test(
-      '$kind citation in the destination note prevents native insertion',
+      kind == 'locked'
+          ? 'locked citation in the destination note prevents native insertion'
+          : '$kind in the destination note must finish before insertion publishes',
       () {
         final document = WmlDocument.empty(text: 'Body ');
         final note = WordNotes.insert(
@@ -616,11 +618,48 @@ void main() {
           run.fieldInstruction = ' ADDIN ZOTERO_ITEM CSL_CITATION {broken} ';
         }
         final before = _snapshot(document);
-        expect(
-          () => _session(document, note.paragraphs.single, 0),
-          throwsUnsupportedError,
-        );
+        if (kind == 'locked') {
+          expect(
+            () => _session(document, note.paragraphs.single, 0),
+            throwsUnsupportedError,
+          );
+          expect(_snapshot(document), before);
+          return;
+        }
+
+        final session = _session(document, note.paragraphs.single, 0);
+        final damaged = _fields(session).single;
+        expect(damaged['code'], 'ITEM CSL_CITATION {broken}');
+        expect(damaged['text'], '(Old)');
+        expect(damaged['noteIndex'], 1);
+        final inserted = _insert(session, 0);
+        _set(session, inserted, 'new', '(New)');
         expect(_snapshot(document), before);
+        expect(
+          () => _call(session, 'Document.complete'),
+          throwsFormatException,
+        );
+        expect(session.isComplete, isFalse);
+        expect(session.apply, throwsStateError);
+        expect(_snapshot(document), before);
+
+        if (kind == 'malformed repair') {
+          _set(session, damaged, 'repaired', '(Repaired)');
+        } else {
+          _call(session, 'Field.removeCode', [damaged['id']]);
+        }
+        expect(_snapshot(document), before);
+        _apply(session);
+        expect(
+          note.paragraphs.single.text,
+          kind == 'malformed repair' ? '(New)See (Repaired)' : '(New)See (Old)',
+        );
+        expect(
+          WordZotero.fields(
+            document,
+          ).map((field) => field.citation!.citationId),
+          kind == 'malformed repair' ? ['new', 'repaired'] : ['new'],
+        );
       },
     );
   }

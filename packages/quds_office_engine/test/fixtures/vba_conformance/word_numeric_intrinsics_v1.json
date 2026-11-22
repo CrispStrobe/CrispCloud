@@ -1,0 +1,1314 @@
+{
+  "schemaVersion": 1,
+  "suite": "vba-word-numeric-intrinsics",
+  "dialect": "vba-word",
+  "cases": [
+    {
+      "id": "abs-negative-50point-3",
+      "feature": "Abs",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Format.LeftIndent = Abs(-50.3)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.paragraphFormat",
+            "arguments": {
+              "paragraph": 0,
+              "left": 50.3
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/abs-function"
+        ],
+        "note": "Expected arithmetic is authored from the published Microsoft function contract; native Word mapping follows the documented Quds dialect. No Office host was executed."
+      }
+    },
+    {
+      "id": "abs-50point-3",
+      "feature": "Abs",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Format.LeftIndent = Abs(50.3)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.paragraphFormat",
+            "arguments": {
+              "paragraph": 0,
+              "left": 50.3
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/abs-function"
+        ],
+        "note": "Expected arithmetic is authored from the published Microsoft function contract; native Word mapping follows the documented Quds dialect. No Office host was executed."
+      }
+    },
+    {
+      "id": "abs-0",
+      "feature": "Abs",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Format.LeftIndent = Abs(0)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.paragraphFormat",
+            "arguments": {
+              "paragraph": 0,
+              "left": 0
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/abs-function"
+        ],
+        "note": "Expected arithmetic is authored from the published Microsoft function contract; native Word mapping follows the documented Quds dialect. No Office host was executed."
+      }
+    },
+    {
+      "id": "int-negative-8point-4",
+      "feature": "Int",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Format.LeftIndent = Int(-8.4)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.paragraphFormat",
+            "arguments": {
+              "paragraph": 0,
+              "left": -9
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/int-fix-functions"
+        ],
+        "note": "Expected arithmetic is authored from the published Microsoft function contract; native Word mapping follows the documented Quds dialect. No Office host was executed."
+      }
+    },
+    {
+      "id": "fix-negative-8point-4",
+      "feature": "Fix",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Format.LeftIndent = Fix(-8.4)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.paragraphFormat",
+            "arguments": {
+              "paragraph": 0,
+              "left": -8
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/int-fix-functions"
+        ],
+        "note": "Expected arithmetic is authored from the published Microsoft function contract; native Word mapping follows the documented Quds dialect. No Office host was executed."
+      }
+    },
+    {
+      "id": "int-99point-8",
+      "feature": "Int",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Format.LeftIndent = Int(99.8)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.paragraphFormat",
+            "arguments": {
+              "paragraph": 0,
+              "left": 99
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/int-fix-functions"
+        ],
+        "note": "Expected arithmetic is authored from the published Microsoft function contract; native Word mapping follows the documented Quds dialect. No Office host was executed."
+      }
+    },
+    {
+      "id": "fix-99point-8",
+      "feature": "Fix",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Format.LeftIndent = Fix(99.8)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.paragraphFormat",
+            "arguments": {
+              "paragraph": 0,
+              "left": 99
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/int-fix-functions"
+        ],
+        "note": "Expected arithmetic is authored from the published Microsoft function contract; native Word mapping follows the documented Quds dialect. No Office host was executed."
+      }
+    },
+    {
+      "id": "int-negative-0point-125",
+      "feature": "Int",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Format.LeftIndent = Int(-0.125)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.paragraphFormat",
+            "arguments": {
+              "paragraph": 0,
+              "left": -1
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/int-fix-functions"
+        ],
+        "note": "Expected arithmetic is authored from the published Microsoft function contract; native Word mapping follows the documented Quds dialect. No Office host was executed."
+      }
+    },
+    {
+      "id": "fix-negative-0point-125",
+      "feature": "Fix",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Format.LeftIndent = Fix(-0.125)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.paragraphFormat",
+            "arguments": {
+              "paragraph": 0,
+              "left": 0
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/int-fix-functions"
+        ],
+        "note": "Expected arithmetic is authored from the published Microsoft function contract; native Word mapping follows the documented Quds dialect. No Office host was executed."
+      }
+    },
+    {
+      "id": "int-negative-9",
+      "feature": "Int",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Format.LeftIndent = Int(-9)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.paragraphFormat",
+            "arguments": {
+              "paragraph": 0,
+              "left": -9
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/int-fix-functions"
+        ],
+        "note": "Expected arithmetic is authored from the published Microsoft function contract; native Word mapping follows the documented Quds dialect. No Office host was executed."
+      }
+    },
+    {
+      "id": "fix-negative-9",
+      "feature": "Fix",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Format.LeftIndent = Fix(-9)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.paragraphFormat",
+            "arguments": {
+              "paragraph": 0,
+              "left": -9
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/int-fix-functions"
+        ],
+        "note": "Expected arithmetic is authored from the published Microsoft function contract; native Word mapping follows the documented Quds dialect. No Office host was executed."
+      }
+    },
+    {
+      "id": "sgn-negative-2point-4",
+      "feature": "Sgn",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Format.LeftIndent = Sgn(-2.4)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.paragraphFormat",
+            "arguments": {
+              "paragraph": 0,
+              "left": -1
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/sgn-function"
+        ],
+        "note": "Expected arithmetic is authored from the published Microsoft function contract; native Word mapping follows the documented Quds dialect. No Office host was executed."
+      }
+    },
+    {
+      "id": "sgn-12",
+      "feature": "Sgn",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Format.LeftIndent = Sgn(12)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.paragraphFormat",
+            "arguments": {
+              "paragraph": 0,
+              "left": 1
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/sgn-function"
+        ],
+        "note": "Expected arithmetic is authored from the published Microsoft function contract; native Word mapping follows the documented Quds dialect. No Office host was executed."
+      }
+    },
+    {
+      "id": "sgn-0",
+      "feature": "Sgn",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Format.LeftIndent = Sgn(0)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.paragraphFormat",
+            "arguments": {
+              "paragraph": 0,
+              "left": 0
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/sgn-function"
+        ],
+        "note": "Expected arithmetic is authored from the published Microsoft function contract; native Word mapping follows the documented Quds dialect. No Office host was executed."
+      }
+    },
+    {
+      "id": "abs-empty",
+      "feature": "Abs",
+      "source": "Sub Main()\n  Dim amount As Variant\n  ActiveDocument.Paragraphs(1).Format.LeftIndent = Abs(amount)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.paragraphFormat",
+            "arguments": {
+              "paragraph": 0,
+              "left": 0
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/abs-function"
+        ],
+        "note": "Expected arithmetic is authored from the published Microsoft function contract; native Word mapping follows the documented Quds dialect. No Office host was executed."
+      }
+    },
+    {
+      "id": "abs-numeric-variant",
+      "feature": "Abs",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Format.LeftIndent = Abs(CVar(-8.4))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.paragraphFormat",
+            "arguments": {
+              "paragraph": 0,
+              "left": 8.4
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/abs-function"
+        ],
+        "note": "Expected arithmetic is authored from the published Microsoft function contract; native Word mapping follows the documented Quds dialect. No Office host was executed."
+      }
+    },
+    {
+      "id": "abs-negative-zero",
+      "feature": "Abs",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Format.LeftIndent = Abs(CDbl(\"-0\"))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.paragraphFormat",
+            "arguments": {
+              "paragraph": 0,
+              "left": 0
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/abs-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md#numeric-intrinsics"
+        ],
+        "note": "Quds bounded numeric, coercion or diagnostic contract; this is not an Office-host observation or a claim that full VBA refuses the source."
+      }
+    },
+    {
+      "id": "abs-null",
+      "feature": "Abs",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Range.Font.Bold = IsNull(Abs(Null))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 0,
+              "bold": true
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/abs-function"
+        ],
+        "note": "Expected arithmetic is authored from the published Microsoft function contract; native Word mapping follows the documented Quds dialect. No Office host was executed."
+      }
+    },
+    {
+      "id": "int-empty",
+      "feature": "Int",
+      "source": "Sub Main()\n  Dim amount As Variant\n  ActiveDocument.Paragraphs(1).Format.LeftIndent = Int(amount)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.paragraphFormat",
+            "arguments": {
+              "paragraph": 0,
+              "left": 0
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/int-fix-functions",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md#numeric-intrinsics"
+        ],
+        "note": "Quds bounded numeric, coercion or diagnostic contract; this is not an Office-host observation or a claim that full VBA refuses the source."
+      }
+    },
+    {
+      "id": "int-numeric-variant",
+      "feature": "Int",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Format.LeftIndent = Int(CVar(-8.4))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.paragraphFormat",
+            "arguments": {
+              "paragraph": 0,
+              "left": -9
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/int-fix-functions"
+        ],
+        "note": "Expected arithmetic is authored from the published Microsoft function contract; native Word mapping follows the documented Quds dialect. No Office host was executed."
+      }
+    },
+    {
+      "id": "int-negative-zero",
+      "feature": "Int",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Format.LeftIndent = Int(CDbl(\"-0\"))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.paragraphFormat",
+            "arguments": {
+              "paragraph": 0,
+              "left": 0
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/int-fix-functions",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md#numeric-intrinsics"
+        ],
+        "note": "Quds bounded numeric, coercion or diagnostic contract; this is not an Office-host observation or a claim that full VBA refuses the source."
+      }
+    },
+    {
+      "id": "int-null",
+      "feature": "Int",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Range.Font.Bold = IsNull(Int(Null))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 0,
+              "bold": true
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/int-fix-functions"
+        ],
+        "note": "Expected arithmetic is authored from the published Microsoft function contract; native Word mapping follows the documented Quds dialect. No Office host was executed."
+      }
+    },
+    {
+      "id": "fix-empty",
+      "feature": "Fix",
+      "source": "Sub Main()\n  Dim amount As Variant\n  ActiveDocument.Paragraphs(1).Format.LeftIndent = Fix(amount)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.paragraphFormat",
+            "arguments": {
+              "paragraph": 0,
+              "left": 0
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/int-fix-functions",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md#numeric-intrinsics"
+        ],
+        "note": "Quds bounded numeric, coercion or diagnostic contract; this is not an Office-host observation or a claim that full VBA refuses the source."
+      }
+    },
+    {
+      "id": "fix-numeric-variant",
+      "feature": "Fix",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Format.LeftIndent = Fix(CVar(-8.4))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.paragraphFormat",
+            "arguments": {
+              "paragraph": 0,
+              "left": -8
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/int-fix-functions"
+        ],
+        "note": "Expected arithmetic is authored from the published Microsoft function contract; native Word mapping follows the documented Quds dialect. No Office host was executed."
+      }
+    },
+    {
+      "id": "fix-negative-zero",
+      "feature": "Fix",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Format.LeftIndent = Fix(CDbl(\"-0\"))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.paragraphFormat",
+            "arguments": {
+              "paragraph": 0,
+              "left": 0
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/int-fix-functions",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md#numeric-intrinsics"
+        ],
+        "note": "Quds bounded numeric, coercion or diagnostic contract; this is not an Office-host observation or a claim that full VBA refuses the source."
+      }
+    },
+    {
+      "id": "fix-null",
+      "feature": "Fix",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Range.Font.Bold = IsNull(Fix(Null))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 0,
+              "bold": true
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/int-fix-functions"
+        ],
+        "note": "Expected arithmetic is authored from the published Microsoft function contract; native Word mapping follows the documented Quds dialect. No Office host was executed."
+      }
+    },
+    {
+      "id": "sgn-empty",
+      "feature": "Sgn",
+      "source": "Sub Main()\n  Dim amount As Variant\n  ActiveDocument.Paragraphs(1).Format.LeftIndent = Sgn(amount)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.paragraphFormat",
+            "arguments": {
+              "paragraph": 0,
+              "left": 0
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/sgn-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md#numeric-intrinsics"
+        ],
+        "note": "Quds bounded numeric, coercion or diagnostic contract; this is not an Office-host observation or a claim that full VBA refuses the source."
+      }
+    },
+    {
+      "id": "sgn-numeric-variant",
+      "feature": "Sgn",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Format.LeftIndent = Sgn(CVar(-8.4))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.paragraphFormat",
+            "arguments": {
+              "paragraph": 0,
+              "left": -1
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/sgn-function"
+        ],
+        "note": "Expected arithmetic is authored from the published Microsoft function contract; native Word mapping follows the documented Quds dialect. No Office host was executed."
+      }
+    },
+    {
+      "id": "sgn-negative-zero",
+      "feature": "Sgn",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Format.LeftIndent = Sgn(CDbl(\"-0\"))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.paragraphFormat",
+            "arguments": {
+              "paragraph": 0,
+              "left": 0
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/sgn-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md#numeric-intrinsics"
+        ],
+        "note": "Quds bounded numeric, coercion or diagnostic contract; this is not an Office-host observation or a claim that full VBA refuses the source."
+      }
+    },
+    {
+      "id": "nested-sign-floor-identity",
+      "feature": "Numeric composition",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Format.LeftIndent = Sgn(-8.4) * Int(Abs(-8.4))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.paragraphFormat",
+            "arguments": {
+              "paragraph": 0,
+              "left": -8
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/int-fix-functions"
+        ],
+        "note": "Expected arithmetic is authored from the published Microsoft function contract; native Word mapping follows the documented Quds dialect. No Office host was executed."
+      }
+    },
+    {
+      "id": "nested-null-composition",
+      "feature": "Numeric composition",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Range.Font.Bold = IsNull(Fix(Int(Abs(Null))))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 0,
+              "bold": true
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/int-fix-functions"
+        ],
+        "note": "Expected arithmetic is authored from the published Microsoft function contract; native Word mapping follows the documented Quds dialect. No Office host was executed."
+      }
+    },
+    {
+      "id": "explicit-string-conversion",
+      "feature": "Abs",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Format.LeftIndent = Abs(CDbl(\" -12.5 \"))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.paragraphFormat",
+            "arguments": {
+              "paragraph": 0,
+              "left": 12.5
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/abs-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md#numeric-intrinsics"
+        ],
+        "note": "Quds bounded numeric, coercion or diagnostic contract; this is not an Office-host observation or a claim that full VBA refuses the source."
+      }
+    },
+    {
+      "id": "explicit-boolean-conversion",
+      "feature": "Abs",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Format.LeftIndent = Abs(CDbl(True))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.paragraphFormat",
+            "arguments": {
+              "paragraph": 0,
+              "left": 1
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/abs-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md#numeric-intrinsics"
+        ],
+        "note": "Quds bounded numeric, coercion or diagnostic contract; this is not an Office-host observation or a claim that full VBA refuses the source."
+      }
+    },
+    {
+      "id": "subnormal-negative-floor",
+      "feature": "Int",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Format.LeftIndent = Int(CDbl(\"-5e-324\"))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.paragraphFormat",
+            "arguments": {
+              "paragraph": 0,
+              "left": -1
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/int-fix-functions",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md#numeric-intrinsics"
+        ],
+        "note": "Quds bounded numeric, coercion or diagnostic contract; this is not an Office-host observation or a claim that full VBA refuses the source."
+      }
+    },
+    {
+      "id": "subnormal-negative-truncation",
+      "feature": "Fix",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Format.LeftIndent = Fix(CDbl(\"-5e-324\"))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.paragraphFormat",
+            "arguments": {
+              "paragraph": 0,
+              "left": 0
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/int-fix-functions",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md#numeric-intrinsics"
+        ],
+        "note": "Quds bounded numeric, coercion or diagnostic contract; this is not an Office-host observation or a claim that full VBA refuses the source."
+      }
+    },
+    {
+      "id": "subnormal-negative-sign",
+      "feature": "Sgn",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Format.LeftIndent = Sgn(CDbl(\"-5e-324\"))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.paragraphFormat",
+            "arguments": {
+              "paragraph": 0,
+              "left": -1
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/sgn-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md#numeric-intrinsics"
+        ],
+        "note": "Quds bounded numeric, coercion or diagnostic contract; this is not an Office-host observation or a claim that full VBA refuses the source."
+      }
+    },
+    {
+      "id": "subnormal-absolute-value",
+      "feature": "Abs",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Range.InsertBefore CStr(Abs(CDbl(\"-5e-324\")))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "5e-324"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/abs-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md#numeric-intrinsics"
+        ],
+        "note": "Quds bounded numeric, coercion or diagnostic contract; this is not an Office-host observation or a claim that full VBA refuses the source."
+      }
+    },
+    {
+      "id": "portable-positive-bound",
+      "feature": "Abs",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Range.InsertBefore CStr(Abs(-9007199254740991))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "9007199254740991"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/abs-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md#numeric-intrinsics"
+        ],
+        "note": "Quds bounded numeric, coercion or diagnostic contract; this is not an Office-host observation or a claim that full VBA refuses the source."
+      }
+    },
+    {
+      "id": "portable-negative-floor-bound",
+      "feature": "Int",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Range.InsertBefore CStr(Int(-9007199254740991))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "-9007199254740991"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/int-fix-functions",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md#numeric-intrinsics"
+        ],
+        "note": "Quds bounded numeric, coercion or diagnostic contract; this is not an Office-host observation or a claim that full VBA refuses the source."
+      }
+    },
+    {
+      "id": "long-minimum-absolute-result",
+      "feature": "Abs",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Range.InsertBefore CStr(Abs(CLng(-2147483648)))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "2147483648"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/abs-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md#numeric-intrinsics"
+        ],
+        "note": "Quds bounded numeric, coercion or diagnostic contract; this is not an Office-host observation or a claim that full VBA refuses the source."
+      }
+    },
+    {
+      "id": "case-insensitive-intrinsics",
+      "feature": "Numeric composition",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Format.LeftIndent = aBs(iNt(-2.2)) + fIx(2.8) + sGn(-0.5)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.paragraphFormat",
+            "arguments": {
+              "paragraph": 0,
+              "left": 4
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/int-fix-functions"
+        ],
+        "note": "Expected arithmetic is authored from the published Microsoft function contract; native Word mapping follows the documented Quds dialect. No Office host was executed."
+      }
+    },
+    {
+      "id": "abs-requires-one-argument",
+      "feature": "Abs",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Abs()\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 12
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/abs-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md#numeric-intrinsics"
+        ],
+        "note": "Quds bounded numeric, coercion or diagnostic contract; this is not an Office-host observation or a claim that full VBA refuses the source."
+      }
+    },
+    {
+      "id": "abs-refuses-implicit-string",
+      "feature": "Abs",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Abs(\"2\")\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 16
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/abs-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md#numeric-intrinsics"
+        ],
+        "note": "Quds bounded numeric, coercion or diagnostic contract; this is not an Office-host observation or a claim that full VBA refuses the source."
+      }
+    },
+    {
+      "id": "abs-refuses-implicit-boolean",
+      "feature": "Abs",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Abs(True)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 16
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/abs-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md#numeric-intrinsics"
+        ],
+        "note": "Quds bounded numeric, coercion or diagnostic contract; this is not an Office-host observation or a claim that full VBA refuses the source."
+      }
+    },
+    {
+      "id": "int-requires-one-argument",
+      "feature": "Int",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Int()\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 12
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/int-fix-functions",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md#numeric-intrinsics"
+        ],
+        "note": "Quds bounded numeric, coercion or diagnostic contract; this is not an Office-host observation or a claim that full VBA refuses the source."
+      }
+    },
+    {
+      "id": "int-refuses-implicit-string",
+      "feature": "Int",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Int(\"2\")\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 16
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/int-fix-functions",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md#numeric-intrinsics"
+        ],
+        "note": "Quds bounded numeric, coercion or diagnostic contract; this is not an Office-host observation or a claim that full VBA refuses the source."
+      }
+    },
+    {
+      "id": "int-refuses-implicit-boolean",
+      "feature": "Int",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Int(True)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 16
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/int-fix-functions",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md#numeric-intrinsics"
+        ],
+        "note": "Quds bounded numeric, coercion or diagnostic contract; this is not an Office-host observation or a claim that full VBA refuses the source."
+      }
+    },
+    {
+      "id": "fix-requires-one-argument",
+      "feature": "Fix",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Fix()\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 12
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/int-fix-functions",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md#numeric-intrinsics"
+        ],
+        "note": "Quds bounded numeric, coercion or diagnostic contract; this is not an Office-host observation or a claim that full VBA refuses the source."
+      }
+    },
+    {
+      "id": "fix-refuses-implicit-string",
+      "feature": "Fix",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Fix(\"2\")\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 16
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/int-fix-functions",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md#numeric-intrinsics"
+        ],
+        "note": "Quds bounded numeric, coercion or diagnostic contract; this is not an Office-host observation or a claim that full VBA refuses the source."
+      }
+    },
+    {
+      "id": "fix-refuses-implicit-boolean",
+      "feature": "Fix",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Fix(True)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 16
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/int-fix-functions",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md#numeric-intrinsics"
+        ],
+        "note": "Quds bounded numeric, coercion or diagnostic contract; this is not an Office-host observation or a claim that full VBA refuses the source."
+      }
+    },
+    {
+      "id": "sgn-requires-one-argument",
+      "feature": "Sgn",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Sgn()\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 12
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/sgn-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md#numeric-intrinsics"
+        ],
+        "note": "Quds bounded numeric, coercion or diagnostic contract; this is not an Office-host observation or a claim that full VBA refuses the source."
+      }
+    },
+    {
+      "id": "sgn-refuses-implicit-string",
+      "feature": "Sgn",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Sgn(\"2\")\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 16
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/sgn-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md#numeric-intrinsics"
+        ],
+        "note": "Quds bounded numeric, coercion or diagnostic contract; this is not an Office-host observation or a claim that full VBA refuses the source."
+      }
+    },
+    {
+      "id": "sgn-refuses-implicit-boolean",
+      "feature": "Sgn",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Sgn(True)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 16
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/sgn-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md#numeric-intrinsics"
+        ],
+        "note": "Quds bounded numeric, coercion or diagnostic contract; this is not an Office-host observation or a claim that full VBA refuses the source."
+      }
+    },
+    {
+      "id": "sgn-null-diagnostic",
+      "feature": "Sgn",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Sgn(Null)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_invalid_use_of_null",
+          "line": 3,
+          "column": 16
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/sgn-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md#numeric-intrinsics"
+        ],
+        "note": "Quds bounded numeric, coercion or diagnostic contract; this is not an Office-host observation or a claim that full VBA refuses the source."
+      }
+    },
+    {
+      "id": "abs-refuses-over-bound",
+      "feature": "Abs",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Abs(9007199254740992)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_limit_exceeded",
+          "line": 3,
+          "column": 16
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/abs-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md#numeric-intrinsics"
+        ],
+        "note": "Quds bounded numeric, coercion or diagnostic contract; this is not an Office-host observation or a claim that full VBA refuses the source."
+      }
+    },
+    {
+      "id": "int-does-not-hide-division-error",
+      "feature": "Int",
+      "source": "Sub Main()\n  Dim result As Variant\n  result = Int(1 / 0)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_arithmetic_error",
+          "line": 3,
+          "column": 18
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/int-fix-functions",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md#numeric-intrinsics"
+        ],
+        "note": "Quds bounded numeric, coercion or diagnostic contract; this is not an Office-host observation or a claim that full VBA refuses the source."
+      }
+    },
+    {
+      "id": "fix-checks-unused-helper",
+      "feature": "Fix",
+      "source": "Sub Main()\nEnd Sub\nFunction Unused() As Double\n  Unused = Fix(True)\nEnd Function\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 4,
+          "column": 16
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/int-fix-functions",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md#numeric-intrinsics"
+        ],
+        "note": "Quds bounded numeric, coercion or diagnostic contract; this is not an Office-host observation or a claim that full VBA refuses the source."
+      }
+    },
+    {
+      "id": "sgn-checks-inactive-branch",
+      "feature": "Sgn",
+      "source": "Sub Main()\n  Dim result As Variant\n  If False Then\n    result = Sgn(\"bad\")\n  End If\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 4,
+          "column": 18
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/sgn-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md#numeric-intrinsics"
+        ],
+        "note": "Quds bounded numeric, coercion or diagnostic contract; this is not an Office-host observation or a claim that full VBA refuses the source."
+      }
+    }
+  ]
+}

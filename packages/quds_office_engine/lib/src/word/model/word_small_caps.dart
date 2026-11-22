@@ -2,20 +2,26 @@ import '../../bidi/grapheme_clusters.dart';
 
 part 'word_small_caps_case_data.dart';
 
-/// Synthetic small capitals shared by document layout and UI previews.
+/// Synthetic capitals shared by document layout and UI previews.
 ///
 /// The native formatting flag and authored letters remain in the document.
 /// Display conversion happens per grapheme, retaining its complete UTF-16
 /// source range even when Unicode uppercase mapping expands a character.
+/// Small capitals reduce lowercase letters; all capitals retain the full size.
 /// Capital letters, punctuation, numbers and uncased scripts keep their size.
 abstract final class WordSmallCaps {
   /// A consistent synthetic fallback independent of font feature availability.
   /// DOCX consumers receive native `w:smallCaps` and may use designed glyphs.
   static const double fontScale = 0.8;
 
+  /// Uppercase display graphemes with their original source ranges.
+  ///
+  /// [allCaps] uses full-size capitals, including lowercase expansions. The
+  /// default retains the existing synthetic small-capital behavior.
   static List<({String text, int start, int end, double scale})> segments(
-    String text,
-  ) {
+    String text, {
+    bool allCaps = false,
+  }) {
     final result = <({String text, int start, int end, double scale})>[];
     for (final cluster in GraphemeClusters.segment(text)) {
       final upper = _uppercase(cluster.text);
@@ -24,7 +30,9 @@ abstract final class WordSmallCaps {
         start: cluster.start,
         end: cluster.end,
         scale:
-            upper != cluster.text && cluster.text.toLowerCase() == cluster.text
+            !allCaps &&
+                upper != cluster.text &&
+                cluster.text.toLowerCase() == cluster.text
             ? fontScale
             : 1,
       ));

@@ -235,6 +235,54 @@ void main() {
     expect(_elements(_xml(package, 'styles'), 'image', _drawNs), hasLength(6));
   });
 
+  test(
+    'continuous picture stories compare authored names despite collisions',
+    () {
+      const titles = [
+        'Logo',
+        'Logo',
+        'Logo 2',
+        'Logo 2',
+        '',
+        '',
+        'Picture',
+        'Picture',
+      ];
+      final document = WmlDocument(
+        sections: [
+          for (var index = 0; index < titles.length; index++)
+            WmlSection(
+              blocks: [_paragraph('Body $index')],
+              headerVisuals: [_picture(title: titles[index])],
+              breakKind: WmlSectionBreakKind.continuous,
+            ),
+        ],
+      );
+      final package = OpcPackage.openBytes(
+        OdtDocumentWriter.writeBytes(document),
+      );
+      final content = _xml(package, 'content');
+      for (var index = 1; index < titles.length; index++) {
+        expect(
+          _bodyMaster(content, 'Body $index'),
+          titles[index] == titles[index - 1] ? isNull : 'mp$index',
+        );
+      }
+      final names = _elements(_xml(package, 'styles'), 'frame', _drawNs)
+          .map((frame) => frame.getAttribute('name', namespaceUri: _drawNs))
+          .toList();
+      expect(names, hasLength(titles.length));
+      expect(names.toSet(), hasLength(titles.length));
+      expect(names, everyElement(isNotEmpty));
+      expect(
+        document.sections.map(
+          (section) => section.headerVisuals.single.visual.title,
+        ),
+        titles,
+      );
+    },
+  );
+
   for (final highlight in [false, true]) {
     test(
       'hex case in ${highlight ? 'highlight' : 'foreground'} cannot split a continuous story',

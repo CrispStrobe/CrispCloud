@@ -684,7 +684,7 @@ class _StyleCascade {
   }
 
   static XmlElement _layoutAttributeProjection(XmlElement source) {
-    // Only effective indentation/spacing attributes are projected here. Source
+    // Only native layout, font, or language attributes are projected here. Source
     // prefixes on copied attributes can become unbound, or a later layer rebinds
     // an earlier layer's prefix. Normalize native attributes in this detached
     // projection; the full direct/style XML retains all extension metadata.
@@ -741,6 +741,37 @@ class _StyleCascade {
     return result;
   }
 
+  static XmlElement _nativePropertyProjection(XmlElement source) {
+    // A property can inherit its prefix binding from the original document or
+    // styles root. Moving it into the detached effective layer must not leave
+    // that prefix unbound or let a foreign same-name attribute win. Sparse
+    // source properties retain their original nodes and extension metadata.
+    final result = XmlElement(
+      localName: source.localName,
+      prefix: 'w',
+      namespaceUri: OfficeNamespaces.w,
+    );
+    for (final attribute in source.attributes) {
+      if (attribute.namespaceUri == OfficeNamespaces.w ||
+          (attribute.namespaceUri.isEmpty && attribute.prefix == 'w')) {
+        result.attributes.add(
+          XmlAttribute(
+            localName: attribute.localName,
+            prefix: 'w',
+            namespaceUri: OfficeNamespaces.w,
+            value: attribute.value,
+          ),
+        );
+      }
+    }
+    for (final child in source.childElements) {
+      if (_word(child, child.localName)) {
+        result.addChild(_nativePropertyProjection(child));
+      }
+    }
+    return result;
+  }
+
   XmlElement merged(
     String name,
     Iterable<XmlElement?> layers, {
@@ -751,20 +782,29 @@ class _StyleCascade {
     for (final layer in layers) {
       if (layer == null) continue;
       for (final incoming in layer.childElements) {
+        if (!_word(incoming, incoming.localName)) continue;
         final scalarControl =
             (name == 'rPr' &&
                 (incoming.localName == 'kern' ||
-                    incoming.localName == 'noProof')) ||
+                    incoming.localName == 'noProof' ||
+                    incoming.localName == 'caps' ||
+                    incoming.localName == 'smallCaps')) ||
             (name == 'pPr' && incoming.localName == 'suppressAutoHyphens');
         if (scalarControl && !_word(incoming, incoming.localName)) continue;
+        final runAttributes =
+            name == 'rPr' &&
+            const {'lang', 'rFonts', 'color'}.contains(incoming.localName);
+        if (runAttributes && !_word(incoming, incoming.localName)) continue;
         final child = scalarControl
             ? _scalarControlProjection(incoming)
+            : runAttributes
+            ? _layoutAttributeProjection(incoming)
             : name == 'pPr' && _word(incoming, 'numPr')
             ? _numberingProjection(incoming)
             : name == 'pPr' &&
                   (_word(incoming, 'ind') || _word(incoming, 'spacing'))
             ? _layoutAttributeProjection(incoming)
-            : incoming;
+            : _nativePropertyProjection(incoming);
         if (name == 'pPr' &&
             (child.localName == 'spacing' ||
                 child.localName == 'bidi' ||
@@ -902,7 +942,11 @@ class _StyleCascade {
     return result;
   }
 
-  void paragraph(WmlParagraph p, List<XmlElement> tableLayers) {
+  void paragraph(
+    WmlParagraph p,
+    List<XmlElement> tableLayers, {
+    bool preserveTableSpacing = true,
+  }) {
     final bool previouslyImported = p.properties.importedValues != null;
     // A fresh import can already contain native numId=0. Its source XML owns
     // extension metadata that a full generated pPr cannot reproduce. Only
@@ -986,7 +1030,7 @@ class _StyleCascade {
         ..next(),
       p.properties,
     );
-    if (tableLayers.isNotEmpty) {
+    if (tableLayers.isNotEmpty && preserveTableSpacing) {
       if (pp.firstChild('spacing')?.getAttribute('after') == null) {
         p.properties.spacingAfter = old.spacingAfter;
       }
@@ -995,10 +1039,10 @@ class _StyleCascade {
       }
     }
     p.properties.sourcePropertiesXml = source ?? '';
-    final markerStyles = [for (final s in paragraphChain) s.firstChild('rPr')];
+    final markerStyles = [for (final s in paragraphChain) _wordChild(s, 'rPr')];
     final markerXml = merged('rPr', [
-      defaults?.firstChild('rPrDefault')?.firstChild('rPr'),
-      for (final t in tableLayers) t.firstChild('rPr'),
+      _wordChild(_wordChild(defaults, 'rPrDefault'), 'rPr'),
+      for (final t in tableLayers) _wordChild(t, 'rPr'),
       ...markerStyles,
       pp.firstChild('rPr'),
     ], toggleLayers: markerStyles.whereType<XmlElement>().toSet());
@@ -1020,12 +1064,12 @@ class _StyleCascade {
       }
       final direct = WordPropertyIo.parse(props.sourcePropertiesXml, 'rPr');
       final styleRuns = [
-        for (final s in paragraphChain) s.firstChild('rPr'),
-        for (final s in chain(props.styleId)) s.firstChild('rPr'),
+        for (final s in paragraphChain) _wordChild(s, 'rPr'),
+        for (final s in chain(props.styleId)) _wordChild(s, 'rPr'),
       ];
       final rp = merged('rPr', [
-        defaults?.firstChild('rPrDefault')?.firstChild('rPr'),
-        for (final t in tableLayers) t.firstChild('rPr'),
+        _wordChild(_wordChild(defaults, 'rPrDefault'), 'rPr'),
+        for (final t in tableLayers) _wordChild(t, 'rPr'),
         ...styleRuns,
         direct,
       ], toggleLayers: styleRuns.whereType<XmlElement>().toSet());
@@ -1039,7 +1083,7 @@ class _StyleCascade {
       // The document default remains live: changing it must affect runs that
       // do not override it without stamping direct formatting onto every run.
       final inheritedLanguage = merged('rPr', [
-        for (final t in tableLayers) t.firstChild('rPr'),
+        for (final t in tableLayers) _wordChild(t, 'rPr'),
         ...styleRuns,
         direct,
       ]).firstChild('lang');

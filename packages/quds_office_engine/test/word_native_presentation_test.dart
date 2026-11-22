@@ -497,7 +497,14 @@ void main() {
           } else {
             final line = lines.single;
             final explicitWidth = sourceLine.contains('38100');
-            expect(line.getAttribute('w'), explicitWidth ? '38100' : null);
+            // DrawingML width is the bare w attribute, not the retained xmlns:w
+            // declaration (which this XML model also stores as an attribute).
+            expect(
+              line.attributes
+                  .where((attribute) => attribute.qualifiedName == 'w')
+                  .map((attribute) => attribute.value),
+              explicitWidth ? ['38100'] : <String>[],
+            );
             expect(line.getAttribute('cap'), explicitWidth ? 'rnd' : null);
             expect(line.getAttribute('cmpd'), explicitWidth ? 'sng' : null);
             expect(line.getAttribute('algn'), explicitWidth ? 'ctr' : null);

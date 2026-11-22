@@ -141,6 +141,7 @@ List<ShapedGlyph> _measureWordRuns({
       props.strike,
       WmlHighlight.toRgb(props.highlight) ?? props.highlight,
       props.vertAlign,
+      props.positionHalfPoints,
       WordComment.idsAt(paragraph, glyph.logicalIndex).join(','),
       glyph.level,
     );

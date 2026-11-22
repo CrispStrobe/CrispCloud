@@ -1,7 +1,7 @@
 {
   "schema": 2,
   "purpose": "Exact native Linux references for macOS/Windows selection-colour variants with Word-compatible line boxes and paragraph spacing.",
-  "policy": "Exact pixel comparison remains enabled; the native Ubuntu Word line-box refresh supersedes the older ruler-only refresh. See word_line_box_refresh.",
+  "policy": "Exact pixel comparison remains enabled. The reviewed table-margin refresh supersedes the prior table padding geometry; see table_margin_refresh.",
   "toolchain": {
     "host_os": "linux",
     "flutter": "3.47.8",
@@ -26,22 +26,26 @@
     {
       "target_platform": "macOS",
       "file": "word_selection_macOS.png",
-      "reference_sha256": "549d9bf04ef7251f4520095dbb76f94ad048bd8a55385c78ee466a417fecb3fb",
+      "reference_sha256": "b5b00b57a45899e53a9f40e520d11cadcff0279fae0347e4629b4094b15bfb3e",
       "before_word_line_box_sha256": "128574cf7ddba0b860901a68a4485328e170a4b0d24a5a3b1c6b32b0f70ebaa5",
       "image_size": [
         820,
         560
-      ]
+      ],
+      "previous_provenance_reference_sha256": "549d9bf04ef7251f4520095dbb76f94ad048bd8a55385c78ee466a417fecb3fb",
+      "before_table_margin_reference_sha256": "7610764f724a853192335f0c37bc36459ccbef3fbd6e5e143b67ebea987bc186"
     },
     {
       "target_platform": "windows",
       "file": "word_selection_windows.png",
-      "reference_sha256": "f7dfe6e1672e41e497685e02e556c90f587398d18d297887866b9fba82544122",
+      "reference_sha256": "915aba428f767cf52a0193f8ea22e2225ea141e3a4fd8a3e455aaf3af1fa7633",
       "before_word_line_box_sha256": "3d0adafc213e36d073a84e1e1d0b41e5eb1708443a118fffd055b41083994d22",
       "image_size": [
         820,
         560
-      ]
+      ],
+      "previous_provenance_reference_sha256": "f7dfe6e1672e41e497685e02e556c90f587398d18d297887866b9fba82544122",
+      "before_table_margin_reference_sha256": "632b4de2fd87b6ce1449268a308b215376f74e14fae2bc3d2be7dceb6d112932"
     }
   ],
   "original_linux_reference_record": {
@@ -263,5 +267,16 @@
       "changed_pixels_outside_24px_rulers": 0,
       "document_selection_and_table_pixels_identical": true
     }
-  ]
+  ],
+  "table_margin_refresh": {
+    "date": "2026-11-21",
+    "production_checkpoint": "49ee5a474f00a7995c813d6060b763e1b9bdb41a",
+    "reason": "Native table layout uses the modeled margin; the existing default is4pt and the prior fixed rendering inset was4.25pt.",
+    "review": "All seven changed images visually inspected. Selection coverage and all pixels above the table are unchanged. No comparator tolerance was added.",
+    "baseline_note": "The pre-refresh selection PNG bytes did not match the earlier reference_sha256 metadata. Both the actual original hashes and previous metadata values are retained above; current hashes name the qualified bytes.",
+    "references_refreshed": 7,
+    "other_references_unchanged": 56,
+    "validation": "docs/validation/zotero-table-layout-20261121/README.md",
+    "review_record": "docs/validation/zotero-table-layout-20261121/golden-review.json"
+  }
 }

@@ -1,0 +1,294 @@
+{
+  "schemaVersion": 1,
+  "suite": "vba-word-font-position",
+  "dialect": "vba-word",
+  "cases": [
+    {
+      "id": "raise-three",
+      "feature": "Font.Position",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Range.Font.Position = 3\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 0,
+              "position": 3
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.font.position",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md#baseline-position-without-resizing-text"
+        ],
+        "note": "Microsoft defines signed Long point displacement; the adapter preserves its paragraph selector. No installed Office host was executed."
+      }
+    },
+    {
+      "id": "lower-two",
+      "feature": "Font.Position",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Range.Font.Position = -2\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 0,
+              "position": -2
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.font.position",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md#baseline-position-without-resizing-text"
+        ],
+        "note": "Microsoft defines signed Long point displacement; the adapter preserves its paragraph selector. No installed Office host was executed."
+      }
+    },
+    {
+      "id": "reset-baseline",
+      "feature": "Font.Position",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Range.Font.Position = 0\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 0,
+              "position": 0
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.font.position",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md#baseline-position-without-resizing-text"
+        ],
+        "note": "Microsoft defines signed Long point displacement; the adapter preserves its paragraph selector. No installed Office host was executed."
+      }
+    },
+    {
+      "id": "positive-dialect-bound",
+      "feature": "Font.Position",
+      "source": "Sub Main()\n  ThisDocument.Paragraphs(2).Range.Font.Position = 1584\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 1,
+              "position": 1584
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.font.position",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md#baseline-position-without-resizing-text"
+        ],
+        "note": "Bounded source-to-plan contract; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "negative-dialect-bound",
+      "feature": "Font.Position",
+      "source": "Sub Main()\n  ThisDocument.Paragraphs(2).Range.Font.Position = -1584\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 1,
+              "position": -1584
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.font.position",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md#baseline-position-without-resizing-text"
+        ],
+        "note": "Bounded source-to-plan contract; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "named-helper-font-alias",
+      "feature": "Font.Position",
+      "source": "Sub Shift(ByVal f As Font, Optional ByVal points As Long = 2)\n  f.Position = points\nEnd Sub\nSub Main()\n  Dim target As Font\n  Set target = Application.ActiveDocument.Paragraphs.Item(2).Range.Font\n  Shift target, -3\n  Shift f:=target\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 1,
+              "position": -3
+            }
+          },
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 1,
+              "position": 2
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.font.position",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md#baseline-position-without-resizing-text"
+        ],
+        "note": "Bounded source-to-plan contract; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "nested-with-order",
+      "feature": "Font.Position",
+      "source": "Sub Main()\n  With ThisDocument.Paragraphs(1).Range\n    With .Font\n      .Position = 4\n      .Position = 0\n    End With\n  End With\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 0,
+              "position": 4
+            }
+          },
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 0,
+              "position": 0
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.font.position",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md#baseline-position-without-resizing-text"
+        ],
+        "note": "Bounded source-to-plan contract; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "independent-even-footer",
+      "feature": "Font.Position",
+      "source": "Sub Main()\n  ThisDocument.Sections(2).Footers(wdHeaderFooterEvenPages).Range.Paragraphs(3).Range.Font.Position = -1\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 2,
+              "position": -1,
+              "story": "evenFooter",
+              "section": 1
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.font.position",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md#baseline-position-without-resizing-text"
+        ],
+        "note": "Bounded source-to-plan contract; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "fractional-refused",
+      "feature": "Font.Position boundaries",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Range.Font.Position = 0.5\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 43
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.font.position",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md#baseline-position-without-resizing-text"
+        ],
+        "note": "The bounded dialect refuses nonintegral or out-of-envelope source points without rounding or publishing a partial plan. No installed Office host was executed."
+      }
+    },
+    {
+      "id": "above-bound-refused",
+      "feature": "Font.Position boundaries",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Range.Font.Position = 1585\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 43
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.font.position",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md#baseline-position-without-resizing-text"
+        ],
+        "note": "The bounded dialect refuses nonintegral or out-of-envelope source points without rounding or publishing a partial plan. No installed Office host was executed."
+      }
+    },
+    {
+      "id": "below-bound-refused",
+      "feature": "Font.Position boundaries",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Range.Font.Position = -1585\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 43
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.font.position",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md#baseline-position-without-resizing-text"
+        ],
+        "note": "The bounded dialect refuses nonintegral or out-of-envelope source points without rounding or publishing a partial plan. No installed Office host was executed."
+      }
+    },
+    {
+      "id": "position-read-refused",
+      "feature": "Source-only boundary",
+      "source": "Sub Main()\n  Dim value As Variant\n  value = ActiveDocument.Paragraphs(1).Range.Font.Position\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 3,
+          "column": 51
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md#baseline-position-without-resizing-text"
+        ],
+        "note": "The static compiler cannot read document formatting; no installed Office host was executed."
+      }
+    }
+  ]
+}

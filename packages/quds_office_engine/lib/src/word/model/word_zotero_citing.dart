@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import '../../zotero/zotero_formatted_text.dart';
 import '../properties/wml_properties.dart';
 import 'wml_clone.dart';
@@ -44,6 +42,7 @@ final class WordZoteroCitingSession {
         ? ''
         : WordZoteroDocumentData.read(document);
     _originalData = _nativeData;
+    WordZotero.assertCompleteNativeFields(document);
     _body.addAll(_flowParagraphs(document.sections.expand((s) => s.blocks)));
     _bodyParagraphs.addAll(_body);
     if (_body.length > 100000) {
@@ -54,8 +53,20 @@ final class WordZoteroCitingSession {
     final all = WordZotero.fields(document);
     if (all.length > 10000 || all.any((f) => !_canProcessField(f))) {
       throw UnsupportedError(
-        'Zotero needs editable citation fields or complete bibliography entry paragraphs. Locked, nested, malformed or ambiguous field structures must be resolved first.',
+        'Zotero needs complete citation fields or complete bibliography entry paragraphs. Locked, nested, incomplete or ambiguous field structures must be resolved first.',
       );
+    }
+    _fieldOwners = WordZotero.nativeFieldOwners(document, all);
+    for (final field in all) {
+      for (final (index, paragraph) in field.paragraphs.indexed) {
+        WordContentControls.assertCanEdit(
+          paragraph,
+          index == 0 ? field.start : 0,
+          index == field.paragraphs.length - 1
+              ? field.end
+              : paragraph.text.length,
+        );
+      }
     }
     final byParagraph = <WmlParagraph, List<WmlZoteroField>>{};
     for (final field in all) {
@@ -183,10 +194,14 @@ final class WordZoteroCitingSession {
           .firstOrNull;
     }
     _sourceParagraphs.addAll(_body);
+    // Writing endpoints can sit in a passive frame or generated TOC even
+    // though those stories cannot own a native Zotero field. Keep their
+    // paragraph identities separate from the narrower citation flow.
+    _positionBody.addAll(document.paragraphs);
     for (final note in [...document.footnotes, ...document.endnotes]) {
       _sourceParagraphs.addAll(note.allParagraphs);
     }
-    for (final paragraph in _sourceParagraphs) {
+    for (final paragraph in [..._sourceParagraphs, ..._positionBody]) {
       _sourceTexts[paragraph] = paragraph.text;
     }
     if (document.revisions.any((revision) => revision.accepted == null)) {
@@ -229,18 +244,22 @@ final class WordZoteroCitingSession {
   final _bodyParagraphs = Set<WmlParagraph>.identity();
   final _fields = <_CitingField>[];
   final _fieldsById = <String, _CitingField>{};
+  late final Map<WmlParagraph, List<Object>> _fieldOwners;
   final _reportedAdjacency = Map<WmlZoteroField, WmlZoteroField>.identity();
   final _originalFieldsPerNote = Map<WmlNote, int>.identity();
   final _notes = <_NoteAnchor>[];
   _NoteAnchor? _insertionNote;
   final _sourceParagraphs = <WmlParagraph>{};
   final _sourceTexts = <WmlParagraph, String>{};
+  final _positionBody = <WmlParagraph>[];
+  final _positions = <WordZoteroCitingPosition>[];
   final formattingWarnings = <String>{};
   late final String _originalData;
   late final bool _startedAsTransfer;
   late final String? _originalDataOverride;
   late String _nativeData;
   _CitingField? _selected;
+  _CitingField? _selectedForContext;
   _CitingField? _stagedInsertion;
   WordZoteroNoteText? _noteText;
   late final _ResearchRangeOwner? _originalNoteTextOwner;
@@ -259,7 +278,133 @@ final class WordZoteroCitingSession {
   /// Resolved after application, including length changes in earlier fields.
   ({WmlParagraph paragraph, int offset})? get caretAfter => _caretAfter;
 
+  /// Captures a writing or selection endpoint in the unchanged source.
+  ///
+  /// Hosts may retain up to eight endpoints independently, preserving a
+  /// selection's original direction. Paragraph identity survives bibliography
+  /// reflow, and offsets follow citation replacements, deletions and note
+  /// conversions. Passive body frames and generated TOC paragraphs retain
+  /// their identity without enabling citations in those stories. Capturing an
+  /// endpoint never changes the document or caret.
+  /// Call [resolvePosition] only after a successful [apply].
+  WordZoteroCitingPosition capturePosition(WmlParagraph paragraph, int offset) {
+    if (_applied) {
+      throw StateError('The Zotero transaction was already applied.');
+    }
+    if (_positions.length >= 8) {
+      throw StateError('A Zotero transaction can retain eight endpoints.');
+    }
+    if (!_positionBody.contains(paragraph) &&
+        !_notes.any((note) => note.note.allParagraphs.contains(paragraph))) {
+      throw ArgumentError('The writing endpoint is outside this document.');
+    }
+    final source = _sourceTexts[paragraph];
+    if (source == null || offset < 0 || offset > source.length) {
+      throw ArgumentError('The writing endpoint is outside its paragraph.');
+    }
+    final position = WordZoteroCitingPosition._(this, paragraph, offset);
+    _positions.add(position);
+    return position;
+  }
+
+  /// Resolves one captured endpoint after successful application.
+  ///
+  /// An exact replacement start stays before the field. An endpoint strictly
+  /// inside changed field text moves to its new end; trailing prose follows
+  /// the length change. Metadata-only or identical-text updates retain the
+  /// original offset. Removed sole-note content resolves at its body anchor.
+  ///
+  /// Transfer and research-content replacement have their own explicit caret
+  /// policy and return null. Hosts should prefer [caretAfter] for insertions.
+  ({WmlParagraph paragraph, int offset})? resolvePosition(
+    WordZoteroCitingPosition position,
+  ) {
+    if (!identical(position._owner, this)) {
+      throw ArgumentError('The writing endpoint belongs to another session.');
+    }
+    if (!_applied) {
+      throw StateError('Apply the Zotero transaction before resolving it.');
+    }
+    return position._resolved;
+  }
+
   bool get isComplete => _complete;
+
+  /// The last explicit `Field.select` request in this active transaction.
+  ///
+  /// This is a read-only source highlight, independent of the host's writing
+  /// caret and the implicit field selected when the session opened. Resolve it
+  /// again after each callback; completion, deletion and unlinking clear it.
+  /// A changed source throws [StateError] rather than exposing stale ranges.
+  ///
+  /// Existing fields resolve exclusively against the unchanged live document,
+  /// even after Zotero stages different text, codes or note placement. Newly
+  /// inserted fields and fields in a detached transfer import have no live
+  /// source range. Their context identifies that distinction without exposing
+  /// staged text, codes or detached model objects as document content.
+  WordZoteroFieldSelectionContext? get selectedFieldContext {
+    if (_complete || _applied) return null;
+    final imported = _importSession;
+    final field = imported == null
+        ? _selectedForContext
+        : imported._selectedForContext;
+    if (field == null || field.deleted || field.unlinked) return null;
+    assertUnchanged();
+    if (imported != null) {
+      imported.assertUnchanged();
+      return WordZoteroFieldSelectionContext._(
+        fieldId: field.id,
+        kind:
+            field.original?.kind ??
+            (field.code == 'TEMP' ? null : _kind(field)),
+        source: WordZoteroFieldSelectionSource.importedDocument,
+      );
+    }
+    final original = field.original;
+    if (original == null) {
+      return WordZoteroFieldSelectionContext._(
+        fieldId: field.id,
+        kind: field.code == 'TEMP' ? null : _kind(field),
+        source: WordZoteroFieldSelectionSource.stagedInsertion,
+      );
+    }
+    // Return a freshly located live field, not a captured run handle which
+    // could have been replaced by equivalent native markup. Match the entire
+    // paragraph span so multipart bibliography ranges cannot be shortened.
+    final matches = WordZotero.fields(document)
+        .where(
+          (candidate) =>
+              _sameField(candidate, original) &&
+              candidate.cachedText == original.cachedText &&
+              candidate.paragraphs.length == original.paragraphs.length &&
+              candidate.paragraphs.indexed.every(
+                (entry) => identical(entry.$2, original.paragraphs[entry.$1]),
+              ),
+        )
+        .toList();
+    if (matches.length != 1) {
+      throw StateError('The selected Zotero source field changed.');
+    }
+    final source = matches.single;
+    return WordZoteroFieldSelectionContext._(
+      fieldId: field.id,
+      kind: source.kind,
+      source: WordZoteroFieldSelectionSource.document,
+      sourceField: source,
+      sourceNote: field.note,
+      sourceRanges: [
+        for (final (index, paragraph) in source.paragraphs.indexed)
+          (
+            paragraph: paragraph,
+            start: index == 0 ? source.start : 0,
+            end: index == source.paragraphs.length - 1
+                ? source.end
+                : paragraph.text.length,
+          ),
+      ],
+    );
+  }
+
   bool get hasInsertedNoteText =>
       _importSession?.hasInsertedNoteText ?? (_noteText != null);
   String get documentData => _importSession?.documentData ?? _nativeData;
@@ -379,7 +524,10 @@ final class WordZoteroCitingSession {
         );
       }
       final result = imported.handle(command, args);
-      if (command == 'Document.complete') _complete = true;
+      if (command == 'Document.complete') {
+        _selectedForContext = null;
+        _complete = true;
+      }
       return result;
     }
     if (hasExportedDocument &&
@@ -406,8 +554,10 @@ final class WordZoteroCitingSession {
         _arity(args, 1);
         return null;
       case 'Document.canInsertField':
-        _arity(args, 2);
-        _httpType(args[1]);
+        if (args.length != 1) {
+          _arity(args, 2);
+          _httpType(args[1]);
+        }
         return !_startedAsTransfer && (_canInsert || _selected != null);
       case 'Document.getDocumentData':
         _arity(args, 1);
@@ -593,25 +743,37 @@ final class WordZoteroCitingSession {
         for (final field in _fields) {
           if (!field.deleted && !field.unlinked) _validateCode(field.code);
         }
+        _selectedForContext = null;
         _complete = true;
         return null;
       case 'Field.select':
         _arity(args, 2);
-        _selected = _field(args[1]);
+        final field = _field(args[1]);
+        if (field.unlinked) {
+          throw const FormatException('Zotero addressed an unlinked field.');
+        }
+        _selected = field;
+        _selectedForContext = field;
         return null;
       case 'Field.delete':
         _arity(args, 2);
-        _field(args[1]).deleted = true;
+        final field = _field(args[1]);
+        field.deleted = true;
+        if (identical(_selectedForContext, field)) _selectedForContext = null;
         return null;
       case 'Field.removeCode':
         _arity(args, 2);
-        _field(args[1]).unlinked = true;
+        final field = _field(args[1]);
+        field.unlinked = true;
+        if (identical(_selectedForContext, field)) _selectedForContext = null;
         return null;
       case 'Field.setCode':
         _arity(args, 3);
         final field = _field(args[1]);
         final code = _string(args[2]);
-        if (code != 'TEMP') _validateCode(code);
+        if (code != 'TEMP' && !_isRepairPlaceholder(field, code)) {
+          _validateCode(code);
+        }
         if (code != 'TEMP' &&
             _noteTextFields.containsKey(field) &&
             WordZotero.kindOfInstruction(_toNative(code)) !=
@@ -677,7 +839,7 @@ final class WordZoteroCitingSession {
       if (_bibliographyStyle != null &&
           _kind(field) == ZoteroFieldKind.bibliography &&
           field.original != null &&
-          (!WordZotero.canReplaceNativeBibliography(
+          (!WordZotero.canRecoverNativeBibliography(
                 document,
                 field.original!,
               ) ||
@@ -695,7 +857,7 @@ final class WordZoteroCitingSession {
       );
       if (_kind(field) == ZoteroFieldKind.bibliography &&
           field.original != null &&
-          !WordZotero.canReplaceNativeBibliography(document, field.original!)) {
+          !WordZotero.canRecoverNativeBibliography(document, field.original!)) {
         formattingWarnings.add(
           'An inline bibliography is kept as protected plain text.',
         );
@@ -727,8 +889,30 @@ final class WordZoteroCitingSession {
         _sourceTexts.entries.any((e) => e.key.text != e.value)) {
       throw StateError('The document changed while Zotero was open.');
     }
+    if (_positions.isNotEmpty) {
+      final paragraphs = document.paragraphs.toList();
+      if (paragraphs.length != _positionBody.length ||
+          Iterable<int>.generate(paragraphs.length).any(
+            (index) => !identical(paragraphs[index], _positionBody[index]),
+          )) {
+        throw StateError('A writing endpoint changed while Zotero was open.');
+      }
+    }
     _assertNoteAnchorsUnchanged();
+    WordZotero.assertCompleteNativeFields(document);
     final current = WordZotero.fields(document);
+    final owners = WordZotero.nativeFieldOwners(document, current);
+    if (owners.length != _fieldOwners.length ||
+        _fieldOwners.entries.any((entry) {
+          final path = owners[entry.key];
+          return path == null ||
+              path.length != entry.value.length ||
+              path.indexed.any(
+                (part) => !identical(part.$2, entry.value[part.$1]),
+              );
+        })) {
+      throw StateError('A Zotero field changed its structural owner.');
+    }
     final original = _fields.where((f) => f.original != null).toList();
     if (current.length != original.length) {
       throw StateError('A Zotero field changed while formatting.');
@@ -834,6 +1018,7 @@ final class WordZoteroCitingSession {
       _importSession?.apply();
       transfer.apply();
       _caretAfter = null;
+      _finishPositions(supported: false);
       _applied = true;
       return;
     }
@@ -854,41 +1039,90 @@ final class WordZoteroCitingSession {
       final original = field.original;
       if (original == null) {
         if (!field.deleted) {
-          _insertResult(
-            field,
-            field.insertionParagraph!,
-            field.insertionOffset,
-          );
+          final paragraph = field.insertionParagraph!;
+          final previousLength = paragraph.text.length;
+          _insertResult(field, paragraph, field.insertionOffset);
+          final insertedLength = paragraph.text.length - previousLength;
+          if (insertedLength != 0) {
+            _replacePositionText(
+              paragraph,
+              field.insertionOffset,
+              field.insertionOffset,
+              insertedLength,
+            );
+          }
         }
         continue;
       }
       if (field.deleted) {
         if (original.kind == ZoteroFieldKind.bibliography &&
-            WordZotero.canReplaceNativeBibliography(document, original)) {
+            WordZotero.canRecoverNativeBibliography(document, original)) {
+          final positions = _bibliographyPositions(original);
           WordZotero.deleteNativeBibliography(document, original);
+          _mapBibliographyPositions(positions, [
+            original.paragraph,
+          ], unchangedText: false);
         } else if (field.note != null && _isSoleNoteField(field)) {
+          final length = _noteAnchorLength(field);
           WordNotes.delete(
             document,
             field.note!.id,
             endnote: field.note!.endnote,
           );
+          _replacePositionText(
+            field.anchor,
+            field.anchorOffset,
+            field.anchorOffset + length,
+            0,
+          );
+          _moveNotePositions(field, 0);
         } else {
-          WordZotero.delete(original);
+          WordZotero.deleteNative(original);
+          _replacePositionText(
+            original.paragraph,
+            original.start,
+            original.end,
+            0,
+          );
         }
       } else if (field.unlinked) {
-        if (field.textWasSet || field.code != _toHttp(original.instruction)) {
-          _replace(field);
-          final current = WordZotero.fields(document).firstWhere(
-            (f) =>
-                identical(f.paragraph, original.paragraph) &&
-                f.start == original.start,
+        if (field.textWasSet) {
+          final bibliography = WordZotero.canRecoverNativeBibliography(
+            document,
+            original,
           );
-          WordZotero.unlink(current);
+          final positions = bibliography
+              ? _bibliographyPositions(original)
+              : null;
+          final replacements = WordZotero.replaceNativeUnlinkedResult(
+            document,
+            original,
+            text: field.text,
+            formattedText: field.formatted,
+          );
+          if (positions != null) {
+            _mapBibliographyPositions(
+              positions,
+              replacements,
+              unchangedText: field.text == original.cachedText,
+            );
+          } else if (field.text != original.cachedText) {
+            _replacePositionText(
+              original.paragraph,
+              original.start,
+              original.end,
+              field.text.length,
+            );
+          }
         } else {
-          WordZotero.unlink(original);
+          WordZotero.unlinkNative(original, document: document);
         }
       } else if (field.noteType != field.originalNoteType) {
         _assertCanConvert(field, field.noteType);
+        final previousLength = field.anchor.text.length;
+        final removedLength = field.note == null
+            ? original.end - original.start
+            : _noteAnchorLength(field);
         if (field.note != null) {
           WordNotes.delete(
             document,
@@ -896,9 +1130,18 @@ final class WordZoteroCitingSession {
             endnote: field.note!.endnote,
           );
         } else {
-          WordZotero.delete(original);
+          WordZotero.deleteNative(original);
         }
         _insertResult(field, field.anchor, field.anchorOffset);
+        final insertedLength =
+            removedLength + field.anchor.text.length - previousLength;
+        _replacePositionText(
+          field.anchor,
+          field.anchorOffset,
+          field.anchorOffset + removedLength,
+          insertedLength,
+        );
+        _moveNotePositions(field, insertedLength);
       } else {
         _replace(field);
       }
@@ -983,13 +1226,15 @@ final class WordZoteroCitingSession {
         offset: caretParagraph.text.length - _noteTextCaretTailLength!,
       );
     }
+    _finishPositions(supported: _noteText == null);
     _applied = true;
   }
 
   void _replace(_CitingField field) {
     final original = field.original!;
     if (_kind(field) == ZoteroFieldKind.bibliography &&
-        WordZotero.canReplaceNativeBibliography(document, original)) {
+        WordZotero.canRecoverNativeBibliography(document, original)) {
+      final positions = _bibliographyPositions(original);
       WordZotero.replaceNativeBibliography(
         document,
         original,
@@ -997,6 +1242,18 @@ final class WordZoteroCitingSession {
         text: field.text,
         formattedText: field.formatted,
       );
+      if (positions.isNotEmpty) {
+        final replacement = WordZotero.fields(document).firstWhere(
+          (candidate) =>
+              candidate.kind == ZoteroFieldKind.bibliography &&
+              identical(candidate.paragraph, original.paragraph),
+        );
+        _mapBibliographyPositions(
+          positions,
+          replacement.paragraphs,
+          unchangedText: field.text == original.cachedText,
+        );
+      }
       return;
     }
     final rich =
@@ -1008,6 +1265,117 @@ final class WordZoteroCitingSession {
       text: field.text,
       formattedText: rich ? field.formatted : null,
     );
+    if (field.text != original.cachedText) {
+      _replacePositionText(
+        original.paragraph,
+        original.start,
+        original.end,
+        field.text.length,
+      );
+    }
+  }
+
+  void _replacePositionText(
+    WmlParagraph paragraph,
+    int start,
+    int end,
+    int replacementLength,
+  ) {
+    for (final position in _positions) {
+      if (!identical(position._paragraph, paragraph) ||
+          position._offset < start ||
+          (position._offset == start && start != end)) {
+        continue;
+      }
+      position._offset = position._offset <= end
+          ? start + replacementLength
+          : position._offset + replacementLength - (end - start);
+    }
+  }
+
+  int _noteAnchorLength(_CitingField field) => field.anchor.inlines
+      .whereType<WmlRun>()
+      .singleWhere(
+        (run) =>
+            run.noteRefId == field.note!.id &&
+            run.noteRefEndnote == field.note!.endnote,
+      )
+      .text
+      .length;
+
+  void _moveNotePositions(_CitingField field, int replacementLength) {
+    final note = field.note;
+    if (note == null) return;
+    final original = field.original!;
+    for (final position in _positions) {
+      if (!note.allParagraphs.contains(position._paragraph)) continue;
+      final before =
+          identical(position._paragraph, original.paragraph) &&
+          position._offset <= original.start;
+      position
+        .._paragraph = field.anchor
+        .._offset = field.anchorOffset + (before ? 0 : replacementLength);
+    }
+  }
+
+  Map<WordZoteroCitingPosition, int> _bibliographyPositions(
+    WmlZoteroField field,
+  ) {
+    final positions = <WordZoteroCitingPosition, int>{};
+    var offset = 0;
+    for (final paragraph in field.paragraphs) {
+      for (final position in _positions) {
+        if (identical(position._paragraph, paragraph)) {
+          positions[position] = offset + position._offset;
+        }
+      }
+      offset += paragraph.text.length + 1;
+    }
+    return positions;
+  }
+
+  void _mapBibliographyPositions(
+    Map<WordZoteroCitingPosition, int> positions,
+    List<WmlParagraph> paragraphs, {
+    required bool unchangedText,
+  }) {
+    for (final entry in positions.entries) {
+      var offset = entry.value;
+      var paragraph = offset == 0 ? paragraphs.first : paragraphs.last;
+      if (unchangedText) {
+        for (final candidate in paragraphs) {
+          paragraph = candidate;
+          if (offset <= candidate.text.length) break;
+          offset -= candidate.text.length + 1;
+        }
+        offset = offset.clamp(0, paragraph.text.length);
+      } else {
+        offset = offset == 0 ? 0 : paragraph.text.length;
+      }
+      entry.key
+        .._paragraph = paragraph
+        .._offset = offset;
+    }
+  }
+
+  void _finishPositions({required bool supported}) {
+    if (_positions.isEmpty) return;
+    final live = Set<WmlParagraph>.identity();
+    if (supported) {
+      live.addAll(document.paragraphs);
+      for (final note in [...document.footnotes, ...document.endnotes]) {
+        live.addAll(note.allParagraphs);
+      }
+    }
+    for (final position in _positions) {
+      final paragraph = position._paragraph;
+      position._resolved = live.contains(paragraph)
+          ? (
+              paragraph: paragraph,
+              offset: position._offset.clamp(0, paragraph.text.length),
+            )
+          : null;
+    }
   }
 
   void _insertResult(_CitingField field, WmlParagraph anchor, int offset) {
@@ -1520,6 +1888,7 @@ final class WordZoteroCitingSession {
     }
     _noteText = parsed;
     _selected = null;
+    _selectedForContext = null;
   }
 
   void _assertNoteBlockTarget(WordZoteroNoteText text) {
@@ -1950,6 +2319,7 @@ final class WordZoteroCitingSession {
     _addField(result);
     _stagedInsertion = result;
     _selected = result;
+    _selectedForContext = null;
     return result;
   }
 
@@ -2194,15 +2564,27 @@ final class WordZoteroCitingSession {
     if (kind == ZoteroFieldKind.citation) ZoteroCitation.fromJson(data);
   }
 
-  static String _toHttp(String native) {
-    final kind = WordZotero.kindOfInstruction(native);
-    final data = WordZotero.metadataOf(native);
-    if (kind == null || data == null) {
-      throw const FormatException('Invalid native Zotero field.');
+  // Zotero clears a corrupt citation before opening its repair picker. This
+  // exact empty code is a staging state, never a valid persisted citation.
+  // Only an existing damaged citation may receive it; completion still uses
+  // the strict codec and therefore refuses an unfinished repair.
+  static bool _isRepairPlaceholder(_CitingField field, String code) {
+    if (field.original?.kind != ZoteroFieldKind.citation ||
+        field.original!.isValid ||
+        !code.startsWith('ITEM CSL_CITATION ')) {
+      return false;
     }
-    return kind == ZoteroFieldKind.citation
-        ? 'ITEM CSL_CITATION ${jsonEncode(data)}'
-        : 'BIBL ${jsonEncode(data)} CSL_BIBLIOGRAPHY';
+    final data = WordZotero.metadataOf(_toNative(code));
+    return data != null &&
+        data.length == 2 &&
+        data['citationItems'] is List &&
+        (data['citationItems'] as List).isEmpty &&
+        data['properties'] is Map &&
+        (data['properties'] as Map).isEmpty;
+  }
+
+  static String _toHttp(String native) {
+    return WordZotero.httpFieldCode(native);
   }
 
   static String _toNative(String code) {
@@ -2237,9 +2619,9 @@ final class WordZoteroCitingSession {
       a.instruction == b.instruction;
 
   bool _canProcessField(WmlZoteroField field) =>
-      field.canEdit ||
+      field.canEditNativeResult ||
       (_bodyParagraphs.contains(field.paragraph) &&
-          WordZotero.canReplaceNativeBibliography(document, field));
+          WordZotero.canRecoverNativeBibliography(document, field));
 
   static bool _hasKnownBibliographyEntries(_CitingField field) {
     final original = field.original;
@@ -2300,6 +2682,73 @@ final class WordZoteroCitingSession {
       }
     }
   }
+}
+
+/// A half-open text range in an original live document paragraph.
+/// Offsets use the same UTF-16 units as [WmlParagraph.text].
+typedef WordZoteroFieldSelectionRange = ({
+  WmlParagraph paragraph,
+  int start,
+  int end,
+});
+
+/// Where Zotero's explicitly selected field exists before a staged edit applies.
+enum WordZoteroFieldSelectionSource {
+  /// An existing body, footnote, endnote or bibliography field.
+  document,
+
+  /// An insertion or research-note placeholder not yet in the live document.
+  stagedInsertion,
+
+  /// A field in the detached result of a transfer import.
+  importedDocument,
+}
+
+/// Read-only context for an explicit native Zotero `Field.select` request.
+///
+/// Obtain this from [WordZoteroCitingSession.selectedFieldContext]. The context
+/// is valid only for that checked source state; resolve it again after each
+/// native callback and discard it when the transaction ends. It never changes
+/// the document, host selection, active note or writing caret.
+final class WordZoteroFieldSelectionContext {
+  WordZoteroFieldSelectionContext._({
+    required this.fieldId,
+    required this.kind,
+    required this.source,
+    this.sourceField,
+    this.sourceNote,
+    List<WordZoteroFieldSelectionRange> sourceRanges = const [],
+  }) : sourceRanges = List.unmodifiable(sourceRanges);
+
+  final String fieldId;
+
+  /// Null until Zotero assigns a kind to a newly inserted temporary field.
+  final ZoteroFieldKind? kind;
+  final WordZoteroFieldSelectionSource source;
+
+  /// The live original field; never a field in a detached staged document.
+  final WmlZoteroField? sourceField;
+
+  /// The original owning note, or null for body fields and staged selections.
+  final WmlNote? sourceNote;
+
+  /// Original visible result ranges, in paragraph order. Empty when no live
+  /// source exists. Multipart bibliographies include each entry paragraph.
+  final List<WordZoteroFieldSelectionRange> sourceRanges;
+
+  /// Original cached result text only; no uncommitted Zotero result is exposed.
+  String? get sourceText => sourceField?.cachedText;
+}
+
+/// A session-owned writing endpoint captured before a Zotero operation applies.
+/// Resolve it with the same [WordZoteroCitingSession] after successful apply.
+final class WordZoteroCitingPosition {
+  WordZoteroCitingPosition._(this._owner, this._paragraph, this._offset);
+
+  final WordZoteroCitingSession _owner;
+  WmlParagraph _paragraph;
+  int _offset;
+  ({WmlParagraph paragraph, int offset})? _resolved;
 }
 
 final class _ResearchRangeOwner {

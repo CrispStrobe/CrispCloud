@@ -111,8 +111,11 @@ def verify_parts(parts, phase, expected=None):
     equal(attr(spacing, 'line'), '300', 'retained line spacing')
     for name in ('left', 'right', 'firstLine'):
         equal(attr(indent, name, '0'), para[name], f'paragraph indent/{name}')
+    # A clear stop cancels an inherited style stop; it is not a visible custom
+    # tab stop and therefore must not be reported as one.
     equal([[attr(t, 'pos'), attr(t, 'val'), attr(t, 'leader', 'none')]
-           for t in properties.findall('w:tabs/w:tab', NS)], para['tabs'], 'tab positions and metadata')
+           for t in properties.findall('w:tabs/w:tab', NS)
+           if attr(t, 'val') != 'clear'], para['tabs'], 'tab positions and metadata')
     breaks = source.findall('.//w:br', NS)
     equal([attr(b, 'type') for b in breaks], ['column'] if para['column_break'] else [], 'column break add/remove')
     equal(attr(properties.find('w:framePr', NS), 'lines'), '2' if phase == 'edit' else None, 'drop cap')

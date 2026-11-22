@@ -688,6 +688,51 @@ void main() {
     }
   });
 
+  testWidgets('German host strings show German review and status chrome', (
+    tester,
+  ) async {
+    final harness = _SurfaceHarness(
+      config: const OfficeSurfaceConfig(
+        showRulers: false,
+        strings: OfficeStrings.german,
+      ),
+    );
+    try {
+      await harness.mount(tester);
+      expect(
+        find.descendant(
+          of: _key('word-review-writing-status'),
+          matching: find.text('1 Schreibhinweis'),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: _key('word-review-changes-status'),
+          matching: find.text('0 Änderungen'),
+        ),
+        findsOneWidget,
+      );
+      await tester.tap(_key('word-review-writing-status'));
+      await _frames(tester);
+      expect(_key('word-review-pane'), findsOneWidget);
+      expect(find.text('Überprüfen'), findsOneWidget);
+      expect(find.text('Hinweis 1 von 1'), findsOneWidget);
+      expect(find.text('Alle Hinweise'), findsWidgets);
+      expect(
+        find.descendant(
+          of: _key('live-proofing-ignore-once'),
+          matching: find.text('Einmal ignorieren'),
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Ignore once'), findsNothing);
+      expect(tester.takeException(), isNull);
+    } finally {
+      await harness.close(tester);
+    }
+  });
+
   for (final arabic in <bool>[false, true]) {
     testWidgets(
       'narrow ${arabic ? 'Arabic' : 'English'} review retains a usable document canvas',

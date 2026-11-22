@@ -48,6 +48,7 @@ class LaidOutGlyph {
     this.highlight,
     this.fontFamily,
     this.vertAlign = WmlVertAlign.baseline,
+    this.positionHalfPoints = 0,
     this.hyperlink,
     List<int>? commentIds,
     this.displayText,
@@ -109,6 +110,9 @@ class LaidOutGlyph {
 
   /// vertAlign API.
   final WmlVertAlign vertAlign;
+
+  /// Independent native baseline position, positive upward, in half-points.
+  final int positionHalfPoints;
 
   /// hyperlink API.
   final WmlHyperlink? hyperlink;
@@ -196,8 +200,11 @@ class LaidOutLine {
       ? null
       : proofingOffsets![layoutOffset];
 
-  /// Default inner left/right pad for table-cell text (85 twips).
-  static const double tableCellPad = 4.25;
+  /// Default table-cell inset, matching [WmlTableProps.cellMargin].
+  ///
+  /// Actual table layout uses each table's configured margin. This constant
+  /// remains the fallback for callers without a table model.
+  static const double tableCellPad = 4;
 
   /// Inner pad for absolutely placed [WmlFrame] text.
   static const double framePad = 8;
@@ -858,6 +865,9 @@ class WordLayoutEngine {
   Map<WmlVisual, double>? _deferredContainedVisuals;
   WmlSection? _containedPhysicalSection;
   int _containedTableDepth = 0;
+  // Sum of one-sided margins of all enclosing table cells. Nested tables may
+  // have different margins; depth alone cannot describe their usable height.
+  double _containedCellMargin = 0;
   final Map<WmlNote, _NoteStory> _noteStories = <WmlNote, _NoteStory>{};
   final Map<int, List<_NoteSlice>> _noteSlices = <int, List<_NoteSlice>>{};
   final Set<int> _placedNotes = <int>{};
@@ -934,6 +944,10 @@ class WordLayoutEngine {
 
   /// Note definitions, their paragraphs and text.
   static List<Object> _noteContentSignature(WmlDocument document) => <Object>[
+    // Separator geometry affects every page's body reservation and must not be
+    // reused after a document preference change, even when no note text changed.
+    document.footnoteSeparator ??
+        'legacy-footnote-separator:${document.sourceFootnoteSeparatorsPresent}',
     for (final WmlNote note in <WmlNote>[
       ...document.footnotes,
       ...document.endnotes,
@@ -947,11 +961,18 @@ class WordLayoutEngine {
     ],
   ];
 
+  double get _footnoteSeparatorHeight {
+    final separator = _layoutDoc?.footnoteSeparator;
+    separator?.validate();
+    return separator?.reservedHeight ?? 8;
+  }
+
   double _noteReserve(int page) {
     final List<_NoteSlice> slices = _noteSlices[page] ?? <_NoteSlice>[];
     return slices.isEmpty
         ? 0
-        : 8 + slices.fold<double>(0, (double n, _NoteSlice s) => n + s.height);
+        : _footnoteSeparatorHeight +
+              slices.fold<double>(0, (double n, _NoteSlice s) => n + s.height);
   }
 
   double _bodyBottom(WmlSection section, int page) =>
@@ -971,7 +992,7 @@ class WordLayoutEngine {
   double _minimumNotes(Iterable<int> ids, WmlSection section, int page) {
     final List<WmlNote> notes = _newNotes(ids);
     if (notes.isEmpty) return 0;
-    return (_noteReserve(page) == 0 ? 8 : 0) +
+    return (_noteReserve(page) == 0 ? _footnoteSeparatorHeight : 0) +
         notes.fold<double>(
           0,
           (double h, WmlNote note) => h + _story(note, section).firstHeight,
@@ -1007,7 +1028,7 @@ class WordLayoutEngine {
             section.margins.bottom -
             top -
             _noteReserve(target) -
-            (_noteReserve(target) == 0 ? 8 : 0) -
+            (_noteReserve(target) == 0 ? _footnoteSeparatorHeight : 0) -
             minimumRemaining;
         final double end = story.cut(start, available);
         if (end <= start + 0.01) {
@@ -1246,7 +1267,9 @@ class WordLayoutEngine {
     final _IncrementalState? previousState = reuse?._incremental;
     if (previousState != null &&
         (!identical(previousState.owner, _incrementalOwner) ||
-            !identical(previousState.document, document))) {
+            !identical(previousState.document, document) ||
+            previousState.noSpaceRaiseLower !=
+                document.sourceNoSpaceRaiseLower)) {
       // Pages of another engine or another document cannot be reused.
       // A rejected incremental attempt must not keep earlier sections from a
       // different engine's font or measurement environment in its fallback.
@@ -1438,6 +1461,7 @@ class WordLayoutEngine {
     if (old == null ||
         !identical(old.owner, _incrementalOwner) ||
         !identical(old.document, document) ||
+        old.noSpaceRaiseLower != document.sourceNoSpaceRaiseLower ||
         old.sections.length != document.sections.length ||
         (document.footnotes.isNotEmpty || document.endnotes.isNotEmpty) !=
             (old.notes != null)) {
@@ -2160,11 +2184,12 @@ class WordLayoutEngine {
       }
     }
     if (paragraph.inlines.whereType<WmlRun>().any(
-      (run) => run.properties.smallCaps,
+      (run) => run.properties.smallCaps || run.properties.allCaps,
     )) {
       for (final segment in WordSmallCaps.segments(text)) {
         if (segment.text == text.substring(segment.start, segment.end) ||
-            !propsAt(segment.start).smallCaps ||
+            !(propsAt(segment.start).smallCaps ||
+                propsAt(segment.start).allCaps) ||
             inlinePictures.containsKey(segment.start) ||
             displayLabels.containsKey(segment.start)) {
           continue;
@@ -2181,7 +2206,9 @@ class WordLayoutEngine {
         displayLabels[segment.start] = (
           text: segment.text,
           end: segment.end,
-          scale: segment.scale,
+          // Prefer full-size capitals for malformed input with both flags on.
+          // This is a display fallback; retain the authored text and flags.
+          scale: props.allCaps ? 1 : segment.scale,
           note: false,
         );
       }
@@ -2479,7 +2506,7 @@ class WordLayoutEngine {
           var ascent = 0.0;
           var descent = 0.0;
           var count = 0;
-          void include(WmlRunProps props, int cp) {
+          void include(WmlRunProps props, int cp, {double displayScale = 1}) {
             final size = props.fontSizePoints;
             final metric = faceMetrics.putIfAbsent((props, cp), () {
               final host = measureFont?.call(cp, size, props);
@@ -2496,12 +2523,30 @@ class WordLayoutEngine {
             final height = metric?.typographicLineHeight ?? size * 1.32;
             ascent = math.max(ascent, runAscent);
             descent = math.max(descent, height - runAscent);
+            if (props.positionHalfPoints != 0 &&
+                paragraph.properties.lineSpacingRule !=
+                    WmlLineSpacingRule.exact &&
+                _layoutDoc?.sourceNoSpaceRaiseLower != true) {
+              // Position moves a run without scaling it. Keep the ordinary
+              // unshifted strut, then include the painted run's shifted
+              // ascent/descent so auto/atLeast lines reserve enough space.
+              // Superscript/subscript and small-cap display scaling stay
+              // independent; exact spacing and noSpaceRaiseLower opt out.
+              final scale = props.vertAlign.fontScale * displayScale;
+              final shift = props.baselineShift;
+              ascent = math.max(ascent, runAscent * scale - shift);
+              descent = math.max(descent, (height - runAscent) * scale + shift);
+            }
             count++;
           }
 
           for (final glyph in line.glyphs) {
             if (inlinePictures.containsKey(glyph.logicalIndex)) continue;
-            include(propsAt(sourceStyleOffset(glyph)), glyph.codePoint);
+            include(
+              propsAt(sourceStyleOffset(glyph)),
+              glyph.codePoint,
+              displayScale: displayLabels[glyph.logicalIndex]?.scale ?? 1,
+            );
           }
           // The paragraph mark is an unpainted final-line participant. Its
           // effective font comes from defaults/styles/direct mark properties.
@@ -2736,7 +2781,7 @@ class WordLayoutEngine {
                 cursorY +
                 baselineLeading +
                 baselineAscent +
-                props.vertAlign.baselineShift(baseSize) -
+                props.baselineShift -
                 g.paintDy,
             color: props.color,
             fontSize: size,
@@ -2755,12 +2800,13 @@ class WordLayoutEngine {
                   : g.codePoint,
             ),
             vertAlign: props.vertAlign,
+            positionHalfPoints: props.positionHalfPoints,
             hyperlink: WordLink.at(paragraph, g.logicalIndex),
             commentIds: WordComment.idsAt(paragraph, g.logicalIndex),
             advance: g.advance,
             paintDx: g.paintDx,
             paintDy: g.paintDy,
-          ).._baselineShift = props.vertAlign.baselineShift(baseSize),
+          ).._baselineShift = props.baselineShift,
         );
         if (display != null) {
           displayOffsets[g.logicalIndex] =
@@ -2974,6 +3020,24 @@ class WordLayoutEngine {
     _Flow? flow,
     bool allowBreak = true,
   }) {
+    final cellMargin = table.properties.cellMargin;
+    if (!cellMargin.isFinite || cellMargin < 0) {
+      throw ArgumentError.value(
+        cellMargin,
+        'cellMargin',
+        'Table cell margins must be finite and nonnegative.',
+      );
+    }
+    final previousMargin = _containedCellMargin;
+    final nestedMargin = previousMargin + cellMargin;
+    if (!nestedMargin.isFinite) {
+      throw ArgumentError.value(
+        cellMargin,
+        'cellMargin',
+        'The combined table cell margins are not representable.',
+      );
+    }
+    _containedCellMargin = nestedMargin;
     _containedTableDepth++;
     try {
       return _layoutTableContents(
@@ -2992,6 +3056,7 @@ class WordLayoutEngine {
       );
     } finally {
       _containedTableDepth--;
+      _containedCellMargin = previousMargin;
     }
   }
 
@@ -3015,12 +3080,21 @@ class WordLayoutEngine {
     var cursorY = y + 6;
     var idx = pageIndex;
     var para = paragraphIndex;
-    const double cellPad = LaidOutLine.tableCellPad;
+    final double cellPad = table.properties.cellMargin;
     final double tableX = originX ?? section.margins.left;
     final double tableWidth = cols.fold<double>(
       0,
       (double sum, double width) => sum + width,
     );
+    if (!tableWidth.isFinite ||
+        tableWidth <= 0 ||
+        cols.any((width) => !width.isFinite || width <= 0)) {
+      throw ArgumentError.value(
+        cols,
+        'table.grid',
+        'Laid-out table columns must have finite positive widths.',
+      );
+    }
     final bool rtl = table.properties.rightToLeft;
 
     for (final WmlTableRow row in table.rows) {
@@ -3215,6 +3289,7 @@ class WordLayoutEngine {
           for (int k = 0; k < span; k++) {
             colW += cols[(gridCol + k).clamp(0, cols.length - 1)];
           }
+          final contentWidth = _tableCellContentWidth(colW, cellPad);
           if (rtl) {
             x -= colW;
           }
@@ -3228,7 +3303,7 @@ class WordLayoutEngine {
             final double blockH = _estimateCellBlockHeight(
               block,
               section,
-              maxWidth: math.max(1, colW - cellPad * 2),
+              maxWidth: contentWidth,
             );
             if (allowBreak &&
                 !row.cantSplit &&
@@ -3250,7 +3325,7 @@ class WordLayoutEngine {
                 final double nextH = _estimateCellBlockHeight(
                   nextBlock,
                   section,
-                  maxWidth: math.max(1, colW - cellPad * 2),
+                  maxWidth: contentWidth,
                 );
                 if (cellY + blockH + nextH > pageBottom) {
                   needsContinue = true;
@@ -3269,7 +3344,7 @@ class WordLayoutEngine {
               cellY,
               cellPara,
               originX: x + cellPad,
-              maxWidth: math.max(1, colW - cellPad * 2),
+              maxWidth: contentWidth,
             );
             cellY = laid.y;
             cellPara = laid.nextParagraphIndex;
@@ -3450,19 +3525,32 @@ class WordLayoutEngine {
       for (int k = 0; k < span; k++) {
         colW += cols[(gridCol + k).clamp(0, cols.length - 1)];
       }
+      final contentWidth = _tableCellContentWidth(colW, cellPad);
       var cellY = cellPad;
       final blocks = WordTree.visibleBlocks(cell.blocks).toList();
       for (int bi = nextBlock[c]; bi < blocks.length; bi++) {
         cellY += _estimateCellBlockHeight(
           blocks[bi],
           section,
-          maxWidth: math.max(1, colW - cellPad * 2),
+          maxWidth: contentWidth,
         );
       }
       rowBottom = math.max(rowBottom, cellY + cellPad);
       gridCol += span;
     }
     return math.max(row.height ?? 0, rowBottom);
+  }
+
+  static double _tableCellContentWidth(double width, double margin) {
+    final innerWidth = width - margin * 2;
+    if (!innerWidth.isFinite || innerWidth <= 0) {
+      throw ArgumentError.value(
+        margin,
+        'cellMargin',
+        'Table cell margins must leave a finite positive content width.',
+      );
+    }
+    return innerWidth;
   }
 
   List<LaidOutBox> _chromeVisualFrames(
@@ -4084,8 +4172,36 @@ class WordLayoutEngine {
   void _attachNotes(LaidOutPage page, WmlSection section) {
     final List<_NoteSlice> slices = _noteSlices[page.index] ?? <_NoteSlice>[];
     if (slices.isEmpty) return;
-    var y = _bodyBottom(section, page.index) + 8;
-    if (_layoutDoc?.sourceFootnoteSeparatorsPresent != false) {
+    final separator = _layoutDoc?.footnoteSeparator;
+    final reservationTop = _bodyBottom(section, page.index);
+    var y = reservationTop + _footnoteSeparatorHeight;
+    if (separator != null) {
+      if (separator.visible) {
+        final width = section.contentWidth * separator.relativeWidth;
+        final remaining = section.contentWidth - width;
+        final x =
+            section.margins.left +
+            switch (separator.alignment) {
+              WmlFootnoteSeparatorAlignment.left => 0.0,
+              WmlFootnoteSeparatorAlignment.center => remaining / 2,
+              WmlFootnoteSeparatorAlignment.right => remaining,
+            };
+        page.frames.add(
+          LaidOutBox(
+            x: x,
+            y: reservationTop + separator.beforeSpacing,
+            width: width,
+            height: separator.thickness,
+            fillColor: separator.color.toRadixString(16).padLeft(6, '0'),
+            // A filled rectangle is the separator itself. Stroking its
+            // outline would paint outside the reserved thickness in PDF.
+            strokeColor: '',
+            kind: LaidOutBoxKind.footnote,
+            isNoteContent: true,
+          ),
+        );
+      }
+    } else if (_layoutDoc?.sourceFootnoteSeparatorsPresent != false) {
       page.frames.add(
         LaidOutBox(
           x: section.margins.left,
@@ -4132,10 +4248,44 @@ class WordLayoutEngine {
     // document's note stories. Only append definitions belonging to this story.
     final owned = document.endnotes.toSet();
     if (owned.isEmpty) return;
+    // Numbering retains orphan definitions for repair. The visual-only path
+    // must not turn those (or ambiguous duplicate IDs) into visible notes.
+    final definitions = <int, WmlNote?>{};
+    for (final note in document.endnotes) {
+      definitions[note.id] = definitions.containsKey(note.id) ? null : note;
+    }
+    final referenced = <WmlNote>{};
+    void collectReferences(Iterable<WmlBlock> blocks) {
+      // Match WordNoteNumbering's body sequence. Frames and generated TOC
+      // paragraphs are separate stories, even though document.paragraphs
+      // exposes them to ordinary editing operations.
+      for (final block in WordTree.visibleBlocks(blocks)) {
+        if (block is WmlParagraph) {
+          for (final run in block.inlines.whereType<WmlRun>()) {
+            if (run.noteRefEndnote) {
+              if (definitions[run.noteRefId] case final WmlNote note) {
+                referenced.add(note);
+              }
+            }
+          }
+        } else if (block is WmlTable) {
+          for (final row in block.rows) {
+            for (final cell in row.cells) {
+              collectReferences(cell.blocks);
+            }
+          }
+        }
+      }
+    }
+
+    for (final section in document.sections) {
+      collectReferences(section.blocks);
+    }
     final List<WmlNote> notes = <WmlNote>[
       for (final WmlNote note in _noteNumbering!.notes)
         if (owned.contains(note) &&
             (note.text.trim().isNotEmpty ||
+                (referenced.contains(note) && note.visuals.isNotEmpty) ||
                 note.addReference ||
                 note.hasReferenceMarkers))
           note,

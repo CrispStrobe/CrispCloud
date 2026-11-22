@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quds_office_editor/quds_office_editor.dart';
 
@@ -190,7 +191,8 @@ List<String> _findings(WordEditorController controller) {
   ];
 }
 
-const _afterWord = Duration(milliseconds: 200);
+// Adaptive word completion trails up to 350 ms during fast typing.
+const _afterWord = Duration(milliseconds: 400);
 
 /// Lets pending pause and idle-time checks finish before teardown.
 Future<void> _drain(WidgetTester tester, _Harness h) async {
@@ -202,6 +204,32 @@ Future<void> _drain(WidgetTester tester, _Harness h) async {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  testWidgets('pending automatic checks wait for active IME composition', (
+    tester,
+  ) async {
+    final h = _setup();
+    await _settle(tester, h.controller);
+    h.clearCalls();
+    h.caretAtEnd(1);
+    await h.type(tester, ' ', gap: Duration.zero);
+    final before = h.paragraph(1).text;
+    final composing = TextEditingValue(
+      text: '${before}Feler',
+      selection: TextSelection.collapsed(offset: before.length + 5),
+      composing: TextRange(start: before.length, end: before.length + 5),
+    );
+    h.controller.input.updateEditingValue(composing);
+    await tester.pump(WordProofingTiming.backgroundIdle);
+    expect(h.calls, 0);
+
+    h.controller.input.updateEditingValue(
+      composing.copyWith(composing: TextRange.empty),
+    );
+    await _drain(tester, h);
+    expect(h.spellingCalls, contains(composing.text));
+    expect(h.grammarCalls, contains(composing.text));
+  });
 
   testWidgets('a loaded document is checked once, after the pause', (
     tester,

@@ -264,3 +264,48 @@ class ZoteroSourceAddress {
     return ZoteroSourceAddress(library, remote[3]!);
   }
 }
+
+/// A trusted Zotero desktop selection URL for a currently loaded catalog item.
+///
+/// Personal web-library IDs cannot be assumed to identify the open desktop
+/// profile. Unsynced items from the active local catalog are safe to select by
+/// their local key; group libraries have an explicit, stable group ID.
+Uri? zoteroCatalogItemSelectionUri(ZoteroItem item) {
+  if (item.library.isLocalUser) {
+    return Uri.parse('zotero://select/library/items/${item.key}');
+  }
+  if (item.library.type == ZoteroLibraryType.group) {
+    return Uri.parse(
+      'zotero://select/groups/${item.library.id}/items/${item.key}',
+    );
+  }
+  return null;
+}
+
+/// A desktop selection URL derived only from canonical Zotero source links.
+///
+/// An offline CSL ID or arbitrary stored URL is never opened. When a citation
+/// contains conflicting local profiles or group identities, do not guess which
+/// source should be selected. A remote personal-library URI is not sufficient
+/// to prove that the user's currently running Zotero profile owns the item.
+Uri? zoteroStoredItemSelectionUri(ZoteroCitationItem item) {
+  final identities = <String>{};
+  final selections = <String>{};
+  for (final rawUri in item.uris) {
+    final source = ZoteroSourceAddress.parse(rawUri);
+    if (source == null) continue;
+    final selection = source.isLocal
+        ? Uri.parse('zotero://select/library/items/${source.key}')
+        : source.library.type == ZoteroLibraryType.group
+        ? Uri.parse(
+            'zotero://select/groups/${source.library.id}/items/${source.key}',
+          )
+        : null;
+    if (selection == null) continue;
+    identities.add('${source.scope}/items/${source.key}');
+    selections.add(selection.toString());
+  }
+  return identities.length == 1 && selections.length == 1
+      ? Uri.parse(selections.single)
+      : null;
+}

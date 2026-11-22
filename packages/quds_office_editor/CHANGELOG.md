@@ -4,6 +4,179 @@ All notable changes to `quds_office_editor` are documented here.
 
 ## Unreleased
 
+- Add explicit current-location checks to uncertain Move/Delete activity for
+  connected IMAP, EWS, Gmail and Microsoft 365 accounts. Show timestamped saved
+  evidence in English, German and Arabic while preserving original uncertainty;
+  support repeated checks, stop/cancel and stale-account fences. Cached activity
+  stays local, and connected folders require refresh after checking.
+- Support Roman-numbered Zotero notes through native ODT opening and Studio's
+  editable ODT copy export. Preserve active note ownership, normal DOCX save,
+  dirty state and undo; native Refresh after import retains Roman labels and
+  numeric citation order. Unsupported numbering refuses before destination
+  selection or replacement of the active document. See the
+  [numbering qualification](../../docs/validation/zotero-note-numbering-20261122/README.md).
+
+- Offer Repair in Zotero and confirmed, undoable Convert to text for damaged
+  reference metadata with safe native field ownership. Keep original-source
+  context visible during repair, preserve the document until completion, and
+  retain rich cached text when explicitly converting a field to ordinary text.
+  Guard incomplete/shared packets and stale host targets; qualify repaired and
+  converted fields through DOCX save/reopen.
+
+- Journal connected single-message Move/Delete with exact destination identity,
+  pre-dispatch persistence, conservative interruption recovery and localized
+  activity history. Add capability-checked native IMAP Move and Mark deleted
+  controls, preserve provider-specific trash behavior, and keep uncertain
+  actions protected without automatic replay or flag-only reconciliation.
+
+- Show saved browsing windows and synchronized folders in one local Mail
+  catalog. Keep their coverage distinct, switch sources explicitly, page
+  synchronized headers in batches of 100, and repair pages after membership
+  changes. Repository updates preserve matching readers and retire stale body
+  loads. EN/DE/AR controls include local refresh and guarded cleanup/close.
+
+- Show the citation or bibliography selected by native Zotero while handling
+  manual-edit and repair prompts. Temporary body/table/note highlights and
+  bounded source excerpts keep the writing selection, Notes target and undo
+  history intact; completion, cancellation, errors and stale targets discard
+  the context. Pending insertions and transfer imports are clearly identified
+  without exposing an uncommitted field as a live document range. Reveal
+  offscreen references safely at high zoom, restore the prior viewport when
+  appropriate, and keep cancellation reachable in a short, enlarged-text
+  workspace.
+
+- Let saved-mail searches keep an explicit folder set across verified local
+  accounts. Select folders locally, save/reopen the exact scope, inspect each
+  folder's retained-header coverage, and repair unavailable selections without
+  falling back to all folders. EN/DE/AR controls preserve legacy account-wide
+  searches, guarded refresh and offline reader ownership.
+
+- Preserve the writing caret and both selection endpoints through Zotero
+  Refresh and citation-style changes. Citation expansion/deletion, bibliography
+  reflow and supported note conversion retain unaffected prose positions;
+  Notes selections keep their direction and affinity. Undo restores the source
+  selection and redo restores the transformed selection.
+
+- Render the modeled footnote separator geometry consistently with native
+  note pagination, preserving hidden and zero-width rules. Qualify separator
+  rendering, note editing, note-image ownership and Zotero transfer together
+  with the current Word macro and workspace integration.
+
+- Scope Zotero dialogs to their originating host view through optional
+  `isCurrent` checks. Studio cancels delayed publication and focus restoration
+  after switching to Mail or another app, even if Word is reopened before the
+  response arrives.
+
+- Protect reserved Zotero shortcuts from conflicting overrides, retire old
+  redo/zoom aliases after reassignment, and reject modifier-only key settings.
+  Keep native text actions and comment emphasis available in their own views;
+  show subscript as unassigned while preserving the established zoom-in chord.
+
+- Give Studio's configured keyboard shortcuts priority at the focused Word,
+  Sheet and Slide surfaces through the optional
+  `OfficeController.onShortcutKeyEvent` host hook. Retire replaced defaults and
+  aliases, dispatch conflicting overrides once, and preserve native text-field
+  editing, composition guards, reserved Zotero commands and standalone editor
+  defaults. Qualify the combined incoming Mail/Zotero changes with focused
+  actual-editor tests; see
+  `docs/validation/word-vba-comparison-colors-20261121/README.md`.
+
+- Add English, German and Arabic help for shared Mail range selection. Search
+  synchronized loaded From/To/Cc headers by both display names and mailbox
+  addresses, retaining multiple-address and empty-name behavior without
+  including Bcc or triggering body reads or provider work.
+
+- Align Word's table-cell ruler fallback with the actual table margin, including
+  zero and narrow cells. Native layout now honors persisted margins throughout
+  research tables, merged/nested cells and authored-note tables.
+
+- Saved-mail search adds **Refresh results** and opt-in 30-second foreground
+  updates. Replace bounded multi-account results atomically, preserve the
+  opened reader when its account/message identity survives, and pause updates
+  on incomplete coverage, failure or app suspension. Query/scope changes and
+  Close fence and drain pending work. Refresh reads saved headers only; it
+  never downloads mail or reloads a retained body implicitly. EN/DE/AR controls
+  explain local coverage and recovery.
+
+- Apply each configured workspace keyboard shortcut once, replace its previous
+  key, and keep document editing shortcuts inactive while Mail is open.
+  Preserve function-key bindings in saved shortcut settings.
+
+- Retain native Word font baseline positions when grouping painted glyphs and
+  fingerprinting document/history/proofing state. Raised and lowered text keep
+  separate painting groups and a position-only change invalidates stale work.
+
+- Preserve adaptive text colors when reusing cached Word body pictures across
+  table selections, mutable cross-cell text selections and header/footer edits.
+  Snapshot the paint inputs, dispose replaced pictures and retain ordinary
+  caret-only cache reuse. Keep field-overlay proofing in the dynamic paint pass.
+  Qualify retained versus fresh rendering with pixel comparisons.
+
+- Native Mail Outbox adds **Send later**, saved UTC deadlines, explicit Resume
+  after reopening and a ten-second pre-submission Undo window. Pause on app
+  suspension, account change or Outbox close; fence stale timing edits and
+  lifecycle/clock changes during pending storage. Retain immediate Send,
+  frozen MIME/envelopes and guarded uncertainty. Scheduling is foreground-only;
+  server-side/OS-background execution remains separate work.
+
+- Keep committed smart-quote and dash corrections synchronized with the system
+  input value so subsequent keystrokes retain them. Cancel pending automatic
+  proofing during active IME composition and resume checking after commit.
+
+- Keep manual Mail account editing available during catalog operations while
+  showing progress for automatic restoration. Forward native saved-message
+  closing to the embedded host callback, matching the browser Mail pane.
+
+- Studio Word adds **Export Zotero ODT** on the File menu and ribbon, creating
+  a separate copy with active supported Zotero marks. Serialize a detached
+  snapshot, show unsupported-field reasons, and preserve the source's normal
+  DOCX save destination, dirty state and edits made during the picker.
+  Keep the browser Mail close callback compatible with the shared workspace
+  constructor and route embedded saved-message closing through that callback.
+
+- Retain the incoming saved-account restoration view: show connection progress
+  while restoring saved Mail instead of briefly displaying the login form.
+
+- Studio Mail adds per-account plain-text signatures and named Quick Text,
+  separate new/reply defaults, localized management, revision-safe persistence
+  and connected/offline draft integration. Existing drafts and Outbox payloads
+  remain independent snapshots. Subsequent local qualification is recorded
+  in `docs/validation/mail-compose-tools-20261121/README.md`.
+
+- Add `WordEditorController.insertPlainText` for literal multiline insertion
+  without touching the clipboard. Support caret insertion, single-paragraph
+  selections and whole-document replacement as one undo step. Return whether
+  insertion occurred; refuse partial cross-paragraph spans, read-only surfaces,
+  active Notes-pane targets and selected objects before mutation, retaining
+  content-control preflight without redirecting note input to the body caret.
+
+- Open supported native ODT through `WordEditorController.loadBytesAsync` and
+  Studio Open, retaining active Zotero fields, notes and supported rich
+  structure. Refuse stale publication after edits, another open, document
+  replacement or disposal; failed imports leave the active document intact.
+  Direct synchronous ODT callers to the asynchronous API. Detect ODT package
+  bytes on the Word open path, clear the original ODT save path in Studio and
+  propose a new `.docx` destination so active fields survive without overwriting
+  the source. Unsupported used formatting remains an explicit refusal; this
+  does not qualify general LibreOffice files or installed Zotero/Word/LibreOffice
+  plugin interoperability. See the
+  [rich-import record](../../docs/validation/zotero-rich-odt-20261121/README.md).
+
+- Add optional Touch ID unlocking for the encrypted credential vault on macOS
+  while retaining the master-password route. Recover incomplete key enrollment
+  and cleanup after restart or backend changes, reject stale enrollment for a
+  different selected store, and keep password/Close controls usable after an
+  unlock failure.
+
+- Add explicit **Search saved mail** across listed native accounts and cached
+  folders, using bounded Boolean header search with account/folder provenance,
+  saved-body availability, incremental continuation and honest coverage.
+  Read saved messages offline, invalidate results when scope or query changes,
+  and drain local storage before closing. English, German and Arabic controls
+  include LTR query examples. Server mail, body text and attachments remain
+  outside this search. If selected scope remains unchecked at 1,000 displayed
+  matches, the search asks for a more specific query.
+
 - Accept nested Zotero research-note/annotation tables through the existing
   native commands, retaining active citations, rich content, body/authored-note
   ownership and one undo/redo step. Table-containing payloads still require

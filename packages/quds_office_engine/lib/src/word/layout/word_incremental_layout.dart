@@ -140,12 +140,14 @@ class _SectionRecord {
 }
 
 class _IncrementalState {
-  _IncrementalState(this.owner, this.document, this.sections);
+  _IncrementalState(this.owner, this.document, this.sections)
+    : noSpaceRaiseLower = document.sourceNoSpaceRaiseLower;
 
   /// Opaque identity of the engine that shaped these pages and checkpoints.
   final Object owner;
   final WmlDocument document;
   final List<_SectionRecord?> sections;
+  final bool noSpaceRaiseLower;
 
   /// Pages made by the body flow; later pages hold only note overflow and
   /// endnotes and are made again by every layout.
@@ -603,7 +605,8 @@ String wordLayoutFingerprint(LaidOutDocument document) {
         ..write(' b=${g.bold} i=${g.italic} u=${g.underline.name}')
         ..write(' s=${g.strike} k=${g.kerning} c=${g.color}')
         ..write(' hl=${g.highlight} f=${g.fontFamily}')
-        ..write(' va=${g.vertAlign.name} disp=${g.displayText}')
+        ..write(' va=${g.vertAlign.name} pos=${g.positionHalfPoints}')
+        ..write(' disp=${g.displayText}')
         ..write('/${g.displayOffset}/${g.sourceEnd}/${g.actualText}')
         ..write(' link=${_link(g.hyperlink)}')
         ..writeln(' cm=${g.commentIds}');

@@ -17,5 +17,6 @@
   {"op":"tableFormat","table":0,"alignment":"center","rtl":true,"borders":true,"borderColor":"224466","borderWidth":1.5},
   {"op":"tableRowFormat","table":0,"row":0,"height":24,"cantSplit":true},
   {"op":"tableCellFormat","table":0,"row":1,"column":1,"fill":"FFEEDD","width":120},
-  {"op":"tocAdd","title":"Contents","minLevel":1,"maxLevel":2,"showPageNumbers":true}
+  {"op":"tocAdd","title":"Contents","minLevel":1,"maxLevel":2,"showPageNumbers":true},
+  {"op":"paragraphStyle","paragraph":0,"name":"Heading 1"}
 ]

@@ -5,16 +5,29 @@ import '../properties/wml_properties.dart';
 /// Sparse source properties and effective values must remain separate: writing
 /// inherited values as direct formatting would prevent subsequent style edits.
 abstract final class WordPropertyIo {
+  /// Private, ignorable provenance for runs whose ODF script formatting was
+  /// flattened into the editor's scalar controls. Ordinary DOCX properties
+  /// retain their independent native slots and never acquire this ownership.
+  static const odtScriptProjectionNamespace =
+      'urn:quds:office:odt-script-projection:1';
+
   static Map<String, String> runValues(WmlRunProps r) => {
     'rStyle': '${r.styleId}',
     'rFonts': '${r.asciiFont}|${r.csFont}',
+    // Independent font slots must not turn inherited or themed fonts into
+    // direct formatting when only the other script's font changes.
+    'rFonts:ascii': r.asciiFont,
+    'rFonts:cs': r.csFont,
+    'rFonts:granular': '1',
     'b': '${r.bold}',
     'i': '${r.italic}',
     'strike': '${r.strike}',
+    'caps': '${r.allCaps}',
     'smallCaps': '${r.smallCaps}',
     'color': r.color,
     'sz': '${r.fontSizeHalfPoints}',
     'kern': '${r.kerningHalfPoints}',
+    'position': '${r.positionHalfPoints}',
     'highlight': '${r.highlight}',
     'u': '${r.underline}',
     'vertAlign': '${r.vertAlign}',
@@ -66,6 +79,13 @@ abstract final class WordPropertyIo {
   ) {
     final XmlElement result = parse(source, generated.localName);
     for (final String key in current.keys) {
+      if (generated.localName == 'rPr') {
+        if (key.startsWith('rFonts:')) continue;
+        if (key == 'rFonts') {
+          _preserveRunFonts(result, generated, imported, current);
+          continue;
+        }
+      }
       if (generated.localName == 'pPr') {
         if (key.startsWith('spacing:')) continue;
         if (key == 'spacing') {
@@ -74,6 +94,35 @@ abstract final class WordPropertyIo {
         }
       }
       if (current[key] == imported[key]) continue;
+      if (generated.localName == 'rPr' && key == 'color') {
+        // An explicit foreground choice owns its native value and theme
+        // selectors, while extension metadata and namespace aliases survive.
+        // This also retains an automatic value equal to the resolved import.
+        final value = generated.childElements
+            .where(
+              (child) =>
+                  child.localName == 'color' &&
+                  _wordName(child.namespaceUri, child.prefix),
+            )
+            .firstOrNull
+            ?.attributes
+            .where(
+              (attribute) =>
+                  attribute.localName == 'val' &&
+                  _wordName(attribute.namespaceUri, attribute.prefix),
+            )
+            .firstOrNull
+            ?.value;
+        if (value != null) {
+          _mergeWordAttributes(
+            result,
+            'color',
+            const {'val', 'themeColor', 'themeShade', 'themeTint'},
+            {'val': value},
+          );
+          continue;
+        }
+      }
       if (generated.localName == 'pPr' && key == 'bidi') {
         // Reading order owns only the Word val attribute, including an
         // explicit false against inherited RTL. Retain extension metadata.
@@ -87,9 +136,15 @@ abstract final class WordPropertyIo {
         continue;
       }
       if ((generated.localName == 'rPr' &&
-              (key == 'kern' || key == 'noProof')) ||
+              (key == 'kern' ||
+                  key == 'position' ||
+                  key == 'noProof' ||
+                  key == 'caps' ||
+                  key == 'smallCaps')) ||
           (generated.localName == 'pPr' && key == 'suppressAutoHyphens')) {
-        final value = generated.firstChild(key)?.getAttribute('val');
+        final value =
+            generated.firstChild(key)?.getAttribute('val') ??
+            (key == 'position' ? '0' : null);
         if (value != null) {
           // Scalar controls own only the native value, not extension
           // metadata, foreign same-name properties, or their namespace aliases.
@@ -142,7 +197,7 @@ abstract final class WordPropertyIo {
       final List<XmlElement> replacement = generated.childrenNamed(key);
       if (replacement.isNotEmpty) {
         for (final n in replacement) {
-          result.addChild(n.copy());
+          _appendGenerated(result, n);
         }
       } else if (const {
         'strike',
@@ -150,12 +205,14 @@ abstract final class WordPropertyIo {
         'pageBreakBefore',
         'bidi',
       }.contains(key)) {
-        result.addChild(
+        _appendGenerated(
+          result,
           XmlElement(localName: key, prefix: 'w')
             ..setAttribute('val', '0', prefix: 'w'),
         );
       } else if (const {'u', 'highlight', 'vertAlign'}.contains(key)) {
-        result.addChild(
+        _appendGenerated(
+          result,
           XmlElement(localName: key, prefix: 'w')..setAttribute(
             'val',
             key == 'vertAlign' ? 'baseline' : 'none',
@@ -164,14 +221,99 @@ abstract final class WordPropertyIo {
         );
       }
     }
-    result.children.removeWhere(
-      (n) => n is XmlElement && n.localName == 'sectPr',
-    );
-    for (final n in generated.childrenNamed('sectPr')) {
-      result.addChild(n.copy());
+    if (generated.localName == 'rPr') {
+      _preserveOdtScriptProjection(result, generated, imported, current);
+    }
+    if (generated.localName == 'pPr') {
+      result.children.removeWhere(
+        (n) =>
+            n is XmlElement &&
+            n.localName == 'sectPr' &&
+            _wordName(n.namespaceUri, n.prefix),
+      );
+      for (final n in generated.childrenNamed('sectPr')) {
+        _appendGenerated(result, n);
+      }
     }
     orderChildren(result);
     return result;
+  }
+
+  static void _preserveOdtScriptProjection(
+    XmlElement result,
+    XmlElement generated,
+    Map<String, String> imported,
+    Map<String, String> current,
+  ) {
+    final projection = result.getAttribute(
+      'script',
+      namespaceUri: odtScriptProjectionNamespace,
+    );
+    if (projection == 'complex' || projection == 'shared') {
+      for (final entry in const {
+        'b': 'bCs',
+        'i': 'iCs',
+        'sz': 'szCs',
+      }.entries) {
+        if (current[entry.key] == imported[entry.key]) continue;
+        final value = generated.firstChild(entry.key)?.getAttribute('val');
+        if (value != null) {
+          _mergeWordAttributes(
+            result,
+            entry.value,
+            const {'val'},
+            {'val': value},
+          );
+        }
+      }
+    } else if (projection == 'asian') {
+      if (current['rFonts:ascii'] != imported['rFonts:ascii']) {
+        final font = generated.firstChild('rFonts')?.getAttribute('ascii');
+        _mergeWordAttributes(
+          result,
+          'rFonts',
+          const {'eastAsia', 'eastAsiaTheme'},
+          {'eastAsia': ?font},
+        );
+      }
+      if (current['lang'] != imported['lang']) {
+        final language = generated.firstChild('lang')?.getAttribute('val');
+        _mergeWordAttributes(
+          result,
+          'lang',
+          const {'eastAsia'},
+          {'eastAsia': ?language},
+        );
+      }
+    }
+  }
+
+  static void _preserveRunFonts(
+    XmlElement result,
+    XmlElement generated,
+    Map<String, String> imported,
+    Map<String, String> current,
+  ) {
+    const groups = <String, Set<String>>{
+      'ascii': {'ascii', 'hAnsi', 'asciiTheme', 'hAnsiTheme'},
+      'cs': {'cs', 'cstheme'},
+    };
+    final granular =
+        imported['rFonts:granular'] == '1' ||
+        groups.keys.any((group) => imported.containsKey('rFonts:$group'));
+    // Removing the aggregate remains an explicit legacy all-font override.
+    // Older snapshots without per-slot values retain aggregate comparison.
+    final whole = !imported.containsKey('rFonts') || !granular;
+    if (whole && current['rFonts'] == imported['rFonts']) return;
+    final replacement = generated.firstChild('rFonts');
+    for (final entry in groups.entries) {
+      final key = 'rFonts:${entry.key}';
+      if (!whole && current[key] == imported[key]) continue;
+      _mergeWordAttributes(result, 'rFonts', entry.value, {
+        for (final attribute in entry.value)
+          attribute: ?replacement?.getAttribute(attribute),
+      });
+    }
   }
 
   static void _preserveSpacing(
@@ -205,6 +347,41 @@ abstract final class WordPropertyIo {
 
   static bool _wordName(String namespace, String prefix) =>
       namespace == OfficeNamespaces.w || (namespace.isEmpty && prefix == 'w');
+
+  static void _appendGenerated(XmlElement target, XmlElement generated) {
+    final inserted = generated.copy();
+    if (inserted.prefix == 'w' &&
+        _wordName(inserted.namespaceUri, inserted.prefix)) {
+      inserted.namespaceUri = OfficeNamespaces.w;
+      String? binding;
+      for (XmlElement? node = target; node != null; node = node.parent) {
+        binding = node.attributes
+            .where((a) => a.qualifiedName == 'xmlns:w')
+            .firstOrNull
+            ?.value;
+        if (binding != null) break;
+        if (node.prefix == 'w' && node.namespaceUri.isNotEmpty) {
+          binding = node.namespaceUri;
+          break;
+        }
+      }
+      // Generated fragments normally inherit the serializer's Word context.
+      // Only a conflicting source binding needs a local declaration; never
+      // rebind the sparse source itself or reinterpret retained extensions.
+      if (binding != null && binding != OfficeNamespaces.w) {
+        inserted.attributes.removeWhere((a) => a.qualifiedName == 'xmlns:w');
+        inserted.attributes.add(
+          XmlAttribute(
+            localName: 'w',
+            prefix: 'xmlns',
+            namespaceUri: 'http://www.w3.org/2000/xmlns/',
+            value: OfficeNamespaces.w,
+          ),
+        );
+      }
+    }
+    target.addChild(inserted);
+  }
 
   /// Change one native tab stop while retaining unowned attributes, children,
   /// other positions, and namespace lookalikes in the sparse direct pPr.
@@ -302,6 +479,7 @@ abstract final class WordPropertyIo {
       );
       properties.addChild(target);
     }
+    target.namespaceUri = OfficeNamespaces.w;
     target.attributes.removeWhere(
       (attribute) =>
           owned.contains(attribute.localName) &&
@@ -358,6 +536,28 @@ abstract final class WordPropertyIo {
     return prefix;
   }
 
+  /// Change a solid paragraph background without replacing its opaque metadata.
+  /// Callers must validate the native texture and theme attributes first.
+  static void mergeParagraphShading(XmlElement properties, String color) {
+    final existing = properties.childElements
+        .where(
+          (node) =>
+              node.localName == 'shd' &&
+              _wordName(node.namespaceUri, node.prefix),
+        )
+        .firstOrNull;
+    _mergeWordAttributes(properties, 'shd', const {'fill'}, {'fill': color});
+    if (existing == null ||
+        !existing.attributes.any(
+          (attribute) =>
+              attribute.localName == 'val' &&
+              _wordName(attribute.namespaceUri, attribute.prefix),
+        )) {
+      _mergeWordAttributes(properties, 'shd', const {'val'}, {'val': 'clear'});
+    }
+    orderChildren(properties);
+  }
+
   /// Change the owned language attribute while preserving native metadata.
   static void mergeLanguage(
     XmlElement runProperties,
@@ -367,33 +567,20 @@ abstract final class WordPropertyIo {
     if (attribute != 'val' && attribute != 'bidi') {
       throw ArgumentError.value(attribute, 'attribute');
     }
-    var lang = runProperties.firstChild(
+    _mergeWordAttributes(
+      runProperties,
       'lang',
-      namespaceUri: OfficeNamespaces.w,
+      {attribute},
+      {if (language != null && language.isNotEmpty) attribute: language},
     );
-    if (lang == null && language != null && language.isNotEmpty) {
-      lang = XmlElement(
-        localName: 'lang',
-        prefix: 'w',
-        namespaceUri: OfficeNamespaces.w,
-      )..setAttribute('w', OfficeNamespaces.w, prefix: 'xmlns');
-      runProperties.addChild(lang);
-    }
-    if (lang == null) return;
     if (language == null || language.isEmpty) {
-      lang.attributes.removeWhere(
-        (a) => a.localName == attribute && a.namespaceUri == OfficeNamespaces.w,
-      );
-      if (lang.attributes.every((a) => a.prefix == 'xmlns')) {
-        runProperties.children.remove(lang);
-      }
-    } else {
-      lang.setAttribute('w', OfficeNamespaces.w, prefix: 'xmlns');
-      lang.setAttribute(
-        attribute,
-        language,
-        prefix: 'w',
-        namespaceUri: OfficeNamespaces.w,
+      runProperties.children.removeWhere(
+        (node) =>
+            node is XmlElement &&
+            node.localName == 'lang' &&
+            _wordName(node.namespaceUri, node.prefix) &&
+            node.children.isEmpty &&
+            node.attributes.every((a) => a.prefix == 'xmlns'),
       );
     }
     orderChildren(runProperties);

@@ -377,6 +377,7 @@ abstract final class WordStyles {
             .round();
       }
       if (!inline.properties.explicitProperties.contains('rFonts') &&
+          !inline.properties.explicitProperties.contains('rFonts:ascii') &&
           (inline.properties.asciiFont == 'Calibri' ||
               inline.properties.asciiFont == 'Arial') &&
           style.font != null &&
@@ -384,6 +385,7 @@ abstract final class WordStyles {
         inline.properties.asciiFont = style.font!;
       }
       if (!inline.properties.explicitProperties.contains('rFonts') &&
+          !inline.properties.explicitProperties.contains('rFonts:cs') &&
           inline.properties.csFont == 'Arial' &&
           style.csFont != null &&
           style.csFont!.isNotEmpty) {

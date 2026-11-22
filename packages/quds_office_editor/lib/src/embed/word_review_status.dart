@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../proofing/word_proofing.dart';
 import 'office_controller.dart';
+import '../l10n/office_language.dart';
 import '../l10n/office_plural.dart';
 
 /// Always-visible entry points and honest live-check status for Word review.
@@ -18,10 +19,10 @@ class WordReviewStatusBar extends StatefulWidget {
 /// The inputs of one status bar frame. The bar rebuilds only when one of
 /// them changes, not for every keystroke or proofing progress notification.
 typedef _StatusChrome = ({
-  bool arabic,
+  OfficeUiLanguage language,
   int pending,
   bool tracking,
-  String? language,
+  String? textLanguage,
   bool hasTarget,
   bool isSelection,
   bool enabled,
@@ -75,10 +76,10 @@ class _WordReviewStatusBarState extends State<WordReviewStatusBar> {
     }
     final target = controller.textProofingTarget;
     return (
-      arabic: controller.config.textDirection == TextDirection.rtl,
+      language: OfficeUiLanguage.of(controller.config),
       pending: _pending,
       tracking: controller.document.trackRevisions,
-      language: target?.language,
+      textLanguage: target?.language,
       hasTarget: target != null,
       isSelection: target?.isSelection == true,
       enabled: controller.proofing.enabled,
@@ -104,44 +105,57 @@ class _WordReviewStatusBarState extends State<WordReviewStatusBar> {
   Widget build(BuildContext context) {
     final status = controller.proofing.status.value;
     final chrome = _chrome;
-    final arabic = chrome.arabic;
+    final ui = chrome.language;
+    final arabic = ui.isArabic;
+    final german = ui.isGerman;
+    String s(String english, String arabic) => ui.label(english, arabic);
     final pending = chrome.pending;
     final issueCount = status.issueCount;
     final languageLabel = !chrome.hasTarget
-        ? (arabic ? 'اللغة' : 'Language')
-        : chrome.language ?? (arabic ? 'لغات متعددة' : 'Mixed');
+        ? s('Language', 'اللغة')
+        : chrome.textLanguage ?? s('Mixed', 'لغات متعددة');
     final textScope = chrome.isSelection
-        ? (arabic ? 'النص المحدد' : 'Selected text')
-        : (arabic ? 'الفقرة الحالية' : 'Current paragraph');
-    final languageTooltip = arabic
-        ? '$textScope · $languageLabel\nاللغة والتدقيق'
-        : '$textScope · $languageLabel\nLanguage and checking';
-    final issuesLabel = officeIssues(issueCount, arabic: arabic);
-    final changesLabel = officeChanges(pending);
+        ? s('Selected text', 'النص المحدد')
+        : s('Current paragraph', 'الفقرة الحالية');
+    final languageTooltip =
+        '$textScope · $languageLabel\n${s('Language and checking', 'اللغة والتدقيق')}';
+    final issuesLabel = officeIssues(
+      issueCount,
+      arabic: arabic,
+      german: german,
+    );
+    final changesLabel = officeChanges(pending, german: german);
     final String label;
     final IconData icon;
     switch (status.phase) {
       case WordProofingPhase.checking:
-        label = arabic ? 'جارٍ التدقيق…' : 'Checking…';
+        label = s('Checking…', 'جارٍ التدقيق…');
         icon = Icons.hourglass_top;
       case WordProofingPhase.waiting:
-        label = arabic ? 'بانتظار توقف الكتابة…' : 'Waiting to check…';
+        label = s('Waiting to check…', 'بانتظار توقف الكتابة…');
         icon = Icons.more_horiz;
       case WordProofingPhase.paused:
-        label = arabic ? 'التدقيق التلقائي متوقف' : 'Live checking paused';
+        label = s('Live checking paused', 'التدقيق التلقائي متوقف');
         icon = Icons.pause_circle_outline;
       case WordProofingPhase.notChecked:
-        label = arabic ? 'لم يُدقّق بعد' : 'Not checked yet';
+        label = s('Not checked yet', 'لم يُدقّق بعد');
         icon = Icons.spellcheck;
       case WordProofingPhase.partial:
-        label = arabic
-            ? '$issuesLabel · تدقيق جزئي'
-            : '$issuesLabel · partial check';
+        label = ui.phrase(
+          '$issuesLabel · partial check',
+          '$issuesLabel · teilweise geprüft',
+          '$issuesLabel · تدقيق جزئي',
+        );
         icon = Icons.info_outline;
       case WordProofingPhase.complete:
         label = issueCount == 0
-            ? (arabic ? 'لا توجد ملاحظات' : 'No writing issues')
-            : officeIssues(issueCount, arabic: arabic, writing: true);
+            ? s('No writing issues', 'لا توجد ملاحظات')
+            : officeIssues(
+                issueCount,
+                arabic: arabic,
+                german: german,
+                writing: true,
+              );
         icon = issueCount == 0 ? Icons.check_circle_outline : Icons.spellcheck;
     }
     return Material(
@@ -195,9 +209,11 @@ class _WordReviewStatusBarState extends State<WordReviewStatusBar> {
                       ),
               ),
               Tooltip(
-                message: arabic
-                    ? '$pending تغييرات · مراجعة التغييرات المتعقبة'
-                    : '$changesLabel · Review tracked changes',
+                message: ui.phrase(
+                  '$changesLabel · Review tracked changes',
+                  '$changesLabel · Nachverfolgte Änderungen prüfen',
+                  '$pending تغييرات · مراجعة التغييرات المتعقبة',
+                ),
                 child: ConstrainedBox(
                   constraints: BoxConstraints(
                     maxWidth: constraints.maxWidth * .34,
@@ -223,9 +239,10 @@ class _WordReviewStatusBarState extends State<WordReviewStatusBar> {
               ),
               IconButton(
                 key: const ValueKey('word-review-thesaurus'),
-                tooltip: arabic
-                    ? 'قاموس المرادفات (Shift+F7)'
-                    : 'Thesaurus (Shift+F7)',
+                tooltip: s(
+                  'Thesaurus (Shift+F7)',
+                  'قاموس المرادفات (Shift+F7)',
+                ),
                 onPressed: controller.requestThesaurus,
                 icon: const Icon(Icons.menu_book_outlined, size: 20),
               ),

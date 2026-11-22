@@ -208,6 +208,13 @@ abstract class OfficeProofingProvider {
   Set<OfficeProofingCategory> get categories =>
       OfficeProofingCategory.values.toSet();
   bool supportsLanguage(String language);
+
+  /// Loads shared, one-time resources (dictionaries, models) without checking
+  /// text. [OfficeProofingService] awaits it before starting a request's
+  /// deadline, so a cold start is not charged to whichever request happens to
+  /// come first. Implementations must make repeated calls cheap.
+  Future<void> warmUp() async {}
+
   Future<OfficeProofingResult> check(OfficeProofingRequest request);
   Future<void> dispose() async {}
 }
@@ -410,8 +417,12 @@ class OfficeProofingService {
   OfficeProofingService({
     required List<OfficeProofingProvider> providers,
     this.timeout = const Duration(seconds: 10),
+    this.warmUpTimeout = const Duration(minutes: 2),
   }) : providers = List<OfficeProofingProvider>.unmodifiable(providers) {
     if (timeout <= Duration.zero) throw ArgumentError.value(timeout, 'timeout');
+    if (warmUpTimeout <= Duration.zero) {
+      throw ArgumentError.value(warmUpTimeout, 'warmUpTimeout');
+    }
     final Set<String> ids = <String>{};
     for (final OfficeProofingProvider provider in providers) {
       if (!ids.add(provider.id)) {
@@ -421,7 +432,14 @@ class OfficeProofingService {
   }
 
   final List<OfficeProofingProvider> providers;
+
+  /// Deadline of one provider's [OfficeProofingProvider.check].
   final Duration timeout;
+
+  /// Separate bound for [OfficeProofingProvider.warmUp], which runs before
+  /// [timeout] starts. A slow warm-up reports a failed result but does not
+  /// dispose the provider; the next request awaits the same load.
+  final Duration warmUpTimeout;
   bool _disposed = false;
   final Set<OfficeProofingProvider> _timedOut = <OfficeProofingProvider>{};
 
@@ -484,6 +502,19 @@ class OfficeProofingService {
           message: '${provider.id} does not support ${request.language}.',
         );
       }
+      try {
+        await provider.warmUp().timeout(warmUpTimeout);
+      } on TimeoutException {
+        return OfficeProofingResult(
+          request: request,
+          providerId: provider.id,
+          status: OfficeProofingStatus.failed,
+          message:
+              'Provider did not finish loading within '
+              '${warmUpTimeout.inMilliseconds} ms.',
+        );
+      }
+      if (_disposed) return unavailable('Proofing service is disposed.');
       final OfficeProofingResult result = await provider
           .check(request)
           .timeout(timeout);

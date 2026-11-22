@@ -156,6 +156,7 @@ abstract final class PaintRunText {
         a.highlight == b.highlight &&
         a.fontFamily == b.fontFamily &&
         a.vertAlign == b.vertAlign &&
+        a.positionHalfPoints == b.positionHalfPoints &&
         a.commentIds.join(',') == b.commentIds.join(',') &&
         // Equal parity does not imply one logical run: nested embeddings can
         // share a direction while referring to disjoint source intervals.

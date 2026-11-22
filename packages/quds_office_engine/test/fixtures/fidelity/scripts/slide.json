@@ -5,6 +5,11 @@
     "text": "Scripted presentation"
   },
   {
+    "op": "shapeTextFrame",
+    "shape": 0,
+    "anchor": "bottom"
+  },
+  {
     "op": "shapeFormat",
     "shape": 0,
     "size": 30,

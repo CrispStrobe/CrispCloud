@@ -1,0 +1,987 @@
+{
+  "schemaVersion": 1,
+  "suite": "vba-word-cell-paragraphs",
+  "dialect": "vba-word",
+  "cases": [
+    {
+      "id": "first-cell-paragraph-style",
+      "feature": "Cell paragraph selection",
+      "source": "Option Explicit\nSub Main()\n  ThisDocument.Tables(1).Cell(1, 1).Range.Paragraphs(1).Style = wdStyleHeading1\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.paragraphStyle",
+            "arguments": {
+              "paragraph": 0,
+              "story": "tableCell",
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "builtin": -2
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.paragraphs",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.style",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.wdbuiltinstyle"
+        ],
+        "note": "Microsoft specifies the selected Paragraph and property value. The native selector and plan are independently authored for a guarded single-paragraph Quds cell; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "item-range-named-style",
+      "feature": "Cell paragraph selection",
+      "source": "Option Explicit\nSub Main()\n  Application.ActiveDocument.Tables.Item(2).Cell(3, 4).Range.Paragraphs.Item(1).Range.Style = \"Résumé & notes <final>\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.paragraphStyle",
+            "arguments": {
+              "paragraph": 0,
+              "story": "tableCell",
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "name": "Résumé & notes <final>"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.paragraphs",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.style",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.wdbuiltinstyle"
+        ],
+        "note": "Microsoft specifies the selected Paragraph and property value. The native selector and plan are independently authored for a guarded single-paragraph Quds cell; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "paragraph-rgb-background",
+      "feature": "Paragraph shading",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs(1).Shading.BackgroundPatternColor = RGB(18, 52, 86)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.paragraphShading",
+            "arguments": {
+              "paragraph": 0,
+              "story": "tableCell",
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "color": "123456"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.paragraphs",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.shading",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.shading.backgroundpatterncolor",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.shading.backgroundpatterncolorindex",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.wdcolorindex"
+        ],
+        "note": "Microsoft specifies the selected Paragraph and property value. The native selector and plan are independently authored for a guarded single-paragraph Quds cell; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "range-palette-background",
+      "feature": "Paragraph shading",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs(1).Range.Shading.BackgroundPatternColorIndex = wdBlue\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.paragraphShading",
+            "arguments": {
+              "paragraph": 0,
+              "story": "tableCell",
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "color": "0000FF"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.paragraphs",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.shading",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.shading.backgroundpatterncolor",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.shading.backgroundpatterncolorindex",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.wdcolorindex"
+        ],
+        "note": "Microsoft specifies the selected Paragraph and property value. The native selector and plan are independently authored for a guarded single-paragraph Quds cell; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "automatic-background-modes",
+      "feature": "Paragraph shading",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs(1).Shading.BackgroundPatternColor = wdColorAutomatic\n  ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs(1).Range.Shading.BackgroundPatternColorIndex = wdAuto\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.paragraphShading",
+            "arguments": {
+              "paragraph": 0,
+              "story": "tableCell",
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "color": "auto"
+            }
+          },
+          {
+            "tool": "docx.paragraphShading",
+            "arguments": {
+              "paragraph": 0,
+              "story": "tableCell",
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "color": "auto"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.paragraphs",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.shading",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.shading.backgroundpatterncolor",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.shading.backgroundpatterncolorindex",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.wdcolorindex"
+        ],
+        "note": "Microsoft specifies the selected Paragraph and property value. The native selector and plan are independently authored for a guarded single-paragraph Quds cell; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "aliases-survive-parent-rebinding",
+      "feature": "Object identity",
+      "source": "Option Explicit\nSub Main()\n  Dim chosenTable As Table, selected As Cell\n  Dim para As Paragraph, retained As Paragraph, paint As Shading\n  Set chosenTable = ActiveDocument.Tables(2)\n  Set selected = chosenTable.Cell(3, 4)\n  Set para = selected.Range.Paragraphs(1)\n  Set retained = para\n  Set paint = para.Range.Shading\n  Set chosenTable = ActiveDocument.Tables(1)\n  Set selected = chosenTable.Cell(1, 2)\n  Set para = selected.Range.Paragraphs.Item(1)\n  retained.Style = wdStyleHeading2\n  paint.BackgroundPatternColorIndex = wdTurquoise\n  para.Style = wdStyleNormal\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.paragraphStyle",
+            "arguments": {
+              "paragraph": 0,
+              "story": "tableCell",
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "builtin": -3
+            }
+          },
+          {
+            "tool": "docx.paragraphShading",
+            "arguments": {
+              "paragraph": 0,
+              "story": "tableCell",
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "color": "00FFFF"
+            }
+          },
+          {
+            "tool": "docx.paragraphStyle",
+            "arguments": {
+              "paragraph": 0,
+              "story": "tableCell",
+              "table": 0,
+              "row": 0,
+              "column": 1,
+              "builtin": -1
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.paragraphs",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.style",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.wdbuiltinstyle",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.shading.backgroundpatterncolor",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.shading.backgroundpatterncolorindex",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.wdcolorindex"
+        ],
+        "note": "Microsoft specifies the selected Paragraph and property value. The native selector and plan are independently authored for a guarded single-paragraph Quds cell; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "named-byval-helper-retains-caller",
+      "feature": "Object identity",
+      "source": "Option Explicit\nSub Main()\n  Dim target As Paragraph\n  Set target = ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs(1)\n  Configure text:=target.Range, para:=target\n  target.Style = wdStyleSubtitle\nEnd Sub\nSub Configure(ByVal para As Paragraph, ByVal text As Range)\n  para.Style = wdStyleCaption\n  text.Font.Bold = True\n  Set para = ActiveDocument.Paragraphs(4)\n  para.Style = wdStyleNormal\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.paragraphStyle",
+            "arguments": {
+              "paragraph": 0,
+              "story": "tableCell",
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "builtin": -35
+            }
+          },
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 0,
+              "story": "tableCell",
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "bold": true
+            }
+          },
+          {
+            "tool": "docx.paragraphStyle",
+            "arguments": {
+              "paragraph": 3,
+              "builtin": -1
+            }
+          },
+          {
+            "tool": "docx.paragraphStyle",
+            "arguments": {
+              "paragraph": 0,
+              "story": "tableCell",
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "builtin": -75
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.paragraphs",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.style",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.wdbuiltinstyle"
+        ],
+        "note": "Microsoft specifies the selected Paragraph and property value. The native selector and plan are independently authored for a guarded single-paragraph Quds cell; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "nested-with-retains-text-controls",
+      "feature": "Existing cell controls",
+      "source": "Option Explicit\nSub Main()\n  With Application\n    With .ActiveDocument.Tables.Item(2)\n      With .Cell(3, 4).Range.Paragraphs.Item(1)\n        .Style = \"Report Body\"\n        With .Range\n          .Font.Italic = True\n          .ParagraphFormat.SpaceAfter = 6\n          .NoProofing = True\n          .HighlightColorIndex = wdNoHighlight\n          .LanguageIDOther = wdGerman\n        End With\n      End With\n    End With\n  End With\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.paragraphStyle",
+            "arguments": {
+              "paragraph": 0,
+              "story": "tableCell",
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "name": "Report Body"
+            }
+          },
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 0,
+              "story": "tableCell",
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "italic": true
+            }
+          },
+          {
+            "tool": "docx.paragraphFormat",
+            "arguments": {
+              "paragraph": 0,
+              "story": "tableCell",
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "after": 6
+            }
+          },
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 0,
+              "story": "tableCell",
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "noProof": true
+            }
+          },
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 0,
+              "story": "tableCell",
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "highlight": null
+            }
+          },
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 0,
+              "story": "tableCell",
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "language": "de-DE"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.paragraphs",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.style",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.wdbuiltinstyle",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.noproofing",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.highlightcolorindex",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.languageidother"
+        ],
+        "note": "Microsoft specifies the selected Paragraph and property value. The native selector and plan are independently authored for a guarded single-paragraph Quds cell; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "range-reprojection-retains-cell",
+      "feature": "Cell paragraph selection",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs(1).Range.Paragraphs.Item(1).Range.Style = wdStyleTitle\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.paragraphStyle",
+            "arguments": {
+              "paragraph": 0,
+              "story": "tableCell",
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "builtin": -63
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.paragraphs",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.style",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.wdbuiltinstyle"
+        ],
+        "note": "Microsoft specifies the selected Paragraph and property value. The native selector and plan are independently authored for a guarded single-paragraph Quds cell; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "paired-line-spacing-retains-cell",
+      "feature": "Existing cell controls",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs(1).Range.ParagraphFormat.LineSpacingRule = wdLineSpaceExactly\n  ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs(1).Range.ParagraphFormat.LineSpacing = 14.25\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.lineSpacing",
+            "arguments": {
+              "paragraph": 0,
+              "story": "tableCell",
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "rule": "exact",
+              "points": 14.25
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.paragraphs",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphformat.linespacingrule",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphformat.linespacing"
+        ],
+        "note": "Microsoft specifies the selected Paragraph and property value. The native selector and plan are independently authored for a guarded single-paragraph Quds cell; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "body-paragraph-contract-unchanged",
+      "feature": "Existing story selection",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Paragraphs(3).Range.Paragraphs(1).Style = wdStyleCaption\n  ActiveDocument.Paragraphs(3).Shading.BackgroundPatternColor = RGB(255, 0, 0)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.paragraphStyle",
+            "arguments": {
+              "paragraph": 2,
+              "builtin": -35
+            }
+          },
+          {
+            "tool": "docx.paragraphShading",
+            "arguments": {
+              "paragraph": 2,
+              "color": "FF0000"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.paragraphs",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.style",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.wdbuiltinstyle",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.shading.backgroundpatterncolor",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.shading.backgroundpatterncolorindex",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.wdcolorindex"
+        ],
+        "note": "Microsoft specifies the selected Paragraph and property value. The native selector and plan are independently authored for a guarded single-paragraph Quds cell; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "header-paragraph-contract-unchanged",
+      "feature": "Existing story selection",
+      "source": "Option Explicit\nSub Main()\n  With ThisDocument.Sections.Item(2).Headers.Item(wdHeaderFooterFirstPage).Range.Paragraphs.Item(3)\n    .Range.Style = \"Report Header\"\n    .Shading.BackgroundPatternColorIndex = wdGray25\n  End With\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.paragraphStyle",
+            "arguments": {
+              "paragraph": 2,
+              "section": 1,
+              "story": "firstHeader",
+              "name": "Report Header"
+            }
+          },
+          {
+            "tool": "docx.paragraphShading",
+            "arguments": {
+              "paragraph": 2,
+              "section": 1,
+              "story": "firstHeader",
+              "color": "C0C0C0"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.paragraphs",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.style",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.wdbuiltinstyle",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.shading.backgroundpatterncolor",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.shading.backgroundpatterncolorindex",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.wdcolorindex"
+        ],
+        "note": "Microsoft specifies the selected Paragraph and property value. The native selector and plan are independently authored for a guarded single-paragraph Quds cell; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "finite-cell-loop-keeps-coordinates",
+      "feature": "Source composition",
+      "source": "Option Explicit\nSub Main()\n  Dim row As Long\n  For row = 1 To 2\n    ActiveDocument.Tables(2).Cell(row, 4).Range.Paragraphs(1).Style = \"Report Body\"\n  Next row\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.paragraphStyle",
+            "arguments": {
+              "paragraph": 0,
+              "story": "tableCell",
+              "table": 1,
+              "row": 0,
+              "column": 3,
+              "name": "Report Body"
+            }
+          },
+          {
+            "tool": "docx.paragraphStyle",
+            "arguments": {
+              "paragraph": 0,
+              "story": "tableCell",
+              "table": 1,
+              "row": 1,
+              "column": 3,
+              "name": "Report Body"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.paragraphs",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.style",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.wdbuiltinstyle"
+        ],
+        "note": "Microsoft specifies the selected Paragraph and property value. The native selector and plan are independently authored for a guarded single-paragraph Quds cell; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "inactive-supported-projection",
+      "feature": "Static admission",
+      "source": "Option Explicit\nSub Main()\n  If False Then\n    ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs(1).Style = wdStyleHeading1\n    ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs(1).Shading.BackgroundPatternColorIndex = wdYellow\n  End If\nEnd Sub\n",
+      "expected": {
+        "steps": []
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md"
+        ],
+        "note": "The bounded compiler admits supported cell paragraph writes in inactive branches without emitting mutations. This is a Quds static-admission contract, not Office-host evidence."
+      }
+    },
+    {
+      "id": "paragraph-index-zero",
+      "feature": "Strict paragraph selector",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs(0).Style = wdStyleNormal\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 45
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.paragraphs",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item"
+        ],
+        "note": "This refusal is an intentional Quds compiler boundary, not a claim that Microsoft Word rejects this VBA. Expected code and source position are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "paragraph-index-negative",
+      "feature": "Strict paragraph selector",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs(-1).Style = wdStyleNormal\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 45
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.paragraphs",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item"
+        ],
+        "note": "This refusal is an intentional Quds compiler boundary, not a claim that Microsoft Word rejects this VBA. Expected code and source position are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "paragraph-index-fractional",
+      "feature": "Strict paragraph selector",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs(1.5).Style = wdStyleNormal\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 45
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.paragraphs",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item"
+        ],
+        "note": "This refusal is an intentional Quds compiler boundary, not a claim that Microsoft Word rejects this VBA. Expected code and source position are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "paragraph-index-boolean",
+      "feature": "Strict paragraph selector",
+      "source": "Option Explicit\nSub Main()\n  Dim value As Variant\n  value = True\n  ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs(value).Style = wdStyleNormal\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 5,
+          "column": 45
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.paragraphs",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item"
+        ],
+        "note": "This refusal is an intentional Quds compiler boundary, not a claim that Microsoft Word rejects this VBA. Expected code and source position are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "paragraph-index-string",
+      "feature": "Strict paragraph selector",
+      "source": "Option Explicit\nSub Main()\n  Dim value As Variant\n  value = \"1\"\n  ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs(value).Style = wdStyleNormal\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 5,
+          "column": 45
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.paragraphs",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item"
+        ],
+        "note": "This refusal is an intentional Quds compiler boundary, not a claim that Microsoft Word rejects this VBA. Expected code and source position are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "second-paragraph-refused",
+      "feature": "Bounded paragraph selector",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs(2).Style = wdStyleNormal\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 3,
+          "column": 45
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.paragraphs",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item"
+        ],
+        "note": "Only the single guarded ordinary paragraph in a selected Quds cell is addressable. Word can select later cell paragraphs; Quds intentionally refuses index 2 before execution."
+      }
+    },
+    {
+      "id": "direct-cell-range-style-refused",
+      "feature": "Direct cell range boundary",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.Style = wdStyleNormal\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 3,
+          "column": 45
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.paragraphs",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item"
+        ],
+        "note": "This refusal is an intentional Quds compiler boundary, not a claim that Microsoft Word rejects this VBA. Expected code and source position are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "direct-cell-range-shading-refused",
+      "feature": "Direct cell range boundary",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.Shading.BackgroundPatternColorIndex = wdYellow\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 3,
+          "column": 45
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.paragraphs",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item"
+        ],
+        "note": "This refusal is an intentional Quds compiler boundary, not a claim that Microsoft Word rejects this VBA. Expected code and source position are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "direct-cell-range-list-refused",
+      "feature": "Direct cell range boundary",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.ListFormat.ApplyBulletDefault\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 3,
+          "column": 45
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.paragraphs",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item"
+        ],
+        "note": "This refusal is an intentional Quds compiler boundary, not a claim that Microsoft Word rejects this VBA. Expected code and source position are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "projected-insertafter-refused",
+      "feature": "Projected range boundary",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs(1).Range.InsertAfter \"prefix\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 3,
+          "column": 3
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.paragraphs",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item"
+        ],
+        "note": "This refusal is an intentional Quds compiler boundary, not a claim that Microsoft Word rejects this VBA. Expected code and source position are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "projected-list-refused",
+      "feature": "Projected range boundary",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs(1).Range.ListFormat.ApplyBulletDefault\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 3,
+          "column": 65
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.paragraphs",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item"
+        ],
+        "note": "This refusal is an intentional Quds compiler boundary, not a claim that Microsoft Word rejects this VBA. Expected code and source position are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "projected-text-replacement-refused",
+      "feature": "Projected range boundary",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs(1).Range.Text = \"replacement\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 3,
+          "column": 65
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.paragraphs",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item"
+        ],
+        "note": "This refusal is an intentional Quds compiler boundary, not a claim that Microsoft Word rejects this VBA. Expected code and source position are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "paragraph-style-read-refused",
+      "feature": "Live read boundary",
+      "source": "Option Explicit\nSub Main()\n  Dim value As Variant\n  value = ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs(1).Style\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 4,
+          "column": 67
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.paragraphs",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item"
+        ],
+        "note": "This refusal is an intentional Quds compiler boundary, not a claim that Microsoft Word rejects this VBA. Expected code and source position are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "paragraph-count-read-refused",
+      "feature": "Live read boundary",
+      "source": "Option Explicit\nSub Main()\n  Dim value As Variant\n  value = ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs.Count\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 4,
+          "column": 64
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.paragraphs",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item"
+        ],
+        "note": "This refusal is an intentional Quds compiler boundary, not a claim that Microsoft Word rejects this VBA. Expected code and source position are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "paragraph-shading-read-refused",
+      "feature": "Live read boundary",
+      "source": "Option Explicit\nSub Main()\n  Dim value As Variant\n  value = ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs(1).Range.Shading.BackgroundPatternColor\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 4,
+          "column": 81
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.paragraphs",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item"
+        ],
+        "note": "This refusal is an intentional Quds compiler boundary, not a claim that Microsoft Word rejects this VBA. Expected code and source position are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "inactive-unsafe-projection-refused",
+      "feature": "Static admission",
+      "source": "Option Explicit\nSub Main()\n  If False Then\n    ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs(1).Range.InsertAfter \"prefix\"\n  End If\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 4,
+          "column": 5
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.paragraphs",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item"
+        ],
+        "note": "This refusal is an intentional Quds compiler boundary, not a claim that Microsoft Word rejects this VBA. Expected code and source position are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "style-boolean-refused",
+      "feature": "Strict style value",
+      "source": "Option Explicit\nSub Main()\n  Dim value As Variant\n  value = True\n  ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs(1).Style = value\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 5,
+          "column": 59
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.paragraphs",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item"
+        ],
+        "note": "This refusal is an intentional Quds compiler boundary, not a claim that Microsoft Word rejects this VBA. Expected code and source position are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "shading-index-outside-palette-refused",
+      "feature": "Strict shading value",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs(1).Shading.BackgroundPatternColorIndex = 17\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 3,
+          "column": 67
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.paragraphs",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraphs.item"
+        ],
+        "note": "This refusal is an intentional Quds compiler boundary, not a claim that Microsoft Word rejects this VBA. Expected code and source position are independently authored; no installed Office host was executed."
+      }
+    }
+  ]
+}

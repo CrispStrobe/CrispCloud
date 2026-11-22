@@ -48,6 +48,15 @@ abstract final class WordZoteroDocumentData {
   static String fromTransfer(String data) =>
       _convert(data, 'Field', transfer: true);
 
+  /// Adapts preferences only after a native ODT reader has reconstructed every
+  /// ReferenceMark as a validated Word field. Ordinary callbacks stay strict.
+  static String fromOdt(String data) =>
+      _convert(data, 'Field', nativeOdt: true);
+
+  /// Adapts validated Word/HTTP preferences for explicit native ODT export.
+  /// This does not relax the input storage types accepted by desktop callbacks.
+  static String toOdt(String data) => _convert(data, 'ReferenceMark');
+
   /// Requests a fresh native bibliography layout without changing the chosen
   /// style or any unrelated preference. Earlier simplified results must not
   /// permanently advertise that their paragraph layout was already applied.
@@ -262,6 +271,7 @@ abstract final class WordZoteroDocumentData {
     String data,
     String fieldType, {
     bool transfer = false,
+    bool nativeOdt = false,
   }) {
     if (data.isEmpty) return '';
     if (data.length > maxDataLength) {
@@ -283,7 +293,11 @@ abstract final class WordZoteroDocumentData {
         throw const FormatException('Missing Zotero document preferences');
       }
       final prefs = decoded['prefs'] as Map<String, dynamic>;
-      _checkFieldType(prefs['fieldType'], transfer: transfer);
+      _checkFieldType(
+        prefs['fieldType'],
+        transfer: transfer,
+        nativeOdt: nativeOdt,
+      );
       if (prefs['fieldType'] == fieldType) return data;
       prefs['fieldType'] = fieldType;
       return _bounded(jsonEncode(decoded));
@@ -314,7 +328,7 @@ abstract final class WordZoteroDocumentData {
       throw const FormatException('Missing or duplicate Zotero field type');
     }
     final value = fields.single.getAttribute('value');
-    _checkFieldType(value, transfer: transfer);
+    _checkFieldType(value, transfer: transfer, nativeOdt: nativeOdt);
     if (value == fieldType) return data;
     fields.single.setAttribute('value', fieldType);
     return _bounded(XmlDocument(root: root).toXmlString(declaration: false));
@@ -329,7 +343,19 @@ abstract final class WordZoteroDocumentData {
     return data;
   }
 
-  static void _checkFieldType(Object? fieldType, {bool transfer = false}) {
+  static void _checkFieldType(
+    Object? fieldType, {
+    bool transfer = false,
+    bool nativeOdt = false,
+  }) {
+    if (nativeOdt) {
+      if (fieldType != 'ReferenceMark') {
+        throw const FormatException(
+          'Native ODT import requires ReferenceMark preferences.',
+        );
+      }
+      return;
+    }
     if (fieldType != 'Field' &&
         fieldType != 'Http' &&
         !(transfer &&

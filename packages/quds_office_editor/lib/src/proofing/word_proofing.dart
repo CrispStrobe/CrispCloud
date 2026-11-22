@@ -4,6 +4,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:quds_office_engine/quds_office_engine.dart';
+
 import '../l10n/office_plural.dart';
 
 /// A finding together with its exact paragraph, story and input snapshot.
@@ -461,6 +462,7 @@ final class WordProofingSession extends ChangeNotifier {
   bool _disposed = false;
   bool _enabled = false;
   bool _enabledPreferenceSet = false;
+  bool _compositionSuspended = false;
   int _draftEnabledRevision = 0;
   bool _draftCheckRunning = false;
   _DraftProofingRequest? _pendingDraftCheck;
@@ -471,6 +473,8 @@ final class WordProofingSession extends ChangeNotifier {
   /// A pending word- or sentence-completion check and its trigger.
   Timer? _completionTimer;
   _Trigger? _completionTrigger;
+  DateTime? _lastTypingAt;
+  Duration _typingGap = const Duration(milliseconds: 1000);
   Timer? _backgroundTimer;
   Timer? _checkingIndicatorTimer;
 
@@ -971,10 +975,21 @@ final class WordProofingSession extends ChangeNotifier {
     }
   }
 
+  /// Cancels pending automatic work while the host previews unfinished IME
+  /// text. Cached findings remain available. The next [observeDocument] call
+  /// resumes scheduling after composition commits, even without a text change.
+  void suspendForComposition() {
+    if (_disposed || _compositionSuspended) return;
+    _compositionSuspended = true;
+    _invalidate();
+  }
+
   /// Called for controller-observed content changes. Selection and scroll
   /// notifications do not repeatedly cancel work or schedule new checks.
   void observeDocument() {
     if (_disposed) return;
+    final resumedComposition = _compositionSuspended;
+    _compositionSuspended = false;
     final document = _document();
     final revision = _revision();
     final configuration = _configurationKey;
@@ -984,7 +999,8 @@ final class WordProofingSession extends ChangeNotifier {
       _touched.clear();
       _typing = null;
     }
-    if (identical(document, _observedDocument) &&
+    if (!resumedComposition &&
+        identical(document, _observedDocument) &&
         revision == _observedRevision &&
         configuration == _observedConfiguration) {
       _releaseTypingPosition();
@@ -1064,6 +1080,7 @@ final class WordProofingSession extends ChangeNotifier {
     final delta = after.length - before.length;
     if (delta == 0 || after.offset - before.offset != delta) return null;
     _typing = (paragraph: after.paragraph, offset: after.offset);
+    _noteTypingCadence();
     _touched.add(after.paragraph);
     // Deleting is not finishing anything.
     if (delta < 0) return null;
@@ -1074,17 +1091,49 @@ final class WordProofingSession extends ChangeNotifier {
     return _Trigger.word;
   }
 
+  void _noteTypingCadence() {
+    final now = DateTime.now();
+    final previous = _lastTypingAt;
+    _lastTypingAt = now;
+    if (previous == null) return;
+    final gap = now.difference(previous);
+    if (gap <= Duration.zero || gap > const Duration(seconds: 2)) return;
+    // An exponential moving average tolerates a single hesitation without
+    // making the next burst look slow.
+    _typingGap = Duration(
+      microseconds: (_typingGap.inMicroseconds * 3 + gap.inMicroseconds) ~/ 4,
+    );
+  }
+
+  Duration get _wordCompletionDelay {
+    if (_typingGap < const Duration(milliseconds: 180)) {
+      return const Duration(milliseconds: 350);
+    }
+    if (_typingGap < const Duration(milliseconds: 300)) {
+      return const Duration(milliseconds: 250);
+    }
+    return WordProofingTiming.wordCompletion;
+  }
+
   void _scheduleCompletion(_Trigger trigger) {
     if (!_automatic || _schedule.mode != WordProofingMode.whileTyping) return;
     final kinds = _kindsFor(trigger);
     if (kinds.isEmpty) return;
     if (_completionTimer != null) {
-      // A pending word check becomes a sentence check; never postponed.
-      if (trigger == _Trigger.sentence) _completionTrigger = trigger;
-      return;
+      // A pending word check becomes a sentence check. A word check is a
+      // trailing debounce: while the user keeps typing, postpone it instead
+      // of running a provider pass in the middle of a burst.
+      if (trigger == _Trigger.sentence) {
+        _completionTrigger = trigger;
+        return;
+      }
+      _completionTimer!.cancel();
     }
     _completionTrigger = trigger;
-    _completionTimer = Timer(WordProofingTiming.wordCompletion, () {
+    final delay = trigger == _Trigger.word
+        ? _wordCompletionDelay
+        : WordProofingTiming.wordCompletion;
+    _completionTimer = Timer(delay, () {
       final fired = _completionTrigger ?? _Trigger.word;
       _completionTimer = null;
       _completionTrigger = null;
@@ -1143,7 +1192,8 @@ final class WordProofingSession extends ChangeNotifier {
     notifyListeners();
   }
 
-  bool get _automatic => _enabled && _schedule.automatic;
+  bool get _automatic =>
+      !_compositionSuspended && _enabled && _schedule.automatic;
 
   /// The provider groups an automatic pass of [trigger] runs.
   Set<_Kind> _kindsFor(_Trigger trigger) => switch (trigger) {
@@ -1703,12 +1753,14 @@ final class WordProofingSession extends ChangeNotifier {
           inline.properties.underline.name,
           inline.properties.strike,
           inline.properties.smallCaps,
+          inline.properties.allCaps,
           inline.properties.color,
           inline.properties.highlight,
           inline.properties.fontSizeHalfPoints,
           inline.properties.asciiFont,
           inline.properties.csFont,
           inline.properties.vertAlign.name,
+          inline.properties.positionHalfPoints,
           inline.properties.proofingLanguage,
           inline.properties.complexScriptLanguage,
           inline.properties.complexScript,

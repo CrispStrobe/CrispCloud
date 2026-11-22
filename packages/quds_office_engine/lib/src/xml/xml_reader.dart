@@ -101,6 +101,20 @@ class XmlPullReader {
   /// namespace URIs, so consumers must resolve them where the attribute occurs.
   String lookupNamespace(String prefix) => _resolvePrefix(prefix);
 
+  /// A read-only snapshot of the namespace declarations currently in scope.
+  ///
+  /// Inherited declarations and default namespace unbindings are included.
+  /// The predefined `xml` and `xmlns` bindings are not added implicitly.
+  /// Capturing this before advancing retains prefixes that appear only in
+  /// QName-valued attributes, such as markup-compatibility requirements.
+  Map<String, String> get inScopeNamespaces {
+    final declarations = <String, String>{};
+    for (final scope in _nsStack.skip(1)) {
+      declarations.addAll(scope._map);
+    }
+    return Map<String, String>.unmodifiable(declarations);
+  }
+
   /// text API.
   String get text {
     if (_type == XmlEventType.characters || _type == XmlEventType.cdata) {

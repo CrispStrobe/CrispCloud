@@ -1154,6 +1154,7 @@ class WmlDocument {
     this.trackRevisions = false,
     this.proofingLanguage,
     this.autoHyphenation = false,
+    this.sourceNoSpaceRaiseLower = false,
     this.watermark = '',
     this.restrictEditing = false,
     this.restrictMode = WmlRestrictMode.readOnly,
@@ -1164,6 +1165,7 @@ class WmlDocument {
     this.sourceFileName = '',
     this.sourceByteLength,
     this.sourceFootnoteSeparatorsPresent,
+    this.footnoteSeparator,
     this.zoteroDocumentData,
   }) : sections = sections ?? <WmlSection>[WmlSection()],
        comments = comments ?? <WmlComment>[],
@@ -1189,6 +1191,10 @@ class WmlDocument {
   /// definitions. Null keeps the conventional rule for a newly authored part;
   /// false preserves explicit native absence in the editor preview.
   bool? sourceFootnoteSeparatorsPresent;
+
+  /// Explicit supported separator geometry shared by footnote pages.
+  /// Null retains the existing conventional or opaque native definition.
+  WmlFootnoteSeparator? footnoteSeparator;
 
   /// endnotes API.
   List<WmlNote> endnotes;
@@ -1233,6 +1239,11 @@ class WmlDocument {
   /// Automatic linguistic hyphenation (`w:autoHyphenation`).
   /// Explicit soft hyphens remain usable when this is disabled.
   bool autoHyphenation;
+
+  /// Imported `w:compat/w:noSpaceRaiseLower`: retain the paragraph's ordinary
+  /// line height when raised/lowered text extends beyond it. This read-only
+  /// layout snapshot is preserved in the original settings part on save.
+  bool sourceNoSpaceRaiseLower;
 
   /// Diagonal / stamp watermark text painted by hosts.
   String watermark;

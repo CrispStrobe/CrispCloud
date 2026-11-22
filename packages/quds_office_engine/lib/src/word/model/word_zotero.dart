@@ -246,8 +246,13 @@ final class WmlZoteroField {
       kind == ZoteroFieldKind.citation ? citation != null : metadata != null;
 
   /// Safe cache replacement is limited to one paragraph of ordinary runs.
-  bool get canEdit =>
-      isValid &&
+  bool get canEdit => isValid && canEditNativeResult;
+
+  /// A complete result packet that Zotero can repair without guessing its
+  /// boundaries. Metadata validity is deliberately independent: the native
+  /// processor must see damaged payloads before it can offer recovery.
+  /// Ordinary metadata editing continues to require [canEdit].
+  bool get canEditNativeResult =>
       !locked &&
       !nested &&
       !opaqueMetadata &&
@@ -266,7 +271,7 @@ final class WmlZoteroField {
 /// Word field support for Zotero citations and bibliographies.
 abstract final class WordZotero {
   static final _citationPrefix = RegExp(
-    r'^\s*(?:ADDIN\s+(?:ZOTERO_ITEM\s+)?)?CSL_CITATION\s+',
+    r'^\s*(?:ADDIN\s+(?:ZOTERO_ITEM\s+)?)?CSL_CITATION(?:\s+|$)',
     caseSensitive: false,
   );
   static final _bibliographyPrefix = RegExp(
@@ -307,6 +312,194 @@ abstract final class WordZotero {
     } on ArgumentError {
       return null;
     }
+  }
+
+  /// Translate only the native instruction prefix. Keep damaged payloads
+  /// intact so Zotero, rather than the host, decides how to recover them.
+  static String httpFieldCode(String instruction) {
+    final kind = kindOfInstruction(instruction);
+    if (kind == null || instruction.length > _maxJsonLength) {
+      throw const FormatException('Invalid or oversized native Zotero field.');
+    }
+    final prefix =
+        (kind == ZoteroFieldKind.citation
+                ? _citationPrefix
+                : _bibliographyPrefix)
+            .firstMatch(instruction)!;
+    final payload = instruction.substring(prefix.end).trim();
+    return kind == ZoteroFieldKind.citation
+        ? 'ITEM CSL_CITATION $payload'
+        : 'BIBL $payload';
+  }
+
+  /// Complete packet enumeration deliberately omits unfinished Word fields.
+  /// Refuse those Zotero instructions before a document-wide transaction so
+  /// a refresh cannot silently ignore an unowned citation.
+  static void assertCompleteNativeFields(WmlDocument document) {
+    for (final story in _stories(document)) {
+      final open = <({StringBuffer code, bool separated})>[];
+      final detached = StringBuffer();
+      void reject(StringBuffer code) {
+        if (kindOfInstruction(code.toString()) != null) {
+          throw UnsupportedError(
+            'Resolve incomplete Zotero field boundaries before formatting. '
+            'The original document has been kept.',
+          );
+        }
+      }
+
+      void flush() {
+        reject(detached);
+        detached.clear();
+      }
+
+      for (final paragraph in story) {
+        for (final inline in paragraph.inlines) {
+          if (inline is! WmlFieldBoundary) {
+            flush();
+            continue;
+          }
+          if (inline.kind != WmlFieldBoundaryKind.instruction) flush();
+          switch (inline.kind) {
+            case WmlFieldBoundaryKind.begin:
+              open.add((code: StringBuffer(), separated: false));
+            case WmlFieldBoundaryKind.instruction:
+              (open.isEmpty ? detached : open.last.code).write(inline.text);
+            case WmlFieldBoundaryKind.separate:
+              if (open.isNotEmpty) {
+                final field = open.removeLast();
+                open.add((code: field.code, separated: true));
+              }
+            case WmlFieldBoundaryKind.end:
+              if (open.isNotEmpty) {
+                final field = open.removeLast();
+                if (!field.separated) reject(field.code);
+              }
+          }
+        }
+      }
+      flush();
+      for (final field in open) {
+        reject(field.code);
+      }
+    }
+  }
+
+  /// Capture real structural owners for native fields, including every table
+  /// cell and note ancestor. Flattened paragraph order alone cannot detect a
+  /// move into another cell or an aliased result run. Paths are opaque live
+  /// identity tokens for revalidation; they are never serialized.
+  static Map<WmlParagraph, List<Object>> nativeFieldOwners(
+    WmlDocument document,
+    Iterable<WmlZoteroField> fields,
+  ) {
+    final targets = Set<WmlParagraph>.identity();
+    final inlines = Set<WmlInline>.identity();
+    for (final field in fields) {
+      targets.addAll(field.paragraphs);
+      inlines.addAll(field._contents);
+      inlines.addAll(field._boundaries.values.expand((value) => value));
+    }
+    final owners = Map<WmlParagraph, List<Object>>.identity();
+    final inlineCounts = Map<WmlInline, int>.identity();
+    final active = Set<List<WmlBlock>>.identity();
+    var visited = 0;
+    Never reject() => throw UnsupportedError(
+      'A Zotero field has ambiguous or unsupported document ownership. '
+      'The original document has been kept.',
+    );
+    void record(WmlParagraph paragraph, List<Object> path, bool supported) {
+      if (++visited > 1000000) reject();
+      if (targets.contains(paragraph)) {
+        if (!supported || owners.containsKey(paragraph)) reject();
+        owners[paragraph] = List.unmodifiable(path);
+      }
+      for (final inline in paragraph.inlines) {
+        if (inlines.contains(inline)) {
+          final count = (inlineCounts[inline] ?? 0) + 1;
+          if (count != 1) reject();
+          inlineCounts[inline] = count;
+        }
+      }
+    }
+
+    void visit(
+      List<WmlBlock> blocks,
+      List<Object> ancestors,
+      bool supported,
+      int depth,
+    ) {
+      if (depth > 64 || ++visited > 1000000 || !active.add(blocks)) reject();
+      final path = <Object>[...ancestors, blocks];
+      for (final (index, block) in blocks.indexed) {
+        if (++visited > 1000000) reject();
+        if (block is WmlParagraph) {
+          record(block, [...path, index], supported);
+        } else if (block is WmlTable) {
+          for (final (rowIndex, row) in block.rows.indexed) {
+            for (final (cellIndex, cell) in row.cells.indexed) {
+              visit(
+                cell.blocks,
+                [
+                  ...path,
+                  index,
+                  block,
+                  block.rows,
+                  rowIndex,
+                  row,
+                  row.cells,
+                  cellIndex,
+                  cell,
+                ],
+                supported && cell.vMerge != WmlVMerge.cont,
+                depth + 1,
+              );
+            }
+          }
+        } else if (block is WmlContentControlBlock) {
+          visit(block.blocks, [...path, index, block], supported, depth + 1);
+        } else if (block is WmlFrame) {
+          visit(block.blocks, [...path, index, block], false, depth + 1);
+        } else if (block is WmlToc) {
+          record(block.titleParagraph, [...path, index, block], false);
+          for (final paragraph in block.itemParagraphs) {
+            record(paragraph, [...path, index, block], false);
+          }
+        }
+      }
+      active.remove(blocks);
+    }
+
+    for (final (index, section) in document.sections.indexed) {
+      visit(section.blocks, [document.sections, index, section], true, 0);
+      for (final story in [
+        section.header,
+        section.footer,
+        section.firstHeader,
+        section.firstFooter,
+        section.evenHeader,
+        section.evenFooter,
+      ]) {
+        for (final paragraph in story) {
+          record(paragraph, [section, story], false);
+        }
+      }
+    }
+    for (final bucket in [document.footnotes, document.endnotes]) {
+      for (final note in bucket) {
+        visit(note.blocks, [bucket, note], true, 0);
+      }
+    }
+    for (final comment in document.comments) {
+      for (final paragraph in comment.paragraphs) {
+        record(paragraph, [comment, comment.paragraphs], false);
+      }
+    }
+    if (owners.length != targets.length ||
+        inlineCounts.length != inlines.length) {
+      reject();
+    }
+    return Map.unmodifiable(owners);
   }
 
   /// Inserts an atomic citation at a caret, preserving surrounding rich text.
@@ -383,7 +576,7 @@ abstract final class WordZotero {
   /// Detached result runs for a native move that does not return new text.
   /// The processor's explicit setText result always takes precedence.
   static List<WmlRun> copyCitationResult(WmlZoteroField field) {
-    if (field.kind != ZoteroFieldKind.citation || !field.canEdit) {
+    if (field.kind != ZoteroFieldKind.citation || !field.canEditNativeResult) {
       throw UnsupportedError('This citation cache cannot be moved safely.');
     }
     _assertCurrent(field);
@@ -410,7 +603,8 @@ abstract final class WordZotero {
     if (field.kind == ZoteroFieldKind.citation &&
         formattedText != null &&
         !formattedText.hasUniformCharacterFormatting) {
-      if (!field.canEdit || field.run?.commentIds.isNotEmpty == true) {
+      if (!field.canEditNativeResult ||
+          field.run?.commentIds.isNotEmpty == true) {
         throw UnsupportedError(
           'This citation has comments, locked, nested or unsupported field '
           'content that cannot be replaced with a formatted result safely.',
@@ -444,6 +638,7 @@ abstract final class WordZotero {
           ? formattedText
           : null,
       preserveSameText: formattedText == null,
+      nativeRecovery: true,
     );
     if (field.kind == ZoteroFieldKind.citation && formattedText != null) {
       final current = _storyFields(<WmlParagraph>[field.paragraph]).firstWhere(
@@ -523,6 +718,19 @@ abstract final class WordZotero {
     if (!field.canEdit) {
       throw UnsupportedError('This Zotero field cannot be deleted safely.');
     }
+    _deletePacket(field);
+  }
+
+  /// Explicit native deletion may follow a failed citation repair. It removes
+  /// the cache as requested by Zotero; [unlinkNative] instead preserves it.
+  static void deleteNative(WmlZoteroField field) {
+    if (!field.canEditNativeResult) {
+      throw UnsupportedError('This Zotero field cannot be deleted safely.');
+    }
+    _deletePacket(field);
+  }
+
+  static void _deletePacket(WmlZoteroField field) {
     _assertCurrent(field);
     WordContentControls.assertCanEdit(field.paragraph, field.start, field.end);
     if (field.run != null) {
@@ -853,6 +1061,14 @@ abstract final class WordZotero {
     if (field.kind != ZoteroFieldKind.bibliography || !field.canEdit) {
       return false;
     }
+    return _ownsFormattedBibliography(field);
+  }
+
+  static bool _ownsFormattedBibliography(WmlZoteroField field) {
+    if (field.kind != ZoteroFieldKind.bibliography ||
+        !field.canEditNativeResult) {
+      return false;
+    }
     final paragraph = field.paragraph;
     return field.wholeParagraph ||
         (field.run != null &&
@@ -872,9 +1088,15 @@ abstract final class WordZotero {
   static bool canReplaceNativeBibliography(
     WmlDocument document,
     WmlZoteroField field,
+  ) => field.isValid && canRecoverNativeBibliography(document, field);
+
+  /// Exact bibliography ownership, independent of a damaged metadata payload.
+  /// New native metadata is still validated before any replacement is applied.
+  static bool canRecoverNativeBibliography(
+    WmlDocument document,
+    WmlZoteroField field,
   ) {
     if (field.kind != ZoteroFieldKind.bibliography ||
-        !field.isValid ||
         field.locked ||
         field.nested ||
         field.opaqueMetadata ||
@@ -908,7 +1130,7 @@ abstract final class WordZotero {
       }
     }
     if (field.paragraphs.length == 1) {
-      return canReplaceFormattedBibliography(field);
+      return _ownsFormattedBibliography(field);
     }
     if (field.start != 0 ||
         field.end != field.paragraphs.last.text.length ||
@@ -955,6 +1177,22 @@ abstract final class WordZotero {
     WmlRunProps? runProperties,
   }) {
     _validateNativeInstruction(instruction, ZoteroFieldKind.bibliography);
+    return _bibliographyParagraphs(
+      instruction: instruction,
+      text: text,
+      formattedText: formattedText,
+      paragraphProperties: paragraphProperties,
+      runProperties: runProperties,
+    );
+  }
+
+  static List<WmlParagraph> _bibliographyParagraphs({
+    String? instruction,
+    required String text,
+    ZoteroFormattedText? formattedText,
+    WmlParagraphProps? paragraphProperties,
+    WmlRunProps? runProperties,
+  }) {
     _assertFormattedText(text, formattedText);
     final entries =
         formattedText?.toParagraphRuns(baseProperties: runProperties) ??
@@ -998,15 +1236,17 @@ abstract final class WordZotero {
         WmlParagraph(properties: properties, inlines: <WmlInline>[...entry]),
       );
     }
-    result.first.inlines.insertAll(0, [
-      WmlFieldBoundary(kind: WmlFieldBoundaryKind.begin),
-      WmlFieldBoundary(
-        kind: WmlFieldBoundaryKind.instruction,
-        text: instruction,
-      ),
-      WmlFieldBoundary(kind: WmlFieldBoundaryKind.separate),
-    ]);
-    result.last.inlines.add(WmlFieldBoundary(kind: WmlFieldBoundaryKind.end));
+    if (instruction != null) {
+      result.first.inlines.insertAll(0, [
+        WmlFieldBoundary(kind: WmlFieldBoundaryKind.begin),
+        WmlFieldBoundary(
+          kind: WmlFieldBoundaryKind.instruction,
+          text: instruction,
+        ),
+        WmlFieldBoundary(kind: WmlFieldBoundaryKind.separate),
+      ]);
+      result.last.inlines.add(WmlFieldBoundary(kind: WmlFieldBoundaryKind.end));
+    }
     return result;
   }
 
@@ -1020,7 +1260,7 @@ abstract final class WordZotero {
     required String text,
     ZoteroFormattedText? formattedText,
   }) {
-    if (!canReplaceNativeBibliography(document, field)) {
+    if (!canRecoverNativeBibliography(document, field)) {
       throw UnsupportedError(
         'This bibliography does not own complete contiguous entry paragraphs.',
       );
@@ -1067,7 +1307,7 @@ abstract final class WordZotero {
     WmlDocument document,
     WmlZoteroField field,
   ) {
-    if (!canReplaceNativeBibliography(document, field)) {
+    if (!canRecoverNativeBibliography(document, field)) {
       throw UnsupportedError('This bibliography cannot be removed safely.');
     }
     _assertCurrent(field);
@@ -1100,9 +1340,10 @@ abstract final class WordZotero {
     String text, {
     ZoteroFormattedText? formattedText,
     bool preserveSameText = false,
+    bool nativeRecovery = false,
   }) {
     _assertFormattedText(text, formattedText);
-    if (!field.canEdit) {
+    if (!(nativeRecovery ? field.canEditNativeResult : field.canEdit)) {
       throw UnsupportedError(
         'This Zotero field has locked, nested, malformed, or cross-paragraph content.',
       );
@@ -1252,9 +1493,124 @@ abstract final class WordZotero {
         'Cannot unlink a locked, nested, or malformed Zotero field.',
       );
     }
+    _unlinkPacket(field);
+  }
+
+  /// Explicit conversion of a complete native packet to its original result.
+  /// The optional document is required for a multipart bibliography so its
+  /// real contiguous block owner can be checked before dropping any code.
+  static void unlinkNative(WmlZoteroField field, {WmlDocument? document}) {
+    if (!field.canEditNativeResult &&
+        !(document != null && canRecoverNativeBibliography(document, field))) {
+      throw UnsupportedError(
+        'This Zotero field has no unambiguous editable result to preserve.',
+      );
+    }
+    _unlinkPacket(field);
+  }
+
+  /// Apply a processor-supplied result and remove its field in the same native
+  /// transaction. No valid metadata is needed for text that will be unlinked;
+  /// an empty repair code must never be materialized as an active citation.
+  /// Returns the surviving paragraphs for writing-position mapping.
+  static List<WmlParagraph> replaceNativeUnlinkedResult(
+    WmlDocument document,
+    WmlZoteroField field, {
+    required String text,
+    ZoteroFormattedText? formattedText,
+  }) {
+    final bibliography = canRecoverNativeBibliography(document, field);
+    if (!field.canEditNativeResult && !bibliography) {
+      throw UnsupportedError('This Zotero result cannot be converted safely.');
+    }
     _assertCurrent(field);
-    for (final paragraph in field.paragraphs) {
-      WordContentControls.assertCanEdit(paragraph, 0, paragraph.text.length);
+    _assertFormattedText(text, formattedText);
+    if (text == field.cachedText && formattedText == null) {
+      unlinkNative(field, document: document);
+      return field.paragraphs;
+    }
+    if (bibliography) {
+      for (final paragraph in field.paragraphs) {
+        WordContentControls.assertCanEdit(paragraph, 0, paragraph.text.length);
+      }
+      final replacements = _bibliographyParagraphs(
+        text: text,
+        formattedText: formattedText,
+        paragraphProperties: field.paragraph.properties,
+        runProperties: WmlRunEdit.propsAt(field.paragraph, 0),
+      );
+      final slot = WordTree.locate(document, field.paragraph)!;
+      for (
+        var i = 0;
+        i < replacements.length && i < field.paragraphs.length;
+        i++
+      ) {
+        final original = field.paragraphs[i];
+        original.inlines
+          ..clear()
+          ..addAll(replacements[i].inlines);
+        _clearParagraphField(original);
+        replacements[i] = original;
+      }
+      slot.parent.replaceRange(
+        slot.index,
+        slot.index + field.paragraphs.length,
+        replacements,
+      );
+      return replacements;
+    }
+    final paragraph = field.paragraph;
+    WordContentControls.assertCanEdit(paragraph, field.start, field.end);
+    final base = WmlRunEdit.propsAt(paragraph, field.start).copy();
+    final sourceRun = field.run;
+    List<WmlRun> runs;
+    if (sourceRun != null && sourceRun.commentIds.isNotEmpty) {
+      if (formattedText != null &&
+          !formattedText.hasUniformCharacterFormatting) {
+        throw UnsupportedError(
+          'This commented citation cannot accept mixed replacement formatting safely.',
+        );
+      }
+      final replacement = WmlClone.inlines([sourceRun]).single as WmlRun;
+      replacement
+        ..text = text
+        ..properties = _atomicProperties(formattedText, base)
+        ..fieldInstruction = null
+        ..fieldDirty = null
+        ..fieldLocked = false;
+      runs = [replacement];
+    } else {
+      runs =
+          formattedText?.toRuns(baseProperties: base) ??
+          [WmlRun(text: text, properties: base)];
+    }
+    if (field.wholeParagraph) {
+      paragraph.inlines
+        ..clear()
+        ..addAll(runs);
+      _clearParagraphField(paragraph);
+    } else if (sourceRun != null) {
+      final index = paragraph.inlines.indexOf(sourceRun);
+      paragraph.inlines.replaceRange(index, index + 1, runs);
+    } else {
+      final boundaries = field._boundaries[paragraph]!;
+      final first = paragraph.inlines.indexOf(boundaries.first);
+      final last = paragraph.inlines.indexOf(boundaries.last);
+      paragraph.inlines.replaceRange(first, last + 1, runs);
+    }
+    return [paragraph];
+  }
+
+  static void _unlinkPacket(WmlZoteroField field) {
+    _assertCurrent(field);
+    for (final (index, paragraph) in field.paragraphs.indexed) {
+      WordContentControls.assertCanEdit(
+        paragraph,
+        index == 0 ? field.start : 0,
+        index == field.paragraphs.length - 1
+            ? field.end
+            : paragraph.text.length,
+      );
     }
     if (field.run != null) {
       field.run!
@@ -1295,6 +1651,7 @@ abstract final class WordZotero {
           current.locked == field.locked &&
           current.nested == field.nested &&
           current.opaqueMetadata == field.opaqueMetadata &&
+          current.canEditNativeResult == field.canEditNativeResult &&
           current.canEdit == field.canEdit) {
         return;
       }

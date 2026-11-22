@@ -103,9 +103,12 @@ abstract final class OfficeTypeface {
     return latinTheme;
   }
 
-  /// familyForRun API.
+  /// Explicit complex-script formatting selects its font even for LTR text.
+  /// This is font routing only; it does not determine the bidi direction.
   static String familyForRun(WmlRunProps props, int codePoint) {
-    return isRtlCodePoint(codePoint) ? props.csFont : props.asciiFont;
+    return props.complexScript == true || isRtlCodePoint(codePoint)
+        ? props.csFont
+        : props.asciiFont;
   }
 
   /// documentHasRtl API.
@@ -134,8 +137,9 @@ abstract final class OfficeTypeface {
           continue;
         }
         final WmlRunProps props = inline.properties;
-        if (isRtlText(inline.text)) {
-          hasRtl = true;
+        final bool rtl = isRtlText(inline.text);
+        if (rtl) hasRtl = true;
+        if (props.complexScript == true || rtl) {
           final String face = !isThemePlaceholder(props.csFont)
               ? props.csFont
               : props.asciiFont;

@@ -20,7 +20,7 @@ abstract final class OfficeIsolateOpen {
   static bool isHeavyBytes(Uint8List bytes) =>
       bytes.length >= OfficeSaveCost.isolateThresholdBytes;
 
-  /// Opens a Word package and lays it out.
+  /// Opens a Word package or supported native ODT and lays it out.
   static Future<WordOpenPayload> word(
     Uint8List bytes, {
     String? password,
@@ -108,23 +108,23 @@ abstract final class OfficeIsolateOpen {
     if (isolated != null) {
       return isolated;
     }
-    return _openSync(bytes, password, kind, onProgress);
+    return _openCurrentIsolate(bytes, password, kind, onProgress);
   }
 }
 
-Object _openSync(
+Future<Object> _openCurrentIsolate(
   Uint8List bytes,
   String? password,
   String kind,
 
   /// Function API.
   void Function(OfficeOpenProgress progress)? onProgress,
-) {
+) async {
   /// call API.
   onProgress?.call(const OfficeOpenProgress(value: 0.2, stage: 'archive'));
 
   /// result API.
-  final Object result = decodeOfficeOpen(bytes, password, kind, (
+  final Object result = await decodeOfficeOpen(bytes, password, kind, (
     OfficeOpenProgress p,
   ) {
     onProgress?.call(p);

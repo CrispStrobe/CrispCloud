@@ -60,11 +60,11 @@ class OfficeVbaMacroLanguage implements OfficeMacroLanguage {
   }
 }
 
-/// Compiles explicit paragraph and section writes from the bounded Word dialect.
+/// Compiles explicit paragraph, section and cell writes from the Word dialect.
 ///
 /// The language and resource limits are shared with [OfficeVbaMacroLanguage].
-/// Word bindings select body or explicit header/footer paragraphs and sections
-/// without reading them.
+/// Word bindings select body or explicit header/footer paragraphs, sections
+/// and direct main-story table cells without reading them.
 /// Native plans retain the ordinary runtime policy and atomic save boundary.
 class OfficeVbaWordMacroLanguage implements OfficeMacroLanguage {
   const OfficeVbaWordMacroLanguage();
@@ -132,13 +132,16 @@ const _maxActiveArrayElements = 16384;
 const _maxActiveArrayStringUnits = 1048576;
 const _maxExactInteger = 9007199254740991;
 const _comparisonOperators = <String>{'=', '<>', '<', '>', '<=', '>='};
+const _numericIntrinsics = <String>{'abs', 'int', 'fix', 'sgn'};
 const _stringIntrinsics = <String>{
   'len',
+  'join',
   r'left$',
   r'right$',
   r'mid$',
   'instr',
   'instrrev',
+  'strcomp',
   'replace',
   'trim',
   r'trim$',
@@ -146,12 +149,33 @@ const _stringIntrinsics = <String>{
   r'ltrim$',
   'rtrim',
   r'rtrim$',
+  'space',
+  r'space$',
+  'string',
+  r'string$',
+  'chrw',
+  r'chrw$',
+  'ascw',
 };
 const _stringComparisonConstants = <String, int>{
   'vbbinarycompare': 0,
   'vbtextcompare': 1,
   'vbdatabasecompare': 2,
   'vbusecompareoption': -1,
+};
+// Portable source characters from the VBA constants module. These remain
+// ordinary Strings; each application still validates text before publication.
+// Host-dependent vbNewLine and the external-call vbNullString sentinel are
+// intentionally not represented as portable source values.
+const _stringConstants = <String, String>{
+  'vbcrlf': '\r\n',
+  'vbcr': '\r',
+  'vblf': '\n',
+  'vbnullchar': '\u0000',
+  'vbtab': '\t',
+  'vbback': '\b',
+  'vbformfeed': '\f',
+  'vbverticaltab': '\u000b',
 };
 const _variantIntrinsics = <String>{
   'isempty',
@@ -163,8 +187,168 @@ const _variantIntrinsics = <String>{
   'cstr',
   'cvar',
 };
+// The initial language-write contract owns the ordinary w:lang/@w:val
+// slot only. These WdLanguageID values have unambiguous normal-slot tags;
+// complex-script/East Asian routing and sentinel side effects are separate.
+const _wordLanguageConstants = <String, int>{
+  'wdenglishus': 1033,
+  'wdenglishuk': 2057,
+  'wdenglishaus': 3081,
+  'wdenglishcanadian': 4105,
+  'wdenglishnewzealand': 5129,
+  'wdenglishireland': 6153,
+  'wdenglishsouthafrica': 7177,
+  'wdgerman': 1031,
+  'wdgermanaustria': 3079,
+  'wdswissgerman': 2055,
+  'wdfrench': 1036,
+  'wdbelgianfrench': 2060,
+  'wdfrenchcanadian': 3084,
+  'wdswissfrench': 4108,
+  'wditalian': 1040,
+  'wdswissitalian': 2064,
+  'wddutch': 1043,
+  'wdbelgiandutch': 2067,
+  'wdportuguese': 2070,
+  'wdportuguesebrazil': 1046,
+  'wdspanishmodernsort': 3082,
+  'wdmexicanspanish': 2058,
+  'wddanish': 1030,
+  'wdswedish': 1053,
+  'wdswedishfinland': 2077,
+  'wdnorwegianbokmol': 1044,
+  'wdnorwegiannynorsk': 2068,
+  'wdfinnish': 1035,
+  'wdicelandic': 1039,
+  'wdturkish': 1055,
+  // Recognized solely to issue precise unsupported-value diagnostics.
+  'wdlanguagenone': 0,
+  'wdnoproofing': 1024,
+  'wdarabic': 1025,
+  'wdhebrew': 1037,
+  'wdjapanese': 1041,
+  'wdundefined': 9999999,
+};
+const _wordNormalLanguages = <int, String>{
+  1033: 'en-US',
+  2057: 'en-GB',
+  3081: 'en-AU',
+  4105: 'en-CA',
+  5129: 'en-NZ',
+  6153: 'en-IE',
+  7177: 'en-ZA',
+  1031: 'de-DE',
+  3079: 'de-AT',
+  2055: 'de-CH',
+  1036: 'fr-FR',
+  2060: 'fr-BE',
+  3084: 'fr-CA',
+  4108: 'fr-CH',
+  1040: 'it-IT',
+  2064: 'it-CH',
+  1043: 'nl-NL',
+  2067: 'nl-BE',
+  2070: 'pt-PT',
+  1046: 'pt-BR',
+  3082: 'es-ES',
+  2058: 'es-MX',
+  1030: 'da-DK',
+  1053: 'sv-SE',
+  2077: 'sv-FI',
+  1044: 'nb-NO',
+  2068: 'nn-NO',
+  1035: 'fi-FI',
+  1039: 'is-IS',
+  1055: 'tr-TR',
+};
+// These explicit built-ins select an existing native paragraph style. They
+// never index a document's Styles collection or manufacture a definition.
+const _wordStyleConstants = <String, int>{
+  'wdstylenormal': -1,
+  'wdstyleheading1': -2,
+  'wdstyleheading2': -3,
+  'wdstyleheading3': -4,
+  'wdstyleheading4': -5,
+  'wdstyleheading5': -6,
+  'wdstyleheading6': -7,
+  'wdstyleheading7': -8,
+  'wdstyleheading8': -9,
+  'wdstyleheading9': -10,
+  'wdstylecaption': -35,
+  'wdstyletitle': -63,
+  'wdstylesubtitle': -75,
+};
+
+// Microsoft's WdColor values use VBA packed RGB (red in the low byte).
+// Automatic is accepted only by members with an explicit automatic contract.
+const _wordColorConstants = <String, int>{
+  'wdcoloraqua': 13421619,
+  'wdcolorautomatic': -16777216,
+  'wdcolorblack': 0,
+  'wdcolorblue': 16711680,
+  'wdcolorbluegray': 10053222,
+  'wdcolorbrightgreen': 65280,
+  'wdcolorbrown': 13209,
+  'wdcolordarkblue': 8388608,
+  'wdcolordarkgreen': 13056,
+  'wdcolordarkred': 128,
+  'wdcolordarkteal': 6697728,
+  'wdcolordarkyellow': 32896,
+  'wdcolorgold': 52479,
+  'wdcolorgray05': 15987699,
+  'wdcolorgray10': 15132390,
+  'wdcolorgray125': 14737632,
+  'wdcolorgray15': 14277081,
+  'wdcolorgray20': 13421772,
+  'wdcolorgray25': 12632256,
+  'wdcolorgray30': 11776947,
+  'wdcolorgray35': 10921638,
+  'wdcolorgray375': 10526880,
+  'wdcolorgray40': 10066329,
+  'wdcolorgray45': 9211020,
+  'wdcolorgray50': 8421504,
+  'wdcolorgray55': 7566195,
+  'wdcolorgray60': 6710886,
+  'wdcolorgray625': 6316128,
+  'wdcolorgray65': 5855577,
+  'wdcolorgray70': 5000268,
+  'wdcolorgray75': 4210752,
+  'wdcolorgray80': 3355443,
+  'wdcolorgray85': 2500134,
+  'wdcolorgray875': 2105376,
+  'wdcolorgray90': 1644825,
+  'wdcolorgray95': 789516,
+  'wdcolorgreen': 32768,
+  'wdcolorindigo': 10040115,
+  'wdcolorlavender': 16751052,
+  'wdcolorlightblue': 16737843,
+  'wdcolorlightgreen': 13434828,
+  'wdcolorlightorange': 39423,
+  'wdcolorlightturquoise': 16777164,
+  'wdcolorlightyellow': 10092543,
+  'wdcolorlime': 52377,
+  'wdcolorolivegreen': 13107,
+  'wdcolororange': 26367,
+  'wdcolorpaleblue': 16764057,
+  'wdcolorpink': 16711935,
+  'wdcolorplum': 6697881,
+  'wdcolorred': 255,
+  'wdcolorrose': 13408767,
+  'wdcolorseagreen': 6723891,
+  'wdcolorskyblue': 16763904,
+  'wdcolortan': 10079487,
+  'wdcolorteal': 8421376,
+  'wdcolorturquoise': 16776960,
+  'wdcolorviolet': 8388736,
+  'wdcolorwhite': 16777215,
+  'wdcoloryellow': 65535,
+};
+
 const _wordConstants = <String, int>{
   ..._stringComparisonConstants,
+  ..._wordLanguageConstants,
+  ..._wordStyleConstants,
+  ..._wordColorConstants,
   'wdheaderfooterprimary': 1,
   'wdheaderfooterfirstpage': 2,
   'wdheaderfooterevenpages': 3,
@@ -288,10 +472,14 @@ const _wordReserved = <String>{
   'thisdocument',
   'activedocument',
   'document',
+  'tables',
+  'table',
+  'cell',
   'paragraph',
   'paragraphs',
   'tabstops',
   'listformat',
+  'shading',
   'wdalignparagraphleft',
   'wdalignparagraphcenter',
   'wdalignparagraphright',
@@ -417,6 +605,7 @@ class _Context {
   bool reserved(String name) =>
       _Checker._reserved.contains(name) ||
       constants.containsKey(name) ||
+      _stringConstants.containsKey(name) ||
       (isWord &&
           (_wordReserved.contains(name) ||
               _wordUnitConversions.containsKey(name))) ||
@@ -707,14 +896,20 @@ enum _Kind {
   wordSections,
   wordSection,
   wordPageSetup,
+  wordTextColumns,
   wordHeadersFooters,
   wordHeaderFooter,
   wordStoryRange,
+  wordTables,
+  wordTable,
+  wordCell,
+  wordCellRange,
   paragraphs,
   paragraph,
   paragraphFormat,
   wordTabStops,
   wordListFormat,
+  wordShading,
   powerPointApplication,
   presentation,
   slides,
@@ -728,6 +923,7 @@ enum _Kind {
   powerPointParagraphFormat,
   slideShowTransition,
   triState,
+  wordStyleValue,
 }
 
 enum _Declared {
@@ -741,13 +937,18 @@ enum _Declared {
   document,
   wordSection,
   wordPageSetup,
+  wordTextColumns,
   wordHeadersFooters,
   wordHeaderFooter,
+  wordTables,
+  wordTable,
+  wordCell,
   paragraph,
   wordFont,
   wordParagraphFormat,
   wordTabStops,
   wordListFormat,
+  wordShading,
   presentation,
   slide,
   shape,
@@ -764,13 +965,18 @@ bool _objectType(_Declared type) =>
     type == _Declared.document ||
     type == _Declared.wordSection ||
     type == _Declared.wordPageSetup ||
+    type == _Declared.wordTextColumns ||
     type == _Declared.wordHeadersFooters ||
     type == _Declared.wordHeaderFooter ||
+    type == _Declared.wordTables ||
+    type == _Declared.wordTable ||
+    type == _Declared.wordCell ||
     type == _Declared.paragraph ||
     type == _Declared.wordFont ||
     type == _Declared.wordParagraphFormat ||
     type == _Declared.wordTabStops ||
     type == _Declared.wordListFormat ||
+    type == _Declared.wordShading ||
     type == _Declared.presentation ||
     type == _Declared.slide ||
     type == _Declared.shape ||
@@ -808,13 +1014,18 @@ _Kind _kindOf(_Declared type) => switch (type) {
   _Declared.document => _Kind.document,
   _Declared.wordSection => _Kind.wordSection,
   _Declared.wordPageSetup => _Kind.wordPageSetup,
+  _Declared.wordTextColumns => _Kind.wordTextColumns,
   _Declared.wordHeadersFooters => _Kind.wordHeadersFooters,
   _Declared.wordHeaderFooter => _Kind.wordHeaderFooter,
+  _Declared.wordTables => _Kind.wordTables,
+  _Declared.wordTable => _Kind.wordTable,
+  _Declared.wordCell => _Kind.wordCell,
   _Declared.paragraph => _Kind.paragraph,
   _Declared.wordFont => _Kind.font,
   _Declared.wordParagraphFormat => _Kind.paragraphFormat,
   _Declared.wordTabStops => _Kind.wordTabStops,
   _Declared.wordListFormat => _Kind.wordListFormat,
+  _Declared.wordShading => _Kind.wordShading,
   _Declared.presentation => _Kind.presentation,
   _Declared.slide => _Kind.slide,
   _Declared.shape => _Kind.shape,
@@ -969,6 +1180,11 @@ class _WordParagraphControl extends _Statement {
 
 class _WordPageSetupOperation extends _Statement {
   const _WordPageSetupOperation(super.token, this.target);
+  final _Member target;
+}
+
+class _WordTextColumnsOperation extends _Statement {
+  const _WordTextColumnsOperation(super.token, this.target);
   final _Member target;
 }
 
@@ -1357,6 +1573,14 @@ class _Parser {
           } else if (target is _Member &&
               target.token.lower == 'toggleportrait') {
             result.add(_WordPageSetupOperation(target.token, target));
+          } else if (target is _Member && target.token.lower == 'setcount') {
+            if (target.arguments == null) {
+              context.unsupported(
+                target.token,
+                'Call TextColumns.SetCount requires parenthesized arguments.',
+              );
+            }
+            result.add(_WordTextColumnsOperation(target.token, target));
           } else if (target is _Call) {
             result.add(_Invoke(target.token, target.arguments));
           } else if (target is _Name) {
@@ -1602,6 +1826,7 @@ class _Parser {
               ..._wordSpacingMethods,
               ..._wordParagraphControls,
               'toggleportrait',
+              'setcount',
             }.contains(target.token.lower)) {
           final arguments = target.arguments ?? <_Expr>[];
           if (target.arguments == null &&
@@ -1632,6 +1857,8 @@ class _Parser {
                 ? _WordParagraphControl(target.token, call)
                 : target.token.lower == 'toggleportrait'
                 ? _WordPageSetupOperation(target.token, call)
+                : target.token.lower == 'setcount'
+                ? _WordTextColumnsOperation(target.token, call)
                 : _WordTabOperation(target.token, call),
           );
         } else if (!isSet &&
@@ -1774,13 +2001,18 @@ class _Parser {
       'document' when context.isWord => _Declared.document,
       'section' when context.isWord => _Declared.wordSection,
       'pagesetup' when context.isWord => _Declared.wordPageSetup,
+      'textcolumns' when context.isWord => _Declared.wordTextColumns,
       'headersfooters' when context.isWord => _Declared.wordHeadersFooters,
       'headerfooter' when context.isWord => _Declared.wordHeaderFooter,
+      'tables' when context.isWord => _Declared.wordTables,
+      'table' when context.isWord => _Declared.wordTable,
+      'cell' when context.isWord => _Declared.wordCell,
       'paragraph' when context.isWord => _Declared.paragraph,
       'font' when context.isWord => _Declared.wordFont,
       'paragraphformat' when context.isWord => _Declared.wordParagraphFormat,
       'tabstops' when context.isWord => _Declared.wordTabStops,
       'listformat' when context.isWord => _Declared.wordListFormat,
+      'shading' when context.isWord => _Declared.wordShading,
       'presentation' when context.isPowerPoint => _Declared.presentation,
       'slide' when context.isPowerPoint => _Declared.slide,
       'shape' when context.isPowerPoint => _Declared.shape,
@@ -1796,7 +2028,7 @@ class _Parser {
         context.isPowerPoint
             ? 'Supported declarations are Long, Double, String, Boolean, Variant, Presentation, Slide, Shape, TextFrame, TextRange, Font, ParagraphFormat, and SlideShowTransition.'
             : context.isWord
-            ? 'Supported declarations are Long, Double, String, Boolean, Variant, Document, Section, PageSetup, HeadersFooters, HeaderFooter, Paragraph, Range, Font, ParagraphFormat, TabStops, and ListFormat.'
+            ? 'Supported declarations are Long, Double, String, Boolean, Variant, Document, Section, PageSetup, TextColumns, HeadersFooters, HeaderFooter, Tables, Table, Cell, Paragraph, Range, Font, ParagraphFormat, TabStops, ListFormat, and Shading.'
             : 'Supported declarations are Long, Double, String, Boolean, Variant, Worksheet, and Range.',
       ),
     };
@@ -2010,6 +2242,14 @@ class _Checker {
       <String, Map<String, _Symbol>>{};
   Map<String, _Symbol> symbols = <String, _Symbol>{};
   final List<_Kind> withKinds = <_Kind>[];
+  final List<_Expr> withTargets = <_Expr>[];
+  // Range and Paragraph are shared by body, story and cell selectors. Keep
+  // known local bindings so cell Text and projected paragraph formatting do
+  // not admit mark replacement/insertion in unexecuted source paths.
+  final Map<String, List<(_Expr, List<_Expr>)>> wordSelectorBindings =
+      <String, List<(_Expr, List<_Expr>)>>{};
+  final Map<String, bool> wordCellRangeBindings = <String, bool>{};
+  final Map<String, bool> wordCellSelectorBindings = <String, bool>{};
   final Set<String> counters = <String>{};
   final Set<String> eachCounters = <String>{};
   final Map<_Symbol, Object> constantValues = <_Symbol, Object>{};
@@ -2020,6 +2260,7 @@ class _Checker {
   final Map<String, Set<String>> calls = <String, Set<String>>{};
   late _Procedure currentProcedure;
   static const _reserved = <String>{
+    ..._numericIntrinsics,
     ..._stringIntrinsics,
     ..._variantIntrinsics,
     'sub',
@@ -2067,7 +2308,6 @@ class _Checker {
     'boolean',
     'double',
     'long',
-    'string',
     'variant',
     'worksheet',
     'function',
@@ -2144,6 +2384,10 @@ class _Checker {
       }
       symbols = <String, _Symbol>{...globals};
       withKinds.clear();
+      withTargets.clear();
+      wordSelectorBindings.clear();
+      wordCellRangeBindings.clear();
+      wordCellSelectorBindings.clear();
       counters.clear();
       eachCounters.clear();
       doDepth = 0;
@@ -2179,6 +2423,7 @@ class _Checker {
         }
       }
       _implicit(procedure.body);
+      if (context.isWord) _collectWordRangeBindings(procedure.body, const []);
       _statements(procedure.body);
       locals[procedure.name.lower] = Map<String, _Symbol>.of(symbols);
     }
@@ -2320,7 +2565,8 @@ class _Checker {
       final current = pending.removeLast();
       switch (current) {
         case _Name():
-          if (context.constants.containsKey(current.token.lower)) {
+          if (context.constants.containsKey(current.token.lower) ||
+              _stringConstants.containsKey(current.token.lower)) {
             break;
           }
           final symbol = _symbol(current.token);
@@ -2370,7 +2616,8 @@ class _Checker {
         break;
       case _Name():
         if (!(symbols[expression.token.lower]?.isConst ?? false) &&
-            !context.constants.containsKey(expression.token.lower)) {
+            !context.constants.containsKey(expression.token.lower) &&
+            !_stringConstants.containsKey(expression.token.lower)) {
           context.unsupported(
             expression.token,
             'Const expressions may only refer to previously declared constants.',
@@ -2434,6 +2681,151 @@ class _Checker {
         symbols[variable.lower] = _Symbol(_Declared.variant, false, variable);
       }
     }
+  }
+
+  void _collectWordRangeBindings(
+    List<_Statement> statements,
+    List<_Expr> scopes,
+  ) {
+    for (final statement in statements) {
+      switch (statement) {
+        case _Assignment(target: final _Name target, isSet: true):
+          final type = symbols[target.token.lower]?.type;
+          if (type == _Declared.range || type == _Declared.paragraph) {
+            (wordSelectorBindings[target.token.lower] ??= []).add((
+              statement.value,
+              scopes,
+            ));
+          }
+        case _With():
+          _collectWordRangeBindings(statement.body, [
+            ...scopes,
+            statement.target,
+          ]);
+        case _For():
+          _collectWordRangeBindings(statement.body, scopes);
+        case _ForEach():
+          _collectWordRangeBindings(statement.body, scopes);
+        case _ConditionalLoop():
+          _collectWordRangeBindings(statement.body, scopes);
+        case _If():
+          for (final branch in statement.branches) {
+            _collectWordRangeBindings(branch.$2, scopes);
+          }
+          _collectWordRangeBindings(statement.otherwise, scopes);
+        case _Select():
+          for (final branch in statement.branches) {
+            _collectWordRangeBindings(branch.body, scopes);
+          }
+          _collectWordRangeBindings(statement.otherwise, scopes);
+        default:
+          break;
+      }
+    }
+  }
+
+  bool _isWordCellRangeSource(
+    _Expr expression,
+    List<_Expr> scopes,
+    Set<String> visiting,
+  ) {
+    if (expression is _WithValue) {
+      return scopes.isNotEmpty &&
+          _isWordCellRangeSource(
+            scopes.last,
+            scopes.sublist(0, scopes.length - 1),
+            visiting,
+          );
+    }
+    if (expression is _Member) {
+      return expression.token.lower == 'range' &&
+          _isWordCellSource(expression.receiver, scopes);
+    }
+    if (expression is! _Name ||
+        symbols[expression.token.lower]?.type != _Declared.range) {
+      return false;
+    }
+    final name = expression.token.lower;
+    if (wordCellRangeBindings[name] case final cached?) return cached;
+    if (!visiting.add(name)) return false;
+    final bindings = wordSelectorBindings[name];
+    // A generic ByVal Range helper is checked again against its actual selector
+    // during source evaluation. Locals known to receive paragraph/story ranges
+    // never gain the cell-only Text property, even in dead branches.
+    final result = bindings == null
+        ? currentProcedure.parameters.any(
+            (parameter) => parameter.name.lower == name,
+          )
+        : bindings.every(
+            (binding) =>
+                _isWordCellRangeSource(binding.$1, binding.$2, visiting),
+          );
+    visiting.remove(name);
+    wordCellRangeBindings[name] = result;
+    return result;
+  }
+
+  // True only for selectors whose local origins are all explicitly cells.
+  // Generic helper parameters and mixed body/cell aliases are checked against
+  // their actual selector during evaluation, preserving shared helpers.
+  bool _knownWordCellSelector(
+    _Expr expression,
+    List<_Expr> scopes,
+    Set<String> visiting,
+  ) {
+    if (expression is _WithValue) {
+      return scopes.isNotEmpty &&
+          _knownWordCellSelector(
+            scopes.last,
+            scopes.sublist(0, scopes.length - 1),
+            visiting,
+          );
+    }
+    if (expression is _Member) {
+      if (expression.token.lower == 'range' &&
+          _isWordCellSource(expression.receiver, scopes)) {
+        return true;
+      }
+      return const {
+            'range',
+            'paragraphs',
+            'item',
+          }.contains(expression.token.lower) &&
+          _knownWordCellSelector(expression.receiver, scopes, visiting);
+    }
+    if (expression is! _Name) return false;
+    final name = expression.token.lower;
+    final type = symbols[name]?.type;
+    if (type != _Declared.range && type != _Declared.paragraph) return false;
+    if (currentProcedure.parameters.any(
+      (parameter) => parameter.name.lower == name,
+    )) {
+      return false;
+    }
+    if (wordCellSelectorBindings[name] case final cached?) return cached;
+    if (!visiting.add(name)) return false;
+    final bindings = wordSelectorBindings[name];
+    final result =
+        bindings != null &&
+        bindings.every(
+          (binding) => _knownWordCellSelector(binding.$1, binding.$2, visiting),
+        );
+    visiting.remove(name);
+    wordCellSelectorBindings[name] = result;
+    return result;
+  }
+
+  bool _isWordCellSource(_Expr expression, List<_Expr> scopes) {
+    if (expression is _WithValue) {
+      return scopes.isNotEmpty &&
+          _isWordCellSource(scopes.last, scopes.sublist(0, scopes.length - 1));
+    }
+    if (expression is _Name) {
+      return symbols[expression.token.lower]?.type == _Declared.wordCell;
+    }
+    // Ordinary expression checking independently validates the Table receiver,
+    // the two arguments and the dialect before this shape reaches evaluation.
+    return expression is _Member && expression.token.lower == 'cell';
   }
 
   void _statements(List<_Statement> statements, {bool nested = false}) {
@@ -2543,18 +2935,7 @@ class _Checker {
             );
           }
         case _InsertBefore():
-          final arguments = _arguments(statement.target, 1);
-          if (_expression(statement.target.receiver) != _Kind.range) {
-            context.type(
-              statement.target.token,
-              'InsertBefore requires an explicit Word Range.',
-            );
-          }
-          _compatible(
-            _Kind.string,
-            _expression(arguments.single),
-            arguments.single.token,
-          );
+          _wordInsertBeforeCall(statement.target);
         case _WordTabOperation():
           _wordTabCall(statement.target);
         case _WordListOperation():
@@ -2596,6 +2977,8 @@ class _Checker {
             statement.target.arguments ?? const <_Expr>[],
             0,
           );
+        case _WordTextColumnsOperation():
+          _wordTextColumnsCall(statement.target);
         case _For():
           final counter = _symbol(statement.counter);
           if (counter.isConst ||
@@ -2695,14 +3078,20 @@ class _Checker {
                   kind == _Kind.wordSections ||
                   kind == _Kind.wordSection ||
                   kind == _Kind.wordPageSetup ||
+                  kind == _Kind.wordTextColumns ||
                   kind == _Kind.wordHeadersFooters ||
                   kind == _Kind.wordHeaderFooter ||
                   kind == _Kind.wordStoryRange ||
+                  kind == _Kind.wordTables ||
+                  kind == _Kind.wordTable ||
+                  kind == _Kind.wordCell ||
+                  kind == _Kind.wordCellRange ||
                   kind == _Kind.paragraphs ||
                   kind == _Kind.paragraph ||
                   kind == _Kind.font ||
                   kind == _Kind.paragraphFormat ||
                   kind == _Kind.wordTabStops ||
+                  kind == _Kind.wordShading ||
                   kind == _Kind.wordListFormat);
           final powerPointObject =
               context.isPowerPoint && _powerPointObjectKinds.contains(kind);
@@ -2715,12 +3104,14 @@ class _Checker {
               context.isPowerPoint
                   ? 'With requires an explicitly bound PowerPoint object.'
                   : context.isWord
-                  ? 'With requires a Document, Section, PageSetup, HeadersFooters, HeaderFooter, Paragraph, Range, Font, ParagraphFormat, TabStops, or ListFormat.'
+                  ? 'With requires a Document, Section, PageSetup, TextColumns, HeadersFooters, HeaderFooter, Tables, Table, Cell, Paragraph, Range, Font, ParagraphFormat, TabStops, ListFormat, or Shading.'
                   : 'With requires a Worksheet or Range.',
             );
           }
           withKinds.add(kind);
+          withTargets.add(statement.target);
           _statements(statement.body, nested: true);
+          withTargets.removeLast();
           withKinds.removeLast();
         case _If():
           for (final branch in statement.branches) {
@@ -2749,6 +3140,59 @@ class _Checker {
           }
       }
     }
+  }
+
+  void _wordInsertBeforeCall(_Member member) {
+    final receiver = _expression(member.receiver);
+    if (receiver != _Kind.range && receiver != _Kind.wordCellRange) {
+      context.type(
+        member.token,
+        'InsertBefore requires an explicit Word Range.',
+      );
+    }
+    final arguments = member.arguments ?? const <_Expr>[];
+    if (arguments.length != 1) {
+      context.type(member.token, 'InsertBefore requires one Text argument.');
+    }
+    final argument = arguments.single;
+    if (argument is _NamedArgument && argument.token.lower != 'text') {
+      context.fail(
+        argument.token,
+        'vba_name_error',
+        'Unknown named argument ${argument.token.text} for Range.InsertBefore.',
+      );
+    }
+    final value = argument is _NamedArgument ? argument.value : argument;
+    if (value is _OmittedArgument) {
+      context.type(value.token, 'Required argument Text cannot be omitted.');
+    }
+    _compatible(_Kind.string, _expression(value), value.token);
+  }
+
+  void _wordTextColumnsCall(_Member member) {
+    if (_expression(member.receiver) != _Kind.wordTextColumns) {
+      context.type(member.token, 'SetCount requires Word TextColumns.');
+    }
+    final arguments = member.arguments ?? const <_Expr>[];
+    if (arguments.length != 1) {
+      context.type(member.token, 'SetCount requires one NumColumns argument.');
+    }
+    final argument = arguments.single;
+    if (argument is _NamedArgument && argument.token.lower != 'numcolumns') {
+      context.fail(
+        argument.token,
+        'vba_name_error',
+        'Unknown named argument ${argument.token.text} for TextColumns.SetCount.',
+      );
+    }
+    final value = argument is _NamedArgument ? argument.value : argument;
+    if (value is _OmittedArgument) {
+      context.type(
+        value.token,
+        'Required argument NumColumns cannot be omitted.',
+      );
+    }
+    _compatible(_Kind.number, _expression(value), value.token);
   }
 
   void _wordListCall(_Member member) {
@@ -2999,17 +3443,42 @@ class _Checker {
       );
     }
     if (context.isWord) {
+      if (property == 'text' &&
+          (receiver == _Kind.wordCellRange ||
+              receiver == _Kind.range &&
+                  _isWordCellRangeSource(target.receiver, withTargets, {}))) {
+        return _Kind.string;
+      }
+      if (receiver == _Kind.wordShading &&
+          (property == 'backgroundpatterncolor' ||
+              property == 'backgroundpatterncolorindex')) {
+        return _Kind.number;
+      }
+      if ((receiver == _Kind.paragraph || receiver == _Kind.range) &&
+          property == 'style') {
+        return _Kind.wordStyleValue;
+      }
+      if (receiver == _Kind.wordTextColumns) {
+        if (property == 'spacing') return _Kind.number;
+        if (property == 'linebetween') return _Kind.boolean;
+      }
       if (receiver == _Kind.wordPageSetup &&
           (_wordPageSetupFields.containsKey(property) ||
               property == 'orientation' ||
               property == 'sectionstart')) {
         return _Kind.number;
       }
-      if (receiver == _Kind.range && property == 'highlightcolorindex') {
+      final textRange =
+          receiver == _Kind.range || receiver == _Kind.wordCellRange;
+      if (textRange && property == 'highlightcolorindex') {
         return _Kind.number;
       }
-      if (receiver == _Kind.range && property == 'noproofing') {
+      if (textRange && property == 'noproofing') {
         return _Kind.boolean;
+      }
+      if (textRange &&
+          (property == 'languageid' || property == 'languageidother')) {
+        return _Kind.number;
       }
       if (receiver == _Kind.wordListFormat && property == 'listlevelnumber') {
         return _Kind.number;
@@ -3019,17 +3488,20 @@ class _Checker {
             property == 'italic' ||
             property == 'strikethrough' ||
             property == 'smallcaps' ||
+            property == 'allcaps' ||
             property == 'superscript' ||
             property == 'subscript') {
           return _Kind.boolean;
         }
         if (property == 'size' ||
             property == 'kerning' ||
+            property == 'position' ||
             property == 'color' ||
+            property == 'colorindex' ||
             property == 'underline') {
           return _Kind.number;
         }
-        if (property == 'name') return _Kind.string;
+        if (property == 'name' || property == 'namebi') return _Kind.string;
       } else if (receiver == _Kind.paragraphFormat) {
         if (property == 'keeptogether' ||
             property == 'pagebreakbefore' ||
@@ -3086,6 +3558,9 @@ class _Checker {
             ? _Kind.boolean
             : _Kind.string;
       case _Name():
+        if (_stringConstants.containsKey(expression.token.lower)) {
+          return _Kind.string;
+        }
         if (context.constants.containsKey(expression.token.lower)) {
           return _Kind.number;
         }
@@ -3144,6 +3619,15 @@ class _Checker {
       case _Call():
         if ((symbols[expression.token.lower]?.isArray ?? false)) {
           return _arrayIndex(expression);
+        }
+        if (_numericIntrinsics.contains(expression.token.lower)) {
+          _count(expression.token, expression.arguments, 1);
+          final argument = expression.arguments.single;
+          final kind = _expression(argument);
+          _compatible(_Kind.number, kind, argument.token);
+          // Abs, Int and Fix preserve Null. Sgn always returns a number or
+          // raises a diagnostic; its Null input cannot produce a result.
+          return expression.token.lower == 'sgn' ? _Kind.number : kind;
         }
         if (_stringIntrinsics.contains(expression.token.lower)) {
           return _stringIntrinsic(expression);
@@ -3243,6 +3727,32 @@ class _Checker {
             _wordUnitCall(expression.token, expression.arguments);
             return _Kind.number;
           }
+          if (receiver == _Kind.document && name == 'tables') {
+            if (expression.arguments == null) return _Kind.wordTables;
+            final argument = _arguments(expression, 1).single;
+            _compatible(_Kind.number, _expression(argument), argument.token);
+            return _Kind.wordTable;
+          }
+          if (receiver == _Kind.wordTables && name == 'item') {
+            final argument = _arguments(expression, 1).single;
+            _compatible(_Kind.number, _expression(argument), argument.token);
+            return _Kind.wordTable;
+          }
+          if (receiver == _Kind.wordTable && name == 'cell') {
+            for (final argument in _arguments(expression, 2)) {
+              _compatible(_Kind.number, _expression(argument), argument.token);
+            }
+            return _Kind.wordCell;
+          }
+          if (receiver == _Kind.wordCell && name == 'range') {
+            _arguments(expression, 0, allowProperty: true);
+            return _Kind.wordCellRange;
+          }
+          if (receiver == _Kind.wordCellRange &&
+              (name == 'font' || name == 'paragraphformat')) {
+            _arguments(expression, 0, allowProperty: true);
+            return name == 'font' ? _Kind.font : _Kind.paragraphFormat;
+          }
           if (receiver == _Kind.document && name == 'sections') {
             if (expression.arguments == null) return _Kind.wordSections;
             final argument = _arguments(expression, 1).single;
@@ -3257,6 +3767,10 @@ class _Checker {
           if (receiver == _Kind.wordSection && name == 'pagesetup') {
             _arguments(expression, 0, allowProperty: true);
             return _Kind.wordPageSetup;
+          }
+          if (receiver == _Kind.wordPageSetup && name == 'textcolumns') {
+            _arguments(expression, 0, allowProperty: true);
+            return _Kind.wordTextColumns;
           }
           if (receiver == _Kind.wordSection &&
               (name == 'headers' || name == 'footers')) {
@@ -3276,7 +3790,8 @@ class _Checker {
           }
           if ((receiver == _Kind.document ||
                   receiver == _Kind.wordStoryRange ||
-                  receiver == _Kind.range) &&
+                  receiver == _Kind.range ||
+                  receiver == _Kind.wordCellRange) &&
               name == 'paragraphs') {
             if (expression.arguments == null) return _Kind.paragraphs;
             final argument = _arguments(expression, 1).single;
@@ -3296,6 +3811,11 @@ class _Checker {
             _arguments(expression, 0, allowProperty: true);
             return _Kind.paragraphFormat;
           }
+          if ((receiver == _Kind.paragraph || receiver == _Kind.range) &&
+              name == 'shading') {
+            _arguments(expression, 0, allowProperty: true);
+            return _Kind.wordShading;
+          }
           if ((receiver == _Kind.paragraph ||
                   receiver == _Kind.paragraphFormat) &&
               name == 'tabstops') {
@@ -3307,6 +3827,13 @@ class _Checker {
                   name == 'paragraphformat' ||
                   name == 'listformat')) {
             _arguments(expression, 0, allowProperty: true);
+            if (name == 'listformat' &&
+                _knownWordCellSelector(expression.receiver, withTargets, {})) {
+              context.unsupported(
+                expression.token,
+                'ListFormat is unsupported on explicitly selected cell paragraphs.',
+              );
+            }
             return switch (name) {
               'font' => _Kind.font,
               'listformat' => _Kind.wordListFormat,
@@ -3490,6 +4017,76 @@ class _Checker {
   _Kind _stringIntrinsic(_Call expression) {
     final name = expression.token.lower;
     final arguments = expression.arguments;
+    if (name == 'join') {
+      if (arguments.isEmpty || arguments.length > 2) {
+        context.type(
+          expression.token,
+          'Join requires a local String array and an optional string delimiter.',
+        );
+      }
+      // Only this intrinsic and the existing array consumers accept a bare
+      // local array. Whole-array values, assignment and parameters stay out of
+      // the scalar expression model.
+      final source = _arraySymbol(arguments.first);
+      if (source.type != _Declared.string) {
+        context.type(
+          arguments.first.token,
+          'Join requires an array declared As String; implicit element conversions are unsupported.',
+        );
+      }
+      if (arguments.length == 2) {
+        final delimiter = arguments[1];
+        _compatible(_Kind.string, _expression(delimiter), delimiter.token);
+      }
+      return _Kind.string;
+    }
+    if (name == 'strcomp') {
+      if (arguments.length < 2 || arguments.length > 3) {
+        context.type(
+          expression.token,
+          'StrComp requires two strings and an optional binary comparison mode.',
+        );
+      }
+      for (var index = 0; index < arguments.length; index++) {
+        final argument = arguments[index];
+        _compatible(
+          index < 2 ? _Kind.string : _Kind.number,
+          _expression(argument),
+          argument.token,
+        );
+      }
+      // String arguments may be Variants containing Empty or Null. A Null
+      // result must remain a Variant until its consumer handles it explicitly.
+      return _Kind.variant;
+    }
+    if (name == 'space' ||
+        name == r'space$' ||
+        name == 'chrw' ||
+        name == r'chrw$' ||
+        name == 'ascw' ||
+        name == 'string' ||
+        name == r'string$') {
+      final repeat = name == 'string' || name == r'string$';
+      _count(expression.token, arguments, repeat ? 2 : 1);
+      final first = arguments.first;
+      _compatible(
+        name == 'ascw' ? _Kind.string : _Kind.number,
+        _expression(first),
+        first.token,
+      );
+      if (repeat) {
+        final character = arguments[1];
+        final kind = _expression(character);
+        if (kind == _Kind.number) {
+          context.unsupported(
+            character.token,
+            'String requires a String character argument; numeric code-page character conversion is unsupported. Use ChrW explicitly.',
+          );
+        }
+        _compatible(_Kind.string, kind, character.token);
+      }
+      return name == 'ascw' ? _Kind.number : _Kind.string;
+    }
     if (name == 'instr' || name == 'instrrev' || name == 'replace') {
       final minimum = name == 'replace' ? 3 : 2;
       final maximum = name == 'replace' ? 6 : 4;
@@ -3603,9 +4200,20 @@ class _Checker {
       _compatible(_kindOf(type), value, token);
 
   void _compatible(_Kind expected, _Kind value, _Token token) {
+    if (expected == _Kind.wordStyleValue) {
+      if (value == _Kind.string ||
+          value == _Kind.number ||
+          value == _Kind.variant) {
+        return;
+      }
+      context.type(
+        token,
+        'Word Style requires a String name or a supported WdBuiltinStyle number.',
+      );
+    }
     if (context.isWord &&
         expected == _Kind.range &&
-        value == _Kind.wordStoryRange) {
+        (value == _Kind.wordStoryRange || value == _Kind.wordCellRange)) {
       return;
     }
     if (expected == _Kind.triState) {
@@ -3628,14 +4236,20 @@ class _Checker {
             expected == _Kind.document ||
             expected == _Kind.wordSection ||
             expected == _Kind.wordPageSetup ||
+            expected == _Kind.wordTextColumns ||
             expected == _Kind.wordHeadersFooters ||
             expected == _Kind.wordHeaderFooter ||
             expected == _Kind.wordStoryRange ||
+            expected == _Kind.wordTables ||
+            expected == _Kind.wordTable ||
+            expected == _Kind.wordCell ||
+            expected == _Kind.wordCellRange ||
             expected == _Kind.paragraph ||
             expected == _Kind.font ||
             expected == _Kind.paragraphFormat ||
             expected == _Kind.wordTabStops ||
             expected == _Kind.wordListFormat ||
+            expected == _Kind.wordShading ||
             _powerPointObjectKinds.contains(expected))) {
       // Scalar Variant values may defer scalar checks until evaluation, but
       // cannot ever carry object bindings, including in unexecuted code.
@@ -3735,6 +4349,27 @@ class _WordApplication {
   const _WordApplication();
 }
 
+class _WordTables {
+  const _WordTables();
+}
+
+class _WordTable {
+  const _WordTable(this.index);
+  final int index;
+}
+
+class _WordCell {
+  const _WordCell(this.table, this.row, this.column);
+  final _WordTable table;
+  final int row;
+  final int column;
+}
+
+class _WordCellRange {
+  const _WordCellRange(this.cell);
+  final _WordCell cell;
+}
+
 class _WordSections {
   const _WordSections();
 }
@@ -3747,6 +4382,11 @@ class _WordSection {
 class _WordPageSetup {
   const _WordPageSetup(this.section);
   final _WordSection section;
+}
+
+class _WordTextColumns {
+  const _WordTextColumns(this.page);
+  final _WordPageSetup page;
 }
 
 class _WordHeadersFooters {
@@ -3775,14 +4415,18 @@ class _WordParagraphs {
 }
 
 class _WordParagraph {
-  const _WordParagraph(this.index, {this.headerFooter});
+  const _WordParagraph(this.index, {this.headerFooter, this.cell});
   final int index;
   final _WordHeaderFooter? headerFooter;
+  final _WordCell? cell;
 
   bool sameTarget(_WordParagraph other) =>
       index == other.index &&
       headerFooter?.section.index == other.headerFooter?.section.index &&
-      headerFooter?.story == other.headerFooter?.story;
+      headerFooter?.story == other.headerFooter?.story &&
+      cell?.table.index == other.cell?.table.index &&
+      cell?.row == other.cell?.row &&
+      cell?.column == other.cell?.column;
 }
 
 class _WordRange {
@@ -3807,6 +4451,11 @@ class _WordTabStops {
 
 class _WordListFormat {
   const _WordListFormat(this.range);
+  final _WordRange range;
+}
+
+class _WordShading {
+  const _WordShading(this.range);
   final _WordRange range;
 }
 
@@ -4212,17 +4861,38 @@ class _Evaluator {
               'value': null,
             }, statement.token);
           case _InsertBefore():
-            final range = _wordParagraphRange(
-              _evaluate(statement.target.receiver),
-              statement.target.token,
-            );
-            final value = _evaluate(statement.target.arguments!.single);
-            final text = _wordText(value, statement.target.token);
-            _emitWord(range, 'replaceText', <String, Object?>{
-              'start': 0,
-              'end': 0,
-              'text': text,
-            }, statement.target.token);
+            final receiver = _evaluate(statement.target.receiver);
+            final range = receiver is _WordCellRange
+                ? _WordRange(_WordParagraph(0, cell: receiver.cell))
+                : _wordParagraphRange(receiver, statement.target.token);
+            final argument = statement.target.arguments!.single;
+            final value = argument is _NamedArgument
+                ? argument.value
+                : argument;
+            final text = _wordText(_evaluate(value), statement.target.token);
+            if (range.paragraph.cell case final cell?) {
+              // Prefixing a cell uses its own guarded operation. Generic
+              // replacement offsets and paragraph/cell marks remain outside
+              // the ordinary paragraph-formatting selector contract.
+              if (steps.length >= _maxSteps) {
+                context.limit(
+                  statement.target.token,
+                  'Word writes exceed $_maxSteps emitted operations.',
+                );
+              }
+              _emitNative('docx.tableCellRangeInsertBefore', <String, Object?>{
+                'table': cell.table.index,
+                'row': cell.row,
+                'column': cell.column,
+                'text': text,
+              }, statement.target.token);
+            } else {
+              _emitWord(range, 'replaceText', <String, Object?>{
+                'start': 0,
+                'end': 0,
+                'text': text,
+              }, statement.target.token);
+            }
           case _WordTabOperation():
             _wordTabs(statement.target);
           case _WordListOperation():
@@ -4254,6 +4924,23 @@ class _Evaluator {
             final page = _evaluate(statement.target.receiver) as _WordPageSetup;
             _emitWordSection(page, 'pageOrientation', <String, Object?>{
               'orientation': 'toggle',
+            }, statement.target.token);
+          case _WordTextColumnsOperation():
+            final columns =
+                _evaluate(statement.target.receiver) as _WordTextColumns;
+            final argument = statement.target.arguments!.single;
+            final value = argument is _NamedArgument
+                ? argument.value
+                : argument;
+            final count = _integer(_evaluate(value), value.token);
+            if (count < 1 || count > 45) {
+              context.type(
+                value.token,
+                'SetCount requires an exact integer NumColumns in 1..45.',
+              );
+            }
+            _emitWordSection(columns.page, 'textColumns', <String, Object?>{
+              'count': count,
             }, statement.target.token);
           case _With():
             withValues.add(_evaluate(statement.target));
@@ -4425,6 +5112,8 @@ class _Evaluator {
       case _Literal():
         return expression.value;
       case _Name():
+        final stringConstant = _stringConstants[expression.token.lower];
+        if (stringConstant != null) return stringConstant;
         final constant = context.constants[expression.token.lower];
         if (constant != null) return constant;
         if (context.isPowerPoint) {
@@ -4496,6 +5185,9 @@ class _Evaluator {
         final arguments = <Object>[
           for (final argument in expression.arguments) _evaluate(argument),
         ];
+        if (_numericIntrinsics.contains(expression.token.lower)) {
+          return _numericIntrinsic(expression, arguments.single);
+        }
         if (_stringIntrinsics.contains(expression.token.lower)) {
           return _stringIntrinsic(expression, arguments);
         }
@@ -4533,6 +5225,41 @@ class _Evaluator {
             return const _WordDocument();
           }
           if (receiver is _WordDocument &&
+              expression.token.lower == 'tables' &&
+              expression.arguments == null) {
+            return const _WordTables();
+          }
+          if (receiver is _WordTables ||
+              receiver is _WordDocument && expression.token.lower == 'tables') {
+            return _WordTable(
+              _wordTableIndex(arguments.single, expression.token),
+            );
+          }
+          if (receiver is _WordTable) {
+            return _WordCell(
+              receiver,
+              _wordTableIndex(arguments[0], expression.token),
+              _wordTableIndex(arguments[1], expression.token),
+            );
+          }
+          if (receiver is _WordCell) return _WordCellRange(receiver);
+          if (receiver is _WordCellRange) {
+            // A cell Range retains its own identity. Formatting objects and
+            // an explicit Paragraphs(1) selector project its guarded ordinary
+            // paragraph without treating cell or paragraph marks as text.
+            final range = _WordRange(_WordParagraph(0, cell: receiver.cell));
+            if (expression.token.lower == 'font') return _WordFont(range);
+            if (expression.token.lower == 'paragraphformat') {
+              return _WordParagraphFormat(range);
+            }
+            if (expression.token.lower != 'paragraphs') {
+              context.unsupported(
+                expression.token,
+                'A cell Range supports its explicit text controls, Font, ParagraphFormat and Paragraphs(1); reads and arbitrary subranges are unsupported.',
+              );
+            }
+          }
+          if (receiver is _WordDocument &&
               expression.token.lower == 'sections' &&
               expression.arguments == null) {
             return const _WordSections();
@@ -4565,6 +5292,9 @@ class _Evaluator {
                     expression.token,
                   );
           }
+          if (receiver is _WordPageSetup) {
+            return _WordTextColumns(receiver);
+          }
           if (receiver is _WordHeadersFooters) {
             return _wordHeaderFooter(
               receiver,
@@ -4585,6 +5315,10 @@ class _Evaluator {
               collection = _WordParagraphs(headerFooter: receiver.headerFooter);
             } else if (receiver is _WordRange) {
               collection = _WordParagraphs(singleParagraph: receiver.paragraph);
+            } else if (receiver is _WordCellRange) {
+              collection = _WordParagraphs(
+                singleParagraph: _WordParagraph(0, cell: receiver.cell),
+              );
             } else {
               collection = const _WordParagraphs();
             }
@@ -4600,7 +5334,7 @@ class _Evaluator {
               if (index != 1) {
                 context.unsupported(
                   expression.token,
-                  'Paragraphs on a selected paragraph Range supports only Item(1).',
+                  'Paragraphs on a selected paragraph or cell Range supports only Item(1).',
                 );
               }
               return paragraph;
@@ -4615,6 +5349,7 @@ class _Evaluator {
             return switch (expression.token.lower) {
               'format' => _WordParagraphFormat(range),
               'tabstops' => _WordTabStops(range),
+              'shading' => _WordShading(range),
               _ => range,
             };
           }
@@ -4623,15 +5358,17 @@ class _Evaluator {
           }
           final range = _wordParagraphRange(receiver, expression.token);
           if (expression.token.lower == 'listformat' &&
-              range.paragraph.headerFooter != null) {
+              (range.paragraph.headerFooter != null ||
+                  range.paragraph.cell != null)) {
             context.unsupported(
               expression.token,
-              'ListFormat currently supports body paragraphs only.',
+              'ListFormat currently supports body paragraphs outside explicit cell and header/footer selectors only.',
             );
           }
           return switch (expression.token.lower) {
             'font' => _WordFont(range),
             'listformat' => _WordListFormat(range),
+            'shading' => _WordShading(range),
             _ => _WordParagraphFormat(range),
           };
         }
@@ -4741,8 +5478,25 @@ class _Evaluator {
     return _WordHeaderFooter(collection.section, stories[index - 1]);
   }
 
+  int _wordTableIndex(Object value, _Token token) {
+    final index = _integer(value, token);
+    if (index < 1 || index > 2147483647) {
+      context.type(
+        token,
+        'Word table, row and column selectors require a positive one-based Long index.',
+      );
+    }
+    return index - 1;
+  }
+
   _WordRange _wordParagraphRange(Object value, _Token token) {
     if (value is _WordRange) return value;
+    if (value is _WordCellRange) {
+      context.unsupported(
+        token,
+        'A cell Range requires its explicit supported operations; select Paragraphs(1) for paragraph formatting.',
+      );
+    }
     context.unsupported(
       token,
       'A header/footer Range only exposes Paragraphs; select an existing paragraph before writing.',
@@ -5037,7 +5791,9 @@ class _Evaluator {
         return value;
       case _Declared.range:
         if (context.isWord
-            ? value is! _WordRange && value is! _WordStoryRange
+            ? value is! _WordRange &&
+                  value is! _WordStoryRange &&
+                  value is! _WordCellRange
             : value is! _Range) {
           context.type(token, 'Set requires a Range.');
         }
@@ -5045,6 +5801,21 @@ class _Evaluator {
       case _Declared.document:
         if (value is! _WordDocument) {
           context.type(token, 'Set requires a Document.');
+        }
+        return value;
+      case _Declared.wordTables:
+        if (value is! _WordTables) {
+          context.type(token, 'Set requires Word Tables.');
+        }
+        return value;
+      case _Declared.wordTable:
+        if (value is! _WordTable) {
+          context.type(token, 'Set requires a Word Table.');
+        }
+        return value;
+      case _Declared.wordCell:
+        if (value is! _WordCell) {
+          context.type(token, 'Set requires a Word Cell.');
         }
         return value;
       case _Declared.wordSection:
@@ -5055,6 +5826,11 @@ class _Evaluator {
       case _Declared.wordPageSetup:
         if (value is! _WordPageSetup) {
           context.type(token, 'Set requires a Word PageSetup.');
+        }
+        return value;
+      case _Declared.wordTextColumns:
+        if (value is! _WordTextColumns) {
+          context.type(token, 'Set requires Word TextColumns.');
         }
         return value;
       case _Declared.wordHeadersFooters:
@@ -5090,6 +5866,11 @@ class _Evaluator {
       case _Declared.wordListFormat:
         if (value is! _WordListFormat) {
           context.type(token, 'Set requires Word ListFormat.');
+        }
+        return value;
+      case _Declared.wordShading:
+        if (value is! _WordShading) {
+          context.type(token, 'Set requires Word Shading.');
         }
         return value;
       case _Declared.presentation:
@@ -5140,6 +5921,32 @@ class _Evaluator {
     'vba_invalid_use_of_null',
     'Null cannot be converted to a typed scalar or published as a cell value; handle it explicitly with IsNull.',
   );
+
+  Object _numericIntrinsic(_Call expression, Object value) {
+    final name = expression.token.lower;
+    final token = expression.arguments.single.token;
+    if (value == _VariantState.nullValue) {
+      if (name == 'sgn') _invalidNull(token);
+      return _VariantState.nullValue;
+    }
+    // Empty has the documented numeric zero value. Other scalar conversions
+    // remain explicit, exactly as for arithmetic and the existing intrinsics.
+    final number = value == _VariantState.empty ? 0 : _number(value, token);
+    final result = switch (name) {
+      'abs' => number.abs(),
+      'int' => number.floor(),
+      'fix' => number.truncate(),
+      _ =>
+        number < 0
+            ? -1
+            : number > 0
+            ? 1
+            : 0,
+    };
+    // Preserve the shared VM/JavaScript envelope, and normalize negative zero
+    // before publishing a plan or composing with another source expression.
+    return result == 0 ? 0 : _finite(result, token);
+  }
 
   Object _variantIntrinsic(_Call expression, Object value) {
     final name = expression.token.lower;
@@ -5347,6 +6154,69 @@ class _Evaluator {
 
   Object _stringIntrinsic(_Call expression, List<Object> arguments) {
     final name = expression.token.lower;
+    if (name == 'join') return _stringJoin(expression, arguments);
+    if (name == 'strcomp') return _stringCompare(expression, arguments);
+    if (name == 'space' ||
+        name == r'space$' ||
+        name == 'string' ||
+        name == r'string$') {
+      final count = _stringIndex(
+        arguments.first,
+        expression.arguments.first.token,
+      );
+      var unit = 32;
+      if (name == 'string' || name == r'string$') {
+        final value = arguments[1];
+        final token = expression.arguments[1].token;
+        if (value is num) {
+          context.unsupported(
+            token,
+            'String requires a String character argument; numeric code-page character conversion is unsupported. Use ChrW explicitly.',
+          );
+        }
+        final character = _string(value, token);
+        if (character.isEmpty) {
+          context.type(token, 'String requires a nonempty character string.');
+        }
+        // VBA's character unit is a 16-bit code unit, not a grapheme or a
+        // Unicode scalar. Isolated surrogates can be examined/recombined in
+        // source; the existing native-publication boundary remains strict.
+        unit = character.codeUnitAt(0);
+      }
+      if (count > _maxString) {
+        context.limit(
+          expression.token,
+          'Constructed strings exceed $_maxString UTF-16 code units.',
+        );
+      }
+      // Validate every argument, even for zero length, and meter the entire
+      // result before allocation. Repeated calls share the normal work budget.
+      _charge(count, expression.token);
+      return count == 0 ? '' : String.fromCharCode(unit) * count;
+    }
+    if (name == 'chrw' || name == r'chrw$') {
+      final token = expression.arguments.single.token;
+      final code = _integer(arguments.single, token);
+      // Quds deliberately accepts the full signed 16-bit range as well as
+      // unsigned units. MS-VBAL 6.1.2.11.1.6 prints -32767; accepting -32768
+      // additionally preserves ChrW(AscW(U+8000)) and its 16-bit bit pattern.
+      // This is a documented dialect choice, not an observed Word-host result.
+      if (code < -32768 || code > 65535) {
+        context.type(token, 'ChrW requires an integer from -32768 to 65535.');
+      }
+      _charge(1, expression.token);
+      return String.fromCharCode(code < 0 ? code + 65536 : code);
+    }
+    if (name == 'ascw') {
+      final token = expression.arguments.single.token;
+      final text = _string(arguments.single, token);
+      if (text.isEmpty) {
+        context.type(token, 'AscW requires a nonempty string.');
+      }
+      _charge(1, expression.token);
+      final unit = text.codeUnitAt(0);
+      return unit > 32767 ? unit - 65536 : unit;
+    }
     if (name == 'instr' || name == 'instrrev') {
       return _stringSearch(expression, arguments);
     }
@@ -5401,6 +6271,81 @@ class _Evaluator {
     if (count == 0) return '';
     final offset = name == r'right$' ? text.length - count : start;
     return text.substring(offset, offset + count);
+  }
+
+  String _stringJoin(_Call expression, List<Object> arguments) {
+    // Arguments have already been evaluated exactly once in source order.
+    // Binding restricts the first argument to a declared local String array;
+    // its physical element order is independent of Option Base/lower bound.
+    final array = arguments.first as _Array;
+    _allocatedBounds(array, expression.arguments.first.token);
+    var delimiter = ' ';
+    if (arguments.length == 2) {
+      final value = arguments[1];
+      final token = expression.arguments[1].token;
+      if (value == _VariantState.nullValue) _invalidNull(token);
+      delimiter = value == _VariantState.empty ? '' : _string(value, token);
+    }
+    var length = 0;
+    for (var index = 0; index < array.elements.length; index++) {
+      _tick(expression.token);
+      final text = _string(
+        array.elements[index],
+        expression.arguments.first.token,
+      );
+      final added = text.length + (index == 0 ? 0 : delimiter.length);
+      if (added > _maxString - length) {
+        context.limit(
+          expression.token,
+          'Joined strings exceed $_maxString UTF-16 code units.',
+        );
+      }
+      length += added;
+    }
+    // Charge all copied text and delimiters before allocating the result,
+    // including single-element and empty-string arrays. Array visits above
+    // are metered even when joining creates an empty result.
+    _charge(length, expression.token);
+    final result = StringBuffer();
+    for (var index = 0; index < array.elements.length; index++) {
+      if (index != 0) result.write(delimiter);
+      result.write(array.elements[index] as String);
+    }
+    return result.toString();
+  }
+
+  Object _stringCompare(_Call expression, List<Object> arguments) {
+    // Every argument expression has already run once in source order. Even
+    // Null text must not bypass a supplied invalid comparison mode.
+    if (arguments.length == 3) {
+      final mode = arguments[2];
+      final token = expression.arguments[2].token;
+      if (mode == _VariantState.nullValue) _invalidNull(token);
+      _stringBinaryCompare(mode, token);
+    }
+    String? text(int index) {
+      final value = arguments[index];
+      if (value == _VariantState.empty) return '';
+      if (value == _VariantState.nullValue) return null;
+      return _string(value, expression.arguments[index].token);
+    }
+
+    // Validate both operands before propagating Null: String/Empty/Null are
+    // accepted, but numeric and Boolean-to-string coercion remains explicit.
+    final left = text(0);
+    final right = text(1);
+    if (left == null || right == null) return _VariantState.nullValue;
+    final length = left.length < right.length ? left.length : right.length;
+    for (var index = 0; index < length; index++) {
+      // Inspect UTF-16 units on both runtimes, including isolated surrogates
+      // in source values. Charge both reads before performing the comparison.
+      _charge(2, expression.token);
+      final a = left.codeUnitAt(index);
+      final b = right.codeUnitAt(index);
+      if (a != b) return a < b ? -1 : 1;
+    }
+    if (left.length == right.length) return 0;
+    return left.length < right.length ? -1 : 1;
   }
 
   int _stringSearch(_Call expression, List<Object> arguments) {
@@ -5513,7 +6458,7 @@ class _Evaluator {
     if (_integer(value, token) != 0) {
       context.unsupported(
         token,
-        'String search and replacement require vbBinaryCompare (0); locale, database and Option Compare modes are unsupported.',
+        'String operations require vbBinaryCompare (0); locale, database and Option Compare modes are unsupported.',
       );
     }
   }
@@ -6163,6 +7108,108 @@ class _Evaluator {
     Object value,
     _Token token,
   ) {
+    if (property == 'text') {
+      if (receiver is! _WordCellRange) {
+        context.unsupported(
+          token,
+          'Text assignment requires an explicit table Cell.Range; paragraph and whole-story replacement are unsupported.',
+        );
+      }
+      final text = _wordText(value, token);
+      if (steps.length >= _maxSteps) {
+        context.limit(
+          token,
+          'Word writes exceed $_maxSteps emitted operations.',
+        );
+      }
+      _emitNative('docx.tableCellRangeText', <String, Object?>{
+        'table': receiver.cell.table.index,
+        'row': receiver.cell.row,
+        'column': receiver.cell.column,
+        'text': text,
+      }, token);
+      return;
+    }
+    if (receiver is _WordCellRange) {
+      if (!const {
+        'highlightcolorindex',
+        'noproofing',
+        'languageid',
+        'languageidother',
+      }.contains(property)) {
+        context.unsupported(
+          token,
+          'A cell Range supports Text, Font, ParagraphFormat, highlighting and proofing controls only; other direct properties are unsupported.',
+        );
+      }
+      // Only these visible-text writes project the cell's guarded paragraph.
+      // Keep the cell Range identity for all other members so an alias cannot
+      // acquire direct insertion, style or shading. Paragraph styles/shading
+      // require an explicit Paragraphs(1) selector.
+      receiver = _WordRange(_WordParagraph(0, cell: receiver.cell));
+    }
+    if (receiver is _WordShading) {
+      final number = _integer(value, token);
+      final String color;
+      if (property == 'backgroundpatterncolorindex') {
+        if (number < 0 || number >= _wordHighlights.length) {
+          context.unsupported(
+            token,
+            'BackgroundPatternColorIndex requires wdAuto or a fixed WdColorIndex color from 1 through 16.',
+          );
+        }
+        color = _wordHighlights[number] ?? 'auto';
+      } else {
+        color = number == -16777216 ? 'auto' : _color(value, token);
+      }
+      _emitWord(receiver.range, 'paragraphShading', <String, Object?>{
+        'color': color,
+      }, token);
+      return;
+    }
+    if (property == 'style' &&
+        (receiver is _WordParagraph || receiver is _WordRange)) {
+      final range = receiver is _WordParagraph
+          ? _WordRange(receiver)
+          : receiver as _WordRange;
+      if (value is String) {
+        _emitWord(range, 'paragraphStyle', <String, Object?>{
+          'name': _wordText(value, token, styleName: true),
+        }, token);
+      } else {
+        final builtin = _integer(value, token);
+        if (!_wordStyleConstants.values.contains(builtin)) {
+          context.unsupported(
+            token,
+            'Word Style supports only Normal, Heading1 through Heading9, Caption, Title and Subtitle built-in constants; numeric collection indices are unsupported.',
+          );
+        }
+        _emitWord(range, 'paragraphStyle', <String, Object?>{
+          'builtin': builtin,
+        }, token);
+      }
+      return;
+    }
+    if (receiver is _WordTextColumns) {
+      if (property == 'linebetween') {
+        _emitWordSection(receiver.page, 'textColumns', <String, Object?>{
+          'lineBetween': _boolean(value, token),
+        }, token);
+      } else {
+        final points = _number(value, token);
+        final twips = points * 20;
+        if (points < 0 || twips > 2147483647 || twips.round() / 20 != points) {
+          context.type(
+            token,
+            'TextColumns.Spacing requires nonnegative exact twentieth-points within signed Long twips.',
+          );
+        }
+        _emitWordSection(receiver.page, 'textColumns', <String, Object?>{
+          'spacing': points,
+        }, token);
+      }
+      return;
+    }
     if (receiver is _WordPageSetup) {
       if (property == 'orientation') {
         final orientation = _integer(value, token);
@@ -6232,6 +7279,19 @@ class _Evaluator {
       );
     }
     if (receiver is _WordRange) {
+      if (property == 'languageid' || property == 'languageidother') {
+        final language = _wordNormalLanguages[_integer(value, token)];
+        if (language == null) {
+          context.unsupported(
+            token,
+            'Word language writes require a supported normal-slot WdLanguageID; complex-script/East Asian routing, wdLanguageNone, wdNoProofing and mixed-state values are unsupported. Use NoProofing for proofing exclusion.',
+          );
+        }
+        _emitWord(receiver, 'runFormat', <String, Object?>{
+          'language': language,
+        }, token);
+        return;
+      }
       if (property == 'noproofing') {
         _emitWord(receiver, 'runFormat', <String, Object?>{
           'noProof': _boolean(value, token),
@@ -6257,11 +7317,13 @@ class _Evaluator {
           property == 'italic' ||
           property == 'strikethrough' ||
           property == 'smallcaps' ||
+          property == 'allcaps' ||
           property == 'superscript' ||
           property == 'subscript') {
         field = switch (property) {
           'strikethrough' => 'strike',
           'smallcaps' => 'smallCaps',
+          'allcaps' => 'allCaps',
           _ => property,
         };
         normalized = _boolean(value, token);
@@ -6272,9 +7334,21 @@ class _Evaluator {
           context.unsupported(token, 'Unsupported WdUnderline value.');
         }
         normalized = underline;
-      } else if (property == 'name') {
-        field = 'font';
+      } else if (property == 'name' || property == 'namebi') {
+        field = property == 'namebi' ? 'csFont' : 'font';
         normalized = _wordText(value, token, fontName: true);
+      } else if (property == 'position') {
+        field = 'position';
+        // Word exposes Font.Position as Long points. The native model retains
+        // half-point OOXML imports, but source writes must be integral points.
+        final points = _integer(value, token);
+        if (points < -1584 || points > 1584) {
+          context.type(
+            token,
+            'Word Font.Position requires exact integer points in -1584..1584.',
+          );
+        }
+        normalized = points;
       } else if (property == 'kerning') {
         field = 'kerning';
         final points = _number(value, token);
@@ -6301,9 +7375,21 @@ class _Evaluator {
           );
         }
         normalized = size;
+      } else if (property == 'colorindex') {
+        field = 'color';
+        final index = _integer(value, token);
+        if (index < 0 || index >= _wordHighlights.length) {
+          context.unsupported(
+            token,
+            'Font.ColorIndex requires wdAuto or a fixed WdColorIndex color from 1 through 16; wdByAuthor is not valid for fonts.',
+          );
+        }
+        normalized = _wordHighlights[index] ?? 'auto';
       } else {
         field = 'color';
-        normalized = _color(value, token);
+        normalized = _integer(value, token) == -16777216
+            ? 'auto'
+            : _color(value, token);
       }
       _emitWord(receiver.range, 'runFormat', <String, Object?>{
         field: normalized,
@@ -6444,25 +7530,32 @@ class _Evaluator {
     }, token);
   }
 
-  String _wordText(Object value, _Token token, {bool fontName = false}) {
+  String _wordText(
+    Object value,
+    _Token token, {
+    bool fontName = false,
+    bool styleName = false,
+  }) {
     final text = _string(value, token);
     // Bound publication scans/copies before validating or encoding a string.
     _charge(text.length, token);
     _nativeString(text, token);
-    if (fontName && text.isEmpty) {
-      context.type(token, 'Font.Name requires a nonempty String.');
+    final isName = fontName || styleName;
+    final nameKind = styleName ? 'style' : 'font';
+    if (isName && text.isEmpty) {
+      context.type(token, 'Word $nameKind names require a nonempty String.');
     }
     for (var index = 0; index < text.length; index++) {
       final unit = text.codeUnitAt(index);
       if ((unit < 0x20 && unit != 9) ||
           unit == 0xfffe ||
           unit == 0xffff ||
-          (fontName && unit == 9)) {
+          (isName && unit == 9)) {
         context.type(
           token,
-          fontName
-              ? 'Font.Name requires XML-safe text without tabs or line breaks.'
-              : 'InsertBefore requires XML-safe single-paragraph text; tabs are allowed but line breaks are unsupported.',
+          isName
+              ? 'Word $nameKind names require XML-safe text without tabs or line breaks.'
+              : 'Word text writes require XML-safe single-paragraph text; tabs are allowed but line breaks are unsupported.',
         );
       }
     }
@@ -6535,6 +7628,22 @@ class _Evaluator {
     Map<String, Object?> fields,
     _Token token,
   ) {
+    if (range.paragraph.cell != null &&
+        !const <String>{
+          'runFormat',
+          'paragraphFormat',
+          'tabStop',
+          'clearTabStops',
+          'lineSpacing',
+          'paragraphSpaceBefore',
+          'paragraphStyle',
+          'paragraphShading',
+        }.contains(operation)) {
+      context.unsupported(
+        token,
+        'An explicitly selected cell paragraph requires its dedicated insertion operation; generic text replacement and list operations are unsupported.',
+      );
+    }
     if (steps.length >= _maxSteps) {
       context.limit(token, 'Word writes exceed $_maxSteps emitted operations.');
     }
@@ -6543,6 +7652,12 @@ class _Evaluator {
       if (range.paragraph.headerFooter case final story?) ...{
         'story': story.story,
         'section': story.section.index,
+      },
+      if (range.paragraph.cell case final cell?) ...{
+        'story': 'tableCell',
+        'table': cell.table.index,
+        'row': cell.row,
+        'column': cell.column,
       },
       ...fields,
     }, token);

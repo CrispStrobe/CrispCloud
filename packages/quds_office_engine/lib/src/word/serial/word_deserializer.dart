@@ -17,6 +17,7 @@ import '../model/wml_document.dart';
 import '../model/wml_run_edit.dart';
 import '../model/word_bookmarks.dart';
 import '../model/word_content_controls.dart';
+import '../model/word_field_spans.dart';
 import '../model/word_fields.dart';
 import '../model/word_link.dart';
 import '../model/word_notes.dart';
@@ -32,6 +33,7 @@ import 'word_bookmark_io.dart';
 import 'word_comment_io.dart';
 import 'word_content_control_io.dart';
 import 'word_drawing_io.dart';
+import 'word_footnote_separator_io.dart';
 import 'word_markup_compatibility.dart';
 import 'word_opaque_io.dart';
 import 'word_property_io.dart';
@@ -40,6 +42,7 @@ import 'word_serializer.dart';
 import 'word_settings_io.dart';
 import 'word_table_property_io.dart';
 
+part 'word_paragraph_style.dart';
 part 'word_style_cascade.dart';
 
 enum _SdtBreakLayout { none, liftLast, opaque }
@@ -108,6 +111,7 @@ class WordDeserializer {
   bool _noteMarkCaptured = false;
   final Set<WmlTable> _tablesWithOwnBorders = Set<WmlTable>.identity();
   final Set<WmlTable> _tablesWithOwnBorderWidths = Set<WmlTable>.identity();
+  final Set<WmlTable> _tablesWithOwnCellMargins = Set<WmlTable>.identity();
   final Set<WmlRunProps> _notBold = Set<WmlRunProps>.identity();
   final Set<WmlRunProps> _notItalic = Set<WmlRunProps>.identity();
   final Map<WmlTable, _TableLook> _tableLooks =
@@ -125,6 +129,7 @@ class WordDeserializer {
     _moveRanges.clear();
     _tablesWithOwnBorders.clear();
     _tablesWithOwnBorderWidths.clear();
+    _tablesWithOwnCellMargins.clear();
     _tableLooks.clear();
     _notBold.clear();
     _notItalic.clear();
@@ -1137,6 +1142,8 @@ class WordDeserializer {
   ) {
     final List<WmlInline> inlines = <WmlInline>[];
     XmlElement? formattingChange;
+    var hasOrdinaryRunIdentity = false;
+    var hasNonTextContent = false;
     final WmlRun run = WmlRun()..properties.sourcePropertiesXml = '';
     if (reader.isEmptyElement) {
       return inlines;
@@ -1145,6 +1152,13 @@ class WordDeserializer {
     while (reader.next() && reader.depth >= depth) {
       if (reader.eventType != XmlEventType.startElement) {
         continue;
+      }
+      if (reader.depth == depth + 1) {
+        final ordinary =
+            reader.namespaceUri == OfficeNamespaces.w &&
+            const {'rPr', 't', 'delText'}.contains(reader.localName);
+        hasOrdinaryRunIdentity |= ordinary;
+        hasNonTextContent |= !ordinary;
       }
       if (reader.localName == 'rPr') {
         formattingChange = _readRPr(reader, run.properties);
@@ -1363,8 +1377,15 @@ class WordDeserializer {
         }
       }
     }
+    // An authored empty text/property packet still owns its insertion style.
+    // Keep it through save/reopen, including an empty rPr inheriting a style.
+    // Bare runs and structural-only field, note, drawing or comment markers
+    // must not acquire an extra ordinary run beside their existing model node.
+    final emptyOrdinaryRun =
+        hasOrdinaryRunIdentity && !hasNonTextContent && inlines.isEmpty;
     if (run.text.isNotEmpty ||
         run.noteRefId != null ||
+        emptyOrdinaryRun ||
         formattingChange != null && inlines.isEmpty) {
       run.commentIds.addAll(_openCommentIds);
       inlines.add(run);
@@ -1575,8 +1596,10 @@ class WordDeserializer {
         continue;
       }
       if ((reader.localName == 'spacing' ||
+              reader.localName == 'pStyle' ||
               reader.localName == 'bidi' ||
               reader.localName == 'tabs' ||
+              reader.localName == 'shd' ||
               reader.localName == 'suppressAutoHyphens') &&
           (reader.depth != depth + 1 ||
               (reader.namespaceUri != OfficeNamespaces.w &&
@@ -1672,10 +1695,14 @@ class WordDeserializer {
         case 'numPr':
           _readNumPr(reader, props);
         case 'shd':
-          props.shadingFill = reader.getAttribute(
+          final fill = reader.getAttribute(
             'fill',
             namespaceUri: OfficeNamespaces.w,
           );
+          // Automatic background is transparent in the solid-fill model. Its
+          // explicit native packet remains in the sparse source, overriding
+          // inherited shading without painting a literal non-RGB color.
+          props.shadingFill = fill == 'auto' ? null : fill;
         case 'pBdr':
           _readParagraphBorders(reader, props);
         case 'framePr':
@@ -2468,7 +2495,17 @@ class WordDeserializer {
       if (reader.eventType != XmlEventType.startElement) {
         continue;
       }
-      if ((reader.localName == 'kern' || reader.localName == 'noProof') &&
+      if (const {
+            'kern',
+            'position',
+            'noProof',
+            'caps',
+            'smallCaps',
+            'color',
+            'lang',
+            'rFonts',
+            'rStyle',
+          }.contains(reader.localName) &&
           (reader.depth != depth + 1 ||
               (reader.namespaceUri != OfficeNamespaces.w &&
                   !(reader.namespaceUri.isEmpty && reader.prefix == 'w')))) {
@@ -2482,7 +2519,25 @@ class WordDeserializer {
         XmlDocument.readElement(reader);
         continue;
       }
-      props.explicitProperties.add(reader.localName);
+      if (reader.localName == 'rFonts') {
+        for (final group in const <String, Set<String>>{
+          'ascii': {'ascii', 'hAnsi', 'asciiTheme', 'hAnsiTheme'},
+          'cs': {'cs', 'cstheme'},
+        }.entries) {
+          if (group.value.any(
+            (attribute) =>
+                reader.getAttribute(
+                  attribute,
+                  namespaceUri: OfficeNamespaces.w,
+                ) !=
+                null,
+          )) {
+            props.explicitProperties.add('rFonts:${group.key}');
+          }
+        }
+      } else {
+        props.explicitProperties.add(reader.localName);
+      }
       switch (reader.localName) {
         case 'lang':
           props.proofingLanguage = reader.getAttribute(
@@ -2529,6 +2584,10 @@ class WordDeserializer {
           props.smallCaps = _onOff(
             reader.getAttribute('val', namespaceUri: OfficeNamespaces.w),
           );
+        case 'caps':
+          props.allCaps = _onOff(
+            reader.getAttribute('val', namespaceUri: OfficeNamespaces.w),
+          );
         case 'color':
           props.color =
               reader.getAttribute('val', namespaceUri: OfficeNamespaces.w) ??
@@ -2541,6 +2600,20 @@ class WordDeserializer {
           props.kerningHalfPoints = int.tryParse(
             reader.getAttribute('val', namespaceUri: OfficeNamespaces.w) ?? '',
           );
+        case 'position':
+          final raw = reader.getAttribute(
+            'val',
+            namespaceUri: OfficeNamespaces.w,
+          );
+          final value =
+              raw == null || !RegExp(r'^[+-]?[0-9]+$').hasMatch(raw.trim())
+              ? null
+              : int.tryParse(raw.trim());
+          // Keep unsupported measurements opaque rather than inventing a
+          // rounded baseline. Native macro writes validate the retained source.
+          if (value != null && value >= -2147483648 && value <= 2147483647) {
+            props.positionHalfPoints = value;
+          }
         case 'sz':
         case 'szCs':
           final regularSize = reader.localName == 'sz';
@@ -2621,6 +2694,9 @@ class WordDeserializer {
 
   void _readTableProperties(XmlPullReader reader, WmlTable table) {
     final int depth = reader.depth;
+    final nativeContainer =
+        reader.localName == 'tblPr' &&
+        reader.namespaceUri == OfficeNamespaces.w;
     while (reader.next() && reader.depth >= depth) {
       if (reader.eventType != XmlEventType.startElement ||
           reader.depth != depth + 1) {
@@ -2646,6 +2722,16 @@ class WordDeserializer {
         table.properties.alignment = _jc(
           reader.getAttribute('val', namespaceUri: OfficeNamespaces.w),
         );
+      } else if (reader.localName == 'tblCellMar' &&
+          nativeContainer &&
+          reader.namespaceUri == OfficeNamespaces.w) {
+        final firstDeclaration = _tablesWithOwnCellMargins.add(table);
+        final margin = WordTablePropertyIo.uniformCellMargin(
+          XmlDocument.readElement(reader),
+        );
+        // Any direct container blocks a guessed style fallback. Unsupported
+        // or duplicate declarations keep their source XML and native fallback.
+        table.properties.cellMargin = firstDeclaration ? margin ?? 4 : 4;
       }
     }
   }
@@ -2704,12 +2790,24 @@ class WordDeserializer {
     final Map<String, _TableStyle> styles = part == null
         ? <String, _TableStyle>{}
         : _TableStyle.readAll(part.readText());
+    final defaultStyles = styles.entries
+        .where((entry) => entry.value.isDefault)
+        .toList();
+    final defaultMarginStyle = defaultStyles.length == 1
+        ? _TableStyle.resolve(defaultStyles.single.key, styles)
+        : null;
 
     void applyTo(WmlTable table) {
       final String? styleId = table.properties.styleId;
       final _TableStyle? style = styleId == null
           ? null
           : _TableStyle.resolve(styleId, styles);
+      final marginStyle = styleId == null ? defaultMarginStyle : style;
+      if (!_tablesWithOwnCellMargins.contains(table)) {
+        if (marginStyle?.cellMargin case final margin?) {
+          table.properties.cellMargin = margin;
+        }
+      }
       if (!_tablesWithOwnBorders.contains(table)) {
         if (style != null && style.bordersDeclared) {
           table.properties.borders = style.borderColor != null;
@@ -2810,6 +2908,7 @@ class WordDeserializer {
     }
     _tablesWithOwnBorders.clear();
     _tablesWithOwnBorderWidths.clear();
+    _tablesWithOwnCellMargins.clear();
     _tableLooks.clear();
   }
 
@@ -3084,9 +3183,9 @@ class WordDeserializer {
           if (space != null) {
             section.columnSpace = _measurePoints(space);
           }
-          section.columnSep =
-              reader.getAttribute('sep', namespaceUri: OfficeNamespaces.w) ==
-              '1';
+          section.columnSep = const {'1', 'true', 'on'}.contains(
+            reader.getAttribute('sep', namespaceUri: OfficeNamespaces.w),
+          );
         } else if (reader.localName == 'headerReference') {
           final String? rid = _relationshipId(reader);
           final String type =
@@ -3662,6 +3761,7 @@ class WordDeserializer {
       'endnote',
       endnote: true,
     );
+    document.footnoteSeparator = WordFootnoteSeparatorIo.read(document);
   }
 
   bool? _readNotesPart(
@@ -4006,6 +4106,21 @@ class WordDeserializer {
     properties: paragraphProperties,
   );
 
+  /// Assign an existing native paragraph style by its primary [name] or a
+  /// supported Word [builtin] constant. Exactly one selector is required.
+  /// Direct paragraph/run properties and opaque style metadata are preserved.
+  /// The selected paragraph is prepared privately and only published after
+  /// source ownership, style inheritance, and numbering checks succeed.
+  void editParagraphStyle(
+    WmlDocument document,
+    WmlParagraph paragraph, {
+    String? name,
+    int? builtin,
+  }) => _StyleCascade(
+    this,
+    document,
+  ).assignParagraphStyle(paragraph, name: name, builtin: builtin);
+
   /// Recompute effective formatting after editing a source style definition.
   void refreshStyles(WmlDocument document) {
     final OpcPackage? package = document.package;
@@ -4094,6 +4209,7 @@ class WordDeserializer {
     final settings = WordSettingsIo.read(part.readText());
     document
       ..autoHyphenation = settings.autoHyphenation
+      ..sourceNoSpaceRaiseLower = settings.noSpaceRaiseLower
       ..trackRevisions = settings.tracking
       ..restrictEditing = settings.protection
       ..restrictMode = settings.restrictMode
@@ -4384,6 +4500,12 @@ class _TableStyle {
   _TableStyle({this.basedOn});
 
   String? basedOn;
+  bool isDefault = false;
+
+  /// Presence is separate from projection: an unsupported child declaration
+  /// must not inherit a parent's scalar and pretend its margins are uniform.
+  bool cellMarginsDeclared = false;
+  double? cellMargin;
 
   /// The style has its own `w:tblPr/w:tblBorders`.
   bool bordersDeclared = false;
@@ -4412,6 +4534,12 @@ class _TableStyle {
       return style;
     }
     final _TableStyle merged = _TableStyle(basedOn: parentId)
+      ..isDefault = style.isDefault
+      ..cellMarginsDeclared =
+          style.cellMarginsDeclared || parent.cellMarginsDeclared
+      ..cellMargin = style.cellMarginsDeclared
+          ? style.cellMargin
+          : parent.cellMargin
       ..bordersDeclared = style.bordersDeclared || parent.bordersDeclared
       ..borderColor = style.bordersDeclared
           ? style.borderColor
@@ -4429,10 +4557,14 @@ class _TableStyle {
     final XmlPullReader reader = WordMarkupCompatibilityReader(xml);
     String? id;
     String? basedOn;
+    var basedOnDeclared = false;
     var isTable = false;
     _TableStyle? current;
     String? region;
     var inBorders = false;
+    int? stylesDepth;
+    int? styleDepth;
+    int? tablePropertiesDepth;
     while (reader.next()) {
       final String name = reader.localName;
       if (reader.eventType == XmlEventType.endElement) {
@@ -4440,12 +4572,22 @@ class _TableStyle {
           region = null;
         } else if (name == 'tblBorders') {
           inBorders = false;
-        } else if (name == 'style') {
+        } else if (name == 'tblPr' &&
+            tablePropertiesDepth != null &&
+            reader.depth == tablePropertiesDepth - 1) {
+          tablePropertiesDepth = null;
+        } else if (name == 'style' &&
+            styleDepth != null &&
+            reader.depth == styleDepth - 1) {
           if (isTable && id != null && current != null) {
             out[id] = current..basedOn = basedOn;
           }
           id = null;
           current = null;
+          styleDepth = null;
+          tablePropertiesDepth = null;
+        } else if (name == 'styles' && reader.depth == 0) {
+          stylesDepth = null;
         }
         continue;
       }
@@ -4456,19 +4598,62 @@ class _TableStyle {
         'val',
         namespaceUri: OfficeNamespaces.w,
       );
-      if (name == 'style') {
+      if (name == 'styles' &&
+          reader.namespaceUri == OfficeNamespaces.w &&
+          reader.depth == 1) {
+        stylesDepth = reader.depth;
+      } else if (name == 'style') {
+        // Only direct native styles can supply effective table properties.
+        // Foreign and nested lookalikes remain in the preserved styles part.
+        if (reader.namespaceUri != OfficeNamespaces.w ||
+            stylesDepth == null ||
+            reader.depth != stylesDepth + 1) {
+          XmlDocument.readElement(reader);
+          continue;
+        }
         isTable =
             reader.getAttribute('type', namespaceUri: OfficeNamespaces.w) ==
             'table';
         id = reader.getAttribute('styleId', namespaceUri: OfficeNamespaces.w);
         basedOn = null;
+        basedOnDeclared = false;
         region = null;
         inBorders = false;
         current = _TableStyle();
+        styleDepth = reader.depth;
+        current.isDefault = const {'1', 'true', 'on'}.contains(
+          reader.getAttribute('default', namespaceUri: OfficeNamespaces.w),
+        );
+        if (reader.isEmptyElement) {
+          if (isTable && id != null) out[id] = current;
+          id = null;
+          current = null;
+          styleDepth = null;
+        }
+        tablePropertiesDepth = null;
       } else if (current == null || !isTable) {
         continue;
-      } else if (name == 'basedOn') {
-        basedOn = val;
+      } else if (name == 'tblPr' &&
+          reader.namespaceUri == OfficeNamespaces.w &&
+          styleDepth != null &&
+          reader.depth == styleDepth + 1 &&
+          !reader.isEmptyElement) {
+        tablePropertiesDepth = reader.depth;
+      } else if (name == 'tblCellMar' &&
+          reader.namespaceUri == OfficeNamespaces.w &&
+          tablePropertiesDepth != null &&
+          reader.depth == tablePropertiesDepth + 1) {
+        final margin = WordTablePropertyIo.uniformCellMargin(
+          XmlDocument.readElement(reader),
+        );
+        current.cellMargin = current.cellMarginsDeclared ? null : margin;
+        current.cellMarginsDeclared = true;
+      } else if (name == 'basedOn' &&
+          reader.namespaceUri == OfficeNamespaces.w &&
+          styleDepth != null &&
+          reader.depth == styleDepth + 1) {
+        basedOn = basedOnDeclared ? null : val;
+        basedOnDeclared = true;
       } else if (name == 'tblStylePr' && !reader.isEmptyElement) {
         region = reader.getAttribute('type', namespaceUri: OfficeNamespaces.w);
       } else if (name == 'tblBorders' && region == null) {

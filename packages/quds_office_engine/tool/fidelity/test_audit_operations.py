@@ -16,7 +16,7 @@ class OperationInventoryControls(unittest.TestCase):
             tool = root/'tool/fidelity'
             tool.mkdir(parents=True)
             (tool/'example_steps.json').write_text('[]')
-            for filename in ('word', 'word-structure-edit', 'word-structure-remove'):
+            for filename in ('word', 'word-operations', 'word-structure-edit', 'word-structure-remove'):
                 (fixtures/f'{filename}.json').write_text('[]')
             (fixtures/'sheet.json').write_text('[{"op":"cell","value":1}]')
             (fixtures/'slide.json').write_text('[{"op":"shape","value":1}]')

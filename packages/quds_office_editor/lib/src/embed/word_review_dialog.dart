@@ -8,6 +8,7 @@ import 'package:quds_office_engine/quds_office_engine.dart';
 
 import 'office_controller.dart';
 import 'word_review_labels.dart';
+import '../l10n/office_language.dart';
 import '../l10n/office_plural.dart';
 
 /// The two independent workflows in the document review workspace.
@@ -39,6 +40,7 @@ Future<void> showWordReviewDialog(
   WordComparisonReportExporter? onExportReport,
   WordReviewTab initialTab = WordReviewTab.changes,
   bool arabic = false,
+  bool? german,
 }) {
   controller.commitPendingEdits();
   return showDialog<void>(
@@ -50,6 +52,7 @@ Future<void> showWordReviewDialog(
       onExportReport: onExportReport,
       initialTab: initialTab,
       arabic: arabic,
+      german: german,
     ),
   );
 }
@@ -65,6 +68,7 @@ class WordReviewDialog extends StatefulWidget {
     this.onExportReport,
     this.initialTab = WordReviewTab.changes,
     this.arabic = false,
+    this.german,
   });
 
   final WordEditorController controller;
@@ -73,6 +77,10 @@ class WordReviewDialog extends StatefulWidget {
   final WordComparisonReportExporter? onExportReport;
   final WordReviewTab initialTab;
   final bool arabic;
+
+  /// German labels; when null, German follows [OfficeStrings.german] in the
+  /// controller's surface configuration. [arabic] takes precedence.
+  final bool? german;
 
   @override
   State<WordReviewDialog> createState() => _WordReviewDialogState();
@@ -114,7 +122,14 @@ class _WordReviewDialogState extends State<WordReviewDialog> {
   int? _comparedRevision;
 
   WordEditorController get _c => widget.controller;
-  String _s(String english, String arabic) => widget.arabic ? arabic : english;
+  OfficeUiLanguage get _language => OfficeUiLanguage.from(
+    arabic: widget.arabic,
+    german: widget.german ?? OfficeUiLanguage.of(_c.config).isGerman,
+  );
+  bool get _german => _language.isGerman;
+  String _s(String english, String arabic) => _language.label(english, arabic);
+  String _t(String english, String german, String arabic) =>
+      _language.phrase(english, german, arabic);
 
   @override
   void initState() {
@@ -205,8 +220,9 @@ class _WordReviewDialogState extends State<WordReviewDialog> {
       _c.revisionAuthor = _author.text;
       _author.text = _c.revisionAuthor;
       setState(
-        () => _notice = _s(
+        () => _notice = _t(
           'New tracked changes will use ${_c.revisionAuthor}.',
+          'Neue nachverfolgte Änderungen verwenden ${_c.revisionAuthor}.',
           'ستستخدم التغييرات الجديدة اسم ${_c.revisionAuthor}.',
         ),
       );
@@ -634,7 +650,9 @@ class _WordReviewDialogState extends State<WordReviewDialog> {
                 ])
                   DropdownMenuItem(
                     value: kind,
-                    child: Text(kind.reviewLabel(arabic: widget.arabic)),
+                    child: Text(
+                      kind.reviewLabel(arabic: widget.arabic, german: _german),
+                    ),
                   ),
               ],
               onChanged: (value) => setState(() {
@@ -650,8 +668,9 @@ class _WordReviewDialogState extends State<WordReviewDialog> {
           crossAxisAlignment: WrapCrossAlignment.center,
           children: <Widget>[
             Text(
-              _s(
+              _t(
                 '${visible.length} of ${pending.length} pending',
+                '${visible.length} von ${pending.length} offen',
                 '${visible.length} من ${pending.length} قيد المراجعة',
               ),
             ),
@@ -677,8 +696,9 @@ class _WordReviewDialogState extends State<WordReviewDialog> {
                   ? () => _act(() => _c.acceptRevisions(visible))
                   : null,
               child: Text(
-                _s(
+                _t(
                   'Accept ${visible.length} shown',
+                  '${visible.length} angezeigte übernehmen',
                   'قبول ${visible.length} المعروضة',
                 ),
               ),
@@ -689,8 +709,9 @@ class _WordReviewDialogState extends State<WordReviewDialog> {
                   ? () => _act(() => _c.rejectRevisions(visible))
                   : null,
               child: Text(
-                _s(
+                _t(
                   'Reject ${visible.length} shown',
+                  '${visible.length} angezeigte ablehnen',
                   'رفض ${visible.length} المعروضة',
                 ),
               ),
@@ -736,7 +757,7 @@ class _WordReviewDialogState extends State<WordReviewDialog> {
                                 : _deleteColor(context),
                           ),
                           title: Text(
-                            '${revision.kind.reviewLabel(arabic: widget.arabic)} · ${revision.author}',
+                            '${revision.kind.reviewLabel(arabic: widget.arabic, german: _german)} · ${revision.author}',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -810,9 +831,10 @@ class _WordReviewDialogState extends State<WordReviewDialog> {
           ),
           const SizedBox(height: 4),
           Text(
-            _s(
+            _t(
               'Change ${revision.id} · ${revision.kind.name}',
-              'التغيير ${revision.id} · ${revision.kind.reviewLabel(arabic: widget.arabic)}',
+              'Änderung ${revision.id} · ${revision.kind.reviewLabel(german: true)}',
+              'التغيير ${revision.id} · ${revision.kind.reviewLabel(arabic: widget.arabic, german: _german)}',
             ),
           ),
           const SizedBox(height: 8),
@@ -1213,8 +1235,9 @@ class _WordReviewDialogState extends State<WordReviewDialog> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
         Text(
-          _s(
+          _t(
             '${officeChanges(result.changeCount)} · ${officeCount(result.insertedCount, 'insertion')} · ${officeCount(result.deletedCount, 'deletion')} · ${officeCount(result.modifiedCount, 'edit')} · ${result.formattingCount} formatting · ${result.structureCount} structure',
+            '${officeChanges(result.changeCount, german: true)} · ${result.insertedCount} eingefügt · ${result.deletedCount} gelöscht · ${result.modifiedCount} bearbeitet · ${result.formattingCount} Formatierung · ${result.structureCount} Struktur',
             '${officeChanges(result.changeCount, arabic: true)} · ${result.insertedCount} إدراج · ${result.deletedCount} حذف · ${result.modifiedCount} تعديل · ${result.formattingCount} تنسيق · ${result.structureCount} بنية',
           ),
           key: const ValueKey('compare-summary'),
@@ -1226,8 +1249,9 @@ class _WordReviewDialogState extends State<WordReviewDialog> {
             tilePadding: EdgeInsets.zero,
             dense: true,
             title: Text(
-              _s(
+              _t(
                 'Comparison scope and notices (${result.warnings.length})',
+                'Vergleichsumfang und Hinweise (${result.warnings.length})',
                 'نطاق المقارنة والملاحظات (${result.warnings.length})',
               ),
             ),
@@ -1333,7 +1357,13 @@ class _WordReviewDialogState extends State<WordReviewDialog> {
                   : () => _stepComparison(entries, selected, 1),
               icon: const Icon(Icons.arrow_downward, size: 18),
             ),
-            Text(_s('${entries.length} shown', '${entries.length} معروضة')),
+            Text(
+              _t(
+                '${entries.length} shown',
+                '${entries.length} angezeigt',
+                '${entries.length} معروضة',
+              ),
+            ),
             if (_focusDifference && selected != null)
               TextButton(
                 key: const ValueKey('compare-show-all'),

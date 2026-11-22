@@ -1,0 +1,1940 @@
+{
+  "schemaVersion": 1,
+  "suite": "vba-word-cell-prefix",
+  "dialect": "vba-word",
+  "cases": [
+    {
+      "id": "direct-positional-first-cell",
+      "feature": "Cell prefix",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.InsertBefore \"First: \"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertBefore",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "First: "
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "Microsoft specifies InsertBefore with required String Text and a Range that expands to include the inserted prefix. Native steps are independently authored for Quds' existing ordinary-paragraph selector contract; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "application-item-named-text",
+      "feature": "Cell prefix",
+      "source": "Option Explicit\nSub Main()\n  Application.ActiveDocument.Tables.Item(3).Cell(2, 4).Range.InsertBefore Text:=\"Third: \"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertBefore",
+            "arguments": {
+              "table": 2,
+              "row": 1,
+              "column": 3,
+              "text": "Third: "
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "Microsoft specifies InsertBefore with required String Text and a Range that expands to include the inserted prefix. Native steps are independently authored for Quds' existing ordinary-paragraph selector contract; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "thisdocument-case-insensitive-text",
+      "feature": "Cell prefix",
+      "source": "Option Explicit\nSub Main()\n  ThisDocument.Tables(2).Cell(3, 4).Range.InsertBefore tExT:=\"Mixed case: \"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertBefore",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "Mixed case: "
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "Microsoft specifies InsertBefore with required String Text and a Range that expands to include the inserted prefix. Native steps are independently authored for Quds' existing ordinary-paragraph selector contract; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "projected-paragraph-named-text",
+      "feature": "Projected cell paragraph",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs(1).Range.InsertBefore Text:=\"Projected: \"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertBefore",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "Projected: "
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "Microsoft specifies InsertBefore with required String Text and a Range that expands to include the inserted prefix. Native steps are independently authored for Quds' existing ordinary-paragraph selector contract; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "projected-item-call",
+      "feature": "Projected cell paragraph",
+      "source": "Option Explicit\nSub Main()\n  Call ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs.Item(1).Range.InsertBefore(Text:=\"Call: \")\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertBefore",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "Call: "
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "Microsoft specifies InsertBefore with required String Text and a Range that expands to include the inserted prefix. Native steps are independently authored for Quds' existing ordinary-paragraph selector contract; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "repeated-single-paragraph-projection",
+      "feature": "Projected cell paragraph",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs(1).Range.Paragraphs.Item(1).Range.InsertBefore \"Nested: \"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertBefore",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "Nested: "
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "Microsoft specifies InsertBefore with required String Text and a Range that expands to include the inserted prefix. Native steps are independently authored for Quds' existing ordinary-paragraph selector contract; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "cell-and-range-aliases",
+      "feature": "Object identity",
+      "source": "Option Explicit\nSub Main()\n  Dim selected As Cell, retained As Range\n  Set selected = ActiveDocument.Tables(2).Cell(3, 4)\n  Set retained = selected.Range\n  retained.InsertBefore Text:=\"Aliased: \"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertBefore",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "Aliased: "
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "Microsoft specifies InsertBefore with required String Text and a Range that expands to include the inserted prefix. Native steps are independently authored for Quds' existing ordinary-paragraph selector contract; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "paragraph-and-range-aliases",
+      "feature": "Object identity",
+      "source": "Option Explicit\nSub Main()\n  Dim selectedParagraph As Paragraph, retained As Range\n  Set selectedParagraph = ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs(1)\n  Set retained = selectedParagraph.Range\n  retained.InsertBefore \"Paragraph alias: \"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertBefore",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "Paragraph alias: "
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "Microsoft specifies InsertBefore with required String Text and a Range that expands to include the inserted prefix. Native steps are independently authored for Quds' existing ordinary-paragraph selector contract; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "nested-with-retains-cell",
+      "feature": "Object identity",
+      "source": "Option Explicit\nSub Main()\n  With ActiveDocument.Tables(2).Cell(3, 4).Range\n    With .Paragraphs.Item(1)\n      With .Range\n        .InsertBefore Text:=\"Nested With: \"\n      End With\n    End With\n  End With\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertBefore",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "Nested With: "
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "Microsoft specifies InsertBefore with required String Text and a Range that expands to include the inserted prefix. Native steps are independently authored for Quds' existing ordinary-paragraph selector contract; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "named-byval-helper-cell-and-body",
+      "feature": "Object identity",
+      "source": "Option Explicit\nSub Prefix(ByVal target As Range, ByVal value As String)\n  target.InsertBefore Text:=value\nEnd Sub\nSub Main()\n  Prefix value:=\"Cell: \", target:=ActiveDocument.Tables(2).Cell(3, 4).Range\n  Prefix target:=ActiveDocument.Paragraphs(2).Range, value:=\"Body: \"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertBefore",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "Cell: "
+            }
+          },
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 1,
+              "start": 0,
+              "end": 0,
+              "text": "Body: "
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "Microsoft specifies InsertBefore with required String Text and a Range that expands to include the inserted prefix. Native steps are independently authored for Quds' existing ordinary-paragraph selector contract; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "byval-rebinding-preserves-caller",
+      "feature": "Object identity",
+      "source": "Option Explicit\nSub Prefix(ByVal target As Range)\n  target.InsertBefore \"Incoming: \"\n  Set target = ActiveDocument.Tables(1).Cell(1, 2).Range\n  target.InsertBefore Text:=\"Rebound: \"\nEnd Sub\nSub Main()\n  Dim retained As Range\n  Set retained = ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs(1).Range\n  Prefix target:=retained\n  retained.InsertBefore Text:=\"Caller: \"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertBefore",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "Incoming: "
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeInsertBefore",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 1,
+              "text": "Rebound: "
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeInsertBefore",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "Caller: "
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "Microsoft specifies InsertBefore with required String Text and a Range that expands to include the inserted prefix. Native steps are independently authored for Quds' existing ordinary-paragraph selector contract; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "mixed-range-origins-use-actual-selector",
+      "feature": "Object identity",
+      "source": "Option Explicit\nSub Main()\n  Dim target As Range\n  Set target = ActiveDocument.Tables(2).Cell(3, 4).Range\n  target.InsertBefore \"Cell: \"\n  Set target = ActiveDocument.Paragraphs(2).Range\n  target.InsertBefore Text:=\"Body: \"\n  Set target = ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs(1).Range\n  target.InsertBefore \"Back: \"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertBefore",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "Cell: "
+            }
+          },
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 1,
+              "start": 0,
+              "end": 0,
+              "text": "Body: "
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeInsertBefore",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "Back: "
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "Microsoft specifies InsertBefore with required String Text and a Range that expands to include the inserted prefix. Native steps are independently authored for Quds' existing ordinary-paragraph selector contract; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "cyclic-local-alias-origins",
+      "feature": "Object identity",
+      "source": "Option Explicit\nSub Main()\n  Dim original As Range, retained As Range\n  Set original = ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs(1).Range\n  Set retained = original\n  Set original = retained\n  original.InsertBefore \"One: \"\n  retained.InsertBefore Text:=\"Two: \"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertBefore",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "One: "
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeInsertBefore",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "Two: "
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "Microsoft specifies InsertBefore with required String Text and a Range that expands to include the inserted prefix. Native steps are independently authored for Quds' existing ordinary-paragraph selector contract; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "successive-prefixes-retain-order",
+      "feature": "Cell prefix",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertBefore \"Inner: \"\n  ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs(1).Range.InsertBefore \"Outer: \"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertBefore",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "Inner: "
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeInsertBefore",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "Outer: "
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "Microsoft specifies InsertBefore with required String Text and a Range that expands to include the inserted prefix. Native steps are independently authored for Quds' existing ordinary-paragraph selector contract; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "unicode-tab-and-xml-characters",
+      "feature": "Text construction",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertBefore Text:=\"Résumé \" & vbTab & \"مرحبا 😀 & <final>\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertBefore",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "Résumé \tمرحبا 😀 & <final>"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "Microsoft specifies InsertBefore with required String Text and a Range that expands to include the inserted prefix. Native steps are independently authored for Quds' existing ordinary-paragraph selector contract; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "empty-prefix-remains-guarded-operation",
+      "feature": "Text construction",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertBefore Text:=\"\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertBefore",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": ""
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "An empty prefix emits the same guarded operation, so target admission still runs. Native execution is required separately to qualify no text or formatting change."
+      }
+    },
+    {
+      "id": "computed-string-prefix",
+      "feature": "Text construction",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs(1).Range.InsertBefore Text:=Trim$(\"  Total  \") & \": \" & CStr(Abs(-42))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertBefore",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "Total: 42"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "Microsoft specifies InsertBefore with required String Text and a Range that expands to include the inserted prefix. Native steps are independently authored for Quds' existing ordinary-paragraph selector contract; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "body-paragraph-named-text",
+      "feature": "Existing paragraph routes",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Paragraphs(2).Range.InsertBefore Text:=\"Body: \"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 1,
+              "start": 0,
+              "end": 0,
+              "text": "Body: "
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "Microsoft specifies InsertBefore with required String Text and a Range that expands to include the inserted prefix. Native steps are independently authored for Quds' existing ordinary-paragraph selector contract; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "primary-header-named-text",
+      "feature": "Existing paragraph routes",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Sections(2).Headers(wdHeaderFooterPrimary).Range.Paragraphs(3).Range.InsertBefore Text:=\"Header: \"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 2,
+              "story": "header",
+              "section": 1,
+              "start": 0,
+              "end": 0,
+              "text": "Header: "
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "Microsoft specifies InsertBefore with required String Text and a Range that expands to include the inserted prefix. Native steps are independently authored for Quds' existing ordinary-paragraph selector contract; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "first-footer-named-text",
+      "feature": "Existing paragraph routes",
+      "source": "Option Explicit\nSub Main()\n  Call ActiveDocument.Sections(2).Footers(wdHeaderFooterFirstPage).Range.Paragraphs(2).Range.InsertBefore(Text:=\"Footer: \")\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 1,
+              "story": "firstFooter",
+              "section": 1,
+              "start": 0,
+              "end": 0,
+              "text": "Footer: "
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "Microsoft specifies InsertBefore with required String Text and a Range that expands to include the inserted prefix. Native steps are independently authored for Quds' existing ordinary-paragraph selector contract; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "even-header-case-insensitive-text",
+      "feature": "Existing paragraph routes",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Sections(3).Headers(wdHeaderFooterEvenPages).Range.Paragraphs.Item(1).Range.InsertBefore TEXT:=\"Even: \"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "story": "evenHeader",
+              "section": 2,
+              "start": 0,
+              "end": 0,
+              "text": "Even: "
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "Microsoft specifies InsertBefore with required String Text and a Range that expands to include the inserted prefix. Native steps are independently authored for Quds' existing ordinary-paragraph selector contract; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "helper-body-header-and-projected-cell",
+      "feature": "Existing paragraph routes",
+      "source": "Option Explicit\nSub Prefix(ByVal target As Range, ByVal value As String)\n  Call target.InsertBefore(Text:=value)\nEnd Sub\nSub Main()\n  Prefix target:=ActiveDocument.Paragraphs(2).Range, value:=\"Body: \"\n  Prefix target:=ActiveDocument.Sections(2).Headers(wdHeaderFooterPrimary).Range.Paragraphs(3).Range, value:=\"Header: \"\n  Prefix target:=ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs(1).Range, value:=\"Cell: \"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 1,
+              "start": 0,
+              "end": 0,
+              "text": "Body: "
+            }
+          },
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 2,
+              "story": "header",
+              "section": 1,
+              "start": 0,
+              "end": 0,
+              "text": "Header: "
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeInsertBefore",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "Cell: "
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "Microsoft specifies InsertBefore with required String Text and a Range that expands to include the inserted prefix. Native steps are independently authored for Quds' existing ordinary-paragraph selector contract; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "call-positional-cell-prefix",
+      "feature": "Invocation syntax",
+      "source": "Option Explicit\nSub Main()\n  Call ActiveDocument.Tables(2).Cell(3, 4).Range.InsertBefore(\"Explicit Call: \")\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertBefore",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "Explicit Call: "
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "Microsoft specifies InsertBefore with required String Text and a Range that expands to include the inserted prefix. Native steps are independently authored for Quds' existing ordinary-paragraph selector contract; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "inactive-supported-prefix",
+      "feature": "Static validation",
+      "source": "Option Explicit\nSub Main()\n  If False Then\n    ActiveDocument.Tables(2).Cell(3, 4).Range.InsertBefore Text:=\"inactive\"\n    ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs(1).Range.InsertBefore \"inactive\"\n  End If\nEnd Sub\n",
+      "expected": {
+        "steps": []
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "This expectation specifies a bounded Quds dialect rule or positioned diagnostic, not full VBA or installed Microsoft Word behavior. Plans and diagnostics are independently authored; no Office host was executed."
+      }
+    },
+    {
+      "id": "unused-supported-prefix-helper",
+      "feature": "Static validation",
+      "source": "Option Explicit\nSub Main()\nEnd Sub\nSub Prefix(ByVal target As Range)\n  target.InsertBefore Text:=\"unused\"\nEnd Sub\n",
+      "expected": {
+        "steps": []
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "This expectation specifies a bounded Quds dialect rule or positioned diagnostic, not full VBA or installed Microsoft Word behavior. Plans and diagnostics are independently authored; no Office host was executed."
+      }
+    },
+    {
+      "id": "text-expression-evaluated-once",
+      "feature": "Expression evaluation",
+      "source": "Option Explicit\nFunction BuildPrefix() As String\n  ActiveDocument.Paragraphs(2).Range.InsertBefore \"evaluated once\"\n  BuildPrefix = \"Computed: \"\nEnd Function\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertBefore Text:=BuildPrefix()\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 1,
+              "start": 0,
+              "end": 0,
+              "text": "evaluated once"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeInsertBefore",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "Computed: "
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "This expectation specifies a bounded Quds dialect rule or positioned diagnostic, not full VBA or installed Microsoft Word behavior. Plans and diagnostics are independently authored; no Office host was executed."
+      }
+    },
+    {
+      "id": "prefix-then-whole-cell-font",
+      "feature": "Cell prefix composition",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertBefore \"Label: \"\n  ActiveDocument.Tables(2).Cell(3, 4).Range.Font.Bold = True\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertBefore",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "Label: "
+            }
+          },
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 0,
+              "story": "tableCell",
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "bold": true
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "Microsoft specifies InsertBefore with required String Text and a Range that expands to include the inserted prefix. Native steps are independently authored for Quds' existing ordinary-paragraph selector contract; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "replacement-and-prefix-remain-distinct",
+      "feature": "Cell prefix composition",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.Text = \"Total\"\n  ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs(1).Range.InsertBefore Text:=\"Grand \"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "Total"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeInsertBefore",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "Grand "
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "Microsoft specifies InsertBefore with required String Text and a Range that expands to include the inserted prefix. Native steps are independently authored for Quds' existing ordinary-paragraph selector contract; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "unknown-argument-name",
+      "feature": "Invocation refusals",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertBefore Value:=\"x\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_name_error",
+          "line": 3,
+          "column": 58
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "This expectation specifies a bounded Quds dialect rule or positioned diagnostic, not full VBA or installed Microsoft Word behavior. Plans and diagnostics are independently authored; no Office host was executed."
+      }
+    },
+    {
+      "id": "duplicate-text-argument",
+      "feature": "Invocation refusals",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertBefore Text:=\"x\", Text:=\"y\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 45
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "This expectation specifies a bounded Quds dialect rule or positioned diagnostic, not full VBA or installed Microsoft Word behavior. Plans and diagnostics are independently authored; no Office host was executed."
+      }
+    },
+    {
+      "id": "two-positional-arguments",
+      "feature": "Invocation refusals",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertBefore \"x\", \"y\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 45
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "This expectation specifies a bounded Quds dialect rule or positioned diagnostic, not full VBA or installed Microsoft Word behavior. Plans and diagnostics are independently authored; no Office host was executed."
+      }
+    },
+    {
+      "id": "missing-parenthesized-argument",
+      "feature": "Invocation refusals",
+      "source": "Option Explicit\nSub Main()\n  Call ActiveDocument.Tables(2).Cell(3, 4).Range.InsertBefore()\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 50
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "This expectation specifies a bounded Quds dialect rule or positioned diagnostic, not full VBA or installed Microsoft Word behavior. Plans and diagnostics are independently authored; no Office host was executed."
+      }
+    },
+    {
+      "id": "missing-bare-argument",
+      "feature": "Invocation refusals",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertBefore\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 45
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "This expectation specifies a bounded Quds dialect rule or positioned diagnostic, not full VBA or installed Microsoft Word behavior. Plans and diagnostics are independently authored; no Office host was executed."
+      }
+    },
+    {
+      "id": "omitted-first-argument",
+      "feature": "Invocation refusals",
+      "source": "Option Explicit\nSub Main()\n  Call ActiveDocument.Tables(2).Cell(3, 4).Range.InsertBefore(, \"x\")\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 50
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "This expectation specifies a bounded Quds dialect rule or positioned diagnostic, not full VBA or installed Microsoft Word behavior. Plans and diagnostics are independently authored; no Office host was executed."
+      }
+    },
+    {
+      "id": "positional-after-named-argument",
+      "feature": "Invocation refusals",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertBefore Text:=\"x\", \"y\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 45
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "This expectation specifies a bounded Quds dialect rule or positioned diagnostic, not full VBA or installed Microsoft Word behavior. Plans and diagnostics are independently authored; no Office host was executed."
+      }
+    },
+    {
+      "id": "numeric-text-refused",
+      "feature": "Text refusals",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertBefore Text:=42\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 64
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "This expectation specifies a bounded Quds dialect rule or positioned diagnostic, not full VBA or installed Microsoft Word behavior. Plans and diagnostics are independently authored; no Office host was executed."
+      }
+    },
+    {
+      "id": "boolean-text-refused",
+      "feature": "Text refusals",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs(1).Range.InsertBefore Text:=True\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 84
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "This expectation specifies a bounded Quds dialect rule or positioned diagnostic, not full VBA or installed Microsoft Word behavior. Plans and diagnostics are independently authored; no Office host was executed."
+      }
+    },
+    {
+      "id": "variant-number-text-refused",
+      "feature": "Text refusals",
+      "source": "Option Explicit\nSub Main()\n  Dim value As Variant\n  value = 42\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertBefore Text:=value\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 5,
+          "column": 45
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "This expectation specifies a bounded Quds dialect rule or positioned diagnostic, not full VBA or installed Microsoft Word behavior. Plans and diagnostics are independently authored; no Office host was executed."
+      }
+    },
+    {
+      "id": "variant-null-text-refused",
+      "feature": "Text refusals",
+      "source": "Option Explicit\nSub Main()\n  Dim value As Variant\n  value = Null\n  ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs(1).Range.InsertBefore value\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 5,
+          "column": 65
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "This expectation specifies a bounded Quds dialect rule or positioned diagnostic, not full VBA or installed Microsoft Word behavior. Plans and diagnostics are independently authored; no Office host was executed."
+      }
+    },
+    {
+      "id": "string-table-selector-refused",
+      "feature": "Selector refusals",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(\"2\").Cell(3, 4).Range.InsertBefore \"x\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 25
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "This expectation specifies a bounded Quds dialect rule or positioned diagnostic, not full VBA or installed Microsoft Word behavior. Plans and diagnostics are independently authored; no Office host was executed."
+      }
+    },
+    {
+      "id": "boolean-row-selector-refused",
+      "feature": "Selector refusals",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(True, 4).Range.InsertBefore \"x\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 33
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "This expectation specifies a bounded Quds dialect rule or positioned diagnostic, not full VBA or installed Microsoft Word behavior. Plans and diagnostics are independently authored; no Office host was executed."
+      }
+    },
+    {
+      "id": "zero-table-selector-refused",
+      "feature": "Selector refusals",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(0).Cell(3, 4).Range.InsertBefore \"x\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 18
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "This expectation specifies a bounded Quds dialect rule or positioned diagnostic, not full VBA or installed Microsoft Word behavior. Plans and diagnostics are independently authored; no Office host was executed."
+      }
+    },
+    {
+      "id": "negative-row-selector-refused",
+      "feature": "Selector refusals",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(-1, 4).Range.InsertBefore \"x\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 28
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "This expectation specifies a bounded Quds dialect rule or positioned diagnostic, not full VBA or installed Microsoft Word behavior. Plans and diagnostics are independently authored; no Office host was executed."
+      }
+    },
+    {
+      "id": "fractional-column-selector-refused",
+      "feature": "Selector refusals",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 1.5).Range.InsertBefore \"x\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 28
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "This expectation specifies a bounded Quds dialect rule or positioned diagnostic, not full VBA or installed Microsoft Word behavior. Plans and diagnostics are independently authored; no Office host was executed."
+      }
+    },
+    {
+      "id": "table-long-overflow-refused",
+      "feature": "Selector refusals",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2147483648).Cell(3, 4).Range.InsertBefore \"x\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 18
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "This expectation specifies a bounded Quds dialect rule or positioned diagnostic, not full VBA or installed Microsoft Word behavior. Plans and diagnostics are independently authored; no Office host was executed."
+      }
+    },
+    {
+      "id": "second-cell-paragraph-refused",
+      "feature": "Selector refusals",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs(2).Range.InsertBefore \"x\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 3,
+          "column": 45
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "This expectation specifies a bounded Quds dialect rule or positioned diagnostic, not full VBA or installed Microsoft Word behavior. Plans and diagnostics are independently authored; no Office host was executed."
+      }
+    },
+    {
+      "id": "zero-cell-paragraph-refused",
+      "feature": "Selector refusals",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs(0).Range.InsertBefore \"x\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 45
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "This expectation specifies a bounded Quds dialect rule or positioned diagnostic, not full VBA or installed Microsoft Word behavior. Plans and diagnostics are independently authored; no Office host was executed."
+      }
+    },
+    {
+      "id": "whole-header-story-refused",
+      "feature": "Selector refusals",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Sections(1).Headers(1).Range.InsertBefore Text:=\"x\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 47
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "This expectation specifies a bounded Quds dialect rule or positioned diagnostic, not full VBA or installed Microsoft Word behavior. Plans and diagnostics are independently authored; no Office host was executed."
+      }
+    },
+    {
+      "id": "whole-footer-helper-refused",
+      "feature": "Selector refusals",
+      "source": "Option Explicit\nSub Prefix(ByVal target As Range)\n  target.InsertBefore Text:=\"x\"\nEnd Sub\nSub Main()\n  Prefix ActiveDocument.Sections(1).Footers(1).Range\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 3,
+          "column": 10
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "This expectation specifies a bounded Quds dialect rule or positioned diagnostic, not full VBA or installed Microsoft Word behavior. Plans and diagnostics are independently authored; no Office host was executed."
+      }
+    },
+    {
+      "id": "direct-cell-list-refused",
+      "feature": "Unchanged unsupported members",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.ListFormat.ApplyBulletDefault\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 3,
+          "column": 45
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "This expectation specifies a bounded Quds dialect rule or positioned diagnostic, not full VBA or installed Microsoft Word behavior. Plans and diagnostics are independently authored; no Office host was executed."
+      }
+    },
+    {
+      "id": "inactive-projected-list-refused",
+      "feature": "Unchanged unsupported members",
+      "source": "Option Explicit\nSub Main()\n  If False Then\n    ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs(1).Range.ListFormat.ApplyBulletDefault\n  End If\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 4,
+          "column": 67
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "This expectation specifies a bounded Quds dialect rule or positioned diagnostic, not full VBA or installed Microsoft Word behavior. Plans and diagnostics are independently authored; no Office host was executed."
+      }
+    },
+    {
+      "id": "insertafter-refused",
+      "feature": "Unchanged unsupported members",
+      "source": "Option Explicit\nSub Main()\n  Call ActiveDocument.Tables(2).Cell(3, 4).Range.InsertAfter(\"x\")\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 3,
+          "column": 50
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "This expectation specifies a bounded Quds dialect rule or positioned diagnostic, not full VBA or installed Microsoft Word behavior. Plans and diagnostics are independently authored; no Office host was executed."
+      }
+    },
+    {
+      "id": "live-cell-text-read-refused",
+      "feature": "Unchanged unsupported members",
+      "source": "Option Explicit\nSub Main()\n  Dim value As String\n  value = ActiveDocument.Tables(2).Cell(3, 4).Range.Text\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 4,
+          "column": 53
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "This expectation specifies a bounded Quds dialect rule or positioned diagnostic, not full VBA or installed Microsoft Word behavior. Plans and diagnostics are independently authored; no Office host was executed."
+      }
+    },
+    {
+      "id": "projected-text-replacement-refused",
+      "feature": "Unchanged unsupported members",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs(1).Range.Text = \"x\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 3,
+          "column": 65
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "This expectation specifies a bounded Quds dialect rule or positioned diagnostic, not full VBA or installed Microsoft Word behavior. Plans and diagnostics are independently authored; no Office host was executed."
+      }
+    },
+    {
+      "id": "font-receiver-refused",
+      "feature": "Selector refusals",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.Font.InsertBefore Text:=\"x\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 50
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "This expectation specifies a bounded Quds dialect rule or positioned diagnostic, not full VBA or installed Microsoft Word behavior. Plans and diagnostics are independently authored; no Office host was executed."
+      }
+    },
+    {
+      "id": "inactive-unknown-argument-refused",
+      "feature": "Static validation",
+      "source": "Option Explicit\nSub Main()\n  If False Then\n    ActiveDocument.Tables(2).Cell(3, 4).Range.InsertBefore Content:=\"x\"\n  End If\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_name_error",
+          "line": 4,
+          "column": 60
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "This expectation specifies a bounded Quds dialect rule or positioned diagnostic, not full VBA or installed Microsoft Word behavior. Plans and diagnostics are independently authored; no Office host was executed."
+      }
+    },
+    {
+      "id": "unused-helper-unknown-argument-refused",
+      "feature": "Static validation",
+      "source": "Option Explicit\nSub Main()\nEnd Sub\nSub Prefix(ByVal target As Range)\n  target.InsertBefore Content:=\"x\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_name_error",
+          "line": 5,
+          "column": 23
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "This expectation specifies a bounded Quds dialect rule or positioned diagnostic, not full VBA or installed Microsoft Word behavior. Plans and diagnostics are independently authored; no Office host was executed."
+      }
+    },
+    {
+      "id": "inactive-numeric-text-refused",
+      "feature": "Static validation",
+      "source": "Option Explicit\nSub Main()\n  If False Then\n    ActiveDocument.Tables(2).Cell(3, 4).Range.InsertBefore Text:=42\n  End If\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 4,
+          "column": 66
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "This expectation specifies a bounded Quds dialect rule or positioned diagnostic, not full VBA or installed Microsoft Word behavior. Plans and diagnostics are independently authored; no Office host was executed."
+      }
+    },
+    {
+      "id": "header-unknown-argument-refused",
+      "feature": "Invocation refusals",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Sections(2).Headers(wdHeaderFooterPrimary).Range.Paragraphs(3).Range.InsertBefore Content:=\"x\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_name_error",
+          "line": 3,
+          "column": 100
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "This expectation specifies a bounded Quds dialect rule or positioned diagnostic, not full VBA or installed Microsoft Word behavior. Plans and diagnostics are independently authored; no Office host was executed."
+      }
+    },
+    {
+      "id": "paragraph-mark-prefix-refused",
+      "feature": "Text refusals",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertBefore Text:=ChrW(13)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 45
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "This expectation specifies a bounded Quds dialect rule or positioned diagnostic, not full VBA or installed Microsoft Word behavior. Plans and diagnostics are independently authored; no Office host was executed."
+      }
+    },
+    {
+      "id": "cell-mark-prefix-refused",
+      "feature": "Text refusals",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.Paragraphs(1).Range.InsertBefore Text:=ChrW(7)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 65
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "This expectation specifies a bounded Quds dialect rule or positioned diagnostic, not full VBA or installed Microsoft Word behavior. Plans and diagnostics are independently authored; no Office host was executed."
+      }
+    },
+    {
+      "id": "malformed-surrogate-prefix-refused",
+      "feature": "Text refusals",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertBefore Text:=ChrW(55296)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 45
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cell.range",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.paragraph.range"
+        ],
+        "note": "This expectation specifies a bounded Quds dialect rule or positioned diagnostic, not full VBA or installed Microsoft Word behavior. Plans and diagnostics are independently authored; no Office host was executed."
+      }
+    },
+    {
+      "id": "portable-string-constant-code-units",
+      "feature": "Portable String constants",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertBefore Text:=CStr(AscW(vbTab)) & \",\" & CStr(AscW(vbCr)) & \",\" & CStr(AscW(vbLf)) & \",\" & CStr(AscW(vbCrLf)) & \",\" & CStr(AscW(vbBack)) & \",\" & CStr(AscW(vbFormFeed)) & \",\" & CStr(AscW(vbVerticalTab)) & \",\" & CStr(AscW(vbNullChar))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertBefore",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "9,13,10,13,8,12,11,0"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/miscellaneous-constants",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore"
+        ],
+        "note": "Expected String units are independently transcribed from Microsoft's miscellaneous-constants table: tab 9, CR 13, LF 10, CRLF 13 then 10, backspace 8, form feed 12, vertical tab 11 and NUL 0. The native Word prefix uses only publishable text; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "crlf-length-and-character-order",
+      "feature": "Portable String constants",
+      "source": "Option Explicit\nSub Main()\n  If vbCrLf = vbCr & vbLf Then\n    ActiveDocument.Tables(2).Cell(3, 4).Range.InsertBefore Text:=CStr(Len(vbCrLf)) & \":\" & CStr(AscW(Right$(vbCrLf, 1)))\n  Else\n    ActiveDocument.Tables(2).Cell(3, 4).Range.InsertBefore \"wrong character order\"\n  End If\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertBefore",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "2:10"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/miscellaneous-constants",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore"
+        ],
+        "note": "Expected String units are independently transcribed from Microsoft's miscellaneous-constants table: tab 9, CR 13, LF 10, CRLF 13 then 10, backspace 8, form feed 12, vertical tab 11 and NUL 0. The native Word prefix uses only publishable text; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "string-constants-in-const-initializers",
+      "feature": "Portable String constants",
+      "source": "Option Explicit\nConst delimiter As String = vbTab\nConst separator As String = vbCrLf\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertBefore Text:=\"A\" & delimiter & \"B:\" & CStr(Len(separator))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertBefore",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "A\tB:2"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/miscellaneous-constants",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore"
+        ],
+        "note": "Expected String units are independently transcribed from Microsoft's miscellaneous-constants table: tab 9, CR 13, LF 10, CRLF 13 then 10, backspace 8, form feed 12, vertical tab 11 and NUL 0. The native Word prefix uses only publishable text; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "string-constant-optional-default",
+      "feature": "Portable String constants",
+      "source": "Option Explicit\nSub Prefix(Optional ByVal delimiter As String = vbTab)\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertBefore Text:=\"A\" & delimiter & \"B\"\nEnd Sub\nSub Main()\n  Call Prefix()\n  Prefix delimiter:=\":\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertBefore",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "A\tB"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeInsertBefore",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "A:B"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/miscellaneous-constants",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore"
+        ],
+        "note": "Expected String units are independently transcribed from Microsoft's miscellaneous-constants table: tab 9, CR 13, LF 10, CRLF 13 then 10, backspace 8, form feed 12, vertical tab 11 and NUL 0. The native Word prefix uses only publishable text; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "normalize-crlf-to-tabs",
+      "feature": "Portable String constants",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertBefore Text:=Replace(\"A\" & vbCrLf & \"B\" & vbCrLf & \"C\", vbCrLf, vbTab)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertBefore",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "A\tB\tC"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/miscellaneous-constants",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore"
+        ],
+        "note": "Expected String units are independently transcribed from Microsoft's miscellaneous-constants table: tab 9, CR 13, LF 10, CRLF 13 then 10, backspace 8, form feed 12, vertical tab 11 and NUL 0. The native Word prefix uses only publishable text; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "string-constant-names-ignore-case",
+      "feature": "Portable String constants",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertBefore Text:=CStr(AscW(VbCr)) & \"|\" & CStr(AscW(VBLF))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertBefore",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "13|10"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/miscellaneous-constants",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore"
+        ],
+        "note": "Expected String units are independently transcribed from Microsoft's miscellaneous-constants table: tab 9, CR 13, LF 10, CRLF 13 then 10, backspace 8, form feed 12, vertical tab 11 and NUL 0. The native Word prefix uses only publishable text; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "direct-vbcr-prefix-refused",
+      "feature": "Portable String constant boundaries",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertBefore Text:=vbCr\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 45
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/miscellaneous-constants",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore"
+        ],
+        "note": "The constant is valid in source calculations, but the bounded native Word text publication contract rejects non-tab controls. This is a Quds refusal, not a claim that Microsoft Word rejects this VBA constant."
+      }
+    },
+    {
+      "id": "direct-vblf-prefix-refused",
+      "feature": "Portable String constant boundaries",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertBefore Text:=vbLf\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 45
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/miscellaneous-constants",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore"
+        ],
+        "note": "The constant is valid in source calculations, but the bounded native Word text publication contract rejects non-tab controls. This is a Quds refusal, not a claim that Microsoft Word rejects this VBA constant."
+      }
+    },
+    {
+      "id": "direct-vbcrlf-prefix-refused",
+      "feature": "Portable String constant boundaries",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertBefore Text:=vbCrLf\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 45
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/miscellaneous-constants",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore"
+        ],
+        "note": "The constant is valid in source calculations, but the bounded native Word text publication contract rejects non-tab controls. This is a Quds refusal, not a claim that Microsoft Word rejects this VBA constant."
+      }
+    },
+    {
+      "id": "direct-vbback-prefix-refused",
+      "feature": "Portable String constant boundaries",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertBefore Text:=vbBack\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 45
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/miscellaneous-constants",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore"
+        ],
+        "note": "The constant is valid in source calculations, but the bounded native Word text publication contract rejects non-tab controls. This is a Quds refusal, not a claim that Microsoft Word rejects this VBA constant."
+      }
+    },
+    {
+      "id": "direct-vbformfeed-prefix-refused",
+      "feature": "Portable String constant boundaries",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertBefore Text:=vbFormFeed\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 45
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/miscellaneous-constants",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore"
+        ],
+        "note": "The constant is valid in source calculations, but the bounded native Word text publication contract rejects non-tab controls. This is a Quds refusal, not a claim that Microsoft Word rejects this VBA constant."
+      }
+    },
+    {
+      "id": "direct-vbverticaltab-prefix-refused",
+      "feature": "Portable String constant boundaries",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertBefore Text:=vbVerticalTab\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 45
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/miscellaneous-constants",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore"
+        ],
+        "note": "The constant is valid in source calculations, but the bounded native Word text publication contract rejects non-tab controls. This is a Quds refusal, not a claim that Microsoft Word rejects this VBA constant."
+      }
+    },
+    {
+      "id": "direct-vbnullchar-prefix-refused",
+      "feature": "Portable String constant boundaries",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertBefore Text:=vbNullChar\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 45
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/miscellaneous-constants",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore"
+        ],
+        "note": "The constant is valid in source calculations, but the bounded native Word text publication contract rejects non-tab controls. This is a Quds refusal, not a claim that Microsoft Word rejects this VBA constant."
+      }
+    },
+    {
+      "id": "unsupported-vbnewline-refused",
+      "feature": "Portable String constant boundaries",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertBefore Text:=vbNewLine\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_name_error",
+          "line": 3,
+          "column": 64
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/miscellaneous-constants",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore"
+        ],
+        "note": "Microsoft documents platform-dependent newline units. Quds intentionally leaves vbNewLine unknown rather than guessing platform semantics; no Office host was executed."
+      }
+    },
+    {
+      "id": "unsupported-vbnullstring-refused",
+      "feature": "Portable String constant boundaries",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(2).Cell(3, 4).Range.InsertBefore Text:=vbNullString\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_name_error",
+          "line": 3,
+          "column": 64
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/miscellaneous-constants",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore"
+        ],
+        "note": "Microsoft documents vbNullString as distinct from an empty String and useful for external procedure calls. Quds intentionally leaves this pointer-like sentinel unknown; no Office host was executed."
+      }
+    },
+    {
+      "id": "portable-string-constant-name-reserved",
+      "feature": "Portable String constant boundaries",
+      "source": "Option Explicit\nSub Main()\n  Dim vbCr As String\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_name_error",
+          "line": 3,
+          "column": 7
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/miscellaneous-constants",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.range.insertbefore"
+        ],
+        "note": "Portable built-in String constant names are reserved in the bounded Quds dialect and cannot be silently shadowed by local declarations. No Office host was executed."
+      }
+    }
+  ]
+}

@@ -18,6 +18,16 @@ def target(parts,owner,kind=None,rid=None):
     if rel.get('TargetMode')=='External': return rel['Target']
     return posixpath.normpath(posixpath.join(posixpath.dirname(owner),rel['Target'])).lstrip('/')
 
+MC_IGNORABLE='{http://schemas.openxmlformats.org/markup-compatibility/2006}Ignorable'
+
+def same_element(a,b):
+    # Namespace declarations are not attributes in ElementTree, so this
+    # compares names, attributes, text and children only. A preserved subtree
+    # carries the mc:Ignorable it was in scope of, which is not a change.
+    attrs=lambda e:{k:v for k,v in e.attrib.items() if k!=MC_IGNORABLE}
+    return (a.tag==b.tag and attrs(a)==attrs(b) and (a.text or '').strip()==(b.text or '').strip()
+            and len(a)==len(b) and all(same_element(x,y) for x,y in zip(a,b)))
+
 def sheet_style(parts,cell_ref):
     root=E.fromstring(parts['xl/worksheets/sheet1.xml'])
     cell=root.find(f'.//{X}c[@r="{cell_ref}"]')
@@ -85,12 +95,22 @@ def verify_slides(parts,edited):
                 assert all(0 <= int(e.get('val')) <= 2147483647 for e in chart.iter(C+tag)), name
     for name in ['ppt/slideMasters/slideMaster1.xml','ppt/theme/theme1.xml']:
         assert parts[name]==source[name], f'Template changed: {name}'
+    source_root=E.fromstring(source['ppt/presentation.xml'])
+    source_slides=[target(source,'ppt/presentation.xml',rid=s.get(R+'id')) for s in source_root.find(P+'sldIdLst')]
     for index,s in enumerate(root.find(P+'sldIdLst')):
         owner=target(parts,'ppt/presentation.xml',rid=s.get(R+'id'))
         slide=E.fromstring(parts[owner])
         transition=slide.find(P+'transition')
         assert transition.get('dur') is None
-        assert int(transition.get('{http://schemas.microsoft.com/office/powerpoint/2010/main}dur')) > 0
+        duration=transition.get('{http://schemas.microsoft.com/office/powerpoint/2010/main}dur')
+        if duration is None:
+            # An unchanged imported transition is written back as authored
+            # (since 118c5a81); the fixture's has no p14:dur, only spd.
+            authored=E.fromstring(source[source_slides[index]]).find(P+'transition')
+            assert authored is not None and same_element(transition,authored), \
+                f'{owner}: transition without p14:dur differs from the authored one'
+        else:
+            assert int(duration) > 0
         for frame in slide.findall('.//'+P+'graphicFrame'):
             assert frame.find(P+'xfrm') is not None
             assert frame.find(A+'xfrm') is None

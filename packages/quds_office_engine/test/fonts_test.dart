@@ -94,4 +94,50 @@ void main() {
     expect(OfficeTypeface.preferredExportFamily(arabic), 'Tajawal');
     expect(OfficeTypeface.sizesPt, containsAll(<int>[11, 12, 24, 72]));
   });
+
+  test('explicit complex font follows edits without changing LTR layout', () {
+    final runs = [
+      for (final complexScript in <bool?>[true, false, null])
+        WmlRun(
+          text: 'कA',
+          properties: WmlRunProps(
+            asciiFont: 'Liberation Serif',
+            csFont: 'Noto Sans Devanagari',
+            complexScript: complexScript,
+          ),
+        ),
+    ];
+    final document = WmlDocument(
+      sections: [
+        WmlSection(
+          blocks: [
+            for (final run in runs) WmlParagraph(inlines: [run]),
+          ],
+        ),
+      ],
+    );
+    List<LaidOutLine> layout() =>
+        WordLayoutEngine(font: null).layout(document).pages.single.lines;
+
+    for (final complexFont in [
+      'Noto Sans Devanagari',
+      'Noto Serif Devanagari',
+    ]) {
+      runs.first.properties.csFont = complexFont;
+      final lines = layout();
+      expect(lines, hasLength(3));
+      for (var index = 0; index < lines.length; index++) {
+        final glyphs = lines[index].glyphs;
+        expect(glyphs, hasLength(2));
+        expect(
+          glyphs.map((glyph) => glyph.fontFamily),
+          everyElement(index == 0 ? complexFont : 'Liberation Serif'),
+        );
+        expect(glyphs.map((glyph) => glyph.glyph.level), everyElement(0));
+        expect(glyphs.first.x, lessThan(glyphs.last.x));
+      }
+      expect(OfficeTypeface.documentHasRtl(document), isFalse);
+      expect(OfficeTypeface.preferredExportFamily(document), complexFont);
+    }
+  });
 }

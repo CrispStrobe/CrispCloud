@@ -1,0 +1,826 @@
+{
+  "schemaVersion": 1,
+  "suite": "vba-word-comparison-colors",
+  "dialect": "vba-word",
+  "cases": [
+    {
+      "id": "three-ordering-results",
+      "feature": "StrComp result",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Range.InsertBefore CStr(StrComp(\"A\", \"a\")) & \":\" & CStr(StrComp(\"same\", \"same\")) & \":\" & CStr(StrComp(\"b\", \"a\", vbBinaryCompare))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "-1:0:1"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/strcomp-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Binary ASCII comparison produces normalized less-than, equality, and greater-than results. Expected plans and diagnostic token positions are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "prefix-and-empty-ordering",
+      "feature": "StrComp result",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Range.InsertBefore CStr(StrComp(\"ab\", \"abc\")) & \":\" & CStr(StrComp(\"abc\", \"ab\")) & \":\" & CStr(StrComp(\"\", \"\"))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "-1:1:0"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/strcomp-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "An equal prefix sorts before its longer extension; two empty strings compare equal. Expected plans and diagnostic token positions are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "binary-digit-strings",
+      "feature": "StrComp result",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Range.InsertBefore CStr(StrComp(\"9\", \"10\", 0))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "1"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/strcomp-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "The bounded binary comparator orders text code units and does not reinterpret digit strings as numbers. Expected plans and diagnostic token positions are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "unicode-no-normalization",
+      "feature": "StrComp result",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Range.InsertBefore CStr(StrComp(\"é\", \"é\")) & \":\" & CStr(StrComp(\"😀\", ChrW(57344)))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "1:-1"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/strcomp-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "The dialect compares UTF-16 units without normalization: U+00E9 exceeds U+0065, and the emoji lead surrogate U+D83D precedes U+E000. Expected plans and diagnostic token positions are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "surrogate-halves-and-nul",
+      "feature": "StrComp result",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Range.InsertBefore CStr(StrComp(Mid$(\"😀\", 1, 1), Mid$(\"😁\", 1, 1))) & \":\" & CStr(StrComp(Mid$(\"😀\", 2, 1), Mid$(\"😁\", 2, 1))) & \":\" & CStr(StrComp(\"a\" & ChrW(0), \"a\"))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "0:-1:1"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/strcomp-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Internal surrogate halves compare as code units; a NUL extends a prefix rather than terminating the String. Expected plans and diagnostic token positions are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "null-operands-propagate",
+      "feature": "StrComp result",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Range.InsertBefore CStr(IsNull(StrComp(Null, \"x\"))) & \":\" & CStr(IsNull(StrComp(\"x\", Null))) & \":\" & CStr(IsNull(StrComp(Null, Null, 0)))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "True:True:True"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/strcomp-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Either Null operand returns Null when the supplied comparison mode is valid. Expected plans and diagnostic token positions are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "empty-and-default-variant",
+      "feature": "StrComp Empty",
+      "source": "Sub Main()\n  Dim unsetValue As Variant\n  ActiveDocument.Paragraphs(1).Range.InsertBefore CStr(StrComp(unsetValue, \"\")) & \":\" & CStr(StrComp(Empty, \"a\")) & \":\" & CStr(StrComp(\"a\", Empty))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "0:-1:1"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/strcomp-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "The bounded dialect treats an Empty string operand, including an uninitialized Variant, as an empty String. Expected plans and diagnostic token positions are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "explicit-text-conversions",
+      "feature": "StrComp result",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Range.InsertBefore CStr(StrComp(CStr(12), \"12\")) & \":\" & CStr(StrComp(CStr(True), \"True\", CVar(0)))\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.replaceText",
+            "arguments": {
+              "paragraph": 0,
+              "start": 0,
+              "end": 0,
+              "text": "0:0"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/strcomp-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Explicit CStr conversions supply actual String operands; an exact numeric Variant zero selects binary comparison. Expected plans and diagnostic token positions are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "comparison-selects-font-palette",
+      "feature": "Comparison and Word formatting",
+      "source": "Sub Main()\n  If StrComp(\"A\", \"a\") < 0 Then\n    ActiveDocument.Paragraphs(1).Range.Font.ColorIndex = wdRed\n  Else\n    ActiveDocument.Paragraphs(1).Range.Font.ColorIndex = wdBlue\n  End If\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 0,
+              "color": "FF0000"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/strcomp-function",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.font.colorindex",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md"
+        ],
+        "note": "Source-only comparison selects one native formatting operation; it does not read existing document text. Expected plans and diagnostic token positions are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "text-mode-refused",
+      "feature": "StrComp refusal",
+      "source": "Sub Main()\n  result = StrComp(Null, \"x\", vbTextCompare)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 2,
+          "column": 31
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/strcomp-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Only binary mode is supported; a Null text operand does not suppress validation of the supplied comparison mode. Expected plans and diagnostic token positions are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "database-mode-refused",
+      "feature": "StrComp refusal",
+      "source": "Sub Main()\n  result = StrComp(Null, \"x\", vbDatabaseCompare)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 2,
+          "column": 31
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/strcomp-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Only binary mode is supported; a Null text operand does not suppress validation of the supplied comparison mode. Expected plans and diagnostic token positions are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "option-mode-refused",
+      "feature": "StrComp refusal",
+      "source": "Sub Main()\n  result = StrComp(Null, \"x\", vbUseCompareOption)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 2,
+          "column": 31
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/strcomp-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Only binary mode is supported; a Null text operand does not suppress validation of the supplied comparison mode. Expected plans and diagnostic token positions are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "null-mode-refused",
+      "feature": "StrComp refusal",
+      "source": "Sub Main()\n  result = StrComp(Null, \"x\", Null)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_invalid_use_of_null",
+          "line": 2,
+          "column": 31
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/strcomp-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "A Null comparison argument is invalid even when a text operand is also Null. Expected plans and diagnostic token positions are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "numeric-text-coercion-refused",
+      "feature": "StrComp refusal",
+      "source": "Sub Main()\n  result = StrComp(12, \"12\")\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 20
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/strcomp-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Numeric-to-text coercion must be explicit; the diagnostic identifies the first numeric operand. Expected plans and diagnostic token positions are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "boolean-text-coercion-refused",
+      "feature": "StrComp refusal",
+      "source": "Sub Main()\n  result = StrComp(Null, True)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 26
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/strcomp-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "An invalid Boolean text operand remains an error despite the other operand being Null. Expected plans and diagnostic token positions are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "string-mode-coercion-refused",
+      "feature": "StrComp refusal",
+      "source": "Sub Main()\n  result = StrComp(\"a\", \"b\", \"0\")\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 30
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/strcomp-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "A String zero does not implicitly become a numeric comparison mode. Expected plans and diagnostic token positions are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "fractional-mode-refused",
+      "feature": "StrComp refusal",
+      "source": "Sub Main()\n  result = StrComp(\"a\", \"b\", 0.5)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 30
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/strcomp-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "The comparison mode must be an exact number, not a rounded fractional value. Expected plans and diagnostic token positions are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "empty-mode-refused",
+      "feature": "StrComp refusal",
+      "source": "Sub Main()\n  result = StrComp(\"a\", \"b\", Empty)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 30
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/strcomp-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Empty-to-empty-String behavior belongs only to the two text operands; it does not coerce Compare to zero. Expected plans and diagnostic token positions are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "missing-required-argument",
+      "feature": "StrComp refusal",
+      "source": "Sub Main()\n  result = StrComp(\"a\")\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 12
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/strcomp-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "The bounded intrinsic requires two or three supplied arguments; arity errors identify the callable. Expected plans and diagnostic token positions are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "named-compare-refused",
+      "feature": "StrComp refusal",
+      "source": "Sub Main()\n  result = StrComp(\"a\", \"b\", compare:=0)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 2,
+          "column": 30
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/strcomp-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "Named intrinsic arguments remain outside this dialect; the diagnostic identifies the named argument. Expected plans and diagnostic token positions are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "omitted-compare-refused",
+      "feature": "StrComp refusal",
+      "source": "Sub Main()\n  result = StrComp(\"a\", \"b\", )\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 2,
+          "column": 30
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/strcomp-function",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md"
+        ],
+        "note": "A syntactically supplied omitted third argument is refused; leaving Compare absent entirely remains supported. Expected plans and diagnostic token positions are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "complete-fixed-font-palette",
+      "feature": "Font.ColorIndex palette",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Range.Font.ColorIndex = wdBlack\n  ActiveDocument.Paragraphs(1).Range.Font.ColorIndex = wdBlue\n  ActiveDocument.Paragraphs(1).Range.Font.ColorIndex = wdTurquoise\n  ActiveDocument.Paragraphs(1).Range.Font.ColorIndex = wdBrightGreen\n  ActiveDocument.Paragraphs(1).Range.Font.ColorIndex = wdPink\n  ActiveDocument.Paragraphs(1).Range.Font.ColorIndex = wdRed\n  ActiveDocument.Paragraphs(1).Range.Font.ColorIndex = wdYellow\n  ActiveDocument.Paragraphs(1).Range.Font.ColorIndex = wdWhite\n  ActiveDocument.Paragraphs(1).Range.Font.ColorIndex = wdDarkBlue\n  ActiveDocument.Paragraphs(1).Range.Font.ColorIndex = wdTeal\n  ActiveDocument.Paragraphs(1).Range.Font.ColorIndex = wdGreen\n  ActiveDocument.Paragraphs(1).Range.Font.ColorIndex = wdViolet\n  ActiveDocument.Paragraphs(1).Range.Font.ColorIndex = wdDarkRed\n  ActiveDocument.Paragraphs(1).Range.Font.ColorIndex = wdDarkYellow\n  ActiveDocument.Paragraphs(1).Range.Font.ColorIndex = wdGray50\n  ActiveDocument.Paragraphs(1).Range.Font.ColorIndex = wdGray25\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 0,
+              "color": "000000"
+            }
+          },
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 0,
+              "color": "0000FF"
+            }
+          },
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 0,
+              "color": "00FFFF"
+            }
+          },
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 0,
+              "color": "00FF00"
+            }
+          },
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 0,
+              "color": "FF00FF"
+            }
+          },
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 0,
+              "color": "FF0000"
+            }
+          },
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 0,
+              "color": "FFFF00"
+            }
+          },
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 0,
+              "color": "FFFFFF"
+            }
+          },
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 0,
+              "color": "000080"
+            }
+          },
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 0,
+              "color": "008080"
+            }
+          },
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 0,
+              "color": "008000"
+            }
+          },
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 0,
+              "color": "800080"
+            }
+          },
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 0,
+              "color": "800000"
+            }
+          },
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 0,
+              "color": "808000"
+            }
+          },
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 0,
+              "color": "808080"
+            }
+          },
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 0,
+              "color": "C0C0C0"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.font.colorindex",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.wdcolorindex",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md"
+        ],
+        "note": "All sixteen named WdColorIndex colors map to independently listed RGB expectations in declaration order. Expected plans and diagnostic token positions are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "automatic-and-packed-rgb-stay-distinct",
+      "feature": "Automatic foreground",
+      "source": "Sub Main()\n  With ActiveDocument.Paragraphs(1).Range.Font\n    .ColorIndex = 0\n    .Color = 0\n    .Color = wdColorAutomatic\n    .ColorIndex = wdBlack\n    .Color = RGB(18, 52, 86)\n  End With\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 0,
+              "color": "auto"
+            }
+          },
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 0,
+              "color": "000000"
+            }
+          },
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 0,
+              "color": "auto"
+            }
+          },
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 0,
+              "color": "000000"
+            }
+          },
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 0,
+              "color": "123456"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.font.colorindex",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.wdcolorindex",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.wdcolor",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md"
+        ],
+        "note": "Palette index zero and wdColorAutomatic retain automatic foreground identity; packed RGB zero remains explicit black. Expected plans and diagnostic token positions are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "helper-and-independent-footer",
+      "feature": "Comparison and Word targeting",
+      "source": "Sub Paint(ByVal target As Font, Optional ByVal index As Long = wdAuto)\n  target.ColorIndex = index\nEnd Sub\nSub Main()\n  Dim target As Font\n  Set target = ThisDocument.Sections(2).Footers(wdHeaderFooterEvenPages).Range.Paragraphs(3).Range.Font\n  Paint index:=wdBlue, target:=target\n  If IsNull(StrComp(Null, \"x\")) Then\n    target.Color = wdColorAutomatic\n  End If\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 2,
+              "section": 1,
+              "story": "evenFooter",
+              "color": "0000FF"
+            }
+          },
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 2,
+              "section": 1,
+              "story": "evenFooter",
+              "color": "auto"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/strcomp-function",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.font.colorindex",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md"
+        ],
+        "note": "Named ByVal helper arguments retain the explicit footer identity; handled Null results can choose a later automatic foreground write. Expected plans and diagnostic token positions are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "font-by-author-refused",
+      "feature": "Font color refusal",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Range.Font.ColorIndex = wdByAuthor\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 2,
+          "column": 43
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.font.colorindex",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.wdcolorindex",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md"
+        ],
+        "note": "Microsoft excludes wdByAuthor for fonts; the source-to-plan diagnostic identifies the written property. Expected plans and diagnostic token positions are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "palette-outside-range-refused",
+      "feature": "Font color refusal",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Range.Font.ColorIndex = 17\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 2,
+          "column": 43
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.font.colorindex",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.wdcolorindex",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md"
+        ],
+        "note": "The bounded palette consists of automatic plus sixteen fixed values; unknown indices have no inferred RGB mapping. Expected plans and diagnostic token positions are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "fractional-palette-refused",
+      "feature": "Font color refusal",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Range.Font.ColorIndex = 0.5\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 2,
+          "column": 43
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.font.colorindex",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.wdcolorindex",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md"
+        ],
+        "note": "Palette indices must be exact integers; the dialect does not round the requested value. Expected plans and diagnostic token positions are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "font-property-read-refused",
+      "feature": "Font color refusal",
+      "source": "Sub Main()\n  If False Then\n    result = ActiveDocument.Paragraphs(1).Range.Font.ColorIndex\n  End If\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 3,
+          "column": 54
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.font.colorindex",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.wdcolorindex",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md"
+        ],
+        "note": "The adapter remains write-only and diagnoses unsupported document reads even in inactive code. Expected plans and diagnostic token positions are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "automatic-sentinel-is-not-palette-index",
+      "feature": "Font color refusal",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Range.Font.ColorIndex = wdColorAutomatic\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 2,
+          "column": 43
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.font.colorindex",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.wdcolorindex",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md"
+        ],
+        "note": "The packed-color automatic sentinel is accepted by Font.Color only; palette automatic uses index zero. Expected plans and diagnostic token positions are independently authored; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "invalid-rgb-does-not-return-partial-plan",
+      "feature": "Font color refusal",
+      "source": "Sub Main()\n  ActiveDocument.Paragraphs(1).Range.Font.Bold = True\n  ActiveDocument.Paragraphs(1).Range.Font.Color = 16777216\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 3,
+          "column": 43
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.font.colorindex",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.wdcolorindex",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_WORD_MACROS.md"
+        ],
+        "note": "A packed value outside the 24-bit RGB range fails the entire compilation after an earlier valid write. Expected plans and diagnostic token positions are independently authored; no installed Office host was executed."
+      }
+    }
+  ]
+}

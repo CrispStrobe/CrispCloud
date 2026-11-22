@@ -3,9 +3,81 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:quds_office_engine/quds_office_engine.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'word_zotero_format.dart';
 import 'word_zotero_stored_details.dart';
+
+/// Opens an item in a Zotero desktop library; hosts may override this for
+/// platform integration or deterministic widget tests.
+typedef ZoteroItemOpener = Future<bool> Function(Uri uri);
+
+/// Explicit navigation only: opening Zotero never fetches, edits, or links a
+/// citation. A failed protocol-handler launch leaves the details dialog open.
+class _ZoteroOpenItemButton extends StatefulWidget {
+  const _ZoteroOpenItemButton({required this.uri, this.onOpen});
+
+  final Uri uri;
+  final ZoteroItemOpener? onOpen;
+
+  @override
+  State<_ZoteroOpenItemButton> createState() => _ZoteroOpenItemButtonState();
+}
+
+class _ZoteroOpenItemButtonState extends State<_ZoteroOpenItemButton> {
+  bool _opening = false;
+  String? _failure;
+
+  Future<void> _open() async {
+    if (_opening) return;
+    setState(() {
+      _opening = true;
+      _failure = null;
+    });
+    try {
+      final success = widget.onOpen != null
+          ? await widget.onOpen!(widget.uri)
+          : await launchUrl(
+              widget.uri,
+              mode: LaunchMode.externalApplication,
+            );
+      if (mounted && !success) {
+        setState(() => _failure = 'Zotero could not be opened on this device.');
+      }
+    } on Exception {
+      if (mounted) {
+        setState(() => _failure = 'Zotero could not be opened on this device.');
+      }
+    } finally {
+      if (mounted) setState(() => _opening = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => Column(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      TextButton.icon(
+        key: const ValueKey('zotero-open-in-desktop'),
+        onPressed: _opening ? null : _open,
+        icon: const Icon(Icons.open_in_new),
+        label: const Text('Open in Zotero'),
+      ),
+      if (_failure != null)
+        Semantics(
+          liveRegion: true,
+          child: SizedBox(
+            width: 180,
+            child: Text(
+              _failure!,
+              textAlign: TextAlign.center,
+              key: const ValueKey('zotero-desktop-selection-error'),
+            ),
+          ),
+        ),
+    ],
+  );
+}
 
 List<(String, String)> _detailFields(ZoteroItem item) => [
   ('Title', zoteroHtmlToPlainText(item.title)),
@@ -46,12 +118,14 @@ class ZoteroItemDetailsDialog extends StatefulWidget {
     required this.activeTags,
     this.onBrowseChildren,
     this.childrenUnavailableReason,
+    this.onOpenInZotero,
   });
 
   final ZoteroItem item;
   final List<String> activeTags;
   final Future<void> Function()? onBrowseChildren;
   final String? childrenUnavailableReason;
+  final ZoteroItemOpener? onOpenInZotero;
 
   @override
   State<ZoteroItemDetailsDialog> createState() =>
@@ -111,6 +185,7 @@ class _ZoteroItemDetailsDialogState extends State<ZoteroItemDetailsDialog> {
   @override
   Widget build(BuildContext context) {
     final item = widget.item;
+    final selectionUri = zoteroCatalogItemSelectionUri(item);
     return AlertDialog(
       key: const ValueKey('zotero-item-details-dialog'),
       insetPadding: const EdgeInsets.all(16),
@@ -196,6 +271,11 @@ class _ZoteroItemDetailsDialogState extends State<ZoteroItemDetailsDialog> {
         ),
       ),
       actions: [
+        if (selectionUri != null)
+          _ZoteroOpenItemButton(
+            uri: selectionUri,
+            onOpen: widget.onOpenInZotero,
+          ),
         if (_copyStatus != null)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -222,9 +302,14 @@ class _ZoteroItemDetailsDialogState extends State<ZoteroItemDetailsDialog> {
 /// Inspects the stored CSL snapshot, including offline and mixed-library
 /// sources. Opening or copying details never fetches or changes a reference.
 class ZoteroStoredReferenceDetailsDialog extends StatefulWidget {
-  const ZoteroStoredReferenceDetailsDialog({super.key, required this.item});
+  const ZoteroStoredReferenceDetailsDialog({
+    super.key,
+    required this.item,
+    this.onOpenInZotero,
+  });
 
   final ZoteroCitationItem item;
+  final ZoteroItemOpener? onOpenInZotero;
 
   @override
   State<ZoteroStoredReferenceDetailsDialog> createState() =>
@@ -292,6 +377,11 @@ class _ZoteroStoredReferenceDetailsDialogState
       ),
     ),
     actions: [
+      if (zoteroStoredItemSelectionUri(widget.item) != null)
+        _ZoteroOpenItemButton(
+          uri: zoteroStoredItemSelectionUri(widget.item)!,
+          onOpen: widget.onOpenInZotero,
+        ),
       TextButton.icon(
         key: const ValueKey('zotero-copy-stored-reference-details'),
         onPressed: _copying ? null : _copyDetails,

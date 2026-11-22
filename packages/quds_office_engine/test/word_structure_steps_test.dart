@@ -54,6 +54,23 @@ void main() {
     },
   );
 
+  test('operation catalog scenario executes', () async {
+    const root = 'build/fidelity-operations';
+    final output = '$root/edited.docx';
+    await cli.execute([
+      'modify',
+      'test/fixtures/fidelity/word.docx',
+      'test/fixtures/fidelity/scripts/word-operations.json',
+      output,
+    ]);
+    await cli.execute(['roundtrip', output, root, '1']);
+    final document = WordDeserializer().readBytes(
+      File(output).readAsBytesSync(),
+    );
+    expect(document.sections, isNotEmpty);
+    expect(document.paragraphs, isNotEmpty);
+  });
+
   for (final step in <Map<String, Object?>>[
     {'op': 'tableAdd', 'rows': 0, 'columns': 2, 'width': 100},
     {'op': 'tableAdd', 'rows': 2, 'columns': 0, 'width': 100},

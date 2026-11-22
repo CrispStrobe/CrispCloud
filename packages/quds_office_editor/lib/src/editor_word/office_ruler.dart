@@ -151,6 +151,7 @@ abstract final class WordRuler {
     double? lineBoxWidth,
     double? cellX,
     double? cellWidth,
+    double cellMargin = LaidOutLine.tableCellPad,
     double? frameX,
     double? frameWidth,
     double frameInsetLeft = LaidOutLine.framePad,
@@ -175,11 +176,19 @@ abstract final class WordRuler {
     if (lineBoxX != null && lineBoxWidth != null && lineBoxWidth > 0) {
       return (left: lineBoxX, right: lineBoxX + lineBoxWidth);
     }
-    if (cellX != null && cellWidth != null && cellWidth > 12) {
-      return (
-        left: cellX + LaidOutLine.tableCellPad,
-        right: cellX + cellWidth - LaidOutLine.tableCellPad,
-      );
+    if (cellX != null && cellWidth != null && cellWidth > 0) {
+      final contentWidth = cellWidth - cellMargin * 2;
+      if (!cellMargin.isFinite ||
+          cellMargin < 0 ||
+          !contentWidth.isFinite ||
+          contentWidth <= 0) {
+        throw ArgumentError.value(
+          cellMargin,
+          'cellMargin',
+          'Table cell margins must leave a finite positive content width.',
+        );
+      }
+      return (left: cellX + cellMargin, right: cellX + cellWidth - cellMargin);
     }
     if (frameX != null && frameWidth != null && frameWidth > 12) {
       final left = frameX + frameInsetLeft;

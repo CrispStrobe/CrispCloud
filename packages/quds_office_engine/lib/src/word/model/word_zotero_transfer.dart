@@ -686,6 +686,7 @@ final class WordZoteroTransferPlan {
             package: _source.package,
             sourceFootnoteSeparatorsPresent:
                 _source.sourceFootnoteSeparatorsPresent,
+            footnoteSeparator: _source.footnoteSeparator,
             zoteroDocumentData: _source.zoteroDocumentData,
             proofingLanguage: _source.proofingLanguage,
             autoHyphenation: _source.autoHyphenation,
@@ -904,6 +905,7 @@ final class _TransferModelGuard {
       );
     }
     final data = document.zoteroDocumentData;
+    final separator = document.footnoteSeparator;
     final package = document.package;
     _checks.add(
       () =>
@@ -912,6 +914,7 @@ final class _TransferModelGuard {
           !document.protectionFormattingRestricted &&
           !document.revisions.any((r) => r.accepted == null) &&
           document.zoteroDocumentData == data &&
+          identical(document.footnoteSeparator, separator) &&
           identical(document.package, package),
     );
     _list(() => document.sections);
@@ -1161,6 +1164,7 @@ List<Object?> _runProperties(WmlRunProps p) => [
   p.underline.name,
   p.strike,
   p.smallCaps,
+  p.allCaps,
   p.color,
   p.highlight,
   p.fontSizeHalfPoints,
@@ -1168,6 +1172,7 @@ List<Object?> _runProperties(WmlRunProps p) => [
   p.asciiFont,
   p.csFont,
   p.vertAlign.name,
+  p.positionHalfPoints,
   p.proofingLanguage,
   p.noProof,
   p.complexScriptLanguage,

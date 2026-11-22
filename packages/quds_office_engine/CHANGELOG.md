@@ -4,6 +4,283 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Preserve continuous automatic decimal and lower/upper Roman footnote/endnote
+  numbering in editable Zotero ODT export/import, including Word's default
+  Roman endnotes. Verify exact native settings and every ordinal in a cited
+  note class, count uncited notes, retain independent class formats, and persist
+  them through DOCX reopening. Keep custom/mixed/restarted/ambiguous numbering
+  guarded and ordinary ODT export unchanged. Expose read-only automatic-note
+  metadata separately from cached labels. See the
+  [numbering qualification](../../docs/validation/zotero-note-numbering-20261122/README.md).
+
+- Prefix existing Word table-cell text through VBA `Cell.Range.InsertBefore`
+  and its selected paragraph Range, with required named `Text:=` also available
+  on supported body/header/footer paragraphs. Preserve original characters,
+  run boundaries, kerning and empty-run metadata with a dedicated guarded native
+  operation; retain table/protection/policy and whole-run rollback limits.
+  Add the eight fixed VBA String constants to all source adapters, including
+  Const/default expressions, without relaxing native text controls. Include a
+  complete table BAS, independent corpus and native/CLI/MCP/portable checks.
+  See the [prefix contract](../../docs/vba-word-macros-details.md#prefixing-existing-cell-text)
+  and [qualification](../../docs/validation/word-vba-cell-prefix-20261122/README.md).
+
+- Permit bounded native Zotero recovery for damaged citation metadata and
+  bibliography JSON with complete, exclusively owned field results. Preserve
+  original payloads, accept temporary repair state only in detached operations,
+  and require valid final metadata or explicit unlink/delete before publication.
+  Revalidate actual body/table/note ownership, guard shared or incomplete
+  packets, and preserve rich ordinary text when repaired fields are unlinked.
+  See the [recovery qualification](../../docs/validation/zotero-field-recovery-20261122/README.md).
+
+- Add bounded Word VBA `Cell.Range.Paragraphs(1)` and `.Paragraphs.Item(1)`
+  selection for the existing ordinary cell paragraph. Preserve cell identity
+  through Paragraph/Range/Shading aliases, nested `With` and named `ByVal`
+  helpers. Apply existing paragraph styles by primary name or supported
+  built-in constant, and solid RGB/palette/automatic paragraph backgrounds,
+  including on empty paragraphs. Reuse guarded native style/shading operations,
+  sparse XML ownership, detached mutation and whole-run rollback. Reject known
+  cell-paragraph insertion/list operations even in inactive source, while
+  generic helpers retain actual-selector validation. Include a complete table
+  template BAS, independent conformance fixtures, native DOCX/DOCM and CLI/MCP
+  checks, and VM/JavaScript agreement. See the
+  [contract](../../docs/vba-word-macros-details.md#formatting-a-cell-paragraph)
+  and [local qualification](../../docs/validation/word-vba-cell-paragraphs-20261122/README.md).
+
+- Extend bounded Word VBA with direct `Cell.Range.HighlightColorIndex`,
+  `NoProofing`, `LanguageID` and `LanguageIDOther` writes. Preserve table/cell
+  identity through aliases and helpers, reuse guarded detached run formatting,
+  and retain current-text-only, structural, protection and atomic-publication
+  boundaries. Add shared `Join` for allocated local String arrays, with
+  explicit delimiters, arbitrary lower bounds, fixed/dynamic array lifecycle,
+  strict conversion rules and metered UTF-16 output. Include complete table
+  report examples, versioned Join expectations, VM/JavaScript conformance and
+  native DOCX/DOCM, CLI/MCP, recording and rollback tests. See the
+  [cell text contract](../../docs/vba-word-macros-details.md#cell-highlighting-and-proofing-controls),
+  [Join contract](../../docs/vba-macros-details.md#joining-source-string-arrays)
+  and [local qualification](../../docs/validation/word-vba-cell-text-20261122/README.md).
+
+- Expose typed, read-only context for native Zotero `Field.select` requests.
+  Resolve original body, note and multipart bibliography ranges against the
+  unchanged live document without moving the writing caret or applying staged
+  results. Distinguish new insertions and detached transfer fields without
+  exposing them as live source ranges, and clear context on deletion, unlinking
+  and transaction completion.
+
+- Format supported Word table cells through bounded VBA `Cell.Range.Font` and
+  `Cell.Range.ParagraphFormat`, including existing font controls, paragraph
+  spacing/alignment, custom line-spacing pairs, spacing methods and tab stops.
+  Retain cell coordinates through aliases and named `ByVal` helpers, and use
+  explicit guarded native cell selectors. Preserve the existing table text,
+  structural and transaction contracts; Font writes require nonempty ordinary
+  text and exclude paragraph/cell marks, while paragraph formatting accepts an
+  empty ordinary paragraph. Format detached run copies to keep shared mutable
+  public-model properties from changing unrelated content. Add a reusable 2×2
+  table BAS and compiler/native/CLI/MCP/portable-runtime regression coverage;
+  see the [contract](../../docs/vba-word-macros-details.md#formatting-existing-table-cells)
+  and [local record](../../docs/validation/word-vba-cell-formatting-20261122/README.md).
+
+- Add session-owned writing-position capture and resolution for native Zotero
+  transactions. Track endpoints through citation replacement/deletion,
+  bibliography reflow and note conversion without changing document content.
+  Preserve offsets during metadata-only or identical-text updates, and accept
+  the HTTP protocol's optional field-type argument to `canInsertField`.
+
+- Retain document-wide footnote separator geometry through bounded native
+  DOCX and editable ODT persistence, note pagination and Zotero transfer.
+  Preserve supported gaps, thickness, relative width, physical alignment,
+  color and hidden rules, including nondefault special-note IDs and settings
+  references. Qualify combined VBA foreground writes and late-failure rollback
+  without changing active notes or separators; see the
+  [integrated record](../../docs/validation/word-vba-comparison-colors-20261121/README.md).
+
+- Add shared binary `StrComp` to Word, Excel and PowerPoint VBA macros, with
+  exact comparison results, explicit Empty/Null handling, strict argument
+  contracts and metered UTF-16 work. Word additionally supports the complete
+  fixed `Font.ColorIndex` palette and automatic foreground through `wdAuto`
+  or `Font.Color = wdColorAutomatic`. Preserve native automatic identity,
+  sparse theme overrides, foreign metadata and transaction rollback. Include
+  a runnable report/template BAS, versioned source cases, CLI/MCP coverage,
+  native save/reopen regressions and matching VM/JavaScript checks. See the
+  [comparison](../../docs/vba-macros-details.md#binary-string-comparison) and
+  [foreground](../../docs/vba-word-macros-details.md#font-palette-and-automatic-foreground)
+  contracts.
+
+- Fill existing Word table templates from the bounded VBA dialect using typed
+  `Tables`, `Table`, `Cell` and cell-range aliases, `With` and `ByVal` helpers.
+  `Cell.Range.Text` emits guarded `docx.tableCellRangeText` operations for plain
+  single-paragraph cells in unmerged rectangular main-story tables. Preserve
+  structure and formatting, refuse ambiguous native ownership and unsupported
+  rich content, and retain the atomic CLI/MCP/recording transaction boundary.
+  Add a runnable table-report BAS and portable source/native conformance checks.
+  Retain explicit empty ordinary text runs during DOCX import so clearing,
+  saving, reopening and refilling a cell preserves insertion formatting;
+  structural markers do not acquire additional empty runs.
+
+- Honor each table's uniform cell margin in native measurement, wrapping,
+  pagination and note/nested-table layout instead of a fixed inset. Preserve
+  accumulated ancestor margins when fitting pictures and splitting tall rows.
+  Editable Zotero ODT exports explicit padding; native import resolves bounded
+  style inheritance and retains uniform padding through DOCX saves. Admit
+  LibreOffice's explicit borderless declarations, while rejecting asymmetric,
+  conflicting or unrepresentable padding and visible unsupported borders.
+  Check serialized content widths with exact decimal arithmetic, including
+  merged spans and margins that exhaust a cell only after rounding. Render
+  uniquely defined, body-referenced image-only endnotes without promoting
+  orphan, duplicate or frame-only note references.
+
+- Refuse editable Zotero ODT export when effective native text, paragraph-mark
+  or note-marker formatting raises or lowers the baseline by an absolute
+  amount. Check inherited positions before writing, preserve explicit zero
+  overrides and keep supported superscript/subscript independent.
+
+- Add shared bounded VBA `Abs`, `Int`, `Fix` and `Sgn` expressions to Word,
+  Excel and PowerPoint macros. Preserve negative floor/truncation differences,
+  numeric Variant and Empty/Null behavior, explicit coercion requirements and
+  finite portable bounds. Include a runnable Word report, versioned numeric
+  corpus and native/CLI/MCP transaction and VM/JavaScript coverage. See the
+  [numeric contract](../../docs/vba-macros-details.md#numeric-intrinsics).
+
+- Add bounded Word VBA `Font.Position` assignments through typed aliases,
+  helpers and independent header/footer selectors. Native run formatting,
+  DOCX inheritance and sparse serialization retain signed half-point positions
+  and explicit zero overrides. Headless/PDF layout moves the baseline without
+  resizing text, including incremental and note-copy paths; logical text,
+  comparison and stale-operation identity remain intact. Include an executable
+  BAS example, versioned source corpus, native/layout and CLI/MCP tests. See the
+  [position contract](../../docs/vba-word-macros-details.md#baseline-position-without-resizing-text).
+
+- Preserve semantic uppercase text when importing native Zotero ODT files.
+  Resolve inherited uppercase and explicit normal-case overrides without
+  changing authored Unicode, citation caches, JSON or UTF-16 endpoints. Retain
+  mixed-script formatting and inline images through repeated ODT/DOCX saves.
+  Reject unsupported transforms and ambiguous uppercase/small-cap combinations.
+  Preserve authored picture-title distinctions in continuous header comparison
+  and character styles on inline annotation pictures. See the
+  [combined qualification](../../docs/validation/zotero-roundtrip-complete-20261121/README.md).
+
+- Reopen supported native Zotero bibliographies saved by LibreOffice, including
+  inherited inert section styles and rich/empty entries. Validate unused
+  sequence declarations and retain protection/layout refusals. Qualify the
+  identified LibreOffice decimal zero-offset note convention against exact
+  visible ordinals. Preserve absolute editable-ODT table widths with physical
+  left/center/right alignment and admit inert border-model defaults only within
+  the bounded borderless reader. Preserve complete uniform DOCX table margins,
+  including zero, through direct properties and bounded style inheritance while
+  retaining unsupported source XML. Recompute optional soft-page hints and
+  declare exact native note marker styles and the final endnote page master;
+  validate their effective formatting and compatible geometry on reopening.
+  Retain actual converter fixtures and controlled
+  native refresh/edit/unlink regressions. See the
+  [round-trip record](../../docs/validation/zotero-odt-roundtrip-20261121/README.md)
+  for executed scope and remaining active-footnote/installed-plugin acceptance.
+
+- Preserve bounded embedded inline PNG/JPEG pictures through native editable
+  Zotero ODT import/export and further DOCX saves, including raster bytes,
+  accessible titles/descriptions, links and adjacent citation ownership.
+  Emit one frame per picture with unique drawing names, preserve image-run
+  styling, and keep identical headers continuous after name allocation.
+  Retain guarded graphic styles, raster budgets and atomic refusals for
+  unsupported pictures. See the
+  [qualified image work](../../docs/validation/zotero-odt-images-20261121/README.md).
+
+- Extend Word VBA with typed `Shading` bindings on selected Paragraph/Range
+  objects, RGB/automatic and fixed-palette background assignments, and all 60
+  named `WdColor` constants. Add guarded native `docx.paragraphShading` with
+  sparse background ownership, explicit automatic overrides, metadata
+  preservation and atomic refusal of unsupported source shading. Include
+  compiler, native, transaction, CLI/MCP and VM/JavaScript example coverage.
+  See the [shading contract](../../docs/vba-word-macros-details.md#paragraph-background-shading).
+
+- Add shared bounded `Space`/`Space$`, `String`/`String$`, `ChrW`/`ChrW$`, and
+  `AscW` to the Word, Excel and PowerPoint source dialects. Keep exact numeric
+  arguments, UTF-16 code-unit semantics, strict actual String inputs, shared
+  work/output limits and existing native-publication character guards. Numeric
+  code-page String operands remain unsupported. Include a runnable Word BAS
+  module and source/transaction/portable tests. See the
+  [construction contract](../../docs/vba-macros-details.md#text-construction-and-unicode-code-units).
+
+- Extend bounded Word VBA with `Paragraph.Style` and selected `Range.Style`
+  assignments by primary name or 13 built-in constants. Add guarded native
+  `docx.paragraphStyle` with targeted inheritance refresh, preserved direct
+  formatting and sparse source metadata, explicit same-value references and
+  atomic refusal of ambiguous styles or changed numbering. Include a runnable
+  BAS example and source, native, CLI/MCP, rollback and VM/JavaScript coverage.
+  See the [style contract](../../docs/vba-word-macros-details.md#existing-paragraph-styles).
+
+- Add explicit `OdtDocumentWriter.writeEditableZoteroBytes` copy export with
+  native citation ReferenceMarks, complete bibliography TextSections and
+  Unicode-safe ReferenceMark preferences. Preserve supported body, table-cell
+  and decimal-note ownership, rich caches and unknown metadata; refuse active
+  fields that would be lost. Keep ordinary cached ODT export unchanged.
+  Preserve decimal imported endnote numbering through DOCX reopening and
+  editable ODT saves; declare decimal native note configurations and refuse
+  mixed fixed/automatic note numbering that cannot retain cited labels. See the
+  [native-output contract](../../docs/roadmaps/zotero/native-odt-output.md).
+
+- Extend bounded native ODT input with horizontal/vertical merged tables.
+  Validate explicit covered-cell ownership, preserve originating Zotero fields,
+  and emit empty native vertical continuations with summed logical widths.
+  Keep existing styles and shared table/cell/paragraph budgets; refuse hidden
+  covered content, ambiguous coverage, conflicting shading and repeated owners.
+  Engine/editor regression sources and independent source review are preserved.
+  The [editable-output continuation](../../docs/validation/zotero-editable-odt-20261121/README.md)
+  executes the previously blocked local qualification and records its results.
+
+- Preserve namespace scope when capturing XML fragments: retain inherited
+  prefixes, including QName-only extension references, without allowing a
+  descendant's prefix shadow to overwrite the captured root's identity.
+  Expose an immutable `XmlPullReader.inScopeNamespaces` snapshot and retain
+  local/default namespace declarations through repeated document saves.
+
+- Extend bounded Word VBA with typed section `TextColumns`, named/positional
+  `SetCount`, exact point `Spacing` and Boolean `LineBetween` writes. Add guarded
+  native uniform-column edits with sparse section ownership, geometry checks,
+  explicit same-value assignments and whole-run rollback. Preserve unrelated
+  native metadata, namespace aliases and inert DOCM parts; recognize native
+  separator Boolean spellings. Include a runnable two-section BAS module and
+  source, native, CLI/MCP and portable regression coverage. See the
+  [text-column contract](../../docs/vba-word-macros-details.md#uniform-section-text-columns).
+
+- Extend bounded native ODT import with independently inherited Latin,
+  complex-script and Asian text formatting, materialized as editable native
+  runs without changing field offsets. Preserve imported script slots through
+  DOCX saves and synchronize later edits only on importer-owned projections.
+  Interpret supported LibreOffice defaults after inheritance and guard dormant
+  paragraph/page settings against active text, language, tabs and footnotes.
+  Retain the original LibreOfficeDev fixture and a separately identified
+  synthetic Zotero extension. See the
+  [style continuation record](../../docs/validation/zotero-libreoffice-styles-20261121/README.md)
+  for qualification and the remaining native-output/installed-host boundaries.
+
+- Add bounded `OdtDocumentReader.readBytes` and byte-based asynchronous Word
+  opening for supported native ODT. Preserve rich paragraphs/styles, absolute
+  external links, authored notes, simple lists and unmerged nested tables;
+  reconstruct canonical Zotero citations/bibliographies by exact source
+  ownership. Retain rich caches and unknown metadata through DOCX save/reopen,
+  normalize ReferenceMark preferences only at the explicit import boundary,
+  and archive original `meta.xml` in DOCX custom XML. Keep resource limits and
+  refuse unsupported used formatting/structure before publication. Qualify
+  controlled refresh/placement transactions separately from installed hosts.
+  This increment retained a LibreOfficeDev 26.8 style refusal, subsequently
+  addressed by the style continuation above. Ordinary ODT export remains a
+  cached-result path. See the
+  [rich-import record](../../docs/validation/zotero-rich-odt-20261121/README.md).
+
+- Extend bounded Word VBA with 30 normal-slot `LanguageID` / `LanguageIDOther`
+  values and independent `Font.NameBi` writes. Retain unedited language/font
+  slots, theme metadata, explicit same-value inheritance overrides and inert
+  DOCM contents. Correct native font ownership and namespace-aware direct/style
+  projection; refuse ambiguous input before mutation. Add a runnable multilingual
+  BAS module, native/compiler/transaction tests and portable VM/JavaScript
+  qualification. See the [language/font contract](../../docs/vba-word-macros-details.md#proofing-language-and-complex-script-font-controls).
+
+- Qualify the incoming bounded ODT reader's table-style inheritance. Preserve
+  inherited alignment and row keep-together, honor explicit transparent cell
+  fills, and distribute an explicit table width across unspecified columns.
+  Refuse conflicting fixed widths, duplicate used property containers and
+  unsupported structural-style metadata. Retain 23 preservation regressions
+  when reconciling the incoming branch with the richer import contract above.
+
 - Add `OdfZotero.inspect`, a bounded read-only native ODT Zotero inventory.
   Retain canonical citation ReferenceMarks, bibliography TextSections, exact
   paragraph/story/cell ownership, UTF-16 offsets, cached results and original
@@ -24,7 +301,7 @@ All notable changes to `quds_office_engine` are documented here.
   formatting fields with exact half-point validation, sparse attribute writes,
   explicit inheritance overrides and preserved foreign XML. Include a runnable
   BAS example and source, native, layout, CLI/MCP and portable qualification.
-  See the [proofing contract](../../docs/VBA_WORD_MACROS.md#proofing-and-kerning-controls).
+  See the [proofing contract](../../docs/vba-word-macros-details.md#proofing-and-kerning-controls).
 - Prevent incremental line translation from reusing stale page/column identity
   when an inline page break becomes active after an earlier typing edit.
 
@@ -36,7 +313,7 @@ All notable changes to `quds_office_engine` are documented here.
   inherited, shared, ambiguous and opaque header/footer targets; reject
   whole-story writes and nonbody list operations. Add a runnable BAS example
   and compiler, native, CLI/MCP and portable regression coverage. See the
-  [header/footer contract](../../docs/VBA_WORD_MACROS.md#existing-header-and-footer-paragraphs).
+  [header/footer contract](../../docs/vba-word-macros-details.md#existing-header-and-footer-paragraphs).
 
 - Preserve adjacent equal-target ODT hyperlinks as one range with independently
   styled spans, preventing lost Unicode transfer metadata in LibreOffice.
@@ -71,7 +348,7 @@ All notable changes to `quds_office_engine` are documented here.
   geometry and revision metadata. Refuse ambiguous orientation/source identity
   and unsupported new-column starts. Add an executable BAS example, source,
   native, transaction and portable checks; see the
-  [section-controls contract](../../docs/VBA_WORD_MACROS.md#section-orientation-and-start-controls).
+  [section-controls contract](../../docs/vba-word-macros-details.md#section-orientation-and-start-controls).
 
 - Replace Zotero research-content selections across consecutive ordinary
   paragraphs in one body section or authored note. Preserve rich prefix/suffix

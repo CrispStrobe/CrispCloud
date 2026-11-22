@@ -8,6 +8,7 @@ import 'package:quds_office_engine/quds_office_engine.dart';
 import '../proofing/word_proofing.dart';
 import 'office_controller.dart';
 import 'word_review_labels.dart';
+import '../l10n/office_language.dart';
 import '../l10n/office_plural.dart';
 
 /// Non-modal writing and tracked-change review beside the document canvas.
@@ -117,8 +118,12 @@ class _WordReviewPaneState extends State<WordReviewPane> {
   int _textOptionsRequest = -1;
 
   WordEditorController get _c => widget.controller;
-  bool get _arabic => _c.config.textDirection == TextDirection.rtl;
-  String _s(String english, String arabic) => _arabic ? arabic : english;
+  OfficeUiLanguage get _language => OfficeUiLanguage.of(_c.config);
+  bool get _arabic => _language.isArabic;
+  bool get _german => _language.isGerman;
+  String _s(String english, String arabic) => _language.label(english, arabic);
+  String _t(String english, String german, String arabic) =>
+      _language.phrase(english, german, arabic);
 
   @override
   void initState() {
@@ -572,9 +577,10 @@ class _WordReviewPaneState extends State<WordReviewPane> {
       const SizedBox(height: 4),
       _navigation(
         label: issues.isEmpty
-            ? officeFindings(0, arabic: _arabic)
-            : _s(
+            ? officeFindings(0, arabic: _arabic, german: _german)
+            : _t(
                 '${selectedIndex + 1} of ${officeFindings(issues.length)}',
+                'Hinweis ${selectedIndex + 1} von ${issues.length}',
                 'النتيجة ${selectedIndex + 1} من ${issues.length}',
               ),
         previousKey: 'live-proofing-previous',
@@ -1249,7 +1255,9 @@ class _WordReviewPaneState extends State<WordReviewPane> {
               ])
                 DropdownMenuItem(
                   value: kind,
-                  child: Text(kind.reviewLabel(arabic: _arabic)),
+                  child: Text(
+                    kind.reviewLabel(arabic: _arabic, german: _german),
+                  ),
                 ),
             ],
             onChanged: (value) => setState(() {
@@ -1265,8 +1273,9 @@ class _WordReviewPaneState extends State<WordReviewPane> {
         crossAxisAlignment: WrapCrossAlignment.center,
         children: <Widget>[
           Text(
-            _s(
+            _t(
               '${shown.length} of ${officeCount(pending.length, 'pending change')}',
+              '${shown.length} von ${pending.length} offenen Änderungen angezeigt',
               'المعروض ${shown.length} من ${officeChanges(pending.length, arabic: true)} معلقة',
             ),
             key: const ValueKey<String>('live-review-filter-count'),
@@ -1282,8 +1291,9 @@ class _WordReviewPaneState extends State<WordReviewPane> {
       _navigation(
         label: shown.isEmpty
             ? _s('0 shown changes', 'لا توجد تغييرات معروضة')
-            : _s(
+            : _t(
                 '${selectedIndex + 1} of ${officeChanges(shown.length)}',
+                'Änderung ${selectedIndex + 1} von ${shown.length}',
                 'التغيير ${selectedIndex + 1} من ${shown.length}',
               ),
         previousKey: 'live-review-previous',
@@ -1327,8 +1337,9 @@ class _WordReviewPaneState extends State<WordReviewPane> {
                         _resolveChanges(shown, accept: true, selected: selected)
                   : null,
               child: Text(
-                _s(
+                _t(
                   'Accept ${shown.length} shown',
+                  '${shown.length} angezeigte übernehmen',
                   'قبول ${shown.length} المعروضة',
                 ),
               ),
@@ -1343,8 +1354,9 @@ class _WordReviewPaneState extends State<WordReviewPane> {
                     )
                   : null,
               child: Text(
-                _s(
+                _t(
                   'Reject ${shown.length} shown',
+                  '${shown.length} angezeigte ablehnen',
                   'رفض ${shown.length} المعروضة',
                 ),
               ),
@@ -1386,7 +1398,7 @@ class _WordReviewPaneState extends State<WordReviewPane> {
                   overflow: TextOverflow.ellipsis,
                 ),
                 subtitle: Text(
-                  '${revision.kind.reviewLabel(arabic: _arabic)}: ${revision.displayText}',
+                  '${revision.kind.reviewLabel(arabic: _arabic, german: _german)}: ${revision.displayText}',
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -1452,7 +1464,7 @@ class _WordReviewPaneState extends State<WordReviewPane> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
         Text(
-          '${revision.kind.reviewLabel(arabic: _arabic)} · ${revision.author}',
+          '${revision.kind.reviewLabel(arabic: _arabic, german: _german)} · ${revision.author}',
           style: Theme.of(context).textTheme.titleSmall,
         ),
         if (revision.kind.isMove || revision.kind.isFormatting)

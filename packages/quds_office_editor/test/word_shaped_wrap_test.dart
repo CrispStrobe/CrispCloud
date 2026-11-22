@@ -81,7 +81,13 @@ void main() {
     });
   }
 
-  for (final cellWidth in [88.0, 84.0]) {
+  // The narrow case needs a 73.2 pt line box, where 'AV To AV' (73.45 pt
+  // shaped) no longer fits. Derive the cell width from the layout's actual
+  // default cell margin, also used by the table model, instead of a width
+  // coupled to the renderer's former fixed padding.
+  const narrowBox = 73.2;
+  final narrowCell = narrowBox + 2 * LaidOutLine.tableCellPad;
+  for (final cellWidth in [88.0, narrowCell]) {
     test('narrow $cellWidth point cells contain reshaped line fragments', () {
       final paragraphs = [
         _paragraph('AV To AV To AV To', 18),
@@ -113,8 +119,8 @@ void main() {
       final controller = _controller(document);
       final before = _lines(controller);
       expect(before.length, greaterThan(paragraphs.length));
-      if (cellWidth == 84) {
-        expect(before.first.boxWidth, closeTo(73.2, 0.001));
+      if (cellWidth == narrowCell) {
+        expect(before.first.boxWidth, closeTo(narrowBox, 0.001));
         expect(
           before.first.text,
           isNot('AV To AV'),
