@@ -314,6 +314,13 @@ jobs:
           ( cd "$WORK" && zip -qr "$RESIGNED" Payload )
           echo "IPA=$RESIGNED" >> "$GITHUB_ENV"
 
+      - name: Verify the SDK recorded in the exported iOS executable
+        run: |
+          set -euo pipefail
+          mkdir -p build/export-compliance
+          bash tool/verify_ios_sdk.sh "$IPA" \
+            | tee build/export-compliance/ios-sdk.txt
+
       - name: Record the submitted IPA's crypto release evidence
         run: |
           set -euo pipefail
