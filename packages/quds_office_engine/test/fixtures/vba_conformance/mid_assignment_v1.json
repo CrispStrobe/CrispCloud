@@ -1,0 +1,1933 @@
+{
+  "schemaVersion": 1,
+  "suite": "vba-mid-assignment",
+  "dialect": "vba-word",
+  "cases": [
+    {
+      "id": "explicit-middle-span",
+      "feature": "Mid bounded string replacement",
+      "source": "Sub Main()\n  Dim text As String\n  text = \"abcdef\"\n  Mid(text, 3, 2) = \"XY\"\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = text\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "abXYef"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-statement",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Independently authored replacement outcome from the published Mid statement contract; the native output sink is the Quds adapter mapping. No Office host was executed."
+      }
+    },
+    {
+      "id": "omitted-length",
+      "feature": "Mid bounded string replacement",
+      "source": "Sub Main()\n  Dim text As String\n  text = \"abcdef\"\n  Mid(text, 3) = \"XY\"\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = text\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "abXYef"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-statement",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Independently authored replacement outcome from the published Mid statement contract; the native output sink is the Quds adapter mapping. No Office host was executed."
+      }
+    },
+    {
+      "id": "dollar-spelling",
+      "feature": "Mid bounded string replacement",
+      "source": "Sub Main()\n  Dim text As String\n  text = \"abcdef\"\n  Mid$(text, 2, 2) = \"XY\"\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = text\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "aXYdef"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-statement",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Independently authored replacement outcome from the published Mid statement contract; the native output sink is the Quds adapter mapping. No Office host was executed."
+      }
+    },
+    {
+      "id": "case-insensitive-spelling",
+      "feature": "Mid bounded string replacement",
+      "source": "Sub Main()\n  Dim text As String\n  text = \"abcdef\"\n  mId$(TEXT, 2, 2) = \"XY\"\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = text\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "aXYdef"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-statement",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect contract, including source-local evaluation and strict String admission; not an observation from an Office host."
+      }
+    },
+    {
+      "id": "replacement-longer-than-length",
+      "feature": "Mid bounded string replacement",
+      "source": "Sub Main()\n  Dim text As String\n  text = \"abcdef\"\n  Mid(text, 2, 2) = \"WXYZ\"\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = text\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "aWXdef"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-statement",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Independently authored replacement outcome from the published Mid statement contract; the native output sink is the Quds adapter mapping. No Office host was executed."
+      }
+    },
+    {
+      "id": "replacement-shorter-than-length",
+      "feature": "Mid bounded string replacement",
+      "source": "Sub Main()\n  Dim text As String\n  text = \"abcdef\"\n  Mid(text, 2, 4) = \"X\"\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = text\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "aXcdef"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-statement",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Independently authored replacement outcome from the published Mid statement contract; the native output sink is the Quds adapter mapping. No Office host was executed."
+      }
+    },
+    {
+      "id": "length-exceeds-remaining-target",
+      "feature": "Mid bounded string replacement",
+      "source": "Sub Main()\n  Dim text As String\n  text = \"abcdef\"\n  Mid(text, 5, 100) = \"WXYZ\"\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = text\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "abcdWX"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-statement",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Independently authored replacement outcome from the published Mid statement contract; the native output sink is the Quds adapter mapping. No Office host was executed."
+      }
+    },
+    {
+      "id": "omitted-length-cannot-grow",
+      "feature": "Mid bounded string replacement",
+      "source": "Sub Main()\n  Dim text As String\n  text = \"abcdef\"\n  Mid(text, 4) = \"WXYZ123456\"\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = text\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "abcWXY"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-statement",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Independently authored replacement outcome from the published Mid statement contract; the native output sink is the Quds adapter mapping. No Office host was executed."
+      }
+    },
+    {
+      "id": "replace-first-character",
+      "feature": "Mid bounded string replacement",
+      "source": "Sub Main()\n  Dim text As String\n  text = \"abcdef\"\n  Mid(text, 1, 1) = \"Z\"\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = text\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "Zbcdef"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-statement",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Independently authored replacement outcome from the published Mid statement contract; the native output sink is the Quds adapter mapping. No Office host was executed."
+      }
+    },
+    {
+      "id": "replace-last-character",
+      "feature": "Mid bounded string replacement",
+      "source": "Sub Main()\n  Dim text As String\n  text = \"abcdef\"\n  Mid(text, 6, 1) = \"Z\"\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = text\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "abcdeZ"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-statement",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Independently authored replacement outcome from the published Mid statement contract; the native output sink is the Quds adapter mapping. No Office host was executed."
+      }
+    },
+    {
+      "id": "replace-complete-target",
+      "feature": "Mid bounded string replacement",
+      "source": "Sub Main()\n  Dim text As String\n  text = \"abcdef\"\n  Mid(text, 1) = \"UVWXYZ\"\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = text\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "UVWXYZ"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-statement",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Independently authored replacement outcome from the published Mid statement contract; the native output sink is the Quds adapter mapping. No Office host was executed."
+      }
+    },
+    {
+      "id": "zero-length-noop",
+      "feature": "Mid bounded string replacement",
+      "source": "Sub Main()\n  Dim text As String\n  text = \"abcdef\"\n  Mid(text, 2, 0) = \"XY\"\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = text\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "abcdef"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-statement",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Independently authored replacement outcome from the published Mid statement contract; the native output sink is the Quds adapter mapping. No Office host was executed."
+      }
+    },
+    {
+      "id": "empty-replacement-noop",
+      "feature": "Mid bounded string replacement",
+      "source": "Sub Main()\n  Dim text As String\n  text = \"abcdef\"\n  Mid(text, 2, 4) = \"\"\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = text\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "abcdef"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-statement",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Independently authored replacement outcome from the published Mid statement contract; the native output sink is the Quds adapter mapping. No Office host was executed."
+      }
+    },
+    {
+      "id": "empty-omitted-replacement-noop",
+      "feature": "Mid bounded string replacement",
+      "source": "Sub Main()\n  Dim text As String\n  text = \"abcdef\"\n  Mid(text, 2) = \"\"\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = text\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "abcdef"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-statement",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Independently authored replacement outcome from the published Mid statement contract; the native output sink is the Quds adapter mapping. No Office host was executed."
+      }
+    },
+    {
+      "id": "maximum-signed-length-clamps",
+      "feature": "Mid bounded string replacement",
+      "source": "Sub Main()\n  Dim text As String\n  text = \"abcdef\"\n  Mid(text, 5, 2147483647) = \"WXYZ\"\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = text\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "abcdWX"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-statement",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Independently authored replacement outcome from the published Mid statement contract; the native output sink is the Quds adapter mapping. No Office host was executed."
+      }
+    },
+    {
+      "id": "integral-double-positions",
+      "feature": "Mid bounded string replacement",
+      "source": "Sub Main()\n  Dim text As String\n  text = \"abcdef\"\n  Mid(text, 2.0, 2.0) = \"XY\"\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = text\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "aXYdef"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-statement",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect contract, including source-local evaluation and strict String admission; not an observation from an Office host."
+      }
+    },
+    {
+      "id": "negative-zero-length",
+      "feature": "Mid bounded string replacement",
+      "source": "Sub Main()\n  Dim text As String\n  text = \"abcdef\"\n  Mid(text, 2, -0.0) = \"XY\"\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = text\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "abcdef"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-statement",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect contract, including source-local evaluation and strict String admission; not an observation from an Office host."
+      }
+    },
+    {
+      "id": "string-variant-target",
+      "feature": "Mid bounded string replacement",
+      "source": "Sub Main()\n  Dim text As Variant\n  text = \"abcdef\"\n  Mid(text, 2, 2) = \"XY\"\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = text\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "aXYdef"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-statement",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Independently authored replacement outcome from the published Mid statement contract; the native output sink is the Quds adapter mapping. No Office host was executed."
+      }
+    },
+    {
+      "id": "implicit-local-string-variant",
+      "feature": "Mid bounded string replacement",
+      "source": "Sub Main()\n  text = \"abcdef\"\n  Mid(text, 2, 2) = \"XY\"\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = text\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "aXYdef"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-statement",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect contract, including source-local evaluation and strict String admission; not an observation from an Office host."
+      }
+    },
+    {
+      "id": "scalar-copy-remains-independent",
+      "feature": "Mid bounded string replacement",
+      "source": "Sub Main()\n  Dim text As String, copy As String\n  text = \"abcdef\"\n  copy = text\n  Mid(copy, 2, 2) = \"XY\"\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = text & \"|\" & copy\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "abcdef|aXYdef"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-statement",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect contract, including source-local evaluation and strict String admission; not an observation from an Office host."
+      }
+    },
+    {
+      "id": "replacement-reads-original-target",
+      "feature": "Mid bounded string replacement",
+      "source": "Sub Main()\n  Dim text As String\n  text = \"abcdef\"\n  Mid(text, 2, 3) = Mid$(text, 4, 3)\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = text\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "adefef"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-statement",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Independently authored replacement outcome from the published Mid statement contract; the native output sink is the Quds adapter mapping. No Office host was executed."
+      }
+    },
+    {
+      "id": "self-replacement-cannot-grow",
+      "feature": "Mid bounded string replacement",
+      "source": "Sub Main()\n  Dim text As String\n  text = \"abcdef\"\n  Mid(text, 2) = text\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = text\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "aabcde"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-statement",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Independently authored replacement outcome from the published Mid statement contract; the native output sink is the Quds adapter mapping. No Office host was executed."
+      }
+    },
+    {
+      "id": "supplementary-pair-span",
+      "feature": "UTF-16 replacement positions",
+      "source": "Sub Main()\n  Dim text As String\n  text = \"A\ud83d\ude00B\"\n  Mid(text, 2, 2) = \"xy\"\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = text\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "AxyB"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-statement",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect contract, including source-local evaluation and strict String admission; not an observation from an Office host."
+      }
+    },
+    {
+      "id": "supplementary-pair-replacement",
+      "feature": "UTF-16 replacement positions",
+      "source": "Sub Main()\n  Dim text As String\n  text = \"AxyB\"\n  Mid(text, 2, 2) = \"\ud83d\ude00\"\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = text\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "A\ud83d\ude00B"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-statement",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect contract, including source-local evaluation and strict String admission; not an observation from an Office host."
+      }
+    },
+    {
+      "id": "combining-mark-position",
+      "feature": "UTF-16 replacement positions",
+      "source": "Sub Main()\n  Dim text As String\n  text = \"e\u0301x\"\n  Mid(text, 2, 1) = \"*\"\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = text\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "e*x"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-statement",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect contract, including source-local evaluation and strict String admission; not an observation from an Office host."
+      }
+    },
+    {
+      "id": "surrogate-halves-can-rejoin",
+      "feature": "UTF-16 intermediate values",
+      "source": "Sub Main()\n  Dim text As String\n  text = \"xx\"\n  Mid(text, 1, 1) = Left$(\"\ud83d\ude00\", 1)\n  Mid$(text, 2, 1) = Right$(\"\ud83d\ude00\", 1)\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = text\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "\ud83d\ude00"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-statement",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Mid positions and lengths count UTF-16 code units. Intermediate surrogate halves are legal source-local values and must rejoin before the native text boundary; no Office host was executed."
+      }
+    },
+    {
+      "id": "embedded-quote-replacement",
+      "feature": "Mid bounded string replacement",
+      "source": "Sub Main()\n  Dim text As String\n  text = \"abcdef\"\n  Mid(text, 2, 1) = \"\"\"\"\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = text\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "a\"cdef"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-statement",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Independently authored replacement outcome from the published Mid statement contract; the native output sink is the Quds adapter mapping. No Office host was executed."
+      }
+    },
+    {
+      "id": "fixed-string-array-element",
+      "feature": "Mid array-element lvalues",
+      "source": "Sub Main()\n  Dim parts(-2 To 0) As String\n  parts(-2) = \"left\"\n  parts(-1) = \"abcdef\"\n  parts(0) = \"right\"\n  Mid(parts(-1), 2, 2) = \"XY\"\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = parts(-2) & \"|\" & parts(-1) & \"|\" & parts(0)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "left|aXYdef|right"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-statement",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect contract, including source-local evaluation and strict String admission; not an observation from an Office host."
+      }
+    },
+    {
+      "id": "dynamic-string-array-element",
+      "feature": "Mid array-element lvalues",
+      "source": "Sub Main()\n  Dim parts() As String\n  ReDim parts(4 To 5)\n  parts(4) = \"abcdef\"\n  parts(5) = \"untouched\"\n  Mid$(parts(4), 5, 9) = \"XYZ\"\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = parts(4) & \"|\" & parts(5)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "abcdXY|untouched"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-statement",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect contract, including source-local evaluation and strict String admission; not an observation from an Office host."
+      }
+    },
+    {
+      "id": "fixed-variant-array-element",
+      "feature": "Mid array-element lvalues",
+      "source": "Sub Main()\n  Dim parts(-2 To 0) As Variant\n  parts(-2) = \"left\"\n  parts(-1) = \"abcdef\"\n  parts(0) = \"right\"\n  Mid(parts(-1), 2, 2) = \"XY\"\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = parts(-2) & \"|\" & parts(-1) & \"|\" & parts(0)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "left|aXYdef|right"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-statement",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect contract, including source-local evaluation and strict String admission; not an observation from an Office host."
+      }
+    },
+    {
+      "id": "dynamic-variant-array-element",
+      "feature": "Mid array-element lvalues",
+      "source": "Sub Main()\n  Dim parts() As Variant\n  ReDim parts(4 To 5)\n  parts(4) = \"abcdef\"\n  parts(5) = \"untouched\"\n  Mid$(parts(4), 5, 9) = \"XYZ\"\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = parts(4) & \"|\" & parts(5)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "abcdXY|untouched"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-statement",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect contract, including source-local evaluation and strict String admission; not an observation from an Office host."
+      }
+    },
+    {
+      "id": "computed-array-index",
+      "feature": "Mid array-element lvalues",
+      "source": "Sub Main()\n  Dim parts(5 To 6) As String\n  parts(5) = \"kept\"\n  parts(6) = \"abcdef\"\n  Mid(parts(LBound(parts) + 1), 2, 2) = \"XY\"\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = parts(5) & \"|\" & parts(6)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "kept|aXYdef"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-statement",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect contract, including source-local evaluation and strict String admission; not an observation from an Office host."
+      }
+    },
+    {
+      "id": "looped-array-element-mutation",
+      "feature": "Mid array-element lvalues",
+      "source": "Sub Main()\n  Dim parts(0 To 2) As String, index As Long\n  parts(0) = \"a-0\"\n  parts(1) = \"b-1\"\n  parts(2) = \"c-2\"\n  For index = 0 To 2\n    Mid(parts(index), 2, 1) = \":\"\n  Next index\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = Join(parts, \"|\")\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "a:0|b:1|c:2"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-statement",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect contract, including source-local evaluation and strict String admission; not an observation from an Office host."
+      }
+    },
+    {
+      "id": "byval-string-isolation",
+      "feature": "Mid mutable ByVal local",
+      "source": "Option Explicit\nSub Main()\n  Dim text As String\n  text = \"abcdef\"\n  Call Rewrite(text)\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = text\nEnd Sub\nSub Rewrite(ByVal local As String)\n  Mid$(local, 2, 2) = \"XY\"\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = local\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "aXYdef"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "abcdef"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-statement",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect contract, including source-local evaluation and strict String admission; not an observation from an Office host."
+      }
+    },
+    {
+      "id": "function-string-result",
+      "feature": "Mid function-result local",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = Rewrite(\"abcdef\")\nEnd Sub\nFunction Rewrite(ByVal value As String) As String\n  Rewrite = value\n  Mid(Rewrite, 2, 2) = \"XY\"\nEnd Function\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "aXYdef"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-statement",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect contract, including source-local evaluation and strict String admission; not an observation from an Office host."
+      }
+    },
+    {
+      "id": "byval-variant-isolation",
+      "feature": "Mid mutable ByVal local",
+      "source": "Option Explicit\nSub Main()\n  Dim text As String\n  text = \"abcdef\"\n  Call Rewrite(text)\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = text\nEnd Sub\nSub Rewrite(ByVal local As Variant)\n  Mid$(local, 2, 2) = \"XY\"\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = local\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "aXYdef"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "abcdef"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-statement",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect contract, including source-local evaluation and strict String admission; not an observation from an Office host."
+      }
+    },
+    {
+      "id": "function-variant-result",
+      "feature": "Mid function-result local",
+      "source": "Option Explicit\nSub Main()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = Rewrite(\"abcdef\")\nEnd Sub\nFunction Rewrite(ByVal value As String) As Variant\n  Rewrite = value\n  Mid(Rewrite, 2, 2) = \"XY\"\nEnd Function\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "aXYdef"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-statement",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect contract, including source-local evaluation and strict String admission; not an observation from an Office host."
+      }
+    },
+    {
+      "id": "continued-mid-statement",
+      "feature": "Mid bounded string replacement",
+      "source": "Sub Main()\n  Dim text As String\n  text = \"abcdef\"\n  Mid( _\n    text, _\n    2, _\n    2) = \"XY\"\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = text\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "aXYdef"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-statement",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect contract, including source-local evaluation and strict String admission; not an observation from an Office host."
+      }
+    },
+    {
+      "id": "left-to-right-once-only-evaluation",
+      "feature": "Mid evaluation order",
+      "source": "Sub Main()\n  Dim parts(1 To 1) As String\n  parts(1) = \"abcdef\"\n  Mid(parts(Mark(1, \"index\")), Mark(2, \"start\"), Mark(2, \"length\")) = Replacement()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = parts(1)\nEnd Sub\nFunction Mark(ByVal value As Long, ByVal label As String) As Long\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = label\n  Mark = value\nEnd Function\nFunction Replacement() As String\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = \"replacement\"\n  Replacement = \"XY\"\nEnd Function\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "index"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "start"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "length"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "replacement"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "aXYdef"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-statement",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Target index, start, length and replacement each evaluate once, in that source order, before the final splice. The labelled native steps make ordering observable without document reads. No Office host was executed."
+      }
+    },
+    {
+      "id": "zero-length-still-evaluates-replacement",
+      "feature": "Mid evaluation order",
+      "source": "Sub Main()\n  Dim parts(1 To 1) As String\n  parts(1) = \"abcdef\"\n  Mid(parts(Mark(1, \"index\")), Mark(2, \"start\"), Mark(0, \"length\")) = Replacement()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = parts(1)\nEnd Sub\nFunction Mark(ByVal value As Long, ByVal label As String) As Long\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = label\n  Mark = value\nEnd Function\nFunction Replacement() As String\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = \"replacement\"\n  Replacement = \"XY\"\nEnd Function\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "index"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "start"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "length"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "replacement"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "abcdef"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-statement",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect contract, including source-local evaluation and strict String admission; not an observation from an Office host."
+      }
+    },
+    {
+      "id": "omitted-length-evaluation-order",
+      "feature": "Mid evaluation order",
+      "source": "Sub Main()\n  Dim parts(1 To 1) As String\n  parts(1) = \"abcdef\"\n  Mid(parts(Mark(1, \"index\")), Mark(2, \"start\")) = Replacement()\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = parts(1)\nEnd Sub\nFunction Mark(ByVal value As Long, ByVal label As String) As Long\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = label\n  Mark = value\nEnd Function\nFunction Replacement() As String\n  ActiveDocument.Tables(1).Cell(1, 1).Range.Text = \"replacement\"\n  Replacement = \"XY\"\nEnd Function\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "index"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "start"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "replacement"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "aXYdef"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/mid-statement",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect contract, including source-local evaluation and strict String admission; not an observation from an Office host."
+      }
+    },
+    {
+      "id": "refuses-declared-numeric-target",
+      "feature": "Mid bounded-dialect refusal",
+      "source": "Sub Main()\n  Dim text As Long\n  Mid(text, 1) = \"X\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 7
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect admission and source-diagnostic contract; strict String values and exact signed-32 positions are intentional restrictions on VBA coercion. No Office host was executed."
+      }
+    },
+    {
+      "id": "refuses-empty-variant-target",
+      "feature": "Mid bounded-dialect refusal",
+      "source": "Sub Main()\n  Dim text As Variant\n  text = Empty\n  Mid(text, 1) = \"X\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 4,
+          "column": 7
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect admission and source-diagnostic contract; strict String values and exact signed-32 positions are intentional restrictions on VBA coercion. No Office host was executed."
+      }
+    },
+    {
+      "id": "refuses-null-variant-target",
+      "feature": "Mid bounded-dialect refusal",
+      "source": "Sub Main()\n  Dim text As Variant\n  text = Null\n  Mid(text, 1) = \"X\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 4,
+          "column": 7
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect admission and source-diagnostic contract; strict String values and exact signed-32 positions are intentional restrictions on VBA coercion. No Office host was executed."
+      }
+    },
+    {
+      "id": "refuses-numeric-replacement",
+      "feature": "Mid bounded-dialect refusal",
+      "source": "Sub Main()\n  Dim text As String\n  text = \"abcdef\"\n  Mid(text, 1) = 1\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 4,
+          "column": 18
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect admission and source-diagnostic contract; strict String values and exact signed-32 positions are intentional restrictions on VBA coercion. No Office host was executed."
+      }
+    },
+    {
+      "id": "refuses-empty-replacement",
+      "feature": "Mid bounded-dialect refusal",
+      "source": "Sub Main()\n  Dim text As String\n  text = \"abcdef\"\n  Mid(text, 1) = Empty\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 4,
+          "column": 18
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect admission and source-diagnostic contract; strict String values and exact signed-32 positions are intentional restrictions on VBA coercion. No Office host was executed."
+      }
+    },
+    {
+      "id": "refuses-null-replacement",
+      "feature": "Mid bounded-dialect refusal",
+      "source": "Sub Main()\n  Dim text As String\n  text = \"abcdef\"\n  Mid(text, 1) = Null\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 4,
+          "column": 18
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect admission and source-diagnostic contract; strict String values and exact signed-32 positions are intentional restrictions on VBA coercion. No Office host was executed."
+      }
+    },
+    {
+      "id": "refuses-zero-start",
+      "feature": "Mid bounded-dialect refusal",
+      "source": "Sub Main()\n  Dim text As String\n  text = \"abcdef\"\n  Mid(text, 0, 0) = \"\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 4,
+          "column": 13
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect admission and source-diagnostic contract; strict String values and exact signed-32 positions are intentional restrictions on VBA coercion. No Office host was executed."
+      }
+    },
+    {
+      "id": "refuses-past-end-start",
+      "feature": "Mid bounded-dialect refusal",
+      "source": "Sub Main()\n  Dim text As String\n  text = \"abcdef\"\n  Mid(text, 7, 0) = \"\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 4,
+          "column": 13
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect admission and source-diagnostic contract; strict String values and exact signed-32 positions are intentional restrictions on VBA coercion. No Office host was executed."
+      }
+    },
+    {
+      "id": "refuses-overflow-start",
+      "feature": "Mid bounded-dialect refusal",
+      "source": "Sub Main()\n  Dim text As String\n  text = \"abcdef\"\n  Mid(text, 2147483648, 0) = \"\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 4,
+          "column": 13
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect admission and source-diagnostic contract; strict String values and exact signed-32 positions are intentional restrictions on VBA coercion. No Office host was executed."
+      }
+    },
+    {
+      "id": "refuses-fractional-start",
+      "feature": "Mid bounded-dialect refusal",
+      "source": "Sub Main()\n  Dim text As String\n  text = \"abcdef\"\n  Mid(text, 1.5, 0) = \"\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 4,
+          "column": 13
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect admission and source-diagnostic contract; strict String values and exact signed-32 positions are intentional restrictions on VBA coercion. No Office host was executed."
+      }
+    },
+    {
+      "id": "refuses-empty-target",
+      "feature": "Mid bounded-dialect refusal",
+      "source": "Sub Main()\n  Dim text As String\n  Mid(text, 1, 0) = \"\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 3,
+          "column": 13
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect admission and source-diagnostic contract; strict String values and exact signed-32 positions are intentional restrictions on VBA coercion. No Office host was executed."
+      }
+    },
+    {
+      "id": "refuses-negative-length",
+      "feature": "Mid bounded-dialect refusal",
+      "source": "Sub Main()\n  Dim text As String\n  text = \"abcdef\"\n  Mid(text, 1, -1) = \"X\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 4,
+          "column": 16
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect admission and source-diagnostic contract; strict String values and exact signed-32 positions are intentional restrictions on VBA coercion. No Office host was executed."
+      }
+    },
+    {
+      "id": "refuses-overflow-length",
+      "feature": "Mid bounded-dialect refusal",
+      "source": "Sub Main()\n  Dim text As String\n  text = \"abcdef\"\n  Mid(text, 1, 2147483648) = \"X\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 4,
+          "column": 16
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect admission and source-diagnostic contract; strict String values and exact signed-32 positions are intentional restrictions on VBA coercion. No Office host was executed."
+      }
+    },
+    {
+      "id": "refuses-fractional-length",
+      "feature": "Mid bounded-dialect refusal",
+      "source": "Sub Main()\n  Dim text As String\n  text = \"abcdef\"\n  Mid(text, 1, 1.5) = \"X\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 4,
+          "column": 16
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect admission and source-diagnostic contract; strict String values and exact signed-32 positions are intentional restrictions on VBA coercion. No Office host was executed."
+      }
+    },
+    {
+      "id": "refuses-local-constant",
+      "feature": "Mid bounded-dialect refusal",
+      "source": "Sub Main()\n  Const text As String = \"abcdef\"\n  Mid(text, 1) = \"X\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 3,
+          "column": 7
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect admission and source-diagnostic contract; strict String values and exact signed-32 positions are intentional restrictions on VBA coercion. No Office host was executed."
+      }
+    },
+    {
+      "id": "refuses-module-constant",
+      "feature": "Mid bounded-dialect refusal",
+      "source": "Const text As String = \"abcdef\"\nSub Main()\n  Mid(text, 1) = \"X\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 3,
+          "column": 7
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect admission and source-diagnostic contract; strict String values and exact signed-32 positions are intentional restrictions on VBA coercion. No Office host was executed."
+      }
+    },
+    {
+      "id": "refuses-whole-array",
+      "feature": "Mid bounded-dialect refusal",
+      "source": "Sub Main()\n  Dim parts(0 To 1) As String\n  Mid(parts, 1) = \"X\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 3,
+          "column": 7
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect admission and source-diagnostic contract; strict String values and exact signed-32 positions are intentional restrictions on VBA coercion. No Office host was executed."
+      }
+    },
+    {
+      "id": "refuses-named-start",
+      "feature": "Mid bounded-dialect refusal",
+      "source": "Sub Main()\n  Dim text As String\n  text = \"abcdef\"\n  Mid(text, start := 1) = \"X\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 4,
+          "column": 13
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect admission and source-diagnostic contract; strict String values and exact signed-32 positions are intentional restrictions on VBA coercion. No Office host was executed."
+      }
+    },
+    {
+      "id": "refuses-omitted-start",
+      "feature": "Mid bounded-dialect refusal",
+      "source": "Sub Main()\n  Dim text As String\n  text = \"abcdef\"\n  Mid(text, , 1) = \"X\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 4,
+          "column": 13
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect admission and source-diagnostic contract; strict String values and exact signed-32 positions are intentional restrictions on VBA coercion. No Office host was executed."
+      }
+    },
+    {
+      "id": "refuses-omitted-length",
+      "feature": "Mid bounded-dialect refusal",
+      "source": "Sub Main()\n  Dim text As String\n  text = \"abcdef\"\n  Mid(text, 1, ) = \"X\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 4,
+          "column": 16
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect admission and source-diagnostic contract; strict String values and exact signed-32 positions are intentional restrictions on VBA coercion. No Office host was executed."
+      }
+    },
+    {
+      "id": "refuses-set-prefix",
+      "feature": "Mid bounded-dialect refusal",
+      "source": "Sub Main()\n  Dim text As String\n  text = \"abcdef\"\n  Set Mid(text, 1) = \"X\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 4,
+          "column": 3
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect admission and source-diagnostic contract; strict String values and exact signed-32 positions are intentional restrictions on VBA coercion. No Office host was executed."
+      }
+    },
+    {
+      "id": "refuses-let-prefix",
+      "feature": "Mid bounded-dialect refusal",
+      "source": "Sub Main()\n  Dim text As String\n  text = \"abcdef\"\n  Let Mid(text, 1) = \"X\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 4,
+          "column": 3
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect admission and source-diagnostic contract; strict String values and exact signed-32 positions are intentional restrictions on VBA coercion. No Office host was executed."
+      }
+    },
+    {
+      "id": "refuses-call-prefix",
+      "feature": "Mid bounded-dialect refusal",
+      "source": "Sub Main()\n  Dim text As String\n  text = \"abcdef\"\n  Call Mid(text, 1)\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 4,
+          "column": 8
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect admission and source-diagnostic contract; strict String values and exact signed-32 positions are intentional restrictions on VBA coercion. No Office host was executed."
+      }
+    },
+    {
+      "id": "refuses-byte-oriented-midb",
+      "feature": "Mid bounded-dialect refusal",
+      "source": "Sub Main()\n  Dim text As String\n  text = \"abcdef\"\n  MidB(text, 1) = \"X\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 4,
+          "column": 3
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect admission and source-diagnostic contract; strict String values and exact signed-32 positions are intentional restrictions on VBA coercion. No Office host was executed."
+      }
+    },
+    {
+      "id": "refuses-byte-oriented-midb-dollar",
+      "feature": "Mid bounded-dialect refusal",
+      "source": "Sub Main()\n  Dim text As String\n  text = \"abcdef\"\n  MidB$(text, 1) = \"X\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 4,
+          "column": 7
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect admission and source-diagnostic contract; strict String values and exact signed-32 positions are intentional restrictions on VBA coercion. No Office host was executed."
+      }
+    },
+    {
+      "id": "refuses-literal-target",
+      "feature": "Mid bounded-dialect refusal",
+      "source": "Sub Main()\n  Mid(\"abcdef\", 1) = \"X\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 2,
+          "column": 7
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect admission and source-diagnostic contract; strict String values and exact signed-32 positions are intentional restrictions on VBA coercion. No Office host was executed."
+      }
+    },
+    {
+      "id": "refuses-expression-target",
+      "feature": "Mid bounded-dialect refusal",
+      "source": "Sub Main()\n  Dim text As String\n  text = \"abcdef\"\n  Mid(text & \"tail\", 1) = \"X\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 4,
+          "column": 12
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect admission and source-diagnostic contract; strict String values and exact signed-32 positions are intentional restrictions on VBA coercion. No Office host was executed."
+      }
+    },
+    {
+      "id": "refuses-property-target",
+      "feature": "Mid bounded-dialect refusal",
+      "source": "Sub Main()\n  Dim text As String\n  text = \"abcdef\"\n  Mid(text.Value, 1) = \"X\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 4,
+          "column": 12
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect admission and source-diagnostic contract; strict String values and exact signed-32 positions are intentional restrictions on VBA coercion. No Office host was executed."
+      }
+    },
+    {
+      "id": "refuses-temporary-function-result",
+      "feature": "Mid bounded-dialect refusal",
+      "source": "Sub Main()\n  Mid(Make(), 1) = \"X\"\nEnd Sub\nFunction Make() As String\n  Make = \"abcdef\"\nEnd Function\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 2,
+          "column": 7
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect admission and source-diagnostic contract; strict String values and exact signed-32 positions are intentional restrictions on VBA coercion. No Office host was executed."
+      }
+    },
+    {
+      "id": "refuses-undeclared-explicit-target",
+      "feature": "Mid bounded-dialect refusal",
+      "source": "Option Explicit\nSub Main()\n  Mid(text, 1) = \"X\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_name_error",
+          "line": 3,
+          "column": 7
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect admission and source-diagnostic contract; strict String values and exact signed-32 positions are intentional restrictions on VBA coercion. No Office host was executed."
+      }
+    },
+    {
+      "id": "refuses-unallocated-array",
+      "feature": "Mid bounded-dialect refusal",
+      "source": "Sub Main()\n  Dim parts() As String\n  Mid(parts(0), 1) = \"X\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_subscript_out_of_range",
+          "line": 3,
+          "column": 13
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect admission and source-diagnostic contract; strict String values and exact signed-32 positions are intentional restrictions on VBA coercion. No Office host was executed."
+      }
+    },
+    {
+      "id": "refuses-outside-array-bounds",
+      "feature": "Mid bounded-dialect refusal",
+      "source": "Sub Main()\n  Dim parts(1 To 1) As String\n  parts(1) = \"abcdef\"\n  Mid(parts(2), 1) = \"X\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_subscript_out_of_range",
+          "line": 4,
+          "column": 13
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect admission and source-diagnostic contract; strict String values and exact signed-32 positions are intentional restrictions on VBA coercion. No Office host was executed."
+      }
+    },
+    {
+      "id": "refuses-missing-start",
+      "feature": "Mid bounded-dialect refusal",
+      "source": "Sub Main()\n  Dim text As String\n  text = \"abcdef\"\n  Mid(text) = \"X\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 4,
+          "column": 3
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect admission and source-diagnostic contract; strict String values and exact signed-32 positions are intentional restrictions on VBA coercion. No Office host was executed."
+      }
+    },
+    {
+      "id": "refuses-four-arguments",
+      "feature": "Mid bounded-dialect refusal",
+      "source": "Sub Main()\n  Dim text As String\n  text = \"abcdef\"\n  Mid(text, 1, 1, 1) = \"X\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 4,
+          "column": 3
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect admission and source-diagnostic contract; strict String values and exact signed-32 positions are intentional restrictions on VBA coercion. No Office host was executed."
+      }
+    },
+    {
+      "id": "inactive-numeric-target-is-statically-refused",
+      "feature": "Mid bounded-dialect refusal",
+      "source": "Sub Main()\n  Dim text As Long\n  If False Then\n    Mid(text, 1) = \"X\"\n  End If\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_type_error",
+          "line": 4,
+          "column": 9
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect admission and source-diagnostic contract; strict String values and exact signed-32 positions are intentional restrictions on VBA coercion. No Office host was executed."
+      }
+    },
+    {
+      "id": "unused-named-argument-is-statically-refused",
+      "feature": "Mid bounded-dialect refusal",
+      "source": "Sub Main()\nEnd Sub\nSub Unused()\n  Dim text As String\n  Exit Sub\n  Mid(text, start := 1) = \"X\"\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 6,
+          "column": 13
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/VBA_MACROS.md",
+          "https://learn.microsoft.com/en-us/openspecs/microsoft_general_purpose_programming_languages/ms-vbal/2a8f3567-c8e0-4176-a802-cf2edeba425f"
+        ],
+        "note": "Explicit bounded-dialect admission and source-diagnostic contract; strict String values and exact signed-32 positions are intentional restrictions on VBA coercion. No Office host was executed."
+      }
+    }
+  ]
+}

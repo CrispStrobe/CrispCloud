@@ -2073,12 +2073,24 @@ final class WordZoteroCitingSession {
         ..indent = WmlIndent(left: indent, hanging: 9)
         ..explicitIndent = true;
     }
+    // Quote scopes are paragraph formatting, independent of citation text and
+    // numbering. Apply them after heading/list styles so their native left
+    // indentation composes without losing right/first-line/hanging settings.
+    for (final entry in text.quoteDepths.entries) {
+      final properties = paragraphs[entry.key].properties;
+      properties
+        ..indent = properties.indent.copyWith(
+          left: properties.indent.left + 18.0 * entry.value,
+        )
+        ..explicitIndent = true;
+    }
     _noteTextCaretTailLength = paragraph.text.length - at;
     if (blocks.any((block) => block is WmlTable) ||
         text.listItems.isNotEmpty ||
+        text.quoteDepths.isNotEmpty ||
         paragraphs.any((p) => p.properties.headingLevel != null)) {
-      // Preserve native tables and keep headings/list formatting independent
-      // from surrounding prose. Cell paragraphs never absorb outside text.
+      // Preserve native tables and keep headings/list/quote formatting
+      // independent from surrounding prose. Cells never absorb outside text.
       final originalProperties = suffixProperties;
       final tail = _splitNoteTextParagraph(
         paragraph,

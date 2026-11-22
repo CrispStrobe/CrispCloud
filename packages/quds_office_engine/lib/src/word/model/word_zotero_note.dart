@@ -15,6 +15,7 @@ final class WordZoteroNoteText {
     this.paragraphs,
     this.placeholders,
     this.listItems,
+    this.quoteDepths,
   );
 
   /// Native blocks in document order, retaining each table's cell ownership.
@@ -28,6 +29,12 @@ final class WordZoteroNoteText {
 
   /// Native list metadata keyed by each item or continuation paragraph index.
   final Map<int, WordZoteroNoteListItem> listItems;
+
+  /// Quote depth for each quoted native paragraph. Structural quote scopes
+  /// never become document text; citation and list indexes keep the same view.
+  /// Native insertion adds 18 points of left indentation per level, at most
+  /// eight levels. Zotero's editor-only CSS borders/spacing are not exported.
+  final Map<int, int> quoteDepths;
   String get plainText => paragraphs.map((p) => p.text).join('\n');
 
   factory WordZoteroNoteText.fromHtml(
@@ -56,6 +63,7 @@ final class WordZoteroNoteText {
     final directRowGroups = <WmlTable, Object>{};
     var nativeCells = 0;
     var listCount = 0;
+    var quoteCount = 0;
     var activeLink = false;
     var elements = 0;
     const escape = HtmlEscape(HtmlEscapeMode.element);
@@ -163,6 +171,27 @@ final class WordZoteroNoteText {
               attributes[name] = value;
             }
             final parent = stack.lastOrNull;
+            final quoteDepth = stack
+                .where((element) => element.tag == 'blockquote')
+                .length;
+            if (tag == 'blockquote') {
+              if (activeLink ||
+                  !_quoteParents.contains(parent?.tag) ||
+                  stack.any(
+                    (element) => !_quoteAncestors.contains(element.tag),
+                  )) {
+                throw _unsupportedQuote();
+              }
+              if (quoteDepth >= 8) {
+                throw const FormatException(
+                  'The Zotero note exceeds eight levels of blockquotes.',
+                );
+              }
+            }
+            if ((parent?.tag == 'blockquote' && !_quoteBlocks.contains(tag)) ||
+                (quoteDepth != 0 && tag == 'table')) {
+              throw _unsupportedQuote();
+            }
             if ((_tableContainers.contains(parent?.tag) &&
                     !(switch (parent?.tag) {
                       'table' => tag == 'tbody' || tag == 'tr',
@@ -286,6 +315,7 @@ final class WordZoteroNoteText {
                             'html',
                             'body',
                             'div',
+                            'blockquote',
                             'td',
                             'th',
                           }.contains(parent?.tag)))) {
@@ -369,6 +399,9 @@ final class WordZoteroNoteText {
             if (cellIndex != null) {
               canonical.write('<p>\uE000c$cellIndex\uE001</p>');
             }
+            if (tag == 'blockquote') {
+              canonical.write('<p>\uE000q${quoteCount++}\uE001</p>');
+            }
             int? linkIndex;
             if (tag == 'a') {
               if (activeLink) throw _malformed();
@@ -445,6 +478,12 @@ final class WordZoteroNoteText {
               );
               canonical.write('<p>\uE000/t\uE001</p>');
             }
+            if (element.tag == 'blockquote') {
+              // Keep an authored empty quote without leaking the scope markers
+              // into text or manufacturing an extra outer/cell paragraph.
+              if (!element.hasText) canonical.write('<p>\uE002</p>');
+              canonical.write('<p>\uE000/q\uE001</p>');
+            }
             if (element.tag == 'p' ||
                 (element.tag == 'div' && !element.hasText)) {
               canonical.write('\uE002');
@@ -460,6 +499,8 @@ final class WordZoteroNoteText {
                     element.tag == 'p' ||
                     element.tag == 'div' ||
                     element.tag == 'li' ||
+                    element.tag == 'blockquote' ||
+                    _headings.contains(element.tag) ||
                     element.tag == 'img' ||
                     _tableTags.contains(element.tag))) {
               stack.last.hasText = true;
@@ -467,6 +508,10 @@ final class WordZoteroNoteText {
           case XmlEventType.characters:
             _checkMarkers(reader.text);
             final parent = stack.lastOrNull;
+            if (parent?.tag == 'blockquote') {
+              if (reader.text.trim().isNotEmpty) throw _unsupportedQuote();
+              break;
+            }
             if (parent?.list != null) {
               if (reader.text.trim().isNotEmpty) throw _unsupportedList();
               break;
@@ -518,13 +563,18 @@ final class WordZoteroNoteText {
     final paragraphs = <WmlParagraph>[];
     final placeholders = <String, WordZoteroNotePlaceholder>{};
     final listItems = <int, WordZoteroNoteListItem>{};
+    final quoteDepths = <int, int>{};
     _NoteLink? current;
     var currentStart = 0;
     var currentParagraph = 0;
     final tableOwners = <_NoteTableOwner>[];
     var tableMarks = 0;
     var cellMarks = 0;
-    final structure = RegExp(r'^\uE000(t[0-9]+|c[0-9]+|/c|/t)\uE001$');
+    var quoteMarks = 0;
+    final quoteOwners = <WmlTableCell?>[];
+    final structure = RegExp(
+      r'^\uE000(t[0-9]+|c[0-9]+|q[0-9]+|/c|/t|/q)\uE001$',
+    );
     final marker = RegExp(
       '\uE000([0-9]+|h[1-6]|/h|l[0-9]+|i[0-9]+)\uE001|\uE002',
     );
@@ -533,6 +583,9 @@ final class WordZoteroNoteText {
         throw const FormatException('The Zotero note has too many paragraphs.');
       }
       destination.add(paragraph);
+      if (quoteOwners.isNotEmpty) {
+        quoteDepths[paragraphs.length] = quoteOwners.length;
+      }
       paragraphs.add(paragraph);
     }
 
@@ -545,7 +598,23 @@ final class WordZoteroNoteText {
       if (structural != null) {
         if (current != null) throw _malformed();
         final value = structural[1]!;
-        if (value.startsWith('t')) {
+        if (value.startsWith('q')) {
+          if (quoteOwners.length >= 8 ||
+              int.parse(value.substring(1)) != quoteMarks++ ||
+              (tableOwners.isNotEmpty && tableOwners.last.cell == null)) {
+            throw _malformed();
+          }
+          quoteOwners.add(tableOwners.lastOrNull?.cell);
+        } else if (value == '/q') {
+          if (quoteOwners.isEmpty ||
+              !identical(quoteOwners.last, tableOwners.lastOrNull?.cell)) {
+            throw _malformed();
+          }
+          quoteOwners.removeLast();
+        } else if (quoteOwners.isNotEmpty) {
+          // Quotes may be inside a cell but cannot cross table ownership.
+          throw _malformed();
+        } else if (value.startsWith('t')) {
           final index = int.parse(value.substring(1));
           final parent = tableOwners.lastOrNull;
           if ((parent != null && parent.cell == null) ||
@@ -684,6 +753,8 @@ final class WordZoteroNoteText {
       );
     }
     if (tableOwners.isNotEmpty ||
+        quoteOwners.isNotEmpty ||
+        quoteMarks != quoteCount ||
         tableMarks != tables.length ||
         cellMarks != cells.length) {
       throw _malformed();
@@ -718,6 +789,10 @@ final class WordZoteroNoteText {
       },
       {
         for (final entry in listItems.entries)
+          indexes[paragraphs[entry.key]]!: entry.value,
+      },
+      {
+        for (final entry in quoteDepths.entries)
           indexes[paragraphs[entry.key]]!: entry.value,
       },
     );
@@ -940,7 +1015,34 @@ final class WordZoteroNoteText {
     'ul',
     'ol',
     'table',
+    'blockquote',
   };
+
+  static const _quoteParents = <String>{
+    'quds-note',
+    'html',
+    'body',
+    'div',
+    'td',
+    'th',
+    'blockquote',
+  };
+  static const _quoteAncestors = <String>{
+    ..._quoteParents,
+    ..._tableContainers,
+  };
+  static const _quoteBlocks = <String>{
+    ..._headings,
+    'p',
+    'div',
+    'ul',
+    'ol',
+    'blockquote',
+  };
+
+  static UnsupportedError _unsupportedQuote() => UnsupportedError(
+    'This Zotero blockquote needs paragraphs, headings, lists or nested blockquotes. Quotes inside list items, tables inside quotes and inline-only quote content are not supported. The document was kept unchanged.',
+  );
 
   static void _checkMarkers(String value) {
     if (value.contains(RegExp('[\uE000-\uE002]'))) throw _malformed();
@@ -1033,6 +1135,7 @@ final class WordZoteroNoteText {
     'ul',
     'ol',
     'li',
+    'blockquote',
   };
   static const _entities = <String, int>{
     'amp': 38,

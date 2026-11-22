@@ -1,0 +1,1040 @@
+{
+  "schemaVersion": 1,
+  "suite": "vba-word-table-navigation",
+  "dialect": "vba-word",
+  "cases": [
+    {
+      "id": "row-positional",
+      "feature": "Word table navigation",
+      "source": "Sub Main()\n  ActiveDocument.Tables(2).Rows(3).Cells(4).Range.Text = \"Row\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "Row"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.tables.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.rows",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.rows.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.columns.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cells.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.column.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.row.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell"
+        ],
+        "note": "Independently authored native selector expectations for source-known ordinary unmerged tables. Microsoft documents the Row, Column and Cells relationships and required indexes. Strict Quds typing, no live reads and native plan lowering are dialect restrictions; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "column-positional",
+      "feature": "Word table navigation",
+      "source": "Sub Main()\n  ActiveDocument.Tables(2).Columns(4).Cells(3).Range.Text = \"Column\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "Column"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.tables.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.rows",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.rows.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.columns.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cells.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.column.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.row.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell"
+        ],
+        "note": "Independently authored native selector expectations for source-known ordinary unmerged tables. Microsoft documents the Row, Column and Cells relationships and required indexes. Strict Quds typing, no live reads and native plan lowering are dialect restrictions; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "row-items",
+      "feature": "Word table navigation",
+      "source": "Sub Main()\n  ThisDocument.Tables.Item(2).Rows.Item(3).Cells.Item(4).Range.Text = \"Items\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "Items"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.tables.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.rows",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.rows.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.columns.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cells.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.column.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.row.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell"
+        ],
+        "note": "Independently authored native selector expectations for source-known ordinary unmerged tables. Microsoft documents the Row, Column and Cells relationships and required indexes. Strict Quds typing, no live reads and native plan lowering are dialect restrictions; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "column-items",
+      "feature": "Word table navigation",
+      "source": "Sub Main()\n  Application.ActiveDocument.Tables.Item(2).Columns.Item(4).Cells.Item(3).Range.Text = \"Items\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "Items"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.tables.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.rows",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.rows.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.columns.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cells.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.column.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.row.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell"
+        ],
+        "note": "Independently authored native selector expectations for source-known ordinary unmerged tables. Microsoft documents the Row, Column and Cells relationships and required indexes. Strict Quds typing, no live reads and native plan lowering are dialect restrictions; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "row-named",
+      "feature": "Word table navigation",
+      "source": "Sub Main()\n  ActiveDocument.Tables(Index:=2).Rows(Index:=3).Cells(Index:=4).Range.Text = \"Named\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "Named"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.tables.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.rows",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.rows.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.columns.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cells.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.column.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.row.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell"
+        ],
+        "note": "Independently authored native selector expectations for source-known ordinary unmerged tables. Microsoft documents the Row, Column and Cells relationships and required indexes. Strict Quds typing, no live reads and native plan lowering are dialect restrictions; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "column-named-items",
+      "feature": "Word table navigation",
+      "source": "Sub Main()\n  ActiveDocument.Tables.Item(Index:=2).Columns.Item(Index:=4).Cells.Item(Index:=3).Range.Text = \"Named\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "Named"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.tables.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.rows",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.rows.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.columns.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cells.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.column.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.row.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell"
+        ],
+        "note": "Independently authored native selector expectations for source-known ordinary unmerged tables. Microsoft documents the Row, Column and Cells relationships and required indexes. Strict Quds typing, no live reads and native plan lowering are dialect restrictions; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "cell-reversed-names",
+      "feature": "Word table navigation",
+      "source": "Sub Main()\n  ActiveDocument.Tables(2).Cell(Column:=4, Row:=3).Range.Text = \"Reversed\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "Reversed"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.tables.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.rows",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.rows.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.columns.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cells.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.column.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.row.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell"
+        ],
+        "note": "Independently authored native selector expectations for source-known ordinary unmerged tables. Microsoft documents the Row, Column and Cells relationships and required indexes. Strict Quds typing, no live reads and native plan lowering are dialect restrictions; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "cell-positional-named",
+      "feature": "Word table navigation",
+      "source": "Sub Main()\n  ActiveDocument.Tables(2).Cell(3, Column:=4).Range.Text = \"Mixed\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "Mixed"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.tables.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.rows",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.rows.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.columns.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cells.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.column.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.row.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell"
+        ],
+        "note": "Independently authored native selector expectations for source-known ordinary unmerged tables. Microsoft documents the Row, Column and Cells relationships and required indexes. Strict Quds typing, no live reads and native plan lowering are dialect restrictions; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "case-insensitive",
+      "feature": "Word table navigation",
+      "source": "Sub Main()\n  aCtIvEdOcUmEnT.tAbLeS(iNdEx:=2).rOwS(iNdEx:=3).cElLs.ItEm(iNdEx:=4).RaNgE.tExT = \"Case\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "Case"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.tables.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.rows",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.rows.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.columns.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cells.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.column.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.row.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell"
+        ],
+        "note": "Independently authored native selector expectations for source-known ordinary unmerged tables. Microsoft documents the Row, Column and Cells relationships and required indexes. Strict Quds typing, no live reads and native plan lowering are dialect restrictions; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "row-suffix",
+      "feature": "Word table navigation",
+      "source": "Sub Main()\n  ActiveDocument.Tables(2).Rows(3).Cells(4).Range.InsertAfter Text:=\" after\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertAfter",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": " after"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.tables.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.rows",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.rows.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.columns.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cells.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.column.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.row.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell"
+        ],
+        "note": "Independently authored native selector expectations for source-known ordinary unmerged tables. Microsoft documents the Row, Column and Cells relationships and required indexes. Strict Quds typing, no live reads and native plan lowering are dialect restrictions; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "column-prefix",
+      "feature": "Word table navigation",
+      "source": "Sub Main()\n  ActiveDocument.Tables(2).Columns(4).Cells(3).Range.InsertBefore Text:=\"before \"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertBefore",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "before "
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.tables.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.rows",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.rows.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.columns.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cells.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.column.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.row.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell"
+        ],
+        "note": "Independently authored native selector expectations for source-known ordinary unmerged tables. Microsoft documents the Row, Column and Cells relationships and required indexes. Strict Quds typing, no live reads and native plan lowering are dialect restrictions; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "column-font",
+      "feature": "Word table navigation",
+      "source": "Sub Main()\n  ActiveDocument.Tables(2).Columns(4).Cells(3).Range.Font.Bold = True\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.runFormat",
+            "arguments": {
+              "paragraph": 0,
+              "story": "tableCell",
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "bold": true
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.tables.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.rows",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.rows.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.columns.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cells.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.column.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.row.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell"
+        ],
+        "note": "Independently authored native selector expectations for source-known ordinary unmerged tables. Microsoft documents the Row, Column and Cells relationships and required indexes. Strict Quds typing, no live reads and native plan lowering are dialect restrictions; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "row-paragraph-style",
+      "feature": "Word table navigation",
+      "source": "Sub Main()\n  ActiveDocument.Tables(2).Rows(3).Cells(4).Range.Paragraphs(1).Style = wdStyleNormal\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.paragraphStyle",
+            "arguments": {
+              "paragraph": 0,
+              "story": "tableCell",
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "builtin": -1
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.tables.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.rows",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.rows.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.columns.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cells.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.column.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.row.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell"
+        ],
+        "note": "Independently authored native selector expectations for source-known ordinary unmerged tables. Microsoft documents the Row, Column and Cells relationships and required indexes. Strict Quds typing, no live reads and native plan lowering are dialect restrictions; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "column-paragraph-shading",
+      "feature": "Word table navigation",
+      "source": "Sub Main()\n  ActiveDocument.Tables(2).Columns(4).Cells(3).Range.Paragraphs.Item(1).Shading.BackgroundPatternColor = RGB(18, 52, 86)\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.paragraphShading",
+            "arguments": {
+              "paragraph": 0,
+              "story": "tableCell",
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "color": "123456"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.tables.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.rows",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.rows.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.columns.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cells.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.column.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.row.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell"
+        ],
+        "note": "Independently authored native selector expectations for source-known ordinary unmerged tables. Microsoft documents the Row, Column and Cells relationships and required indexes. Strict Quds typing, no live reads and native plan lowering are dialect restrictions; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "typed-cells-switch-axis",
+      "feature": "Word table navigation",
+      "source": "Sub Main()\n  Dim selected As Cells, retained As Range\n  Set selected = ActiveDocument.Tables(2).Rows(3).Cells\n  Set retained = selected.Item(4).Range\n  Set selected = ActiveDocument.Tables(1).Columns(2).Cells\n  retained.Text = \"Retained row\"\n  selected.Item(1).Range.Text = \"New column\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "Retained row"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 1,
+              "text": "New column"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.tables.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.rows",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.rows.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.columns.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cells.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.column.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.row.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell"
+        ],
+        "note": "Independently authored native selector expectations for source-known ordinary unmerged tables. Microsoft documents the Row, Column and Cells relationships and required indexes. Strict Quds typing, no live reads and native plan lowering are dialect restrictions; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "typed-row-byval",
+      "feature": "Word table navigation",
+      "source": "Sub Main()\n  Dim selected As Row\n  Set selected = ActiveDocument.Tables(2).Rows(3)\n  Fill selected\n  selected.Cells(4).Range.InsertAfter \" caller\"\nEnd Sub\nSub Fill(ByVal row As Row)\n  row.Cells(4).Range.Text = \"First\"\n  Set row = ActiveDocument.Tables(1).Rows(1)\n  row.Cells(2).Range.Text = \"Local\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "First"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 1,
+              "text": "Local"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeInsertAfter",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": " caller"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.tables.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.rows",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.rows.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.columns.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cells.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.column.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.row.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell"
+        ],
+        "note": "Independently authored native selector expectations for source-known ordinary unmerged tables. Microsoft documents the Row, Column and Cells relationships and required indexes. Strict Quds typing, no live reads and native plan lowering are dialect restrictions; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "nested-with-cells",
+      "feature": "Word table navigation",
+      "source": "Sub Main()\n  With ActiveDocument.Tables(2).Rows\n    With .Item(Index:=3).Cells\n      With .Item(Index:=4).Range\n        .Text = \"Nested\"\n        .InsertAfter Text:=vbTab & \"Ready\"\n      End With\n    End With\n  End With\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "Nested"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeInsertAfter",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "\tReady"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "spec-derived",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.tables.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.rows",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.rows.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.columns.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cells.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.column.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.row.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell"
+        ],
+        "note": "Independently authored native selector expectations for source-known ordinary unmerged tables. Microsoft documents the Row, Column and Cells relationships and required indexes. Strict Quds typing, no live reads and native plan lowering are dialect restrictions; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "source-index-arithmetic",
+      "feature": "Word table navigation",
+      "source": "Sub Main()\n  Dim r As Variant, c As Long\n  r = 3\n  c = 4\n  ActiveDocument.Tables(1 + 1).Rows(Index:=r).Cells.Item(Index:=c).Range.Text = \"Calculated\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "Calculated"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.tables.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.rows",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.rows.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.columns.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cells.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.column.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.row.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell"
+        ],
+        "note": "Independently authored native selector expectations for source-known ordinary unmerged tables. Microsoft documents the Row, Column and Cells relationships and required indexes. Strict Quds typing, no live reads and native plan lowering are dialect restrictions; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "long-selector-boundary",
+      "feature": "Word table navigation",
+      "source": "Sub Main()\n  ActiveDocument.Tables(Index:=2147483647).Columns(Index:=2147483647).Cells(Index:=2147483647).Range.Text = \"Large\"\nEnd Sub\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 2147483646,
+              "row": 2147483646,
+              "column": 2147483646,
+              "text": "Large"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.tables.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.rows",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.rows.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.columns.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cells.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.column.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.row.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell"
+        ],
+        "note": "Independently authored native selector expectations for source-known ordinary unmerged tables. Microsoft documents the Row, Column and Cells relationships and required indexes. Strict Quds typing, no live reads and native plan lowering are dialect restrictions; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "source-order-named-cell",
+      "feature": "Word table navigation",
+      "source": "Sub Main()\n  ActiveDocument.Tables(Index:=Mark(2)).Cell(Column:=Mark(4), Row:=Mark(3)).Range.Text = \"Target\"\nEnd Sub\nFunction Mark(ByVal value As Long) As Long\n  ActiveDocument.Tables(1).Cell(1, 1).Range.InsertAfter CStr(value)\n  Mark = value\nEnd Function\n",
+      "expected": {
+        "steps": [
+          {
+            "tool": "docx.tableCellRangeInsertAfter",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "2"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeInsertAfter",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "4"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeInsertAfter",
+            "arguments": {
+              "table": 0,
+              "row": 0,
+              "column": 0,
+              "text": "3"
+            }
+          },
+          {
+            "tool": "docx.tableCellRangeText",
+            "arguments": {
+              "table": 1,
+              "row": 2,
+              "column": 3,
+              "text": "Target"
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.tables.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.rows",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.rows.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.columns.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cells.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.column.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.row.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell"
+        ],
+        "note": "Independently authored native selector expectations for source-known ordinary unmerged tables. Microsoft documents the Row, Column and Cells relationships and required indexes. Strict Quds typing, no live reads and native plan lowering are dialect restrictions; no installed Office host was executed."
+      }
+    },
+    {
+      "id": "no-rows-count",
+      "feature": "Word table navigation boundary",
+      "source": "Sub Main()\n  Dim value As Variant\n  If False Then\n    value = ActiveDocument.Tables(1).Rows.Count\n  End If\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 4,
+          "column": 43
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.tables.item",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.rows",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.rows.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.columns.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cells.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.column.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.row.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell"
+        ],
+        "note": "Explicit bounded Quds dialect refusal with independently chosen offending source token. No claim that full Microsoft Word refuses this construct, and no installed Office host was executed."
+      }
+    },
+    {
+      "id": "no-columns-count",
+      "feature": "Word table navigation boundary",
+      "source": "Sub Main()\n  Dim value As Variant\n  If False Then\n    value = ActiveDocument.Tables(1).Columns.Count\n  End If\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 4,
+          "column": 46
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.tables.item",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.rows",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.rows.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.columns.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cells.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.column.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.row.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell"
+        ],
+        "note": "Explicit bounded Quds dialect refusal with independently chosen offending source token. No claim that full Microsoft Word refuses this construct, and no installed Office host was executed."
+      }
+    },
+    {
+      "id": "no-row-cells-count",
+      "feature": "Word table navigation boundary",
+      "source": "Sub Main()\n  Dim value As Variant\n  If False Then\n    value = ActiveDocument.Tables(1).Rows(1).Cells.Count\n  End If\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 4,
+          "column": 52
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.tables.item",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.rows",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.rows.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.columns.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cells.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.column.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.row.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell"
+        ],
+        "note": "Explicit bounded Quds dialect refusal with independently chosen offending source token. No claim that full Microsoft Word refuses this construct, and no installed Office host was executed."
+      }
+    },
+    {
+      "id": "no-column-cells-count",
+      "feature": "Word table navigation boundary",
+      "source": "Sub Main()\n  Dim value As Variant\n  If False Then\n    value = ActiveDocument.Tables(1).Columns(1).Cells.Count\n  End If\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 4,
+          "column": 55
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.tables.item",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.rows",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.rows.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.columns.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cells.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.column.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.row.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell"
+        ],
+        "note": "Explicit bounded Quds dialect refusal with independently chosen offending source token. No claim that full Microsoft Word refuses this construct, and no installed Office host was executed."
+      }
+    },
+    {
+      "id": "no-row-first",
+      "feature": "Word table navigation boundary",
+      "source": "Sub Main()\n  Dim value As Variant\n  If False Then\n    value = ActiveDocument.Tables(1).Rows.First\n  End If\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 4,
+          "column": 43
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.tables.item",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.rows",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.rows.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.columns.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cells.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.column.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.row.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell"
+        ],
+        "note": "Explicit bounded Quds dialect refusal with independently chosen offending source token. No claim that full Microsoft Word refuses this construct, and no installed Office host was executed."
+      }
+    },
+    {
+      "id": "no-column-last",
+      "feature": "Word table navigation boundary",
+      "source": "Sub Main()\n  Dim value As Variant\n  If False Then\n    value = ActiveDocument.Tables(1).Columns.Last\n  End If\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 4,
+          "column": 46
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.tables.item",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.rows",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.rows.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.columns.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cells.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.column.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.row.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell"
+        ],
+        "note": "Explicit bounded Quds dialect refusal with independently chosen offending source token. No claim that full Microsoft Word refuses this construct, and no installed Office host was executed."
+      }
+    },
+    {
+      "id": "no-row-range",
+      "feature": "Word table navigation boundary",
+      "source": "Sub Main()\n  Dim value As Variant\n  If False Then\n    value = ActiveDocument.Tables(1).Rows(1).Range\n  End If\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 4,
+          "column": 46
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.tables.item",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.rows",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.rows.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.columns.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cells.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.column.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.row.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell"
+        ],
+        "note": "Explicit bounded Quds dialect refusal with independently chosen offending source token. No claim that full Microsoft Word refuses this construct, and no installed Office host was executed."
+      }
+    },
+    {
+      "id": "no-column-range",
+      "feature": "Word table navigation boundary",
+      "source": "Sub Main()\n  Dim value As Variant\n  If False Then\n    value = ActiveDocument.Tables(1).Columns(1).Range\n  End If\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 4,
+          "column": 49
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.tables.item",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.rows",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.rows.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.columns.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cells.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.column.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.row.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell"
+        ],
+        "note": "Explicit bounded Quds dialect refusal with independently chosen offending source token. No claim that full Microsoft Word refuses this construct, and no installed Office host was executed."
+      }
+    },
+    {
+      "id": "no-whole-table-cells",
+      "feature": "Word table navigation boundary",
+      "source": "Sub Main()\n  Dim value As Variant\n  If False Then\n    value = ActiveDocument.Tables(1).Cells(1)\n  End If\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 4,
+          "column": 38
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.tables.item",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.rows",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.rows.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.columns.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cells.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.column.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.row.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell"
+        ],
+        "note": "Explicit bounded Quds dialect refusal with independently chosen offending source token. No claim that full Microsoft Word refuses this construct, and no installed Office host was executed."
+      }
+    },
+    {
+      "id": "no-cells-first",
+      "feature": "Word table navigation boundary",
+      "source": "Sub Main()\n  Dim value As Variant\n  If False Then\n    value = ActiveDocument.Tables(1).Rows(1).Cells.First\n  End If\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 4,
+          "column": 52
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.tables.item",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.rows",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.rows.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.columns.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cells.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.column.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.row.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell"
+        ],
+        "note": "Explicit bounded Quds dialect refusal with independently chosen offending source token. No claim that full Microsoft Word refuses this construct, and no installed Office host was executed."
+      }
+    },
+    {
+      "id": "no-projected-row-suffix",
+      "feature": "Word table navigation boundary",
+      "source": "Sub Main()\n  If False Then\n    ActiveDocument.Tables(1).Rows(1).Cells(1).Range.Paragraphs(1).Range.InsertAfter \"x\"\n  End If\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 3,
+          "column": 73
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.tables.item",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.rows",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.rows.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.columns.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cells.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.column.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.row.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell"
+        ],
+        "note": "Explicit bounded Quds dialect refusal with independently chosen offending source token. No claim that full Microsoft Word refuses this construct, and no installed Office host was executed."
+      }
+    },
+    {
+      "id": "no-projected-column-suffix",
+      "feature": "Word table navigation boundary",
+      "source": "Sub Main()\n  If False Then\n    ActiveDocument.Tables(1).Columns(1).Cells(1).Range.Paragraphs(1).Range.InsertAfter \"x\"\n  End If\nEnd Sub\n",
+      "expected": {
+        "diagnostic": {
+          "code": "vba_unsupported",
+          "line": 3,
+          "column": 76
+        }
+      },
+      "provenance": {
+        "kind": "dialect-contract",
+        "references": [
+          "https://learn.microsoft.com/en-us/office/vba/api/word.tables.item",
+          "https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/vba-word-macros-details.md",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.rows",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.rows.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.columns.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.cells.item",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.column.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.row.cells",
+          "https://learn.microsoft.com/en-us/office/vba/api/word.table.cell"
+        ],
+        "note": "Explicit bounded Quds dialect refusal with independently chosen offending source token. No claim that full Microsoft Word refuses this construct, and no installed Office host was executed."
+      }
+    }
+  ]
+}

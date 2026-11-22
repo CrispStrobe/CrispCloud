@@ -299,9 +299,6 @@ $_target.Text = value
     for (final statement in <String>[
       'ActiveDocument.Tables(1).Cell(1,1).Range(1).Text = "x"',
       '$_target.Text(1) = "x"',
-      'ActiveDocument.Tables(Index:=1).Cell(1,1).Range.Text = "x"',
-      'ActiveDocument.Tables.Item(Index:=1).Cell(1,1).Range.Text = "x"',
-      'ActiveDocument.Tables(1).Cell(Row:=1, Column:=1).Range.Text = "x"',
       'ActiveDocument.Tables(1).Cell(,1).Range.Text = "x"',
       'ActiveDocument.Tables(1).Cell(1,).Range.Text = "x"',
     ]) {

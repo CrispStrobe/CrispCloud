@@ -902,6 +902,11 @@ enum _Kind {
   wordStoryRange,
   wordTables,
   wordTable,
+  wordRows,
+  wordRow,
+  wordColumns,
+  wordColumn,
+  wordCells,
   wordCell,
   wordCellRange,
   paragraphs,
@@ -942,6 +947,11 @@ enum _Declared {
   wordHeaderFooter,
   wordTables,
   wordTable,
+  wordRows,
+  wordRow,
+  wordColumns,
+  wordColumn,
+  wordCells,
   wordCell,
   paragraph,
   wordFont,
@@ -970,6 +980,11 @@ bool _objectType(_Declared type) =>
     type == _Declared.wordHeaderFooter ||
     type == _Declared.wordTables ||
     type == _Declared.wordTable ||
+    type == _Declared.wordRows ||
+    type == _Declared.wordRow ||
+    type == _Declared.wordColumns ||
+    type == _Declared.wordColumn ||
+    type == _Declared.wordCells ||
     type == _Declared.wordCell ||
     type == _Declared.paragraph ||
     type == _Declared.wordFont ||
@@ -1019,6 +1034,11 @@ _Kind _kindOf(_Declared type) => switch (type) {
   _Declared.wordHeaderFooter => _Kind.wordHeaderFooter,
   _Declared.wordTables => _Kind.wordTables,
   _Declared.wordTable => _Kind.wordTable,
+  _Declared.wordRows => _Kind.wordRows,
+  _Declared.wordRow => _Kind.wordRow,
+  _Declared.wordColumns => _Kind.wordColumns,
+  _Declared.wordColumn => _Kind.wordColumn,
+  _Declared.wordCells => _Kind.wordCells,
   _Declared.wordCell => _Kind.wordCell,
   _Declared.paragraph => _Kind.paragraph,
   _Declared.wordFont => _Kind.font,
@@ -1146,6 +1166,12 @@ class _Assignment extends _Statement {
   final _Expr target;
   final _Expr value;
   final bool isSet;
+}
+
+class _MidAssignment extends _Statement {
+  const _MidAssignment(super.token, this.call, this.value);
+  final _Call call;
+  final _Expr value;
 }
 
 class _Clear extends _Statement {
@@ -1541,6 +1567,12 @@ class _Parser {
         result.add(_Exit(token, kind));
       } else if (_is('call')) {
         position++;
+        if (_is('mid') || _is(r'mid$') || _is('midb')) {
+          context.unsupported(
+            current,
+            'Mid is an assignment statement and cannot be invoked with Call.',
+          );
+        }
         if (context.isWord) {
           final target = _postfix();
           if (target is _Member &&
@@ -1769,6 +1801,21 @@ class _Parser {
         _expect('if');
         _endStatement();
         result.add(_If(token, branches, otherwise));
+      } else if (_is('midb')) {
+        context.unsupported(current, 'Byte-oriented MidB is unsupported.');
+      } else if (_is('mid') || _is(r'mid$')) {
+        final token = current;
+        final call = _postfix();
+        if (call is! _Call) {
+          context.unsupported(
+            token,
+            'Mid assignment requires a local String target, start, and optional length in parentheses.',
+          );
+        }
+        _expect('=');
+        final value = _expression();
+        _endStatement();
+        result.add(_MidAssignment(token, call, value));
       } else if (current.kind == _TokenKind.identifier &&
           !_is('set') &&
           !_is('let') &&
@@ -1806,6 +1853,14 @@ class _Parser {
         final isSet = _take('set');
         final isLet = !isSet && _take('let');
         final target = _postfix();
+        if ((isSet || isLet) &&
+            target is _Call &&
+            (target.token.lower == 'mid' || target.token.lower == r'mid$')) {
+          context.unsupported(
+            token,
+            'Mid is a standalone assignment statement; Set and Let prefixes are unsupported.',
+          );
+        }
         if (_take('=')) {
           final value = _expression();
           _endStatement();
@@ -2010,6 +2065,11 @@ class _Parser {
       'headerfooter' when context.isWord => _Declared.wordHeaderFooter,
       'tables' when context.isWord => _Declared.wordTables,
       'table' when context.isWord => _Declared.wordTable,
+      'rows' when context.isWord => _Declared.wordRows,
+      'row' when context.isWord => _Declared.wordRow,
+      'columns' when context.isWord => _Declared.wordColumns,
+      'column' when context.isWord => _Declared.wordColumn,
+      'cells' when context.isWord => _Declared.wordCells,
       'cell' when context.isWord => _Declared.wordCell,
       'paragraph' when context.isWord => _Declared.paragraph,
       'font' when context.isWord => _Declared.wordFont,
@@ -2032,7 +2092,7 @@ class _Parser {
         context.isPowerPoint
             ? 'Supported declarations are Long, Double, String, Boolean, Variant, Presentation, Slide, Shape, TextFrame, TextRange, Font, ParagraphFormat, and SlideShowTransition.'
             : context.isWord
-            ? 'Supported declarations are Long, Double, String, Boolean, Variant, Document, Section, PageSetup, TextColumns, HeadersFooters, HeaderFooter, Tables, Table, Cell, Paragraph, Range, Font, ParagraphFormat, TabStops, ListFormat, and Shading.'
+            ? 'Supported declarations are Long, Double, String, Boolean, Variant, Document, Section, PageSetup, TextColumns, HeadersFooters, HeaderFooter, Tables, Table, Rows, Row, Columns, Column, Cells, Cell, Paragraph, Range, Font, ParagraphFormat, TabStops, ListFormat, and Shading.'
             : 'Supported declarations are Long, Double, String, Boolean, Variant, Worksheet, and Range.',
       ),
     };
@@ -2262,6 +2322,8 @@ class _Checker {
   final Map<_Symbol, Object> constantValues = <_Symbol, Object>{};
   final Map<_Parameter, Object> parameterDefaults = <_Parameter, Object>{};
   final Map<_Token, List<int>> argumentBindings = <_Token, List<int>>{};
+  final Map<_Token, List<int>> wordSelectorArgumentBindings =
+      <_Token, List<int>>{};
   int constantWork = 0;
   int doDepth = 0;
   final Map<String, Set<String>> calls = <String, Set<String>>{};
@@ -2293,6 +2355,7 @@ class _Checker {
     'or',
     'xor',
     'mod',
+    'mid',
     'option',
     'explicit',
     'attribute',
@@ -2649,6 +2712,10 @@ class _Checker {
       switch (statement) {
         case _Assignment(target: final _Name target):
           variable = target.token;
+        case _MidAssignment():
+          if (statement.call.arguments.firstOrNull case final _Name target) {
+            variable = target.token;
+          }
         case _For():
           variable = statement.counter;
           _implicit(statement.body);
@@ -2829,17 +2896,51 @@ class _Checker {
     return result;
   }
 
-  bool _isWordCellSource(_Expr expression, List<_Expr> scopes) {
+  bool _isWordCellSource(_Expr expression, List<_Expr> scopes) =>
+      _wordTableSelectorKind(expression, scopes) == _Kind.wordCell;
+
+  // Classify table selector origins without evaluating source or inspecting a
+  // document. Bindings can occur later in the procedure, so this walk cannot
+  // depend on a cache populated by earlier statement checking. Ordinary
+  // expression checking separately validates every receiver and argument.
+  // In particular Item is a Cell only on Cells, never on Rows or Paragraphs.
+  _Kind? _wordTableSelectorKind(_Expr expression, List<_Expr> scopes) {
     if (expression is _WithValue) {
-      return scopes.isNotEmpty &&
-          _isWordCellSource(scopes.last, scopes.sublist(0, scopes.length - 1));
+      return scopes.isEmpty
+          ? null
+          : _wordTableSelectorKind(
+              scopes.last,
+              scopes.sublist(0, scopes.length - 1),
+            );
     }
     if (expression is _Name) {
-      return symbols[expression.token.lower]?.type == _Declared.wordCell;
+      final name = expression.token.lower;
+      if (name == 'thisdocument' || name == 'activedocument') {
+        return _Kind.document;
+      }
+      if (name == 'application') return _Kind.wordApplication;
+      final type = symbols[name]?.type;
+      return type == null ? null : _kindOf(type);
     }
-    // Ordinary expression checking independently validates the Table receiver,
-    // the two arguments and the dialect before this shape reaches evaluation.
-    return expression is _Member && expression.token.lower == 'cell';
+    if (expression is! _Member) return null;
+    final receiver = _wordTableSelectorKind(expression.receiver, scopes);
+    final name = expression.token.lower;
+    final called = expression.arguments != null;
+    return switch ((receiver, name)) {
+      (_Kind.wordApplication, 'activedocument') => _Kind.document,
+      (_Kind.document, 'tables') => called ? _Kind.wordTable : _Kind.wordTables,
+      (_Kind.wordTables, 'item') => _Kind.wordTable,
+      (_Kind.wordTable, 'cell') => _Kind.wordCell,
+      (_Kind.wordTable, 'rows') => called ? _Kind.wordRow : _Kind.wordRows,
+      (_Kind.wordRows, 'item') => _Kind.wordRow,
+      (_Kind.wordTable, 'columns') =>
+        called ? _Kind.wordColumn : _Kind.wordColumns,
+      (_Kind.wordColumns, 'item') => _Kind.wordColumn,
+      (_Kind.wordRow || _Kind.wordColumn, 'cells') =>
+        called ? _Kind.wordCell : _Kind.wordCells,
+      (_Kind.wordCells, 'item') => _Kind.wordCell,
+      _ => null,
+    };
   }
 
   void _statements(List<_Statement> statements, {bool nested = false}) {
@@ -2877,6 +2978,8 @@ class _Checker {
               context.type(target, 'Erase requires a declared local array.');
             }
           }
+        case _MidAssignment():
+          _midAssignment(statement);
         case _Assignment():
           final valueKind = _expression(statement.value);
           if (statement.target case final _Name target) {
@@ -3098,6 +3201,11 @@ class _Checker {
                   kind == _Kind.wordStoryRange ||
                   kind == _Kind.wordTables ||
                   kind == _Kind.wordTable ||
+                  kind == _Kind.wordRows ||
+                  kind == _Kind.wordRow ||
+                  kind == _Kind.wordColumns ||
+                  kind == _Kind.wordColumn ||
+                  kind == _Kind.wordCells ||
                   kind == _Kind.wordCell ||
                   kind == _Kind.wordCellRange ||
                   kind == _Kind.paragraphs ||
@@ -3118,7 +3226,7 @@ class _Checker {
               context.isPowerPoint
                   ? 'With requires an explicitly bound PowerPoint object.'
                   : context.isWord
-                  ? 'With requires a Document, Section, PageSetup, TextColumns, HeadersFooters, HeaderFooter, Tables, Table, Cell, Paragraph, Range, Font, ParagraphFormat, TabStops, ListFormat, or Shading.'
+                  ? 'With requires a Document, Section, PageSetup, TextColumns, HeadersFooters, HeaderFooter, Tables, Table, Rows, Row, Columns, Column, Cells, Cell, Paragraph, Range, Font, ParagraphFormat, TabStops, ListFormat, or Shading.'
                   : 'With requires a Worksheet or Range.',
             );
           }
@@ -3154,6 +3262,83 @@ class _Checker {
           }
       }
     }
+  }
+
+  void _midAssignment(_MidAssignment statement) {
+    final arguments = statement.call.arguments;
+    if (arguments.length < 2 || arguments.length > 3) {
+      context.type(
+        statement.token,
+        'Mid assignment requires a String variable or array element, start, and optional length.',
+      );
+    }
+    for (final argument in arguments) {
+      if (argument is _NamedArgument || argument is _OmittedArgument) {
+        context.unsupported(
+          argument.token,
+          'Named and omitted arguments are unsupported in Mid assignment.',
+        );
+      }
+    }
+    final target = arguments.first;
+    final _Symbol symbol;
+    if (target is _Name) {
+      if (context.reserved(target.token.lower)) {
+        context.unsupported(
+          target.token,
+          'Mid assignment cannot modify a built-in constant or object binding.',
+        );
+      }
+      symbol = _symbol(target.token);
+      if (symbol.isArray || symbol.isConst) {
+        context.unsupported(
+          target.token,
+          'Mid assignment requires a writable scalar variable or array element, not a constant or whole array.',
+        );
+      }
+    } else if (target is _Call) {
+      if (module.procedures.containsKey(target.token.lower) ||
+          context.reserved(target.token.lower)) {
+        context.unsupported(
+          target.token,
+          'Mid assignment cannot modify a temporary function result.',
+        );
+      }
+      symbol = _symbol(target.token);
+      if (!symbol.isArray) {
+        context.unsupported(
+          target.token,
+          'Mid assignment cannot modify a temporary function result.',
+        );
+      }
+      _arrayIndex(target);
+    } else {
+      context.unsupported(
+        target.token,
+        'Mid assignment requires a local variable or array element; expressions and document properties are unsupported.',
+      );
+    }
+    if (symbol.type != _Declared.string && symbol.type != _Declared.variant) {
+      context.type(
+        target.token,
+        'Mid assignment targets must be declared As String or As Variant.',
+      );
+    }
+    if (counters.contains(target.token.lower) &&
+        !eachCounters.contains(target.token.lower)) {
+      context.unsupported(
+        target.token,
+        'An active For counter cannot be assigned by Mid.',
+      );
+    }
+    for (final argument in arguments.skip(1)) {
+      _compatible(_Kind.number, _expression(argument), argument.token);
+    }
+    _compatible(
+      _Kind.string,
+      _expression(statement.value),
+      statement.value.token,
+    );
   }
 
   void _wordRangeInsertionCall(_Member member) {
@@ -3757,19 +3942,40 @@ class _Checker {
           }
           if (receiver == _Kind.document && name == 'tables') {
             if (expression.arguments == null) return _Kind.wordTables;
-            final argument = _arguments(expression, 1).single;
-            _compatible(_Kind.number, _expression(argument), argument.token);
+            _wordSelectorCall(expression, const ['index']);
             return _Kind.wordTable;
           }
           if (receiver == _Kind.wordTables && name == 'item') {
-            final argument = _arguments(expression, 1).single;
-            _compatible(_Kind.number, _expression(argument), argument.token);
+            _wordSelectorCall(expression, const ['index']);
             return _Kind.wordTable;
           }
           if (receiver == _Kind.wordTable && name == 'cell') {
-            for (final argument in _arguments(expression, 2)) {
-              _compatible(_Kind.number, _expression(argument), argument.token);
+            _wordSelectorCall(expression, const ['row', 'column']);
+            return _Kind.wordCell;
+          }
+          if (receiver == _Kind.wordTable &&
+              (name == 'rows' || name == 'columns')) {
+            if (expression.arguments == null) {
+              return name == 'rows' ? _Kind.wordRows : _Kind.wordColumns;
             }
+            _wordSelectorCall(expression, const ['index']);
+            return name == 'rows' ? _Kind.wordRow : _Kind.wordColumn;
+          }
+          if ((receiver == _Kind.wordRows || receiver == _Kind.wordColumns) &&
+              name == 'item') {
+            _wordSelectorCall(expression, const ['index']);
+            return receiver == _Kind.wordRows
+                ? _Kind.wordRow
+                : _Kind.wordColumn;
+          }
+          if ((receiver == _Kind.wordRow || receiver == _Kind.wordColumn) &&
+              name == 'cells') {
+            if (expression.arguments == null) return _Kind.wordCells;
+            _wordSelectorCall(expression, const ['index']);
+            return _Kind.wordCell;
+          }
+          if (receiver == _Kind.wordCells && name == 'item') {
+            _wordSelectorCall(expression, const ['index']);
             return _Kind.wordCell;
           }
           if (receiver == _Kind.wordCell && name == 'range') {
@@ -4191,6 +4397,73 @@ class _Checker {
     _compatible(_Kind.number, _expression(value), value.token);
   }
 
+  // Table selectors have required numeric arguments. Keep an actual-to-formal
+  // map so named arguments may be reordered without reordering evaluation.
+  void _wordSelectorCall(_Member member, List<String> parameters) {
+    final arguments = member.arguments;
+    if (arguments == null) {
+      context.type(member.token, '${member.token.text} needs arguments.');
+    }
+    if (arguments.length > parameters.length) {
+      context.type(
+        member.token,
+        '${member.token.text} received too many arguments.',
+      );
+    }
+    final assigned = <int>{};
+    final bindings = <int>[];
+    var positional = 0;
+    var sawNamed = false;
+    for (final argument in arguments) {
+      final int parameter;
+      final _Expr value;
+      if (argument is _NamedArgument) {
+        sawNamed = true;
+        parameter = parameters.indexOf(argument.token.lower);
+        if (parameter < 0) {
+          context.fail(
+            argument.token,
+            'vba_name_error',
+            'Unknown named argument ${argument.token.text} for ${member.token.text}.',
+          );
+        }
+        value = argument.value;
+      } else {
+        if (sawNamed) {
+          context.type(
+            argument.token,
+            'Positional or omitted arguments cannot follow named arguments.',
+          );
+        }
+        parameter = positional++;
+        value = argument;
+      }
+      if (!assigned.add(parameter)) {
+        context.type(
+          argument.token,
+          'Parameter ${parameters[parameter]} is supplied more than once.',
+        );
+      }
+      if (value is _OmittedArgument) {
+        context.unsupported(
+          value.token,
+          'Required selector argument ${parameters[parameter]} cannot be omitted.',
+        );
+      }
+      _compatible(_Kind.number, _expression(value), value.token);
+      bindings.add(parameter);
+    }
+    for (var index = 0; index < parameters.length; index++) {
+      if (!assigned.contains(index)) {
+        context.type(
+          member.token,
+          'Required argument ${parameters[index]} is missing.',
+        );
+      }
+    }
+    wordSelectorArgumentBindings[member.token] = bindings;
+  }
+
   List<_Expr> _arguments(
     _Member member,
     int count, {
@@ -4270,6 +4543,11 @@ class _Checker {
             expected == _Kind.wordStoryRange ||
             expected == _Kind.wordTables ||
             expected == _Kind.wordTable ||
+            expected == _Kind.wordRows ||
+            expected == _Kind.wordRow ||
+            expected == _Kind.wordColumns ||
+            expected == _Kind.wordColumn ||
+            expected == _Kind.wordCells ||
             expected == _Kind.wordCell ||
             expected == _Kind.wordCellRange ||
             expected == _Kind.paragraph ||
@@ -4384,6 +4662,35 @@ class _WordTables {
 class _WordTable {
   const _WordTable(this.index);
   final int index;
+}
+
+class _WordRows {
+  const _WordRows(this.table);
+  final _WordTable table;
+}
+
+class _WordRow {
+  const _WordRow(this.table, this.index);
+  final _WordTable table;
+  final int index;
+}
+
+class _WordColumns {
+  const _WordColumns(this.table);
+  final _WordTable table;
+}
+
+class _WordColumn {
+  const _WordColumn(this.table, this.index);
+  final _WordTable table;
+  final int index;
+}
+
+class _WordCells {
+  const _WordCells(this.table, this.index, {required this.rowCells});
+  final _WordTable table;
+  final int index;
+  final bool rowCells;
 }
 
 class _WordCell {
@@ -4865,6 +5172,8 @@ class _Evaluator {
             for (final target in statement.targets) {
               _erase(target);
             }
+          case _MidAssignment():
+            _midAssignment(statement);
           case _Assignment():
             if (statement.target case final _Call target) {
               final array = values[target.token.lower]! as _Array;
@@ -5254,10 +5563,27 @@ class _Evaluator {
             _wordUnitConversions.containsKey(expression.token.lower)) {
           return _evaluateWordUnitCall(expression.token, expression.arguments!);
         }
-        final arguments = <Object>[
-          for (final argument in expression.arguments ?? const <_Expr>[])
-            _evaluate(argument),
-        ];
+        final selectorBindings =
+            checker.wordSelectorArgumentBindings[expression.token];
+        final arguments = selectorBindings == null
+            ? <Object>[
+                for (final argument in expression.arguments ?? const <_Expr>[])
+                  _evaluate(argument),
+              ]
+            : List<Object>.filled(
+                selectorBindings.length,
+                const _Uninitialized(),
+              );
+        if (selectorBindings != null) {
+          // Evaluate once in written order, then place values in formal slots.
+          // Reversed named Row/Column arguments must not reorder helper calls.
+          for (var index = 0; index < selectorBindings.length; index++) {
+            final argument = expression.arguments![index];
+            arguments[selectorBindings[index]] = _evaluate(
+              argument is _NamedArgument ? argument.value : argument,
+            );
+          }
+        }
         if (context.isPowerPoint) {
           return _evaluatePowerPointMember(expression, receiver, arguments);
         }
@@ -5277,10 +5603,62 @@ class _Evaluator {
             );
           }
           if (receiver is _WordTable) {
+            if (expression.token.lower == 'rows') {
+              return expression.arguments == null
+                  ? _WordRows(receiver)
+                  : _WordRow(
+                      receiver,
+                      _wordTableIndex(arguments.single, expression.token),
+                    );
+            }
+            if (expression.token.lower == 'columns') {
+              return expression.arguments == null
+                  ? _WordColumns(receiver)
+                  : _WordColumn(
+                      receiver,
+                      _wordTableIndex(arguments.single, expression.token),
+                    );
+            }
             return _WordCell(
               receiver,
               _wordTableIndex(arguments[0], expression.token),
               _wordTableIndex(arguments[1], expression.token),
+            );
+          }
+          if (receiver is _WordRows) {
+            return _WordRow(
+              receiver.table,
+              _wordTableIndex(arguments.single, expression.token),
+            );
+          }
+          if (receiver is _WordColumns) {
+            return _WordColumn(
+              receiver.table,
+              _wordTableIndex(arguments.single, expression.token),
+            );
+          }
+          if (receiver is _WordRow ||
+              receiver is _WordColumn ||
+              receiver is _WordCells) {
+            final cells = switch (receiver) {
+              _WordRow() => _WordCells(
+                receiver.table,
+                receiver.index,
+                rowCells: true,
+              ),
+              _WordColumn() => _WordCells(
+                receiver.table,
+                receiver.index,
+                rowCells: false,
+              ),
+              _ => receiver as _WordCells,
+            };
+            if (expression.arguments == null) return cells;
+            final index = _wordTableIndex(arguments.single, expression.token);
+            return _WordCell(
+              cells.table,
+              cells.rowCells ? cells.index : index,
+              cells.rowCells ? index : cells.index,
             );
           }
           if (receiver is _WordCell) return _WordCellRange(receiver);
@@ -5699,6 +6077,63 @@ class _Evaluator {
     return index - bounds.lower;
   }
 
+  void _midAssignment(_MidAssignment statement) {
+    final arguments = statement.call.arguments;
+    final target = arguments.first;
+    // Resolve the writable slot, including a possibly effectful array index,
+    // once before evaluating the remaining expressions. Helper frames restore
+    // the caller's values, so retained arrays and local bindings keep identity.
+    _tick(target.token);
+    _Array? array;
+    int? index;
+    final Object original;
+    if (target is _Name) {
+      original = _initialized(values[target.token.lower]!, target.token);
+    } else {
+      final element = target as _Call;
+      array = values[element.token.lower]! as _Array;
+      index = _arrayOffset(array, element.arguments.single);
+      original = _initialized(array.elements[index], element.token);
+    }
+    final startValue = _evaluate(arguments[1]);
+    final lengthValue = arguments.length == 3 ? _evaluate(arguments[2]) : null;
+    final replacementValue = _evaluate(statement.value);
+    // Every supplied expression runs once in source order before validating
+    // scalar values. String coercion is explicit, as for the shared intrinsics.
+    final text = _string(original, target.token);
+    final start = _stringIndex(startValue, arguments[1].token, isStart: true);
+    final replacement = _string(replacementValue, statement.value.token);
+    final requested = lengthValue == null
+        ? replacement.length
+        : _stringIndex(lengthValue, arguments[2].token);
+    if (start > text.length) {
+      context.type(
+        arguments[1].token,
+        'Mid assignment start must address an existing UTF-16 code unit, including for an empty replacement or zero length.',
+      );
+    }
+    final offset = start - 1;
+    var count = text.length - offset;
+    if (count > requested) count = requested;
+    if (count > replacement.length) count = replacement.length;
+    // Mid never grows its target. Charge the full resulting String before
+    // allocating slices for a nonempty edit, even if its text is identical.
+    // Zero-length edits reuse the original value after all validation above.
+    if (count != 0) _charge(text.length, statement.token);
+    final result = count == 0
+        ? text
+        : text.substring(0, offset) +
+              replacement.substring(0, count) +
+              text.substring(offset + count);
+    if (array == null) {
+      values[target.token.lower] = result;
+    } else {
+      // Element writes retain the existing For Each contract: the descriptor
+      // stays locked against resize/erase, while individual values may change.
+      _writeArrayElement(array, index!, result, target.token);
+    }
+  }
+
   void _writeArrayElement(_Array array, int index, Object value, _Token token) {
     final converted = _convert(array.type, value, token);
     final previous = array.elements[index];
@@ -5878,6 +6313,31 @@ class _Evaluator {
       case _Declared.wordTable:
         if (value is! _WordTable) {
           context.type(token, 'Set requires a Word Table.');
+        }
+        return value;
+      case _Declared.wordRows:
+        if (value is! _WordRows) {
+          context.type(token, 'Set requires Word Rows.');
+        }
+        return value;
+      case _Declared.wordRow:
+        if (value is! _WordRow) {
+          context.type(token, 'Set requires a Word Row.');
+        }
+        return value;
+      case _Declared.wordColumns:
+        if (value is! _WordColumns) {
+          context.type(token, 'Set requires Word Columns.');
+        }
+        return value;
+      case _Declared.wordColumn:
+        if (value is! _WordColumn) {
+          context.type(token, 'Set requires a Word Column.');
+        }
+        return value;
+      case _Declared.wordCells:
+        if (value is! _WordCells) {
+          context.type(token, 'Set requires Word Cells.');
         }
         return value;
       case _Declared.wordCell:

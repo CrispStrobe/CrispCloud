@@ -4,6 +4,13 @@ All notable changes to `quds_office_editor` are documented here.
 
 ## Unreleased
 
+- Insert quoted Zotero research notes through Add Note and Add Annotation in
+  body text, authored footnotes/endnotes and supported table-cell selections.
+  Preserve quote indents, rich text and active fields while retaining staged
+  publication, one-step undo/redo, selection recovery and DOCX persistence.
+  Unsupported quote content keeps the original document unchanged. See the
+  [quote qualification](../../docs/validation/zotero-workflow-parity-20261122/README.md).
+
 - Add provider-scoped Move/Delete for checked connected-mailbox selections,
   with explicit count/account/folder/destination confirmation in EN/DE/AR.
   Preserve frozen identities, per-message durable receipts, partial results,

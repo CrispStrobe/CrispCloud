@@ -4,6 +4,26 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Import Zotero research-note blockquotes as distinct native paragraphs, with
+  up to eight quote levels and 18 pt of additional left indentation per level.
+  Preserve supported headings, lists, links, pictures and active citations;
+  retain quote ownership through merged table cells and DOCX saves. Keep
+  surrounding paragraph formatting separate and refuse unsupported nesting
+  before applying any document changes. See the
+  [quote contract](../../docs/zotero-support-details.md#block-quotations-in-research-notes)
+  and [qualification](../../docs/validation/zotero-workflow-parity-20261122/README.md).
+
+- Add typed Word VBA `Rows`, `Row`, `Columns`, `Column` and `Cells` selectors,
+  including explicit `Item`, nested `With`, retained aliases and required
+  `ByVal` helpers. Support required named `Index` arguments on table
+  collections and named `Row`/`Column` on `Table.Cell`, with once-only source
+  evaluation order. Lower selected cells to the existing guarded native
+  operations and preserve direct-cell/paragraph origin restrictions, strict
+  index validation and atomic rollback. Include a 10-operation table BAS,
+  an independent 32-case conformance corpus and native/CLI/MCP/portable tests.
+  See the [contract](../../docs/vba-word-macros-details.md#table-row-and-column-navigation)
+  and [local qualification](../../docs/validation/word-vba-table-navigation-20261122/README.md).
+
 - Add shared VBA integer division (`\`) and signed remainder (`Mod`), with
   ties-to-even Long operands, VBA precedence, strict Empty/Null/conversion
   rules, positioned errors and existing compilation budgets. Include a
