@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "name": "Set report heading",
+  "format": "docx",
+  "parameters": { "title": { "type": "string" } },
+  "steps": [
+    { "tool": "docx.replaceText", "arguments": { "paragraph": 0, "text": { "$parameter": "title" } } },
+    { "tool": "docx.heading", "arguments": { "paragraph": 0, "level": 1 } }
+  ]
+}

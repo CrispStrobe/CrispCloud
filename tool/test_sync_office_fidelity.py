@@ -59,6 +59,21 @@ class SyncOfficeFidelityTest(unittest.TestCase):
         self.assertEqual(change['manifest']['source_commit'], self.run_git('rev-parse','HEAD').strip())
         self.assertEqual(sync.plan(self.source, self.host, 'HEAD')['writes'], {})
 
+    def test_existing_macro_example_is_backfilled_without_a_source_diff(self):
+        example = f'{sync.MACRO_EXAMPLES}/word_example.bas'
+        program = 'Sub Main()\nEnd Sub\n'
+        self.write_source(example, program)
+        self.commit()
+        baseline = sync.plan(self.source, self.host, 'HEAD')['manifest']
+        baseline['files'].pop(example)
+        (self.host/'tool/office_fidelity_manifest.json').write_text(json.dumps(baseline))
+
+        change = sync.plan(self.source, self.host, 'HEAD')
+        self.assertEqual(change['writes'], {example: program.encode()})
+        sync.apply(self.host, change)
+        self.assertEqual((self.host/example).read_text(), program)
+        self.assertEqual(change['manifest']['files'][example], sync.digest(program.encode()))
+
     def test_modified_pinned_file_refuses_every_write(self):
         self.write_source(self.name, 'after')
         self.commit()

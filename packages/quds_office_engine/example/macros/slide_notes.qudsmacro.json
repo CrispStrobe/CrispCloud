@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "name": "Set opening slide notes",
+  "format": "pptx",
+  "parameters": { "notes": { "type": "string" } },
+  "steps": [
+    { "tool": "pptx.slideNotes", "arguments": { "slide": 0, "text": { "$parameter": "notes" } } }
+  ]
+}

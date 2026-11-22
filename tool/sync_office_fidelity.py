@@ -19,6 +19,7 @@ import re
 ROOT = Path(__file__).resolve().parents[1]
 LEGACY_PREFIX = 'packages/legacy_doc_parser'
 LEGACY_REPOSITORY = 'CrispStrobe/legacy-doc-parser'
+MACRO_EXAMPLES = 'packages/quds_office_engine/example/macros'
 
 
 class SyncError(ValueError):
@@ -87,6 +88,8 @@ def standalone_path(name, sources):
 def shared(name):
     path = safe_path(name)
     parts = path.parts
+    if name.startswith(MACRO_EXAMPLES + '/'):
+        return True
     if parts[:2] == ('tool', 'office-validation'):
         return True
     # Embedded German data and font metadata use these exact source notices.
@@ -137,7 +140,7 @@ def plan(source, target_root, ref, branch=None):
     expected = manifest['files']
     tree = git(source, 'diff', '--name-only', '--no-renames', base, target).decode().splitlines()
     tree += git(source, 'ls-tree', '-r', '--name-only', target, '--',
-                'packages/quds_proofing_spacy').decode().splitlines()
+                'packages/quds_proofing_spacy', MACRO_EXAMPLES).decode().splitlines()
     names = sorted({name for name in expected if not standalone_path(name, independent)} |
                    {name for name in tree if shared(name) and not standalone_path(name, independent)})
     originals = source_files(source, base, names)

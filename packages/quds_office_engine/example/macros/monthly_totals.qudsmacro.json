@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "name": "Monthly totals",
+  "format": "xlsx",
+  "parameters": {
+    "title": { "type": "string" },
+    "revenue": { "type": "number" },
+    "cost": { "type": "number" }
+  },
+  "steps": [
+    { "tool": "xlsx.cellValue", "arguments": { "sheet": 0, "cell": "A1", "value": { "$parameter": "title" } } },
+    { "tool": "xlsx.cellFormat", "arguments": { "sheet": 0, "cell": "A1", "bold": true, "fill": "DCE6F1" } },
+    { "tool": "xlsx.cellValue", "arguments": { "sheet": 0, "cell": "A2", "value": "Revenue" } },
+    { "tool": "xlsx.cellValue", "arguments": { "sheet": 0, "cell": "B2", "value": { "$parameter": "revenue" } } },
+    { "tool": "xlsx.cellValue", "arguments": { "sheet": 0, "cell": "A3", "value": "Cost" } },
+    { "tool": "xlsx.cellValue", "arguments": { "sheet": 0, "cell": "B3", "value": { "$parameter": "cost" } } },
+    { "tool": "xlsx.cellValue", "arguments": { "sheet": 0, "cell": "A4", "value": "Net" } },
+    { "tool": "xlsx.cellFormula", "arguments": { "sheet": 0, "cell": "B4", "formula": "B2-B3" } },
+    { "tool": "xlsx.freeze", "arguments": { "sheet": 0, "rows": 1 } }
+  ]
+}
