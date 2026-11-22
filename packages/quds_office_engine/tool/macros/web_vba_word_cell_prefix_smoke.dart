@@ -116,12 +116,15 @@ Object _xml(XmlNode node) => switch (node) {
 
 /// Prefixing changes only selected runs. Compare all paragraph properties,
 /// untouched cells/body paragraphs, geometry, headers and opaque package parts.
-String wordCellPrefixUntouched(Uint8List bytes) {
+String wordCellPrefixUntouched(Uint8List bytes, {int selectedCellCount = 3}) {
   final root = XmlDocument.parse(
     OpcPackage.openBytes(bytes).getPart('/word/document.xml')!.readText(),
   ).root!;
   return jsonEncode({
-    'layoutAndParts': fixture.wordCellParagraphUntouched(bytes),
+    'layoutAndParts': fixture.wordCellParagraphUntouched(
+      bytes,
+      selectedCellCount: selectedCellCount,
+    ),
     'paragraphProperties': [for (final p in _elements(root, 'pPr')) _xml(p)],
   });
 }

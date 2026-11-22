@@ -4,6 +4,13 @@ All notable changes to `quds_office_editor` are documented here.
 
 ## Unreleased
 
+- Add provider-scoped Move/Delete for checked connected-mailbox selections,
+  with explicit count/account/folder/destination confirmation in EN/DE/AR.
+  Preserve frozen identities, per-message durable receipts, partial results,
+  cancellation and no-replay recovery across IMAP/EWS/Graph/Gmail. Keep IMAP
+  Deleted markers distinct from expunge and Gmail Trash distinct from unsupported
+  folder-style Move. Cached views remain read-only.
+
 - Preserve authoritative IMAP and EWS move identities through Studio's durable
   journal, including stable-account and local-cache ID translation. Optional
   receipt-aware adapters retain older host compatibility; membership changes

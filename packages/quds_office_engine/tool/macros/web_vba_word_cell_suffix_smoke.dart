@@ -59,8 +59,8 @@ List<Map<String, Object?>> wordCellSuffixState(Uint8List bytes) => [
 ];
 
 /// Compare paragraph properties, untouched cells, geometry and opaque parts.
-String wordCellSuffixUntouched(Uint8List bytes) =>
-    prefix.wordCellPrefixUntouched(bytes);
+String wordCellSuffixUntouched(Uint8List bytes, {int selectedCellCount = 3}) =>
+    prefix.wordCellPrefixUntouched(bytes, selectedCellCount: selectedCellCount);
 
 void assertWordCellSuffixExample(Uint8List bytes) {
   final cells = fixture.wordCellParagraphs(WordDeserializer().readBytes(bytes));

@@ -6,8 +6,9 @@ import 'support/vba_conformance.dart';
 
 void main() {
   final suite = VbaConformanceSuite.parse(
-    File('test/fixtures/vba_conformance/word_integer_arithmetic_v1.json')
-        .readAsStringSync(),
+    File(
+      'test/fixtures/vba_conformance/word_integer_arithmetic_v1.json',
+    ).readAsStringSync(),
   );
   for (final fixture in suite.cases) {
     test('${fixture.feature}: ${fixture.id}', () {

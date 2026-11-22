@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:quds_office_engine/quds_office_automation.dart';
+import 'package:quds_office_engine/quds_office_engine.dart';
 import 'package:test/test.dart';
 
 import '../tool/macros/web_vba_word_cell_suffix_smoke.dart' as fixture;
@@ -29,6 +30,75 @@ void main() {
         expect(result['lateRollback'], isTrue);
       },
     );
+  }
+
+  test('grouped preservation excludes exactly four selected cells', () async {
+    final input = fixture.wordCellSuffixInput();
+    final untouched = fixture.wordCellSuffixUntouched(
+      input,
+      selectedCellCount: 4,
+    );
+    final session = OfficeMacroSession(input, format: OfficeMacroFormat.docx);
+    await session.run(
+      portable.groupedReportSource(File(_example).readAsStringSync()),
+    );
+    expect(
+      fixture.wordCellSuffixUntouched(session.bytes, selectedCellCount: 4),
+      untouched,
+    );
+    expect(
+      fixture.wordCellSuffixUntouched(session.bytes),
+      isNot(fixture.wordCellSuffixUntouched(input)),
+      reason: 'The suffix default must still protect the fourth cell',
+    );
+    await session.callTool('docx.tableCellRangeText', {
+      'table': 1,
+      'row': 0,
+      'column': 0,
+      'text': 'Unexpected neighboring table edit',
+    });
+    expect(
+      fixture.wordCellSuffixUntouched(session.bytes, selectedCellCount: 4),
+      isNot(untouched),
+      reason: 'The grouped report must still protect the fifth cell',
+    );
+  });
+
+  for (final change in ['paragraph properties', 'table geometry']) {
+    test('grouped preservation detects selected-cell $change changes', () {
+      final input = fixture.wordCellSuffixInput();
+      final document = WordDeserializer().readBytes(input);
+      final table = document.sections.first.blocks.whereType<WmlTable>().first;
+      if (change == 'paragraph properties') {
+        final paragraph =
+            table.rows.first.cells.first.blocks.single as WmlParagraph;
+        paragraph.properties.spacingAfter = 9;
+      } else {
+        table.grid[0] += 1;
+      }
+      expect(
+        fixture.wordCellSuffixUntouched(
+          WordSerializer().writeBytes(document),
+          selectedCellCount: 4,
+        ),
+        isNot(fixture.wordCellSuffixUntouched(input, selectedCellCount: 4)),
+      );
+    });
+  }
+
+  for (final partUri in ['/customXml/table.xml', '/word/vbaProject.bin']) {
+    test('grouped preservation detects opaque $partUri changes', () {
+      final input = fixture.wordCellSuffixInput();
+      final package = OpcPackage.openBytes(input);
+      final part = package.getPart(partUri)!;
+      final changed = part.readBytes();
+      changed[0] ^= 1;
+      part.writeBytes(changed);
+      expect(
+        fixture.wordCellSuffixUntouched(package.save(), selectedCellCount: 4),
+        isNot(fixture.wordCellSuffixUntouched(input, selectedCellCount: 4)),
+      );
+    });
   }
 
   test(
@@ -67,15 +137,17 @@ void main() {
           File(_example).readAsStringSync(),
           'ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr($expression)',
         );
-        final result = await OfficeMacroMcp(session)
-            .callTool('office_macro_compile', {
-              'source': {
-                'language': 'vba-word',
-                'format': 'docx',
-                'moduleName': 'GroupedReport',
-                'source': source,
-              },
-            });
+        final result = await OfficeMacroMcp(session).callTool(
+          'office_macro_compile',
+          {
+            'source': {
+              'language': 'vba-word',
+              'format': 'docx',
+              'moduleName': 'GroupedReport',
+              'source': source,
+            },
+          },
+        );
         expect(result['isError'], isTrue, reason: '$result');
         expect(session.bytes, input);
         expect(session.revision, 0);
@@ -110,44 +182,51 @@ void main() {
     });
   }
 
-  test('CLI runs actual grouped BAS and protects existing output on arithmetic failure', () async {
-    final directory = Directory.systemTemp.createTempSync(
-      'word-grouped-report-',
-    );
-    addTearDown(() => directory.deleteSync(recursive: true));
-    final input = File('${directory.path}/input.docm')
-      ..writeAsBytesSync(fixture.wordCellSuffixInput());
-    final source = File(_example).absolute.path;
-    final plan = File('${directory.path}/plan.json');
-    final output = File('${directory.path}/output.docm');
-    for (final arguments in [
-      ['compile-word-vba', source, plan.path],
-      ['validate-word-vba', input.path, source],
-      ['run-word-vba', input.path, source, output.path],
-    ]) {
-      final result = await runOfficeMacroCli(arguments);
-      expect(result.exitCode, 0, reason: '${result.stdout}\n${result.stderr}');
-    }
-    expect(OfficeMacro.parse(plan.readAsStringSync()).steps, hasLength(12));
-    final saved = output.readAsBytesSync();
-    expect(
-      fixture.wordCellSuffixState(saved).map((cell) => cell['text']),
-      portable.groupedReportText,
-    );
-    final invalid = File('${directory.path}/invalid.bas')
-      ..writeAsStringSync(
-        portable.appendGroupedReportStatement(
-          File(_example).readAsStringSync(),
-          r'ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(1 \ 0)',
-        ),
+  test(
+    'CLI runs actual grouped BAS and protects existing output on arithmetic failure',
+    () async {
+      final directory = Directory.systemTemp.createTempSync(
+        'word-grouped-report-',
       );
-    final result = await runOfficeMacroCli([
-      'run-word-vba',
-      input.path,
-      invalid.path,
-      output.path,
-    ]);
-    expect(result.exitCode, isNot(0));
-    expect(output.readAsBytesSync(), saved);
-  });
+      addTearDown(() => directory.deleteSync(recursive: true));
+      final input = File('${directory.path}/input.docm')
+        ..writeAsBytesSync(fixture.wordCellSuffixInput());
+      final source = File(_example).absolute.path;
+      final plan = File('${directory.path}/plan.json');
+      final output = File('${directory.path}/output.docm');
+      for (final arguments in [
+        ['compile-word-vba', source, plan.path],
+        ['validate-word-vba', input.path, source],
+        ['run-word-vba', input.path, source, output.path],
+      ]) {
+        final result = await runOfficeMacroCli(arguments);
+        expect(
+          result.exitCode,
+          0,
+          reason: '${result.stdout}\n${result.stderr}',
+        );
+      }
+      expect(OfficeMacro.parse(plan.readAsStringSync()).steps, hasLength(12));
+      final saved = output.readAsBytesSync();
+      expect(
+        fixture.wordCellSuffixState(saved).map((cell) => cell['text']),
+        portable.groupedReportText,
+      );
+      final invalid = File('${directory.path}/invalid.bas')
+        ..writeAsStringSync(
+          portable.appendGroupedReportStatement(
+            File(_example).readAsStringSync(),
+            r'ActiveDocument.Tables(1).Cell(1, 1).Range.Text = CStr(1 \ 0)',
+          ),
+        );
+      final result = await runOfficeMacroCli([
+        'run-word-vba',
+        input.path,
+        invalid.path,
+        output.path,
+      ]);
+      expect(result.exitCode, isNot(0));
+      expect(output.readAsBytesSync(), saved);
+    },
+  );
 }

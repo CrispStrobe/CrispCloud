@@ -158,7 +158,11 @@ Object _coreMetadata(String source) {
 
 /// Independently snapshots unselected paragraphs, cells, table geometry,
 /// headers and opaque parts using expanded XML names, not serializer spacing.
-String wordCellParagraphUntouched(Uint8List bytes) {
+/// Only the first [selectedCellCount] cells may have their contents changed.
+String wordCellParagraphUntouched(
+  Uint8List bytes, {
+  int selectedCellCount = 3,
+}) {
   final package = OpcPackage.openBytes(bytes);
   final root = XmlDocument.parse(
     package.getPart('/word/document.xml')!.readText(),
@@ -166,7 +170,8 @@ String wordCellParagraphUntouched(Uint8List bytes) {
   final body = root.firstChild('body', namespaceUri: _w)!;
   return jsonEncode({
     'otherCells': [
-      for (final cell in _elements(root, 'tc').skip(3)) _xml(cell),
+      for (final cell in _elements(root, 'tc').skip(selectedCellCount))
+        _xml(cell),
     ],
     'body': [
       for (final p in body.childrenNamed('p', namespaceUri: _w)) _xml(p),

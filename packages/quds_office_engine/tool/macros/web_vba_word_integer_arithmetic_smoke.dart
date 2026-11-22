@@ -35,7 +35,10 @@ Future<Map<String, Object?>> runGroupedReport(
   bool macroEnabled = true,
 }) async {
   final input = fixture.wordCellSuffixInput(macroEnabled: macroEnabled);
-  final untouched = fixture.wordCellSuffixUntouched(input);
+  final untouched = fixture.wordCellSuffixUntouched(
+    input,
+    selectedCellCount: 4,
+  );
   final plan = groupedReportSource(source);
   if (plan.steps.length != 12) {
     throw StateError('The complete grouped report must emit twelve operations');
@@ -65,7 +68,8 @@ Future<Map<String, Object?>> runGroupedReport(
         throw StateError('Mod-based report emphasis was not retained');
       }
     }
-    if (fixture.wordCellSuffixUntouched(saved) != untouched) {
+    if (fixture.wordCellSuffixUntouched(saved, selectedCellCount: 4) !=
+        untouched) {
       throw StateError('The report changed unrelated layout or opaque parts');
     }
     if (cycle < 2) {
