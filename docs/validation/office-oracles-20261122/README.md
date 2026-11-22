@@ -180,3 +180,46 @@ three Word-saved DOCX files from `word-citation-stories`. Missing output is
 a failure. The tool checks installed-app saves and their CrispOffice reopen
 results. Live Zotero style parity and execution of VBA inside Microsoft Word
 remain separate.
+
+## Table borders, ODT links, and Microsoft app reopens
+
+The final local mirror follows upstream main
+`f4d89bf436c81c32097c3255240aac3bb7929f52` with 3,446 tracked inputs. It
+includes editable Zotero table borders, equivalent ODT hyperlink styles,
+and the Word VBA `StrReverse` implementation. The initial active branch
+snapshots exposed five failures in a malformed ODT test fixture and the
+expected omission diagnostic for `StrReverse`. The subsequent upstream
+merges corrected those fixtures and expectations. The final engine run
+passed all 1,572 selected cases without failures or skips, including
+the 1,500-citation scaling case and the seven Microsoft app comparisons.
+
+Installed LibreOffice 26.8.2.2 passed the two-save table-border matrix for
+a retained Writer cell, coloured asymmetric edges, and a merged cell.
+The runner matched borders, citation editability, and document settings
+and verified no change among the 376 captured source and dependency inputs.
+
+The native app matrix saved and reopened one Excel workbook, three PowerPoint
+decks, and three Word citation tables. All seven semantic comparisons passed
+on the installed-app output and its CrispOffice reopen. The workbook retained
+formulas, freeze panes, and merge topology. Excel's extra empty cells inside a
+merge are ignored by this value comparison. An independent XML check found
+the two original formulas and their evaluated values, 6 and 15. The Word
+tables retained balanced editable fields and cell-edge aliases. Run
+`dart test tool/microsoft_file_roundtrip_test.dart` from the engine package
+with `CRISP_OFFICE_ORACLE_OUTPUT` pointing to the native output root.
+
+The broader editor run passed 161 cases. One tracked-changes canvas paint
+expectation failed and reproduced on the earlier Office pin, so this intake
+does not establish that paint assertion as passing.
+
+Excel also presented an external workbook-link prompt. The first automation
+attempt missed it while polling document objects. The user chose Don't
+Update. I inspected the fixture window, chose Don't Save on its separate
+close prompt, and verified that no fixtures remained open. The linked
+workbook is outside the accepted native matrix. Future native runs should
+inspect visible prompts before retrying failed document automation.
+
+The background capture probe used a disposable Word document. CoreGraphics
+identified its window ID and `screencapture -l` captured the document window
+while Terminal remained frontmost. The capture showed the Word window and
+its citation table. I closed the probe after capture.
