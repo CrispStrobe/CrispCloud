@@ -29,15 +29,25 @@ abstract final class WordPropertyIo {
     'kern': '${r.kerningHalfPoints}',
     'position': '${r.positionHalfPoints}',
     'highlight': '${r.highlight}',
+    // The editor exposes one effective text background. Non-palette colors
+    // are stored in native run shading instead of an invalid w:highlight.
+    // Unprojected patterned/themed shading remains opaque source metadata.
+    'shd': usesRunShading(r) ? '${WmlHighlight.toRgb(r.highlight)}' : 'null',
     'u': '${r.underline}',
     'vertAlign': '${r.vertAlign}',
     'lang': '${r.proofingLanguage}',
     'lang:bidi': '${r.complexScriptLanguage}',
     'noProof': '${r.noProof}',
   };
+
+  static bool usesRunShading(WmlRunProps r) =>
+      r.explicitProperties.contains('shd:highlight') ||
+      (WmlHighlight.toRgb(r.highlight) != null &&
+          WmlHighlight.toName(r.highlight) == null);
   static Map<String, String> paragraphValues(WmlParagraphProps p) => {
     'pStyle': '${p.styleId}',
     'jc': '${p.justification}',
+    'jc:logical': paragraphJustificationValue(p),
     'spacing':
         '${p.spacingBefore}|${p.spacingAfter}|${p.lineSpacing}|${p.lineSpacingRule}',
     // Keep the aggregate for older snapshots, while separately tracking
@@ -48,6 +58,13 @@ abstract final class WordPropertyIo {
     'spacing:granular': '1',
     'ind':
         '${p.indent.left}|${p.indent.right}|${p.indent.firstLine}|${p.indent.hanging}',
+    // The editor owns physical margins, while native start/end are logical.
+    // Track the encoded sides independently so changing direction preserves
+    // physical placement without flattening unrelated inherited indentation.
+    'ind:start': '${p.rightToLeft == true ? p.indent.right : p.indent.left}',
+    'ind:end': '${p.rightToLeft == true ? p.indent.left : p.indent.right}',
+    'ind:firstLine': '${p.indent.firstLine}|${p.indent.hanging}',
+    'ind:granular': '1',
     'keepLines': '${p.keepTogether}',
     'pageBreakBefore': '${p.pageBreakBefore}',
     'numPr': '${p.numId ?? (p.numberingSuppressed ? 0 : null)}|${p.ilvl}',
@@ -62,6 +79,16 @@ abstract final class WordPropertyIo {
         .map((t) => '${t.position}|${t.alignment}|${t.leader}')
         .join(','),
   };
+
+  static String paragraphJustificationValue(WmlParagraphProps p) =>
+      switch (p.justification) {
+        WmlJustification.center => 'center',
+        WmlJustification.right => p.rightToLeft == true ? 'left' : 'right',
+        WmlJustification.justify => 'both',
+        WmlJustification.distributed => 'distribute',
+        WmlJustification.left => p.rightToLeft == true ? 'right' : 'left',
+      };
+
   static XmlElement parse(String? xml, String name) =>
       xml == null || xml.isEmpty
       ? XmlElement(
@@ -87,9 +114,21 @@ abstract final class WordPropertyIo {
         }
       }
       if (generated.localName == 'pPr') {
-        if (key.startsWith('spacing:')) continue;
+        if (key.startsWith('spacing:') ||
+            key.startsWith('ind:') ||
+            key.startsWith('jc:')) {
+          continue;
+        }
         if (key == 'spacing') {
           _preserveSpacing(result, generated, imported, current);
+          continue;
+        }
+        if (key == 'ind') {
+          _preserveIndent(result, generated, imported, current);
+          continue;
+        }
+        if (key == 'jc') {
+          _preserveJustification(result, generated, imported, current);
           continue;
         }
       }
@@ -122,6 +161,30 @@ abstract final class WordPropertyIo {
           );
           continue;
         }
+      }
+      if (generated.localName == 'rPr' && key == 'shd') {
+        final shading = generated.firstChild('shd');
+        _mergeWordAttributes(
+          result,
+          'shd',
+          const {
+            'val',
+            'color',
+            'fill',
+            'themeColor',
+            'themeTint',
+            'themeShade',
+            'themeFill',
+            'themeFillTint',
+            'themeFillShade',
+          },
+          {
+            'val': 'clear',
+            'color': 'auto',
+            'fill': shading?.getAttribute('fill') ?? 'auto',
+          },
+        );
+        continue;
       }
       if (generated.localName == 'pPr' && key == 'bidi') {
         // Reading order owns only the Word val attribute, including an
@@ -345,6 +408,62 @@ abstract final class WordPropertyIo {
     }
   }
 
+  static void _preserveIndent(
+    XmlElement result,
+    XmlElement generated,
+    Map<String, String> imported,
+    Map<String, String> current,
+  ) {
+    const groups = <String, Set<String>>{
+      'start': {'left', 'leftChars', 'start', 'startChars'},
+      'end': {'right', 'rightChars', 'end', 'endChars'},
+      'firstLine': {'firstLine', 'firstLineChars', 'hanging', 'hangingChars'},
+    };
+    final granular = imported['ind:granular'] == '1';
+    // Legacy explicit all-indent writes remove the aggregate snapshot. Keep
+    // that convention, and allow older saved histories without group values.
+    final whole = !imported.containsKey('ind') || !granular;
+    final directionChanged =
+        (current['bidi'] == 'true') != (imported['bidi'] == 'true');
+    if (whole && current['ind'] == imported['ind'] && !directionChanged) {
+      return;
+    }
+    final replacement = generated.firstChild('ind');
+    for (final entry in groups.entries) {
+      final key = 'ind:${entry.key}';
+      if (!whole && current[key] == imported[key]) continue;
+      final values = <String, String>{
+        for (final attribute in entry.value)
+          attribute: ?replacement?.getAttribute(attribute),
+      };
+      if (entry.key == 'firstLine' && values.isEmpty && replacement != null) {
+        // Omitting both exposes an inherited first-line/hanging indent.
+        // One explicit zero resets their shared native inheritance group.
+        values['firstLine'] = '0';
+      }
+      _mergeWordAttributes(result, 'ind', entry.value, values);
+    }
+  }
+
+  static void _preserveJustification(
+    XmlElement result,
+    XmlElement generated,
+    Map<String, String> imported,
+    Map<String, String> current,
+  ) {
+    final unchanged = imported.containsKey('jc:logical')
+        ? current['jc:logical'] == imported['jc:logical']
+        : current['jc'] == imported['jc'] &&
+              (current['bidi'] == 'true') == (imported['bidi'] == 'true');
+    if (imported.containsKey('jc') && unchanged) return;
+    final value = generated.firstChild('jc')?.getAttribute('val');
+    if (value != null) {
+      // Alignment owns its native value only. Foreign lookalikes, prefixes,
+      // and extension attributes remain in the original sparse property.
+      _mergeWordAttributes(result, 'jc', const {'val'}, {'val': value});
+    }
+  }
+
   static bool _wordName(String namespace, String prefix) =>
       namespace == OfficeNamespaces.w || (namespace.isEmpty && prefix == 'w');
 
@@ -534,6 +653,26 @@ abstract final class WordPropertyIo {
       ),
     );
     return prefix;
+  }
+
+  /// A catalog style edit owns the native value, not extension attributes.
+  static void mergeStyleValue(XmlElement style, String name, String? value) {
+    _mergeWordAttributes(
+      style,
+      name,
+      const {'val'},
+      {if (value != null && value.isNotEmpty) 'val': value},
+    );
+    if (value == null || value.isEmpty) {
+      style.children.removeWhere(
+        (node) =>
+            node is XmlElement &&
+            node.localName == name &&
+            _wordName(node.namespaceUri, node.prefix) &&
+            node.children.isEmpty &&
+            node.attributes.every((attribute) => attribute.prefix == 'xmlns'),
+      );
+    }
   }
 
   /// Change a solid paragraph background without replacing its opaque metadata.

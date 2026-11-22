@@ -705,9 +705,36 @@ class _StyleCascade {
     for (final attribute in source.attributes) {
       if (attribute.namespaceUri == OfficeNamespaces.w ||
           (attribute.namespaceUri.isEmpty && attribute.prefix == 'w')) {
+        // Left/right are transitional aliases of start/end. Normalize each
+        // detached layer before merging so a direct legacy alias overrides
+        // the same logical side from a modern inherited style (and vice
+        // versa). Conflicting aliases in one source retain the reader's
+        // legacy-first behavior; the sparse source itself is never rewritten.
+        final name = source.localName == 'ind'
+            ? const {
+                    'left': 'start',
+                    'right': 'end',
+                    'leftChars': 'startChars',
+                    'rightChars': 'endChars',
+                  }[attribute.localName] ??
+                  attribute.localName
+            : attribute.localName;
+        if (source.localName == 'ind' &&
+            const {'start', 'end', 'startChars', 'endChars'}.contains(name)) {
+          final legacy = const {
+            'start': 'left',
+            'end': 'right',
+            'startChars': 'leftChars',
+            'endChars': 'rightChars',
+          }[name]!;
+          if (attribute.localName == name &&
+              _tabAttribute(source, legacy) != null) {
+            continue;
+          }
+        }
         result.attributes.add(
           XmlAttribute(
-            localName: attribute.localName,
+            localName: name,
             prefix: 'w',
             namespaceUri: OfficeNamespaces.w,
             value: attribute.value,
@@ -789,7 +816,9 @@ class _StyleCascade {
                     incoming.localName == 'noProof' ||
                     incoming.localName == 'caps' ||
                     incoming.localName == 'smallCaps')) ||
-            (name == 'pPr' && incoming.localName == 'suppressAutoHyphens');
+            (name == 'pPr' &&
+                (incoming.localName == 'suppressAutoHyphens' ||
+                    incoming.localName == 'bidi'));
         if (scalarControl && !_word(incoming, incoming.localName)) continue;
         final runAttributes =
             name == 'rPr' &&
@@ -888,6 +917,23 @@ class _StyleCascade {
             if (child.getAttribute(pair.key) != null &&
                 child.getAttribute(pair.value) == null) {
               old.removeAttribute(pair.value);
+            }
+          }
+        }
+        if (name == 'pPr' && child.localName == 'ind') {
+          // First-line and hanging indents share one inheritance slot. A
+          // direct firstLine=0 must clear a style's hanging value, and a
+          // direct hanging value must replace an inherited firstLine.
+          const first = ['firstLine', 'firstLineChars'];
+          const hanging = ['hanging', 'hangingChars'];
+          if (first.any((key) => child.getAttribute(key) != null)) {
+            for (final key in hanging) {
+              old.removeAttribute(key);
+            }
+          }
+          if (hanging.any((key) => child.getAttribute(key) != null)) {
+            for (final key in first) {
+              old.removeAttribute(key);
             }
           }
         }
@@ -1098,9 +1144,17 @@ class _StyleCascade {
       if (run.noteRefId != null) resolved.vertAlign = WmlVertAlign.superscript;
       resolved.styleId = props.styleId;
       resolved.sourcePropertiesXml = props.sourcePropertiesXml ?? '';
+      final shadingBackground = resolved.explicitProperties.contains(
+        'shd:highlight',
+      );
       resolved.explicitProperties
         ..clear()
         ..addAll(props.explicitProperties);
+      if (shadingBackground) {
+        resolved.explicitProperties.add('shd:highlight');
+      } else {
+        resolved.explicitProperties.remove('shd:highlight');
+      }
       resolved.importedValues = WordPropertyIo.runValues(resolved);
       run.properties = resolved;
     }

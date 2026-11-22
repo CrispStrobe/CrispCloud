@@ -1314,8 +1314,17 @@ class WordSerializer {
     }
     w.writeEndElement();
     w.writeStartElement('ind', prefix: 'w');
-    w.writeAttribute('w:left', '${pointsToTwips(p.indent.left)}');
-    w.writeAttribute('w:right', '${pointsToTwips(p.indent.right)}');
+    // The native model stores physical margins. OOXML left/right are the
+    // transitional aliases of logical start/end, including in RTL paragraphs.
+    final rtl = p.rightToLeft == true;
+    w.writeAttribute(
+      'w:left',
+      '${pointsToTwips(rtl ? p.indent.right : p.indent.left)}',
+    );
+    w.writeAttribute(
+      'w:right',
+      '${pointsToTwips(rtl ? p.indent.left : p.indent.right)}',
+    );
     if (p.indent.firstLine > 0) {
       w.writeAttribute('w:firstLine', '${pointsToTwips(p.indent.firstLine)}');
     }
@@ -1327,13 +1336,7 @@ class WordSerializer {
       'jc',
       prefix: 'w',
       attributes: <String, String>{
-        'w:val': switch (p.justification) {
-          WmlJustification.center => 'center',
-          WmlJustification.right => 'right',
-          WmlJustification.justify => 'both',
-          WmlJustification.distributed => 'distribute',
-          WmlJustification.left => 'left',
-        },
+        'w:val': WordPropertyIo.paragraphJustificationValue(p),
       },
     );
     if (p.headingLevel != null && p.headingLevel! >= 1) {
@@ -1500,10 +1503,15 @@ class WordSerializer {
       prefix: 'w',
       attributes: <String, String>{'w:val': '${r.fontSizeHalfPoints}'},
     );
-    final String? highlight = WmlHighlight.toName(r.highlight);
+    final useShading = WordPropertyIo.usesRunShading(r);
+    final String? highlight = useShading
+        ? null
+        : WmlHighlight.toName(r.highlight);
     // An explicit clear on an authored run must override inherited styles even
     // without a sparse import snapshot. Omission would revive the old color.
-    if (highlight != null || r.explicitProperties.contains('highlight')) {
+    if (highlight != null ||
+        useShading ||
+        r.explicitProperties.contains('highlight')) {
       w.writeEmptyElement(
         'highlight',
         prefix: 'w',
@@ -1515,6 +1523,17 @@ class WordSerializer {
         'u',
         prefix: 'w',
         attributes: <String, String>{'w:val': r.underline.xmlValue},
+      );
+    }
+    if (useShading) {
+      w.writeEmptyElement(
+        'shd',
+        prefix: 'w',
+        attributes: {
+          'w:val': 'clear',
+          'w:color': 'auto',
+          'w:fill': WmlHighlight.toRgb(r.highlight) ?? 'auto',
+        },
       );
     }
     // Baseline is also an owned value after an explicit script-mode clear.
@@ -2256,6 +2275,180 @@ class WordSerializer {
     return styles;
   }
 
+  XmlElement _preserveCatalogStyle(
+    XmlElement source,
+    XmlElement generated,
+    WmlStyle previous,
+    WmlStyle current, {
+    required bool previousRightToLeft,
+    required bool currentRightToLeft,
+  }) {
+    final result = source.copy();
+    XmlElement? child(XmlElement node, String name) =>
+        node.firstChild(name, namespaceUri: OfficeNamespaces.w);
+    String fragment(XmlElement? node) {
+      if (node == null) return '';
+      final detached = node.copy();
+      final bindings = <String, XmlAttribute>{};
+      for (XmlElement? parent = node; parent != null; parent = parent.parent) {
+        for (final attribute in parent.attributes) {
+          if (attribute.prefix == 'xmlns' ||
+              attribute.qualifiedName == 'xmlns') {
+            bindings.putIfAbsent(attribute.qualifiedName, () => attribute);
+          }
+        }
+      }
+      for (final entry in bindings.entries) {
+        if (!detached.attributes.any((a) => a.qualifiedName == entry.key)) {
+          detached.attributes.add(entry.value.copy());
+        }
+      }
+      return XmlDocument(root: detached).toXmlString(declaration: false);
+    }
+
+    void install(String name, XmlElement replacement) {
+      final old = child(result, name);
+      if (old != null) {
+        result.children[result.children.indexOf(old)] = replacement
+          ..parent = result;
+      } else if (replacement.children.isNotEmpty ||
+          replacement.attributes.any((a) => a.prefix != 'xmlns')) {
+        result.addChild(replacement);
+      }
+    }
+
+    WmlParagraphProps paragraph(WmlStyle style, bool rtl) => WmlParagraphProps(
+      justification: style.justification,
+      rightToLeft: rtl,
+      spacingBefore: style.spacingBefore,
+      spacingAfter: style.spacingAfter,
+      indent: style.indent ?? const WmlIndent(),
+      numId: style.numId,
+      ilvl: style.ilvl ?? 0,
+      headingLevel: style.headingLevel,
+    );
+    final before = WordPropertyIo.paragraphValues(
+      paragraph(previous, previousRightToLeft),
+    )..remove('bidi');
+    final after = WordPropertyIo.paragraphValues(
+      paragraph(current, currentRightToLeft),
+    )..remove('bidi');
+    // Catalog styles cannot edit direction: retain native own bidi and let
+    // the current basedOn chain supply inherited direction. Logical values
+    // still change when that chain changes, preserving owned physical layout.
+    final sourceParagraph = child(source, 'pPr');
+    if (previous.justification == current.justification &&
+        sourceParagraph?.firstChild('jc', namespaceUri: OfficeNamespaces.w) ==
+            null) {
+      before['jc:logical'] = after['jc:logical']!;
+    }
+    if ((previous.indent == null) != (current.indent == null)) {
+      before.remove('ind');
+    }
+    final generatedParagraph = child(generated, 'pPr')!.copy();
+    final sourceIndent = sourceParagraph == null
+        ? null
+        : child(sourceParagraph, 'ind');
+    final generatedIndent = child(generatedParagraph, 'ind');
+    if (previous.indent != null &&
+        current.indent != null &&
+        sourceIndent != null &&
+        generatedIndent != null) {
+      const start = {'left', 'start', 'leftChars', 'startChars'};
+      const end = {'right', 'end', 'rightChars', 'endChars'};
+      final sourceSides = [start, end];
+      final previousPhysical = previousRightToLeft
+          ? [previous.indent!.right, previous.indent!.left]
+          : [previous.indent!.left, previous.indent!.right];
+      final currentPhysical = previousRightToLeft
+          ? [current.indent!.right, current.indent!.left]
+          : [current.indent!.left, current.indent!.right];
+      final reversed = previousRightToLeft != currentRightToLeft;
+      for (var side = 0; side < 2; side++) {
+        final target = sourceSides[reversed ? 1 - side : side];
+        final sourceAttributes = sourceIndent.attributes
+            .where(
+              (a) =>
+                  a.namespaceUri == OfficeNamespaces.w &&
+                  sourceSides[side].contains(a.localName),
+            )
+            .toList();
+        if (currentPhysical[side] != previousPhysical[side]) continue;
+        // Catalog values project only this style's owned sides. An omitted
+        // side must keep inheriting from the new base rather than become 0.
+        generatedIndent.attributes.removeWhere(
+          (a) =>
+              a.namespaceUri == OfficeNamespaces.w &&
+              target.contains(a.localName),
+        );
+        for (final attribute in sourceAttributes) {
+          final name = reversed
+              ? const {
+                  'left': 'right',
+                  'right': 'left',
+                  'start': 'end',
+                  'end': 'start',
+                  'leftChars': 'rightChars',
+                  'rightChars': 'leftChars',
+                  'startChars': 'endChars',
+                  'endChars': 'startChars',
+                }[attribute.localName]!
+              : attribute.localName;
+          generatedIndent.setAttribute(
+            name,
+            attribute.value,
+            prefix: 'w',
+            namespaceUri: OfficeNamespaces.w,
+          );
+        }
+      }
+      if (reversed) {
+        // Move explicit zero ownership as well as nonzero values; equal
+        // scalar snapshots alone cannot distinguish zero from inheritance.
+        before.remove('ind:start');
+        before.remove('ind:end');
+      }
+    }
+    install(
+      'pPr',
+      WordPropertyIo.preserve(
+        generatedParagraph,
+        fragment(sourceParagraph),
+        before,
+        after,
+      ),
+    );
+
+    WmlRunProps run(WmlStyle style) => WmlRunProps(
+      asciiFont: style.font ?? '',
+      csFont: style.csFont ?? '',
+      bold: style.bold,
+      italic: style.italic,
+      color: style.color,
+      fontSizeHalfPoints: (style.fontSizePoints * 2).round(),
+    );
+    final currentRun = run(current);
+    final runWriter = XmlWriter();
+    _writeFullRPr(runWriter, currentRun);
+    install(
+      'rPr',
+      WordPropertyIo.preserve(
+        XmlDocument.parse(runWriter.toXml()).root!,
+        fragment(child(source, 'rPr')),
+        WordPropertyIo.runValues(run(previous)),
+        WordPropertyIo.runValues(currentRun),
+      ),
+    );
+    if (current.name != previous.name) {
+      WordPropertyIo.mergeStyleValue(result, 'name', current.name);
+    }
+    if (current.basedOn != previous.basedOn) {
+      WordPropertyIo.mergeStyleValue(result, 'basedOn', current.basedOn);
+    }
+    WordPropertyIo.orderChildren(result);
+    return result;
+  }
+
   void _syncStyles(WmlDocument document, OpcPackage package) {
     final String uri = _relatedPartUri(
       package,
@@ -2269,6 +2462,53 @@ class WordSerializer {
       document,
       includeDefaultStyles: document.package == null,
     );
+    final sourceStyles = original == null
+        ? null
+        : XmlDocument.parse(original.readText());
+    final sourceById = <String, XmlElement>{
+      for (final style
+          in sourceStyles?.root?.childrenNamed(
+                'style',
+                namespaceUri: OfficeNamespaces.w,
+              ) ??
+              <XmlElement>[])
+        if (style.getAttribute('styleId', namespaceUri: OfficeNamespaces.w)
+            case final String id)
+          id: style,
+    };
+    XmlElement? child(XmlElement? node, String name) =>
+        node?.firstChild(name, namespaceUri: OfficeNamespaces.w);
+    bool on(XmlElement? node) =>
+        node != null &&
+        !const {
+          '0',
+          'false',
+          'off',
+        }.contains(node.getAttribute('val', namespaceUri: OfficeNamespaces.w));
+    final defaultDirection = on(
+      child(
+        child(
+          child(child(sourceStyles?.root, 'docDefaults'), 'pPrDefault'),
+          'pPr',
+        ),
+        'bidi',
+      ),
+    );
+    bool directionFor(
+      String id,
+      Map<String, WmlStyle> definitions, [
+      Set<String>? seen,
+    ]) {
+      seen ??= {};
+      if (!seen.add(id)) return defaultDirection;
+      final bidi = child(child(sourceById[id], 'pPr'), 'bidi');
+      if (bidi != null) return on(bidi);
+      final parent = definitions[id]?.basedOn;
+      return parent == null
+          ? defaultDirection
+          : directionFor(parent, definitions, seen);
+    }
+
     if (importedWithoutStyles &&
         current.isEmpty &&
         document.proofingLanguage == null) {
@@ -2312,6 +2552,7 @@ class WordSerializer {
       w.writeEndElement();
     }
     for (final WmlStyle style in current.values) {
+      final rtl = directionFor(style.id, current);
       w.writeStartElement('style', prefix: 'w');
       w.writeAttribute('w:type', 'paragraph');
       w.writeAttribute('w:styleId', style.id);
@@ -2352,8 +2593,8 @@ class WordSerializer {
           'ind',
           prefix: 'w',
           attributes: <String, String>{
-            'w:left': '${pointsToTwips(indent.left)}',
-            'w:right': '${pointsToTwips(indent.right)}',
+            'w:left': '${pointsToTwips(rtl ? indent.right : indent.left)}',
+            'w:right': '${pointsToTwips(rtl ? indent.left : indent.right)}',
             if (indent.firstLine != 0)
               'w:firstLine': '${pointsToTwips(indent.firstLine)}',
             if (indent.hanging != 0)
@@ -2365,13 +2606,12 @@ class WordSerializer {
         'jc',
         prefix: 'w',
         attributes: <String, String>{
-          'w:val': switch (style.justification) {
-            WmlJustification.center => 'center',
-            WmlJustification.right => 'right',
-            WmlJustification.justify => 'both',
-            WmlJustification.distributed => 'distribute',
-            WmlJustification.left => 'left',
-          },
+          'w:val': WordPropertyIo.paragraphJustificationValue(
+            WmlParagraphProps(
+              justification: style.justification,
+              rightToLeft: rtl,
+            ),
+          ),
         },
       );
       if (style.headingLevel != null) {
@@ -2419,18 +2659,21 @@ class WordSerializer {
     w.writeEndElement();
     final XmlDocument generated = XmlDocument.parse(w.toXml());
     String xml = generated.toXmlString();
-    if (original != null) {
-      final XmlDocument preserved = XmlDocument.parse(original.readText());
+    if (sourceStyles != null) {
+      final XmlDocument preserved = sourceStyles;
       final XmlElement? root = preserved.root;
       if (root != null) {
         root.children.removeWhere(
           (XmlNode node) =>
               node is XmlElement &&
               node.localName == 'style' &&
+              node.namespaceUri == OfficeNamespaces.w &&
               document.importedStyles.containsKey(
-                node.getAttribute('styleId'),
+                node.getAttribute('styleId', namespaceUri: OfficeNamespaces.w),
               ) &&
-              !current.containsKey(node.getAttribute('styleId')),
+              !current.containsKey(
+                node.getAttribute('styleId', namespaceUri: OfficeNamespaces.w),
+              ),
         );
         for (final XmlElement node in generated.root!.childrenNamed('style')) {
           final String? id = node.getAttribute('styleId');
@@ -2442,10 +2685,27 @@ class WordSerializer {
             (XmlNode old) =>
                 old is XmlElement &&
                 old.localName == 'style' &&
-                old.getAttribute('styleId') == id,
+                old.namespaceUri == OfficeNamespaces.w &&
+                old.getAttribute('styleId', namespaceUri: OfficeNamespaces.w) ==
+                    id,
           );
-          final XmlElement copy = node.copy()
-            ..setAttribute('w', OfficeNamespaces.w, prefix: 'xmlns');
+          final previous = document.importedStyles[id];
+          final source = sourceById[id];
+          final XmlElement copy =
+              previous != null && source != null && id != null
+              ? _preserveCatalogStyle(
+                  source,
+                  node,
+                  previous,
+                  current[id]!,
+                  previousRightToLeft: directionFor(
+                    id,
+                    document.importedStyles,
+                  ),
+                  currentRightToLeft: directionFor(id, current),
+                )
+              : (node.copy()
+                  ..setAttribute('w', OfficeNamespaces.w, prefix: 'xmlns'));
           if (at < 0) {
             root.addChild(copy);
           } else {

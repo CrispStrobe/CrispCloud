@@ -513,7 +513,12 @@ class WmlParagraphProps {
     if (rightToLeft == false) {
       return 0;
     }
-    return justification == WmlJustification.right ? 1 : null;
+    // Explicit alignment positions a paragraph; it does not declare its
+    // reading direction. Retain the legacy implicit-right fallback only when
+    // no authored alignment is present, otherwise let UAX #9 resolve text.
+    return !explicitJustification && justification == WmlJustification.right
+        ? 1
+        : null;
   }
 
   /// copy API.

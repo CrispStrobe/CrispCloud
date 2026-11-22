@@ -4,6 +4,14 @@ All notable changes to `quds_office_editor` are documented here.
 
 ## Unreleased
 
+- Add explicit connected-mail Archive for a selected message or checked visible
+  rows, with English/German/Arabic confirmation. Gmail removes only Inbox
+  membership; IMAP/Microsoft 365 resolve an ordinary Archive destination, and
+  EWS or unavailable discovery requires an explicit folder choice. Freeze and
+  revalidate account/folder/message identities before using the durable command
+  journal. Preserve per-message recovery, uncertain outcomes and existing
+  independent archive-copy workflows. Cached views remain read-only.
+
 - Insert quoted Zotero research notes through Add Note and Add Annotation in
   body text, authored footnotes/endnotes and supported table-cell selections.
   Preserve quote indents, rich text and active fields while retaining staged

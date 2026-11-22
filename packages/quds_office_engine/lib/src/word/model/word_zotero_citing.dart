@@ -2021,7 +2021,14 @@ final class WordZoteroCitingSession {
       if (heading == null) continue;
       final emphasis = [
         for (final run in inserted.inlines.whereType<WmlRun>())
-          (run: run, bold: run.properties.bold, italic: run.properties.italic),
+          (
+            run: run,
+            bold: run.properties.bold,
+            italic: run.properties.italic,
+            color: run.properties.explicitProperties.contains('color')
+                ? run.properties.color
+                : null,
+          ),
       ];
       WordStyles.apply(inserted, 'Heading$heading', document: document);
       inserted.properties
@@ -2031,6 +2038,12 @@ final class WordZoteroCitingSession {
         span.run.properties
           ..bold = span.bold
           ..italic = span.italic;
+        if (span.color != null) {
+          span.run.properties
+            ..color = span.color!
+            ..explicitProperties.add('color');
+          span.run.properties.importedValues?.remove('color');
+        }
       }
     }
     final listIds = <int, int>{};
@@ -2084,12 +2097,18 @@ final class WordZoteroCitingSession {
         )
         ..explicitIndent = true;
     }
+    // Authored paragraph layout must win over native heading/list defaults.
+    // Metadata indexes already include synthetic merged-cell paragraphs.
+    for (final entry in text.paragraphFormats.entries) {
+      entry.value.applyTo(paragraphs[entry.key].properties);
+    }
     _noteTextCaretTailLength = paragraph.text.length - at;
     if (blocks.any((block) => block is WmlTable) ||
         text.listItems.isNotEmpty ||
         text.quoteDepths.isNotEmpty ||
+        text.paragraphFormats.isNotEmpty ||
         paragraphs.any((p) => p.properties.headingLevel != null)) {
-      // Preserve native tables and keep headings/list/quote formatting
+      // Preserve native tables and keep explicit paragraph/heading/list/quote formatting
       // independent from surrounding prose. Cells never absorb outside text.
       final originalProperties = suffixProperties;
       final tail = _splitNoteTextParagraph(

@@ -357,7 +357,8 @@ abstract final class WordRuler {
     double? contentLeft,
     double? contentRight,
   }) {
-    final double start = indent.left + indent.firstLine - indent.hanging;
+    final double leading = rtl ? indent.right : indent.left;
+    final double start = leading + indent.firstLine - indent.hanging;
     final double origin = contentOriginX(
       margins: margins,
       pageWidth: pageWidth,
@@ -384,10 +385,10 @@ abstract final class WordRuler {
       contentLeft: contentLeft,
       contentRight: contentRight,
     );
-    return rtl ? origin - indent.left : origin + indent.left;
+    return rtl ? origin - indent.right : origin + indent.left;
   }
 
-  /// Right-indent marker page X.
+  /// Trailing-indent marker page X (the physical left edge in RTL).
   static double rightIndentPageX({
     required WmlPageMargins margins,
     required WmlIndent indent,
@@ -402,7 +403,7 @@ abstract final class WordRuler {
       contentLeft: contentLeft,
       contentRight: contentRight,
     );
-    return rtl ? box.left + indent.right : box.right - indent.right;
+    return rtl ? box.left + indent.left : box.right - indent.right;
   }
 
   /// Apply a horizontal indent drag to [indent].
@@ -495,37 +496,40 @@ abstract final class WordRuler {
     required double contentRight,
     required double contentW,
   }) {
+    // Handle names follow the stacked leading-edge ruler controls. The native
+    // model stores physical sides, so the RTL leading family owns right.
     switch (kind) {
       case RulerHitKind.firstLine:
-        final double rel = (contentRight - pageX - indent.left).clamp(
-          -indent.left,
-          contentW - indent.left - 12,
+        final double rel = (contentRight - pageX - indent.right).clamp(
+          -indent.right,
+          contentW - indent.right - 12,
         );
         if (rel >= 0) {
           return indent.copyWith(firstLine: rel, hanging: 0);
         }
         return indent.copyWith(firstLine: 0, hanging: -rel);
       case RulerHitKind.hanging:
-        final double firstPos = indent.left + indent.firstLine - indent.hanging;
-        final double newLeft = (contentRight - pageX).clamp(0, contentW - 24);
-        if (firstPos >= newLeft) {
+        final double firstPos =
+            indent.right + indent.firstLine - indent.hanging;
+        final double newRight = (contentRight - pageX).clamp(0, contentW - 24);
+        if (firstPos >= newRight) {
           return indent.copyWith(
-            left: newLeft,
-            firstLine: firstPos - newLeft,
+            right: newRight,
+            firstLine: firstPos - newRight,
             hanging: 0,
           );
         }
         return indent.copyWith(
-          left: newLeft,
+          right: newRight,
           firstLine: 0,
-          hanging: newLeft - firstPos,
+          hanging: newRight - firstPos,
         );
       case RulerHitKind.leftIndent:
-        final double newLeft = (contentRight - pageX).clamp(0, contentW - 24);
-        return indent.copyWith(left: newLeft);
+        final double newRight = (contentRight - pageX).clamp(0, contentW - 24);
+        return indent.copyWith(right: newRight);
       case RulerHitKind.rightIndent:
-        final double right = (pageX - contentLeft).clamp(0, contentW - 24);
-        return indent.copyWith(right: right);
+        final double left = (pageX - contentLeft).clamp(0, contentW - 24);
+        return indent.copyWith(left: left);
       default:
         return indent;
     }

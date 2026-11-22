@@ -16,6 +16,7 @@ final class WordZoteroNoteText {
     this.placeholders,
     this.listItems,
     this.quoteDepths,
+    this.paragraphFormats,
   );
 
   /// Native blocks in document order, retaining each table's cell ownership.
@@ -35,6 +36,11 @@ final class WordZoteroNoteText {
   /// Native insertion adds 18 points of left indentation per level, at most
   /// eight levels. Zotero's editor-only CSS borders/spacing are not exported.
   final Map<int, int> quoteDepths;
+
+  /// Explicit layout exported on Zotero paragraphs and headings. Applied after
+  /// native heading/list/quote formatting, without modifying surrounding prose.
+  /// Indexes refer to the final native tree, including merged-cell continuations.
+  final Map<int, WordZoteroNoteParagraphFormat> paragraphFormats;
   String get plainText => paragraphs.map((p) => p.text).join('\n');
 
   factory WordZoteroNoteText.fromHtml(
@@ -55,6 +61,7 @@ final class WordZoteroNoteText {
     final images = <WmlVisual>[];
     final imageReader = WordZoteroNoteImageReader();
     final items = <WordZoteroNoteListItem>[];
+    final formats = <WordZoteroNoteParagraphFormat>[];
     final tables = <WmlTable>[];
     final cells = <({WmlTable table, WmlTableCell cell})>[];
     final columnWidths = <WmlTableCell, List<double?>>{};
@@ -133,6 +140,8 @@ final class WordZoteroNoteText {
               _checkMarkers(value);
               if (name != 'style' &&
                   name != 'class' &&
+                  !((name == 'dir' || name == 'data-indent') &&
+                      (tag == 'p' || _headings.contains(tag))) &&
                   !(name == 'href' && tag == 'a') &&
                   !(name == 'start' && tag == 'ol') &&
                   !(_cellTags.contains(tag) &&
@@ -379,9 +388,23 @@ final class WordZoteroNoteText {
                 ? 'div'
                 : tag;
             canonical.write('<$outputTag');
-            final authoredStyle = _tableTags.contains(tag)
+            var authoredStyle = _tableTags.contains(tag)
                 ? null
                 : attributes['style'];
+            WordZoteroNoteParagraphFormat? paragraphFormat;
+            if (tag == 'p' || _headings.contains(tag)) {
+              final parsed = _paragraphFormat(attributes);
+              paragraphFormat = parsed.format;
+              authoredStyle = parsed.inlineStyle;
+              // A native list paragraph has one direction for its text and
+              // marker. A child RTL paragraph can change only the text's
+              // direction in HTML; retain the guard until those are distinct.
+              if (activeItem != null && paragraphFormat?.rightToLeft == true) {
+                throw UnsupportedError(
+                  'Right-to-left paragraphs inside Zotero lists are not yet supported. The document was kept unchanged.',
+                );
+              }
+            }
             final style = tag == 'th'
                 ? 'font-weight: bold;'
                 : _headings.contains(tag)
@@ -401,6 +424,10 @@ final class WordZoteroNoteText {
             }
             if (tag == 'blockquote') {
               canonical.write('<p>\uE000q${quoteCount++}\uE001</p>');
+            }
+            if (paragraphFormat != null) {
+              canonical.write('\uE000p${formats.length}\uE001');
+              formats.add(paragraphFormat);
             }
             int? linkIndex;
             if (tag == 'a') {
@@ -553,7 +580,10 @@ final class WordZoteroNoteText {
       throw _malformed();
     }
     if (stack.isNotEmpty || activeLink) throw _malformed();
-    final formatted = ZoteroFormattedText.fromHtml(canonical.toString());
+    final formatted = ZoteroFormattedText.fromHtml(
+      canonical.toString(),
+      allowNoteColors: true,
+    );
     if (formatted.unsupportedFormatting.isNotEmpty) {
       throw UnsupportedError(
         'This Zotero note contains unsupported formatting or embedded content. The document was kept unchanged.',
@@ -564,6 +594,7 @@ final class WordZoteroNoteText {
     final placeholders = <String, WordZoteroNotePlaceholder>{};
     final listItems = <int, WordZoteroNoteListItem>{};
     final quoteDepths = <int, int>{};
+    final paragraphFormats = <int, WordZoteroNoteParagraphFormat>{};
     _NoteLink? current;
     var currentStart = 0;
     var currentParagraph = 0;
@@ -576,7 +607,7 @@ final class WordZoteroNoteText {
       r'^\uE000(t[0-9]+|c[0-9]+|q[0-9]+|/c|/t|/q)\uE001$',
     );
     final marker = RegExp(
-      '\uE000([0-9]+|h[1-6]|/h|l[0-9]+|i[0-9]+)\uE001|\uE002',
+      '\uE000([0-9]+|h[1-6]|/h|l[0-9]+|i[0-9]+|p[0-9]+)\uE001|\uE002',
     );
     void appendParagraph(WmlParagraph paragraph, List<WmlBlock> destination) {
       if (paragraphs.length >= 10000) {
@@ -691,6 +722,13 @@ final class WordZoteroNoteText {
               ),
             );
             offset++;
+          } else if (number != null && number.startsWith('p')) {
+            if (offset != 0 ||
+                paragraphFormats.containsKey(paragraphs.length)) {
+              throw _malformed();
+            }
+            paragraphFormats[paragraphs.length] =
+                formats[int.parse(number.substring(1))];
           } else if (number != null && number.startsWith('l')) {
             if (offset != 0 || listItems.containsKey(paragraphs.length)) {
               throw _malformed();
@@ -762,7 +800,10 @@ final class WordZoteroNoteText {
     if (tables.isEmpty && paragraphs.every((p) => p.text.trim().isEmpty)) {
       throw const FormatException('The selected Zotero note contains no text.');
     }
-    if (listItems.length != items.length) throw _malformed();
+    if (listItems.length != items.length ||
+        paragraphFormats.length != formats.length) {
+      throw _malformed();
+    }
     // HTML omits cells covered by a rowspan, while native Word retains an
     // empty paragraph in each continuation cell. Address the final native
     // tree, so cloning it in the citing session cannot shift later citations
@@ -795,8 +836,88 @@ final class WordZoteroNoteText {
         for (final entry in quoteDepths.entries)
           indexes[paragraphs[entry.key]]!: entry.value,
       },
+      {
+        for (final entry in paragraphFormats.entries)
+          indexes[paragraphs[entry.key]]!: entry.value,
+      },
     );
   }
+
+  static ({WordZoteroNoteParagraphFormat? format, String? inlineStyle})
+  _paragraphFormat(Map<String, String> attributes) {
+    final rawDirection = attributes['dir']?.trim().toLowerCase();
+    if (rawDirection != null &&
+        rawDirection != 'ltr' &&
+        rawDirection != 'rtl') {
+      throw _unsupportedParagraphFormat();
+    }
+    final direction = rawDirection == null ? null : rawDirection == 'rtl';
+    final rawIndent = attributes['data-indent']?.trim();
+    if (rawIndent != null && !RegExp(r'^[1-7]$').hasMatch(rawIndent)) {
+      throw _unsupportedParagraphFormat();
+    }
+    final level = rawIndent == null ? 0 : int.parse(rawIndent);
+    WmlJustification? alignment;
+    bool? paddingRight;
+    final names = <String>{};
+    final inlineStyles = <String>[];
+    for (final declaration in (attributes['style'] ?? '').split(';')) {
+      if (declaration.trim().isEmpty) continue;
+      final colon = declaration.indexOf(':');
+      if (colon < 1) throw _unsupportedParagraphFormat();
+      final name = declaration.substring(0, colon).trim().toLowerCase();
+      final value = declaration.substring(colon + 1).trim().toLowerCase();
+      if (name == 'text-align') {
+        if (!names.add(name)) throw _unsupportedParagraphFormat();
+        alignment = switch (value) {
+          'left' => WmlJustification.left,
+          'right' => WmlJustification.right,
+          'center' => WmlJustification.center,
+          'justify' => WmlJustification.justify,
+          _ => throw _unsupportedParagraphFormat(),
+        };
+      } else if (name == 'padding-left' || name == 'padding-right') {
+        // Zotero emits 40 CSS px per data-indent level for word-processor
+        // export. Its editor-only 30 px rule is not part of that payload.
+        // Accept the redundant compatibility style exactly once, and never
+        // infer arbitrary CSS layout or double-count it with data-indent.
+        if (paddingRight != null || level == 0 || value != '${level * 40}px') {
+          throw _unsupportedParagraphFormat();
+        }
+        paddingRight = name == 'padding-right';
+        if (direction != null && direction != paddingRight) {
+          throw _unsupportedParagraphFormat();
+        }
+      } else {
+        // The shared inert formatter must still validate every other style.
+        inlineStyles.add(declaration);
+      }
+    }
+    final format = direction == null && level == 0 && alignment == null
+        ? null
+        : WordZoteroNoteParagraphFormat(
+            rightToLeft: direction,
+            justification:
+                alignment ??
+                (direction == null
+                    ? null
+                    : direction
+                    ? WmlJustification.right
+                    : WmlJustification.left),
+            indentPoints: level * 30.0,
+            // An RTL Zotero editor can export right padding without a dir
+            // attribute. Preserve the physical side without inventing bidi.
+            indentOnRight: paddingRight ?? direction ?? false,
+          );
+    return (
+      format: format,
+      inlineStyle: inlineStyles.isEmpty ? null : inlineStyles.join(';'),
+    );
+  }
+
+  static UnsupportedError _unsupportedParagraphFormat() => UnsupportedError(
+    'This Zotero paragraph uses unsupported direction, indentation or alignment. The document was kept unchanged.',
+  );
 
   static ({WmlTableCell cell, int rows, List<double?> widths}) _tableCell(
     Map<String, String> attributes,
@@ -1170,6 +1291,41 @@ final class WordZoteroNoteText {
     'micro': 181,
     'middot': 183,
   };
+}
+
+/// Canonical paragraph layout from Zotero's exported note HTML.
+///
+/// Indentation uses the exported 40 CSS pixels (30 points) per level, not the
+/// editor-only stylesheet's 30 pixels. It composes with native lists/quotes.
+final class WordZoteroNoteParagraphFormat {
+  const WordZoteroNoteParagraphFormat({
+    this.rightToLeft,
+    this.justification,
+    this.indentPoints = 0,
+    this.indentOnRight = false,
+  });
+
+  final bool? rightToLeft;
+  final WmlJustification? justification;
+  final double indentPoints;
+  final bool indentOnRight;
+
+  void applyTo(WmlParagraphProps properties) {
+    if (rightToLeft != null) properties.rightToLeft = rightToLeft;
+    if (justification != null) {
+      properties
+        ..justification = justification!
+        ..explicitJustification = true;
+    }
+    if (indentPoints != 0) {
+      properties
+        ..indent = properties.indent.copyWith(
+          left: properties.indent.left + (indentOnRight ? 0 : indentPoints),
+          right: properties.indent.right + (indentOnRight ? indentPoints : 0),
+        )
+        ..explicitIndent = true;
+    }
+  }
 }
 
 /// A paragraph in one independent research-note list.

@@ -3587,6 +3587,14 @@ class _ZoteroFormattedPreview extends StatelessWidget {
 
   InlineSpan _previewSpan(ZoteroTextSpan span, TextStyle base, double size) {
     final style = base.copyWith(
+      color: span.color == null
+          ? null
+          : Color(0xff000000 | int.parse(span.color!, radix: 16)),
+      backgroundColor: span.highlight == null
+          ? null
+          : span.highlight == 'none'
+          ? Colors.transparent
+          : Color(0xff000000 | int.parse(span.highlight!, radix: 16)),
       fontWeight: span.bold ? FontWeight.bold : FontWeight.normal,
       fontStyle: span.italic ? FontStyle.italic : FontStyle.normal,
       decoration: TextDecoration.combine([

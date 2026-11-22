@@ -1128,6 +1128,11 @@ class WordEditorController extends OfficeController {
   String? _textBeforeLocalEdit;
   bool _historyRestoredSelection = false;
   double? _stickyCaretX;
+  // Only this controller's inferred values may follow later UI-language
+  // changes. Imported/authored directions and replacement property objects
+  // remain authoritative, including explicit LTR on an empty paragraph.
+  final Expando<({WmlParagraphProps properties, bool? rightToLeft})>
+  _automaticParagraphDirections = Expando('automatic paragraph directions');
 
   @override
   /// kind API.
@@ -6078,33 +6083,53 @@ class WordEditorController extends OfficeController {
 
   void _syncParagraphDirection(WmlParagraph para, {String incoming = ''}) {
     final String existing = para.text.trim();
-    // Empty paragraphs track studio language / incoming script and may flip.
+    final properties = para.properties;
+    final automatic = _automaticParagraphDirections[para];
+    final retainsAutomaticDirection =
+        identical(automatic?.properties, properties) &&
+        automatic?.rightToLeft == properties.rightToLeft;
+    if (properties.rightToLeft != null && !retainsAutomaticDirection) {
+      return;
+    }
+    // Fresh empty paragraphs track studio language / incoming script. Values
+    // authored by the user or an importer must survive layout and typing.
     if (existing.isEmpty) {
       final bool preferRtl =
           OfficeTypeface.isRtlText(incoming) ||
           config.textDirection == TextDirection.rtl;
       if (preferRtl) {
-        para.properties
-          ..rightToLeft = true
-          ..justification = WmlJustification.right;
+        properties.rightToLeft = true;
+        if (!properties.explicitJustification) {
+          properties.justification = WmlJustification.right;
+        }
       } else {
         // Drop auto-RTL latch so BiDi / later Arabic input can take over.
-        para.properties.rightToLeft = null;
-        if (para.properties.justification == WmlJustification.right) {
-          para.properties.justification = WmlJustification.left;
+        properties.rightToLeft = null;
+        if (!properties.explicitJustification &&
+            properties.justification == WmlJustification.right) {
+          properties.justification = WmlJustification.left;
         }
       }
+      _automaticParagraphDirections[para] = (
+        properties: properties,
+        rightToLeft: properties.rightToLeft,
+      );
       return;
     }
-    if (para.properties.rightToLeft != null) {
+    if (properties.rightToLeft != null) {
       return;
     }
     if (OfficeTypeface.isRtlText(existing) ||
         OfficeTypeface.isRtlText(incoming)) {
-      if (para.properties.justification == WmlJustification.left) {
-        para.properties
-          ..rightToLeft = true
-          ..justification = WmlJustification.right;
+      if (properties.justification == WmlJustification.left) {
+        properties.rightToLeft = true;
+        if (!properties.explicitJustification) {
+          properties.justification = WmlJustification.right;
+        }
+        _automaticParagraphDirections[para] = (
+          properties: properties,
+          rightToLeft: properties.rightToLeft,
+        );
       }
     }
   }

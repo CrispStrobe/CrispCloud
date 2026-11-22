@@ -16,6 +16,8 @@ final class ZoteroTextSpan {
     this.strike = false,
     this.smallCaps = false,
     this.verticalAlign = WmlVertAlign.baseline,
+    this.color,
+    this.highlight,
   });
 
   final String text;
@@ -25,12 +27,23 @@ final class ZoteroTextSpan {
   final bool strike;
   final bool smallCaps;
   final WmlVertAlign verticalAlign;
+
+  /// An explicit opaque RRGGBB foreground from a research note. Null retains
+  /// the insertion host's color; ordinary CSL results do not set this value.
+  final String? color;
+
+  /// An opaque RRGGBB note background, or `none` for an explicit clear. Null
+  /// retains the insertion host's background. Transparent descendants retain
+  /// an ancestor's painted background instead of erasing it.
+  final String? highlight;
 }
 
 /// A bounded, inert rendering of Zotero's formatted XHTML.
 ///
 /// Supports bold, italic, underline, strike-through, small caps, subscript and
-/// superscript.
+/// superscript. Research notes can additionally opt into bounded opaque RGB
+/// foreground/background colors; ordinary CSL parsing retains its existing
+/// supported-formatting boundary.
 /// Links are retained as text; resources, scripts and stylesheets are never
 /// loaded or evaluated. Arbitrary CSS and paragraph layout are not
 /// implemented. [unsupportedFormatting] reports fixed labels for those limits.
@@ -48,7 +61,13 @@ final class ZoteroFormattedText {
       paragraphBreakOffsets = List<int>.unmodifiable(paragraphBreakOffsets),
       plainText = spans.map((span) => span.text).join();
 
-  factory ZoteroFormattedText.fromHtml(String html) => _parse(html);
+  /// [allowNoteColors] accepts exported note marks with #RGB, #RRGGBB or
+  /// integer rgb() colors. Alpha, named colors and dynamic CSS remain reported
+  /// as unsupported so a note importer can refuse them before editing.
+  factory ZoteroFormattedText.fromHtml(
+    String html, {
+    bool allowNoteColors = false,
+  }) => _parse(html, allowNoteColors: allowNoteColors);
 
   final List<ZoteroTextSpan> spans;
   final String plainText;
@@ -70,7 +89,9 @@ final class ZoteroFormattedText {
           span.underline == first.underline &&
           span.strike == first.strike &&
           span.smallCaps == first.smallCaps &&
-          span.verticalAlign == first.verticalAlign,
+          span.verticalAlign == first.verticalAlign &&
+          span.color == first.color &&
+          span.highlight == first.highlight,
     );
   }
 
@@ -102,6 +123,17 @@ final class ZoteroFormattedText {
       props.allCaps = false;
       props.importedValues?.remove('caps');
       props.explicitProperties.add('caps');
+    }
+    if (span.color != null) {
+      props.color = span.color!;
+      props.importedValues?.remove('color');
+      props.explicitProperties.add('color');
+    }
+    if (span.highlight != null) {
+      props.highlight = span.highlight == 'none' ? null : span.highlight;
+      props.importedValues?.remove('highlight');
+      props.importedValues?.remove('shd');
+      props.explicitProperties.add('highlight');
     }
     return props;
   }
@@ -146,7 +178,10 @@ final class ZoteroFormattedText {
   static const _maxDepth = 64;
   static const _maxElements = 50000;
 
-  static ZoteroFormattedText _parse(String html) {
+  static ZoteroFormattedText _parse(
+    String html, {
+    required bool allowNoteColors,
+  }) {
     if (html.length > _maxBytes || utf8.encode(html).length > _maxBytes) {
       throw const FormatException('The formatted reference is too large.');
     }
@@ -192,6 +227,7 @@ final class ZoteroFormattedText {
                 attributes['style'] ?? '',
                 style,
                 unsupported,
+                allowNoteColors: allowNoteColors,
               );
               if (role == _Role.block) out.blockBreak();
               if (tag == 'br') out.lineBreak();
@@ -357,14 +393,18 @@ final class ZoteroFormattedText {
     String tag,
     String css,
     _Style parent,
-    Set<String> unsupported,
-  ) {
+    Set<String> unsupported, {
+    required bool allowNoteColors,
+  }) {
     var bold = parent.bold;
     var italic = parent.italic;
     var underline = parent.underline;
     var strike = parent.strike;
     var smallCaps = parent.smallCaps;
     var verticalAlign = parent.verticalAlign;
+    var color = parent.color;
+    var highlight = parent.highlight;
+    final colorDeclarations = <String>{};
     if (tag == 'b' || tag == 'strong') bold = true;
     if (tag == 'i' || tag == 'em') italic = true;
     if (tag == 'u') underline = true;
@@ -381,6 +421,36 @@ final class ZoteroFormattedText {
       final name = declaration.substring(0, colon).trim().toLowerCase();
       final value = declaration.substring(colon + 1).trim().toLowerCase();
       switch (name) {
+        case 'color':
+        case 'background':
+        case 'background-color':
+          final foreground = name == 'color';
+          if (!allowNoteColors ||
+              !colorDeclarations.add(foreground ? 'color' : 'background')) {
+            unsupported.add('unsupported inline style');
+            continue;
+          }
+          if (foreground &&
+              const {'inherit', 'unset', 'currentcolor'}.contains(value)) {
+            color = parent.color;
+          } else if (!foreground && value == 'inherit') {
+            highlight = parent.highlight;
+          } else if (!foreground &&
+              const {'transparent', 'initial', 'unset'}.contains(value)) {
+            // CSS backgrounds paint behind descendants. A transparent child
+            // still shows the ancestor's opaque color. At the root an explicit
+            // transparent mark clears the host's inherited native highlight.
+            highlight = parent.highlight ?? 'none';
+          } else {
+            final rgb = _opaqueColor(value);
+            if (rgb == null) {
+              unsupported.add('unsupported inline style');
+            } else if (foreground) {
+              color = rgb;
+            } else {
+              highlight = rgb;
+            }
+          }
         case 'font-style':
           if (const ['italic', 'oblique', 'normal'].contains(value)) {
             italic = value != 'normal';
@@ -455,7 +525,33 @@ final class ZoteroFormattedText {
       strike: strike,
       smallCaps: smallCaps,
       verticalAlign: verticalAlign,
+      color: color,
+      highlight: highlight,
     );
+  }
+
+  /// Zotero's exportable-note conversion emits opaque rgb() for highlights,
+  /// deliberately dropping the editor palette's alpha before sending a note
+  /// to a word processor. Do not silently flatten arbitrary source alpha here.
+  static String? _opaqueColor(String value) {
+    final hex = RegExp(r'^#([0-9a-f]{3}|[0-9a-f]{6})$').firstMatch(value);
+    if (hex != null) {
+      final digits = hex[1]!;
+      return (digits.length == 3
+              ? digits.split('').map((digit) => '$digit$digit').join()
+              : digits)
+          .toUpperCase();
+    }
+    final rgb = RegExp(
+      r'^rgb\(\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*\)$',
+    ).firstMatch(value);
+    if (rgb == null) return null;
+    final components = [for (var i = 1; i <= 3; i++) int.parse(rgb[i]!)];
+    if (components.any((component) => component > 255)) return null;
+    return components
+        .map((component) => component.toRadixString(16).padLeft(2, '0'))
+        .join()
+        .toUpperCase();
   }
 
   static String _entity(Match match) {
@@ -546,6 +642,8 @@ final class _Style {
     this.strike = false,
     this.smallCaps = false,
     this.verticalAlign = WmlVertAlign.baseline,
+    this.color,
+    this.highlight,
   });
   final bool bold;
   final bool italic;
@@ -553,6 +651,8 @@ final class _Style {
   final bool strike;
   final bool smallCaps;
   final WmlVertAlign verticalAlign;
+  final String? color;
+  final String? highlight;
 
   bool sameAs(_Style other) =>
       bold == other.bold &&
@@ -560,7 +660,9 @@ final class _Style {
       underline == other.underline &&
       strike == other.strike &&
       smallCaps == other.smallCaps &&
-      verticalAlign == other.verticalAlign;
+      verticalAlign == other.verticalAlign &&
+      color == other.color &&
+      highlight == other.highlight;
   ZoteroTextSpan span(String text) => ZoteroTextSpan(
     text: text,
     bold: bold,
@@ -569,6 +671,8 @@ final class _Style {
     strike: strike,
     smallCaps: smallCaps,
     verticalAlign: verticalAlign,
+    color: color,
+    highlight: highlight,
   );
 }
 

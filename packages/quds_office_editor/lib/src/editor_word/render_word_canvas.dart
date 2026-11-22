@@ -5096,8 +5096,7 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
         final double x1 = run.last.x + run.last.advance;
         canvas.drawRect(
           Rect.fromLTWH(x0, line.y, x1 - x0, line.height),
-          Paint()
-            ..color = _colorFromHex(first.highlight!).withValues(alpha: 0.45),
+          Paint()..color = _colorFromHex(first.highlight!),
         );
       }
       final bool splitWords =
@@ -5307,7 +5306,7 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
       }
       if (glyph.highlight != null) {
         background = Color.alphaBlend(
-          _colorFromHex(glyph.highlight!).withValues(alpha: 0.45),
+          _colorFromHex(glyph.highlight!),
           background,
         );
       }

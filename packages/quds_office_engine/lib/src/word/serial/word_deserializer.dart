@@ -1591,11 +1591,16 @@ class WordDeserializer {
       return;
     }
     final int depth = reader.depth;
+    WmlIndent? logicalIndent;
+    String? justification;
+    var hasJustification = false;
     while (reader.next() && reader.depth >= depth) {
       if (reader.eventType != XmlEventType.startElement) {
         continue;
       }
       if ((reader.localName == 'spacing' ||
+              reader.localName == 'ind' ||
+              reader.localName == 'jc' ||
               reader.localName == 'pStyle' ||
               reader.localName == 'bidi' ||
               reader.localName == 'tabs' ||
@@ -1615,8 +1620,10 @@ class WordDeserializer {
           XmlDocument.readElement(reader);
         case 'jc':
           props.explicitJustification = true;
-          props.justification = _jc(
-            reader.getAttribute('val', namespaceUri: OfficeNamespaces.w),
+          hasJustification = true;
+          justification = reader.getAttribute(
+            'val',
+            namespaceUri: OfficeNamespaces.w,
           );
         case 'suppressAutoHyphens':
           props.suppressAutoHyphens = _onOff(
@@ -1670,7 +1677,7 @@ class WordDeserializer {
           }
         case 'ind':
           props.explicitIndent = true;
-          props.indent = WmlIndent(
+          logicalIndent = WmlIndent(
             left: _twipAttr(
               reader,
               'left',
@@ -1746,6 +1753,18 @@ class WordDeserializer {
             _readSectPr(reader, _pendingParagraphSectPr!, package, docUri);
           }
       }
+    }
+    // OOXML start/end, including the transitional left/right aliases, are
+    // relative to the effective paragraph direction. Resolve after the whole
+    // pPr: a direct bidi or a late style layer can follow jc/ind in the XML.
+    if (logicalIndent != null) {
+      props.indent = _physicalIndent(logicalIndent, props.rightToLeft == true);
+    }
+    if (hasJustification) {
+      props.justification = _jc(
+        justification,
+        rightToLeft: props.rightToLeft == true,
+      );
     }
   }
 
@@ -2490,6 +2509,8 @@ class WordDeserializer {
     // effective style cascade an inherited szCs must not override a direct sz.
     // Source XML still retains both properties for independent round trips.
     var hasRegularSize = false;
+    String? plainShading;
+    var hasPlainShading = false;
     final int depth = reader.depth;
     while (reader.next() && reader.depth >= depth) {
       if (reader.eventType != XmlEventType.startElement) {
@@ -2502,6 +2523,8 @@ class WordDeserializer {
             'caps',
             'smallCaps',
             'color',
+            'highlight',
+            'shd',
             'lang',
             'rFonts',
             'rStyle',
@@ -2596,6 +2619,41 @@ class WordDeserializer {
           props.highlight = WmlHighlight.toRgb(
             reader.getAttribute('val', namespaceUri: OfficeNamespaces.w),
           );
+        case 'shd':
+          // Only a native, opaque, unthemed clear fill has the same semantics
+          // as the editor's scalar text background. Preserve all other shapes
+          // as source XML, without inventing a rendered color.
+          final pattern = reader.getAttribute(
+            'val',
+            namespaceUri: OfficeNamespaces.w,
+          );
+          final fill = reader.getAttribute(
+            'fill',
+            namespaceUri: OfficeNamespaces.w,
+          );
+          final themed =
+              const {
+                'themeColor',
+                'themeTint',
+                'themeShade',
+                'themeFill',
+                'themeFillTint',
+                'themeFillShade',
+              }.any(
+                (name) =>
+                    reader.getAttribute(
+                      name,
+                      namespaceUri: OfficeNamespaces.w,
+                    ) !=
+                    null,
+              );
+          if (!themed &&
+              (pattern == null || pattern == 'clear') &&
+              (fill == 'auto' ||
+                  fill != null && RegExp(r'^[0-9a-fA-F]{6}$').hasMatch(fill))) {
+            hasPlainShading = true;
+            plainShading = fill == 'auto' ? null : fill!.toUpperCase();
+          }
         case 'kern':
           props.kerningHalfPoints = int.tryParse(
             reader.getAttribute('val', namespaceUri: OfficeNamespaces.w) ?? '',
@@ -2646,6 +2704,10 @@ class WordDeserializer {
               reader.getAttribute('cs', namespaceUri: OfficeNamespaces.w) ??
               props.csFont;
       }
+    }
+    if (hasPlainShading && props.highlight == null) {
+      props.highlight = plainShading;
+      props.explicitProperties.add('shd:highlight');
     }
   }
 
@@ -3882,6 +3944,26 @@ class WordDeserializer {
       );
     }
     document.styles.clear();
+    final nativeStyles = _StyleCascade(this, document)
+      .._load(includeTheme: false);
+    bool styleRightToLeft(String styleId) {
+      bool? direction;
+      for (final properties in <XmlElement?>[
+        _StyleCascade._wordChild(
+          _StyleCascade._wordChild(nativeStyles.defaults, 'pPrDefault'),
+          'pPr',
+        ),
+        for (final style in nativeStyles.chain(styleId))
+          _StyleCascade._wordChild(style, 'pPr'),
+      ]) {
+        final bidi = _StyleCascade._wordChild(properties, 'bidi');
+        if (bidi != null) {
+          direction = _onOff(_StyleCascade._tabAttribute(bidi, 'val'));
+        }
+      }
+      return direction == true;
+    }
+
     final XmlPullReader reader = WordMarkupCompatibilityReader(part.readText());
     String? id;
     String name = '';
@@ -3894,7 +3976,7 @@ class WordDeserializer {
     var fontSizePoints = 11.0;
     var spacingBefore = 0.0;
     var spacingAfter = 8.0;
-    WmlJustification justification = WmlJustification.left;
+    String? justification;
     int? headingLevel;
     int? numId;
     int? ilvl;
@@ -3928,7 +4010,7 @@ class WordDeserializer {
         fontSizePoints = 11;
         spacingBefore = 0;
         spacingAfter = 8;
-        justification = WmlJustification.left;
+        justification = null;
         headingLevel = null;
         numId = null;
         ilvl = null;
@@ -3974,8 +4056,9 @@ class WordDeserializer {
             csFont;
       } else if (reader.eventType == XmlEventType.startElement &&
           reader.localName == 'jc') {
-        justification = _jc(
-          reader.getAttribute('val', namespaceUri: OfficeNamespaces.w),
+        justification = reader.getAttribute(
+          'val',
+          namespaceUri: OfficeNamespaces.w,
         );
       } else if (reader.eventType == XmlEventType.startElement &&
           reader.localName == 'spacing') {
@@ -4038,14 +4121,16 @@ class WordDeserializer {
           fontSizePoints: fontSizePoints,
           spacingBefore: spacingBefore,
           spacingAfter: spacingAfter,
-          justification: justification,
+          justification: _jc(justification, rightToLeft: styleRightToLeft(id)),
           headingLevel: headingLevel,
           font: font,
           csFont: csFont,
           basedOn: basedOn,
           numId: numId,
           ilvl: ilvl,
-          indent: indent,
+          indent: indent == null
+              ? null
+              : _physicalIndent(indent, styleRightToLeft(id)),
         );
         document.styles.add(style);
         document.importedStyles[style.id] = style;
@@ -4273,10 +4358,18 @@ class WordDeserializer {
         reader.getAttribute('embed');
   }
 
-  static WmlJustification _jc(String? val) {
+  static WmlIndent _physicalIndent(WmlIndent logical, bool rightToLeft) =>
+      rightToLeft
+      ? logical.copyWith(left: logical.right, right: logical.left)
+      : logical;
+
+  static WmlJustification _jc(String? val, {bool rightToLeft = false}) {
     return switch (val) {
       'center' => WmlJustification.center,
-      'right' => WmlJustification.right,
+      'left' ||
+      'start' => rightToLeft ? WmlJustification.right : WmlJustification.left,
+      'right' ||
+      'end' => rightToLeft ? WmlJustification.left : WmlJustification.right,
       'both' || 'justify' => WmlJustification.justify,
       'distribute' => WmlJustification.distributed,
       _ => WmlJustification.left,
