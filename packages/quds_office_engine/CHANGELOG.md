@@ -6,6 +6,8 @@ All notable changes to `quds_office_engine` are documented here.
 
 - Keep bounded LibreOffice-formatted Zotero DOCX fields editable while
   preserving their raw instruction/boundary formatting and empty code runs.
+  Refresh or unlink empty results using cached-result or surrounding text
+  formatting; instruction-only run formatting remains inert.
   Retain structural, ownership, lock and unknown-metadata guards. Reopen the
   observed unnumbered Writer ODT outline forms and clear character shading
   with an explicit background. Original converter files exercise citation

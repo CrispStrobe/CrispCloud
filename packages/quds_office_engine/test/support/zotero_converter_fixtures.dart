@@ -75,12 +75,80 @@ Map<String, Object?> converterSnapshot(WmlDocument document, String kind) {
   };
 }
 
-void expectConverterSnapshot(WmlDocument document, String kind) {
-  final expected = jsonDecode(
-    File(
-      '$zoteroConverterFixtureRoot/original/$kind.expected.json',
-    ).readAsStringSync(),
-  );
+/// Checks the original golden, allowing only explicitly requested citation text
+/// changes. Expected values always come from the golden and the caller's edits,
+/// never from the document under test.
+void expectConverterSnapshot(
+  WmlDocument document,
+  String kind, {
+  Map<String, String> refreshedCitations = const {},
+}) {
+  final expected =
+      jsonDecode(
+            File(
+              '$zoteroConverterFixtureRoot/original/$kind.expected.json',
+            ).readAsStringSync(),
+          )
+          as Map<String, dynamic>;
+  if (refreshedCitations.isNotEmpty) {
+    final fields = (expected['fields'] as List<Object?>)
+        .cast<Map<String, dynamic>>();
+    final text = (expected['text'] as List<Object?>).cast<String>();
+    final replacements = <String, String>{};
+    for (final entry in refreshedCitations.entries) {
+      final matches = fields
+          .where(
+            (field) =>
+                (field['metadata'] as Map<String, dynamic>)['citationID'] ==
+                entry.key,
+          )
+          .toList();
+      expect(
+        matches,
+        hasLength(1),
+        reason: '$kind: refresh must identify exactly one golden citation.',
+      );
+      final field = matches.single;
+      final oldText = field['text'] as String;
+      expect(
+        oldText,
+        isNotEmpty,
+        reason: '$kind: golden cache must be explicit.',
+      );
+      expect(
+        replacements.containsKey(oldText),
+        isFalse,
+        reason: '$kind: citation caches must be distinguishable.',
+      );
+      final literal = RegExp(RegExp.escape(oldText));
+      expect(
+        text.fold<int>(
+          0,
+          (count, paragraph) => count + literal.allMatches(paragraph).length,
+        ),
+        1,
+        reason: '$kind: replacement must select one golden citation cache.',
+      );
+      replacements[oldText] = entry.value;
+      field['text'] = entry.value;
+      final metadata = field['metadata'] as Map<String, dynamic>;
+      final properties = metadata['properties'] as Map<String, dynamic>;
+      properties['plainCitation'] = entry.value;
+      properties['formattedCitation'] = entry.value;
+    }
+    // Match the original text once, so a replacement cannot cascade into a
+    // second replacement when requested text contains another citation cache.
+    final literal = RegExp(replacements.keys.map(RegExp.escape).join('|'));
+    String refreshed(String value) => value.replaceAllMapped(
+      literal,
+      (match) => replacements[match.group(0)]!,
+    );
+    final paragraphs = expected['paragraphs'] as Map<String, dynamic>;
+    for (final paragraph in paragraphs.values.cast<Map<String, dynamic>>()) {
+      paragraph['text'] = refreshed(paragraph['text'] as String);
+    }
+    expected['text'] = text.map(refreshed).toList();
+  }
   _expectSnapshot(expected, converterSnapshot(document, kind), kind);
 }
 

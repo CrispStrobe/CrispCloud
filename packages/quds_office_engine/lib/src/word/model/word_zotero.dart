@@ -603,7 +603,7 @@ abstract final class WordZotero {
   }) {
     _validateNativeInstruction(instruction, field.kind);
     _assertFormattedText(text, formattedText);
-    final base = WmlRunEdit.propsAt(field.paragraph, field.start).copy();
+    final base = _resultBaseProperties(field).copy();
     if (field.kind == ZoteroFieldKind.citation &&
         _hasBoundaryFormatting(field)) {
       if (!field.canEditNativeResult) {
@@ -1309,7 +1309,7 @@ abstract final class WordZotero {
       text: text,
       formattedText: formattedText,
       paragraphProperties: field.paragraph.properties,
-      runProperties: WmlRunEdit.propsAt(field.paragraph, 0),
+      runProperties: _resultBaseProperties(field),
     );
     if (_hasBoundaryFormatting(field)) {
       final boundaries = _replacementBoundaries(field, instruction);
@@ -1398,7 +1398,7 @@ abstract final class WordZotero {
           'This bibliography uses an inline field. Use plain text for this update, or insert a new formatted bibliography in its own paragraph.',
         );
       }
-      final base = WmlRunEdit.propsAt(field.paragraph, field.start).copy();
+      final base = _resultBaseProperties(field).copy();
       _replaceBoundaryResult(
         field,
         instruction,
@@ -1425,7 +1425,7 @@ abstract final class WordZotero {
         );
       }
       final runs = formattedText.toRuns(
-        baseProperties: WmlRunEdit.propsAt(paragraph, field.start),
+        baseProperties: _resultBaseProperties(field),
       );
       paragraph.properties.fieldInstruction = instruction;
       paragraph.inlines
@@ -1441,7 +1441,7 @@ abstract final class WordZotero {
       return;
     }
     final paragraph = field.paragraph;
-    final properties = WmlRunEdit.propsAt(paragraph, field.start).copy();
+    final properties = _resultBaseProperties(field).copy();
     final replacement = WmlRun(
       text: text,
       properties: properties,
@@ -1567,6 +1567,34 @@ abstract final class WordZotero {
             (boundary) => boundary.runPropertiesXml?.trim().isNotEmpty == true,
           );
 
+  // Empty instruction-side runs are non-visible packet metadata. Excluding
+  // them preserves text offsets while keeping propsAt's cached-result and
+  // neighboring-run fallback unchanged, including an empty result at the end.
+  static WmlRunProps _resultBaseProperties(WmlZoteroField field) {
+    final paragraph = field.paragraph;
+    final codeRuns = Set<WmlRun>.identity()..addAll(field._codeRuns);
+    if (paragraph.inlines.any(
+      (inline) => inline is WmlRun && inline.text.isEmpty,
+    )) {
+      // A following empty citation can share this same visible text offset.
+      // Its instruction-side formatting is not surrounding display text either.
+      for (final candidate in _storyFields([paragraph])) {
+        codeRuns.addAll(candidate._codeRuns);
+      }
+    }
+    if (codeRuns.isEmpty) {
+      return WmlRunEdit.propsAt(paragraph, field.start);
+    }
+    final resultView = WmlParagraph(
+      properties: paragraph.properties,
+      inlines: [
+        for (final inline in paragraph.inlines)
+          if (!codeRuns.contains(inline)) inline,
+      ],
+    );
+    return WmlRunEdit.propsAt(resultView, field.start);
+  }
+
   // These are complete, validated native packets. Formatting on non-visible
   // code/boundary runs does not become result formatting and is never silently
   // discarded when Zotero supplies a new cache or instruction.
@@ -1683,7 +1711,7 @@ abstract final class WordZotero {
         text: text,
         formattedText: formattedText,
         paragraphProperties: field.paragraph.properties,
-        runProperties: WmlRunEdit.propsAt(field.paragraph, 0),
+        runProperties: _resultBaseProperties(field),
       );
       final slot = WordTree.locate(document, field.paragraph)!;
       for (
@@ -1707,7 +1735,7 @@ abstract final class WordZotero {
     }
     final paragraph = field.paragraph;
     WordContentControls.assertCanEdit(paragraph, field.start, field.end);
-    final base = WmlRunEdit.propsAt(paragraph, field.start).copy();
+    final base = _resultBaseProperties(field).copy();
     final sourceRun = field.run;
     List<WmlRun> runs;
     if (sourceRun != null && sourceRun.commentIds.isNotEmpty) {

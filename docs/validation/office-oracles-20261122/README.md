@@ -134,9 +134,10 @@ this engine-only VBA gate.
 CrispCloud's guarded mirror advanced to CrispOffice
 `4cc604810fb2f41ac7ba04cbed65cb76300bff59`, the merge of PR #382. The
 mirror verifies 3,435 tracked files. This intake includes the editable Zotero
-converter paths and VBA `Split`. PR #383 still conflicts with that upstream
-main in Mail account navigation and related tests. Its `Split` implementation
-is already present through the accepted converter merge.
+converter paths and VBA `Split`. Its `Split` implementation is already present
+through the accepted converter merge. PR #383 initially conflicted with that
+upstream main in Mail account navigation and related tests. The update below
+records its reconciled head.
 
 The Mac passed 1,231 engine cases and 125 editor cases. These include the
 `Split` BAS CLI, conformance, editor citation controls, import and refresh,
@@ -160,3 +161,22 @@ stubs. The separate citation story set preserved its six editable fields even
 though it also triggered strict PDF text or separator comparisons. These
 comparisons distinguish an external app or verifier difference from a lost
 citation. Word showed zero open test fixtures after both batches.
+
+The reconciled PR #383 head, `8bbe17bc7d82964b67385aa796b7f43248c65149`, is
+the final local mirror pin. It includes the Zotero formatting fix that keeps
+invisible field-code formatting out of refreshed citation results. The
+guarded inventory stays at 3,435 files. The exact head passed all 1,240
+selected engine cases and 125 editor cases without failures or skips. The
+engine total includes the 15 installed-app file comparisons.
+
+The fresh-file comparison is now available in
+`packages/quds_office_engine/tool/office_app_roundtrip_test.dart`. Run it from
+the engine package after saving the three `original` fixtures in each format
+through LibreOffice twice and the three original DOCX files through the Word
+verifier. Point `CRISP_OFFICE_ORACLE_OUTPUT` at the output root. The runner
+expects four LibreOffice folders under `fresh-converter`, named
+`docx-cycle-1`, `docx-cycle-2`, `odt-cycle-1`, and `odt-cycle-2`. It reads the
+three Word-saved DOCX files from `word-citation-stories`. Missing output is
+a failure. The tool checks installed-app saves and their CrispOffice reopen
+results. Live Zotero style parity and execution of VBA inside Microsoft Word
+remain separate.

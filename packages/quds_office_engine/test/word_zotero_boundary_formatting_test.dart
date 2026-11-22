@@ -194,6 +194,7 @@ void _assertFields(WmlDocument document) {
 }
 
 void main() {
+  _emptyCodeFormattingTests();
   for (final story in ['body', 'footnote', 'cell']) {
     for (final cycle in [1, 2]) {
       test(
@@ -265,6 +266,14 @@ void main() {
         ];
         for (var nativeCycle = 0; nativeCycle < 3; nativeCycle++) {
           _assertFields(document);
+          expectConverterSnapshot(
+            document,
+            story,
+            refreshedCitations: const {
+              'FIRST1': 'Refreshed first',
+              'SECOND2': 'Refreshed second',
+            },
+          );
           final updated = WordZotero.fields(document);
           expect(updated.map((field) => field.cachedText), newText);
           expect(_paragraphs(document).map((p) => p.text), expectedText);
@@ -815,4 +824,236 @@ void main() {
       expect(WordZotero.fields(_reopen(document)).single.canEdit, isFalse);
     });
   }
+}
+
+WmlDocument _emptyCodeDocument({
+  bool bibliography = false,
+  String cache = '',
+  bool trailingContext = false,
+}) {
+  const bibliographyInstruction =
+      ' ADDIN ZOTERO_BIBL {"uncited":[],"omitted":[],"custom":[]} CSL_BIBLIOGRAPHY ';
+  return _reopen(
+    WmlDocument(
+      sections: [
+        WmlSection(
+          blocks: [
+            WmlParagraph(
+              inlines: [
+                if (!bibliography)
+                  WmlRun(
+                    text: 'Before ',
+                    properties: WmlRunProps(
+                      color: '123456',
+                      fontSizeHalfPoints: 24,
+                    ),
+                  ),
+                WmlFieldBoundary(kind: WmlFieldBoundaryKind.begin),
+                WmlFieldBoundary(
+                  kind: WmlFieldBoundaryKind.instruction,
+                  text: bibliography
+                      ? bibliographyInstruction
+                      : _citation(cache).fieldInstruction,
+                ),
+                WmlRun(
+                  properties: WmlRunProps(
+                    bold: true,
+                    color: 'FF0000',
+                    fontSizeHalfPoints: 56,
+                  ),
+                ),
+                WmlFieldBoundary(kind: WmlFieldBoundaryKind.separate),
+                if (cache.isNotEmpty)
+                  WmlRun(
+                    text: cache,
+                    properties: WmlRunProps(
+                      italic: true,
+                      color: '345678',
+                      fontSizeHalfPoints: 30,
+                    ),
+                  ),
+                WmlFieldBoundary(kind: WmlFieldBoundaryKind.end),
+                if (trailingContext)
+                  WmlRun(
+                    text: ' After',
+                    properties: WmlRunProps(
+                      color: '234567',
+                      fontSizeHalfPoints: 26,
+                    ),
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
+}
+
+void _expectVisibleResult(
+  WmlDocument document,
+  String text, {
+  required String color,
+  required int halfPoints,
+  bool italic = false,
+}) {
+  final run = document.paragraphs
+      .expand((paragraph) => paragraph.inlines.whereType<WmlRun>())
+      .singleWhere((run) => run.text == text);
+  expect(run.properties.color, color);
+  expect(run.properties.fontSizeHalfPoints, halfPoints);
+  expect(run.properties.bold, isFalse);
+  expect(run.properties.italic, italic);
+}
+
+void _emptyCodeFormattingTests() {
+  for (final action in ['metadata', 'native plain', 'native rich', 'unlink']) {
+    test('empty code formatting stays outside citation $action results', () {
+      final document = _emptyCodeDocument();
+      final field = WordZotero.fields(document).single;
+      expect(field.canEdit, isTrue);
+      expect(field.cachedText, isEmpty);
+      final code = field.paragraph.inlines.whereType<WmlRun>().singleWhere(
+        (run) => run.text.isEmpty,
+      );
+      expect(code.properties.color, 'FF0000');
+      final codeProperties = code.properties.sourcePropertiesXml;
+      switch (action) {
+        case 'metadata':
+          WordZotero.updateCitation(field, _citation('Refreshed'));
+        case 'native plain':
+        case 'native rich':
+          WordZotero.replaceNativeResult(
+            field,
+            instruction: _citation('Refreshed').fieldInstruction,
+            text: 'Refreshed',
+            formattedText: action == 'native rich'
+                ? ZoteroFormattedText.fromHtml('<i>Refreshed</i>')
+                : null,
+          );
+        case 'unlink':
+          WordZotero.replaceNativeUnlinkedResult(
+            document,
+            field,
+            text: 'Refreshed',
+          );
+      }
+      for (final current in [document, _reopen(document)]) {
+        expect(current.paragraphs.single.text, 'Before Refreshed');
+        _expectVisibleResult(
+          current,
+          'Refreshed',
+          color: '123456',
+          halfPoints: 24,
+          italic: action == 'native rich',
+        );
+        if (action == 'unlink') {
+          expect(WordZotero.fields(current), isEmpty);
+          expect(
+            current.paragraphs.single.inlines.whereType<WmlRun>().any(
+              (run) => run.text.isEmpty,
+            ),
+            isFalse,
+          );
+        } else {
+          expect(WordZotero.fields(current).single.cachedText, 'Refreshed');
+          final preserved = current.paragraphs.single.inlines
+              .whereType<WmlRun>()
+              .singleWhere((run) => run.text.isEmpty);
+          expect(preserved.properties.color, 'FF0000');
+          expect(
+            _propertyFingerprint(preserved.properties.sourcePropertiesXml),
+            _propertyFingerprint(codeProperties),
+          );
+        }
+      }
+    });
+  }
+
+  for (final unlink in [false, true]) {
+    test('empty code formatting stays outside bibliography unlink=$unlink', () {
+      final document = _emptyCodeDocument(bibliography: true);
+      final field = WordZotero.fields(document).single;
+      expect(WordZotero.canRecoverNativeBibliography(document, field), isTrue);
+      if (unlink) {
+        WordZotero.replaceNativeUnlinkedResult(
+          document,
+          field,
+          text: 'Entry one\nEntry two',
+        );
+      } else {
+        WordZotero.replaceNativeBibliography(
+          document,
+          field,
+          instruction: field.instruction,
+          text: 'Entry one\nEntry two',
+        );
+      }
+      for (final current in [document, _reopen(document)]) {
+        expect(current.paragraphs.map((p) => p.text), [
+          'Entry one',
+          'Entry two',
+        ]);
+        for (final entry in ['Entry one', 'Entry two']) {
+          _expectVisibleResult(current, entry, color: '000000', halfPoints: 22);
+        }
+        expect(WordZotero.fields(current), hasLength(unlink ? 0 : 1));
+      }
+    });
+  }
+
+  test('empty code formatting preserves existing cached result style', () {
+    final document = _emptyCodeDocument(cache: 'Old cache');
+    WordZotero.updateCitation(
+      WordZotero.fields(document).single,
+      _citation('Refreshed'),
+    );
+    for (final current in [document, _reopen(document)]) {
+      _expectVisibleResult(
+        current,
+        'Refreshed',
+        color: '345678',
+        halfPoints: 30,
+        italic: true,
+      );
+    }
+  });
+
+  test('empty code formatting preserves following context fallback', () {
+    final document = _emptyCodeDocument(trailingContext: true);
+    WordZotero.updateCitation(
+      WordZotero.fields(document).single,
+      _citation('Refreshed'),
+    );
+    for (final current in [document, _reopen(document)]) {
+      expect(current.paragraphs.single.text, 'Before Refreshed After');
+      _expectVisibleResult(
+        current,
+        'Refreshed',
+        color: '234567',
+        halfPoints: 26,
+      );
+    }
+  });
+
+  test('empty code formatting ignores adjacent empty citation code', () {
+    final document = _emptyCodeDocument();
+    final following = _emptyCodeDocument();
+    document.paragraphs.single.inlines.addAll(
+      following.paragraphs.single.inlines.skip(1),
+    );
+    final source = WordZotero.fields(document);
+    expect(source, hasLength(2));
+    WordZotero.updateCitation(source.first, _citation('Refreshed'));
+    for (final current in [document, _reopen(document)]) {
+      expect(WordZotero.fields(current), hasLength(2));
+      expect(WordZotero.fields(current).last.cachedText, isEmpty);
+      _expectVisibleResult(
+        current,
+        'Refreshed',
+        color: '123456',
+        halfPoints: 24,
+      );
+    }
+  });
 }
