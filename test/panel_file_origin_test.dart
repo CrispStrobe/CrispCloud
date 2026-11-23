@@ -381,11 +381,19 @@ void main() {
 
   for (final side in PanelSide.values) {
     test(
-      'remote origin in ${side.name} pane is the actual request client',
+      'remote origin in ${side.name} pane belongs to the selected account',
       () async {
         final panel = container.read(panelProvider(side));
         await Future<void>.delayed(Duration.zero);
-        final other = _Cloud('Dropdown provider');
+        final other = _Cloud('Dropdown provider', accountId: 'account-b');
+        container
+            .read(multiCloudProvider)
+            .addConnection(
+              id: 'dropdown',
+              label: other.providerName,
+              provider: CloudProvider.nextcloud,
+              client: other,
+            );
         container
             .read(panelSourceProvider(side).notifier)
             .setSource(
@@ -395,13 +403,13 @@ void main() {
                 path: '/documents',
               ),
             );
-        await Future<void>.delayed(Duration.zero);
+        await panel.refresh();
         final file = panel.files!.firstWhere((file) => !file.isFolder);
         final origin = panel.originForFile(file)!;
-        expect((origin.source as RemotePanelSource).client, same(actual));
+        expect((origin.source as RemotePanelSource).client, same(other));
         expect(origin.source.currentPath, '/documents');
-        expect(actual.paths.last, '/documents');
-        expect(other.paths, isEmpty);
+        expect(other.paths.last, '/documents');
+        expect(actual.paths, isNot(contains('/documents')));
       },
     );
   }
@@ -443,6 +451,15 @@ void main() {
     'same identifiers after reconnect do not inherit old selection',
     () async {
       final panel = container.read(panelProvider(PanelSide.remote));
+      container
+          .read(panelSourceProvider(PanelSide.remote).notifier)
+          .setSource(
+            RemotePanelSource(
+              providerName: actual.providerName,
+              client: actual,
+              path: actual.rootPath,
+            ),
+          );
       await panel.refresh();
       final old = panel.files!.single;
       panel.toggleSelection(old);

@@ -107,47 +107,51 @@ void main() {
     },
   );
 
-  test(
-    'explicit missing Heading1 still resolves and exports only the referenced style',
-    () {
-      final package = _package();
-      final main = package.getPart('/custom/document-main.xml')!;
-      main.writeText(
-        main.readText().replaceFirst(
-          '<w:p>',
-          '<w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr>',
-        ),
-      );
-      final document = WordDeserializer().read(package);
-      expect(document.paragraphs.first.properties.headingLevel, 1);
-      expect(
-        document.paragraphs.first.inlines
-            .whereType<WmlRun>()
-            .first
-            .properties
-            .fontSizePoints,
-        // Word 365's built-in Heading 1 (used when the style is undefined).
-        20,
-      );
-      final saved = WordSerializer().write(document);
-      final styles = XmlDocument.parse(
-        saved.getPart('/custom/styles.xml')!.readText(),
-      ).root!;
-      expect(
-        styles
-            .childrenNamed('style')
-            .map((style) => style.getAttribute('styleId')),
-        <String>['Heading1'],
-      );
-      final defaults = styles
-          .firstChild('docDefaults')!
-          .firstChild('rPrDefault')!
-          .firstChild('rPr')!;
-      expect(defaults.childElements.map((e) => e.localName), ['kern']);
-      expect(defaults.firstChild('kern')!.getAttribute('val'), '1');
-      _expectNoDirectFormatting(_body(saved).childrenNamed('p').last);
-    },
-  );
+  test('undefined native Heading1 retains its fallback through save', () {
+    final package = _package();
+    final main = package.getPart('/custom/document-main.xml')!;
+    main.writeText(
+      main.readText().replaceFirst(
+        '<w:p>',
+        '<w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr>',
+      ),
+    );
+    final document = WordDeserializer().read(package);
+    expect(document.paragraphs.first.properties.headingLevel, 1);
+    expect(
+      document.paragraphs.first.inlines
+          .whereType<WmlRun>()
+          .first
+          .properties
+          .fontSizePoints,
+      // Word 365's built-in Heading 1 (used when the style is undefined).
+      20,
+    );
+    final saved = WordSerializer().write(document);
+    expect(
+      saved
+          .relationshipsFor('/custom/document-main.xml')
+          .firstByType(RelationshipTypes.styles),
+      isNull,
+    );
+    expect(saved.getPart('/custom/styles.xml'), isNull);
+    final paragraphs = _body(saved).childrenNamed('p');
+    expect(
+      paragraphs.first
+          .firstChild('pPr')!
+          .firstChild('pStyle')!
+          .getAttribute('val'),
+      'Heading1',
+    );
+    final reopened = WordDeserializer().readBytes(saved.save());
+    final heading = reopened.paragraphs.first;
+    expect(heading.properties.headingLevel, 1);
+    expect(
+      heading.inlines.whereType<WmlRun>().first.properties.fontSizePoints,
+      20,
+    );
+    _expectNoDirectFormatting(_body(saved).childrenNamed('p').last);
+  });
 
   test('new documents retain their intentional default style catalog', () {
     final document = WmlDocument(

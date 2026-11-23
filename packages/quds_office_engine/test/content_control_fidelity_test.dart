@@ -260,36 +260,36 @@ void main() {
     );
   });
 
-  test('unsupported row/cell wrappers reject instead of flattening', () {
-    for (final location in ['row', 'cell']) {
-      final document = source();
-      final package = document.package!;
-      final main = package.getPart('/word/document.xml')!;
-      const open =
-          '<w:sdt><w:sdtPr><w:id w:val="999"/></w:sdtPr><w:sdtContent>';
-      const close = '</w:sdtContent></w:sdt>';
-      if (location == 'row') {
-        main.writeText(
-          main
-              .readText()
-              .replaceFirst('<w:tr>', '$open<w:tr>')
-              .replaceFirst('</w:tr>', '</w:tr>$close'),
-        );
-      } else {
-        main.writeText(
-          main
-              .readText()
-              .replaceFirst('<w:tc>', '$open<w:tc>')
-              .replaceFirst('</w:tc>', '</w:tc>$close'),
+  test(
+    'row controls and malformed cell controls reject without flattening',
+    () {
+      for (final location in ['row', 'cell']) {
+        final document = source();
+        final package = document.package!;
+        final main = package.getPart('/word/document.xml')!;
+        const open =
+            '<w:sdt><w:sdtPr><w:id w:val="999"/></w:sdtPr><w:sdtContent>';
+        const close = '</w:sdtContent></w:sdt>';
+        if (location == 'row') {
+          main.writeText(
+            main
+                .readText()
+                .replaceFirst('<w:tr>', '$open<w:tr>')
+                .replaceFirst('</w:tr>', '</w:tr>$close'),
+          );
+        } else {
+          main.writeText(
+            main.readText().replaceFirst('<w:tc>', '$open$close<w:tc>'),
+          );
+        }
+        expect(
+          () => WordDeserializer().read(package),
+          throwsUnsupportedError,
+          reason: location,
         );
       }
-      expect(
-        () => WordDeserializer().read(package),
-        throwsUnsupportedError,
-        reason: location,
-      );
-    }
-  });
+    },
+  );
 
   test(
     'CLI rejects an inline control split before replacing an existing output',

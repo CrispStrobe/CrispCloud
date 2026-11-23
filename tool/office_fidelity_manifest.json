@@ -2511,7 +2511,7 @@
     "packages/quds_office_engine/test/bookmark_fidelity_test.dart": "3c08c1cb992be0cbffe3205ead575529473bd630a60b5e20c3eb012080290e87",
     "packages/quds_office_engine/test/bounded_cfb_reader_test.dart": "4577021902d0d9e798f7e7a74885ef1079bf67ad2b12a63f53c870decf1a87da",
     "packages/quds_office_engine/test/comment_thread_fidelity_test.dart": "fdd10b7c43b3d98e57df88219637be5850fc0a2f4e8a58cd6a935828fd1417f1",
-    "packages/quds_office_engine/test/content_control_fidelity_test.dart": "92179ec93f02730ca6a157afb1ed44a5cc9b754bc73acdae8fb05366ea248ab2",
+    "packages/quds_office_engine/test/content_control_fidelity_test.dart": "f21446fcc01558d4389bf864234e141d51939bc94145a0b30500446d2f42ff8f",
     "packages/quds_office_engine/test/csv_sheet_import_test.dart": "423a0ddda0a53efbc75c82dcafb0f7fd4ae61ae55e73a69d770eb88c063d7e0b",
     "packages/quds_office_engine/test/drawing_line_style_test.dart": "596c675305a187a464fbaebae1412292a8e8a36b4f32a9e6b5243f9a896f07d8",
     "packages/quds_office_engine/test/english_hyphenation_test.dart": "70f85df2080d90b7f0e0512ea4510cabb5ebb99e0ac1bef265ff9abaf13ca048",
@@ -3041,7 +3041,7 @@
     "packages/quds_office_engine/test/sml_styles_date_test.dart": "7d1958191cbb8db7e341d49482c3c09dd1227ca5afd206b4ce47f66d0ab4228f",
     "packages/quds_office_engine/test/story_media_fidelity_test.dart": "1c5678453daf0275e31a1c226be5d8f46f1a36eea8af740b705cb60c1164779f",
     "packages/quds_office_engine/test/style_cascade_test.dart": "ee0cdd3f9d55111c92998d3dd4e0202b7241ee6b392fe91afc3f9549d45a5ed5",
-    "packages/quds_office_engine/test/styleless_import_fidelity_test.dart": "02c7f3387910815d66565dc271797de9fcf716f18dc6f692815454d975ca35bd",
+    "packages/quds_office_engine/test/styleless_import_fidelity_test.dart": "4206fee08e688ca2f47d8475f6dfd6ed2c778314992eb131184c5cb43bad18cd",
     "packages/quds_office_engine/test/support/legacy_word_fixture.dart": "b8a20463999decb7ae235de4949b4a3277265f2a0cc693206d8b69886d1e10ba",
     "packages/quds_office_engine/test/support/office_macro_cli.dart": "a99c9fa6df165eb5fe864104a92d971af3ebc1595bde8504e04b704524078c3a",
     "packages/quds_office_engine/test/support/pdf_alias_fixture.dart": "e34d9dc829231299e4ff3185b1725899d0164d2c13407478f596918a83a99ce6",
@@ -3459,7 +3459,7 @@
     "tool/office-validation/test_render.py": "1ba68e18608d74387cbc1c779ceb72af76bf7741463c282684aec93bf3825472"
   },
   "source_branch": "main",
-  "source_commit": "565fd80b6863205dca3ac4fd7e1a2c6559dff947",
+  "source_commit": "15cda2732d68175b9150605a430abc5dd4f7bb68",
   "source_repository": "CrispStrobe/quds_office_suite",
   "standalone_sources": {
     "packages/legacy_doc_parser": {
