@@ -153,7 +153,7 @@ class BrowserMenuStrings {
     ],
     'controls': [
       'Menu controls',
-      'Menüverwaltung',
+      'Anpassen',
       'Gestion des menus',
       'Controles del menú',
       'Gestão dos menus',
