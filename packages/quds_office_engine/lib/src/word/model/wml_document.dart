@@ -756,7 +756,7 @@ class WmlTocEntry {
   /// level API.
   int level;
 
-  /// headingParagraphIndex API.
+  /// Document paragraph index, or -1 if the imported destination is unresolved.
   int headingParagraphIndex;
 
   /// pageNumber API.

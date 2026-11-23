@@ -373,6 +373,41 @@ void main() {
     expect(layout.pages.single.lines.map((line) => line.text), ['Heading']);
   });
 
+  test('native TOC uses bookmark destinations and keeps unbound cached pages', () {
+    const itemStart = '<w:p><w:pPr><w:pStyle w:val="TOC1"/></w:pPr>';
+    final document = WordDeserializer().read(
+      _source(
+        '$itemStart$_begin$_instruction$_separate'
+        '<w:hyperlink w:anchor="Target"><w:r><w:t>First</w:t></w:r></w:hyperlink>'
+        '<w:r><w:tab/><w:t>12</w:t></w:r></w:p>'
+        '$itemStart<w:r><w:t>Unbound</w:t><w:tab/><w:t>24</w:t></w:r>$_end</w:p>'
+        '<w:p><w:pPr><w:pageBreakBefore/></w:pPr>'
+        '<w:bookmarkStart w:id="30" w:name="Target"/>'
+        '<w:r><w:t>Custom heading</w:t></w:r><w:bookmarkEnd w:id="30"/></w:p>',
+      ),
+    );
+    WordToc.rebindHeadings(document);
+    final toc = WordToc.tocs(document).single;
+    final destination = document.paragraphs.toList().indexWhere(
+      (paragraph) => paragraph.text == 'Custom heading',
+    );
+    expect(destination, greaterThan(0));
+    expect(toc.entries.map((entry) => entry.headingParagraphIndex), [
+      destination,
+      -1,
+    ]);
+    final laid = WordLayoutEngine(font: null).layout(document);
+    expect(WordToc.syncPageNumbers(document, laid), isTrue);
+    expect(toc.entries.map((entry) => entry.pageNumber), [2, 24]);
+    expect(
+      laid.pages
+          .expand((page) => page.frames)
+          .where((box) => box.kind == LaidOutBoxKind.tocEntry)
+          .map((box) => box.paragraphIndex),
+      [destination],
+    );
+  });
+
   test('nested PAGEREF fields keep one native TOC and their cached results', () {
     const itemStart = '<w:p><w:pPr><w:pStyle w:val="TOC1"/></w:pPr>';
     const pageRef =

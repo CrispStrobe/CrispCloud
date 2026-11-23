@@ -262,11 +262,28 @@ abstract final class WordToc {
     }
   }
 
-  /// Points each TOC entry at the live heading paragraph so page sync works
-  /// after a file open (absorbed entries store ordinals, not paragraph indexes).
+  /// Connects cached TOC entries to their actual document paragraphs.
   static void rebindHeadings(WmlDocument document) {
+    final tocsInDocument = tocs(document).toList();
+    if (tocsInDocument.isEmpty) return;
     final List<WmlParagraph> all = document.paragraphs.toList();
-    for (final WmlToc toc in tocs(document)) {
+    final indexes = <WmlParagraph, int>{
+      for (final (index, paragraph) in all.indexed) paragraph: index,
+    };
+    final anchors = <String, WmlParagraph>{};
+    for (final paragraph in all) {
+      final alias = paragraph.properties.bookmarkName;
+      if (alias != null) {
+        anchors.putIfAbsent(alias.toLowerCase(), () => paragraph);
+      }
+      for (final marker in paragraph.inlines.whereType<WmlBookmarkBoundary>()) {
+        final name = marker.name;
+        if (marker.isStart && name != null) {
+          anchors.putIfAbsent(name.toLowerCase(), () => paragraph);
+        }
+      }
+    }
+    for (final WmlToc toc in tocsInDocument) {
       final List<WmlParagraph> headings = <WmlParagraph>[
         for (final WmlParagraph paragraph in all)
           if (_isCollectibleHeading(
@@ -279,10 +296,24 @@ abstract final class WordToc {
       ];
       for (int i = 0; i < toc.entries.length; i++) {
         final WmlTocEntry entry = toc.entries[i];
+        final item = i < toc.itemParagraphs.length
+            ? toc.itemParagraphs[i]
+            : null;
         WmlParagraph? match;
-        if (i < headings.length && headings[i].text.trim() == entry.text) {
+        final anchor = item?.inlines
+            .whereType<WmlRun>()
+            .map((run) => run.hyperlink?.anchor)
+            .whereType<String>()
+            .firstOrNull;
+        if (anchor != null) {
+          match = anchors[anchor.toLowerCase()];
+        }
+        final matchedByAnchor = match != null;
+        if (!matchedByAnchor &&
+            i < headings.length &&
+            headings[i].text.trim() == entry.text) {
           match = headings[i];
-        } else {
+        } else if (!matchedByAnchor) {
           for (final WmlParagraph heading in headings) {
             if (heading.text.trim() == entry.text &&
                 headingLevelOf(heading) == entry.level) {
@@ -291,17 +322,13 @@ abstract final class WordToc {
             }
           }
         }
-        if (match != null) {
-          entry.headingParagraphIndex = all.indexOf(match);
-          final String? bookmark = match.properties.bookmarkName;
-          if (bookmark != null &&
-              bookmark.isNotEmpty &&
-              i < toc.itemParagraphs.length) {
-            for (final WmlInline inline in toc.itemParagraphs[i].inlines) {
-              if (inline is WmlRun) {
-                inline.hyperlink = WmlHyperlink(anchor: bookmark);
-              }
-            }
+        if (match != null || toc.sourcePresentation != null) {
+          entry.headingParagraphIndex = indexes[match] ?? -1;
+        }
+        final bookmark = match?.properties.bookmarkName;
+        if (!matchedByAnchor && item != null && bookmark?.isNotEmpty == true) {
+          for (final inline in item.inlines.whereType<WmlRun>()) {
+            inline.hyperlink = WmlHyperlink(anchor: bookmark);
           }
         }
       }
@@ -472,7 +499,7 @@ abstract final class WordToc {
       WmlTocEntry(
         text: text.replaceAll('\t', ' '),
         level: level,
-        headingParagraphIndex: toc.entries.length,
+        headingParagraphIndex: -1,
         pageNumber: page == null ? 1 : int.parse(page.group(1)!),
       ),
     );

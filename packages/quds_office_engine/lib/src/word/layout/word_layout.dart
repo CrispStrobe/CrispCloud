@@ -3222,6 +3222,7 @@ class WordLayoutEngine {
     for (int i = 0; i < itemCount; i++) {
       final WmlParagraph item = toc.itemParagraphs[i];
       final WmlTocEntry? entry = i < toc.entries.length ? toc.entries[i] : null;
+      final target = entry?.headingParagraphIndex ?? -1;
       final int lineStart = current.length;
       final ({double y, int pageIndex}) laid = _layoutParagraph(
         item,
@@ -3237,7 +3238,7 @@ class WordLayoutEngine {
         maxWidthOverride: maxWidthOverride ?? flow?.colWidth,
         flow: flow,
         allowBreak: allowBreak,
-        tocTargetParagraph: entry?.headingParagraphIndex,
+        tocTargetParagraph: target >= 0 ? target : null,
         overlayText: entry != null && toc.showsPageNumberForLevel(entry.level)
             ? '${entry.pageNumber}'
             : null,
@@ -3249,7 +3250,7 @@ class WordLayoutEngine {
       final List<LaidOutLine> entryLines = lineStart <= current.length
           ? current.sublist(lineStart)
           : List<LaidOutLine>.from(current);
-      if (entryLines.isNotEmpty && entry != null) {
+      if (entryLines.isNotEmpty && target >= 0) {
         final LaidOutLine first = entryLines.first;
         final LaidOutLine last = entryLines.last;
         currentFrames.add(
@@ -3260,7 +3261,7 @@ class WordLayoutEngine {
             height: (last.y + last.height) - first.y,
             strokeColor: '00000000',
             kind: LaidOutBoxKind.tocEntry,
-            paragraphIndex: entry.headingParagraphIndex,
+            paragraphIndex: target,
           ),
         );
       }
