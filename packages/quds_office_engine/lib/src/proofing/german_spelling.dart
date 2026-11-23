@@ -14,6 +14,8 @@ final RegExp _internalApostrophe = RegExp(
   unicode: true,
 );
 
+final RegExp _composableMark = RegExp(r'[\u0300-\u036f]');
+
 /// Canonicalizes common decomposed Latin letters and lexical separators.
 /// This comparison helper is deliberately separate from source-offset handling.
 String normalizeGermanWord(String word) {
@@ -68,17 +70,19 @@ String normalizeGermanWord(String word) {
   // A discretionary layout control can separate a base from its combining
   // accent. Remove it before composing the dictionary's canonical forms.
   String result = word.replaceAll('\u00ad', '');
-  for (final MapEntry<String, String> entry in composed.entries) {
-    if (result.contains(entry.key)) {
-      result = result.replaceAll(entry.key, entry.value);
+  if (_composableMark.hasMatch(result)) {
+    for (final MapEntry<String, String> entry in composed.entries) {
+      if (result.contains(entry.key)) {
+        result = result.replaceAll(entry.key, entry.value);
+      }
     }
   }
-  return result
-      .replaceAll('\u2010', '-')
-      .replaceAll('\u2011', '-')
-      // U+2019 also closes quotations. Only an internal lexical apostrophe
-      // shares the dictionary/personal-word spelling of the ASCII separator.
-      .replaceAll(_internalApostrophe, "'");
+  result = result.replaceAll('\u2010', '-').replaceAll('\u2011', '-');
+  // U+2019 also closes quotations. Only an internal lexical apostrophe
+  // shares the dictionary/personal-word spelling of the ASCII separator.
+  return result.contains('’')
+      ? result.replaceAll(_internalApostrophe, "'")
+      : result;
 }
 
 /// Host-owned personal and session-ignored words. Nothing is persisted or shared
@@ -208,6 +212,7 @@ class GermanSpellingProvider extends OfficeProofingProvider {
     OfficeProofingVocabulary? vocabulary,
     this.maximumSuggestions = 5,
     this.maximumCandidateChecks = 6000,
+    this.yieldBetweenChecks = true,
   }) : vocabulary = vocabulary ?? OfficeProofingVocabulary() {
     if (maximumSuggestions < 0 || maximumSuggestions > 20) {
       throw RangeError.range(maximumSuggestions, 0, 20, 'maximumSuggestions');
@@ -225,6 +230,14 @@ class GermanSpellingProvider extends OfficeProofingProvider {
   final OfficeProofingVocabulary vocabulary;
   final int maximumSuggestions;
   final int maximumCandidateChecks;
+
+  /// Yield during long scans on the UI isolate. Dedicated workers can run
+  /// a paragraph without scheduling timer turns between tokens.
+  final bool yieldBetweenChecks;
+  int _suggestionRevision = -1;
+  var _suggestions = <(String, String, bool, String?), List<String>>{};
+  static const _maxCachedSuggestions = 1024;
+
   bool _disposed = false;
   static Future<_GermanLexicon>? _sharedLexicon;
   static final RegExp _tokens = RegExp(
@@ -262,10 +275,12 @@ class GermanSpellingProvider extends OfficeProofingProvider {
 
   /// The isolate-wide dictionary, loaded once. A failed load is forgotten so
   /// that one error does not poison every later provider in the isolate.
-  static Future<_GermanLexicon> _lexicon() {
+  Future<_GermanLexicon> _lexicon() {
     final Future<_GermanLexicon>? shared = _sharedLexicon;
     if (shared != null) return shared;
-    final Future<_GermanLexicon> load = _GermanLexicon.load();
+    final Future<_GermanLexicon> load = _GermanLexicon.load(
+      cooperative: yieldBetweenChecks,
+    );
     _sharedLexicon = load;
     load.then<void>(
       (_) {},
@@ -334,17 +349,20 @@ class GermanSpellingProvider extends OfficeProofingProvider {
     final int vocabularyRevision = vocabulary.revision;
     final Set<String> personal = vocabulary.wordsFor(request.language);
     final Set<String> ignored = vocabulary.ignoredWordsFor(request.language);
+    if (_suggestionRevision != vocabularyRevision) {
+      _suggestionRevision = vocabularyRevision;
+      _suggestions = {};
+    }
+    final suggestions = _suggestions;
     final _GermanLexicon lexicon = await _lexicon();
     final bool swiss = request.language == 'de-CH';
     final List<OfficeProofingFinding> findings = <OfficeProofingFinding>[];
     final source = _GermanSpellingText(request.text);
     final literals = GermanLiteralTextRanges(request.text);
-    final Map<(String, bool, String?), List<String>> suggestions =
-        <(String, bool, String?), List<String>>{};
     int examined = 0;
     for (final RegExpMatch token in _tokens.allMatches(request.text)) {
       if (examined++ % 16 == 0) {
-        await Future<void>.delayed(Duration.zero);
+        if (yieldBetweenChecks) await Future<void>.delayed(Duration.zero);
         if (_disposed) {
           return result(
             OfficeProofingStatus.unavailable,
@@ -378,12 +396,13 @@ class GermanSpellingProvider extends OfficeProofingProvider {
         source.protectedRanges,
         source.boundaries,
       );
-      final (String, bool, String?) suggestionKey = (
+      final suggestionKey = (
+        request.language,
         word,
         sentenceInitial,
         preferredParticiple,
       );
-      List<String>? replacements = suggestions[suggestionKey];
+      List<String>? replacements = suggestions.remove(suggestionKey);
       if (replacements == null) {
         replacements = _suggest(
           word,
@@ -393,11 +412,9 @@ class GermanSpellingProvider extends OfficeProofingProvider {
           sentenceInitial: sentenceInitial,
           preferredParticiple: preferredParticiple,
         );
-        suggestions[suggestionKey] = replacements;
-        // A new indexed search can consume the full candidate budget. Do not
-        // accumulate sixteen such searches in one UI event-loop turn. Known
-        // words and repeated misspellings keep the ordinary cheap batch path.
-        await Future<void>.delayed(Duration.zero);
+        // Keep the cooperative path responsive even during a full indexed
+        // suggestion search. Worker requests do not block the UI isolate.
+        if (yieldBetweenChecks) await Future<void>.delayed(Duration.zero);
         if (_disposed) {
           return result(
             OfficeProofingStatus.unavailable,
@@ -410,6 +427,13 @@ class GermanSpellingProvider extends OfficeProofingProvider {
             message:
                 'Personal vocabulary changed during this check; check again.',
           );
+        }
+      }
+      if (word.length <= 128 &&
+          replacements.every((replacement) => replacement.length <= 128)) {
+        suggestions[suggestionKey] = replacements;
+        if (suggestions.length > _maxCachedSuggestions) {
+          suggestions.remove(suggestions.keys.first);
         }
       }
       findings.add(
@@ -1071,20 +1095,21 @@ class GermanSpellingProvider extends OfficeProofingProvider {
     return matches.take(maximumSuggestions).map((match) => match.$1).toList();
   }
 
+  static final _styledSeparators = RegExp(r'[\u2010\u2011\u2019]');
+
   static List<String> _withSourceSeparators(
     String source,
     List<String> replacements,
   ) {
+    if (replacements.isEmpty || !_styledSeparators.hasMatch(source)) {
+      return replacements;
+    }
     final List<String> hyphens = RegExp(
       r'[-\u2010\u2011]',
     ).allMatches(source).map((RegExpMatch match) => match.group(0)!).toList();
     final List<String> apostrophes = RegExp(
       r"['\u2019]",
     ).allMatches(source).map((RegExpMatch match) => match.group(0)!).toList();
-    if (hyphens.every((String separator) => separator == '-') &&
-        apostrophes.every((String separator) => separator == "'")) {
-      return replacements;
-    }
     return List<String>.unmodifiable(
       replacements.map((String replacement) {
         // Restore each separator kind independently, only when the proposed
@@ -1215,23 +1240,25 @@ int _boundedEditDistance(String source, String target, {int limit = 2}) {
   ];
   List<int> current = List<int>.filled(target.length + 1, beyond);
   for (int i = 1; i <= source.length; i++) {
-    current.fillRange(0, current.length, beyond);
-    if (i <= limit) current[0] = i;
     final int start = i > limit ? i - limit : 1;
     final int end = i + limit < target.length ? i + limit : target.length;
+    // Only the neighboring cells can be read from outside the band.
+    current[start - 1] = i <= limit ? i : beyond;
+    if (end < target.length) current[end + 1] = beyond;
     int best = beyond;
+    final int sourceUnit = source.codeUnitAt(i - 1);
     for (int j = start; j <= end; j++) {
+      final int targetUnit = target.codeUnitAt(j - 1);
       final int substitution =
-          previous[j - 1] +
-          (source.codeUnitAt(i - 1) == target.codeUnitAt(j - 1) ? 0 : 1);
+          previous[j - 1] + (sourceUnit == targetUnit ? 0 : 1);
       final int insertion = current[j - 1] + 1;
       final int deletion = previous[j] + 1;
       int cost = substitution < insertion ? substitution : insertion;
       if (deletion < cost) cost = deletion;
       if (i > 1 &&
           j > 1 &&
-          source.codeUnitAt(i - 1) == target.codeUnitAt(j - 2) &&
-          source.codeUnitAt(i - 2) == target.codeUnitAt(j - 1)) {
+          sourceUnit == target.codeUnitAt(j - 2) &&
+          source.codeUnitAt(i - 2) == targetUnit) {
         final int transposition = previousPrevious[j - 2] + 1;
         if (transposition < cost) cost = transposition;
       }
@@ -1258,11 +1285,11 @@ class _GermanLexicon {
   final Set<String> sharpSCapitals;
   final Map<(int, int, String), List<String>> _suggestionIndex;
 
-  static Future<_GermanLexicon> load() async {
+  static Future<_GermanLexicon> load({required bool cooperative}) async {
     Future<Set<String>> decode(List<String> chunks) async {
       final Set<String> words = <String>{};
       for (final String chunk in chunks) {
-        await Future<void>.delayed(Duration.zero);
+        if (cooperative) await Future<void>.delayed(Duration.zero);
         final String decoded = utf8.decode(
           RawDeflate.inflate(base64.decode(chunk), maxOutputBytes: 1048576),
         );
@@ -1279,7 +1306,9 @@ class _GermanLexicon {
         <(int, int, String), List<String>>{};
     int indexed = 0;
     for (final String word in standard.followedBy(swiss)) {
-      if (indexed++ % 4096 == 0) await Future<void>.delayed(Duration.zero);
+      if (cooperative && indexed++ % 4096 == 0) {
+        await Future<void>.delayed(Duration.zero);
+      }
       final String lower = word.toLowerCase();
       if (lower.length < 3 || lower.length > 66) continue;
       final int width = lower.length >= 9 ? 3 : 2;

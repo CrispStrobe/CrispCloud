@@ -253,9 +253,10 @@ void main() {
     expect(WordProofingGeometry.displayRanges(lines[1], start, start + 6), [
       const TextRange(start: 0, end: 6),
     ]);
+    // A literal number in the right tab remains authored text.
     expect(
       WordProofingGeometry.displayRanges(lines.last, 0, header.text.length),
-      isEmpty,
+      [const TextRange(start: 0, end: 1)],
     );
     expect(
       WordProofingGeometry.displayRanges(
@@ -263,7 +264,7 @@ void main() {
         header.text.length,
         header.text.length,
       ),
-      isEmpty,
+      [const TextRange(start: 1, end: 1)],
     );
   });
 
@@ -392,7 +393,7 @@ void main() {
   testWidgets('generated header labels cannot paint source squiggles', (
     tester,
   ) async {
-    final header = _paragraph('1');
+    final header = _paragraph('1')..properties.pageNumberField = true;
     final doc = _document([_paragraph('Body')]);
     doc.sections.single.header.add(header);
     await _mount(

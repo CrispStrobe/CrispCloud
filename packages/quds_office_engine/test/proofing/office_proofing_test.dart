@@ -288,6 +288,29 @@ void main() {
   });
 
   test(
+    'a bounded provider can continue after an individual deadline',
+    () async {
+      final pending = Completer<OfficeProofingResult>();
+      final first = request('slow');
+      final provider = FakeProvider(
+        (input) async =>
+            identical(input, first) ? pending.future : clean(input),
+      );
+      final service = OfficeProofingService(
+        providers: [provider],
+        timeout: const Duration(milliseconds: 10),
+        disposeOnTimeout: false,
+      );
+      addTearDown(service.dispose);
+      final slow = await service.check(first);
+      expect(slow.results.single.status, OfficeProofingStatus.failed);
+      expect(provider.disposed, isFalse);
+      expect((await service.check(request('next'))).isClean, isTrue);
+      pending.complete(clean(first));
+    },
+  );
+
+  test(
     'disposed service stays unavailable and duplicate provider ids rejected',
     () async {
       final OfficeProofingService service = OfficeProofingService(

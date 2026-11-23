@@ -418,6 +418,7 @@ class OfficeProofingService {
     required List<OfficeProofingProvider> providers,
     this.timeout = const Duration(seconds: 10),
     this.warmUpTimeout = const Duration(minutes: 2),
+    this.disposeOnTimeout = true,
   }) : providers = List<OfficeProofingProvider>.unmodifiable(providers) {
     if (timeout <= Duration.zero) throw ArgumentError.value(timeout, 'timeout');
     if (warmUpTimeout <= Duration.zero) {
@@ -440,6 +441,11 @@ class OfficeProofingService {
   /// [timeout] starts. A slow warm-up reports a failed result but does not
   /// dispose the provider; the next request awaits the same load.
   final Duration warmUpTimeout;
+
+  /// Keep a bounded, isolated provider usable after an individual request
+  /// misses its deadline, such as when a shared worker queue is temporarily
+  /// busy. In-process providers are retired on timeout by default.
+  final bool disposeOnTimeout;
   bool _disposed = false;
   final Set<OfficeProofingProvider> _timedOut = <OfficeProofingProvider>{};
 
@@ -532,9 +538,13 @@ class OfficeProofingService {
         message: result.message,
       );
     } on TimeoutException {
-      _timedOut.add(provider);
-      // A failing disposal must not prevent the timeout result from returning.
-      unawaited(Future<void>.sync(provider.dispose).catchError((Object _) {}));
+      if (disposeOnTimeout) {
+        _timedOut.add(provider);
+        // A failing disposal must not prevent the timeout result from returning.
+        unawaited(
+          Future<void>.sync(provider.dispose).catchError((Object _) {}),
+        );
+      }
       return OfficeProofingResult(
         request: request,
         providerId: provider.id,
@@ -564,6 +574,7 @@ class OfficeProofingService {
         result.findings.isNotEmpty) {
       return 'An incomplete provider result must not contain findings.';
     }
+    if (result.findings.isEmpty) return null;
     final Set<int> boundaries = <int>{0};
     int boundary = 0;
     for (final String cluster in request.text.characters) {

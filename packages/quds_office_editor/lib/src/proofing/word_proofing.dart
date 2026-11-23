@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:quds_office_engine/quds_office_engine.dart';
 
 import '../l10n/office_plural.dart';
+import 'background_proofing.dart';
 
 /// A finding together with its exact paragraph, story and input snapshot.
 final class WordProofingIssue {
@@ -378,16 +379,7 @@ final class WordProofingSession extends ChangeNotifier {
        _schedule = debounce == null
            ? schedule
            : schedule.copyWith(pause: debounce) {
-    _service =
-        service ??
-        OfficeProofingService(
-          providers: [
-            GermanWritingRulesProvider(),
-            GermanSpellingProvider(vocabulary: this.vocabulary),
-            // Active only for Arabic-language paragraphs.
-            ArabicWritingRulesProvider(),
-          ],
-        );
+    _service = service ?? defaultWordProofingService(this.vocabulary);
   }
 
   final WmlDocument Function() _document;
@@ -2085,6 +2077,64 @@ final class WordProofingSession extends ChangeNotifier {
       notifyListeners();
     }
 
+    final wanted = _available(kinds);
+    final allKinds = _available(_Kind.values.toSet());
+    Future<_CachedParagraph?> evaluate(_ParagraphSnapshot snapshot) async {
+      // Reuse results for the same text and add the missing provider groups.
+      final previous = _cache[snapshot.paragraph];
+      final reusable =
+          !useManual &&
+          previous != null &&
+          !previous.includesManual &&
+          previous.key == snapshot.key &&
+          previous.reports.length == snapshot.segments.length &&
+          previous.reports.every(_settled);
+      final missing = reusable ? wanted.difference(previous.kinds) : wanted;
+      final paragraphReports = <OfficeProofingReport>[];
+      // Every available group already has settled results (an empty
+      // provider selection must never be sent or cached).
+      if (!useManual && missing.isEmpty) return null;
+      for (var index = 0; index < snapshot.segments.length; index++) {
+        final request = _request(
+          snapshot,
+          snapshot.segments[index],
+          documentId: documentId,
+          revision: revision,
+        );
+        final ordinary = await _service.check(
+          request,
+          only: useManual ? null : _filter(missing),
+        );
+        if (!current()) return null;
+        final report = useManual
+            ? mergeOfficeProofingReports(
+                primary: ordinary,
+                secondary: await manual!.check(request),
+              )
+            : reusable
+            ? _mergeKinds(previous.reports[index], ordinary)
+            : _carryOver(previous, snapshot, missing, ordinary) ?? ordinary;
+        if (!current()) return null;
+        paragraphReports.add(report);
+      }
+      final checkedKinds = useManual
+          ? _Kind.values.toSet()
+          : {...missing, if (reusable) ...previous.kinds};
+      return _CachedParagraph(
+        snapshot.key,
+        paragraphReports,
+        useManual,
+        checkedKinds,
+      );
+    }
+
+    // Keep both local workers busy when their checks have different costs.
+    // Start with the priority paragraph and keep typing and custom providers
+    // on their existing serial path.
+    final batchSize =
+        whole && !useManual && usesBackgroundWordProofing(_service) ? 4 : 1;
+    var batch = const <_CachedParagraph?>[];
+    var batchStart = 0;
     // About twenty progress publications per pass, plus early feedback for
     // the edited paragraph; each one republishes the whole document.
     final progressStride = (checkOrder.length + 19) ~/ 20;
@@ -2100,55 +2150,26 @@ final class WordProofingSession extends ChangeNotifier {
           ..start();
       }
       if (!current()) return _summary;
-      // Reuse results for the same text and add the missing provider groups.
-      final previous = _cache[snapshot.paragraph];
-      final reusable =
-          !useManual &&
-          previous != null &&
-          !previous.includesManual &&
-          previous.key == snapshot.key &&
-          previous.reports.length == snapshot.segments.length &&
-          previous.reports.every(_settled);
-      final wanted = _available(kinds);
-      final missing = reusable ? wanted.difference(previous.kinds) : wanted;
-      final paragraphReports = <OfficeProofingReport>[];
-      // Every available group already has settled results (an empty
-      // provider selection must never be sent or cached).
-      if (!useManual && missing.isEmpty) continue;
-      for (var index = 0; index < snapshot.segments.length; index++) {
-        final request = _request(
-          snapshot,
-          snapshot.segments[index],
-          documentId: documentId,
-          revision: revision,
-        );
-        final ordinary = await _service.check(
-          request,
-          only: useManual ? null : _filter(missing),
-        );
-        if (!current()) return _summary;
-        final report = useManual
-            ? mergeOfficeProofingReports(
-                primary: ordinary,
-                secondary: await manual!.check(request),
-              )
-            : reusable
-            ? _mergeKinds(previous.reports[index], ordinary)
-            : _carryOver(previous, snapshot, missing, ordinary) ?? ordinary;
-        if (!current()) return _summary;
-        paragraphReports.add(report);
+      if (position - batchStart >= batch.length) {
+        batchStart = position;
+        final end = position + (position == 0 ? 1 : batchSize);
+        batch = end == position + 1
+            ? [await evaluate(snapshot)]
+            : await Future.wait([
+                for (
+                  var next = position;
+                  next < end && next < checkOrder.length;
+                  next++
+                )
+                  evaluate(checkOrder[next]),
+              ]);
       }
+      if (!current()) return _summary;
+      final checked = batch[position - batchStart];
+      if (checked == null) continue;
       checkedParagraphCount++;
-      final checkedKinds = useManual
-          ? _Kind.values.toSet()
-          : {...missing, if (reusable) ...previous.kinds};
-      _cache[snapshot.paragraph] = _CachedParagraph(
-        snapshot.key,
-        paragraphReports,
-        useManual,
-        checkedKinds,
-      );
-      if (checkedKinds.containsAll(_available(_Kind.values.toSet()))) {
+      _cache[snapshot.paragraph] = checked;
+      if (checked.kinds.containsAll(allKinds)) {
         _touched.remove(snapshot.paragraph);
       }
       final remaining = position + 1 < checkOrder.length;
