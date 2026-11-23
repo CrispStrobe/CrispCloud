@@ -140,6 +140,7 @@ import '../providers/browser_menu_provider.dart';
 import '../providers/custom_command_provider.dart';
 import '../widgets/browser_menu_editor.dart';
 import '../widgets/configurable_browser_menu.dart';
+import '../widgets/windows_platform_menu_bar.dart';
 
 class FileBrowserScreen extends ConsumerStatefulWidget {
   const FileBrowserScreen({super.key});
@@ -299,6 +300,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         officeEditor == null &&
         imageEditor == null &&
         pdfEditor == null &&
+        ebookEditor == null &&
         codeEditor == null &&
         mediaEditor == null &&
         terminal == null;
@@ -313,13 +315,27 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
               elevation: isWindowsDesktop ? 0 : null,
               scrolledUnderElevation: isWindowsDesktop ? 0 : null,
               surfaceTintColor: isWindowsDesktop ? Colors.transparent : null,
-              title: isWindowsDesktop && browserMenusVisible
-                  ? ConfigurableBrowserMenu(
-                      layout: menuStore.layout,
-                      commands: _browserMenuBindings(context, ref),
-                      fixedCommands: _fixedBrowserMenuBindings(context, ref),
-                      inToolbar: true,
-                    )
+              title: isWindowsDesktop
+                  ? (browserMenusVisible
+                        ? ConfigurableBrowserMenu(
+                            layout: menuStore.layout,
+                            commands: _browserMenuBindings(context, ref),
+                            fixedCommands: _fixedBrowserMenuBindings(context, ref),
+                            inToolbar: true,
+                          )
+                        : WindowsPlatformMenuBar(
+                            menus: _buildWindowsContextMenus(
+                              context,
+                              ref,
+                              officeEditor,
+                              imageEditor,
+                              pdfEditor,
+                              ebookEditor,
+                              codeEditor,
+                              mediaEditor,
+                              terminal,
+                            ),
+                          ))
                   : isNarrow
                       ? Text(l.appTitle)
                       : null,
@@ -328,7 +344,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                       context,
                       auth,
                       isNarrow: isNarrow,
-                      showToolbar: showTopToolbar,
+                      showToolbar: showTopToolbar && browserMenusVisible,
                     )
                   : isNarrow
                       ? _buildNarrowActions(context, auth)
@@ -1429,6 +1445,52 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
               builder: (_) => const AboutAppDialog(),
             ),
           ),
+        ],
+      ),
+    ];
+  }
+
+  /// The macOS app menu is a system-global menu; on Windows the contextual
+  /// editor/terminal menus belong in the window itself. Keep the actions and
+  /// disabled states from the same platform menu registry, but put app-level
+  /// commands under Help and omit system-provided macOS-only items.
+  List<PlatformMenuItem> _buildWindowsContextMenus(
+    BuildContext context,
+    WidgetRef ref,
+    OfficeEditorMenuActions? editor,
+    ImageEditorMenuActions? imageEditor,
+    PdfEditorMenuActions? pdfEditor,
+    EbookEditorMenuActions? ebookEditor,
+    CodeEditorMenuActions? codeEditor,
+    MediaEditorMenuActions? mediaEditor,
+    TerminalMenuActions? terminal,
+  ) {
+    final macMenus = _buildMacMenus(
+      context,
+      ref,
+      editor,
+      imageEditor,
+      pdfEditor,
+      ebookEditor,
+      codeEditor,
+      mediaEditor,
+      terminal,
+    );
+    final appMenu = macMenus.first as PlatformMenu;
+    return [
+      ...macMenus.skip(1),
+      PlatformMenu(
+        label: context.tr('Help'),
+        menus: [
+          PlatformMenuItem(
+            label: HelpGuideStrings(context).text('title'),
+            onSelected: () => showUserGuide(context),
+          ),
+          PlatformMenuItem(
+            label: context.commanderTr('Keyboard Shortcuts...'),
+            onSelected: () => showKeyboardShortcutsDialog(context),
+          ),
+          ...appMenu.menus,
         ],
       ),
     ];
