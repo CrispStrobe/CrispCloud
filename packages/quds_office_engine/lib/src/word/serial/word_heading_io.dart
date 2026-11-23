@@ -61,6 +61,39 @@ abstract final class WordHeadingIo {
     }
   }
 
+  /// Apply a native catalog style by ID, including custom headings.
+  static bool applyImportedStyles(
+    WmlDocument document,
+    Iterable<WmlParagraph> paragraphs,
+    String styleId,
+  ) {
+    if (!document.importedStyles.containsKey(styleId)) return false;
+    final properties = XmlDocument.parse(
+      '<w:pPr xmlns:w="${OfficeNamespaces.w}"><w:pStyle/></w:pPr>',
+    );
+    properties.root!.firstChild('pStyle')!.setAttribute(
+      'val',
+      styleId,
+      prefix: 'w',
+      namespaceUri: OfficeNamespaces.w,
+    );
+    final source = properties.toXmlString(declaration: false);
+    for (final paragraph in paragraphs) {
+      paragraph.properties
+        ..styleId = styleId
+        ..listLabel = null
+        ..listLabelUsesSpace = false
+        ..listRestart = null
+        ..sourcePropertiesXml = source
+        ..importedValues = null;
+      _resetMajorityRunFormatting(paragraph);
+    }
+    WordDeserializer()
+      ..refreshStyles(document)
+      ..refreshNumbering(document);
+    return true;
+  }
+
   static void _resetMajorityRunFormatting(WmlParagraph paragraph) {
     final runs = paragraph.inlines.whereType<WmlRun>().toList();
     final serializer = WordSerializer();

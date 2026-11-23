@@ -829,6 +829,28 @@ typedef WordGlyphMeasure =
 typedef WordFontMeasure =
     FontMetrics? Function(int codePoint, double sizePoints, WmlRunProps props);
 
+/// Real progress from a Word layout pass.
+class WordLayoutProgress {
+  const WordLayoutProgress({
+    required this.blocksDone,
+    required this.blocksTotal,
+    required this.notesDone,
+    required this.notesTotal,
+    required this.pages,
+  });
+
+  final int blocksDone;
+  final int blocksTotal;
+  final int notesDone;
+  final int notesTotal;
+  final int pages;
+
+  double get fraction {
+    final total = blocksTotal + notesTotal;
+    return total <= 0 ? 1 : (blocksDone + notesDone) / total;
+  }
+}
+
 /// Word-style greedy wrapping with shaped line measurements and pagination.
 class WordLayoutEngine {
   /// WordLayoutEngine API.
@@ -839,6 +861,7 @@ class WordLayoutEngine {
     this.measure,
     this.measureRun,
     this.measureFont,
+    this.onProgress,
   });
 
   /// Primary face used when [fonts] does not cover a code point.
@@ -861,6 +884,10 @@ class WordLayoutEngine {
   final WordRunMeasure? measureRun;
 
   final WordFontMeasure? measureFont;
+
+  /// Optional real progress callback. It reports completed body blocks and
+  /// shaped notes, never a timer-derived percentage.
+  final void Function(WordLayoutProgress progress)? onProgress;
 
   final Map<(SfntFont, double), FontMetrics> _metricsCache = {};
 
@@ -886,6 +913,57 @@ class WordLayoutEngine {
   /// [_placedNotes] in placement order (incremental layout restores
   /// prefixes of it).
   final List<int> _placedOrder = <int>[];
+
+  int _progressBlocksDone = 0;
+  int _progressBlocksTotal = 0;
+  int _progressNotesDone = 0;
+  int _progressNotesTotal = 0;
+  final Stopwatch _progressClock = Stopwatch();
+  int _lastProgressEmit = -1000;
+
+  void _resetLayoutProgress(WmlDocument document) {
+    _progressBlocksDone = 0;
+    _progressNotesDone = 0;
+    _progressBlocksTotal = 0;
+    for (final section in document.sections) {
+      _progressBlocksTotal += WordTree.visibleBlocks(section.blocks).length;
+    }
+    _progressNotesTotal = document.footnotes.length + document.endnotes.length;
+    _progressClock
+      ..reset()
+      ..start();
+    _lastProgressEmit = -1000;
+    _emitLayoutProgress(0);
+  }
+
+  void _noteLaidOut() {
+    _progressNotesDone++;
+    _emitLayoutProgress(0);
+  }
+
+  void _emitLayoutProgress(int pages) {
+    final callback = onProgress;
+    if (callback == null) return;
+    final elapsed = _progressClock.elapsedMilliseconds;
+    final done = _progressBlocksDone + _progressNotesDone;
+    final total = _progressBlocksTotal + _progressNotesTotal;
+    if (done < total && elapsed - _lastProgressEmit < 80) return;
+    _lastProgressEmit = elapsed;
+    callback(
+      WordLayoutProgress(
+        blocksDone: _progressBlocksDone,
+        blocksTotal: _progressBlocksTotal,
+        notesDone: _progressNotesDone,
+        notesTotal: _progressNotesTotal,
+        pages: pages,
+      ),
+    );
+  }
+
+  void _blockLaidOut(int pages) {
+    _progressBlocksDone++;
+    _emitLayoutProgress(pages);
+  }
 
   /// Note slices reserved on pages from [fromPage] on, copied; null if none.
   Map<int, List<_NoteSlice>>? _pendingNotes(int fromPage) {
@@ -1335,6 +1413,7 @@ class WordLayoutEngine {
       WordIncrementalLayoutStats.fallbacks++;
     }
     _prepareLayout(document, updateFields: updateFields);
+    _resetLayoutProgress(document);
     final _IncrementalState? previousState = reuse?._incremental;
     if (previousState != null &&
         (!identical(previousState.owner, _incrementalOwner) ||
@@ -1352,13 +1431,18 @@ class WordLayoutEngine {
     }
     final _Recorder recorder = _recorder = _Recorder(document.sections.length);
     try {
-      return _layoutFrom(
+      final result = _layoutFrom(
         document,
         updateFields: updateFields,
         fromSectionIndex: fromSectionIndex,
         reuse: reuse,
         recorder: recorder,
       );
+      _progressBlocksDone = _progressBlocksTotal;
+      _progressNotesDone = _progressNotesTotal;
+      _lastProgressEmit = -1000;
+      _emitLayoutProgress(result.pages.length);
+      return result;
     } finally {
       _recorder = null;
     }
@@ -2141,6 +2225,7 @@ class WordLayoutEngine {
           flow.pageIndex = toc.pageIndex;
           paragraphIndex += 1 + block.itemParagraphs.length;
       }
+      _blockLaidOut(flow.pages.length);
     }
     flow.finish();
     return paragraphIndex;
@@ -2508,7 +2593,9 @@ class WordLayoutEngine {
             .firstOrNull;
         final target =
             stop?.position ??
-            ((pen / kDefaultTabWidth).floor() + 1) * kDefaultTabWidth;
+            (hanging > 0 && pen < textLeft - .001
+                ? textLeft
+                : ((pen / kDefaultTabWidth).floor() + 1) * kDefaultTabWidth);
         final inset = switch (stop?.alignment ?? WmlTabAlignment.left) {
           WmlTabAlignment.left => 0.0,
           WmlTabAlignment.center => fieldWidth / 2,

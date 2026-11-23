@@ -42,6 +42,7 @@ class WordCanvas extends LeafRenderObjectWidget {
     this.equationCaret = 0,
     this.pictureCropMode = false,
     this.onChanged,
+    this.onViewportChanged,
     this.onSelectVisual,
     this.onSelectFrame,
     this.onEditFrame,
@@ -177,6 +178,9 @@ class WordCanvas extends LeafRenderObjectWidget {
 
   /// onChanged API.
   final VoidCallback? onChanged;
+
+  /// Viewport page or zoom changes, independent of edits and selection.
+  final VoidCallback? onViewportChanged;
 
   /// onSelectVisual API.
   final ValueChanged<OfficeVisual?>? onSelectVisual;
@@ -320,6 +324,7 @@ class WordCanvas extends LeafRenderObjectWidget {
       equationCaret: equationCaret,
       pictureCropMode: pictureCropMode,
       onChanged: onChanged,
+      onViewportChanged: onViewportChanged,
       onSelectVisual: onSelectVisual,
       onSelectFrame: onSelectFrame,
       onEditFrame: onEditFrame,
@@ -397,6 +402,7 @@ class WordCanvas extends LeafRenderObjectWidget {
       ..equationCaret = equationCaret
       ..pictureCropMode = pictureCropMode
       ..onChanged = onChanged
+      ..onViewportChanged = onViewportChanged
       ..onSelectVisual = onSelectVisual
       ..onSelectFrame = onSelectFrame
       ..onEditFrame = onEditFrame
@@ -512,6 +518,7 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
     this.equationCaret = 0,
     this.pictureCropMode = false,
     this.onChanged,
+    this.onViewportChanged,
     this.onSelectVisual,
     this.onSelectFrame,
     this.onEditFrame,
@@ -647,6 +654,9 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
 
   /// onChanged API.
   VoidCallback? onChanged;
+
+  /// Viewport page or zoom changes, independent of edits and selection.
+  VoidCallback? onViewportChanged;
 
   /// onSelectVisual API.
   ValueChanged<OfficeVisual?>? onSelectVisual;
@@ -818,10 +828,20 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
   _selectionPaths = <(LaidOutPage, int, int, int, int, WmlTable?), Path>{};
   final Map<LaidOutPage, _CachedBodyTextPicture> _bodyTextPictures =
       <LaidOutPage, _CachedBodyTextPicture>{};
+  static const int _maxTextPicturePages = 8;
+  static const int _maxTextPictureBytes = 24 * 1024 * 1024;
+  var _textPictureBytes = 0;
+
+  @visibleForTesting
+  int get debugCachedTextPageCount => _bodyTextPictures.length;
+
   WmlDocument? _paragraphIndicesFor;
   Map<WmlParagraph, int>? _paragraphIndicesCache;
   final Map<LaidOutPage, Map<int, WmlFrame>> _frameOwnersCache =
       <LaidOutPage, Map<int, WmlFrame>>{};
+
+  @override
+  bool get isRepaintBoundary => true;
 
   @override
   void dispose() {
@@ -836,6 +856,7 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
       cached.picture.dispose();
     }
     _bodyTextPictures.clear();
+    _textPictureBytes = 0;
     _paragraphIndicesFor = null;
     _paragraphIndicesCache = null;
     _frameOwnersCache.clear();
@@ -847,6 +868,7 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
       cached.picture.dispose();
     }
     _bodyTextPictures.clear();
+    _textPictureBytes = 0;
     _paragraphIndicesFor = null;
     _paragraphIndicesCache = null;
     _frameOwnersCache.clear();
@@ -1285,7 +1307,7 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
     _clampViewport();
     _scrollPageTip = _pageAtViewport();
     markNeedsPaint();
-    onChanged?.call();
+    _notifyViewportChanged();
   }
 
   void _paintScrollBar(Canvas canvas) {
@@ -1387,7 +1409,7 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
           _scrollDrag = false;
           _scrollPageTip = null;
           markNeedsPaint();
-          onChanged?.call();
+          _notifyViewportChanged();
           return;
         }
         if (_draggingVisual) {
@@ -1415,11 +1437,30 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
       HardwareKeyboard.instance.isControlPressed ||
       HardwareKeyboard.instance.isMetaPressed;
 
+  int? _reportedViewportPage;
+  double? _reportedViewportScale;
+
+  void _notifyViewportChanged() {
+    final callback = onViewportChanged;
+    if (callback == null) {
+      onChanged?.call();
+      return;
+    }
+    final page = _pageAtViewport();
+    final scale = viewport.scale;
+    if (_reportedViewportPage == page && _reportedViewportScale == scale) {
+      return;
+    }
+    _reportedViewportPage = page;
+    _reportedViewportScale = scale;
+    callback();
+  }
+
   void _finishPointerScroll() {
     _clampViewport();
     _scrollPageTip = _pageAtViewport();
     markNeedsPaint();
-    onChanged?.call();
+    _notifyViewportChanged();
   }
 
   void _applyWheelScroll(PointerScrollEvent event) {
@@ -1503,7 +1544,7 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
       _ensureRecognizers();
       _pan!.addPointer(event);
       markNeedsPaint();
-      onChanged?.call();
+      _notifyViewportChanged();
       return;
     }
     if (!config.allowsSelection) {
@@ -5015,10 +5056,15 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
     Map<int, WmlFrame> frameOwners,
   ) {
     final inkState = _bodyTextInkState(page);
-    final cached = _bodyTextPictures[page];
-    if (cached != null && cached.inkState == inkState) return cached.picture;
-    // Retain one picture per page, not one per selection or active story.
-    _bodyTextPictures.remove(page)?.picture.dispose();
+    final cached = _bodyTextPictures.remove(page);
+    if (cached != null) {
+      if (cached.inkState == inkState) {
+        _bodyTextPictures[page] = cached;
+        return cached.picture;
+      }
+      _textPictureBytes -= cached.picture.approximateBytesUsed;
+      cached.picture.dispose();
+    }
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
     canvas.clipRect(Rect.fromLTWH(0, 0, page.width, page.height));
@@ -5044,6 +5090,16 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
     }
     final picture = recorder.endRecording();
     _bodyTextPictures[page] = (inkState: inkState, picture: picture);
+    _textPictureBytes += picture.approximateBytesUsed;
+    while (_bodyTextPictures.length > 1 &&
+        (_bodyTextPictures.length > _maxTextPicturePages ||
+            _textPictureBytes > _maxTextPictureBytes)) {
+      final oldest = _bodyTextPictures.keys.first;
+      final evicted = _bodyTextPictures.remove(oldest)!.picture;
+      _textPictureBytes -= evicted.approximateBytesUsed;
+      evicted.dispose();
+      _frameOwnersCache.remove(oldest);
+    }
     return picture;
   }
 
@@ -5057,14 +5113,30 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
     if (line.isParagraphStart &&
         line.listLabel != null &&
         line.listLabel!.isNotEmpty) {
-      final TextPainter marker = TextPainter(
+      final first = line.glyphs.firstOrNull;
+      final label = line.listLabel!.trimRight();
+      final family = PaintRunText.familyFor(
+        text: label,
+        runFamily: first?.fontFamily,
+        themeFamily: _theme.fontFamily,
+      );
+      final rgb = int.tryParse(first?.color ?? '', radix: 16);
+      final marker = TextPainter(
         text: TextSpan(
-          text: line.listLabel,
+          text: label,
           style: TextStyle(
-            fontSize: line.glyphs.isEmpty ? 11 : line.glyphs.first.fontSize,
-            fontFamily: PaintRunText.latinFallbacks.first,
-            fontFamilyFallback: PaintRunText.latinFallbacks,
-            color: _documentInk(line, const Color(0xFF222222)),
+            fontSize: first?.fontSize ?? 11,
+            fontFamily: family,
+            fontFamilyFallback: PaintRunText.fallbacksFor(
+              label,
+              runFamily: family,
+            ),
+            fontWeight: first?.bold == true ? FontWeight.bold : FontWeight.normal,
+            fontStyle: first?.italic == true ? FontStyle.italic : FontStyle.normal,
+            color: _documentInk(
+              line,
+              rgb == null ? const Color(0xFF222222) : Color(0xFF000000 | rgb),
+            ),
             height: 1.0,
           ),
         ),
@@ -5073,7 +5145,19 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
       );
       try {
         marker.layout();
-        marker.paint(canvas, Offset(line.x - marker.width - 4, line.y));
+        final baseline = marker.computeDistanceToActualBaseline(
+          TextBaseline.alphabetic,
+        );
+        marker.paint(
+          canvas,
+          Offset(
+            line.sourceParagraph?.properties.listLabelUsesSpace == true ||
+                    line.listMarkerX == 0
+                ? line.x - marker.width - (first?.fontSize ?? 11) * .25
+                : line.listMarkerX,
+            first == null ? line.y : first.y - baseline,
+          ),
+        );
       } finally {
         marker.dispose();
       }

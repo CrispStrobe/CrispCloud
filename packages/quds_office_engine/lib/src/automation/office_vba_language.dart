@@ -5884,16 +5884,26 @@ class _Evaluator {
             ? _Font(range)
             : _Interior(range);
       case _Unary():
-        final value = _evaluate(expression.operand);
-        if (value == _VariantState.nullValue) return value;
-        if (expression.token.lower == 'not') {
-          return !_boolean(value, expression.token);
+        // Keep the admitted expression depth independent of the host stack.
+        // Each procedure in a call chain can have its own unary prefix.
+        final operators = <_Token>[expression.token];
+        var operand = expression.operand;
+        while (operand is _Unary) {
+          _tick(operand.token);
+          operators.add(operand.token);
+          operand = operand.operand;
         }
-        final number = _arithmeticNumber(value, expression.token);
-        return _finite(
-          expression.token.lower == '-' ? -number : number,
-          expression.token,
-        );
+        var value = _evaluate(operand);
+        if (value == _VariantState.nullValue) return value;
+        for (final token in operators.reversed) {
+          if (token.lower == 'not') {
+            value = !_boolean(value, token);
+          } else {
+            final number = _arithmeticNumber(value, token);
+            value = _finite(token.lower == '-' ? -number : number, token);
+          }
+        }
+        return value;
       case _Binary():
         // VBA And/Or are eager, so both operands are evaluated.
         final left = _evaluate(expression.left);

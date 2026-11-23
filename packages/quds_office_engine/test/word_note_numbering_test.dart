@@ -46,6 +46,40 @@ List<LaidOutLine> _body(WmlDocument doc) => WordLayoutEngine(
 ).layout(doc, updateFields: false).pages.expand((page) => page.lines).toList();
 
 void main() {
+  test('imported note marker keeps its native font size, rise and hanging tab', () {
+    final package = WordSerializer().write(_document([2]));
+    const w = OfficeNamespaces.w;
+    package.getPart('/word/styles.xml')!.writeText(
+      '<w:styles xmlns:w="$w">'
+      '<w:style w:type="character" w:styleId="NoteMarker">'
+      '<w:rPr><w:sz w:val="14"/><w:position w:val="4"/>'
+      '<w:vertAlign w:val="baseline"/></w:rPr></w:style>'
+      '</w:styles>',
+    );
+    package.getPart('/word/footnotes.xml')!.writeText(
+      '<w:footnotes xmlns:w="$w"><w:footnote w:id="2"><w:p>'
+      '<w:pPr><w:ind w:left="462" w:hanging="462"/></w:pPr>'
+      '<w:r><w:rPr><w:rStyle w:val="NoteMarker"/></w:rPr><w:footnoteRef/></w:r>'
+      '<w:r><w:t xml:space="preserve"> </w:t><w:tab/><w:t>Note text</w:t></w:r>'
+      '</w:p></w:footnote></w:footnotes>',
+    );
+    var doc = WordDeserializer().read(package);
+    for (var cycle = 0; cycle < 2; cycle++) {
+      final marker = doc.footnotes.single.paragraphs.single.inlines
+          .whereType<WmlNoteMarker>().single;
+      expect(marker.properties.fontSizePoints, 7);
+      expect(marker.properties.positionHalfPoints, 4);
+      expect(marker.properties.vertAlign, WmlVertAlign.baseline);
+      final line = WordLayoutEngine(font: null).layout(doc)
+          .pages.expand((page) => page.notes).single;
+      final number = line.glyphs.first;
+      final text = line.glyphs.firstWhere((g) => g.glyph.codePoint == 0x4e);
+      expect(number.fontSize, 7);
+      expect(text.x - number.x, closeTo(23.1, .01));
+      doc = WordDeserializer().readBytes(WordSerializer().writeBytes(doc));
+    }
+  });
+
   test('IDs and storage order do not determine body, note, or pane order', () {
     final doc = _document([42, 8, 71]);
     final source = doc.paragraphs.map((p) => p.text).toList();

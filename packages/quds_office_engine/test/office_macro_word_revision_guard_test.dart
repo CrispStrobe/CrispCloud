@@ -4,7 +4,10 @@ import 'package:quds_office_engine/quds_office_automation.dart';
 import 'package:quds_office_engine/quds_office_engine.dart';
 import 'package:test/test.dart';
 
-Uint8List _source({required int emptyFormattingRuns}) {
+Uint8List _source({
+  required int emptyFormattingRuns,
+  bool missingPreviousFormatting = false,
+}) {
   // Use the application's ordinary native package, including its default
   // settings part. Import honors that authored tracking-disabled setting;
   // a minimal package without settings instead retains record()'s true flag.
@@ -12,10 +15,13 @@ Uint8List _source({required int emptyFormattingRuns}) {
   final package = OpcPackage.openBytes(builder.build());
   final runs = StringBuffer();
   for (var index = 0; index < emptyFormattingRuns; index++) {
+    final previous = missingPreviousFormatting && index == 0
+        ? ''
+        : '<w:rPr><w:i/></w:rPr>';
     runs.write(
       '<w:r><w:rPr><w:b/>'
       '<w:rPrChange w:id="${index + 13}" w:author="Original reviewer" '
-      'w:date="2026-11-19T10:00:00Z"><w:rPr><w:i/></w:rPr></w:rPrChange>'
+      'w:date="2026-11-19T10:00:00Z">$previous</w:rPrChange>'
       '</w:rPr><w:t xml:space="preserve"></w:t></w:r>',
     );
   }
@@ -26,9 +32,8 @@ Uint8List _source({required int emptyFormattingRuns}) {
         '<w:p>$runs</w:p><w:p><w:r><w:t>Original heading</w:t></w:r></w:p>'
         '<w:sectPr/></w:body></w:document>',
       );
-  // Preserve the imported source bytes, including intentionally ambiguous
-  // revision attribution, without passing them through a model serializer.
-  // There is no protection/tracking-setting override or alternate dispatcher.
+  // Keep incomplete native revision markup in the fixture so the macro
+  // runtime reaches the same save guard as a real imported document.
   return package.save();
 }
 
@@ -47,14 +52,17 @@ Matcher _saveGuardFailure() => isA<OfficeMacroException>()
     .having(
       (error) => error.message,
       'message',
-      contains('The empty formatting run no longer has an unambiguous target.'),
+      contains('The previous formatting is missing.'),
     );
 
 void main() {
   test(
-    'ambiguous empty formatting history refuses macro save without publication or recording',
+    'missing previous formatting refuses macro save without publication or recording',
     () async {
-      final source = _source(emptyFormattingRuns: 2);
+      final source = _source(
+        emptyFormattingRuns: 2,
+        missingPreviousFormatting: true,
+      );
       final admitted =
           OfficeOperationCatalog.open(source, OfficeMacroFormat.docx)
               as WmlDocument;
@@ -97,6 +105,40 @@ void main() {
         );
       }
       expect(session.stopRecording().steps, isEmpty);
+    },
+  );
+
+  test(
+    'two native empty formatting runs survive a macro save independently',
+    () async {
+      final source = _source(emptyFormattingRuns: 2);
+      final session = OfficeMacroSession(
+        source,
+        format: OfficeMacroFormat.docx,
+      );
+      final preview = await session.validate(_headingPlan());
+      expect(preview.validatedOnly, isTrue);
+      expect(session.bytes, source);
+      expect(session.revision, 0);
+
+      await session.run(_headingPlan());
+      expect(session.revision, 1);
+      final saved = WordDeserializer().readBytes(session.bytes);
+      final runs = saved.paragraphs.first.inlines.whereType<WmlRun>().toList();
+      expect(saved.paragraphs.last.properties.headingLevel, 2);
+      expect(saved.revisions, hasLength(2));
+      expect(runs, hasLength(2));
+      for (var index = 0; index < runs.length; index++) {
+        expect(runs[index].text, isEmpty);
+        expect(
+          saved.revisions[index].emptyFormattingAnchor,
+          same(runs[index].formattingAnchor),
+        );
+      }
+      expect(
+        runs.first.formattingAnchor,
+        isNot(same(runs.last.formattingAnchor)),
+      );
     },
   );
 

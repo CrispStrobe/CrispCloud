@@ -145,6 +145,32 @@ void _expectNotes(
 }
 
 void main() {
+  test('Word layout failure leaves the previously opened document in place', () async {
+    final original = WmlDocument.empty(text: 'Original body');
+    var failMeasure = false;
+    final editor = WordEditorController(
+      document: original,
+      layoutEngine: WordLayoutEngine(
+        font: null,
+        measure: (codePoint, size, properties) {
+          if (failMeasure) throw StateError('Layout measurement failed');
+          return size / 2;
+        },
+      ),
+    );
+    addTearDown(editor.dispose);
+    final previousLayout = editor.documentLaidOut;
+    failMeasure = true;
+    await expectLater(
+      editor.loadBytesAsync(WordSerializer().writeBytes(
+        WmlDocument.empty(text: 'Valid replacement'),
+      )),
+      throwsStateError,
+    );
+    expect(editor.document, same(original));
+    expect(editor.documentLaidOut, same(previousLayout));
+  });
+
   TestWidgetsFlutterBinding.ensureInitialized();
 
   for (final start in [1, 9]) {

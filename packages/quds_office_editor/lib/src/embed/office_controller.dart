@@ -1520,7 +1520,7 @@ class WordEditorController extends OfficeController {
     final int generation = ++_openGeneration;
     final WmlDocument original = document;
     final int revision = contentRevision;
-    final WordOpenPayload opened = await OfficeIsolateOpen.word(
+    final WmlDocument opened = await OfficeIsolateOpen.wordDocument(
       bytes,
       password: password,
       onProgress: onProgress,
@@ -1531,10 +1531,15 @@ class WordEditorController extends OfficeController {
         contentRevision != revision) {
       throw StateError('The document changed while the file was opening.');
     }
-    _acceptOpenedWord(opened.document);
+    _acceptOpenedWord(opened);
   }
 
   void _acceptOpenedWord(WmlDocument opened) {
+    final first = opened.paragraphs.firstOrNull;
+    if (first != null && first.text.trim().isEmpty) {
+      _syncParagraphDirection(first);
+    }
+    final layout = _layoutWordDocument(opened);
     document = opened;
     commands.clear();
     _noteEditStart.clear();
@@ -1556,7 +1561,9 @@ class WordEditorController extends OfficeController {
     equationSlot = 0;
     equationCaret = 0;
     pictureCropMode = false;
-    relayout();
+    documentLaidOut = layout;
+    _documentReplaced = false;
+    _layoutComment();
     _dirty = false;
     notifyListeners();
   }
@@ -1617,6 +1624,17 @@ class WordEditorController extends OfficeController {
     }
   }
 
+  LaidOutDocument _layoutWordDocument(WmlDocument model) {
+    WordLink.ensureHeadingBookmarks(model);
+    WordToc.refreshEmpty(model);
+    WordToc.rebindHeadings(model);
+    final engine = _engine;
+    final layout = engine.layout(model);
+    return WordToc.syncPageNumbers(model, layout)
+        ? engine.layout(model)
+        : layout;
+  }
+
   void _relayoutCurrentDocument({
     required bool localEdit,
     Iterable<WmlParagraph>? dirty,
@@ -1627,13 +1645,13 @@ class WordEditorController extends OfficeController {
     // header band. Force a full layout while editing a header or footer.
     final bool incremental = localEdit && !isEditingHeaderFooter;
     if (!incremental) {
-      WordLink.ensureHeadingBookmarks(document);
-      WordToc.refreshEmpty(document);
-      WordToc.rebindHeadings(document);
+      documentLaidOut = _layoutWordDocument(document);
+      _layoutComment();
+      return;
     }
     final WordLayoutEngine engine = _engine;
-    final int fromSection = incremental ? sectionIndexAtCaret : 0;
-    if (incremental && WordLayoutEngine.incrementalLayout) {
+    final int fromSection = sectionIndexAtCaret;
+    if (WordLayoutEngine.incrementalLayout) {
       final LaidOutDocument previous = documentLaidOut;
       // Paint-fitted lines get their engine values back first, so they can
       // be reused line by line (the new layout is unfitted, as a full
@@ -1652,20 +1670,17 @@ class WordEditorController extends OfficeController {
     } else {
       // The section-level path reuses earlier pages as they are (fitted),
       // without recording incremental state from them.
-      if (incremental && _FittedLines.of(documentLaidOut) != null) {
+      if (_FittedLines.of(documentLaidOut) != null) {
         documentLaidOut.discardIncrementalState();
       }
       documentLaidOut = engine.layout(
         document,
-        updateFields: !incremental,
+        updateFields: false,
         fromSectionIndex: fromSection,
-        reuse: incremental ? documentLaidOut : null,
+        reuse: documentLaidOut,
       );
     }
-    if (!incremental && WordToc.syncPageNumbers(document, documentLaidOut)) {
-      documentLaidOut = engine.layout(document);
-    }
-    if (!incremental || isEditingComment) {
+    if (isEditingComment) {
       _layoutComment();
     }
   }
@@ -7618,15 +7633,22 @@ class WordEditorController extends OfficeController {
       }
     }
 
+    final imported = document.importedStyles.containsKey(styleId);
     commands.commit(
       _CallbackCommand(
         executeFn: () {
           restore();
+          if (WordHeadingIo.applyImportedStyles(document, before.keys, styleId)) {
+            return;
+          }
           for (final paragraph in before.keys) {
             WordStyles.apply(paragraph, styleId, document: document);
           }
         },
-        undoFn: restore,
+        undoFn: () {
+          restore();
+          if (imported) WordDeserializer().refreshNumbering(document);
+        },
       ),
     );
     relayout();

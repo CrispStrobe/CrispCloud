@@ -93,6 +93,11 @@ jobs:
       - name: Native test dependencies
         run: sudo apt-get update && sudo apt-get install -y clang libsqlite3-dev
       - run: flutter pub get
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install image comparison dependency
+        run: python3 -m pip install Pillow==13.0.0
       - name: Shared corpus and host save workflow
         env:
           OFFICE_NAVIGATION_PREVIEW: '1'

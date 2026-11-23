@@ -139,6 +139,7 @@ class _NoteStory {
       fallbackWidthFactor: owner.fallbackWidthFactor,
     ).._containedPhysicalSection = section;
     final LaidOutDocument laid = storyEngine.layout(story, updateFields: false);
+    owner._noteLaidOut();
     final List<WmlParagraph> paragraphs = story.paragraphs.toList();
     final List<LaidOutLine> lines = <LaidOutLine>[];
     final List<LaidOutBox> frames = <LaidOutBox>[];

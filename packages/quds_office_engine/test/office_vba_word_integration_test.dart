@@ -518,8 +518,8 @@ End Sub''');
       () async {
         final original = _rawBody(
           '<w:p>'
-          '<w:r><w:rPr><w:b/><w:rPrChange w:id="13" w:author="Original">'
-          '<w:rPr><w:i/></w:rPr></w:rPrChange></w:rPr><w:t/></w:r>'
+          '<w:r><w:rPr><w:b/><w:rPrChange w:id="13" w:author="Original"/>'
+          '</w:rPr><w:t/></w:r>'
           '<w:r><w:rPr><w:b/><w:rPrChange w:id="14" w:author="Original">'
           '<w:rPr><w:i/></w:rPr></w:rPrChange></w:rPr><w:t/></w:r>'
           '</w:p><w:p><w:r><w:t>Original heading</w:t></w:r></w:p>',
@@ -536,9 +536,7 @@ End Sub''');
             .having(
               (error) => error.message,
               'message',
-              contains(
-                'The empty formatting run no longer has an unambiguous target.',
-              ),
+              contains('The previous formatting is missing.'),
             );
         await expectLater(session.validate(plan), throwsA(failure));
         await expectLater(session.run(plan), throwsA(failure));

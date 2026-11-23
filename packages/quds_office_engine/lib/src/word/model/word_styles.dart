@@ -415,6 +415,9 @@ abstract final class WordStyles {
     if (level != null && level > 0) {
       return byId('Heading$level', document: document) ?? catalog.first;
     }
-    return catalog.first;
+    final defaultId = paragraph.properties.defaultStyleId;
+    return (defaultId == null ? null : byId(defaultId, document: document)) ??
+        byId('Normal', document: document) ??
+        catalog.first;
   }
 }

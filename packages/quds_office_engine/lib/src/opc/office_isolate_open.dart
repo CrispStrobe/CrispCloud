@@ -44,6 +44,21 @@ abstract final class OfficeIsolateOpen {
     throw StateError('Word open isolate returned an unexpected payload');
   }
 
+  /// Decodes a Word or native ODT document for a host that lays it out itself.
+  static Future<WmlDocument> wordDocument(
+    Uint8List bytes, {
+    String? password,
+    void Function(OfficeOpenProgress progress)? onProgress,
+  }) async {
+    final raw = await _open(
+      bytes: bytes,
+      password: password,
+      kind: 'word-document',
+      onProgress: onProgress,
+    );
+    return raw as WmlDocument;
+  }
+
   /// Opens a workbook and recalculates formulas.
   static Future<SmlWorkbook> workbook(
     Uint8List bytes, {

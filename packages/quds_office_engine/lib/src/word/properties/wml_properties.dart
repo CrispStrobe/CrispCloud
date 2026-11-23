@@ -374,6 +374,7 @@ class WmlParagraphProps {
     this.numberingSuppressed = false,
     this.ilvl = 0,
     this.listLabel,
+    this.listLabelUsesSpace = false,
     this.listRestart,
     this.pageNumberField = false,
     this.headingLevel,
@@ -462,6 +463,9 @@ class WmlParagraphProps {
 
   /// listLabel API.
   String? listLabel;
+
+  /// The native numbering level places a space between its label and text.
+  bool listLabelUsesSpace;
 
   /// Restart value for multilevel numbering (`null` = continue).
   int? listRestart;
@@ -565,6 +569,7 @@ class WmlParagraphProps {
           numberingSuppressed: numberingSuppressed,
           ilvl: ilvl,
           listLabel: listLabel,
+          listLabelUsesSpace: listLabelUsesSpace,
           listRestart: listRestart,
           pageNumberField: pageNumberField,
           headingLevel: headingLevel,

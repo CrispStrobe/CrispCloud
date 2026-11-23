@@ -441,6 +441,60 @@ void main() {
     }
   });
 
+  testWidgets('scrolling retains only nearby page pictures and avoids editing events',
+      (tester) async {
+    final controller = WordEditorController(
+      document: WmlDocument(
+        sections: [
+          WmlSection(
+            blocks: [
+              for (var i = 0; i < 18; i++)
+                WmlParagraph(
+                  properties: WmlParagraphProps(pageBreakBefore: i != 0),
+                  inlines: [WmlRun(text: 'Page ${i + 1}')],
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+    addTearDown(controller.dispose);
+    var editNotifications = 0;
+    var viewportNotifications = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: WordCanvas(
+          document: controller.document,
+          laidOut: controller.documentLaidOut,
+          caret: controller.caret,
+          viewport: controller.viewport,
+          onChanged: () => editNotifications++,
+          onViewportChanged: () => viewportNotifications++,
+        ),
+      ),
+    );
+    final canvas = find.byType(WordCanvas);
+    final render = tester.renderObject<RenderWordCanvas>(canvas);
+    final position = tester.getCenter(canvas);
+    Future<void> scroll(double dy) async {
+      await tester.sendEventToBinding(
+        PointerScrollEvent(position: position, scrollDelta: Offset(0, dy)),
+      );
+      await tester.pump();
+    }
+
+    await scroll(5);
+    final first = viewportNotifications;
+    await scroll(5);
+    expect(viewportNotifications, first);
+    for (var page = 0; page < 12; page++) {
+      await scroll(controller.documentLaidOut.pages.first.height * (96 / 72) + 24);
+    }
+    expect(viewportNotifications, greaterThan(8));
+    expect(editNotifications, 0);
+    expect(render.debugCachedTextPageCount, inInclusiveRange(1, 8));
+  });
+
   testWidgets(
     'selection wheel scrolling and zoom preserve published findings',
     (tester) async {

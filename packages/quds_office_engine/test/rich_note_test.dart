@@ -4,6 +4,18 @@ import 'package:test/test.dart';
 import '../tool/fidelity/note_fixture.dart';
 
 void main() {
+  test('layout progress reports real blocks, notes and completion', () {
+    final doc = WmlDocument.empty(text: 'Progress body');
+    WordNotes.insert(doc, doc.paragraphs.first, endnote: false, text: 'Note');
+    final events = <WordLayoutProgress>[];
+    WordLayoutEngine(font: null, onProgress: events.add).layout(doc);
+    expect(events, isNotEmpty);
+    expect(events.last.blocksDone, events.last.blocksTotal);
+    expect(events.last.notesDone, events.last.notesTotal);
+    expect(events.last.notesTotal, 1);
+    expect(events.last.fraction, 1);
+  });
+
   void assertNoOverlap(LaidOutDocument layout, WmlDocument doc) {
     for (final LaidOutPage page in layout.pages) {
       final WmlSection section = doc.sections[page.sectionIndex];

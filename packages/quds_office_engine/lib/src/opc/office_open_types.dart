@@ -6,13 +6,20 @@ export '../pdf/file/io/pdf_open_payload.dart';
 /// Progress while a package is decoded on a worker isolate.
 class OfficeOpenProgress {
   /// Creates a progress tick.
-  const OfficeOpenProgress({required this.value, required this.stage});
+  const OfficeOpenProgress({
+    required this.value,
+    required this.stage,
+    this.detail,
+  });
 
   /// 0–1.
   final double value;
 
   /// `archive`, `document`, `layout`, `formulas`, or `apply`.
   final String stage;
+
+  /// Optional concrete work description, such as page/block/note counts.
+  final String? detail;
 }
 
 /// Word document plus its print layout after an isolate (or sync) open.

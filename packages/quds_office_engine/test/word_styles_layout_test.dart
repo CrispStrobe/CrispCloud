@@ -173,6 +173,40 @@ void main() {
     });
   });
 
+  test('inherited numbering skips an empty section-break paragraph', () {
+    const chapter = '<w:pStyle w:val="Chapter"/>';
+    final doc = _open(
+      '<w:p><w:pPr>$chapter$_a4</w:pPr></w:p>'
+      '<w:p><w:pPr>$chapter</w:pPr><w:r><w:t>First chapter</w:t></w:r></w:p>'
+      '<w:p><w:r><w:t>Next chapter</w:t></w:r></w:p>',
+      styles:
+          '<w:style w:type="paragraph" w:styleId="Chapter">'
+          '<w:name w:val="Imported chapter"/>'
+          '<w:pPr><w:keepNext/><w:outlineLvl w:val="0"/>'
+          '<w:numPr><w:numId w:val="1"/></w:numPr></w:pPr>'
+          '<w:rPr><w:sz w:val="28"/></w:rPr></w:style>',
+      numbering:
+          '<w:abstractNum w:abstractNumId="0"><w:lvl w:ilvl="0">'
+          '<w:start w:val="1"/><w:numFmt w:val="upperRoman"/>'
+          '<w:lvlText w:val="%1."/></w:lvl></w:abstractNum>'
+          '<w:num w:numId="1"><w:abstractNumId w:val="0"/></w:num>',
+    );
+    expect(doc.paragraphs.map((p) => p.properties.listLabel), [
+      null, 'I. ', null,
+    ]);
+    final last = doc.paragraphs.last;
+    expect(WordHeadingIo.applyImportedStyles(doc, [last], 'Chapter'), isTrue);
+    expect(last.properties.styleId, 'Chapter');
+    expect(last.properties.headingLevel, 1);
+    expect(last.properties.keepWithNext, isTrue);
+    expect(last.properties.listLabel, 'II. ');
+    expect(last.inlines.whereType<WmlRun>().single.properties.fontSizePoints, 14);
+    final reopened = WordDeserializer().readBytes(WordSerializer().writeBytes(doc));
+    expect(reopened.paragraphs.map((p) => p.properties.listLabel), [
+      null, 'I. ', 'II. ',
+    ]);
+  });
+
   group('Word styles', () {
     const String listBullet =
         '<w:style w:type="paragraph" w:styleId="ListParagraph">'

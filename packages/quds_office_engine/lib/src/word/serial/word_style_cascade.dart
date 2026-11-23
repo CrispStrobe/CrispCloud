@@ -1088,6 +1088,7 @@ class _StyleCascade {
       noteId: old.noteId,
       endnoteRef: old.endnoteRef,
       listLabel: old.listLabel,
+      listLabelUsesSpace: old.listLabelUsesSpace,
       listRestart: old.listRestart,
       columnBreakBefore: old.columnBreakBefore,
     );
@@ -1140,8 +1141,14 @@ class _StyleCascade {
       p.properties.importedParagraphMark = marker;
     }
     p.properties.importedValues = WordPropertyIo.paragraphValues(p.properties);
-    for (final run in p.inlines.whereType<WmlRun>()) {
-      final props = run.properties;
+    for (var index = 0; index < p.inlines.length; index++) {
+      final inline = p.inlines[index];
+      final props = switch (inline) {
+        WmlRun() => inline.properties,
+        WmlNoteMarker() => inline.properties,
+        _ => null,
+      };
+      if (props == null) continue;
       if (props.importedValues != null) {
         props.sourcePropertiesXml = WordSerializer().runPropertiesXml(props);
       }
@@ -1177,13 +1184,18 @@ class _StyleCascade {
       ]).firstChild('lang');
       resolved.proofingLanguage = inheritedLanguage?.getAttribute('val');
       resolved.complexScriptLanguage = inheritedLanguage?.getAttribute('bidi');
-      if (run.hyperlink != null) {
+      if (inline is WmlRun && inline.hyperlink != null) {
         if (rp.firstChild('color') == null) resolved.color = WordLink.color;
         if (rp.firstChild('u') == null) {
           resolved.underline = WmlUnderline.single;
         }
       }
-      if (run.noteRefId != null) resolved.vertAlign = WmlVertAlign.superscript;
+      if (inline is WmlRun &&
+          inline.noteRefId != null &&
+          rp.firstChild('vertAlign') == null &&
+          rp.firstChild('position') == null) {
+        resolved.vertAlign = WmlVertAlign.superscript;
+      }
       resolved.styleId = props.styleId;
       resolved.sourcePropertiesXml = props.sourcePropertiesXml ?? '';
       resolved.hasEmptyFormattingRevision = props.hasEmptyFormattingRevision;
@@ -1199,7 +1211,15 @@ class _StyleCascade {
         resolved.explicitProperties.remove('shd:highlight');
       }
       resolved.importedValues = WordPropertyIo.runValues(resolved);
-      run.properties = resolved;
+      if (inline is WmlRun) {
+        inline.properties = resolved;
+      } else if (inline is WmlNoteMarker) {
+        p.inlines[index] = WmlNoteMarker(
+          endnote: inline.endnote,
+          properties: resolved,
+          runPropertiesXml: inline.runPropertiesXml,
+        );
+      }
     }
   }
 

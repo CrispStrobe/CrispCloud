@@ -47,6 +47,7 @@ Future<Object?> officeTrySpawnOpen({
         OfficeOpenProgress(
           value: (message[1] as num).toDouble(),
           stage: message[2] as String,
+          detail: message.length > 3 ? message[3] as String? : null,
         ),
       );
       return;
@@ -108,7 +109,7 @@ void _openIsolateWorker(List<Object?> args) async {
       password,
       kind,
       (OfficeOpenProgress p) =>
-          port.send(<Object>['progress', p.value, p.stage]),
+          port.send(<Object?>['progress', p.value, p.stage, p.detail]),
       formulaLocale: args[4] as String?,
     );
     try {

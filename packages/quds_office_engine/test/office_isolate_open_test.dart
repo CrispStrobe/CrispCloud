@@ -7,12 +7,20 @@ void main() {
   group('OfficeIsolateOpen', () {
     test('opens a Word package and reports progress', () async {
       final WmlDocument document = WmlDocument.empty(text: 'فتح معزول');
+      WordNotes.insert(
+        document,
+        document.paragraphs.first,
+        endnote: false,
+        text: 'ملاحظة',
+      );
       final Uint8List bytes = WordSerializer().writeBytes(document);
       final List<String> stages = <String>[];
+      final List<String> details = <String>[];
       final WordOpenPayload opened = await OfficeIsolateOpen.word(
         bytes,
         onProgress: (OfficeOpenProgress progress) {
           stages.add(progress.stage);
+          if (progress.detail case final detail?) details.add(detail);
           expect(progress.value, inInclusiveRange(0, 1));
         },
       );
@@ -25,6 +33,21 @@ void main() {
       expect(stages, contains('archive'));
       expect(stages, contains('document'));
       expect(stages, contains('layout'));
+      expect(details, isNotEmpty);
+      expect(details.last, contains('1 notes'));
+      expect(details.last, contains('blocks'));
+    });
+
+    test('opens the Word model without generating a fallback layout', () async {
+      final source = WmlDocument.empty(text: 'Keep the authored text');
+      final stages = <String>[];
+      final document = await OfficeIsolateOpen.wordDocument(
+        WordSerializer().writeBytes(source),
+        onProgress: (progress) => stages.add(progress.stage),
+      );
+      expect(document.paragraphs.single.text, 'Keep the authored text');
+      expect(stages, containsAllInOrder(['archive', 'document', 'apply']));
+      expect(stages, isNot(contains('layout')));
     });
 
     test('opens a workbook package and keeps cell values', () async {

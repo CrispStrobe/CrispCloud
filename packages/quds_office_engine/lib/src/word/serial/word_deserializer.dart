@@ -3800,6 +3800,12 @@ class WordDeserializer {
     String docUri,
   ) {
     final Map<int, _NumberingLevel> levels = _readNumbering(package, docUri);
+    final sectionEnds = Set<WmlParagraph>.identity();
+    for (var index = 0; index + 1 < document.sections.length; index++) {
+      final section = document.sections[index];
+      final end = WordTree.paragraphs(section.blocks).lastOrNull;
+      if (end != null && section.sourceProperties != null) sectionEnds.add(end);
+    }
     void applyStory(Iterable<WmlParagraph> paragraphs) {
       if (levels.isEmpty) {
         for (final WmlParagraph paragraph in paragraphs) {
@@ -3817,6 +3823,23 @@ class WordDeserializer {
         if (numId == null || numId == 0) {
           continue;
         }
+        if (paragraph.text.isEmpty) {
+          final direct = WordPropertyIo.parse(
+            paragraph.properties.sourcePropertiesXml,
+            'pPr',
+          );
+          final sectionMark = sectionEnds.contains(paragraph) ||
+              direct?.firstChild('sectPr', namespaceUri: OfficeNamespaces.w) !=
+                  null;
+          if (sectionMark &&
+              direct?.firstChild('numPr', namespaceUri: OfficeNamespaces.w) ==
+                  null) {
+            // The section mark can inherit the previous heading's style.
+            // Word does not display or count its inherited numbering.
+            paragraph.properties.listLabel = null;
+            continue;
+          }
+        }
         final int ilvl = paragraph.properties.ilvl.clamp(0, 8);
         final _NumberingLevel? level =
             levels[_levelKey(numId, ilvl)] ?? levels[_levelKey(numId, 0)];
@@ -3824,6 +3847,7 @@ class WordDeserializer {
           paragraph.properties.listLabel ??= '• ';
           continue;
         }
+        paragraph.properties.listLabelUsesSpace = level.suffix == 'space';
         if (level.isBullet) {
           paragraph.properties.listLabel = level.bulletLabel();
         } else {
@@ -3912,6 +3936,8 @@ class WordDeserializer {
         left: indent?.getAttribute('left') == null
             ? base?.left ?? 0
             : twipsToPoints(int.tryParse(indent!.getAttribute('left')!) ?? 0),
+        suffix:
+            node.firstChild('suff')?.getAttribute('val') ?? base?.suffix,
         hanging: indent?.getAttribute('hanging') == null
             ? base?.hanging ?? 0
             : twipsToPoints(
@@ -3961,6 +3987,7 @@ class WordDeserializer {
                 start: start,
                 left: level.left,
                 hanging: level.hanging,
+                suffix: level.suffix,
               );
       }
       for (final MapEntry<int, _NumberingLevel> level in levels.entries) {
@@ -4461,6 +4488,19 @@ class WordDeserializer {
         : package.packageRelationships.resolve(rel);
     _readStyles(document, package, uri, readProofingLanguage: false);
     _applyDocumentStyles(document);
+  }
+
+  /// Refresh the native list labels after an editor changes a paragraph style.
+  void refreshNumbering(WmlDocument document) {
+    final package = document.package;
+    if (package == null) return;
+    final office = package.packageRelationships.firstByType(
+      RelationshipTypes.officeDocument,
+    );
+    final uri = office == null
+        ? '/word/document.xml'
+        : package.packageRelationships.resolve(office);
+    _applyNumbering(document, package, uri);
   }
 
   void _applyDocumentStyles(WmlDocument document) {
@@ -5050,6 +5090,7 @@ class _NumberingLevel {
     required this.start,
     this.left = 0,
     this.hanging = 0,
+    this.suffix,
   });
 
   /// fmt API.
@@ -5066,6 +5107,8 @@ class _NumberingLevel {
 
   /// hanging API.
   final double hanging;
+
+  final String? suffix;
 
   /// isBullet API.
   bool get isBullet =>

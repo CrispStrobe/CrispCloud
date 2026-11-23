@@ -1443,6 +1443,7 @@ class _QudsWordEditorState extends State<QudsWordEditor>
                                 onBeginRulerEdit: _c.beginRulerEdit,
                                 onPreviewRulerEdit: _c.previewRulerEdit,
                                 onCommitRulerEdit: _c.commitRulerEdit,
+                                onViewportChanged: _c.refreshView,
                                 onChanged: () {
                                   _c.clearNoteEditingTarget();
                                   _focus.requestFocus();

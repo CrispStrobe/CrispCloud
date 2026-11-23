@@ -2433,7 +2433,8 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
 
   Widget _wordStyleDropdown() {
     final int heading = _word.activeHeadingLevel;
-    final String? styleId = _paraProps?.styleId;
+    final paragraph = _paraProps;
+    final String? styleId = paragraph?.styleId;
     const Map<String, String> builtins = <String, String>{
       'Normal': 'Normal',
       'Title': 'Title',
@@ -2458,7 +2459,8 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
           style.id: style.name.isEmpty ? style.id : style.name,
     };
     final String current =
-        styleId ?? (heading > 0 ? 'Heading$heading' : 'Normal');
+        styleId ??
+        (heading > 0 ? 'Heading$heading' : paragraph?.defaultStyleId ?? 'Normal');
     labels.putIfAbsent(current, () => current);
     return _smallDropdown<String>(
       value: current,
