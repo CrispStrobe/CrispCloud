@@ -1124,6 +1124,74 @@ void main() {
     expect(sheet.rowHeightAt(0), greaterThan(28));
   });
 
+  test('viewport zoom keeps the content under the focal point fixed', () {
+    final VirtualViewport view = VirtualViewport(
+      origin: const Offset(240, 600),
+      extent: const Size(800, 600),
+      scale: 1.25,
+    );
+    const Offset focal = Offset(400, 300);
+    final Offset before = (view.origin + focal) / view.scale;
+    view.setScale(2, focal: focal);
+    final Offset after = (view.origin + focal) / view.scale;
+    expect(after.dx, closeTo(before.dx, 0.001));
+    expect(after.dy, closeTo(before.dy, 0.001));
+  });
+
+  test('Word zoom keeps the same visible page and in-page offset', () {
+    final WmlDocument document = WmlDocument(
+      sections: <WmlSection>[
+        WmlSection(
+          pageSize: const WmlPageSize(width: 320, height: 360),
+          margins: const WmlPageMargins(
+            top: 40,
+            bottom: 40,
+            left: 30,
+            right: 30,
+          ),
+          blocks: <WmlBlock>[
+            for (int i = 0; i < 120; i++)
+              WmlParagraph(inlines: <WmlInline>[WmlRun(text: 'Paragraph $i')]),
+          ],
+        ),
+      ],
+    );
+    final WordEditorController controller = WordEditorController(
+      document: document,
+    );
+    controller.viewport.extent = const Size(540, 300);
+    const double pointsToPixels = 96 / 72;
+    final LaidOutDocument laidOut = controller.documentLaidOut;
+    expect(laidOut.pages.length, greaterThan(2));
+    final double scale = controller.viewport.scale * pointsToPixels;
+    controller.viewport.origin = Offset(0, laidOut.pageStackTop(2, scale) + 30);
+    final int page = controller.visiblePageIndex;
+    final double offset =
+        controller.viewport.origin.dy +
+        300 * 0.35 -
+        laidOut.pageStackTop(page, scale);
+
+    controller.setZoomPreservingPage(1.6);
+    final double zoomedScale = controller.viewport.scale * pointsToPixels;
+    expect(controller.visiblePageIndex, page);
+    expect(
+      controller.viewport.origin.dy +
+          300 * 0.35 -
+          laidOut.pageStackTop(page, zoomedScale),
+      closeTo(offset * (zoomedScale / scale), 0.01),
+    );
+
+    controller.setZoomPreservingPage(0.7);
+    final double reducedScale = controller.viewport.scale * pointsToPixels;
+    expect(controller.visiblePageIndex, page);
+    expect(
+      controller.viewport.origin.dy +
+          300 * 0.35 -
+          laidOut.pageStackTop(page, reducedScale),
+      closeTo(offset * (reducedScale / scale), 0.01),
+    );
+  });
+
   test('viewport clamp stops endless scrolling', () {
     final VirtualViewport view = VirtualViewport(
       origin: const Offset(-200, -400),

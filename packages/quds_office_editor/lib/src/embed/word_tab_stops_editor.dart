@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:quds_office_engine/quds_office_engine.dart';
 
+import 'office_units.dart';
+
 /// Edits custom paragraph tab stops without changing the document.
 ///
 /// Hosts provide their translations and apply the returned values through their
@@ -14,6 +16,7 @@ class WordTabStopsEditor extends StatefulWidget {
     required this.initialValue,
     required this.onChanged,
     this.translate,
+    this.unit,
     this.enabled = true,
   });
 
@@ -26,6 +29,7 @@ class WordTabStopsEditor extends StatefulWidget {
   /// Translates the English labels and validation messages for the host.
   final String Function(String english)? translate;
 
+  final OfficeLengthUnit? unit;
   final bool enabled;
 
   @override
@@ -34,13 +38,20 @@ class WordTabStopsEditor extends StatefulWidget {
 
 class _WordTabStopsEditorState extends State<WordTabStopsEditor> {
   late final List<_TabDraft> _drafts = <_TabDraft>[
-    for (final tab in widget.initialValue) _TabDraft(tab),
+    for (final tab in widget.initialValue) _draft(tab),
   ];
 
   String _text(String english) => widget.translate?.call(english) ?? english;
 
-  double? _parsePosition(String text) =>
-      double.tryParse(text.trim().replaceAll(',', '.'));
+  double? _parsePosition(String text) => widget.unit == null
+      ? double.tryParse(text.trim().replaceAll(',', '.'))
+      : widget.unit!.parsePoints(text);
+
+  _TabDraft _draft(WmlTabStop tab) => _TabDraft(
+    tab,
+    widget.unit?.fromPoints(tab.position).toStringAsFixed(5) ??
+        tab.position.toString(),
+  );
 
   @override
   void dispose() {
@@ -56,14 +67,16 @@ class _WordTabStopsEditorState extends State<WordTabStopsEditor> {
     var valid = true;
     for (final draft in _drafts) {
       draft.error = null;
-      final position = _parsePosition(draft.position.text);
+      final position = draft.position.text == draft.display
+          ? draft.originalPosition
+          : _parsePosition(draft.position.text);
       // w:pos is a signed 32-bit twip value. Also reject distinct input values
       // which would collapse onto the same serialized stop after rounding.
       if (position == null ||
           !position.isFinite ||
           position < 0 ||
           position * 20 > 2147483647) {
-        draft.error = 'Enter a finite, nonnegative position in points.';
+        draft.error = 'Enter a finite, nonnegative position.';
         valid = false;
         continue;
       }
@@ -95,7 +108,7 @@ class _WordTabStopsEditorState extends State<WordTabStopsEditor> {
         position = value;
       }
     }
-    _drafts.add(_TabDraft(WmlTabStop(position: position + 36)));
+    _drafts.add(_draft(WmlTabStop(position: position + 36)));
     _changed();
   }
 
@@ -153,7 +166,9 @@ class _WordTabStopsEditorState extends State<WordTabStopsEditor> {
                     decimal: true,
                   ),
                   decoration: InputDecoration(
-                    labelText: _text('Tab position (pt)'),
+                    labelText: _text(
+                      'Tab position (pt)',
+                    ).replaceFirst('(pt)', '(${widget.unit?.suffix ?? 'pt'})'),
                     errorText: draft.error == null ? null : _text(draft.error!),
                     errorMaxLines: 3,
                     border: const OutlineInputBorder(),
@@ -263,12 +278,15 @@ class _WordTabStopsEditorState extends State<WordTabStopsEditor> {
 }
 
 class _TabDraft {
-  _TabDraft(WmlTabStop tab)
-    : position = TextEditingController(text: tab.position.toString()),
+  _TabDraft(WmlTabStop tab, this.display)
+    : position = TextEditingController(text: display),
+      originalPosition = tab.position,
       alignment = tab.alignment,
       leader = tab.leader;
 
   final TextEditingController position;
+  final String display;
+  final double originalPosition;
   WmlTabAlignment alignment;
   WmlTabLeader leader;
   String? error;

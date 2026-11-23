@@ -46,6 +46,7 @@ export 'src/embed/word_notes_pane.dart';
 export 'src/embed/word_zotero_dialog.dart';
 export 'src/embed/word_zotero_format.dart';
 export 'src/embed/word_tab_stops_editor.dart';
+export 'src/embed/word_tab_indent_dialog.dart';
 export 'src/embed/word_proofing_dialog.dart';
 export 'src/embed/word_review_dialog.dart';
 export 'src/embed/word_review_pane.dart';

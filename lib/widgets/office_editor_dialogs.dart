@@ -878,6 +878,7 @@ Future<WordParagraphChoice?> showWordParagraphDialog(
                     const SizedBox(height: 10),
                     WordTabStopsEditor(
                       initialValue: current.tabs,
+                      unit: unit,
                       translate: ctx.tr,
                       onChanged: (value) => tabStops = value,
                     ),

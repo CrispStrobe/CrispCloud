@@ -9,6 +9,7 @@ abstract final class WordSettingsIo {
     bool protection,
     bool oddEven,
     bool autoHyphenation,
+    double? defaultTabStop,
     bool noSpaceRaiseLower,
     WmlRestrictMode restrictMode,
     bool protectionHasPassword,
@@ -25,6 +26,7 @@ abstract final class WordSettingsIo {
       protection: _enabled(root, 'documentProtection'),
       oddEven: _enabled(root, 'evenAndOddHeaders'),
       autoHyphenation: _enabled(root, 'autoHyphenation'),
+      defaultTabStop: _defaultTabStop(root),
       noSpaceRaiseLower:
           compatibility != null && _enabled(compatibility, 'noSpaceRaiseLower'),
       restrictMode: _restrictMode(root),
@@ -45,6 +47,7 @@ abstract final class WordSettingsIo {
     required bool protection,
     required bool oddEven,
     bool? autoHyphenation,
+    double? defaultTabStop,
     WmlRestrictMode? restrictMode,
     List<int>? footnoteSpecialIds,
     List<int>? endnoteSpecialIds,
@@ -54,6 +57,7 @@ abstract final class WordSettingsIo {
         !protection &&
         !oddEven &&
         autoHyphenation != true &&
+        defaultTabStop == null &&
         footnoteSpecialIds == null &&
         endnoteSpecialIds == null) {
       return null;
@@ -116,6 +120,37 @@ abstract final class WordSettingsIo {
       }
       changed = true;
     }
+    if (defaultTabStop != null && defaultTabStop != _defaultTabStop(root)) {
+      final int twips = (defaultTabStop * 20).round();
+      if (twips <= 0) {
+        throw ArgumentError.value(defaultTabStop, 'defaultTabStop');
+      }
+      var node = root.firstChild(
+        'defaultTabStop',
+        namespaceUri: OfficeNamespaces.w,
+      );
+      if (node == null) {
+        node = XmlElement(
+          localName: 'defaultTabStop',
+          prefix: prefix,
+          namespaceUri: OfficeNamespaces.w,
+        );
+        _insert(root, node);
+      }
+      node.setAttribute(
+        prefix,
+        OfficeNamespaces.w,
+        prefix: 'xmlns',
+        namespaceUri: 'http://www.w3.org/2000/xmlns/',
+      );
+      node.setAttribute(
+        'val',
+        '$twips',
+        prefix: prefix,
+        namespaceUri: OfficeNamespaces.w,
+      );
+      changed = true;
+    }
     for (final (kind, ids) in [
       ('footnote', footnoteSpecialIds),
       ('endnote', endnoteSpecialIds),
@@ -176,6 +211,14 @@ abstract final class WordSettingsIo {
       changed = true;
     }
     return !changed && source != null ? source : document.toXmlString();
+  }
+
+  static double? _defaultTabStop(XmlElement root) {
+    final val = root
+        .firstChild('defaultTabStop', namespaceUri: OfficeNamespaces.w)
+        ?.getAttribute('val', namespaceUri: OfficeNamespaces.w);
+    final twips = int.tryParse(val ?? '');
+    return twips != null && twips > 0 ? twips / 20 : null;
   }
 
   static WmlRestrictMode _restrictMode(XmlElement root) {

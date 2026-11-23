@@ -173,6 +173,8 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
   DocumentWorkspaceSession? _workspace;
   DocumentActivity? _activity;
   OfficeController? _controller;
+  WordEditorController? _openingWord;
+  WordEditorController? _firstPagePreview;
   OfficeEditorKind _kind = OfficeEditorKind.unsupported;
   Uint8List? _loadedBytes;
   CapturedFileTarget? _target;
@@ -245,6 +247,8 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
     }
     _controller?.removeListener(_onControllerChanged);
     _controller?.dispose();
+    _openingWord?.dispose();
+    _firstPagePreview?.dispose();
     _focusNode.dispose();
     super.dispose();
   }
@@ -298,7 +302,9 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
       if (!mounted) return;
 
       // Preserve the actual source even when legacy import itself is refused.
-      _loadedBytes = Uint8List.fromList(bytes).asUnmodifiableView();
+      _loadedBytes =
+          (widget.bytesOverride == null ? bytes : Uint8List.fromList(bytes))
+              .asUnmodifiableView();
 
       // BIFF workbooks are imported into the shared model and opened as XLSX.
       // Saving writes a new .xlsx copy; the original .xls is never rewritten.
@@ -325,22 +331,60 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
         _file.name,
       );
       if (!mounted) return;
-      final controller = switch (kind) {
-        OfficeEditorKind.word => WordEditorController.fromBytes(
-          bytes,
-          config: _config,
-        ),
-        OfficeEditorKind.sheet => SheetEditorController.fromBytes(
-          bytes,
-          config: _config,
-          formulaLocale: Localizations.maybeLocaleOf(context)?.toLanguageTag(),
-        ),
-        OfficeEditorKind.slides => SlideEditorController.fromBytes(
-          bytes,
-          config: _config,
-        ),
-        OfficeEditorKind.unsupported => null,
-      };
+      final OfficeController? controller;
+      if (kind == OfficeEditorKind.word &&
+          OfficeIsolateOpen.isHeavyBytes(bytes)) {
+        final word = _openingWord = WordEditorController(config: _config);
+        try {
+          await word.loadBytesAsync(
+            bytes,
+            onFirstPage: (document, layout) {
+              if (!mounted || !identical(_openingWord, word)) return;
+              final preview = WordEditorController(
+                config: _config.copyWith(
+                  mode: OfficeInteractionMode.viewing,
+                  autofocus: false,
+                ),
+                document: document,
+                initialLayout: layout,
+              );
+              setState(() => _firstPagePreview = preview);
+            },
+          );
+        } catch (_) {
+          if (mounted) word.dispose();
+          rethrow;
+        } finally {
+          _openingWord = null;
+          final preview = _firstPagePreview;
+          _firstPagePreview = null;
+          if (mounted && preview != null) {
+            WidgetsBinding.instance.addPostFrameCallback(
+              (_) => preview.dispose(),
+            );
+          }
+        }
+        if (!mounted) return;
+        controller = word;
+      } else {
+        controller = switch (kind) {
+          OfficeEditorKind.word => WordEditorController.fromBytes(
+            bytes,
+            config: _config,
+          ),
+          OfficeEditorKind.sheet => SheetEditorController.fromBytes(
+            bytes,
+            config: _config,
+            formulaLocale: Localizations.maybeLocaleOf(context)
+                ?.toLanguageTag(),
+          ),
+          OfficeEditorKind.slides => SlideEditorController.fromBytes(
+            bytes,
+            config: _config,
+          ),
+          OfficeEditorKind.unsupported => null,
+        };
+      }
       if (!mounted) {
         controller?.dispose();
         return;
@@ -937,11 +981,10 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
     if (next.lengthUnit != _config.lengthUnit) {
       _unitRevision++;
       unawaited(
-        OfficeMeasurementPreferences.write(next.lengthUnit).catchError((
-          Object error,
-        ) {
-          _log.warn('Could not save measurement units', error);
-        }),
+        OfficeMeasurementPreferences.write(next.lengthUnit)
+            .catchError((Object error) {
+              _log.warn('Could not save measurement units', error);
+            }),
       );
     }
     setState(() => _config = next);
@@ -1130,7 +1173,24 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
 
   Widget _buildBody(ThemeData theme) {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator());
+      final preview = _firstPagePreview;
+      if (preview == null) {
+        return const Center(child: CircularProgressIndicator());
+      }
+      return Column(
+        children: [
+          const LinearProgressIndicator(),
+          Expanded(
+            child: IgnorePointer(
+              child: QudsWordEditor(
+                controller: preview,
+                enableLiveProofing: false,
+                showReviewStatus: false,
+              ),
+            ),
+          ),
+        ],
+      );
     }
     final error = _error;
     if (error != null) {
@@ -1240,9 +1300,8 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
           // Keep a key entered during this document session even if the
           // initial credential-store read was unavailable.
           _zoteroCredentialsLoaded = true;
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(context.tr(error.message))));
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(context.tr(error.message))));
         }
       }
       if (!mounted ||

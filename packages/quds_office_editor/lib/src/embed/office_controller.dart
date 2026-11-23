@@ -919,6 +919,7 @@ class WordEditorController extends OfficeController {
     WmlDocument? document,
     super.config,
     this.layoutEngine,
+    LaidOutDocument? initialLayout,
     OfficeProofingVocabulary? proofingVocabulary,
     OfficeProofingService? proofingService,
     String revisionAuthor = 'CrispOffice',
@@ -928,7 +929,11 @@ class WordEditorController extends OfficeController {
        _revisionAuthor = _normalizeRevisionAuthor(revisionAuthor) {
     _requestedMode = _config.mode;
     _config = _effectiveConfig(_config);
-    relayout();
+    if (initialLayout == null) {
+      relayout();
+    } else {
+      documentLaidOut = initialLayout;
+    }
     input = OfficeInputBridge(
       onValue: (value) => _coalescingNotifications(() => _onIme(value)),
       onAction: _onImeAction,
@@ -1067,38 +1072,38 @@ class WordEditorController extends OfficeController {
   WordLayoutEngine? _paintMetricsEngine;
 
   WordLayoutEngine get _engine =>
-      layoutEngine ??
-      (_paintMetricsEngine ??= WordLayoutEngine(
-        font: null,
-        measureFont: (codePoint, sizePoints, props) =>
-            OfficeHostFonts.wordMetrics(
-              codePoint,
-              sizePoints,
-              props,
-              themeFamily: config.theme.fontFamily,
-            ),
-        measureRun: (text, sizePoints, props, bidiLevel) =>
-            WordRunMetrics.measure(
-              text,
-              sizePoints,
-              props,
-              bidiLevel,
-              respectKerningThreshold: true,
-              themeFamily: config.theme.fontFamily,
-            ),
-        measure: (int codePoint, double sizePoints, WmlRunProps props) =>
-            PaintRunText.advanceOf(
-              codePoint,
-              sizePoints,
-              props,
-              themeFamily: config.theme.fontFamily,
-            ),
-      ));
+      layoutEngine ?? (_paintMetricsEngine ??= _newPaintMetricsEngine());
 
-  /// Lays the document out again with fresh paint metrics, for example
-  /// after fonts finish loading.
+  WordLayoutEngine _newPaintMetricsEngine() => WordLayoutEngine(
+    font: null,
+    measureFont: (codePoint, sizePoints, props) => OfficeHostFonts.wordMetrics(
+      codePoint,
+      sizePoints,
+      props,
+      themeFamily: config.theme.fontFamily,
+    ),
+    measureRun: (text, sizePoints, props, bidiLevel) => WordRunMetrics.measure(
+      text,
+      sizePoints,
+      props,
+      bidiLevel,
+      respectKerningThreshold: true,
+      themeFamily: config.theme.fontFamily,
+    ),
+    measure: (int codePoint, double sizePoints, WmlRunProps props) =>
+        PaintRunText.advanceOf(
+          codePoint,
+          sizePoints,
+          props,
+          themeFamily: config.theme.fontFamily,
+        ),
+  );
+
+  /// Reflow after fonts load. The editor fits paint metrics when a page enters
+  /// view; explicit export and print callers can still fit the full layout.
   void refreshMetrics() {
-    fitPaintMetrics(themeFamily: config.theme.fontFamily);
+    if (documentLaidOut.isPreview) return;
+    relayout();
     notifyListeners();
   }
 
@@ -1401,6 +1406,34 @@ class WordEditorController extends OfficeController {
     notifyListeners();
   }
 
+  /// Zooms while keeping the currently visible page and in-page offset fixed.
+  ///
+  /// The canvas stacks pages with unscaled gaps, so simply scaling
+  /// [viewport.origin] drifts across page boundaries when the user zooms.
+  void setZoomPreservingPage(double value) {
+    const double pointsToPixels = 96 / 72;
+    final double oldScale = viewport.scale * pointsToPixels;
+    if (oldScale <= 0) {
+      viewport.setScale(value);
+      notifyListeners();
+      return;
+    }
+    final double viewH = viewport.extent.height > 0
+        ? viewport.extent.height
+        : 1;
+    final double anchorY = viewport.origin.dy + viewH * 0.35;
+    final int page = documentLaidOut.pageIndexAtContentY(anchorY, oldScale);
+    final double pageTop = documentLaidOut.pageStackTop(page, oldScale);
+    final double offset = anchorY - pageTop;
+    viewport.setScale(value);
+    final double nextScale = viewport.scale * pointsToPixels;
+    final double nextPageTop = documentLaidOut.pageStackTop(page, nextScale);
+    final double nextY =
+        nextPageTop + offset * (nextScale / oldScale) - viewH * 0.35;
+    viewport.origin = Offset(viewport.origin.dx, nextY < 0 ? 0 : nextY);
+    notifyListeners();
+  }
+
   void _revealPage(int pageIndex) {
     if (documentLaidOut.pages.isEmpty) {
       return;
@@ -1513,6 +1546,7 @@ class WordEditorController extends OfficeController {
     Uint8List bytes, {
     String? password,
     void Function(OfficeOpenProgress progress)? onProgress,
+    void Function(WmlDocument document, LaidOutDocument firstPage)? onFirstPage,
   }) async {
     if (isDisposed) {
       throw StateError('Cannot open a file in a disposed editor.');
@@ -1520,26 +1554,61 @@ class WordEditorController extends OfficeController {
     final int generation = ++_openGeneration;
     final WmlDocument original = document;
     final int revision = contentRevision;
+    bool isCurrent() =>
+        !isDisposed &&
+        generation == _openGeneration &&
+        identical(document, original) &&
+        contentRevision == revision;
     final WmlDocument opened = await OfficeIsolateOpen.wordDocument(
       bytes,
       password: password,
       onProgress: onProgress,
     );
-    if (isDisposed ||
-        generation != _openGeneration ||
-        !identical(document, original) ||
-        contentRevision != revision) {
+    if (!isCurrent()) {
       throw StateError('The document changed while the file was opening.');
     }
-    _acceptOpenedWord(opened);
+    if (onFirstPage == null || layoutEngine != null) {
+      _acceptOpenedWord(opened);
+      return;
+    }
+    _prepareOpenedWord(opened);
+    WordLink.ensureHeadingBookmarks(opened);
+    WordToc.refreshEmpty(opened);
+    WordToc.rebindHeadings(opened);
+    // Keep a separate engine until the result is accepted. Edits or a new
+    // document can use the active editor's engine while this one is yielding.
+    final engine = _newPaintMetricsEngine();
+    var layout = await engine.layoutProgressively(
+      opened,
+      onFirstPage: (page) => onFirstPage(opened, page),
+      isCurrent: isCurrent,
+    );
+    if (WordToc.syncPageNumbers(opened, layout)) {
+      layout = await engine.layoutProgressively(
+        opened,
+        onFirstPage: (_) {},
+        isCurrent: isCurrent,
+      );
+    }
+    if (!isCurrent()) {
+      throw StateError('The document changed while the file was opening.');
+    }
+    _paintMetricsEngine = engine;
+    _acceptOpenedWord(opened, layout: layout);
   }
 
-  void _acceptOpenedWord(WmlDocument opened) {
+  void _prepareOpenedWord(WmlDocument opened) {
     final first = opened.paragraphs.firstOrNull;
     if (first != null && first.text.trim().isEmpty) {
       _syncParagraphDirection(first);
     }
-    final layout = _layoutWordDocument(opened);
+  }
+
+  void _acceptOpenedWord(WmlDocument opened, {LaidOutDocument? layout}) {
+    if (layout == null) {
+      _prepareOpenedWord(opened);
+      layout = _layoutWordDocument(opened);
+    }
     document = opened;
     commands.clear();
     _noteEditStart.clear();
@@ -1710,6 +1779,10 @@ class WordEditorController extends OfficeController {
       attachInput();
     }
   }
+
+  /// Effective formatting at the active paragraph.
+  WmlParagraphProps get activeParagraphProperties =>
+      _activeParagraph.properties;
 
   /// activeHeadingLevel API.
   int get activeHeadingLevel => WordToc.headingLevelOf(_activeParagraph) ?? 0;
@@ -6043,8 +6116,63 @@ class WordEditorController extends OfficeController {
     setPageSize(landscape ? pageSize.landscape : pageSize.portrait);
   }
 
+  /// Modify the document's default tab interval and reflow its paragraphs.
+  void setDefaultTabStop(double points) {
+    if (!config.allowsMutation ||
+        !points.isFinite ||
+        points < 0.05 ||
+        points > 1584) {
+      return;
+    }
+    final next = (points * 20).round() / 20;
+    final model = document;
+    final before = model.defaultTabStop;
+    if (next == (before ?? kDefaultTabWidth)) return;
+    commands.commit(
+      _CallbackCommand(
+        executeFn: () => model.defaultTabStop = next,
+        undoFn: () => model.defaultTabStop = before,
+      ),
+    );
+    relayout();
+    notifyListeners();
+  }
+
+  /// Edit the native paragraph style without changing direct paragraph indents.
+  void setParagraphStyleGeometry(
+    String id, {
+    required WmlIndent indent,
+    required List<WmlTabStop> tabs,
+  }) {
+    if (!config.allowsMutation || document.trackRevisions) return;
+    final model = document;
+    final update = WordHeadingIo.prepareStyleGeometry(
+      model,
+      id,
+      indent: indent,
+      tabs: tabs,
+    );
+    if (update == null || update.before == update.after) return;
+    void apply(String xml) {
+      update.part.writeText(xml);
+      WordDeserializer().refreshStyles(model);
+    }
+
+    commands.commit(
+      _CallbackCommand(
+        executeFn: () => apply(update.after),
+        undoFn: () => apply(update.before),
+      ),
+    );
+    relayout();
+    notifyListeners();
+  }
+
   /// applyParagraphFormat API.
-  void applyParagraphFormat(void Function(WmlParagraphProps props) update) {
+  void applyParagraphFormat(
+    void Function(WmlParagraphProps props) update, {
+    List<WmlTabStop>? tabStops,
+  }) {
     if (!config.allowsMutation) {
       return;
     }
@@ -6066,16 +6194,37 @@ class WordEditorController extends OfficeController {
     final Map<int, WmlParagraphProps> before = <int, WmlParagraphProps>{
       for (int i = start; i <= end; i++) i: paras[i].properties.copy(),
     };
+    final after = <int, WmlParagraphProps>{};
+    if (tabStops != null) {
+      final reader = WordDeserializer();
+      for (var i = start; i <= end; i++) {
+        final paragraph = paras[i];
+        final candidate = before[i]!.copy();
+        update(candidate);
+        final original = paragraph.properties;
+        try {
+          reader.editParagraphTabStops(
+            document,
+            paragraph,
+            replacement: tabStops,
+            paragraphProperties: candidate,
+          );
+          after[i] = paragraph.properties;
+        } finally {
+          paragraph.properties = original;
+        }
+      }
+    }
     commands.commit(
       _CallbackCommand(
         executeFn: () {
-          for (int i = start; i <= end; i++) {
-            paras[i].properties = before[i]!.copy();
-            update(paras[i].properties);
+          for (var i = start; i <= end; i++) {
+            paras[i].properties = (after[i] ?? before[i]!).copy();
+            if (tabStops == null) update(paras[i].properties);
           }
         },
         undoFn: () {
-          for (final MapEntry<int, WmlParagraphProps> entry in before.entries) {
+          for (final entry in before.entries) {
             paras[entry.key].properties = entry.value.copy();
           }
         },

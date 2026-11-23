@@ -697,10 +697,12 @@ void main() {
     controller.viewport.origin = const Offset(13, 29);
     final transaction = _begin(controller);
     _call(transaction, 'Field.select', [_fieldId(transaction, 'first')]);
-    const userOrigin = Offset(41, 315);
     controller.viewport
-      ..origin = userOrigin
+      ..origin = const Offset(41, 315)
       ..setScale(1.5);
+    // Zoom now keeps the content point in view instead of leaving the old
+    // scaled offset, so the user's state is the post-zoom origin.
+    final Offset userOrigin = controller.viewport.origin;
     _call(transaction, 'Field.select', [_fieldId(transaction, 'second')]);
     expect(controller.viewport.origin, isNot(userOrigin));
     transaction.clearFieldContext();

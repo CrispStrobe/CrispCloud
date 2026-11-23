@@ -21,6 +21,32 @@ ui.Image _image() {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  test('a frame exceeding the budget keeps visible images through paint', () {
+    final images = <ui.Image>[];
+    final cache = VisualImageCache(
+      decodedByteBudget: 4,
+      decodeImage: (_, ready) {
+        final image = _image();
+        images.add(image);
+        ready(image);
+      },
+    );
+    addTearDown(cache.dispose);
+    final first = Uint8List.fromList([1]);
+    final second = Uint8List.fromList([2]);
+    cache.load(first, () {});
+    cache.load(second, () {});
+    expect(cache.get(first), same(images.first));
+    expect(cache.get(second), same(images.last));
+    cache.endFrame();
+    expect(images.every((image) => !image.debugDisposed), isTrue);
+    expect(cache.get(second), same(images.last));
+    cache.endFrame();
+    expect(cache.get(first), isNull);
+    expect(images.first.debugDisposed, isTrue);
+    expect(images.last.debugDisposed, isFalse);
+  });
+
   test('embedded SVG pixels use the same owned image cache', () async {
     final cache = VisualImageCache();
     addTearDown(cache.dispose);

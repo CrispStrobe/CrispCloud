@@ -1187,6 +1187,7 @@ class WmlDocument {
     this.trackRevisions = false,
     this.proofingLanguage,
     this.autoHyphenation = false,
+    this.defaultTabStop,
     this.sourceNoSpaceRaiseLower = false,
     this.watermark = '',
     this.restrictEditing = false,
@@ -1276,6 +1277,9 @@ class WmlDocument {
   /// Automatic linguistic hyphenation (`w:autoHyphenation`).
   /// Explicit soft hyphens remain usable when this is disabled.
   bool autoHyphenation;
+
+  /// Authored default tab interval in points. Null uses Word’s half inch.
+  double? defaultTabStop;
 
   /// Imported `w:compat/w:noSpaceRaiseLower`: retain the paragraph's ordinary
   /// line height when raised/lowered text extends beyond it. This read-only

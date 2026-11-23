@@ -757,6 +757,7 @@ abstract final class WordRuler {
     required bool rtl,
     required OfficeTheme theme,
     OfficeLengthUnit unit = OfficeLengthUnit.inches,
+    double defaultTabInterval = defaultTab,
     RulerHit? hover,
     RulerHit? active,
     String? readout,
@@ -909,6 +910,7 @@ abstract final class WordRuler {
       canvas,
       pageLeft: pageLeft,
       scale: scale,
+      interval: defaultTabInterval,
       margins: margins,
       pageWidth: pageWidth,
       tabs: tabs,
@@ -1264,6 +1266,7 @@ abstract final class WordRuler {
     Canvas canvas, {
     required double pageLeft,
     required double scale,
+    required double interval,
     required WmlPageMargins margins,
     required double pageWidth,
     required List<WmlTabStop> tabs,
@@ -1283,7 +1286,11 @@ abstract final class WordRuler {
       contentRight: contentRight,
     );
     final double contentW = box.right - box.left;
-    for (double pos = defaultTab; pos < contentW - 4; pos += defaultTab) {
+    // At extreme zoom-out or unusually small settings, skip marks that
+    // would land on the same pixel but keep the spacing an exact multiple.
+    if (!interval.isFinite || interval <= 0) return;
+    final step = interval * math.max(1, (3 / (interval * scale)).ceil());
+    for (double pos = step; pos < contentW - 4; pos += step) {
       if (tabs.any((WmlTabStop t) => (t.position - pos).abs() < 3)) {
         continue;
       }

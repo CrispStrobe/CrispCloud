@@ -613,7 +613,15 @@ class LaidOutPage {
 /// Class LaidOutDocument.
 class LaidOutDocument {
   /// LaidOutDocument API.
-  LaidOutDocument({required this.pages, required this.pageSize});
+  LaidOutDocument({
+    required List<LaidOutPage> pages,
+    required this.pageSize,
+    this.isPreview = false,
+  }) : pages = List.unmodifiable(pages);
+
+  /// A published prefix of an opening layout. Its metrics are still in use
+  /// by the paginator and must not be modified for painting.
+  final bool isPreview;
 
   /// Flow checkpoints recorded by the engine for incremental relayout.
   _IncrementalState? _incremental;
@@ -634,33 +642,45 @@ class LaidOutDocument {
   /// pageSize API.
   final WmlPageSize pageSize;
 
-  /// Vertical offset of page [index] in the stacked Word canvas (points ? scale).
-  double pageStackTop(int index, double scale) {
-    var top = 24.0;
-    final int last = index < pages.length ? index : pages.length;
-    for (int i = 0; i < last; i++) {
-      top += pages[i].height * scale + 24;
+  // A layout publishes its pages in order. Index their geometry once, so
+  // repaint and scrolling cost does not grow with the document length.
+  late final List<double> _pageHeightPrefix = _indexPageHeights();
+
+  List<double> _indexPageHeights() {
+    final heights = List<double>.filled(pages.length + 1, 0);
+    for (var i = 0; i < pages.length; i++) {
+      heights[i + 1] = heights[i] + pages[i].height;
     }
-    if (index >= pages.length) {
-      top += (index - pages.length) * (pageSize.height * scale + 24);
-    }
-    return top;
+    return heights;
   }
 
-  /// pageIndexAtContentY API.
+  /// The widest page, including the base page size for an empty layout.
+  late final double maxPageWidth = pages.fold<double>(
+    pageSize.width,
+    (width, page) => math.max(width, page.width),
+  );
+
+  /// Vertical offset of page [index] in the stacked Word canvas.
+  double pageStackTop(int index, double scale) {
+    final count = index.clamp(0, pages.length);
+    final extra = math.max(0, index - pages.length);
+    return 24 * (count + extra + 1) +
+        (_pageHeightPrefix[count] + extra * pageSize.height) * scale;
+  }
+
+  /// The page whose span (including half either gutter) contains [contentY].
   int pageIndexAtContentY(double contentY, double scale) {
-    if (pages.isEmpty) {
-      return 0;
-    }
-    var top = 24.0;
-    for (int i = 0; i < pages.length; i++) {
-      final double bottom = top + pages[i].height * scale;
-      if (contentY < bottom + 12) {
-        return i;
+    var low = 0;
+    var high = math.max(0, pages.length - 1);
+    while (low < high) {
+      final middle = (low + high) ~/ 2;
+      if (contentY < pageStackTop(middle + 1, scale) - 12) {
+        high = middle;
+      } else {
+        low = middle + 1;
       }
-      top = bottom + 24;
     }
-    return pages.length - 1;
+    return low;
   }
 }
 
@@ -1173,6 +1193,8 @@ class WordLayoutEngine {
       ) ??
       (font != null && font!.glyphIdFor(cp) != 0 ? font : null);
 
+  double get _defaultTabWidth => _layoutDoc?.defaultTabStop ?? kDefaultTabWidth;
+
   double _advanceOf(
     int cp,
     double sizePoints,
@@ -1180,7 +1202,7 @@ class WordLayoutEngine {
     WmlRunProps props,
   ) {
     if (cp == 0x09) {
-      return kDefaultTabWidth;
+      return _defaultTabWidth;
     }
     final SfntFont? face = _faceFor(cp, props);
     if (face == null) {
@@ -1443,6 +1465,68 @@ class WordLayoutEngine {
       _lastProgressEmit = -1000;
       _emitLayoutProgress(result.pages.length);
       return result;
+    } finally {
+      _recorder = null;
+    }
+  }
+
+  /// Paginates with the same flow as [layout], giving the host a chance to
+  /// paint between blocks. A following continuous section may reopen the last
+  /// page, so publish only an earlier, finalized prefix.
+  Future<LaidOutDocument> layoutProgressively(
+    WmlDocument document, {
+    required void Function(LaidOutDocument) onFirstPage,
+    required bool Function() isCurrent,
+    void Function(int pages)? onPageProgress,
+  }) async {
+    _prepareLayout(document, updateFields: true);
+    _resetLayoutProgress(document);
+    final recorder = _recorder = _Recorder(document.sections.length);
+    final pages = <LaidOutPage>[];
+    final slice = Stopwatch()..start();
+    var paragraphIndex = 0;
+    var published = false;
+    try {
+      for (var i = 0; i < document.sections.length; i++) {
+        final steps = _layoutSectionSteps(
+          document.sections[i],
+          pages,
+          sectionIndex: i,
+          paragraphIndex: paragraphIndex,
+        );
+        for (final nextIndex in steps) {
+          if (nextIndex != null) paragraphIndex = nextIndex;
+          if (!published && pages.length > 1) {
+            published = true;
+            onFirstPage(
+              LaidOutDocument(
+                pages: [pages.first],
+                pageSize: document.sections.first.pageSize,
+                isPreview: true,
+              ),
+            );
+            // Give the host a full frame for the first page.
+            await Future<void>.delayed(const Duration(milliseconds: 17));
+          } else if (slice.elapsedMicroseconds >= 6000) {
+            onPageProgress?.call(pages.length);
+            await Future<void>.delayed(const Duration(milliseconds: 1));
+          } else {
+            continue;
+          }
+          if (!isCurrent()) throw StateError('The Word open was superseded.');
+          slice.reset();
+        }
+      }
+      return _finishLayout(
+        document,
+        pages,
+        updateFields: true,
+        state: _IncrementalState(
+          _incrementalOwner,
+          document,
+          recorder.sections,
+        ),
+      );
     } finally {
       _recorder = null;
     }
@@ -1968,7 +2052,28 @@ class WordLayoutEngine {
       _SectionRecord prefix,
     })?
     resume,
-  }) {
+  }) => _layoutSectionSteps(
+    section,
+    pages,
+    sectionIndex: sectionIndex,
+    paragraphIndex: paragraphIndex,
+    resume: resume,
+  ).last!;
+
+  Iterable<int?> _layoutSectionSteps(
+    WmlSection section,
+    List<LaidOutPage> pages, {
+    required int sectionIndex,
+    required int paragraphIndex,
+    ({
+      int block,
+      _Checkpoint checkpoint,
+      List<LaidOutLine> lines,
+      List<LaidOutBox> frames,
+      _SectionRecord prefix,
+    })?
+    resume,
+  }) sync* {
     final _Flow flow;
     double headerBodyTop(int index, {required bool firstInSection}) =>
         _headerBodyTop(section, index, firstInSection: firstInSection);
@@ -2040,7 +2145,8 @@ class WordLayoutEngine {
           adjacentParagraph,
           _notesMatch,
         )) {
-          return paragraphIndex;
+          yield paragraphIndex;
+          return;
         }
         translation = translateParagraphs && block is WmlParagraph
             ? recorder.translationSource(
@@ -2226,9 +2332,10 @@ class WordLayoutEngine {
           paragraphIndex += 1 + block.itemParagraphs.length;
       }
       _blockLaidOut(flow.pages.length);
+      yield null;
     }
     flow.finish();
-    return paragraphIndex;
+    yield paragraphIndex;
   }
 
   static bool _canMeasureKeepParagraph(WmlBlock block) =>
@@ -2595,7 +2702,7 @@ class WordLayoutEngine {
             stop?.position ??
             (hanging > 0 && pen < textLeft - .001
                 ? textLeft
-                : ((pen / kDefaultTabWidth).floor() + 1) * kDefaultTabWidth);
+                : ((pen / _defaultTabWidth).floor() + 1) * _defaultTabWidth);
         final inset = switch (stop?.alignment ?? WmlTabAlignment.left) {
           WmlTabAlignment.left => 0.0,
           WmlTabAlignment.center => fieldWidth / 2,

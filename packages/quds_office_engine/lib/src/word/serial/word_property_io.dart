@@ -105,9 +105,11 @@ abstract final class WordPropertyIo {
     XmlElement generated,
     String source,
     Map<String, String> imported,
-    Map<String, String> current,
-  ) {
-    final XmlElement result = parse(source, generated.localName);
+    Map<String, String> current, {
+    XmlElement? sourceElement,
+  }) {
+    final XmlElement result =
+        sourceElement?.copy() ?? parse(source, generated.localName);
     for (final String key in current.keys) {
       if (generated.localName == 'rPr') {
         if (key.startsWith('rFonts:')) continue;

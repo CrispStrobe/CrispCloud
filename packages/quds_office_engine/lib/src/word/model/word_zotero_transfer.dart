@@ -690,6 +690,7 @@ final class WordZoteroTransferPlan {
             zoteroDocumentData: _source.zoteroDocumentData,
             proofingLanguage: _source.proofingLanguage,
             autoHyphenation: _source.autoHyphenation,
+            defaultTabStop: _source.defaultTabStop,
             watermark: _source.watermark,
             sourceFileName: _source.sourceFileName,
             sourceByteLength: _source.sourceByteLength,

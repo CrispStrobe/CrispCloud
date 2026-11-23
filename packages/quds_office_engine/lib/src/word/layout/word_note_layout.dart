@@ -99,6 +99,7 @@ class _NoteStory {
     final WmlDocument story = WmlDocument(
       proofingLanguage: owner._layoutDoc?.proofingLanguage,
       autoHyphenation: owner._layoutDoc?.autoHyphenation ?? false,
+      defaultTabStop: owner._layoutDoc?.defaultTabStop,
       sourceNoSpaceRaiseLower:
           owner._layoutDoc?.sourceNoSpaceRaiseLower ?? false,
       sections: <WmlSection>[

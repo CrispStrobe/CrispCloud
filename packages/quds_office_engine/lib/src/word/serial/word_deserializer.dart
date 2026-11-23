@@ -4477,6 +4477,23 @@ class WordDeserializer {
     document,
   ).assignParagraphStyle(paragraph, name: name, builtin: builtin);
 
+  /// Formatting inherited by a paragraph of this native style, without
+  /// the current paragraph's direct formatting.
+  WmlParagraphProps? paragraphStyleProperties(WmlDocument document, String id) {
+    final cascade = _StyleCascade(this, document);
+    if (!cascade._load(includeTheme: false)) return null;
+    final style = cascade.styles[id];
+    if (style == null ||
+        (style.getAttribute('type', namespaceUri: OfficeNamespaces.w) ??
+                'paragraph') !=
+            'paragraph') {
+      return null;
+    }
+    final paragraph = WmlParagraph(properties: WmlParagraphProps(styleId: id));
+    cascade.paragraph(paragraph, const []);
+    return paragraph.properties;
+  }
+
   /// Recompute effective formatting after editing a source style definition.
   void refreshStyles(WmlDocument document) {
     final OpcPackage? package = document.package;
@@ -4578,6 +4595,7 @@ class WordDeserializer {
     final settings = WordSettingsIo.read(part.readText());
     document
       ..autoHyphenation = settings.autoHyphenation
+      ..defaultTabStop = settings.defaultTabStop
       ..sourceNoSpaceRaiseLower = settings.noSpaceRaiseLower
       ..trackRevisions = settings.tracking
       ..restrictEditing = settings.protection

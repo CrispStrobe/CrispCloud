@@ -1,11 +1,14 @@
 import '../../opc/content_types.dart';
 import '../../opc/opc_archive.dart';
+import '../../opc/package_part.dart';
 import '../../xml/namespaces.dart';
 import '../../xml/xml_node.dart';
 import '../model/wml_document.dart';
 import '../model/word_link.dart';
 import '../model/word_toc.dart';
+import '../properties/wml_properties.dart';
 import 'word_deserializer.dart';
+import 'word_property_io.dart';
 import 'word_serializer.dart';
 
 /// Applies a built-in heading the way Word does.
@@ -92,6 +95,93 @@ abstract final class WordHeadingIo {
       ..refreshStyles(document)
       ..refreshNumbering(document);
     return true;
+  }
+
+  /// Prepare an undoable update to the native style part. A removed effective
+  /// tab becomes a clear record, which also suppresses a stop inherited from
+  /// a parent style. Unchanged properties retain their native ownership.
+  static ({PackagePart part, String before, String after})?
+  prepareStyleGeometry(
+    WmlDocument document,
+    String id, {
+    required WmlIndent indent,
+    required List<WmlTabStop> tabs,
+  }) {
+    final package = document.package;
+    if (package == null) return null;
+    final part = package.getPart(_stylesUri(package, _mainUri(package)));
+    if (part == null) return null;
+    final current = WordDeserializer().paragraphStyleProperties(document, id);
+    if (current == null) return null;
+    final before = part.readText();
+    final xml = XmlDocument.parse(before);
+    final style = xml.root!
+        .childrenNamed('style', namespaceUri: OfficeNamespaces.w)
+        .where(
+          (node) =>
+              node.getAttribute('styleId', namespaceUri: OfficeNamespaces.w) ==
+              id,
+        )
+        .first;
+    final existing = style.firstChild('pPr', namespaceUri: OfficeNamespaces.w);
+    final next = current.copy()..indent = indent;
+    final generated = WordPropertyIo.parse(
+      WordSerializer().paragraphPropertiesXml(
+        WmlParagraphProps(
+          indent: indent,
+          explicitIndent: true,
+          rightToLeft: next.rightToLeft,
+        ),
+      ),
+      'pPr',
+    );
+    final properties = WordPropertyIo.preserve(
+      generated,
+      '',
+      WordPropertyIo.paragraphValues(current),
+      WordPropertyIo.paragraphValues(next),
+      sourceElement: existing,
+    );
+
+    final oldStops = {
+      for (final stop in current.tabs) pointsToTwips(stop.position): stop,
+    };
+    final newStops = {
+      for (final stop in tabs) pointsToTwips(stop.position): stop,
+    };
+    for (final position in oldStops.keys) {
+      if (!newStops.containsKey(position)) {
+        WordPropertyIo.writeTabStop(properties, position, 'clear');
+      }
+    }
+    for (final entry in newStops.entries) {
+      final stop = entry.value;
+      final old = oldStops[entry.key];
+      if (old?.alignment == stop.alignment && old?.leader == stop.leader) {
+        continue;
+      }
+      WordPropertyIo.writeTabStop(
+        properties,
+        entry.key,
+        stop.alignment.name,
+        leader: stop.leader.name,
+      );
+    }
+    if (existing == null) {
+      properties.setAttribute('w', OfficeNamespaces.w, prefix: 'xmlns');
+    }
+    if (existing != null) {
+      style.children[style.children.indexOf(existing)] = properties;
+      properties.parent = style;
+    } else {
+      final run = style.firstChild('rPr', namespaceUri: OfficeNamespaces.w);
+      final index = run == null
+          ? style.children.length
+          : style.children.indexOf(run);
+      style.children.insert(index, properties);
+      properties.parent = style;
+    }
+    return (part: part, before: before, after: xml.toXmlString());
   }
 
   static void _resetMajorityRunFormatting(WmlParagraph paragraph) {

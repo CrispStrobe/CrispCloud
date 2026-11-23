@@ -37,9 +37,26 @@ class VirtualViewport {
   /// Default upper zoom bound (also the initial [clampMax]).
   static const double maxScale = 4;
 
-  /// setScale API.
-  void setScale(double value) {
-    scale = value.clamp(clampMin, clampMax);
+  /// Zooms while keeping the content under [focal] in place.
+  ///
+  /// [origin] is measured in scaled content pixels, so a plain scale change
+  /// otherwise makes the visible position jump by the zoom ratio. Without an
+  /// explicit focal point the view centre is used, matching ordinary editor
+  /// zoom gestures.
+  void setScale(double value, {Offset? focal}) {
+    final double next = value.clamp(clampMin, clampMax);
+    final double previous = scale;
+    if (previous <= 0 || previous == next) {
+      scale = next;
+      return;
+    }
+    final Offset anchor = focal ?? Offset(extent.width / 2, extent.height / 2);
+    final double factor = next / previous;
+    origin = Offset(
+      origin.dx * factor + anchor.dx * (factor - 1),
+      origin.dy * factor + anchor.dy * (factor - 1),
+    );
+    scale = next;
   }
 
   /// Apply host zoom limits from viewer options.

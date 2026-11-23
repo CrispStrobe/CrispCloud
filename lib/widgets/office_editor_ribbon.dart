@@ -886,9 +886,25 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
               'Paragraph settings…',
               _wordParagraphDialog,
             ),
+            _iconButton(
+              Icons.straighten,
+              'Tabs and indents…',
+              () => showWordTabIndentDialog(
+                context,
+                controller: _word,
+                unit: widget.config.lengthUnit,
+                translate: context.tr,
+              ),
+            ),
           ]),
           _group('Styles', <Widget>[
             _wordStyleDropdown(),
+            _iconButton(
+              Icons.tune,
+              'Style tabs and indents…',
+              _wordStyleGeometry,
+            ),
+
             _iconButton(
               Icons.format_clear,
               'Clear formatting',
@@ -2460,7 +2476,9 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
     };
     final String current =
         styleId ??
-        (heading > 0 ? 'Heading$heading' : paragraph?.defaultStyleId ?? 'Normal');
+        (heading > 0
+            ? 'Heading$heading'
+            : paragraph?.defaultStyleId ?? 'Normal');
     labels.putIfAbsent(current, () => current);
     return _smallDropdown<String>(
       value: current,
@@ -3018,6 +3036,41 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
     });
   }
 
+  Future<void> _wordStyleGeometry() async {
+    final controller = _word;
+    if (controller.document.trackRevisions) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            context.tr('Turn off Track Changes to edit a paragraph style.'),
+          ),
+        ),
+      );
+      return;
+    }
+    final properties = controller.activeParagraphProperties;
+    final id = properties.styleId ?? properties.defaultStyleId ?? 'Normal';
+    final style = controller.document.importedStyles[id];
+    if (style == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            context.tr('Choose a paragraph style defined in the document.'),
+          ),
+        ),
+      );
+      return;
+    }
+    await showWordTabIndentDialog(
+      context,
+      controller: controller,
+      unit: widget.config.lengthUnit,
+      styleId: id,
+      styleName: style.name.isEmpty ? id : style.name,
+      translate: context.tr,
+    );
+  }
+
   void _wordParagraphDialog() async {
     final WmlParagraphProps? current = _paraProps?.copy();
     if (current == null) return;
@@ -3060,7 +3113,7 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
         choice.pageBreakBefore == current.pageBreakBefore) {
       return;
     }
-    _wordPara((WmlParagraphProps p) {
+    _word.applyParagraphFormat((WmlParagraphProps p) {
       // Apply only edited fields. Other selected paragraphs can have different
       // imported values when the tab controls have not been edited.
       if (choice.align != current.justification) {
@@ -3097,16 +3150,13 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
         p.dropCapLines = choice.dropCapLines;
       }
       if (border != current.borderColor) p.borderColor = border;
-      if (tabsChanged) {
-        p.tabs = List<WmlTabStop>.of(choice.tabStops);
-      }
       if (choice.keepTogether != current.keepTogether) {
         p.keepTogether = choice.keepTogether;
       }
       if (choice.pageBreakBefore != current.pageBreakBefore) {
         p.pageBreakBefore = choice.pageBreakBefore;
       }
-    });
+    }, tabStops: tabsChanged ? choice.tabStops : null);
   }
 
   Future<void> _wordInsertPicture() async {

@@ -16,12 +16,19 @@ typedef VisualImageDecoder =
 
 /// Owns decoded pictures for one Office canvas, including pending decodes.
 class VisualImageCache {
-  VisualImageCache({VisualImageDecoder? decodeImage})
+  VisualImageCache({VisualImageDecoder? decodeImage, this.decodedByteBudget})
     // Keep the public decoder parameter name independent of its private field.
     // ignore: prefer_initializing_formals
     : _decodeImage = decodeImage;
 
   final VisualImageDecoder? _decodeImage;
+
+  /// Budget for decoded pixels outside the current viewport.
+  final int? decodedByteBudget;
+  final Set<Uint8List> _painted = Set<Uint8List>.identity();
+  int _decodedBytes = 0;
+
+  static int _decodedSize(ui.Image image) => image.width * image.height * 4;
 
   /// Optional bounded converter supplied by the embedding app for metafiles.
   static FutureOr<Uint8List?> Function(Uint8List bytes)? metafileAsSvg;
@@ -34,7 +41,28 @@ class VisualImageCache {
   static const _maxSvgPixels = 2048;
   bool _disposed = false;
 
-  ui.Image? get(Uint8List bytes) => _ready[bytes];
+  ui.Image? get(Uint8List bytes) {
+    final image = _ready[bytes];
+    if (image != null && decodedByteBudget != null) _painted.add(bytes);
+    return image;
+  }
+
+  /// Release offscreen images after painting. All images drawn in the current
+  /// frame stay resident even if a large page temporarily exceeds the budget.
+  void endFrame() {
+    final budget = decodedByteBudget;
+    if (budget == null) return;
+    if (_decodedBytes > budget) {
+      for (final key in _ready.keys.toList()) {
+        if (_decodedBytes <= budget) break;
+        if (_painted.contains(key)) continue;
+        final image = _ready.remove(key)!;
+        _decodedBytes -= _decodedSize(image);
+        image.dispose();
+      }
+    }
+    _painted.clear();
+  }
 
   /// load API.
   void load(Uint8List bytes, VoidCallback onReady) {
@@ -52,6 +80,7 @@ class VisualImageCache {
         return;
       }
       _ready[bytes] = image;
+      _decodedBytes += _decodedSize(image);
       onReady();
     }
 
@@ -178,6 +207,8 @@ class VisualImageCache {
       image.dispose();
     }
     _ready.clear();
+    _painted.clear();
+    _decodedBytes = 0;
     _loading.clear();
     _failed.clear();
   }

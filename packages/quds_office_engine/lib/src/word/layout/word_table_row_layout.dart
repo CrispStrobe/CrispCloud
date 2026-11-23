@@ -65,6 +65,7 @@ typedef _TallCellSlice = ({_TallCellContent content, double start, double end});
   final storyDocument = WmlDocument(
     proofingLanguage: owner._layoutDoc?.proofingLanguage,
     autoHyphenation: owner._layoutDoc?.autoHyphenation ?? false,
+    defaultTabStop: owner._layoutDoc?.defaultTabStop,
     sourceNoSpaceRaiseLower: owner._layoutDoc?.sourceNoSpaceRaiseLower ?? false,
     sections: [
       WmlSection(

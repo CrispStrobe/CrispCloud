@@ -2138,6 +2138,7 @@ class WordSerializer {
       restrictMode: document.restrictMode,
       oddEven: document.sections.any((s) => s.differentOddEven),
       autoHyphenation: document.autoHyphenation,
+      defaultTabStop: document.defaultTabStop,
       footnoteSpecialIds: _footnoteSeparator?.ids,
     );
     if (xml == null) return;
