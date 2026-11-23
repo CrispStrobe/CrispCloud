@@ -1,5 +1,4 @@
 import '../proofing/office_proofing.dart';
-import '../proofing/proofing_text_ranges.dart';
 import 'german_hyphenation_data.dart';
 import 'grapheme_clusters.dart';
 import 'hyphenation_words.dart';
@@ -21,13 +20,25 @@ abstract final class GermanHyphenator {
   static final RegExp _letter = RegExp(r'^\p{L}$', unicode: true);
 
   /// Candidate boundaries for one word; no candidates inside source graphemes.
-  static List<int> wordOffsets(String word, {String? language = 'de-DE'}) {
-    if (!supports(language) ||
-        word.contains('\u00ad') ||
-        word.contains("'") ||
-        word.contains('’') ||
-        word.contains('ʼ')) {
+  static List<int> wordOffsets(
+    String word, {
+    String? language = 'de-DE',
+    bool allowSoftHyphenAlternatives = false,
+  }) {
+    if (!supports(language)) return const [];
+    if (word.contains('\u00ad')) {
+      return allowSoftHyphenAlternatives
+          ? _offsetsWithSoftHyphens(word, language)
+          : const [];
+    }
+    if (word.contains("'") || word.contains('’') || word.contains('ʼ')) {
       return const [];
+    }
+    if (word.length >= 4 && word.length <= 128 && _isPlainGerman(word)) {
+      final normalized = word.toLowerCase();
+      // These letters are single UTF-16 source units before and after case
+      // folding. Offsets from the pattern cache are already source offsets.
+      return List<int>.of(_cachedMatches(normalized));
     }
     final letters = <String>[];
     final sourceOffsets = <int>[0];
@@ -42,14 +53,41 @@ abstract final class GermanHyphenator {
       sourceOffsets.add(cluster.end);
     }
     if (letters.length < 4 || letters.length > 128) return const [];
-    final normalized = letters.join();
-    var positions = _cache[normalized];
-    if (positions == null) {
-      positions = _match(letters);
-      if (_cache.length >= 2048) _cache.remove(_cache.keys.first);
-      _cache[normalized] = positions;
+    return [
+      for (final offset in _cachedMatches(letters.join(), letters))
+        sourceOffsets[offset],
+    ];
+  }
+
+  static bool _isPlainGerman(String word) {
+    for (var i = 0; i < word.length; i++) {
+      final unit = word.codeUnitAt(i);
+      if ((unit >= 0x41 && unit <= 0x5a) || (unit >= 0x61 && unit <= 0x7a)) {
+        continue;
+      }
+      if (!const {
+        0xc4,
+        0xd6,
+        0xdc,
+        0xdf,
+        0xe4,
+        0xf6,
+        0xfc,
+        0x1e9e,
+      }.contains(unit)) {
+        return false;
+      }
     }
-    return [for (final offset in positions) sourceOffsets[offset]];
+    return true;
+  }
+
+  static List<int> _cachedMatches(String normalized, [List<String>? letters]) {
+    final cached = _cache[normalized];
+    if (cached != null) return cached;
+    final positions = _match(letters ?? normalized.split(''));
+    if (_cache.length >= 2048) _cache.remove(_cache.keys.first);
+    _cache[normalized] = positions;
+    return positions;
   }
 
   /// Paragraph candidates. A word crossing a language boundary is skipped.
@@ -59,37 +97,20 @@ abstract final class GermanHyphenator {
     String? Function(int sourceOffset)? languageAt,
     bool allowSoftHyphenAlternatives = false,
   }) {
-    if (languageAt == null && !supports(language)) return const [];
-    final result = <int>[];
-    final protected = OfficeProofingTextRanges(text);
-    for (final word in hyphenationWords.allMatches(text)) {
-      if (protected.overlaps(word.start, word.end)) continue;
-      final wordLanguage = languageAt?.call(word.start) ?? language;
-      if (!supports(wordLanguage)) continue;
-      if ((word.start > 0 &&
-              isHyphenationIdentifierNeighbor(text, word.start - 1)) ||
-          (word.end < text.length &&
-              isHyphenationIdentifierNeighbor(text, word.end))) {
-        continue;
-      }
-      if (languageAt != null) {
-        var homogeneous = true;
-        for (var at = word.start; at < word.end; at++) {
-          if (_language(languageAt(at) ?? language) !=
-              _language(wordLanguage)) {
-            homogeneous = false;
-            break;
-          }
-        }
-        if (!homogeneous) continue;
-      }
-      final source = word.group(0)!;
-      final offsets = allowSoftHyphenAlternatives && source.contains('\u00ad')
-          ? _offsetsWithSoftHyphens(source, wordLanguage)
-          : wordOffsets(source, language: wordLanguage);
-      result.addAll(offsets.map((n) => word.start + n));
-    }
-    return result;
+    return [
+      for (final item in hyphenationCandidates(
+        text,
+        language: language,
+        languageAt: languageAt,
+        supported: const {'de-DE', 'de-AT', 'de-CH'},
+      ))
+        for (final offset in wordOffsets(
+          item.word,
+          language: item.language,
+          allowSoftHyphenAlternatives: allowSoftHyphenAlternatives,
+        ))
+          item.start + offset,
+    ];
   }
 
   static List<int> _offsetsWithSoftHyphens(String source, String? language) {

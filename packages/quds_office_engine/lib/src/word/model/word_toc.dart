@@ -190,14 +190,13 @@ abstract final class WordToc {
     required int minLevel,
     required int maxLevel,
   }) {
-    if (isFieldParagraph(paragraph) || isInsideToc(document, paragraph)) {
-      return false;
-    }
     final int? level = headingLevelOf(paragraph);
     if (level == null || level < minLevel || level > maxLevel) {
       return false;
     }
-    return paragraph.text.trim().isNotEmpty;
+    return !isFieldParagraph(paragraph) &&
+        !isInsideToc(document, paragraph) &&
+        paragraph.text.trim().isNotEmpty;
   }
 
   /// headings API.

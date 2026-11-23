@@ -1,5 +1,4 @@
 import '../proofing/office_proofing.dart';
-import '../proofing/proofing_text_ranges.dart';
 import 'english_gb_hyphenation_data.dart';
 import 'english_us_hyphenation_data.dart';
 import 'hyphenation_words.dart';
@@ -50,39 +49,16 @@ abstract final class EnglishHyphenator {
     String? language,
     String? Function(int sourceOffset)? languageAt,
   }) {
-    if (languageAt == null && !supports(language)) return const [];
-    final result = <int>[];
-    final protected = OfficeProofingTextRanges(text);
-    for (final word in hyphenationWords.allMatches(text)) {
-      if (protected.overlaps(word.start, word.end)) continue;
-      final wordLanguage = languageAt?.call(word.start) ?? language;
-      if (!supports(wordLanguage)) continue;
-      // Do not treat the letter portion of an identifier as ordinary prose.
-      if ((word.start > 0 &&
-              isHyphenationIdentifierNeighbor(text, word.start - 1)) ||
-          (word.end < text.length &&
-              isHyphenationIdentifierNeighbor(text, word.end))) {
-        continue;
-      }
-      if (languageAt != null) {
-        var homogeneous = true;
-        for (var at = word.start; at < word.end; at++) {
-          if (_language(languageAt(at) ?? language) !=
-              _language(wordLanguage)) {
-            homogeneous = false;
-            break;
-          }
-        }
-        if (!homogeneous) continue;
-      }
-      result.addAll(
-        wordOffsets(
-          word.group(0)!,
-          language: wordLanguage,
-        ).map((offset) => word.start + offset),
-      );
-    }
-    return result;
+    return [
+      for (final item in hyphenationCandidates(
+        text,
+        language: language,
+        languageAt: languageAt,
+        supported: const {'en-US', 'en-GB'},
+      ))
+        for (final offset in wordOffsets(item.word, language: item.language))
+          item.start + offset,
+    ];
   }
 }
 

@@ -1579,7 +1579,6 @@ class WordEditorController extends OfficeController {
     _prepareOpenedWord(opened);
     WordLink.ensureHeadingBookmarks(opened);
     WordToc.refreshEmpty(opened);
-    WordToc.rebindHeadings(opened);
     // Only a generated TOC without page numbers needs the extra full pass.
     final bool needsTocSync = _needsTocPageSync(opened);
     // Keep a separate engine until the result is accepted. Edits or a new

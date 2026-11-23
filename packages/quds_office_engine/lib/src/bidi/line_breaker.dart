@@ -591,8 +591,20 @@ abstract final class LineBreaker {
     MarkAttachFn? markAttachOf, [
     Set<int>? clusterStarts,
   ]) {
-    if (logicalSlice.isEmpty) {
-      return logicalSlice;
+    var hasOddLevel = false;
+    var hasMarks = false;
+    for (final glyph in logicalSlice) {
+      if (glyph.level.isOdd) {
+        hasOddLevel = true;
+        break;
+      }
+      hasMarks |= isCombiningMark(glyph.codePoint);
+    }
+    // UAX #9 L2 has no reversals when all embedding levels are even.
+    if (!hasOddLevel) {
+      return hasMarks
+          ? _attachMarksToBases(logicalSlice, markAttachOf)
+          : logicalSlice;
     }
     final List<List<ShapedGlyph>> clusters = _graphemeClusters(
       logicalSlice,

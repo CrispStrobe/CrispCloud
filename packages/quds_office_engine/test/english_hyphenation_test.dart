@@ -358,6 +358,25 @@ void main() {
       },
     );
 
+    test('mixed dispatch keeps protected ranges and locale boundaries', () {
+      const text =
+          'dictionary Silbentrennung WWW.dictionary.example '
+          'dictionary@example.com `Silbentrennung` dictionary';
+      final finalWord = text.lastIndexOf('dictionary');
+      expect(
+        OfficeHyphenator.breakOffsets(
+          text,
+          language: 'EN_us',
+          languageAt: (offset) {
+            if (offset >= finalWord + 4) return 'de-DE';
+            if (offset >= 11 && offset < 25) return 'de_de';
+            return null;
+          },
+        ),
+        [3, 6, 14, 17, 21],
+      );
+    });
+
     test('English selected hyphens own no authored units', () {
       const text = 'dictionary';
       final lines = LineBreaker.breakLines(

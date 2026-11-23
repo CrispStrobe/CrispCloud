@@ -5,18 +5,29 @@
 /// This is a conservative prose convention, not a Markdown or URI parser.
 final class OfficeProofingTextRanges {
   OfficeProofingTextRanges(String text) : sourceLength = text.length {
+    final canContainLink =
+        text.contains('@') || text.contains('://') || _bareUrl.hasMatch(text);
+    final canContainCode = text.contains('`');
+    if (!canContainLink && !canContainCode) {
+      ranges = const [];
+      return;
+    }
     final spans = <({int start, int end})>[];
-    for (final match in _links.allMatches(text)) {
-      final end = _urlStart.hasMatch(match.group(0)!)
-          ? _urlEnd(text, match.start, match.end)
-          : match.end;
-      spans.add((start: match.start, end: end));
+    if (canContainLink) {
+      for (final match in _links.allMatches(text)) {
+        final end = _urlStart.hasMatch(match.group(0)!)
+            ? _urlEnd(text, match.start, match.end)
+            : match.end;
+        spans.add((start: match.start, end: end));
+      }
     }
 
     // Pair runs of equal delimiter length. Precomputed next matches avoid
     // repeatedly searching the remaining paragraph after unmatched openers.
     // A matched outer span owns any differently sized delimiters inside it.
-    final ticks = _backticks.allMatches(text).toList(growable: false);
+    final ticks = canContainCode
+        ? _backticks.allMatches(text).toList(growable: false)
+        : const <Match>[];
     final next = List<int>.filled(ticks.length, -1);
     final lastByLength = <int, int>{};
     for (var i = ticks.length - 1; i >= 0; i--) {
@@ -57,6 +68,7 @@ final class OfficeProofingTextRanges {
     unicode: true,
     caseSensitive: false,
   );
+  static final _bareUrl = RegExp(r'www\.', caseSensitive: false, unicode: true);
   static final RegExp _urlStart = RegExp(
     r'^(?:https?://|www\.)',
     caseSensitive: false,

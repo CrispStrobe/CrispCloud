@@ -1,5 +1,6 @@
 import 'english_hyphenator.dart';
 import 'german_hyphenator.dart';
+import 'hyphenation_words.dart';
 
 /// Automatic hyphenation for the languages with explicitly licensed patterns.
 ///
@@ -36,17 +37,25 @@ abstract final class OfficeHyphenator {
       );
     }
     return [
-      ...EnglishHyphenator.breakOffsets(
+      for (final item in hyphenationCandidates(
         text,
         language: language,
         languageAt: languageAt,
-      ),
-      ...GermanHyphenator.breakOffsets(
-        text,
-        language: language,
-        languageAt: languageAt,
-        allowSoftHyphenAlternatives: allowGermanSoftHyphenAlternatives,
-      ),
-    ]..sort();
+        supported: const {'en-US', 'en-GB', 'de-DE', 'de-AT', 'de-CH'},
+      ))
+        for (final offset
+            in item.language.startsWith('en-')
+                ? EnglishHyphenator.wordOffsets(
+                    item.word,
+                    language: item.language,
+                  )
+                : GermanHyphenator.wordOffsets(
+                    item.word,
+                    language: item.language,
+                    allowSoftHyphenAlternatives:
+                        allowGermanSoftHyphenAlternatives,
+                  ))
+          item.start + offset,
+    ];
   }
 }
