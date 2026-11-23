@@ -90,6 +90,27 @@ void main() {
     expect(prefs.getString('panel_source_remote_path'), '/two');
   });
 
+  testWidgets('tab-guided Windows startup ignores an old source preference', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({
+      'panel_source_local': 'local',
+      'panel_source_local_path': '/stale/root',
+    });
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    final notifier = container.read(panelSourceProvider(PanelSide.local).notifier);
+    notifier.deferToRestoredTabs();
+    await tester.pump();
+
+    // A pane's saved tabs (or the new Home fallback), not an unrelated old
+    // source preference, will supply the actual selected storage.
+    expect(
+      container.read(panelSourceProvider(PanelSide.local)),
+      const LocalPanelSource('/'),
+    );
+  });
+
   testWidgets(
     'disposing before preferences resolve does not publish a source',
     (tester) async {

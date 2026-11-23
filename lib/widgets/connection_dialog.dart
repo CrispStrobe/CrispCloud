@@ -56,7 +56,11 @@ import '../services/nextcloud_login_flow.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ConnectionDialog extends ConsumerStatefulWidget {
-  const ConnectionDialog({super.key});
+  const ConnectionDialog({super.key, this.targetSide});
+
+  /// A connection started inside a specific pane must open in that pane,
+  /// irrespective of the keyboard focus at login completion.
+  final PanelSide? targetSide;
 
   @override
   ConsumerState<ConnectionDialog> createState() => _ConnectionDialogState();
@@ -1852,11 +1856,21 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
       final active = ref.read(activePanelProvider);
       final other = oppositePanel(active);
       // Prefer a local pane when the active pane already shows another cloud.
-      final target =
-          ref.read(panelSourceProvider(active)).isRemote &&
-              ref.read(panelSourceProvider(other)).isLocal
-          ? other
-          : active;
+      // The login flow is asynchronous: by this point auth listeners may
+      // have completed the right pane's first cloud listing and cleared its
+      // setup marker. Prefer the original dialog target; as a fallback, keep
+      // a local left pane intact when the right already owns the cloud.
+      final left = ref.read(panelSourceProvider(PanelSide.local));
+      final right = ref.read(panelSourceProvider(PanelSide.remote));
+      final target = widget.targetSide ??
+          (left.isLocal && right.isRemote
+              ? PanelSide.remote
+              : left.isRemote && right.isLocal
+                  ? PanelSide.local
+                  : ref.read(panelSourceProvider(active)).isRemote &&
+                          ref.read(panelSourceProvider(other)).isLocal
+                      ? other
+                      : active);
       ref
           .read(panelSourceProvider(target).notifier)
           .setSource(

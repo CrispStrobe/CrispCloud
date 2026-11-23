@@ -44,11 +44,16 @@ void main() {
       await expectLater(service.refresh(), completes);
     });
 
-    test('DesktopFileService has access to every path', () async {
+    test('DesktopFileService checks actual local access', () async {
       final service = DesktopFileService();
-      // DesktopFileService always returns true for hasAccessToPath
-      final hasAccess = await service.hasAccessToPath('/tmp');
-      expect(hasAccess, isTrue);
+      final dir = await Directory.systemTemp.createTemp('crisp_access_');
+      addTearDown(() => dir.delete(recursive: true));
+      final file = File('${dir.path}${Platform.pathSeparator}present.txt');
+      await file.writeAsString('test');
+      expect(await service.hasAccessToPath(dir.path), isTrue);
+      expect(await service.hasAccessToPath(file.path), isTrue);
+      expect(await service.hasAccessToPath('${dir.path}${Platform.pathSeparator}missing'), isFalse);
+      expect(await service.hasAccessToPath('relative/path'), isFalse);
     });
 
     test('getSafeFallbackDirectory returns a non-empty path', () async {

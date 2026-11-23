@@ -22,6 +22,7 @@ import 'ios_file_listing.dart';
 import 'native_system.dart';
 import 'macos_bookmark_service.dart';
 import '../utils/path_access.dart';
+import '../utils/native_home_directory.dart';
 
 LocalFileService createPlatformFileService() {
   if (Platform.isMacOS) return MacosFileService();
@@ -679,9 +680,8 @@ class DesktopFileService
         LocalMediaFileAccess {
   @override
   String currentPath =
-      Platform.environment['HOME'] ??
-      Platform.environment['USERPROFILE'] ??
-      '/';
+      nativeHomeDirectory(Platform.environment, windows: Platform.isWindows) ??
+      Directory.current.path;
 
   @override
   String? get grantedBasePath => null;
@@ -766,7 +766,31 @@ class DesktopFileService
   }) => operation(path);
 
   @override
-  Future<bool> hasAccessToPath(String path) async => true;
+  Future<bool> hasAccessToPath(String path) async {
+    if (path.isEmpty || !p.isAbsolute(path)) return false;
+    try {
+      final type = await FileSystemEntity.type(path);
+      if (type == FileSystemEntityType.directory) {
+        // Directory.exists alone does not prove we can enumerate it.
+        await Directory(path).list(followLinks: false).take(1).drain<void>();
+        return true;
+      }
+      if (type == FileSystemEntityType.file) {
+        final handle = await File(path).open();
+        try {
+          await handle.read(1);
+        } finally {
+          await handle.close();
+        }
+        return true;
+      }
+    } on FileSystemException {
+      return false;
+    } on OSError {
+      return false;
+    }
+    return false;
+  }
 
   @override
   Future<void> createDirectory(String path) async {
@@ -784,9 +808,12 @@ class DesktopFileService
 
   @override
   Future<String> getSafeFallbackDirectory() async {
-    return Platform.environment['HOME'] ??
-        Platform.environment['USERPROFILE'] ??
-        '/';
+    final home = nativeHomeDirectory(
+      Platform.environment,
+      windows: Platform.isWindows,
+    );
+    if (home != null && await Directory(home).exists()) return home;
+    return Directory.current.path;
   }
 
   @override

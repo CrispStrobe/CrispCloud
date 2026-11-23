@@ -72,10 +72,23 @@ class PanelSourceNotifier extends StateNotifier<PanelSource> {
 
   final PanelSide side;
   int _sourceRevision = 0;
+
+  /// Increments for deliberate source/path choices. The async restore of an
+  /// old saved preference does not count as a new user selection.
+  int get sourceSelectionRevision => _sourceRevision;
+
   List<PanelSource>? _deferredContainerReleases;
 
   PanelSourceNotifier(this.side) : super(const LocalPanelSource('/')) {
     _restore();
+  }
+
+  /// Tab restoration is the authoritative source on Windows. Prevent the
+  /// independent legacy panel_source_* preference from racing a saved tab or
+  /// silently resetting the new local-Home/cloud-setup startup layout.
+  /// Does not navigate, load files, or discard persisted tab locations.
+  void deferToRestoredTabs() {
+    _sourceRevision++;
   }
 
   // ---- Public API -----------------------------------------------------------

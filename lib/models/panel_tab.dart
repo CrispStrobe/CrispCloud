@@ -30,6 +30,11 @@ class PanelTab {
   bool isPinned;
   StorageReference? storage;
   String? collectionId;
+
+  /// A source-free startup placeholder, not a remote account identity.
+  /// Saved tabs lacking storage *without* this flag remain legacy-unscoped
+  /// and must not be automatically rebound to any current cloud account.
+  bool isCloudSetup;
   TabLockMode lockMode;
   String? lockedPath;
   StorageReference? lockedStorage;
@@ -47,6 +52,7 @@ class PanelTab {
     this.isPinned = false,
     this.storage,
     this.collectionId,
+    this.isCloudSetup = false,
     this.lockMode = TabLockMode.none,
     this.lockedPath,
     this.lockedStorage,
@@ -115,6 +121,7 @@ class PanelTab {
     'pinned': isPinned,
     if (storage != null) 'storage': storage!.toJson(),
     if (collectionId != null) 'collectionId': collectionId,
+    if (isCloudSetup) 'cloudSetup': true,
     'lock': lockMode.name,
     if (lockedPath != null) 'lockedPath': lockedPath,
     if (lockedStorage != null) 'lockedStorage': lockedStorage!.toJson(),
@@ -150,6 +157,7 @@ class PanelTab {
               Map<String, dynamic>.from(json['storage'] as Map),
             ),
       collectionId: json['collectionId'] as String?,
+      isCloudSetup: json['cloudSetup'] == true,
       lockMode: TabLockMode.values.byName(json['lock'] as String? ?? 'none'),
       lockedPath: json['lockedPath'] as String?,
       lockedStorage: json['lockedStorage'] == null
@@ -189,6 +197,7 @@ class PanelTab {
       isPinned: isPinned,
       storage: storage,
       collectionId: collectionId,
+      isCloudSetup: isCloudSetup,
       lockMode: lockMode,
       lockedPath: lockedPath,
       lockedStorage: lockedStorage,

@@ -9,6 +9,7 @@ import '../models/panel_side.dart';
 import '../providers/custom_command_provider.dart';
 import '../providers/providers.dart';
 import '../services/macos_app_store.dart';
+import 'windows_menu_accelerators.dart';
 import 'custom_command_dialog.dart';
 
 class BrowserMenuCommandBinding {
@@ -202,16 +203,6 @@ class ConfigurableBrowserMenu extends StatelessWidget {
           )
         : null;
     final usedAccelerators = <String>{};
-    String acceleratorLabel(String label) {
-      for (var i = 0; i < label.length; i++) {
-        final letter = label[i].toLowerCase();
-        if (RegExp(r'[a-z]').hasMatch(letter) &&
-            usedAccelerators.add(letter)) {
-          return '${label.substring(0, i)}&${label.substring(i)}';
-        }
-      }
-      return label;
-    }
 
     List<Widget> children(
       List<BrowserMenuNode> entries, {
@@ -233,7 +224,12 @@ class ConfigurableBrowserMenu extends StatelessWidget {
                 : null,
             menuChildren: children(entry.children),
             child: topLevel && inToolbar
-                ? MenuAcceleratorLabel(acceleratorLabel(strings.title(entry)))
+                ? MenuAcceleratorLabel(
+                    windowsMenuAcceleratorLabel(
+                      strings.title(entry),
+                      usedAccelerators,
+                    ),
+                  )
                 : Text(
                     strings.title(entry),
                     maxLines: 1,
@@ -270,7 +266,7 @@ class ConfigurableBrowserMenu extends StatelessWidget {
           ],
           child: toolbarMode
               ? MenuAcceleratorLabel(
-                  acceleratorLabel(strings.text('controls')),
+                  windowsMenuAcceleratorLabel(strings.text('controls'), usedAccelerators),
                 )
               : Text(strings.text('controls')),
         ),

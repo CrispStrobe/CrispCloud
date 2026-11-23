@@ -28,6 +28,7 @@ import 'package:flutter/foundation.dart'
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path/path.dart' as p;
 
 import '../models/panel_side.dart';
 import '../models/file_item.dart';
@@ -672,8 +673,13 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             final origin = panel.isInArchive
                 ? panel.captureArchiveOrigin()
                 : panel.captureCurrentOrigin();
-            final path = home && origin.source.isLocal && !kIsWeb
-                ? Platform.environment['HOME'] ?? origin.storageReference.root
+            if (home) {
+              // The pane resolves Home in its *own* local or remote source.
+              panel.navigateHome();
+              return;
+            }
+            final path = origin.source.isLocal && !kIsWeb
+                ? p.rootPrefix(origin.source.currentPath)
                 : origin.storageReference.root;
             panel.navigateToPath(path, origin: origin);
           } catch (error) {
@@ -1477,12 +1483,19 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       mediaEditor,
       terminal,
     );
-    final appMenu = macMenus.first as PlatformMenu;
-    return [
-      ...macMenus.skip(1),
-      PlatformMenu(
-        label: context.tr('Help'),
-        menus: [
+    final helpLabel = context.tr('Help');
+    PlatformMenu? existingHelp;
+    for (final menu in macMenus.skip(1)) {
+      if (menu is PlatformMenu && menu.label == helpLabel) {
+        existingHelp = menu;
+        break;
+      }
+    }
+
+    // macOS already adds Help in some contexts. Reuse it instead of showing
+    // two Help menus or duplicating About/keyboard shortcut entries.
+    final helpItems = existingHelp?.menus ??
+        <PlatformMenuItem>[
           PlatformMenuItem(
             label: HelpGuideStrings(context).text('title'),
             onSelected: () => showUserGuide(context),
@@ -1491,7 +1504,36 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             label: context.commanderTr('Keyboard Shortcuts...'),
             onSelected: () => showKeyboardShortcutsDialog(context),
           ),
-          ...appMenu.menus,
+          PlatformMenuItem(
+            label: context.commanderTr('About CrispCloud'),
+            onSelected: () => showDialog(
+              context: context,
+              builder: (_) => const AboutAppDialog(),
+            ),
+          ),
+        ];
+    return [
+      for (final menu in macMenus.skip(1))
+        if (!identical(menu, existingHelp)) menu,
+      PlatformMenu(
+        label: helpLabel,
+        menus: [
+          ...helpItems,
+          PlatformMenuItemGroup(
+            members: [
+              PlatformMenuItem(
+                label: context.commanderTr('Settings...'),
+                shortcut: const SingleActivator(
+                  LogicalKeyboardKey.comma,
+                  meta: true,
+                ),
+                onSelected: () => showSettingsDialog(context),
+              ),
+              for (final binding in _fixedBrowserMenuBindings(context, ref))
+                if (binding.id != 'settings' && binding.id != 'userGuide')
+                  binding.platform(),
+            ],
+          ),
         ],
       ),
     ];

@@ -50,8 +50,14 @@ List<FileItem> _selectedOrCursor(PanelNotifier panel) {
   return const <FileItem>[];
 }
 
-void showConnectionDialogScreen(BuildContext context) {
-  showDialog(context: context, builder: (context) => const ConnectionDialog());
+void showConnectionDialogScreen(
+  BuildContext context, {
+  PanelSide? targetSide,
+}) {
+  showDialog(
+    context: context,
+    builder: (context) => ConnectionDialog(targetSide: targetSide),
+  );
 }
 
 /// Directly open the Azure Blob Storage connection dialog.

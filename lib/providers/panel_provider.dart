@@ -64,6 +64,7 @@ import '../services/log_service.dart';
 import '../services/panel_source_service.dart';
 import '../services/panel_view_mode_service.dart';
 import '../utils/async_lock.dart';
+import '../utils/native_home_directory.dart';
 import 'action_history_provider.dart';
 import 'auth_provider.dart';
 import 'core_providers.dart';
@@ -138,6 +139,9 @@ class PanelNotifier extends ChangeNotifier {
   final PanelSide side;
 
   final LocalFileService _localFileService;
+
+  bool get _windowsDesktop =>
+      !kIsWeb && defaultTargetPlatform == TargetPlatform.windows;
 
   List<FileItem>? _files;
   final _fileOrigins = Expando<PanelFileOrigin>('listed file origin');
@@ -452,20 +456,47 @@ class PanelNotifier extends ChangeNotifier {
         connections = current;
       }
     });
-    _restoreTabs();
-    if (side == PanelSide.local) {
-      _initializeLocalPath();
+    if (_windowsDesktop) {
+      // Restored tabs, not stale standalone panel_source_* preferences,
+      // determine the initial Windows layout. Cancel their pending restore
+      // before the first asynchronous tab read can yield.
+      _ref.read(panelSourceProvider(side).notifier).deferToRestoredTabs();
+      unawaited(_restoreWindowsPane());
     } else {
-      // Refresh remote panel when auth connection changes
-      _ref.listen<AuthNotifier>(authProvider, (prev, next) {
-        if (!(prev?.isConnected ?? false) && next.isConnected) {
-          _remotePath = '/'; // start at cloud root when connecting
-          refresh();
-        } else if ((prev?.isConnected ?? false) && !next.isConnected) {
-          // On disconnect, show local filesystem
-          _remotePath = kIsWeb ? '/' : (Platform.environment['HOME'] ?? '/');
+      _restoreTabs();
+      if (side == PanelSide.local) _initializeLocalPath();
+    }
+    if (side == PanelSide.remote) {
+      // Riverpod can deliver the same mutable AuthNotifier for prev and next:
+      // compare a retained boolean, not prev.isConnected.
+      var wasConnected = initialAuth.isConnected;
+      _ref.listen<AuthNotifier>(authProvider, (_, next) {
+        final connected = next.isConnected;
+        if (!wasConnected && connected) {
+          if (activeTab?.isCloudSetup == true) {
+            final source = RemotePanelSource(
+              providerName: next.providerName,
+              client: next.client,
+              path: next.client.rootPath,
+            );
+            // A reconnect can authenticate the very same client and path:
+            // setting an equal PanelSource does not emit a state change.
+            // Always refresh in that case or the right pane stays offline.
+            final selected = _ref.read(panelSourceProvider(side));
+            if (selected != source) {
+              _ref.read(panelSourceProvider(side).notifier).setSource(source);
+            } else {
+              unawaited(refresh());
+            }
+          } else {
+            unawaited(refresh());
+          }
+        } else if (wasConnected && !connected) {
+          // Keep an old cloud tab tied to its original account so the
+          // disconnected state is clear; never silently show local files.
           refresh();
         }
+        wasConnected = connected;
       });
     }
     // Listen for panel source changes (e.g. user switches provider in dropdown).
@@ -636,6 +667,7 @@ class PanelNotifier extends ChangeNotifier {
       tab.storage = origin.storageReference;
       tab.path = origin.source.currentPath;
       tab.collectionId = null;
+      tab.isCloudSetup = false;
       tab.updateLabel();
       _saveTabs();
     }
@@ -3721,8 +3753,22 @@ class PanelNotifier extends ChangeNotifier {
       await exitArchive();
       return;
     }
-    final path = kIsWeb ? '/' : (Platform.environment['HOME'] ?? '/');
-    await navigateToPath(path);
+    final origin = directoryPresentationOrigin;
+    final source = origin?.source ?? _ref.read(panelSourceProvider(side));
+    if (source is RemotePanelSource && origin?.isCurrent == true) {
+      // Cloud Home belongs to its own account, not the host filesystem.
+      await navigateToPath(origin!.storageReference.root, origin: origin);
+    } else {
+      final home = kIsWeb
+          ? '/'
+          : await _localFileService.getSafeFallbackDirectory();
+      if (_isDisposed) return;
+      final local = resolveStorageReference(
+        storageReferenceForSource(LocalPanelSource(home)),
+        home,
+      );
+      if (local != null) await navigateToPath(home, origin: local);
+    }
     if (!_isDisposed) focusList();
   }
 
@@ -5796,13 +5842,14 @@ class PanelNotifier extends ChangeNotifier {
             : null;
         final selectedSource = _ref.read(panelSourceProvider(side));
         final remote =
-            _remoteSourceForListing() != null &&
+            selectedSource.isRemote ||
+            (_remoteSourceForListing() != null &&
             (knownSource?.isRemote ??
                 (selectedSource.isRemote ||
                     (side == PanelSide.remote &&
                         _currentDirectoryOrigin == null &&
                         !_sourceWasSelected &&
-                        selectedSource == const LocalPanelSource('/'))));
+                        selectedSource == const LocalPanelSource('/')))));
         if (remote) {
           await _loadRemoteFiles();
         } else {
@@ -5936,7 +5983,9 @@ class PanelNotifier extends ChangeNotifier {
         // Keep the original value; the loader will report a friendly error.
       }
     }
-    final home = kIsWeb ? null : Platform.environment['HOME'];
+    final home = kIsWeb
+        ? null
+        : nativeHomeDirectory(Platform.environment, windows: Platform.isWindows);
     if (home != null && home.isNotEmpty) {
       if (path == '~') {
         path = home;
@@ -6028,6 +6077,13 @@ class PanelNotifier extends ChangeNotifier {
         (sourceOrigin?.isCurrent ?? true) &&
         (canContinue?.call() ?? true);
     if (!stillNavigating()) return;
+    // A verified, explicit location choice (picker, source dropdown or a
+    // reconnected saved account) replaces an unavailable legacy tab. Without
+    // clearing this marker, refresh() repeatedly reopens the *old* source and
+    // the new local folder looks permanently disconnected.
+    if (sourceOrigin != null && sourceOrigin.isCurrent) {
+      _pendingTabStorage = null;
+    }
     if (_isArchiveVirtualPath(path)) {
       final archive = path.split(':/').first;
       path = !isRemote
@@ -6100,7 +6156,7 @@ class PanelNotifier extends ChangeNotifier {
       }
       if (!stillNavigating()) return;
       final selected = _ref.read(panelSourceProvider(side));
-      if (selected is! LocalPanelSource) {
+      if (selected is! LocalPanelSource || selected.currentPath != path) {
         _settingSwapSource = true;
         try {
           _ref
@@ -6124,7 +6180,8 @@ class PanelNotifier extends ChangeNotifier {
       if (sourceOrigin?.source case final RemotePanelSource requested) {
         final selected = _ref.read(panelSourceProvider(side));
         if (selected is! RemotePanelSource ||
-            !identical(selected.client, requested.client)) {
+            !identical(selected.client, requested.client) ||
+            selected.currentPath != path) {
           _settingSwapSource = true;
           try {
             _ref
@@ -6254,42 +6311,67 @@ class PanelNotifier extends ChangeNotifier {
       return;
     }
     if (!item.isFolder) return;
-    if (operationOrigin != null) {
-      await navigateToPath(item.path!, origin: operationOrigin);
-    } else if (side == PanelSide.local) {
-      if (item.path != null) await navigateToPath(item.path!);
-    } else {
-      await navigateToPath(item.path ?? p.posix.join(_remotePath, item.name));
-    }
+    // Either visual pane can browse local or cloud folders. Never infer the
+    // filesystem path syntax from PanelSide: right-side local folders need
+    // native Windows paths too, and left-side cloud folders use POSIX paths.
+    final local = directoryStorage?.isLocal ??
+        _ref.read(panelSourceProvider(side)).isLocal;
+    final path = item.path ??
+        (local
+            ? p.join(_localPath, item.name)
+            : p.posix.join(_remotePath, item.name));
+    await navigateToPath(path, origin: operationOrigin);
   }
 
   Future<void> pickLocalDirectory() async {
     _log.info('pickLocalDirectory (web=$kIsWeb)');
-    final target = _localPath;
+    final tabId = _activeTabId;
+    final revision = _navigationRevision;
     try {
-      final dir = await _localFileService.requestDirectoryAccess(
-        initialDirectory: target,
+      // A stale cloud tab may have no valid local path; never hand Windows a
+      // POSIX "/" root as its initialDirectory.
+      final previous = _localPath;
+      final initial = kIsWeb || p.isAbsolute(previous)
+          ? previous
+          : await _localFileService.getSafeFallbackDirectory();
+      if (_isDisposed || tabId != _activeTabId ||
+          revision != _navigationRevision) return;
+      final chosen = await _localFileService.requestDirectoryAccess(
+        initialDirectory: initial,
       );
-      if (dir != null) {
-        // If the previously requested folder is now accessible, stay there;
-        // otherwise navigate to the folder the user selected.
-        if (target != dir && await _localFileService.hasAccessToPath(target)) {
-          _localPath = target;
-        } else {
-          _localPath = dir;
-        }
-        await _loadLocalFiles();
-        notifyListeners();
+      if (_isDisposed || chosen == null || tabId != _activeTabId ||
+          revision != _navigationRevision) return;
+      if (!(kIsWeb ? p.posix : p.context).isAbsolute(chosen)) {
+        throw FileSystemException('Select an absolute folder path.', chosen);
       }
+      // The *chosen* path always wins, even when the previous folder is
+      // readable. navigateToPath also binds the selected pane's real storage,
+      // updates tab/history and clears an unavailable legacy tab marker.
+      final source = LocalPanelSource(chosen);
+      final origin = resolveStorageReference(
+        storageReferenceForSource(source),
+        chosen,
+      );
+      if (origin == null || !origin.isCurrent) return;
+      if (activeTab case final tab?
+          when tab.lockMode == TabLockMode.locked &&
+              _tabLocationDiffers(tab, chosen, origin.storageReference)) {
+        // The user explicitly picked a new folder. Preserve a locked tab and
+        // open the chosen folder alongside it instead of blocking recovery.
+        _createTabLocation(chosen, origin.storageReference);
+      }
+      await navigateToPath(chosen, origin: origin);
     } catch (e) {
       _log.warn('operation failed', e);
-      _ref
-          .read(errorProvider)
-          .addError(
-            'Error picking directory: $e',
-            code: PanelErrorCode.pickFailed,
-            arguments: {'error': e},
-          );
+      if (!_isDisposed) {
+        _ref
+            .read(errorProvider)
+            .addError(
+              'Error picking directory: $e',
+              code: PanelErrorCode.pickFailed,
+              arguments: {'error': e},
+            );
+      }
     }
   }
 
@@ -7429,7 +7511,9 @@ class PanelNotifier extends ChangeNotifier {
               id,
               Map<String, dynamic>.from(item as Map)..['path'] = path,
             );
-            if (restored.storage == null && restored.collectionId == null) {
+            if (restored.storage == null &&
+                restored.collectionId == null &&
+                !restored.isCloudSetup) {
               restored.storage = const StorageReference(
                 kind: 'remote',
                 provider: 'Original source',
@@ -7450,7 +7534,12 @@ class PanelNotifier extends ChangeNotifier {
             if (tab != null) _remotePath = tab.path;
           }
           notifyListeners();
-          await _restoreSelectedTab();
+          // The original storage of an old tab is unknown. Windows opens a
+          // separate recoverable Home/cloud-setup tab without overwriting it.
+          if (!(_windowsDesktop &&
+              activeTab?.storage?.accountKey == 'legacy-unscoped-tab')) {
+            await _restoreSelectedTab();
+          }
           return;
         }
       }
@@ -7458,7 +7547,7 @@ class PanelNotifier extends ChangeNotifier {
       _log.warn('Tab restore failed', e);
     }
     _initFirstTab();
-    if (side == PanelSide.remote) {
+    if (side == PanelSide.remote && !_windowsDesktop) {
       if (!kIsWeb && !_ref.read(authProvider).isConnected) {
         _remotePath = Platform.environment['HOME'] ?? '/';
         final tab = activeTab;
@@ -7639,6 +7728,10 @@ class PanelNotifier extends ChangeNotifier {
           notifyListeners();
           await _saveTabs();
         }
+        return;
+      }
+      if (target.isCloudSetup && _windowsDesktop) {
+        await _showWindowsCloudSetup();
         return;
       }
       final storage = target.storage;
@@ -8196,6 +8289,92 @@ class PanelNotifier extends ChangeNotifier {
     _saveTabs();
   }
 
+  /// Windows uses a real local Home on the left and a disconnected cloud
+  /// setup on the right. A saved tab with an exact storage identity wins; an
+  /// older unscoped tab is retained but is *not* silently rebound.
+  Future<void> _restoreWindowsPane() async {
+    final selectionRevision = _ref
+        .read(panelSourceProvider(side).notifier)
+        .sourceSelectionRevision;
+    await _restoreTabs();
+    if (_isDisposed ||
+        _ref.read(panelSourceProvider(side).notifier).sourceSelectionRevision !=
+            selectionRevision) return;
+    final tab = activeTab;
+    if (tab == null) return;
+    final legacy = tab.storage?.accountKey == 'legacy-unscoped-tab';
+    if (side == PanelSide.local) {
+      if (legacy || (tab.storage == null && tab.collectionId == null)) {
+        await _showWindowsLocalHome(preserveLegacy: legacy);
+      }
+    } else {
+      if (legacy) {
+        // Preserve the old, non-authorizing tab for explicit recovery. The
+        // active startup tab is an independent cloud setup, not that account.
+        final setup = _createTabLocation('/', null);
+        setup.isCloudSetup = true;
+        setup.label = 'Cloud';
+        await _showWindowsCloudSetup();
+      } else if (tab.isCloudSetup ||
+          (tab.storage == null && tab.collectionId == null)) {
+        tab.isCloudSetup = true;
+        tab.label = 'Cloud';
+        await _showWindowsCloudSetup();
+      }
+    }
+  }
+
+  Future<void> _showWindowsLocalHome({required bool preserveLegacy}) async {
+    final tabId = _activeTabId;
+    final navigation = _navigationRevision;
+    final selectionRevision = _ref
+        .read(panelSourceProvider(side).notifier)
+        .sourceSelectionRevision;
+    final path = await _localFileService.getSafeFallbackDirectory();
+    if (_isDisposed ||
+        tabId != _activeTabId ||
+        navigation != _navigationRevision ||
+        selectionRevision != _ref
+            .read(panelSourceProvider(side).notifier)
+            .sourceSelectionRevision) return;
+    if (!p.isAbsolute(path)) return;
+    final source = LocalPanelSource(path);
+    final origin = resolveStorageReference(
+      storageReferenceForSource(source),
+      path,
+    );
+    if (origin == null || !origin.isCurrent) return;
+    if (preserveLegacy) _createTabLocation(path, origin.storageReference);
+    await navigateToPath(path, origin: origin, bypassTabLock: true);
+  }
+
+  Future<void> _showWindowsCloudSetup() async {
+    if (_isDisposed) return;
+    final auth = _ref.read(authProvider);
+    final tab = activeTab;
+    if (tab == null || !tab.isCloudSetup) return;
+    final source = RemotePanelSource(
+      providerName: auth.providerName,
+      client: auth.client,
+      path: auth.client.rootPath,
+    );
+    _remotePath = source.currentPath;
+    _pendingTabStorage = null;
+    // The connection picker should target this pane, not replace the Home
+    // pane just because the latter currently has keyboard focus.
+    _settingSwapSource = true;
+    try {
+      _ref.read(panelSourceProvider(side).notifier).setSource(source);
+    } finally {
+      _settingSwapSource = false;
+    }
+    await _loadRemoteFiles();
+    if (!_isDisposed) {
+      notifyListeners();
+      unawaited(_saveTabs());
+    }
+  }
+
   // --- Internal loading ---
   Future<void> _initializeLocalPath() async {
     var generation = _listingGeneration;
@@ -8734,7 +8913,12 @@ class PanelNotifier extends ChangeNotifier {
 
     final generation = ++_listingGeneration;
     final auth = _ref.read(authProvider);
-    final selected = _remoteSourceForListing();
+    // A disconnected, explicitly selected cloud still owns the panel's
+    // placeholder. Never substitute a different authenticated account.
+    final selectedSource = _ref.read(panelSourceProvider(side));
+    final selected = selectedSource is RemotePanelSource
+        ? selectedSource
+        : _remoteSourceForListing();
     final client = selected?.client ?? auth.client;
     final providerName = selected?.providerName ?? auth.providerName;
     final listingPath = _remotePath;

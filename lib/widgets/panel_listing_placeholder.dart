@@ -173,15 +173,30 @@ class PanelListingPlaceholder extends ConsumerWidget {
                         ),
                       );
                 }
-              : () => showConnectionDialogScreen(context),
+              : () => showConnectionDialogScreen(
+                  context,
+                  targetSide: side,
+                ),
         ),
       );
     } else if (state == PanelListingState.disconnected) {
       actions.add(
         ElevatedButton.icon(
-          onPressed: () => showConnectionDialogScreen(context),
+          onPressed: () => showConnectionDialogScreen(
+            context,
+            targetSide: side,
+          ),
           icon: const Icon(Icons.login),
           label: Text(l.connectToCloudShort),
+        ),
+      );
+      // A disconnected or legacy-unscoped cloud tab must never trap the user.
+      // This always uses the OS picker and an explicit local storage identity.
+      actions.add(
+        OutlinedButton.icon(
+          onPressed: panel.pickLocalDirectory,
+          icon: const Icon(Icons.folder_open),
+          label: Text(l.openLocalFolder),
         ),
       );
     } else if (state == PanelListingState.failed ||

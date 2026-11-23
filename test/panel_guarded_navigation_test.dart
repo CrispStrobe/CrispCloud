@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/providers/providers.dart';
+import 'package:crisp_cloud/providers/panel_source_provider.dart';
 import 'package:crisp_cloud/services/local_file_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -56,6 +57,7 @@ class _Local extends Fake
   final snapshotDelays = <String, Completer<List<FileSystemEntity>?>>{};
   final snapshotFailures = <String, FileSystemException>{};
   int grantRequests = 0, ensureRequests = 0, fallbackRequests = 0;
+  String? directoryChoice;
   bool accessible = true;
 
   @override
@@ -68,7 +70,7 @@ class _Local extends Fake
   Future<String?> requestDirectoryAccess({String? initialDirectory}) async {
     grantRequests++;
     accessible = true;
-    return initialDirectory;
+    return directoryChoice ?? initialDirectory;
   }
 
   @override
@@ -266,6 +268,46 @@ void main() {
     expect(local.interactiveReads, [manualPath]);
     expect(panel.currentPath, manualPath);
     expect(panel.hasVerifiedDirectoryListing, isTrue);
+  });
+
+  test('Browse opens the selected folder even when the old folder is accessible', () async {
+    local.directoryChoice = targetPath;
+    await panel.pickLocalDirectory();
+    expect(panel.currentPath, targetPath);
+    expect(panel.hasVerifiedDirectoryListing, isTrue);
+    expect(panel.directoryStorage?.isLocal, isTrue);
+    expect(
+      panel.files!.where((row) => row.name != '..').single.name,
+      'target.txt',
+    );
+    expect(local.interactiveReads, [targetPath]);
+    expect(panel.activeTab?.path, targetPath);
+    expect(
+      container.read(panelSourceProvider(PanelSide.local)).currentPath,
+      targetPath,
+    );
+  });
+
+  test('right pane can browse local folders using their native paths', () async {
+    final right = container.read(panelProvider(PanelSide.remote));
+    final origin = right.resolveStorageReference(
+      panel.directoryStorage!,
+      targetPath,
+    );
+    expect(origin, isNotNull);
+    await right.navigateToPath(targetPath, origin: origin);
+    expect(right.directoryStorage?.isLocal, isTrue);
+    final childPath = p.join(targetPath, 'nested');
+    await Directory(childPath).create();
+    await right.refresh();
+    final nested = right.files!.firstWhere((item) => item.name == 'nested');
+    expect(nested.isFolder, isTrue);
+    await right.navigateInto(nested);
+    // Folder listing stays scoped to the right pane's local storage, not
+    // reinterpreted as a path in the cloud provider's root.
+    expect(right.directoryStorage?.isLocal, isTrue);
+    expect(right.currentPath, childPath);
+    expect(right.hasVerifiedDirectoryListing, isTrue);
   });
 
   test('a cancelled remote listing cannot publish its delayed rows', () async {
