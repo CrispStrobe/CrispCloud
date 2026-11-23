@@ -271,7 +271,7 @@ void main() {
     );
   });
 
-  test('arc support does not authorize path brackets or unknown effects', () {
+  test('an unfinished path bracket suppresses the preview', () {
     final result = _emf([
       _emr(45, [20, 10, 180, 90, 420, 50, 100, -110]),
       emfRecord(59, []),

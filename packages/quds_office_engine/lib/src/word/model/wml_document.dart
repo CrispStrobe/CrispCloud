@@ -116,10 +116,17 @@ final class WmlContentControlBoundary extends WmlInline {
 /// Keeping the marker in the inline sequence preserves imported placement,
 /// including a marker between two text nodes in one native run.
 final class WmlNoteMarker extends WmlInline {
-  WmlNoteMarker({required this.endnote, required this.properties});
+  WmlNoteMarker({
+    required this.endnote,
+    required this.properties,
+    this.runPropertiesXml,
+  });
 
   final bool endnote;
   final WmlRunProps properties;
+
+  /// Native run properties including formatting history on the marker.
+  final String? runPropertiesXml;
 }
 
 /// One zero-width endpoint of a native Word bookmark range.
@@ -202,6 +209,7 @@ class WmlRun extends WmlInline {
     this.fieldLocked = false,
     this.fieldDirty,
     this.inlineVisual,
+    this.formattingAnchor,
   }) : properties = properties ?? WmlRunProps(),
        commentIds = commentIds ?? <int>[];
 
@@ -210,6 +218,9 @@ class WmlRun extends WmlInline {
 
   /// properties API.
   WmlRunProps properties;
+
+  /// Identity retained when undo snapshots clone an authored empty run.
+  Object? formattingAnchor;
 
   /// hyperlink API.
   WmlHyperlink? hyperlink;
@@ -513,6 +524,7 @@ class WmlTableCell {
   /// WmlTableCell API.
   WmlTableCell({
     List<WmlBlock>? blocks,
+    List<WmlContentControlData>? contentControlWrappers,
     this.gridSpan = 1,
     this.vMerge = WmlVMerge.none,
     this.width,
@@ -523,10 +535,15 @@ class WmlTableCell {
     this.borderBottom,
     this.borderLeft,
     this.borderRight,
-  }) : blocks = blocks ?? <WmlBlock>[];
+  }) : blocks = blocks ?? <WmlBlock>[],
+       contentControlWrappers =
+           contentControlWrappers ?? <WmlContentControlData>[];
 
   /// blocks API.
   List<WmlBlock> blocks;
+
+  /// Native cell-level content controls, ordered outermost first.
+  final List<WmlContentControlData> contentControlWrappers;
 
   /// gridSpan API.
   int gridSpan;
@@ -567,6 +584,7 @@ class WmlTableRow {
     List<WmlTableCell>? cells,
     this.cantSplit = false,
     this.height,
+    this.heightIsExact = false,
     this.gridBefore = 0,
     this.gridAfter = 0,
   }) : cells = cells ?? <WmlTableCell>[];
@@ -579,6 +597,16 @@ class WmlTableRow {
 
   /// height API.
   double? height;
+
+  /// Whether the authored height limits the row as well as sizing it.
+  bool heightIsExact;
+
+  double? get exactHeight {
+    final value = height;
+    return heightIsExact && value != null && value.isFinite && value > 0
+        ? value
+        : null;
+  }
 
   /// Native grid columns omitted before/after this row's physical cells.
   ///

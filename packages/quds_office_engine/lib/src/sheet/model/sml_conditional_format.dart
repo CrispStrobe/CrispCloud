@@ -494,6 +494,7 @@ class _ConditionalFormulas {
 
   bool _allowed(FormulaNode node, SmlWorksheet sheet) => switch (node) {
     LiteralNode() => true,
+    ExternalCellNode() => true,
     CellNode() => _valid(node.ref),
     RangeNode() => _rangeAllowed(node.range),
     BinaryNode() => _allowed(node.left, sheet) && _allowed(node.right, sheet),

@@ -15,7 +15,8 @@ class PackagePart {
     Uint8List? bytes,
     bool loaded = false,
   }) : _bytes = bytes ?? Uint8List(0),
-       _loaded = loaded || bytes != null;
+       _loaded = loaded || bytes != null,
+       _modified = bytes != null;
 
   /// package API.
   final OpcPackage package;
@@ -27,10 +28,21 @@ class PackagePart {
   String contentType;
   Uint8List _bytes;
   bool _loaded;
+  bool _modified;
   RelationshipCollection? _relationships;
 
   /// isLoaded API.
   bool get isLoaded => _loaded;
+
+  /// Whether this part was authored after its source entry was opened.
+  bool get isModified => _modified;
+
+  /// Materializes a source entry without marking it as an authored change.
+  void loadSourceBytes(Uint8List data) {
+    if (_loaded) return;
+    _bytes = data;
+    _loaded = true;
+  }
 
   /// Absolute OPC URI of this part's `*.rels` file.
   String get relationshipsUri => OpcUris.relationshipsUriFor(uri);
@@ -55,6 +67,7 @@ class PackagePart {
   void writeBytes(Uint8List data) {
     _bytes = Uint8List.fromList(data);
     _loaded = true;
+    _modified = true;
     package.markDirty(this);
   }
 

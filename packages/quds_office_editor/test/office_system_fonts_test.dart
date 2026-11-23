@@ -197,6 +197,31 @@ void main() {
   );
 
   test(
+    'discovers installed Comic Sans faces by their platform filenames',
+    () async {
+      const candidates = [
+        ('Comic Sans MS.ttf', 'LiberationSans-Regular.ttf', 400, false),
+        ('ComicSansMSBold.ttf', 'LiberationSans-Bold.ttf', 700, false),
+        ('comici.ttf', 'LiberationSans-Italic.ttf', 400, true),
+        ('comicz.ttf', 'LiberationSans-BoldItalic.ttf', 700, true),
+      ];
+      for (final (name, fixture, _, _) in candidates) {
+        final bytes = await installedFontFixture(
+          'Comic Sans MS',
+          file: fixture,
+        );
+        await File('${primary.path}/$name').writeAsBytes(bytes);
+      }
+
+      final faces = await installed.load(searchDirectories: [primary.path]);
+      expect(faces.map((face) => (face.family, face.weight, face.italic)), [
+        for (final (_, _, weight, italic) in candidates)
+          ('Comic Sans MS', weight, italic),
+      ]);
+    },
+  );
+
+  test(
     'canonical candidates precede aliases without duplicate faces',
     () async {
       // These names remain distinct on case-insensitive filesystems as well.

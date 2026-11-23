@@ -3,12 +3,18 @@ import '../../xml/xml_node.dart';
 import '../../xml/xml_reader.dart';
 import '../model/pml_presentation.dart';
 
+final _containsSymbol = RegExp(r'[\uF000-\uF0FF]');
+final _symbolSegments = RegExp(r'[\uF000-\uF0FF]+|[^\uF000-\uF0FF]+');
+
 /// Parses a captured `p:txBody` snapshot into paragraphs and styled runs.
 List<PmlTextParagraph> parsePmlRichText(
   String xml,
   Map<String, String> colors,
 ) {
   final XmlElement root = _readRoot(xml);
+  XmlElement? drawing(XmlElement? parent, String tag) =>
+      parent?.firstChild(tag, namespaceUri: OfficeNamespaces.a);
+  final list = drawing(root, 'lstStyle');
   final List<PmlTextParagraph> paragraphs = <PmlTextParagraph>[];
   for (final XmlElement paragraph in root.childrenNamed(
     'p',
@@ -18,102 +24,161 @@ List<PmlTextParagraph> parsePmlRichText(
       'pPr',
       namespaceUri: OfficeNamespaces.a,
     );
-    final PmlTextParagraph out = PmlTextParagraph(
-      align: _align(pPr?.getAttribute('algn')),
-      level: int.tryParse(pPr?.getAttribute('lvl') ?? '') ?? 0,
-      marginLeftPt: _emuToPt(pPr?.getAttribute('marL')),
-      indentPt: _emuToPt(pPr?.getAttribute('indent')),
-      rightToLeft: pPr?.getAttribute('rtl') == '1',
-      defaultTabPt: _emuToPt(pPr?.getAttribute('defTabSz') ?? '') == 0
+    final level = (int.tryParse(pPr?.getAttribute('lvl') ?? '') ?? 0).clamp(
+      0,
+      8,
+    );
+    final levelProps = drawing(list, 'lvl${level + 1}pPr');
+    final fallbackProps = drawing(levelProps, 'defRPr');
+    final paraRun = drawing(pPr, 'defRPr');
+    final end = drawing(paragraph, 'endParaRPr');
+    String? runAttr(XmlElement? run, String name) =>
+        run?.getAttribute(name) ??
+        paraRun?.getAttribute(name) ??
+        fallbackProps?.getAttribute(name);
+    String face(XmlElement? run) =>
+        drawing(run, 'latin')?.getAttribute('typeface') ?? '';
+    String ink(XmlElement? run) {
+      for (final props in [run, paraRun, fallbackProps]) {
+        final color = _runColor(props, colors);
+        if (color.isNotEmpty) return color;
+      }
+      return '';
+    }
+
+    String? paragraphAttr(String name) =>
+        pPr?.getAttribute(name) ?? levelProps?.getAttribute(name);
+    XmlElement? paragraphElement(String name) =>
+        drawing(pPr, name) ?? drawing(levelProps, name);
+    XmlElement? choice(XmlElement? props, Set<String> names) => props
+        ?.childElements
+        .where(
+          (e) =>
+              e.namespaceUri == OfficeNamespaces.a &&
+              names.contains(e.localName),
+        )
+        .firstOrNull;
+    final bulletNames = {'buNone', 'buChar', 'buAutoNum', 'buBlip'};
+    final bullet = choice(pPr, bulletNames) ?? choice(levelProps, bulletNames);
+    final bulletFont =
+        choice(pPr, {'buFont', 'buFontTx'}) ??
+        choice(levelProps, {'buFont', 'buFontTx'});
+    final bulletColor =
+        choice(pPr, {'buClr', 'buClrTx'}) ??
+        choice(levelProps, {'buClr', 'buClrTx'});
+    final line = paragraphElement('lnSpc');
+    final before = paragraphElement('spcBef');
+    final after = paragraphElement('spcAft');
+    final pointValue = double.tryParse(
+      drawing(line, 'spcPts')?.getAttribute('val') ?? '',
+    );
+    final out = PmlTextParagraph(
+      align: _align(paragraphAttr('algn')),
+      level: level,
+      marginLeftPt: _emuToPt(paragraphAttr('marL')),
+      marginRightPt: _emuToPt(paragraphAttr('marR')),
+      indentPt: _emuToPt(paragraphAttr('indent')),
+      rightToLeft: paragraphAttr('rtl') == '1',
+      defaultTabPt: _emuToPt(paragraphAttr('defTabSz')) == 0
           ? 72
-          : _emuToPt(pPr?.getAttribute('defTabSz')),
+          : _emuToPt(paragraphAttr('defTabSz')),
+      lineSpacing: _spacingRatio(line, fallback: 1),
+      lineSpacingPt:
+          pointValue != null && pointValue.isFinite && pointValue >= 0
+          ? pointValue / 100
+          : null,
+      spaceBeforePt: _spacing(before),
+      spaceAfterPt: _spacing(after),
+      spaceBeforeLineRatio: _spacingRatio(before),
+      spaceAfterLineRatio: _spacingRatio(after),
+      defaultFontSizePt: (int.tryParse(runAttr(end, 'sz') ?? '') ?? 0) / 100,
+      defaultLetterSpacingPt: _letterSpacing(runAttr(null, 'spc')),
+      defaultFontFamily: [
+        face(end),
+        face(paraRun),
+        face(fallbackProps),
+      ].firstWhere((name) => name.isNotEmpty, orElse: () => ''),
+      defaultColor: ink(end),
+      defaultBold: runAttr(end, 'b') == '1',
+      defaultItalic: runAttr(end, 'i') == '1',
+      bullet: bullet?.getAttribute('char'),
+      bulletFont: bulletFont?.getAttribute('typeface'),
+      bulletColor: bulletColor?.localName == 'buClr'
+          ? _fillColor(bulletColor!, colors)
+          : null,
+      definedProperties: {
+        if (paragraphAttr('algn') != null) PmlParagraphProperty.alignment,
+        if (paragraphAttr('rtl') != null) PmlParagraphProperty.direction,
+        if (paragraphAttr('marL') != null) PmlParagraphProperty.leftMargin,
+        if (paragraphAttr('marR') != null) PmlParagraphProperty.rightMargin,
+        if (paragraphAttr('indent') != null) PmlParagraphProperty.indent,
+        if (line != null) PmlParagraphProperty.lineSpacing,
+        if (before != null) PmlParagraphProperty.spaceBefore,
+        if (after != null) PmlParagraphProperty.spaceAfter,
+        if (bullet != null) PmlParagraphProperty.bullet,
+        if (bulletFont != null) PmlParagraphProperty.bulletFont,
+        if (bulletColor != null) PmlParagraphProperty.bulletColor,
+      },
     );
-    if (pPr != null) {
-      final XmlElement? line = pPr.firstChild(
-        'lnSpc',
-        namespaceUri: OfficeNamespaces.a,
-      );
-      final XmlElement? pct = line?.firstChild(
-        'spcPct',
-        namespaceUri: OfficeNamespaces.a,
-      );
-      final int? pctVal = int.tryParse(pct?.getAttribute('val') ?? '');
-      if (pctVal != null && pctVal >= 0) {
-        out.lineSpacing = pctVal / 100000;
-      }
-      final XmlElement? points = line?.firstChild(
-        'spcPts',
-        namespaceUri: OfficeNamespaces.a,
-      );
-      final int? pointValue = int.tryParse(points?.getAttribute('val') ?? '');
-      if (pointValue != null && pointValue >= 0) {
-        out.lineSpacingPt = pointValue / 100;
-      }
-      out.spaceBeforePt = _spacing(pPr, 'spcBef');
-      out.spaceAfterPt = _spacing(pPr, 'spcAft');
-    }
-    final XmlElement? end = paragraph.firstChild(
-      'endParaRPr',
-      namespaceUri: OfficeNamespaces.a,
-    );
-    if (end != null) {
-      out.defaultFontSizePt =
-          (int.tryParse(end.getAttribute('sz') ?? '') ?? 0) / 100;
-      out.defaultColor = _runColor(end, colors);
-      out.defaultBold = end.getAttribute('b') == '1';
-      out.defaultItalic = end.getAttribute('i') == '1';
-    }
     for (final XmlElement child in paragraph.childElements) {
-      if (child.localName == 'r' || child.localName == 'fld') {
+      final isBreak = child.localName == 'br';
+      if (child.localName == 'r' || child.localName == 'fld' || isBreak) {
         final XmlElement? rPr = child.firstChild(
           'rPr',
           namespaceUri: OfficeNamespaces.a,
         );
-        final String text = child
-            .childrenNamed('t', namespaceUri: OfficeNamespaces.a)
-            .map((XmlElement e) => e.text)
-            .join();
+        final String text = isBreak
+            ? '\n'
+            : child
+                  .childrenNamed('t', namespaceUri: OfficeNamespaces.a)
+                  .map((XmlElement e) => e.text)
+                  .join();
         if (text.isEmpty) continue;
-        out.runs.add(
-          PmlTextRun(
-            text: text,
-            fontSizePt:
-                (int.tryParse(rPr?.getAttribute('sz') ?? '') ?? 0) / 100,
-            // An omitted attribute can use fallback styling; an explicit
-            // zero must continue to disable that style on this run.
-            bold: rPr?.getAttribute('b') == null
-                ? out.defaultBold
-                : rPr?.getAttribute('b') == '1',
-            italic: rPr?.getAttribute('i') == null
-                ? out.defaultItalic
-                : rPr?.getAttribute('i') == '1',
-            underline: switch (rPr?.getAttribute('u')) {
-              null || 'none' => false,
-              _ => true,
-            },
-            strike: switch (rPr?.getAttribute('strike')) {
-              null || 'noStrike' => false,
-              _ => true,
-            },
-            baseline:
-                (int.tryParse(rPr?.getAttribute('baseline') ?? '') ?? 0) /
-                100000,
-            color: _runColor(rPr, colors),
-            fontFamily:
-                rPr
-                    ?.firstChild('latin', namespaceUri: OfficeNamespaces.a)
-                    ?.getAttribute('typeface') ??
-                '',
-          ),
+        final run = PmlTextRun(
+          text: text,
+          fontSizePt: (int.tryParse(runAttr(rPr, 'sz') ?? '') ?? 0) / 100,
+          // An omitted attribute can use fallback styling; an explicit
+          // zero must continue to disable that style on this run.
+          bold: (runAttr(rPr, 'b') ?? end?.getAttribute('b')) == '1',
+          boldSpecified: (runAttr(rPr, 'b') ?? end?.getAttribute('b')) != null,
+          italic: (runAttr(rPr, 'i') ?? end?.getAttribute('i')) == '1',
+          underline: switch (rPr?.getAttribute('u')) {
+            null || 'none' => false,
+            _ => true,
+          },
+          strike: switch (rPr?.getAttribute('strike')) {
+            null || 'noStrike' => false,
+            _ => true,
+          },
+          baseline:
+              (int.tryParse(rPr?.getAttribute('baseline') ?? '') ?? 0) / 100000,
+          letterSpacingPt: _letterSpacing(rPr?.getAttribute('spc')),
+          color: ink(rPr),
+          fontFamily: [
+            face(rPr),
+            face(paraRun),
+            face(fallbackProps),
+          ].firstWhere((name) => name.isNotEmpty, orElse: () => ''),
         );
-      } else if (child.localName == 'br') {
-        out.runs.add(
-          PmlTextRun(
-            text: '\n',
-            bold: out.defaultBold,
-            italic: out.defaultItalic,
-          ),
-        );
+        final symbolFace = drawing(rPr, 'sym')?.getAttribute('typeface');
+        if (symbolFace == null ||
+            symbolFace.isEmpty ||
+            !_containsSymbol.hasMatch(text)) {
+          out.runs.add(run);
+        } else {
+          // The symbol face applies only to encoded symbol characters. A run
+          // can also contain ordinary letters or spaces in its Latin face.
+          for (final match in _symbolSegments.allMatches(text)) {
+            final segment = match.group(0)!;
+            out.runs.add(
+              run.copy()
+                ..text = segment
+                ..fontFamily = _containsSymbol.hasMatch(segment)
+                    ? symbolFace
+                    : run.fontFamily,
+            );
+          }
+        }
       }
     }
     if (end != null) {
@@ -126,6 +191,53 @@ List<PmlTextParagraph> parsePmlRichText(
   return paragraphs;
 }
 
+/// Projects master text defaults through the same parser as slide text.
+Map<int, PmlTextParagraph> parsePmlMasterTextStyle(
+  XmlElement style,
+  Map<String, String> colors,
+) {
+  XmlElement drawing(String name) => XmlElement(
+    localName: name,
+    prefix: 'a',
+    namespaceUri: OfficeNamespaces.a,
+  );
+  final body =
+      XmlElement(
+          localName: 'txBody',
+          prefix: 'p',
+          namespaceUri: OfficeNamespaces.p,
+        )
+        ..setAttribute('a', OfficeNamespaces.a, prefix: 'xmlns')
+        ..setAttribute('p', OfficeNamespaces.p, prefix: 'xmlns');
+  for (var level = 0; level < 9; level++) {
+    final props =
+        style.firstChild(
+          'lvl${level + 1}pPr',
+          namespaceUri: OfficeNamespaces.a,
+        ) ??
+        style.firstChild('defPPr', namespaceUri: OfficeNamespaces.a);
+    if (props == null) continue;
+    final pPr = drawing('pPr')
+      ..attributes.addAll(props.attributes.map((attribute) => attribute.copy()))
+      ..setAttribute('lvl', '$level');
+    for (final node in props.children) {
+      pPr.addChild(node.copy());
+    }
+    body.addChild(
+      drawing('p')
+        ..addChild(pPr)
+        ..addChild(drawing('r')..addChild(drawing('t')..addText('x'))),
+    );
+  }
+  return {
+    for (final paragraph in parsePmlRichText(
+      XmlDocument(root: body).toXmlString(declaration: false),
+      colors,
+    ))
+      paragraph.level: paragraph,
+  };
+}
+
 PmlTextAlign _align(String? value) => switch (value) {
   'ctr' => PmlTextAlign.center,
   'r' => PmlTextAlign.right,
@@ -135,26 +247,47 @@ PmlTextAlign _align(String? value) => switch (value) {
 
 double _emuToPt(String? value) => (int.tryParse(value ?? '') ?? 0) / 12700;
 
-double _spacing(XmlElement pPr, String name) {
-  final XmlElement? spacing = pPr.firstChild(
-    name,
-    namespaceUri: OfficeNamespaces.a,
-  );
-  if (spacing == null) return 0;
-  final XmlElement? pts = spacing.firstChild(
-    'spcPts',
-    namespaceUri: OfficeNamespaces.a,
-  );
-  return (int.tryParse(pts?.getAttribute('val') ?? '') ?? 0) / 100;
+double? _letterSpacing(String? value) {
+  final hundredths = int.tryParse(value ?? '');
+  if (hundredths == null || hundredths < -400000 || hundredths > 400000) {
+    return null;
+  }
+  return hundredths / 100;
 }
 
-String _runColor(XmlElement? rPr, Map<String, String> colors) {
-  if (rPr == null) return '';
-  final XmlElement? fill = rPr.firstChild(
+double _spacing(XmlElement? spacing) =>
+    (int.tryParse(
+          spacing
+                  ?.firstChild('spcPts', namespaceUri: OfficeNamespaces.a)
+                  ?.getAttribute('val') ??
+              '',
+        ) ??
+        0) /
+    100;
+
+double _spacingRatio(XmlElement? spacing, {double fallback = 0}) {
+  final value = spacing
+      ?.firstChild('spcPct', namespaceUri: OfficeNamespaces.a)
+      ?.getAttribute('val')
+      ?.trim();
+  if (value == null) return fallback;
+  final hasUnit = value.endsWith('%');
+  final amount = double.tryParse(
+    hasUnit ? value.substring(0, value.length - 1) : value,
+  );
+  if (amount == null || !amount.isFinite || amount < 0) return fallback;
+  return amount / (hasUnit ? 100 : 100000);
+}
+
+String _runColor(XmlElement? properties, Map<String, String> colors) {
+  final fill = properties?.firstChild(
     'solidFill',
     namespaceUri: OfficeNamespaces.a,
   );
-  if (fill == null) return '';
+  return fill == null ? '' : _fillColor(fill, colors);
+}
+
+String _fillColor(XmlElement fill, Map<String, String> colors) {
   for (final XmlElement color in fill.childElements) {
     switch (color.localName) {
       case 'srgbClr':

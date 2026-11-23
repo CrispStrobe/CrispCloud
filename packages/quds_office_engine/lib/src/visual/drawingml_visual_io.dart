@@ -161,10 +161,11 @@ abstract final class DrawingmlVisualIo {
     required PictureAdjust adj,
     int offX = 0,
     int offY = 0,
+    int? rotation,
     String prefix = 'a',
   }) {
     w.writeStartElement('xfrm', prefix: prefix);
-    final int rot = (adj.rotationDeg * 60000).round();
+    final int rot = rotation ?? (adj.rotationDeg * 60000).round();
     if (rot != 0 && prefix != 'p') {
       w.writeAttribute('rot', '$rot');
     }
@@ -211,15 +212,27 @@ abstract final class DrawingmlVisualIo {
     }
     w.writeStartElement('effectLst', prefix: 'a');
     w.writeStartElement('outerShdw', prefix: 'a');
-    w.writeAttribute('blurRad', '50800');
-    w.writeAttribute('dist', '38100');
-    w.writeAttribute('dir', '2700000');
+    final outer = adj.outerShadow;
+    w.writeAttribute(
+      'blurRad',
+      '${((outer?.blurRadius ?? 4) * 12700).round()}',
+    );
+    w.writeAttribute('dist', '${((outer?.distance ?? 3) * 12700).round()}');
+    w.writeAttribute(
+      'dir',
+      '${(((outer?.directionDegrees ?? 45) % 360) * 60000).round()}',
+    );
+    if (outer != null && !outer.rotatesWithShape) {
+      w.writeAttribute('rotWithShape', '0');
+    }
     w.writeStartElement('srgbClr', prefix: 'a');
-    w.writeAttribute('val', '000000');
+    w.writeAttribute('val', outer?.color ?? '000000');
     w.writeEmptyElement(
       'alpha',
       prefix: 'a',
-      attributes: <String, String>{'val': '40000'},
+      attributes: <String, String>{
+        'val': '${((outer?.opacity ?? 0.4) * 100000).round()}',
+      },
     );
     w.writeEndElement();
     w.writeEndElement();

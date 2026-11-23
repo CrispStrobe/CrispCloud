@@ -78,6 +78,37 @@ void main() {
     expect(xml, isNot(contains('</w:p><w:bookmark')));
   });
 
+  test('unpaired starts cannot shadow complete bookmarks on import', () {
+    final doc = WordDeserializer().read(
+      _package(
+        '<w:p><w:bookmarkStart w:id="9" w:name="Kept"/>'
+        '<w:r><w:t>Before</w:t></w:r></w:p>'
+        '<w:p><w:bookmarkStart w:id="10" w:name="Kept"/>'
+        '<w:r><w:t>Exact</w:t></w:r><w:bookmarkEnd w:id="10"/>'
+        '<w:r><w:t> outside</w:t></w:r></w:p>'
+        '<w:p><w:bookmarkStart w:id="11" w:name="Kept"/>'
+        '<w:bookmarkStart w:id="12" w:name="Other"/>'
+        '<w:r><w:t>After</w:t></w:r></w:p>'
+        '<w:p><w:bookmarkStart w:id="13" w:name="Unpaired"/>'
+        '<w:r><w:t>Tail</w:t></w:r><w:bookmarkEnd w:id="12"/></w:p>',
+      ),
+    );
+    expect(doc.paragraphs.map((p) => p.properties.bookmarkName), [
+      null,
+      'Kept',
+      'Other',
+      'Unpaired',
+    ]);
+    final expected = {
+      'Kept': 'Exact',
+      'Other': 'After\nTail',
+      'Unpaired': 'Tail',
+    };
+    expect(_texts(doc), expected);
+    final bytes = WordSerializer().writeBytes(doc);
+    expect(_texts(WordDeserializer().readBytes(bytes)), expected);
+  });
+
   test('a marker between blocks never moves into a text box story', () {
     // The start precedes a paragraph whose drawing holds a text box; it must
     // attach to that host paragraph, not to the text box's own paragraph.

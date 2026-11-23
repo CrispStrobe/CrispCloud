@@ -128,6 +128,17 @@ class ZipReader {
   /// contains API.
   bool contains(String name) => _entries.containsKey(name);
 
+  /// Returns an unencrypted, supported member in its original encoding.
+  Uint8List compressedPayload(ZipEntry entry) {
+    if ((entry.generalPurposeFlag & 1) != 0 ||
+        (entry.compressionMethod != zipMethodStore &&
+            entry.compressionMethod != zipMethodDeflate)) {
+      throw ZipException('Unsupported ZIP member: ${entry.fileName}');
+    }
+    final location = _localData(entry);
+    return _source.view(location.offset, location.compressedSize);
+  }
+
   /// Inflates [name] into a newly allocated buffer.
   ///
   /// When [maxBytes] is supplied, both the declared and actual output size are

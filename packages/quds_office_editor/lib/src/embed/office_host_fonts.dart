@@ -44,19 +44,32 @@ abstract final class OfficeHostFonts {
       runFamily: OfficeTypeface.familyForRun(props, codePoint),
       themeFamily: themeFamily,
     );
-    final registered =
-        registeredFamily(requested) ??
-        (OfficeTypeface.isRtlCodePoint(codePoint)
-            ? 'Noto Naskh Arabic'
-            : 'Liberation Sans');
-    final faces = _metricFaces[registered.toLowerCase()];
-    if (faces == null) return null;
-    final face = OfficeFontSet(faces: faces).resolve(
-      codePoint < 32 ? 0x20 : codePoint,
-      family: registered,
+    return paintMetrics(
+      registeredFamily(requested) ??
+          (OfficeTypeface.isRtlCodePoint(codePoint)
+              ? 'Noto Naskh Arabic'
+              : 'Liberation Sans'),
+      sizePoints,
+      codePoint: codePoint < 32 ? 0x20 : codePoint,
       weight: props.bold ? 700 : 400,
       italic: props.italic,
     );
+  }
+
+  /// Metrics for a font family already selected by the canvas painter.
+  static FontMetrics? paintMetrics(
+    String family,
+    double sizePoints, {
+    required int codePoint,
+    required int weight,
+    required bool italic,
+  }) {
+    final registered = registeredFamily(family) ?? family;
+    final faces = _metricFaces[registered.toLowerCase()];
+    if (faces == null) return null;
+    final face = OfficeFontSet(
+      faces: faces,
+    ).resolve(codePoint, family: registered, weight: weight, italic: italic);
     return face == null
         ? null
         : FontMetrics(font: face.font, fontSizePoints: sizePoints);

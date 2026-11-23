@@ -853,8 +853,15 @@ class _StyleCascade {
           if (old == null) result.addChild(effective);
           continue;
         }
-        if (name == 'rPr' &&
-            const {'noProof', 'rtl', 'cs'}.contains(child.localName)) {
+        if ((name == 'rPr' &&
+                const {'noProof', 'rtl', 'cs'}.contains(child.localName)) ||
+            (name == 'pPr' &&
+                const {
+                  'keepLines',
+                  'keepNext',
+                  'widowControl',
+                  'contextualSpacing',
+                }.contains(child.localName))) {
           // An omitted on/off value enables these properties. Do not retain
           // a lower layer's explicit false for a direct empty marker.
           final effective = old ?? child.copy();
@@ -1058,6 +1065,7 @@ class _StyleCascade {
       spacingAfter: 0,
       lineSpacing: 1,
       styleId: old.styleId,
+      defaultStyleId: defaultParagraph,
       fieldInstruction: old.fieldInstruction,
       fieldBegin: old.fieldBegin,
       fieldSeparate: old.fieldSeparate,

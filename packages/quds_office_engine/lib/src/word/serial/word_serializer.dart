@@ -62,7 +62,7 @@ class WordSerializer {
   final Set<int> _openComments = <int>{};
   Map<WmlSection, _HeaderFooterIds> _headerFooterIds =
       <WmlSection, _HeaderFooterIds>{};
-  WmlDocument? _document;
+  final _paragraphRevisions = Map<WmlParagraph, List<WmlRevision>>.identity();
   WordFootnoteSeparatorPlan? _footnoteSeparator;
   late WordSectionRevisionIds _sectionRevisionIds;
   final Map<WmlParagraph, int> _restartNumberingIds =
@@ -132,7 +132,11 @@ class WordSerializer {
     _activePartUri = _mainPartUri;
     _docPrId = 1;
     _openComments.clear();
-    _document = document;
+    _paragraphRevisions.clear();
+    for (final revision in document.revisions) {
+      final paragraph = revision.targetParagraph!;
+      _paragraphRevisions.putIfAbsent(paragraph, () => []).add(revision);
+    }
     _sectionRevisionIds = WordSectionRevisionIds(document.sections);
     _syncNumbering(package);
     _restartNumberingIds
@@ -787,8 +791,14 @@ class WordSerializer {
     var offset = 0;
     var pageFieldOpen = pageField;
     final controlShells = <XmlElement>[];
+    final openRevisions = <WmlRevision>[];
     while (i < paragraph.inlines.length) {
       final WmlInline inline = paragraph.inlines[i];
+      if (inline is WmlContentControlBoundary ||
+          (inline is WmlRun && inline.hyperlink != null) ||
+          pageFieldOpen) {
+        _closeTrackedRuns(w, openRevisions);
+      }
       if (inline is WmlRun) {
         _openCommentStarts(w, inline.commentIds);
       }
@@ -818,9 +828,10 @@ class WordSerializer {
           if (r > i) {
             _openCommentStarts(w, run.commentIds);
           }
-          _writeTrackedRun(w, paragraph, run, offset);
+          _writeTrackedRun(w, paragraph, run, offset, openRevisions);
           offset += run.text.length;
         }
+        _closeTrackedRuns(w, openRevisions);
         w.writeEndElement();
         _closeCommentsNotIn(w, _peekCommentIds(paragraph, end));
         i = end;
@@ -848,7 +859,10 @@ class WordSerializer {
           final changed = WordPropertyIo.runValues(marker).entries.any(
             (entry) => marker.importedValues?[entry.key] != entry.value,
           );
-          if (marker.sourcePropertiesXml != '' || changed) {
+          final nativeProperties = inline.runPropertiesXml;
+          if (nativeProperties != null && !changed) {
+            XmlDocument.parse(nativeProperties).root!.writeTo(w);
+          } else if (marker.sourcePropertiesXml != '' || changed) {
             _writeRPr(w, marker);
           }
           w.writeEmptyElement(
@@ -861,7 +875,7 @@ class WordSerializer {
             _writePageFieldResult(w, inline);
             pageFieldOpen = false;
           } else {
-            _writeTrackedRun(w, paragraph, inline, offset);
+            _writeTrackedRun(w, paragraph, inline, offset, openRevisions);
           }
           offset += inline.text.length;
         case WmlFieldBoundary():
@@ -898,6 +912,7 @@ class WordSerializer {
       _closeCommentsNotIn(w, _peekCommentIds(paragraph, i + 1));
       i++;
     }
+    _closeTrackedRuns(w, openRevisions);
     _closeCommentsNotIn(w, const <int>[]);
     if (nativeTocBoundary
         ? paragraph.properties.fieldEnd
@@ -933,11 +948,13 @@ class WordSerializer {
     WmlParagraph paragraph,
     WmlRun inline,
     int offset,
+    List<WmlRevision> openRevisions,
   ) {
     final List<WmlRevision> revisions = _revisionsFor(
       paragraph,
     ).where((r) => r.kind != WmlRevisionKind.paragraphFormat).toList();
     if (revisions.isEmpty || inline.text.isEmpty) {
+      if (inline.fieldInstruction != null) _closeTrackedRuns(w, openRevisions);
       _writeRun(
         w,
         inline,
@@ -946,7 +963,12 @@ class WordSerializer {
               (r) =>
                   r.kind == WmlRevisionKind.runFormat &&
                   r.start == offset &&
-                  r.end == offset,
+                  r.end == offset &&
+                  (r.emptyFormattingAnchor == null ||
+                      identical(
+                        r.emptyFormattingAnchor,
+                        inline.formattingAnchor,
+                      )),
             )
             .firstOrNull,
       );
@@ -967,14 +989,14 @@ class WordSerializer {
     for (var i = 1; i < cuts.length; i++) {
       final int start = offset + cuts[i - 1];
       final int end = offset + cuts[i];
-      WmlRevision? tracked;
+      final tracked = <WmlRevision>[];
       WmlRevision? formatting;
       for (final revision in revisions) {
         if (revision.start < end && revision.end > start) {
           if (revision.kind.isFormatting) {
             formatting = revision;
           } else {
-            tracked = revision;
+            tracked.add(revision);
           }
         }
       }
@@ -982,13 +1004,77 @@ class WordSerializer {
           ? inline
           : (WmlClone.inlines(<WmlInline>[inline]).single as WmlRun
               ..text = inline.text.substring(cuts[i - 1], cuts[i]));
-      if (tracked?.moveStartXml != null && start == tracked!.start) {
-        XmlDocument.parse(tracked.moveStartXml!).root!.writeTo(w);
+      tracked.sort(
+        (a, b) => a.nativeAncestors.length.compareTo(b.nativeAncestors.length),
+      );
+      // A native simple field owns its tracked runs. Field boundaries and
+      // editor-generated changes keep the existing local write scope.
+      final persistent =
+          run.fieldInstruction == null &&
+          tracked.every((revision) => revision.nativeWrapper != null);
+      if (!persistent) _closeTrackedRuns(w, openRevisions);
+      if (persistent) {
+        var shared = 0;
+        while (shared < openRevisions.length &&
+            shared < tracked.length &&
+            identical(openRevisions[shared], tracked[shared])) {
+          shared++;
+        }
+        _closeTrackedRuns(w, openRevisions, keep: shared);
+        for (final revision in tracked.skip(shared)) {
+          _writeTrackedStart(w, revision, start);
+          openRevisions.add(revision);
+        }
       }
-      _writeRun(w, run, revision: tracked, formatting: formatting);
-      if (tracked?.moveEndXml != null && end == tracked!.end) {
-        XmlDocument.parse(tracked.moveEndXml!).root!.writeTo(w);
+      _writeRun(
+        w,
+        run,
+        revisions: persistent ? const [] : tracked,
+        formatting: formatting,
+        deleted: tracked.lastOrNull?.kind == WmlRevisionKind.delete,
+        start: start,
+        end: end,
+      );
+      if (persistent) {
+        final firstEnding = openRevisions.indexWhere((r) => r.end == end);
+        if (firstEnding >= 0) {
+          _closeTrackedRuns(w, openRevisions, keep: firstEnding, end: end);
+        }
       }
+    }
+  }
+
+  void _writeTrackedStart(XmlWriter w, WmlRevision revision, int start) {
+    if (revision.start == start && revision.moveStartXml != null) {
+      XmlDocument.parse(revision.moveStartXml!).root!.writeTo(w);
+    }
+    w.writeStartElement(switch (revision.kind) {
+      WmlRevisionKind.insert => 'ins',
+      WmlRevisionKind.delete => 'del',
+      _ => revision.kind.name,
+    }, prefix: 'w');
+    w.writeAttribute('w:id', '${revision.id}');
+    w.writeAttribute('w:author', revision.author);
+    if (revision.dateIso.isNotEmpty) {
+      w.writeAttribute('w:date', revision.dateIso);
+    }
+  }
+
+  void _writeTrackedEnd(XmlWriter w, WmlRevision revision, int? end) {
+    w.writeEndElement();
+    if (revision.end == end && revision.moveEndXml != null) {
+      XmlDocument.parse(revision.moveEndXml!).root!.writeTo(w);
+    }
+  }
+
+  void _closeTrackedRuns(
+    XmlWriter w,
+    List<WmlRevision> openRevisions, {
+    int keep = 0,
+    int? end,
+  }) {
+    while (openRevisions.length > keep) {
+      _writeTrackedEnd(w, openRevisions.removeLast(), end);
     }
   }
 
@@ -1000,26 +1086,17 @@ class WordSerializer {
     return false;
   }
 
-  Iterable<WmlRevision> _revisionsFor(WmlParagraph paragraph) sync* {
-    final WmlDocument? document = _document;
-    if (document == null) return;
-    for (final WmlRevision revision in document.revisions) {
-      if (revision.accepted == null &&
-          identical(
-            revision.targetParagraph ??
-                WordRevisions.resolveParagraph(document, revision),
-            paragraph,
-          )) {
-        yield revision;
-      }
-    }
-  }
+  Iterable<WmlRevision> _revisionsFor(WmlParagraph paragraph) =>
+      _paragraphRevisions[paragraph] ?? const [];
 
   void _writeRun(
     XmlWriter w,
     WmlRun inline, {
-    WmlRevision? revision,
+    List<WmlRevision> revisions = const [],
     WmlRevision? formatting,
+    bool deleted = false,
+    int start = 0,
+    int end = 0,
   }) {
     final String? instruction = inline.fieldInstruction;
     final zotero = WordZotero.kindOfInstruction(instruction) != null;
@@ -1053,21 +1130,8 @@ class WordSerializer {
     }
     // Native simple fields contain tracked runs. A fldSimple inside ins/del
     // is not a valid WordprocessingML run-content child.
-    final bool deleted = revision?.kind == WmlRevisionKind.delete;
-    if (revision != null) {
-      w.writeStartElement(
-        revision.kind == WmlRevisionKind.insert
-            ? 'ins'
-            : revision.kind == WmlRevisionKind.delete
-            ? 'del'
-            : revision.kind.name,
-        prefix: 'w',
-      );
-      w.writeAttribute('w:id', '${revision.id}');
-      w.writeAttribute('w:author', revision.author);
-      if (revision.dateIso.isNotEmpty) {
-        w.writeAttribute('w:date', revision.dateIso);
-      }
+    for (final revision in revisions) {
+      _writeTrackedStart(w, revision, start);
     }
     w.writeStartElement('r', prefix: 'w');
     _writeRPr(w, inline.properties, revision: formatting);
@@ -1095,7 +1159,9 @@ class WordSerializer {
       _writeRunContent(w, inline.text, deleted: deleted);
     }
     w.writeEndElement();
-    if (revision != null) w.writeEndElement();
+    for (final revision in revisions.reversed) {
+      _writeTrackedEnd(w, revision, end);
+    }
     if (instruction != null) {
       if (zotero) {
         _writeFieldChar(w, 'end');
@@ -1214,11 +1280,21 @@ class WordSerializer {
         attributes: <String, String>{'w:val': p.styleId!},
       );
     }
+    if (p.keepWithNext) {
+      w.writeEmptyElement('keepNext', prefix: 'w');
+    }
     if (p.keepTogether) {
       w.writeEmptyElement('keepLines', prefix: 'w');
     }
     if (p.pageBreakBefore) {
       w.writeEmptyElement('pageBreakBefore', prefix: 'w');
+    }
+    if (p.widowControl case final enabled?) {
+      w.writeEmptyElement(
+        'widowControl',
+        prefix: 'w',
+        attributes: {'w:val': enabled ? '1' : '0'},
+      );
     }
     if (p.dropCapLines > 0) {
       w.writeEmptyElement(
@@ -1332,6 +1408,9 @@ class WordSerializer {
       w.writeAttribute('w:hanging', '${pointsToTwips(p.indent.hanging)}');
     }
     w.writeEndElement();
+    if (p.contextualSpacing) {
+      w.writeEmptyElement('contextualSpacing', prefix: 'w');
+    }
     w.writeEmptyElement(
       'jc',
       prefix: 'w',
@@ -1605,13 +1684,17 @@ class WordSerializer {
             prefix: 'w',
             attributes: <String, String>{
               'w:val': '${pointsToTwips(row.height!)}',
-              'w:hRule': 'atLeast',
+              'w:hRule': row.heightIsExact ? 'exact' : 'atLeast',
             },
           );
         }
         w.writeEndElement();
       }
       for (final WmlTableCell cell in row.cells) {
+        final controlShells = <XmlElement>[
+          for (final control in cell.contentControlWrappers)
+            WordContentControlIo.start(w, control, _package!, _activePartUri),
+        ];
         w.writeStartElement('tc', prefix: 'w');
         w.writeStartElement('tcPr', prefix: 'w');
         if (cell.sourceWidthXml != null &&
@@ -1695,6 +1778,9 @@ class WordSerializer {
           }
         }
         w.writeEndElement();
+        for (final shell in controlShells.reversed) {
+          WordContentControlIo.end(w, shell);
+        }
       }
       w.writeEndElement();
     }
@@ -2276,7 +2362,16 @@ class WordSerializer {
       for (final WmlComment comment in document.comments) ...comment.paragraphs,
     ];
     for (final WmlParagraph paragraph in paragraphs) {
-      include(paragraph.properties.styleId);
+      final properties = paragraph.properties;
+      final id = properties.styleId;
+      if (document.package != null &&
+          properties.importedValues?['pStyle'] == '$id' &&
+          !styles.containsKey(id)) {
+        // An unresolved native reference already has an effective fallback.
+        // Adding a catalog definition on save would change that appearance.
+        continue;
+      }
+      include(id);
     }
     return styles;
   }

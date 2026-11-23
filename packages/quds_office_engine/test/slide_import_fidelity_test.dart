@@ -282,7 +282,98 @@ PmlPresentation _deck(
 }
 
 void main() {
+  test('native slide preserves unknown extension XML around a text edit', () {
+    const path = '/ppt/slides/slide1.xml';
+    final base = PmlPresentation(
+      slides: [
+        PmlSlide(
+          id: 256,
+          shapes: [PmlShape(id: 2, name: 'Editable', text: 'Old')],
+        ),
+      ],
+    );
+    final package = OpcPackage.openBytes(SlideSerializer().writeBytes(base));
+    final slide = package.getPart(path)!;
+    const nativeExtension =
+        '<p:extLst><p:ext uri="retained"><x:meta xmlns:x="urn:test"/></p:ext></p:extLst>';
+    final original = slide.readText().replaceFirst(
+      '</p:sld>',
+      '$nativeExtension</p:sld>',
+    );
+    slide.writeText(original);
+    final imported = SlideDeserializer().read(package);
+    final serializer = SlideSerializer();
+    expect(
+      OpcPackage.openBytes(
+        serializer.writeBytes(imported),
+      ).getPart(path)!.readText(),
+      original,
+    );
+
+    imported.slides.single.shapes.single.text = 'New';
+    final saved = OpcPackage.openBytes(serializer.writeBytes(imported));
+    final savedXml = saved.getPart(path)!.readText();
+    expect(savedXml, contains('urn:test'));
+    expect(savedXml, contains('New'));
+    expect(
+      SlideDeserializer().read(saved).slides.single.shapes.single.text,
+      'New',
+    );
+  });
+
+  test('import resolves worksheet group coordinates and transparent fills', () {
+    final authored = _sld(
+      '<p:grpSp><p:grpSpPr><a:xfrm><a:off x="500" y="700"/>'
+      '<a:ext cx="400" cy="600"/><a:chOff x="100" y="200"/>'
+      '<a:chExt cx="200" cy="300"/></a:xfrm></p:grpSpPr>'
+      '<p:sp><p:nvSpPr><p:cNvPr id="8" name="Overlay"/></p:nvSpPr>'
+      '<p:spPr><a:xfrm><a:off x="110" y="220"/><a:ext cx="20" cy="30"/></a:xfrm>'
+      '<a:solidFill><a:srgbClr val="FFA000"><a:alpha val="42000"/></a:srgbClr></a:solidFill>'
+      '</p:spPr></p:sp></p:grpSp>',
+    );
+    final shape = parseSlideShapes(authored).single;
+    expect((shape.transform.x, shape.transform.y), (520, 740));
+    expect((shape.transform.cx, shape.transform.cy), (40, 60));
+    expect(shape.fillOpacity, closeTo(.42, .000001));
+    expect(shape.copy().fillOpacity, shape.fillOpacity);
+    expect(slideToXml(PmlSlide(id: 256, shapes: [shape])), contains('42000'));
+  });
+
   group('shape import', () {
+    test('rounded callout keeps its tail, radius and flip through save', () {
+      final authored = _sld(
+        '<p:sp><p:nvSpPr><p:cNvPr id="2" name="Callout"/>'
+        '<p:cNvSpPr/><p:nvPr/></p:nvSpPr><p:spPr>'
+        '<a:xfrm flipH="1"><a:off x="500" y="800"/>'
+        '<a:ext cx="90000" cy="40000"/></a:xfrm>'
+        '<a:prstGeom prst="wedgeRoundRectCallout"><a:avLst>'
+        '<a:gd name="adj1" fmla="val 40732"/>'
+        '<a:gd name="adj2" fmla="val 67822"/>'
+        '<a:gd name="adj3" fmla="val 12000"/>'
+        '</a:avLst></a:prstGeom></p:spPr></p:sp>',
+      );
+      final original = parseSlideShapes(authored).single;
+      final cloned = original.copy();
+      final deck = PmlPresentation(
+        slides: [
+          PmlSlide(id: 256, shapes: [cloned]),
+        ],
+      );
+      final slide = SlideDeserializer()
+          .read(OpcPackage.openBytes(SlideSerializer().writeBytes(deck)))
+          .slides
+          .single;
+      for (final candidate in [original, cloned, slide.shapes.single]) {
+        expect(candidate.preset, PmlShapePreset.roundRect);
+        expect(candidate.transform.flipH, isTrue);
+        final callout = candidate.roundedCallout!;
+        expect(
+          (callout.tipX, callout.tipY, callout.corner),
+          (40732, 67822, 12000),
+        );
+      }
+    });
+
     test('text boxes stay text; only p:pic becomes a picture', () {
       final PmlPresentation deck = _deck(<String>[
         _sld(
@@ -351,6 +442,45 @@ void main() {
       expect(crop.cropBottom, closeTo(-0.01896, 0.00001));
     });
 
+    test('picture outer shadow retains its native settings when moved', () {
+      final deck = _deck([
+        _sld(
+          '<p:pic><p:nvPicPr><p:cNvPr id="2" name="Shadow"/>'
+          '<p:cNvPicPr/><p:nvPr/></p:nvPicPr><p:blipFill>'
+          '<a:blip r:embed="rId9"/><a:stretch/></p:blipFill><p:spPr>'
+          '<a:xfrm rot="5400000"><a:off x="0" y="0"/>'
+          '<a:ext cx="914400" cy="914400"/></a:xfrm><a:effectLst>'
+          '<a:outerShdw blurRad="127000" dist="63500" dir="2700000"'
+          ' rotWithShape="0" algn="tl"><a:srgbClr val="333333">'
+          '<a:alpha val="65000"/></a:srgbClr></a:outerShdw></a:effectLst>'
+          '</p:spPr></p:pic>',
+        ),
+      ]);
+      void check(PmlShape shape) {
+        final picture = shape.visual!.picture;
+        expect(shape.transform.rotationDegrees, 90);
+        expect(picture.rotationDeg, 0);
+        expect(picture.shadow, isTrue);
+        final effect = picture.outerShadow!;
+        expect(effect.blurRadius, 10);
+        expect(effect.distance, 5);
+        expect(effect.directionDegrees, 45);
+        expect(effect.color, '333333');
+        expect(effect.opacity, 0.65);
+        expect(effect.rotatesWithShape, isFalse);
+      }
+
+      final shape = deck.slides.single.shapes.single;
+      check(shape.copy());
+      shape.transform = shape.transform.copyWith(x: 12700);
+      final saved = OpcPackage.openBytes(SlideSerializer().writeBytes(deck));
+      expect(
+        saved.getPart('/ppt/slides/slide1.xml')!.readText(),
+        contains('algn="tl"'),
+      );
+      check(SlideDeserializer().read(saved).slides.single.shapes.single);
+    });
+
     test('rich text keeps run styles, paragraph defaults, and anchor', () {
       final PmlPresentation deck = _deck(<String>[
         _sld(
@@ -375,6 +505,110 @@ void main() {
       expect(shape.richText[0].runs.single.color, 'A6A6A6');
       expect(shape.richText[1].runs.single.fontSizePt, 0);
       expect(shape.richText[1].defaultFontSizePt, 11);
+    });
+
+    test(
+      'run spacing retains inherited defaults and explicit zero on save',
+      () {
+        final deck = _deck([
+          _sld(
+            '<p:sp><p:nvSpPr><p:cNvPr id="2" name="Tracking"/>'
+            '<p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr><p:spPr>'
+            '${_xfrm(0, 0, 9144000, 914400)}</p:spPr><p:txBody>'
+            '<a:bodyPr/><a:lstStyle><a:lvl1pPr><a:defRPr spc="175"/>'
+            '</a:lvl1pPr></a:lstStyle><a:p><a:r><a:t>Inherited</a:t></a:r>'
+            '<a:r><a:rPr spc="-150"/><a:t>Tightened</a:t></a:r>'
+            '<a:r><a:rPr spc="0"/><a:t>Default</a:t></a:r></a:p>'
+            '<a:p><a:pPr><a:defRPr spc="-30"/></a:pPr>'
+            '<a:r><a:t>Paragraph override</a:t></a:r></a:p>'
+            '</p:txBody></p:sp>',
+          ),
+        ]);
+        void check(PmlShape shape) {
+          final paragraphs = shape.resolvedRichText;
+          expect(paragraphs[0].defaultLetterSpacingPt, 1.75);
+          expect(paragraphs[0].runs.map((r) => r.letterSpacingPt), [
+            null,
+            -1.5,
+            0,
+          ]);
+          expect(paragraphs[1].defaultLetterSpacingPt, -0.3);
+        }
+
+        final shape = deck.slides.single.shapes.single;
+        check(shape.copy());
+        shape.transform = const PmlTransform(x: 12700, cx: 9144000, cy: 914400);
+        final reopened = SlideDeserializer().read(
+          OpcPackage.openBytes(SlideSerializer().writeBytes(deck)),
+        );
+        check(reopened.slides.single.shapes.single);
+      },
+    );
+
+    test(
+      'text wrapping inherits from layout and preserves direct overrides',
+      () {
+        const placeholder = '<p:ph type="body" idx="20"/>';
+        String shape(int id, String text, String wrap) =>
+            '<p:sp><p:nvSpPr><p:cNvPr id="$id" name="Text"/>'
+            '<p:cNvSpPr/><p:nvPr>$placeholder</p:nvPr></p:nvSpPr>'
+            '<p:spPr>${_xfrm(0, 0, 1000000, 1000000)}</p:spPr>'
+            '<p:txBody><a:bodyPr$wrap/><a:p><a:r><a:t>$text</a:t>'
+            '</a:r></a:p></p:txBody></p:sp>';
+        final deck = _deck([
+          _sld(
+            shape(2, 'Inherited', '') + shape(3, 'Override', ' wrap="square"'),
+          ),
+        ], layoutShapes: shape(8, 'Layout', ' wrap="none"'));
+        final shapes = deck.slides.single.shapes;
+        expect(shapes.first.textWrap, isNull);
+        expect(shapes.first.copy().wrapsText, isFalse);
+        expect(shapes.last.wrapsText, isTrue);
+        shapes.first.text = 'Edited';
+        final reopened = SlideDeserializer().read(
+          OpcPackage.openBytes(SlideSerializer().writeBytes(deck)),
+        );
+        final edited = reopened.slides.single.shapes;
+        expect(edited.first.text, 'Edited');
+        expect(edited.first.textWrap, isNull);
+        expect(edited.first.wrapsText, isFalse);
+        expect(edited.last.textWrap, isTrue);
+      },
+    );
+
+    test('placeholder margins cascade independently and save only edits', () {
+      String shape(int id, String attributes) =>
+          '<p:sp><p:nvSpPr><p:cNvPr id="$id" name="Inset"/>'
+          '<p:cNvSpPr/><p:nvPr><p:ph type="body" idx="20"/></p:nvPr></p:nvSpPr>'
+          '<p:spPr>${_xfrm(0, 0, 2000000, 1000000)}</p:spPr>'
+          '<p:txBody><a:bodyPr $attributes/>'
+          '<a:p><a:r><a:t>Text</a:t></a:r></a:p></p:txBody></p:sp>';
+      final deck = _deck(
+        [_sld(shape(2, 'lIns="0"'))],
+        layoutShapes: shape(8, 'lIns="381000" tIns="304800"'),
+        masterShapes: shape(8, 'lIns="190500" rIns="190500" bIns="152400"'),
+      );
+      final inset = deck.slides.single.shapes.single;
+      List<double> margins(PmlShape item) => [
+        for (final side in PmlTextInsetSide.values) item.textInsets[side],
+      ];
+      expect(margins(inset.copy()), [0, 24, 15, 12]);
+      expect(inset.hasTextInsetChanges, isFalse);
+      inset.textInsets = inset.textInsets.withSide(PmlTextInsetSide.right, 40);
+      final saved = OpcPackage.openBytes(SlideSerializer().writeBytes(deck));
+      final xml = saved.getPart('/ppt/slides/slide1.xml')!.readText();
+      expect(xml, contains('lIns="0"'));
+      expect(xml, contains('rIns="508000"'));
+      expect(xml, isNot(contains('tIns=')));
+      expect(xml, isNot(contains('bIns=')));
+      final reopened = SlideDeserializer()
+          .read(saved)
+          .slides
+          .single
+          .shapes
+          .single;
+      expect(margins(reopened), [0, 24, 40, 12]);
+      expect(reopened.hasTextInsetChanges, isFalse);
     });
 
     test('layout decorations paint behind slide content', () {
@@ -1446,7 +1680,115 @@ void main() {
     });
   });
 
+  test('a mixed DrawingML run confines symbol fonts to encoded characters', () {
+    final shape = parseSlideShapes(
+      _sld(
+        _textBox(2, '\uF0F3 Bottleneck').replaceFirst(
+          '<a:r><a:t>',
+          '<a:r><a:rPr><a:latin typeface="Aptos"/><a:sym typeface="Wingdings"/>'
+              '</a:rPr><a:t>',
+        ),
+      ),
+    ).single;
+    expect(shape.text, '\uF0F3 Bottleneck');
+    expect(
+      shape.richText.single.runs.map((run) => (run.text, run.fontFamily)),
+      [('\uF0F3', 'Wingdings'), (' Bottleneck', 'Aptos')],
+    );
+  });
+
+  test('soft breaks retain their own native line metrics', () {
+    final deck = _deck([
+      _sld(
+        _textBox(2, 'Title').replaceFirst(
+          '<a:r><a:t>',
+          '<a:br><a:rPr sz="800" b="0"><a:latin typeface="Arial"/>'
+              '</a:rPr></a:br><a:r><a:rPr sz="2800"/><a:t>',
+        ),
+      ),
+    ]);
+    void check(PmlPresentation presentation) {
+      final shape = presentation.slides.single.shapes.single;
+      expect(shape.text, '\nTitle');
+      final runs = shape.richText.single.runs;
+      expect(runs.map((run) => (run.text, run.fontSizePt, run.fontFamily)), [
+        ('\n', 8, 'Arial'),
+        ('Title', 28, ''),
+      ]);
+    }
+
+    check(deck);
+    check(SlideDeserializer().readBytes(SlideSerializer().writeBytes(deck)));
+  });
+
+  test('native percentage paragraph gaps survive a save and reopen', () {
+    final deck = _deck([
+      _sld(
+        _textBox(2, 'Text').replaceFirst(
+          '<a:p><a:r>',
+          '<a:p><a:pPr><a:lnSpc><a:spcPct val="90.5%"/></a:lnSpc>'
+              '<a:spcBef><a:spcPct val="20000"/></a:spcBef>'
+              '<a:spcAft><a:spcPts val="400"/></a:spcAft></a:pPr><a:r>',
+        ),
+      ),
+    ]);
+    final roundTrip = SlideDeserializer().readBytes(
+      SlideSerializer().writeBytes(deck),
+    );
+    for (final document in [deck, roundTrip]) {
+      final paragraph = document.slides.single.shapes.single.richText.single;
+      expect(paragraph.spaceBeforeLineRatio, 0.2);
+      expect(paragraph.lineSpacing, 0.905);
+      expect(paragraph.spaceBeforePt, 0);
+      expect(paragraph.spaceAfterLineRatio, 0);
+      expect(paragraph.spaceAfterPt, 4);
+    }
+  });
+
   group('layouts and placeholders', () {
+    test('ordinary text uses the presentation default size for its level', () {
+      const presentationUri = '/ppt/presentation.xml';
+      const masterUri = '/ppt/slideMasters/slideMaster1.xml';
+      const slideUri = '/ppt/slides/slide1.xml';
+      final text = _textBox(4, 'Ordinary')
+          .replaceFirst('<a:p><a:r>', '<a:p><a:pPr lvl="1"/><a:r>')
+          .replaceFirst(
+            '</a:p>',
+            '<a:r><a:rPr sz="2600"/><a:t>Explicit</a:t></a:r></a:p>',
+          );
+      final authored = _sld(text + _placeholder(5, 'ctrTitle', text: 'Title'));
+      final package = _deck([authored]).package!;
+      final presentation = package.getPart(presentationUri)!;
+      presentation.writeText(
+        presentation.readText().replaceFirst(
+          '</p:presentation>',
+          '<p:defaultTextStyle><a:lvl1pPr><a:defRPr sz="1800"/></a:lvl1pPr>'
+              '<a:lvl2pPr><a:defRPr sz="2200"/></a:lvl2pPr>'
+              '</p:defaultTextStyle></p:presentation>',
+        ),
+      );
+      final master = package.getPart(masterUri)!;
+      master.writeText(
+        master.readText().replaceFirst(
+          '</p:sldMaster>',
+          '<p:txStyles><p:titleStyle><a:lvl1pPr><a:defRPr sz="3200"/>'
+              '</a:lvl1pPr></p:titleStyle><p:otherStyle><a:lvl1pPr>'
+              '<a:defRPr sz="1350"/></a:lvl1pPr><a:lvl2pPr>'
+              '<a:defRPr sz="1350"/></a:lvl2pPr></p:otherStyle>'
+              '</p:txStyles></p:sldMaster>',
+        ),
+      );
+
+      final deck = SlideDeserializer().read(package);
+      final shapes = deck.slides.single.shapes;
+      final paragraph = shapes[0].richText.single;
+      expect(paragraph.defaultFontSizePt, 22);
+      expect(paragraph.runs.map((run) => run.fontSizePt), [22, 26]);
+      expect(shapes[1].richText.single.runs.single.fontSizePt, 32);
+      final reopened = OpcPackage.openBytes(SlideSerializer().writeBytes(deck));
+      expect(reopened.getPart(slideUri)!.readText(), authored);
+    });
+
     test('placeholders inherit layout geometry, then master geometry', () {
       final PmlPresentation deck = _deck(<String>[
         _sld(
@@ -1478,6 +1820,99 @@ void main() {
           subtitle.transform.cy,
         ],
         <int>[1371600, 3886200, 6400800, 1752600],
+      );
+    });
+
+    test(
+      'inherits paragraph geometry and explicit bullet suppression independently',
+      () {
+        final master = _placeholder(
+          12,
+          'body',
+          idx: 7,
+          xfrm: _xfrm(127000, 127000, 1270000, 1270000),
+        ).replaceFirst('<a:bodyPr/>', '<a:bodyPr anchor="ctr"/>');
+        final authored = _sld(
+          _placeholder(2, 'body', idx: 7, text: 'First').replaceFirst(
+            '</p:txBody>',
+            '<a:p><a:pPr marL="0"><a:buNone/></a:pPr>'
+                '<a:r><a:t>Second</a:t></a:r></a:p></p:txBody>',
+          ),
+        );
+        final initial = _deck([authored], masterShapes: master);
+        final package = initial.package!;
+        final part = package.getPart('/ppt/slideMasters/slideMaster1.xml')!;
+        part.writeText(
+          part.readText().replaceFirst(
+            '</p:sldMaster>',
+            '<p:txStyles><p:bodyStyle><a:lvl1pPr marL="457200" indent="-228600">'
+                '<a:lnSpc><a:spcPct val="90000"/></a:lnSpc>'
+                '<a:spcBef><a:spcPts val="600"/></a:spcBef>'
+                '<a:buClr><a:srgbClr val="AABBCC"/></a:buClr>'
+                '<a:buFont typeface="Arial"/><a:buChar char="•"/>'
+                '</a:lvl1pPr></p:bodyStyle></p:txStyles></p:sldMaster>',
+          ),
+        );
+        final deck = SlideDeserializer().read(package);
+        final shape = deck.slides.single.shapes.single;
+        final (first, second) = (shape.richText.first, shape.richText.last);
+        expect(shape.displayTextAnchor, PmlTextAnchor.center);
+        expect(first.marginLeftPt, 36);
+        expect(first.indentPt, -18);
+        expect(first.lineSpacing, 0.9);
+        expect(first.spaceBeforePt, 6);
+        expect(first.bullet, '•');
+        expect(first.bulletFont, 'Arial');
+        expect(first.bulletColor, 'AABBCC');
+        expect(second.bullet, isNull);
+        expect(second.marginLeftPt, 0);
+        expect(second.indentPt, -18);
+        final reopened = OpcPackage.openBytes(
+          SlideSerializer().writeBytes(deck),
+        );
+        expect(
+          reopened.getPart('/ppt/slides/slide1.xml')!.readText(),
+          authored,
+        );
+      },
+    );
+
+    test('inherited representative size leaves individual run sizes intact', () {
+      final master = _placeholder(
+        12,
+        'body',
+        idx: 7,
+        text: 'Master',
+        xfrm: _xfrm(127000, 127000, 1270000, 1270000),
+      ).replaceFirst('<a:r><a:t>', '<a:r><a:rPr sz="2800"/><a:t>');
+      final authored = _sld(
+        _placeholder(2, 'body', idx: 7, text: 'First').replaceFirst(
+          '</p:txBody>',
+          '<a:p><a:pPr lvl="1"/><a:r><a:t>Second</a:t></a:r></a:p></p:txBody>',
+        ),
+      );
+      final package = _deck([authored], masterShapes: master).package!;
+      final part = package.getPart('/ppt/slideMasters/slideMaster1.xml')!;
+      part.writeText(
+        part.readText().replaceFirst(
+          '</p:sldMaster>',
+          '<p:txStyles><p:bodyStyle><a:lvl2pPr><a:defRPr sz="1800"/>'
+              '</a:lvl2pPr></p:bodyStyle></p:txStyles></p:sldMaster>',
+        ),
+      );
+      final deck = SlideDeserializer().read(package);
+      final shape = deck.slides.single.shapes.single;
+      expect(shape.fontSizePt, 28);
+      expect(
+        shape.resolvedRichText.map((para) => para.runs.single.fontSizePt),
+        [28, 18],
+      );
+      expect(
+        SlideSerializer()
+            .write(deck)
+            .getPart('/ppt/slides/slide1.xml')!
+            .readText(),
+        authored,
       );
     });
 

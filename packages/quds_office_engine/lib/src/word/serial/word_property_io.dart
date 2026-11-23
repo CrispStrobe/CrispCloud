@@ -66,6 +66,9 @@ abstract final class WordPropertyIo {
     'ind:firstLine': '${p.indent.firstLine}|${p.indent.hanging}',
     'ind:granular': '1',
     'keepLines': '${p.keepTogether}',
+    'keepNext': '${p.keepWithNext}',
+    'widowControl': '${p.widowControl}',
+    'contextualSpacing': '${p.contextualSpacing}',
     'pageBreakBefore': '${p.pageBreakBefore}',
     'numPr': '${p.numId ?? (p.numberingSuppressed ? 0 : null)}|${p.ilvl}',
     'outlineLvl': '${p.headingLevel}',
@@ -265,6 +268,8 @@ abstract final class WordPropertyIo {
       } else if (const {
         'strike',
         'keepLines',
+        'keepNext',
+        'contextualSpacing',
         'pageBreakBefore',
         'bidi',
       }.contains(key)) {

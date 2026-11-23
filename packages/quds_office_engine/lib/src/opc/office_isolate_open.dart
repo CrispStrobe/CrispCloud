@@ -48,12 +48,14 @@ abstract final class OfficeIsolateOpen {
   static Future<SmlWorkbook> workbook(
     Uint8List bytes, {
     String? password,
+    String? formulaLocale,
     void Function(OfficeOpenProgress progress)? onProgress,
   }) async {
     final Object raw = await _open(
       bytes: bytes,
       password: password,
       kind: 'sheet',
+      formulaLocale: formulaLocale,
       onProgress: onProgress,
     );
     return raw as SmlWorkbook;
@@ -96,6 +98,7 @@ abstract final class OfficeIsolateOpen {
     required Uint8List bytes,
     required String? password,
     required String kind,
+    String? formulaLocale,
     void Function(OfficeOpenProgress progress)? onProgress,
   }) async {
     onProgress?.call(const OfficeOpenProgress(value: 0.06, stage: 'archive'));
@@ -103,12 +106,19 @@ abstract final class OfficeIsolateOpen {
       bytes: bytes,
       password: password,
       kind: kind,
+      formulaLocale: formulaLocale,
       onProgress: onProgress,
     );
     if (isolated != null) {
       return isolated;
     }
-    return _openCurrentIsolate(bytes, password, kind, onProgress);
+    return _openCurrentIsolate(
+      bytes,
+      password,
+      kind,
+      onProgress,
+      formulaLocale: formulaLocale,
+    );
   }
 }
 
@@ -118,17 +128,20 @@ Future<Object> _openCurrentIsolate(
   String kind,
 
   /// Function API.
-  void Function(OfficeOpenProgress progress)? onProgress,
-) async {
+  void Function(OfficeOpenProgress progress)? onProgress, {
+  String? formulaLocale,
+}) async {
   /// call API.
   onProgress?.call(const OfficeOpenProgress(value: 0.2, stage: 'archive'));
 
   /// result API.
-  final Object result = await decodeOfficeOpen(bytes, password, kind, (
-    OfficeOpenProgress p,
-  ) {
-    onProgress?.call(p);
-  });
+  final Object result = await decodeOfficeOpen(
+    bytes,
+    password,
+    kind,
+    (OfficeOpenProgress p) => onProgress?.call(p),
+    formulaLocale: formulaLocale,
+  );
 
   /// call API.
   onProgress?.call(const OfficeOpenProgress(value: 0.96, stage: 'apply'));

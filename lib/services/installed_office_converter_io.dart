@@ -8,6 +8,7 @@ import 'package:path/path.dart' as p;
 import 'package:quds_office_engine/quds_office_engine.dart';
 import 'installed_office_converter_models.dart';
 import 'installed_office_converter_scripts.dart';
+import 'legacy_powerpoint_document.dart';
 import 'word_conversion_inspection.dart';
 
 bool get _desktop => Platform.isWindows || Platform.isLinux || Platform.isMacOS;
@@ -129,6 +130,14 @@ Future<InstalledOfficeConversionResult> convertWithInstalledOffice({
   if (timeout <= Duration.zero || timeout > const Duration(minutes: 10)) {
     throw ArgumentError.value(timeout, 'timeout');
   }
+  final isPresentation = isInstalledOfficePresentationName(sourceName);
+  if (isPresentation &&
+      (output != InstalledOfficeOutput.pdf ||
+          installation.kind != InstalledOfficeKind.libreOffice)) {
+    throw const InstalledOfficeConversionException(
+      InstalledOfficeConversionErrorCode.unsupportedOutput,
+    );
+  }
   await _validateInput(bytes, sourceName, output);
   final clock = Stopwatch()..start();
   Directory? workspace;
@@ -157,7 +166,8 @@ Future<InstalledOfficeConversionResult> convertWithInstalledOffice({
       final filter = switch (output) {
         InstalledOfficeOutput.docx => 'Office Open XML Text',
         InstalledOfficeOutput.docm => 'MS Word 2007 XML VBA',
-        InstalledOfficeOutput.pdf => 'writer_pdf_Export',
+        InstalledOfficeOutput.pdf =>
+          isPresentation ? 'impress_pdf_Export' : 'writer_pdf_Export',
       };
       result = await _runProcess(
         installation.executablePath,
@@ -312,12 +322,21 @@ Future<void> _validateInput(
   String sourceName,
   InstalledOfficeOutput output,
 ) async {
-  if (bytes.length > kInstalledOfficeInputLimit) {
+  if (bytes.length > installedOfficePreviewInputLimit(sourceName)) {
     throw const InstalledOfficeConversionException(
       InstalledOfficeConversionErrorCode.inputTooLarge,
     );
   }
   final extension = p.extension(sourceName).toLowerCase();
+  if (output == InstalledOfficeOutput.pdf &&
+      isInstalledOfficePresentationName(sourceName)) {
+    _validatePresentationInput(
+      bytes,
+      extension,
+      installedOfficePreviewInputLimit(sourceName),
+    );
+    return;
+  }
   if (output == InstalledOfficeOutput.pdf &&
       const {'.docx', '.docm'}.contains(extension)) {
     try {
@@ -336,6 +355,51 @@ Future<void> _validateInput(
     }
   }
   _validateLegacyInput(bytes, sourceName);
+}
+
+void _validatePresentationInput(Uint8List bytes, String extension, int limit) {
+  try {
+    if (const {'.ppt', '.pps', '.pot'}.contains(extension)) {
+      final compound = BoundedCfbReader(
+        bytes,
+        maxFileBytes: limit,
+        maxStreamBytes: kPowerPointCurrentUserLimit,
+        maxTotalReadBytes: kPowerPointCurrentUserLimit,
+      );
+      final entry = compound.child(compound.root, 'PowerPoint Document');
+      final user = compound.readPath('Current User');
+      if (entry == null || !entry.isStream || user == null) {
+        throw const FormatException('Missing PowerPoint streams');
+      }
+      final editOffset = readPowerPointCurrentEditOffset(user);
+      if (editOffset > entry.streamSize - 8) {
+        throw const FormatException('PowerPoint edit is outside the stream');
+      }
+    } else {
+      if (CfbfFile.isCfbf(bytes)) {
+        throw const InstalledOfficeConversionException(
+          InstalledOfficeConversionErrorCode.encryptedInput,
+        );
+      }
+      final package = OpcPackage.openBytes(bytes);
+      if (package.kind != OpcPackageKind.slide ||
+          package.sourceInflatedLength > 1024 * 1024 * 1024) {
+        throw const FormatException('Invalid PowerPoint package');
+      }
+    }
+  } on LegacyPowerPointException catch (error) {
+    throw InstalledOfficeConversionException(
+      error.code == LegacyPowerPointErrorCode.encrypted
+          ? InstalledOfficeConversionErrorCode.encryptedInput
+          : InstalledOfficeConversionErrorCode.invalidInput,
+    );
+  } on InstalledOfficeConversionException {
+    rethrow;
+  } on Object {
+    throw const InstalledOfficeConversionException(
+      InstalledOfficeConversionErrorCode.invalidInput,
+    );
+  }
 }
 
 void _validateLegacyInput(Uint8List bytes, String sourceName) {

@@ -155,8 +155,21 @@ class _PptxSlideViewerState extends State<PptxSlideViewer> {
         errorBuilder: (_, __, ___) => const SizedBox.shrink(),
       );
     }
+    final stroke = _color(shape.strokeColorHex);
+    if (shape.connector) {
+      return CustomPaint(
+        painter: _ConnectorPainter(
+          stroke ?? Colors.black,
+          shape.flipX,
+          shape.flipY,
+        ),
+      );
+    }
     return Container(
-      color: _color(shape.fillColorHex),
+      decoration: BoxDecoration(
+        color: _color(shape.fillColorHex)?.withValues(alpha: shape.fillOpacity),
+        border: stroke == null ? null : Border.all(color: stroke),
+      ),
       alignment: Alignment.topLeft,
       padding: EdgeInsets.all(math.max(1.0, 2 * widget.fontScale)),
       child: Text(
@@ -175,4 +188,27 @@ class _PptxSlideViewerState extends State<PptxSlideViewer> {
       ),
     );
   }
+}
+
+class _ConnectorPainter extends CustomPainter {
+  const _ConnectorPainter(this.color, this.flipX, this.flipY);
+
+  final Color color;
+  final bool flipX;
+  final bool flipY;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.drawLine(
+      Offset(flipX ? size.width : 0, flipY ? size.height : 0),
+      Offset(flipX ? 0 : size.width, flipY ? 0 : size.height),
+      Paint()
+        ..color = color
+        ..strokeWidth = 1,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_ConnectorPainter old) =>
+      old.color != color || old.flipX != flipX || old.flipY != flipY;
 }

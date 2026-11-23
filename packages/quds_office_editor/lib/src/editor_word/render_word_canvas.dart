@@ -3519,7 +3519,9 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
         marginRight: page == null ? null : _marginRightOf(page),
       );
       final offset = painter
-          .getPositionForOffset(Offset(local.dx - x, local.dy - line.y))
+          .getPositionForOffset(
+            Offset(local.dx - x, local.dy - _overlayY(line, painter)),
+          )
           .offset;
       painter.dispose();
       return offset.clamp(0, text.length);
@@ -3993,6 +3995,7 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
   ) {
     final findings = proofingFindings[line.sourceParagraph];
     if (findings == null) return;
+    final y = _overlayY(line, painter);
     for (final finding in findings) {
       for (final range in WordProofingGeometry.displayRanges(
         line,
@@ -4011,7 +4014,7 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
             canvas,
             x + caret.dx,
             x + caret.dx + 4,
-            line.y + painter.height,
+            y + painter.height,
             finding.category,
           );
         }
@@ -4022,7 +4025,7 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
             canvas,
             x + box.left,
             x + box.right,
-            line.y + box.bottom,
+            y + box.bottom,
             finding.category,
           );
         }
@@ -4149,7 +4152,9 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
           for (final box in painter.getBoxesForSelection(
             TextSelection(baseOffset: display.start, extentOffset: display.end),
           )) {
-            band.addRect(box.toRect().shift(Offset(overlayX!, line.y)));
+            band.addRect(
+              box.toRect().shift(Offset(overlayX!, _overlayY(line, painter))),
+            );
           }
         } else if (line.glyphs.isNotEmpty) {
           for (final rect in CaretEngine.rangeRectsOnLine(
@@ -4815,6 +4820,13 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
 
   TextPainter _overlayPainter(LaidOutLine line) {
     final text = line.overlayText ?? '';
+    final paragraph = line.sourceParagraph;
+    final run = line.overlayBaseline != null && paragraph != null
+        ? WmlRunEdit.propsAt(paragraph, 0)
+        : null;
+    final family = run == null || text.isEmpty
+        ? null
+        : OfficeTypeface.familyForRun(run, text.runes.first);
     return TextPainter(
       text: TextSpan(
         text: text,
@@ -4823,9 +4835,14 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
           fontWeight: line.overlayBold ? FontWeight.w700 : FontWeight.w400,
           fontFamily: PaintRunText.familyFor(
             text: text,
+            runFamily: family,
             themeFamily: _theme.fontFamily,
           ),
-          fontFamilyFallback: PaintRunText.fallbacksFor(text),
+          fontFamilyFallback: PaintRunText.fallbacksFor(
+            text,
+            runFamily: family,
+          ),
+          fontStyle: run?.italic == true ? FontStyle.italic : FontStyle.normal,
           color: _documentInk(
             line,
             line.hyperlink != null
@@ -4845,6 +4862,14 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
       textDirection: PaintRunText.directionFor(bidiLevel: 0, text: text),
       maxLines: 1,
     )..layout();
+  }
+
+  static double _overlayY(LaidOutLine line, TextPainter painter) {
+    final baseline = line.overlayBaseline;
+    if (baseline == null) return line.y;
+    return line.y +
+        baseline -
+        painter.computeDistanceToActualBaseline(TextBaseline.alphabetic);
   }
 
   double _overlayOrigin(
@@ -4888,6 +4913,7 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
       pageWidth: pageWidth,
       marginRight: marginRight,
     );
+    final y = _overlayY(line, painter);
     if (_isActiveHeaderFooterLine(line) &&
         config.allowsSelection &&
         !caret.isCollapsed &&
@@ -4908,13 +4934,13 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
           TextSelection(baseOffset: range.start, extentOffset: range.end),
         )) {
           canvas.drawRect(
-            box.toRect().shift(Offset(x, line.y)),
+            box.toRect().shift(Offset(x, y)),
             Paint()..color = _textSelectionFill,
           );
         }
       }
     }
-    painter.paint(canvas, Offset(x, line.y));
+    painter.paint(canvas, Offset(x, y));
     if (paintProofing) _paintProofingOverlay(canvas, line, painter, x);
     painter.dispose();
   }
@@ -5489,7 +5515,7 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
       );
       final rect = Rect.fromLTWH(
         origin + caretOffset.dx,
-        line.y + caretOffset.dy,
+        _overlayY(line, painter) + caretOffset.dy,
         1,
         painter.height,
       );

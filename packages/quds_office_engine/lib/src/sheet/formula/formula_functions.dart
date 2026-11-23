@@ -1,8 +1,12 @@
 import 'dart:math' as math;
 
+import 'package:intl/intl.dart';
+
 import '../model/sml_analysis.dart';
 import '../model/sml_workbook.dart';
+import '../styles/sml_styles.dart';
 import 'formula_ast.dart';
+import 'formula_date_input.dart';
 import 'formula_eval.dart';
 
 /// Broad catalog of spreadsheet functions (Excel-like names; not full Excel).
@@ -62,6 +66,12 @@ abstract final class FormulaFunctions {
           (n == 'IFERROR' || formulaString(value) == '#N/A');
       return fallback ? (args.length > 1 ? args[1].eval(ctx) : 0) : value;
     }
+    if (n == 'SUMIFS' || n == 'COUNTIFS') {
+      return _conditionalAggregate(ctx, args, sum: n == 'SUMIFS');
+    }
+    if (n == 'SUMIF' || n == 'COUNTIF' || n == 'AVERAGEIF') {
+      return _conditionalSingle(ctx, args, operation: n);
+    }
     final List<Object?> vals = args
         .map((FormulaNode a) => a.eval(ctx))
         .toList();
@@ -120,6 +130,7 @@ abstract final class FormulaFunctions {
           'TIME',
           'DAYS',
           'VALUE',
+          'NUMBERVALUE',
           'CHAR',
           'CODE',
           'UNICHAR',
@@ -285,10 +296,16 @@ abstract final class FormulaFunctions {
       case 'TIME':
         return _time(vals);
       case 'DAYS':
-        return _days(vals);
+        return _days(vals, ctx.workbook.uses1904Dates);
       case 'SHEET':
+        if (args.firstOrNull is ExternalCellNode) {
+          throw UnsupportedError('SHEET metadata for external references');
+        }
         return (ctx.workbook.sheets.indexOf(ctx.sheet) + 1).toDouble();
       case 'SHEETS':
+        if (args.firstOrNull is ExternalCellNode) {
+          throw UnsupportedError('SHEETS metadata for external references');
+        }
         return ctx.workbook.sheets.length.toDouble();
       case 'AND':
       case 'OR':
@@ -298,6 +315,7 @@ abstract final class FormulaFunctions {
           final value = vals[i];
           final reference =
               args[i] is CellNode ||
+              args[i] is ExternalCellNode ||
               args[i] is RangeNode ||
               args[i] is NamedRangeNode;
           for (final item in flattenValues(value)) {
@@ -348,16 +366,6 @@ abstract final class FormulaFunctions {
         return flattenValues(
           vals,
         ).where((Object? v) => v == null || v == '').length.toDouble();
-      case 'SUMIF':
-        return _sumIf(ctx, args);
-      case 'COUNTIF':
-        return _countIf(ctx, args);
-      case 'AVERAGEIF':
-        return _avgIf(ctx, args);
-      case 'SUMIFS':
-        return _sumIfs(ctx, args);
-      case 'COUNTIFS':
-        return _countIfs(ctx, args);
       case 'CONCATENATE':
       case 'CONCAT':
         return vals.map(formulaString).join();
@@ -390,14 +398,7 @@ abstract final class FormulaFunctions {
             formulaString(vals.length > 1 ? vals[1] : '');
       case 'FIND':
       case 'SEARCH':
-        final int at = formulaString(vals.length > 1 ? vals[1] : '').indexOf(
-          n == 'SEARCH'
-              ? formulaString(vals[0]).toLowerCase()
-              : formulaString(vals[0]),
-        );
-        return at < 0
-            ? const FormulaErrorValue('#VALUE!')
-            : (at + 1).toDouble();
+        return _findText(vals, wildcard: n == 'SEARCH');
       case 'REPLACE':
         final String base = formulaString(vals[0]);
         final int rs = ((_n(vals, 1)?.toInt() ?? 1) - 1).clamp(0, base.length);
@@ -408,10 +409,7 @@ abstract final class FormulaFunctions {
           formulaString(vals.length > 3 ? vals[3] : ''),
         );
       case 'SUBSTITUTE':
-        return formulaString(vals[0]).replaceAll(
-          formulaString(vals.length > 1 ? vals[1] : ''),
-          formulaString(vals.length > 2 ? vals[2] : ''),
-        );
+        return _substitute(vals);
       case 'REPT':
         return List<String>.filled(
           _n(vals, 1)?.toInt() ?? 0,
@@ -419,6 +417,12 @@ abstract final class FormulaFunctions {
         ).join();
       case 'VALUE':
         return asFormulaNumber(vals[0]) ?? const FormulaErrorValue('#VALUE!');
+      case 'NUMBERVALUE':
+        return _numberValue(
+          vals,
+          ctx.workbook.uses1904Dates,
+          ctx.workbook.formulaLocale ?? Intl.getCurrentLocale(),
+        );
       case 'CHAR':
         return String.fromCharCode(_n1(vals)?.toInt() ?? 0);
       case 'CODE':
@@ -478,6 +482,9 @@ abstract final class FormulaFunctions {
             vals.isEmpty ? null : vals[0],
           ).toLowerCase();
           SmlCellRef ref = ctx.origin;
+          if (args.length > 1 && args[1] is ExternalCellNode) {
+            throw UnsupportedError('CELL metadata for external references');
+          }
           if (args.length > 1 && args[1] is CellNode) {
             ref = (args[1] as CellNode).ref;
           } else if (args.length > 1 && args[1] is RangeNode) {
@@ -488,6 +495,12 @@ abstract final class FormulaFunctions {
             'col' || 'column' => (ref.col + 1).toDouble(),
             'row' => (ref.row + 1).toDouble(),
             'contents' => args.length > 1 ? vals[1] : ctx.sheet.cell(ref).value,
+            // The engine consumes workbook bytes without a file location.
+            // Preserve any imported path result when recalculating.
+            'filename' || 'dateiname' => const FormulaErrorValue(
+              '#VALUE!',
+              isUnsupported: true,
+            ),
             'type' => () {
               final Object? v = args.length > 1
                   ? vals[1]
@@ -583,6 +596,9 @@ abstract final class FormulaFunctions {
       case 'LOOKUP':
         return _lookup(vals);
       case 'ROW':
+        if (args.firstOrNull case ExternalCellNode(:final ref)) {
+          return ref.row + 1;
+        }
         return (vals.isEmpty
                 ? ctx.origin.row
                 : (args[0] is CellNode
@@ -590,6 +606,9 @@ abstract final class FormulaFunctions {
                       : ctx.origin.row)) +
             1;
       case 'COLUMN':
+        if (args.firstOrNull case ExternalCellNode(:final ref)) {
+          return ref.col + 1;
+        }
         return (vals.isEmpty
                 ? ctx.origin.col
                 : (args[0] is CellNode
@@ -635,32 +654,40 @@ abstract final class FormulaFunctions {
         if (_isErr(t, ctx)) return 16;
         return 64;
       case 'DATE':
-        return DateTime(
-              _n(vals, 0)?.toInt() ?? 1900,
-              _n(vals, 1)?.toInt() ?? 1,
-              _n(vals, 2)?.toInt() ?? 1,
-            ).millisecondsSinceEpoch /
-            86400000;
+        final year = _n(vals, 0)?.toInt();
+        final month = _n(vals, 1)?.toInt();
+        final day = _n(vals, 2)?.toInt();
+        if (year == null || month == null || day == null || year < 0) {
+          return const FormulaErrorValue('#NUM!');
+        }
+        final adjustedYear = year < 1900 ? year + 1900 : year;
+        final use1904 = ctx.workbook.uses1904Dates;
+        if (!use1904 && adjustedYear == 1900 && month == 2 && day == 29) {
+          return 60.0;
+        }
+        return _dateSerial(DateTime.utc(adjustedYear, month, day), use1904);
       case 'TODAY':
       case 'NOW':
-        return DateTime.now().millisecondsSinceEpoch / 86400000;
+        final now = DateTime.now();
+        final localClock = DateTime.utc(
+          now.year,
+          now.month,
+          now.day,
+          now.hour,
+          now.minute,
+          now.second,
+          now.millisecond,
+        );
+        final serial = _dateSerial(localClock, ctx.workbook.uses1904Dates);
+        return n == 'TODAY' ? serial.floorToDouble() : serial;
       case 'YEAR':
-        return _date(vals[0])?.year.toDouble() ??
-            const FormulaErrorValue('#VALUE!');
       case 'MONTH':
-        return _date(vals[0])?.month.toDouble() ??
-            const FormulaErrorValue('#VALUE!');
       case 'DAY':
-        return _date(vals[0])?.day.toDouble() ??
-            const FormulaErrorValue('#VALUE!');
       case 'HOUR':
-        return _date(vals[0])?.hour.toDouble() ?? 0;
       case 'MINUTE':
-        return _date(vals[0])?.minute.toDouble() ?? 0;
       case 'SECOND':
-        return _date(vals[0])?.second.toDouble() ?? 0;
       case 'WEEKDAY':
-        return ((_date(vals[0])?.weekday ?? 1) % 7) + 1;
+        return _datePart(n, vals.firstOrNull, ctx.workbook.uses1904Dates);
       case 'PV':
       case 'FV':
       case 'PMT':
@@ -674,15 +701,19 @@ abstract final class FormulaFunctions {
       case 'TAN':
         return math.tan(_n1(vals) ?? 0);
       case 'TEXT':
-        return _textFmt(vals);
+        return _textFmt(
+          vals,
+          ctx.workbook.uses1904Dates,
+          ctx.workbook.formulaLocale ?? Intl.getCurrentLocale(),
+        );
       case 'INDIRECT':
         return _indirect(ctx, vals);
       case 'EDATE':
-        return _edate(vals);
+        return _edate(vals, ctx.workbook.uses1904Dates);
       case 'EOMONTH':
-        return _eomonth(vals);
+        return _eomonth(vals, ctx.workbook.uses1904Dates);
       case 'NETWORKDAYS':
-        return _networkdays(vals);
+        return _networkdays(vals, ctx.workbook.uses1904Dates);
       case 'SEQUENCE':
         return _sequence(vals);
       default:
@@ -738,7 +769,6 @@ abstract final class FormulaFunctions {
     'LENB': 'LEN',
     'REPLACEB': 'REPLACE',
     'SEARCHB': 'SEARCH',
-    'NUMBERVALUE': 'VALUE',
     'DATEVALUE': 'DATE',
     'TIMEVALUE': 'NOW',
     'WORKDAY': 'DATE',
@@ -767,8 +797,6 @@ abstract final class FormulaFunctions {
     'MAXIFS': 'MAX',
     'MINIFS': 'MIN',
     'AVERAGEIFS': 'AVERAGEIF',
-    'COUNTIFS': 'COUNTIFS',
-    'SUMIFS': 'SUMIFS',
     'XMATCH': 'MATCH',
     'FILTER': 'FILTER',
     'SORT': 'SORT',
@@ -840,6 +868,206 @@ abstract final class FormulaFunctions {
   static bool _isErr(Object? v, FormulaContext ctx) =>
       v is FormulaErrorValue ||
       (!ctx.tracksErrorTypes && v is String && v.startsWith('#'));
+
+  static final _numberWhitespace = RegExp(r'\s');
+  static final _numberText = RegExp(
+    r'^[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?$',
+  );
+
+  static Object _numberValue(
+    List<Object?> args,
+    bool use1904,
+    String localeName,
+  ) {
+    const invalid = FormulaErrorValue('#VALUE!');
+    if (args.isEmpty || args.length > 3) return invalid;
+    if (args.any((arg) => arg is List || arg is FormulaSpill)) {
+      return const FormulaErrorValue('#VALUE!', isUnsupported: true);
+    }
+    final locale =
+        Intl.verifiedLocale(
+          localeName,
+          NumberFormat.localeExists,
+          onFailure: (_) => 'en_US',
+        ) ??
+        'en_US';
+    final separators = NumberFormat.decimalPattern(locale).symbols;
+    String firstCharacter(int index, String fallback) {
+      final value = index < args.length ? args[index] : null;
+      if (value == null) return fallback;
+      final text = formulaString(value);
+      return text.isEmpty ? '' : String.fromCharCode(text.runes.first);
+    }
+
+    final decimal = firstCharacter(1, separators.DECIMAL_SEP);
+    final group = firstCharacter(2, separators.GROUP_SEP);
+    if (decimal.isEmpty || group.isEmpty || decimal == group) return invalid;
+    final value = args.first;
+    if (value is num) return value;
+
+    final raw = formulaString(value);
+    var text = raw.replaceAll(_numberWhitespace, '');
+    var percentEnd = text.length;
+    while (percentEnd > 0 && text.codeUnitAt(percentEnd - 1) == 0x25) {
+      percentEnd--;
+    }
+    final percentCount = text.length - percentEnd;
+    text = text.substring(0, percentEnd);
+    if (text.isEmpty) return 0.0;
+
+    final result =
+        _parseExplicitNumber(text, decimal, group) ??
+        _parseRegionalNumber(
+          text,
+          separators.DECIMAL_SEP,
+          separators.GROUP_SEP,
+        ) ??
+        _numberValueDate(raw, percentCount, locale, group, use1904);
+    if (result == null || !result.isFinite) return invalid;
+    // Scale in chunks so a long percent suffix cannot overflow its divisor.
+    var scaled = result;
+    var remaining = percentCount;
+    while (remaining > 0 && scaled != 0) {
+      final count = math.min(remaining, 100);
+      scaled /= math.pow(100, count);
+      remaining -= count;
+    }
+    return scaled;
+  }
+
+  static double? _parseExplicitNumber(
+    String text,
+    String decimal,
+    String group,
+  ) {
+    final parts = text.split(decimal);
+    if (parts.length > 2 || (parts.length == 2 && parts.last.contains(group))) {
+      return null;
+    }
+    final whole = parts.first.replaceAll(group, '');
+    if (decimal != '.' &&
+        (whole.contains('.') ||
+            (parts.length == 2 && parts.last.contains('.')))) {
+      return null;
+    }
+    final number = parts.length == 1 ? whole : '$whole.${parts.last}';
+    return _numberText.hasMatch(number) ? double.tryParse(number) : null;
+  }
+
+  static double? _parseRegionalNumber(
+    String text,
+    String decimal,
+    String group,
+  ) {
+    // Apply the ordinary regional grouping only to explicitly grouped numbers.
+    // In particular, a short German 1.2 may be a calendar date instead.
+    final d = RegExp.escape(decimal);
+    final g = RegExp.escape(group);
+    if (!RegExp(
+      '^[+-]?[0-9]{1,3}(?:(?:$g[0-9]{3})+|$g[0-9]{4})(?:$d[0-9]+)?(?:[eE][+-]?[0-9]+)?\$',
+    ).hasMatch(text)) {
+      return null;
+    }
+    return _parseExplicitNumber(text, decimal, group);
+  }
+
+  static double? _numberValueDate(
+    String raw,
+    int percentCount,
+    String locale,
+    String group,
+    bool use1904,
+  ) {
+    final dateText = percentCount == 0
+        ? raw
+        : raw.replaceFirst(RegExp(r'(?:%\s*)+$'), '');
+    final parsed = parseFormulaDateInput(
+      dateText.replaceAll(group, ''),
+      locale,
+    );
+    if (parsed == null) return null;
+    if (parsed.time != null) return parsed.time;
+    final date = parsed.date!;
+    if (parsed.fictitiousLeapDay) return use1904 ? null : 60;
+    final serial = _dateSerial(date, use1904);
+    return serial < 0 ? null : serial;
+  }
+
+  static Object _findText(List<Object?> args, {required bool wildcard}) {
+    const invalid = FormulaErrorValue('#VALUE!');
+    if (args.length < 2 || args.length > 3) return invalid;
+    final needle = formulaString(args[0]);
+    final text = formulaString(args[1]);
+    final position = args.length == 3 ? _n(args, 2)?.toInt() : 1;
+    // FIND can match the empty string just beyond the final character.
+    final maxPosition = text.length + (wildcard ? 0 : 1);
+    if (position == null || position <= 0 || position > maxPosition) {
+      return invalid;
+    }
+    final start = position - 1;
+    final at = wildcard
+        ? _searchWildcard(needle, text, start)
+        : text.indexOf(needle, start);
+    return at < 0 ? invalid : (at + 1).toDouble();
+  }
+
+  static int _searchWildcard(String pattern, String text, int start) {
+    // Split on unescaped stars. Each remaining segment has a fixed length,
+    // so choosing its earliest match avoids backtracking across stars.
+    final segments = <String>[];
+    final segment = StringBuffer();
+    final chars = pattern.runes.toList();
+    for (var i = 0; i < chars.length; i++) {
+      final char = chars[i];
+      if (char == 0x2a) {
+        segments.add(segment.toString());
+        segment.clear();
+      } else if (char == 0x3f) {
+        segment.write('.');
+      } else if (char == 0x7e) {
+        if (i + 1 < chars.length) {
+          segment.write(RegExp.escape(String.fromCharCode(chars[++i])));
+        }
+      } else {
+        segment.write(RegExp.escape(String.fromCharCode(char)));
+      }
+    }
+    segments.add(segment.toString());
+
+    var offset = start;
+    var first = start;
+    for (var i = 0; i < segments.length; i++) {
+      if (segments[i].isEmpty) continue;
+      final regexp = RegExp(segments[i], caseSensitive: false, dotAll: true);
+      final match = regexp.allMatches(text, offset).firstOrNull;
+      if (match == null) return -1;
+      if (i == 0) first = match.start;
+      offset = match.end;
+    }
+    return first;
+  }
+
+  static Object _substitute(List<Object?> args) {
+    const invalid = FormulaErrorValue('#VALUE!');
+    if (args.length < 3 || args.length > 4) return invalid;
+    final text = formulaString(args[0]);
+    final previous = formulaString(args[1]);
+    final replacement = formulaString(args[2]);
+    if (args.length == 3) {
+      return previous.isEmpty ? text : text.replaceAll(previous, replacement);
+    }
+    final instance = args[3] is bool ? null : _n(args, 3)?.toInt();
+    if (instance == null || instance < 1) return invalid;
+    if (previous.isEmpty) return text;
+
+    var count = 0;
+    for (final match in previous.allMatches(text)) {
+      if (++count == instance) {
+        return text.replaceRange(match.start, match.end, replacement);
+      }
+    }
+    return text;
+  }
 
   static int _clamp(int v, int max) => v < 0 ? 0 : (v > max ? max : v);
 
@@ -966,74 +1194,296 @@ abstract final class FormulaFunctions {
     return ss / (pop ? n.length : n.length - 1);
   }
 
-  static Object? _sumIf(FormulaContext ctx, List<FormulaNode> args) {
-    if (args.isEmpty || args[0] is! RangeNode) return 0;
-    final RangeNode range = args[0] as RangeNode;
-    final String crit = args.length > 1 ? formulaString(args[1].eval(ctx)) : '';
-    final RangeNode sumRange = args.length > 2 && args[2] is RangeNode
-        ? args[2] as RangeNode
-        : range;
-    var s = 0.0;
-    final List<SmlCellRef> keys = range.range.cells.toList();
-    final List<SmlCellRef> sums = sumRange.range.cells.toList();
-    for (int i = 0; i < keys.length && i < sums.length; i++) {
-      final Object? v = ctx.valueOf(keys[i]);
-      if (_matchCrit(v, crit)) {
-        s += asFormulaNumber(ctx.valueOf(sums[i])) ?? 0;
+  static Object? _conditionalSingle(
+    FormulaContext ctx,
+    List<FormulaNode> args, {
+    required String operation,
+  }) {
+    const invalid = FormulaErrorValue('#VALUE!');
+    final countOnly = operation == 'COUNTIF';
+    if (args.length < 2 || args.length > (countOnly ? 2 : 3)) {
+      return invalid;
+    }
+    final keys = _conditionalRange(ctx, args[0]);
+    if (keys is FormulaErrorValue) return keys;
+    if (keys is! ({SmlRange range, SmlWorksheet sheet})) return invalid;
+    final criterion = args[1].eval(ctx);
+    if (criterion is FormulaErrorValue) return criterion;
+    if (criterion is List || criterion is FormulaSpill) {
+      return const FormulaErrorValue('#VALUE!', isUnsupported: true);
+    }
+    final matches = _compileCriterion(criterion ?? 0);
+    final nums = args.length == 3 ? _conditionalRange(ctx, args[2]) : keys;
+    if (nums is FormulaErrorValue) return nums;
+    if (nums is! ({SmlRange range, SmlWorksheet sheet})) return invalid;
+
+    var count = 0;
+    var total = 0.0;
+    for (final key in keys.range.cells) {
+      final value = ctx.valueOf(key, onSheet: keys.sheet);
+      if (value is FormulaErrorValue && value.isUnsupported) return value;
+      if (!matches(value)) continue;
+      if (countOnly) {
+        count++;
+        continue;
+      }
+      // Excel aligns the numeric range's upper-left cell and uses the
+      // criteria range's shape, even when a different size was supplied.
+      final target = SmlCellRef(
+        nums.range.minCol + key.col - keys.range.minCol,
+        nums.range.minRow + key.row - keys.range.minRow,
+      );
+      if (!_validCell(target)) return const FormulaErrorValue('#REF!');
+      final operand = ctx.valueOf(target, onSheet: nums.sheet);
+      if (operand is FormulaErrorValue) return operand;
+      if (operand is num) {
+        total += operand;
+        count++;
       }
     }
-    return s;
+    return switch (operation) {
+      'COUNTIF' => count.toDouble(),
+      'AVERAGEIF' =>
+        count == 0 ? const FormulaErrorValue('#DIV/0!') : total / count,
+      _ => total,
+    };
   }
 
-  static Object? _countIf(FormulaContext ctx, List<FormulaNode> args) {
-    if (args.isEmpty || args[0] is! RangeNode) return 0;
-    final String crit = args.length > 1 ? formulaString(args[1].eval(ctx)) : '';
-    var c = 0;
-    for (final SmlCellRef ref in (args[0] as RangeNode).range.cells) {
-      if (_matchCrit(ctx.valueOf(ref), crit)) c++;
+  static Object? _conditionalAggregate(
+    FormulaContext ctx,
+    List<FormulaNode> args, {
+    required bool sum,
+  }) {
+    const invalid = FormulaErrorValue('#VALUE!');
+    final first = sum ? 1 : 0;
+    final criteriaArgs = args.length - first;
+    if (criteriaArgs < 2 || criteriaArgs > 254 || criteriaArgs.isOdd) {
+      return invalid;
     }
-    return c.toDouble();
+
+    final ranges = <({SmlRange range, SmlWorksheet sheet})>[];
+    final tests = <bool Function(Object?)>[];
+    for (var i = 0; i < args.length; i++) {
+      final arg = args[i];
+      if (i < first || (i - first).isEven) {
+        final reference = _conditionalRange(ctx, arg);
+        if (reference is FormulaErrorValue) return reference;
+        if (reference is! ({SmlRange range, SmlWorksheet sheet})) {
+          return invalid;
+        }
+        if (ranges.isNotEmpty) {
+          final a = ranges.first.range;
+          final b = reference.range;
+          if (a.maxRow - a.minRow != b.maxRow - b.minRow ||
+              a.maxCol - a.minCol != b.maxCol - b.minCol) {
+            return invalid;
+          }
+        }
+        ranges.add(reference);
+      } else {
+        final criterion = arg.eval(ctx);
+        if (criterion is FormulaErrorValue) return criterion;
+        if (criterion is List || criterion is FormulaSpill) {
+          // Array criteria can return spilled results. The scalar evaluator
+          // must leave any saved result of that formula intact.
+          return const FormulaErrorValue('#VALUE!', isUnsupported: true);
+        }
+        tests.add(_compileCriterion(criterion ?? 0));
+      }
+    }
+
+    final shape = ranges.first.range;
+    Object? valueAt(int index, int col, int row) {
+      final ref = ranges[index];
+      return ctx.valueOf(
+        SmlCellRef(ref.range.minCol + col, ref.range.minRow + row),
+        onSheet: ref.sheet,
+      );
+    }
+
+    var total = 0.0;
+    for (var row = 0; row <= shape.maxRow - shape.minRow; row++) {
+      for (var col = 0; col <= shape.maxCol - shape.minCol; col++) {
+        var matches = true;
+        for (var i = 0; i < tests.length; i++) {
+          final candidate = valueAt(first + i, col, row);
+          if (candidate is FormulaErrorValue && candidate.isUnsupported) {
+            return candidate;
+          }
+          if (!tests[i](candidate)) {
+            matches = false;
+            break;
+          }
+        }
+        if (!matches) continue;
+        if (!sum) {
+          total++;
+          continue;
+        }
+        final candidate = valueAt(0, col, row);
+        if (candidate is FormulaErrorValue) return candidate;
+        if (candidate is num) total += candidate.toDouble();
+      }
+    }
+    return total;
   }
 
-  static Object? _avgIf(FormulaContext ctx, List<FormulaNode> args) {
-    final Object? s = _sumIf(ctx, args);
-    final Object? c = _countIf(ctx, args);
-    if (s is num && c is num && c != 0) return s / c;
-    return const FormulaErrorValue('#DIV/0!');
+  static Object? _conditionalRange(FormulaContext ctx, FormulaNode node) {
+    switch (node) {
+      case RangeNode(:final range, :final sheetName):
+        return _onWorksheet(ctx, range, sheetName);
+      case CellNode(:final ref, :final sheetName):
+        return _onWorksheet(ctx, SmlRange(ref, ref), sheetName);
+      case ExternalCellNode():
+        return const FormulaErrorValue('#VALUE!', isUnsupported: true);
+      case NamedRangeNode(:final name, :final sheetName):
+        if (sheetName == null) {
+          if (ctx.lets.containsKey(name.toUpperCase())) {
+            return const FormulaErrorValue('#VALUE!', isUnsupported: true);
+          }
+          final table = SmlTable.resolveRef(ctx.sheet, name);
+          if (table != null) return (range: table, sheet: ctx.sheet);
+        }
+        final definition = node.resolve(ctx.workbook, ctx.sheet);
+        if (definition is SmlNamedRange) {
+          return _onWorksheet(ctx, definition.range, definition.sheetName);
+        }
+        final value = node.eval(ctx);
+        return value is FormulaErrorValue ? value : null;
+      case CallNode():
+        // Functions such as INDEX can produce Excel references. This
+        // evaluator only exposes their values, so preserve the cached result.
+        return const FormulaErrorValue('#VALUE!', isUnsupported: true);
+      default:
+        return null;
+    }
   }
 
-  static Object? _sumIfs(FormulaContext ctx, List<FormulaNode> args) =>
-      _sumIf(ctx, args);
+  static Object _onWorksheet(
+    FormulaContext ctx,
+    SmlRange range,
+    String? sheetName,
+  ) {
+    final sheet = sheetName == null
+        ? ctx.sheet
+        : ctx.workbook.sheetByName(sheetName);
+    return sheet == null
+        ? const FormulaErrorValue('#REF!')
+        : (range: range, sheet: sheet);
+  }
 
-  static Object? _countIfs(FormulaContext ctx, List<FormulaNode> args) =>
-      _countIf(ctx, args);
+  static final _criteriaOperator = RegExp(r'^(<>|>=|<=|=|>|<)');
 
-  static bool _matchCrit(Object? value, String crit) {
-    if (crit.startsWith('>=')) {
-      return (asFormulaNumber(value) ?? 0) >=
-          (double.tryParse(crit.substring(2)) ?? 0);
+  static bool Function(Object?) _compileCriterion(Object criterion) {
+    var op = '=';
+    var text = formulaString(criterion);
+    final match = criterion is String
+        ? _criteriaOperator.firstMatch(text)
+        : null;
+    if (match != null) {
+      op = match.group(0)!;
+      text = text.substring(match.end);
     }
-    if (crit.startsWith('<=')) {
-      return (asFormulaNumber(value) ?? 0) <=
-          (double.tryParse(crit.substring(2)) ?? 0);
+    final lower = text.toLowerCase();
+    final isEquality = op == '=' || op == '<>';
+    final number = double.tryParse(text);
+    final bool? logical = switch (lower) {
+      'true' => true,
+      'false' => false,
+      _ => null,
+    };
+    bool ordered(int comparison) => switch (op) {
+      '>' => comparison > 0,
+      '>=' => comparison >= 0,
+      '<' => comparison < 0,
+      '<=' => comparison <= 0,
+      _ => false,
+    };
+
+    if (number != null && number.isFinite) {
+      if (!isEquality) {
+        return (value) => value is num && ordered(value.compareTo(number));
+      }
+      return (value) =>
+          (op == '=') ==
+          ((value is num
+                  ? value
+                  : value is String
+                  ? double.tryParse(value)
+                  : null) ==
+              number);
     }
-    if (crit.startsWith('<>')) {
-      return formulaString(value) != crit.substring(2);
+    if (logical != null && isEquality) {
+      return (value) => (op == '=') == (value == logical);
     }
-    if (crit.startsWith('>')) {
-      return (asFormulaNumber(value) ?? 0) >
-          (double.tryParse(crit.substring(1)) ?? 0);
+    if (isEquality) {
+      final wildcard = _criterionWildcard(lower);
+      return (value) {
+        final candidate = value is String
+            ? value.toLowerCase()
+            : value is FormulaErrorValue
+            ? value.code.toLowerCase()
+            : null;
+        final matches = text.isEmpty
+            ? value == null || value == ''
+            : wildcard != null
+            ? value is String && wildcard(candidate!)
+            : candidate == lower;
+        return (op == '=') == matches;
+      };
     }
-    if (crit.startsWith('<')) {
-      return (asFormulaNumber(value) ?? 0) <
-          (double.tryParse(crit.substring(1)) ?? 0);
+    return (value) =>
+        value is String && ordered(value.toLowerCase().compareTo(lower));
+  }
+
+  static bool Function(String)? _criterionWildcard(String pattern) {
+    if (!pattern.contains(RegExp(r'[?*~]'))) return null;
+    const star = -1;
+    const any = -2;
+    final tokens = <int>[];
+    final patternRunes = pattern.runes.toList();
+    for (var i = 0; i < patternRunes.length; i++) {
+      final rune = patternRunes[i];
+      if (rune == 0x7e &&
+          i + 1 < patternRunes.length &&
+          const {0x7e, 0x2a, 0x3f}.contains(patternRunes[i + 1])) {
+        tokens.add(patternRunes[++i]);
+      } else {
+        tokens.add(switch (rune) {
+          0x2a => star,
+          0x3f => any,
+          _ => rune,
+        });
+      }
     }
-    if (crit.contains('*')) {
-      final String re = RegExp.escape(crit).replaceAll('\\*', '.*');
-      return RegExp('^$re\$').hasMatch(formulaString(value));
-    }
-    return formulaString(value) == crit ||
-        asFormulaNumber(value) == double.tryParse(crit);
+    return (text) {
+      final runes = text.runes.toList();
+      var patternIndex = 0;
+      var textIndex = 0;
+      var lastStar = -1;
+      var starEnd = 0;
+      while (textIndex < runes.length) {
+        final token = patternIndex < tokens.length
+            ? tokens[patternIndex]
+            : null;
+        if (token == star) {
+          lastStar = patternIndex++;
+          starEnd = textIndex;
+        } else if (token == any || token == runes[textIndex]) {
+          patternIndex++;
+          textIndex++;
+        } else if (lastStar >= 0) {
+          patternIndex = lastStar + 1;
+          textIndex = ++starEnd;
+        } else {
+          return false;
+        }
+      }
+      while (patternIndex < tokens.length && tokens[patternIndex] == star) {
+        patternIndex++;
+      }
+      return patternIndex == tokens.length;
+    };
   }
 
   static Object? _vlookup(
@@ -1122,14 +1572,53 @@ abstract final class FormulaFunctions {
 
   static Object? _lookup(List<Object?> vals) => _xlookup(vals);
 
-  static DateTime? _date(Object? v) {
-    if (v is DateTime) return v;
-    final double? n = asFormulaNumber(v);
-    if (n == null) return null;
-    return DateTime.fromMillisecondsSinceEpoch(
-      (n * 86400000).round(),
-      isUtc: true,
-    );
+  static final _serialEpoch = DateTime.utc(1899, 12, 31);
+  static final _serialEpoch1904 = DateTime.utc(1904);
+
+  static DateTime? _date(Object? value, bool use1904) {
+    if (value is DateTime) return value;
+    final serial = asFormulaNumber(value);
+    if (serial == null || !serial.isFinite || serial < 0 || serial > 2958465) {
+      return null;
+    }
+    final epoch = use1904 ? _serialEpoch1904 : _serialEpoch;
+    final days = use1904 || serial < 60 ? serial : serial - 1;
+    return epoch.add(Duration(milliseconds: (days * 86400000).round()));
+  }
+
+  static double _dateSerial(DateTime date, bool use1904) {
+    final epoch = use1904 ? _serialEpoch1904 : _serialEpoch;
+    final serial = date.difference(epoch).inMilliseconds / 86400000;
+    return use1904 || serial < 60 ? serial : serial + 1;
+  }
+
+  static Object _datePart(String name, Object? value, bool use1904) {
+    final date = _date(value ?? 0, use1904);
+    if (date == null) return const FormulaErrorValue('#VALUE!');
+    final serial = value is num
+        ? value.floor()
+        : value == null
+        ? 0
+        : null;
+    final leapDay = !use1904 && serial == 60;
+    final dayZero = !use1904 && serial == 0;
+    return switch (name) {
+      'YEAR' => dayZero ? 1900.0 : date.year.toDouble(),
+      'MONTH' => dayZero ? 1.0 : date.month.toDouble(),
+      'DAY' =>
+        dayZero
+            ? 0.0
+            : leapDay
+            ? 29.0
+            : date.day.toDouble(),
+      'HOUR' => date.hour.toDouble(),
+      'MINUTE' => date.minute.toDouble(),
+      'SECOND' => date.second.toDouble(),
+      _ =>
+        (date.weekday + (!use1904 && serial != null && serial < 60 ? -1 : 0)) %
+                7 +
+            1,
+    };
   }
 
   static Object? _fin(String name, List<Object?> vals) {
@@ -1277,7 +1766,7 @@ abstract final class FormulaFunctions {
     return array.map(formulaString).join(',');
   }
 
-  static Object? _textFmt(List<Object?> vals) {
+  static Object? _textFmt(List<Object?> vals, bool use1904, String locale) {
     if (vals.isEmpty) {
       return '';
     }
@@ -1286,26 +1775,113 @@ abstract final class FormulaFunctions {
     if (n == null) {
       return formulaString(vals[0]);
     }
-    final String upper = fmt.toUpperCase();
-    if (fmt.contains('%')) {
-      return '${(n * 100).toStringAsFixed(fmt.contains('0.00') ? 2 : 0)}%';
+    if (!n.isFinite) return const FormulaErrorValue('#VALUE!');
+    final germanSyntax = RegExp(
+      r'^de([-_]|$)',
+      caseSensitive: false,
+    ).hasMatch(locale);
+    final format = _dateTextFormat(fmt, germanSyntax);
+    if (format != null) {
+      if (format.invalid) return const FormulaErrorValue('#VALUE!');
+      final date = _date(n, use1904);
+      if (date == null) return const FormulaErrorValue('#VALUE!');
+      final serial = n.floor();
+      final firstDay = !use1904 && serial == 0;
+      final leapDay = !use1904 && serial == 60;
+      return formatExcelDate(
+        firstDay ? date.add(const Duration(days: 1)) : date,
+        format.mask,
+        germanNames: format.germanNames,
+        lowercaseMonthIsMinute: format.germanSyntax,
+        serial: n,
+        calendarDay: firstDay ? 0 : (leapDay ? 29 : null),
+        calendarWeekday: !use1904 && serial < 60
+            ? (date.weekday + 5) % 7 + 1
+            : null,
+      );
     }
-    if (upper.contains('YYYY') || upper.contains('YYYY-MM-DD')) {
-      final DateTime? d = _date(n);
-      if (d == null) {
-        return formulaString(vals[0]);
+    if (fmt == '@' || germanSyntax && fmt.toLowerCase() == 'standard') {
+      final plain = formulaString(n);
+      return germanSyntax ? plain.replaceFirst('.', ',') : plain;
+    }
+    if (fmt.toLowerCase() == 'general') {
+      return germanSyntax
+          ? const FormulaErrorValue('#VALUE!')
+          : formulaString(n);
+    }
+    final formatted = applyNumberFormat(
+      n,
+      fmt,
+      decimalSeparator: germanSyntax ? ',' : '.',
+      groupSeparator: germanSyntax ? '.' : ',',
+    );
+    if (formatted.startsWith('RED:') && fmt.contains('[Red]')) {
+      return formatted.substring(4);
+    }
+    return formatted;
+  }
+
+  static final _dateMaskParts = RegExp(r'\\.|"[^"]*"|\[[^\]]*\]|[a-zA-Z]+');
+  static final _dateTokens = RegExp(r'^[ymdhs]+$', caseSensitive: false);
+  static final _germanDateTokens = RegExp(
+    r'^[jtmdyhs]+$',
+    caseSensitive: false,
+  );
+
+  static ({String mask, bool germanNames, bool germanSyntax, bool invalid})?
+  _dateTextFormat(String input, bool germanSyntax) {
+    var hasDateTokens = false;
+    var germanNames = false;
+    var foreignDateToken = false;
+    final localSyntax =
+        germanSyntax ||
+        _dateMaskParts.allMatches(input).any((match) {
+          final token = match[0]!;
+          return _germanDateTokens.hasMatch(token) &&
+              RegExp(r'jj|tt', caseSensitive: false).hasMatch(token);
+        });
+    final mask = input.replaceAllMapped(_dateMaskParts, (match) {
+      final token = match[0]!;
+      final lower = token.toLowerCase();
+      if (lower == r'[$-407]' || lower == r'[$-de-de]') {
+        germanNames = true;
       }
-      final String mm = d.month.toString().padLeft(2, '0');
-      final String dd = d.day.toString().padLeft(2, '0');
-      return '${d.year}-$mm-$dd';
+      if (const {'[h]', '[hh]', '[m]', '[mm]', '[s]', '[ss]'}.contains(lower)) {
+        hasDateTokens = true;
+      }
+      final tokenPattern = localSyntax ? _germanDateTokens : _dateTokens;
+      if (!tokenPattern.hasMatch(token)) return token;
+      hasDateTokens = true;
+      if (!localSyntax) return token;
+      return token.replaceAllMapped(
+        RegExp(r'j+|t+|d+|y+', caseSensitive: false),
+        (part) {
+          final code = part[0]!;
+          final letter = code[0].toLowerCase();
+          if (letter == 'd' || letter == 'y') foreignDateToken = true;
+          return switch (letter) {
+            'j' => code.length >= 4 ? 'yyyy' : 'yy',
+            't' => List.filled(code.length, 'd').join(),
+            _ => '"$code"',
+          };
+        },
+      );
+    });
+    if (!hasDateTokens) return null;
+    final separators = input.replaceAll(_dateMaskParts, '');
+    if (RegExp(r'[0#?]').hasMatch(separators) &&
+        !RegExp(r's+[.,]0{1,3}$', caseSensitive: false).hasMatch(input)) {
+      return null;
     }
-    if (fmt.contains('0.00') || fmt.contains('#.##')) {
-      return n.toStringAsFixed(2);
-    }
-    if (n == n.roundToDouble()) {
-      return n.toInt().toString();
-    }
-    return n.toString();
+    final invalid =
+        foreignDateToken &&
+        (separators.contains('/') || RegExp(r'\[\$-[^\]]+\]').hasMatch(input));
+    return (
+      mask: mask,
+      germanNames: germanNames,
+      germanSyntax: localSyntax,
+      invalid: invalid,
+    );
   }
 
   static Object? _indirect(FormulaContext ctx, List<Object?> vals) {
@@ -1372,6 +1948,9 @@ abstract final class FormulaFunctions {
     SmlRange? range;
     SmlWorksheet? target = ctx.sheet;
     final FormulaNode first = args[0];
+    if (first is ExternalCellNode) {
+      throw UnsupportedError('OFFSET of external references');
+    }
     if (first is CellNode) {
       range = SmlRange(first.ref, first.ref);
       target = first.sheetName == null
@@ -1417,29 +1996,34 @@ abstract final class FormulaFunctions {
     return RangeNode(SmlRange(start, end), sheetName: target.name).eval(ctx);
   }
 
-  static Object? _edate(List<Object?> vals) {
-    final DateTime? d = _date(vals.isEmpty ? null : vals[0]);
+  static Object? _edate(List<Object?> vals, bool use1904) {
+    final DateTime? d = _date(vals.isEmpty ? null : vals[0], use1904);
     if (d == null) {
       return const FormulaErrorValue('#VALUE!');
     }
     final int months = (_n(vals, 1) ?? 0).toInt();
-    final DateTime next = DateTime.utc(d.year, d.month + months, d.day);
-    return next.millisecondsSinceEpoch / 86400000;
+    final int endDay = DateTime.utc(d.year, d.month + months + 1, 0).day;
+    final DateTime next = DateTime.utc(
+      d.year,
+      d.month + months,
+      math.min(d.day, endDay),
+    );
+    return _dateSerial(next, use1904);
   }
 
-  static Object? _eomonth(List<Object?> vals) {
-    final DateTime? d = _date(vals.isEmpty ? null : vals[0]);
+  static Object? _eomonth(List<Object?> vals, bool use1904) {
+    final DateTime? d = _date(vals.isEmpty ? null : vals[0], use1904);
     if (d == null) {
       return const FormulaErrorValue('#VALUE!');
     }
     final int months = (_n(vals, 1) ?? 0).toInt();
     final DateTime next = DateTime.utc(d.year, d.month + months + 1, 0);
-    return next.millisecondsSinceEpoch / 86400000;
+    return _dateSerial(next, use1904);
   }
 
-  static Object? _networkdays(List<Object?> vals) {
-    final DateTime? start = _date(vals.isEmpty ? null : vals[0]);
-    final DateTime? end = _date(vals.length < 2 ? null : vals[1]);
+  static Object? _networkdays(List<Object?> vals, bool use1904) {
+    final DateTime? start = _date(vals.isEmpty ? null : vals[0], use1904);
+    final DateTime? end = _date(vals.length < 2 ? null : vals[1], use1904);
     if (start == null || end == null) {
       return const FormulaErrorValue('#VALUE!');
     }
@@ -1469,6 +2053,9 @@ abstract final class FormulaFunctions {
       return const FormulaErrorValue('#N/A');
     }
     final FormulaNode first = args.first;
+    if (first is ExternalCellNode) {
+      throw UnsupportedError('FORMULATEXT of external references');
+    }
     if (first is CellNode) {
       final SmlWorksheet? sheet = first.sheetName == null
           ? ctx.sheet
@@ -1547,9 +2134,9 @@ abstract final class FormulaFunctions {
     return ((h + m / 60 + s / 3600) / 24) % 1;
   }
 
-  static Object? _days(List<Object?> vals) {
-    final DateTime? end = _date(vals.isEmpty ? null : vals[0]);
-    final DateTime? start = _date(vals.length < 2 ? null : vals[1]);
+  static Object? _days(List<Object?> vals, bool use1904) {
+    final DateTime? end = _date(vals.isEmpty ? null : vals[0], use1904);
+    final DateTime? start = _date(vals.length < 2 ? null : vals[1], use1904);
     if (end == null || start == null) {
       return const FormulaErrorValue('#VALUE!');
     }

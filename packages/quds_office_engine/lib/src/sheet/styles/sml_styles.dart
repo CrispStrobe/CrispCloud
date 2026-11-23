@@ -1341,7 +1341,12 @@ class SmlStyleSheet {
 }
 
 /// ECMA-376 §18.8.30 number formats (common subset).
-String applyNumberFormat(Object? value, String code) {
+String applyNumberFormat(
+  Object? value,
+  String code, {
+  String decimalSeparator = '.',
+  String groupSeparator = ',',
+}) {
   if (value == null) {
     return '';
   }
@@ -1378,7 +1383,7 @@ String applyNumberFormat(Object? value, String code) {
   if (_isDateFormat(clean) && !RegExp(r'[0#?]').hasMatch(_literalFree(clean))) {
     out = formatExcelDate(excelSerialToDate(shown), clean);
   } else {
-    out = _formatNumberSection(shown, clean);
+    out = _formatNumberSection(shown, clean, decimalSeparator, groupSeparator);
   }
   if (negativeRed && n < 0) {
     return 'RED:$out';
@@ -1411,7 +1416,12 @@ String _literalFree(String code) =>
 
 /// Formats one numeric section: `0` / `#` / `?` digits, `,` grouping and
 /// thousands scaling, `.` decimals, `%`, and literal prefix / suffix text.
-String _formatNumberSection(double n, String code) {
+String _formatNumberSection(
+  double n,
+  String code,
+  String decimalSeparator,
+  String groupSeparator,
+) {
   final StringBuffer literal = StringBuffer();
   final StringBuffer pattern = StringBuffer();
   var prefix = '';
@@ -1451,7 +1461,10 @@ String _formatNumberSection(double n, String code) {
       i += 2;
     } else if (ch == '*' && i + 1 < code.length) {
       i += 2;
-    } else if (!patternDone && '0#?,.'.contains(ch)) {
+    } else if (!patternDone &&
+        ('0#?'.contains(ch) ||
+            ch == decimalSeparator ||
+            ch == groupSeparator)) {
       inPattern = true;
       pattern.write(ch);
       i++;
@@ -1469,17 +1482,23 @@ String _formatNumberSection(double n, String code) {
     final String text = '$prefix$suffix';
     return text.trim().isEmpty ? _plainNumber(n) : text;
   }
-  final int dot = digits.indexOf('.');
+  final int dot = digits.indexOf(decimalSeparator);
   var integerPart = dot < 0 ? digits : digits.substring(0, dot);
-  final String fraction = dot < 0 ? '' : digits.substring(dot + 1);
+  final String fraction = dot < 0
+      ? ''
+      : digits.substring(dot + 1).replaceAll(groupSeparator, '');
   var scale = 1.0;
-  while (integerPart.endsWith(',')) {
+  while (groupSeparator.isNotEmpty && integerPart.endsWith(groupSeparator)) {
     scale *= 1000;
-    integerPart = integerPart.substring(0, integerPart.length - 1);
+    integerPart = integerPart.substring(
+      0,
+      integerPart.length - groupSeparator.length,
+    );
   }
-  final bool group = integerPart.contains(',');
+  final bool group =
+      groupSeparator.isNotEmpty && integerPart.contains(groupSeparator);
   final int minInteger = '0'.allMatches(integerPart).length;
-  final int fixed = '0'.allMatches(fraction).length;
+  final int fixed = fraction.lastIndexOf('0') + 1;
   final int optional = fraction.length - fixed;
   var value = (percent ? n * 100 : n) / scale;
   final bool negative = value < 0;
@@ -1498,7 +1517,9 @@ String _formatNumberSection(double n, String code) {
   }
   final int point = text.indexOf('.');
   var whole = point < 0 ? text : text.substring(0, point);
-  final String decimals = point < 0 ? '' : text.substring(point);
+  final String decimals = point < 0
+      ? ''
+      : '$decimalSeparator${text.substring(point + 1)}';
   if (whole == '0' && minInteger == 0) {
     whole = '';
   }
@@ -1509,13 +1530,16 @@ String _formatNumberSection(double n, String code) {
     grouped.write(whole.substring(0, head));
     for (var g = head; g < whole.length; g += 3) {
       if (grouped.isNotEmpty) {
-        grouped.write(',');
+        grouped.write(groupSeparator);
       }
       grouped.write(whole.substring(g, g + 3));
     }
     whole = grouped.toString();
   }
-  final bool isZero = RegExp(r'^[0.,]*$').hasMatch('$whole$decimals');
+  final bool isZero = RegExp(r'^[0]*$').hasMatch(
+    whole.replaceAll(groupSeparator, '') +
+        decimals.replaceAll(decimalSeparator, ''),
+  );
   final String sign = negative && !isZero ? '-' : '';
   return '$sign$prefix$whole$decimals$suffix';
 }
@@ -1547,7 +1571,15 @@ DateTime excelSerialToDate(double serial) {
 }
 
 /// formatExcelDate API.
-String formatExcelDate(DateTime dt, String code) {
+String formatExcelDate(
+  DateTime dt,
+  String code, {
+  bool germanNames = false,
+  bool lowercaseMonthIsMinute = false,
+  double? serial,
+  int? calendarDay,
+  int? calendarWeekday,
+}) {
   const List<String> shortMonths = <String>[
     'Jan',
     'Feb',
@@ -1594,8 +1626,51 @@ String formatExcelDate(DateTime dt, String code) {
     'Saturday',
     'Sunday',
   ];
+  const germanShortMonths = [
+    'Jan',
+    'Feb',
+    'Mär',
+    'Apr',
+    'Mai',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Okt',
+    'Nov',
+    'Dez',
+  ];
+  const germanLongMonths = [
+    'Januar',
+    'Februar',
+    'März',
+    'April',
+    'Mai',
+    'Juni',
+    'Juli',
+    'August',
+    'September',
+    'Oktober',
+    'November',
+    'Dezember',
+  ];
+  const germanShortDays = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+  const germanLongDays = [
+    'Montag',
+    'Dienstag',
+    'Mittwoch',
+    'Donnerstag',
+    'Freitag',
+    'Samstag',
+    'Sonntag',
+  ];
   String pad(int value, int width) => value.toString().padLeft(width, '0');
-  final String month = shortMonths[dt.month - 1];
+  final String month = (germanNames
+      ? germanShortMonths
+      : shortMonths)[dt.month - 1];
+  final monthName = (germanNames ? germanLongMonths : longMonths)[dt.month - 1];
+  final weekday = (calendarWeekday ?? dt.weekday) - 1;
+  final day = calendarDay ?? dt.day;
   // Literal escapes (`\.`) and quoted text must not be treated as date
   // tokens; Excel prints dd\.mm\.yyyy as 15.03.2023.
   final List<String> literals = <String>[];
@@ -1615,9 +1690,16 @@ String formatExcelDate(DateTime dt, String code) {
             !match[0]!.startsWith('[') || elapsedToken.hasMatch(match[0]!),
       )
       .toList();
-  final minutePositions = <int>{};
+  final minutePositions = <int, int>{};
   for (var token = 0; token < tokens.length; token++) {
-    final text = tokens[token][0]!;
+    final match = tokens[token];
+    final text = match[0]!;
+    if (lowercaseMonthIsMinute &&
+        text.startsWith('M') &&
+        protected[match.start] == 'm') {
+      minutePositions[match.start] = text.length;
+      continue;
+    }
     if (text != 'M' && text != 'MM') continue;
     final previous = token == 0 ? '' : tokens[token - 1][0]!;
     final next = token + 1 == tokens.length ? '' : tokens[token + 1][0]!;
@@ -1625,19 +1707,21 @@ String formatExcelDate(DateTime dt, String code) {
     // tokens reset that context, including when a date follows a time.
     if (RegExp(r'^\[?HH?\]?$').hasMatch(previous) ||
         RegExp(r'^\[?SS?\]?$').hasMatch(next)) {
-      minutePositions.add(tokens[token].start);
+      minutePositions[match.start] = text.length;
     }
   }
   final hasElapsed = tokens.any((token) => elapsedToken.hasMatch(token[0]!));
-  final elapsedMilliseconds = DateTime.utc(
-    dt.year,
-    dt.month,
-    dt.day,
-    dt.hour,
-    dt.minute,
-    dt.second,
-    dt.millisecond,
-  ).difference(DateTime.utc(1899, 12, 30)).inMilliseconds;
+  final elapsedMilliseconds = serial == null
+      ? DateTime.utc(
+          dt.year,
+          dt.month,
+          dt.day,
+          dt.hour,
+          dt.minute,
+          dt.second,
+          dt.millisecond,
+        ).difference(DateTime.utc(1899, 12, 30)).inMilliseconds
+      : (serial * 86400000).round();
   final clock = hasElapsed && elapsedMilliseconds < 0
       ? excelSerialToDate(-elapsedMilliseconds / 86400000)
       : dt;
@@ -1680,8 +1764,19 @@ String formatExcelDate(DateTime dt, String code) {
       i += 2;
       continue;
     }
+    final minuteLength = minutePositions[i];
+    if (minuteLength != null) {
+      out.write(pad(clock.minute, minuteLength == 1 ? 1 : 2));
+      i += minuteLength;
+      continue;
+    }
+    if (upper.startsWith('MMMMM', i)) {
+      out.write(monthName[0]);
+      i += 5;
+      continue;
+    }
     if (upper.startsWith('MMMM', i)) {
-      out.write(longMonths[dt.month - 1]);
+      out.write(monthName);
       i += 4;
       continue;
     }
@@ -1691,36 +1786,32 @@ String formatExcelDate(DateTime dt, String code) {
       continue;
     }
     if (upper.startsWith('MM', i)) {
-      out.write(
-        minutePositions.contains(i) ? pad(clock.minute, 2) : pad(dt.month, 2),
-      );
+      out.write(pad(dt.month, 2));
       i += 2;
       continue;
     }
     if (upper[i] == 'M') {
-      out.write(
-        minutePositions.contains(i) ? '${clock.minute}' : '${dt.month}',
-      );
+      out.write(dt.month);
       i += 1;
       continue;
     }
     if (upper.startsWith('DDDD', i)) {
-      out.write(longDays[dt.weekday - 1]);
+      out.write((germanNames ? germanLongDays : longDays)[weekday]);
       i += 4;
       continue;
     }
     if (upper.startsWith('DDD', i)) {
-      out.write(shortDays[dt.weekday - 1]);
+      out.write((germanNames ? germanShortDays : shortDays)[weekday]);
       i += 3;
       continue;
     }
     if (upper.startsWith('DD', i)) {
-      out.write(pad(dt.day, 2));
+      out.write(pad(day, 2));
       i += 2;
       continue;
     }
     if (upper[i] == 'D') {
-      out.write('${dt.day}');
+      out.write(day);
       i += 1;
       continue;
     }
@@ -1728,8 +1819,12 @@ String formatExcelDate(DateTime dt, String code) {
       final hour = twelveHour
           ? (clock.hour % 12 == 0 ? 12 : clock.hour % 12)
           : clock.hour;
-      out.write(pad(hour, 2));
-      i += 2;
+      var end = i + 2;
+      while (end < upper.length && upper[end] == 'H') {
+        end++;
+      }
+      out.write(end == i + 2 ? pad(hour, 2) : hour);
+      i = end;
       continue;
     }
     if (upper[i] == 'H') {

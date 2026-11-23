@@ -366,6 +366,41 @@ const _preservedKey = {
 };
 
 void main() {
+  test('cell-level controls preserve native metadata and editable cells', () {
+    final controlledCell = _controlXml(
+      121,
+      '<w:tc><w:tcPr><w:tcW w:w="900" w:type="dxa"/></w:tcPr>'
+      '<w:p><w:r><w:t>Before</w:t></w:r></w:p></w:tc>',
+    );
+    final doc = WordDeserializer().read(
+      _source(
+        body:
+            '<w:tbl><w:tblGrid><w:gridCol w:w="900"/></w:tblGrid>'
+            '<w:tr>${_controlXml(120, '\n$controlledCell')}</w:tr></w:tbl>',
+      ),
+    );
+    final tbl = doc.sections.first.blocks.whereType<WmlTable>().single;
+    final cell = tbl.rows.single.cells.single;
+    expect(cell.width, 45);
+    expect(cell.contentControlWrappers.map((c) => c.id), ['120', '121']);
+    cell.blocks
+            .whereType<WmlParagraph>()
+            .single
+            .inlines
+            .whereType<WmlRun>()
+            .single
+            .text =
+        'After';
+    final copy = WordDeserializer().readBytes(WordSerializer().writeBytes(doc));
+    final clonedTable = copy.sections.first.blocks.whereType<WmlTable>().single;
+    final clonedCell = clonedTable.rows.single.cells.single;
+    expect(clonedCell.contentControlWrappers.map((c) => c.tag), [
+      'control-120',
+      'control-121',
+    ]);
+    expect(clonedCell.blocks.whereType<WmlParagraph>().single.text, 'After');
+  });
+
   for (final kind in ['drawing', 'equation']) {
     test('unsupported inline control $kind stops import without changing source', () {
       final rich = kind == 'drawing'
@@ -403,7 +438,10 @@ void main() {
           '<w:tc><w:p><w:r><w:t>Controlled cell</w:t></w:r></w:p></w:tc>';
       final content = kind == 'rows'
           ? _controlXml(101, '<w:tr>$cell</w:tr>')
-          : '<w:tr>${_controlXml(101, cell)}</w:tr>';
+          : '<w:tr>${_controlXml(101, '$cell$cell')}</w:tr>';
+      final context = kind == 'rows'
+          ? 'content control wrapping table rows'
+          : 'content control without one table cell';
       final package = _source(
         body:
             '<w:tbl><w:tblGrid><w:gridCol w:w="4000"/></w:tblGrid>$content</w:tbl>',
@@ -415,9 +453,7 @@ void main() {
           isA<UnsupportedError>().having(
             (e) => e.message,
             'location and unsupported topology',
-            contains(
-              '/word/document.xml: content control wrapping table $kind',
-            ),
+            contains('/word/document.xml: $context'),
           ),
         ),
       );

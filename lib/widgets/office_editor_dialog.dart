@@ -48,6 +48,7 @@ import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../services/captured_file_target.dart';
 import '../services/office_device_export.dart';
+import '../services/office_page_preview.dart';
 import '../services/log_service.dart';
 import '../services/office_zotero.dart';
 import '../l10n/file_bytes_error_strings.dart';
@@ -63,8 +64,6 @@ import 'office_worksheet_bar.dart';
 
 const _log = Log('OfficeEditor');
 
-const int _kOfficeEditorCap = 64 * 1024 * 1024;
-
 /// Extensions that belong to the Office dialog (editable or message-only).
 const Set<String> kOfficeExtensions = <String>{
   'docx',
@@ -77,6 +76,10 @@ const Set<String> kOfficeExtensions = <String>{
   'pptx',
   'pptm',
   'potx',
+  'potm',
+  'ppsx',
+  'ppsm',
+  'pot',
   'odt',
   'ods',
   'odp',
@@ -281,9 +284,14 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
       if (widget.bytesOverride case final supplied?) {
         bytes = supplied;
       } else {
-        final target = _target ??= ref
-            .read(panelProvider(widget.side))
-            .captureFileTarget(_file, maxBytes: _kOfficeEditorCap);
+        final panel = ref.read(panelProvider(widget.side));
+        final target = _target ??= panel.captureFileTarget(
+          _file,
+          maxBytes: officeSlideInputLimit(
+            _file.name,
+            local: panel.directoryStorage?.isLocal ?? false,
+          ),
+        );
         bytes = await target.load();
       }
       if (!mounted) return;
@@ -324,6 +332,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
         OfficeEditorKind.sheet => SheetEditorController.fromBytes(
           bytes,
           config: _config,
+          formulaLocale: Localizations.maybeLocaleOf(context)?.toLanguageTag(),
         ),
         OfficeEditorKind.slides => SlideEditorController.fromBytes(
           bytes,
@@ -449,9 +458,13 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
       controller.commitPendingEdits();
       final savedRevision = controller.contentRevision;
       final bytes = await controller.saveBytesAsync();
-      if (bytes.length > kOfficeCopyOutputLimitBytes) {
-        throw FileTargetTooLarge(kOfficeCopyOutputLimitBytes);
-      }
+      final saveLimit = controller is SlideEditorController
+          ? officeSlideInputLimit(
+              _file.name,
+              local: _target?.reference.storage.isLocal ?? false,
+            )
+          : kOfficeCopyOutputLimitBytes;
+      if (bytes.length > saveLimit) throw FileTargetTooLarge(saveLimit);
       await _wordPreservation?.validateSaved(bytes);
       await _saveSnapshot(bytes, kind: 'recovery');
       if (!mounted) return;

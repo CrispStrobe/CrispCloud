@@ -75,6 +75,76 @@ void _expectTextOnce(LaidOutDocument laid, WmlDocument document) {
 }
 
 void main() {
+  test('staggered cell lines break independently without dropping text', () {
+    WmlParagraph line(String text, {double before = 0}) => WmlParagraph(
+      properties: WmlParagraphProps(
+        spacingBefore: before,
+        spacingAfter: 0,
+        lineSpacingRule: WmlLineSpacingRule.exact,
+        lineSpacing: 20,
+      ),
+      inlines: [WmlRun(text: text)],
+    );
+    final table = WmlTable(
+      grid: [180, 180],
+      rows: [
+        WmlTableRow(
+          cells: [
+            WmlTableCell(
+              blocks: List.generate(45, (index) => line('Left $index')),
+            ),
+            WmlTableCell(
+              blocks: List.generate(
+                45,
+                (index) => line('Right $index', before: index == 0 ? 10 : 0),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+    final document = _document([table]);
+    final layout = WordLayoutEngine(font: null).layout(document);
+    final section = document.sections.single;
+    _expectTextOnce(layout, document);
+    final splitPages = layout.pages.where(
+      (page) => page.frames.any((frame) => identical(frame.table, table)),
+    );
+    expect(splitPages.length, greaterThan(2));
+    for (final page in splitPages) {
+      final cells = page.frames.where((frame) => identical(frame.table, table));
+      expect(cells, hasLength(2));
+      expect(cells.first.y, cells.last.y);
+      expect(cells.first.height, cells.last.height);
+      expect(
+        cells.first.y + cells.first.height,
+        lessThanOrEqualTo(
+          section.pageSize.height - section.margins.bottom + 0.01,
+        ),
+      );
+    }
+  });
+
+  test('an oversized blank table row can break inside its empty space', () {
+    final table = WmlTable(
+      grid: [180],
+      rows: [
+        WmlTableRow(
+          cells: [
+            WmlTableCell(blocks: List.generate(70, (_) => _paragraph(''))),
+          ],
+        ),
+      ],
+    );
+    final document = _document([table]);
+    final layout = WordLayoutEngine(font: null).layout(document);
+    final parts = layout.pages
+        .expand((page) => page.frames)
+        .where((frame) => identical(frame.table, table));
+    expect(parts.length, greaterThan(2));
+    _expectTextOnce(layout, document);
+  });
+
   for (final reopen in [false, true]) {
     final mode = reopen ? 'reopened' : 'live';
     for (final depth in [1, 2, 3]) {

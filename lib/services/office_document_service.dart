@@ -13,6 +13,7 @@
 // malformed or oversized documents cannot exhaust memory.
 
 import 'dart:convert';
+import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'package:html/dom.dart' as dom;
@@ -21,7 +22,13 @@ import 'package:legacy_doc_parser/legacy_doc_parser.dart'
     show parseLegacyWordDocument;
 import 'package:path/path.dart' as p;
 import 'package:quds_office_engine/quds_office_engine.dart'
-    show OfficePackageParts, OfficePartRelationship;
+    show
+        OfficeIsolateOpen,
+        OfficePackageParts,
+        OfficePartRelationship,
+        PmlPresentation,
+        PmlShape,
+        PmlShapePreset;
 import 'package:xml/xml.dart';
 
 import 'archive_viewer_service.dart';
@@ -35,6 +42,29 @@ const String _wordNamespace =
     'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 const String _officeRelationshipNamespace =
     'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+
+const officeSlidePackageExtensions = <String>{
+  'pptx',
+  'pptm',
+  'potx',
+  'potm',
+  'ppsx',
+  'ppsm',
+};
+
+bool isOfficeSlidePackageName(String filename) {
+  final i = filename.lastIndexOf('.');
+  return i >= 0 &&
+      officeSlidePackageExtensions.contains(
+        filename.substring(i + 1).toLowerCase(),
+      );
+}
+
+bool isLegacyPowerPointName(String filename) => const {
+  'ppt',
+  'pot',
+  'pps',
+}.contains(filename.split('.').last.toLowerCase());
 
 enum OfficeDocumentKind { document, spreadsheet, presentation, ebook }
 
@@ -51,6 +81,7 @@ enum OfficePreviewNotice {
   powerPointResourceLimit,
   legacyWordPartial,
   legacyWordStories,
+  spreadsheetAddinPreview,
 }
 
 enum OfficePreviewFallback {
@@ -160,6 +191,11 @@ class SlideShape {
   final bool bold;
   final String? textColorHex;
   final String? fillColorHex;
+  final double fillOpacity;
+  final String? strokeColorHex;
+  final bool connector;
+  final bool flipX;
+  final bool flipY;
   final Uint8List? image;
 
   const SlideShape({
@@ -172,6 +208,11 @@ class SlideShape {
     this.bold = false,
     this.textColorHex,
     this.fillColorHex,
+    this.fillOpacity = 1,
+    this.strokeColorHex,
+    this.connector = false,
+    this.flipX = false,
+    this.flipY = false,
     this.image,
   });
 }
@@ -204,8 +245,8 @@ Future<OfficeDocument> parseOfficeDocument(
         notice: OfficePreviewNotice.rtfFormatting,
       );
     }
-    if (ext == 'ppt' || ext == 'pps' || ext == 'pot') {
-      return _parseLegacyPowerPoint(bytes);
+    if (isLegacyPowerPointName(filename)) {
+      return await _loadLegacyPowerPointPreview(bytes);
     }
     if (ext == 'doc' || ext == 'dot') {
       // Opening for a person: damage confined to an auxiliary feature (a
@@ -236,9 +277,14 @@ Future<OfficeDocument> parseOfficeDocument(
       case 'xlsm':
       case 'xltx':
         return await _parseSpreadsheet(archive, isOds: false);
+      case 'xlam':
+        return await _parseSpreadsheet(archive, isOds: false, isAddin: true);
       case 'pptx':
       case 'pptm':
       case 'potx':
+      case 'potm':
+      case 'ppsx':
+      case 'ppsm':
         return await _parsePptx(archive);
       case 'odt':
         return await _parseOdt(archive);
@@ -252,6 +298,14 @@ Future<OfficeDocument> parseOfficeDocument(
         return await _parseDocx(archive);
     }
   } catch (e) {
+    if (officeSlidePackageExtensions.contains(ext)) {
+      try {
+        final recovered = await OfficeIsolateOpen.presentation(bytes);
+        if (recovered.slides.isNotEmpty) return _recoveredSlides(recovered);
+      } on Object {
+        // A package that cannot be recovered uses the regular extraction error.
+      }
+    }
     final notice = switch (e) {
       RtfDocumentException(code: final code) => switch (code) {
         RtfDocumentErrorCode.malformed => OfficePreviewNotice.rtfMalformed,
@@ -275,7 +329,11 @@ Future<OfficeDocument> parseOfficeDocument(
       _ => null,
     };
     return OfficeDocument(
-      kind: ext == 'ppt' || ext == 'pps' || ext == 'pot'
+      kind:
+          officeSlidePackageExtensions.contains(ext) ||
+              ext == 'ppt' ||
+              ext == 'pps' ||
+              ext == 'pot'
           ? OfficeDocumentKind.presentation
           : OfficeDocumentKind.document,
       markdown: '',
@@ -286,6 +344,17 @@ Future<OfficeDocument> parseOfficeDocument(
     );
   } finally {
     await archive?.close();
+  }
+}
+
+Future<OfficeDocument> _loadLegacyPowerPointPreview(Uint8List bytes) async {
+  // Large binary decks can occupy a UI frame while reading the compound file.
+  if (bytes.length <= 8 * 1024 * 1024) return _parseLegacyPowerPoint(bytes);
+  try {
+    return await Isolate.run(() => _parseLegacyPowerPoint(bytes));
+  } on UnsupportedError {
+    // The browser has no Dart isolates.
+    return _parseLegacyPowerPoint(bytes);
   }
 }
 
@@ -725,6 +794,7 @@ String _markdownTable(List<List<String>> rows) {
 Future<OfficeDocument> _parseSpreadsheet(
   ViewerArchive archive, {
   required bool isOds,
+  bool isAddin = false,
 }) async {
   if (isOds) return _parseOds(archive);
 
@@ -760,6 +830,8 @@ Future<OfficeDocument> _parseSpreadsheet(
     for (final sheet in XmlDocument.parse(
       workbookXml,
     ).findAllElements('sheet', namespace: '*')) {
+      final state = sheet.getAttribute('state');
+      if (isAddin && (state == 'hidden' || state == 'veryHidden')) continue;
       final id = sheet.getAttribute(
         'id',
         namespace: _officeRelationshipNamespace,
@@ -769,7 +841,7 @@ Future<OfficeDocument> _parseSpreadsheet(
         sheets.add((path: path, name: sheet.getAttribute('name')));
       }
     }
-  } else {
+  } else if (!isAddin) {
     // Minimal/legacy extraction fixtures may have no workbook part. In that
     // case only, retain the best-effort scan, with natural sheet-number order.
     final paths =
@@ -839,6 +911,7 @@ Future<OfficeDocument> _parseSpreadsheet(
     csv: csv.toString().trim(),
     csvHeadings: csvHeadings,
     rawXml: await _rawPart(archive, sheets.firstOrNull?.path),
+    notice: isAddin ? OfficePreviewNotice.spreadsheetAddinPreview : null,
   );
 }
 
@@ -1288,8 +1361,65 @@ Future<OfficeDocument> _parseOds(ViewerArchive archive) async {
 // PPTX / ODP
 // ---------------------------------------------------------------------------
 
+OfficeDocument _recoveredSlides(PmlPresentation presentation) {
+  final markdown = StringBuffer();
+  final headings = <OfficeGeneratedHeading>[];
+  SlideShape project(PmlShape shape) => SlideShape(
+    x: shape.transform.x,
+    y: shape.transform.y,
+    width: shape.transform.cx,
+    height: shape.transform.cy,
+    text: shape.text,
+    fontSizePt: shape.fontSizePt > 0 ? shape.fontSizePt : 18,
+    textColorHex: shape.textColor,
+    fillColorHex: shape.fillColor,
+    fillOpacity: shape.fillOpacity,
+    image: shape.visual?.imageBytes,
+    connector: shape.preset == PmlShapePreset.connector,
+    strokeColorHex: shape.strokeColor,
+  );
+  final pages = <SlidePage>[];
+  for (final (index, slide) in presentation.slides.indexed) {
+    _writeHeading(
+      markdown,
+      '## ',
+      OfficeHeadingKind.slide,
+      index + 1,
+      headings,
+    );
+    markdown.writeln();
+    for (final shape in slide.shapes) {
+      if (shape.text.trim().isNotEmpty) markdown.writeln(shape.text);
+    }
+    markdown.writeln();
+    pages.add(
+      SlidePage(
+        backgroundHex: slide.background,
+        shapes: [
+          for (final shape in slide.backgroundShapes.followedBy(slide.shapes))
+            project(shape),
+        ],
+      ),
+    );
+  }
+  final md = markdown.toString().trim();
+  final (plain, textHeadings) = _plainWithHeadings(md, headings);
+  return OfficeDocument(
+    kind: OfficeDocumentKind.presentation,
+    markdown: md,
+    plainText: plain,
+    markdownHeadings: headings,
+    textHeadings: textHeadings,
+    deck: SlideDeck(
+      widthEmu: presentation.slideWidth,
+      heightEmu: presentation.slideHeight,
+      slides: pages,
+    ),
+  );
+}
+
 Future<OfficeDocument> _parsePptx(ViewerArchive archive) async {
-  final slides =
+  var slides =
       archive.members
           .where(
             (m) =>
@@ -1310,9 +1440,28 @@ Future<OfficeDocument> _parsePptx(ViewerArchive archive) async {
   final presentationXml = await _readPart(archive, 'ppt/presentation.xml');
   if (presentationXml != null) {
     try {
-      final size = XmlDocument.parse(presentationXml)
-          .findAllElements('p:sldSz')
-          .firstOrNull;
+      final document = XmlDocument.parse(presentationXml);
+      final list = document.findAllElements('p:sldId').toList();
+      if (list.isNotEmpty) {
+        final ids = {
+          for (final relation in await _officePartRelationships(
+            archive,
+            'ppt/presentation.xml',
+          ))
+            if (relation.isType('slide')) relation.id: relation.path,
+        };
+        final ordered = [
+          for (final slide in list)
+            if (ids[slide.getAttribute(
+                  'id',
+                  namespace: _officeRelationshipNamespace,
+                )]
+                case final String path)
+              path,
+        ];
+        if (ordered.isNotEmpty) slides = ordered;
+      }
+      final size = document.findAllElements('p:sldSz').firstOrNull;
       final cx = int.tryParse(size?.getAttribute('cx') ?? '');
       final cy = int.tryParse(size?.getAttribute('cy') ?? '');
       if (cx != null && cy != null && cx > 0 && cy > 0) {
@@ -1334,7 +1483,10 @@ Future<OfficeDocument> _parsePptx(ViewerArchive archive) async {
     if (xml == null) continue;
     slideNumber++;
     final document = XmlDocument.parse(xml);
-    final rels = await _readSlideRelationships(archive, slidePath);
+    final rels = {
+      for (final relation in await _officePartRelationships(archive, slidePath))
+        if (relation.isType('image')) relation.id: relation.path,
+    };
 
     final background = document
         .findAllElements('p:bg')
@@ -1346,31 +1498,67 @@ Future<OfficeDocument> _parsePptx(ViewerArchive archive) async {
     final shapes = <SlideShape>[];
     final textParagraphs = <String>[];
 
-    for (final shape in document.findAllElements('p:sp')) {
+    final tree = document.findAllElements('p:spTree').firstOrNull;
+    final elements = tree?.descendants.whereType<XmlElement>() ?? const [];
+    for (final shape in elements) {
       if (shapes.length >= 200) break;
+      final kind = shape.name.qualified;
+      if (!const {'p:sp', 'p:cxnSp', 'p:pic'}.contains(kind)) continue;
+      final box = _pptxShapeBox(shape);
+      if (kind == 'p:pic') {
+        if (box == null) continue;
+        final embed = shape
+            .findAllElements('a:blip')
+            .firstOrNull
+            ?.getAttribute('r:embed');
+        final target = rels[embed];
+        if (target == null) continue;
+        final image = await _readPartBytes(archive, target);
+        if (image == null) continue;
+        shapes.add(
+          SlideShape(
+            x: box.$1,
+            y: box.$2,
+            width: box.$3,
+            height: box.$4,
+            image: image,
+          ),
+        );
+        continue;
+      }
       final text = _pptxShapeText(shape);
-      final shapeProperties = shape.findElements('p:spPr').firstOrNull;
-      final fill = shapeProperties
-          ?.findAllElements('a:solidFill')
+      final properties = shape.findElements('p:spPr').firstOrNull;
+      final fill = properties
+          ?.findElements('a:solidFill')
           .firstOrNull
-          ?.findAllElements('a:srgbClr')
+          ?.findElements('a:srgbClr')
+          .firstOrNull;
+      final line = properties?.findElements('a:ln').firstOrNull;
+      final stroke = line
+          ?.findElements('a:solidFill')
+          .firstOrNull
+          ?.findElements('a:srgbClr')
           .firstOrNull
           ?.getAttribute('val');
-      // Keep text shapes and filled rectangles (background blocks).
-      if (text.trim().isEmpty && fill == null) continue;
+      final connector = kind == 'p:cxnSp';
+      if (text.trim().isEmpty && fill == null && stroke == null && !connector) {
+        continue;
+      }
       if (text.trim().isNotEmpty) {
         textParagraphs.addAll(
           text.trim().split('\n').where((line) => line.trim().isNotEmpty),
         );
       }
-      final box = _pptxShapeBox(shape);
+      final transform = properties?.findElements('a:xfrm').firstOrNull;
       final runProps = shape.findAllElements('a:rPr').firstOrNull;
       final size = int.tryParse(runProps?.getAttribute('sz') ?? '');
-      final bold = runProps?.getAttribute('b') == '1';
       final color = runProps
           ?.findAllElements('a:srgbClr')
           .firstOrNull
           ?.getAttribute('val');
+      final alpha = int.tryParse(
+        fill?.findElements('a:alpha').firstOrNull?.getAttribute('val') ?? '',
+      );
       shapes.add(
         SlideShape(
           x: box?.$1 ?? 228600,
@@ -1379,36 +1567,14 @@ Future<OfficeDocument> _parsePptx(ViewerArchive archive) async {
           height: box?.$4 ?? slideHeight - 457200,
           text: text.trim().isEmpty ? null : text.trim(),
           fontSizePt: ((size ?? 1800) / 100).clamp(6, 96).toDouble(),
-          bold: bold,
+          bold: runProps?.getAttribute('b') == '1',
           textColorHex: color,
-          fillColorHex: fill,
-        ),
-      );
-    }
-
-    for (final picture in document.findAllElements('p:pic')) {
-      if (shapes.length >= 200) break;
-      final box = _pptxShapeBox(picture);
-      if (box == null) continue;
-      final embed = picture
-          .findAllElements('a:blip')
-          .firstOrNull
-          ?.getAttribute('r:embed');
-      if (embed == null) continue;
-      final target = rels[embed];
-      if (target == null) continue;
-      final imagePath = p.posix.normalize(
-        p.posix.join(p.posix.dirname(slidePath), target),
-      );
-      final image = await _readPartBytes(archive, imagePath);
-      if (image == null) continue;
-      shapes.add(
-        SlideShape(
-          x: box.$1,
-          y: box.$2,
-          width: box.$3,
-          height: box.$4,
-          image: image,
+          fillColorHex: fill?.getAttribute('val'),
+          fillOpacity: ((alpha ?? 100000) / 100000).clamp(0, 1).toDouble(),
+          strokeColorHex: stroke,
+          connector: connector,
+          flipX: const {'1', 'true'}.contains(transform?.getAttribute('flipH')),
+          flipY: const {'1', 'true'}.contains(transform?.getAttribute('flipV')),
         ),
       );
     }
@@ -1450,28 +1616,6 @@ Future<OfficeDocument> _parsePptx(ViewerArchive archive) async {
             slides: pages,
           ),
   );
-}
-
-Future<Map<String, String>> _readSlideRelationships(
-  ViewerArchive archive,
-  String slidePath,
-) async {
-  final relsPath =
-      '${p.posix.dirname(slidePath)}/_rels/${p.posix.basename(slidePath)}.rels';
-  final xml = await _readPart(archive, relsPath);
-  final result = <String, String>{};
-  if (xml == null) return result;
-  try {
-    final document = XmlDocument.parse(xml);
-    for (final relationship in document.findAllElements('Relationship')) {
-      final id = relationship.getAttribute('Id');
-      final target = relationship.getAttribute('Target');
-      if (id != null && target != null) result[id] = target;
-    }
-  } catch (_) {
-    // Ignore malformed relationship files.
-  }
-  return result;
 }
 
 String _pptxShapeText(XmlElement shape) {

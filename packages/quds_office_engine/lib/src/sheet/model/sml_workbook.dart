@@ -1569,6 +1569,8 @@ class SmlWorkbook {
     List<SmlNamedRange>? namedRanges,
     List<SmlFormulaName>? formulaNames,
     OfficeDocumentProperties? properties,
+    this.uses1904Dates = false,
+    this.formulaLocale,
     this.package,
     this.styles,
   }) : sheets =
@@ -1598,8 +1600,18 @@ class SmlWorkbook {
   /// properties API.
   OfficeDocumentProperties properties;
 
+  /// Whether Excel serial zero denotes January 1, 1904.
+  bool uses1904Dates;
+
+  /// Runtime calculation locale. Workbook files do not store this choice.
+  String? formulaLocale;
+
   /// package API.
   OpcPackage? package;
+
+  /// Stored external workbook values keyed by link index, lowercase sheet
+  /// name, and canonical A1 cell address. The entries come from this package.
+  final externalCellValues = <(int, String, String), Object>{};
 
   /// Native names may contain expressions, scopes and print references that
   /// the compact named-range projection cannot represent independently.

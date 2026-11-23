@@ -191,6 +191,7 @@ class BoundedCfbReader {
       return (sector + 1) * size;
     }
 
+    final requiredFatSectors = (sectors + size ~/ 4 - 1) ~/ (size ~/ 4);
     final fatSectors = <int>[];
     final seenFat = <int>{};
     void addFat(int sector) {
@@ -200,7 +201,7 @@ class BoundedCfbReader {
         throw const FormatException('Repeated compound allocation table');
       }
       fatSectors.add(sector);
-      if (fatSectors.length > (sectors + size ~/ 4 - 1) ~/ (size ~/ 4)) {
+      if (fatSectors.length > requiredFatSectors + 2) {
         throw const FormatException('Oversized compound allocation table');
       }
     }
@@ -222,6 +223,18 @@ class BoundedCfbReader {
     }
     if (fatSectors.length != u32(44) || seenDifat.length != u32(72)) {
       throw const FormatException('Inconsistent compound allocation tables');
+    }
+    // Some writers reserve spare FAT sectors. Accept up to two only when
+    // their entries are completely unused, with normal chain checks below.
+    for (final sector in fatSectors.skip(requiredFatSectors)) {
+      final start = offsetOf(sector);
+      for (var index = 0; index < size; index += 4) {
+        if (u32(start + index) != free) {
+          throw const FormatException(
+            'Nonempty spare compound allocation table',
+          );
+        }
+      }
     }
     final fat = <int>[
       for (final sector in fatSectors)

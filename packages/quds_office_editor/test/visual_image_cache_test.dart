@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:convert';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
@@ -18,6 +20,24 @@ ui.Image _image() {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  test('embedded SVG pixels use the same owned image cache', () async {
+    final cache = VisualImageCache();
+    addTearDown(cache.dispose);
+    final source = Uint8List.fromList(
+      utf8.encode(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="8" height="4">'
+        '<rect width="8" height="4" fill="#336699"/></svg>',
+      ),
+    );
+    final ready = Completer<void>();
+    cache.load(source, ready.complete);
+    await ready.future.timeout(const Duration(seconds: 5));
+    final image = cache.get(source)!;
+    expect(image.width, image.height * 2);
+    final pixels = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+    expect(pixels!.getUint32(0), 0x336699ff);
+  });
 
   test('one pending decode serves a picture and its cache owns the image', () {
     final callbacks = <void Function(ui.Image)>[];

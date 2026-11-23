@@ -237,6 +237,32 @@ void main() {
     expect(document.rawXml, contains('t="s"'));
   });
 
+  test('XLAM preview shows visible stored sheets without loading the add-in', () async {
+    final document = await parseOfficeDocument(
+      _zip({
+        'xl/workbook.xml':
+            '<s:workbook xmlns:s="$_s" xmlns:r="$_r"><s:sheets>'
+            '<s:sheet name="Visible" sheetId="1" r:id="visible"/>'
+            '<s:sheet name="Hidden" sheetId="2" state="veryHidden" r:id="hidden"/>'
+            '</s:sheets></s:workbook>',
+        'xl/_rels/workbook.xml.rels':
+            '<Relationships xmlns="$_pr">'
+            '<Relationship Id="visible" Type="$_r/worksheet" Target="worksheets/sheet1.xml"/>'
+            '<Relationship Id="hidden" Type="$_r/worksheet" Target="worksheets/sheet2.xml"/>'
+            '</Relationships>',
+        'xl/worksheets/sheet1.xml': _sheet('Stored worksheet text'),
+        'xl/worksheets/sheet2.xml': _sheet('INTERNAL DATA'),
+        'xl/vbaProject.bin': 'UNREADABLE ADD-IN PAYLOAD',
+      }),
+      'toolkit.XLAM',
+    );
+    expect(document.kind, OfficeDocumentKind.spreadsheet);
+    expect(document.notice, OfficePreviewNotice.spreadsheetAddinPreview);
+    expect(document.plainText, contains('Stored worksheet text'));
+    expect(document.plainText, isNot(contains('INTERNAL DATA')));
+    expect(document.plainText, isNot(contains('UNREADABLE')));
+  });
+
   test(
     'XLSX without a workbook retains fallback headings and natural order',
     () async {

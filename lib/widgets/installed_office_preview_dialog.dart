@@ -18,12 +18,14 @@ bool get supportsInstalledOfficePreview =>
       TargetPlatform.windows,
     }.contains(defaultTargetPlatform);
 
-bool isInstalledOfficePreviewFileName(String name) => const {
-  '.doc',
-  '.dot',
-  '.docx',
-  '.docm',
-}.contains(p.extension(name).toLowerCase());
+bool isInstalledOfficePreviewFileName(String name) =>
+    isInstalledOfficePresentationName(name) ||
+    const {
+      '.doc',
+      '.dot',
+      '.docx',
+      '.docm',
+    }.contains(p.extension(name).toLowerCase());
 
 /// Makes an explicit installed-application PDF preview without creating or
 /// saving a Word copy. [onPreviewPdf] opens the existing app PDF viewer.
@@ -109,7 +111,8 @@ class _InstalledOfficePreviewDialogState
       _error = const InstalledOfficeConversionException(
         InstalledOfficeConversionErrorCode.invalidInput,
       );
-    } else if (widget.bytes.length > kInstalledOfficeInputLimit) {
+    } else if (widget.bytes.length >
+        installedOfficePreviewInputLimit(widget.sourceName)) {
       _error = const InstalledOfficeConversionException(
         InstalledOfficeConversionErrorCode.inputTooLarge,
       );
@@ -139,7 +142,10 @@ class _InstalledOfficePreviewDialogState
       if (!mounted) return;
       final available = [
         for (final installation in found)
-          if (installation.supportsPagePreview) installation,
+          if (installation.supportsPagePreview &&
+              (!isInstalledOfficePresentationName(widget.sourceName) ||
+                  installation.kind == InstalledOfficeKind.libreOffice))
+            installation,
       ];
       setState(() {
         _installations = List.unmodifiable(available);

@@ -306,6 +306,12 @@ abstract final class WordContentControls {
       }
       if (block is WmlParagraph) {
         yield* _paragraphControls([block]);
+      } else if (block is WmlTable) {
+        for (final row in block.rows) {
+          for (final cell in row.cells) {
+            yield* cell.contentControlWrappers;
+          }
+        }
       } else if (block is WmlToc) {
         yield* _paragraphControls([
           block.titleParagraph,

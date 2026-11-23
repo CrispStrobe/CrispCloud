@@ -1,8 +1,11 @@
+import 'dart:async';
+import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/painting.dart';
+import 'package:flutter_svg/flutter_svg.dart' show SvgBytesLoader, vg;
 import 'package:quds_office_engine/quds_office_engine.dart';
 
 import '../editor_word/paint_run_text.dart';
@@ -14,22 +17,35 @@ typedef VisualImageDecoder =
 /// Owns decoded pictures for one Office canvas, including pending decodes.
 class VisualImageCache {
   VisualImageCache({VisualImageDecoder? decodeImage})
-    : _decodeImage = decodeImage ?? ui.decodeImageFromList;
+    // Keep the public decoder parameter name independent of its private field.
+    // ignore: prefer_initializing_formals
+    : _decodeImage = decodeImage;
 
-  final VisualImageDecoder _decodeImage;
+  final VisualImageDecoder? _decodeImage;
+
+  /// Optional bounded converter supplied by the embedding app for metafiles.
+  static FutureOr<Uint8List?> Function(Uint8List bytes)? metafileAsSvg;
+
   final Map<Uint8List, ui.Image> _ready = Map<Uint8List, ui.Image>.identity();
   final Set<Uint8List> _loading = Set<Uint8List>.identity();
+  final Set<Uint8List> _failed = Set<Uint8List>.identity();
+  static final _svgElement = RegExp(r'<(?:[\w.-]+:)?svg[\s/>]');
+  static const _maxSvgBytes = 8 * 1024 * 1024;
+  static const _maxSvgPixels = 2048;
   bool _disposed = false;
 
   ui.Image? get(Uint8List bytes) => _ready[bytes];
 
   /// load API.
   void load(Uint8List bytes, VoidCallback onReady) {
-    if (_disposed || _ready.containsKey(bytes) || _loading.contains(bytes)) {
+    if (_disposed ||
+        _ready.containsKey(bytes) ||
+        _loading.contains(bytes) ||
+        _failed.contains(bytes)) {
       return;
     }
     _loading.add(bytes);
-    _decodeImage(bytes, (ui.Image image) {
+    void decoded(ui.Image image) {
       _loading.remove(bytes);
       if (_disposed) {
         image.dispose();
@@ -37,7 +53,121 @@ class VisualImageCache {
       }
       _ready[bytes] = image;
       onReady();
-    });
+    }
+
+    void failed() {
+      _loading.remove(bytes);
+      if (!_disposed) _failed.add(bytes);
+    }
+
+    final decoder = _decodeImage;
+    if (decoder == null) {
+      _decodeDefault(bytes, decoded, failed);
+    } else {
+      var callbackStarted = false;
+      try {
+        decoder(bytes, (image) {
+          callbackStarted = true;
+          decoded(image);
+        });
+      } catch (_) {
+        if (callbackStarted) rethrow;
+        failed();
+      }
+    }
+  }
+
+  Future<void> _decodeDefault(
+    Uint8List bytes,
+    void Function(ui.Image) onDecoded,
+    VoidCallback onError,
+  ) async {
+    ui.Image image;
+    try {
+      final vector = _looksLikeSvg(bytes)
+          ? bytes
+          : await metafileAsSvg?.call(bytes);
+      image = await (vector == null
+          ? _decodeRaster(bytes)
+          : _rasterizeSvg(vector));
+    } catch (_) {
+      onError();
+      return;
+    }
+    onDecoded(image);
+  }
+
+  static bool _looksLikeSvg(Uint8List bytes) {
+    if (bytes.isEmpty || bytes.length > _maxSvgBytes) return false;
+    final first = bytes.first;
+    if (first != 0x3c &&
+        first != 0xef &&
+        first != 0x20 &&
+        (first < 0x09 || first > 0x0d)) {
+      return false;
+    }
+    final prefix = utf8
+        .decode(
+          Uint8List.sublistView(bytes, 0, math.min(bytes.length, 4096)),
+          allowMalformed: true,
+        )
+        .trimLeft();
+    return (prefix.startsWith('<') || prefix.startsWith('\uFEFF')) &&
+        _svgElement.hasMatch(prefix);
+  }
+
+  static Future<ui.Image> _decodeRaster(Uint8List bytes) async {
+    final buffer = await ui.ImmutableBuffer.fromUint8List(bytes);
+    try {
+      final descriptor = await ui.ImageDescriptor.encoded(buffer);
+      try {
+        final longest = math.max(descriptor.width, descriptor.height);
+        final scale = math.min(1.0, 4096 / longest);
+        final codec = await descriptor.instantiateCodec(
+          targetWidth: math.max(1, (descriptor.width * scale).round()),
+          targetHeight: math.max(1, (descriptor.height * scale).round()),
+        );
+        try {
+          return (await codec.getNextFrame()).image;
+        } finally {
+          codec.dispose();
+        }
+      } finally {
+        descriptor.dispose();
+      }
+    } finally {
+      buffer.dispose();
+    }
+  }
+
+  static Future<ui.Image> _rasterizeSvg(Uint8List bytes) async {
+    // The byte loader resolves inline assets without fetching external URLs.
+    final svg = await vg.loadPicture(SvgBytesLoader(bytes), null);
+    try {
+      final size = svg.size;
+      if (!size.isFinite || size.isEmpty) {
+        throw const FormatException('Invalid embedded SVG size.');
+      }
+      final target = (size.longestSide * 2).clamp(256, _maxSvgPixels);
+      final scale = target / size.longestSide;
+      if (!scale.isFinite) {
+        throw const FormatException('Invalid embedded SVG scale.');
+      }
+      final width = (size.width * scale).ceil().clamp(1, _maxSvgPixels);
+      final height = (size.height * scale).ceil().clamp(1, _maxSvgPixels);
+      final recorder = ui.PictureRecorder();
+      Canvas(recorder)
+        ..scale(scale)
+        ..drawPicture(svg.picture);
+      final scaled = recorder.endRecording();
+      try {
+        return await scaled.toImage(width, height);
+      } finally {
+        scaled.dispose();
+      }
+    } finally {
+      svg.picture.dispose();
+    }
   }
 
   /// A late decode must release its image without repainting a disposed owner.
@@ -49,6 +179,7 @@ class VisualImageCache {
     }
     _ready.clear();
     _loading.clear();
+    _failed.clear();
   }
 }
 
@@ -63,6 +194,7 @@ abstract final class PaintOfficeVisual {
     VisualImageCache? images,
     VoidCallback? onImageReady,
     bool cropPreview = false,
+    double shapeRotationDegrees = 0,
   }) {
     switch (visual.kind) {
       case OfficeVisualKind.picture:
@@ -73,6 +205,7 @@ abstract final class PaintOfficeVisual {
           images,
           onImageReady,
           cropPreview: cropPreview,
+          shapeRotationDegrees: shapeRotationDegrees,
         );
       case OfficeVisualKind.chartColumn:
         _column(canvas, rect, visual, fontFamily);
@@ -98,6 +231,7 @@ abstract final class PaintOfficeVisual {
     VisualImageCache? images,
     VoidCallback? onImageReady, {
     bool cropPreview = false,
+    required double shapeRotationDegrees,
   }) {
     final Uint8List? bytes = visual.imageBytes;
     if (bytes == null || bytes.isEmpty) {
@@ -196,25 +330,56 @@ abstract final class PaintOfficeVisual {
         Paint()..color = const Color(0x99FFFFFF),
       );
     }
-    if (adj.shadow) {
-      canvas.drawRect(
-        dest.shift(const Offset(2, 2)),
-        Paint()
-          ..color = const Color(0x55000000)
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
-      );
-    }
-    canvas.drawImageRect(
-      image,
-      Rect.fromLTWH(
-        sl,
-        st,
-        (image.width - sl - sr).clamp(1, image.width.toDouble()),
-        (image.height - st - sb).clamp(1, image.height.toDouble()),
-      ),
-      dest,
-      paint,
+    final source = Rect.fromLTWH(
+      sl,
+      st,
+      (image.width - sl - sr).clamp(1, image.width.toDouble()),
+      (image.height - st - sb).clamp(1, image.height.toDouble()),
     );
+    final matrix = canvas.getTransform();
+    final screenWidth =
+        dest.width * math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
+    final screenHeight =
+        dest.height * math.sqrt(matrix[4] * matrix[4] + matrix[5] * matrix[5]);
+    if (source.width > 2 * screenWidth || source.height > 2 * screenHeight) {
+      // Mipmaps retain thin marks in highly reduced worksheet art. Bicubic
+      // samples a fixed neighborhood and can miss them at those scales.
+      paint.filterQuality = FilterQuality.medium;
+    }
+    if (adj.shadow) {
+      final effect = adj.outerShadow;
+      final rotation = effect?.rotatesWithShape == false
+          ? shapeRotationDegrees + adj.rotationDeg
+          : 0;
+      final angle =
+          ((effect?.directionDegrees ?? 45) - rotation) * math.pi / 180;
+      final distance = effect?.distance ?? math.sqrt(8);
+      final shadowRect = dest.shift(
+        Offset(math.cos(angle) * distance, math.sin(angle) * distance),
+      );
+      final sigma = effect == null
+          ? 3.0
+          : (effect.blurRadius / 2).clamp(0.0, 128.0);
+      final tint = _hex(effect?.color ?? '000000').withValues(
+        alpha: ((effect?.opacity ?? 1 / 3) * (1 - adj.transparency)).clamp(
+          0.0,
+          1.0,
+        ),
+      );
+      final shadowPaint = Paint()
+        ..colorFilter = ColorFilter.mode(tint, BlendMode.srcIn)
+        ..filterQuality = paint.filterQuality;
+      if (sigma > 0) {
+        shadowPaint.imageFilter = ui.ImageFilter.blur(
+          sigmaX: sigma,
+          sigmaY: sigma,
+          tileMode: TileMode.decal,
+        );
+      }
+      // Draw the cropped alpha mask so transparent pixels cast no shadow.
+      canvas.drawImageRect(image, source, shadowRect, shadowPaint);
+    }
+    canvas.drawImageRect(image, source, dest, paint);
     if (adj.borderWidth > 0 && adj.borderColor.isNotEmpty) {
       canvas.drawRect(
         dest.inflate(adj.borderWidth / 2),

@@ -343,10 +343,39 @@ void main() {
     expect(reopen(doc).revisions, isEmpty);
   });
   test(
-    'ambiguous or removed empty formatting targets fail without losing history',
+    'multiple native empty runs retain independent formatting histories',
     () {
       final duplicate = read('<w:p>${changedRun('')}${changedRun('')}</w:p>');
-      expect(duplicate.revisions, hasLength(2));
+      final copy = reopen(duplicate);
+      expect(copy.revisions, hasLength(2));
+      final runs = copy.paragraphs.first.inlines.whereType<WmlRun>().toList();
+      expect(
+        copy.revisions.first.emptyFormattingAnchor,
+        same(runs.first.formattingAnchor),
+      );
+      expect(
+        copy.revisions.last.emptyFormattingAnchor,
+        same(runs.last.formattingAnchor),
+      );
+      WordRevisions.reject(copy, copy.revisions.first);
+      expect(runs.first.properties.italic, isTrue);
+      expect(runs.last.properties.bold, isTrue);
+      expect(reopen(copy).revisions, hasLength(1));
+    },
+  );
+  test(
+    'ambiguous or removed empty formatting targets fail without losing history',
+    () {
+      final duplicate = read('<w:p>${run('')}${run('')}</w:p>');
+      WordRevisions.record(
+        duplicate,
+        kind: WmlRevisionKind.runFormat,
+        paragraphIndex: 0,
+        start: 0,
+        end: 0,
+        text: '',
+        previousPropertiesXml: '<w:rPr xmlns:w="$w"/>',
+      );
       expect(() => WordSerializer().writeBytes(duplicate), throwsStateError);
       final removed = read('<w:p>${changedRun('')}</w:p>');
       removed.paragraphs.first.inlines.clear();
@@ -354,6 +383,43 @@ void main() {
       expect(removed.revisions, hasLength(1));
     },
   );
+  test('native nested revisions retain their grouping and authors on save', () {
+    final doc = read(
+      '<w:p><w:ins w:id="20" w:author="Outer">'
+      '${run('before')}<w:del w:id="21" w:author="Inner">'
+      '<w:r><w:delText>old</w:delText></w:r>'
+      '<w:r><w:delText> text</w:delText></w:r>'
+      '</w:del>${run('after')}</w:ins></w:p><w:p>${run('Other')}</w:p>',
+    );
+    final other = doc.paragraphs.last.inlines.whereType<WmlRun>().single;
+    other.text = 'Edited unrelated paragraph';
+    final copy = reopen(doc);
+    final [inner, outer] = copy.revisions;
+    expect(inner.hasNativeAncestor(outer), isTrue);
+    expect(inner.kind, WmlRevisionKind.delete);
+    expect(inner.author, 'Inner');
+    expect(inner.text, 'old text');
+    expect(outer.kind, WmlRevisionKind.insert);
+    expect(outer.author, 'Outer');
+    expect(outer.text, 'beforeold textafter');
+    expect(outer.dateIso, isEmpty);
+    expect(copy.paragraphs.last.text, 'Edited unrelated paragraph');
+    expect(() => WordRevisions.accept(copy, inner), throwsStateError);
+  });
+  test('native move ranges preserve nested text revisions', () {
+    final doc = read(
+      '<w:p>${move('moveFrom', 'pair', 2, run('Source'))}</w:p><w:p>'
+      '${move('moveTo', 'pair', 4, '${run('Destination')}<w:del w:id="22" w:author="Editor"><w:r><w:delText>gone</w:delText></w:r></w:del>')}</w:p>',
+    );
+    final copy = reopen(doc);
+    expect(copy.revisions, hasLength(3));
+    final destination = copy.revisions.last;
+    expect(destination.kind, WmlRevisionKind.moveTo);
+    expect(destination.moveName, 'pair');
+    expect(destination.moveStartXml, isNotNull);
+    expect(destination.moveEndXml, isNotNull);
+    expect(copy.revisions[1].hasNativeAncestor(destination), isTrue);
+  });
   test('write a native tracked formatting and move interoperability fixture', () {
     final d = read(
       '<w:p>${changedRun('Changed formatting')}</w:p><w:p>${move('moveFrom', 'paired', 2, run('Moved sentence.'))}${run('Some other text.')}${move('moveTo', 'paired', 4, run('Moved sentence.'))}</w:p><w:p><w:pPr><w:jc w:val="center"/><w:pPrChange $meta><w:pPr><w:jc w:val="right"/></w:pPr></w:pPrChange></w:pPr>${run('Paragraph formatting')}</w:p>',

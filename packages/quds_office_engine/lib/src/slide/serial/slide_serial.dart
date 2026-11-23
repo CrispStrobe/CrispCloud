@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math' as math;
 import 'dart:typed_data';
 
 import '../../builders/drawingml_charts.dart';
@@ -9,6 +10,7 @@ import '../../opc/content_types.dart';
 import '../../opc/opc_archive.dart';
 import '../../opc/package_part.dart';
 import '../../opc/relationships.dart';
+import '../../opc/zip/crc32.dart';
 import '../../sheet/serial/sheet_drawing_io.dart';
 import '../../visual/drawingml_visual_io.dart';
 import '../../visual/office_visual.dart';
@@ -20,13 +22,19 @@ import '../anim/pml_motion_io.dart';
 import '../model/pml_arrange.dart';
 import '../model/pml_presentation.dart';
 import '../shapes/drawingml.dart';
+import '../shapes/slide_rich_text.dart';
 import 'slide_section_io.dart';
+
+part 'slide_source_xml.dart';
 
 /// Class SlideDeserializer.
 class SlideDeserializer {
   /// read API.
   PmlPresentation read(OpcPackage package) {
     package.assertUnsignedForEditing();
+    if (package.sourceInflatedLength > 1024 * 1024 * 1024) {
+      throw const FormatException('Expanded presentation exceeds 1 GiB.');
+    }
     final PmlPresentation pres = PmlPresentation(
       package: package,
       slides: <PmlSlide>[],
@@ -76,12 +84,12 @@ class SlideDeserializer {
               : '/ppt/slides/slide${pres.slides.length}.xml',
         );
       } else if (reader.localName == 'sldSz') {
-        pres.slideWidth = int.parse(
-          reader.getAttribute('cx') ?? '${pres.slideWidth}',
-        );
-        pres.slideHeight = int.parse(
-          reader.getAttribute('cy') ?? '${pres.slideHeight}',
-        );
+        final width = int.tryParse(reader.getAttribute('cx') ?? '');
+        final height = int.tryParse(reader.getAttribute('cy') ?? '');
+        if (width != null && width > 0 && height != null && height > 0) {
+          pres.slideWidth = width;
+          pres.slideHeight = height;
+        }
       }
     }
     final XmlDocument source = XmlDocument.parse(part.readText());
@@ -95,6 +103,13 @@ class SlideDeserializer {
       slideWidth: pres.slideWidth,
       slideHeight: pres.slideHeight,
     );
+    final defaultTextStyle = source.root?.firstChild(
+      'defaultTextStyle',
+      namespaceUri: OfficeNamespaces.p,
+    );
+    final presentationTextStyles = defaultTextStyle == null
+        ? const <int, PmlTextParagraph>{}
+        : parsePmlMasterTextStyle(defaultTextStyle, templates.defaultColors);
     final String? masterBg = _masterBackground(
       package,
       templates.defaultColors,
@@ -187,6 +202,12 @@ class SlideDeserializer {
         pres.slides[i].hidden = _slideIsHidden(slideXml);
         final RelationshipCollection rels = package.relationshipsFor(uri);
         _bindSlideMedia(pres.slides[i], package, rels);
+        _applyMasterTextStyles(
+          shapes,
+          layout?.master?.textStyles ?? const {},
+          presentationTextStyles: presentationTextStyles,
+        );
+        _resolveThemeFonts(shapes, layout?.fonts ?? templates.defaultFonts);
         final PackageRelationship? notesRel = rels.firstByType(
           RelationshipTypes.notesSlide,
         );
@@ -199,6 +220,9 @@ class SlideDeserializer {
                 .join('\n');
           }
         }
+        pres.slides[i].sourceState = SlideSerializer._sourceState(
+          pres.slides[i],
+        );
       }
     }
     final List<PmlLayout> layouts = templates.allLayouts();
@@ -216,15 +240,152 @@ class SlideDeserializer {
     List<List<PmlShape>> sources,
   ) {
     for (final PmlShape shape in shapes) {
-      if (!shape.placeholder || positioned.contains(shape)) {
+      if (!shape.placeholder) {
         continue;
       }
+      final snapshot = shape.textSource;
+      final insetSides = {...?snapshot?.definedInsetSides};
       for (final List<PmlShape> source in sources) {
         final PmlShape? match = _matchPlaceholder(shape, source);
-        if (match != null) {
+        if (match == null) continue;
+        if (match != shape && !positioned.contains(shape)) {
           shape.transform = match.transform;
           positioned.add(shape);
-          break;
+        }
+        shape.clipsTextVertically ??= match.clipsTextVertically;
+        shape.inheritedTextWrap ??= match.textWrap ?? match.inheritedTextWrap;
+        final templateText = match.textSource;
+        if (snapshot != null && templateText != null) {
+          for (final side in templateText.definedInsetSides) {
+            if (insetSides.add(side)) {
+              shape.textInsets = shape.textInsets.withSide(
+                side,
+                templateText.textInsets[side],
+              );
+            }
+          }
+        }
+        if (!shape.textAnchorSpecified) {
+          shape.inheritedTextAnchor ??= match.textAnchorSpecified
+              ? match.textAnchor
+              : match.inheritedTextAnchor;
+        }
+        final first = match.richText.firstOrNull;
+        if (shape.fontSizePt == 0) {
+          shape.fontSizePt = match.fontSizePt > 0
+              ? match.fontSizePt
+              : first?.defaultFontSizePt ?? 0;
+        }
+        if (shape.textColor.isEmpty) {
+          shape.textColor = match.textColor.isNotEmpty
+              ? match.textColor
+              : first?.defaultColor ?? '';
+        }
+        for (final paragraph in shape.richText) {
+          final template = match.richText
+              .where((p) => p.level == paragraph.level)
+              .firstOrNull;
+          if (template == null) continue;
+          paragraph.inheritLayout(template);
+          paragraph.defaultLetterSpacingPt ??= template.defaultLetterSpacingPt;
+          final templateRun = template.runs.firstOrNull;
+          if (paragraph.defaultFontSizePt == 0)
+            paragraph.defaultFontSizePt = template.defaultFontSizePt;
+          if (paragraph.defaultFontFamily.isEmpty)
+            paragraph.defaultFontFamily = template.defaultFontFamily;
+          for (final run in paragraph.runs) {
+            if (run.fontSizePt == 0) {
+              run.fontSizePt =
+                  templateRun?.fontSizePt ?? template.defaultFontSizePt;
+            }
+            if (run.color.isEmpty)
+              run.color = templateRun?.color ?? template.defaultColor;
+            if (run.fontFamily.isEmpty)
+              run.fontFamily =
+                  templateRun?.fontFamily ?? template.defaultFontFamily;
+            if (!run.boldSpecified && templateRun?.boldSpecified == true) {
+              run.bold = templateRun!.bold;
+              run.boldSpecified = true;
+            }
+          }
+        }
+      }
+      if (snapshot != null &&
+          (snapshot.fontSizePt != shape.fontSizePt ||
+              snapshot.textColor != shape.textColor ||
+              snapshot.definedInsetSides.length != insetSides.length)) {
+        shape.textSource = snapshot.withInheritedFormatting(
+          fontSizePt: shape.fontSizePt,
+          textColor: shape.textColor,
+          textInsets: shape.textInsets,
+          definedInsetSides: Set.unmodifiable(insetSides),
+        );
+      }
+    }
+  }
+
+  static void _applyMasterTextStyles(
+    List<PmlShape> shapes,
+    Map<String, Map<int, PmlTextParagraph>> styles, {
+    Map<int, PmlTextParagraph> presentationTextStyles = const {},
+  }) {
+    for (final shape in shapes) {
+      final role = shape.placeholder
+          ? switch (_placeholderFamily(shape.placeholderType)) {
+              'title' => 'titleStyle',
+              'body' => 'bodyStyle',
+              _ => 'otherStyle',
+            }
+          : 'otherStyle';
+      final style = styles[role];
+      for (final paragraph in shape.richText) {
+        final defaults = style?[paragraph.level] ?? style?[0];
+        // Ordinary text without an authored size uses the presentation's
+        // defaults. Placeholders inherit size through the layout and master.
+        final presentationSize = shape.placeholder
+            ? 0.0
+            : presentationTextStyles[paragraph.level]?.defaultFontSizePt ?? 0.0;
+        final first = defaults?.runs.firstOrNull;
+        final size = presentationSize > 0
+            ? presentationSize
+            : first?.fontSizePt ?? 0.0;
+        if (paragraph.defaultFontSizePt == 0)
+          paragraph.defaultFontSizePt = size;
+        if (defaults != null) {
+          paragraph.inheritLayout(defaults);
+          paragraph.defaultLetterSpacingPt ??= defaults.defaultLetterSpacingPt;
+        }
+        if (first != null && paragraph.defaultFontFamily.isEmpty) {
+          paragraph.defaultFontFamily = first.fontFamily;
+        }
+        for (final run in paragraph.runs) {
+          if (run.fontSizePt == 0) run.fontSizePt = size;
+          if (first == null) continue;
+          if (run.color.isEmpty) run.color = first.color;
+          if (run.fontFamily.isEmpty) run.fontFamily = first.fontFamily;
+          if (!run.boldSpecified && first.boldSpecified) run.bold = first.bold;
+        }
+      }
+    }
+  }
+
+  static void _resolveThemeFonts(
+    List<PmlShape> shapes,
+    Map<String, String> fonts,
+  ) {
+    for (final shape in shapes) {
+      final isTitle = _placeholderFamily(shape.placeholderType) == 'title';
+      for (final paragraph in shape.richText) {
+        final defaultKey = paragraph.defaultFontFamily.isEmpty
+            ? (isTitle ? '+mj-lt' : '+mn-lt')
+            : paragraph.defaultFontFamily;
+        paragraph.defaultFontFamily =
+            fonts[defaultKey] ?? paragraph.defaultFontFamily;
+        for (final run in paragraph.runs) {
+          final key = run.fontFamily.isEmpty
+              ? (isTitle ? '+mj-lt' : '+mn-lt')
+              : run.fontFamily;
+          run.fontFamily = fonts[key] ?? run.fontFamily;
         }
       }
     }
@@ -600,7 +761,7 @@ class SlideDeserializer {
         shape.visual = OfficeVisual(
           kind: shape.visual?.kind ?? OfficeVisualKind.picture,
           title: shape.visual?.title ?? shape.name,
-          imageBytes: part.readBytes(),
+          imageBytes: part.bytesView,
           width: shape.transform.widthPoints,
           height: shape.transform.heightPoints,
           picture: picture,
@@ -624,6 +785,7 @@ class _SlideTemplate {
   _SlideTemplate({
     required this.name,
     required this.colors,
+    required this.fonts,
     required this.placeholders,
     required this.decorations,
     this.background,
@@ -632,10 +794,13 @@ class _SlideTemplate {
     this.inheritsMasterBackground = false,
     this.showsMasterShapes = true,
     this.master,
+    this.textStyles = const {},
   });
 
   final String name;
   final Map<String, String> colors;
+  final Map<String, String> fonts;
+  final Map<String, Map<int, PmlTextParagraph>> textStyles;
   final List<PmlShape> placeholders;
   final List<PmlShape> decorations;
   final String? background;
@@ -656,12 +821,16 @@ class _SlideTemplates {
   }) : defaultColors = _colorMap(
          package.getPart('/ppt/theme/theme1.xml')?.readText(),
          null,
+       ),
+       defaultFonts = _fontMap(
+         package.getPart('/ppt/theme/theme1.xml')?.readText(),
        );
 
   final OpcPackage package;
   final int slideWidth;
   final int slideHeight;
   final Map<String, String> defaultColors;
+  final Map<String, String> defaultFonts;
   final Map<String, _SlideTemplate?> _layouts = <String, _SlideTemplate?>{};
   final Map<String, _SlideTemplate?> _masters = <String, _SlideTemplate?>{};
 
@@ -723,9 +892,12 @@ class _SlideTemplates {
     }
     final String? background = SlideDeserializer._backgroundOf(xml, colors);
     final bool ownsBackground = SlideDeserializer._hasBackground(xml);
+    final fonts = master?.fonts ?? defaultFonts;
+    SlideDeserializer._resolveThemeFonts(shapes, fonts);
     return _layouts[uri] = _SlideTemplate(
       name: _cSldName(xml) ?? 'Layout',
       colors: colors,
+      fonts: fonts,
       placeholders: <PmlShape>[
         for (final PmlShape shape in shapes)
           if (shape.placeholder && positioned.contains(shape)) shape,
@@ -765,19 +937,32 @@ class _SlideTemplates {
       return null;
     }
     final String? themeUri = _target(uri, RelationshipTypes.theme);
-    final Map<String, String> colors = _colorMap(
-      themeUri == null ? null : package.getPart(themeUri)?.readText(),
-      xml,
-    );
+    final theme = themeUri == null
+        ? null
+        : package.getPart(themeUri)?.readText();
+    final colors = _colorMap(theme, xml);
+    final fonts = theme == null ? defaultFonts : _fontMap(theme);
     final Set<PmlShape> positioned = Set<PmlShape>.identity();
     final List<PmlShape> shapes = parseSlideShapes(
       xml,
       colors: colors,
       positioned: positioned,
     );
+    final styles = XmlDocument.parse(
+      xml,
+    ).root?.firstChild('txStyles', namespaceUri: OfficeNamespaces.p);
+    final textStyles = {
+      for (final element in styles?.childElements ?? const <XmlElement>[])
+        if (element.namespaceUri == OfficeNamespaces.p)
+          element.localName: parsePmlMasterTextStyle(element, colors),
+    };
+    SlideDeserializer._applyMasterTextStyles(shapes, textStyles);
+    SlideDeserializer._resolveThemeFonts(shapes, fonts);
     return _masters[uri] = _SlideTemplate(
       name: _cSldName(xml) ?? 'Master',
+      textStyles: textStyles,
       colors: colors,
+      fonts: fonts,
       placeholders: <PmlShape>[
         for (final PmlShape shape in shapes)
           if (shape.placeholder && positioned.contains(shape)) shape,
@@ -830,6 +1015,25 @@ class _SlideTemplates {
       }
     }
     return null;
+  }
+
+  static Map<String, String> _fontMap(String? themeXml) {
+    if (themeXml == null) return const {};
+    final theme = XmlDocument.parse(themeXml).root;
+    final scheme = theme?.firstChild('themeElements')?.firstChild('fontScheme');
+    final fonts = <String, String>{};
+    for (final (role, key) in [('majorFont', '+mj'), ('minorFont', '+mn')]) {
+      final font = scheme?.firstChild(role);
+      for (final (script, suffix) in [
+        ('latin', 'lt'),
+        ('ea', 'ea'),
+        ('cs', 'cs'),
+      ]) {
+        final face = font?.firstChild(script)?.getAttribute('typeface');
+        if (face != null && face.isNotEmpty) fonts['$key-$suffix'] = face;
+      }
+    }
+    return fonts;
   }
 
   /// Theme `a:clrScheme` slots, plus the master's `p:clrMap` aliases
@@ -913,7 +1117,7 @@ class _SlideTemplates {
 class SlideSerializer {
   /// writeBytes API.
   Uint8List writeBytes(PmlPresentation pres, {String? password}) =>
-      write(pres).save(password: password);
+      write(pres).save(password: password, reuseCompressedParts: true);
 
   /// write API.
   OpcPackage write(PmlPresentation pres) {
@@ -992,22 +1196,38 @@ class SlideSerializer {
         target: OpcUris.relativize(_presentationUri, uri),
       );
       slideRelIds.add(slideRel.id);
-      final Map<PmlShape, String> embedIds = _syncSlideVisuals(
-        pres.slides[i],
-        package,
-        uri,
-        preserveBackgroundInheritance: preserveBackgroundInheritance,
-      );
-      package
-          .getPart(uri)!
-          .writeText(
-            slideToXml(
-              pres.slides[i],
-              embedIds: embedIds,
-              preserveBackgroundInheritance: preserveBackgroundInheritance,
-            ),
-          );
-      _syncNotesSlide(pres.slides[i], package, uri, i + 1);
+      final PmlSlide slide = pres.slides[i];
+      final PackagePart part = package.getPart(uri)!;
+      final source = part.length == 0 ? null : slide.sourceState;
+      final current = _sourceState(slide);
+      final slideChanged =
+          source == null ||
+          source.modeledXml != current.modeledXml ||
+          !_sameMap(source.visuals, current.visuals);
+      if (slideChanged) {
+        final Map<PmlShape, String> embedIds = _syncSlideVisuals(
+          slide,
+          package,
+          uri,
+          preserveBackgroundInheritance: preserveBackgroundInheritance,
+          source: source,
+          current: current,
+        );
+        final String xml = slideToXml(
+          slide,
+          embedIds: embedIds,
+          preserveBackgroundInheritance: preserveBackgroundInheritance,
+        );
+        part.writeText(
+          source == null
+              ? xml
+              : _SlideSourceXml.update(part.readText(), source, current, xml),
+        );
+      }
+      if (source == null || source.notes != slide.notes) {
+        _syncNotesSlide(slide, package, uri, i + 1);
+      }
+      slide.sourceState = slideChanged ? _sourceState(slide) : current;
     }
     for (final PackageRelationship rel
         in presentationRels.byType(RelationshipTypes.slide).toList()) {
@@ -1023,6 +1243,26 @@ class SlideSerializer {
     return package;
   }
 
+  static PmlSlideSource _sourceState(PmlSlide slide) => PmlSlideSource(
+    modeledXml: slideToXml(slide, preserveBackgroundInheritance: true),
+    notes: slide.notes,
+    shapeOrder: [for (final shape in slide.shapes) (shape.id, shape.groupId)],
+    visuals: {
+      for (final shape in slide.shapes)
+        if (shape.visual case final visual?)
+          shape.id: switch (visual) {
+            _ when visual.isChart => _chartXml(visual),
+            _ when visual.imageBytes != null =>
+              '${visual.imageBytes!.length}:${Crc32.compute(visual.imageBytes!)}',
+            _ => '${visual.kind}:${visual.title}',
+          },
+    },
+  );
+
+  static bool _sameMap(Map<int, String> a, Map<int, String> b) =>
+      a.length == b.length &&
+      a.entries.every((entry) => b[entry.key] == entry.value);
+
   // SDK semantic constraints restrict axis IDs to signed-positive integers.
   // Allocate replacements for out-of-range producer IDs without colliding with
   // valid IDs, and apply the same mapping to every axis reference in the part.
@@ -1031,6 +1271,8 @@ class SlideSerializer {
     OpcPackage package,
     String slideUri, {
     required bool preserveBackgroundInheritance,
+    required PmlSlideSource? source,
+    required PmlSlideSource current,
   }) {
     final Map<PmlShape, String> ids = <PmlShape, String>{};
     final RelationshipCollection rels = package.relationshipsFor(slideUri);
@@ -1043,7 +1285,10 @@ class SlideSerializer {
       ...slide.shapes,
     ]) {
       final OfficeVisual? visual = shape.visual;
-      if (visual == null) {
+      if (visual == null ||
+          (source != null &&
+              shape.embedRelId != null &&
+              source.visuals[shape.id] == current.visuals[shape.id])) {
         continue;
       }
       if (visual.isChart) {

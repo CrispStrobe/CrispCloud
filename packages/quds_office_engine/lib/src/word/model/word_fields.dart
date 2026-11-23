@@ -26,6 +26,15 @@ enum WmlFieldKind {
 
 /// Resolves paragraph fields and native single-run inline fields.
 abstract final class WordFields {
+  static final _plainPageInstruction = RegExp(
+    r'^\s*PAGE(?:\s+\\\*\s+MERGEFORMAT)?\s*$',
+    caseSensitive: false,
+  );
+
+  /// Whether the native PAGE instruction can display an ordinary number.
+  static bool isPlainPageInstruction(String instruction) =>
+      _plainPageInstruction.hasMatch(instruction);
+
   /// kindOf API.
   static WmlFieldKind kindOf(String? instruction) {
     // Arguments may contain reserved words (a citation tagged PAGE or a URL

@@ -151,6 +151,33 @@ List<LaidOutLine> _noteLines(WmlDocument doc) => WordLayoutEngine(font: null)
     .toList();
 
 void main() {
+  test('formatting history on a note marker survives save and reopen', () {
+    final package = _source();
+    final part = package.getPart('/word/footnotes.xml')!;
+    final xml = part.readText();
+    const properties =
+        '<w:rPr><w:b/><w:rPrChange w:id="921" w:author="Reviewer">'
+        '<w:rPr><w:i/></w:rPr></w:rPrChange></w:rPr>';
+    part.writeText(
+      xml.replaceFirst(
+        '<w:r><w:footnoteRef/></w:r>',
+        '<w:r>$properties<w:footnoteRef/></w:r>',
+      ),
+    );
+    final doc = WordDeserializer().read(package);
+    expect(doc.revisions, isEmpty);
+    final saved = WordSerializer().write(doc);
+    final output = saved.getPart('/word/footnotes.xml')!.readText();
+    expect(output, contains('w:author="Reviewer"'));
+    expect(output, contains('w:rPrChange'));
+    final copy = WordDeserializer().read(saved);
+    expect(copy.revisions, isEmpty);
+    expect(
+      copy.footnotes.expand(_markers).map((m) => m.runPropertiesXml),
+      contains(contains('w:rPrChange')),
+    );
+  });
+
   final expected =
       jsonDecode(
             File('$_fixtures/note_markers_expected.json').readAsStringSync(),

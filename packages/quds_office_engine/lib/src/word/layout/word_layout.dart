@@ -9,6 +9,8 @@ import '../../fonts/office_font_set.dart';
 import '../../fonts/office_typeface.dart';
 import '../../fonts/sfnt_parser.dart';
 import '../../visual/office_visual.dart';
+import '../../xml/namespaces.dart';
+import '../../xml/xml_node.dart';
 import '../math/omml_document.dart';
 import '../math/omml_layout.dart';
 import '../model/wml_clone.dart';
@@ -25,6 +27,7 @@ import '../model/word_tree.dart';
 import '../properties/wml_properties.dart';
 
 part 'word_contained_layout.dart';
+part 'word_chrome_frames.dart';
 part 'word_incremental_layout.dart';
 part 'word_note_layout.dart';
 part 'word_run_measure.dart';
@@ -168,6 +171,7 @@ class LaidOutLine {
     this.overlayColor,
     this.overlaySize = 11,
     this.overlayBold = false,
+    this.overlayBaseline,
     this.sourceText,
     this.sourceParagraph,
     this.proofingOffsets,
@@ -322,6 +326,9 @@ class LaidOutLine {
 
   /// overlayBold API.
   final bool overlayBold;
+
+  /// Baseline measured from the top of the line box for an overlay.
+  final double? overlayBaseline;
 
   /// sourceText API.
   final String? sourceText;
@@ -863,6 +870,7 @@ class WordLayoutEngine {
   Map<WmlFrame, ({double y, int paragraphIndex})>? _deferredContainedFrames;
   int _containedMeasureDepth = 0;
   Map<WmlVisual, double>? _deferredContainedVisuals;
+  ({WmlTable table, List<_TallCellContent> cells})? _captureTallCells;
   WmlSection? _containedPhysicalSection;
   int _containedTableDepth = 0;
   // Sum of one-sided margins of all enclosing table cells. Nested tables may
@@ -1505,7 +1513,13 @@ class WordLayoutEngine {
       }
       // One block of margin on each side: an edit can adjust a neighbour
       // (split/join, list or direction sync) without changing its text.
-      final int start = p > 0 ? p - 1 : 0;
+      var start = p > 0 ? p - 1 : 0;
+      // Reflow the beginning of any keep-with-next chain the edit touches.
+      while (start > 0) {
+        final prior = now[start - 1];
+        if (prior is! WmlParagraph || !prior.properties.keepWithNext) break;
+        start--;
+      }
       final int suffix = q > 0 ? q - 1 : 0;
       dirtyBlocks.addAll(now.sublist(start, n - suffix));
       if (firstSection < 0) {
@@ -1809,7 +1823,7 @@ class WordLayoutEngine {
     resume,
   }) {
     final _Flow flow;
-    double? adjacentParagraphAfter;
+    _AdjacentWordParagraph? adjacentParagraph;
     if (resume == null) {
       _padSectionBreak(section, pages, sectionIndex);
       final bool continuous =
@@ -1839,12 +1853,13 @@ class WordLayoutEngine {
         ..columnTop = cp.columnTop;
       flow.current.addAll(resume.lines);
       flow.currentFrames.addAll(resume.frames);
-      adjacentParagraphAfter = cp.adjacentAfter;
+      adjacentParagraph = cp.adjacentParagraph;
       _recorder?.begin(section, sectionIndex, prefix: resume.prefix);
     }
     final List<WmlBlock> blocks = WordTree.visibleBlocks(
       section.blocks,
     ).toList();
+    var keepGroupEnd = -1;
     for (int bi = resume?.block ?? 0; bi < blocks.length; bi++) {
       final WmlBlock block = blocks[bi];
       List<LaidOutLine>? translation;
@@ -1855,7 +1870,7 @@ class WordLayoutEngine {
           bi,
           flow,
           paragraphIndex,
-          adjacentParagraphAfter,
+          adjacentParagraph,
           _notesMatch,
         )) {
           return paragraphIndex;
@@ -1866,7 +1881,7 @@ class WordLayoutEngine {
                 bi,
                 block,
                 flow,
-                adjacentParagraphAfter,
+                adjacentParagraph,
               )
             : null;
         recorder.record(
@@ -1874,7 +1889,7 @@ class WordLayoutEngine {
           block,
           flow,
           paragraphIndex,
-          adjacentParagraphAfter,
+          adjacentParagraph,
           placedNotes: _placedOrder.length,
           pendingNotes: _pendingNotes(flow.pages.length),
         );
@@ -1892,23 +1907,47 @@ class WordLayoutEngine {
         case WmlParagraph():
           if (block.properties.pageBreakBefore) {
             flow.breakPage();
-            adjacentParagraphAfter = null;
+            adjacentParagraph = null;
           } else if (block.properties.columnBreakBefore ||
               _hasBreak(block, WmlBreakType.column)) {
             flow.nextColumn();
-            adjacentParagraphAfter = null;
+            adjacentParagraph = null;
           } else if (_hasBreak(block, WmlBreakType.page)) {
             flow.breakPage();
-            adjacentParagraphAfter = null;
+            adjacentParagraph = null;
           }
-          if (adjacentParagraphAfter != null) {
-            // Word uses the greater of adjacent before/after spacing. The
-            // preceding paragraph has already advanced by its after-space;
-            // remove only the overlap, without changing either source value.
-            flow.y -= math.min(
-              math.max(0, adjacentParagraphAfter),
-              math.max(0, block.properties.spacingBefore),
-            );
+          if (block.properties.keepWithNext && bi > keepGroupEnd) {
+            keepGroupEnd = bi;
+            while (keepGroupEnd + 1 < blocks.length &&
+                (blocks[keepGroupEnd] as WmlParagraph)
+                    .properties
+                    .keepWithNext &&
+                _canMeasureKeepParagraph(blocks[keepGroupEnd + 1])) {
+              keepGroupEnd++;
+            }
+            if (keepGroupEnd > bi &&
+                flow.y > flow.columnTop &&
+                !flow.currentFrames.any(
+                  (box) =>
+                      box.frame != null && box.frame!.wrap != WmlFrameWrap.none,
+                )) {
+              final height = _measureKeepGroup(blocks, bi, keepGroupEnd, flow);
+              final overlap = adjacentParagraph == null
+                  ? 0.0
+                  : _paragraphGapOverlap(adjacentParagraph, block.properties);
+              final nextCapacity =
+                  flow.columnIndex + 1 < section.resolvedColumnCount
+                  ? flow.bottom - flow.columnTop
+                  : section.contentHeight;
+              if (flow.y - overlap + height > flow.bottom &&
+                  height <= nextCapacity) {
+                flow.nextColumn();
+                adjacentParagraph = null;
+              }
+            }
+          }
+          if (adjacentParagraph != null) {
+            flow.y -= _paragraphGapOverlap(adjacentParagraph, block.properties);
           }
           final ({double y, int pageIndex}) para =
               (translation == null
@@ -1936,13 +1975,13 @@ class WordLayoutEngine {
           flow.y = para.y;
           flow.pageIndex = para.pageIndex;
           paragraphIndex++;
-          adjacentParagraphAfter = block.properties.spacingAfter;
+          adjacentParagraph = _afterParagraph(block.properties);
           if (flow.y > flow.bottom) {
             flow.nextColumn();
-            adjacentParagraphAfter = null;
+            adjacentParagraph = null;
           }
         case WmlTable():
-          adjacentParagraphAfter = null;
+          adjacentParagraph = null;
           final ({double y, int pageIndex}) table = _layoutTable(
             block,
             section,
@@ -1960,7 +1999,7 @@ class WordLayoutEngine {
           flow.pageIndex = table.pageIndex;
           paragraphIndex += _tableParagraphCount(block);
         case WmlVisual():
-          adjacentParagraphAfter = null;
+          adjacentParagraph = null;
           final ({double y, int pageIndex}) visual = _layoutVisual(
             block.visual,
             section,
@@ -1976,10 +2015,10 @@ class WordLayoutEngine {
           flow.y = visual.y;
           flow.pageIndex = visual.pageIndex;
         case WmlFrame():
-          adjacentParagraphAfter = null;
+          adjacentParagraph = null;
           paragraphIndex = _layoutFrame(block, section, flow, paragraphIndex);
         case WmlEquation():
-          adjacentParagraphAfter = null;
+          adjacentParagraph = null;
           final ({double y, int pageIndex}) equation = _layoutEquation(
             block,
             section,
@@ -1992,7 +2031,7 @@ class WordLayoutEngine {
           flow.y = equation.y;
           flow.pageIndex = equation.pageIndex;
         case WmlToc():
-          adjacentParagraphAfter = null;
+          adjacentParagraph = null;
           WordToc.ensureBody(block);
           final ({double y, int pageIndex}) toc = _layoutToc(
             block,
@@ -2012,6 +2051,62 @@ class WordLayoutEngine {
     }
     flow.finish();
     return paragraphIndex;
+  }
+
+  static bool _canMeasureKeepParagraph(WmlBlock block) =>
+      block is WmlParagraph &&
+      !block.properties.pageBreakBefore &&
+      !block.properties.columnBreakBefore &&
+      block.properties.dropCapLines == 0 &&
+      !_hasBreak(block, WmlBreakType.page) &&
+      !_hasBreak(block, WmlBreakType.column) &&
+      !block.inlines.whereType<WmlRun>().any(
+        (run) => run.noteRefId != null || run.inlineVisual != null,
+      );
+
+  double _measureKeepGroup(
+    List<WmlBlock> blocks,
+    int first,
+    int last,
+    _Flow flow,
+  ) {
+    if (!_canMeasureKeepParagraph(blocks[first])) return double.infinity;
+    var height = 0.0;
+    _AdjacentWordParagraph? previous;
+    for (var i = first; i <= last; i++) {
+      final para = blocks[i] as WmlParagraph;
+      final props = para.properties;
+      if (previous != null) height -= _paragraphGapOverlap(previous, props);
+      final lines = <LaidOutLine>[];
+      final layout = _layoutParagraph(
+        para,
+        flow.section,
+        [],
+        lines,
+        [],
+        flow.pageIndex,
+        0,
+        0,
+        maxWidthOverride: flow.colWidth,
+        allowBreak: false,
+        measureBody: true,
+      );
+      if (i == last) {
+        if (props.keepTogether || lines.isEmpty) {
+          height += layout.y - props.spacingAfter;
+        } else {
+          final count = props.widowControl == false
+              ? 1
+              : math.min(lines.length, lines.length == 3 ? 3 : 2);
+          final line = lines[count - 1];
+          height += line.y + line.height;
+        }
+      } else {
+        height += layout.y;
+        previous = _afterParagraph(props);
+      }
+    }
+    return height;
   }
 
   static bool _hasBreak(WmlParagraph paragraph, WmlBreakType type) {
@@ -2082,8 +2177,9 @@ class WordLayoutEngine {
     bool tocLeader = false,
     _Flow? flow,
     bool allowBreak = true,
+    bool measureBody = false,
   }) {
-    if (!_breakCacheReadable) {
+    if (!measureBody && !_breakCacheReadable) {
       // Dirty blocks and full layouts cannot retain breaks from an earlier
       // version of this paragraph. Clear before any empty or frame-wrapping
       // path, which may produce no replacement cache entry; otherwise a later
@@ -2095,7 +2191,10 @@ class WordLayoutEngine {
               WmlRunEdit.propsAt(paragraph, 0)
         : WmlRunEdit.propsAt(paragraph, 0);
     final double fontSize = runProps.fontSizePoints;
-    final int firstCodePoint = paragraph.text.runes.firstOrNull ?? 0x20;
+    final firstRune = paragraph.text.runes.firstOrNull;
+    final int firstCodePoint = firstRune == null || firstRune == 0x09
+        ? 0x20
+        : firstRune;
     final SfntFont? firstFace = _faceFor(firstCodePoint, runProps);
     final FontMetrics? metrics =
         measureFont?.call(firstCodePoint, fontSize, runProps) ??
@@ -2140,13 +2239,13 @@ class WordLayoutEngine {
           paragraph.properties.spacingBefore +
           lineHeight +
           paragraph.properties.spacingAfter;
-      _breakCache[paragraph] = null;
+      if (!measureBody) _breakCache[paragraph] = null;
       return (y: y + gap, pageIndex: pageIndex);
     }
     final String text = paragraph.text;
     // Table cells and frames (laid out without page breaks) use a wider em
     // so the painted text stays inside their border.
-    final double em = allowBreak
+    final double em = allowBreak || measureBody
         ? fallbackWidthFactor
         : math.max(fallbackWidthFactor, 0.72);
     final propsByOffset = <int, WmlRunProps>{};
@@ -2400,7 +2499,8 @@ class WordLayoutEngine {
     // Line breaks of a paragraph the caller proved unchanged since the last
     // layout (incremental layout, clean block) are reused when the width
     // environment is the same; shaping dominates layout cost.
-    final _BreakCache? cachedBreaks = wrapsFrames || !_breakCacheReadable
+    final _BreakCache? cachedBreaks =
+        measureBody || wrapsFrames || !_breakCacheReadable
         ? null
         : _breakCache[paragraph];
     final List<BrokenLine>? reusedBreaks =
@@ -2473,7 +2573,7 @@ class WordLayoutEngine {
                 measureLine: measureRun == null && !hasMeasuredTabs
                     ? null
                     : measuredLine,
-                breakLongWords: !allowBreak,
+                breakLongWords: !allowBreak && !measureBody,
                 ligate:
                     displayLabels.isEmpty &&
                         measureRun == null &&
@@ -2481,7 +2581,7 @@ class WordLayoutEngine {
                     ? null
                     : measuredRuns,
               );
-    if (!wrapsFrames && reusedBreaks == null) {
+    if (!measureBody && !wrapsFrames && reusedBreaks == null) {
       _breakCache[paragraph] = _BreakCache(
         broken,
         maxWidth: maxWidth,
@@ -2494,8 +2594,6 @@ class WordLayoutEngine {
     var lineOrigin = originX ?? section.margins.left;
     final int dropLines = paragraph.properties.dropCapLines;
     final double dropWidth = dropLines > 0 ? fontSize * 2.4 : 0;
-    final int lineStart = current.length;
-    final double paraTop = cursorY;
     // Each line owns its strut. A large opening run must not enlarge all
     // subsequent lines, nor may one family's metrics stand in for another.
     final faceMetrics = <(WmlRunProps, int), FontMetrics?>{};
@@ -2508,10 +2606,13 @@ class WordLayoutEngine {
           var count = 0;
           void include(WmlRunProps props, int cp, {double displayScale = 1}) {
             final size = props.fontSizePoints;
-            final metric = faceMetrics.putIfAbsent((props, cp), () {
-              final host = measureFont?.call(cp, size, props);
+            // A tab participates in the line's strut with its run's font,
+            // whose cmap need not contain an actual tab glyph.
+            final metricPoint = cp == 0x09 ? 0x20 : cp;
+            final metric = faceMetrics.putIfAbsent((props, metricPoint), () {
+              final host = measureFont?.call(metricPoint, size, props);
               if (host != null) return host;
-              final face = _faceFor(cp, props);
+              final face = _faceFor(metricPoint, props);
               return face == null
                   ? null
                   : _metricsCache.putIfAbsent((
@@ -2594,7 +2695,38 @@ class WordLayoutEngine {
       return text + (picture - ascent);
     }
 
+    final canPlanBreaks =
+        allowBreak &&
+        wrapBreaker == null &&
+        broken.length > 1 &&
+        !paragraph.inlines.whereType<WmlRun>().any(
+          (run) => run.noteRefId != null && !run.noteRefEndnote,
+        );
+    double nextCapacity(_Flow currentFlow) =>
+        currentFlow.columnIndex + 1 < section.resolvedColumnCount
+        ? _bodyBottom(section, idx) - currentFlow.columnTop
+        : section.contentHeight;
+    if (flow != null &&
+        canPlanBreaks &&
+        paragraph.properties.keepTogether &&
+        y > flow.columnTop) {
+      final height = broken.fold(
+        0.0,
+        (total, line) => total + heightOfLine(line),
+      );
+      // An oversized paragraph can still flow across page boundaries.
+      if (cursorY + height > _bodyBottom(section, idx) &&
+          height <= nextCapacity(flow)) {
+        flow.nextColumn();
+        cursorY = flow.y;
+        idx = flow.pageIndex;
+        lineOrigin = flow.originX;
+      }
+    }
+    final int lineStart = current.length;
+    final double paraTop = cursorY;
     var lineNumber = 0;
+    var segmentStartLine = 0;
     var wrappedOffset = 0;
     while (wrapBreaker == null
         ? lineNumber < broken.length
@@ -2655,6 +2787,34 @@ class WordLayoutEngine {
 
       rebreakForFrame();
       var lineH = heightOfLine(line);
+      if (flow != null &&
+          canPlanBreaks &&
+          paragraph.properties.widowControl != false &&
+          dropLines == 0 &&
+          (lineNumber > 0 || y > flow.columnTop) &&
+          cursorY > flow.columnTop) {
+        final remaining = broken.length - lineNumber;
+        final placedOnColumn = lineNumber - segmentStartLine;
+        if (remaining >= 2 &&
+            (placedOnColumn == 0 || remaining == 2 && placedOnColumn >= 2)) {
+          final capacity = nextCapacity(flow);
+          var groupHeight = lineH + heightOfLine(broken[lineNumber + 1]);
+          // Three lines cannot be split into two groups of at least two.
+          if (placedOnColumn == 0 && remaining == 3) {
+            final thirdHeight = heightOfLine(broken[lineNumber + 2]);
+            if (groupHeight + thirdHeight <= capacity)
+              groupHeight += thirdHeight;
+          }
+          if (cursorY + groupHeight > _bodyBottom(section, idx) &&
+              groupHeight <= capacity) {
+            flow.nextColumn();
+            cursorY = flow.y;
+            idx = flow.pageIndex;
+            lineOrigin = flow.originX;
+            segmentStartLine = lineNumber;
+          }
+        }
+      }
       var noteIds = _noteIds(
         paragraph,
         line.glyphs.map((ShapedGlyph g) => g.logicalIndex),
@@ -2717,6 +2877,7 @@ class WordLayoutEngine {
           idx++;
           cursorY = section.margins.top;
         }
+        segmentStartLine = lineNumber;
         rebreakForFrame();
         lineH = heightOfLine(line);
         noteIds = _noteIds(
@@ -3126,7 +3287,11 @@ class WordLayoutEngine {
         rtl: rtl,
         cellPad: cellPad,
       );
-      if (allowBreak && fullRowHeight > section.contentHeight - cellPad * 2) {
+      final exactHeight = row.exactHeight;
+      final canSplitRow = !row.cantSplit && exactHeight == null;
+      if (allowBreak &&
+          exactHeight == null &&
+          fullRowHeight > section.contentHeight - cellPad * 2) {
         final laid = _layoutTallTableRow(
           this,
           table,
@@ -3220,7 +3385,7 @@ class WordLayoutEngine {
             (current.isNotEmpty ||
                 currentFrames.isNotEmpty ||
                 _noteReserve(idx) > 0) &&
-            cursorY + cellPad + 12 > pageBottom) {
+            cursorY + (exactHeight ?? cellPad + 12) > pageBottom) {
           pages.add(
             _makePage(
               section,
@@ -3243,7 +3408,7 @@ class WordLayoutEngine {
         // mid-row continuation (Word default for Table Grid).
         if (allowBreak &&
             sliceStart &&
-            row.cantSplit &&
+            !canSplitRow &&
             (current.isNotEmpty || currentFrames.isNotEmpty)) {
           final double estimated = _measureTableRowHeightFrom(
             row,
@@ -3281,8 +3446,19 @@ class WordLayoutEngine {
         final int rowFrameStart = currentFrames.length;
         final List<LaidOutBox> rowFrames = <LaidOutBox>[];
         var needsContinue = false;
+        final capture = identical(table, _captureTallCells?.table)
+            ? _captureTallCells
+            : null;
 
         for (int c = 0; c < row.cells.length; c++) {
+          final lineStart = capture == null ? 0 : current.length;
+          final frameStart = capture == null ? 0 : currentFrames.length;
+          final anchorStart = capture == null
+              ? 0
+              : _deferredContainedFrames!.length;
+          final visualStart = capture == null
+              ? 0
+              : _deferredContainedVisuals!.length;
           final WmlTableCell cell = row.cells[c];
           final int span = WordTable.spanOf(cell);
           var colW = 0.0;
@@ -3297,17 +3473,22 @@ class WordLayoutEngine {
           final int cellParagraphCount = blockParagraphOffsets[c].last;
           var cellPara = cellParaStart + blockParagraphOffsets[c][nextBlock[c]];
           var cellY = rowStartY + cellPad;
-          var bi = nextBlock[c];
-          while (bi < rowBlocks[c].length) {
-            final WmlBlock block = rowBlocks[c][bi];
+          final firstBlock = nextBlock[c];
+          final blocks = rowBlocks[c];
+          var bi = firstBlock;
+          while (bi < blocks.length) {
+            final WmlBlock block = blocks[bi];
+            final blockY = bi == firstBlock
+                ? cellY
+                : cellY - _cellParagraphOverlap(blocks[bi - 1], block);
             final double blockH = _estimateCellBlockHeight(
               block,
               section,
               maxWidth: contentWidth,
             );
             if (allowBreak &&
-                !row.cantSplit &&
-                cellY + blockH > pageBottom &&
+                canSplitRow &&
+                blockY + blockH > pageBottom &&
                 cellY > rowStartY + cellPad + 0.5) {
               needsContinue = true;
               break;
@@ -3316,18 +3497,22 @@ class WordLayoutEngine {
             // block fits but the next list sibling does not, break before
             // this block so the pair moves together (e.g. UN OCHA + CEPs).
             if (allowBreak &&
-                !row.cantSplit &&
-                bi + 1 < rowBlocks[c].length &&
+                canSplitRow &&
+                bi + 1 < blocks.length &&
                 cellY > rowStartY + cellPad + 0.5 &&
-                cellY + blockH <= pageBottom) {
-              final WmlBlock nextBlock = rowBlocks[c][bi + 1];
+                blockY + blockH <= pageBottom) {
+              final WmlBlock nextBlock = blocks[bi + 1];
               if (_listOrphanPair(block, nextBlock)) {
                 final double nextH = _estimateCellBlockHeight(
                   nextBlock,
                   section,
                   maxWidth: contentWidth,
                 );
-                if (cellY + blockH + nextH > pageBottom) {
+                if (blockY +
+                        blockH +
+                        nextH -
+                        _cellParagraphOverlap(block, nextBlock) >
+                    pageBottom) {
                   needsContinue = true;
                   break;
                 }
@@ -3341,7 +3526,7 @@ class WordLayoutEngine {
               current,
               currentFrames,
               idx,
-              cellY,
+              blockY,
               cellPara,
               originX: x + cellPad,
               maxWidth: contentWidth,
@@ -3352,6 +3537,17 @@ class WordLayoutEngine {
           }
           nextBlock[c] = bi;
           rowBottom = math.max(rowBottom, cellY + cellPad);
+          if (capture != null) {
+            capture.cells.add(
+              _TallCellContent(
+                current.sublist(lineStart),
+                currentFrames.sublist(frameStart),
+                _deferredContainedFrames!.entries.skip(anchorStart).toList(),
+                _deferredContainedVisuals!.entries.skip(visualStart).toList(),
+                cellY + cellPad,
+              ),
+            );
+          }
           final bool firstSlice = sliceStart;
           final bool lastSlice = bi >= rowBlocks[c].length;
           // Empty cells still have visible borders. Their absent paragraph
@@ -3404,7 +3600,8 @@ class WordLayoutEngine {
         }
 
         final double minH = sliceStart ? (row.height ?? 0) : 0;
-        final double height = math.max(minH, rowBottom - rowStartY);
+        final double height =
+            exactHeight ?? math.max(minH, rowBottom - rowStartY);
         for (final LaidOutBox frame in rowFrames) {
           frame.height = height;
           // Close the bottom edge of a mid-row split on both columns so the
@@ -3481,6 +3678,38 @@ class WordLayoutEngine {
     return a.properties.ilvl == b.properties.ilvl;
   }
 
+  static _AdjacentWordParagraph _afterParagraph(WmlParagraphProps properties) =>
+      (
+        after: properties.spacingAfter,
+        styleId: properties.layoutStyleId,
+        contextualSpacing: properties.contextualSpacing,
+      );
+
+  static double _paragraphGapOverlap(
+    _AdjacentWordParagraph previous,
+    WmlParagraphProps next,
+  ) {
+    final after = math.max(0.0, previous.after);
+    final before = math.max(0.0, next.spacingBefore);
+    if (previous.styleId != next.layoutStyleId ||
+        (!previous.contextualSpacing && !next.contextualSpacing)) {
+      return math.min(after, before);
+    }
+    // Word ignores an opted-in before-space when combining the gaps, then
+    // subtracts an opted-in after-space from the result.
+    final combined = math.max(after, next.contextualSpacing ? 0.0 : before);
+    final gap = combined - (previous.contextualSpacing ? after : 0.0);
+    return after + before - gap;
+  }
+
+  static double _cellParagraphOverlap(WmlBlock previous, WmlBlock next) =>
+      previous is WmlParagraph && next is WmlParagraph
+      ? _paragraphGapOverlap(
+          _afterParagraph(previous.properties),
+          next.properties,
+        )
+      : 0;
+
   double _estimateCellBlockHeight(
     WmlBlock block,
     WmlSection section, {
@@ -3516,6 +3745,7 @@ class WordLayoutEngine {
     required bool rtl,
     required double cellPad,
   }) {
+    if (row.exactHeight case final height?) return height;
     var rowBottom = 0.0;
     var gridCol = 0;
     for (int c = 0; c < row.cells.length; c++) {
@@ -3529,8 +3759,12 @@ class WordLayoutEngine {
       var cellY = cellPad;
       final blocks = WordTree.visibleBlocks(cell.blocks).toList();
       for (int bi = nextBlock[c]; bi < blocks.length; bi++) {
+        final block = blocks[bi];
+        if (bi > nextBlock[c]) {
+          cellY -= _cellParagraphOverlap(blocks[bi - 1], block);
+        }
         cellY += _estimateCellBlockHeight(
-          blocks[bi],
+          block,
           section,
           maxWidth: contentWidth,
         );
@@ -4378,21 +4612,55 @@ class WordLayoutEngine {
     if (story.isEmpty) {
       return <LaidOutLine>[];
     }
-    final double y = isFooter
-        ? section.pageSize.height -
-              math.max(
-                22,
-                math.max(section.margins.footer, section.margins.bottom * 0.45),
-              )
-        : math.max(8, section.margins.header);
+    final double y = isFooter ? 0 : math.max(8, section.margins.header);
     final List<LaidOutLine> lines = <LaidOutLine>[];
-    var offsetY = 0.0;
+    final ordinary = _WordChromeFlow();
+    final frames = <_WordChromeFlow>[];
+    final fieldResults = <bool>[];
+    _WordChromeFlow? activeFrame;
+    var unanchored = 0;
     for (int i = 0; i < story.length; i++) {
       final WmlParagraph paragraph = story[i];
-      final WmlRunProps run = WmlRunEdit.propsAt(paragraph, 0);
+      final props = paragraph.properties;
+      final frame = isFooter
+          ? _WordChromeFrame.read(props.sourcePropertiesXml)
+          : null;
+      if (frame == null) {
+        activeFrame = null;
+      } else if (activeFrame?.frame?.key != frame.key) {
+        activeFrame = _WordChromeFlow(frame: frame);
+        frames.add(activeFrame);
+      }
+      final flow = activeFrame ?? ordinary;
+      final box =
+          frame?.horizontalBox(section) ??
+          (left: section.margins.left, width: section.contentWidth);
       final WmlDocument? doc = _layoutDoc;
       final String source = paragraph.text.replaceAll('\uFFFC', ' ');
       final String raw = source.trim();
+      if (isFooter) {
+        for (final boundary
+            in paragraph.inlines.whereType<WmlFieldBoundary>()) {
+          switch (boundary.kind) {
+            case WmlFieldBoundaryKind.begin:
+              fieldResults.add(false);
+            case WmlFieldBoundaryKind.separate:
+              if (fieldResults.isNotEmpty) fieldResults.last = true;
+            case WmlFieldBoundaryKind.end:
+              if (fieldResults.isNotEmpty) fieldResults.removeLast();
+            case WmlFieldBoundaryKind.instruction:
+              break;
+          }
+        }
+        // A field instruction can span native paragraphs. Its code-only
+        // prefix does not create an empty line in the positioned result.
+        if (frame != null && raw.isEmpty && fieldResults.contains(false)) {
+          continue;
+        }
+      }
+      final WmlRunProps run =
+          (frame != null && raw.isEmpty ? props.importedParagraphMark : null) ??
+          WmlRunEdit.propsAt(paragraph, 0);
       final int rawStart = source.length - source.trimLeft().length;
       final String text;
       var generated = false;
@@ -4407,7 +4675,7 @@ class WordLayoutEngine {
         );
         text = resolved.isEmpty ? raw : resolved;
         generated = true;
-      } else if (_looksLikePageCache(raw)) {
+      } else if (frame != null && _isPositionedPageField(paragraph)) {
         text = '$pageNumber';
         generated = true;
       } else {
@@ -4421,10 +4689,84 @@ class WordLayoutEngine {
         text.length + 1,
         (index) => generated ? null : rawStart + index,
       );
-      final double size = run.fontSizePoints.clamp(8, 16);
+      final double size = isFooter && run.fontSizePoints > 0
+          ? run.fontSizePoints
+          : run.fontSizePoints.clamp(8, 16);
+      var height = size + 3;
+      double? baseline;
+      if (isFooter) {
+        final point = text.isEmpty ? 0x20 : text.runes.first;
+        final font = _faceFor(point, run);
+        final metrics =
+            measureFont?.call(point, size, run) ??
+            (font == null
+                ? null
+                : FontMetrics(font: font, fontSizePoints: size));
+        height = _lineHeight(props, metrics, size);
+        final ascent = metrics?.typographicAscender ?? size * 0.8;
+        final naturalHeight = metrics?.typographicLineHeight ?? size * 1.32;
+        baseline = switch (props.lineSpacingRule) {
+          WmlLineSpacingRule.exact => height * 0.8,
+          WmlLineSpacingRule.atLeast => ascent + height - naturalHeight,
+          WmlLineSpacingRule.auto => ascent,
+        };
+        flow.height += props.spacingBefore;
+        if (flow.previousParagraph case final previous?) {
+          flow.height -= _paragraphGapOverlap(_afterParagraph(previous), props);
+        }
+        flow.previousParagraph = props;
+        if (frame == null) {
+          while (unanchored < frames.length) {
+            frames[unanchored++].textAnchor = flow.height;
+          }
+        }
+      }
       final String overlayColor = run.color.isEmpty
           ? (isFooter ? '222222' : '6B7280')
           : run.color;
+      void addLine(String label, List<int?> mapping, WmlJustification align) {
+        final double width = label.isEmpty
+            ? box.width
+            : frame == null
+            ? label.length * size * 0.52
+            : label.runes.fold(
+                0.0,
+                (sum, rune) => sum + _advanceOf(rune, size, 0.52, run),
+              );
+        final double x = switch (align) {
+          WmlJustification.center =>
+            frame == null
+                ? (section.pageSize.width - width) / 2
+                : box.left + (box.width - width) / 2,
+          WmlJustification.right => box.left + box.width - width,
+          _ => box.left,
+        };
+        final line = LaidOutLine(
+          glyphs: <LaidOutGlyph>[],
+          x: x,
+          y: y + flow.height,
+          width: width,
+          height: height,
+          pageIndex: pageNumber - 1,
+          paragraphIndex: i,
+          sourceParagraph: paragraph,
+          sourceText: source,
+          proofingOffsets: mapping,
+          justification: align,
+          isFooter: isFooter,
+          overlayText: label,
+          overlayColor: overlayColor,
+          overlaySize: size,
+          overlayBold: run.bold,
+          overlayBaseline: baseline,
+          hyperlink: WordLink.firstIn(paragraph),
+          boxX: box.left,
+          boxWidth: box.width,
+        );
+        flow.lines.add(line);
+        lines.add(line);
+      }
+
       final List<String> tabParts = text.split('\t');
       if (tabParts.length >= 2) {
         final parts = <({String text, List<int?> offsets})>[];
@@ -4432,20 +4774,13 @@ class WordLayoutEngine {
         for (final part in tabParts) {
           final trimmed = part.trim();
           final leading = part.length - part.trimLeft().length;
-          if (_looksLikePageCache(trimmed)) {
-            parts.add((
-              text: '$pageNumber',
-              offsets: List<int?>.filled('$pageNumber'.length + 1, null),
-            ));
-          } else {
-            parts.add((
-              text: trimmed,
-              offsets: offsets.sublist(
-                partStart + leading,
-                partStart + leading + trimmed.length + 1,
-              ),
-            ));
-          }
+          parts.add((
+            text: trimmed,
+            offsets: offsets.sublist(
+              partStart + leading,
+              partStart + leading + trimmed.length + 1,
+            ),
+          ));
           partStart += part.length + 1;
         }
         final left = parts.first;
@@ -4474,86 +4809,48 @@ class WordLayoutEngine {
           ({String text, List<int?> offsets}) part,
           WmlJustification align,
         ) {
-          if (part.text.isEmpty) {
-            return;
+          if (part.text.isNotEmpty) {
+            addLine(part.text, part.offsets, align);
           }
-          final double width = part.text.length * size * 0.52;
-          var x = section.margins.left;
-          if (align == WmlJustification.center) {
-            x = (section.pageSize.width - width) / 2;
-          } else if (align == WmlJustification.right) {
-            x = section.pageSize.width - section.margins.right - width;
-          }
-          lines.add(
-            LaidOutLine(
-              glyphs: <LaidOutGlyph>[],
-              x: x,
-              y: y + offsetY,
-              width: width,
-              height: size + 3,
-              pageIndex: pageNumber - 1,
-              paragraphIndex: i,
-              sourceParagraph: paragraph,
-              sourceText: source,
-              proofingOffsets: part.offsets,
-              justification: align,
-              isFooter: isFooter,
-              overlayText: part.text,
-              overlayColor: overlayColor,
-              overlaySize: size,
-              overlayBold: run.bold,
-              hyperlink: WordLink.firstIn(paragraph),
-              boxX: section.margins.left,
-              boxWidth: section.contentWidth,
-            ),
-          );
         }
 
         addPart(left, WmlJustification.left);
         addPart(mid, WmlJustification.center);
         addPart(right, WmlJustification.right);
-        offsetY += size + 4;
-        continue;
+      } else {
+        addLine(
+          text,
+          offsets,
+          frame?.width == null
+              ? frame?.alignment ?? props.justification
+              : props.justification,
+        );
       }
-      final double width = text.isEmpty
-          ? section.contentWidth
-          : text.length * size * 0.52;
-      var x = section.margins.left;
-      if (paragraph.properties.justification == WmlJustification.center) {
-        x = (section.pageSize.width - width) / 2;
-      } else if (paragraph.properties.justification == WmlJustification.right) {
-        x = section.pageSize.width - section.margins.right - width;
+      flow.height += isFooter ? height + props.spacingAfter : size + 4;
+    }
+    if (isFooter) {
+      final bottom = section.pageSize.height - section.margins.footer;
+      final top = bottom - ordinary.height;
+      for (final line in ordinary.lines) {
+        line._y += top;
       }
-      lines.add(
-        LaidOutLine(
-          glyphs: <LaidOutGlyph>[],
-          x: x,
-          y: y + offsetY,
-          width: width,
-          height: size + 3,
-          pageIndex: pageNumber - 1,
-          paragraphIndex: i,
-          sourceParagraph: paragraph,
-          sourceText: source,
-          proofingOffsets: offsets,
-          justification: paragraph.properties.justification,
-          isFooter: isFooter,
-          overlayText: text,
-          overlayColor: overlayColor,
-          overlaySize: size,
-          overlayBold: run.bold,
-          hyperlink: WordLink.firstIn(paragraph),
-          boxX: section.margins.left,
-          boxWidth: section.contentWidth,
-        ),
-      );
-      offsetY += size + 4;
+      for (final flow in frames) {
+        final frame = flow.frame!;
+        final origin = switch (frame.vertical) {
+          'page' => 0.0,
+          'margin' => section.margins.top,
+          _ =>
+            flow.textAnchor == null
+                ? top - flow.height
+                : top + flow.textAnchor!,
+        };
+        for (final line in flow.lines) {
+          line._y += origin + frame.y;
+        }
+      }
     }
     return lines;
   }
-
-  static bool _looksLikePageCache(String text) =>
-      RegExp(r'^\d+$').hasMatch(text);
 
   static double _chromeBandHeight({
     required List<LaidOutLine> lines,

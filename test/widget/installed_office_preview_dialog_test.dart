@@ -194,8 +194,27 @@ void main() {
     );
   });
 
+  _platformTest('presentation preview chooses an Impress-capable engine', (
+    tester,
+  ) async {
+    await _open(
+      tester,
+      sourceName: 'legacy.pot',
+      discover: () async => [_word, _office],
+    );
+    final menu = tester.widget<DropdownButton<int>>(
+      find.descendant(
+        of: find.byKey(_selector),
+        matching: find.byType(DropdownButton<int>),
+      ),
+    );
+    expect(menu.items, hasLength(1));
+    expect(find.text('LibreOffice fixture (installed)'), findsOneWidget);
+    expect(find.text('Word fixture (installed)'), findsNothing);
+  });
+
   for (final invalid in [
-    ('unsupported suffix', 'document.pptx', Uint8List.fromList([1])),
+    ('unsupported suffix', 'document.csv', Uint8List.fromList([1])),
     ('empty document', 'empty.doc', Uint8List(0)),
     (
       'over-limit input',

@@ -31,6 +31,25 @@ enum PictureWrapDistanceEdge { top, bottom, left, right }
 /// Legend placement (`c:legendPos`).
 enum ChartLegendPos { bottom, top, left, right, topRight }
 
+/// Native DrawingML outer shadow settings for a picture.
+class PictureOuterShadow {
+  const PictureOuterShadow({
+    this.blurRadius = 0,
+    this.distance = 0,
+    this.directionDegrees = 0,
+    this.color = '000000',
+    this.opacity = 1,
+    this.rotatesWithShape = true,
+  });
+
+  final double blurRadius;
+  final double distance;
+  final double directionDegrees;
+  final String color;
+  final double opacity;
+  final bool rotatesWithShape;
+}
+
 /// Crop, tone, rotation, stroke, wrap, and effects applied to a picture.
 class PictureAdjust {
   /// PictureAdjust API.
@@ -56,6 +75,7 @@ class PictureAdjust {
     this.altTitle = '',
     this.altDescription = '',
     this.shadow = false,
+    this.outerShadow,
   });
 
   /// cropLeft API.
@@ -158,6 +178,7 @@ class PictureAdjust {
 
   /// shadow API.
   bool shadow;
+  PictureOuterShadow? outerShadow;
 
   /// copy API.
   PictureAdjust copy() =>
@@ -183,6 +204,7 @@ class PictureAdjust {
           altTitle: altTitle,
           altDescription: altDescription,
           shadow: shadow,
+          outerShadow: outerShadow,
         )
         .._sourceWrapDistances = _sourceWrapDistances
         .._editedWrapDistances.addAll(_editedWrapDistances);
@@ -210,6 +232,7 @@ class PictureAdjust {
     altTitle = '';
     altDescription = '';
     shadow = false;
+    outerShadow = null;
   }
 }
 

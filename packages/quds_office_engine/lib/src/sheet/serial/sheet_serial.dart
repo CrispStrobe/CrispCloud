@@ -12,6 +12,7 @@ import '../../xml/xml_node.dart';
 import '../../xml/xml_reader.dart';
 import '../../xml/xml_writer.dart';
 import '../formula/dep_graph.dart';
+import '../formula/formula_ast.dart';
 import '../formula/formula_eval.dart';
 import '../formula/formula_refs.dart';
 import '../model/sml_analysis.dart';
@@ -146,8 +147,15 @@ class SheetDeserializer {
     final RelationshipCollection rels = package.relationshipsFor(
       '/xl/workbook.xml',
     );
-    final XmlPullReader reader = XmlPullReader(wb.readText());
+    final workbookXml = wb.readText();
+    final XmlPullReader reader = XmlPullReader(workbookXml);
     while (reader.next()) {
+      if (reader.eventType == XmlEventType.startElement &&
+          reader.localName == 'workbookPr' &&
+          reader.depth == 2) {
+        final setting = reader.getAttribute('date1904');
+        book.uses1904Dates = setting == '1' || setting == 'true';
+      }
       if (reader.eventType != XmlEventType.startElement ||
           reader.localName != 'sheet') {
         continue;
@@ -181,7 +189,9 @@ class SheetDeserializer {
     }
     final resolver = columnMetricsResolver;
     if (resolver != null) book.resolveColumnMetrics(resolver);
-    _readDefinedNames(wb.readText(), book);
+    final workbookRoot = XmlDocument.parse(workbookXml).root;
+    _readDefinedNames(workbookRoot, book);
+    _readExternalCellValues(workbookRoot, package, rels, book);
     book.sourceDefinedNameState = book.definedNameState();
     SheetChartData.refreshWorkbook(book);
     for (final sheet in book.sheets) {
@@ -198,8 +208,8 @@ class SheetDeserializer {
   SmlWorkbook readBytes(Uint8List bytes, {String? password}) =>
       read(OpcPackage.openBytes(bytes, password: password));
 
-  static void _readDefinedNames(String xml, SmlWorkbook book) {
-    final names = XmlDocument.parse(xml).root?.firstChild('definedNames');
+  static void _readDefinedNames(XmlElement? root, SmlWorkbook book) {
+    final names = root?.firstChild('definedNames');
     if (names == null) return;
     // Relative references depend on the definition's active-cell origin.
     // Project only absolute in-workbook A1 references; retain every other
@@ -1716,6 +1726,9 @@ class SheetSerializer {
     w.writeStartElement('workbook');
     w.writeAttribute('xmlns', OfficeNamespaces.x);
     w.writeNamespace('r', OfficeNamespaces.r);
+    if (book.uses1904Dates) {
+      w.writeEmptyElement('workbookPr', attributes: {'date1904': '1'});
+    }
     w.writeStartElement('sheets');
     for (int i = 0; i < book.sheets.length; i++) {
       final SmlWorksheet s = book.sheets[i];
@@ -1871,7 +1884,10 @@ class SheetSerializer {
         if (cell.formula != null) {
           if (cell.value is bool) {
             w.writeAttribute('t', 'b');
-          } else if (cell.value is String) {
+          } else if (cell.value is String ||
+              (cell.value == null &&
+                  (cell.type == SmlCellType.error ||
+                      cell.type == SmlCellType.string))) {
             w.writeAttribute('t', cell.type == SmlCellType.error ? 'e' : 'str');
           }
           w.writeStartElement('f');
@@ -1881,13 +1897,15 @@ class SheetSerializer {
                 : cell.formula!,
           );
           w.writeEndElement();
-          w.writeStartElement('v');
-          w.writeText(
-            cell.value is bool
-                ? (cell.value == true ? '1' : '0')
-                : cell.asString,
-          );
-          w.writeEndElement();
+          final value = cell.value;
+          if (value != null) {
+            w.writeStartElement('v');
+            if (value is String && value.trim() != value) {
+              w.writeAttribute('xml:space', 'preserve');
+            }
+            w.writeText(value is bool ? (value ? '1' : '0') : cell.asString);
+            w.writeEndElement();
+          }
         } else if (cell.type == SmlCellType.error) {
           w.writeAttribute('t', 'e');
           w.writeStartElement('v');

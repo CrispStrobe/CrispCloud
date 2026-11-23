@@ -56,6 +56,62 @@ const String _bulletNumbering =
     '</w:abstractNum><w:num w:numId="1"><w:abstractNumId w:val="0"/></w:num>';
 
 void main() {
+  test('empty direct paragraph flags enable settings disabled by a style', () {
+    final doc = _open(
+      '<w:p><w:pPr><w:pStyle w:val="Disabled"/>'
+      '<w:keepNext/><w:keepLines/><w:widowControl/><w:contextualSpacing/></w:pPr>'
+      '<w:r><w:t>Paragraph</w:t></w:r></w:p>',
+      styles:
+          '<w:style w:type="paragraph" w:styleId="Disabled">'
+          '<w:name w:val="Disabled"/><w:pPr><w:keepNext w:val="0"/><w:keepLines w:val="0"/>'
+          '<w:widowControl w:val="false"/><w:contextualSpacing w:val="off"/>'
+          '</w:pPr></w:style>',
+    );
+    final reopened = WordDeserializer().readBytes(
+      WordSerializer().writeBytes(doc),
+    );
+    for (final sample in [doc, reopened]) {
+      final properties = sample.paragraphs.single.properties;
+      expect(properties.keepTogether, isTrue);
+      expect(properties.keepWithNext, isTrue);
+      expect(properties.widowControl, isTrue);
+      expect(properties.contextualSpacing, isTrue);
+    }
+  });
+
+  test(
+    'save retains the effective color of a missing native heading style',
+    () {
+      final document = _open(
+        '<w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr>'
+        '<w:r><w:t>Existing heading</w:t></w:r></w:p>',
+        styles:
+            '<w:style w:type="paragraph" w:default="1" w:styleId="Normal">'
+            '<w:name w:val="Normal"/><w:rPr><w:color w:val="000000"/>'
+            '</w:rPr></w:style>',
+      );
+      final heading = document.paragraphs.single;
+      expect(heading.properties.styleId, 'Heading1');
+      expect(
+        heading.inlines.whereType<WmlRun>().single.properties.color,
+        '000000',
+      );
+
+      final encoded = WordSerializer().writeBytes(document);
+      final saved = OpcPackage.openBytes(encoded);
+      expect(
+        saved.getPart('/word/styles.xml')!.readText(),
+        isNot(contains('Heading1')),
+      );
+      final reopened = WordDeserializer().readBytes(encoded).paragraphs.single;
+      expect(reopened.properties.styleId, 'Heading1');
+      expect(
+        reopened.inlines.whereType<WmlRun>().single.properties.color,
+        '000000',
+      );
+    },
+  );
+
   group('Word body layout', () {
     test('body text uses fallbackWidthFactor, not the table-cell em', () {
       final WmlDocument doc = _open('<w:p><w:r><w:t>$_lorem</w:t></w:r></w:p>');

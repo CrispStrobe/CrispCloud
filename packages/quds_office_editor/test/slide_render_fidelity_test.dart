@@ -265,6 +265,123 @@ void main() {
     },
   );
 
+  testWidgets(
+    'rich paragraphs keep independent alignment, spacing, and caret offsets',
+    (tester) async {
+      final shape = _shape()
+        ..text = 'Alpha\nBeta'
+        ..richText = [
+          PmlTextParagraph(
+            runs: [PmlTextRun(text: 'Alpha', fontSizePt: 20, color: 'FF0000')],
+          ),
+          PmlTextParagraph(
+            align: PmlTextAlign.right,
+            spaceBeforePt: 24,
+            bullet: '•',
+            runs: [PmlTextRun(text: 'Beta', fontSizePt: 20, color: '0000FF')],
+          ),
+        ];
+      int? caret;
+      await _mount(
+        tester,
+        shape,
+        onPlaceCaret: (int index, {bool extend = false}) => caret = index,
+      );
+      final first = (await _inkBounds(tester, 0xFF0000))!;
+      final second = (await _inkBounds(tester, 0x0000FF))!;
+      expect(second.left - first.left, greaterThan(140));
+      expect(second.top - first.bottom, greaterThan(22));
+      await tester.tapAt(second.center);
+      expect(caret, inInclusiveRange(6, 10));
+    },
+  );
+
+  testWidgets('hanging indent preserves the wrap and continuation caret', (
+    tester,
+  ) async {
+    const first = 'First line\n';
+    const continuation = 'Continuation';
+    final shape = _shape()
+      ..text = '$first$continuation'
+      ..transform = const PmlTransform(
+        x: 30 * 12700,
+        y: 40 * 12700,
+        cx: 272 * 12700,
+        cy: 180 * 12700,
+      )
+      ..richText = [
+        PmlTextParagraph(
+          marginLeftPt: 48,
+          indentPt: -48,
+          runs: [
+            PmlTextRun(text: first, color: 'FF0000'),
+            PmlTextRun(text: continuation, color: '0000FF'),
+          ],
+        ),
+      ];
+    int? caret;
+    await _mount(
+      tester,
+      shape,
+      onPlaceCaret: (int index, {bool extend = false}) => caret = index,
+    );
+    final head = (await _inkBounds(tester, 0xFF0000))!;
+    final tail = (await _inkBounds(tester, 0x0000FF))!;
+    expect(tail.left - head.left, closeTo(48, 6));
+    expect(tail.top, greaterThanOrEqualTo(head.bottom));
+    await tester.tapAt(tail.center);
+    expect(caret, inInclusiveRange(first.length, shape.text.length));
+  });
+
+  testWidgets('percentage paragraph gaps use the corresponding font height', (
+    tester,
+  ) async {
+    final shape = _shape()
+      ..text = 'Small\nLarge'
+      ..richText = [
+        PmlTextParagraph(
+          runs: [PmlTextRun(text: 'Small', fontSizePt: 16, color: 'FF0000')],
+        ),
+        PmlTextParagraph(
+          runs: [PmlTextRun(text: 'Large', fontSizePt: 32, color: '0000FF')],
+        ),
+      ];
+    await _mount(tester, shape);
+    final baseline = (await _inkBounds(tester, 0x0000FF))!.top;
+    final before = shape.copy()..richText.last.spaceBeforeLineRatio = 0.5;
+    await _mount(tester, before);
+    final beforeGap = (await _inkBounds(tester, 0x0000FF))!.top - baseline;
+    final after = shape.copy()..richText.first.spaceAfterLineRatio = 0.5;
+    await _mount(tester, after);
+    final afterGap = (await _inkBounds(tester, 0x0000FF))!.top - baseline;
+    expect(afterGap, greaterThan(5));
+    expect(beforeGap, closeTo(2 * afterGap, 2));
+  });
+
+  testWidgets('imported vertical overflow paints beyond a finite frame', (
+    tester,
+  ) async {
+    final shape = _shape()
+      ..text = 'First\nOverflow'
+      ..transform = const PmlTransform(
+        x: 30 * 12700,
+        y: 40 * 12700,
+        cx: 300 * 12700,
+        cy: 28 * 12700,
+      );
+    _captureRichRuns(shape);
+    shape.richText.last.runs.single.color = '0000FF';
+    await _mount(tester, shape, presenting: true);
+    final overflow = (await _inkBounds(tester, 0x0000FF))!;
+    await _mount(
+      tester,
+      shape.copy()..clipsTextVertically = true,
+      presenting: true,
+    );
+    final clipped = await _inkBounds(tester, 0x0000FF);
+    expect(clipped?.bottom ?? 0, lessThan(overflow.bottom));
+  });
+
   testWidgets('autofit scales all rich lines and their paragraph terminators', (
     tester,
   ) async {
@@ -300,6 +417,157 @@ void main() {
       final Rect after = (await _inkBounds(tester, 0xFF0000))!;
       expect(after.height, lessThan(before.height - 5), reason: 'rich=$rich');
       expect(after.width, before.width);
+    }
+  });
+
+  testWidgets('imported normal autofit paints at the fitted whole point size', (
+    tester,
+  ) async {
+    final imported = _shape()
+      ..text = 'Autofit sample'
+      ..fontSizePt = 24
+      ..textScale = 0.85;
+    _captureRichRuns(imported);
+    await _mount(tester, imported);
+    final fitted = await _inkBounds(tester, 0xFF0000);
+
+    final reference = _shape()
+      ..text = imported.text
+      ..fontSizePt = 20;
+    _captureRichRuns(reference);
+    await _mount(tester, reference);
+    expect(fitted, isNotNull);
+    expect(fitted, await _inkBounds(tester, 0xFF0000));
+    expect(imported.richText.single.runs.single.fontSizePt, 24);
+  });
+
+  testWidgets('percentage leading uses the fitted whole point size', (
+    tester,
+  ) async {
+    const paragraphCount = 10;
+    final shape = _shape()
+      ..text = List.filled(paragraphCount, 'Glyph').join('\n')
+      ..fontSizePt = 19
+      ..textScale = 0.625
+      ..lineSpacingReduction = 0.2;
+    _captureRichRuns(shape);
+    for (final paragraph in shape.richText) {
+      paragraph
+        ..lineSpacing = 1.5
+        ..spaceBeforeLineRatio = 0.2;
+    }
+    shape.richText.last.runs.single.color = '0000FF';
+
+    await _mount(tester, shape);
+    final first = (await _inkBounds(tester, 0xFF0000))!;
+    final last = (await _inkBounds(tester, 0x0000FF))!;
+    // PowerPoint fits 19 pt at 62.5% to 12 pt before applying leading.
+    // The 20% space before offsets the autofit reduction.
+    expect(last.top - first.top, closeTo(194.4, 0.8));
+  });
+
+  testWidgets('default leading matches explicit single spacing', (
+    tester,
+  ) async {
+    final shape = _shape()
+      ..text = List.filled(10, 'Glyph').join('\n')
+      ..fontSizePt = 19;
+    _captureRichRuns(shape);
+    shape.richText.last.runs.single.color = '0000FF';
+    await _mount(tester, shape);
+    final first = (await _inkBounds(tester, 0xFF0000))!;
+    final last = (await _inkBounds(tester, 0x0000FF))!;
+    expect(last.top - first.top, closeTo(205.2, 1.2));
+
+    for (final paragraph in shape.richText) {
+      paragraph.definedProperties.add(PmlParagraphProperty.lineSpacing);
+    }
+    await _mount(tester, shape);
+    expect(await _inkBounds(tester, 0xFF0000), first);
+    expect(await _inkBounds(tester, 0x0000FF), last);
+  });
+
+  testWidgets('mixed font styles retain the advance of a uniform point size', (
+    tester,
+  ) async {
+    final shape = _shape()
+      ..text = List.filled(10, 'Glyph sample').join('\n')
+      ..textColor = '222222'
+      ..fontSizePt = 19;
+    _captureRichRuns(shape);
+    for (final (index, paragraph) in shape.richText.indexed) {
+      paragraph.runs.single
+        ..text = 'Glyph'
+        ..color = index == 9 ? '0000FF' : 'FF0000';
+      paragraph.runs.add(
+        PmlTextRun(text: ' sample', fontSizePt: 19, bold: true, italic: true),
+      );
+    }
+    await _mount(tester, shape);
+    final first = (await _inkBounds(tester, 0xFF0000))!;
+    final last = (await _inkBounds(tester, 0x0000FF))!;
+    expect(last.top - first.top, closeTo(205.2, 1.2));
+  });
+
+  testWidgets('character spacing changes the rendered width under autofit', (
+    tester,
+  ) async {
+    final shape = _shape()
+      ..text = 'Spacing sample'
+      ..textScale = 0.625;
+    _captureRichRuns(shape);
+    final paragraph = shape.richText.single;
+    final run = paragraph.runs.single;
+    await _mount(tester, shape);
+    final normal = (await _inkBounds(tester, 0xFF0000))!;
+
+    paragraph.defaultLetterSpacingPt = 2;
+    await _mount(tester, shape);
+    final expanded = (await _inkBounds(tester, 0xFF0000))!;
+    expect(expanded.width - normal.width, greaterThan(16));
+
+    run.letterSpacingPt = 0;
+    await _mount(tester, shape);
+    expect(await _inkBounds(tester, 0xFF0000), normal);
+
+    run.letterSpacingPt = -1.5;
+    await _mount(tester, shape);
+    final tightened = (await _inkBounds(tester, 0xFF0000))!;
+    expect(normal.width - tightened.width, greaterThan(8));
+  });
+
+  testWidgets('disabled wrapping honors alignment and manual line breaks', (
+    tester,
+  ) async {
+    for (final rich in [false, true]) {
+      final shape = _shape()
+        ..text = 'Alpha Beta Gamma\nShort'
+        ..transform = const PmlTransform(
+          x: 330 * 12700,
+          y: 40 * 12700,
+          cx: 90 * 12700,
+          cy: 180 * 12700,
+        );
+      if (rich) _captureRichRuns(shape);
+      await _mount(tester, shape);
+      final wrapped = (await _inkBounds(tester, 0xFF0000))!;
+      shape.textWrap = false;
+      await _mount(tester, shape);
+      final left = (await _inkBounds(tester, 0xFF0000))!;
+      expect(left.width, greaterThan(wrapped.width * 1.6));
+      expect(left.height, lessThan(wrapped.height * 0.8));
+      expect(left.height, greaterThan(24));
+
+      shape.textAlignOverride = true;
+      shape.textAlign = PmlTextAlign.center;
+      await _mount(tester, shape);
+      final centered = (await _inkBounds(tester, 0xFF0000))!;
+      shape.textAlign = PmlTextAlign.right;
+      await _mount(tester, shape);
+      final right = (await _inkBounds(tester, 0xFF0000))!;
+      expect(centered.left, lessThan(left.left - 20));
+      expect(right.left, lessThan(centered.left - 20));
+      expect(right.width, closeTo(left.width, 2));
     }
   });
 
@@ -419,6 +687,36 @@ void main() {
     });
   }
 
+  testWidgets('rounded callout insets text and uses the same caret origin', (
+    tester,
+  ) async {
+    final shape = _shape()
+      ..text = 'Alpha'
+      ..preset = PmlShapePreset.roundRect
+      ..transform = const PmlTransform(
+        x: 30 * 12700,
+        y: 40 * 12700,
+        cx: 250 * 12700,
+        cy: 100 * 12700,
+      );
+    _captureRichRuns(shape);
+    await _mount(tester, shape);
+    final ordinary = (await _inkBounds(tester, 0xFF0000))!;
+
+    shape.roundedCallout = const PmlRoundedCallout(corner: 40000);
+    int? caret;
+    await _mount(
+      tester,
+      shape,
+      onPlaceCaret: (int index, {bool extend = false}) => caret = index,
+    );
+    final callout = (await _inkBounds(tester, 0xFF0000))!;
+    expect(callout.left - ordinary.left, closeTo(11.7, 1));
+    expect(callout.top - ordinary.top, closeTo(11.7, 1));
+    await tester.tapAt(callout.topLeft + const Offset(1, 1));
+    expect(caret, lessThanOrEqualTo(1));
+  });
+
   testWidgets('edited scalar size and ink replace stale imported rendering', (
     WidgetTester tester,
   ) async {
@@ -497,5 +795,45 @@ void main() {
     );
     expect(await _inkBounds(tester, 0x000000), isNotNull);
     expect(content.textColor, '000000');
+  });
+
+  testWidgets('justified text wraps at the quantized glyph advances', (
+    tester,
+  ) async {
+    await OfficeHostFonts.ensureRegistered();
+    final shape = _shape()
+      ..text = 'a readable editor'
+      ..fontSizePt = 28;
+    _captureRichRuns(shape);
+    final paragraph = shape.richText.single..align = PmlTextAlign.justify;
+    paragraph.runs.single
+      ..fontFamily = 'Liberation Sans'
+      ..text = 'a readable ';
+    paragraph.runs.add(
+      PmlTextRun(
+        fontFamily: 'Liberation Sans',
+        fontSizePt: 28,
+        text: 'editor',
+        color: '0000FF',
+      ),
+    );
+
+    Future<double> inkLineDifference(double contentWidth) async {
+      shape.transform = PmlTransform(
+        x: 30 * 12700,
+        y: 40 * 12700,
+        cx: ((contentWidth + 14.4) * 12700).round(),
+        cy: 160 * 12700,
+      );
+      await _mount(tester, shape);
+      final first = (await _inkBounds(tester, 0xFF0000))!;
+      final last = (await _inkBounds(tester, 0x0000FF))!;
+      return last.top - first.top;
+    }
+
+    // The font's fractional advances total 210.15 pt. PowerPoint's rounded
+    // advances total 210.75 pt, so 210.5 pt fits only the first two words.
+    expect(await inkLineDifference(210.5), greaterThan(20));
+    expect(await inkLineDifference(211), closeTo(0, 1));
   });
 }

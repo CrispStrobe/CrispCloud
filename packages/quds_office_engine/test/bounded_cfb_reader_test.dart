@@ -95,6 +95,28 @@ void main() {
       expect(reader.readPath('small'), isNull);
     });
 
+    test('accepts bounded all-free spare FAT sectors', () {
+      final original = (CfbfWriter()..addStream('small', [1])).build();
+      const sectorSize = 512;
+      final expanded = Uint8List(original.length + sectorSize * 2)
+        ..setRange(0, original.length, original)
+        ..fillRange(original.length, original.length + sectorSize * 2, 0xff);
+      final view = ByteData.sublistView(expanded);
+      final fat = view.getUint32(76, Endian.little);
+      final spare = original.length ~/ sectorSize - 1;
+      view
+        ..setUint32(44, 3, Endian.little)
+        ..setUint32(80, spare, Endian.little)
+        ..setUint32(84, spare + 1, Endian.little);
+      final fatOffset = (fat + 1) * sectorSize;
+      for (var index = spare; index <= spare + 1; index++) {
+        view.setUint32(fatOffset + index * 4, 0xfffffffd, Endian.little);
+      }
+      expect(BoundedCfbReader(expanded).readPath('small'), [1]);
+      expanded[original.length] = 0;
+      expect(() => BoundedCfbReader(expanded), throwsFormatException);
+    });
+
     test('duplicate FAT references fail before the parser allocates them', () {
       final bytes = (CfbfWriter()..addStream('small', [1])).build();
       final view = ByteData.sublistView(bytes);

@@ -94,6 +94,62 @@ void _expectNativeGroups(Uint8List bytes) {
 }
 
 void main() {
+  test(
+    'moving an imported group child survives native-coordinate round trip',
+    () {
+      const slideUri = '/ppt/slides/slide1.xml';
+      final package = OpcPackage.openBytes(
+        SlideSerializer().writeBytes(
+          PmlPresentation(slides: [PmlSlide(id: 256)]),
+        ),
+      );
+      package
+          .getPart(slideUri)!
+          .writeText(
+            '<p:sld xmlns:p="${OfficeNamespaces.p}" xmlns:a="${OfficeNamespaces.a}">'
+            '<p:cSld><p:spTree><p:grpSp>'
+            '<p:grpSpPr><a:xfrm><a:off x="500" y="700"/>'
+            '<a:ext cx="400" cy="600"/><a:chOff x="100" y="200"/>'
+            '<a:chExt cx="200" cy="300"/></a:xfrm></p:grpSpPr>'
+            '<p:sp><p:nvSpPr><p:cNvPr id="8" name="Grouped"/></p:nvSpPr>'
+            '<p:spPr><a:xfrm><a:off x="110" y="220"/>'
+            '<a:ext cx="20" cy="30"/></a:xfrm></p:spPr>'
+            '</p:sp></p:grpSp></p:spTree></p:cSld></p:sld>',
+          );
+      final imported = SlideDeserializer().read(package);
+      final shape = imported.slides.single.shapes.single;
+      final original = shape.transform;
+      expect(
+        (original.x, original.y, original.cx, original.cy),
+        (520, 740, 40, 60),
+      );
+      shape.transform = original.copyWith(
+        x: original.x + 100,
+        y: original.y + 40,
+      );
+      final saved = SlideSerializer().writeBytes(imported);
+      final reopened = SlideDeserializer()
+          .readBytes(saved)
+          .slides
+          .single
+          .shapes
+          .single;
+      expect(
+        (
+          reopened.transform.x,
+          reopened.transform.y,
+          reopened.transform.cx,
+          reopened.transform.cy,
+        ),
+        (620, 780, 40, 60),
+      );
+      expect(
+        OpcPackage.openBytes(saved).getPart(slideUri)!.readText(),
+        contains('x="160" y="240"'),
+      );
+    },
+  );
+
   final alignmentCases = <PmlAlignAxis, List<(int, int)>>{
     PmlAlignAxis.left: [(-20, 30), (-20, -10), (-20, 70)],
     PmlAlignAxis.center: [(25, 30), (15, -10), (30, 70)],

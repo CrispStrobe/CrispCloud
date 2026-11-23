@@ -1143,6 +1143,7 @@ class _Collector {
             'cells': cells,
             if (options.includeFormatting) ...<String, Object?>{
               'height': row.height,
+              'heightIsExact': row.heightIsExact,
               'keepTogether': row.cantSplit,
             },
           });

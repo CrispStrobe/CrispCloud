@@ -2446,6 +2446,10 @@ class _QudsSlideEditorState extends State<QudsSlideEditor>
           child: SlideStage(
             slide: _c.slideShow?.currentSlide ?? _c.slide,
             master: _c.presentation.master,
+            slideSize: Size(
+              _c.presentation.slideWidth / 12700,
+              _c.presentation.slideHeight / 12700,
+            ),
             selected: null,
             viewport: _c.viewport,
             config: config,
@@ -2856,6 +2860,10 @@ class _QudsSlideEditorState extends State<QudsSlideEditor>
                                 ? (_c.slideShow?.currentSlide ?? _c.slide)
                                 : _c.canvasSlide,
                             master: _c.presentation.master,
+                            slideSize: Size(
+                              _c.presentation.slideWidth / 12700,
+                              _c.presentation.slideHeight / 12700,
+                            ),
                             selected: _c.isPresenting ? null : _c.selected,
                             selectedShapes: _c.isPresenting
                                 ? const <PmlShape>[]
