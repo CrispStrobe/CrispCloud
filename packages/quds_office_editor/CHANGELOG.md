@@ -4,6 +4,11 @@ All notable changes to `quds_office_editor` are documented here.
 
 ## Unreleased
 
+- Add English, German and Arabic help for `recipient:` and `participant:`
+  correspondence searches in connected and cached Mail. Named saved searches
+  accept the same fields while retaining their exact account/folder scopes.
+  Bcc, private transport envelopes and message bodies remain outside this query.
+
 - Remember custom Archive destinations per account in connected IMAP, Exchange
   EWS and Microsoft 365. Add English/German/Arabic save/change/clear controls
   that work without a selected message, fresh exact-folder validation,
