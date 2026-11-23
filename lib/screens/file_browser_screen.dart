@@ -293,20 +293,51 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
 
     final bool showTopToolbar =
         !isDesktopPlatform || ref.watch(topToolbarVisibleProvider);
+    final bool isWindowsDesktop =
+        !kIsWeb && defaultTargetPlatform == TargetPlatform.windows;
+    final bool browserMenusVisible =
+        officeEditor == null &&
+        imageEditor == null &&
+        pdfEditor == null &&
+        codeEditor == null &&
+        mediaEditor == null &&
+        terminal == null;
     _configureNativeToolbar(context, auth, showTopToolbar);
     final scaffold = Scaffold(
-      appBar: showTopToolbar && !_nativeToolbarReady
+      // Windows keeps its application menus even when the optional toolbar is
+      // hidden. They share the same row as the primary window actions.
+      appBar: isWindowsDesktop || (showTopToolbar && !_nativeToolbarReady)
           ? AppBar(
-              titleSpacing: 12,
-              title: isNarrow ? Text(l.appTitle) : null,
-              actions: isNarrow
-                  ? _buildNarrowActions(context, auth)
-                  : _buildWideActions(
+              toolbarHeight: isWindowsDesktop ? 48 : null,
+              titleSpacing: isWindowsDesktop ? 8 : 12,
+              elevation: isWindowsDesktop ? 0 : null,
+              scrolledUnderElevation: isWindowsDesktop ? 0 : null,
+              surfaceTintColor: isWindowsDesktop ? Colors.transparent : null,
+              title: isWindowsDesktop && browserMenusVisible
+                  ? ConfigurableBrowserMenu(
+                      layout: menuStore.layout,
+                      commands: _browserMenuBindings(context, ref),
+                      fixedCommands: _fixedBrowserMenuBindings(context, ref),
+                      inToolbar: true,
+                    )
+                  : isNarrow
+                      ? Text(l.appTitle)
+                      : null,
+              actions: isWindowsDesktop
+                  ? _buildWindowsActions(
                       context,
                       auth,
-                      showPreview,
-                      isDesktopPlatform,
-                    ),
+                      isNarrow: isNarrow,
+                      showToolbar: showTopToolbar,
+                    )
+                  : isNarrow
+                      ? _buildNarrowActions(context, auth)
+                      : _buildWideActions(
+                          context,
+                          auth,
+                          showPreview,
+                          isDesktopPlatform,
+                        ),
             )
           : null,
       body: Focus(
@@ -314,13 +345,9 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         onKeyEvent: (node, event) => handleKeyEvent(context, ref, event),
         child: Column(
           children: [
-            if ((kIsWeb || defaultTargetPlatform != TargetPlatform.macOS) &&
-                officeEditor == null &&
-                imageEditor == null &&
-                pdfEditor == null &&
-                codeEditor == null &&
-                mediaEditor == null &&
-                terminal == null)
+            if (!isWindowsDesktop &&
+                (kIsWeb || defaultTargetPlatform != TargetPlatform.macOS) &&
+                browserMenusVisible)
               ConfigurableBrowserMenu(
                 layout: menuStore.layout,
                 commands: _browserMenuBindings(context, ref),
@@ -2205,6 +2232,65 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         )
       else
         _buildUserMenu(context, auth),
+    ];
+  }
+
+  /// Keep the Windows app menu visible and leave enough room for its labels.
+  /// Less frequent actions remain available from the overflow and View menus.
+  List<Widget> _buildWindowsActions(
+    BuildContext context,
+    AuthNotifier auth, {
+    required bool isNarrow,
+    required bool showToolbar,
+  }) {
+    final l = AppLocalizations.of(context)!;
+    return [
+      if (showToolbar) ...[
+        IconButton(
+          icon: const Icon(Icons.swap_horiz, size: 20),
+          tooltip: context.commanderTr("{0} (Ctrl+U)", [l.swapPanels]),
+          onPressed: _swapPanels,
+        ),
+        if (!isNarrow) ...[
+          IconButton(
+            icon: Icon(
+              ref.watch(showDualPanelProvider)
+                  ? Icons.view_column
+                  : Icons.web_asset,
+              size: 20,
+            ),
+            tooltip: ref.watch(showDualPanelProvider)
+                ? l.singlePanel
+                : l.dualPanel,
+            onPressed: () => ref.read(showDualPanelProvider.notifier).state =
+                !ref.read(showDualPanelProvider),
+          ),
+          IconButton(
+            icon: Icon(
+              Icons.account_tree,
+              size: 20,
+              color: ref.watch(showTreeSidebarProvider)
+                  ? Theme.of(context).colorScheme.primary
+                  : null,
+            ),
+            tooltip: ref.watch(showTreeSidebarProvider)
+                ? l.hideTreeSidebar
+                : l.showTreeSidebar,
+            onPressed: () => ref.read(showTreeSidebarProvider.notifier).state =
+                !ref.read(showTreeSidebarProvider),
+          ),
+        ],
+        _buildOverflowMenu(context, auth),
+      ],
+      if (!auth.isConnected)
+        TextButton.icon(
+          icon: const Icon(Icons.login, size: 18),
+          label: Text(l.connect),
+          onPressed: () => showConnectionDialogScreen(context),
+        )
+      else
+        _buildUserMenu(context, auth),
+      const SizedBox(width: 6),
     ];
   }
 

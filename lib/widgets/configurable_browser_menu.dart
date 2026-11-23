@@ -153,11 +153,16 @@ class ConfigurableBrowserMenu extends StatelessWidget {
     required this.commands,
     required this.fixedCommands,
     this.preview = false,
+    this.inToolbar = false,
   });
   final BrowserMenuLayout layout;
   final Map<String, BrowserMenuCommandBinding> commands;
   final List<BrowserMenuCommandBinding> fixedCommands;
   final bool preview;
+
+  /// Windows displays its application menus inside the top AppBar, not in
+  /// a second Material menu row. Other platforms retain the existing layout.
+  final bool inToolbar;
 
   @override
   Widget build(BuildContext context) {
@@ -176,18 +181,63 @@ class ConfigurableBrowserMenu extends StatelessWidget {
             ),
           ),
         );
-    List<Widget> children(List<BrowserMenuNode> entries) => [
+    // Limit top-level popups to the space below the Windows menu strip.
+    // Otherwise Flutter flips a long menu above its anchor and obscures the
+    // entire toolbar, which feels like a modal instead of a desktop dropdown.
+    final maxPopupHeight =
+        (MediaQuery.sizeOf(context).height - 48 - 16).clamp(120.0, double.infinity);
+    final toolbarPopupStyle = inToolbar
+        ? MenuStyle(
+            alignment: AlignmentDirectional.bottomStart,
+            maximumSize: WidgetStatePropertyAll(
+              Size(double.infinity, maxPopupHeight),
+            ),
+            elevation: const WidgetStatePropertyAll(6),
+            shape: const WidgetStatePropertyAll(
+              RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(4)),
+              ),
+            ),
+          )
+        : null;
+    final usedAccelerators = <String>{};
+    String acceleratorLabel(String label) {
+      for (var i = 0; i < label.length; i++) {
+        final letter = label[i].toLowerCase();
+        if (RegExp(r'[a-z]').hasMatch(letter) &&
+            usedAccelerators.add(letter)) {
+          return '${label.substring(0, i)}&${label.substring(i)}';
+        }
+      }
+      return label;
+    }
+
+    List<Widget> children(
+      List<BrowserMenuNode> entries, {
+      bool topLevel = false,
+    }) => [
       for (final entry in entries)
         switch (entry.kind) {
           BrowserMenuNodeKind.separator => const Divider(height: 8),
           BrowserMenuNodeKind.submenu => SubmenuButton(
             key: ValueKey('browser-menu-${entry.id}'),
+            menuStyle: topLevel ? toolbarPopupStyle : null,
+            style: topLevel && inToolbar
+                ? const ButtonStyle(
+                    minimumSize: WidgetStatePropertyAll(Size(0, 36)),
+                    padding: WidgetStatePropertyAll(
+                      EdgeInsets.symmetric(horizontal: 10),
+                    ),
+                  )
+                : null,
             menuChildren: children(entry.children),
-            child: Text(
-              strings.title(entry),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
+            child: topLevel && inToolbar
+                ? MenuAcceleratorLabel(acceleratorLabel(strings.title(entry)))
+                : Text(
+                    strings.title(entry),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
           ),
           BrowserMenuNodeKind.command => command(
             commands[entry.commandId] ??
@@ -200,20 +250,33 @@ class ConfigurableBrowserMenu extends StatelessWidget {
         },
     ];
     final menus = [
-      ...children(layout.menus),
+      ...children(layout.menus, topLevel: true),
       if (fixedCommands.isNotEmpty)
         SubmenuButton(
           key: const ValueKey('browser-menu-controls'),
+          menuStyle: toolbarPopupStyle,
+          style: inToolbar
+              ? const ButtonStyle(
+                  minimumSize: WidgetStatePropertyAll(Size(0, 36)),
+                  padding: WidgetStatePropertyAll(
+                    EdgeInsets.symmetric(horizontal: 10),
+                  ),
+                )
+              : null,
           menuChildren: [
             for (final binding in fixedCommands)
               command(binding, 'browser-menu-fixed-${binding.id}'),
           ],
-          child: Text(strings.text('controls')),
+          child: inToolbar
+              ? MenuAcceleratorLabel(
+                  acceleratorLabel(strings.text('controls')),
+                )
+              : Text(strings.text('controls')),
         ),
     ];
     return LayoutBuilder(
       builder: (context, constraints) {
-        if (constraints.maxWidth < 650) {
+        if (constraints.maxWidth < (inToolbar ? 600 : 650)) {
           return Align(
             alignment: AlignmentDirectional.centerStart,
             child: MenuAnchor(
@@ -225,6 +288,23 @@ class ConfigurableBrowserMenu extends StatelessWidget {
                 onPressed: () =>
                     controller.isOpen ? controller.close() : controller.open(),
               ),
+            ),
+          );
+        }
+        if (inToolbar) {
+          return Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: MenuBar(
+              key: const ValueKey('browser-menu-toolbar'),
+              style: const MenuStyle(
+                padding: WidgetStatePropertyAll(EdgeInsets.zero),
+                backgroundColor: WidgetStatePropertyAll(Colors.transparent),
+                elevation: WidgetStatePropertyAll(0),
+                shape: WidgetStatePropertyAll(
+                  RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                ),
+              ),
+              children: menus,
             ),
           );
         }
