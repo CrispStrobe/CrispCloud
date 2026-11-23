@@ -696,6 +696,28 @@ abstract final class WordRevisions {
     }
   }
 
+  /// Group tracked changes on live body paragraphs for canvas painting.
+  ///
+  /// Preserve document order within each group so overlapping markup is
+  /// painted in its original order. Auxiliary stories and detached targets
+  /// cannot claim a body index, even if they once occupied that index.
+  static Map<int, List<WmlRevision>> bodyRevisionsByParagraph(
+    WmlDocument document,
+  ) {
+    if (document.revisions.isEmpty) return const {};
+    final body = document.paragraphs.toList(growable: false);
+    final byTarget = Map<WmlParagraph, List<WmlRevision>>.identity();
+    for (final revision in document.revisions) {
+      if (_captureTarget(document, revision, body: body) case final target?) {
+        byTarget.putIfAbsent(target, () => []).add(revision);
+      }
+    }
+    return {
+      for (var index = 0; index < body.length; index++)
+        index: ?byTarget[body[index]],
+    };
+  }
+
   /// Finds the captured paragraph while it still belongs to the document.
   ///
   /// Older callers that construct [WmlRevision] directly bind their body index
@@ -704,14 +726,7 @@ abstract final class WordRevisions {
     WmlDocument document,
     WmlRevision revision,
   ) {
-    if (!revision._targetCaptured && revision.targetParagraph == null) {
-      revision.targetParagraph = _bodyParagraph(
-        document,
-        revision.paragraphIndex,
-      );
-    }
-    revision._targetCaptured = true;
-    final WmlParagraph? target = revision.targetParagraph;
+    final target = _captureTarget(document, revision);
     if (target == null) return null;
     for (final WmlParagraph paragraph in _allParagraphs(document)) {
       if (identical(paragraph, target)) return target;
@@ -725,15 +740,23 @@ abstract final class WordRevisions {
     WmlRevision revision,
     Set<WmlParagraph> attached,
   ) {
+    final target = _captureTarget(document, revision);
+    return target != null && attached.contains(target) ? target : null;
+  }
+
+  static WmlParagraph? _captureTarget(
+    WmlDocument document,
+    WmlRevision revision, {
+    List<WmlParagraph>? body,
+  }) {
     if (!revision._targetCaptured && revision.targetParagraph == null) {
-      revision.targetParagraph = _bodyParagraph(
-        document,
-        revision.paragraphIndex,
-      );
+      final index = revision.paragraphIndex;
+      revision.targetParagraph = body == null
+          ? _bodyParagraph(document, index)
+          : (index >= 0 && index < body.length ? body[index] : null);
     }
     revision._targetCaptured = true;
-    final WmlParagraph? target = revision.targetParagraph;
-    return target != null && attached.contains(target) ? target : null;
+    return revision.targetParagraph;
   }
 
   static WmlParagraph? _bodyParagraph(WmlDocument document, int index) {

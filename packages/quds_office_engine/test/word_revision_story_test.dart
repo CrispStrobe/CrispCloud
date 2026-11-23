@@ -150,6 +150,39 @@ void _assertPending(WmlDocument document) {
 }
 
 void main() {
+  test('body paint index preserves target identity and revision order', () {
+    final document = WmlDocument.empty(text: 'tracked body');
+    final body = document.paragraphs.single;
+    final header = _paragraph('tracked header');
+    document.sections.single.header.add(header);
+    WmlRevision revision(int id, int index, [WmlParagraph? target]) =>
+        WmlRevision(
+          id: id,
+          kind: WmlRevisionKind.insert,
+          paragraphIndex: index,
+          start: 0,
+          end: 7,
+          text: 'tracked',
+          targetParagraph: target,
+        );
+    final legacy = revision(1, 0);
+    final auxiliary = revision(2, 0, header);
+    final explicit = revision(3, 0, body);
+    final missing = revision(4, 1);
+    document.revisions.addAll([legacy, auxiliary, explicit, missing]);
+
+    expect(WordRevisions.bodyRevisionsByParagraph(document), {
+      0: [legacy, explicit],
+    });
+    final replacement = _paragraph('inserted body');
+    document.sections.single.blocks.insert(0, replacement);
+    expect(WordRevisions.bodyRevisionsByParagraph(document), {
+      1: [legacy, explicit],
+    });
+    document.sections.single.blocks.remove(body);
+    expect(WordRevisions.bodyRevisionsByParagraph(document), isEmpty);
+  });
+
   test(
     'record binds a body paragraph before index-changing structural edits',
     () {

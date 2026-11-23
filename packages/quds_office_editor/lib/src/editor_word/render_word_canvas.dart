@@ -3720,6 +3720,9 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
     canvas.clipRect(Offset.zero & size);
     canvas.translate(-viewport.origin.dx, -viewport.origin.dy);
 
+    late final revisionsByParagraph = WordRevisions.bodyRevisionsByParagraph(
+      document,
+    );
     final viewBottom = viewport.origin.dy + size.height;
     final firstPage = laidOut.pageIndexAtContentY(viewport.origin.dy, scale);
     final centeredPage = laidOut.pageIndexAtContentY(
@@ -3832,7 +3835,11 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
           }
         }
       }
-      final pictures = _textPicturesForPage(page, centered: i == centeredPage);
+      final pictures = _textPicturesForPage(
+        page,
+        centered: i == centeredPage,
+        revisionsForBody: () => revisionsByParagraph,
+      );
       canvas.drawPicture(pictures.body);
       if (!_editingHeaderFooter &&
           config.showsCaret &&
@@ -4159,20 +4166,36 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
   Map<WmlParagraph, List<WordZoteroFieldSelectionRange>>
   _zoteroRangesForDocument() {
     if (zoteroFieldRanges.isEmpty) return const {};
-    final owners = Set<WmlParagraph>.identity()..addAll(document.paragraphs);
-    for (final note in [...document.footnotes, ...document.endnotes]) {
-      owners.addAll(note.allParagraphs);
-    }
     final ranges =
         Map<WmlParagraph, List<WordZoteroFieldSelectionRange>>.identity();
     for (final range in zoteroFieldRanges) {
-      if (!owners.contains(range.paragraph) ||
-          range.start < 0 ||
+      if (range.start < 0 ||
           range.end <= range.start ||
           range.end > range.paragraph.text.length) {
         continue;
       }
       ranges.putIfAbsent(range.paragraph, () => []).add(range);
+    }
+
+    if (ranges.isEmpty) return const {};
+    // Check attachment only for paragraphs the overlay actually references.
+    // A stale range still requires checking all stories before it is dropped.
+    final unattached = Set<WmlParagraph>.identity()..addAll(ranges.keys);
+    void verify(Iterable<WmlParagraph> paragraphs) {
+      if (unattached.isEmpty) return;
+      for (final paragraph in paragraphs) {
+        unattached.remove(paragraph);
+        if (unattached.isEmpty) break;
+      }
+    }
+
+    verify(document.paragraphs);
+    for (final note in [...document.footnotes, ...document.endnotes]) {
+      if (unattached.isEmpty) break;
+      verify(note.allParagraphs);
+    }
+    for (final paragraph in unattached) {
+      ranges.remove(paragraph);
     }
     return ranges;
   }
@@ -4554,22 +4577,12 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
     }
   }
 
-  void _paintRevisionMarkup(Canvas canvas, LaidOutLine line) {
-    if (document.revisions.isEmpty || line.glyphs.isEmpty) {
-      return;
-    }
-    final List<WmlParagraph> paragraphs = document.paragraphs.toList();
-    if (line.paragraphIndex < 0 || line.paragraphIndex >= paragraphs.length) {
-      return;
-    }
-    final WmlParagraph paragraph = paragraphs[line.paragraphIndex];
-    for (final WmlRevision revision in document.revisions) {
-      if (!identical(
-        WordRevisions.resolveParagraph(document, revision),
-        paragraph,
-      )) {
-        continue;
-      }
+  void _paintRevisionMarkup(
+    Canvas canvas,
+    LaidOutLine line,
+    List<WmlRevision> revisions,
+  ) {
+    for (final revision in revisions) {
       for (final LaidOutGlyph glyph in line.glyphs) {
         final int at = glyph.glyph.logicalIndex;
         if (at < revision.start || at >= revision.end) {
@@ -5070,6 +5083,7 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
   _CachedPageText _textPicturesForPage(
     LaidOutPage page, {
     required bool centered,
+    required Map<int, List<WmlRevision>> Function() revisionsForBody,
   }) {
     final inkState = _pageTextInkState(page);
     final cached = _textPictures.remove(page);
@@ -5083,6 +5097,8 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
       cached.dispose();
     }
     final frameOwners = _frameOwners(page);
+    final hasRevisions = document.revisions.isNotEmpty;
+    late final revisions = revisionsForBody();
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
     canvas.clipRect(Rect.fromLTWH(0, 0, page.width, page.height));
@@ -5096,7 +5112,11 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
         canvas.save();
         canvas.clipRect(Rect.fromLTWH(cell.x, cell.y, cell.width, cell.height));
       }
-      _paintRevisionMarkup(canvas, line);
+      if (hasRevisions && line.glyphs.isNotEmpty && line.paragraphIndex >= 0) {
+        if (revisions[line.paragraphIndex] case final changes?) {
+          _paintRevisionMarkup(canvas, line, changes);
+        }
+      }
       _drawLine(
         canvas,
         line,

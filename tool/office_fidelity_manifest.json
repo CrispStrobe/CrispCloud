@@ -1874,7 +1874,7 @@
     "packages/quds_office_editor/lib/src/editor_word/office_ruler.dart": "1b6ddf7206f501ddb5cbadb0427e5a7c16196b692acd462e5651b0c1b85b7df1",
     "packages/quds_office_editor/lib/src/editor_word/paint_run_text.dart": "47a993896d7b857273cb9f4035ac61ae2b0af4623564f2334f97bfdf09b38778",
     "packages/quds_office_editor/lib/src/editor_word/proofing_geometry.dart": "8210a778704748cd52783e32832949d1c6e69010139eaef1bedaf3bde26970ea",
-    "packages/quds_office_editor/lib/src/editor_word/render_word_canvas.dart": "96b3790f0b4d1ca51a2da5cecfd7c71d3a8afd1456bc28fa63eea7a6a29e0c57",
+    "packages/quds_office_editor/lib/src/editor_word/render_word_canvas.dart": "ef224785394869b7131ad865784b9fd331c07955ac381b5656cefab85f6fe528",
     "packages/quds_office_editor/lib/src/editor_word/table_history.dart": "5bb83807c45fd62aa5e3ae55def7538fb5da904c7237f43c51311994fa0c8640",
     "packages/quds_office_editor/lib/src/editor_word/word_run_metrics.dart": "5bfeea71be0da417a0e164614f172ce7848a6ce0cdef6a53170a801bdcfdf07b",
     "packages/quds_office_editor/lib/src/embed/office_clipboard.dart": "68c99d20c83004448d44deebd09e031aecebf84a11f2a5067d0febbe206c2715",
@@ -2466,7 +2466,7 @@
     "packages/quds_office_engine/lib/src/word/model/word_note_numbering.dart": "f9adfd69b6e678fba06d300b73b87cc51413e94bd795fb5e0d40e00fb214a97a",
     "packages/quds_office_engine/lib/src/word/model/word_notes.dart": "708c8d546b2de7417ff113b775e34d23d74ed86614bee78ca03af9658b2985e1",
     "packages/quds_office_engine/lib/src/word/model/word_proofing_language.dart": "e609d4521bc7345b931dc6811b1a91ef04bb1eedd7c9ba2636561836c7bc9ff0",
-    "packages/quds_office_engine/lib/src/word/model/word_revision.dart": "6f250ad1c0f18fc8f95aa95d83ba3be1d4e7ba7d7f276fcb0818a6d530750b6c",
+    "packages/quds_office_engine/lib/src/word/model/word_revision.dart": "f9e6d19b4a606a41deac9493dd054476de08b2d0100a1699ef95f5cbb6d70045",
     "packages/quds_office_engine/lib/src/word/model/word_small_caps.dart": "6ac5c41adaa27ab8b5089a5df7cafaa458634001dc8b38f1b2e8b923bcbade39",
     "packages/quds_office_engine/lib/src/word/model/word_small_caps_case_data.dart": "dd05f3ae8bf4366f6609953d54d92952fbf1310c2b2e3a1251f88c198e70e2dc",
     "packages/quds_office_engine/lib/src/word/model/word_styles.dart": "2005634d54531e7f336bb56334a22f0a115d7ffa3a4706da4d3dcf92ed69f4d1",
@@ -3119,7 +3119,7 @@
     "packages/quds_office_engine/test/word_protection_mode_test.dart": "c2aac173522212834fc12bb317496670ea8ac369decbf6fd30d900df5e957e5d",
     "packages/quds_office_engine/test/word_referenced_styles_and_breaks_test.dart": "519c50b0e09a5e74e9c3196e13eee25ece7074b35e51a228ae5b9956404f4edf",
     "packages/quds_office_engine/test/word_revision_scaling_test.dart": "28a9527d2307b369e1d52065083a6f7ff72e0cb2d1b2ccfe9fc9773322449c0a",
-    "packages/quds_office_engine/test/word_revision_story_test.dart": "ba234a4efa66aced9ed3e2e5e6654ea17b28296ae24f328f96857b3487d6367c",
+    "packages/quds_office_engine/test/word_revision_story_test.dart": "990ca18c992833302bbd1d0a1eec4b2d492c0d51e3430639ceb7c0ffefd7f306",
     "packages/quds_office_engine/test/word_revision_validation_test.dart": "0c9335ad341b7affe55231084bb1f8badb932083a016c12dd5ff411e33256eec",
     "packages/quds_office_engine/test/word_run_fragment_fallback_test.dart": "60c1dd491bdfc2f99c2312129d0a5a511c6425c0ff6611cb06a1469d2a5c5091",
     "packages/quds_office_engine/test/word_run_measure_boundaries_test.dart": "57e5e26e2e9bab01407eff01190d775a71bbb0b089c9997e1d681b68e39a96af",
@@ -3476,7 +3476,7 @@
     "packages/quds_office_engine/lib/src/pdf/file/decode/pdf_ccitt.dart": "402149c19a31e35f326cb9a3b60cffc4fb5a0b5a852c1f2fdd75d42412719af4"
   },
   "source_branch": "main",
-  "source_commit": "89d1443920f66dd5dd6ea331ccce8dc0e599cd55",
+  "source_commit": "80c27f1a661ae23ec0b05a4ff10bc12dbbb49d72",
   "source_repository": "CrispStrobe/quds_office_suite",
   "standalone_sources": {
     "packages/legacy_doc_parser": {
