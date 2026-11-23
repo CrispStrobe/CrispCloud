@@ -2482,20 +2482,15 @@ class WordEditorController extends OfficeController {
       WordTree.flowHost(document, _activeParagraph);
 
   void _revealParagraph(int index) {
+    final location = laidOut.firstBodyLine(index);
+    if (location == null) return;
     const double pointsToPixels = 96 / 72;
     final double scale = viewport.scale * pointsToPixels;
-    for (final LaidOutPage page in laidOut.pages) {
-      for (final LaidOutLine line in page.lines) {
-        if (line.paragraphIndex != index) {
-          continue;
-        }
-        final double top =
-            laidOut.pageStackTop(page.index, scale) + line.y * scale;
-        final double nextY = top - 48;
-        viewport.origin = Offset(viewport.origin.dx, nextY < 0 ? 0 : nextY);
-        return;
-      }
-    }
+    final double top =
+        laidOut.pageStackTop(location.page.index, scale) +
+        location.line.y * scale;
+    final double nextY = top - 48;
+    viewport.origin = Offset(viewport.origin.dx, nextY < 0 ? 0 : nextY);
   }
 
   /// Re-lays out then applies the same Flutter metrics used on screen.

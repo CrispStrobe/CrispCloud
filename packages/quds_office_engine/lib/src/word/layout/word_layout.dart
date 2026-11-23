@@ -634,13 +634,79 @@ class LaidOutDocument {
   /// example paint-metric fitting): reusing such objects would no longer
   /// reproduce a fresh layout, so the next local edit falls back to the
   /// section-level path.
-  void discardIncrementalState() => _incremental = null;
+  void discardIncrementalState() {
+    _incremental = null;
+    _bodyLineIndex = null;
+  }
 
   /// pages API.
   final List<LaidOutPage> pages;
 
   /// pageSize API.
   final WmlPageSize pageSize;
+
+  Map<int, _BodyParagraphLines>? _bodyLineIndex;
+
+  Map<int, _BodyParagraphLines> _indexBodyLines() {
+    final index = <int, _BodyParagraphLines>{};
+    for (var ordinal = 0; ordinal < pages.length; ordinal++) {
+      final page = pages[ordinal];
+      for (final line in page.lines) {
+        final group = index[line.paragraphIndex];
+        if (group == null) {
+          index[line.paragraphIndex] = _BodyParagraphLines(ordinal, page, line);
+        } else {
+          group.include(ordinal, page, line);
+        }
+      }
+    }
+    return index;
+  }
+
+  _BodyParagraphLines? _bodyLinesAt(int paragraphIndex) =>
+      (_bodyLineIndex ??= _indexBodyLines())[paragraphIndex];
+
+  /// First body line in page order, used to reveal a paragraph.
+  ({LaidOutPage page, LaidOutLine line})? firstBodyLine(int paragraphIndex) {
+    final group = _bodyLinesAt(paragraphIndex);
+    return group == null
+        ? null
+        : (page: pages[group.firstPage], line: group.firstLine);
+  }
+
+  /// Body lines in the same order as their containing pages.
+  Iterable<({LaidOutPage page, LaidOutLine line})> bodyLinesOf(
+    int paragraphIndex,
+  ) sync* {
+    final group = _bodyLinesAt(paragraphIndex);
+    if (group == null) return;
+    for (var ordinal = group.firstPage; ordinal <= group.lastPage; ordinal++) {
+      final page = pages[ordinal];
+      for (final line in page.lines) {
+        if (line.paragraphIndex == paragraphIndex) {
+          yield (page: page, line: line);
+        }
+      }
+    }
+  }
+
+  /// Body line that owns the selection's trailing paragraph mark.
+  LaidOutLine? lastBodyLine(int paragraphIndex) =>
+      _bodyLinesAt(paragraphIndex)?.lastLine;
+
+  /// Whether a body line of this paragraph follows [line] on this or a
+  /// later page. Lines at the same vertical position may share a boundary.
+  bool hasBodyLineAfter(LaidOutPage page, LaidOutLine line) {
+    final group = _bodyLinesAt(line.paragraphIndex);
+    if (group == null) return false;
+    final latest = group.pageWithMaxY;
+    if (latest.index != page.index) return latest.index > page.index;
+    if (identical(latest, page)) return group.maxY > line.y + 0.01;
+    return page.lines.any(
+      (other) =>
+          other.paragraphIndex == line.paragraphIndex && other.y > line.y + 0.01,
+    );
+  }
 
   // A layout publishes its pages in order. Index their geometry once, so
   // repaint and scrolling cost does not grow with the document length.
@@ -681,6 +747,34 @@ class LaidOutDocument {
       }
     }
     return low;
+  }
+}
+
+class _BodyParagraphLines {
+  _BodyParagraphLines(this.firstPage, LaidOutPage page, this.firstLine)
+    : lastPage = firstPage,
+      lastLine = firstLine,
+      pageWithMaxY = page,
+      maxY = firstLine.y;
+
+  final int firstPage;
+  final LaidOutLine firstLine;
+  int lastPage;
+  LaidOutLine lastLine;
+  LaidOutPage pageWithMaxY;
+  double maxY;
+
+  void include(int ordinal, LaidOutPage page, LaidOutLine line) {
+    lastPage = ordinal;
+    if (line.pageIndex > lastLine.pageIndex ||
+        (line.pageIndex == lastLine.pageIndex && line.y > lastLine.y + 0.01)) {
+      lastLine = line;
+    }
+    if (page.index > pageWithMaxY.index ||
+        (page.index == pageWithMaxY.index && line.y > maxY)) {
+      pageWithMaxY = page;
+      maxY = line.y;
+    }
   }
 }
 
@@ -1858,6 +1952,8 @@ class WordLayoutEngine {
         blockOffset: lastOffset,
       );
       final List<LaidOutPage> pages = oldPages.sublist(0, cp.pagesLength);
+      // Incremental flow may move or renumber lines taken from the old pages.
+      reuse._bodyLineIndex = null;
       var paragraphIndex = _layoutSection(
         document.sections[firstSection],
         pages,

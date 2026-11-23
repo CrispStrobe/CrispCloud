@@ -81,6 +81,58 @@ void main() {
 
   WmlRun runOf(WmlParagraph p) => p.inlines.whereType<WmlRun>().first;
 
+  test('body line lookup follows incremental paragraph numbering', () {
+    void check(LaidOutDocument layout, int index) {
+      final expected = [
+        for (final page in layout.pages)
+          for (final line in page.lines)
+            if (line.paragraphIndex == index) (page: page, line: line),
+      ];
+      expect(layout.bodyLinesOf(index), expected);
+      expect(layout.firstBodyLine(index), expected.firstOrNull);
+      if (expected.isEmpty) {
+        expect(layout.lastBodyLine(index), isNull);
+        return;
+      }
+      final selectionEnd = expected
+          .map((location) => location.line)
+          .reduce(
+            (before, after) =>
+                after.pageIndex > before.pageIndex ||
+                    (after.pageIndex == before.pageIndex &&
+                        after.y > before.y + 0.01)
+                ? after
+                : before,
+          );
+      expect(layout.lastBodyLine(index), same(selectionEnd));
+      for (final location in expected) {
+        expect(
+          layout.hasBodyLineAfter(location.page, location.line),
+          expected.any(
+            (other) =>
+                other.page.index > location.page.index ||
+                (identical(other.page, location.page) &&
+                    other.line.y > location.line.y + 0.01),
+          ),
+        );
+      }
+    }
+
+    final previous = laid;
+    for (final index in [0, 20, 21, 90, 400]) {
+      check(previous, index);
+    }
+    final inserted = _p('A paragraph that continues across pages. ' * 200);
+    document.sections.first.blocks.insert(20, inserted);
+    relayout([inserted]);
+    final locations = laid.bodyLinesOf(20).toList();
+    expect(locations.last.page.index, greaterThan(locations.first.page.index));
+    for (final index in [0, 20, 21, 90, 400]) {
+      check(previous, index);
+      check(laid, index);
+    }
+  });
+
   test('typing converges after the edited paragraph', () {
     final WmlParagraph p = document.sections[0].blocks[10] as WmlParagraph;
     for (final String ch in 'abc'.split('')) {

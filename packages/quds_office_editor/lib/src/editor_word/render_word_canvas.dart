@@ -1616,17 +1616,12 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
         (local.dy <= WordRuler.size || local.dx <= WordRuler.size);
   }
 
-  List<WmlParagraph> _rulerStory() {
-    return storyParagraphs ?? document.paragraphs.toList();
-  }
-
   /// Page the sticky rulers follow: the caret's page (active), not merely
   /// whichever sheet sits under the top of the viewport.
-  int _activeRulerPageIndex() {
+  int _activeRulerPageIndex(LaidOutLine? caretLine) {
     if (laidOut.pages.isEmpty) {
       return 0;
     }
-    final LaidOutLine? caretLine = _lineForParagraph(_caretParagraph());
     if (caretLine != null &&
         caretLine.pageIndex >= 0 &&
         caretLine.pageIndex < laidOut.pages.length) {
@@ -1640,55 +1635,31 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
         .clamp(0, laidOut.pages.length - 1);
   }
 
-  WmlParagraph? _rulerParagraph() {
-    final List<WmlParagraph> paras = _rulerStory();
-    if (paras.isEmpty) {
-      return null;
-    }
-    final LaidOutLine? focus = _rulerFocusLine();
-    if (focus != null) {
-      return paras[focus.paragraphIndex.clamp(0, paras.length - 1)];
-    }
-    return paras[caret.paragraphIndex.clamp(0, paras.length - 1)];
-  }
-
-  WmlSection _rulerSection() {
-    if (laidOut.pages.isEmpty || document.sections.isEmpty) {
-      return document.sections.isEmpty ? WmlSection() : document.sections.first;
-    }
-    final int sectionIndex = laidOut.pages[_activeRulerPageIndex()].sectionIndex
-        .clamp(0, document.sections.length - 1);
-    return document.sections[sectionIndex];
-  }
-
-  LaidOutLine? _rulerFocusLine() {
-    if (laidOut.pages.isEmpty) {
-      return null;
-    }
-    final int pageIndex = _activeRulerPageIndex();
-    final LaidOutPage page = laidOut.pages[pageIndex];
-    return WordRuler.pickFocusLine(
-      activePageIndex: pageIndex,
-      caretLine: _lineForParagraph(_caretParagraph()),
-      pageLines: _editingHeaderFooter
-          ? (editingFooter ? page.footer : page.header)
-          : page.lines,
-    );
-  }
-
-  WmlParagraph? _caretParagraph() {
-    final List<WmlParagraph> paras = _rulerStory();
-    if (paras.isEmpty) {
-      return null;
-    }
-    return paras[caret.paragraphIndex.clamp(0, paras.length - 1)];
-  }
-
   _RulerView _rulerView() {
-    final int pageIndex = laidOut.pages.isEmpty ? 0 : _activeRulerPageIndex();
-    final WmlSection section = _rulerSection();
-    final LaidOutLine? focus = _rulerFocusLine();
-    final WmlParagraph? para = _rulerParagraph();
+    final story =
+        storyParagraphs ?? document.paragraphs.toList(growable: false);
+    final caretParagraph = story.isEmpty
+        ? null
+        : story[caret.paragraphIndex.clamp(0, story.length - 1)];
+    final caretLine = _lineForParagraph(caretParagraph);
+    final pageIndex = _activeRulerPageIndex(caretLine);
+    final page = laidOut.pages.isEmpty ? null : laidOut.pages[pageIndex];
+    final sections = document.sections;
+    final section = sections.isEmpty
+        ? WmlSection()
+        : sections[(page?.sectionIndex ?? 0).clamp(0, sections.length - 1)];
+    final focus = page == null
+        ? null
+        : WordRuler.pickFocusLine(
+            activePageIndex: pageIndex,
+            caretLine: caretLine,
+            pageLines: _editingHeaderFooter
+                ? (editingFooter ? page.footer : page.header)
+                : page.lines,
+          );
+    final para = focus == null || story.isEmpty
+        ? caretParagraph
+        : story[focus.paragraphIndex.clamp(0, story.length - 1)];
     final WmlIndent indent =
         _rulerIndent ?? para?.properties.indent ?? const WmlIndent();
     final List<WmlTabStop> tabs =
@@ -1769,28 +1740,33 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
   }
 
   LaidOutLine? _lineForParagraph(WmlParagraph? para) {
-    if (para == null) {
-      return null;
-    }
+    if (para == null) return null;
     final int index = caret.paragraphIndex;
     LaidOutLine? first;
-    for (final LaidOutPage page in laidOut.pages) {
-      final List<LaidOutLine> pool = _editingHeaderFooter
-          ? <LaidOutLine>[
-              if (editingHeader) ...page.header,
-              if (editingFooter) ...page.footer,
-            ]
-          : page.lines;
-      for (final LaidOutLine line in pool) {
-        if (line.paragraphIndex != index ||
-            (line.sourceParagraph != null &&
-                !identical(line.sourceParagraph, para))) {
-          continue;
-        }
-        first ??= line;
-        final bool last = _isLastParagraphLine(page, line);
-        if (_caretIsOnLine(line, lastOfParagraph: last)) {
-          return line;
+    bool matches(LaidOutPage page, LaidOutLine line) {
+      if (line.paragraphIndex != index ||
+          (line.sourceParagraph != null &&
+              !identical(line.sourceParagraph, para))) {
+        return false;
+      }
+      first ??= line;
+      return _caretIsOnLine(
+        line,
+        lastOfParagraph: _isLastParagraphLine(page, line),
+      );
+    }
+
+    if (!_editingHeaderFooter) {
+      for (final (:page, :line) in laidOut.bodyLinesOf(index)) {
+        if (matches(page, line)) return line;
+      }
+    } else {
+      for (final page in laidOut.pages) {
+        for (final line in [
+          if (editingHeader) ...page.header,
+          if (editingFooter) ...page.footer,
+        ]) {
+          if (matches(page, line)) return line;
         }
       }
     }
@@ -4330,7 +4306,7 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
     );
     var band = _selectionPaths[key];
     if (band == null) {
-      final Map<int, LaidOutLine> lastLines = _lastLineOfParagraphs();
+      late final bodyParagraphs = document.paragraphs.toList(growable: false);
       band = Path();
       var any = false;
       for (final LaidOutLine line in page.lines) {
@@ -4342,8 +4318,15 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
           line.y,
           line.height,
           paragraph: line.paragraphIndex,
-          lastOfParagraph: identical(lastLines[line.paragraphIndex], line),
-          rtl: _paragraphRtl(line.paragraphIndex, line: line),
+          lastOfParagraph: identical(
+            laidOut.lastBodyLine(line.paragraphIndex),
+            line,
+          ),
+          rtl: _paragraphRtl(
+            line.paragraphIndex,
+            line: line,
+            bodyParagraphs: () => bodyParagraphs,
+          ),
         )) {
           band.addRect(r);
           any = true;
@@ -4361,29 +4344,6 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
         ..color = _textSelectionFill
         ..style = PaintingStyle.fill,
     );
-  }
-
-  Map<int, LaidOutLine>? _lastLinesCache;
-  LaidOutDocument? _lastLinesFor;
-
-  /// The last laid-out line of every body paragraph (document order).
-  Map<int, LaidOutLine> _lastLineOfParagraphs() {
-    if (_lastLinesCache != null && identical(_lastLinesFor, laidOut)) {
-      return _lastLinesCache!;
-    }
-    final Map<int, LaidOutLine> last = <int, LaidOutLine>{};
-    for (final LaidOutPage page in laidOut.pages) {
-      for (final LaidOutLine line in page.lines) {
-        final LaidOutLine? seen = last[line.paragraphIndex];
-        if (seen == null ||
-            seen.pageIndex < line.pageIndex ||
-            (seen.pageIndex == line.pageIndex && line.y > seen.y + 0.01)) {
-          last[line.paragraphIndex] = line;
-        }
-      }
-    }
-    _lastLinesFor = laidOut;
-    return _lastLinesCache = last;
   }
 
   bool _paintsLineSelection(LaidOutLine line, LaidOutPage page) {
@@ -5619,7 +5579,10 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
     return paras[index.clamp(0, paras.length - 1)].text;
   }
 
-  List<WmlParagraph> _storyForLine(LaidOutLine? line) {
+  List<WmlParagraph> _storyForLine(
+    LaidOutLine? line, {
+    List<WmlParagraph> Function()? bodyParagraphs,
+  }) {
     if (storyParagraphs != null &&
         _editingHeaderFooter &&
         (line == null || _isActiveHeaderFooterLine(line))) {
@@ -5638,7 +5601,7 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
         return line.isFooter ? section.footer : section.header;
       }
     }
-    return document.paragraphs.toList();
+    return bodyParagraphs?.call() ?? document.paragraphs.toList();
   }
 
   WmlSection? _pageSectionForLine(LaidOutLine line) {
@@ -5663,25 +5626,8 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
     return Color(0xFF000000 | rgb);
   }
 
-  bool _isLastParagraphLine(LaidOutPage page, LaidOutLine line) {
-    for (final LaidOutLine other in page.lines) {
-      if (other.paragraphIndex == line.paragraphIndex &&
-          other.y > line.y + 0.01) {
-        return false;
-      }
-    }
-    for (final LaidOutPage later in laidOut.pages) {
-      if (later.index <= page.index) {
-        continue;
-      }
-      for (final LaidOutLine other in later.lines) {
-        if (other.paragraphIndex == line.paragraphIndex) {
-          return false;
-        }
-      }
-    }
-    return true;
-  }
+  bool _isLastParagraphLine(LaidOutPage page, LaidOutLine line) =>
+      !laidOut.hasBodyLineAfter(page, line);
 
   void _paintCaret(Canvas canvas, LaidOutLine line) {
     final bool paragraphRtl = _paragraphRtl(line.paragraphIndex, line: line);
@@ -5701,8 +5647,12 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
     );
   }
 
-  bool _paragraphRtl(int paragraphIndex, {LaidOutLine? line}) {
-    final List<WmlParagraph> paras = _storyForLine(line);
+  bool _paragraphRtl(
+    int paragraphIndex, {
+    LaidOutLine? line,
+    List<WmlParagraph> Function()? bodyParagraphs,
+  }) {
+    final paras = _storyForLine(line, bodyParagraphs: bodyParagraphs);
     if (paras.isEmpty) {
       return config.textDirection == TextDirection.rtl ||
           CaretEngine.deviceRtl();
