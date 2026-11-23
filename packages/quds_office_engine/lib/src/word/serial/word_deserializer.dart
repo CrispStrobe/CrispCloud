@@ -121,10 +121,16 @@ class WordDeserializer {
   final Map<WmlTable, _TableLook> _tableLooks =
       Map<WmlTable, _TableLook>.identity();
 
+  final _runPropertyCache = <
+    (Map<String, String>, String, bool),
+    ({WmlRunProps props, String xml, bool notBold, bool notItalic})
+  >{};
+
   /// read API.
   WmlDocument read(OpcPackage package) {
     // A reader may be reused after a truncated document or a parse failure.
     // Story state belongs to one document and must not contaminate the next.
+    _runPropertyCache.clear();
     _pendingEquations.clear();
     _pendingVisuals.clear();
     _pendingFrames.clear();
@@ -244,6 +250,7 @@ class WordDeserializer {
       revision.paragraphIndex = bodyIndices[revision.targetParagraph] ?? -1;
     }
     WordContentControls.recordImported(document);
+    _runPropertyCache.clear();
     return document;
   }
 
@@ -1170,9 +1177,16 @@ class WordDeserializer {
         hasNonTextContent |= !ordinary;
       }
       if (reader.localName == 'rPr') {
-        final properties = _readRPr(reader, run.properties);
-        formattingChange = properties.change;
-        boundaryRunPropertiesXml = properties.sourceXml;
+        if (boundaryRunPropertiesXml == null) {
+          final properties = _readRunProperties(reader, run.properties);
+          run.properties = properties.props;
+          formattingChange = properties.change;
+          boundaryRunPropertiesXml = properties.sourceXml;
+        } else {
+          final properties = _readRPr(reader, run.properties);
+          formattingChange = properties.change;
+          boundaryRunPropertiesXml = properties.sourceXml;
+        }
       } else if (reader.localName == 't' || reader.localName == 'delText') {
         final String text = _elementText(reader);
         // A PAGE instruction elsewhere in this paragraph must not consume a
@@ -2559,6 +2573,41 @@ class WordDeserializer {
     );
   }
 
+  ({WmlRunProps props, XmlElement? change, String sourceXml})
+  _readRunProperties(XmlPullReader reader, WmlRunProps props) {
+    final namespaces = reader.inScopeNamespaces;
+    final projected = reader is WordMarkupCompatibilityReader;
+    final fragment = reader.readRawElement();
+    final cacheable = fragment.length <= 2048;
+    final key = (namespaces, fragment, projected);
+    // Duplicate rPr blocks are common in native Word documents. Cache only
+    // the private parsed template, never a run's editable property object.
+    final cached = cacheable ? _runPropertyCache[key] : null;
+    if (cached != null) {
+      final copy = cached.props.copy();
+      if (cached.notBold) _notBold.add(copy);
+      if (cached.notItalic) _notItalic.add(copy);
+      return (props: copy, change: null, sourceXml: cached.xml);
+    }
+    final replay = projected
+        ? WordMarkupCompatibilityReader(
+            fragment,
+            inheritedNamespaces: namespaces,
+          )
+        : XmlPullReader(fragment, inheritedNamespaces: namespaces);
+    replay.next();
+    final result = _readRPr(replay, props);
+    if (cacheable && result.change == null && _runPropertyCache.length < 256) {
+      _runPropertyCache[key] = (
+        props: props.copy(),
+        xml: result.sourceXml,
+        notBold: _notBold.contains(props),
+        notItalic: _notItalic.contains(props),
+      );
+    }
+    return (props: props, change: result.change, sourceXml: result.sourceXml);
+  }
+
   ({XmlElement? change, String sourceXml}) _readRPr(
     XmlPullReader reader,
     WmlRunProps props,
@@ -2569,10 +2618,14 @@ class WordDeserializer {
       'rPrChange',
       namespaceUri: OfficeNamespaces.w,
     );
-    if (change != null) node.children.remove(change);
-    props.sourcePropertiesXml = XmlDocument(
-      root: node,
-    ).toXmlString(declaration: false);
+    if (change == null) {
+      props.sourcePropertiesXml = sourceXml;
+    } else {
+      node.children.remove(change);
+      props.sourcePropertiesXml = XmlDocument(
+        root: node,
+      ).toXmlString(declaration: false);
+    }
     final XmlPullReader source = WordMarkupCompatibilityReader(
       props.sourcePropertiesXml!,
     )..next();

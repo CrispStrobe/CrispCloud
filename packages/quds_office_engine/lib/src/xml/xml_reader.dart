@@ -22,7 +22,14 @@ enum XmlEventType {
 /// against a stack of `xmlns` declarations.
 class XmlPullReader {
   /// XmlPullReader API.
-  XmlPullReader(String source) : _source = _stripBom(source);
+  XmlPullReader(String source, {Map<String, String>? inheritedNamespaces})
+    : _source = _stripBom(source),
+      _nsStack = [
+        if (inheritedNamespaces == null || inheritedNamespaces.isEmpty)
+          _NsScope.root()
+        else
+          _NsScope.inherited(inheritedNamespaces),
+      ];
 
   /// fromBytes API.
   factory XmlPullReader.fromBytes(Uint8List bytes) {
@@ -49,7 +56,7 @@ class XmlPullReader {
   bool _textHasEntities = false;
 
   /// root API.
-  final List<_NsScope> _nsStack = <_NsScope>[_NsScope.root()];
+  final List<_NsScope> _nsStack;
   final List<_AttrSlice> _attrs = <_AttrSlice>[];
   final List<String> _elementStack = <String>[];
 
@@ -107,13 +114,7 @@ class XmlPullReader {
   /// The predefined `xml` and `xmlns` bindings are not added implicitly.
   /// Capturing this before advancing retains prefixes that appear only in
   /// QName-valued attributes, such as markup-compatibility requirements.
-  Map<String, String> get inScopeNamespaces {
-    final declarations = <String, String>{};
-    for (final scope in _nsStack.skip(1)) {
-      declarations.addAll(scope._map);
-    }
-    return Map<String, String>.unmodifiable(declarations);
-  }
+  Map<String, String> get inScopeNamespaces => _nsStack.last.snapshot;
 
   /// text API.
   String get text {
@@ -223,6 +224,18 @@ class XmlPullReader {
     }
   }
 
+  /// Consumes the current element and returns its original lexical fragment.
+  /// The caller can retain [inScopeNamespaces] first to reparse the fragment
+  /// with the namespace declarations inherited from its surrounding story.
+  String readRawElement() {
+    if (_type != XmlEventType.startElement) {
+      throw StateError('Expected an XML start element');
+    }
+    final start = _nameStart - 1;
+    skip();
+    return _source.substring(start, _pos);
+  }
+
   /// attributeQualifiedName API.
   String attributeQualifiedName(int index) => _attrs[index].qualified(_source);
 
@@ -278,7 +291,8 @@ class XmlPullReader {
     _type = XmlEventType.startElement;
     _readQName();
     _skipSpaces();
-    final _NsScope scope = _NsScope(_nsStack.last);
+    final inherited = _nsStack.last;
+    var scope = inherited;
     while (_pos < _source.length) {
       final int ch = _source.codeUnitAt(_pos);
       if (ch == _gt) {
@@ -291,7 +305,16 @@ class XmlPullReader {
         _emptyElement = true;
         break;
       }
-      _readAttribute(scope);
+      final attr = _readAttribute();
+      _attrs.add(attr);
+      if (attr.isXmlns) {
+        if (identical(scope, inherited)) scope = _NsScope(inherited);
+        final key = attr.prefixEnd == attr.nameStart ? '' : attr.local(_source);
+        scope.declare(key, attr.decodedValue(_source));
+      } else if (attr.hasEntities) {
+        // Validate entities even when no caller reads this attribute.
+        attr.decodedValue(_source);
+      }
       _skipSpaces();
     }
     _nsStack.add(scope);
@@ -345,7 +368,7 @@ class XmlPullReader {
     }
   }
 
-  void _readAttribute(_NsScope scope) {
+  _AttrSlice _readAttribute() {
     final int qStart = _pos;
     int prefixEnd = qStart;
     while (_pos < _source.length && _isNameChar(_source.codeUnitAt(_pos))) {
@@ -377,25 +400,17 @@ class XmlPullReader {
     final int vEnd = _pos;
     _expect(quote, 'Unterminated attribute value');
 
-    final _AttrSlice attr = _AttrSlice(
+    return _AttrSlice(
       nameStart: qStart,
       nameEnd: qEnd,
-      prefixEnd: prefixEnd == qStart ? qStart : prefixEnd,
+      prefixEnd: prefixEnd,
       valueStart: vStart,
       valueEnd: vEnd,
       hasEntities: hasEntities,
+      isXmlns:
+          (prefixEnd == qStart ? qEnd : prefixEnd) == qStart + 5 &&
+          _source.startsWith('xmlns', qStart),
     );
-    _attrs.add(attr);
-
-    final String qname = _source.substring(qStart, qEnd);
-    final String value = attr.decodedValue(_source);
-    if (qname == 'xmlns') {
-      scope.declare('', value);
-      attr.isXmlns = true;
-    } else if (qname.startsWith('xmlns:')) {
-      scope.declare(qname.substring(6), value);
-      attr.isXmlns = true;
-    }
   }
 
   void _readText() {
@@ -690,6 +705,7 @@ class _AttrSlice {
     required this.valueStart,
     required this.valueEnd,
     required this.hasEntities,
+    required this.isXmlns,
   });
 
   /// nameStart API.
@@ -711,7 +727,7 @@ class _AttrSlice {
   final bool hasEntities;
 
   /// isXmlns API.
-  bool isXmlns = false;
+  final bool isXmlns;
 
   /// qualified API.
   String qualified(String source) => source.substring(nameStart, nameEnd);
@@ -746,13 +762,20 @@ class _NsScope {
   _NsScope(this.parent);
 
   /// root API.
-  _NsScope.root() : parent = null {
-    _map[''] = '';
+  _NsScope.root() : parent = null;
+
+  _NsScope.inherited(Map<String, String> namespaces) : parent = null {
+    _map.addAll(namespaces);
   }
 
-  /// parent API.
   final _NsScope? parent;
   final Map<String, String> _map = <String, String>{};
+
+  // Declaration scopes are populated before publishing their start event.
+  // Descendants without declarations reuse the same immutable snapshot.
+  late final Map<String, String> snapshot = _map.isEmpty
+      ? parent?.snapshot ?? const <String, String>{}
+      : Map.unmodifiable({...?parent?.snapshot, ..._map});
 
   /// declare API.
   void declare(String prefix, String uri) {

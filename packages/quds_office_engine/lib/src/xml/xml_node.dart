@@ -426,21 +426,28 @@ class XmlDocument {
           final parentNamespaces = namespaceScopes.isEmpty
               ? const <String, String>{}
               : namespaceScopes.last;
-          final attributeNames = node.attributes
-              .map((attribute) => attribute.qualifiedName)
-              .toSet();
-          for (final ns in namespaces.entries) {
-            if (parentNamespaces[ns.key] == ns.value) continue;
-            final qualifiedName = ns.key.isEmpty ? 'xmlns' : 'xmlns:${ns.key}';
-            if (attributeNames.contains(qualifiedName)) continue;
-            // Match qualified names, so xmlns:w never replaces a real w:w.
-            node.attributes.add(
-              XmlAttribute(
-                localName: ns.key.isEmpty ? 'xmlns' : ns.key,
-                prefix: ns.key.isEmpty ? '' : 'xmlns',
-                value: ns.value,
-              ),
-            );
+          if (!identical(namespaces, parentNamespaces)) {
+            final declared = <String>{
+              for (final attribute in node.attributes)
+                if (attribute.prefix == 'xmlns')
+                  attribute.localName
+                else if (attribute.prefix.isEmpty &&
+                    attribute.localName == 'xmlns')
+                  '',
+            };
+            for (final ns in namespaces.entries) {
+              if (parentNamespaces[ns.key] == ns.value ||
+                  declared.contains(ns.key)) {
+                continue;
+              }
+              node.attributes.add(
+                XmlAttribute(
+                  localName: ns.key.isEmpty ? 'xmlns' : ns.key,
+                  prefix: ns.key.isEmpty ? '' : 'xmlns',
+                  value: ns.value,
+                ),
+              );
+            }
           }
           if (stack.isEmpty) {
             root = node;

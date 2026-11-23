@@ -9,6 +9,7 @@ import '../slide/serial/slide_serial.dart';
 import '../visual/sheet_chart_data.dart';
 import '../word/layout/word_layout.dart';
 import '../word/model/wml_document.dart';
+import '../word/model/word_tree.dart';
 import '../word/serial/odt_document_reader.dart';
 import '../word/serial/word_deserializer.dart';
 import 'office_open_types.dart';
@@ -61,7 +62,21 @@ Future<Object> decodeOfficeOpen(
   emit(const OfficeOpenProgress(value: 0.42, stage: 'document'));
   switch (kind) {
     case 'word-document':
-      final document = WordDeserializer().read(package);
+      final WmlDocument document = WordDeserializer().read(package);
+      int blocks = 0;
+      for (final WmlSection section in document.sections) {
+        blocks += WordTree.visibleBlocks(section.blocks).length;
+      }
+      final int notes = document.footnotes.length + document.endnotes.length;
+      emit(
+        OfficeOpenProgress(
+          value: 0.42,
+          stage: 'document',
+          detail:
+              '${document.sections.length} sections · '
+              '$blocks blocks · $notes notes',
+        ),
+      );
       emit(const OfficeOpenProgress(value: 0.92, stage: 'apply'));
       return document;
     case 'word':

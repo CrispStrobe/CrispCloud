@@ -1074,8 +1074,11 @@ class WordEditorController extends OfficeController {
   WordLayoutEngine get _engine =>
       layoutEngine ?? (_paintMetricsEngine ??= _newPaintMetricsEngine());
 
-  WordLayoutEngine _newPaintMetricsEngine() => WordLayoutEngine(
+  WordLayoutEngine _newPaintMetricsEngine({
+    void Function(WordLayoutProgress progress)? onProgress,
+  }) => WordLayoutEngine(
     font: null,
+    onProgress: onProgress,
     measureFont: (codePoint, sizePoints, props) => OfficeHostFonts.wordMetrics(
       codePoint,
       sizePoints,
@@ -1568,22 +1571,43 @@ class WordEditorController extends OfficeController {
       throw StateError('The document changed while the file was opening.');
     }
     if (onFirstPage == null || layoutEngine != null) {
-      _acceptOpenedWord(opened);
+      // Opening shows the authored cached TOC page numbers, as Word does.
+      // Rebuilding them would require a second full layout of a large file.
+      _acceptOpenedWord(opened, syncToc: false);
       return;
     }
     _prepareOpenedWord(opened);
     WordLink.ensureHeadingBookmarks(opened);
     WordToc.refreshEmpty(opened);
     WordToc.rebindHeadings(opened);
+    // Only a generated TOC without page numbers needs the extra full pass.
+    final bool needsTocSync = _needsTocPageSync(opened);
     // Keep a separate engine until the result is accepted. Edits or a new
     // document can use the active editor's engine while this one is yielding.
-    final engine = _newPaintMetricsEngine();
+    var progressBase = 0.45;
+    var progressSpan = needsTocSync ? 0.30 : 0.52;
+    final engine = _newPaintMetricsEngine(
+      onProgress: onProgress == null
+          ? null
+          : (progress) => onProgress(
+              OfficeOpenProgress(
+                value: progressBase + progressSpan * progress.fraction,
+                stage: 'layout',
+                detail:
+                    'Layout: ${progress.pages} pages · '
+                    '${progress.blocksDone}/${progress.blocksTotal} blocks · '
+                    '${progress.notesDone}/${progress.notesTotal} notes',
+              ),
+            ),
+    );
     var layout = await engine.layoutProgressively(
       opened,
       onFirstPage: (page) => onFirstPage(opened, page),
       isCurrent: isCurrent,
     );
-    if (WordToc.syncPageNumbers(opened, layout)) {
+    if (needsTocSync && WordToc.syncPageNumbers(opened, layout)) {
+      progressBase = 0.75;
+      progressSpan = 0.22;
       layout = await engine.layoutProgressively(
         opened,
         onFirstPage: (_) {},
@@ -1604,10 +1628,14 @@ class WordEditorController extends OfficeController {
     }
   }
 
-  void _acceptOpenedWord(WmlDocument opened, {LaidOutDocument? layout}) {
+  void _acceptOpenedWord(
+    WmlDocument opened, {
+    LaidOutDocument? layout,
+    bool syncToc = true,
+  }) {
     if (layout == null) {
       _prepareOpenedWord(opened);
-      layout = _layoutWordDocument(opened);
+      layout = _layoutWordDocument(opened, syncToc: syncToc);
     }
     document = opened;
     commands.clear();
@@ -1693,16 +1721,25 @@ class WordEditorController extends OfficeController {
     }
   }
 
-  LaidOutDocument _layoutWordDocument(WmlDocument model) {
+  LaidOutDocument _layoutWordDocument(
+    WmlDocument model, {
+    bool syncToc = true,
+  }) {
     WordLink.ensureHeadingBookmarks(model);
     WordToc.refreshEmpty(model);
     WordToc.rebindHeadings(model);
     final engine = _engine;
     final layout = engine.layout(model);
+    if (!syncToc && !_needsTocPageSync(model)) return layout;
     return WordToc.syncPageNumbers(model, layout)
         ? engine.layout(model)
         : layout;
   }
+
+  /// True when a TOC has entries but no cached page numbers yet.
+  bool _needsTocPageSync(WmlDocument model) => WordToc.tocs(
+    model,
+  ).any((toc) => toc.entries.any((entry) => entry.pageNumber <= 0));
 
   void _relayoutCurrentDocument({
     required bool localEdit,
@@ -7787,7 +7824,11 @@ class WordEditorController extends OfficeController {
       _CallbackCommand(
         executeFn: () {
           restore();
-          if (WordHeadingIo.applyImportedStyles(document, before.keys, styleId)) {
+          if (WordHeadingIo.applyImportedStyles(
+            document,
+            before.keys,
+            styleId,
+          )) {
             return;
           }
           for (final paragraph in before.keys) {

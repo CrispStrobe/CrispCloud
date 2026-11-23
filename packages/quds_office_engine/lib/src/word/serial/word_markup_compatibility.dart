@@ -8,7 +8,7 @@ import '../../xml/xml_reader.dart';
 /// The wrappers themselves are hidden so body, paragraph, drawing and note
 /// readers all see the same stream, including nested alternatives.
 final class WordMarkupCompatibilityReader extends XmlPullReader {
-  WordMarkupCompatibilityReader(super.source);
+  WordMarkupCompatibilityReader(super.source, {super.inheritedNamespaces});
 
   static const Set<String> _supported = <String>{
     OfficeNamespaces.w,

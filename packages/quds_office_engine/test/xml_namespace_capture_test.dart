@@ -54,6 +54,53 @@ void main() {
     },
   );
 
+  test('repeated Word run properties stay scoped and independently editable', () {
+    const properties =
+        '<w:rPr><mc:AlternateContent>'
+        '<mc:Choice Requires="q"><w:b/></mc:Choice>'
+        '<mc:Fallback><w:i/></mc:Fallback>'
+        '</mc:AlternateContent><q:extension q:id="native"/></w:rPr>';
+    final package = OpcPackage.create(OpcPackageKind.word);
+    package
+        .getPart('/word/document.xml')!
+        .writeText(
+          '<w:document xmlns:w="${OfficeNamespaces.w}" '
+          'xmlns:mc="${OfficeNamespaces.mc}" xmlns:q="${OfficeNamespaces.w}">'
+          '<w:body><w:p><w:r>$properties<w:t>First</w:t></w:r>'
+          '<w:r>$properties<w:t>Second</w:t></w:r></w:p>'
+          '<w:p xmlns:q="urn:unsupported"><w:r>$properties<w:t>Third</w:t></w:r></w:p>'
+          '</w:body></w:document>',
+        );
+    final document = WordDeserializer().read(package);
+    final runs = document.paragraphs
+        .expand((paragraph) => paragraph.inlines.whereType<WmlRun>())
+        .toList();
+    expect(runs.map((run) => run.properties.bold), [true, true, false]);
+    expect(runs.map((run) => run.properties.italic), [false, false, true]);
+    runs.first.properties.bold = false;
+    expect(runs[1].properties.bold, isTrue);
+    final original = XmlDocument.parse(
+      runs[2].properties.sourcePropertiesXml!,
+    ).root!;
+    expect(
+      original.firstChild('extension', namespaceUri: 'urn:unsupported'),
+      isNotNull,
+    );
+    final saved = WordDeserializer().read(
+      OfficeRepair.open(WordSerializer().writeBytes(document)),
+    );
+    final reopened = saved.paragraphs
+        .expand((paragraph) => paragraph.inlines.whereType<WmlRun>())
+        .toList();
+    expect(reopened.map((run) => run.properties.bold), [false, true, false]);
+    expect(reopened.map((run) => run.properties.italic), [false, false, true]);
+  });
+
+  test('unread XML attributes still validate entities', () {
+    final reader = XmlPullReader('<root invalid="&unknown;"/>');
+    expect(reader.next, throwsA(isA<XmlParseException>()));
+  });
+
   for (final declaredHere in [false, true]) {
     test(
       'captured w:w survives ${declaredHere ? 'local' : 'inherited'} xmlns:w',

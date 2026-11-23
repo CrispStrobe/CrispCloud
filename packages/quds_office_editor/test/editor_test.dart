@@ -89,7 +89,7 @@ void main() {
     );
     expect(
       PaintRunText.familyFor(text: 'Hello', runFamily: 'Georgia'),
-      'Liberation Sans',
+      'Liberation Serif',
     );
     // Painting an unloaded face uses a bundled fallback without rewriting
     // the document's requested family or claiming another font's metrics.

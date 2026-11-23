@@ -1,5 +1,12 @@
 part of 'word_deserializer.dart';
 
+typedef _RunStyleProjection = ({
+  WmlRunProps properties,
+  bool hasColor,
+  bool hasUnderline,
+  bool hasBaseline,
+});
+
 /// Resolve only declared properties, from defaults through table/paragraph/
 /// character styles to direct formatting. Missing values never reset a parent.
 class _StyleCascade {
@@ -12,6 +19,10 @@ class _StyleCascade {
   XmlElement? defaults;
   String? defaultParagraph;
   bool _missingStyles = false;
+
+  // Reuse effective run formatting within one document cascade. Table
+  // formatting can depend on cell coordinates and uses the normal path.
+  final _runStyles = <(String?, String?, String), _RunStyleProjection>{};
 
   bool _load({bool includeTheme = true}) {
     final package = document.package;
@@ -1152,48 +1163,30 @@ class _StyleCascade {
       if (props.importedValues != null) {
         props.sourcePropertiesXml = WordSerializer().runPropertiesXml(props);
       }
-      final direct = WordPropertyIo.parse(props.sourcePropertiesXml, 'rPr');
-      final styleRuns = [
-        ...paragraphRunStyles,
-        for (final s in chain(props.styleId)) _wordChild(s, 'rPr'),
-      ];
-      final rp = merged(
-        'rPr',
-        [
-          _wordChild(_wordChild(defaults, 'rPrDefault'), 'rPr'),
-          for (final t in tableLayers) _wordChild(t, 'rPr'),
-          ...styleRuns,
-          direct,
-        ],
-        toggleLayers: styleRuns.whereType<XmlElement>().toSet(),
-        paragraphRunLayers: paragraphRunStyles,
-      );
-      final resolved = WmlRunProps(
-        kerningHalfPoints: _missingStyles ? 1 : null,
-      );
-      final inner = XmlPullReader(
-        XmlDocument(root: rp).toXmlString(declaration: false),
-      )..next();
-      reader._parseRPr(inner, resolved);
-      // The document default remains live: changing it must affect runs that
-      // do not override it without stamping direct formatting onto every run.
-      final inheritedLanguage = merged('rPr', [
-        for (final t in tableLayers) _wordChild(t, 'rPr'),
-        ...styleRuns,
-        direct,
-      ]).firstChild('lang');
-      resolved.proofingLanguage = inheritedLanguage?.getAttribute('val');
-      resolved.complexScriptLanguage = inheritedLanguage?.getAttribute('bidi');
+      final source = props.sourcePropertiesXml ?? '';
+      final key = (id, props.styleId, source);
+      final canCache = tableLayers.isEmpty && source.length <= 4096;
+      final cached = canCache ? _runStyles[key] : null;
+      final projection =
+          cached ?? _projectRunStyle(props, tableLayers, paragraphRunStyles);
+      if (cached == null && canCache && _runStyles.length < 256) {
+        _runStyles[key] = (
+          properties: projection.properties.copy(),
+          hasColor: projection.hasColor,
+          hasUnderline: projection.hasUnderline,
+          hasBaseline: projection.hasBaseline,
+        );
+      }
+      final resolved = cached == null
+          ? projection.properties
+          : projection.properties.copy();
       if (inline is WmlRun && inline.hyperlink != null) {
-        if (rp.firstChild('color') == null) resolved.color = WordLink.color;
-        if (rp.firstChild('u') == null) {
-          resolved.underline = WmlUnderline.single;
-        }
+        if (!projection.hasColor) resolved.color = WordLink.color;
+        if (!projection.hasUnderline) resolved.underline = WmlUnderline.single;
       }
       if (inline is WmlRun &&
           inline.noteRefId != null &&
-          rp.firstChild('vertAlign') == null &&
-          rp.firstChild('position') == null) {
+          !projection.hasBaseline) {
         resolved.vertAlign = WmlVertAlign.superscript;
       }
       resolved.styleId = props.styleId;
@@ -1221,6 +1214,48 @@ class _StyleCascade {
         );
       }
     }
+  }
+
+  _RunStyleProjection _projectRunStyle(
+    WmlRunProps props,
+    List<XmlElement> tableLayers,
+    Set<XmlElement> paragraphRunStyles,
+  ) {
+    final direct = WordPropertyIo.parse(props.sourcePropertiesXml, 'rPr');
+    final styleRuns = [
+      ...paragraphRunStyles,
+      for (final s in chain(props.styleId)) _wordChild(s, 'rPr'),
+    ];
+    final layers = [
+      for (final t in tableLayers) _wordChild(t, 'rPr'),
+      ...styleRuns,
+      direct,
+    ];
+    final rp = merged(
+      'rPr',
+      [_wordChild(_wordChild(defaults, 'rPrDefault'), 'rPr'), ...layers],
+      toggleLayers: styleRuns.whereType<XmlElement>().toSet(),
+      paragraphRunLayers: paragraphRunStyles,
+    );
+    final resolved = WmlRunProps(kerningHalfPoints: null);
+    reader._parseRPr(
+      XmlPullReader(XmlDocument(root: rp).toXmlString(declaration: false))
+        ..next(),
+      resolved,
+    );
+    // Keep document-default proofing language live instead of copying it
+    // into runs whose own formatting layers do not declare a language.
+    final language = merged('rPr', layers).firstChild('lang');
+    resolved.proofingLanguage = language?.getAttribute('val');
+    resolved.complexScriptLanguage = language?.getAttribute('bidi');
+    return (
+      properties: resolved,
+      hasColor: rp.firstChild('color') != null,
+      hasUnderline: rp.firstChild('u') != null,
+      hasBaseline:
+          rp.firstChild('vertAlign') != null ||
+          rp.firstChild('position') != null,
+    );
   }
 
   void walk(
