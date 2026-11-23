@@ -483,6 +483,25 @@ void main() {
       await tester.pump();
     }
 
+    final layout = controller.documentLaidOut;
+    final scale = controller.viewport.scale * (96 / 72);
+    const targets = [0, 3, 6, 9, 12];
+    final pageHeight = layout.pages.first.height * scale;
+    for (final index in targets) {
+      // Show the end of this page and a sliver of the next page.
+      controller.viewport.origin = Offset(
+        0,
+        layout.pageStackTop(index, scale) + pageHeight - render.size.height * .7,
+      );
+      render.markNeedsPaint();
+      await tester.pump();
+    }
+    expect(render.debugCachedTextPageIndices, containsAll(targets));
+    expect(render.debugCachedTextPageCount, inInclusiveRange(1, 8));
+
+    controller.viewport.origin = Offset.zero;
+    render.markNeedsPaint();
+    await tester.pump();
     await scroll(5);
     final first = viewportNotifications;
     await scroll(5);

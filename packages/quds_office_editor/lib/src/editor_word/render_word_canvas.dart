@@ -495,10 +495,11 @@ typedef _PageTextInkState = ({
 });
 
 class _CachedPageText {
-  _CachedPageText(this.inkState, this.body);
+  _CachedPageText(this.inkState, this.body, {required this.wasCentered});
 
   final _PageTextInkState inkState;
   final ui.Picture body;
+  bool wasCentered;
   ui.Picture? notes;
 
   int get approximateBytesUsed =>
@@ -846,6 +847,10 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
 
   @visibleForTesting
   int get debugCachedTextPageCount => _textPictures.length;
+
+  @visibleForTesting
+  Set<int> get debugCachedTextPageIndices =>
+      _textPictures.keys.map((page) => page.index).toSet();
 
   @visibleForTesting
   int get debugCachedNoteTextPageCount =>
@@ -3717,6 +3722,10 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
 
     final viewBottom = viewport.origin.dy + size.height;
     final firstPage = laidOut.pageIndexAtContentY(viewport.origin.dy, scale);
+    final centeredPage = laidOut.pageIndexAtContentY(
+      viewport.origin.dy + size.height / 2,
+      scale,
+    );
     for (int i = firstPage; i < laidOut.pages.length; i++) {
       final double top = laidOut.pageStackTop(i, scale);
       if (top >= viewBottom) break;
@@ -3823,7 +3832,7 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
           }
         }
       }
-      final pictures = _textPicturesForPage(page);
+      final pictures = _textPicturesForPage(page, centered: i == centeredPage);
       canvas.drawPicture(pictures.body);
       if (!_editingHeaderFooter &&
           config.showsCaret &&
@@ -5058,11 +5067,15 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
     );
   }
 
-  _CachedPageText _textPicturesForPage(LaidOutPage page) {
+  _CachedPageText _textPicturesForPage(
+    LaidOutPage page, {
+    required bool centered,
+  }) {
     final inkState = _pageTextInkState(page);
     final cached = _textPictures.remove(page);
     if (cached != null) {
       if (cached.inkState == inkState) {
+        cached.wasCentered |= centered;
         _textPictures[page] = cached;
         return cached;
       }
@@ -5093,10 +5106,14 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
       );
       if (cell != null) canvas.restore();
     }
-    final pictures = _CachedPageText(inkState, recorder.endRecording());
+    final pictures = _CachedPageText(
+      inkState,
+      recorder.endRecording(),
+      wasCentered: centered || (cached?.wasCentered ?? false),
+    );
     _textPictures[page] = pictures;
     _textPictureBytes += pictures.approximateBytesUsed;
-    _evictTextPictures();
+    _evictTextPictures(keep: page);
     return pictures;
   }
 
@@ -5150,16 +5167,23 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
       }
       notes = pictures.notes = recorder.endRecording();
       _textPictureBytes += notes.approximateBytesUsed;
-      _evictTextPictures();
+      _evictTextPictures(keep: page);
     }
     canvas.drawPicture(notes);
   }
 
-  void _evictTextPictures() {
+  void _evictTextPictures({required LaidOutPage keep}) {
     while (_textPictures.length > 1 &&
         (_textPictures.length > _maxTextPicturePages ||
             _textPictureBytes > _maxTextPictureBytes)) {
-      final oldest = _textPictures.keys.first;
+      // A sliver of the next page may be visible during a jump. Keep pages
+      // the reader actually centered until the peripheral pages age out.
+      var oldest = _textPictures.keys.first;
+      for (final entry in _textPictures.entries) {
+        if (identical(entry.key, keep) || entry.value.wasCentered) continue;
+        oldest = entry.key;
+        break;
+      }
       final evicted = _textPictures.remove(oldest)!;
       _textPictureBytes -= evicted.approximateBytesUsed;
       evicted.dispose();
