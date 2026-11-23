@@ -189,6 +189,47 @@ void main() {
     }
   });
 
+  for (final columns in [1, 2]) {
+    test(
+      'an overflowing blank line moves with its height in $columns columns',
+      () {
+        WmlParagraph fixed(String text) => paragraph(text)
+          ..properties.lineSpacingRule = WmlLineSpacingRule.exact
+          ..properties.lineSpacing = 14;
+        final source = WmlDocument(
+          sections: [
+            WmlSection(
+              pageSize: const WmlPageSize(width: 400, height: 160),
+              margins: const WmlPageMargins(
+                top: 20,
+                bottom: 24,
+                left: 20,
+                right: 20,
+              ),
+              columnCount: columns,
+              blocks: [
+                for (var i = 0; i < 8; i++) fixed('Line $i'),
+                fixed(''),
+                fixed('Following text'),
+              ],
+            ),
+          ],
+        );
+        final reopened = WordDeserializer().readBytes(
+          WordSerializer().writeBytes(source),
+        );
+        for (final version in [source, reopened]) {
+          final pages = engine().layout(version).pages;
+          expect(pages, hasLength(columns == 1 ? 2 : 1));
+          final line = pages.last.lines.last;
+          expect(line.paragraphIndex, 9);
+          expect(line.y, 34);
+          expect(line.boxX, version.sections.single.columnOriginX(columns - 1));
+        }
+      },
+    );
+  }
+
   test('keep lines moves a fitting paragraph and allows an oversized one', () {
     List<int> pagesFor({required bool keep, required int lineCount}) {
       WmlParagraph fixed(String text) => paragraph(text)

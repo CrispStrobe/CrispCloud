@@ -2264,11 +2264,18 @@ class WordLayoutEngine {
         listLabel == null &&
         !paragraph.properties.pageNumberField &&
         paragraph.properties.noteId == null) {
-      final double gap =
-          paragraph.properties.spacingBefore +
-          lineHeight +
-          paragraph.properties.spacingAfter;
       if (!measureBody) _breakCache[paragraph] = null;
+      final lineExtent = paragraph.properties.spacingBefore + lineHeight;
+      final gap = lineExtent + paragraph.properties.spacingAfter;
+      // Move the blank line itself when it will not fit. Advancing after
+      // consuming its height would lose it at a page or column boundary.
+      if (allowBreak &&
+          flow != null &&
+          y + lineExtent > flow.bottom &&
+          (y > flow.columnTop || flow.hasContent)) {
+        flow.nextColumn();
+        return (y: flow.y + gap, pageIndex: flow.pageIndex);
+      }
       return (y: y + gap, pageIndex: pageIndex);
     }
     final String text = paragraph.text;
