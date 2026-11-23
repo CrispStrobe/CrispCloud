@@ -6028,6 +6028,13 @@ class PanelNotifier extends ChangeNotifier {
         (sourceOrigin?.isCurrent ?? true) &&
         (canContinue?.call() ?? true);
     if (!stillNavigating()) return;
+    // A verified, explicit location choice (picker, source dropdown or a
+    // reconnected saved account) replaces an unavailable legacy tab. Without
+    // clearing this marker, refresh() repeatedly reopens the *old* source and
+    // the new local folder looks permanently disconnected.
+    if (sourceOrigin != null && sourceOrigin.isCurrent) {
+      _pendingTabStorage = null;
+    }
     if (_isArchiveVirtualPath(path)) {
       final archive = path.split(':/').first;
       path = !isRemote
@@ -6254,42 +6261,60 @@ class PanelNotifier extends ChangeNotifier {
       return;
     }
     if (!item.isFolder) return;
-    if (operationOrigin != null) {
-      await navigateToPath(item.path!, origin: operationOrigin);
-    } else if (side == PanelSide.local) {
-      if (item.path != null) await navigateToPath(item.path!);
-    } else {
-      await navigateToPath(item.path ?? p.posix.join(_remotePath, item.name));
-    }
+    // Either visual pane can browse local or cloud folders. Never infer the
+    // filesystem path syntax from PanelSide: right-side local folders need
+    // native Windows paths too, and left-side cloud folders use POSIX paths.
+    final local = directoryStorage?.isLocal ??
+        _ref.read(panelSourceProvider(side)).isLocal;
+    final path = item.path ??
+        (local
+            ? p.join(_localPath, item.name)
+            : p.posix.join(_remotePath, item.name));
+    await navigateToPath(path, origin: operationOrigin);
   }
 
   Future<void> pickLocalDirectory() async {
     _log.info('pickLocalDirectory (web=$kIsWeb)');
-    final target = _localPath;
+    final tabId = _activeTabId;
+    final revision = _navigationRevision;
     try {
-      final dir = await _localFileService.requestDirectoryAccess(
-        initialDirectory: target,
+      // A stale cloud tab may have no valid local path; never hand Windows a
+      // POSIX "/" root as its initialDirectory.
+      final previous = _localPath;
+      final initial = kIsWeb || p.isAbsolute(previous)
+          ? previous
+          : await _localFileService.getSafeFallbackDirectory();
+      if (_isDisposed || tabId != _activeTabId ||
+          revision != _navigationRevision) return;
+      final chosen = await _localFileService.requestDirectoryAccess(
+        initialDirectory: initial,
       );
-      if (dir != null) {
-        // If the previously requested folder is now accessible, stay there;
-        // otherwise navigate to the folder the user selected.
-        if (target != dir && await _localFileService.hasAccessToPath(target)) {
-          _localPath = target;
-        } else {
-          _localPath = dir;
-        }
-        await _loadLocalFiles();
-        notifyListeners();
+      if (_isDisposed || chosen == null || tabId != _activeTabId ||
+          revision != _navigationRevision) return;
+      if (!(kIsWeb ? p.posix : p.context).isAbsolute(chosen)) {
+        throw FileSystemException('Select an absolute folder path.', chosen);
       }
+      // The *chosen* path always wins, even when the previous folder is
+      // readable. navigateToPath also binds the selected pane's real storage,
+      // updates tab/history and clears an unavailable legacy tab marker.
+      final source = LocalPanelSource(chosen);
+      final origin = resolveStorageReference(
+        storageReferenceForSource(source),
+        chosen,
+      );
+      if (origin == null || !origin.isCurrent) return;
+      await navigateToPath(chosen, origin: origin);
     } catch (e) {
       _log.warn('operation failed', e);
-      _ref
-          .read(errorProvider)
-          .addError(
-            'Error picking directory: $e',
-            code: PanelErrorCode.pickFailed,
-            arguments: {'error': e},
-          );
+      if (!_isDisposed) {
+        _ref
+            .read(errorProvider)
+            .addError(
+              'Error picking directory: $e',
+              code: PanelErrorCode.pickFailed,
+              arguments: {'error': e},
+            );
+      }
     }
   }
 

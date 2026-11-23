@@ -766,7 +766,31 @@ class DesktopFileService
   }) => operation(path);
 
   @override
-  Future<bool> hasAccessToPath(String path) async => true;
+  Future<bool> hasAccessToPath(String path) async {
+    if (path.isEmpty || !p.isAbsolute(path)) return false;
+    try {
+      final type = await FileSystemEntity.type(path);
+      if (type == FileSystemEntityType.directory) {
+        // Directory.exists alone does not prove we can enumerate it.
+        await Directory(path).list(followLinks: false).take(1).drain<void>();
+        return true;
+      }
+      if (type == FileSystemEntityType.file) {
+        final handle = await File(path).open();
+        try {
+          await handle.read(1);
+        } finally {
+          await handle.close();
+        }
+        return true;
+      }
+    } on FileSystemException {
+      return false;
+    } on OSError {
+      return false;
+    }
+    return false;
+  }
 
   @override
   Future<void> createDirectory(String path) async {
