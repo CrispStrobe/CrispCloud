@@ -59,6 +59,9 @@ void main() {
   test('Office typeface catalog honors run faces and Arabic theme', () {
     expect(OfficeTypeface.isArabicFamily('Noto Naskh Arabic'), isTrue);
     expect(OfficeTypeface.isThemePlaceholder('Calibri'), isTrue);
+    expect(OfficeTypeface.isSerifFamily('Adobe Garamond'), isTrue);
+    expect(OfficeTypeface.isSerifFamily('Times New Roman'), isTrue);
+    expect(OfficeTypeface.isSerifFamily('Arial'), isFalse);
     expect(
       OfficeTypeface.paintFamily(text: 'مرحبا', runFamily: 'Calibri'),
       OfficeTypeface.arabicTheme,

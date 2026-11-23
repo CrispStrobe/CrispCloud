@@ -66,6 +66,24 @@ abstract final class OfficeTypeface {
         lower.isEmpty;
   }
 
+  /// Serif-like authored families that should substitute with a bundled serif
+  /// face, never a generic sans-serif fallback.
+  static bool isSerifFamily(String family) {
+    final lower = family.trim().toLowerCase();
+    return lower.contains('garamond') ||
+        lower.contains('times') ||
+        lower.contains('georgia') ||
+        lower.contains('cambria') ||
+        lower.contains('palatino') ||
+        lower.contains('book') ||
+        lower.contains('minion') ||
+        lower.contains('baskerville') ||
+        lower.contains('caslon') ||
+        lower.contains('didot') ||
+        lower.contains('schoolbook') ||
+        lower.endsWith('serif');
+  }
+
   /// isRtlText API.
   static bool isRtlText(String text) {
     for (final int cp in text.runes) {

@@ -232,15 +232,18 @@ class _NoteStory {
   }
 
   double get firstHeight {
-    final List<double> ends = <double>[
-      height,
-      for (final LaidOutLine l in lines) l.y + l.height,
-      for (final LaidOutBox b in frames) b.y + b.height,
-    ]..sort();
-    for (final double end in ends) {
-      if (cut(0, end) > 0) return end;
+    // The first line/box bottom is the earliest non-splitting boundary; no
+    // candidate sort or repeated full scan is needed for each note.
+    var first = height;
+    for (final LaidOutLine line in lines) {
+      final bottom = line.y + line.height;
+      if (bottom > 0.01 && bottom < first) first = bottom;
     }
-    return height;
+    for (final LaidOutBox box in frames) {
+      final bottom = box.y + box.height;
+      if (bottom > 0.01 && bottom < first) first = bottom;
+    }
+    return first;
   }
 }
 

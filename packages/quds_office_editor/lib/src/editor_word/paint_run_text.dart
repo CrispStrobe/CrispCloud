@@ -57,7 +57,11 @@ abstract final class PaintRunText {
     if (OfficeHostFonts.registeredFamily(requested) != null) {
       return OfficeHostFonts.paintFamily(requested);
     }
-    return looksRtl(text) ? 'Noto Naskh Arabic' : 'Liberation Sans';
+    return looksRtl(text)
+        ? 'Noto Naskh Arabic'
+        : OfficeTypeface.isSerifFamily(requested)
+        ? 'Liberation Serif'
+        : 'Liberation Sans';
   }
 
   /// fallbacksFor API.

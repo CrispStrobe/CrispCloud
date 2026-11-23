@@ -48,6 +48,8 @@ abstract final class OfficeHostFonts {
       registeredFamily(requested) ??
           (OfficeTypeface.isRtlCodePoint(codePoint)
               ? 'Noto Naskh Arabic'
+              : OfficeTypeface.isSerifFamily(requested)
+              ? 'Liberation Serif'
               : 'Liberation Sans'),
       sizePoints,
       codePoint: codePoint < 32 ? 0x20 : codePoint,
