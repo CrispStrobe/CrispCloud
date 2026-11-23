@@ -235,6 +235,44 @@ void main() {
     }
   });
 
+  test('blank-line height follows the paragraph mark character style', () {
+    var document = WordDeserializer().read(
+      _package(
+        '<w:p><w:pPr><w:pStyle w:val="Report"/><w:rPr>'
+        '<w:rStyle w:val="Compact"/></w:rPr></w:pPr></w:p>'
+        '<w:p><w:pPr><w:pStyle w:val="Report"/><w:rPr>'
+        '<w:rStyle w:val="Compact"/><w:sz w:val="16"/></w:rPr></w:pPr></w:p>'
+        '<w:p><w:r><w:t>Following text</w:t></w:r></w:p>',
+        styles:
+            '$_styles'
+            '<w:style w:type="character" w:styleId="CompactBase">'
+            '<w:rPr><w:sz w:val="20"/></w:rPr></w:style>'
+            '<w:style w:type="character" w:styleId="Compact">'
+            '<w:basedOn w:val="CompactBase"/><w:rPr><w:i/></w:rPr></w:style>',
+      ),
+    );
+    for (var cycle = 0; cycle < 3; cycle++) {
+      final paragraphs = document.paragraphs.toList();
+      final marks = paragraphs.take(2).map((p) {
+        expect(p.inlines, isEmpty);
+        final mark = p.properties.importedParagraphMark!;
+        expect(mark.bold, isTrue);
+        expect(mark.italic, isTrue);
+        expect(mark.styleId, 'Compact');
+        return mark.fontSizePoints;
+      });
+      expect(marks, [10, 8]);
+      final pages = WordLayoutEngine(font: null).layout(document).pages;
+      final line = pages.single.lines.single;
+      expect(
+        line.y,
+        closeTo(document.sections.single.margins.top + 23.76, 0.001),
+      );
+      expect(WmlRunEdit.propsAt(paragraphs.last, 0).fontSizePoints, 12);
+      document = _reopen(document);
+    }
+  });
+
   test('formatted field markers produce no extra ordinary empty runs', () {
     final document = WordDeserializer().read(
       _package(

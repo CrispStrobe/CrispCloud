@@ -158,6 +158,37 @@ void main() {
     expect(laid.pages[1].lines.single.y, 78);
   });
 
+  test('a standalone page break leaves no blank line on the next page', () {
+    WmlParagraph pageBreak({bool bookmarked = false}) => WmlParagraph(
+      inlines: [
+        WmlBreak(WmlBreakType.page),
+        if (bookmarked) ...[
+          WmlBookmarkBoundary(id: '45', isStart: true, name: 'BreakAnchor'),
+          WmlBookmarkBoundary(id: '45', isStart: false),
+        ],
+      ],
+    );
+    final doc = document([
+      paragraph('First'),
+      pageBreak(bookmarked: true),
+      paragraph('Second'),
+      pageBreak(),
+      paragraph(''),
+      paragraph('Third'),
+    ]);
+    final reopened = WordDeserializer().readBytes(
+      WordSerializer().writeBytes(doc),
+    );
+    for (final version in [doc, reopened]) {
+      final pages = engine().layout(version).pages;
+      expect(pages, hasLength(3));
+      expect(pages.map((p) => p.lines.single.paragraphIndex), [0, 2, 5]);
+      expect(pages[0].lines.single.y, 72);
+      expect(pages[1].lines.single.y, 72);
+      expect(pages[2].lines.single.y, closeTo(72 + 13.798828125, 0.001));
+    }
+  });
+
   test('keep lines moves a fitting paragraph and allows an oversized one', () {
     List<int> pagesFor({required bool keep, required int lineCount}) {
       WmlParagraph fixed(String text) => paragraph(text)

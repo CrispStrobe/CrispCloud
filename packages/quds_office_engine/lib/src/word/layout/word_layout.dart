@@ -736,8 +736,28 @@ class _Flow {
     currentFrames.clear();
     pageIndex++;
     columnIndex = 0;
-    y = section.margins.top;
+    y = _bodyTopBelowInlineHeader();
     columnTop = y;
+  }
+
+  // Inline art occupies vertical space in the selected running header.
+  double _bodyTopBelowInlineHeader() {
+    var top = section.margins.top;
+    for (final paragraph in section.headerForPage(
+      pageIndex + 1,
+      firstInSection: false,
+    )) {
+      for (final run in paragraph.inlines.whereType<WmlRun>()) {
+        final picture = run.inlineVisual?.visual;
+        if (picture != null && picture.picture.wrap == PictureWrap.inline) {
+          top = math.max(
+            top,
+            section.margins.header + picture.height.clamp(12.0, 120.0),
+          );
+        }
+      }
+    }
+    return top;
   }
 
   /// nextColumn API.
@@ -1915,6 +1935,15 @@ class WordLayoutEngine {
           } else if (_hasBreak(block, WmlBreakType.page)) {
             flow.breakPage();
             adjacentParagraph = null;
+            // A break on its own ends the page, even if a bookmark owns the
+            // break position. It does not occupy a line on the new page.
+            if (block.inlines
+                    .where((inline) => inline is! WmlBookmarkBoundary)
+                    .singleOrNull
+                is WmlBreak) {
+              paragraphIndex++;
+              break;
+            }
           }
           if (block.properties.keepWithNext && bi > keepGroupEnd) {
             keepGroupEnd = bi;
@@ -2840,7 +2869,7 @@ class WordLayoutEngine {
         if (current.isEmpty &&
             currentFrames.isEmpty &&
             _noteReserve(idx) == 0 &&
-            cursorY <= section.margins.top + 0.01) {
+            cursorY <= (flow?.columnTop ?? section.margins.top) + 0.01) {
           if (_minimumNotes(noteIds, section, idx) > 0) {
             throw StateError(
               'A note reference and its first line cannot fit the page',

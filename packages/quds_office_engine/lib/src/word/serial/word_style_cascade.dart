@@ -1093,12 +1093,20 @@ class _StyleCascade {
       }
     }
     p.properties.sourcePropertiesXml = source ?? '';
-    final markerStyles = [for (final s in paragraphChain) _wordChild(s, 'rPr')];
+    final markerProperties = _wordChild(pp, 'rPr');
+    final markerStyleId = _wordChild(
+      markerProperties,
+      'rStyle',
+    )?.getAttribute('val', namespaceUri: OfficeNamespaces.w);
+    final markerStyles = [
+      for (final s in paragraphChain) _wordChild(s, 'rPr'),
+      for (final s in chain(markerStyleId)) _wordChild(s, 'rPr'),
+    ];
     final markerXml = merged('rPr', [
       _wordChild(_wordChild(defaults, 'rPrDefault'), 'rPr'),
       for (final t in tableLayers) _wordChild(t, 'rPr'),
       ...markerStyles,
-      pp.firstChild('rPr'),
+      markerProperties,
     ], toggleLayers: markerStyles.whereType<XmlElement>().toSet());
     if (markerXml.childElements.isNotEmpty) {
       final marker = WmlRunProps(kerningHalfPoints: _missingStyles ? 1 : null);
