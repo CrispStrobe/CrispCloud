@@ -23,12 +23,17 @@ abstract final class OfficeHyphenator {
     String text, {
     String? language,
     String? Function(int sourceOffset)? languageAt,
+    bool allowGermanSoftHyphenAlternatives = false,
   }) {
     if (languageAt == null) {
       if (EnglishHyphenator.supports(language)) {
         return EnglishHyphenator.breakOffsets(text, language: language);
       }
-      return GermanHyphenator.breakOffsets(text, language: language);
+      return GermanHyphenator.breakOffsets(
+        text,
+        language: language,
+        allowSoftHyphenAlternatives: allowGermanSoftHyphenAlternatives,
+      );
     }
     return [
       ...EnglishHyphenator.breakOffsets(
@@ -40,6 +45,7 @@ abstract final class OfficeHyphenator {
         text,
         language: language,
         languageAt: languageAt,
+        allowSoftHyphenAlternatives: allowGermanSoftHyphenAlternatives,
       ),
     ]..sort();
   }

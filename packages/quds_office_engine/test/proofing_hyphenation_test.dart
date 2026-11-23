@@ -51,6 +51,32 @@ void main() {
       );
       expect(GermanHyphenator.breakOffsets('Silbentrennung'), isEmpty);
     });
+
+    test(
+      'Word can consider a later German break without losing the soft hyphen',
+      () {
+        const word = 'ge\u00adhender';
+        final automatic = OfficeHyphenator.breakOffsets(
+          word,
+          language: 'de-DE',
+          allowGermanSoftHyphenAlternatives: true,
+        );
+        expect(automatic, [3, 6]);
+        final breaks = LineBreaker.breakLines(
+          text: word,
+          maxWidth: 6,
+          widthOf: (_) => 1,
+          hyphenationOffsets: automatic,
+          justify: false,
+          balanceLines: false,
+        );
+        final hyphen = breaks.first.glyphs.last;
+        expect(hyphen.isDiscretionaryHyphen, isTrue);
+        expect(hyphen.sourceLength, 0);
+        expect(hyphen.logicalIndex, 6);
+        expect(OfficeHyphenator.breakOffsets(word, language: 'de-DE'), isEmpty);
+      },
+    );
   });
   group('source-preserving discretionary layout', () {
     test('soft hyphen is invisible and zero-width when text fits', () {
@@ -185,24 +211,33 @@ void main() {
       expect(overlays[2].proofingOffsetAt(9), text.indexOf('Text') + 4);
     });
 
-    test('generated header and footer labels expose no authored offsets', () {
-      final header = WmlParagraph(inlines: [WmlRun(text: 'Title\t1')]);
-      final footer = WmlParagraph(
-        properties: WmlParagraphProps(pageNumberField: true),
-        inlines: [WmlRun(text: '1')],
-      );
-      final doc = WmlDocument.empty(text: 'Body');
-      doc.sections.single
-        ..header.add(header)
-        ..footer.add(footer);
-      final page = WordLayoutEngine(font: null).layout(doc).pages.single;
-      expect(page.header.first.proofingOffsetAt(0), 0);
-      for (final line in [page.header.last, page.footer.single]) {
-        expect(line.overlayText, '1');
-        expect(line.proofingOffsetAt(0), isNull);
-        expect(line.proofingOffsetAt(1), isNull);
-      }
-    });
+    test(
+      'literal header text and generated page fields keep separate offsets',
+      () {
+        final header = WmlParagraph(inlines: [WmlRun(text: 'Title\t1')]);
+        final headerPage = WmlParagraph(
+          properties: WmlParagraphProps(pageNumberField: true),
+        );
+        final footer = WmlParagraph(
+          properties: WmlParagraphProps(pageNumberField: true),
+          inlines: [WmlRun(text: '1')],
+        );
+        final doc = WmlDocument.empty(text: 'Body');
+        doc.sections.single
+          ..header.addAll([header, headerPage])
+          ..footer.add(footer);
+        final page = WordLayoutEngine(font: null).layout(doc).pages.single;
+        expect(page.header.first.proofingOffsetAt(0), 0);
+        expect(page.header[1].overlayText, '1');
+        expect(page.header[1].proofingOffsetAt(0), 6);
+        expect(page.header[1].proofingOffsetAt(1), 7);
+        for (final line in [page.header.last, page.footer.single]) {
+          expect(line.overlayText, '1');
+          expect(line.proofingOffsetAt(0), isNull);
+          expect(line.proofingOffsetAt(1), isNull);
+        }
+      },
+    );
 
     test(
       'native Word discretionary and nonbreaking hyphens survive import/save',

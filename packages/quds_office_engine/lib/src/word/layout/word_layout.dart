@@ -2625,6 +2625,9 @@ class WordLayoutEngine {
               paragraph.properties.suppressAutoHyphens != true
         ? OfficeHyphenator.breakOffsets(
             text,
+            // Native Word can use a later German syllable boundary even
+            // when the source word already has an optional hyphen.
+            allowGermanSoftHyphenAlternatives: true,
             language:
                 paragraph.properties.proofingLanguage ??
                 _layoutDoc?.proofingLanguage,

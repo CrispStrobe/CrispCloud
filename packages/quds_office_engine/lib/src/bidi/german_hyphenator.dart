@@ -57,6 +57,7 @@ abstract final class GermanHyphenator {
     String text, {
     String? language,
     String? Function(int sourceOffset)? languageAt,
+    bool allowSoftHyphenAlternatives = false,
   }) {
     if (languageAt == null && !supports(language)) return const [];
     final result = <int>[];
@@ -82,14 +83,33 @@ abstract final class GermanHyphenator {
         }
         if (!homogeneous) continue;
       }
-      result.addAll(
-        wordOffsets(
-          word.group(0)!,
-          language: wordLanguage,
-        ).map((n) => word.start + n),
-      );
+      final source = word.group(0)!;
+      final offsets = allowSoftHyphenAlternatives && source.contains('\u00ad')
+          ? _offsetsWithSoftHyphens(source, wordLanguage)
+          : wordOffsets(source, language: wordLanguage);
+      result.addAll(offsets.map((n) => word.start + n));
     }
     return result;
+  }
+
+  static List<int> _offsetsWithSoftHyphens(String source, String? language) {
+    final clean = StringBuffer();
+    final originalOffsets = <int>[0];
+    for (var i = 0; i < source.length; i++) {
+      final unit = source.codeUnitAt(i);
+      if (unit == 0xad) {
+        // The authored opportunity already belongs to the line breaker. Map
+        // a coincident automatic candidate to the same source boundary.
+        originalOffsets[originalOffsets.length - 1] = i + 1;
+      } else {
+        clean.writeCharCode(unit);
+        originalOffsets.add(i + 1);
+      }
+    }
+    return [
+      for (final offset in wordOffsets(clean.toString(), language: language))
+        originalOffsets[offset],
+    ];
   }
 
   static String _composeUmlaut(String cluster) => switch (cluster) {
