@@ -64,6 +64,7 @@ import '../services/log_service.dart';
 import '../services/panel_source_service.dart';
 import '../services/panel_view_mode_service.dart';
 import '../utils/async_lock.dart';
+import '../utils/native_home_directory.dart';
 import 'action_history_provider.dart';
 import 'auth_provider.dart';
 import 'core_providers.dart';
@@ -3742,8 +3743,22 @@ class PanelNotifier extends ChangeNotifier {
       await exitArchive();
       return;
     }
-    final path = kIsWeb ? '/' : (Platform.environment['HOME'] ?? '/');
-    await navigateToPath(path);
+    final origin = directoryPresentationOrigin;
+    final source = origin?.source ?? _ref.read(panelSourceProvider(side));
+    if (source is RemotePanelSource && origin?.isCurrent == true) {
+      // Cloud Home belongs to its own account, not the host filesystem.
+      await navigateToPath(origin!.storageReference.root, origin: origin);
+    } else {
+      final home = kIsWeb
+          ? '/'
+          : await _localFileService.getSafeFallbackDirectory();
+      if (_isDisposed) return;
+      final local = resolveStorageReference(
+        storageReferenceForSource(LocalPanelSource(home)),
+        home,
+      );
+      if (local != null) await navigateToPath(home, origin: local);
+    }
     if (!_isDisposed) focusList();
   }
 
@@ -5958,7 +5973,9 @@ class PanelNotifier extends ChangeNotifier {
         // Keep the original value; the loader will report a friendly error.
       }
     }
-    final home = kIsWeb ? null : Platform.environment['HOME'];
+    final home = kIsWeb
+        ? null
+        : nativeHomeDirectory(Platform.environment, windows: Platform.isWindows);
     if (home != null && home.isNotEmpty) {
       if (path == '~') {
         path = home;

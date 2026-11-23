@@ -22,6 +22,7 @@ import 'ios_file_listing.dart';
 import 'native_system.dart';
 import 'macos_bookmark_service.dart';
 import '../utils/path_access.dart';
+import '../utils/native_home_directory.dart';
 
 LocalFileService createPlatformFileService() {
   if (Platform.isMacOS) return MacosFileService();
@@ -679,9 +680,8 @@ class DesktopFileService
         LocalMediaFileAccess {
   @override
   String currentPath =
-      Platform.environment['HOME'] ??
-      Platform.environment['USERPROFILE'] ??
-      '/';
+      nativeHomeDirectory(Platform.environment, windows: Platform.isWindows) ??
+      Directory.current.path;
 
   @override
   String? get grantedBasePath => null;
@@ -808,9 +808,12 @@ class DesktopFileService
 
   @override
   Future<String> getSafeFallbackDirectory() async {
-    return Platform.environment['HOME'] ??
-        Platform.environment['USERPROFILE'] ??
-        '/';
+    final home = nativeHomeDirectory(
+      Platform.environment,
+      windows: Platform.isWindows,
+    );
+    if (home != null && await Directory(home).exists()) return home;
+    return Directory.current.path;
   }
 
   @override

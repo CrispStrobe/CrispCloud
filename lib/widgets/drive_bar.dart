@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/panel_side.dart';
+import '../utils/native_home_directory.dart';
 import '../providers/providers.dart';
 import 'bookmark_actions.dart';
 import '../l10n/file_panel_strings.dart';
@@ -135,6 +136,12 @@ Future<List<DriveEntry>> _linuxMounts() async {
 
 Future<List<DriveEntry>> _windowsDrives() async {
   final entries = <DriveEntry>[];
+  final home = nativeHomeDirectory(Platform.environment, windows: true);
+  if (home != null && await Directory(home).exists()) {
+    entries.add(
+      DriveEntry(path: home, label: 'Home', icon: Icons.home, isHome: true),
+    );
+  }
   // Probe drive roots directly. wmic is absent on recent Windows builds and
   // is blocked by some enterprise policies.
   for (var index = 0; index < 26; index++) {

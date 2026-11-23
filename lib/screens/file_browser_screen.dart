@@ -28,6 +28,7 @@ import 'package:flutter/foundation.dart'
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path/path.dart' as p;
 
 import '../models/panel_side.dart';
 import '../models/file_item.dart';
@@ -672,8 +673,13 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             final origin = panel.isInArchive
                 ? panel.captureArchiveOrigin()
                 : panel.captureCurrentOrigin();
-            final path = home && origin.source.isLocal && !kIsWeb
-                ? Platform.environment['HOME'] ?? origin.storageReference.root
+            if (home) {
+              // The pane resolves Home in its *own* local or remote source.
+              panel.navigateHome();
+              return;
+            }
+            final path = origin.source.isLocal && !kIsWeb
+                ? p.rootPrefix(origin.source.currentPath)
                 : origin.storageReference.root;
             panel.navigateToPath(path, origin: origin);
           } catch (error) {

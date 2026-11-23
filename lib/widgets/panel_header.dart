@@ -18,6 +18,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
+import '../utils/native_home_directory.dart';
 
 import '../l10n/app_localizations.dart';
 import '../l10n/gallery_strings.dart';
@@ -279,7 +280,10 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
       }
     }
     if (!kIsWeb) {
-      final home = Platform.environment['HOME'];
+      final home = nativeHomeDirectory(
+        Platform.environment,
+        windows: Platform.isWindows,
+      );
       if (home != null) {
         if (path == '~') path = home;
         if (path.startsWith('~/')) path = '$home/${path.substring(2)}';

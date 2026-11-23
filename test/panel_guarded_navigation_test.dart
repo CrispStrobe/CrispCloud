@@ -292,12 +292,17 @@ void main() {
     expect(origin, isNotNull);
     await right.navigateToPath(targetPath, origin: origin);
     expect(right.directoryStorage?.isLocal, isTrue);
-    await right.navigateInto(
-      right.files!.firstWhere((item) => item.name == 'target.txt').copyWith(isFolder: true),
-    );
+    final childPath = p.join(targetPath, 'nested');
+    await Directory(childPath).create();
+    await right.refresh();
+    final nested = right.files!.firstWhere((item) => item.name == 'nested');
+    expect(nested.isFolder, isTrue);
+    await right.navigateInto(nested);
     // Folder listing stays scoped to the right pane's local storage, not
     // reinterpreted as a path in the cloud provider's root.
     expect(right.directoryStorage?.isLocal, isTrue);
+    expect(right.currentPath, childPath);
+    expect(right.hasVerifiedDirectoryListing, isTrue);
   });
 
   test('a cancelled remote listing cannot publish its delayed rows', () async {
