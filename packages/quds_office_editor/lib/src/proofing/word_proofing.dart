@@ -441,7 +441,7 @@ final class WordProofingSession extends ChangeNotifier {
   final Set<String> _missingDetections = {};
   final Set<String> _capturedTexts = {};
   final Set<String> _ignoredRules = {};
-  final Set<String> _ignoredOnce = {};
+  final Set<_ProofingOccurrence> _ignoredOnce = {};
   final Expando<String> _ids = Expando<String>('proofing paragraph id');
   final Expando<String> _documentIds = Expando<String>('proofing document id');
   final Expando<_CachedParagraphSnapshot> _snapshotCache =
@@ -1370,17 +1370,17 @@ final class WordProofingSession extends ChangeNotifier {
           )
           .toList();
 
-  String _issueKey(
+  _ProofingOccurrence _issueKey(
     OfficeProofingFinding finding,
     _ParagraphSnapshot snapshot,
-  ) => jsonEncode([
-    finding.blockId,
-    snapshot.key,
-    finding.providerId,
-    finding.ruleId,
-    finding.start,
-    finding.end,
-  ]);
+  ) => (
+    blockId: finding.blockId,
+    snapshotKey: snapshot.key,
+    providerId: finding.providerId,
+    ruleId: finding.ruleId,
+    start: finding.start,
+    end: finding.end,
+  );
 
   void ignoreOnce(WordProofingIssue issue) {
     if (!isCurrent(issue)) return;
@@ -2065,8 +2065,9 @@ final class WordProofingSession extends ChangeNotifier {
     }
     passCount++;
     passCountsByTrigger.update(trigger.name, (n) => n + 1, ifAbsent: () => 1);
-    _passShowsProgress = showProgress;
-    if (showProgress) {
+    final hasWork = checkOrder.isNotEmpty;
+    _passShowsProgress = showProgress && hasWork;
+    if (_passShowsProgress) {
       _publishCached(
         captured,
         documentId: documentId,
@@ -2193,7 +2194,9 @@ final class WordProofingSession extends ChangeNotifier {
       }
     }
     if (!current()) return _summary;
-    if (!captured.sameAs(_capture(document))) {
+    // With no work there was no progress callback or async gap after the
+    // current capture, so the settled summary can be published directly.
+    if (hasWork && !captured.sameAs(_capture(document))) {
       refresh();
       return _summary;
     }
@@ -2440,9 +2443,16 @@ final class WordProofingSession extends ChangeNotifier {
     _pendingPublish = null;
     _provisionalFindings = null;
     final previous = HashMap<WmlParagraph, List<WordProofingIssue>>.identity();
+    final previousByFinding =
+        HashMap<OfficeProofingFinding, WordProofingIssue>.identity();
     for (final issue in _published.issues) {
       previous.putIfAbsent(issue.paragraph, () => []).add(issue);
+      previousByFinding[issue.finding] = issue;
     }
+    final findings =
+        HashMap<WmlParagraph, List<OfficeProofingFinding>>.identity();
+    final previousReports = HashSet<OfficeProofingReport>.identity()
+      ..addAll(_published.reports);
     final reports = <OfficeProofingReport>[];
     final issues = <WordProofingIssue>[];
     var checked = 0;
@@ -2451,6 +2461,7 @@ final class WordProofingSession extends ChangeNotifier {
     // it until the word is completed or the caret moves away.
     final caret = _schedule.hideTypingErrors ? _typing : null;
     final allKinds = _available(_Kind.values.toSet());
+    final hasIgnoredOccurrences = _ignoredOnce.isNotEmpty;
     _hidAtCaret = false;
     _findingTexts.clear();
     for (final snapshot in captured.paragraphs) {
@@ -2467,18 +2478,34 @@ final class WordProofingSession extends ChangeNotifier {
           entry.kinds.containsAll(allKinds)) {
         checked++;
       }
+      final paragraphFindings = <OfficeProofingFinding>[];
       for (var index = 0; index < snapshot.segments.length; index++) {
         final segment = snapshot.segments[index];
-        final report = _retarget(
-          cached[index],
-          _request(
-            snapshot,
-            segment,
-            documentId: documentId,
-            revision: revision,
-          ),
-        );
+        final cachedReport = cached[index];
+        final request = cachedReport.request;
+        // Progress repeatedly publishes the same requests. A later document
+        // revision still needs fresh request and finding coordinates.
+        final report =
+            request.documentId == documentId &&
+                request.blockId == _ids[snapshot.paragraph] &&
+                request.revision == revision &&
+                request.text == segment.text &&
+                request.startOffset == segment.start &&
+                request.language ==
+                    normalizeProofingLanguage(segment.language) &&
+                setEquals(request.ignoredRuleIds, _ignoredRules)
+            ? cachedReport
+            : _retarget(
+                cachedReport,
+                _request(
+                  snapshot,
+                  segment,
+                  documentId: documentId,
+                  revision: revision,
+                ),
+              );
         reports.add(report);
+        final previouslyPublished = previousReports.contains(report);
         for (final finding in report.findings) {
           // Inside or at the end of the finding (the word being typed);
           // a finding that starts at the caret is the next word.
@@ -2489,7 +2516,10 @@ final class WordProofingSession extends ChangeNotifier {
             _hidAtCaret = true;
             continue;
           }
-          if (_ignoredOnce.contains(_issueKey(finding, snapshot))) continue;
+          if (hasIgnoredOccurrences &&
+              _ignoredOnce.contains(_issueKey(finding, snapshot))) {
+            continue;
+          }
           if (finding.category == OfficeProofingCategory.spelling &&
               vocabulary.contains(
                 finding.originalText,
@@ -2499,33 +2529,38 @@ final class WordProofingSession extends ChangeNotifier {
           }
           // Keep a current finding's identity when only progress changes, so
           // an open suggestion menu remains usable while other text is checked.
-          final existing = previous[snapshot.paragraph]
-              ?.where(
-                (issue) =>
-                    issue._snapshot.key == snapshot.key &&
-                    issue.language == segment.language &&
-                    _sameFinding(issue.finding, finding),
-              )
-              .firstOrNull;
-          issues.add(
-            existing ??
-                WordProofingIssue._(finding, snapshot, segment.language),
-          );
+          var existing = previousByFinding[finding];
+          if (existing?._snapshot.key != snapshot.key ||
+              existing?.language != segment.language) {
+            existing = null;
+          }
+          if (existing == null && !previouslyPublished) {
+            final candidates = previous[snapshot.paragraph];
+            if (candidates != null &&
+                candidates.first.finding.revision == revision &&
+                candidates.first._snapshot.key == snapshot.key) {
+              existing = candidates
+                  .where(
+                    (issue) =>
+                        issue.language == segment.language &&
+                        _sameFinding(issue.finding, finding),
+                  )
+                  .firstOrNull;
+            }
+          }
+          final issue =
+              existing ??
+              WordProofingIssue._(finding, snapshot, segment.language);
+          issues.add(issue);
+          paragraphFindings.add(issue.finding);
         }
       }
+      if (paragraphFindings.isNotEmpty) {
+        findings[snapshot.paragraph] = List.unmodifiable(paragraphFindings);
+        _findingTexts[snapshot.paragraph] = snapshot.text;
+      }
     }
-    final findings =
-        HashMap<WmlParagraph, List<OfficeProofingFinding>>.identity();
-    for (final issue in issues) {
-      findings.putIfAbsent(issue.paragraph, () => []).add(issue.finding);
-    }
-    _findings = HashMap<WmlParagraph, List<OfficeProofingFinding>>.identity();
-    for (final entry in findings.entries) {
-      _findings[entry.key] = List.unmodifiable(entry.value);
-    }
-    for (final issue in issues) {
-      _findingTexts[issue.paragraph] = issue.sourceText;
-    }
+    _findings = findings;
     _summary = WordProofingSummary(
       paragraphCount: captured.paragraphs.length,
       checkedParagraphCount: checked,
@@ -2582,6 +2617,9 @@ final class WordProofingSession extends ChangeNotifier {
     final seen = HashSet<WmlParagraph>.identity();
     var skipped = 0;
     final configuration = _configurationKey;
+    final documentLanguage = normalizeProofingLanguage(
+      document.proofingLanguage ?? 'de-DE',
+    );
     final deletions =
         HashMap<WmlParagraph, List<({int start, int end})>>.identity();
     final pending =
@@ -2631,6 +2669,7 @@ final class WordProofingSession extends ChangeNotifier {
             >[];
         final detection = _detectionForCapture(paragraph, text);
         var hasField = fieldDepth > 0;
+        var hasInlineControl = false;
         var offset = 0;
         var locked =
             entry.locked ||
@@ -2641,15 +2680,6 @@ final class WordProofingSession extends ChangeNotifier {
             paragraph.properties.pageNumberField;
         if (generated && text.isNotEmpty) {
           exclusions.add((start: 0, end: text.length));
-        }
-        try {
-          for (final span in WordContentControls.spans(paragraph)) {
-            if (_lockedControl(span.control)) {
-              guards.add((start: span.start, end: span.end));
-            }
-          }
-        } on Object {
-          locked = true;
         }
         for (final inline in paragraph.inlines) {
           if (inline is WmlFieldBoundary) {
@@ -2683,24 +2713,30 @@ final class WordProofingSession extends ChangeNotifier {
                       documentComplexScriptLanguage:
                           document.complexScriptLanguage,
                     ) ??
-                    language,
+                    documentLanguage,
               ),
               run: inline,
-              latin: wordRunLanguageSlot(
-                inline,
-                paragraph,
-                complexScript: false,
-                documentLanguage: document.proofingLanguage,
-              ),
-              complex: wordRunLanguageSlot(
-                inline,
-                paragraph,
-                complexScript: true,
-                documentComplexScriptLanguage: document.complexScriptLanguage,
-              ),
+              latin: detection == null
+                  ? (language: null, isDefault: true)
+                  : wordRunLanguageSlot(
+                      inline,
+                      paragraph,
+                      complexScript: false,
+                      documentLanguage: document.proofingLanguage,
+                    ),
+              complex: detection == null
+                  ? (language: null, isDefault: true)
+                  : wordRunLanguageSlot(
+                      inline,
+                      paragraph,
+                      complexScript: true,
+                      documentComplexScriptLanguage:
+                          document.complexScriptLanguage,
+                    ),
             ));
             offset = end;
           } else {
+            if (inline is WmlContentControlBoundary) hasInlineControl = true;
             barriers.add(offset);
             if (inline is WmlContentControlBoundary ||
                 inline is WmlOpaqueInline) {
@@ -2721,6 +2757,17 @@ final class WordProofingSession extends ChangeNotifier {
         if (emptyField) {
           exclusions.add((start: 0, end: 0));
           insertionBarriers.add(0);
+        }
+        if (hasInlineControl) {
+          try {
+            for (final span in WordContentControls.spans(paragraph)) {
+              if (_lockedControl(span.control)) {
+                guards.add((start: span.start, end: span.end));
+              }
+            }
+          } on Object {
+            locked = true;
+          }
         }
         guards.addAll(exclusions);
         // Existing insert revisions are not rewritten by a second command.
@@ -2763,36 +2810,47 @@ final class WordProofingSession extends ChangeNotifier {
         final ranges = <({int start, int end, String language})>[];
         var paragraphSkipped = generated || emptyField;
         var languageIndex = 0;
-        // A language or noProof boundary inside a Unicode grapheme must never
-        // give a provider half a surrogate pair, accent, or joined emoji.
-        for (final cluster in GraphemeClusters.segment(text)) {
-          final start = cluster.start;
-          final end = cluster.end;
-          if (exclusions.any(
-            (range) => start < range.end && end > range.start,
-          )) {
-            paragraphSkipped = true;
-            continue;
-          }
-          while (languageIndex < languageRuns.length &&
-              languageRuns[languageIndex].end <= start) {
-            languageIndex++;
-          }
-          final tag = languageIndex < languageRuns.length
-              ? _routedLanguage(
-                  languageRuns[languageIndex],
-                  detection?.segmentAt(start),
-                  document,
-                )
-              : language;
-          if (!barriers.contains(start) &&
-              ranges.isNotEmpty &&
-              ranges.last.end == start &&
-              ranges.last.language == tag) {
-            final last = ranges.removeLast();
-            ranges.add((start: last.start, end: end, language: tag));
-          } else {
-            ranges.add((start: start, end: end, language: tag));
+        final uniformLanguage =
+            languageRuns.firstOrNull?.language ?? documentLanguage;
+        if (text.isNotEmpty &&
+            detection == null &&
+            exclusions.isEmpty &&
+            !barriers.any((offset) => offset > 0 && offset < text.length) &&
+            languageRuns.every((run) => run.language == uniformLanguage)) {
+          ranges.add((start: 0, end: text.length, language: uniformLanguage));
+        } else {
+          // A language or noProof boundary inside a Unicode grapheme must never
+          // give a provider half a surrogate pair, accent, or joined emoji.
+          var nextStart = 0;
+          for (final end in GraphemeClusters.endOffsets(text)) {
+            final start = nextStart;
+            nextStart = end;
+            if (exclusions.any(
+              (range) => start < range.end && end > range.start,
+            )) {
+              paragraphSkipped = true;
+              continue;
+            }
+            while (languageIndex < languageRuns.length &&
+                languageRuns[languageIndex].end <= start) {
+              languageIndex++;
+            }
+            final tag = languageIndex < languageRuns.length
+                ? _routedLanguage(
+                    languageRuns[languageIndex],
+                    detection?.segmentAt(start),
+                    document,
+                  )
+                : documentLanguage;
+            if (!barriers.contains(start) &&
+                ranges.isNotEmpty &&
+                ranges.last.end == start &&
+                ranges.last.language == tag) {
+              final last = ranges.removeLast();
+              ranges.add((start: last.start, end: end, language: tag));
+            } else {
+              ranges.add((start: start, end: end, language: tag));
+            }
           }
         }
         final segments = [
@@ -2811,7 +2869,7 @@ final class WordProofingSession extends ChangeNotifier {
               0,
               0,
               '',
-              paragraph.properties.proofingLanguage ?? language,
+              paragraph.properties.proofingLanguage ?? documentLanguage,
             ),
           );
         }
@@ -3038,6 +3096,15 @@ final class WordProofingSession extends ChangeNotifier {
     _status.dispose();
   }
 }
+
+typedef _ProofingOccurrence = ({
+  String blockId,
+  String snapshotKey,
+  String providerId,
+  String ruleId,
+  int start,
+  int end,
+});
 
 final class _Segment {
   const _Segment(this.start, this.end, this.text, this.language);

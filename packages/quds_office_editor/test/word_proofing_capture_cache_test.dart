@@ -75,6 +75,23 @@ WmlContentControlData _lock() => WmlContentControlData(
 
 void main() {
   test(
+    'settled recheck publishes once and reuses the validated report',
+    () async {
+      final paragraph = _paragraph('Feler');
+      final h = _Harness(_document([paragraph]));
+      final first = await h.session.checkNow();
+      final checking = <bool>[];
+      h.session.addListener(() => checking.add(h.session.checking));
+      final second = await h.session.checkNow();
+
+      expect(checking, [false]);
+      expect(h.provider.requests, hasLength(1));
+      expect(second.reports.single, same(first.reports.single));
+      expect(second.issues.single, same(first.issues.single));
+    },
+  );
+
+  test(
     'warm capture notices noProof and language changes without text edits',
     () async {
       final changed = _paragraph('Feler');
