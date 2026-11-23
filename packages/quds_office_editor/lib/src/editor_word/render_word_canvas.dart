@@ -834,8 +834,13 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
     decodedByteBudget: 64 * 1024 * 1024,
   );
 
-  final Map<_RunPaintKey, TextPainter> _runPainters =
-      <_RunPaintKey, TextPainter>{};
+  // Keep recently reused painters separate from first-use runs. A cold page
+  // can contain hundreds of unique runs without evicting the commonly styled
+  // words that other pages need. The total native painter budget stays fixed.
+  static const _maxRunPainters = 512;
+  static const _maxReusedRunPainters = 384;
+  final _newRunPainters = <_RunPaintKey, TextPainter>{};
+  final _reusedRunPainters = <_RunPaintKey, TextPainter>{};
   final Map<(int, int, int, int), Path> _proofingPaths =
       <(int, int, int, int), Path>{};
   final Map<(LaidOutPage, int, int, int, int, WmlTable?), Path>
@@ -867,10 +872,14 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
   @override
   void dispose() {
     _images.dispose();
-    for (final painter in _runPainters.values) {
+    for (final painter in _newRunPainters.values) {
       painter.dispose();
     }
-    _runPainters.clear();
+    for (final painter in _reusedRunPainters.values) {
+      painter.dispose();
+    }
+    _newRunPainters.clear();
+    _reusedRunPainters.clear();
     _proofingPaths.clear();
     _selectionPaths.clear();
     _clearTextPictures();
@@ -5317,6 +5326,7 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
         line.sourceText ??
         line.sourceParagraph?.text ??
         _paragraphTextAt(line.paragraphIndex, line: line);
+    final splitWords = PaintRunText.splitsWordsForPaint(line);
     var start = 0;
     while (start < line.glyphs.length) {
       final LaidOutGlyph first = line.glyphs[start];
@@ -5325,10 +5335,10 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
           PaintRunText.samePaintRun(first, line.glyphs[end])) {
         end++;
       }
-      final List<LaidOutGlyph> run = line.glyphs.sublist(start, end);
       if (first.commentIds.isNotEmpty) {
         final double x0 = first.x;
-        final double x1 = run.last.x + run.last.advance;
+        final last = line.glyphs[end - 1];
+        final double x1 = last.x + last.advance;
         final bool active =
             selectedCommentId != null &&
             first.commentIds.contains(selectedCommentId);
@@ -5342,16 +5352,13 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
       }
       if (first.highlight != null) {
         final double x0 = first.x;
-        final double x1 = run.last.x + run.last.advance;
+        final last = line.glyphs[end - 1];
+        final double x1 = last.x + last.advance;
         canvas.drawRect(
           Rect.fromLTWH(x0, line.y, x1 - x0, line.height),
           Paint()..color = _colorFromHex(first.highlight!),
         );
       }
-      final bool splitWords =
-          (line.justification == WmlJustification.justify ||
-              line.justification == WmlJustification.distributed) &&
-          line.justificationRatio != 0;
       if (splitWords) {
         var i = start;
         while (i < end) {
@@ -5367,7 +5374,7 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
           i = j;
         }
       } else {
-        _paintTextRun(canvas, line, paragraph, run);
+        _paintTextRun(canvas, line, paragraph, line.glyphs.sublist(start, end));
       }
       start = end;
     }
@@ -5458,8 +5465,16 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
       ink: ink,
       themeFamily: _theme.fontFamily,
     );
-    final cached = _runPainters[key];
-    if (cached != null) return cached;
+    final cached =
+        _reusedRunPainters.remove(key) ?? _newRunPainters.remove(key);
+    if (cached != null) {
+      _reusedRunPainters[key] = cached;
+      if (_reusedRunPainters.length > _maxReusedRunPainters) {
+        final oldest = _reusedRunPainters.keys.first;
+        _newRunPainters[oldest] = _reusedRunPainters.remove(oldest)!;
+      }
+      return cached;
+    }
     final painter = PaintRunText.painterFor(
       text: text,
       first: first,
@@ -5471,11 +5486,11 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
       decorationStyle: underlineStyleFor(first.underline),
       decorationThickness: first.underline.isHeavy ? 2 : null,
     )..layout();
-    if (_runPainters.length >= 512) {
-      final oldest = _runPainters.keys.first;
-      _runPainters.remove(oldest)?.dispose();
+    if (_newRunPainters.length + _reusedRunPainters.length >= _maxRunPainters) {
+      final oldest = _newRunPainters.keys.first;
+      _newRunPainters.remove(oldest)!.dispose();
     }
-    _runPainters[key] = painter;
+    _newRunPainters[key] = painter;
     return painter;
   }
 

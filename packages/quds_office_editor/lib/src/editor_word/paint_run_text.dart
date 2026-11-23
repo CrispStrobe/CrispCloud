@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/painting.dart';
 import 'package:quds_office_engine/quds_office_engine.dart';
 
@@ -161,7 +162,7 @@ abstract final class PaintRunText {
         a.fontFamily == b.fontFamily &&
         a.vertAlign == b.vertAlign &&
         a.positionHalfPoints == b.positionHalfPoints &&
-        a.commentIds.join(',') == b.commentIds.join(',') &&
+        listEquals(a.commentIds, b.commentIds) &&
         // Equal parity does not imply one logical run: nested embeddings can
         // share a direction while referring to disjoint source intervals.
         a.glyph.level == b.glyph.level;
@@ -458,6 +459,10 @@ abstract final class PaintRunText {
     if (paragraph.isEmpty || run.isEmpty) {
       return '';
     }
+    final contiguousEnd = _contiguousEnd(paragraph, run);
+    if (contiguousEnd != null) {
+      return paragraph.substring(run.first.glyph.logicalIndex, contiguousEnd);
+    }
     final List<int> indices = <int>[
       for (final LaidOutGlyph glyph in run)
         if (glyph.glyph.logicalIndex >= 0 &&
@@ -503,6 +508,24 @@ abstract final class PaintRunText {
       last = i;
     }
     return buffer.toString();
+  }
+
+  // Most LTR runs own consecutive source scalars in paint order. Runs
+  // containing gaps, reordering or unusual indices use the general path.
+  static int? _contiguousEnd(String paragraph, List<LaidOutGlyph> run) {
+    var end = run.first.glyph.logicalIndex;
+    if (end < 0 ||
+        end >= paragraph.length ||
+        _scalarStart(paragraph, end) != end) {
+      return null;
+    }
+    for (final glyph in run) {
+      if (glyph.glyph.logicalIndex != end || end >= paragraph.length) {
+        return null;
+      }
+      end += _utf16Len(paragraph, end);
+    }
+    return end;
   }
 
   /// Page X where [painter] should be painted for [run].

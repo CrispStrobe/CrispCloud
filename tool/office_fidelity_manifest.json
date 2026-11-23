@@ -1872,9 +1872,9 @@
     "packages/quds_office_editor/lib/src/editor_slide/render_slide_stage.dart": "540bd70971ef0cd38ec8ab88e76a60772eec3876fc2672ad502e685b5b867dbd",
     "packages/quds_office_editor/lib/src/editor_word/caret_engine.dart": "085b7ef4d4f6c327b53bfa184a3f6d4e5cc225aeb448b60be03284e6d8fe2801",
     "packages/quds_office_editor/lib/src/editor_word/office_ruler.dart": "1b6ddf7206f501ddb5cbadb0427e5a7c16196b692acd462e5651b0c1b85b7df1",
-    "packages/quds_office_editor/lib/src/editor_word/paint_run_text.dart": "47a993896d7b857273cb9f4035ac61ae2b0af4623564f2334f97bfdf09b38778",
+    "packages/quds_office_editor/lib/src/editor_word/paint_run_text.dart": "ff70e2703c0fed7af9c5a2b4b49785ad317612ce14ca4eb0b1b0765700f6a7d5",
     "packages/quds_office_editor/lib/src/editor_word/proofing_geometry.dart": "8210a778704748cd52783e32832949d1c6e69010139eaef1bedaf3bde26970ea",
-    "packages/quds_office_editor/lib/src/editor_word/render_word_canvas.dart": "4a2c7fcc8062d276ae2340e1c2e06ac1676997549a3ed3b290cf9307d261c3c3",
+    "packages/quds_office_editor/lib/src/editor_word/render_word_canvas.dart": "2bc276754354944f5ee611a1dae821bb54322ac8aa1a08beb2e73b033e629a0c",
     "packages/quds_office_editor/lib/src/editor_word/table_history.dart": "5bb83807c45fd62aa5e3ae55def7538fb5da904c7237f43c51311994fa0c8640",
     "packages/quds_office_editor/lib/src/editor_word/word_run_metrics.dart": "5bfeea71be0da417a0e164614f172ce7848a6ce0cdef6a53170a801bdcfdf07b",
     "packages/quds_office_editor/lib/src/embed/office_clipboard.dart": "68c99d20c83004448d44deebd09e031aecebf84a11f2a5067d0febbe206c2715",
@@ -3476,7 +3476,7 @@
     "packages/quds_office_engine/lib/src/pdf/file/decode/pdf_ccitt.dart": "402149c19a31e35f326cb9a3b60cffc4fb5a0b5a852c1f2fdd75d42412719af4"
   },
   "source_branch": "main",
-  "source_commit": "a256b35ae4644021219a347ffabc703932d45367",
+  "source_commit": "9452e0818a0b132e1ed96474a70dc4d3651bc617",
   "source_repository": "CrispStrobe/quds_office_suite",
   "standalone_sources": {
     "packages/legacy_doc_parser": {
