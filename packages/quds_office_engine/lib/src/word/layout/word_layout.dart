@@ -16,7 +16,6 @@ import '../math/omml_layout.dart';
 import '../model/wml_clone.dart';
 import '../model/wml_document.dart';
 import '../model/wml_run_edit.dart';
-import '../model/word_comment.dart';
 import '../model/word_fields.dart';
 import '../model/word_link.dart';
 import '../model/word_notes.dart';
@@ -926,6 +925,7 @@ class WordLayoutEngine {
   // Sum of one-sided margins of all enclosing table cells. Nested tables may
   // have different margins; depth alone cannot describe their usable height.
   double _containedVerticalInsets = 0;
+  final _footnotesById = <int, WmlNote>{};
   final Map<WmlNote, _NoteStory> _noteStories = <WmlNote, _NoteStory>{};
   final Map<int, List<_NoteSlice>> _noteSlices = <int, List<_NoteSlice>>{};
   final Set<int> _placedNotes = <int>{};
@@ -1094,12 +1094,11 @@ class WordLayoutEngine {
   List<WmlNote> _newNotes(Iterable<int> ids) => <WmlNote>[
     for (final int id in ids.toSet())
       if (!_placedNotes.contains(id))
-        if (WordNotes.byId(_layoutDoc!, id, endnote: false)
-            case final WmlNote note)
-          note,
+        if (_footnotesById[id] case final WmlNote note) note,
   ];
 
   double _minimumNotes(Iterable<int> ids, WmlSection section, int page) {
+    if (ids.isEmpty) return 0;
     final List<WmlNote> notes = _newNotes(ids);
     if (notes.isEmpty) return 0;
     return (_noteReserve(page) == 0 ? _footnoteSeparatorHeight : 0) +
@@ -1163,23 +1162,6 @@ class WordLayoutEngine {
             );
         start = end;
         target++;
-      }
-    }
-  }
-
-  Iterable<int> _noteIds(WmlParagraph paragraph, Iterable<int> offsets) sync* {
-    final Set<int> positions = offsets.toSet();
-    var offset = 0;
-    for (final WmlInline inline in paragraph.inlines) {
-      if (inline is WmlRun) {
-        if (inline.noteRefId != null &&
-            !inline.noteRefEndnote &&
-            positions.contains(offset)) {
-          yield inline.noteRefId!;
-        }
-        offset += inline.text.length;
-      } else if (inline is WmlBreak) {
-        offset++;
       }
     }
   }
@@ -1295,8 +1277,9 @@ class WordLayoutEngine {
               null) {
         continue;
       }
-      final point = paragraph.text.runes.firstOrNull ?? 0x20;
-      final run = paragraph.text.isEmpty
+      final text = paragraph.text;
+      final point = text.runes.firstOrNull ?? 0x20;
+      final run = text.isEmpty
           ? props.importedParagraphMark ?? WmlRunEdit.propsAt(paragraph, 0)
           : WmlRunEdit.propsAt(paragraph, 0);
       final size = run.fontSizePoints;
@@ -1494,9 +1477,11 @@ class WordLayoutEngine {
           sectionIndex: i,
           paragraphIndex: paragraphIndex,
         );
-        for (final nextIndex in steps) {
-          if (nextIndex != null) paragraphIndex = nextIndex;
-          if (!published && pages.length > 1) {
+        for (final step in steps) {
+          if (step.paragraphIndex case final nextIndex?) {
+            paragraphIndex = nextIndex;
+          }
+          if (!published && step.firstPageSealed) {
             published = true;
             onFirstPage(
               LaidOutDocument(
@@ -1509,7 +1494,7 @@ class WordLayoutEngine {
             await Future<void>.delayed(const Duration(milliseconds: 17));
           } else if (slice.elapsedMicroseconds >= 6000) {
             onPageProgress?.call(pages.length);
-            await Future<void>.delayed(const Duration(milliseconds: 1));
+            await Future<void>.delayed(Duration.zero);
           } else {
             continue;
           }
@@ -1534,6 +1519,10 @@ class WordLayoutEngine {
 
   void _prepareLayout(WmlDocument document, {required bool updateFields}) {
     _layoutDoc = document;
+    _footnotesById.clear();
+    for (final note in document.footnotes) {
+      _footnotesById.putIfAbsent(note.id, () => note);
+    }
     _noteNumbering = _inheritedNoteNumbering ?? WordNoteNumbering(document);
     _noteStories.clear();
     _noteSlices.clear();
@@ -2058,9 +2047,9 @@ class WordLayoutEngine {
     sectionIndex: sectionIndex,
     paragraphIndex: paragraphIndex,
     resume: resume,
-  ).last!;
+  ).last.paragraphIndex!;
 
-  Iterable<int?> _layoutSectionSteps(
+  Iterable<({int? paragraphIndex, bool firstPageSealed})> _layoutSectionSteps(
     WmlSection section,
     List<LaidOutPage> pages, {
     required int sectionIndex,
@@ -2145,7 +2134,10 @@ class WordLayoutEngine {
           adjacentParagraph,
           _notesMatch,
         )) {
-          yield paragraphIndex;
+          yield (
+            paragraphIndex: paragraphIndex,
+            firstPageSealed: pages.length > 1,
+          );
           return;
         }
         translation = translateParagraphs && block is WmlParagraph
@@ -2332,10 +2324,17 @@ class WordLayoutEngine {
           paragraphIndex += 1 + block.itemParagraphs.length;
       }
       _blockLaidOut(flow.pages.length);
-      yield null;
+      // A continuous section may reopen the last page. Once the next page
+      // contains content, the first page is safe to publish before that
+      // next page has been filled and added to the page stack.
+      yield (
+        paragraphIndex: null,
+        firstPageSealed:
+            pages.length > 1 || (pages.length == 1 && flow.hasContent),
+      );
     }
     flow.finish();
-    yield paragraphIndex;
+    yield (paragraphIndex: paragraphIndex, firstPageSealed: pages.length > 1);
   }
 
   static bool _canMeasureKeepParagraph(WmlBlock block) =>
@@ -2476,7 +2475,8 @@ class WordLayoutEngine {
               WmlRunEdit.propsAt(paragraph, 0)
         : WmlRunEdit.propsAt(paragraph, 0);
     final double fontSize = runProps.fontSizePoints;
-    final firstRune = paragraph.text.runes.firstOrNull;
+    final String text = paragraph.text;
+    final firstRune = text.runes.firstOrNull;
     final int firstCodePoint = firstRune == null || firstRune == 0x09
         ? 0x20
         : firstRune;
@@ -2521,8 +2521,8 @@ class WordLayoutEngine {
       section.pageSize.width,
     );
     // Empty paragraphs are a full blank line in Word. A tab is content.
-    if (!paragraph.text.contains('\t') &&
-        paragraph.text.trim().isEmpty &&
+    if (!text.contains('\t') &&
+        text.trim().isEmpty &&
         listLabel == null &&
         !paragraph.properties.pageNumberField &&
         paragraph.properties.noteId == null) {
@@ -2540,17 +2540,13 @@ class WordLayoutEngine {
       }
       return (y: y + gap, pageIndex: pageIndex);
     }
-    final String text = paragraph.text;
     // Table cells and frames (laid out without page breaks) use a wider em
     // so the painted text stays inside their border.
     final double em = allowBreak || measureBody
         ? fallbackWidthFactor
         : math.max(fallbackWidthFactor, 0.72);
-    final propsByOffset = <int, WmlRunProps>{};
-    WmlRunProps propsAt(int offset) => propsByOffset.putIfAbsent(
-      offset,
-      () => WmlRunEdit.propsAt(paragraph, offset),
-    );
+    final runIndex = _LayoutRunIndex(paragraph);
+    final propsAt = runIndex.propsAt;
     // Inline pictures: one U+FFFC per picture (WmlRun.inlineVisual). It
     // advances by the picture's width and is shaped as a space glyph, so no
     // painter draws a character there; the picture itself becomes a box on
@@ -2580,6 +2576,9 @@ class WordLayoutEngine {
         offset += inline.text.length;
       }
     }
+    List<int> notesOn(BrokenLine line) =>
+        runIndex.footnoteIds(line.glyphs.map((glyph) => glyph.logicalIndex));
+
     if (paragraph.inlines.whereType<WmlRun>().any(
       (run) => run.properties.smallCaps || run.properties.allCaps,
     )) {
@@ -2739,8 +2738,7 @@ class WordLayoutEngine {
         _measureWordRuns(
           glyphs: fallback,
           text: text,
-          paragraph: paragraph,
-          propsAt: propsAt,
+          runIndex: runIndex,
           labels: displayLabels,
           pictures: inlinePictures.keys.toSet(),
           measure: host,
@@ -3122,10 +3120,7 @@ class WordLayoutEngine {
           }
         }
       }
-      var noteIds = _noteIds(
-        paragraph,
-        line.glyphs.map((ShapedGlyph g) => g.logicalIndex),
-      ).toList();
+      var noteIds = notesOn(line);
       double occupiedBottom() {
         var bottom = cursorY + lineH;
         for (final LaidOutLine l in current) {
@@ -3187,12 +3182,11 @@ class WordLayoutEngine {
         segmentStartLine = lineNumber;
         rebreakForFrame();
         lineH = heightOfLine(line);
-        noteIds = _noteIds(
-          paragraph,
-          line.glyphs.map((g) => g.logicalIndex),
-        ).toList();
+        noteIds = notesOn(line);
       }
-      if (allowBreak) _reserveNotes(noteIds, section, idx, occupiedBottom());
+      if (allowBreak && noteIds.isNotEmpty) {
+        _reserveNotes(noteIds, section, idx, occupiedBottom());
+      }
       final double x0 = wrapBreaker == null
           ? lineOrigin + textLeft + (lineNumber == 0 ? firstLineShift : 0)
           : lineLeft;
@@ -3225,6 +3219,8 @@ class WordLayoutEngine {
       for (final ShapedGlyph g in line.glyphs) {
         final WmlRunProps props = propsAt(sourceStyleOffset(g));
         final double baseSize = props.fontSizePoints;
+        final sourceRun = runIndex.at(g.logicalIndex);
+        final comments = sourceRun?.commentIds;
         final display = g.isDiscretionaryHyphen
             ? null
             : displayLabels[g.logicalIndex];
@@ -3269,8 +3265,10 @@ class WordLayoutEngine {
             ),
             vertAlign: props.vertAlign,
             positionHalfPoints: props.positionHalfPoints,
-            hyperlink: WordLink.at(paragraph, g.logicalIndex),
-            commentIds: WordComment.idsAt(paragraph, g.logicalIndex),
+            hyperlink: runIndex.linkAt(g.logicalIndex, sourceRun),
+            commentIds: comments == null || comments.isEmpty
+                ? null
+                : List<int>.of(comments),
             advance: g.advance,
             paintDx: g.paintDx,
             paintDy: g.paintDy,

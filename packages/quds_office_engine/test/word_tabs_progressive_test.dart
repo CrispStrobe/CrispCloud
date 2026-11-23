@@ -106,6 +106,43 @@ void main() {
     },
   );
 
+  test('publishes page one before the second page finishes', () async {
+    final document = WmlDocument(
+      sections: [
+        WmlSection(
+          blocks: [
+            WmlParagraph(inlines: [WmlRun(text: 'First')]),
+            WmlParagraph(
+              properties: WmlParagraphProps(pageBreakBefore: true),
+              inlines: [WmlRun(text: 'Second')],
+            ),
+            WmlParagraph(inlines: [WmlRun(text: 'ZZZZ')]),
+          ],
+        ),
+      ],
+    );
+    var measuredLast = false;
+    var published = false;
+    final engine = WordLayoutEngine(
+      font: null,
+      measure: (point, size, props) {
+        measuredLast |= point == 0x5a;
+        return 5;
+      },
+    );
+    final completed = await engine.layoutProgressively(
+      document,
+      onFirstPage: (page) {
+        expect(page.pages.single.lines.first.sourceParagraph?.text, 'First');
+        expect(measuredLast, isFalse);
+        published = true;
+      },
+      isCurrent: () => true,
+    );
+    expect(published && measuredLast, isTrue);
+    expect(completed.pages, hasLength(2));
+  });
+
   test('superseding a preview cancels the rest of pagination', () async {
     final model = WmlDocument(
       sections: [

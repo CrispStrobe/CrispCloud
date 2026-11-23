@@ -174,13 +174,16 @@ typedef _TallCellSlice = ({_TallCellContent content, double start, double end});
             containsAnchor(entry.value, slice),
       );
 
+  final noteRuns = <int, _LayoutRunIndex>{};
   Set<int> notesThrough(List<_TallCellSlice> slices) => {
     for (final slice in slices) ...{
       for (final line in linesThrough(slice))
-        ...owner._noteIds(
-          paragraphs[line.paragraphIndex],
-          line.glyphs.map((g) => g.glyph.logicalIndex),
-        ),
+        ...noteRuns
+            .putIfAbsent(
+              line.paragraphIndex,
+              () => _LayoutRunIndex(paragraphs[line.paragraphIndex]),
+            )
+            .footnoteIds(line.glyphs.map((g) => g.glyph.logicalIndex)),
       for (final entry in framesThrough(slice))
         for (final paragraph in WordTree.paragraphs(entry.key.blocks))
           for (final run in paragraph.inlines.whereType<WmlRun>())

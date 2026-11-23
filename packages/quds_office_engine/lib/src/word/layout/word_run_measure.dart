@@ -107,11 +107,80 @@ ShapedGlyph _withMeasuredAdvance(ShapedGlyph glyph, double advance) =>
       sourceLength: glyph.sourceLength,
     );
 
+/// Source formatting ranges for one paragraph layout. Lookups use the same
+/// UTF-16 offsets as editing, including the last run's formatting at the end.
+class _LayoutRunIndex {
+  _LayoutRunIndex(WmlParagraph paragraph) {
+    var offset = 0;
+    var breaks = 0;
+    for (final inline in paragraph.inlines) {
+      if (inline is WmlBreak) {
+        breaks++;
+      } else if (inline is WmlRun) {
+        if (inline.noteRefId case final id? when !inline.noteRefEndnote) {
+          _noteReferences.add((offset + breaks, id));
+        }
+        offset += inline.text.length;
+        _ends.add(offset);
+        _runs.add(inline);
+        _lastLink = inline.hyperlink ?? _lastLink;
+      }
+    }
+  }
+
+  final _noteReferences = <(int, int)>[];
+  final _ends = <int>[];
+  final _runs = <WmlRun>[];
+  final _commentKeys = <WmlRun, String>{};
+  WmlHyperlink? _lastLink;
+  late final _fallback = WmlRunProps();
+  var _lastIndex = 0;
+
+  WmlRun? at(int offset) {
+    if (_runs.isEmpty) return null;
+    if (offset >= _ends.last) return _runs.last;
+    final current = _lastIndex;
+    if (offset < _ends[current] &&
+        (current == 0 || offset >= _ends[current - 1])) {
+      return _runs[current];
+    }
+    var low = 0;
+    var high = _ends.length - 1;
+    while (low < high) {
+      final mid = (low + high) ~/ 2;
+      if (offset < _ends[mid]) {
+        high = mid;
+      } else {
+        low = mid + 1;
+      }
+    }
+    _lastIndex = low;
+    return _runs[low];
+  }
+
+  WmlRunProps propsAt(int offset) => at(offset)?.properties ?? _fallback;
+
+  WmlHyperlink? linkAt(int offset, WmlRun? run) =>
+      _ends.isNotEmpty && offset >= _ends.last ? _lastLink : run?.hyperlink;
+
+  List<int> footnoteIds(Iterable<int> offsets) {
+    if (_noteReferences.isEmpty) return const [];
+    final positions = offsets.toSet();
+    return [
+      for (final (offset, id) in _noteReferences)
+        if (positions.contains(offset)) id,
+    ];
+  }
+
+  String commentKey(WmlRun? run) => run == null || run.commentIds.isEmpty
+      ? ''
+      : _commentKeys.putIfAbsent(run, () => run.commentIds.join(','));
+}
+
 List<ShapedGlyph> _measureWordRuns({
   required List<ShapedGlyph> glyphs,
   required String text,
-  required WmlParagraph paragraph,
-  required WmlRunProps Function(int) propsAt,
+  required _LayoutRunIndex runIndex,
   required Map<int, ({String text, int end, double scale, bool note})> labels,
   required Set<int> pictures,
   required WordRunMeasure measure,
@@ -124,7 +193,8 @@ List<ShapedGlyph> _measureWordRuns({
       glyph.codePoint == 0x0d ||
       pictures.contains(glyph.logicalIndex);
   Object styleKey(ShapedGlyph glyph) {
-    final props = propsAt(glyph.logicalIndex);
+    final run = runIndex.at(glyph.logicalIndex);
+    final props = run?.properties ?? runIndex._fallback;
     return (
       OfficeTypeface.familyForRun(
         props,
@@ -142,7 +212,7 @@ List<ShapedGlyph> _measureWordRuns({
       WmlHighlight.toRgb(props.highlight) ?? props.highlight,
       props.vertAlign,
       props.positionHalfPoints,
-      WordComment.idsAt(paragraph, glyph.logicalIndex).join(','),
+      runIndex.commentKey(run),
       glyph.level,
     );
   }
@@ -167,7 +237,7 @@ List<ShapedGlyph> _measureWordRuns({
       }
       end++;
     }
-    final props = propsAt(first.logicalIndex);
+    final props = runIndex.propsAt(first.logicalIndex);
     final String runText;
     final offsets = <int>[];
     if (label != null) {

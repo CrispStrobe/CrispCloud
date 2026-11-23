@@ -19,6 +19,8 @@ abstract final class OfficeHostFonts {
   static final Map<String, String> _extensionOwners = {};
   static int _revision = 0;
   static final Map<String, List<OfficeFontFace>> _metricFaces = {};
+  static final _paintMetrics =
+      <(String, double, int, int, bool), FontMetrics?>{};
   static final Map<String, List<InstalledFontData>> _installedFaces = {};
   static final Map<String, Future<void>> _installedLoads = {};
   static final Set<String> _installedNames = {};
@@ -67,8 +69,11 @@ abstract final class OfficeHostFonts {
     required bool italic,
   }) {
     final registered = registeredFamily(family) ?? family;
-    final faces = _metricFaces[registered.toLowerCase()];
+    final normalized = registered.toLowerCase();
+    final faces = _metricFaces[normalized];
     if (faces == null) return null;
+    final key = (normalized, sizePoints, codePoint, weight, italic);
+    if (_paintMetrics.containsKey(key)) return _paintMetrics[key];
     final face = OfficeFontSet(faces: faces).resolve(
       codePoint,
       family: registered,
@@ -76,9 +81,14 @@ abstract final class OfficeHostFonts {
       italic: italic,
       allowPostScriptOutlines: true,
     );
-    return face == null
+    final metrics = face == null
         ? null
         : FontMetrics(font: face.font, fontSizePoints: sizePoints);
+    if (_paintMetrics.length >= 4096) {
+      _paintMetrics.remove(_paintMetrics.keys.first);
+    }
+    _paintMetrics[key] = metrics;
+    return metrics;
   }
 
   /// Changes after a name or alias successfully gains real font bytes.
@@ -275,6 +285,7 @@ abstract final class OfficeHostFonts {
     _registeredFaces[paintKey] = (paintName, hasItalic);
     _registeredFaces[key] = (paintName, hasItalic);
     _installedFaces[key] = faces;
+    _paintMetrics.clear();
     _revision++;
   }
 
@@ -417,6 +428,7 @@ abstract final class OfficeHostFonts {
       return parsed;
     });
     _registeredFaces[family.trim().toLowerCase()] = (resolvedFamily, hasItalic);
+    _paintMetrics.clear();
     _revision++;
   }
 }

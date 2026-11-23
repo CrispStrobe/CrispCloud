@@ -11,7 +11,6 @@ typedef _RunMetricsKey = ({
   String text,
   double sizePoints,
   String requestedFamily,
-  String family,
   String? themeFamily,
   bool bold,
   bool italic,
@@ -38,7 +37,7 @@ abstract final class WordRunMetrics {
 
   // Only immutable Dart values are cached. Native paragraphs are released at
   // the end of every measurement, including unsuccessful measurements.
-  static final _cache = <_RunMetricsKey, List<WordMeasuredCluster>>{};
+  static final _cache = <_RunMetricsKey, List<WordMeasuredCluster>?>{};
   static var _retainedKeyUnits = 0;
   static var _fontRevision = -1;
   static final _layoutControl = RegExp(r'[\t\n\r\v\f\u0085\u2028\u2029]');
@@ -78,11 +77,6 @@ abstract final class WordRunMetrics {
       props,
       text.runes.first,
     );
-    final family = PaintRunText.familyFor(
-      text: text,
-      runFamily: requestedFamily,
-      themeFamily: themeFamily,
-    );
     final threshold = props.kerningHalfPoints;
     final kerning =
         !respectKerningThreshold ||
@@ -91,7 +85,6 @@ abstract final class WordRunMetrics {
       text: text,
       sizePoints: sizePoints,
       requestedFamily: requestedFamily,
-      family: family,
       themeFamily: themeFamily,
       bold: props.bold,
       italic: props.italic,
@@ -99,30 +92,59 @@ abstract final class WordRunMetrics {
       bidiLevel: bidiLevel,
       fontRevision: revision,
     );
-    final cached = _cache.remove(key);
-    if (cached != null) {
+    if (_cache.containsKey(key)) {
+      final cached = _cache.remove(key);
       _cache[key] = cached;
       return cached;
     }
 
+    final family = PaintRunText.familyFor(
+      text: text,
+      runFamily: requestedFamily,
+      themeFamily: themeFamily,
+    );
+    final measured = _measure(key, family);
+    final keyUnits = _keyUnits(key);
+    if (keyUnits <= _maxKeyUnits &&
+        requestedFamily.length <= _maxFamilyUnits &&
+        family.length <= _maxFamilyUnits &&
+        (themeFamily?.length ?? 0) <= _maxFamilyUnits) {
+      _cache[key] = measured;
+      _retainedKeyUnits += keyUnits;
+      while (_cache.length > _maxEntries || _retainedKeyUnits > _maxKeyUnits) {
+        final oldest = _cache.keys.first;
+        _retainedKeyUnits -= _keyUnits(oldest);
+        _cache.remove(oldest);
+      }
+    }
+    return measured;
+  }
+
+  static List<WordMeasuredCluster>? _measure(
+    _RunMetricsKey key,
+    String family,
+  ) {
+    final text = key.text;
     final painter = TextPainter(
       text: TextSpan(
         text: text,
         style: TextStyle(
-          fontSize: sizePoints,
+          fontSize: key.sizePoints,
           fontFamily: family,
           fontFamilyFallback: PaintRunText.fallbacksFor(
             text,
-            runFamily: requestedFamily,
+            runFamily: key.requestedFamily,
           ),
-          fontWeight: props.bold ? FontWeight.bold : FontWeight.normal,
-          fontStyle: props.italic ? FontStyle.italic : FontStyle.normal,
-          fontFeatures: kerning ? null : const [ui.FontFeature.disable('kern')],
+          fontWeight: key.bold ? FontWeight.bold : FontWeight.normal,
+          fontStyle: key.italic ? FontStyle.italic : FontStyle.normal,
+          fontFeatures: key.kerning
+              ? null
+              : const [ui.FontFeature.disable('kern')],
           height: 1.0,
         ),
       ),
       textDirection: PaintRunText.directionFor(
-        bidiLevel: bidiLevel,
+        bidiLevel: key.bidiLevel,
         text: text,
       ),
       maxLines: 1,
@@ -153,22 +175,7 @@ abstract final class WordRunMetrics {
       if ((total - width).abs() > math.max(0.0001, width.abs() * 0.000001)) {
         return null;
       }
-      final result = List<WordMeasuredCluster>.unmodifiable(measured);
-      final keyUnits = _keyUnits(key);
-      if (keyUnits <= _maxKeyUnits &&
-          requestedFamily.length <= _maxFamilyUnits &&
-          family.length <= _maxFamilyUnits &&
-          (themeFamily?.length ?? 0) <= _maxFamilyUnits) {
-        _cache[key] = result;
-        _retainedKeyUnits += keyUnits;
-        while (_cache.length > _maxEntries ||
-            _retainedKeyUnits > _maxKeyUnits) {
-          final oldest = _cache.keys.first;
-          _retainedKeyUnits -= _keyUnits(oldest);
-          _cache.remove(oldest);
-        }
-      }
-      return result;
+      return List<WordMeasuredCluster>.unmodifiable(measured);
     } finally {
       painter.dispose();
     }
@@ -177,7 +184,6 @@ abstract final class WordRunMetrics {
   static int _keyUnits(_RunMetricsKey key) =>
       key.text.length +
       key.requestedFamily.length +
-      key.family.length +
       (key.themeFamily?.length ?? 0);
 
   static double? _clusterAdvance(TextPainter painter, int start, int end) {
@@ -194,6 +200,10 @@ abstract final class WordRunMetrics {
         Rect.zero,
       );
       return (trailing.dx - leading.dx).abs();
+    }
+    if (boxes.length == 1) {
+      final box = boxes.single;
+      return box.right - box.left;
     }
     // A logical range can have multiple visual boxes. Count their union so
     // fallback or mark boxes sharing the same horizontal span are not added

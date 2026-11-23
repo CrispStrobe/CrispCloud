@@ -376,6 +376,41 @@ void main() {
     expect(laid.pages.first.lines.last.justificationRatio, 0);
   });
 
+  test('bidi glyphs preserve source run formatting, links and comments', () {
+    final link = WmlHyperlink(anchor: 'section');
+    final paragraph = WmlParagraph(
+      inlines: [
+        WmlRun(text: '', properties: WmlRunProps(bold: true)),
+        WmlRun(text: 'Local ', commentIds: [1]),
+        WmlRun(
+          text: 'עברית',
+          properties: WmlRunProps(bold: true),
+          hyperlink: link,
+          commentIds: [4, 6],
+        ),
+        WmlRun(text: '', properties: WmlRunProps(italic: true)),
+        WmlRun(text: ' text', properties: WmlRunProps(italic: true)),
+        WmlRun(text: '', commentIds: [9]),
+      ],
+    );
+    final document = WmlDocument(
+      sections: [
+        WmlSection(blocks: [paragraph]),
+      ],
+    );
+    final page = WordLayoutEngine(font: null).layout(document).pages.single;
+    final glyphs = page.lines.expand((line) => line.glyphs);
+    expect(glyphs.any((item) => item.glyph.level.isOdd), isTrue);
+    for (final glyph in glyphs) {
+      final offset = glyph.glyph.logicalIndex;
+      final expected = WmlRunEdit.propsAt(paragraph, offset);
+      expect(glyph.bold, expected.bold);
+      expect(glyph.italic, expected.italic);
+      expect(glyph.hyperlink, same(WordLink.at(paragraph, offset)));
+      expect(glyph.commentIds, WordComment.idsAt(paragraph, offset));
+    }
+  });
+
   test('tab advances to the next default half-inch stop', () {
     final WmlDocument doc = WmlDocument(
       sections: <WmlSection>[
