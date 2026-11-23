@@ -105,7 +105,7 @@ typedef _TallCellSlice = ({_TallCellContent content, double start, double end});
         .._containedVerticalInsets =
             owner._containedVerticalInsets -
             table.properties.cellInsets.vertical;
-  final laid = rowEngine.layout(storyDocument, updateFields: false);
+  final laid = rowEngine._layoutTransient(storyDocument);
   final paragraphs = storyDocument.paragraphs.toList();
   final lines = laid.pages.single.lines;
   final frames = laid.pages.single.frames;

@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:math' as math;
 
 import '../../bidi/grapheme_clusters.dart';
@@ -1454,6 +1455,19 @@ class WordLayoutEngine {
     }
   }
 
+  // A nested note or temporary table row transfers its geometry to the
+  // enclosing layout. It never receives an incremental edit of its own.
+  LaidOutDocument _layoutTransient(WmlDocument document) {
+    _prepareLayout(document, updateFields: false);
+    return _layoutFrom(
+      document,
+      updateFields: false,
+      fromSectionIndex: 0,
+      reuse: null,
+      recorder: null,
+    );
+  }
+
   /// Paginates with the same flow as [layout], giving the host a chance to
   /// paint between blocks. A following continuous section may reopen the last
   /// page, so publish only an earlier, finalized prefix.
@@ -1546,11 +1560,11 @@ class WordLayoutEngine {
     required bool updateFields,
     required int fromSectionIndex,
     required LaidOutDocument? reuse,
-    required _Recorder recorder,
+    required _Recorder? recorder,
   }) {
     final List<LaidOutPage> pages = <LaidOutPage>[];
     var paragraphIndex = 0;
-    var recorded = true;
+    var recorded = recorder != null;
     var start = fromSectionIndex.clamp(0, document.sections.length);
     if (start > 0 && reuse != null && start < document.sections.length) {
       while (start > 0 &&
@@ -1586,7 +1600,7 @@ class WordLayoutEngine {
             recorded = false;
             break;
           }
-          recorder.sections[i] = record;
+          recorder?.sections[i] = record;
         }
       }
     } else {
@@ -1605,7 +1619,7 @@ class WordLayoutEngine {
       pages,
       updateFields: updateFields,
       state: recorded
-          ? _IncrementalState(_incrementalOwner, document, recorder.sections)
+          ? _IncrementalState(_incrementalOwner, document, recorder!.sections)
           : null,
     );
   }
@@ -2911,7 +2925,10 @@ class WordLayoutEngine {
                     ? null
                     : measuredRuns,
               );
-    if (!measureBody && !wrapsFrames && reusedBreaks == null) {
+    if (_recorder != null &&
+        !measureBody &&
+        !wrapsFrames &&
+        reusedBreaks == null) {
       _breakCache[paragraph] = _BreakCache(
         broken,
         maxWidth: maxWidth,

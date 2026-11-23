@@ -288,6 +288,26 @@ void main() {
     });
   }
 
+  test('multiple generated note labels preserve UTF-16 source offsets', () {
+    final document = _document();
+    final paragraph = document.footnotes.single.paragraphs.single;
+    paragraph.inlines
+      ..clear()
+      ..addAll([
+        WmlRun(text: 'A'),
+        WmlNoteMarker(endnote: false, properties: WmlRunProps()),
+        WmlRun(text: '😀'),
+        WmlNoteMarker(endnote: false, properties: WmlRunProps()),
+        WmlRun(text: 'Z'),
+      ]);
+
+    final note =
+        WordLayoutEngine(font: null).layout(document).pages.single.notes.single;
+    expect(note.sourceParagraph, same(paragraph));
+    expect(note.proofingOffsets, [0, null, 1, 2, null, 3, 4]);
+    expect(note.proofingOffsetAt(7), isNull);
+  });
+
   test('long footnote continuations keep every line in order', () {
     final rows = List.generate(41, (index) => 'Note line $index.');
     final document = _document(

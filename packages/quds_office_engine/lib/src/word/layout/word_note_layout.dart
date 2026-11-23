@@ -39,29 +39,30 @@ class _NoteStory {
     final label = owner._noteNumbering?.labelFor(note) ?? '${note.id}';
     var hasMarker = false;
     for (final paragraph in blocks.expand(WmlClone.paragraphsOf)) {
-      final offsets = <int?>[];
-      var sourceOffset = 0;
-      for (final inline in paragraph.inlines) {
-        if (inline is WmlNoteMarker) {
-          offsets.addAll(List<int?>.filled(label.length, null));
-        } else if (inline is WmlRun) {
-          for (var j = 0; j < inline.text.length; j++) {
-            offsets.add(sourceOffset++);
-          }
-        }
-      }
-      offsets.add(sourceOffset);
-      offsetsOf[paragraph] = offsets;
+      List<(int, int)>? displayRanges;
+      var offset = 0;
       for (var i = 0; i < paragraph.inlines.length; i++) {
         final inline = paragraph.inlines[i];
         if (inline is WmlNoteMarker) {
           hasMarker = true;
+          final end = offset + label.length;
+          if (end > offset) {
+            (displayRanges ??= []).add((offset, end));
+            offset = end;
+          }
           paragraph.inlines[i] = WmlRun(
             text: label,
             properties: inline.properties.copy(),
           );
+        } else if (inline is WmlRun) {
+          offset += inline.text.length;
         }
       }
+      // Include the end-of-paragraph position used by caret hit testing.
+      offsetsOf[paragraph] = _NoteProofingOffsets(
+        offset + 1,
+        displayRanges ?? const [],
+      );
     }
     if (note.addReference && !hasMarker) {
       if (blocks.isEmpty || blocks.first is! WmlParagraph) {
@@ -72,10 +73,10 @@ class _NoteStory {
           label.isNotEmpty &&
           note.addReferenceSpace &&
           (first.text.isEmpty || !RegExp(r'^\s').hasMatch(first.text));
-      final map = offsetsOf.putIfAbsent(first, () => <int?>[0]);
-      map.insertAll(
-        0,
-        List<int?>.filled(label.length + (separator ? 1 : 0), null),
+      final prefix = label.length + (separator ? 1 : 0);
+      offsetsOf[first] = _NoteProofingOffsets(
+        (offsetsOf[first]?.length ?? 1) + prefix,
+        prefix > 0 ? [(0, prefix)] : const [],
       );
       first.inlines.insertAll(0, [
         WmlRun(
@@ -140,7 +141,7 @@ class _NoteStory {
       measureFont: owner.measureFont,
       fallbackWidthFactor: owner.fallbackWidthFactor,
     ).._containedPhysicalSection = section;
-    final LaidOutDocument laid = storyEngine.layout(story, updateFields: false);
+    final LaidOutDocument laid = storyEngine._layoutTransient(story);
     owner._noteLaidOut();
     final List<WmlParagraph> paragraphs = story.paragraphs.toList();
     final List<LaidOutLine> lines = <LaidOutLine>[];
@@ -274,6 +275,38 @@ class _NoteStory {
     }
     return height;
   }
+}
+
+/// A logical note offset differs from its source offset only where layout
+/// inserted a reference label. Store those ranges instead of one int per
+/// character, keeping the same indexed offsets for editing and proofing.
+class _NoteProofingOffsets extends ListBase<int?> {
+  _NoteProofingOffsets(this.length, this._displayRanges);
+
+  @override
+  final int length;
+  final List<(int, int)> _displayRanges;
+
+  @override
+  int? operator [](int index) {
+    RangeError.checkValidIndex(index, this, 'index', length);
+    var source = index;
+    for (var i = 0; i < _displayRanges.length; i++) {
+      final (start, end) = _displayRanges[i];
+      if (index < start) break;
+      if (index < end) return null;
+      source -= end - start;
+    }
+    return source;
+  }
+
+  @override
+  void operator []=(int index, int? value) =>
+      throw UnsupportedError('Note proofing offsets are read-only');
+
+  @override
+  set length(int value) =>
+      throw UnsupportedError('Note proofing offsets are read-only');
 }
 
 class _NoteSlice {
