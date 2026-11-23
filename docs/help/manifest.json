@@ -3,7 +3,7 @@
   "sourceLanguage": "en",
   "guides": {
     "en": {
-      "asset": "docs/USER_GUIDE.md",
+      "asset": "docs/help/USER_GUIDE.en.md",
       "sha256": "16f069708644c5ffa68fb4ee9300e553f571bf5bb5365d9fa8da17ee1eee4b80"
     },
     "de": {

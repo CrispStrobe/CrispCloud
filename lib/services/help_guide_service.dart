@@ -47,7 +47,7 @@ class HelpGuideService {
 
   static const manifestAsset = 'docs/help/manifest.json';
   static const assets = {
-    'en': 'docs/USER_GUIDE.md',
+    'en': 'docs/help/USER_GUIDE.en.md',
     'de': 'docs/help/USER_GUIDE.de.md',
     'fr': 'docs/help/USER_GUIDE.fr.md',
   };

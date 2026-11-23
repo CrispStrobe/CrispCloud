@@ -5,6 +5,9 @@ platform, account and storage capabilities shown in the current window.
 
 The longer reference text is preserved in the
 [user guide archive](user-guide-details.md).
+The app's offline Help bundles the reviewed full guide in
+[English](help/USER_GUIDE.en.md), [German](help/USER_GUIDE.de.md) and
+[French](help/USER_GUIDE.fr.md).
 
 ## Start
 

@@ -11,7 +11,7 @@ import sys
 ROOT = Path(__file__).resolve().parent.parent
 MANIFEST = ROOT / "docs/help/manifest.json"
 ASSETS = {
-    "en": "docs/USER_GUIDE.md",
+    "en": "docs/help/USER_GUIDE.en.md",
     "de": "docs/help/USER_GUIDE.de.md",
     "fr": "docs/help/USER_GUIDE.fr.md",
 }
