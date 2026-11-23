@@ -27,8 +27,16 @@ class ShapedChar {
 /// Isolated / initial / medial / final shaping plus obligatory Lam-Alef ligatures.
 abstract final class ArabicShaper {
   /// shape API.
-  static List<ShapedChar> shape(String text) {
-    final List<int> cps = text.runes.toList();
+  static List<ShapedChar> shape(String text) =>
+      shapeCodePoints(text.runes.toList());
+
+  /// Arabic joining and presentation forms are confined to these ranges.
+  /// Presentation-form inputs may also need a nominal glyph fallback.
+  static bool mayNeedShaping(int cp) =>
+      (cp >= 0x0600 && cp <= 0x08ff) || (cp >= 0xfb50 && cp <= 0xfeff);
+
+  /// One result per input code point, including consumed ligature characters.
+  static List<ShapedChar> shapeCodePoints(List<int> cps) {
     if (cps.isEmpty) {
       return const <ShapedChar>[];
     }

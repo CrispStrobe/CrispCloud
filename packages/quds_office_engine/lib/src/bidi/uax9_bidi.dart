@@ -123,15 +123,7 @@ abstract final class Uax9Bidi {
       );
     }
     final List<int> cps = text.runes.toList();
-    final List<BidiClass> types = cps.map(_classify).toList();
-    final int paragraphLevel = baseLevel ?? _paragraphLevel(types);
-    final List<int> levels = List<int>.filled(cps.length, paragraphLevel);
-    final List<BidiClass> working = List<BidiClass>.from(types);
-    _resolveExplicit(working, levels, paragraphLevel);
-    _resolveWeak(working);
-    _resolveNeutrals(working, levels, paragraphLevel);
-    _resolveImplicit(working, levels);
-    _resetWhitespace(types, levels, paragraphLevel);
+    final (paragraphLevel, levels) = _resolveLevels(cps, baseLevel);
     final List<int> visual = visualOrder(levels);
     final List<int> logicalToVisual = List<int>.filled(cps.length, 0);
     for (int v = 0; v < visual.length; v++) {
@@ -145,6 +137,27 @@ abstract final class Uax9Bidi {
       runs: _runs(text, cps, levels, visual),
       original: text,
     );
+  }
+
+  /// Logical embedding levels for a caller that reorders its own lines.
+  static List<int> embeddingLevels(List<int> codePoints, {int? baseLevel}) =>
+      _resolveLevels(codePoints, baseLevel).$2;
+
+  static (int, List<int>) _resolveLevels(List<int> codePoints, int? baseLevel) {
+    if (codePoints.isEmpty) return (baseLevel ?? 0, const <int>[]);
+    final List<BidiClass> types = codePoints.map(_classify).toList();
+    final int paragraphLevel = baseLevel ?? _paragraphLevel(types);
+    final List<int> levels = List<int>.filled(
+      codePoints.length,
+      paragraphLevel,
+    );
+    final List<BidiClass> working = List<BidiClass>.from(types);
+    _resolveExplicit(working, levels, paragraphLevel);
+    _resolveWeak(working);
+    _resolveNeutrals(working, levels, paragraphLevel);
+    _resolveImplicit(working, levels);
+    _resetWhitespace(types, levels, paragraphLevel);
+    return (paragraphLevel, levels);
   }
 
   static int _paragraphLevel(List<BidiClass> types) {

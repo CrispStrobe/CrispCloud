@@ -2299,6 +2299,7 @@
     "packages/quds_office_engine/lib/src/automation/operations/word_style_steps.dart": "83fca4ce3babd09535251e47b21d22219e50657979f9cad85f301bd221beae15",
     "packages/quds_office_engine/lib/src/automation/operations/word_table_cell_text_steps.dart": "803e67dca96819e4a2bbdaea05beb18cb8d1a895b1a1f55b366606e4514e5231",
     "packages/quds_office_engine/lib/src/automation/operations/word_text_columns_steps.dart": "42676146df77ceb41c117dc8302b92d273d0f14821745deae36af4fc35cabc6c",
+    "packages/quds_office_engine/lib/src/bidi/arabic_shaping.dart": "fb2368c753d82174965ad712219f610a1fc9e6cd3594697ed2ade9443afb3812",
     "packages/quds_office_engine/lib/src/bidi/english_gb_hyphenation_data.dart": "12ec89a0bec6172d782821f75dd9f78a6ac62ec980cc6cab6a4928fb69041d9d",
     "packages/quds_office_engine/lib/src/bidi/english_hyphenator.dart": "c4547764a3a958262c81ed1db25c273fccbe4397c597a2711701023b9e7f03a6",
     "packages/quds_office_engine/lib/src/bidi/english_us_hyphenation_data.dart": "809673b992606bbe3a249f99126ae14419e1969905954311e04125c34e231fea",
@@ -2306,8 +2307,9 @@
     "packages/quds_office_engine/lib/src/bidi/german_hyphenator.dart": "f5a419083210b80a1a00f5d00d77caa04328abdc5b9e4dd010b8ef2b77642496",
     "packages/quds_office_engine/lib/src/bidi/grapheme_clusters.dart": "f04618334611bb31abcf34a7388c45c0068b161f09a56303d3c39226f859ce60",
     "packages/quds_office_engine/lib/src/bidi/hyphenation_words.dart": "c31b1cf2bcd3a8fe3ba194ff13e88fc6a2f79b4635c2e934ffc132f5c35464ea",
-    "packages/quds_office_engine/lib/src/bidi/line_breaker.dart": "bbe1d2926d07446713378fff04147454d69f4ff4df917848c5e526ccf0af2326",
+    "packages/quds_office_engine/lib/src/bidi/line_breaker.dart": "1d40d71b4f0b3f51cc27dd39ffc2d97a217632372c124ea9388edacfda9571b9",
     "packages/quds_office_engine/lib/src/bidi/office_hyphenator.dart": "1af8eed059dfcb9eaa33d9e884ca7c8d073b1b52af22178de9751d9323072a00",
+    "packages/quds_office_engine/lib/src/bidi/uax9_bidi.dart": "07d01099f18303258bb99a4d32f343bbeeaeee681d72b3244ca6bebe8c6ec113",
     "packages/quds_office_engine/lib/src/builders/docx_builder.dart": "43a52e550eebd74900bb33d6596326282cb5c3f73e49b64dc8a1c1efd42f1f8b",
     "packages/quds_office_engine/lib/src/extract/office_search_text.dart": "ae3ebb445cc76adf7bd9b9857b1a402d426b5a3acdce60badc84b056d1a14937",
     "packages/quds_office_engine/lib/src/extract/office_text_extractor.dart": "d4fe68cc063bb569129cf7d3cb32122a4bc0cd6b5885e61d9371a7dab28118cb",
@@ -2511,6 +2513,7 @@
     "packages/quds_office_engine/lib/src/zotero/zotero_client.dart": "dd01c52c43c0984a27c31fdb5ee9d95cd6616093871ecc2dd71f0a362d55d024",
     "packages/quds_office_engine/lib/src/zotero/zotero_formatted_text.dart": "2d2fdfae0238cde8039131eca12661d8fabb69aa1dd85777774749dfa5d589a7",
     "packages/quds_office_engine/lib/src/zotero/zotero_models.dart": "29a16a14a0765104ab9c4c65bfbff6e2c2b0c9ce72a8b60c349f33655b764d96",
+    "packages/quds_office_engine/test/bidi_test.dart": "b21deab77b72f77a6738c8b50517afb7fbb5b1f915fb5baf7731b72a9d7d1943",
     "packages/quds_office_engine/test/bookmark_fidelity_test.dart": "3c08c1cb992be0cbffe3205ead575529473bd630a60b5e20c3eb012080290e87",
     "packages/quds_office_engine/test/bounded_cfb_reader_test.dart": "4577021902d0d9e798f7e7a74885ef1079bf67ad2b12a63f53c870decf1a87da",
     "packages/quds_office_engine/test/comment_thread_fidelity_test.dart": "fdd10b7c43b3d98e57df88219637be5850fc0a2f4e8a58cd6a935828fd1417f1",
@@ -3464,7 +3467,7 @@
     "tool/office-validation/test_render.py": "1ba68e18608d74387cbc1c779ceb72af76bf7741463c282684aec93bf3825472"
   },
   "source_branch": "main",
-  "source_commit": "38674f38a2a5dbf91204321ab68640c73b7d814e",
+  "source_commit": "f6f7ec91761fcbec75ebd6178ce9812dfec173ad",
   "source_repository": "CrispStrobe/quds_office_suite",
   "standalone_sources": {
     "packages/legacy_doc_parser": {

@@ -25,6 +25,23 @@ void main() {
       expect(Uax9Bidi.classify(0x0661), BidiClass.an);
       expect(Uax9Bidi.classify(0x064B), BidiClass.nsm);
     });
+    test('measures ordinary glyphs once and keeps zero-width fallback', () {
+      final requests = <(int, int)>[];
+      final prepared = LineBreaker.prepare(
+        text: '1ä😀',
+        widthOf: (_) => 8,
+        widthAt: (cp, offset) {
+          requests.add((cp, offset));
+          return cp == 0xe4 ? 0 : 8;
+        },
+      );
+      final result = prepared.breakNext(start: 0, maxWidth: 100);
+      expect(requests, [(49, 0), (0xe4, 1), (32, 1), (0x1f600, 2)]);
+      expect(result.line.glyphs.map((glyph) => glyph.advance), [8, 8, 8]);
+      expect(result.line.glyphs.map((glyph) => glyph.level), [2, 0, 0]);
+      expect(result.nextOffset, 4);
+    });
+
     test('mirrors parentheses on RTL odd levels (L4)', () {
       expect(Uax9Bidi.mirrored(0x0028), 0x0029);
       expect(Uax9Bidi.mirrored(0x0029), 0x0028);

@@ -126,18 +126,21 @@ abstract final class LineBreaker {
     List<ShapedGlyph> Function(List<ShapedGlyph> glyphs)? measureLine,
     Iterable<int> hyphenationOffsets = const [],
   }) {
-    final bidi = Uax9Bidi.reorder(text, baseLevel: baseLevel);
     final logical = _logicalGlyphs(
       text,
-      bidi,
+      baseLevel,
       widthAt ?? (cp, _) => widthOf(cp),
       glyphIdAt ?? (cp, _) => glyphIdOf(cp),
     );
     final shaped = ligate == null ? logical : ligate(logical);
+    final clusterStarts = {
+      for (final cluster in GraphemeClusters.segment(text)) cluster.start,
+    };
     final hyphens = _hyphenGlyphs(
       text,
       shaped,
       hyphenationOffsets,
+      clusterStarts,
       widthAt ?? (cp, _) => widthOf(cp),
       glyphIdAt ?? (cp, _) => glyphIdOf(cp),
     );
@@ -150,7 +153,7 @@ abstract final class LineBreaker {
       markAttachOf,
       hyphens,
       _BreakControls.fromText(text, shaped),
-      {for (final cluster in GraphemeClusters.segment(text)) cluster.start},
+      clusterStarts,
       measureLine,
       breakLongWords,
       balanceLines,
@@ -204,12 +207,11 @@ abstract final class LineBreaker {
         ),
       ];
     }
-    final BidiParagraph bidi = Uax9Bidi.reorder(text, baseLevel: baseLevel);
     // Wrap in logical order, then apply UAX #9 L2 per line. Reordering the
     // whole paragraph first inverts RTL wraps (logical start on a later line).
     final shaped = _logicalGlyphs(
       text,
-      bidi,
+      baseLevel,
       widthAt ?? (cp, _) => widthOf(cp),
       glyphIdAt ?? (cp, _) => glyphIdOf(cp),
     );
@@ -217,16 +219,17 @@ abstract final class LineBreaker {
     if (logical.isEmpty) {
       return <BrokenLine>[];
     }
+    final clusterStarts = {
+      for (final cluster in GraphemeClusters.segment(text)) cluster.start,
+    };
     final hyphens = _hyphenGlyphs(
       text,
       logical,
       hyphenationOffsets,
+      clusterStarts,
       widthAt ?? (cp, _) => widthOf(cp),
       glyphIdAt ?? (cp, _) => glyphIdOf(cp),
     );
-    final clusterStarts = {
-      for (final cluster in GraphemeClusters.segment(text)) cluster.start,
-    };
     final controls = _BreakControls.fromText(text, logical);
 
     // Hard breaks on LF/CR (Flutter / package:pdf Text parity).
@@ -704,112 +707,72 @@ abstract final class LineBreaker {
 
   static List<ShapedGlyph> _logicalGlyphs(
     String text,
-    BidiParagraph bidi,
+    int? baseLevel,
     GlyphWidthAtFn widthOf,
     GlyphIdAtFn glyphIdOf,
   ) {
-    final List<int> cps = text.runes.toList();
-    final List<int> offsets = <int>[0];
+    final codePoints = text.runes.toList();
+    final levels = Uax9Bidi.embeddingLevels(codePoints, baseLevel: baseLevel);
+    final shaped = codePoints.any(ArabicShaper.mayNeedShaping)
+        ? ArabicShaper.shapeCodePoints(codePoints)
+        : null;
+    final glyphs = <ShapedGlyph>[];
     var utf16 = 0;
-    for (final int cp in cps) {
-      utf16 += cp > 0xFFFF ? 2 : 1;
-      offsets.add(utf16);
-    }
-    final List<ShapedGlyph> logical = <ShapedGlyph>[];
-    for (
-      int logicalCpIndex = 0;
-      logicalCpIndex < cps.length;
-      logicalCpIndex++
-    ) {
-      final int cp = cps[logicalCpIndex];
-      final int logicalIndex = offsets[logicalCpIndex];
-      if (cp == 0x00ad) {
-        logical.add(
+    for (var i = 0; i < codePoints.length; i++) {
+      final source = codePoints[i];
+      final index = utf16;
+      utf16 += source > 0xffff ? 2 : 1;
+      if (Uax9Bidi.isInvisibleFormat(source)) continue;
+      final level = levels[i];
+      if (source == 0x00ad) {
+        glyphs.add(
           ShapedGlyph(
-            codePoint: cp,
+            codePoint: source,
             glyphId: 0,
             advance: 0,
-            logicalIndex: logicalIndex,
-            level: bidi.levels[logicalCpIndex],
+            logicalIndex: index,
+            level: level,
           ),
         );
         continue;
       }
-      if (Uax9Bidi.isInvisibleFormat(cp)) {
-        continue;
+
+      final char = shaped?[i];
+      var cp = char?.codePoint ?? source;
+      final hasAdvance = char == null || char.advanceFactor != 0;
+      // A consumed alef owns its source offset without painting a glyph.
+      var gid = !hasAdvance && cp == 0 ? 0 : glyphIdOf(cp, index);
+      if (shaped != null && gid == 0 && cp != 0) {
+        final nominal = ArabicShaper.nominalOf(cp);
+        if (nominal != null) {
+          final nominalGlyph = glyphIdOf(nominal, index);
+          if (nominalGlyph != 0) {
+            cp = nominal;
+            gid = nominalGlyph;
+          }
+        }
       }
-      if (isCombiningMark(cp)) {
-        logical.add(
+      var advance = hasAdvance ? widthOf(cp, index) : 0.0;
+      if (hasAdvance && advance <= 0 && gid != 0) {
+        final space = widthOf(0x0020, index);
+        advance = space > 0 ? space : 1;
+      }
+      glyphs.add(
+        _l4Mirror(
           ShapedGlyph(
             codePoint: cp,
-            glyphId: glyphIdOf(cp, logicalIndex),
-            advance: 0,
-            logicalIndex: logicalIndex,
-            level: bidi.levels[logicalCpIndex],
+            glyphId: gid,
+            advance: advance,
+            logicalIndex: index,
+            level: level,
+            isSpace: _isBreakSpace(source),
           ),
-        );
-        continue;
-      }
-      logical.add(
-        ShapedGlyph(
-          codePoint: cp,
-          glyphId: glyphIdOf(cp, logicalIndex),
-          advance: widthOf(cp, logicalIndex),
-          logicalIndex: logicalIndex,
-          level: bidi.levels[logicalCpIndex],
-          isSpace: _isBreakSpace(cp),
+          widthOf,
+          glyphIdOf,
         ),
       );
     }
-    // Presentation forms use logical-neighbour joining on the original string.
-    final List<ShapedChar> shaped = ArabicShaper.shape(text);
-    final Map<int, ShapedChar> byLogical = <int, ShapedChar>{
-      for (final ShapedChar s in shaped) s.logicalIndex: s,
-    };
-    return logical.map((ShapedGlyph g) {
-      if (g.codePoint == 0x00ad) return g;
-      final ShapedChar? s = byLogical[g.logicalIndex];
-      if (s == null) {
-        return _l4Mirror(g, widthOf, glyphIdOf);
-      }
-      // Prefer the joining presentation form. Fonts that only encode the
-      // nominal letter (GSUB shaping, no FE7x cmap) still get a non-zero
-      // advance so the glyph is not painted on top of the previous letter.
-      var cp = s.codePoint;
-      if (cp == 0 && s.advanceFactor == 0) {
-        return ShapedGlyph(
-          codePoint: 0,
-          glyphId: 0,
-          advance: 0,
-          logicalIndex: g.logicalIndex,
-          level: g.level,
-        );
-      }
-      if (glyphIdOf(cp, g.logicalIndex) == 0) {
-        final int? nominal = ArabicShaper.nominalOf(cp);
-        if (nominal != null && glyphIdOf(nominal, g.logicalIndex) != 0) {
-          cp = nominal;
-        }
-      }
-      final int gid = glyphIdOf(cp, g.logicalIndex);
-      var advance = s.advanceFactor == 0 ? 0.0 : widthOf(cp, g.logicalIndex);
-      if (s.advanceFactor != 0 && advance <= 0 && gid != 0) {
-        final double space = widthOf(0x0020, g.logicalIndex);
-        advance = space > 0 ? space : 1;
-      }
-      return _l4Mirror(
-        ShapedGlyph(
-          codePoint: cp,
-          glyphId: gid,
-          advance: advance,
-          logicalIndex: g.logicalIndex,
-          level: g.level,
-          isSpace: g.isSpace,
-        ),
-        widthOf,
-        glyphIdOf,
-      );
-    }).toList();
+    return glyphs;
   }
 
   /// UAX #9 L4 after shaping: flip mirrored pairs on odd embedding levels.
@@ -1072,13 +1035,11 @@ abstract final class LineBreaker {
     String text,
     List<ShapedGlyph> logical,
     Iterable<int> candidates,
+    Set<int> clusterStarts,
     GlyphWidthAtFn widthAt,
     GlyphIdAtFn glyphIdAt,
   ) {
     if (candidates.isEmpty && !text.contains('\u00ad')) return const {};
-    final boundaries = {
-      for (final c in GraphemeClusters.segment(text)) c.start,
-    };
     final offsets = candidates.toSet();
     for (final g in logical) {
       if (g.codePoint == 0x00ad) offsets.add(g.logicalIndex + 1);
@@ -1088,7 +1049,7 @@ abstract final class LineBreaker {
     for (final offset in offsets) {
       if (offset <= 0 ||
           offset >= text.length ||
-          !boundaries.contains(offset) ||
+          !clusterStarts.contains(offset) ||
           !bySource.containsKey(offset)) {
         continue;
       }
