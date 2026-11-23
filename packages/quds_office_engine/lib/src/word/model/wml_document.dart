@@ -29,11 +29,16 @@ final class WmlOpaqueBlock extends WmlBlock {
     required this.xml,
     required this.sourcePartUri,
     required Iterable<WmlOpaqueRelationship> relationships,
+    this.headerAnchor,
   }) : relationships = List<WmlOpaqueRelationship>.unmodifiable(relationships);
 
   final String xml;
   final String sourcePartUri;
   final List<WmlOpaqueRelationship> relationships;
+
+  /// Flow paragraph of a recognized floating watermark in a preserved header.
+  /// The original XML remains the source for export.
+  final WmlParagraph? headerAnchor;
 }
 
 /// A relationship from a preserved block, resolved against its original owner.

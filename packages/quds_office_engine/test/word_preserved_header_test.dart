@@ -58,6 +58,37 @@ OpcPackage _package() {
 }
 
 void main() {
+  test('a preserved watermark keeps the height of its anchor paragraph', () {
+    final package = _package();
+    package
+        .getPart('/word/header1.xml')!
+        .writeText(
+          '<w:hdr xmlns:w="$_w" xmlns:v="urn:schemas-microsoft-com:vml">'
+          '<w:sdt><w:sdtPr><w:docPartObj><w:docPartGallery w:val="Watermarks"/>'
+          '</w:docPartObj></w:sdtPr><w:sdtContent><w:p>'
+          '<w:pPr><w:spacing w:line="320" w:lineRule="exact"/></w:pPr>'
+          '<w:r><w:pict><v:shape style="position:absolute">'
+          '<v:textpath string="DRAFT"/></v:shape></w:pict></w:r>'
+          '</w:p></w:sdtContent></w:sdt></w:hdr>',
+        );
+    final body = package.getPart('/word/document.xml')!;
+    body.writeText(
+      body.readText().replaceFirst(
+        '</w:sectPr>',
+        '<w:pgMar w:top="560" w:header="400"/></w:sectPr>',
+      ),
+    );
+    var document = WordDeserializer().read(package);
+    for (var cycle = 0; cycle < 2; cycle++) {
+      expect(document.sections.single.header, isEmpty);
+      final layout = WordLayoutEngine(font: null).layout(document);
+      expect(layout.pages.single.lines.single.y, 36);
+      final bytes = WordSerializer().writeBytes(document);
+      expect(_savedHeader(bytes).$1, contains('string="DRAFT"'));
+      document = WordDeserializer().readBytes(bytes);
+    }
+  });
+
   test(
     'opaque header fallback discards revisions from its abandoned model',
     () async {

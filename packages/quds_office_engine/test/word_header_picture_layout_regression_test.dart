@@ -224,6 +224,7 @@ void main() {
 
   test('new body pages clear the inline picture in their own header', () {
     WmlParagraph pictureLine(double height) => WmlParagraph(
+      properties: WmlParagraphProps(spacingAfter: 0),
       inlines: [
         WmlRun(
           text: '\uFFFC',
@@ -248,6 +249,35 @@ void main() {
     expect(pages[1].lines.first.y, _margins.header + 65);
     expect(pages[2].lines.first.y, _margins.header + 100);
   });
+
+  for (final text in ['', 'Header text']) {
+    test(
+      'a header paragraph with text length ${text.length} reserves height',
+      () {
+        final heading = _paragraph(text);
+        heading.properties
+          ..lineSpacingRule = WmlLineSpacingRule.exact
+          ..lineSpacing = 60
+          ..spacingAfter = 0;
+        final positioned = _paragraph('Page label');
+        positioned.properties.sourcePropertiesXml =
+            '<w:pPr xmlns:w="${OfficeNamespaces.w}">'
+            '<w:framePr w:hAnchor="margin" w:vAnchor="text" '
+            'w:xAlign="outside" w:y="1"/></w:pPr>';
+        final pages = _layout([
+          _section(
+            header: [positioned, heading],
+            blocks: [
+              _paragraph('First page'),
+              WmlParagraph(inlines: [WmlBreak(WmlBreakType.page)]),
+              _paragraph('Second page'),
+            ],
+          ),
+        ]).pages;
+        expect(pages.map((p) => p.lines.single.y), [78, 78]);
+      },
+    );
+  }
 
   test(
     'body pictures and chrome remain equivalent after a local text edit',

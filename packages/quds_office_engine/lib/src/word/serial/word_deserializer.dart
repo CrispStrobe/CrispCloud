@@ -3634,9 +3634,81 @@ class WordDeserializer {
         package.getPart(storyUri)!.readText(),
       );
       while (reader.next() && reader.eventType != XmlEventType.startElement) {}
-      preserveInto(WordOpaqueIo.read(reader, package, storyUri));
+      final opaque = WordOpaqueIo.read(reader, package, storyUri);
+      final anchor = _preservedWatermarkAnchor(opaque);
+      preserveInto(
+        anchor == null
+            ? opaque
+            : WmlOpaqueBlock(
+                xml: opaque.xml,
+                sourcePartUri: opaque.sourcePartUri,
+                relationships: opaque.relationships,
+                headerAnchor: anchor,
+              ),
+      );
       return <WmlParagraph>[];
     }
+  }
+
+  WmlParagraph? _preservedWatermarkAnchor(WmlOpaqueBlock header) {
+    XmlElement? child(XmlElement? element, String name) =>
+        element?.firstChild(name, namespaceUri: OfficeNamespaces.w);
+    final root = XmlDocument.parse(header.xml).root;
+    if (root?.namespaceUri != OfficeNamespaces.w ||
+        root?.localName != 'hdr' ||
+        root?.childElements.length != 1) {
+      return null;
+    }
+    final control = child(root, 'sdt');
+    final gallery = child(
+      child(child(control, 'sdtPr'), 'docPartObj'),
+      'docPartGallery',
+    );
+    if (gallery?.getAttribute('val', namespaceUri: OfficeNamespaces.w) !=
+        'Watermarks') {
+      return null;
+    }
+    final content = child(control, 'sdtContent');
+    final paragraph = child(content, 'p');
+    if (content?.childElements.length != 1 || paragraph == null) return null;
+    final properties = child(paragraph, 'pPr');
+    final run = child(paragraph, 'r');
+    if (run == null ||
+        paragraph.childElements.length != (properties == null ? 1 : 2)) {
+      return null;
+    }
+    final drawing = child(run, 'pict');
+    if (drawing == null ||
+        run.childElements.length != (child(run, 'rPr') == null ? 1 : 2)) {
+      return null;
+    }
+    final shape = drawing.firstChild('shape', namespaceUri: OfficeNamespaces.v);
+    if (shape?.firstChild('textpath', namespaceUri: OfficeNamespaces.v) ==
+        null) {
+      return null;
+    }
+    final anchor = WmlParagraph();
+    if (properties != null) {
+      final fragment = properties.copy();
+      final bindings = fragment.attributes.map((a) => a.qualifiedName).toSet();
+      for (
+        var parent = properties.parent;
+        parent != null;
+        parent = parent.parent
+      ) {
+        for (final attr in parent.attributes) {
+          if ((attr.prefix == 'xmlns' || attr.localName == 'xmlns') &&
+              bindings.add(attr.qualifiedName)) {
+            fragment.attributes.add(attr.copy());
+          }
+        }
+      }
+      final xml = XmlDocument(root: fragment).toXmlString(declaration: false);
+      _readPPr(WordMarkupCompatibilityReader(xml)..next(), anchor.properties);
+    } else {
+      anchor.properties.sourcePropertiesXml = '';
+    }
+    return anchor;
   }
 
   List<WmlParagraph> _readStoryByRidModeled(

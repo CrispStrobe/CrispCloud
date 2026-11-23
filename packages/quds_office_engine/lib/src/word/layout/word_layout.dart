@@ -671,6 +671,7 @@ class _Flow {
     this.makePage,
     this.sectionIndex,
     this.noteReserve,
+    this.headerBodyTop,
   ) : pageIndex = pages.length,
       y = section.margins.top,
       columnTop = section.margins.top;
@@ -697,6 +698,8 @@ class _Flow {
   makePage;
 
   final double Function(int) noteReserve;
+  final double Function(int pageIndex, {required bool firstInSection})
+  headerBodyTop;
 
   /// current API.
   final List<LaidOutLine> current = <LaidOutLine>[];
@@ -736,28 +739,8 @@ class _Flow {
     currentFrames.clear();
     pageIndex++;
     columnIndex = 0;
-    y = _bodyTopBelowInlineHeader();
+    y = headerBodyTop(pageIndex, firstInSection: false);
     columnTop = y;
-  }
-
-  // Inline art occupies vertical space in the selected running header.
-  double _bodyTopBelowInlineHeader() {
-    var top = section.margins.top;
-    for (final paragraph in section.headerForPage(
-      pageIndex + 1,
-      firstInSection: false,
-    )) {
-      for (final run in paragraph.inlines.whereType<WmlRun>()) {
-        final picture = run.inlineVisual?.visual;
-        if (picture != null && picture.picture.wrap == PictureWrap.inline) {
-          top = math.max(
-            top,
-            section.margins.header + picture.height.clamp(12.0, 120.0),
-          );
-        }
-      }
-    }
-    return top;
   }
 
   /// nextColumn API.
@@ -1174,6 +1157,65 @@ class WordLayoutEngine {
   /// Word keeps floating header art outside the table; starting a continuation
   /// row at [WmlPageMargins.top] draws cell borders through the logo.
   double _tablePageTop(WmlSection section) => _bodyTopClearingLogo(section);
+
+  double _headerBodyTop(
+    WmlSection section,
+    int pageIndex, {
+    required bool firstInSection,
+  }) {
+    final preserved = section.preservedStories;
+    final (story, key) =
+        section.differentFirstPage &&
+            firstInSection &&
+            (section.firstHeader.isNotEmpty ||
+                preserved.containsKey('firstHeader'))
+        ? (section.firstHeader, 'firstHeader')
+        : section.differentOddEven &&
+              (pageIndex + 1).isEven &&
+              (section.evenHeader.isNotEmpty ||
+                  preserved.containsKey('evenHeader'))
+        ? (section.evenHeader, 'evenHeader')
+        : (section.header, 'header');
+    final anchor = preserved[key]?.headerAnchor;
+    final paragraphs = story.isEmpty && anchor != null ? [anchor] : story;
+    if (paragraphs.isEmpty) return section.margins.top;
+
+    var bottom = section.margins.header;
+    _AdjacentWordParagraph? previous;
+    for (final paragraph in paragraphs) {
+      final props = paragraph.properties;
+      final source = props.sourcePropertiesXml;
+      if (props.dropCapLines == 0 &&
+          source != null &&
+          source.contains('framePr') &&
+          XmlDocument.parse(
+                source,
+              ).root?.firstChild('framePr', namespaceUri: OfficeNamespaces.w) !=
+              null) {
+        continue;
+      }
+      final point = paragraph.text.runes.firstOrNull ?? 0x20;
+      final run = paragraph.text.isEmpty
+          ? props.importedParagraphMark ?? WmlRunEdit.propsAt(paragraph, 0)
+          : WmlRunEdit.propsAt(paragraph, 0);
+      final size = run.fontSizePoints;
+      final face = _faceFor(point, run);
+      final metrics =
+          measureFont?.call(point, size, run) ??
+          (face == null ? null : FontMetrics(font: face, fontSizePoints: size));
+      var height = _lineHeight(props, metrics, size);
+      for (final inline in paragraph.inlines.whereType<WmlRun>()) {
+        final picture = inline.inlineVisual?.visual;
+        if (picture != null && picture.picture.wrap == PictureWrap.inline) {
+          height = math.max(height, picture.height.clamp(12.0, 120.0));
+        }
+      }
+      bottom += props.spacingBefore + height + props.spacingAfter;
+      if (previous != null) bottom -= _paragraphGapOverlap(previous, props);
+      previous = _afterParagraph(props);
+    }
+    return math.max(section.margins.top, bottom);
+  }
 
   /// Global switch for paragraph-level incremental relayout of local edits.
   /// When false, [layout] ignores `dirtyParagraphs` and uses the
@@ -1843,15 +1885,27 @@ class WordLayoutEngine {
     resume,
   }) {
     final _Flow flow;
+    double headerBodyTop(int index, {required bool firstInSection}) =>
+        _headerBodyTop(section, index, firstInSection: firstInSection);
     _AdjacentWordParagraph? adjacentParagraph;
     if (resume == null) {
       _padSectionBreak(section, pages, sectionIndex);
       final bool continuous =
           sectionIndex > 0 &&
           section.breakKind == WmlSectionBreakKind.continuous;
-      flow = _Flow(section, pages, _makePage, sectionIndex, _noteReserve);
+      flow = _Flow(
+        section,
+        pages,
+        _makePage,
+        sectionIndex,
+        _noteReserve,
+        headerBodyTop,
+      );
       // Leave room under a floating header logo for title/body on page 1.
-      flow.y = _bodyTopClearingLogo(section);
+      flow.y = math.max(
+        _bodyTopClearingLogo(section),
+        headerBodyTop(flow.pageIndex, firstInSection: true),
+      );
       flow.columnTop = flow.y;
       if (continuous && pages.isNotEmpty) {
         final LaidOutPage last = pages.removeLast();
@@ -1866,11 +1920,19 @@ class WordLayoutEngine {
       _recorder?.begin(section, sectionIndex);
     } else {
       final _Checkpoint cp = resume.checkpoint;
-      flow = _Flow(section, pages, _makePage, sectionIndex, _noteReserve)
-        ..pageIndex = cp.pageIndex
-        ..columnIndex = cp.columnIndex
-        ..y = cp.y
-        ..columnTop = cp.columnTop;
+      flow =
+          _Flow(
+              section,
+              pages,
+              _makePage,
+              sectionIndex,
+              _noteReserve,
+              headerBodyTop,
+            )
+            ..pageIndex = cp.pageIndex
+            ..columnIndex = cp.columnIndex
+            ..y = cp.y
+            ..columnTop = cp.columnTop;
       flow.current.addAll(resume.lines);
       flow.currentFrames.addAll(resume.frames);
       adjacentParagraph = cp.adjacentParagraph;

@@ -72,6 +72,9 @@ abstract final class WmlClone {
           xml: source.xml,
           sourcePartUri: source.sourcePartUri,
           relationships: source.relationships,
+          headerAnchor: source.headerAnchor == null
+              ? null
+              : paragraph(source.headerAnchor!),
         );
     }
   }

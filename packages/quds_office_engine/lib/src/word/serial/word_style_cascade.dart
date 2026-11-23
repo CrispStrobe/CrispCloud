@@ -112,6 +112,11 @@ class _StyleCascade {
       ]) {
         walk(story);
       }
+      for (final part in section.preservedStories.values) {
+        if (part.headerAnchor case final anchor?) {
+          paragraph(anchor, const []);
+        }
+      }
     }
     for (final note in [...document.footnotes, ...document.endnotes]) {
       walk(note.blocks);
