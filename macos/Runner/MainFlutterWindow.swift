@@ -364,10 +364,12 @@ final class BrowserToolbarController: NSObject, NSToolbarDelegate {
 
 // Persistent breadcrumbs distinguish a normal window/app termination from an
 // OS crash/kill even when LaunchServices did not retain Flutter stdout.
+// They live in Library/Logs, not Application Support: the window wakes before
+// Dart's first-run check, which requires an empty Application Support folder.
 enum WindowLifecycleDiagnostics {
   static func record(_ event: String) {
-    guard let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else { return }
-    let directory = support.appendingPathComponent("com.CrispStrobe.cloud", isDirectory: true)
+    guard let library = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask).first else { return }
+    let directory = library.appendingPathComponent("Logs/com.CrispStrobe.cloud", isDirectory: true)
     let file = directory.appendingPathComponent("window_lifecycle.log")
     let title = Bundle.main.bundleURL.lastPathComponent
     let stack = Thread.callStackSymbols.prefix(16).joined(separator: "\n")

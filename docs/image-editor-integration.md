@@ -240,5 +240,5 @@ opening, repeated cancellation, typing, applying, explicit saving, injected
 launch failure/retry and diagonal crop dragging. It is run as widget tests
 with all three desktop UI variants and as an actual macOS integration test.
 The test store is isolated from user files. Window close/termination breadcrumbs
-are retained in the app's Application Support `window_lifecycle.log` (bounded
+are retained in the app's `Library/Logs` `window_lifecycle.log` (bounded
 size) to distinguish a normal last-window exit from an OS crash report.
