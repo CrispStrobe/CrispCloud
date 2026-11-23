@@ -3238,7 +3238,10 @@ class WordLayoutEngine {
     final firstPage = pages.length;
     final firstFrame = currentFrames.length;
     final List<double> cols = _columnWidths(table, section, maxWidthOverride);
-    var cursorY = y + 6;
+    // Word tables occupy their row boxes in the surrounding story flow.
+    // Keep the editor's spacing for tables authored without a DOCX source.
+    final imported = table.properties.sourcePropertiesXml != null;
+    var cursorY = y + (imported ? 0 : 6);
     var idx = pageIndex;
     var para = paragraphIndex;
     final double cellPad = table.properties.cellMargin;
@@ -3649,7 +3652,7 @@ class WordLayoutEngine {
         pages[page].frames.skip(page == firstPage ? firstFrame : 0),
       currentFrames.skip(pages.length == firstPage ? firstFrame : 0),
     ]);
-    return (y: cursorY + 4, pageIndex: idx);
+    return (y: cursorY + (imported ? 0 : 4), pageIndex: idx);
   }
 
   static bool _cellEdge(bool? explicit, {required bool inherit}) {

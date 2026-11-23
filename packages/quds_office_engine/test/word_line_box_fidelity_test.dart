@@ -93,6 +93,10 @@ void main() {
       expect(cells.map((box) => box.height), [24, 72]);
       expect(cells[1].y, cells[0].y + 24);
       expect(page.lines.last.text, 'After');
+      if (!identical(source, doc)) {
+        expect(cells.first.y, 72);
+        expect(page.lines.last.y, cells.last.y + cells.last.height);
+      }
     }
   });
 
