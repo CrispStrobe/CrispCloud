@@ -875,7 +875,7 @@ class WordLayoutEngine {
   int _containedTableDepth = 0;
   // Sum of one-sided margins of all enclosing table cells. Nested tables may
   // have different margins; depth alone cannot describe their usable height.
-  double _containedCellMargin = 0;
+  double _containedVerticalInsets = 0;
   final Map<WmlNote, _NoteStory> _noteStories = <WmlNote, _NoteStory>{};
   final Map<int, List<_NoteSlice>> _noteSlices = <int, List<_NoteSlice>>{};
   final Set<int> _placedNotes = <int>{};
@@ -3189,16 +3189,17 @@ class WordLayoutEngine {
         'Table cell margins must be finite and nonnegative.',
       );
     }
-    final previousMargin = _containedCellMargin;
-    final nestedMargin = previousMargin + cellMargin;
-    if (!nestedMargin.isFinite) {
+    final insets = table.properties.cellInsets;
+    final previousInsets = _containedVerticalInsets;
+    final nestedInsets = previousInsets + insets.vertical;
+    if (!nestedInsets.isFinite) {
       throw ArgumentError.value(
         cellMargin,
         'cellMargin',
         'The combined table cell margins are not representable.',
       );
     }
-    _containedCellMargin = nestedMargin;
+    _containedVerticalInsets = nestedInsets;
     _containedTableDepth++;
     try {
       return _layoutTableContents(
@@ -3212,12 +3213,13 @@ class WordLayoutEngine {
         paragraphIndex,
         originX: originX,
         maxWidthOverride: maxWidthOverride,
+        insets: insets,
         flow: flow,
         allowBreak: allowBreak,
       );
     } finally {
       _containedTableDepth--;
-      _containedCellMargin = previousMargin;
+      _containedVerticalInsets = previousInsets;
     }
   }
 
@@ -3232,6 +3234,7 @@ class WordLayoutEngine {
     int paragraphIndex, {
     double? originX,
     double? maxWidthOverride,
+    required WmlTableCellInsets insets,
     _Flow? flow,
     bool allowBreak = true,
   }) {
@@ -3244,7 +3247,6 @@ class WordLayoutEngine {
     var cursorY = y + (imported ? 0 : 6);
     var idx = pageIndex;
     var para = paragraphIndex;
-    final double cellPad = table.properties.cellMargin;
     final double tableX = originX ?? section.margins.left;
     final double tableWidth = cols.fold<double>(
       0,
@@ -3285,16 +3287,13 @@ class WordLayoutEngine {
         cols,
         section,
         nextBlock: List<int>.filled(row.cells.length, 0),
-        tableX: tableX,
-        tableWidth: tableWidth,
-        rtl: rtl,
-        cellPad: cellPad,
+        insets: insets,
       );
       final exactHeight = row.exactHeight;
       final canSplitRow = !row.cantSplit && exactHeight == null;
       if (allowBreak &&
           exactHeight == null &&
-          fullRowHeight > section.contentHeight - cellPad * 2) {
+          fullRowHeight > section.contentHeight - insets.vertical) {
         final laid = _layoutTallTableRow(
           this,
           table,
@@ -3344,10 +3343,7 @@ class WordLayoutEngine {
             cols,
             section,
             nextBlock: nextBlock,
-            tableX: tableX,
-            tableWidth: tableWidth,
-            rtl: rtl,
-            cellPad: cellPad,
+            insets: insets,
           );
           while (cursorY + rowHeight + _minimumNotes(rowNotes, section, idx) >
                   _bodyBottom(section, idx) &&
@@ -3388,7 +3384,7 @@ class WordLayoutEngine {
             (current.isNotEmpty ||
                 currentFrames.isNotEmpty ||
                 _noteReserve(idx) > 0) &&
-            cursorY + (exactHeight ?? cellPad + 12) > pageBottom) {
+            cursorY + (exactHeight ?? insets.top + 12) > pageBottom) {
           pages.add(
             _makePage(
               section,
@@ -3418,10 +3414,7 @@ class WordLayoutEngine {
             cols,
             section,
             nextBlock: nextBlock,
-            tableX: tableX,
-            tableWidth: tableWidth,
-            rtl: rtl,
-            cellPad: cellPad,
+            insets: insets,
           );
           if (cursorY + estimated > pageBottom) {
             pages.add(
@@ -3468,14 +3461,14 @@ class WordLayoutEngine {
           for (int k = 0; k < span; k++) {
             colW += cols[(gridCol + k).clamp(0, cols.length - 1)];
           }
-          final contentWidth = _tableCellContentWidth(colW, cellPad);
+          final contentWidth = _tableCellContentWidth(colW, insets.horizontal);
           if (rtl) {
             x -= colW;
           }
           final int cellParaStart = cellParagraphStarts[c];
           final int cellParagraphCount = blockParagraphOffsets[c].last;
           var cellPara = cellParaStart + blockParagraphOffsets[c][nextBlock[c]];
-          var cellY = rowStartY + cellPad;
+          var cellY = rowStartY + insets.top;
           final firstBlock = nextBlock[c];
           final blocks = rowBlocks[c];
           var bi = firstBlock;
@@ -3492,7 +3485,7 @@ class WordLayoutEngine {
             if (allowBreak &&
                 canSplitRow &&
                 blockY + blockH > pageBottom &&
-                cellY > rowStartY + cellPad + 0.5) {
+                cellY > rowStartY + insets.top + 0.5) {
               needsContinue = true;
               break;
             }
@@ -3502,7 +3495,7 @@ class WordLayoutEngine {
             if (allowBreak &&
                 canSplitRow &&
                 bi + 1 < blocks.length &&
-                cellY > rowStartY + cellPad + 0.5 &&
+                cellY > rowStartY + insets.top + 0.5 &&
                 blockY + blockH <= pageBottom) {
               final WmlBlock nextBlock = blocks[bi + 1];
               if (_listOrphanPair(block, nextBlock)) {
@@ -3531,7 +3524,7 @@ class WordLayoutEngine {
               idx,
               blockY,
               cellPara,
-              originX: x + cellPad,
+              originX: x + insets.left,
               maxWidth: contentWidth,
             );
             cellY = laid.y;
@@ -3539,7 +3532,7 @@ class WordLayoutEngine {
             bi++;
           }
           nextBlock[c] = bi;
-          rowBottom = math.max(rowBottom, cellY + cellPad);
+          rowBottom = math.max(rowBottom, cellY + insets.bottom);
           if (capture != null) {
             capture.cells.add(
               _TallCellContent(
@@ -3547,7 +3540,7 @@ class WordLayoutEngine {
                 currentFrames.sublist(frameStart),
                 _deferredContainedFrames!.entries.skip(anchorStart).toList(),
                 _deferredContainedVisuals!.entries.skip(visualStart).toList(),
-                cellY + cellPad,
+                cellY + insets.bottom,
               ),
             );
           }
@@ -3743,10 +3736,7 @@ class WordLayoutEngine {
     List<double> cols,
     WmlSection section, {
     required List<int> nextBlock,
-    required double tableX,
-    required double tableWidth,
-    required bool rtl,
-    required double cellPad,
+    required WmlTableCellInsets insets,
   }) {
     if (row.exactHeight case final height?) return height;
     var rowBottom = 0.0;
@@ -3758,8 +3748,8 @@ class WordLayoutEngine {
       for (int k = 0; k < span; k++) {
         colW += cols[(gridCol + k).clamp(0, cols.length - 1)];
       }
-      final contentWidth = _tableCellContentWidth(colW, cellPad);
-      var cellY = cellPad;
+      final contentWidth = _tableCellContentWidth(colW, insets.horizontal);
+      var cellY = insets.top;
       final blocks = WordTree.visibleBlocks(cell.blocks).toList();
       for (int bi = nextBlock[c]; bi < blocks.length; bi++) {
         final block = blocks[bi];
@@ -3772,14 +3762,14 @@ class WordLayoutEngine {
           maxWidth: contentWidth,
         );
       }
-      rowBottom = math.max(rowBottom, cellY + cellPad);
+      rowBottom = math.max(rowBottom, cellY + insets.bottom);
       gridCol += span;
     }
     return math.max(row.height ?? 0, rowBottom);
   }
 
   static double _tableCellContentWidth(double width, double margin) {
-    final innerWidth = width - margin * 2;
+    final innerWidth = width - margin;
     if (!innerWidth.isFinite || innerWidth <= 0) {
       throw ArgumentError.value(
         margin,

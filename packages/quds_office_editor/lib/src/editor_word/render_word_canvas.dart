@@ -1675,8 +1675,7 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
       lineBoxWidth: line != null && line.boxWidth > 0 ? line.boxWidth : null,
       cellX: cell?.x,
       cellWidth: cell?.width,
-      cellMargin:
-          cell?.table?.properties.cellMargin ?? LaidOutLine.tableCellPad,
+      cellInsets: cell?.table?.properties.cellInsets,
       frameX: frame?.pageX(section),
       frameWidth: frame?.width,
       frameInsetLeft: frame?.insetLeft ?? LaidOutLine.framePad,

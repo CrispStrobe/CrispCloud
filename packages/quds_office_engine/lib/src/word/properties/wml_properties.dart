@@ -814,11 +814,35 @@ class WmlRunProps {
             : Map.of(importedValues!);
 }
 
+/// Physical padding between a table cell border and its content, in points.
+class WmlTableCellInsets {
+  const WmlTableCellInsets({
+    required this.left,
+    required this.top,
+    required this.right,
+    required this.bottom,
+  });
+
+  const WmlTableCellInsets.uniform(double margin)
+    : this(left: margin, top: margin, right: margin, bottom: margin);
+
+  final double left;
+  final double top;
+  final double right;
+  final double bottom;
+
+  double get horizontal => left + right;
+  double get vertical => top + bottom;
+}
+
 /// Class WmlTableProps.
 class WmlTableProps {
   /// Original direct tblPr XML and effective import values, for sparse export.
   String? sourcePropertiesXml;
   Map<String, String>? importedValues;
+
+  /// Supported per-edge values from a direct DOCX margin declaration.
+  WmlTableCellInsets? importedCellInsets;
 
   /// WmlTableProps API.
   WmlTableProps({
@@ -840,6 +864,12 @@ class WmlTableProps {
 
   /// cellMargin API.
   double cellMargin;
+
+  WmlTableCellInsets get cellInsets =>
+      (importedValues?['tblCellMar'] == '$cellMargin'
+          ? importedCellInsets
+          : null) ??
+      WmlTableCellInsets.uniform(cellMargin);
 
   /// Word `w:bidiVisual` — first column is drawn on the right.
   bool rightToLeft;
@@ -870,6 +900,7 @@ class WmlTableProps {
           styleId: styleId,
         )
         ..sourcePropertiesXml = sourcePropertiesXml
+        ..importedCellInsets = importedCellInsets
         ..importedValues = importedValues == null
             ? null
             : Map<String, String>.of(importedValues!);

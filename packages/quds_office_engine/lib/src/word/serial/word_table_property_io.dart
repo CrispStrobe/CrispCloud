@@ -21,18 +21,39 @@ abstract final class WordTablePropertyIo {
   /// model. Partial, logical-edge, asymmetric and extension-bearing containers
   /// remain in their original XML instead of becoming a guessed uniform value.
   static double? uniformCellMargin(XmlElement element) {
+    final sides = _physicalCellMargins(element);
+    if (sides == null || sides.length != 4) return null;
+    final first = sides.values.first;
+    return sides.values.every((side) => side == first) ? first : null;
+  }
+
+  /// Resolve a direct physical margin with both horizontal edges specified.
+  /// Omitted vertical edges use the native zero-padding default.
+  static WmlTableCellInsets? directCellInsets(XmlElement element) {
+    final sides = _physicalCellMargins(element);
+    final left = sides?['left'];
+    final right = sides?['right'];
+    if (sides == null || left == null || right == null) return null;
+    return WmlTableCellInsets(
+      left: left,
+      top: sides['top'] ?? 0,
+      right: right,
+      bottom: sides['bottom'] ?? 0,
+    );
+  }
+
+  static Map<String, double>? _physicalCellMargins(XmlElement element) {
     if (element.namespaceUri != OfficeNamespaces.w ||
         element.localName != 'tblCellMar' ||
         element.attributes.any((attribute) => !_namespace(attribute)) ||
         !_whitespaceOnly(element)) {
       return null;
     }
-    final sides = <String>{};
-    int? uniform;
+    final sides = <String, double>{};
     for (final edge in element.childElements) {
       if (edge.namespaceUri != OfficeNamespaces.w ||
           !const {'top', 'left', 'bottom', 'right'}.contains(edge.localName) ||
-          !sides.add(edge.localName) ||
+          sides.containsKey(edge.localName) ||
           edge.childElements.isNotEmpty ||
           !_whitespaceOnly(edge)) {
         return null;
@@ -56,10 +77,9 @@ abstract final class WordTablePropertyIo {
       final twips = int.tryParse(raw.trim());
       // The physical left/right margin type uses a signed 16-bit width.
       if (twips == null || twips < 0 || twips > 32767) return null;
-      if (uniform != null && uniform != twips) return null;
-      uniform = twips;
+      sides[edge.localName] = twipsToPoints(twips);
     }
-    return sides.length == 4 && uniform != null ? uniform / 20 : null;
+    return sides;
   }
 
   static bool _namespace(XmlAttribute attribute) =>

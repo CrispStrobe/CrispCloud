@@ -2853,12 +2853,14 @@ class WordDeserializer {
           nativeContainer &&
           reader.namespaceUri == OfficeNamespaces.w) {
         final firstDeclaration = _tablesWithOwnCellMargins.add(table);
-        final margin = WordTablePropertyIo.uniformCellMargin(
-          XmlDocument.readElement(reader),
-        );
+        final element = XmlDocument.readElement(reader);
+        final margin = WordTablePropertyIo.uniformCellMargin(element);
         // Any direct container blocks a guessed style fallback. Unsupported
         // or duplicate declarations keep their source XML and native fallback.
         table.properties.cellMargin = firstDeclaration ? margin ?? 4 : 4;
+        table.properties.importedCellInsets = firstDeclaration && margin == null
+            ? WordTablePropertyIo.directCellInsets(element)
+            : null;
       }
     }
   }

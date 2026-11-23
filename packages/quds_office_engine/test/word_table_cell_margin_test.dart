@@ -198,6 +198,46 @@ void main() {
     );
   });
 
+  group('direct physical margins in layout', () {
+    for (final hasVerticalPadding in [false, true]) {
+      test('preserves and lays out the authored edges, vertical padding '
+          '$hasVerticalPadding', () {
+        final properties =
+            '<w:tblCellMar>'
+            '${hasVerticalPadding ? '<w:top w:w="40" w:type="dxa"/>' : ''}'
+            '<w:left w:w="70" w:type="dxa"/>'
+            '${hasVerticalPadding ? '<w:bottom w:w="180" w:type="dxa"/>' : ''}'
+            '<w:right w:w="120" w:type="dxa"/></w:tblCellMar>';
+        final document = _import(properties);
+        final original = _marginXml(document);
+        final engine = WordLayoutEngine(font: null, measure: (_, _, _) => 5);
+        for (final version in [document, _reopen(document)]) {
+          expect(_marginXml(version), original);
+          final page = engine.layout(version).pages.single;
+          final cell = page.frames.single;
+          final line = page.lines.single;
+          expect(line.boxX, cell.x + 3.5);
+          expect(line.boxWidth, cell.width - 9.5);
+          expect(line.y, cell.y + (hasVerticalPadding ? 2 : 0));
+          expect(
+            cell.height,
+            closeTo(line.height + (hasVerticalPadding ? 11 : 0), 0.001),
+          );
+        }
+
+        _table(document).properties.cellMargin = 8;
+        for (final version in [document, _reopen(document)]) {
+          final page = engine.layout(version).pages.single;
+          final cell = page.frames.single;
+          final line = page.lines.single;
+          expect(line.boxX, cell.x + 8);
+          expect(line.boxWidth, cell.width - 16);
+          expect(line.y, cell.y + 8);
+        }
+      });
+    }
+  });
+
   group('table style margin inheritance', () {
     final parent = _style('Parent', properties: _margins('120'));
     final child = _style('Child', basedOn: '<w:basedOn w:val="Parent"/>');

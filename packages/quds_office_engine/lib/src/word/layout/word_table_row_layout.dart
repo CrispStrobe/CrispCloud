@@ -101,8 +101,9 @@ typedef _TallCellSlice = ({_TallCellContent content, double start, double end});
         .._containedTableDepth = math.max(0, owner._containedTableDepth - 1)
         // The temporary table adds its own margin while shaping. Retain only
         // its ancestors here, just as for the inherited nesting depth.
-        .._containedCellMargin =
-            owner._containedCellMargin - table.properties.cellMargin;
+        .._containedVerticalInsets =
+            owner._containedVerticalInsets -
+            table.properties.cellInsets.vertical;
   final laid = rowEngine.layout(storyDocument, updateFields: false);
   final paragraphs = storyDocument.paragraphs.toList();
   final lines = laid.pages.single.lines;
