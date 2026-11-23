@@ -103,6 +103,14 @@ void main() {
         isA<RemotePanelSource>());
   });
 
+  test('reconnection refreshes an unchanged selected cloud source', () async {
+    final before = container.read(panelSourceProvider(PanelSide.remote));
+    auth.connect();
+    await until(() => right.hasVerifiedDirectoryListing);
+    expect(container.read(panelSourceProvider(PanelSide.remote)), before);
+    expect(right.files!.any((file) => file.name == 'from-cloud.txt'), isTrue);
+  });
+
   test('connecting fills the right cloud pane without replacing local Home',
       () async {
     auth.connect();

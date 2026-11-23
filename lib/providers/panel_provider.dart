@@ -479,9 +479,17 @@ class PanelNotifier extends ChangeNotifier {
               client: next.client,
               path: next.client.rootPath,
             );
-            _ref.read(panelSourceProvider(side).notifier).setSource(source);
+            // A reconnect can authenticate the very same client and path:
+            // setting an equal PanelSource does not emit a state change.
+            // Always refresh in that case or the right pane stays offline.
+            final selected = _ref.read(panelSourceProvider(side));
+            if (selected != source) {
+              _ref.read(panelSourceProvider(side).notifier).setSource(source);
+            } else {
+              unawaited(refresh());
+            }
           } else {
-            refresh();
+            unawaited(refresh());
           }
         } else if (wasConnected && !connected) {
           // Keep an old cloud tab tied to its original account so the
@@ -6345,6 +6353,13 @@ class PanelNotifier extends ChangeNotifier {
         chosen,
       );
       if (origin == null || !origin.isCurrent) return;
+      if (activeTab case final tab?
+          when tab.lockMode == TabLockMode.locked &&
+              _tabLocationDiffers(tab, chosen, origin.storageReference)) {
+        // The user explicitly picked a new folder. Preserve a locked tab and
+        // open the chosen folder alongside it instead of blocking recovery.
+        _createTabLocation(chosen, origin.storageReference);
+      }
       await navigateToPath(chosen, origin: origin);
     } catch (e) {
       _log.warn('operation failed', e);
