@@ -288,6 +288,27 @@ void main() {
     });
   }
 
+  test('long footnote continuations keep every line in order', () {
+    final rows = List.generate(41, (index) => 'Note line $index.');
+    final document = _document(
+      separator: _separator(),
+      noteText: rows.join('\n'),
+      height: 150,
+    );
+    document.footnotes.single.paragraphs.single.properties
+      ..lineSpacingRule = WmlLineSpacingRule.exact
+      ..lineSpacing = 10
+      ..widowControl = true;
+
+    final layout = WordLayoutEngine(font: null).layout(document);
+    final continued = layout.pages.expand((page) => page.notes).toList();
+    expect(layout.pages.length, greaterThan(3));
+    expect(continued.first.text, endsWith(rows.first));
+    expect(continued.skip(1).map((line) => line.text), rows.skip(1));
+    expect(layout.pages.last.notes.length, greaterThanOrEqualTo(2));
+    _expectClearBand(layout, document);
+  });
+
   test('unused footnote preferences do not reserve body space', () {
     final document = _document(addNote: false, bodyParagraphs: 40);
     final engine = WordLayoutEngine(font: null);

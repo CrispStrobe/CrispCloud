@@ -1132,12 +1132,13 @@ class WordLayoutEngine {
                   )
             : 0;
         final double top = target == page ? bodyBottom : section.margins.top;
+        final reserved = _noteReserve(target);
         final double available =
             section.pageSize.height -
             section.margins.bottom -
             top -
-            _noteReserve(target) -
-            (_noteReserve(target) == 0 ? _footnoteSeparatorHeight : 0) -
+            reserved -
+            (reserved == 0 ? _footnoteSeparatorHeight : 0) -
             minimumRemaining;
         final double end = story.cut(start, available);
         if (end <= start + 0.01) {
@@ -1628,7 +1629,8 @@ class WordLayoutEngine {
       );
     }
     final int flowPages = pages.length;
-    while (_noteSlices.keys.any((int index) => index >= pages.length)) {
+    final lastNotePage = _noteSlices.keys.fold(-1, math.max);
+    while (pages.length <= lastNotePage) {
       final _NoteSlice? slice = _noteSlices[pages.length]?.firstOrNull;
       final WmlSection section = slice?.section ?? document.sections.last;
       pages.add(

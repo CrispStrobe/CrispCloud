@@ -13,6 +13,7 @@ class _NoteStory {
   static List<List<LaidOutLine>> _groupWidowControlledLines(
     List<LaidOutLine> lines,
   ) {
+    if (lines.length < 2) return const [];
     final groups = <WmlParagraph, List<LaidOutLine>>{};
     for (final line in lines) {
       final paragraph = line.sourceParagraph;
@@ -176,41 +177,68 @@ class _NoteStory {
     return _NoteStory(lines, frames, height > 0 ? height : 14);
   }
 
-  late final List<double> _cutBoundaries = <double>[
-    height,
-    for (final LaidOutLine line in lines) line.y + line.height,
-    for (final LaidOutBox box in frames) box.y + box.height,
-  ]..sort();
+  late final List<double> _cutBoundaries = _buildCutBoundaries();
 
-  bool _canCutAt(double end) =>
-      !lines.any(
-        (line) => line.y < end - 0.01 && line.y + line.height > end + 0.01,
-      ) &&
-      !frames.any(
-        (box) =>
-            box.visual != null &&
-            box.y < end - 0.01 &&
-            box.y + box.height > end + 0.01,
-      );
+  List<double> _buildCutBoundaries() {
+    if (frames.isEmpty &&
+        (lines.isEmpty ||
+            (lines.length == 1 &&
+                lines.single.y + lines.single.height == height))) {
+      return [height];
+    }
+    final boundaries = <double>{
+      height,
+      for (final line in lines) line.y + line.height,
+      for (final box in frames) box.y + box.height,
+    }.toList()..sort();
+    final spans = <({double top, double bottom})>[
+      for (final line in lines) (top: line.y, bottom: line.y + line.height),
+      for (final box in frames)
+        if (box.visual != null) (top: box.y, bottom: box.y + box.height),
+    ]..sort((a, b) => a.top.compareTo(b.top));
+
+    // At each possible cut, track the lowest bottom among lines and images
+    // that started before it. Borders can still be clipped at a cut.
+    var span = 0;
+    var bottom = double.negativeInfinity;
+    final cuts = <double>[];
+    for (final end in boundaries) {
+      while (span < spans.length && spans[span].top < end - 0.01) {
+        bottom = math.max(bottom, spans[span].bottom);
+        span++;
+      }
+      if (bottom <= end + 0.01) cuts.add(end);
+    }
+    return cuts;
+  }
 
   double cut(double start, double available) {
-    final double limit = math.min(height, start + available);
-    var lastFitting = start;
-    var lastWithoutWidow = start;
-    for (final double end in _cutBoundaries) {
-      if (end <= start + 0.01) continue;
-      if (end > limit + 0.01) break;
-      if (!_canCutAt(end)) continue;
-      lastFitting = end;
+    final limit = math.min(height, start + available) + 0.01;
+    final cuts = _cutBoundaries;
+    var low = 0;
+    var high = cuts.length;
+    while (low < high) {
+      final mid = (low + high) ~/ 2;
+      if (cuts[mid] <= limit) {
+        low = mid + 1;
+      } else {
+        high = mid;
+      }
+    }
+
+    // Prefer the latest widow-safe cut. If none exists, use the latest cut
+    // that fits so a cramped page can still place a line beside its reference.
+    final lastFitting = low == 0 ? start : cuts[low - 1];
+    if (lastFitting <= start + 0.01) return start;
+    for (var i = low - 1; i >= 0 && cuts[i] > start + 0.01; i--) {
+      final end = cuts[i];
       if (!_widowControlledParagraphs.any(
         (paragraph) => _leavesSingleLine(paragraph, start, end),
       )) {
-        lastWithoutWidow = end;
+        return end;
       }
     }
-    // A cramped page must still be able to place a line of the note beside
-    // its reference and make progress on pages filled by longer notes.
-    return lastWithoutWidow > start ? lastWithoutWidow : lastFitting;
+    return lastFitting;
   }
 
   static bool _leavesSingleLine(
@@ -242,7 +270,7 @@ class _NoteStory {
     for (final end in _cutBoundaries) {
       // Parallel table cells or a picture can span an earlier line bottom.
       // Reserve through the first boundary that can actually be painted.
-      if (end > 0.01 && _canCutAt(end)) return end;
+      if (end > 0.01) return end;
     }
     return height;
   }
