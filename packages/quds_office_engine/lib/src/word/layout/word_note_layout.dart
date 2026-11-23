@@ -3,10 +3,25 @@ part of 'word_layout.dart';
 /// A shaped note story in local coordinates. Cut points never split a text
 /// line or picture; table borders are clipped at a continuation boundary.
 class _NoteStory {
-  _NoteStory(this.lines, this.frames, this.height);
+  _NoteStory(this.lines, this.frames, this.height)
+    : _widowControlledParagraphs = _groupWidowControlledLines(lines);
   final List<LaidOutLine> lines;
   final List<LaidOutBox> frames;
   final double height;
+  final List<List<LaidOutLine>> _widowControlledParagraphs;
+
+  static List<List<LaidOutLine>> _groupWidowControlledLines(
+    List<LaidOutLine> lines,
+  ) {
+    final groups = <WmlParagraph, List<LaidOutLine>>{};
+    for (final line in lines) {
+      final paragraph = line.sourceParagraph;
+      if (paragraph != null && paragraph.properties.widowControl != false) {
+        groups.putIfAbsent(paragraph, () => []).add(line);
+      }
+    }
+    return groups.values.where((group) => group.length > 1).toList();
+  }
 
   factory _NoteStory.shape(
     WmlNote note,
@@ -166,7 +181,8 @@ class _NoteStory {
       for (final LaidOutLine line in lines) line.y + line.height,
       for (final LaidOutBox box in frames) box.y + box.height,
     ]..sort();
-    var best = start;
+    var lastFitting = start;
+    var lastWithoutWidow = start;
     for (final double end in candidates) {
       if (end <= start + 0.01 || end > limit + 0.01) continue;
       if (lines.any(
@@ -180,9 +196,39 @@ class _NoteStory {
       )) {
         continue;
       }
-      best = end;
+      lastFitting = end;
+      if (!_widowControlledParagraphs.any(
+        (paragraph) => _leavesSingleLine(paragraph, start, end),
+      )) {
+        lastWithoutWidow = end;
+      }
     }
-    return best;
+    // A cramped page must still be able to place a line of the note beside
+    // its reference and make progress on pages filled by longer notes.
+    return lastWithoutWidow > start ? lastWithoutWidow : lastFitting;
+  }
+
+  static bool _leavesSingleLine(
+    List<LaidOutLine> paragraph,
+    double start,
+    double end,
+  ) {
+    final last = paragraph.last;
+    if (end < paragraph.first.y || end >= last.y + last.height - 0.01) {
+      return false;
+    }
+    var before = 0;
+    var after = 0;
+    for (final line in paragraph) {
+      if (line.y < start - 0.01) continue;
+      if (line.y + line.height <= end + 0.01) {
+        before++;
+      } else {
+        after++;
+      }
+      if (before > 1 && after > 1) return false;
+    }
+    return before > 0 && after > 0 && (before == 1 || after == 1);
   }
 
   double get firstHeight {

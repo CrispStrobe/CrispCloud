@@ -193,6 +193,37 @@ void main() {
     _expectClearBand(tight, document);
   });
 
+  for (final widowControl in [true, false]) {
+    test('footnote continuation respects widow control $widowControl', () {
+      final document = _document(
+        separator: _separator(),
+        noteText: 'First\nSecond\nThird\nFourth\nFifth',
+      );
+      document.footnotes.single.paragraphs.single.properties
+        ..lineSpacingRule = WmlLineSpacingRule.exact
+        ..lineSpacing = 10
+        ..widowControl = widowControl;
+      final engine = WordLayoutEngine(font: null);
+      final body = engine.layout(document).pages.single.lines.single;
+      final section = document.sections.single;
+      section.pageSize = WmlPageSize(
+        width: section.pageSize.width,
+        height:
+            body.y +
+            body.height +
+            document.footnoteSeparator!.reservedHeight +
+            40.5 +
+            section.margins.bottom,
+      );
+      final layout = engine.layout(document);
+      expect(layout.pages.map((page) => page.notes.length), [
+        if (widowControl) ...[3, 2] else ...[4, 1],
+      ]);
+      expect(layout.pages.last.notes.last.text, 'Fifth');
+      _expectClearBand(layout, document);
+    });
+  }
+
   test('unused footnote preferences do not reserve body space', () {
     final document = _document(addNote: false, bodyParagraphs: 40);
     final engine = WordLayoutEngine(font: null);
