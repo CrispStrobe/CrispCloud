@@ -82,8 +82,9 @@ class _WordChromeFrame {
     final horizontal = attr('hAnchor') ?? 'text';
     final vertical = attr('vAnchor') ?? 'text';
     const anchors = {'text', 'margin', 'page'};
-    if (!anchors.contains(horizontal) || !anchors.contains(vertical))
+    if (!anchors.contains(horizontal) || !anchors.contains(vertical)) {
       return null;
+    }
     final xAlign = attr('xAlign');
     if (xAlign != null &&
         !const {

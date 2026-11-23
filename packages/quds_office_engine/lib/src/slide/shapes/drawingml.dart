@@ -201,8 +201,9 @@ List<PmlShape> parseSlideShapes(
       continue;
     }
     if (reader.localName == 'grpSp') {
-      if (!reader.isEmptyElement)
+      if (!reader.isEmptyElement) {
         groups.add(groups.firstOrNull ?? nextGroupId++);
+      }
     } else if (reader.localName == 'sp' ||
         reader.localName == 'cxnSp' ||
         reader.localName == 'pic' ||
@@ -646,7 +647,8 @@ void _resolveGroupGeometry(String xml, List<PmlShape> shapes) {
       final preset = a(properties, 'prstGeom');
       if (preset?.getAttribute('prst') == 'wedgeRoundRectCallout') {
         final guides = <String, int>{};
-        for (final guide in a(preset, 'avLst')?.childElements ?? const []) {
+        for (final guide
+            in a(preset, 'avLst')?.childElements ?? const <XmlElement>[]) {
           final name = guide.getAttribute('name');
           final formula = guide.getAttribute('fmla')?.trim();
           if (guide.localName != 'gd' ||

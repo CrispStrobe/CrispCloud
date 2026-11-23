@@ -106,8 +106,9 @@ abstract final class _SlideSourceXml {
         ? parent.children.length
         : parent.children.indexOf(end);
     if (old != null) parent.children.removeAt(index);
-    if (next != null)
+    if (next != null) {
       parent.children.insert(index, next.copy()..parent = parent);
+    }
   }
 
   static int? _shapeId(XmlElement node) {
@@ -182,8 +183,9 @@ abstract final class _SlideSourceXml {
           for (final child in current.childElements) child.localName,
         };
         for (final field in changed) {
-          if (_sameNode(previous.firstChild(field), current.firstChild(field)))
+          if (_sameNode(previous.firstChild(field), current.firstChild(field))) {
             continue;
+          }
           final child = next.firstChild(field);
           _replaceElement(
             nativeFill,
@@ -255,8 +257,9 @@ abstract final class _SlideSourceXml {
           ? native.children.length
           : native.children.indexOf(insertion);
       if (old != null) native.children.removeAt(at);
-      if (next != null)
+      if (next != null) {
         native.children.insert(at, next.copy()..parent = native);
+      }
     }
   }
 

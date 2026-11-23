@@ -12,7 +12,9 @@ import 'support/structured_word_fixture.dart';
 void main() {
   test('built-in styles get canonical names; user styles keep theirs', () {
     final bytes = StructuredWordFixture(
-      pieces: const [WordFixturePiece('Titel\rText\rEigen\r', compressed: false)],
+      pieces: const [
+        WordFixturePiece('Titel\rText\rEigen\r', compressed: false),
+      ],
       paragraphRuns: const [
         WordFixtureFkpRun(8192, 8204, styleIndex: 1),
         WordFixtureFkpRun(8204, 8214, styleIndex: 0),

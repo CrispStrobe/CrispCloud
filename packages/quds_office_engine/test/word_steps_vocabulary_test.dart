@@ -34,7 +34,13 @@ void main() {
       doc.paragraphs.single.properties.justification,
       WmlJustification.justify,
     );
-    expect(_xml(doc), contains('<w:jc w:val="both"/>'));
+    final paragraph = XmlDocument.parse(_xml(doc)).root!
+        .firstChild('body', namespaceUri: _w)!
+        .firstChild('p', namespaceUri: _w)!;
+    final alignment = paragraph
+        .firstChild('pPr', namespaceUri: _w)!
+        .firstChild('jc', namespaceUri: _w)!;
+    expect(alignment.getAttribute('val', namespaceUri: _w), 'both');
     cli.applyStep(doc, {
       'op': 'paragraphFormat',
       'paragraph': 0,

@@ -151,27 +151,33 @@ void main() {
   // empty (68-byte header only): the instruction is then the only statement
   // of the target, so it is accepted; a present HFD must still match.
   for (final suffix in ['', r' \o "Tip"', r' \t "_blank"']) {
-    test('empty binary data from Word 2010+ keeps the link (suffix "$suffix")', () {
-      final empty = Uint8List(68);
-      ByteData.sublistView(empty)
-        ..setUint32(0, 68, Endian.little)
-        ..setUint16(4, 68, Endian.little);
-      // Word writes display switches before the binary-data marker.
-      final source = _source(
-        payload: empty,
-        quoted: false,
-        url: '"https://example.com/path?x=1&y=2"$suffix',
-      );
-      final (xml, _) = _convert(source);
-      expect(xml.findAllElements('fldChar', namespace: _w), hasLength(3));
-      final instruction = xml
-          .findAllElements('instrText', namespace: _w)
-          .map((e) => e.innerText)
-          .join();
-      expect(instruction, contains('HYPERLINK "https://example.com/path?x=1&y=2"'));
-      expect(instruction, isNot(contains('\x01')));
-      if (suffix.isNotEmpty) expect(instruction, contains(suffix.trim()));
-    });
+    test(
+      'empty binary data from Word 2010+ keeps the link (suffix "$suffix")',
+      () {
+        final empty = Uint8List(68);
+        ByteData.sublistView(empty)
+          ..setUint32(0, 68, Endian.little)
+          ..setUint16(4, 68, Endian.little);
+        // Word writes display switches before the binary-data marker.
+        final source = _source(
+          payload: empty,
+          quoted: false,
+          url: '"https://example.com/path?x=1&y=2"$suffix',
+        );
+        final (xml, _) = _convert(source);
+        expect(xml.findAllElements('fldChar', namespace: _w), hasLength(3));
+        final instruction = xml
+            .findAllElements('instrText', namespace: _w)
+            .map((e) => e.innerText)
+            .join();
+        expect(
+          instruction,
+          contains('HYPERLINK "https://example.com/path?x=1&y=2"'),
+        );
+        expect(instruction, isNot(contains('\x01')));
+        if (suffix.isNotEmpty) expect(instruction, contains(suffix.trim()));
+      },
+    );
   }
 
   final malformed = <String, void Function(Uint8List)>{

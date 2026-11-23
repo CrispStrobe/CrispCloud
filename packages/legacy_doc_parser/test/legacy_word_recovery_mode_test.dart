@@ -21,7 +21,10 @@ void main() {
         );
         expect(() => parseLegacyWordDocument(bytes), throwsFormatException);
         final document = parseLegacyWordDocument(bytes, recover: true);
-        expect(document.warnings, contains(LegacyWordWarning.recoveredMissingStyle));
+        expect(
+          document.warnings,
+          contains(LegacyWordWarning.recoveredMissingStyle),
+        );
         expect(document.plainText, isNotEmpty);
         final conversion = convertLegacyWord(bytes, recover: true);
         expect(

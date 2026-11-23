@@ -2914,8 +2914,9 @@ class WordLayoutEngine {
           // Three lines cannot be split into two groups of at least two.
           if (placedOnColumn == 0 && remaining == 3) {
             final thirdHeight = heightOfLine(broken[lineNumber + 2]);
-            if (groupHeight + thirdHeight <= capacity)
+            if (groupHeight + thirdHeight <= capacity) {
               groupHeight += thirdHeight;
+            }
           }
           if (cursorY + groupHeight > _bodyBottom(section, idx) &&
               groupHeight <= capacity) {

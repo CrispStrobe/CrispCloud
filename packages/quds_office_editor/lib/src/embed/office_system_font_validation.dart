@@ -36,8 +36,9 @@ InstalledFontData? parseInstalledFont(
   final postScript = signature == 0x4f54544f;
   if (signature != 0x00010000 &&
       signature != 0x74727565 &&
-      !(postScript && allowPostScriptOutlines))
+      !(postScript && allowPostScriptOutlines)) {
     return null;
+  }
   try {
     final font = SfntFont.parse(bytes);
     if (font.familyName.trim().toLowerCase() != family.trim().toLowerCase() ||

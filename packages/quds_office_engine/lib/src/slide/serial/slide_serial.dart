@@ -289,20 +289,24 @@ class SlideDeserializer {
           paragraph.inheritLayout(template);
           paragraph.defaultLetterSpacingPt ??= template.defaultLetterSpacingPt;
           final templateRun = template.runs.firstOrNull;
-          if (paragraph.defaultFontSizePt == 0)
+          if (paragraph.defaultFontSizePt == 0) {
             paragraph.defaultFontSizePt = template.defaultFontSizePt;
-          if (paragraph.defaultFontFamily.isEmpty)
+          }
+          if (paragraph.defaultFontFamily.isEmpty) {
             paragraph.defaultFontFamily = template.defaultFontFamily;
+          }
           for (final run in paragraph.runs) {
             if (run.fontSizePt == 0) {
               run.fontSizePt =
                   templateRun?.fontSizePt ?? template.defaultFontSizePt;
             }
-            if (run.color.isEmpty)
+            if (run.color.isEmpty) {
               run.color = templateRun?.color ?? template.defaultColor;
-            if (run.fontFamily.isEmpty)
+            }
+            if (run.fontFamily.isEmpty) {
               run.fontFamily =
                   templateRun?.fontFamily ?? template.defaultFontFamily;
+            }
             if (!run.boldSpecified && templateRun?.boldSpecified == true) {
               run.bold = templateRun!.bold;
               run.boldSpecified = true;
@@ -349,8 +353,9 @@ class SlideDeserializer {
         final size = presentationSize > 0
             ? presentationSize
             : first?.fontSizePt ?? 0.0;
-        if (paragraph.defaultFontSizePt == 0)
+        if (paragraph.defaultFontSizePt == 0) {
           paragraph.defaultFontSizePt = size;
+        }
         if (defaults != null) {
           paragraph.inheritLayout(defaults);
           paragraph.defaultLetterSpacingPt ??= defaults.defaultLetterSpacingPt;
