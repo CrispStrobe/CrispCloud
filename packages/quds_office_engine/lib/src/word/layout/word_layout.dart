@@ -959,6 +959,7 @@ class WordLayoutEngine {
     // reused after a document preference change, even when no note text changed.
     document.footnoteSeparator ??
         'legacy-footnote-separator:${document.sourceFootnoteSeparatorsPresent}',
+    if (document.sourceBlankFootnoteSeparators) 'blank-footnote-separators',
     for (final WmlNote note in <WmlNote>[
       ...document.footnotes,
       ...document.endnotes,
@@ -4540,7 +4541,8 @@ class WordLayoutEngine {
           ),
         );
       }
-    } else if (_layoutDoc?.sourceFootnoteSeparatorsPresent != false) {
+    } else if (_layoutDoc?.sourceFootnoteSeparatorsPresent != false &&
+        _layoutDoc?.sourceBlankFootnoteSeparators != true) {
       page.frames.add(
         LaidOutBox(
           x: section.margins.left,

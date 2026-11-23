@@ -695,6 +695,8 @@ final class WordZoteroTransferPlan {
             sourceByteLength: _source.sourceByteLength,
           )
           ..complexScriptLanguage = _source.complexScriptLanguage
+          ..sourceBlankFootnoteSeparators =
+              _source.sourceBlankFootnoteSeparators
           ..sourceDuplicateControlIds = Map.of(
             _source.sourceDuplicateControlIds,
           )

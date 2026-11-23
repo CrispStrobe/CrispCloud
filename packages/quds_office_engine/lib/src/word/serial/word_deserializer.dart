@@ -4066,7 +4066,7 @@ class WordDeserializer {
       'endnote',
       endnote: true,
     );
-    document.footnoteSeparator = WordFootnoteSeparatorIo.read(document);
+    WordFootnoteSeparatorIo.readLayout(document);
   }
 
   bool? _readNotesPart(

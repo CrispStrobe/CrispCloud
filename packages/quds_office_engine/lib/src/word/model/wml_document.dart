@@ -1225,6 +1225,10 @@ class WmlDocument {
   /// false preserves explicit native absence in the editor preview.
   bool? sourceFootnoteSeparatorsPresent;
 
+  /// Whether Word defined the normal and continuation separators as empty
+  /// paragraphs with no rule. Their XML remains in the source package.
+  bool sourceBlankFootnoteSeparators = false;
+
   /// Explicit supported separator geometry shared by footnote pages.
   /// Null retains the existing conventional or opaque native definition.
   WmlFootnoteSeparator? footnoteSeparator;

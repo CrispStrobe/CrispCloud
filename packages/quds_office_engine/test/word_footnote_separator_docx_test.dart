@@ -103,6 +103,43 @@ Object _snapshot(XmlElement node) => [
 ];
 
 void main() {
+  test('native blank footnote separators suppress the rule and round trip', () {
+    final package = WordSerializer().write(
+      _document(const WmlFootnoteSeparator()),
+    );
+    _rewrite(package, '/word/footnotes.xml', (root) {
+      for (final separator in root.childrenNamed('footnote')) {
+        if (separator.getAttribute('type', namespaceUri: OfficeNamespaces.w) ==
+            null) {
+          continue;
+        }
+        separator.children.clear();
+        separator.addChild(
+          XmlElement(
+            localName: 'p',
+            prefix: 'w',
+            namespaceUri: OfficeNamespaces.w,
+          ),
+        );
+      }
+    });
+    final originalSeparators = _definitions(package).map(_snapshot).toList();
+    final reopened = WordDeserializer().read(package);
+    expect(reopened.footnoteSeparator, isNull);
+    expect(reopened.sourceBlankFootnoteSeparators, isTrue);
+    final engine = WordLayoutEngine(font: null);
+    final page = engine.layout(reopened).pages.single;
+    expect(page.notes, isNotEmpty);
+    expect(
+      page.frames.where((box) => box.kind == LaidOutBoxKind.footnote),
+      isEmpty,
+    );
+    expect(
+      _definitions(WordSerializer().write(reopened)).map(_snapshot),
+      originalSeparators,
+    );
+  });
+
   for (final alignment in WmlFootnoteSeparatorAlignment.values) {
     for (final style in WmlFootnoteSeparatorLineStyle.values) {
       for (final gap in [0.0, 7.25]) {

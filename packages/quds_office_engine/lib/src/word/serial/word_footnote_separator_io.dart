@@ -29,59 +29,107 @@ abstract final class WordFootnoteSeparatorIo {
     'continuationNotice',
   };
 
-  static WmlFootnoteSeparator? read(WmlDocument document) {
+  /// Projects supported native separator layout without rewriting its XML.
+  static void readLayout(WmlDocument document) {
     final package = document.package;
-    if (package == null) return null;
+    if (package == null) return;
     try {
       final source = _source(document, package);
       if (source?.localName != 'footnotes' ||
           source?.namespaceUri != OfficeNamespaces.w ||
           !_uniqueAttributes(source!)) {
-        return null;
+        return;
       }
       final definitions = _definitions(source);
-      if (definitions.length != 2) return null;
-      final normal = definitions.where(
-        (node) => _attr(node, 'type') == 'separator',
-      );
-      final continued = definitions.where(
-        (node) => _attr(node, 'type') == 'continuationSeparator',
-      );
-      if (normal.length != 1 || continued.length != 1) return null;
-      final firstId = int.tryParse(_attr(normal.single, 'id') ?? '');
-      final secondId = int.tryParse(_attr(continued.single, 'id') ?? '');
-      if (firstId == null ||
-          secondId == null ||
-          firstId == secondId ||
-          firstId < -2147483648 ||
-          firstId > 2147483647 ||
-          secondId < -2147483648 ||
-          secondId > 2147483647) {
-        return null;
+      document.sourceBlankFootnoteSeparators = _hasBlankPair(definitions);
+      if (!document.sourceBlankFootnoteSeparators) {
+        document.footnoteSeparator = _readGeometry(
+          document,
+          package,
+          source,
+          definitions,
+        );
       }
-      final allIds = source
-          .childrenNamed('footnote', namespaceUri: OfficeNamespaces.w)
-          .map((node) => int.tryParse(_attr(node, 'id') ?? ''))
-          .toList();
-      if (allIds.where((id) => id == firstId).length != 1 ||
-          allIds.where((id) => id == secondId).length != 1) {
-        return null;
-      }
-      final refs = _specialReferenceIds(package);
-      if (refs.length != 2 ||
-          !refs.contains(firstId) ||
-          !refs.contains(secondId)) {
-        return null;
-      }
-      final width = _bodyWidthTwips(document);
-      final first = _parseDefinition(normal.single, width);
-      final second = _parseDefinition(continued.single, width);
-      return first != null && first == second ? first : null;
     } on FormatException {
-      return null;
+      return;
     } on UnsupportedError {
+      return;
+    }
+  }
+
+  /// Word can use empty default paragraphs instead of horizontal rules.
+  /// Mixed and formatted separator stories remain opaque.
+  static bool _hasBlankPair(List<XmlElement> definitions) {
+    final separators = definitions
+        .where((node) => _attr(node, 'type') != 'continuationNotice')
+        .toList();
+    if (separators.length != 2 ||
+        !separators.any((node) => _attr(node, 'type') == 'separator') ||
+        !separators.any(
+          (node) => _attr(node, 'type') == 'continuationSeparator',
+        )) {
+      return false;
+    }
+    for (final separator in separators) {
+      final paragraph = separator.childElements.singleOrNull;
+      if (paragraph?.localName != 'p' ||
+          paragraph?.namespaceUri != OfficeNamespaces.w ||
+          paragraph!.childElements.isNotEmpty ||
+          separator.text.trim().isNotEmpty) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  static WmlFootnoteSeparator? _readGeometry(
+    WmlDocument document,
+    OpcPackage package,
+    XmlElement source,
+    List<XmlElement> definitions,
+  ) {
+    if (definitions.length != 2) return null;
+    final normal = definitions.where(
+      (node) => _attr(node, 'type') == 'separator',
+    );
+    final continued = definitions.where(
+      (node) => _attr(node, 'type') == 'continuationSeparator',
+    );
+    if (normal.length != 1 || continued.length != 1) return null;
+    final firstId = int.tryParse(_attr(normal.single, 'id') ?? '');
+    final secondId = int.tryParse(_attr(continued.single, 'id') ?? '');
+    if (firstId == null ||
+        secondId == null ||
+        firstId == secondId ||
+        firstId < -2147483648 ||
+        firstId > 2147483647 ||
+        secondId < -2147483648 ||
+        secondId > 2147483647) {
       return null;
     }
+    final allIds = source
+        .childrenNamed('footnote', namespaceUri: OfficeNamespaces.w)
+        .map((node) => int.tryParse(_attr(node, 'id') ?? ''))
+        .toList();
+    if (allIds.where((id) => id == firstId).length != 1 ||
+        allIds.where((id) => id == secondId).length != 1) {
+      return null;
+    }
+    final List<int> refs;
+    try {
+      refs = _specialReferenceIds(package);
+    } on FormatException {
+      return null;
+    }
+    if (refs.length != 2 ||
+        !refs.contains(firstId) ||
+        !refs.contains(secondId)) {
+      return null;
+    }
+    final width = _bodyWidthTwips(document);
+    final first = _parseDefinition(normal.single, width);
+    final second = _parseDefinition(continued.single, width);
+    return first != null && first == second ? first : null;
   }
 
   /// Validate before the serializer changes any package part.
@@ -173,7 +221,7 @@ abstract final class WordFootnoteSeparatorIo {
     int normalId;
     int continuationId;
     if (definitions.isNotEmpty) {
-      if (read(document) == null) {
+      if (_readGeometry(document, package!, source!, definitions) == null) {
         throw UnsupportedError(
           'An unsupported imported footnote separator cannot be replaced implicitly.',
         );
