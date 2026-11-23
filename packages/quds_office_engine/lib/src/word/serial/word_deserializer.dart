@@ -2186,7 +2186,8 @@ class WordDeserializer {
   // Open fields across paragraphs (a TOC spans many). Each entry is the begin
   // boundary plus whether its instruction marked it as a TOC.
   final List<(WmlFieldBoundary, bool)> _openFields = [];
-  final Set<WmlFieldBoundary> _tocBoundaries = Set.identity();
+  // The value distinguishes the TOC wrapper from fields inside its cache.
+  final Map<WmlFieldBoundary, bool> _tocBoundaries = Map.identity();
 
   void _flushFieldText(List<WmlInline> inlines, WmlRun run) {
     if (run.text.isEmpty) return;
@@ -2202,15 +2203,19 @@ class WordDeserializer {
 
   bool get _insideToc => _openFields.any((entry) => entry.$2);
 
+  void _noteTocBoundary(WmlFieldBoundary boundary) {
+    if (_insideToc) _tocBoundaries[boundary] = _openFields.last.$2;
+  }
+
   void _noteFieldChar(WmlFieldBoundary boundary) {
     switch (boundary.kind) {
       case WmlFieldBoundaryKind.begin:
         _openFields.add((boundary, false));
-        if (_insideToc) _tocBoundaries.add(boundary);
+        _noteTocBoundary(boundary);
       case WmlFieldBoundaryKind.separate:
-        if (_insideToc) _tocBoundaries.add(boundary);
+        _noteTocBoundary(boundary);
       case WmlFieldBoundaryKind.end:
-        if (_insideToc) _tocBoundaries.add(boundary);
+        _noteTocBoundary(boundary);
         if (_openFields.isNotEmpty) _openFields.removeLast();
       case WmlFieldBoundaryKind.instruction:
         break;
@@ -2222,10 +2227,10 @@ class WordDeserializer {
       final (begin, toc) = _openFields.last;
       if (!toc && WordToc.isTocInstruction(boundary.text)) {
         _openFields[_openFields.length - 1] = (begin, true);
-        _tocBoundaries.add(begin);
+        _tocBoundaries[begin] = true;
       }
     }
-    if (_insideToc) _tocBoundaries.add(boundary);
+    _noteTocBoundary(boundary);
   }
 
   /// Decide, once a paragraph is complete, how its fields are represented.
@@ -2241,9 +2246,26 @@ class WordDeserializer {
       return true;
     }
 
-    // TOC fields keep the established paragraph-level machinery.
-    if (boundaries.every(_tocBoundaries.contains)) {
-      strip();
+    // Only the TOC wrapper spans paragraphs. Nested PAGEREF fields keep
+    // their own inline boundaries and must not close the wrapper.
+    if (boundaries.every(_tocBoundaries.containsKey)) {
+      final wrapper = boundaries.where((b) => _tocBoundaries[b]!).toList();
+      final instruction = wrapper
+          .where((b) => b.kind == WmlFieldBoundaryKind.instruction)
+          .map((b) => b.text)
+          .join();
+      _clearParagraphField(paragraph);
+      paragraph.properties
+        ..fieldInstruction = instruction.isEmpty ? null : instruction
+        ..fieldBegin = wrapper.any((b) => b.kind == WmlFieldBoundaryKind.begin)
+        ..fieldSeparate = wrapper.any(
+          (b) => b.kind == WmlFieldBoundaryKind.separate,
+        )
+        ..fieldEnd = wrapper.any((b) => b.kind == WmlFieldBoundaryKind.end);
+      paragraph.inlines.removeWhere(
+        (inline) =>
+            inline is WmlFieldBoundary && _tocBoundaries[inline] == true,
+      );
       return;
     }
     // Exactly one top-level field that wraps all of the paragraph's text,
@@ -3568,7 +3590,7 @@ class WordDeserializer {
     // Headers and footers are independent field stories, even while a body
     // paragraph's section properties are being parsed.
     final fields = List<(WmlFieldBoundary, bool)>.of(_openFields);
-    final toc = Set<WmlFieldBoundary>.identity()..addAll(_tocBoundaries);
+    final toc = Map<WmlFieldBoundary, bool>.identity()..addAll(_tocBoundaries);
     _openFields.clear();
     _tocBoundaries.clear();
     try {

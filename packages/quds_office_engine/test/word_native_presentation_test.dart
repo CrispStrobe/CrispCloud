@@ -369,6 +369,59 @@ void main() {
     final package = WordSerializer().write(document);
     expect(_body(package).childrenNamed('p'), hasLength(1));
     expect(_body(package).text, isNot(contains('Table of Contents')));
+    final layout = WordLayoutEngine(font: null).layout(document);
+    expect(layout.pages.single.lines.map((line) => line.text), ['Heading']);
+  });
+
+  test('nested PAGEREF fields keep one native TOC and their cached results', () {
+    const itemStart = '<w:p><w:pPr><w:pStyle w:val="TOC1"/></w:pPr>';
+    const pageRef =
+        '<w:r><w:instrText xml:space="preserve"> PAGEREF target </w:instrText></w:r>';
+    final package = _source(
+      '$itemStart$_begin$_instruction$_separate'
+      '<w:hyperlink w:anchor="target"><w:r><w:t>1.</w:t><w:tab/><w:t>First</w:t></w:r>'
+      '<w:r><w:tab/></w:r>$_begin$pageRef$_separate<w:r><w:t>12</w:t></w:r>$_end</w:hyperlink></w:p>'
+      '$itemStart<w:r><w:t>Second</w:t><w:tab/></w:r>$_begin$pageRef$_separate'
+      '<w:r><w:t>24</w:t></w:r>$_end</w:p>'
+      '<w:p>$_end</w:p>'
+      '<w:p><w:r><w:t>Body</w:t></w:r></w:p>',
+    );
+    var document = WordDeserializer().read(package);
+    for (var cycle = 0; cycle < 2; cycle++) {
+      final toc = WordToc.tocs(document).single;
+      expect(toc.entries.map((entry) => entry.text), ['1. First', 'Second']);
+      expect(toc.entries.map((entry) => entry.pageNumber), [12, 24]);
+      expect(toc.itemParagraphs.map((item) => item.text), [
+        '1.\tFirst',
+        'Second',
+      ]);
+      expect(document.sections.single.blocks.last, isA<WmlParagraph>());
+
+      final saved = WordSerializer().write(document);
+      expect(_all(_body(saved), 'instrText').map((node) => node.text.trim()), [
+        'TOC \\o "1-3" \\h',
+        'PAGEREF target',
+        'PAGEREF target',
+      ]);
+      expect(
+        _all(
+          _body(saved),
+          'fldChar',
+        ).map((field) => field.getAttribute('fldCharType')),
+        [
+          'begin',
+          'separate',
+          'begin',
+          'separate',
+          'end',
+          'begin',
+          'separate',
+          'end',
+          'end',
+        ],
+      );
+      document = WordDeserializer().read(saved);
+    }
   });
 
   test(

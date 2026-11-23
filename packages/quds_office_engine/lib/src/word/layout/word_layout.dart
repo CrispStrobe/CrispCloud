@@ -3197,23 +3197,26 @@ class WordLayoutEngine {
     var cursorY = y;
     var idx = pageIndex;
     var para = paragraphIndex;
-    final ({double y, int pageIndex}) title = _layoutParagraph(
-      toc.titleParagraph,
-      section,
-      pages,
-      current,
-      currentFrames,
-      idx,
-      cursorY,
-      para,
-      sourceText: toc.titleParagraph.text,
-      originX: originX ?? flow?.originX,
-      maxWidthOverride: maxWidthOverride ?? flow?.colWidth,
-      flow: flow,
-      allowBreak: allowBreak,
-    );
-    cursorY = title.y;
-    idx = title.pageIndex;
+    final source = toc.sourcePresentation;
+    if (source == null || source.paragraphs.any((p) => p.title)) {
+      final title = _layoutParagraph(
+        toc.titleParagraph,
+        section,
+        pages,
+        current,
+        currentFrames,
+        idx,
+        cursorY,
+        para,
+        sourceText: toc.titleParagraph.text,
+        originX: originX ?? flow?.originX,
+        maxWidthOverride: maxWidthOverride ?? flow?.colWidth,
+        flow: flow,
+        allowBreak: allowBreak,
+      );
+      cursorY = title.y;
+      idx = title.pageIndex;
+    }
     para++;
     final int itemCount = toc.itemParagraphs.length;
     for (int i = 0; i < itemCount; i++) {

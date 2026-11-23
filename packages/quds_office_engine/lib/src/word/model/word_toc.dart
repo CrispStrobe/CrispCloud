@@ -451,7 +451,7 @@ abstract final class WordToc {
       return;
     }
     final String original = paragraph.text;
-    final String raw = original.replaceAll('\t', ' ').trim();
+    final String raw = original.trim();
     if (raw.isEmpty) {
       return;
     }
@@ -470,7 +470,7 @@ abstract final class WordToc {
     _keepPrefix(paragraph, text);
     toc.entries.add(
       WmlTocEntry(
-        text: text,
+        text: text.replaceAll('\t', ' '),
         level: level,
         headingParagraphIndex: toc.entries.length,
         pageNumber: page == null ? 1 : int.parse(page.group(1)!),
@@ -692,6 +692,14 @@ abstract final class WordToc {
     if (at < 0) {
       return;
     }
+    // Fields in the removed page-number suffix belong to the native cache,
+    // where their zero-width markers can still wrap the saved page value.
+    var offset = 0;
+    paragraph.inlines.removeWhere((inline) {
+      if (inline is WmlRun) offset += inline.text.length;
+      return inline is WmlFieldBoundary &&
+          (offset < at || offset >= at + prefix.length);
+    });
     if (at + prefix.length < text.length) {
       WmlRunEdit.replaceRange(paragraph, at + prefix.length, text.length, '');
     }
