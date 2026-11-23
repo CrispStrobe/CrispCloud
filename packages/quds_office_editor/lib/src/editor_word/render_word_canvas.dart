@@ -88,6 +88,7 @@ class WordCanvas extends LeafRenderObjectWidget {
     this.findHits = const <OfficeFindHit>[],
     this.zoteroFieldRanges = const <WordZoteroFieldSelectionRange>[],
     this.proofingFindings = const <WmlParagraph, List<OfficeProofingFinding>>{},
+    this.proofingLookup,
     this.activeFindIndex = -1,
   });
 
@@ -301,6 +302,9 @@ class WordCanvas extends LeafRenderObjectWidget {
   /// Current source-bound findings, indexed by exact paragraph identity.
   final Map<WmlParagraph, List<OfficeProofingFinding>> proofingFindings;
 
+  /// When provided, resolves marks for individual paragraphs during paint.
+  final List<OfficeProofingFinding>? Function(WmlParagraph)? proofingLookup;
+
   /// activeFindIndex API.
   final int activeFindIndex;
 
@@ -370,6 +374,7 @@ class WordCanvas extends LeafRenderObjectWidget {
       findHits: findHits,
       zoteroFieldRanges: zoteroFieldRanges,
       proofingFindings: proofingFindings,
+      proofingLookup: proofingLookup,
       activeFindIndex: activeFindIndex,
     );
   }
@@ -448,6 +453,7 @@ class WordCanvas extends LeafRenderObjectWidget {
       ..findHits = findHits
       ..zoteroFieldRanges = zoteroFieldRanges
       ..proofingFindings = proofingFindings
+      ..proofingLookup = proofingLookup
       ..activeFindIndex = activeFindIndex;
     if (viewport != null && !identical(renderObject.viewport, viewport)) {
       renderObject.viewport = viewport!;
@@ -576,6 +582,7 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
     this.findHits = const <OfficeFindHit>[],
     this.zoteroFieldRanges = const <WordZoteroFieldSelectionRange>[],
     this.proofingFindings = const <WmlParagraph, List<OfficeProofingFinding>>{},
+    this.proofingLookup,
     this.activeFindIndex = -1,
   });
 
@@ -784,6 +791,13 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
   List<WordZoteroFieldSelectionRange> zoteroFieldRanges;
 
   Map<WmlParagraph, List<OfficeProofingFinding>> proofingFindings;
+  List<OfficeProofingFinding>? Function(WmlParagraph)? proofingLookup;
+
+  List<OfficeProofingFinding>? _proofingFor(WmlParagraph? paragraph) {
+    if (paragraph == null) return null;
+    final lookup = proofingLookup;
+    return lookup == null ? proofingFindings[paragraph] : lookup(paragraph);
+  }
 
   /// activeFindIndex API.
   int activeFindIndex;
@@ -2895,7 +2909,7 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
     final offset = line.proofingOffsetAt(_hitOffsetOnLine(line, local));
     if (offset == null) return;
     final hasIssue =
-        proofingFindings[paragraph]?.any(
+        _proofingFor(paragraph)?.any(
           (finding) =>
               offset >= finding.start &&
               (finding.start == finding.end
@@ -3787,11 +3801,12 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
         // proofing updates and unrelated repaints.
         if (zoteroRanges.isNotEmpty ||
             findHits.isNotEmpty ||
+            proofingLookup != null ||
             proofingFindings.isNotEmpty) {
           for (final LaidOutLine line in page.lines) {
             final ranges = zoteroRanges[line.sourceParagraph];
             final hasProofing =
-                proofingFindings[line.sourceParagraph]?.isNotEmpty == true;
+                _proofingFor(line.sourceParagraph)?.isNotEmpty == true;
             final lineHits =
                 findHits.isNotEmpty && _paintsLineSelection(line, page)
                 ? findHitsByParagraph[line.paragraphIndex]
@@ -3996,7 +4011,7 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
   }
 
   void _paintProofing(Canvas canvas, LaidOutLine line) {
-    final findings = proofingFindings[line.sourceParagraph];
+    final findings = _proofingFor(line.sourceParagraph);
     if (findings == null || line.glyphs.isEmpty) return;
     for (final finding in findings) {
       for (final range in WordProofingGeometry.displayRanges(
@@ -4051,7 +4066,7 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
     TextPainter painter,
     double x,
   ) {
-    final findings = proofingFindings[line.sourceParagraph];
+    final findings = _proofingFor(line.sourceParagraph);
     if (findings == null) return;
     final y = _overlayY(line, painter);
     for (final finding in findings) {
@@ -5146,7 +5161,7 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
         page.notes.any(
           (line) =>
               zoteroRanges.containsKey(line.sourceParagraph) ||
-              proofingFindings[line.sourceParagraph]?.isNotEmpty == true,
+              _proofingFor(line.sourceParagraph)?.isNotEmpty == true,
         );
     if (hasAnnotations) {
       // A note's background and proofing ink must stay next to its own

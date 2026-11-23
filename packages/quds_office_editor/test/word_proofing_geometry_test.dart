@@ -58,6 +58,7 @@ Future<RenderWordCanvas> _mount(
   WmlDocument document,
   LaidOutDocument layout, {
   Map<WmlParagraph, List<OfficeProofingFinding>> findings = const {},
+  List<OfficeProofingFinding>? Function(WmlParagraph)? proofingLookup,
   ValueChanged<OfficeContextHit>? onContextMenu,
   ValueChanged<OfficeContextHit>? onReviewTap,
   bool compact = false,
@@ -74,6 +75,7 @@ Future<RenderWordCanvas> _mount(
           caret: CaretEngine(),
           config: const OfficeSurfaceConfig(showRulers: false),
           proofingFindings: findings,
+          proofingLookup: proofingLookup,
           onContextMenu: onContextMenu,
           onReviewTap: onReviewTap,
         ),
@@ -371,7 +373,7 @@ void main() {
       tester,
       doc,
       layout,
-      findings: session.findingsByParagraph,
+      proofingLookup: session.paintFindingsLookup,
     );
     final line = layout.pages.single.lines.single;
     final field = CaretEngine.rangeRectsOnLine(

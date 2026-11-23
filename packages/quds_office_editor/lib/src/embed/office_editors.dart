@@ -1358,8 +1358,7 @@ class _QudsWordEditorState extends State<QudsWordEditor>
                               child: WordCanvas(
                                 key: _canvasKey,
                                 document: _c.document,
-                                proofingFindings:
-                                    _c.proofing.findingsByParagraph,
+                                proofingLookup: _c.proofing.paintFindingsLookup,
                                 laidOut: _c.documentLaidOut,
                                 caret: _c.caret,
                                 findHits: _c.findSession.hits,

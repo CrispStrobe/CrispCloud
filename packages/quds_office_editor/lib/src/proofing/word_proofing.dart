@@ -361,8 +361,8 @@ final class WordProofingStatus {
 ///
 /// Typing only marks the published results stale: the document is captured
 /// and republished lazily, when a reader asks for the [summary] or a check
-/// starts, never once per keystroke. Painting uses [findingsByParagraph],
-/// which drops findings of edited paragraphs without a capture.
+/// starts, never once per keystroke. Painting uses [paintFindingsLookup] to
+/// remap findings for each visible paragraph without capturing the document.
 final class WordProofingSession extends ChangeNotifier {
   WordProofingSession({
     required this._document,
@@ -480,6 +480,8 @@ final class WordProofingSession extends ChangeNotifier {
   /// A republish requested by an edit, performed on first read.
   ({bool scheduled})? _pendingPublish;
   Map<WmlParagraph, List<OfficeProofingFinding>>? _provisionalFindings;
+  final _provisionalParagraphs =
+      HashMap<WmlParagraph, List<OfficeProofingFinding>?>.identity();
   final Map<WmlParagraph, String> _findingTexts = HashMap.identity();
 
   /// Where the latest edit left the collapsed caret, until the caret moves
@@ -520,7 +522,7 @@ final class WordProofingSession extends ChangeNotifier {
     final pending = _pendingPublish;
     if (pending != null) {
       _pendingPublish = null;
-      _provisionalFindings = null;
+      _clearProvisionalFindings();
       final document = _document();
       // Readers can be widgets in build: never notify listeners from here.
       _flushing = true;
@@ -543,7 +545,7 @@ final class WordProofingSession extends ChangeNotifier {
 
   set _summary(WordProofingSummary value) {
     _pendingPublish = null;
-    _provisionalFindings = null;
+    _clearProvisionalFindings();
     _published = value;
     if (_flushing) {
       scheduleMicrotask(_updateStatus);
@@ -588,18 +590,37 @@ final class WordProofingSession extends ChangeNotifier {
   /// does not make the paragraph's other underlines blink.
   Map<WmlParagraph, List<OfficeProofingFinding>> get findingsByParagraph {
     if (_pendingPublish == null) return UnmodifiableMapView(_findings);
-    return _provisionalFindings ??= UnmodifiableMapView(
-      HashMap<WmlParagraph, List<OfficeProofingFinding>>.identity()..addAll({
-        for (final entry in _findings.entries)
-          if (_provisionalMarks(
-                entry.value,
-                _findingTexts[entry.key],
-                entry.key.text,
-              )
-              case final kept? when kept.isNotEmpty)
-            entry.key: kept,
-      }),
-    );
+    if (_provisionalFindings case final prepared?) return prepared;
+    final all = HashMap<WmlParagraph, List<OfficeProofingFinding>>.identity();
+    for (final paragraph in _findings.keys) {
+      if (_paintFindingsFor(paragraph) case final kept?) all[paragraph] = kept;
+    }
+    _provisionalParagraphs.clear();
+    return _provisionalFindings = UnmodifiableMapView(all);
+  }
+
+  /// The canvas asks for individual visible paragraphs. During typing this
+  /// avoids reading and rebuilding the marks on every page before painting.
+  List<OfficeProofingFinding>? Function(WmlParagraph)?
+  get paintFindingsLookup => _findings.isEmpty ? null : _paintFindingsFor;
+
+  List<OfficeProofingFinding>? _paintFindingsFor(WmlParagraph paragraph) {
+    final findings = _findings[paragraph];
+    if (findings == null || _pendingPublish == null) return findings;
+    if (_provisionalFindings case final prepared?) return prepared[paragraph];
+    return _provisionalParagraphs.putIfAbsent(paragraph, () {
+      final kept = _provisionalMarks(
+        findings,
+        _findingTexts[paragraph],
+        paragraph.text,
+      );
+      return kept == null || kept.isEmpty ? null : kept;
+    });
+  }
+
+  void _clearProvisionalFindings() {
+    _provisionalFindings = null;
+    _provisionalParagraphs.clear();
   }
 
   static List<OfficeProofingFinding>? _provisionalMarks(
@@ -1229,7 +1250,7 @@ final class WordProofingSession extends ChangeNotifier {
       // Defer it to the first reader or the next pass, so a keystroke costs
       // no document-wide work; consecutive edits coalesce into one capture.
       _pendingPublish = (scheduled: automatic);
-      _provisionalFindings = null;
+      _clearProvisionalFindings();
       _updateStatus();
     }
     if (automatic) {
@@ -2205,7 +2226,7 @@ final class WordProofingSession extends ChangeNotifier {
         ? null
         : [
             for (final snapshot in checkOrder)
-              findingsByParagraph[snapshot.paragraph],
+              _paintFindingsFor(snapshot.paragraph),
           ];
     final hadResults = _pendingPublish != null || _published.hasResults;
     _publishCached(
@@ -2441,7 +2462,7 @@ final class WordProofingSession extends ChangeNotifier {
       ..addAll(captured.paragraphs.map((snapshot) => snapshot.paragraph));
     _cache.removeWhere((paragraph, _) => !attached.contains(paragraph));
     _pendingPublish = null;
-    _provisionalFindings = null;
+    _clearProvisionalFindings();
     final previous = HashMap<WmlParagraph, List<WordProofingIssue>>.identity();
     final previousByFinding =
         HashMap<OfficeProofingFinding, WordProofingIssue>.identity();
@@ -3085,6 +3106,8 @@ final class WordProofingSession extends ChangeNotifier {
     _pendingDraftCheck = null;
     _cache.clear();
     _findings.clear();
+    _findingTexts.clear();
+    _clearProvisionalFindings();
     _languageDetector = null;
     _detections.clear();
     _missingDetections.clear();

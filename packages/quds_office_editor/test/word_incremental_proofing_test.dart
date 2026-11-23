@@ -56,6 +56,18 @@ class _Provider extends OfficeProofingProvider {
   }
 }
 
+class _CountedParagraph extends WmlParagraph {
+  _CountedParagraph(String text) : super(inlines: [WmlRun(text: text)]);
+
+  int reads = 0;
+
+  @override
+  String get text {
+    reads++;
+    return super.text;
+  }
+}
+
 WmlParagraph _paragraph(String text) =>
     WmlParagraph(inlines: [WmlRun(text: text)]);
 
@@ -94,6 +106,40 @@ class _Harness {
 }
 
 void main() {
+  test(
+    'paint resolves only requested paragraphs during a pending edit',
+    () async {
+      final changed = _CountedParagraph('Feler first Feler');
+      final offscreen = _CountedParagraph('Feler second');
+      final h = _Harness([]);
+      h.document.sections.single.blocks.addAll(<WmlParagraph>[
+        changed,
+        offscreen,
+      ]);
+      await h.session.checkNow();
+
+      h.edit(0, 'Fehler first Feler');
+      changed.reads = 0;
+      offscreen.reads = 0;
+      final paint = h.session.paintFindingsLookup!;
+      expect(paint(changed)?.single.start, 13);
+      expect(paint(changed)?.single.originalText, 'Feler');
+      expect(changed.reads, 1);
+      expect(offscreen.reads, 0);
+
+      h.edit(0, 'Fehler first completely correct');
+      expect(h.session.paintFindingsLookup!(changed), isNull);
+      expect(offscreen.reads, 0);
+
+      // Whole-map readers still see the unchanged paragraph and the same
+      // read-only map contract while the next provider check is pending.
+      final snapshot = h.session.findingsByParagraph;
+      expect(snapshot.keys, [offscreen]);
+      expect(offscreen.reads, 1);
+      expect(() => snapshot.clear(), throwsUnsupportedError);
+    },
+  );
+
   test(
     'unchanged findings survive typing and the next in-flight check',
     () async {
