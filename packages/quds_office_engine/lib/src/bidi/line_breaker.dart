@@ -189,6 +189,9 @@ abstract final class LineBreaker {
     /// to the original metrics. Overflow is repaired before visual reordering.
     List<ShapedGlyph> Function(List<ShapedGlyph> glyphs)? measureLine,
     Iterable<int> hyphenationOffsets = const [],
+
+    /// Optional width for the first line. When supplied, wrapping is greedy.
+    double? firstLineWidth,
   }) {
     if (text.isEmpty) {
       return <BrokenLine>[
@@ -244,6 +247,7 @@ abstract final class LineBreaker {
             chunk,
             sourceText: text,
             maxWidth: maxWidth,
+            firstLineWidth: lines.isEmpty ? firstLineWidth : null,
             spaceStretch: spaceStretch,
             spaceShrink: spaceShrink,
             justify: justify,
@@ -283,6 +287,7 @@ abstract final class LineBreaker {
     List<ShapedGlyph> logical, {
     required String sourceText,
     required double maxWidth,
+    double? firstLineWidth,
     required double spaceStretch,
     required double spaceShrink,
     required bool justify,
@@ -303,7 +308,7 @@ abstract final class LineBreaker {
       markAttachOf,
       measureLine,
     );
-    final List<int> planned = balanceLines
+    final List<int> planned = balanceLines && firstLineWidth == null
         ? _knuthPlass(
             logical,
             maxWidth,
@@ -320,6 +325,7 @@ abstract final class LineBreaker {
             clusterStarts,
             controls,
             measurements.at,
+            firstLineWidth: firstLineWidth,
           );
     var breaks = !breakLongWords
         ? planned
@@ -330,6 +336,7 @@ abstract final class LineBreaker {
             maxWidth,
             hyphens,
             controls,
+            firstLineWidth: firstLineWidth,
           );
     if (measureLine != null) {
       breaks = _refineBreaks(
@@ -341,6 +348,7 @@ abstract final class LineBreaker {
         controls,
         measurements.at,
         breakLongWords: breakLongWords,
+        firstLineWidth: firstLineWidth,
       );
     }
     final List<BrokenLine> lines = <BrokenLine>[];
@@ -357,9 +365,10 @@ abstract final class LineBreaker {
         }
       }
       var ratio = 0.0;
-      if (justify && spaces > 0 && width < maxWidth && i != breaks.length - 2) {
-        ratio = (maxWidth - width) / (spaces * spaceStretch);
-        width = maxWidth;
+      final limit = i == 0 ? firstLineWidth ?? maxWidth : maxWidth;
+      if (justify && spaces > 0 && width < limit && i != breaks.length - 2) {
+        ratio = (limit - width) / (spaces * spaceStretch);
+        width = limit;
       }
       int logStart = 0x7fffffff;
       int logEnd = 0;
@@ -402,8 +411,9 @@ abstract final class LineBreaker {
     Set<int> clusterStarts,
     double maxWidth,
     Map<int, ShapedGlyph> hyphens,
-    _BreakControls controls,
-  ) {
+    _BreakControls controls, {
+    double? firstLineWidth,
+  }) {
     final boundaries = <int>[
       0,
       for (var i = 1; i < logical.length; i++)
@@ -428,6 +438,7 @@ abstract final class LineBreaker {
       // A natural break inside a source grapheme must join the next interval.
       if (end == null) continue;
       while (start < end) {
+        final limit = start == 0 ? firstLineWidth ?? maxWidth : maxWidth;
         var fitting = start;
         var natural = start;
         for (var next = start + 1; next <= end; next++) {
@@ -437,7 +448,7 @@ abstract final class LineBreaker {
               widths[math.max(from, paintedEnd[to])] -
               widths[from] +
               (_hyphenForBreak(logical, to, hyphens)?.advance ?? 0);
-          if (width > maxWidth + 0.000001) {
+          if (width > limit + 0.000001) {
             // An indivisible glyph/cluster may itself be wider than the box.
             // Keep it whole and always make progress.
             if (fitting == start) fitting = next;
@@ -494,6 +505,7 @@ abstract final class LineBreaker {
     _BreakControls controls,
     _MeasuredLine Function(int from, int to) measure, {
     required bool breakLongWords,
+    double? firstLineWidth,
   }) {
     final boundaries = <int>[
       for (var at = 1; at <= logical.length; at++)
@@ -522,11 +534,12 @@ abstract final class LineBreaker {
     var plannedIndex = 1;
     var start = 0;
     while (start < logical.length) {
+      final width = start == 0 ? firstLineWidth ?? maxWidth : maxWidth;
       while (planned[plannedIndex] <= start) {
         plannedIndex++;
       }
       final end = planned[plannedIndex];
-      if (measure(start, end).width <= maxWidth + 0.000001) {
+      if (measure(start, end).width <= width + 0.000001) {
         result.add(end);
         start = end;
         continue;
@@ -542,7 +555,7 @@ abstract final class LineBreaker {
           if (tested == limit - 1 && at > first) at = first;
           final cut = candidates[at];
           tested++;
-          if (measure(start, cut).width <= maxWidth + 0.000001) return cut;
+          if (measure(start, cut).width <= width + 0.000001) return cut;
           if (tested >= limit) break;
         }
         return null;
@@ -820,8 +833,9 @@ abstract final class LineBreaker {
     Map<int, ShapedGlyph> hyphens,
     Set<int> clusterStarts,
     _BreakControls controls,
-    _MeasuredLine Function(int, int) measure,
-  ) {
+    _MeasuredLine Function(int, int) measure, {
+    double? firstLineWidth,
+  }) {
     final n = glyphs.length;
     final widths = List<double>.filled(n + 1, 0);
     final legal = <int>[];
@@ -836,6 +850,7 @@ abstract final class LineBreaker {
     var start = 0;
     var first = 0;
     while (start < n) {
+      final limit = start == 0 ? firstLineWidth ?? maxWidth : maxWidth;
       while (legal[first] <= start) {
         first++;
       }
@@ -851,7 +866,7 @@ abstract final class LineBreaker {
       var high = legal.length;
       while (low < high) {
         final mid = (low + high) ~/ 2;
-        if (baseWidth(legal[mid]) <= maxWidth + .000001) {
+        if (baseWidth(legal[mid]) <= limit + .000001) {
           low = mid + 1;
         } else {
           high = mid;
@@ -864,7 +879,7 @@ abstract final class LineBreaker {
         at >= first && tested < 32;
         at--, tested++
       ) {
-        if (measure(start, legal[at]).width <= maxWidth + .000001) {
+        if (measure(start, legal[at]).width <= limit + .000001) {
           chosen = legal[at];
           chosenIndex = at;
           break;
@@ -877,7 +892,7 @@ abstract final class LineBreaker {
         at < legal.length && tested < 32;
         at++, tested++
       ) {
-        if (measure(start, legal[at]).width <= maxWidth + .000001) {
+        if (measure(start, legal[at]).width <= limit + .000001) {
           chosen = legal[at];
           chosenIndex = at;
         } else if (_hyphenForBreak(glyphs, legal[at], hyphens) == null) {

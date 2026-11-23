@@ -210,6 +210,71 @@ void main() {
     }
   });
 
+  test(
+    'hanging paragraphs start before the continuation indent and use their tabs',
+    () {
+      const contentLeft = 20.0;
+      final source = WmlDocument(
+        sections: [
+          WmlSection(
+            pageSize: const WmlPageSize(width: 140, height: 280),
+            margins: const WmlPageMargins(left: contentLeft, right: 20),
+            blocks: [
+              paragraph('VIII.1\tAlpha beta gamma delta epsilon')
+                ..properties.indent = const WmlIndent(left: 30, hanging: 25)
+                ..properties.tabs.addAll([
+                  const WmlTabStop(
+                    position: 41,
+                    alignment: WmlTabAlignment.left,
+                  ),
+                  const WmlTabStop(
+                    position: 96,
+                    alignment: WmlTabAlignment.right,
+                  ),
+                ]),
+            ],
+          ),
+        ],
+      );
+      final output = WordLayoutEngine(
+        font: null,
+        measure: (_, _, _) => 5,
+      ).layout(source);
+      final lines = output.pages.single.lines;
+      expect(lines.first.glyphs.first.x, contentLeft + 5);
+      expect(
+        lines.first.glyphs.singleWhere((item) => item.glyph.codePoint == 0x41).x,
+        contentLeft + 41,
+      );
+      expect(lines.first.text, 'VIII.1\tAlpha beta');
+      expect(lines[1].glyphs.first.x, contentLeft + 30);
+    },
+  );
+
+  test('first-line indents reduce the available width before wrapping', () {
+    final source = WmlDocument(
+      sections: [
+        WmlSection(
+          pageSize: const WmlPageSize(width: 140, height: 280),
+          margins: const WmlPageMargins(left: 20, right: 20),
+          blocks: [
+            paragraph('Alpha beta gamma delta epsilon')
+              ..properties.indent = const WmlIndent(firstLine: 25),
+          ],
+        ),
+      ],
+    );
+    final lines = WordLayoutEngine(
+      font: null,
+      measure: (_, _, _) => 5,
+    ).layout(source).pages.single.lines;
+    expect(lines.map((line) => line.text), [
+      'Alpha beta',
+      'gamma delta epsilon',
+    ]);
+    expect(lines.map((line) => line.glyphs.first.x), [45, 20]);
+  });
+
   for (final columns in [1, 2]) {
     test(
       'an overflowing blank line moves with its height in $columns columns',

@@ -2302,7 +2302,9 @@ class WordLayoutEngine {
     final double hanging = paragraph.properties.indent.hanging;
     final double indentLeft = paragraph.properties.indent.left;
     final double firstLineShift = hanging > 0
-        ? 0
+        ? (listLabel == null && paragraph.properties.bidiBaseLevel != 1
+              ? -hanging
+              : 0)
         : paragraph.properties.indent.firstLine;
     // Hanging indent: marker sits in [left-hanging, left); text wraps at left.
     final double markerSlot = listLabel == null
@@ -2321,6 +2323,10 @@ class WordLayoutEngine {
           12.0,
           section.pageSize.width,
         );
+    final double firstLineWidth = (maxWidth - firstLineShift).clamp(
+      12.0,
+      section.pageSize.width,
+    );
     // Empty paragraphs are a full blank line in Word. A tab is content.
     if (!paragraph.text.contains('\t') &&
         paragraph.text.trim().isEmpty &&
@@ -2663,6 +2669,9 @@ class WordLayoutEngine {
                 balanceLines: false,
                 hyphenationOffsets: hyphenationOffsets,
                 maxWidth: maxWidth,
+                firstLineWidth: firstLineWidth == maxWidth
+                    ? null
+                    : firstLineWidth,
                 widthOf: (cp) => widthAt(cp, 0),
                 widthAt: widthAt,
                 glyphIdAt: glyphIdAt,
@@ -2841,11 +2850,11 @@ class WordLayoutEngine {
             );
       var nextOffset = wrappedOffset;
       var lineLeft = lineOrigin + textLeft;
-      var lineWidth = maxWidth;
+      var lineWidth = lineNumber == 0 ? firstLineWidth : maxWidth;
       void rebreakForFrame() {
         if (wrapBreaker == null) return;
         final shift = lineNumber == 0 ? firstLineShift : 0.0;
-        final available = math.max(12.0, maxWidth - math.max(0.0, shift));
+        final available = lineNumber == 0 ? firstLineWidth : maxWidth;
         final rtl = paragraph.properties.bidiBaseLevel == 1;
         var band = _frameWrapBand(
           currentFrames,
