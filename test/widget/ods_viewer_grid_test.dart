@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quds_office_editor/quds_office_editor.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 Uint8List _odsBytes() {
   const xml = '''
@@ -62,6 +63,9 @@ Future<void> _waitFor(
 }
 
 void main() {
+  // The file panel's show-hidden-files setting reads SharedPreferences.
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
   testWidgets('ODS opens in the Quds grid and falls back to the typed table', (
     tester,
   ) async {

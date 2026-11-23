@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quds_office_editor/quds_office_editor.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../support/office_test_harness.dart';
 
@@ -42,6 +43,9 @@ Uint8List _source() {
 }
 
 void main() {
+  // The file panel's show-hidden-files setting reads SharedPreferences.
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
   for (final archiveMember in [false, true]) {
     testWidgets(
       archiveMember

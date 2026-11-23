@@ -77,7 +77,8 @@ jobs:
     name: Analyze + Test (Linux)
     runs-on: ubuntu-latest
     # Include native streamed archive regressions and leave time for reports.
-    timeout-minutes: 45
+    # The deterministic suite alone takes ~35 min on ubuntu-latest (2026-11-23).
+    timeout-minutes: 75
 
     steps:
       - uses: actions/checkout@v5
