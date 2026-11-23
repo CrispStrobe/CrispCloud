@@ -9,6 +9,7 @@ import 'package:crisp_cloud/providers/external_comparison_provider.dart';
 import 'package:crisp_cloud/providers/external_remote_editing_provider.dart';
 import 'package:crisp_cloud/providers/providers.dart';
 import 'package:crisp_cloud/screens/file_browser_screen.dart';
+import 'package:crisp_cloud/widgets/windows_platform_menu_bar.dart';
 import 'package:crisp_cloud/screens/screen_dialogs.dart';
 import 'package:crisp_cloud/services/browser_menu_store.dart';
 import 'package:crisp_cloud/services/code_editor_menu.dart';
@@ -324,7 +325,6 @@ void main() {
     variant: TargetPlatformVariant.only(TargetPlatform.linux),
   );
 
-
   testWidgets('Windows keeps one menu row when the toolbar is hidden', (
     tester,
   ) async {
@@ -332,7 +332,10 @@ void main() {
     final menu = find.byType(ConfigurableBrowserMenu);
     expect(menu, findsOneWidget);
     expect(tester.widget<ConfigurableBrowserMenu>(menu).inToolbar, isTrue);
-    expect(find.ancestor(of: menu, matching: find.byType(AppBar)), findsOneWidget);
+    expect(
+      find.ancestor(of: menu, matching: find.byType(AppBar)),
+      findsOneWidget,
+    );
     expect(find.byKey(const ValueKey('browser-menu-toolbar')), findsOneWidget);
     expect(find.byType(PlatformMenuBar), findsNothing);
 
@@ -349,8 +352,9 @@ void main() {
   ) async {
     await mount(tester);
     CodeEditorMenuAction? editorAction;
-    container.read(codeEditorMenuProvider.notifier).state =
-        CodeEditorMenuActions(
+    container
+        .read(codeEditorMenuProvider.notifier)
+        .state = CodeEditorMenuActions(
       perform: (action) => editorAction = action,
       canSave: true,
       canUndo: true,

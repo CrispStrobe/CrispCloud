@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 /// Renders contextual PlatformMenu items in the Windows window toolbar.
 ///
@@ -33,8 +32,7 @@ class WindowsPlatformMenuBar extends StatelessWidget {
     String acceleratorLabel(String label) {
       for (var i = 0; i < label.length; i++) {
         final letter = label[i].toLowerCase();
-        if (RegExp(r'[a-z]').hasMatch(letter) &&
-            usedAccelerators.add(letter)) {
+        if (RegExp(r'[a-z]').hasMatch(letter) && usedAccelerators.add(letter)) {
           return '${label.substring(0, i)}&${label.substring(i)}';
         }
       }
@@ -57,7 +55,10 @@ class WindowsPlatformMenuBar extends StatelessWidget {
       return shortcut;
     }
 
-    List<Widget> entries(List<PlatformMenuItem> items, {bool topLevel = false}) {
+    List<Widget> entries(
+      List<PlatformMenuItem> items, {
+      bool topLevel = false,
+    }) {
       final widgets = <Widget>[];
       for (final item in items) {
         if (item is PlatformProvidedMenuItem) {
@@ -98,7 +99,11 @@ class WindowsPlatformMenuBar extends StatelessWidget {
             key: ValueKey('windows-context-item-${item.label}'),
             onPressed: item.onSelected,
             shortcut: windowsShortcut(item.shortcut),
-            child: Text(item.label, maxLines: 2, overflow: TextOverflow.ellipsis),
+            child: Text(
+              item.label,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         );
       }
@@ -118,9 +123,8 @@ class WindowsPlatformMenuBar extends StatelessWidget {
                 key: const ValueKey('windows-context-compact'),
                 icon: const Icon(Icons.menu, size: 18),
                 label: const Text('Menu'),
-                onPressed: () => controller.isOpen
-                    ? controller.close()
-                    : controller.open(),
+                onPressed: () =>
+                    controller.isOpen ? controller.close() : controller.open(),
               ),
             ),
           );
