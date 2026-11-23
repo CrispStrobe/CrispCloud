@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/models/panel_tab.dart';
 import 'package:crisp_cloud/providers/providers.dart';
+import 'package:crisp_cloud/providers/panel_source_provider.dart';
 import 'package:crisp_cloud/services/local_file_service.dart';
 import 'package:crisp_cloud/services/panel_source_service.dart';
 import 'package:crisp_cloud/services/storage_identity.dart';

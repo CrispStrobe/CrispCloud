@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/providers/providers.dart';
+import 'package:crisp_cloud/providers/panel_source_provider.dart';
 import 'package:crisp_cloud/services/local_file_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -281,6 +282,10 @@ void main() {
     );
     expect(local.interactiveReads, [targetPath]);
     expect(panel.activeTab?.path, targetPath);
+    expect(
+      container.read(panelSourceProvider(PanelSide.local)).currentPath,
+      targetPath,
+    );
   });
 
   test('right pane can browse local folders using their native paths', () async {

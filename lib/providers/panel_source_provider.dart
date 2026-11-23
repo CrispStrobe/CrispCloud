@@ -72,6 +72,11 @@ class PanelSourceNotifier extends StateNotifier<PanelSource> {
 
   final PanelSide side;
   int _sourceRevision = 0;
+
+  /// Increments for deliberate source/path choices. The async restore of an
+  /// old saved preference does not count as a new user selection.
+  int get sourceSelectionRevision => _sourceRevision;
+
   List<PanelSource>? _deferredContainerReleases;
 
   PanelSourceNotifier(this.side) : super(const LocalPanelSource('/')) {

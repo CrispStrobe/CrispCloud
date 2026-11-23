@@ -6146,7 +6146,7 @@ class PanelNotifier extends ChangeNotifier {
       }
       if (!stillNavigating()) return;
       final selected = _ref.read(panelSourceProvider(side));
-      if (selected is! LocalPanelSource) {
+      if (selected is! LocalPanelSource || selected.currentPath != path) {
         _settingSwapSource = true;
         try {
           _ref
@@ -6170,7 +6170,8 @@ class PanelNotifier extends ChangeNotifier {
       if (sourceOrigin?.source case final RemotePanelSource requested) {
         final selected = _ref.read(panelSourceProvider(side));
         if (selected is! RemotePanelSource ||
-            !identical(selected.client, requested.client)) {
+            !identical(selected.client, requested.client) ||
+            selected.currentPath != path) {
           _settingSwapSource = true;
           try {
             _ref
@@ -8275,8 +8276,13 @@ class PanelNotifier extends ChangeNotifier {
   /// setup on the right. A saved tab with an exact storage identity wins; an
   /// older unscoped tab is retained but is *not* silently rebound.
   Future<void> _restoreWindowsPane() async {
+    final selectionRevision = _ref
+        .read(panelSourceProvider(side).notifier)
+        .sourceSelectionRevision;
     await _restoreTabs();
-    if (_isDisposed || _sourceWasSelected) return;
+    if (_isDisposed ||
+        _ref.read(panelSourceProvider(side).notifier).sourceSelectionRevision !=
+            selectionRevision) return;
     final tab = activeTab;
     if (tab == null) return;
     final legacy = tab.storage?.accountKey == 'legacy-unscoped-tab';
@@ -8304,9 +8310,16 @@ class PanelNotifier extends ChangeNotifier {
   Future<void> _showWindowsLocalHome({required bool preserveLegacy}) async {
     final tabId = _activeTabId;
     final navigation = _navigationRevision;
+    final selectionRevision = _ref
+        .read(panelSourceProvider(side).notifier)
+        .sourceSelectionRevision;
     final path = await _localFileService.getSafeFallbackDirectory();
-    if (_isDisposed || tabId != _activeTabId ||
-        navigation != _navigationRevision || _sourceWasSelected) return;
+    if (_isDisposed ||
+        tabId != _activeTabId ||
+        navigation != _navigationRevision ||
+        selectionRevision != _ref
+            .read(panelSourceProvider(side).notifier)
+            .sourceSelectionRevision) return;
     if (!p.isAbsolute(path)) return;
     final source = LocalPanelSource(path);
     final origin = resolveStorageReference(

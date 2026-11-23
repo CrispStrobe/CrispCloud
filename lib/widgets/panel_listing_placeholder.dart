@@ -190,6 +190,15 @@ class PanelListingPlaceholder extends ConsumerWidget {
           label: Text(l.connectToCloudShort),
         ),
       );
+      // A disconnected or legacy-unscoped cloud tab must never trap the user.
+      // This always uses the OS picker and an explicit local storage identity.
+      actions.add(
+        OutlinedButton.icon(
+          onPressed: panel.pickLocalDirectory,
+          icon: const Icon(Icons.folder_open),
+          label: Text(l.openLocalFolder),
+        ),
+      );
     } else if (state == PanelListingState.failed ||
         state == PanelListingState.unavailable) {
       actions.add(
